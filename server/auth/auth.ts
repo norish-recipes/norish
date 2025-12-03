@@ -293,5 +293,11 @@ export const auth = new Proxy({} as AuthInstance, {
   },
 });
 
+// Register reset function so the auth instance can be recreated when cache is updated
+// This is important for development mode with hot module reloading
+globalThis.norish_resetAuthInstance = () => {
+  _auth = null;
+};
+
 // Export type for client inference
 export type Auth = AuthInstance;
