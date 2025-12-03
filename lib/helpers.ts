@@ -7,7 +7,7 @@ import { httpUrlSchema } from "./schema";
 
 export function stripHtmlTags(input: string): string {
   return input
-    .replace(/<[^>]*>/g, "") // Remove HTML tags
+    .replace(/<[^>]*>/g, " ") // Replace HTML tags with space
     .replace(/&nbsp;/gi, " ") // Decode non-breaking space
     .replace(/&amp;/gi, "&") // Decode ampersand
     .replace(/&lt;/gi, "<") // Decode less than
@@ -16,7 +16,7 @@ export function stripHtmlTags(input: string): string {
     .replace(/&#0?39;/gi, "'") // Decode apostrophe
     .replace(/&apos;/gi, "'") // Decode apostrophe
     .trim()
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, " "); // Collapse multiple spaces
 }
 
 export const parseJsonWithRepair = (input: string): any | null => {
