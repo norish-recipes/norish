@@ -4,21 +4,15 @@ import { validateVideoLength, getVideoMetadata, downloadVideoAudio } from "./yt-
 import { extractRecipeFromVideo } from "./normalizer";
 import { cleanupFile } from "./cleanup";
 
-import { SERVER_CONFIG } from "@/config/env-config-server";
 import { videoLogger as log } from "@/server/logger";
-import { isAIEnabled } from "@/config/server-config-loader";
+import { isVideoParsingEnabled } from "@/config/server-config-loader";
 import { transcribeAudio } from "@/server/ai/transcriber";
 
 export async function processVideoRecipe(url: string): Promise<FullRecipeInsertDTO> {
-  if (!SERVER_CONFIG.VIDEO_PARSING_ENABLED) {
-    throw new Error("Video processing is not enabled.");
-  }
+  const videoEnabled = await isVideoParsingEnabled();
 
-  // Video processing requires AI for transcription and recipe extraction
-  const aiEnabled = await isAIEnabled();
-
-  if (!aiEnabled) {
-    throw new Error("AI features are disabled. Video recipe parsing requires AI.");
+  if (!videoEnabled) {
+    throw new Error("AI features or video processing is not enabled.");
   }
 
   let audioPath: string | null = null;

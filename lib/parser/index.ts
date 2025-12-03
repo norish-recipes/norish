@@ -3,20 +3,24 @@ import { tryExtractRecipeFromJsonLd } from "@/lib/parser/jsonld";
 import { tryExtractRecipeFromMicrodata } from "@/lib/parser/microdata";
 import { fetchViaHttp, fetchViaPuppeteer } from "@/lib/parser/fetch";
 import { extractRecipeWithAI } from "@/server/ai/recipe-parser";
-import { getContentIndicators, isAIEnabled } from "@/config/server-config-loader";
+import {
+  getContentIndicators,
+  isAIEnabled,
+  isVideoParsingEnabled,
+} from "@/config/server-config-loader";
 import { isVideoUrl } from "@/lib/helpers";
-import { SERVER_CONFIG } from "@/config/env-config-server";
 import { parserLogger as log } from "@/server/logger";
 
 export async function parseRecipeFromUrl(url: string): Promise<FullRecipeInsertDTO> {
   // Check if URL is a video platform (YouTube, Instagram, TikTok, etc.)
   if (await isVideoUrl(url)) {
-    if (!SERVER_CONFIG.VIDEO_PARSING_ENABLED) {
+    const videoEnabled = await isVideoParsingEnabled();
+
+    if (!videoEnabled) {
       throw new Error("Video recipe parsing is not enabled.");
     }
 
     try {
-      // Route to video processing pipeline
       const { processVideoRecipe } = await import("@/lib/video/processor");
 
       return await processVideoRecipe(url);

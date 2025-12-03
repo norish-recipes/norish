@@ -109,6 +109,15 @@ export async function isAIEnabled(): Promise<boolean> {
   return aiConfig?.enabled ?? false;
 }
 
+/**
+ * Check if video parsing is enabled
+ */
+export async function isVideoParsingEnabled(): Promise<boolean> {
+  const videoConfig = await getConfig<VideoConfig>(ServerConfigKeys.VIDEO_CONFIG);
+
+  return ((await isAIEnabled()) && videoConfig?.enabled) ?? false;
+}
+
 // ============================================================================
 // Type exports for convenience
 // ============================================================================
