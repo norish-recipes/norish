@@ -33,7 +33,13 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError("Password should be at least 8 characters");
+
+      return;
+    }
+
+    if (password.length > 128) {
+      setError("Password can be at most 128 characters");
 
       return;
     }

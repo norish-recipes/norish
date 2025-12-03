@@ -11,7 +11,7 @@ vi.mock("@/server/logger", () => ({
 }));
 
 // Import mocks
-import { setConfig } from "../../mocks/server-config";
+import { setConfig, configExists } from "../../mocks/server-config";
 import { isUserServerAdmin } from "../../mocks/users";
 
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
@@ -133,6 +133,53 @@ describe("Password Auth Admin Procedures", () => {
       const caller = t.createCallerFactory(testRouter)(ctx);
 
       await expect(caller.updatePasswordAuth(true)).rejects.toThrow(TRPCError);
+    });
+
+    it("returns error when disabling password auth with no OAuth providers configured", async () => {
+      // Arrange
+      const ctx = createMockAdminContext(mockAdmin);
+
+      configExists.mockResolvedValue(false);
+      setConfig.mockResolvedValue(undefined);
+
+      const testRouter = t.router({
+        updatePasswordAuth: adminProcedure.input(z.boolean()).mutation(async ({ input }) => {
+          if (input === false) {
+            const oauthProviderKeys = [
+              ServerConfigKeys.AUTH_PROVIDER_OIDC,
+              ServerConfigKeys.AUTH_PROVIDER_GITHUB,
+              ServerConfigKeys.AUTH_PROVIDER_GOOGLE,
+            ];
+
+            const hasOAuthProvider = await Promise.all(
+              oauthProviderKeys.map((k) => configExists(k))
+            ).then((results) => results.some(Boolean));
+
+            if (!hasOAuthProvider) {
+              return {
+                success: false,
+                error: "Cannot delete the last authentication method.",
+              };
+            }
+          }
+
+          await setConfig(ServerConfigKeys.PASSWORD_AUTH_ENABLED, input, ctx.user.id, false);
+
+          return { success: true };
+        }),
+      });
+
+      const caller = t.createCallerFactory(testRouter)(ctx);
+
+      // Act
+      const result = await caller.updatePasswordAuth(false);
+
+      // Assert
+      expect(result).toEqual({
+        success: false,
+        error: "Cannot delete the last authentication method.",
+      });
+      expect(setConfig).not.toHaveBeenCalled();
     });
   });
 });

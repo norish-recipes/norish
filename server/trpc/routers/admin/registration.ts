@@ -38,7 +38,7 @@ const updatePasswordAuth = adminProcedure.input(z.boolean()).mutation(async ({ i
 
     if (!hasOAuthProvider) {
       log.info(
-        { userId: ctx.user.id, provider: input },
+        { userId: ctx.user.id, enabled: input },
         "Cannot delete the last authentication method"
       );
 
