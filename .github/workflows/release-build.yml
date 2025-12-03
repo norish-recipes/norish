@@ -137,7 +137,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
-            ghcr.io/mikevanes/norish:${{ steps.image_tags.outputs.version_tag }}
-            ghcr.io/mikevanes/norish:${{ steps.image_tags.outputs.latest_tag }}
+            ghcr.io/norish-recipes/norish:${{ steps.image_tags.outputs.version_tag }}
+            ghcr.io/norish-recipes/norish:${{ steps.image_tags.outputs.latest_tag }}
             docker.io/norishapp/norish:${{ steps.image_tags.outputs.version_tag }}
             docker.io/norishapp/norish:${{ steps.image_tags.outputs.latest_tag }}
