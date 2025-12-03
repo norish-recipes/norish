@@ -2,12 +2,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const mockGetConfig = vi.fn();
 const mockSetConfig = vi.fn();
+const mockDeleteConfig = vi.fn();
 const mockConfigExists = vi.fn();
 let mockServerConfig: Record<string, string | undefined> = {};
 
 vi.mock("@/server/db/repositories/server-config", () => ({
   getConfig: mockGetConfig,
   setConfig: mockSetConfig,
+  deleteConfig: mockDeleteConfig,
   configExists: mockConfigExists,
 }));
 
@@ -39,6 +41,7 @@ describe("Auth Provider Sync Logic", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockServerConfig = {};
+    mockDeleteConfig.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -199,6 +202,58 @@ describe("Auth Provider Sync Logic", () => {
       expect(oidcCall).toBeDefined();
       expect(oidcCall![1].wellknown).toBe(customWellknown);
     });
+
+    it("should DELETE OIDC config when env credentials are removed and config is not overridden", async () => {
+      // Arrange - No env config, but DB has a non-overridden config
+      mockServerConfig = {};
+      mockGetConfig.mockImplementation((key: string) => {
+        if (key === ServerConfigKeys.AUTH_PROVIDER_OIDC) {
+          return Promise.resolve({
+            name: "EnvOIDC",
+            issuer: "https://auth.example.com",
+            clientId: "env-client-id",
+            clientSecret: "env-client-secret",
+            isOverridden: false, // Was set by env, not admin
+          });
+        }
+
+        return Promise.resolve(null);
+      });
+      mockConfigExists.mockResolvedValue(true);
+      const { seedServerConfig } = await import("@/server/startup/seed-config");
+
+      // Act
+      await seedServerConfig();
+
+      // Assert - Should delete the config
+      expect(mockDeleteConfig).toHaveBeenCalledWith(ServerConfigKeys.AUTH_PROVIDER_OIDC);
+    });
+
+    it("should NOT delete OIDC config when env is empty but config is admin-overridden", async () => {
+      // Arrange - No env config, DB has admin-overridden config
+      mockServerConfig = {};
+      mockGetConfig.mockImplementation((key: string) => {
+        if (key === ServerConfigKeys.AUTH_PROVIDER_OIDC) {
+          return Promise.resolve({
+            name: "AdminOIDC",
+            issuer: "https://admin-auth.example.com",
+            clientId: "admin-client-id",
+            clientSecret: "admin-client-secret",
+            isOverridden: true, // Set by admin
+          });
+        }
+
+        return Promise.resolve(null);
+      });
+      mockConfigExists.mockResolvedValue(true);
+      const { seedServerConfig } = await import("@/server/startup/seed-config");
+
+      // Act
+      await seedServerConfig();
+
+      // Assert - Should NOT delete the config
+      expect(mockDeleteConfig).not.toHaveBeenCalledWith(ServerConfigKeys.AUTH_PROVIDER_OIDC);
+    });
   });
 
   describe("GitHub Provider Sync", () => {
@@ -257,6 +312,54 @@ describe("Auth Provider Sync Logic", () => {
 
       expect(githubCall).toBeUndefined();
     });
+
+    it("should DELETE GitHub config when env credentials are removed and config is not overridden", async () => {
+      // Arrange - No env config, but DB has a non-overridden config
+      mockServerConfig = {};
+      mockGetConfig.mockImplementation((key: string) => {
+        if (key === ServerConfigKeys.AUTH_PROVIDER_GITHUB) {
+          return Promise.resolve({
+            clientId: "env-github-id",
+            clientSecret: "env-github-secret",
+            isOverridden: false,
+          });
+        }
+
+        return Promise.resolve(null);
+      });
+      mockConfigExists.mockResolvedValue(true);
+      const { seedServerConfig } = await import("@/server/startup/seed-config");
+
+      // Act
+      await seedServerConfig();
+
+      // Assert - Should delete the config
+      expect(mockDeleteConfig).toHaveBeenCalledWith(ServerConfigKeys.AUTH_PROVIDER_GITHUB);
+    });
+
+    it("should NOT delete GitHub config when env is empty but config is admin-overridden", async () => {
+      // Arrange - No env config, DB has admin-overridden config
+      mockServerConfig = {};
+      mockGetConfig.mockImplementation((key: string) => {
+        if (key === ServerConfigKeys.AUTH_PROVIDER_GITHUB) {
+          return Promise.resolve({
+            clientId: "admin-github-id",
+            clientSecret: "admin-github-secret",
+            isOverridden: true,
+          });
+        }
+
+        return Promise.resolve(null);
+      });
+      mockConfigExists.mockResolvedValue(true);
+      const { seedServerConfig } = await import("@/server/startup/seed-config");
+
+      // Act
+      await seedServerConfig();
+
+      // Assert - Should NOT delete the config
+      expect(mockDeleteConfig).not.toHaveBeenCalledWith(ServerConfigKeys.AUTH_PROVIDER_GITHUB);
+    });
   });
 
   describe("Google Provider Sync", () => {
@@ -314,6 +417,54 @@ describe("Auth Provider Sync Logic", () => {
       );
 
       expect(googleCall).toBeUndefined();
+    });
+
+    it("should DELETE Google config when env credentials are removed and config is not overridden", async () => {
+      // Arrange - No env config, but DB has a non-overridden config
+      mockServerConfig = {};
+      mockGetConfig.mockImplementation((key: string) => {
+        if (key === ServerConfigKeys.AUTH_PROVIDER_GOOGLE) {
+          return Promise.resolve({
+            clientId: "env-google-id",
+            clientSecret: "env-google-secret",
+            isOverridden: false,
+          });
+        }
+
+        return Promise.resolve(null);
+      });
+      mockConfigExists.mockResolvedValue(true);
+      const { seedServerConfig } = await import("@/server/startup/seed-config");
+
+      // Act
+      await seedServerConfig();
+
+      // Assert - Should delete the config
+      expect(mockDeleteConfig).toHaveBeenCalledWith(ServerConfigKeys.AUTH_PROVIDER_GOOGLE);
+    });
+
+    it("should NOT delete Google config when env is empty but config is admin-overridden", async () => {
+      // Arrange - No env config, DB has admin-overridden config
+      mockServerConfig = {};
+      mockGetConfig.mockImplementation((key: string) => {
+        if (key === ServerConfigKeys.AUTH_PROVIDER_GOOGLE) {
+          return Promise.resolve({
+            clientId: "admin-google-id",
+            clientSecret: "admin-google-secret",
+            isOverridden: true,
+          });
+        }
+
+        return Promise.resolve(null);
+      });
+      mockConfigExists.mockResolvedValue(true);
+      const { seedServerConfig } = await import("@/server/startup/seed-config");
+
+      // Act
+      await seedServerConfig();
+
+      // Assert - Should NOT delete the config
+      expect(mockDeleteConfig).not.toHaveBeenCalledWith(ServerConfigKeys.AUTH_PROVIDER_GOOGLE);
     });
   });
 

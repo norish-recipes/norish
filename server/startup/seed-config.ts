@@ -1,4 +1,4 @@
-import { setConfig, configExists, getConfig } from "../db/repositories/server-config";
+import { setConfig, configExists, getConfig, deleteConfig } from "../db/repositories/server-config";
 import {
   ServerConfigKeys,
   type ServerConfigKey,
@@ -27,6 +27,19 @@ interface ConfigDefinition {
 }
 
 /**
+ * Check if any OAuth provider is configured via environment variables
+ */
+function hasOAuthEnvConfigured(): boolean {
+  return !!(
+    (SERVER_CONFIG.OIDC_CLIENT_ID &&
+      SERVER_CONFIG.OIDC_CLIENT_SECRET &&
+      SERVER_CONFIG.OIDC_ISSUER) ||
+    (SERVER_CONFIG.GITHUB_CLIENT_ID && SERVER_CONFIG.GITHUB_CLIENT_SECRET) ||
+    (SERVER_CONFIG.GOOGLE_CLIENT_ID && SERVER_CONFIG.GOOGLE_CLIENT_SECRET)
+  );
+}
+
+/**
  * All required server config keys with their default values
  * When adding a new config key, add it here and it will be automatically seeded
  */
@@ -36,6 +49,13 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     getDefaultValue: () => true,
     sensitive: false,
     description: "Registration enabled",
+  },
+  {
+    key: ServerConfigKeys.PASSWORD_AUTH_ENABLED,
+    // Enable password auth by default if no OAuth providers are configured via env
+    getDefaultValue: () => !hasOAuthEnvConfigured(),
+    sensitive: false,
+    description: "Password authentication enabled",
   },
   {
     key: ServerConfigKeys.UNITS,
@@ -132,12 +152,16 @@ async function loadAuthProvidersIntoCache(): Promise<void> {
   const github = await getConfig<AuthProviderGitHub>(ServerConfigKeys.AUTH_PROVIDER_GITHUB, true);
   const google = await getConfig<AuthProviderGoogle>(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, true);
   const oidc = await getConfig<AuthProviderOIDC>(ServerConfigKeys.AUTH_PROVIDER_OIDC, true);
+  const passwordEnabled = await getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED);
 
-  setAuthProviderCache({ github, google, oidc });
+  setAuthProviderCache({ github, google, oidc, passwordEnabled: passwordEnabled ?? false });
 
-  const configured = [github && "GitHub", google && "Google", oidc && `OIDC (${oidc.name})`].filter(
-    Boolean
-  );
+  const configured = [
+    github && "GitHub",
+    google && "Google",
+    oidc && `OIDC (${oidc.name})`,
+    passwordEnabled && "Password",
+  ].filter(Boolean);
 
   if (configured.length > 0) {
     serverLogger.info({ providers: configured }, "Auth providers loaded");
@@ -206,12 +230,26 @@ function configsDiffer<T extends Record<string, unknown>>(
 
 /**
  * Sync OIDC provider from env to DB
+ * - If env has config and DB doesn't: insert
+ * - If env has config and DB has non-overridden config: update if different
+ * - If env is empty and DB has non-overridden config: delete (fallback to password auth)
+ * - If DB config is overridden: never touch
  */
 async function syncOIDCProvider(): Promise<void> {
   const hasEnvConfig =
     SERVER_CONFIG.OIDC_ISSUER && SERVER_CONFIG.OIDC_CLIENT_ID && SERVER_CONFIG.OIDC_CLIENT_SECRET;
 
-  if (!hasEnvConfig) return; // No env config, nothing to sync
+  const existing = await getConfig<AuthProviderOIDC>(ServerConfigKeys.AUTH_PROVIDER_OIDC, true);
+
+  // If no env config, check if we need to remove env-managed DB config
+  if (!hasEnvConfig) {
+    if (existing && !existing.isOverridden) {
+      await deleteConfig(ServerConfigKeys.AUTH_PROVIDER_OIDC);
+      serverLogger.info("Removed OIDC provider (env credentials removed)");
+    }
+
+    return;
+  }
 
   const envConfig: AuthProviderOIDC = {
     name: SERVER_CONFIG.OIDC_NAME,
@@ -230,8 +268,6 @@ async function syncOIDCProvider(): Promise<void> {
     },
     "OIDC env config loaded"
   );
-
-  const existing = await getConfig<AuthProviderOIDC>(ServerConfigKeys.AUTH_PROVIDER_OIDC, true);
 
   if (!existing) {
     await setConfig(ServerConfigKeys.AUTH_PROVIDER_OIDC, envConfig, null, true);
@@ -270,19 +306,31 @@ async function syncOIDCProvider(): Promise<void> {
 
 /**
  * Sync GitHub provider from env to DB
+ * - If env has config and DB doesn't: insert
+ * - If env has config and DB has non-overridden config: update if different
+ * - If env is empty and DB has non-overridden config: delete (fallback to password auth)
+ * - If DB config is overridden: never touch
  */
 async function syncGitHubProvider(): Promise<void> {
   const hasEnvConfig = SERVER_CONFIG.GITHUB_CLIENT_ID && SERVER_CONFIG.GITHUB_CLIENT_SECRET;
 
-  if (!hasEnvConfig) return;
+  const existing = await getConfig<AuthProviderGitHub>(ServerConfigKeys.AUTH_PROVIDER_GITHUB, true);
+
+  // If no env config, check if we need to remove env-managed DB config
+  if (!hasEnvConfig) {
+    if (existing && !existing.isOverridden) {
+      await deleteConfig(ServerConfigKeys.AUTH_PROVIDER_GITHUB);
+      serverLogger.info("Removed GitHub provider (env credentials removed)");
+    }
+
+    return;
+  }
 
   const envConfig: AuthProviderGitHub = {
     clientId: SERVER_CONFIG.GITHUB_CLIENT_ID!,
     clientSecret: SERVER_CONFIG.GITHUB_CLIENT_SECRET!,
     isOverridden: false,
   };
-
-  const existing = await getConfig<AuthProviderGitHub>(ServerConfigKeys.AUTH_PROVIDER_GITHUB, true);
 
   if (!existing) {
     await setConfig(ServerConfigKeys.AUTH_PROVIDER_GITHUB, envConfig, null, true);
@@ -308,19 +356,31 @@ async function syncGitHubProvider(): Promise<void> {
 
 /**
  * Sync Google provider from env to DB
+ * - If env has config and DB doesn't: insert
+ * - If env has config and DB has non-overridden config: update if different
+ * - If env is empty and DB has non-overridden config: delete (fallback to password auth)
+ * - If DB config is overridden: never touch
  */
 async function syncGoogleProvider(): Promise<void> {
   const hasEnvConfig = SERVER_CONFIG.GOOGLE_CLIENT_ID && SERVER_CONFIG.GOOGLE_CLIENT_SECRET;
 
-  if (!hasEnvConfig) return;
+  const existing = await getConfig<AuthProviderGoogle>(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, true);
+
+  // If no env config, check if we need to remove env-managed DB config
+  if (!hasEnvConfig) {
+    if (existing && !existing.isOverridden) {
+      await deleteConfig(ServerConfigKeys.AUTH_PROVIDER_GOOGLE);
+      serverLogger.info("Removed Google provider (env credentials removed)");
+    }
+
+    return;
+  }
 
   const envConfig: AuthProviderGoogle = {
     clientId: SERVER_CONFIG.GOOGLE_CLIENT_ID!,
     clientSecret: SERVER_CONFIG.GOOGLE_CLIENT_SECRET!,
     isOverridden: false,
   };
-
-  const existing = await getConfig<AuthProviderGoogle>(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, true);
 
   if (!existing) {
     await setConfig(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, envConfig, null, true);

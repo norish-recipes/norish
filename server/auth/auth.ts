@@ -8,6 +8,7 @@ import {
   getCachedGitHubProvider,
   getCachedGoogleProvider,
   getCachedOIDCProvider,
+  getCachedPasswordAuthEnabled,
 } from "./provider-cache";
 
 import { db } from "@/server/db/drizzle";
@@ -78,10 +79,29 @@ function buildOIDCProviders() {
   return providers;
 }
 
+// Build emailAndPassword configuration from cached DB value
+function buildEmailAndPasswordConfig() {
+  const passwordEnabled = getCachedPasswordAuthEnabled();
+
+  if (!passwordEnabled) {
+    return undefined;
+  }
+
+  return {
+    enabled: true,
+    requireEmailVerification: false,
+    autoSignIn: true,
+    minPasswordLength: 8,
+    maxPasswordLength: 128,
+  };
+}
+
 // Lazy-initialized auth instance
 let _auth: ReturnType<typeof betterAuth> | null = null;
 
 function createAuth() {
+  const emailAndPasswordConfig = buildEmailAndPasswordConfig();
+
   return betterAuth({
     database: drizzleAdapter(db, {
       provider: "pg",
@@ -107,6 +127,8 @@ function createAuth() {
           ]
         : []),
     ],
+    // Email and password authentication (conditionally enabled)
+    ...(emailAndPasswordConfig && { emailAndPassword: emailAndPasswordConfig }),
     user: {
       modelName: "user",
       additionalFields: {

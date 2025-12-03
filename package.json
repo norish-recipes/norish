@@ -1,6 +1,6 @@
 {
   "name": "norish",
-  "version": "0.10.0-beta",
+  "version": "0.11.0-beta",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.11.0",
@@ -13,7 +13,7 @@
     "build:prod": "pnpm run clean:install && cross-env NODE_ENV=production pnpm run build",
     "db:ensure": "tsx db/scripts/ensure-db.ts",
     "db:push": "pnpm run db:ensure && drizzle-kit push --config ./db/drizzle.config.ts",
-    "db:generate": "drizzle-kit generate --config ./db/drizzle.config.ts",
+    "db:generate": "drizzle-kit generate --config ./server/db/drizzle.config.ts",
     "migrate": "pnpm run db:ensure && drizzle-kit push --config ./db/drizzle.config.ts",
     "docker:build": "docker build -f docker/Dockerfile -t norishapp/norish:latest .",
     "docker:up": "docker-compose -f docker/docker-compose.yml up",

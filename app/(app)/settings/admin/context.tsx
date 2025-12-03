@@ -27,6 +27,7 @@ import {
 interface AdminSettingsContextValue {
   // Data
   registrationEnabled: boolean | undefined;
+  passwordAuthEnabled: boolean | undefined;
   authProviderOIDC: AuthProviderOIDC | undefined;
   authProviderGitHub: AuthProviderGitHub | undefined;
   authProviderGoogle: AuthProviderGoogle | undefined;
@@ -43,6 +44,7 @@ interface AdminSettingsContextValue {
 
   // Actions
   updateRegistration: (enabled: boolean) => Promise<void>;
+  updatePasswordAuth: (enabled: boolean) => Promise<{ success: boolean; error?: string }>;
   updateAuthProviderOIDC: (
     config: AuthProviderOIDCInput
   ) => Promise<{ success: boolean; error?: string }>;
@@ -94,6 +96,9 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
 
   // Extract typed config values
   const registrationEnabled = configs[ServerConfigKeys.REGISTRATION_ENABLED] as boolean | undefined;
+  const passwordAuthEnabled = configs[ServerConfigKeys.PASSWORD_AUTH_ENABLED] as
+    | boolean
+    | undefined;
   const authProviderOIDC = configs[ServerConfigKeys.AUTH_PROVIDER_OIDC] as
     | AuthProviderOIDC
     | undefined;
@@ -123,6 +128,13 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const updateRegistration = useCallback(
     async (enabled: boolean) => {
       await mutations.updateRegistration(enabled);
+    },
+    [mutations]
+  );
+
+  const updatePasswordAuth = useCallback(
+    async (enabled: boolean) => {
+      return mutations.updatePasswordAuth(enabled);
     },
     [mutations]
   );
@@ -242,6 +254,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
 
   const value: AdminSettingsContextValue = {
     registrationEnabled,
+    passwordAuthEnabled,
     authProviderOIDC,
     authProviderGitHub,
     authProviderGoogle,
@@ -254,6 +267,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     recipePermissionPolicy,
     isLoading,
     updateRegistration,
+    updatePasswordAuth,
     updateAuthProviderOIDC: updateAuthOIDC,
     updateAuthProviderGitHub: updateAuthGitHub,
     updateAuthProviderGoogle: updateAuthGoogle,

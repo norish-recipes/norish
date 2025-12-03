@@ -4,7 +4,12 @@ import { router } from "../../trpc";
 import { adminProcedure } from "../../middleware";
 
 import { trpcLogger as log } from "@/server/logger";
-import { setConfig, deleteConfig, configExists } from "@/server/db/repositories/server-config";
+import {
+  setConfig,
+  deleteConfig,
+  configExists,
+  getConfig,
+} from "@/server/db/repositories/server-config";
 import {
   testOIDCProvider,
   testGitHubProvider,
@@ -90,20 +95,29 @@ const deleteProvider = adminProcedure
     };
     const key = keyMap[input];
 
-    // Check if this is the last configured auth provider
+    // Check if this is the last configured auth method
     const otherProviderKeys = Object.entries(keyMap)
       .filter(([k]) => k !== input)
       .map(([, v]) => v);
 
-    const hasOtherProvider = await Promise.all(otherProviderKeys.map((k) => configExists(k))).then(
-      (results) => results.some(Boolean)
-    );
+    const [hasOtherOAuthProvider, passwordAuthEnabled] = await Promise.all([
+      Promise.all(otherProviderKeys.map((k) => configExists(k))).then((results) =>
+        results.some(Boolean)
+      ),
+      getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED),
+    ]);
 
-    if (!hasOtherProvider) {
+    const hasOtherAuthMethod = hasOtherOAuthProvider || passwordAuthEnabled === true;
+
+    if (!hasOtherAuthMethod) {
+      log.info(
+        { userId: ctx.user.id, provider: input },
+        "Cannot delete the last authentication method"
+      );
+
       return {
         success: false,
-        error:
-          "Cannot delete the last authentication provider. At least one provider must remain configured.",
+        error: "Cannot delete the last authentication method.",
       };
     }
 

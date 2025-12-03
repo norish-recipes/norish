@@ -6,6 +6,7 @@ import { z } from "zod";
 
 export const ServerConfigKeys = {
   REGISTRATION_ENABLED: "registration_enabled",
+  PASSWORD_AUTH_ENABLED: "password_auth_enabled",
   AUTH_PROVIDER_OIDC: "auth_provider_oidc",
   AUTH_PROVIDER_GITHUB: "auth_provider_github",
   AUTH_PROVIDER_GOOGLE: "auth_provider_google",

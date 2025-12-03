@@ -19,6 +19,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 export type AdminMutationsResult = {
   // Registration
   updateRegistration: (enabled: boolean) => Promise<{ success: boolean }>;
+  updatePasswordAuth: (enabled: boolean) => Promise<{ success: boolean; error?: string }>;
 
   // Auth providers (input types - isOverridden is set server-side)
   updateAuthProviderOIDC: (
@@ -76,6 +77,7 @@ export function useAdminMutations(): AdminMutationsResult {
 
   // Registration
   const updateRegistrationMutation = useMutation(trpc.admin.updateRegistration.mutationOptions());
+  const updatePasswordAuthMutation = useMutation(trpc.admin.updatePasswordAuth.mutationOptions());
 
   // Auth providers
   const updateOIDCMutation = useMutation(trpc.admin.auth.updateOIDC.mutationOptions());
@@ -127,6 +129,9 @@ export function useAdminMutations(): AdminMutationsResult {
     // Registration
     updateRegistration: async (enabled) => {
       return withInvalidate(updateRegistrationMutation.mutateAsync(enabled));
+    },
+    updatePasswordAuth: async (enabled) => {
+      return withInvalidate(updatePasswordAuthMutation.mutateAsync(enabled));
     },
 
     // Auth providers

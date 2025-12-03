@@ -11,6 +11,18 @@ import {
 export async function getAvailableProviders(): Promise<ProviderInfo[]> {
   const providers: ProviderInfo[] = [];
 
+  // Check password auth
+  const passwordEnabled = await getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED);
+
+  if (passwordEnabled) {
+    providers.push({
+      id: "credential",
+      name: "Email",
+      icon: "mdi:email-outline",
+      type: "credential",
+    });
+  }
+
   // Check GitHub provider
   const github = await getConfig<AuthProviderGitHub>(ServerConfigKeys.AUTH_PROVIDER_GITHUB, true);
 
@@ -19,6 +31,7 @@ export async function getAvailableProviders(): Promise<ProviderInfo[]> {
       id: "github",
       name: "GitHub",
       icon: "mdi:github",
+      type: "oauth",
     });
   }
 
@@ -30,6 +43,7 @@ export async function getAvailableProviders(): Promise<ProviderInfo[]> {
       id: "google",
       name: "Google",
       icon: "flat-color-icons:google",
+      type: "oauth",
     });
   }
 
@@ -41,22 +55,31 @@ export async function getAvailableProviders(): Promise<ProviderInfo[]> {
       id: "oidc",
       name: oidc.name || "SSO",
       icon: "mdi:shield-account-outline",
+      type: "oauth",
     });
   }
 
   return providers;
 }
 
+export async function isPasswordAuthEnabled(): Promise<boolean> {
+  const passwordEnabled = await getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED);
+
+  return passwordEnabled ?? false;
+}
+
 export async function getConfiguredProviders(): Promise<Record<string, boolean>> {
-  const [github, google, oidc] = await Promise.all([
+  const [github, google, oidc, passwordEnabled] = await Promise.all([
     getConfig<AuthProviderGitHub>(ServerConfigKeys.AUTH_PROVIDER_GITHUB, true),
     getConfig<AuthProviderGoogle>(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, true),
     getConfig<AuthProviderOIDC>(ServerConfigKeys.AUTH_PROVIDER_OIDC, true),
+    getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED),
   ]);
 
   return {
     github: !!github?.clientId,
     google: !!google?.clientId,
     oidc: !!(oidc?.clientId && oidc?.issuer),
+    password: !!passwordEnabled,
   };
 }

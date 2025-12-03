@@ -6,10 +6,7 @@ const STATIC_ASSETS = [
   '/android-chrome-192x192.png',
   '/android-chrome-512x512.png',
   '/apple-touch-icon.png',
-  '/homepage.png',
-  '/homepage_dark.png',
-  '/homepage_mobile.png',
-  '/homepage_mobile_dark.png'
+  '/mockup-norish.png'
 ];
 
 // precache static assets
