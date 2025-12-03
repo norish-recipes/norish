@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// === Mocks ===
-
 const mockGetConfig = vi.fn();
 const mockSetConfig = vi.fn();
 const mockConfigExists = vi.fn();
