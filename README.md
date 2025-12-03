@@ -56,7 +56,8 @@ On my _todolist_ are still in order of current priority:
 - **CalDav sync** Sync your recipes with any caldav provider(only tested with radicale)
 - **Mobile-first design** for use in the kitchen
 - **Light & dark mode** support
-- **SSO (OIDC/OAuth2)** Norish only supports login via OIDC/OAuth2. There are no plans to start supporting password login.
+- **SSO (OIDC/OAuth2)** Norish supports login via OIDC/OAuth2. There are no plans to start supporting password login.
+  - If no auth provider is configured email and password authentication will be enabled by default.
 - **Admin Settings UI** for server owners to manage configuration without editing files
 - **Permission policies** for controlling who can view/edit/delete recipes (everyone, household, or owner only)
   - Default view: Everyone
@@ -91,20 +92,31 @@ services:
       MASTER_KEY: <32-byte-base64-key> # Generate with: openssl rand -base64 32
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000
 
-      # First-time auth provider (configure ONE to create your admin account)
-      # After first login, use Settings → Admin to manage all configuration
-      OIDC_NAME: MyAuth
-      OIDC_ISSUER: https://auth.example.com
-      OIDC_CLIENT_ID: <client-id>
-      OIDC_CLIENT_SECRET: <client-secret>
+      # ─────────────────────────────────────────────────────────────────────────
+      # FIRST USER SETUP
+      # ─────────────────────────────────────────────────────────────────────────
+      # On first startup, configure ONE auth provider below to create your admin account.
+      # After first login, use Settings → Admin to configure additional providers,
+      # AI settings, video parsing, and all other options.
+
+      # Option 1= Password auth - basic auth with email/password
+      # If not set defaults to disabled if OIDC or OAuth is configured.
+      # Defaults to true if no other auth providers are configured.
+      #PASSWORD_AUTH_ENABLED=false
+
+      # Option 2: OIDC (Authentik, Keycloak, PocketID, etc.)
+      # OIDC_NAME: NoraId
+      # OIDC_ISSUER: https://nora.example.com
+      # OIDC_CLIENT_ID: <client-id>
+      # OIDC_CLIENT_SECRET: <client-secret>
       # OIDC_WELLKNOWN: https://auth.example.com/.well-known/openid-configuration
       # Wellknown is optional: By default the wellknown URL is derived from the issuer by appending /.well-known/openid-configuration
 
-      # Alternative: GitHub OAuth (uncomment and remove OIDC above)
+      # Option 3: GitHub OAuth (uncomment and remove OIDC above)
       # GITHUB_CLIENT_ID: <github-client-id>
       # GITHUB_CLIENT_SECRET: <github-client-secret>
 
-      # Alternative: Google OAuth (uncomment and remove OIDC above)
+      # Option 4: Google OAuth (uncomment and remove OIDC above)
       # GOOGLE_CLIENT_ID: <google-client-id>
       # GOOGLE_CLIENT_SECRET: <google-client-secret>
     depends_on:
@@ -218,11 +230,12 @@ Only a few environment variables are required. All other settings are managed vi
 
 Configure **one** auth provider via environment variables to create your first admin account:
 
-| Provider   | Variables                                                                                       | Callback                                                 |
-| ---------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| **OIDC**   | `OIDC_NAME`, `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_WELLKNOWN` (optional) | https://example.norish.com/api/auth/oauth2/callback/oidc |
-| **GitHub** | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`                                                      | https://example.norish.com/api/auth/callback/github      |
-| **Google** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                                      | https://example.norish.com/api/auth/callback/google      |
+| Provider     | Variables                                                                                       | Callback                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Password** | `PASSWORD_AUTH_ENABLED`                                                                         |                                                          |
+| **OIDC**     | `OIDC_NAME`, `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_WELLKNOWN` (optional) | https://example.norish.com/api/auth/oauth2/callback/oidc |
+| **GitHub**   | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`                                                      | https://example.norish.com/api/auth/callback/github      |
+| **Google**   | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                                      | https://example.norish.com/api/auth/callback/google      |
 
 After first login, manage all auth providers via **Settings => Admin**.
 
