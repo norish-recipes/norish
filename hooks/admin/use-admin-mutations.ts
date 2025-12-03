@@ -3,9 +3,9 @@
 import type {
   AIConfig,
   VideoConfig,
-  AuthProviderOIDC,
-  AuthProviderGitHub,
-  AuthProviderGoogle,
+  AuthProviderOIDCInput,
+  AuthProviderGitHubInput,
+  AuthProviderGoogleInput,
   RecipePermissionPolicy,
   ServerConfigKey,
 } from "@/server/db/zodSchemas/server-config";
@@ -20,15 +20,15 @@ export type AdminMutationsResult = {
   // Registration
   updateRegistration: (enabled: boolean) => Promise<{ success: boolean }>;
 
-  // Auth providers
+  // Auth providers (input types - isOverridden is set server-side)
   updateAuthProviderOIDC: (
-    config: AuthProviderOIDC
+    config: AuthProviderOIDCInput
   ) => Promise<{ success: boolean; error?: string }>;
   updateAuthProviderGitHub: (
-    config: AuthProviderGitHub
+    config: AuthProviderGitHubInput
   ) => Promise<{ success: boolean; error?: string }>;
   updateAuthProviderGoogle: (
-    config: AuthProviderGoogle
+    config: AuthProviderGoogleInput
   ) => Promise<{ success: boolean; error?: string }>;
   deleteAuthProvider: (
     type: "oidc" | "github" | "google"

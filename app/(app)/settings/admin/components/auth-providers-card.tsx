@@ -32,7 +32,23 @@ import { useAdminSettingsContext } from "../context";
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
 import SecretInput from "@/components/shared/secret-input";
 
+function EnvManagedBadge({ isOverridden }: { isOverridden: boolean | undefined }) {
+  if (isOverridden === undefined) return null;
+
+  return isOverridden ? (
+    <Chip color="success" size="sm" variant="flat">
+      Managed by DB
+    </Chip>
+  ) : (
+    <Chip color="warning" size="sm" variant="flat">
+      Managed by env
+    </Chip>
+  );
+}
+
 export default function AuthProvidersCard() {
+  const { authProviderOIDC, authProviderGitHub, authProviderGoogle } = useAdminSettingsContext();
+
   return (
     <Card>
       <CardHeader>
@@ -50,13 +66,46 @@ export default function AuthProvidersCard() {
           take effect.
         </p>
         <Accordion selectionMode="multiple" variant="bordered">
-          <AccordionItem key="oidc" subtitle="Generic OpenID Connect" title="OIDC Provider">
+          <AccordionItem
+            key="oidc"
+            subtitle="Generic OpenID Connect"
+            title={
+              <div className="flex items-center gap-2">
+                <span>OIDC Provider</span>
+                {authProviderOIDC && (
+                  <EnvManagedBadge isOverridden={authProviderOIDC.isOverridden} />
+                )}
+              </div>
+            }
+          >
             <OIDCProviderForm />
           </AccordionItem>
-          <AccordionItem key="github" subtitle="GitHub OAuth" title="GitHub">
+          <AccordionItem
+            key="github"
+            subtitle="GitHub OAuth"
+            title={
+              <div className="flex items-center gap-2">
+                <span>GitHub</span>
+                {authProviderGitHub && (
+                  <EnvManagedBadge isOverridden={authProviderGitHub.isOverridden} />
+                )}
+              </div>
+            }
+          >
             <GitHubProviderForm />
           </AccordionItem>
-          <AccordionItem key="google" subtitle="Google OAuth" title="Google">
+          <AccordionItem
+            key="google"
+            subtitle="Google OAuth"
+            title={
+              <div className="flex items-center gap-2">
+                <span>Google</span>
+                {authProviderGoogle && (
+                  <EnvManagedBadge isOverridden={authProviderGoogle.isOverridden} />
+                )}
+              </div>
+            }
+          >
             <GoogleProviderForm />
           </AccordionItem>
         </Accordion>

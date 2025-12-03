@@ -168,63 +168,179 @@ async function seedMissingConfigs(): Promise<number> {
 }
 
 /**
- * Import auth providers configured via environment variables if none exist in DB
- * Only imports providers that are configured in env AND missing from database
+ * Sync auth providers from environment variables to database.
+ *
+ * Logic per provider:
+ * - If no DB row exists and env is complete => insert with isOverridden=false
+ * - If DB row exists and isOverridden=false => compare env vs stored; if different, update from env
+ * - If DB row exists and isOverridden=true => never touch, this is manually overridden
  */
 async function importEnvAuthProvidersIfMissing(): Promise<void> {
-  // Check if any auth providers exist in DB
-  const oidcExists = await configExists(ServerConfigKeys.AUTH_PROVIDER_OIDC);
-  const githubExists = await configExists(ServerConfigKeys.AUTH_PROVIDER_GITHUB);
-  const googleExists = await configExists(ServerConfigKeys.AUTH_PROVIDER_GOOGLE);
+  await syncOIDCProvider();
+  await syncGitHubProvider();
+  await syncGoogleProvider();
+}
 
-  // Import OIDC provider if configured in env and missing from DB
-  if (
-    !oidcExists &&
-    SERVER_CONFIG.OIDC_ISSUER &&
-    SERVER_CONFIG.OIDC_CLIENT_ID &&
-    SERVER_CONFIG.OIDC_CLIENT_SECRET
-  ) {
-    await setConfig(
-      ServerConfigKeys.AUTH_PROVIDER_OIDC,
-      {
-        name: SERVER_CONFIG.OIDC_NAME,
-        issuer: SERVER_CONFIG.OIDC_ISSUER,
-        clientId: SERVER_CONFIG.OIDC_CLIENT_ID,
-        clientSecret: SERVER_CONFIG.OIDC_CLIENT_SECRET,
-        wellknown: SERVER_CONFIG.OIDC_WELLKNOWN || undefined,
-      },
-      null,
-      true
-    );
-    serverLogger.info({ name: SERVER_CONFIG.OIDC_NAME }, "Imported OIDC provider from env");
+/**
+ * Check if two config objects differ
+ * Treats undefined and missing keys as equivalent
+ */
+function configsDiffer<T extends Record<string, unknown>>(
+  stored: T | null | undefined,
+  env: T
+): boolean {
+  if (!stored) return true;
+
+  // Compare each key in the env config
+  for (const key of Object.keys(env) as (keyof T)[]) {
+    const envVal = env[key];
+    const storedVal = stored[key];
+
+    // Treat undefined and missing as equivalent
+    if (envVal === undefined && storedVal === undefined) continue;
+    if (envVal !== storedVal) return true;
   }
 
-  // Import GitHub provider if configured in env and missing from DB
-  if (!githubExists && SERVER_CONFIG.GITHUB_CLIENT_ID && SERVER_CONFIG.GITHUB_CLIENT_SECRET) {
-    await setConfig(
-      ServerConfigKeys.AUTH_PROVIDER_GITHUB,
-      {
-        clientId: SERVER_CONFIG.GITHUB_CLIENT_ID,
-        clientSecret: SERVER_CONFIG.GITHUB_CLIENT_SECRET,
-      },
-      null,
-      true
+  return false;
+}
+
+/**
+ * Sync OIDC provider from env to DB
+ */
+async function syncOIDCProvider(): Promise<void> {
+  const hasEnvConfig =
+    SERVER_CONFIG.OIDC_ISSUER && SERVER_CONFIG.OIDC_CLIENT_ID && SERVER_CONFIG.OIDC_CLIENT_SECRET;
+
+  if (!hasEnvConfig) return; // No env config, nothing to sync
+
+  const envConfig: AuthProviderOIDC = {
+    name: SERVER_CONFIG.OIDC_NAME,
+    issuer: SERVER_CONFIG.OIDC_ISSUER!,
+    clientId: SERVER_CONFIG.OIDC_CLIENT_ID!,
+    clientSecret: SERVER_CONFIG.OIDC_CLIENT_SECRET!,
+    wellknown: SERVER_CONFIG.OIDC_WELLKNOWN || undefined,
+    isOverridden: false,
+  };
+
+  serverLogger.debug(
+    {
+      name: envConfig.name,
+      issuer: envConfig.issuer,
+      wellknown: envConfig.wellknown ?? "(auto-derived from issuer)",
+    },
+    "OIDC env config loaded"
+  );
+
+  const existing = await getConfig<AuthProviderOIDC>(ServerConfigKeys.AUTH_PROVIDER_OIDC, true);
+
+  if (!existing) {
+    await setConfig(ServerConfigKeys.AUTH_PROVIDER_OIDC, envConfig, null, true);
+    serverLogger.debug({ name: envConfig.name }, "Imported OIDC provider from env");
+
+    return;
+  }
+
+  serverLogger.debug(
+    {
+      name: existing.name,
+      issuer: existing.issuer,
+      wellknown: existing.wellknown ?? "(auto-derived from issuer)",
+      isOverridden: existing.isOverridden,
+    },
+    "OIDC DB config loaded"
+  );
+
+  if (existing.isOverridden) {
+    serverLogger.debug("OIDC provider is overridden by admin, skipping env sync");
+
+    return;
+  }
+
+  const storedComparable = { ...existing, isOverridden: undefined };
+  const envComparable = { ...envConfig, isOverridden: undefined };
+
+  if (configsDiffer(storedComparable, envComparable)) {
+    await setConfig(ServerConfigKeys.AUTH_PROVIDER_OIDC, envConfig, null, true);
+    serverLogger.info(
+      { name: envConfig.name, issuer: envConfig.issuer, wellknown: envConfig.wellknown },
+      "Updated OIDC provider from env (config changed)"
     );
+  }
+}
+
+/**
+ * Sync GitHub provider from env to DB
+ */
+async function syncGitHubProvider(): Promise<void> {
+  const hasEnvConfig = SERVER_CONFIG.GITHUB_CLIENT_ID && SERVER_CONFIG.GITHUB_CLIENT_SECRET;
+
+  if (!hasEnvConfig) return;
+
+  const envConfig: AuthProviderGitHub = {
+    clientId: SERVER_CONFIG.GITHUB_CLIENT_ID!,
+    clientSecret: SERVER_CONFIG.GITHUB_CLIENT_SECRET!,
+    isOverridden: false,
+  };
+
+  const existing = await getConfig<AuthProviderGitHub>(ServerConfigKeys.AUTH_PROVIDER_GITHUB, true);
+
+  if (!existing) {
+    await setConfig(ServerConfigKeys.AUTH_PROVIDER_GITHUB, envConfig, null, true);
     serverLogger.info("Imported GitHub provider from env");
+
+    return;
   }
 
-  // Import Google provider if configured in env and missing from DB
-  if (!googleExists && SERVER_CONFIG.GOOGLE_CLIENT_ID && SERVER_CONFIG.GOOGLE_CLIENT_SECRET) {
-    await setConfig(
-      ServerConfigKeys.AUTH_PROVIDER_GOOGLE,
-      {
-        clientId: SERVER_CONFIG.GOOGLE_CLIENT_ID,
-        clientSecret: SERVER_CONFIG.GOOGLE_CLIENT_SECRET,
-      },
-      null,
-      true
-    );
+  if (existing.isOverridden) {
+    serverLogger.debug("GitHub provider is overridden by admin, skipping env sync");
+
+    return;
+  }
+
+  const storedComparable = { ...existing, isOverridden: undefined };
+  const envComparable = { ...envConfig, isOverridden: undefined };
+
+  if (configsDiffer(storedComparable, envComparable)) {
+    await setConfig(ServerConfigKeys.AUTH_PROVIDER_GITHUB, envConfig, null, true);
+    serverLogger.info("Updated GitHub provider from env (config changed)");
+  }
+}
+
+/**
+ * Sync Google provider from env to DB
+ */
+async function syncGoogleProvider(): Promise<void> {
+  const hasEnvConfig = SERVER_CONFIG.GOOGLE_CLIENT_ID && SERVER_CONFIG.GOOGLE_CLIENT_SECRET;
+
+  if (!hasEnvConfig) return;
+
+  const envConfig: AuthProviderGoogle = {
+    clientId: SERVER_CONFIG.GOOGLE_CLIENT_ID!,
+    clientSecret: SERVER_CONFIG.GOOGLE_CLIENT_SECRET!,
+    isOverridden: false,
+  };
+
+  const existing = await getConfig<AuthProviderGoogle>(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, true);
+
+  if (!existing) {
+    await setConfig(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, envConfig, null, true);
     serverLogger.info("Imported Google provider from env");
+
+    return;
+  }
+
+  if (existing.isOverridden) {
+    serverLogger.debug("Google provider is overridden by admin, skipping env sync");
+
+    return;
+  }
+
+  const storedComparable = { ...existing, isOverridden: undefined };
+  const envComparable = { ...envConfig, isOverridden: undefined };
+
+  if (configsDiffer(storedComparable, envComparable)) {
+    await setConfig(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, envConfig, null, true);
+    serverLogger.info("Updated Google provider from env (config changed)");
   }
 }
 

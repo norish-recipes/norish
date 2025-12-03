@@ -24,29 +24,42 @@ export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfi
 // Auth Provider Schemas
 // ============================================================================
 
+// Base schema with isOverridden for storage
 export const AuthProviderOIDCSchema = z.object({
   name: z.string().min(1, "Provider name is required"),
-  issuer: z.string().url("Issuer must be a valid URL"),
+  issuer: z.url("Issuer must be a valid URL"),
   clientId: z.string().min(1, "Client ID is required"),
   clientSecret: z.string().optional(), // Optional on update, server preserves existing
-  wellknown: z.string().url("Well-known URL must be valid").optional(),
+  wellknown: z.url("Well-known URL must be valid").optional(),
+  isOverridden: z.boolean().default(false), // True if admin edited, false means env-managed
 });
 
 export type AuthProviderOIDC = z.infer<typeof AuthProviderOIDCSchema>;
 
+export const AuthProviderOIDCInputSchema = AuthProviderOIDCSchema.omit({ isOverridden: true });
+export type AuthProviderOIDCInput = z.infer<typeof AuthProviderOIDCInputSchema>;
+
 export const AuthProviderGitHubSchema = z.object({
   clientId: z.string().min(1, "Client ID is required"),
   clientSecret: z.string().optional(), // Optional on update, server preserves existing
+  isOverridden: z.boolean().default(false), // True if admin edited, false means env-managed
 });
 
 export type AuthProviderGitHub = z.infer<typeof AuthProviderGitHubSchema>;
 
+export const AuthProviderGitHubInputSchema = AuthProviderGitHubSchema.omit({ isOverridden: true });
+export type AuthProviderGitHubInput = z.infer<typeof AuthProviderGitHubInputSchema>;
+
 export const AuthProviderGoogleSchema = z.object({
   clientId: z.string().min(1, "Client ID is required"),
   clientSecret: z.string().optional(), // Optional on update, server preserves existing
+  isOverridden: z.boolean().default(false), // True if admin edited, false means env-managed
 });
 
 export type AuthProviderGoogle = z.infer<typeof AuthProviderGoogleSchema>;
+
+export const AuthProviderGoogleInputSchema = AuthProviderGoogleSchema.omit({ isOverridden: true });
+export type AuthProviderGoogleInput = z.infer<typeof AuthProviderGoogleInputSchema>;
 
 // ============================================================================
 // Content Indicators Schema
@@ -112,7 +125,7 @@ export type AIProvider = z.infer<typeof AIProviderSchema>;
 export const AIConfigSchema = z.object({
   enabled: z.boolean(),
   provider: AIProviderSchema,
-  endpoint: z.string().url("Endpoint must be a valid URL").optional(),
+  endpoint: z.url("Endpoint must be a valid URL").optional(),
   model: z.string().min(1, "Model is required"),
   apiKey: z.string().optional(),
   temperature: z.number().min(0).max(2),
@@ -135,7 +148,7 @@ export const VideoConfigSchema = z.object({
   ytDlpVersion: z.string().min(1),
   // Transcription settings (required for video processing)
   transcriptionProvider: TranscriptionProviderSchema,
-  transcriptionEndpoint: z.string().url("Endpoint must be a valid URL").optional(),
+  transcriptionEndpoint: z.url("Endpoint must be a valid URL").optional(),
   transcriptionApiKey: z.string().optional(),
   transcriptionModel: z.string().min(1, "Model is required"),
 });
@@ -175,12 +188,12 @@ export const DEFAULT_RECIPE_PERMISSION_POLICY: RecipePermissionPolicy = {
 // ============================================================================
 
 export const ServerConfigEntrySchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   key: z.string(),
   value: z.any().nullable(),
   valueEnc: z.string().nullable(),
   isSensitive: z.boolean(),
-  updatedBy: z.string().uuid().nullable(),
+  updatedBy: z.uuid().nullable(),
   updatedAt: z.date(),
   createdAt: z.date(),
 });
@@ -194,7 +207,7 @@ export type ServerConfigEntry = z.infer<typeof ServerConfigEntrySchema>;
 export const ServerConfigMetadataSchema = z.object({
   key: z.string(),
   updatedAt: z.date(),
-  updatedBy: z.string().uuid().nullable(),
+  updatedBy: z.uuid().nullable(),
   hasSensitiveData: z.boolean(),
 });
 

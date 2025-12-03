@@ -11,8 +11,11 @@ import {
   type AIConfig,
   type VideoConfig,
   type AuthProviderOIDC,
+  type AuthProviderOIDCInput,
   type AuthProviderGitHub,
+  type AuthProviderGitHubInput,
   type AuthProviderGoogle,
+  type AuthProviderGoogleInput,
   type RecipePermissionPolicy,
   type ServerConfigKey,
 } from "@/server/db/zodSchemas/server-config";
@@ -41,13 +44,13 @@ interface AdminSettingsContextValue {
   // Actions
   updateRegistration: (enabled: boolean) => Promise<void>;
   updateAuthProviderOIDC: (
-    config: AuthProviderOIDC
+    config: AuthProviderOIDCInput
   ) => Promise<{ success: boolean; error?: string }>;
   updateAuthProviderGitHub: (
-    config: AuthProviderGitHub
+    config: AuthProviderGitHubInput
   ) => Promise<{ success: boolean; error?: string }>;
   updateAuthProviderGoogle: (
-    config: AuthProviderGoogle
+    config: AuthProviderGoogleInput
   ) => Promise<{ success: boolean; error?: string }>;
   deleteAuthProvider: (
     type: "oidc" | "github" | "google"
@@ -125,21 +128,21 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   );
 
   const updateAuthOIDC = useCallback(
-    async (config: AuthProviderOIDC) => {
+    async (config: AuthProviderOIDCInput) => {
       return mutations.updateAuthProviderOIDC(config);
     },
     [mutations]
   );
 
   const updateAuthGitHub = useCallback(
-    async (config: AuthProviderGitHub) => {
+    async (config: AuthProviderGitHubInput) => {
       return mutations.updateAuthProviderGitHub(config);
     },
     [mutations]
   );
 
   const updateAuthGoogle = useCallback(
-    async (config: AuthProviderGoogle) => {
+    async (config: AuthProviderGoogleInput) => {
       return mutations.updateAuthProviderGoogle(config);
     },
     [mutations]

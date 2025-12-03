@@ -89,6 +89,7 @@ services:
       AUTH_URL: http://norish.example.com
       DATABASE_URL: postgres://postgres:norish@db:5432/norish
       MASTER_KEY: <32-byte-base64-key> # Generate with: openssl rand -base64 32
+      CHROME_WS_ENDPOINT: ws://chrome-headless:3000
 
       # First-time auth provider (configure ONE to create your admin account)
       # After first login, use Settings → Admin to manage all configuration
@@ -119,6 +120,21 @@ services:
       POSTGRES_DB: norish
     volumes:
       - db_data:/var/lib/postgresql/data
+
+  # Chrome headless is fully optional but advised as this does improve the scraping
+  chrome-headless:
+    image: ghcr.io/browserless/chrome:latest
+    container_name: chrome-headless
+    restart: unless-stopped
+    networks:
+      - default
+    environment:
+      DEBUG: "browserless:*"
+      MAX_CONCURRENT_SESSIONS: 5
+      CONNECTION_TIMEOUT: 300000
+      KEEP_ALIVE: "true"
+    ports:
+      - "3003:3000"
 
 volumes:
   db_data:

@@ -6,13 +6,9 @@ import z from "zod";
 import { db } from "@/server/db/drizzle";
 import { recipeTags, tags } from "@/server/db/schema";
 import { TagSelectBaseSchema } from "@/server/db/zodSchemas";
+import { stripHtmlTags } from "@/lib/helpers";
 
 const TagArraySchema = z.array(TagSelectBaseSchema);
-
-function cleanName(name: string): string {
-  // Preserve case; just normalize whitespace
-  return name.trim().replace(/\s+/g, " ");
-}
 
 export async function listAllTagNames(): Promise<string[]> {
   const rows = await db
@@ -24,7 +20,7 @@ export async function listAllTagNames(): Promise<string[]> {
 }
 
 function ensureNonEmptyName(name: string): string {
-  const cleaned = cleanName(name);
+  const cleaned = stripHtmlTags(name);
 
   if (cleaned.length === 0) throw new Error("Tag name cannot be empty");
 
@@ -75,7 +71,7 @@ export async function getOrCreateTagByName(name: string): Promise<TagDto> {
 }
 
 export async function getOrCreateManyTags(names: string[]): Promise<TagDto[]> {
-  const cleaned = names.map(cleanName).filter((n) => n.length > 0);
+  const cleaned = names.map(stripHtmlTags).filter((n) => n.length > 0);
 
   if (cleaned.length === 0) return [];
 
@@ -100,7 +96,7 @@ export async function getOrCreateManyTags(names: string[]): Promise<TagDto[]> {
 }
 
 export async function getOrCreateManyTagsTx(tx: any, names: string[]): Promise<TagDto[]> {
-  const cleaned = names.map(cleanName).filter((n) => n.length > 0);
+  const cleaned = names.map(stripHtmlTags).filter((n) => n.length > 0);
 
   if (cleaned.length === 0) return [];
 

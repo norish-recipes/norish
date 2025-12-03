@@ -6,12 +6,9 @@ import { z } from "zod";
 import { steps } from "@/server/db/schema";
 import { StepSelectBaseSchema } from "@/server/db/zodSchemas/steps";
 import { dbLogger } from "@/server/logger";
+import { stripHtmlTags } from "@/lib/helpers";
 
 const StepArraySchema = z.array(StepSelectBaseSchema);
-
-function cleanStep(s: string): string {
-  return s.trim().replace(/\s+/g, " ");
-}
 
 export async function createManyRecipeStepsTx(
   tx: any,
@@ -20,7 +17,7 @@ export async function createManyRecipeStepsTx(
   if (!rawSteps.length) return [];
 
   const cleaned = rawSteps
-    .map((s) => ({ ...s, step: cleanStep(s.step) }))
+    .map((s) => ({ ...s, step: stripHtmlTags(s.step) }))
     .filter((s) => s.step.length > 0 && s.recipeId);
 
   if (cleaned.length === 0) return [];

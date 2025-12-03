@@ -14,6 +14,7 @@ services:
       AUTH_URL: http://norish.example.com # The URL where Norish is reachable
       DATABASE_URL: postgres://postgres:norish@db:5432/norish
       MASTER_KEY: <32-byte-base64-key>    # Generate with: openssl rand -base64 32
+      CHROME_WS_ENDPOINT: ws://chrome-headless:3000
       
       # Optional
       RECIPES_DISK_DIR: /app/uploads      # Defaults to /app/uploads
@@ -58,6 +59,20 @@ services:
       - db_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+
+  chrome-headless:
+    image: ghcr.io/browserless/chrome:latest
+    container_name: chrome-headless
+    restart: unless-stopped
+    networks:
+      - default
+    environment:
+      DEBUG: "browserless:*"
+      MAX_CONCURRENT_SESSIONS: 5
+      CONNECTION_TIMEOUT: 300000
+      KEEP_ALIVE: "true"
+    ports:
+      - "3003:3000"
 
 # Use this or map the volume to a host path if you want to persist data
 volumes:

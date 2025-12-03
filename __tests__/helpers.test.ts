@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-import { parseIsoDuration, formatMinutesHM, parseIngredientWithDefaults } from "@/lib/helpers";
+import {
+  parseIsoDuration,
+  formatMinutesHM,
+  parseIngredientWithDefaults,
+  stripHtmlTags,
+} from "@/lib/helpers";
 
 describe("parseIsoDuration", () => {
   it("parses hours and minutes", () => {
@@ -99,5 +104,65 @@ describe("parseIngredientWithDefaults", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].quantity).toBe(500);
+  });
+});
+
+describe("stripHtmlTags", () => {
+  it("removes simple HTML tags", () => {
+    expect(stripHtmlTags("<p>Hello</p>")).toBe("Hello");
+  });
+
+  it("removes multiple tags", () => {
+    expect(stripHtmlTags("<b>Bold</b> and <i>italic</i>")).toBe("Bold and italic");
+  });
+
+  it("removes nested tags", () => {
+    expect(stripHtmlTags("<div><p><span>Nested</span></p></div>")).toBe("Nested");
+  });
+
+  it("handles self-closing tags", () => {
+    expect(stripHtmlTags("Line 1<br/>Line 2")).toBe("Line 1 Line 2");
+  });
+
+  it("decodes &nbsp;", () => {
+    expect(stripHtmlTags("Hello&nbsp;World")).toBe("Hello World");
+  });
+
+  it("decodes &amp;", () => {
+    expect(stripHtmlTags("Salt &amp; Pepper")).toBe("Salt & Pepper");
+  });
+
+  it("decodes &lt; and &gt;", () => {
+    expect(stripHtmlTags("&lt;tag&gt;")).toBe("<tag>");
+  });
+
+  it("decodes &quot; and apostrophes", () => {
+    expect(stripHtmlTags("&quot;quoted&quot; and &#39;apostrophe&#39;")).toBe(
+      "\"quoted\" and 'apostrophe'"
+    );
+  });
+
+  it("handles mixed content", () => {
+    expect(stripHtmlTags("<b>Salt</b> &amp; <i>Pepper</i>")).toBe("Salt & Pepper");
+  });
+
+  it("returns plain text unchanged", () => {
+    expect(stripHtmlTags("Just plain text")).toBe("Just plain text");
+  });
+
+  it("handles empty string", () => {
+    expect(stripHtmlTags("")).toBe("");
+  });
+
+  it("trims leading and trailing whitespace", () => {
+    expect(stripHtmlTags("  hello world  ")).toBe("hello world");
+  });
+
+  it("collapses multiple spaces into one", () => {
+    expect(stripHtmlTags("hello    world")).toBe("hello world");
+  });
+
+  it("normalizes newlines and tabs to single space", () => {
+    expect(stripHtmlTags("hello\n\nworld\tthere")).toBe("hello world there");
   });
 });

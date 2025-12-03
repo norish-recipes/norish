@@ -33,7 +33,7 @@ export default function RecipePageDesktop() {
       <Card className="bg-content1 overflow-hidden rounded-2xl shadow-md">
         <div className="grid grid-cols-2">
           {/* Image Section */}
-          <div className="bg-default-200 relative aspect-[3/2] w-full overflow-hidden">
+          <div className="bg-default-200 relative overflow-hidden">
             {recipe.image ? (
               <>
                 <Image

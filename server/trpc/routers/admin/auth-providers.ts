@@ -14,30 +14,45 @@ import {
   ServerConfigKeys,
   type ServerConfigKey,
   AuthProviderOIDCSchema,
+  AuthProviderOIDCInputSchema,
   AuthProviderGitHubSchema,
+  AuthProviderGitHubInputSchema,
   AuthProviderGoogleSchema,
+  AuthProviderGoogleInputSchema,
 } from "@/server/db/zodSchemas/server-config";
 
 /**
  * Update OIDC auth provider config.
  */
-const updateOIDC = adminProcedure.input(AuthProviderOIDCSchema).mutation(async ({ input, ctx }) => {
-  log.info({ userId: ctx.user.id }, "Updating OIDC auth provider");
+const updateOIDC = adminProcedure
+  .input(AuthProviderOIDCInputSchema)
+  .mutation(async ({ input, ctx }) => {
+    log.info({ userId: ctx.user.id }, "Updating OIDC auth provider");
 
-  await setConfig(ServerConfigKeys.AUTH_PROVIDER_OIDC, input, ctx.user.id, true);
+    await setConfig(
+      ServerConfigKeys.AUTH_PROVIDER_OIDC,
+      { ...input, isOverridden: true },
+      ctx.user.id,
+      true
+    );
 
-  return { success: true };
-});
+    return { success: true };
+  });
 
 /**
  * Update GitHub auth provider config.
  */
 const updateGitHub = adminProcedure
-  .input(AuthProviderGitHubSchema)
+  .input(AuthProviderGitHubInputSchema)
   .mutation(async ({ input, ctx }) => {
     log.info({ userId: ctx.user.id }, "Updating GitHub auth provider");
 
-    await setConfig(ServerConfigKeys.AUTH_PROVIDER_GITHUB, input, ctx.user.id, true);
+    await setConfig(
+      ServerConfigKeys.AUTH_PROVIDER_GITHUB,
+      { ...input, isOverridden: true },
+      ctx.user.id,
+      true
+    );
 
     return { success: true };
   });
@@ -46,11 +61,16 @@ const updateGitHub = adminProcedure
  * Update Google auth provider config.
  */
 const updateGoogle = adminProcedure
-  .input(AuthProviderGoogleSchema)
+  .input(AuthProviderGoogleInputSchema)
   .mutation(async ({ input, ctx }) => {
     log.info({ userId: ctx.user.id }, "Updating Google auth provider");
 
-    await setConfig(ServerConfigKeys.AUTH_PROVIDER_GOOGLE, input, ctx.user.id, true);
+    await setConfig(
+      ServerConfigKeys.AUTH_PROVIDER_GOOGLE,
+      { ...input, isOverridden: true },
+      ctx.user.id,
+      true
+    );
 
     return { success: true };
   });

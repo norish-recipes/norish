@@ -5,6 +5,20 @@ import { parseIngredient } from "parse-ingredient";
 
 import { httpUrlSchema } from "./schema";
 
+export function stripHtmlTags(input: string): string {
+  return input
+    .replace(/<[^>]*>/g, "") // Remove HTML tags
+    .replace(/&nbsp;/gi, " ") // Decode non-breaking space
+    .replace(/&amp;/gi, "&") // Decode ampersand
+    .replace(/&lt;/gi, "<") // Decode less than
+    .replace(/&gt;/gi, ">") // Decode greater than
+    .replace(/&quot;/gi, '"') // Decode quote
+    .replace(/&#0?39;/gi, "'") // Decode apostrophe
+    .replace(/&apos;/gi, "'") // Decode apostrophe
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 export const parseJsonWithRepair = (input: string): any | null => {
   try {
     const parsed = JSON.parse(input.trim());

@@ -17,17 +17,14 @@ import {
 } from "@/server/db/zodSchemas/recipe-ingredients";
 import { MeasurementSystem } from "@/types";
 import { dbLogger } from "@/server/logger";
+import { stripHtmlTags } from "@/lib/helpers";
 
 const IngredientArraySchema = z.array(IngredientSelectBaseSchema);
-
-function cleanName(name: string): string {
-  return name.trim().replace(/\s+/g, " ");
-}
 
 function ensureNonEmptyName(name?: string): string {
   if (name === undefined || name === null) throw new Error("Ingredient name cannot be empty");
 
-  const cleaned = cleanName(name);
+  const cleaned = stripHtmlTags(name);
 
   if (cleaned.length === 0) throw new Error("Ingredient name cannot be empty");
 
@@ -77,7 +74,7 @@ export async function getOrCreateIngredientByName(name: string): Promise<Ingredi
 }
 
 export async function findManyIngredientsByNames(names: string[]): Promise<IngredientDto[]> {
-  const cleaned = names.map(cleanName).filter((n) => n.length > 0);
+  const cleaned = names.map(stripHtmlTags).filter((n) => n.length > 0);
 
   if (cleaned.length === 0) return [];
 
@@ -97,7 +94,7 @@ export async function findManyIngredientsByNames(names: string[]): Promise<Ingre
 
 export async function getOrCreateManyIngredients(names: string[]): Promise<IngredientDto[]> {
   // Clean and drop empties; preserve original case
-  const cleaned = names.map(cleanName).filter((n) => n.length > 0);
+  const cleaned = names.map(stripHtmlTags).filter((n) => n.length > 0);
 
   if (cleaned.length === 0) return [];
 
@@ -126,7 +123,7 @@ export async function getOrCreateManyIngredientsTx(
   tx: any,
   names: string[]
 ): Promise<IngredientDto[]> {
-  const cleaned = names.map(cleanName).filter((n) => n.length > 0);
+  const cleaned = names.map(stripHtmlTags).filter((n) => n.length > 0);
 
   if (cleaned.length === 0) return [];
 
