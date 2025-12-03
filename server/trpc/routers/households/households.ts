@@ -85,35 +85,35 @@ const create = authedProcedure
 
     log.info({ userId: ctx.user.id, name }, "Creating household");
 
-    // Check if user is already in a household
-    const existingHousehold = await getHouseholdForUser(ctx.user.id);
+    try {
+      // Check if user is already in a household
+      const existingHousehold = await getHouseholdForUser(ctx.user.id);
 
-    if (existingHousehold) {
-      throw new Error("You are already in a household. Leave it first to create a new one.");
-    }
+      if (existingHousehold) {
+        throw new Error("You are already in a household. Leave it first to create a new one.");
+      }
 
-    // Create household async and emit events
-    createHousehold({ name, adminUserId: ctx.user.id })
-      .then(async (household) => {
-        await addUserToHousehold({ householdId: household.id, userId: ctx.user.id });
+      // Create household and add user
+      const household = await createHousehold({ name, adminUserId: ctx.user.id });
+      await addUserToHousehold({ householdId: household.id, userId: ctx.user.id });
 
-        log.info({ userId: ctx.user.id, householdId: household.id }, "Household created");
+      log.info({ userId: ctx.user.id, householdId: household.id }, "Household created");
 
-        // Get full household data with users
-        const fullHousehold = await getHouseholdForUser(ctx.user.id);
-        const dto = toHouseholdDto(fullHousehold, ctx.user.id);
+      // Get full household data with users
+      const fullHousehold = await getHouseholdForUser(ctx.user.id);
+      const dto = toHouseholdDto(fullHousehold, ctx.user.id);
 
-        // Emit to the user who created the household
-        householdEmitter.emitToUser(ctx.user.id, "created", { household: dto! });
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to create household");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to create household",
-        });
+      // Emit to the user who created the household
+      householdEmitter.emitToUser(ctx.user.id, "created", { household: dto! });
+
+      return { id };
+    } catch (err) {
+      log.error({ err, userId: ctx.user.id }, "Failed to create household");
+      householdEmitter.emitToUser(ctx.user.id, "failed", {
+        reason: "Failed to create household",
       });
-
-    return { id };
+      throw err;
+    }
   });
 
 const join = authedProcedure
@@ -148,33 +148,26 @@ const join = authedProcedure
 
     const householdId = household.id;
 
-    // Add user async and emit events
-    addUserToHousehold({ householdId, userId: ctx.user.id })
-      .then(async () => {
-        log.info({ userId: ctx.user.id, householdId }, "User joined household");
+    // Add user to household
+    await addUserToHousehold({ householdId, userId: ctx.user.id });
 
-        // Get full household for the joining user
-        const fullHousehold = await getHouseholdForUser(ctx.user.id);
-        const dto = toHouseholdDto(fullHousehold, ctx.user.id);
+    log.info({ userId: ctx.user.id, householdId }, "User joined household");
 
-        // Emit to the joining user
-        householdEmitter.emitToUser(ctx.user.id, "created", { household: dto! });
+    // Get full household for the joining user
+    const fullHousehold = await getHouseholdForUser(ctx.user.id);
+    const dto = toHouseholdDto(fullHousehold, ctx.user.id);
 
-        // Emit to existing household members
-        const userInfo: HouseholdUserInfo = {
-          id: ctx.user.id,
-          name: ctx.user.name ?? null,
-          isAdmin: false,
-        };
+    // Emit to the joining user
+    householdEmitter.emitToUser(ctx.user.id, "created", { household: dto! });
 
-        householdEmitter.emitToHousehold(householdId, "userJoined", { user: userInfo });
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to join household");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to join household",
-        });
-      });
+    // Emit to existing household members
+    const userInfo: HouseholdUserInfo = {
+      id: ctx.user.id,
+      name: ctx.user.name ?? null,
+      isAdmin: false,
+    };
+
+    householdEmitter.emitToHousehold(householdId, "userJoined", { user: userInfo });
 
     return { householdId };
   });
@@ -202,22 +195,15 @@ const leave = authedProcedure
     // Store remaining member IDs from the already-fetched household data
     const remainingMemberIds = household.users.filter((u) => u.id !== ctx.user.id).map((u) => u.id);
 
-    // Remove user async and emit events - fire and forget
-    removeUserFromHousehold(householdId, ctx.user.id)
-      .then(() => {
-        log.info({ userId: ctx.user.id, householdId }, "User left household");
+    // Remove user from household
+    await removeUserFromHousehold(householdId, ctx.user.id);
 
-        // Emit to remaining members
-        for (const memberId of remainingMemberIds) {
-          householdEmitter.emitToUser(memberId, "userLeft", { userId: ctx.user.id });
-        }
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to leave household");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to leave household",
-        });
-      });
+    log.info({ userId: ctx.user.id, householdId }, "User left household");
+
+    // Emit to remaining members
+    for (const memberId of remainingMemberIds) {
+      householdEmitter.emitToUser(memberId, "userLeft", { userId: ctx.user.id });
+    }
 
     return { success: true };
   });
@@ -248,32 +234,25 @@ const kick = authedProcedure
       throw new Error("User is not a member of this household");
     }
 
-    // Kick user async and emit events
-    kickUserFromHousehold(householdId, userIdToKick, ctx.user.id)
-      .then(async () => {
-        log.info({ userId: ctx.user.id, householdId, userIdToKick }, "User kicked from household");
+    // Kick user from household
+    await kickUserFromHousehold(householdId, userIdToKick, ctx.user.id);
 
-        // Emit to the kicked user (user-scoped)
-        householdEmitter.emitToUser(userIdToKick, "userKicked", {
-          householdId,
-          kickedBy: ctx.user.id,
-        });
+    log.info({ userId: ctx.user.id, householdId, userIdToKick }, "User kicked from household");
 
-        // Emit to remaining household members (household-scoped)
-        householdEmitter.emitToHousehold(householdId, "memberRemoved", { userId: userIdToKick });
+    // Emit to the kicked user (user-scoped)
+    householdEmitter.emitToUser(userIdToKick, "userKicked", {
+      householdId,
+      kickedBy: ctx.user.id,
+    });
 
-        // Emit policyUpdated to kicked user so their recipe view refreshes
-        // (they lose access to household recipes)
-        const recipePolicy = await getRecipePermissionPolicy();
+    // Emit to remaining household members (household-scoped)
+    householdEmitter.emitToHousehold(householdId, "memberRemoved", { userId: userIdToKick });
 
-        permissionsEmitter.emitToUser(userIdToKick, "policyUpdated", { recipePolicy });
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to kick user");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to kick user from household",
-        });
-      });
+    // Emit policyUpdated to kicked user so their recipe view refreshes
+    // (they lose access to household recipes)
+    const recipePolicy = await getRecipePermissionPolicy();
+
+    permissionsEmitter.emitToUser(userIdToKick, "policyUpdated", { recipePolicy });
 
     return { success: true };
   });
@@ -292,23 +271,16 @@ const regenerateCode = authedProcedure
       throw new Error("Only the household admin can regenerate the join code");
     }
 
-    // Regenerate code async and emit events
-    regenerateJoinCode(householdId)
-      .then((household) => {
-        log.info({ userId: ctx.user.id, householdId }, "Join code regenerated");
+    // Regenerate join code
+    const updatedHousehold = await regenerateJoinCode(householdId);
 
-        // Emit to all household members
-        householdEmitter.emitToHousehold(householdId, "joinCodeRegenerated", {
-          joinCode: household.joinCode!,
-          joinCodeExpiresAt: household.joinCodeExpiresAt!.toISOString(),
-        });
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to regenerate join code");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to regenerate join code",
-        });
-      });
+    log.info({ userId: ctx.user.id, householdId }, "Join code regenerated");
+
+    // Emit to all household members
+    householdEmitter.emitToHousehold(householdId, "joinCodeRegenerated", {
+      joinCode: updatedHousehold.joinCode!,
+      joinCodeExpiresAt: updatedHousehold.joinCodeExpiresAt!.toISOString(),
+    });
 
     return { success: true };
   });
@@ -331,23 +303,16 @@ const transferAdmin = authedProcedure
       throw new Error("You are already the admin");
     }
 
-    // Transfer admin async and emit events
-    transferHouseholdAdmin(householdId, ctx.user.id, newAdminId)
-      .then(() => {
-        log.info({ userId: ctx.user.id, householdId, newAdminId }, "Admin transferred");
+    // Transfer admin privileges
+    await transferHouseholdAdmin(householdId, ctx.user.id, newAdminId);
 
-        // Emit to all household members
-        householdEmitter.emitToHousehold(householdId, "adminTransferred", {
-          oldAdminId: ctx.user.id,
-          newAdminId,
-        });
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to transfer admin");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to transfer admin privileges",
-        });
-      });
+    log.info({ userId: ctx.user.id, householdId, newAdminId }, "Admin transferred");
+
+    // Emit to all household members
+    householdEmitter.emitToHousehold(householdId, "adminTransferred", {
+      oldAdminId: ctx.user.id,
+      newAdminId,
+    });
 
     return { success: true };
   });

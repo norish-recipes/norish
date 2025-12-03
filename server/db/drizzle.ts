@@ -31,3 +31,15 @@ export const db = new Proxy({} as NodePgDatabase<typeof schema>, {
     return typeof value === "function" ? value.bind(instance) : value;
   },
 });
+
+/**
+ * Gracefully close the database connection pool
+ * Should be called during server shutdown
+ */
+export async function closeDb(): Promise<void> {
+  if (_pool) {
+    await _pool.end();
+    _pool = null;
+    _db = null;
+  }
+}

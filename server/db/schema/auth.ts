@@ -41,7 +41,11 @@ export const users = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [uniqueIndex("user_email_hmac_idx").on(t.emailHmac)]
+  (t) => [
+    uniqueIndex("user_email_hmac_idx").on(t.emailHmac),
+    // Ensure only one server owner can exist (prevents race condition during first user registration)
+    uniqueIndex("user_single_server_owner_idx").on(t.isServerOwner).where("isServerOwner = true"),
+  ]
 );
 
 // OAuth accounts linked to users (BetterAuth native column names)

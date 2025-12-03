@@ -66,144 +66,147 @@ const create = authedProcedure
       },
     }));
 
-    createGroceries(groceriesToCreate)
-      .then((createdGroceries) => {
-        log.info({ userId: ctx.user.id, count: createdGroceries.length }, "Groceries created");
-        groceryEmitter.emitToHousehold(ctx.householdKey, "created", {
-          groceries: createdGroceries,
-        });
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to create groceries");
-        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-          reason: "Failed to create grocery items",
-        });
+    try {
+      const createdGroceries = await createGroceries(groceriesToCreate);
+
+      log.info({ userId: ctx.user.id, count: createdGroceries.length }, "Groceries created");
+      groceryEmitter.emitToHousehold(ctx.householdKey, "created", {
+        groceries: createdGroceries,
       });
 
-    return ids;
+      return ids;
+    } catch (err) {
+      log.error({ err, userId: ctx.user.id }, "Failed to create groceries");
+      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+        reason: "Failed to create grocery items",
+      });
+      throw err;
+    }
   });
 
-const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, input }) => {
+const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(async ({ ctx, input }) => {
   const { groceryId, raw } = input;
 
   log.debug({ userId: ctx.user.id, groceryId }, "Updating grocery");
 
-  getGroceryOwnerIds([groceryId])
-    .then(async (ownerIds) => {
-      const ownerId = ownerIds.get(groceryId);
+  try {
+    const ownerIds = await getGroceryOwnerIds([groceryId]);
+    const ownerId = ownerIds.get(groceryId);
 
-      if (!ownerId) {
-        throw new Error("Grocery not found");
-      }
+    if (!ownerId) {
+      throw new Error("Grocery not found");
+    }
 
-      await assertHouseholdAccess(ctx.user.id, ownerId);
+    await assertHouseholdAccess(ctx.user.id, ownerId);
 
-      const units = await getUnits();
-      const parsedIngredient = parseIngredientWithDefaults(raw, units)[0];
+    const units = await getUnits();
+    const parsedIngredient = parseIngredientWithDefaults(raw, units)[0];
 
-      const updateData: GroceryUpdateDto = {
-        id: groceryId,
-        name: parsedIngredient.description,
-        amount: parsedIngredient.quantity,
-        unit: parsedIngredient.unitOfMeasure,
-      };
+    const updateData: GroceryUpdateDto = {
+      id: groceryId,
+      name: parsedIngredient.description,
+      amount: parsedIngredient.quantity,
+      unit: parsedIngredient.unitOfMeasure,
+    };
 
-      const parsed = GroceryUpdateBaseSchema.safeParse(updateData);
+    const parsed = GroceryUpdateBaseSchema.safeParse(updateData);
 
-      if (!parsed.success) {
-        throw new Error("Invalid grocery data");
-      }
+    if (!parsed.success) {
+      throw new Error("Invalid grocery data");
+    }
 
-      const updatedGroceries = await updateGroceries([parsed.data as GroceryUpdateDto]);
+    const updatedGroceries = await updateGroceries([parsed.data as GroceryUpdateDto]);
 
-      log.debug({ userId: ctx.user.id, groceryId }, "Grocery updated");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-        changedGroceries: updatedGroceries,
-      });
-    })
-    .catch((err) => {
-      log.error({ err, userId: ctx.user.id, groceryId }, "Failed to update grocery");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: err.message || "Failed to update grocery",
-      });
+    log.debug({ userId: ctx.user.id, groceryId }, "Grocery updated");
+    groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
+      changedGroceries: updatedGroceries,
     });
 
-  return { success: true };
+    return { success: true };
+  } catch (err) {
+    log.error({ err, userId: ctx.user.id, groceryId }, "Failed to update grocery");
+    groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+      reason: err instanceof Error ? err.message : "Failed to update grocery",
+    });
+    throw err;
+  }
 });
 
-const toggle = authedProcedure.input(GroceryToggleSchema).mutation(({ ctx, input }) => {
+const toggle = authedProcedure.input(GroceryToggleSchema).mutation(async ({ ctx, input }) => {
   const { groceryIds, isDone } = input;
 
   log.debug({ userId: ctx.user.id, count: groceryIds.length, isDone }, "Toggling groceries");
 
-  getGroceryOwnerIds(groceryIds)
-    .then(async (ownerIds) => {
-      if (ownerIds.size !== groceryIds.length) {
-        throw new Error("Some groceries not found");
-      }
+  try {
+    const ownerIds = await getGroceryOwnerIds(groceryIds);
 
-      for (const ownerId of ownerIds.values()) {
-        await assertHouseholdAccess(ctx.user.id, ownerId);
-      }
+    if (ownerIds.size !== groceryIds.length) {
+      throw new Error("Some groceries not found");
+    }
 
-      const groceries = await getGroceriesByIds(groceryIds);
+    for (const ownerId of ownerIds.values()) {
+      await assertHouseholdAccess(ctx.user.id, ownerId);
+    }
 
-      if (groceries.length === 0) {
-        throw new Error("Groceries not found");
-      }
+    const groceries = await getGroceriesByIds(groceryIds);
 
-      const updatedGroceries = groceries.map((grocery) => ({
-        ...grocery,
-        isDone,
-      }));
+    if (groceries.length === 0) {
+      throw new Error("Groceries not found");
+    }
 
-      const parsed = z.array(GroceryUpdateBaseSchema).safeParse(updatedGroceries);
+    const updatedGroceries = groceries.map((grocery) => ({
+      ...grocery,
+      isDone,
+    }));
 
-      if (!parsed.success) {
-        throw new Error("Invalid data");
-      }
+    const parsed = z.array(GroceryUpdateBaseSchema).safeParse(updatedGroceries);
 
-      const updated = await updateGroceries(parsed.data as GroceryUpdateDto[]);
+    if (!parsed.success) {
+      throw new Error("Invalid data");
+    }
 
-      log.debug({ userId: ctx.user.id, count: updated.length, isDone }, "Groceries toggled");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-        changedGroceries: updated,
-      });
-    })
-    .catch((err) => {
-      log.error({ err, userId: ctx.user.id, groceryIds }, "Failed to toggle groceries");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: err.message || "Failed to update groceries",
-      });
+    const updated = await updateGroceries(parsed.data as GroceryUpdateDto[]);
+
+    log.debug({ userId: ctx.user.id, count: updated.length, isDone }, "Groceries toggled");
+    groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
+      changedGroceries: updated,
     });
 
-  return { success: true };
+    return { success: true };
+  } catch (err) {
+    log.error({ err, userId: ctx.user.id, groceryIds }, "Failed to toggle groceries");
+    groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+      reason: err instanceof Error ? err.message : "Failed to update groceries",
+    });
+    throw err;
+  }
 });
 
-const deleteGroceries = authedProcedure.input(GroceryDeleteSchema).mutation(({ ctx, input }) => {
+const deleteGroceries = authedProcedure.input(GroceryDeleteSchema).mutation(async ({ ctx, input }) => {
   const { groceryIds } = input;
 
   log.info({ userId: ctx.user.id, count: groceryIds.length }, "Deleting groceries");
 
-  getGroceryOwnerIds(groceryIds)
-    .then(async (ownerIds) => {
-      for (const ownerId of ownerIds.values()) {
-        await assertHouseholdAccess(ctx.user.id, ownerId);
-      }
+  try {
+    const ownerIds = await getGroceryOwnerIds(groceryIds);
 
-      await deleteGroceryByIds(groceryIds);
+    for (const ownerId of ownerIds.values()) {
+      await assertHouseholdAccess(ctx.user.id, ownerId);
+    }
 
-      log.info({ userId: ctx.user.id, count: groceryIds.length }, "Groceries deleted");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "deleted", { groceryIds });
-    })
-    .catch((err) => {
-      log.error({ err, userId: ctx.user.id, groceryIds }, "Failed to delete groceries");
-      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-        reason: err.message || "Failed to delete groceries",
-      });
+    await deleteGroceryByIds(groceryIds);
+
+    log.info({ userId: ctx.user.id, count: groceryIds.length }, "Groceries deleted");
+    groceryEmitter.emitToHousehold(ctx.householdKey, "deleted", { groceryIds });
+
+    return { success: true };
+  } catch (err) {
+    log.error({ err, userId: ctx.user.id, groceryIds }, "Failed to delete groceries");
+    groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+      reason: err instanceof Error ? err.message : "Failed to delete groceries",
     });
-
-  return { success: true };
+    throw err;
+  }
 });
 
 export const groceriesProcedures = router({

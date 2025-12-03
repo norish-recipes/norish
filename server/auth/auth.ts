@@ -169,6 +169,9 @@ function createAuth() {
         create: {
           before: async (user) => {
             // Check registration status
+            // NOTE: There's a theoretical race condition if two users register simultaneously
+            // as the first user. The database has a unique constraint on isServerOwner=true
+            // to prevent multiple owners, which will cause one registration to fail gracefully.
             const registrationEnabled = await isRegistrationEnabled();
             const userCount = await countUsers();
             const isFirstUser = userCount === 0;

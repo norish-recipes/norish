@@ -1,3 +1,5 @@
+import { TRPCError } from "@trpc/server";
+
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 import { emitByPolicy } from "../../helpers";
@@ -102,7 +104,10 @@ async function assertRecipeAccess(
   );
 
   if (!canAccess) {
-    throw new Error("FORBIDDEN");
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You do not have permission to perform this action",
+    });
   }
 }
 
@@ -166,91 +171,98 @@ const get = authedProcedure.input(RecipeGetInputSchema).query(async ({ ctx, inpu
   return recipe;
 });
 
-const create = authedProcedure.input(FullRecipeInsertSchema).mutation(({ ctx, input }) => {
+const create = authedProcedure.input(FullRecipeInsertSchema).mutation(async ({ ctx, input }) => {
   const recipeId = crypto.randomUUID();
 
   log.info({ userId: ctx.user.id, recipeName: input.name }, "Creating recipe");
 
-  createRecipeWithRefs(recipeId, ctx.user.id, input)
-    .then(async (createdId) => {
-      if (!createdId) {
-        throw new Error("Failed to create recipe");
-      }
+  try {
+    const createdId = await createRecipeWithRefs(recipeId, ctx.user.id, input);
 
-      const dashboardDto = await dashboardRecipe(createdId);
+    if (!createdId) {
+      throw new Error("Failed to create recipe");
+    }
 
-      if (dashboardDto) {
-        log.info({ userId: ctx.user.id, recipeId: createdId }, "Recipe created");
-        const policy = await getRecipePermissionPolicy();
+    const dashboardDto = await dashboardRecipe(createdId);
 
-        emitByPolicy(
-          recipeEmitter,
-          policy.view,
-          { userId: ctx.user.id, householdKey: ctx.householdKey },
-          "created",
-          { recipe: dashboardDto }
-        );
-      }
-    })
-    .catch((err) => handleError(ctx, err, "create recipe", { recipeId }));
+    if (dashboardDto) {
+      log.info({ userId: ctx.user.id, recipeId: createdId }, "Recipe created");
+      const policy = await getRecipePermissionPolicy();
 
-  return recipeId;
+      emitByPolicy(
+        recipeEmitter,
+        policy.view,
+        { userId: ctx.user.id, householdKey: ctx.householdKey },
+        "created",
+        { recipe: dashboardDto }
+      );
+    }
+
+    return recipeId;
+  } catch (err) {
+    handleError(ctx, err, "create recipe", { recipeId });
+    throw err;
+  }
 });
 
-const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, input }) => {
+const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(async ({ ctx, input }) => {
   const { id, data } = input;
 
   log.info({ userId: ctx.user.id, recipeId: id }, "Updating recipe");
 
-  assertRecipeAccess(ctx, id, "edit")
-    .then(async () => {
-      await updateRecipeWithRefs(id, ctx.user.id, data);
+  try {
+    await assertRecipeAccess(ctx, id, "edit");
+    await updateRecipeWithRefs(id, ctx.user.id, data);
 
-      const updatedRecipe = await getRecipeFull(id);
+    const updatedRecipe = await getRecipeFull(id);
 
-      if (updatedRecipe) {
-        log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
-        const policy = await getRecipePermissionPolicy();
+    if (updatedRecipe) {
+      log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
+      const policy = await getRecipePermissionPolicy();
 
-        emitByPolicy(
-          recipeEmitter,
-          policy.view,
-          { userId: ctx.user.id, householdKey: ctx.householdKey },
-          "updated",
-          { recipe: updatedRecipe }
-        );
-      }
-    })
-    .catch((err) => handleError(ctx, err, "update recipe", { recipeId: id }));
+      emitByPolicy(
+        recipeEmitter,
+        policy.view,
+        { userId: ctx.user.id, householdKey: ctx.householdKey },
+        "updated",
+        { recipe: updatedRecipe }
+      );
+    }
 
-  return { success: true };
+    return { success: true };
+  } catch (err) {
+    handleError(ctx, err, "update recipe", { recipeId: id });
+    throw err;
+  }
 });
 
 const deleteProcedure = authedProcedure
   .input(RecipeDeleteInputSchema)
-  .mutation(({ ctx, input }) => {
+  .mutation(async ({ ctx, input }) => {
     const { id } = input;
 
     log.info({ userId: ctx.user.id, recipeId: id }, "Deleting recipe");
 
-    assertRecipeAccess(ctx, id, "delete")
-      .then(async () => {
-        await deleteRecipeById(id);
+    try {
+      await assertRecipeAccess(ctx, id, "delete");
+      await deleteRecipeById(id);
 
-        log.info({ userId: ctx.user.id, recipeId: id }, "Recipe deleted");
-        const policy = await getRecipePermissionPolicy();
+      log.info({ userId: ctx.user.id, recipeId: id }, "Recipe deleted");
+      const policy = await getRecipePermissionPolicy();
 
-        emitByPolicy(
-          recipeEmitter,
-          policy.view,
-          { userId: ctx.user.id, householdKey: ctx.householdKey },
-          "deleted",
-          { id }
-        );
-      })
-      .catch((err) => handleError(ctx, err, "delete recipe", { recipeId: id }));
+      emitByPolicy(
+        recipeEmitter,
+        policy.view,
+        { userId: ctx.user.id, householdKey: ctx.householdKey },
+        "deleted",
+        { id }
+      );
 
-    return { success: true };
+      return { success: true };
+    } catch (err) {
+      handleError(ctx, err, "delete recipe", { recipeId: id });
+      throw err;
+    }
   });
 
 const importFromUrlProcedure = authedProcedure
@@ -266,119 +278,104 @@ const importFromUrlProcedure = authedProcedure
 
 const convertMeasurements = authedProcedure
   .input(RecipeConvertInputSchema)
-  .mutation(({ ctx, input }) => {
+  .mutation(async ({ ctx, input }) => {
     const { recipeId, targetSystem } = input;
 
     log.info({ userId: ctx.user.id, recipeId, targetSystem }, "Converting recipe measurements");
 
-    checkAIEnabled()
-      .then((aiEnabled) => {
-        if (!aiEnabled) {
-          throw new Error("AI features are disabled");
-        }
+    try {
+      const aiEnabled = await checkAIEnabled();
 
-        return getRecipeFull(recipeId);
-      })
-      .then((recipe) => {
-        if (!recipe) {
-          throw new Error("Recipe not found");
-        }
+      if (!aiEnabled) {
+        throw new Error("AI features are disabled");
+      }
 
-        if (recipe.recipeIngredients.length === 0) {
-          throw new Error("Recipe has no ingredients to convert");
-        }
+      const recipe = await getRecipeFull(recipeId);
 
-        // Check edit permission (uses recipe.userId directly since we have the full recipe)
-        const permissionCheck = recipe.userId
-          ? canAccessResource(
-              "edit",
-              ctx.user.id,
-              recipe.userId,
-              ctx.householdUserIds,
-              ctx.isServerAdmin
-            )
-          : Promise.resolve(true);
+      if (!recipe) {
+        throw new Error("Recipe not found");
+      }
 
-        return permissionCheck.then((canEdit) => {
-          if (!canEdit) {
-            throw new Error("FORBIDDEN");
-          }
+      if (recipe.recipeIngredients.length === 0) {
+        throw new Error("Recipe has no ingredients to convert");
+      }
 
-          return recipe;
+      // Check edit permission
+      const canEdit = recipe.userId
+        ? await canAccessResource(
+            "edit",
+            ctx.user.id,
+            recipe.userId,
+            ctx.householdUserIds,
+            ctx.isServerAdmin
+          )
+        : true;
+
+      if (!canEdit) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to edit this recipe",
         });
-      })
-      .then((recipe) => {
-        // Check if already converted (has ingredients with target system)
-        if (recipe.recipeIngredients.some((ri) => ri.systemUsed === targetSystem)) {
-          return setActiveSystemForRecipe(recipe.id, targetSystem).then(async () => {
-            const policy = await getRecipePermissionPolicy();
+      }
 
-            emitByPolicy(
-              recipeEmitter,
-              policy.view,
-              { userId: ctx.user.id, householdKey: ctx.householdKey },
-              "converted",
-              { recipe: { ...recipe, systemUsed: targetSystem } }
-            );
+      // Check if already converted (has ingredients with target system)
+      if (recipe.recipeIngredients.some((ri) => ri.systemUsed === targetSystem)) {
+        await setActiveSystemForRecipe(recipe.id, targetSystem);
+        const policy = await getRecipePermissionPolicy();
 
-            return null; // Signal to stop chain
-          });
-        }
+        emitByPolicy(
+          recipeEmitter,
+          policy.view,
+          { userId: ctx.user.id, householdKey: ctx.householdKey },
+          "converted",
+          { recipe: { ...recipe, systemUsed: targetSystem } }
+        );
 
-        return recipe;
-      })
-      .then((recipe) => {
-        if (recipe === null) return null;
+        return { success: true };
+      }
 
-        // Convert with AI
-        return import("@/server/ai/unit-converter")
-          .then(({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(recipe, targetSystem))
-          .then((converted) => {
-            if (!converted) {
-              throw new Error("Conversion failed, please try again.");
-            }
+      // Convert with AI
+      const { convertRecipeDataWithAI } = await import("@/server/ai/unit-converter");
+      const converted = await convertRecipeDataWithAI(recipe, targetSystem);
 
-            return { recipe, converted };
-          });
-      })
-      .then((result) => {
-        if (result === null) return;
+      if (!converted) {
+        throw new Error("Conversion failed, please try again.");
+      }
 
-        const { recipe, converted } = result;
+      const steps = converted.steps.map((s) => ({
+        ...s,
+        recipeId: recipe.id,
+        systemUsed: targetSystem,
+      }));
 
-        const steps = converted.steps.map((s) => ({
-          ...s,
-          recipeId: recipe.id,
-          systemUsed: targetSystem,
-        }));
+      const ingredients = converted.ingredients.map((i) => ({
+        ...i,
+        recipeId: recipe.id,
+        systemUsed: targetSystem,
+      }));
 
-        const ingredients = converted.ingredients.map((i) => ({
-          ...i,
-          recipeId: recipe.id,
-          systemUsed: targetSystem,
-        }));
+      await addStepsAndIngredientsToRecipeByInput(steps, ingredients);
+      await setActiveSystemForRecipe(recipe.id, targetSystem);
+      const updatedRecipe = await getRecipeFull(recipe.id);
 
-        return addStepsAndIngredientsToRecipeByInput(steps, ingredients)
-          .then(() => setActiveSystemForRecipe(recipe.id, targetSystem))
-          .then(() => getRecipeFull(recipe.id))
-          .then(async (updatedRecipe) => {
-            if (updatedRecipe) {
-              log.info({ userId: ctx.user.id, recipeId }, "Recipe measurements converted");
-              const policy = await getRecipePermissionPolicy();
+      if (updatedRecipe) {
+        log.info({ userId: ctx.user.id, recipeId }, "Recipe measurements converted");
+        const policy = await getRecipePermissionPolicy();
 
-              emitByPolicy(
-                recipeEmitter,
-                policy.view,
-                { userId: ctx.user.id, householdKey: ctx.householdKey },
-                "converted",
-                { recipe: { ...updatedRecipe, systemUsed: targetSystem } }
-              );
-            }
-          });
-      })
-      .catch((err) => handleError(ctx, err, "convert recipe measurements", { recipeId }));
+        emitByPolicy(
+          recipeEmitter,
+          policy.view,
+          { userId: ctx.user.id, householdKey: ctx.householdKey },
+          "converted",
+          { recipe: { ...updatedRecipe, systemUsed: targetSystem } }
+        );
+      }
 
-    return { success: true };
+      return { success: true };
+    } catch (err) {
+      handleError(ctx, err, "convert recipe measurements", { recipeId });
+      throw err;
+    }
   });
 
 export const recipesProcedures = router({

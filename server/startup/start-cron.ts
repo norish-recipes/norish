@@ -92,8 +92,12 @@ export async function runScheduledCleanup() {
 
 export const startRecurringTasks = () => {
   // Run all cleanup tasks daily at midnight
-  cron.schedule("0 0 * * *", () => {
-    runScheduledCleanup();
+  cron.schedule("0 0 * * *", async () => {
+    try {
+      await runScheduledCleanup();
+    } catch (err) {
+      schedulerLogger.error({ err }, "Scheduled cleanup failed");
+    }
   });
 
   schedulerLogger.info("Scheduler started (all cleanup tasks run daily at midnight)");

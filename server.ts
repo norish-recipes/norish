@@ -47,6 +47,33 @@ async function main() {
     log.info(`  ENV:  ${SERVER_CONFIG.NODE_ENV}`);
     log.info("-".repeat(50));
   });
+
+  // Graceful shutdown handler
+  const shutdown = async (signal: string) => {
+    log.info(`${signal} received, shutting down gracefully...`);
+
+    // Close HTTP server (stop accepting new connections)
+    server.close(async () => {
+      log.info("HTTP server closed");
+
+      // Close database pool
+      const { closeDb } = await import("./server/db/drizzle");
+
+      await closeDb();
+      log.info("Database connections closed");
+
+      process.exit(0);
+    });
+
+    // Force shutdown after 30 seconds
+    setTimeout(() => {
+      log.error("Forced shutdown after timeout");
+      process.exit(1);
+    }, 30000);
+  };
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
 
 main().catch((err) => {

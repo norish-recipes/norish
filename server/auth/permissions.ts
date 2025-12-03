@@ -1,3 +1,5 @@
+import { TRPCError } from "@trpc/server";
+
 import { getConfig } from "@/server/db/repositories/server-config";
 import { getHouseholdForUser } from "@/server/db/repositories/households";
 import {
@@ -73,7 +75,10 @@ export async function assertHouseholdAccess(
   const hasAccess = await canAccessHouseholdResource(userId, resourceOwnerId);
 
   if (!hasAccess) {
-    throw new Error("FORBIDDEN");
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You do not have access to this resource",
+    });
   }
 }
 
@@ -81,6 +86,9 @@ export async function assertAIEnabled(): Promise<void> {
   const enabled = await isAIEnabled();
 
   if (!enabled) {
-    throw new Error("AI features are disabled");
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "AI features are disabled",
+    });
   }
 }
