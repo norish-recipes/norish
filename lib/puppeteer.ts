@@ -17,11 +17,13 @@ async function discoverWebSocketEndpoint(baseUrl: string): Promise<string> {
   log.debug({ versionUrl }, "Discovering Chrome WebSocket endpoint");
 
   const response = await fetch(versionUrl);
+
   if (!response.ok) {
     throw new Error(`Failed to get Chrome version info: ${response.status} ${response.statusText}`);
   }
 
   const versionInfo = (await response.json()) as { webSocketDebuggerUrl?: string };
+
   if (!versionInfo.webSocketDebuggerUrl) {
     throw new Error("Chrome did not return webSocketDebuggerUrl");
   }
@@ -30,6 +32,7 @@ async function discoverWebSocketEndpoint(baseUrl: string): Promise<string> {
     { webSocketDebuggerUrl: versionInfo.webSocketDebuggerUrl },
     "Discovered Chrome WebSocket endpoint"
   );
+
   return versionInfo.webSocketDebuggerUrl;
 }
 
