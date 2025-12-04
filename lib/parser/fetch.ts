@@ -25,6 +25,7 @@ const BROWSER_HEADERS: Record<string, string> = {
 function getReferer(url: string): string {
   try {
     const parsed = new URL(url);
+
     return Math.random() > 0.5 ? `https://${parsed.hostname}/` : "https://www.google.com/";
   } catch {
     return "https://www.google.com/";
@@ -53,6 +54,7 @@ export async function fetchViaPuppeteer(targetUrl: string): Promise<string> {
 
       // Override permissions
       const originalQuery = window.navigator.permissions.query;
+
       window.navigator.permissions.query = (parameters: PermissionDescriptor) =>
         parameters.name === "notifications"
           ? Promise.resolve({ state: "denied" } as PermissionStatus)

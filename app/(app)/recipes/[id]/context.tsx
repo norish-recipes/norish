@@ -96,6 +96,7 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
       // If servings equals original recipe servings, reset to original amounts
       if (servings === recipe.servings) {
         setAdjustedIngredients(recipe.recipeIngredients);
+
         return;
       }
 

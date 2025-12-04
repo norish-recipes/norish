@@ -8,6 +8,7 @@ import { useRecipeContextRequired } from "../context";
 
 function formatServings(n: number): string {
   if (Number.isInteger(n)) return String(n);
+
   // Remove trailing zeros (e.g., 2.50 -> 2.5)
   return n.toFixed(2).replace(/\.?0+$/, "");
 }
@@ -35,6 +36,7 @@ export default function ServingsControl() {
       if (s <= 1) return Math.max(0.125, s / 2);
       // If between 1 and 2, go to 1
       if (s <= 2) return 1;
+
       // Otherwise decrement by 1
       return s - 1;
     });
@@ -43,6 +45,7 @@ export default function ServingsControl() {
     setServings((s) => {
       // If below 1, double it (0.125 -> 0.25 -> 0.5 -> 1)
       if (s < 1) return Math.min(1, s * 2);
+
       // Otherwise increment by 1
       return s + 1;
     });
