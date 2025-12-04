@@ -1,3 +1,6 @@
+import { readFileSync } from "fs";
+import { join } from "path";
+
 import { setConfig, configExists, getConfig, deleteConfig } from "../db/repositories/server-config";
 import {
   ServerConfigKeys,
@@ -14,6 +17,17 @@ import { serverLogger } from "@/server/logger";
 import defaultUnits from "@/config/units.default.json";
 import defaultContentIndicators from "@/config/content-indicators.default.json";
 import defaultRecurrenceConfig from "@/config/recurrence-config.default.json";
+
+const PROMPTS_DIR = join(process.cwd(), "server", "ai", "prompts");
+
+/**
+ * Load default prompt content from file
+ */
+function loadDefaultPromptFromFile(name: string): string {
+  const filePath = join(PROMPTS_DIR, `${name}.txt`);
+
+  return readFileSync(filePath, "utf-8");
+}
 
 /**
  * Configuration definition for seeding
@@ -114,6 +128,18 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     getDefaultValue: () => DEFAULT_RECIPE_PERMISSION_POLICY,
     sensitive: false,
     description: "Recipe permission policy (default: household)",
+  },
+  {
+    key: ServerConfigKeys.PROMPT_RECIPE_EXTRACTION,
+    getDefaultValue: () => ({ content: loadDefaultPromptFromFile("recipe-extraction") }),
+    sensitive: false,
+    description: "AI prompt for recipe extraction",
+  },
+  {
+    key: ServerConfigKeys.PROMPT_UNIT_CONVERSION,
+    getDefaultValue: () => ({ content: loadDefaultPromptFromFile("unit-conversion") }),
+    sensitive: false,
+    description: "AI prompt for unit conversion",
   },
 ];
 
@@ -405,7 +431,7 @@ async function syncGoogleProvider(): Promise<void> {
 }
 
 /**
- * Load default values from .default.json files
+ * Load default values from .default.json files or prompt files
  * Used for "Restore to defaults" functionality
  */
 export function getDefaultConfigValue(key: ServerConfigKey): unknown {
@@ -438,6 +464,10 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       };
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return DEFAULT_RECIPE_PERMISSION_POLICY;
+    case ServerConfigKeys.PROMPT_RECIPE_EXTRACTION:
+      return { content: loadDefaultPromptFromFile("recipe-extraction") };
+    case ServerConfigKeys.PROMPT_UNIT_CONVERSION:
+      return { content: loadDefaultPromptFromFile("unit-conversion") };
     default:
       return null;
   }

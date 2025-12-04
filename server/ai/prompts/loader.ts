@@ -1,33 +1,30 @@
-import { readFileSync } from "fs";
-import { join } from "path";
-
 import { getConfig } from "@/server/db/repositories/server-config";
 import { ServerConfigKeys, type ServerConfigKey } from "@/server/db/zodSchemas/server-config";
 import type { PromptConfig } from "@/server/db/zodSchemas/server-config";
-
-const PROMPTS_DIR = join(process.cwd(), "server", "ai", "prompts");
 
 const PROMPT_NAME_TO_CONFIG_KEY: Record<string, ServerConfigKey> = {
   "recipe-extraction": ServerConfigKeys.PROMPT_RECIPE_EXTRACTION,
   "unit-conversion": ServerConfigKeys.PROMPT_UNIT_CONVERSION,
 };
 
+/**
+ * Load a prompt from the database.
+ * Prompts are seeded on startup from the txt files, so this always reads from DB.
+ */
 export async function loadPrompt(name: string): Promise<string> {
-  // Check if there's a database override for this prompt
   const configKey = PROMPT_NAME_TO_CONFIG_KEY[name];
 
-  if (configKey) {
-    const override = await getConfig(configKey);
-
-    if (override && typeof override === "object" && "content" in override) {
-      return (override as PromptConfig).content;
-    }
+  if (!configKey) {
+    throw new Error(`Unknown prompt: ${name}`);
   }
 
-  // Fall back to file-based prompt
-  const filePath = join(PROMPTS_DIR, `${name}.txt`);
+  const config = await getConfig<PromptConfig>(configKey);
 
-  return readFileSync(filePath, "utf-8");
+  if (!config || !config.content) {
+    throw new Error(`Prompt not found in database: ${name}. Run seed-config to initialize.`);
+  }
+
+  return config.content;
 }
 
 export function fillPrompt(template: string, vars: Record<string, string>): string {

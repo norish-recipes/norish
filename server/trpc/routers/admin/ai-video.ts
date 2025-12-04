@@ -1,25 +1,22 @@
 import { z } from "zod";
-import { readFileSync } from "fs";
-import { join } from "path";
 
 import { router } from "../../trpc";
 import { adminProcedure } from "../../middleware";
 import { permissionsEmitter } from "../permissions/emitter";
 
 import { trpcLogger as log } from "@/server/logger";
-import { setConfig, getConfig, deleteConfig } from "@/server/db/repositories/server-config";
+import { setConfig, getConfig } from "@/server/db/repositories/server-config";
 import { testAIEndpoint as testAIEndpointFn } from "@/server/auth/connection-tests";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { getDefaultConfigValue } from "@/server/startup/seed-config";
 import {
   ServerConfigKeys,
   AIConfigSchema,
   VideoConfigSchema,
-  PromptConfigSchema,
   type AIConfig,
   type ServerConfigKey,
+  type PromptConfig,
 } from "@/server/db/zodSchemas/server-config";
-
-const PROMPTS_DIR = join(process.cwd(), "server", "ai", "prompts");
 
 const PromptNameSchema = z.enum(["recipe-extraction", "unit-conversion"]);
 
@@ -31,12 +28,13 @@ const PROMPT_NAME_TO_CONFIG_KEY: Record<PromptName, ServerConfigKey> = {
 };
 
 /**
- * Get the default prompt content from file
+ * Get the default prompt content from seed-config
  */
-function getDefaultPrompt(name: PromptName): string {
-  const filePath = join(PROMPTS_DIR, `${name}.txt`);
+function getDefaultPromptContent(name: PromptName): string {
+  const configKey = PROMPT_NAME_TO_CONFIG_KEY[name];
+  const defaultValue = getDefaultConfigValue(configKey) as PromptConfig | null;
 
-  return readFileSync(filePath, "utf-8");
+  return defaultValue?.content ?? "";
 }
 
 /**
@@ -98,7 +96,9 @@ const testAIEndpoint = adminProcedure
   });
 
 /**
- * Get prompt content (custom or default)
+ * Get prompt content from database.
+ * Prompts are seeded on startup, so this always reads from DB.
+ * Returns both current content and default content for comparison.
  */
 const getPrompt = adminProcedure
   .input(z.object({ name: PromptNameSchema }))
@@ -106,22 +106,16 @@ const getPrompt = adminProcedure
     log.debug({ userId: ctx.user.id, promptName: input.name }, "Getting prompt");
 
     const configKey = PROMPT_NAME_TO_CONFIG_KEY[input.name];
-    const override = await getConfig(configKey);
-    const defaultContent = getDefaultPrompt(input.name);
+    const stored = await getConfig<PromptConfig>(configKey);
+    const defaultContent = getDefaultPromptContent(input.name);
 
-    if (override && typeof override === "object" && "content" in override) {
-      return {
-        name: input.name,
-        content: override.content as string,
-        isCustom: true,
-        defaultContent,
-      };
-    }
+    const content = stored?.content ?? defaultContent;
+    const isCustom = content !== defaultContent;
 
     return {
       name: input.name,
-      content: defaultContent,
-      isCustom: false,
+      content,
+      isCustom,
       defaultContent,
     };
   });
@@ -150,7 +144,7 @@ const updatePrompt = adminProcedure
   });
 
 /**
- * Reset prompt to default (remove override)
+ * Reset prompt to default by re-seeding from the txt file
  */
 const resetPrompt = adminProcedure
   .input(z.object({ name: PromptNameSchema }))
@@ -158,14 +152,15 @@ const resetPrompt = adminProcedure
     log.info({ userId: ctx.user.id, promptName: input.name }, "Resetting prompt to default");
 
     const configKey = PROMPT_NAME_TO_CONFIG_KEY[input.name];
+    const defaultContent = getDefaultPromptContent(input.name);
 
-    await deleteConfig(configKey);
+    await setConfig(configKey, { content: defaultContent }, ctx.user.id, false);
 
     return { success: true };
   });
 
 /**
- * List all available prompts
+ * List all available prompts with their custom status
  */
 const listPrompts = adminProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Listing prompts");
@@ -174,11 +169,12 @@ const listPrompts = adminProcedure.query(async ({ ctx }) => {
   const results = await Promise.all(
     prompts.map(async (name) => {
       const configKey = PROMPT_NAME_TO_CONFIG_KEY[name];
-      const override = await getConfig(configKey);
+      const stored = await getConfig<PromptConfig>(configKey);
+      const defaultContent = getDefaultPromptContent(name);
 
       return {
         name,
-        isCustom: override !== null,
+        isCustom: stored?.content !== defaultContent,
       };
     })
   );

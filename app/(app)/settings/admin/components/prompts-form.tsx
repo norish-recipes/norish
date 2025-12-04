@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button, Textarea, Select, SelectItem, Chip } from "@heroui/react";
+import { useState, useEffect, useCallback } from "react";
+import { Button, Textarea, Select, SelectItem, Chip, Spinner } from "@heroui/react";
 import { CheckIcon, ArrowPathIcon } from "@heroicons/react/16/solid";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
+import { useAdminSettingsContext } from "../context";
 
 type PromptName = "recipe-extraction" | "unit-conversion";
 
@@ -26,59 +25,66 @@ export default function PromptsForm() {
   const [content, setContent] = useState("");
   const [defaultContent, setDefaultContent] = useState("");
   const [isCustom, setIsCustom] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const { getPrompt, updatePrompt, resetPrompt, refresh } = useAdminSettingsContext();
 
-  const queryKey = trpc.admin.prompts.getPrompt.queryKey({ name: selectedPrompt });
-  const { data: promptData, isLoading } = useQuery(
-    trpc.admin.prompts.getPrompt.queryOptions({ name: selectedPrompt })
-  );
+  const loadPrompt = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await getPrompt(selectedPrompt);
 
-  const refetch = () => queryClient.invalidateQueries({ queryKey });
-
-  const updateMutation = useMutation(
-    trpc.admin.prompts.updatePrompt.mutationOptions({
-      onSuccess: () => {
-        refetch();
-      },
-    })
-  );
-
-  const resetMutation = useMutation(
-    trpc.admin.prompts.resetPrompt.mutationOptions({
-      onSuccess: () => {
-        refetch();
-      },
-    })
-  );
+      setContent(data.content);
+      setDefaultContent(data.defaultContent);
+      setIsCustom(data.isCustom);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getPrompt, selectedPrompt]);
 
   useEffect(() => {
-    if (promptData) {
-      setContent(promptData.content);
-      setDefaultContent(promptData.defaultContent);
-      setIsCustom(promptData.isCustom);
-    }
-  }, [promptData]);
+    loadPrompt();
+  }, [loadPrompt]);
 
   const handleSave = async () => {
-    if (content === defaultContent) {
-      // If content matches default, reset instead of saving
-      await resetMutation.mutateAsync({ name: selectedPrompt });
-    } else {
-      await updateMutation.mutateAsync({
-        name: selectedPrompt,
-        content,
-      });
+    setIsSaving(true);
+    try {
+      if (content === defaultContent) {
+        // If content matches default, reset instead of saving
+        await resetPrompt(selectedPrompt);
+      } else {
+        await updatePrompt(selectedPrompt, content);
+      }
+      refresh();
+      await loadPrompt();
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleReset = async () => {
-    await resetMutation.mutateAsync({ name: selectedPrompt });
+    setIsResetting(true);
+    try {
+      await resetPrompt(selectedPrompt);
+      refresh();
+      await loadPrompt();
+    } finally {
+      setIsResetting(false);
+    }
   };
 
-  const hasChanges = content !== promptData?.content;
+  const hasChanges = content !== (isLoading ? "" : defaultContent) && content !== defaultContent;
   const isDefault = content === defaultContent;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 p-2">
@@ -123,8 +129,8 @@ export default function PromptsForm() {
         <div className="flex gap-2">
           {!isDefault && (
             <Button
-              isDisabled={isLoading || updateMutation.isPending}
-              isLoading={resetMutation.isPending}
+              isDisabled={isLoading || isSaving}
+              isLoading={isResetting}
               startContent={<ArrowPathIcon className="h-4 w-4" />}
               variant="flat"
               onPress={handleReset}
@@ -135,8 +141,8 @@ export default function PromptsForm() {
 
           <Button
             color="primary"
-            isDisabled={!hasChanges || isLoading || resetMutation.isPending}
-            isLoading={updateMutation.isPending}
+            isDisabled={!hasChanges || isLoading || isResetting}
+            isLoading={isSaving}
             startContent={<CheckIcon className="h-4 w-4" />}
             onPress={handleSave}
           >

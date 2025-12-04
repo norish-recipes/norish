@@ -18,11 +18,21 @@ import {
   type AuthProviderGoogleInput,
   type RecipePermissionPolicy,
   type ServerConfigKey,
+  type PromptConfig,
 } from "@/server/db/zodSchemas/server-config";
 
 // ============================================================================
 // Context Type
 // ============================================================================
+
+type PromptName = "recipe-extraction" | "unit-conversion";
+
+interface PromptData {
+  name: PromptName;
+  content: string;
+  isCustom: boolean;
+  defaultContent: string;
+}
 
 interface AdminSettingsContextValue {
   // Data
@@ -38,6 +48,8 @@ interface AdminSettingsContextValue {
   videoConfig: VideoConfig | undefined;
   schedulerCleanupMonths: number | undefined;
   recipePermissionPolicy: RecipePermissionPolicy | undefined;
+  promptRecipeExtraction: PromptConfig | undefined;
+  promptUnitConversion: PromptConfig | undefined;
 
   // Loading states
   isLoading: boolean;
@@ -75,6 +87,11 @@ interface AdminSettingsContextValue {
     config: Pick<AIConfig, "provider" | "endpoint" | "apiKey">
   ) => Promise<{ success: boolean; error?: string }>;
   restartServer: () => Promise<void>;
+
+  // Prompts
+  getPrompt: (name: PromptName) => Promise<PromptData>;
+  updatePrompt: (name: PromptName, content: string) => Promise<{ success: boolean }>;
+  resetPrompt: (name: PromptName) => Promise<{ success: boolean }>;
 
   // Secret fetching
   fetchConfigSecret: (key: ServerConfigKey, field: string) => Promise<string | null>;
@@ -122,6 +139,12 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     | undefined;
   const recipePermissionPolicy = configs[ServerConfigKeys.RECIPE_PERMISSION_POLICY] as
     | RecipePermissionPolicy
+    | undefined;
+  const promptRecipeExtraction = configs[ServerConfigKeys.PROMPT_RECIPE_EXTRACTION] as
+    | PromptConfig
+    | undefined;
+  const promptUnitConversion = configs[ServerConfigKeys.PROMPT_UNIT_CONVERSION] as
+    | PromptConfig
     | undefined;
 
   // Actions - wrap mutations
@@ -252,6 +275,28 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     invalidate();
   }, [invalidate]);
 
+  // Prompts
+  const getPromptData = useCallback(
+    async (name: PromptName) => {
+      return mutations.getPrompt(name);
+    },
+    [mutations]
+  );
+
+  const updatePromptContent = useCallback(
+    async (name: PromptName, content: string) => {
+      return mutations.updatePrompt(name, content);
+    },
+    [mutations]
+  );
+
+  const resetPromptToDefault = useCallback(
+    async (name: PromptName) => {
+      return mutations.resetPrompt(name);
+    },
+    [mutations]
+  );
+
   const value: AdminSettingsContextValue = {
     registrationEnabled,
     passwordAuthEnabled,
@@ -265,6 +310,8 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     videoConfig,
     schedulerCleanupMonths,
     recipePermissionPolicy,
+    promptRecipeExtraction,
+    promptUnitConversion,
     isLoading,
     updateRegistration,
     updatePasswordAuth,
@@ -283,6 +330,9 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     testAuthProvider: testAuth,
     testAIEndpoint: testAI,
     restartServer: restart,
+    getPrompt: getPromptData,
+    updatePrompt: updatePromptContent,
+    resetPrompt: resetPromptToDefault,
     fetchConfigSecret: fetchSecret,
     refresh,
   };

@@ -16,6 +16,15 @@ import { useAdminConfigsQuery } from "./use-admin-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 
+type PromptName = "recipe-extraction" | "unit-conversion";
+
+interface PromptData {
+  name: PromptName;
+  content: string;
+  isCustom: boolean;
+  defaultContent: string;
+}
+
 export type AdminMutationsResult = {
   // Registration
   updateRegistration: (enabled: boolean) => Promise<{ success: boolean }>;
@@ -55,6 +64,11 @@ export type AdminMutationsResult = {
   updateRecipePermissionPolicy: (
     policy: RecipePermissionPolicy
   ) => Promise<{ success: boolean; error?: string }>;
+
+  // Prompts
+  getPrompt: (name: PromptName) => Promise<PromptData>;
+  updatePrompt: (name: PromptName, content: string) => Promise<{ success: boolean }>;
+  resetPrompt: (name: PromptName) => Promise<{ success: boolean }>;
 
   // System
   updateSchedulerMonths: (months: number) => Promise<{ success: boolean; error?: string }>;
@@ -104,6 +118,10 @@ export function useAdminMutations(): AdminMutationsResult {
   const updatePermissionPolicyMutation = useMutation(
     trpc.admin.updateRecipePermissionPolicy.mutationOptions()
   );
+
+  // Prompts
+  const updatePromptMutation = useMutation(trpc.admin.prompts.updatePrompt.mutationOptions());
+  const resetPromptMutation = useMutation(trpc.admin.prompts.resetPrompt.mutationOptions());
 
   // System
   const updateSchedulerMonthsMutation = useMutation(
@@ -178,6 +196,17 @@ export function useAdminMutations(): AdminMutationsResult {
     // Permissions
     updateRecipePermissionPolicy: async (policy) => {
       return withInvalidate(updatePermissionPolicyMutation.mutateAsync(policy));
+    },
+
+    // Prompts
+    getPrompt: async (name) => {
+      return queryClient.fetchQuery(trpc.admin.prompts.getPrompt.queryOptions({ name }));
+    },
+    updatePrompt: async (name, content) => {
+      return withInvalidate(updatePromptMutation.mutateAsync({ name, content }));
+    },
+    resetPrompt: async (name) => {
+      return withInvalidate(resetPromptMutation.mutateAsync({ name }));
     },
 
     // System

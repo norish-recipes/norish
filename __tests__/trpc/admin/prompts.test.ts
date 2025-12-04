@@ -3,25 +3,26 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { z } from "zod";
 
-// Mock fs module for reading default prompts
-vi.mock("fs", () => ({
-  readFileSync: vi.fn((path: string) => {
-    if (path.includes("recipe-extraction.txt")) {
-      return "Default recipe extraction prompt content";
-    }
-    if (path.includes("unit-conversion.txt")) {
-      return "Default unit conversion prompt content";
-    }
-    throw new Error(`File not found: ${path}`);
-  }),
-}));
-
 // Setup mocks before any imports that use them
 vi.mock("@/server/db/repositories/server-config", () => import("../../mocks/server-config"));
 vi.mock("@/server/db/repositories/users", () => import("../../mocks/users"));
 
+// Mock seed-config for getDefaultConfigValue
+vi.mock("@/server/startup/seed-config", () => ({
+  getDefaultConfigValue: vi.fn((key: string) => {
+    if (key === "prompt_recipe_extraction") {
+      return { content: "Default recipe extraction prompt content" };
+    }
+    if (key === "prompt_unit_conversion") {
+      return { content: "Default unit conversion prompt content" };
+    }
+
+    return null;
+  }),
+}));
+
 // Import mocks for assertions
-import { getConfig, setConfig, deleteConfig } from "../../mocks/server-config";
+import { getConfig, setConfig } from "../../mocks/server-config";
 import { isUserServerAdmin } from "../../mocks/users";
 
 import { createMockAdminUser, createMockUser, createMockAdminContext } from "./test-utils";
@@ -81,33 +82,27 @@ describe("prompts procedures", () => {
   });
 
   describe("getPrompt", () => {
-    it("returns default prompt when no override exists", async () => {
+    it("returns prompt from database with isCustom=false when content matches default", async () => {
       const ctx = createMockAdminContext(mockAdmin);
 
-      // No override in database
-      getConfig.mockResolvedValue(null);
+      // Database has default content (seeded on startup)
+      getConfig.mockResolvedValue({ content: "Default recipe extraction prompt content" });
 
       const testRouter = t.router({
         getPrompt: adminProcedure
           .input(z.object({ name: PromptNameSchema }))
           .query(async ({ input }) => {
             const configKey = PROMPT_NAME_TO_CONFIG_KEY[input.name];
-            const override = await getConfig(configKey);
+            const stored = await getConfig(configKey);
             const defaultContent = getDefaultPrompt(input.name);
 
-            if (override && typeof override === "object" && "content" in override) {
-              return {
-                name: input.name,
-                content: override.content as string,
-                isCustom: true,
-                defaultContent,
-              };
-            }
+            const content = stored?.content ?? defaultContent;
+            const isCustom = content !== defaultContent;
 
             return {
               name: input.name,
-              content: defaultContent,
-              isCustom: false,
+              content,
+              isCustom,
               defaultContent,
             };
           }),
@@ -123,11 +118,11 @@ describe("prompts procedures", () => {
       expect(getConfig).toHaveBeenCalledWith(ServerConfigKeys.PROMPT_RECIPE_EXTRACTION);
     });
 
-    it("returns custom prompt when override exists", async () => {
+    it("returns custom prompt with isCustom=true when content differs from default", async () => {
       const ctx = createMockAdminContext(mockAdmin);
       const customContent = "My custom recipe extraction prompt";
 
-      // Override exists in database
+      // Database has custom content
       getConfig.mockResolvedValue({ content: customContent });
 
       const testRouter = t.router({
@@ -135,22 +130,16 @@ describe("prompts procedures", () => {
           .input(z.object({ name: PromptNameSchema }))
           .query(async ({ input }) => {
             const configKey = PROMPT_NAME_TO_CONFIG_KEY[input.name];
-            const override = await getConfig(configKey);
+            const stored = await getConfig(configKey);
             const defaultContent = getDefaultPrompt(input.name);
 
-            if (override && typeof override === "object" && "content" in override) {
-              return {
-                name: input.name,
-                content: override.content as string,
-                isCustom: true,
-                defaultContent,
-              };
-            }
+            const content = stored?.content ?? defaultContent;
+            const isCustom = content !== defaultContent;
 
             return {
               name: input.name,
-              content: defaultContent,
-              isCustom: false,
+              content,
+              isCustom,
               defaultContent,
             };
           }),
@@ -168,29 +157,23 @@ describe("prompts procedures", () => {
     it("works for unit-conversion prompt", async () => {
       const ctx = createMockAdminContext(mockAdmin);
 
-      getConfig.mockResolvedValue(null);
+      getConfig.mockResolvedValue({ content: "Default unit conversion prompt content" });
 
       const testRouter = t.router({
         getPrompt: adminProcedure
           .input(z.object({ name: PromptNameSchema }))
           .query(async ({ input }) => {
             const configKey = PROMPT_NAME_TO_CONFIG_KEY[input.name];
-            const override = await getConfig(configKey);
+            const stored = await getConfig(configKey);
             const defaultContent = getDefaultPrompt(input.name);
 
-            if (override && typeof override === "object" && "content" in override) {
-              return {
-                name: input.name,
-                content: override.content as string,
-                isCustom: true,
-                defaultContent,
-              };
-            }
+            const content = stored?.content ?? defaultContent;
+            const isCustom = content !== defaultContent;
 
             return {
               name: input.name,
-              content: defaultContent,
-              isCustom: false,
+              content,
+              isCustom,
               defaultContent,
             };
           }),
@@ -201,6 +184,7 @@ describe("prompts procedures", () => {
 
       expect(result.name).toBe("unit-conversion");
       expect(result.content).toBe("Default unit conversion prompt content");
+      expect(result.isCustom).toBe(false);
       expect(getConfig).toHaveBeenCalledWith(ServerConfigKeys.PROMPT_UNIT_CONVERSION);
     });
 
@@ -212,13 +196,16 @@ describe("prompts procedures", () => {
           .input(z.object({ name: PromptNameSchema }))
           .query(async ({ input }) => {
             const configKey = PROMPT_NAME_TO_CONFIG_KEY[input.name];
-            const override = await getConfig(configKey);
+            const stored = await getConfig(configKey);
             const defaultContent = getDefaultPrompt(input.name);
+
+            const content = stored?.content ?? defaultContent;
+            const isCustom = content !== defaultContent;
 
             return {
               name: input.name,
-              content: override?.content ?? defaultContent,
-              isCustom: !!override,
+              content,
+              isCustom,
               defaultContent,
             };
           }),
@@ -341,18 +328,19 @@ describe("prompts procedures", () => {
   });
 
   describe("resetPrompt", () => {
-    it("deletes custom prompt from database", async () => {
+    it("resets prompt to default by re-seeding from file", async () => {
       const ctx = createMockAdminContext(mockAdmin);
 
-      deleteConfig.mockResolvedValue(undefined);
+      setConfig.mockResolvedValue(undefined);
 
       const testRouter = t.router({
         resetPrompt: adminProcedure
           .input(z.object({ name: PromptNameSchema }))
-          .mutation(async ({ input }) => {
+          .mutation(async ({ input, ctx: procedureCtx }) => {
             const configKey = PROMPT_NAME_TO_CONFIG_KEY[input.name];
+            const defaultContent = getDefaultPrompt(input.name);
 
-            await deleteConfig(configKey);
+            await setConfig(configKey, { content: defaultContent }, procedureCtx.user.id, false);
 
             return { success: true };
           }),
@@ -362,21 +350,27 @@ describe("prompts procedures", () => {
       const result = await caller.resetPrompt({ name: "recipe-extraction" });
 
       expect(result).toEqual({ success: true });
-      expect(deleteConfig).toHaveBeenCalledWith(ServerConfigKeys.PROMPT_RECIPE_EXTRACTION);
+      expect(setConfig).toHaveBeenCalledWith(
+        ServerConfigKeys.PROMPT_RECIPE_EXTRACTION,
+        { content: "Default recipe extraction prompt content" },
+        mockAdmin.id,
+        false
+      );
     });
 
-    it("resets unit-conversion prompt", async () => {
+    it("resets unit-conversion prompt to default", async () => {
       const ctx = createMockAdminContext(mockAdmin);
 
-      deleteConfig.mockResolvedValue(undefined);
+      setConfig.mockResolvedValue(undefined);
 
       const testRouter = t.router({
         resetPrompt: adminProcedure
           .input(z.object({ name: PromptNameSchema }))
-          .mutation(async ({ input }) => {
+          .mutation(async ({ input, ctx: procedureCtx }) => {
             const configKey = PROMPT_NAME_TO_CONFIG_KEY[input.name];
+            const defaultContent = getDefaultPrompt(input.name);
 
-            await deleteConfig(configKey);
+            await setConfig(configKey, { content: defaultContent }, procedureCtx.user.id, false);
 
             return { success: true };
           }),
@@ -386,18 +380,26 @@ describe("prompts procedures", () => {
       const result = await caller.resetPrompt({ name: "unit-conversion" });
 
       expect(result).toEqual({ success: true });
-      expect(deleteConfig).toHaveBeenCalledWith(ServerConfigKeys.PROMPT_UNIT_CONVERSION);
+      expect(setConfig).toHaveBeenCalledWith(
+        ServerConfigKeys.PROMPT_UNIT_CONVERSION,
+        { content: "Default unit conversion prompt content" },
+        mockAdmin.id,
+        false
+      );
     });
   });
 
   describe("listPrompts", () => {
-    it("lists all prompts with custom status", async () => {
+    it("lists all prompts with custom status based on content comparison", async () => {
       const ctx = createMockAdminContext(mockAdmin);
 
-      // Recipe extraction has custom override, unit conversion does not
+      // Recipe extraction has custom content, unit conversion has default
       getConfig.mockImplementation((key: string) => {
         if (key === ServerConfigKeys.PROMPT_RECIPE_EXTRACTION) {
           return Promise.resolve({ content: "Custom content" });
+        }
+        if (key === ServerConfigKeys.PROMPT_UNIT_CONVERSION) {
+          return Promise.resolve({ content: "Default unit conversion prompt content" });
         }
 
         return Promise.resolve(null);
@@ -409,11 +411,12 @@ describe("prompts procedures", () => {
           const results = await Promise.all(
             prompts.map(async (name) => {
               const configKey = PROMPT_NAME_TO_CONFIG_KEY[name];
-              const override = await getConfig(configKey);
+              const stored = await getConfig(configKey);
+              const defaultContent = getDefaultPrompt(name);
 
               return {
                 name,
-                isCustom: override !== null,
+                isCustom: stored?.content !== defaultContent,
               };
             })
           );
@@ -432,10 +435,20 @@ describe("prompts procedures", () => {
       ]);
     });
 
-    it("shows all prompts as default when no overrides exist", async () => {
+    it("shows all prompts as default when content matches defaults", async () => {
       const ctx = createMockAdminContext(mockAdmin);
 
-      getConfig.mockResolvedValue(null);
+      // Both prompts have default content
+      getConfig.mockImplementation((key: string) => {
+        if (key === ServerConfigKeys.PROMPT_RECIPE_EXTRACTION) {
+          return Promise.resolve({ content: "Default recipe extraction prompt content" });
+        }
+        if (key === ServerConfigKeys.PROMPT_UNIT_CONVERSION) {
+          return Promise.resolve({ content: "Default unit conversion prompt content" });
+        }
+
+        return Promise.resolve(null);
+      });
 
       const testRouter = t.router({
         listPrompts: adminProcedure.query(async () => {
@@ -443,11 +456,12 @@ describe("prompts procedures", () => {
           const results = await Promise.all(
             prompts.map(async (name) => {
               const configKey = PROMPT_NAME_TO_CONFIG_KEY[name];
-              const override = await getConfig(configKey);
+              const stored = await getConfig(configKey);
+              const defaultContent = getDefaultPrompt(name);
 
               return {
                 name,
-                isCustom: override !== null,
+                isCustom: stored?.content !== defaultContent,
               };
             })
           );
