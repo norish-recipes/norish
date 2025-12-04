@@ -72,19 +72,10 @@ const ServerConfigSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 
+  // During build (SKIP_ENV_VALIDATION=1), use a placeholder key for Next.js compilation
+  // At runtime, require a real 32+ char key - the placeholder is never persisted in the image
   MASTER_KEY: isBuild
-    ? z
-        .string()
-        .default("QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=")
-        .refine(
-          (val) =>
-            process.env.NODE_ENV !== "production" ||
-            val !== "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
-          {
-            message:
-              "MASTER_KEY must be set in production. The default build key is not secure for production use.",
-          }
-        )
+    ? z.string().default("QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=")
     : z.string().min(32),
 
   // AI Provider Configuration
