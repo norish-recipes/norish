@@ -5,6 +5,37 @@ import { serverLogger as log } from "@/server/logger";
 
 let browser: Browser | null = null;
 
+/**
+ * Get the WebSocket endpoint from Chrome's remote debugging port.
+ * Chrome exposes /json/version which contains the webSocketDebuggerUrl.
+ */
+async function discoverWebSocketEndpoint(baseUrl: string): Promise<string> {
+  // Convert ws:// to http:// for the version endpoint
+  const httpUrl = baseUrl.replace(/^ws:\/\//, "http://").replace(/\/$/, "");
+  const versionUrl = `${httpUrl}/json/version`;
+
+  log.debug({ versionUrl }, "Discovering Chrome WebSocket endpoint");
+
+  const response = await fetch(versionUrl);
+
+  if (!response.ok) {
+    throw new Error(`Failed to get Chrome version info: ${response.status} ${response.statusText}`);
+  }
+
+  const versionInfo = (await response.json()) as { webSocketDebuggerUrl?: string };
+
+  if (!versionInfo.webSocketDebuggerUrl) {
+    throw new Error("Chrome did not return webSocketDebuggerUrl");
+  }
+
+  log.debug(
+    { webSocketDebuggerUrl: versionInfo.webSocketDebuggerUrl },
+    "Discovered Chrome WebSocket endpoint"
+  );
+
+  return versionInfo.webSocketDebuggerUrl;
+}
+
 export async function getBrowser(): Promise<Browser> {
   if (browser && browser.connected) return browser;
 
@@ -14,7 +45,7 @@ export async function getBrowser(): Promise<Browser> {
   if (chromeWsEndpoint) {
     try {
       browser = await puppeteer.connect({
-        browserWSEndpoint: chromeWsEndpoint,
+        browserWSEndpoint: await discoverWebSocketEndpoint(chromeWsEndpoint),
       });
     } catch (error) {
       log.error({ err: error }, "Failed to connect to remote Chrome");

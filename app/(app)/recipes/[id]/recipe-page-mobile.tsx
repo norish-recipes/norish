@@ -18,7 +18,7 @@ export default function RecipePageMobile() {
   return (
     <div className="flex w-full flex-col">
       {/* Hero Image */}
-      <div className="bg-default-200 relative h-[45vh] min-h-[320px] w-full overflow-hidden">
+      <div className="bg-default-200 relative h-72 w-full overflow-hidden">
         {recipe.image ? (
           <Image
             fill
