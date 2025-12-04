@@ -78,6 +78,13 @@
       "when": 1764702611027,
       "tag": "0010_last_mattie_franklin",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1764832388751,
+      "tag": "0011_closed_frank_castle",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "user_single_server_owner_idx" ON "user" USING btree ("id") WHERE "user"."isServerOwner" = true;

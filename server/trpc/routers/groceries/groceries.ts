@@ -1,5 +1,6 @@
 import type { GroceryUpdateDto } from "@/types";
 
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { router } from "../../trpc";
@@ -93,7 +94,10 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       const ownerId = ownerIds.get(groceryId);
 
       if (!ownerId) {
-        throw new Error("Grocery not found");
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Grocery not found",
+        });
       }
 
       await assertHouseholdAccess(ctx.user.id, ownerId);
@@ -111,7 +115,10 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       const parsed = GroceryUpdateBaseSchema.safeParse(updateData);
 
       if (!parsed.success) {
-        throw new Error("Invalid grocery data");
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid grocery data",
+        });
       }
 
       const updatedGroceries = await updateGroceries([parsed.data as GroceryUpdateDto]);
@@ -139,7 +146,10 @@ const toggle = authedProcedure.input(GroceryToggleSchema).mutation(({ ctx, input
   getGroceryOwnerIds(groceryIds)
     .then(async (ownerIds) => {
       if (ownerIds.size !== groceryIds.length) {
-        throw new Error("Some groceries not found");
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Some groceries not found",
+        });
       }
 
       for (const ownerId of ownerIds.values()) {
@@ -149,7 +159,10 @@ const toggle = authedProcedure.input(GroceryToggleSchema).mutation(({ ctx, input
       const groceries = await getGroceriesByIds(groceryIds);
 
       if (groceries.length === 0) {
-        throw new Error("Groceries not found");
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Groceries not found",
+        });
       }
 
       const updatedGroceries = groceries.map((grocery) => ({
@@ -160,7 +173,10 @@ const toggle = authedProcedure.input(GroceryToggleSchema).mutation(({ ctx, input
       const parsed = z.array(GroceryUpdateBaseSchema).safeParse(updatedGroceries);
 
       if (!parsed.success) {
-        throw new Error("Invalid data");
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid data",
+        });
       }
 
       const updated = await updateGroceries(parsed.data as GroceryUpdateDto[]);

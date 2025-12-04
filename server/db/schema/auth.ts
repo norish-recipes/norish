@@ -9,7 +9,7 @@ import {
   integer,
   index,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // User table with encrypted PII fields
 export const users = pgTable(
@@ -41,7 +41,12 @@ export const users = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => [uniqueIndex("user_email_hmac_idx").on(t.emailHmac)]
+  (t) => [
+    uniqueIndex("user_email_hmac_idx").on(t.emailHmac),
+    uniqueIndex("user_single_server_owner_idx")
+      .on(t.id)
+      .where(sql`${t.isServerOwner} = true`),
+  ]
 );
 
 // OAuth accounts linked to users (BetterAuth native column names)

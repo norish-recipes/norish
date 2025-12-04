@@ -1,3 +1,5 @@
+import { TRPCError } from "@trpc/server";
+
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 import { emitByPolicy } from "../../helpers";
@@ -102,7 +104,10 @@ async function assertRecipeAccess(
   );
 
   if (!canAccess) {
-    throw new Error("FORBIDDEN");
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You do not have permission to access this recipe",
+    });
   }
 }
 
@@ -174,7 +179,10 @@ const create = authedProcedure.input(FullRecipeInsertSchema).mutation(({ ctx, in
   createRecipeWithRefs(recipeId, ctx.user.id, input)
     .then(async (createdId) => {
       if (!createdId) {
-        throw new Error("Failed to create recipe");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create recipe",
+        });
       }
 
       const dashboardDto = await dashboardRecipe(createdId);
@@ -274,18 +282,27 @@ const convertMeasurements = authedProcedure
     checkAIEnabled()
       .then((aiEnabled) => {
         if (!aiEnabled) {
-          throw new Error("AI features are disabled");
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "AI features are disabled",
+          });
         }
 
         return getRecipeFull(recipeId);
       })
       .then((recipe) => {
         if (!recipe) {
-          throw new Error("Recipe not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Recipe not found",
+          });
         }
 
         if (recipe.recipeIngredients.length === 0) {
-          throw new Error("Recipe has no ingredients to convert");
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Recipe has no ingredients to convert",
+          });
         }
 
         // Check edit permission (uses recipe.userId directly since we have the full recipe)
@@ -301,7 +318,10 @@ const convertMeasurements = authedProcedure
 
         return permissionCheck.then((canEdit) => {
           if (!canEdit) {
-            throw new Error("FORBIDDEN");
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "You do not have permission to edit this recipe",
+            });
           }
 
           return recipe;
@@ -335,7 +355,10 @@ const convertMeasurements = authedProcedure
           .then(({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(recipe, targetSystem))
           .then((converted) => {
             if (!converted) {
-              throw new Error("Conversion failed, please try again.");
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Conversion failed, please try again.",
+              });
             }
 
             return { recipe, converted };

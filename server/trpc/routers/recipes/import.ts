@@ -1,5 +1,7 @@
 import type { PermissionLevel } from "@/server/db/zodSchemas/server-config";
 
+import { TRPCError } from "@trpc/server";
+
 import { emitByPolicy, type PolicyEmitContext } from "../../helpers";
 
 import { recipeEmitter } from "./emitter";
@@ -48,13 +50,19 @@ async function processImport(
   const parsedRecipe = await parseRecipeFromUrl(url);
 
   if (!parsedRecipe) {
-    throw new Error("Failed to parse recipe from URL");
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Failed to parse recipe from URL",
+    });
   }
 
   const createdId = await createRecipeWithRefs(recipeId, ctx.userId, parsedRecipe);
 
   if (!createdId) {
-    throw new Error("Failed to save imported recipe");
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to save imported recipe",
+    });
   }
 
   const dashboardDto = await dashboardRecipe(createdId);

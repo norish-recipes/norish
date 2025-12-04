@@ -1,3 +1,6 @@
+import type { BetterAuthOptions, Where } from "better-auth";
+import type { DBAdapter } from "better-auth/adapters";
+
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { apiKey, genericOAuth } from "better-auth/plugins";
@@ -20,6 +23,48 @@ import { countUsers } from "@/server/db/repositories/users";
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
 import * as schema from "@/server/db/schema/auth";
 import { authLogger } from "@/server/logger";
+
+/**
+ * Creates a wrapped adapter factory that intercepts user email lookups
+ * and converts them to use emailHmac for encrypted email lookup.
+ *
+ * Better Auth queries users with WHERE email = 'plain@email.com',
+ * but we store encrypted emails. This wrapper converts email lookups
+ * to use the deterministic emailHmac field instead.
+ */
+function createEncryptedEmailAdapter<T extends BetterAuthOptions>(
+  baseAdapterFactory: (options: T) => DBAdapter<T>
+): (options: T) => DBAdapter<T> {
+  return (options: T) => {
+    const baseAdapter = baseAdapterFactory(options);
+
+    return {
+      ...baseAdapter,
+      findOne: async (params) => {
+        if (params.model === "user" && params.where) {
+          const emailWhere = params.where.find(
+            (w: Where) => w.field === "email" && w.value && typeof w.value === "string"
+          );
+
+          if (emailWhere) {
+            // Lookup by email - convert to emailHmac
+            const emailHmacValue = hmacIndex(emailWhere.value as string);
+            const modifiedWhere = params.where.map((w: Where) =>
+              w.field === "email" ? { ...w, field: "emailHmac", value: emailHmacValue } : w
+            );
+
+            return baseAdapter.findOne({
+              ...params,
+              where: modifiedWhere,
+            });
+          }
+        }
+
+        return baseAdapter.findOne(params);
+      },
+    };
+  };
+}
 
 // Helper to decrypt user object fields
 function decryptUser(user: any): any {
@@ -102,17 +147,23 @@ let _auth: ReturnType<typeof betterAuth> | null = null;
 function createAuth() {
   const emailAndPasswordConfig = buildEmailAndPasswordConfig();
 
+  // Create base drizzle adapter factory
+  const baseAdapterFactory = drizzleAdapter(db, {
+    provider: "pg",
+    schema: {
+      user: schema.users,
+      session: schema.sessions,
+      account: schema.accounts,
+      verification: schema.verification,
+      apikey: schema.apiKeys,
+    },
+  });
+
+  // Wrap adapter factory to handle encrypted email lookups
+  const encryptedEmailAdapter = createEncryptedEmailAdapter(baseAdapterFactory);
+
   return betterAuth({
-    database: drizzleAdapter(db, {
-      provider: "pg",
-      schema: {
-        user: schema.users,
-        session: schema.sessions,
-        account: schema.accounts,
-        verification: schema.verification,
-        apikey: schema.apiKeys,
-      },
-    }),
+    database: encryptedEmailAdapter,
     secret: AUTH_SECRET,
     baseURL: SERVER_CONFIG.AUTH_URL,
     trustedOrigins: [

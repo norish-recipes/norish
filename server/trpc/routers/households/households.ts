@@ -1,6 +1,7 @@
 import type { HouseholdSettingsDto, HouseholdAdminSettingsDto } from "@/types/dto/household";
 import type { HouseholdUserInfo } from "./types";
 
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { router } from "../../trpc";
@@ -89,7 +90,10 @@ const create = authedProcedure
     const existingHousehold = await getHouseholdForUser(ctx.user.id);
 
     if (existingHousehold) {
-      throw new Error("You are already in a household. Leave it first to create a new one.");
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "You are already in a household. Leave it first to create a new one.",
+      });
     }
 
     // Create household async and emit events
@@ -131,19 +135,28 @@ const join = authedProcedure
     const existingHousehold = await getHouseholdForUser(ctx.user.id);
 
     if (existingHousehold) {
-      throw new Error("You are already in a household. Leave it first to join another one.");
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "You are already in a household. Leave it first to join another one.",
+      });
     }
 
     // Find household by code
     const household = await findHouseholdByJoinCode(cleaned);
 
     if (!household) {
-      throw new Error("Invalid join code");
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Invalid join code",
+      });
     }
 
     // Check if code is expired
     if (household.joinCodeExpiresAt && new Date(household.joinCodeExpiresAt) < new Date()) {
-      throw new Error("This join code has expired");
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "This join code has expired",
+      });
     }
 
     const householdId = household.id;
@@ -189,14 +202,19 @@ const leave = authedProcedure
     const household = await getHouseholdForUser(ctx.user.id);
 
     if (!household || household.id !== householdId) {
-      throw new Error("You are not in this household");
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "You are not in this household",
+      });
     }
 
     // Check if user is admin with other members
     if (household.adminUserId === ctx.user.id && household.users.length > 1) {
-      throw new Error(
-        "You must transfer admin privileges before leaving. Go to Household Settings to assign a new admin."
-      );
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message:
+          "You must transfer admin privileges before leaving. Go to Household Settings to assign a new admin.",
+      });
     }
 
     // Store remaining member IDs from the already-fetched household data
@@ -233,11 +251,17 @@ const kick = authedProcedure
     const isAdmin = await isUserHouseholdAdmin(householdId, ctx.user.id);
 
     if (!isAdmin) {
-      throw new Error("Only the household admin can kick members");
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only the household admin can kick members",
+      });
     }
 
     if (userIdToKick === ctx.user.id) {
-      throw new Error("You cannot kick yourself");
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "You cannot kick yourself",
+      });
     }
 
     // Verify the user is actually in the household
@@ -245,7 +269,10 @@ const kick = authedProcedure
     const kickedUser = household?.users.find((u) => u.id === userIdToKick);
 
     if (!kickedUser) {
-      throw new Error("User is not a member of this household");
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "User is not a member of this household",
+      });
     }
 
     // Kick user async and emit events
@@ -289,7 +316,10 @@ const regenerateCode = authedProcedure
     const isAdmin = await isUserHouseholdAdmin(householdId, ctx.user.id);
 
     if (!isAdmin) {
-      throw new Error("Only the household admin can regenerate the join code");
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only the household admin can regenerate the join code",
+      });
     }
 
     // Regenerate code async and emit events
@@ -324,11 +354,17 @@ const transferAdmin = authedProcedure
     const isAdmin = await isUserHouseholdAdmin(householdId, ctx.user.id);
 
     if (!isAdmin) {
-      throw new Error("Only the current admin can transfer admin privileges");
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only the current admin can transfer admin privileges",
+      });
     }
 
     if (newAdminId === ctx.user.id) {
-      throw new Error("You are already the admin");
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "You are already the admin",
+      });
     }
 
     // Transfer admin async and emit events

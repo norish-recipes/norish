@@ -1,5 +1,7 @@
 import type { Slot } from "@/types";
 
+import { TRPCError } from "@trpc/server";
+
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 
@@ -44,7 +46,10 @@ const create = authedProcedure.input(PlannedRecipeCreateSchema).mutation(({ ctx,
   getRecipeFull(recipeId)
     .then((recipe) => {
       if (!recipe) {
-        throw new Error("Recipe not found");
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Recipe not found",
+        });
       }
 
       return createPlannedRecipe(id, ctx.user.id, recipeId, date, slot).then((plannedRecipe) => ({
@@ -88,7 +93,10 @@ const deleteProcedure = authedProcedure
     getPlannedRecipeOwnerId(id)
       .then(async (ownerId) => {
         if (!ownerId) {
-          throw new Error("Planned recipe not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Planned recipe not found",
+          });
         }
 
         await assertHouseholdAccess(ctx.user.id, ownerId);
@@ -129,7 +137,10 @@ const updateDate = authedProcedure
     getPlannedRecipeOwnerId(id)
       .then(async (ownerId) => {
         if (!ownerId) {
-          throw new Error("Planned recipe not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Planned recipe not found",
+          });
         }
 
         await assertHouseholdAccess(ctx.user.id, ownerId);

@@ -1,5 +1,7 @@
 import type { Slot } from "@/types";
 
+import { TRPCError } from "@trpc/server";
+
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 
@@ -70,7 +72,10 @@ const deleteProcedure = authedProcedure.input(NoteDeleteSchema).mutation(({ ctx,
   getNoteOwnerId(id)
     .then(async (ownerId) => {
       if (!ownerId) {
-        throw new Error("Note not found");
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Note not found",
+        });
       }
 
       await assertHouseholdAccess(ctx.user.id, ownerId);
@@ -108,7 +113,10 @@ const updateDate = authedProcedure.input(NoteUpdateDateSchema).mutation(({ ctx, 
   getNoteOwnerId(id)
     .then(async (ownerId) => {
       if (!ownerId) {
-        throw new Error("Note not found");
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Note not found",
+        });
       }
 
       await assertHouseholdAccess(ctx.user.id, ownerId);

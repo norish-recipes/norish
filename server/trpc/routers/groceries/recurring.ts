@@ -1,5 +1,6 @@
 import type { GroceryInsertDto } from "@/types";
 
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { router } from "../../trpc";
@@ -109,7 +110,10 @@ const updateRecurring = authedProcedure
     getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
-          throw new Error("Recurring grocery not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Recurring grocery not found",
+          });
         }
 
         await assertHouseholdAccess(ctx.user.id, ownerId);
@@ -157,7 +161,10 @@ const deleteRecurring = authedProcedure
     getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
-          throw new Error("Recurring grocery not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Recurring grocery not found",
+          });
         }
 
         await assertHouseholdAccess(ctx.user.id, ownerId);
@@ -201,7 +208,10 @@ const checkRecurring = authedProcedure
     getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
-          throw new Error("Recurring grocery not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Recurring grocery not found",
+          });
         }
 
         await assertHouseholdAccess(ctx.user.id, ownerId);
@@ -209,13 +219,19 @@ const checkRecurring = authedProcedure
         const recurringGrocery = await getRecurringGroceryById(recurringGroceryId);
 
         if (!recurringGrocery) {
-          throw new Error("Recurring grocery not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Recurring grocery not found",
+          });
         }
 
         const updated = await updateGrocery({ id: groceryId, isDone });
 
         if (!updated) {
-          throw new Error("Grocery not found");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Grocery not found",
+          });
         }
 
         if (isDone) {
