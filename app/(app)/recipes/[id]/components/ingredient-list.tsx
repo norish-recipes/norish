@@ -1,10 +1,23 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useRecipeContextRequired } from "../context";
 
 import { RecipeIngredientsDto } from "@/types/dto/recipe-ingredient";
+
+// Format amount as a clean decimal (e.g., 2.5, 0.25)
+function formatAmount(n: number | null | string): string {
+  if (n == null || n === "") return "";
+
+  const num = typeof n === "string" ? parseFloat(n) : n;
+
+  if (isNaN(num)) return String(n);
+  if (Number.isInteger(num)) return String(num);
+
+  // Remove trailing zeros (e.g., 2.50 -> 2.5)
+  return num.toFixed(2).replace(/\.?0+$/, "");
+}
 
 export default function IngredientsList() {
   const { adjustedIngredients, recipe } = useRecipeContextRequired();
@@ -21,7 +34,7 @@ export default function IngredientsList() {
         .filter((it) => it.systemUsed === recipe.systemUsed)
         .sort((a, b) => a.order - b.order)
         .map((it, idx) => {
-          const amount = it.amount != null ? it.amount : "";
+          const amount = formatAmount(it.amount);
           const unit = it.unit || "";
 
           return (

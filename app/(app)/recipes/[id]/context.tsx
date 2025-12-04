@@ -89,18 +89,25 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
 
   const setIngredientAmounts = useCallback(
     (servings: number) => {
-      if (!recipe || servings == null || servings == recipe.servings) return;
+      if (!recipe || servings == null) return;
 
       setServings(servings);
+
+      // If servings equals original recipe servings, reset to original amounts
+      if (servings === recipe.servings) {
+        setAdjustedIngredients(recipe.recipeIngredients);
+        return;
+      }
+
       setAdjustedIngredients(
         recipe.recipeIngredients.map((ing) => {
           if (ing.amount == null && ing.amount === "") return ing;
 
-          const amountInt = Number(ing.amount);
+          const amountNum = Number(ing.amount);
 
-          if (isNaN(amountInt) || amountInt <= 0) return ing;
+          if (isNaN(amountNum) || amountNum <= 0) return ing;
 
-          const newAmount = Math.round((amountInt / recipe.servings) * servings * 100) / 100;
+          const newAmount = Math.round((amountNum / recipe.servings) * servings * 10000) / 10000;
 
           return { ...ing, amount: newAmount };
         })
