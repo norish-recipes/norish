@@ -135,16 +135,16 @@ services:
 
   # Chrome headless is fully optional but advised as this does improve the scraping
   chrome-headless:
-    image: ghcr.io/browserless/chrome:latest
+    image: zenika/alpine-chrome:latest
     container_name: chrome-headless
     restart: unless-stopped
-    networks:
-      - default
-    environment:
-      DEBUG: "browserless:*"
-      MAX_CONCURRENT_SESSIONS: 5
-      CONNECTION_TIMEOUT: 300000
-      KEEP_ALIVE: "true"
+    command:
+      - "--no-sandbox"
+      - "--disable-gpu"
+      - "--disable-dev-shm-usage"
+      - "--remote-debugging-address=0.0.0.0"
+      - "--remote-debugging-port=3000"
+      - "--headless"
     ports:
       - "3003:3000"
 

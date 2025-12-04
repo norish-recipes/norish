@@ -37,7 +37,6 @@ export async function fetchViaPuppeteer(targetUrl: string): Promise<string> {
     const browser = await getBrowser();
     const page = await browser.newPage();
 
-    // Stealth: Override navigator properties to avoid detection
     await page.evaluateOnNewDocument(() => {
       // Override the webdriver property
       Object.defineProperty(navigator, "webdriver", { get: () => false });
@@ -79,22 +78,19 @@ export async function fetchViaPuppeteer(targetUrl: string): Promise<string> {
       DNT: BROWSER_HEADERS["DNT"],
     });
 
-    // Set user agent with client hints metadata (using new API)
-    await page.setUserAgent({
-      userAgent: BROWSER_HEADERS["User-Agent"],
-      userAgentMetadata: {
-        brands: [
-          { brand: "Google Chrome", version: "131" },
-          { brand: "Chromium", version: "131" },
-          { brand: "Not_A Brand", version: "24" },
-        ],
-        fullVersion: "131.0.0.0",
-        platform: "Windows",
-        platformVersion: "10.0.0",
-        architecture: "x86",
-        model: "",
-        mobile: false,
-      },
+    // Set user agent with client hints metadata
+    await page.setUserAgent(BROWSER_HEADERS["User-Agent"], {
+      brands: [
+        { brand: "Google Chrome", version: "131" },
+        { brand: "Chromium", version: "131" },
+        { brand: "Not_A Brand", version: "24" },
+      ],
+      fullVersion: "131.0.0.0",
+      platform: "Windows",
+      platformVersion: "10.0.0",
+      architecture: "x86",
+      model: "",
+      mobile: false,
     });
 
     // Set viewport to look like a real browser
