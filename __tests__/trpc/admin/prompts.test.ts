@@ -480,4 +480,3 @@ describe("prompts procedures", () => {
     });
   });
 });
-
