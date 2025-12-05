@@ -2,21 +2,14 @@ import type { UnitsMap } from "@/server/db/zodSchemas/server-config";
 
 import { jsonrepair } from "jsonrepair";
 import { parseIngredient } from "parse-ingredient";
+import { decode } from "html-entities";
 
 import { httpUrlSchema } from "./schema";
 
 export function stripHtmlTags(input: string): string {
-  return input
-    .replace(/<[^>]*>/g, " ") // Replace HTML tags with space
-    .replace(/&nbsp;/gi, " ") // Decode non-breaking space
-    .replace(/&amp;/gi, "&") // Decode ampersand
-    .replace(/&lt;/gi, "<") // Decode less than
-    .replace(/&gt;/gi, ">") // Decode greater than
-    .replace(/&quot;/gi, '"') // Decode quote
-    .replace(/&#0?39;/gi, "'") // Decode apostrophe
-    .replace(/&apos;/gi, "'") // Decode apostrophe
-    .trim()
-    .replace(/\s+/g, " "); // Collapse multiple spaces
+  const withoutTags = input.replace(/<[^>]*>/g, " ");
+
+  return decode(withoutTags).trim().replace(/\s+/g, " ");
 }
 
 export const parseJsonWithRepair = (input: string): any | null => {

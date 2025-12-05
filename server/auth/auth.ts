@@ -168,6 +168,7 @@ function createAuth() {
     baseURL: SERVER_CONFIG.AUTH_URL,
     trustedOrigins: [
       SERVER_CONFIG.AUTH_URL,
+      ...SERVER_CONFIG.TRUSTED_ORIGINS,
       ...(process.env.NODE_ENV === "development"
         ? [
             "http://*/*",

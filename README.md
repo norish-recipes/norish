@@ -92,6 +92,10 @@ services:
       MASTER_KEY: <32-byte-base64-key> # Generate with: openssl rand -base64 32
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000
 
+      # OPTIONAL
+      # NEXT_PUBLIC_LOG_LEVEL: info       # trace, debug, info, warn, error, fatal (default: info in prod, debug in dev)
+      # TRUSTED_ORIGINS:http://192.168.1.100:3000,https://norish.example.com  # Additional trusted origins, comma separated. Useful when behind a proxy or using multiple domains.
+
       # ─────────────────────────────────────────────────────────────────────────
       # FIRST USER SETUP
       # ─────────────────────────────────────────────────────────────────────────
@@ -220,11 +224,13 @@ Only a few environment variables are required. All other settings are managed vi
 
 ### Optional Variables
 
-| Variable           | Description              | Default        |
-| ------------------ | ------------------------ | -------------- |
-| `HOST`             | Server bind address      | `0.0.0.0`      |
-| `PORT`             | Server port              | `3000`         |
-| `RECIPES_DISK_DIR` | Upload storage directory | `/app/uploads` |
+| Variable                | Description                             | Default        |
+| ----------------------- | --------------------------------------- | -------------- |
+| `HOST`                  | Server bind address                     | `0.0.0.0`      |
+| `PORT`                  | Server port                             | `3000`         |
+| `RECIPES_DISK_DIR`      | Upload storage directory                | `/app/uploads` |
+| `NEXT_PUBLIC_LOG_LEVEL` | Log level                               | `info`         |
+| `TRUSTED_ORIGINS`       | Comma seperated list of trusted origins | `empty`        |
 
 ### First-Time Auth Provider
 

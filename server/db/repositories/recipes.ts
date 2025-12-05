@@ -14,6 +14,7 @@ import { attachIngredientsToRecipeByInputTx } from "./ingredients";
 import { createManyRecipeStepsTx } from "./steps";
 import { attachTagsToRecipeByInputTx } from "./tags";
 
+import { stripHtmlTags } from "@/lib/helpers";
 import {
   RecipeDashboardDTO,
   FilterMode,
@@ -362,9 +363,9 @@ export async function createRecipeWithRefs(
 
   const toInsert = {
     id: recipeId,
-    name: payload.name,
+    name: stripHtmlTags(payload.name),
     userId,
-    description: payload.description ?? null,
+    description: payload.description ? stripHtmlTags(payload.description) : null,
     url: payload.url ?? null,
     image: payload.image ?? null,
     servings: payload.servings ?? 1,
@@ -579,8 +580,9 @@ export async function updateRecipeWithRefs(
     // Update recipe base fields
     const updateData: any = {};
 
-    if (payload.name !== undefined) updateData.name = payload.name;
-    if (payload.description !== undefined) updateData.description = payload.description;
+    if (payload.name !== undefined) updateData.name = stripHtmlTags(payload.name);
+    if (payload.description !== undefined)
+      updateData.description = payload.description ? stripHtmlTags(payload.description) : null;
     if (payload.url !== undefined) updateData.url = payload.url;
     if (payload.image !== undefined) updateData.image = payload.image;
     if (payload.servings !== undefined) updateData.servings = payload.servings;

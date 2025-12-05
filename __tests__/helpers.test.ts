@@ -165,4 +165,28 @@ describe("stripHtmlTags", () => {
   it("normalizes newlines and tabs to single space", () => {
     expect(stripHtmlTags("hello\n\nworld\tthere")).toBe("hello world there");
   });
+
+  it("decodes numeric HTML entities (&#NNN;)", () => {
+    expect(stripHtmlTags("&#248;")).toBe("ø");
+    expect(stripHtmlTags("caf&#233;")).toBe("café");
+    expect(stripHtmlTags("R&#248;dgr&#248;d med fl&#248;de")).toBe("Rødgrød med fløde");
+  });
+
+  it("decodes hex HTML entities (&#xHH;)", () => {
+    expect(stripHtmlTags("&#xF8;")).toBe("ø");
+    expect(stripHtmlTags("&#xe9;")).toBe("é");
+  });
+
+  it("decodes smart quotes and special punctuation", () => {
+    expect(stripHtmlTags("&#8220;Hello&#8221;")).toBe("\u201CHello\u201D");
+    expect(stripHtmlTags("It&#8217;s")).toBe("It\u2019s");
+    expect(stripHtmlTags("180&#176;C")).toBe("180°C");
+  });
+
+  it("handles mixed entities and HTML tags", () => {
+    expect(stripHtmlTags("<b>Sm&#248;rrebr&#248;d</b>")).toBe("Smørrebrød");
+    expect(stripHtmlTags("<p>Bake at 180&#176;C for 30 minutes</p>")).toBe(
+      "Bake at 180°C for 30 minutes"
+    );
+  });
 });

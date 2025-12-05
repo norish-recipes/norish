@@ -46,6 +46,19 @@ const ServerConfigSchema = z.object({
   PORT: z.coerce.number().default(3000),
   // Public URL for auth callbacks etc.
   AUTH_URL: z.url().default("http://localhost:3000"),
+  // Additional trusted origins (comma-separated URLs) for multi-domain access
+  TRUSTED_ORIGINS: z
+    .string()
+    .optional()
+    .transform((val) =>
+      val
+        ? val
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : []
+    )
+    .pipe(z.array(z.string())),
   UPLOADS_DIR: z.string().default(path.resolve("./uploads/")),
 
   DATABASE_URL: z.url(),

@@ -1,6 +1,6 @@
 {
   "name": "norish",
-  "version": "0.13.4-beta",
+  "version": "0.13.5-beta",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.11.0",
@@ -37,6 +37,7 @@
     "drizzle-orm": "0.44.5",
     "drizzle-zod": "0.8.3",
     "heic-convert": "^2.1.0",
+    "html-entities": "^2.6.0",
     "next": "16.0.7",
     "node-cron": "^4.2.1",
     "pg": "8.16.3",
