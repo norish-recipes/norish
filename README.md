@@ -133,7 +133,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  # Chrome headless is fully optional but advised as this does improve the scraping
+  # Chrome headless 
   chrome-headless:
     image: zenika/alpine-chrome:latest
     container_name: chrome-headless
@@ -211,20 +211,20 @@ Only a few environment variables are required. All other settings are managed vi
 
 ### Required Variables
 
-| Variable       | Description                             | Example                               |
-| -------------- | --------------------------------------- | ------------------------------------- |
-| `AUTH_URL`     | Public URL of your Norish instance      | `https://norish.example.com`          |
-| `DATABASE_URL` | PostgreSQL connection string            | `postgres://user:pass@db:5432/norish` |
-| `MASTER_KEY`   | Master key for deriving encryption keys | `openssl rand -base64 32`             |
+| Variable             | Description                                   | Example                               |
+| -------------------- | --------------------------------------------- | ------------------------------------- |
+| `AUTH_URL`           | Public URL of your Norish instance            | `https://norish.example.com`          |
+| `DATABASE_URL`       | PostgreSQL connection string                  | `postgres://user:pass@db:5432/norish` |
+| `MASTER_KEY`         | Master key for deriving encryption keys       | `openssl rand -base64 32`             |
+| `CHROME_WS_ENDPOINT` | Puppeteer WebSocket endpoint for web scraping | `ws://chrome-headless:3000`           |
 
 ### Optional Variables
 
-| Variable             | Description                                        | Default        |
-| -------------------- | -------------------------------------------------- | -------------- |
-| `HOST`               | Server bind address                                | `0.0.0.0`      |
-| `PORT`               | Server port                                        | `3000`         |
-| `RECIPES_DISK_DIR`   | Upload storage directory                           | `/app/uploads` |
-| `CHROME_WS_ENDPOINT` | Puppeteer WebSocket endpoint for improved scraping | -              |
+| Variable           | Description              | Default        |
+| ------------------ | ------------------------ | -------------- |
+| `HOST`             | Server bind address      | `0.0.0.0`      |
+| `PORT`             | Server port              | `3000`         |
+| `RECIPES_DISK_DIR` | Upload storage directory | `/app/uploads` |
 
 ### First-Time Auth Provider
 
@@ -321,7 +321,7 @@ The root config files (`eslint.config.mjs`, `vitest.config.ts`) re-export from t
 ### AI & Processing
 
 - **OpenAI SDK**
-- **Puppeteer** – Headless browser for web scraping, optional if not configured uses the built in fetch method.
+- **Puppeteer** – Headless browser for web scraping (required).
 - **yt-dlp** – Video downloading from YouTube, TikTok, etc.
 - **Sharp** – To process the images to a uniform format.
 - **FFmpeg**

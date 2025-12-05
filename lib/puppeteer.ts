@@ -82,22 +82,15 @@ function isLocalhost(host: string): boolean {
 export async function getBrowser(): Promise<Browser> {
   if (browser && browser.connected) return browser;
 
-  // Check if we should connect to remote Chrome
-  const chromeWsEndpoint = SERVER_CONFIG.CHROME_WS_ENDPOINT;
-
-  if (chromeWsEndpoint) {
-    try {
-      browser = await puppeteer.connect({
-        browserWSEndpoint: await discoverWebSocketEndpoint(chromeWsEndpoint),
-      });
-    } catch (error) {
-      log.error({ err: error }, "Failed to connect to remote Chrome");
-      throw new Error(
-        "Chrome service not available. Please start the chrome service or check CHROME_WS_ENDPOINT."
-      );
-    }
-  } else {
-    throw new Error("No Chrome available. Set CHROME_WS_ENDPOINT to use a remote Chrome service.");
+  try {
+    browser = await puppeteer.connect({
+      browserWSEndpoint: await discoverWebSocketEndpoint(SERVER_CONFIG.CHROME_WS_ENDPOINT),
+    });
+  } catch (error) {
+    log.error({ err: error }, "Failed to connect to remote Chrome");
+    throw new Error(
+      "Chrome service not available. Please start the chrome service or check CHROME_WS_ENDPOINT."
+    );
   }
 
   return browser;

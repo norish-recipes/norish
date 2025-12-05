@@ -107,7 +107,7 @@ const ServerConfigSchema = z.object({
   CONTENT_INDICATORS: z.string().optional(),
   CONTENT_INGREDIENTS: z.string().optional(),
 
-  CHROME_WS_ENDPOINT: z.string().optional(),
+  CHROME_WS_ENDPOINT: z.string().min(1, "CHROME_WS_ENDPOINT is required for web scraping"),
 
   // Scheduler Configuration
   SCHEDULER_CLEANUP_MONTHS: z.coerce.number().default(3),

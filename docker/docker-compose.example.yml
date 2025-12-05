@@ -14,12 +14,11 @@ services:
       AUTH_URL: http://norish.example.com # The URL where Norish is reachable
       DATABASE_URL: postgres://postgres:norish@db:5432/norish
       MASTER_KEY: <32-byte-base64-key>    # Generate with: openssl rand -base64 32
-      CHROME_WS_ENDPOINT: ws://chrome-headless:3000
+      CHROME_WS_ENDPOINT: ws://chrome-headless:3000  # Puppeteer WebSocket endpoint for web scraping
       
       # Optional
       RECIPES_DISK_DIR: /app/uploads      # Defaults to /app/uploads
       # NEXT_PUBLIC_LOG_LEVEL: info       # trace, debug, info, warn, error, fatal (default: info in prod, debug in dev)
-      # CHROME_WS_ENDPOINT: ""            # For Puppeteer to improve recipe scraping
       
       # ─────────────────────────────────────────────────────────────────────────
       # FIRST USER SETUP
@@ -65,7 +64,7 @@ services:
     ports:
       - "5433:5432"
 
-  # Headless Chrome for recipe scraping (smaller alternative to browserless/chrome)
+  # Headless Chrome for recipe scraping
   chrome-headless:
     image: zenika/alpine-chrome:latest
     container_name: chrome-headless
