@@ -4,12 +4,14 @@ import { router } from "../../trpc";
 import { adminProcedure } from "../../middleware";
 
 import { trpcLogger as log } from "@/server/logger";
-import { setConfig } from "@/server/db/repositories/server-config";
+import { setConfig, getConfig } from "@/server/db/repositories/server-config";
 import {
   ServerConfigKeys,
   ContentIndicatorsSchema,
   UnitsMapSchema,
   RecurrenceConfigSchema,
+  PromptsConfigSchema,
+  type PromptsConfig,
 } from "@/server/db/zodSchemas/server-config";
 
 /**
@@ -92,8 +94,32 @@ const updateRecurrenceConfig = adminProcedure.input(z.string()).mutation(async (
   return { success: true };
 });
 
+/**
+ * Get prompts config.
+ * Returns the current prompts from the database.
+ */
+const getPrompts = adminProcedure.query(async () => {
+  return await getConfig<PromptsConfig>(ServerConfigKeys.PROMPTS);
+});
+
+/**
+ * Update prompts config.
+ * Accepts the PromptsConfig object directly.
+ */
+const updatePrompts = adminProcedure
+  .input(PromptsConfigSchema)
+  .mutation(async ({ input, ctx }) => {
+    log.info({ userId: ctx.user.id }, "Updating prompts config");
+
+    await setConfig(ServerConfigKeys.PROMPTS, input, ctx.user.id, false);
+
+    return { success: true };
+  });
+
 export const contentConfigProcedures = router({
   updateContentIndicators,
   updateUnits,
   updateRecurrenceConfig,
+  getPrompts,
+  updatePrompts,
 });

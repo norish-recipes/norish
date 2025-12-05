@@ -17,6 +17,7 @@ import {
   type AuthProviderGoogle,
   type AuthProviderGoogleInput,
   type RecipePermissionPolicy,
+  type PromptsConfig,
   type ServerConfigKey,
 } from "@/server/db/zodSchemas/server-config";
 
@@ -38,6 +39,7 @@ interface AdminSettingsContextValue {
   videoConfig: VideoConfig | undefined;
   schedulerCleanupMonths: number | undefined;
   recipePermissionPolicy: RecipePermissionPolicy | undefined;
+  prompts: PromptsConfig | undefined;
 
   // Loading states
   isLoading: boolean;
@@ -62,6 +64,7 @@ interface AdminSettingsContextValue {
   updateRecurrenceConfig: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateAIConfig: (config: AIConfig) => Promise<{ success: boolean; error?: string }>;
   updateVideoConfig: (config: VideoConfig) => Promise<{ success: boolean; error?: string }>;
+  updatePrompts: (config: PromptsConfig) => Promise<{ success: boolean; error?: string }>;
   updateSchedulerMonths: (months: number) => Promise<{ success: boolean; error?: string }>;
   updateRecipePermissionPolicy: (
     policy: RecipePermissionPolicy
@@ -123,6 +126,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const recipePermissionPolicy = configs[ServerConfigKeys.RECIPE_PERMISSION_POLICY] as
     | RecipePermissionPolicy
     | undefined;
+  const prompts = configs[ServerConfigKeys.PROMPTS] as PromptsConfig | undefined;
 
   // Actions - wrap mutations
   const updateRegistration = useCallback(
@@ -202,6 +206,13 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     [mutations]
   );
 
+  const updatePromptsConfig = useCallback(
+    async (config: PromptsConfig) => {
+      return mutations.updatePrompts(config);
+    },
+    [mutations]
+  );
+
   const updateScheduler = useCallback(
     async (months: number) => {
       return mutations.updateSchedulerMonths(months);
@@ -265,6 +276,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     videoConfig,
     schedulerCleanupMonths,
     recipePermissionPolicy,
+    prompts,
     isLoading,
     updateRegistration,
     updatePasswordAuth,
@@ -277,6 +289,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     updateRecurrenceConfig: updateRecurrence,
     updateAIConfig: updateAI,
     updateVideoConfig: updateVideo,
+    updatePrompts: updatePromptsConfig,
     updateSchedulerMonths: updateScheduler,
     updateRecipePermissionPolicy: updatePermissionPolicy,
     restoreDefaultConfig: restoreDefault,

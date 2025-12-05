@@ -7,6 +7,7 @@ import type {
   AuthProviderGitHubInput,
   AuthProviderGoogleInput,
   RecipePermissionPolicy,
+  PromptsConfig,
   ServerConfigKey,
 } from "@/server/db/zodSchemas/server-config";
 
@@ -43,6 +44,7 @@ export type AdminMutationsResult = {
   updateContentIndicators: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateUnits: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateRecurrenceConfig: (json: string) => Promise<{ success: boolean; error?: string }>;
+  updatePrompts: (config: PromptsConfig) => Promise<{ success: boolean; error?: string }>;
 
   // AI & Video
   updateAIConfig: (config: AIConfig) => Promise<{ success: boolean; error?: string }>;
@@ -94,6 +96,7 @@ export function useAdminMutations(): AdminMutationsResult {
   const updateRecurrenceConfigMutation = useMutation(
     trpc.admin.content.updateRecurrenceConfig.mutationOptions()
   );
+  const updatePromptsMutation = useMutation(trpc.admin.content.updatePrompts.mutationOptions());
 
   // AI & Video
   const updateAIConfigMutation = useMutation(trpc.admin.updateAIConfig.mutationOptions());
@@ -161,6 +164,9 @@ export function useAdminMutations(): AdminMutationsResult {
     },
     updateRecurrenceConfig: async (json) => {
       return withInvalidate(updateRecurrenceConfigMutation.mutateAsync(json));
+    },
+    updatePrompts: async (config) => {
+      return withInvalidate(updatePromptsMutation.mutateAsync(config));
     },
 
     // AI & Video

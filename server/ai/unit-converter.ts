@@ -8,11 +8,11 @@ import { RecipeIngredientInputSchema, StepStepSchema } from "@/server/db/zodSche
 import { aiLogger } from "@/server/logger";
 
 /* ------------------ PROMPT BUILDER ------------------ */
-function buildConversionPrompt(
+async function buildConversionPrompt(
   sourceSystem: MeasurementSystem,
   targetSystem: MeasurementSystem,
   recipe: FullRecipeDTO
-): string {
+): Promise<string> {
   const ingredients = recipe.recipeIngredients.map((i) => ({
     ingredientName: i.ingredientName,
     amount: i.amount ?? null,
@@ -28,7 +28,9 @@ function buildConversionPrompt(
   }));
 
   const units = targetSystem === "metric" ? "g, ml, L, kg, °C" : "cups, tbsp, tsp, oz, lb, °F";
-  const prompt = loadPrompt("unit-conversion");
+  const prompt = await loadPrompt("unit-conversion");
+  aiLogger.debug({prompt}, "Loaded unit conversion prompt template");
+
   const filled = fillPrompt(prompt, { sourceSystem, targetSystem, units });
 
   return `${filled}
@@ -68,7 +70,7 @@ export async function convertRecipeDataWithAI(
   );
 
   const obj = await provider.generateStructuredOutput<any>(
-    buildConversionPrompt(sourceSystem, targetSystem, recipe),
+    await buildConversionPrompt(sourceSystem, targetSystem, recipe),
     conversionSchema,
     "Convert recipe measurements between metric and US systems. Return valid JSON only."
   );

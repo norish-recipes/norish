@@ -17,6 +17,7 @@ export const ServerConfigKeys = {
   VIDEO_CONFIG: "video_config",
   SCHEDULER_CLEANUP_MONTHS: "scheduler_cleanup_months",
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
+  PROMPTS: "prompts",
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
@@ -72,6 +73,17 @@ export const ContentIndicatorsSchema = z.object({
 });
 
 export type ContentIndicatorsConfig = z.infer<typeof ContentIndicatorsSchema>;
+
+// ============================================================================
+// Prompts Schema
+// ============================================================================
+
+export const PromptsConfigSchema = z.object({
+  recipeExtraction: z.string(),
+  unitConversion: z.string(),
+});
+
+export type PromptsConfig = z.infer<typeof PromptsConfigSchema>;
 
 // ============================================================================
 // Units Schema
@@ -256,6 +268,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return SchedulerCleanupMonthsSchema;
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return RecipePermissionPolicySchema;
+    case ServerConfigKeys.PROMPTS:
+      return PromptsConfigSchema;
     default:
       return z.any();
   }

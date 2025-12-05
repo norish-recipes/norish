@@ -14,6 +14,7 @@ import { serverLogger } from "@/server/logger";
 import defaultUnits from "@/config/units.default.json";
 import defaultContentIndicators from "@/config/content-indicators.default.json";
 import defaultRecurrenceConfig from "@/config/recurrence-config.default.json";
+import { loadDefaultPrompts } from "@/server/ai/prompts/loader";
 
 /**
  * Configuration definition for seeding
@@ -114,6 +115,12 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     getDefaultValue: () => DEFAULT_RECIPE_PERMISSION_POLICY,
     sensitive: false,
     description: "Recipe permission policy (default: household)",
+  },
+  {
+    key: ServerConfigKeys.PROMPTS,
+    getDefaultValue: () => loadDefaultPrompts(),
+    sensitive: false,
+    description: "AI prompts for recipe extraction and unit conversion",
   },
 ];
 
@@ -438,6 +445,8 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       };
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return DEFAULT_RECIPE_PERMISSION_POLICY;
+    case ServerConfigKeys.PROMPTS:
+      return loadDefaultPrompts();
     default:
       return null;
   }

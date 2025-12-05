@@ -22,6 +22,7 @@ import {
   type AIConfig,
   type VideoConfig,
   type RecipePermissionPolicy,
+  type PromptsConfig,
   DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "@/server/db/zodSchemas/server-config";
 import { getConfig } from "@/server/db/repositories/server-config";
@@ -101,6 +102,16 @@ export async function getRecipePermissionPolicy(): Promise<RecipePermissionPolic
 }
 
 /**
+ * Get prompts configuration
+ */
+export async function getPrompts(): Promise<PromptsConfig> {
+  const value = await getConfig<PromptsConfig>(ServerConfigKeys.PROMPTS);
+
+  // Prompts are seeded at startup, so this should always exist
+  return value!;
+}
+
+/**
  * Check if AI features are enabled
  */
 export async function isAIEnabled(): Promise<boolean> {
@@ -129,4 +140,5 @@ export type {
   AIConfig,
   VideoConfig,
   RecipePermissionPolicy,
+  PromptsConfig,
 };

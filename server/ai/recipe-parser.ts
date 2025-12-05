@@ -153,13 +153,14 @@ function extractSanitizedBody(html: string): string {
   }
 }
 
-function buildExtractionPrompt(url: string | undefined, html: string): string {
+async function buildExtractionPrompt(url: string | undefined, html: string): Promise<string> {
   console.log("Building extraction prompt");
   console.log("RAW HTML:", html);
   const sanitized = extractSanitizedBody(html);
   const truncated = sanitized.slice(0, 50000);
 
-  const prompt = loadPrompt("recipe-extraction");
+  const prompt = await loadPrompt("recipe-extraction");
+  aiLogger.debug({prompt}, "Loaded extraction prompt template");
 
   return `${prompt}
 ${url ? `URL: ${url}\n` : ""}
@@ -183,7 +184,7 @@ export async function extractRecipeWithAI(
   aiLogger.info({ url }, "Starting AI recipe extraction");
 
   const provider = await getAIProvider();
-  const prompt = buildExtractionPrompt(url, html);
+  const prompt = await buildExtractionPrompt(url, html);
 
   aiLogger.debug({ url, promptLength: prompt.length, prompt: prompt }, "Sending prompt to AI provider");
 
