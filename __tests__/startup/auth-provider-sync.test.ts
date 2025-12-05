@@ -34,6 +34,12 @@ vi.mock("@/config/content-indicators.default.json", () => ({
 vi.mock("@/config/recurrence-config.default.json", () => ({
   default: { locales: {} },
 }));
+vi.mock("@/server/ai/prompts/loader", () => ({
+  loadDefaultPrompts: vi.fn().mockReturnValue({
+    recipeExtraction: "mock recipe extraction prompt",
+    unitConversion: "mock unit conversion prompt",
+  }),
+}));
 
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
 
