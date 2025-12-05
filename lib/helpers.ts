@@ -70,7 +70,7 @@ export function parseIngredientWithDefaults(
       const match = line.toString().match(regex);
 
       if (match) {
-        const qty = match[1];
+        const qty = match[1].replace(",", ".");
         const unit = match[2];
         const rest = line.toString().replace(match[0], "").trim().replace(/\s+/g, " ");
         const reordered = `${qty} ${unit} ${rest}`;

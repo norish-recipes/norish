@@ -105,7 +105,10 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
                 </span>
               }
               variant="light"
-              onPress={() => setShowUrlModal(true)}
+              onPress={() => {
+                setUserMenuOpen(false);
+                setShowUrlModal(true);
+              }}
             >
               <span className="flex flex-col items-start">
                 <span className="text-sm leading-tight font-medium">Import from URL</span>
