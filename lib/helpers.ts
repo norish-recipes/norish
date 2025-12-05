@@ -44,7 +44,8 @@ export function parseIngredientWithDefaults(
   for (const line of lines) {
     if (!line) continue;
 
-    let parsed = parseIngredient(line.toString(), {
+    const normalizedLine = line.toString().replace(/(\d),(\d)/g, "$1.$2");
+    let parsed = parseIngredient(normalizedLine, {
       additionalUOMs: units,
     });
 
@@ -67,12 +68,12 @@ export function parseIngredientWithDefaults(
         .join("|");
       const regex = new RegExp(`\\b(\\d+(?:[.,]\\d+)?)\\s*(${unitPattern})\\b`, "i");
 
-      const match = line.toString().match(regex);
+      const match = normalizedLine.match(regex);
 
       if (match) {
-        const qty = match[1].replace(",", ".");
+        const qty = match[1];
         const unit = match[2];
-        const rest = line.toString().replace(match[0], "").trim().replace(/\s+/g, " ");
+        const rest = normalizedLine.replace(match[0], "").trim().replace(/\s+/g, " ");
         const reordered = `${qty} ${unit} ${rest}`;
 
         const smartParsed = parseIngredient(reordered, {
