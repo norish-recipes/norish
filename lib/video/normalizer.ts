@@ -1,7 +1,7 @@
 import type { VideoMetadata } from "./types";
 
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
-import { videoLogger as log } from "@/server/logger";
+import { videoLogger } from "@/server/logger";
 import { loadPrompt } from "@/server/ai/prompts/loader";
 import { downloadImage } from "@/lib/downloader";
 import { measurementSystems } from "@/server/db";
@@ -11,12 +11,12 @@ import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { getUnits } from "@/config/server-config-loader";
 
-function buildVideoExtractionPrompt(
+async function buildVideoExtractionPrompt(
   transcript: string,
   metadata: VideoMetadata,
   url: string
-): string {
-  const prompt = loadPrompt("recipe-extraction");
+): Promise<string> {
+  const prompt = await loadPrompt("recipe-extraction");
 
   return `${prompt}
 
@@ -39,12 +39,14 @@ export async function extractRecipeFromVideo(
   url: string
 ): Promise<FullRecipeInsertDTO | null> {
   try {
-    log.info({ url, title: metadata.title }, "Starting AI video recipe extraction");
+    videoLogger.info({ url, title: metadata.title }, "Starting AI video recipe extraction");
 
-    const prompt = buildVideoExtractionPrompt(transcript, metadata, url);
+    const prompt = await buildVideoExtractionPrompt(transcript, metadata, url);
+
+    videoLogger.debug({ prompt }, "Built video extraction prompt");
     const provider = await getAIProvider();
 
-    log.debug(
+    videoLogger.debug(
       { url, promptLength: prompt.length, transcriptLength: transcript.length },
       "Sending video transcript to AI"
     );
@@ -56,12 +58,12 @@ export async function extractRecipeFromVideo(
     );
 
     if (!jsonLd || Object.keys(jsonLd).length === 0) {
-      log.error({ url }, "AI returned empty response - no recipe found in video");
+      videoLogger.error({ url }, "AI returned empty response - no recipe found in video");
 
       return null;
     }
 
-    log.debug(
+    videoLogger.debug(
       {
         url,
         recipeName: jsonLd.name,
@@ -80,7 +82,7 @@ export async function extractRecipeFromVideo(
       !jsonLd.recipeInstructions?.metric?.length ||
       !jsonLd.recipeInstructions?.us?.length
     ) {
-      log.error(
+      videoLogger.error(
         {
           hasName: !!jsonLd.name,
           metricIngredients: jsonLd.recipeIngredient?.metric?.length || 0,
@@ -103,7 +105,7 @@ export async function extractRecipeFromVideo(
     const normalized = await normalizeRecipeFromJson(metricVersion);
 
     if (!normalized) {
-      log.error("Failed to normalize recipe from JSON-LD");
+      videoLogger.error("Failed to normalize recipe from JSON-LD");
 
       return null;
     }
@@ -141,7 +143,7 @@ export async function extractRecipeFromVideo(
     ];
     normalized.steps = [...(normalized.steps ?? []), ...usSteps];
 
-    log.info(
+    videoLogger.info(
       {
         url,
         recipeName: normalized.name,
@@ -154,7 +156,7 @@ export async function extractRecipeFromVideo(
 
     return normalized;
   } catch (error: any) {
-    log.error({ err: error, errorType: error.constructor.name }, "Error extracting recipe");
+    videoLogger.error({ err: error, errorType: error.constructor.name }, "Error extracting recipe");
     const errorMessage = error.message || "Unknown error";
 
     throw new Error(`Failed to extract recipe from video: ${errorMessage}`);
