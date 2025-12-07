@@ -48,8 +48,12 @@ services:
       # Option 4: Google OAuth (uncomment and remove OIDC above)
       # GOOGLE_CLIENT_ID: <google-client-id>
       # GOOGLE_CLIENT_SECRET: <google-client-secret>
+
+      # Redis for real-time events (required)
+      REDIS_URL: redis://redis:6379
     depends_on:
       - db
+      - redis
 
   # PostgreSQL Database
   db:
@@ -80,7 +84,16 @@ services:
     ports:
       - "3003:3000"
 
+  # Redis for real-time events
+  redis:
+    image: redis:7-alpine
+    container_name: norish-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
 # Use this or map the volume to a host path if you want to persist data
 volumes:
   db_data:
   norish_data:
+  redis_data:

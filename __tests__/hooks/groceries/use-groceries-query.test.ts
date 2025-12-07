@@ -55,7 +55,7 @@ describe("useGroceriesQuery", () => {
     it("returns loading state initially", () => {
       mockQueryOptions.mockReturnValue({
         queryKey: mockQueryKey,
-        queryFn: () => new Promise(() => {}), // Never resolves
+        queryFn: () => new Promise(() => { }), // Never resolves
       });
 
       const { renderHook } = require("@testing-library/react");
@@ -149,7 +149,7 @@ describe("useGroceriesQuery", () => {
       const newGrocery = createMockGrocery({ id: "g2", name: "Bread" });
 
       act(() => {
-        result.current.setGroceriesData((prev) => ({
+        result.current.setGroceriesData((prev: ReturnType<typeof createMockGroceriesData> | undefined) => ({
           ...prev!,
           groceries: [...prev!.groceries, newGrocery],
         }));
@@ -177,7 +177,7 @@ describe("useGroceriesQuery", () => {
 
       // Should not throw when previous data is undefined
       act(() => {
-        result.current.setGroceriesData((prev) => {
+        result.current.setGroceriesData((prev: ReturnType<typeof createMockGroceriesData> | undefined) => {
           if (!prev) return prev;
 
           return { ...prev, groceries: [] };

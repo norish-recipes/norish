@@ -4,13 +4,26 @@
 import { vi } from "vitest";
 
 export const calendarEmitter = {
-  emit: vi.fn(),
-  on: vi.fn(),
-  off: vi.fn(),
+  emitToHousehold: vi.fn(),
+  emitToUser: vi.fn(),
+  broadcast: vi.fn(),
+  emitGlobal: vi.fn(),
+  householdEvent: vi.fn(
+    (householdKey: string, event: string) => `norish:household:${householdKey}:${event}`
+  ),
+  userEvent: vi.fn((userId: string, event: string) => `norish:user:${userId}:${event}`),
+  broadcastEvent: vi.fn((event: string) => `norish:broadcast:${event}`),
+  globalEvent: vi.fn((event: string) => `norish:global:${event}`),
+  createSubscription: vi.fn(),
 };
 
 export function resetCalendarEmitterMocks() {
-  calendarEmitter.emit.mockReset();
-  calendarEmitter.on.mockReset();
-  calendarEmitter.off.mockReset();
+  Object.values(calendarEmitter).forEach((fn) => {
+    if (typeof fn === "function" && "mockReset" in fn) {
+      fn.mockReset();
+    }
+  });
 }
+
+
+

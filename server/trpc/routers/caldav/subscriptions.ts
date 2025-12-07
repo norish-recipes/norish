@@ -6,8 +6,6 @@
 
 import type { CaldavSubscriptionEvents } from "./types";
 
-import { on } from "events";
-
 import { caldavEmitter } from "./emitter";
 
 import { router } from "@/server/trpc/trpc";
@@ -41,7 +39,7 @@ const onSyncEvent = authedProcedure.subscription(async function* ({ ctx, signal 
     const userEventName = caldavEmitter.userEvent(userId, eventName);
 
     return (async function* () {
-      for await (const [data] of on(caldavEmitter, userEventName, { signal })) {
+      for await (const data of caldavEmitter.createSubscription(userEventName, signal)) {
         yield { type: eventName, data } as {
           type: EventName;
           data: CaldavSubscriptionEvents[EventName];
@@ -70,7 +68,7 @@ const onItemStatusUpdated = authedProcedure.subscription(async function* ({ ctx,
   log.debug({ userId }, "Subscribed to CalDAV item status updates");
 
   try {
-    for await (const [data] of on(caldavEmitter, eventName, { signal })) {
+    for await (const data of caldavEmitter.createSubscription(eventName, signal)) {
       yield data as CaldavSubscriptionEvents["itemStatusUpdated"];
     }
   } finally {
@@ -88,7 +86,7 @@ const onSyncCompleted = authedProcedure.subscription(async function* ({ ctx, sig
   log.debug({ userId }, "Subscribed to CalDAV sync completed events");
 
   try {
-    for await (const [data] of on(caldavEmitter, eventName, { signal })) {
+    for await (const data of caldavEmitter.createSubscription(eventName, signal)) {
       yield data as CaldavSubscriptionEvents["syncCompleted"];
     }
   } finally {
@@ -106,7 +104,7 @@ const onSyncFailed = authedProcedure.subscription(async function* ({ ctx, signal
   log.debug({ userId }, "Subscribed to CalDAV sync failed events");
 
   try {
-    for await (const [data] of on(caldavEmitter, eventName, { signal })) {
+    for await (const data of caldavEmitter.createSubscription(eventName, signal)) {
       yield data as CaldavSubscriptionEvents["syncFailed"];
     }
   } finally {
@@ -124,7 +122,7 @@ const onInitialSyncComplete = authedProcedure.subscription(async function* ({ ct
   log.debug({ userId }, "Subscribed to CalDAV initial sync complete events");
 
   try {
-    for await (const [data] of on(caldavEmitter, eventName, { signal })) {
+    for await (const data of caldavEmitter.createSubscription(eventName, signal)) {
       yield data as CaldavSubscriptionEvents["initialSyncComplete"];
     }
   } finally {
@@ -141,3 +139,4 @@ export const caldavSubscriptions = router({
 });
 
 export type CaldavSubscriptionsRouter = typeof caldavSubscriptions;
+

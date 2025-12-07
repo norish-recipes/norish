@@ -33,6 +33,8 @@ import {
 
 import { getRecipeFull } from "@/server/db";
 
+const getRecipeFullMock = vi.mocked(getRecipeFull);
+
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
   transformer: superjson,
@@ -59,7 +61,7 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
         const { date, slot, recipeId } = input;
         const id = crypto.randomUUID();
 
-        const recipe = await (getRecipeFull as ReturnType<typeof vi.fn>)(recipeId);
+        const recipe = await getRecipeFullMock(recipeId);
 
         if (!recipe) {
           throw new Error("Recipe not found");
@@ -67,7 +69,8 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
 
         const plannedRecipe = await createPlannedRecipe(id, ctx.user.id, recipeId, date, slot);
 
-        calendarEmitter.emit("recipePlanned", { plannedRecipe });
+        // Use emitToHousehold like the real implementation
+        calendarEmitter.emitToHousehold(ctx.householdKey, "recipePlanned", { plannedRecipe });
 
         return id;
       }),
@@ -87,7 +90,11 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
 
         await deletePlannedRecipe(id);
 
-        calendarEmitter.emit("recipeDeleted", { plannedRecipeId: id, date });
+        // Use emitToHousehold like the real implementation
+        calendarEmitter.emitToHousehold(ctx.householdKey, "recipeDeleted", {
+          plannedRecipeId: id,
+          date,
+        });
 
         return { success: true };
       }),
@@ -107,7 +114,11 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
 
         const plannedRecipe = await updatePlannedRecipeDate(id, newDate);
 
-        calendarEmitter.emit("recipeUpdated", { plannedRecipe, oldDate });
+        // Use emitToHousehold like the real implementation
+        calendarEmitter.emitToHousehold(ctx.householdKey, "recipeUpdated", {
+          plannedRecipe,
+          oldDate,
+        });
 
         return { success: true };
       }),
@@ -163,17 +174,18 @@ describe("calendar planned recipes procedures", () => {
   });
 
   describe("createRecipe", () => {
-    it("creates a planned recipe and emits event", async () => {
+    it("creates a planned recipe and emits event to household", async () => {
       const mockPlannedRecipe = createMockPlannedRecipe({
         recipeId: "recipe-123",
         date: "2025-01-15",
         slot: "Breakfast",
       });
 
-      (getRecipeFull as ReturnType<typeof vi.fn>).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      getRecipeFullMock.mockResolvedValue({
         id: "recipe-123",
         name: "Pancakes",
-      });
+      } as any);
       createPlannedRecipe.mockResolvedValue(mockPlannedRecipe);
 
       const caller = createTestCaller(ctx);
@@ -191,14 +203,16 @@ describe("calendar planned recipes procedures", () => {
         "2025-01-15",
         "Breakfast"
       );
-      expect(calendarEmitter.emit).toHaveBeenCalledWith("recipePlanned", {
-        plannedRecipe: mockPlannedRecipe,
-      });
+      expect(calendarEmitter.emitToHousehold).toHaveBeenCalledWith(
+        ctx.householdKey,
+        "recipePlanned",
+        { plannedRecipe: mockPlannedRecipe }
+      );
       expect(result).toEqual(expect.any(String)); // Returns UUID
     });
 
     it("throws error when recipe not found", async () => {
-      (getRecipeFull as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      getRecipeFullMock.mockResolvedValue(null);
 
       const caller = createTestCaller(ctx);
 
@@ -211,12 +225,12 @@ describe("calendar planned recipes procedures", () => {
       ).rejects.toThrow("Recipe not found");
 
       expect(createPlannedRecipe).not.toHaveBeenCalled();
-      expect(calendarEmitter.emit).not.toHaveBeenCalled();
+      expect(calendarEmitter.emitToHousehold).not.toHaveBeenCalled();
     });
   });
 
   describe("deleteRecipe", () => {
-    it("deletes a planned recipe and emits event", async () => {
+    it("deletes a planned recipe and emits event to household", async () => {
       getPlannedRecipeOwnerId.mockResolvedValue("test-user-id");
       assertHouseholdAccess.mockResolvedValue(undefined);
       deletePlannedRecipe.mockResolvedValue(undefined);
@@ -230,10 +244,11 @@ describe("calendar planned recipes procedures", () => {
       expect(getPlannedRecipeOwnerId).toHaveBeenCalledWith("pr-123");
       expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, "test-user-id");
       expect(deletePlannedRecipe).toHaveBeenCalledWith("pr-123");
-      expect(calendarEmitter.emit).toHaveBeenCalledWith("recipeDeleted", {
-        plannedRecipeId: "pr-123",
-        date: "2025-01-15",
-      });
+      expect(calendarEmitter.emitToHousehold).toHaveBeenCalledWith(
+        ctx.householdKey,
+        "recipeDeleted",
+        { plannedRecipeId: "pr-123", date: "2025-01-15" }
+      );
       expect(result).toEqual({ success: true });
     });
 
@@ -250,7 +265,7 @@ describe("calendar planned recipes procedures", () => {
       ).rejects.toThrow("Planned recipe not found");
 
       expect(deletePlannedRecipe).not.toHaveBeenCalled();
-      expect(calendarEmitter.emit).not.toHaveBeenCalled();
+      expect(calendarEmitter.emitToHousehold).not.toHaveBeenCalled();
     });
 
     it("throws error when user lacks permission", async () => {
@@ -267,12 +282,12 @@ describe("calendar planned recipes procedures", () => {
       ).rejects.toThrow("Access denied");
 
       expect(deletePlannedRecipe).not.toHaveBeenCalled();
-      expect(calendarEmitter.emit).not.toHaveBeenCalled();
+      expect(calendarEmitter.emitToHousehold).not.toHaveBeenCalled();
     });
   });
 
   describe("updateRecipeDate", () => {
-    it("updates planned recipe date and emits event", async () => {
+    it("updates planned recipe date and emits event to household", async () => {
       const updatedRecipe = createMockPlannedRecipe({
         id: "pr-123",
         date: "2025-01-20",
@@ -292,10 +307,11 @@ describe("calendar planned recipes procedures", () => {
       expect(getPlannedRecipeOwnerId).toHaveBeenCalledWith("pr-123");
       expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, "test-user-id");
       expect(updatePlannedRecipeDate).toHaveBeenCalledWith("pr-123", "2025-01-20");
-      expect(calendarEmitter.emit).toHaveBeenCalledWith("recipeUpdated", {
-        plannedRecipe: updatedRecipe,
-        oldDate: "2025-01-15",
-      });
+      expect(calendarEmitter.emitToHousehold).toHaveBeenCalledWith(
+        ctx.householdKey,
+        "recipeUpdated",
+        { plannedRecipe: updatedRecipe, oldDate: "2025-01-15" }
+      );
       expect(result).toEqual({ success: true });
     });
 
@@ -313,7 +329,7 @@ describe("calendar planned recipes procedures", () => {
       ).rejects.toThrow("Planned recipe not found");
 
       expect(updatePlannedRecipeDate).not.toHaveBeenCalled();
-      expect(calendarEmitter.emit).not.toHaveBeenCalled();
+      expect(calendarEmitter.emitToHousehold).not.toHaveBeenCalled();
     });
 
     it("throws error when user lacks permission", async () => {
@@ -331,7 +347,8 @@ describe("calendar planned recipes procedures", () => {
       ).rejects.toThrow("Access denied");
 
       expect(updatePlannedRecipeDate).not.toHaveBeenCalled();
-      expect(calendarEmitter.emit).not.toHaveBeenCalled();
+      expect(calendarEmitter.emitToHousehold).not.toHaveBeenCalled();
     });
   });
 });
+

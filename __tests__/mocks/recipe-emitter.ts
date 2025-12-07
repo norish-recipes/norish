@@ -6,21 +6,22 @@ import { vi } from "vitest";
 export const recipeEmitter = {
   emitToHousehold: vi.fn(),
   emitToUser: vi.fn(),
+  broadcast: vi.fn(),
+  emitGlobal: vi.fn(),
   householdEvent: vi.fn(
-    (householdKey: string, event: string) => `household:${householdKey}:${event}`
+    (householdKey: string, event: string) => `norish:household:${householdKey}:${event}`
   ),
-  userEvent: vi.fn((userId: string, event: string) => `user:${userId}:${event}`),
-  on: vi.fn(),
-  off: vi.fn(),
-  emit: vi.fn(),
+  userEvent: vi.fn((userId: string, event: string) => `norish:user:${userId}:${event}`),
+  broadcastEvent: vi.fn((event: string) => `norish:broadcast:${event}`),
+  globalEvent: vi.fn((event: string) => `norish:global:${event}`),
+  createSubscription: vi.fn(),
 };
 
 export function resetRecipeEmitterMock() {
-  recipeEmitter.emitToHousehold.mockReset();
-  recipeEmitter.emitToUser.mockReset();
-  recipeEmitter.householdEvent.mockClear();
-  recipeEmitter.userEvent.mockClear();
-  recipeEmitter.on.mockReset();
-  recipeEmitter.off.mockReset();
-  recipeEmitter.emit.mockReset();
+  Object.values(recipeEmitter).forEach((fn) => {
+    if (typeof fn === "function" && "mockReset" in fn) {
+      fn.mockReset();
+    }
+  });
 }
+

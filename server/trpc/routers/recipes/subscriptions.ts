@@ -26,7 +26,7 @@ function createPolicyAwareSubscription<K extends keyof RecipeSubscriptionEvents 
     try {
       const iterables = createPolicyAwareIterables(recipeEmitter, policyCtx, eventName, signal);
 
-      for await (const [data] of mergeAsyncIterables(iterables, signal)) {
+      for await (const data of mergeAsyncIterables(iterables, signal)) {
         yield data as RecipeSubscriptionEvents[K];
       }
     } finally {

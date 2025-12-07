@@ -1,8 +1,6 @@
 import type { TypedEmitter } from "./emitter";
 import type { PermissionLevel } from "@/server/db/zodSchemas/server-config";
 
-import { on } from "events";
-
 import { trpcLogger as log } from "@/server/logger";
 
 /**
@@ -61,11 +59,8 @@ export function emitByPolicy<
  *
  * @example
  * ```ts
- * const householdIterable = on(emitter, householdEvent, { signal });
- * const broadcastIterable = on(emitter, broadcastEvent, { signal });
- * const userIterable = on(emitter, userEvent, { signal });
- *
- * for await (const [data] of mergeAsyncIterables([householdIterable, broadcastIterable, userIterable], signal)) {
+ * const iterables = createPolicyAwareIterables(emitter, ctx, "imported", signal);
+ * for await (const data of mergeAsyncIterables(iterables, signal)) {
  *   yield data;
  * }
  * ```
@@ -114,7 +109,7 @@ export async function* mergeAsyncIterables<T>(
  * @example
  * ```ts
  * const iterables = createPolicyAwareIterables(recipeEmitter, ctx, "imported", signal);
- * for await (const [data] of mergeAsyncIterables(iterables, signal)) {
+ * for await (const data of mergeAsyncIterables(iterables, signal)) {
  *   yield data as RecipeSubscriptionEvents["imported"];
  * }
  * ```
@@ -124,7 +119,7 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
   ctx: PolicyEmitContext,
   event: keyof TEvents & string,
   signal?: AbortSignal
-): AsyncIterable<unknown[]>[] {
+): AsyncIterable<TEvents[typeof event]>[] {
   const householdEventName = emitter.householdEvent(ctx.householdKey, event);
   const broadcastEventName = emitter.broadcastEvent(event);
   const userEventName = emitter.userEvent(ctx.userId, event);
@@ -135,8 +130,9 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
   );
 
   return [
-    on(emitter, householdEventName, { signal }),
-    on(emitter, broadcastEventName, { signal }),
-    on(emitter, userEventName, { signal }),
+    emitter.createSubscription(householdEventName, signal),
+    emitter.createSubscription(broadcastEventName, signal),
+    emitter.createSubscription(userEventName, signal),
   ];
 }
+

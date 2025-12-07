@@ -224,7 +224,7 @@ describe("Mela import procedures", () => {
         recipeIngredients: [],
         steps: [],
         tags: [],
-        systemUsed: "metric",
+        systemUsed: "metric" as const,
       };
 
       parseMelaRecipeToTDOMock.mockResolvedValue(mockDto);

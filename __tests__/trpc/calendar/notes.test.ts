@@ -52,7 +52,7 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
 
         const note = await createNote(id, ctx.user.id, title, date, slot);
 
-        calendarEmitter.emit("notePlanned", { note });
+        calendarEmitter.emitToHousehold(ctx.householdKey, "notePlanned", { note });
 
         return id;
       }),
@@ -72,7 +72,7 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
 
         await deleteNote(id);
 
-        calendarEmitter.emit("noteDeleted", { noteId: id, date });
+        calendarEmitter.emitToHousehold(ctx.householdKey, "noteDeleted", { noteId: id, date });
 
         return { success: true };
       }),
@@ -92,7 +92,7 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
 
         const note = await updateNoteDate(id, newDate);
 
-        calendarEmitter.emit("noteUpdated", { note, oldDate });
+        calendarEmitter.emitToHousehold(ctx.householdKey, "noteUpdated", { note, oldDate });
 
         return { success: true };
       }),
@@ -148,7 +148,7 @@ describe("calendar notes procedures", () => {
   });
 
   describe("createNote", () => {
-    it("creates a note and emits event", async () => {
+    it("creates a note and emits event to household", async () => {
       const mockNote = createMockNote({
         title: "Meal prep Sunday",
         date: "2025-01-15",
@@ -171,9 +171,11 @@ describe("calendar notes procedures", () => {
         "2025-01-15",
         "Lunch"
       );
-      expect(calendarEmitter.emit).toHaveBeenCalledWith("notePlanned", {
-        note: mockNote,
-      });
+      expect(calendarEmitter.emitToHousehold).toHaveBeenCalledWith(
+        ctx.householdKey,
+        "notePlanned",
+        { note: mockNote }
+      );
       expect(result).toEqual(expect.any(String)); // Returns UUID
     });
 
@@ -206,7 +208,7 @@ describe("calendar notes procedures", () => {
   });
 
   describe("deleteNote", () => {
-    it("deletes a note and emits event", async () => {
+    it("deletes a note and emits event to household", async () => {
       getNoteOwnerId.mockResolvedValue("test-user-id");
       assertHouseholdAccess.mockResolvedValue(undefined);
       deleteNote.mockResolvedValue(undefined);
@@ -220,10 +222,11 @@ describe("calendar notes procedures", () => {
       expect(getNoteOwnerId).toHaveBeenCalledWith("note-123");
       expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, "test-user-id");
       expect(deleteNote).toHaveBeenCalledWith("note-123");
-      expect(calendarEmitter.emit).toHaveBeenCalledWith("noteDeleted", {
-        noteId: "note-123",
-        date: "2025-01-15",
-      });
+      expect(calendarEmitter.emitToHousehold).toHaveBeenCalledWith(
+        ctx.householdKey,
+        "noteDeleted",
+        { noteId: "note-123", date: "2025-01-15" }
+      );
       expect(result).toEqual({ success: true });
     });
 
@@ -240,7 +243,7 @@ describe("calendar notes procedures", () => {
       ).rejects.toThrow("Note not found");
 
       expect(deleteNote).not.toHaveBeenCalled();
-      expect(calendarEmitter.emit).not.toHaveBeenCalled();
+      expect(calendarEmitter.emitToHousehold).not.toHaveBeenCalled();
     });
 
     it("throws error when user lacks permission", async () => {
@@ -257,12 +260,12 @@ describe("calendar notes procedures", () => {
       ).rejects.toThrow("Access denied");
 
       expect(deleteNote).not.toHaveBeenCalled();
-      expect(calendarEmitter.emit).not.toHaveBeenCalled();
+      expect(calendarEmitter.emitToHousehold).not.toHaveBeenCalled();
     });
   });
 
   describe("updateNoteDate", () => {
-    it("updates note date and emits event", async () => {
+    it("updates note date and emits event to household", async () => {
       const updatedNote = createMockNote({
         id: "note-123",
         date: "2025-01-20",
@@ -282,10 +285,11 @@ describe("calendar notes procedures", () => {
       expect(getNoteOwnerId).toHaveBeenCalledWith("note-123");
       expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, "test-user-id");
       expect(updateNoteDate).toHaveBeenCalledWith("note-123", "2025-01-20");
-      expect(calendarEmitter.emit).toHaveBeenCalledWith("noteUpdated", {
-        note: updatedNote,
-        oldDate: "2025-01-15",
-      });
+      expect(calendarEmitter.emitToHousehold).toHaveBeenCalledWith(
+        ctx.householdKey,
+        "noteUpdated",
+        { note: updatedNote, oldDate: "2025-01-15" }
+      );
       expect(result).toEqual({ success: true });
     });
 
@@ -303,7 +307,7 @@ describe("calendar notes procedures", () => {
       ).rejects.toThrow("Note not found");
 
       expect(updateNoteDate).not.toHaveBeenCalled();
-      expect(calendarEmitter.emit).not.toHaveBeenCalled();
+      expect(calendarEmitter.emitToHousehold).not.toHaveBeenCalled();
     });
 
     it("throws error when user lacks permission", async () => {
@@ -321,7 +325,8 @@ describe("calendar notes procedures", () => {
       ).rejects.toThrow("Access denied");
 
       expect(updateNoteDate).not.toHaveBeenCalled();
-      expect(calendarEmitter.emit).not.toHaveBeenCalled();
+      expect(calendarEmitter.emitToHousehold).not.toHaveBeenCalled();
     });
   });
 });
+
