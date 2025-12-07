@@ -9,7 +9,9 @@ export const caldavEmitter = {
   broadcast: vi.fn(),
   emitGlobal: vi.fn(),
   userEvent: vi.fn((userId: string, event: string) => `norish:user:${userId}:${event}`),
-  householdEvent: vi.fn((householdKey: string, event: string) => `norish:household:${householdKey}:${event}`),
+  householdEvent: vi.fn(
+    (householdKey: string, event: string) => `norish:household:${householdKey}:${event}`
+  ),
   broadcastEvent: vi.fn((event: string) => `norish:broadcast:${event}`),
   globalEvent: vi.fn((event: string) => `norish:global:${event}`),
   createSubscription: vi.fn(),

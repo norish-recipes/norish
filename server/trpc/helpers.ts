@@ -135,4 +135,3 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
     emitter.createSubscription(userEventName, signal),
   ];
 }
-

@@ -72,11 +72,11 @@ describe("useCalendarQuery", () => {
     it("returns loading state initially", () => {
       mockRecipesQueryOptions.mockReturnValue({
         queryKey: mockRecipesQueryKey,
-        queryFn: () => new Promise(() => { }), // Never resolves
+        queryFn: () => new Promise(() => {}), // Never resolves
       });
       mockNotesQueryOptions.mockReturnValue({
         queryKey: mockNotesQueryKey,
-        queryFn: () => new Promise(() => { }), // Never resolves
+        queryFn: () => new Promise(() => {}), // Never resolves
       });
 
       const { renderHook } = require("@testing-library/react");

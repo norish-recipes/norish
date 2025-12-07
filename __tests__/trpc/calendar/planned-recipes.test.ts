@@ -181,7 +181,6 @@ describe("calendar planned recipes procedures", () => {
         slot: "Breakfast",
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       getRecipeFullMock.mockResolvedValue({
         id: "recipe-123",
         name: "Pancakes",
@@ -351,4 +350,3 @@ describe("calendar planned recipes procedures", () => {
     });
   });
 });
-

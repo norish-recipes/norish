@@ -329,4 +329,3 @@ describe("calendar notes procedures", () => {
     });
   });
 });
-

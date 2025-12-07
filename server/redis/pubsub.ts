@@ -153,4 +153,3 @@ export function createTypedEmitter<
 }
 
 export { TypedRedisEmitter as TypedEmitter };
-

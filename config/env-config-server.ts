@@ -53,9 +53,9 @@ const ServerConfigSchema = z.object({
     .transform((val) =>
       val
         ? val
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
         : []
     )
     .pipe(z.array(z.string())),

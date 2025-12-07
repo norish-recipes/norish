@@ -139,4 +139,3 @@ export const caldavSubscriptions = router({
 });
 
 export type CaldavSubscriptionsRouter = typeof caldavSubscriptions;
-

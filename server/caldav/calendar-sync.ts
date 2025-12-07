@@ -77,6 +77,7 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       signal,
       async (data: CalendarSubscriptionEvents["globalRecipePlanned"]) => {
         const { id, recipeId, recipeName, date, slot, userId } = data;
+
         log.debug({ id, recipeId, userId }, "Recipe planned - syncing to CalDAV");
         try {
           await syncPlannedItem(userId, id, "recipe", id, recipeName, date, slot, recipeId);
@@ -91,6 +92,7 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       signal,
       async (data: CalendarSubscriptionEvents["globalRecipeDeleted"]) => {
         const { id, userId } = data;
+
         log.debug({ id, userId }, "Recipe unplanned - removing from CalDAV");
         try {
           await deletePlannedItem(userId, id);
@@ -105,11 +107,14 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       signal,
       async (data: CalendarSubscriptionEvents["globalRecipeUpdated"]) => {
         const { id, recipeId, recipeName, newDate, slot, userId } = data;
+
         log.debug({ id, userId, newDate }, "Recipe date updated - updating CalDAV");
         try {
           const syncStatus = await getCaldavSyncStatusByItemId(userId, id);
+
           if (!syncStatus) {
             log.debug({ id, userId }, "Recipe not synced to CalDAV, skipping update");
+
             return;
           }
           await syncPlannedItem(userId, id, "recipe", id, recipeName, newDate, slot, recipeId);
@@ -124,6 +129,7 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       signal,
       async (data: CalendarSubscriptionEvents["globalNotePlanned"]) => {
         const { id, title, date, slot, userId } = data;
+
         log.debug({ id, title, userId }, "Note planned - syncing to CalDAV");
         try {
           await syncPlannedItem(userId, id, "note", id, title, date, slot);
@@ -138,6 +144,7 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       signal,
       async (data: CalendarSubscriptionEvents["globalNoteDeleted"]) => {
         const { id, userId } = data;
+
         log.debug({ id, userId }, "Note unplanned - removing from CalDAV");
         try {
           await deletePlannedItem(userId, id);
@@ -152,11 +159,14 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       signal,
       async (data: CalendarSubscriptionEvents["globalNoteUpdated"]) => {
         const { id, title, newDate, slot, userId } = data;
+
         log.debug({ id, userId, newDate }, "Note date updated - updating CalDAV");
         try {
           const syncStatus = await getCaldavSyncStatusByItemId(userId, id);
+
           if (!syncStatus) {
             log.debug({ id, userId }, "Note not synced to CalDAV, skipping update");
+
             return;
           }
           await syncPlannedItem(userId, id, "note", id, title, newDate, slot);
@@ -194,6 +204,7 @@ async function startRecipeSubscriptions(signal: AbortSignal): Promise<void> {
     for await (const data of recipeEmitter.createSubscription(channel, signal)) {
       const typedData = data as RecipeSubscriptionEvents["updated"];
       const { recipe } = typedData;
+
       if (!recipe || !recipe.name) continue;
 
       const recipeId = recipe.id;
@@ -203,6 +214,7 @@ async function startRecipeSubscriptions(signal: AbortSignal): Promise<void> {
 
       try {
         const plannedInstances = await getPlannedRecipesByRecipeId(recipeId);
+
         for (const planned of plannedInstances) {
           await syncPlannedItem(
             planned.userId,
@@ -229,7 +241,6 @@ async function startRecipeSubscriptions(signal: AbortSignal): Promise<void> {
     }
   }
 }
-
 
 export async function syncAllFutureItems(userId: string): Promise<{
   totalSynced: number;

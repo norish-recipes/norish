@@ -30,10 +30,10 @@ const logLevel: LogLevel =
  */
 const stream = isDev
   ? pretty({
-    colorize: true,
-    translateTime: "HH:MM:ss",
-    ignore: "pid,hostname",
-  })
+      colorize: true,
+      translateTime: "HH:MM:ss",
+      ignore: "pid,hostname",
+    })
   : process.stdout;
 
 export const logger = pino({ level: logLevel }, stream);

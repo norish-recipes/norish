@@ -24,6 +24,3 @@ export function resetCalendarEmitterMocks() {
     }
   });
 }
-
-
-
