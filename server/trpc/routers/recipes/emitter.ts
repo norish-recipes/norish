@@ -1,5 +1,13 @@
 import type { RecipeSubscriptionEvents } from "./types";
 
-import { createTypedEmitter } from "../../emitter";
+import { createTypedEmitter, TypedEmitter } from "../../emitter";
 
-export const recipeEmitter = createTypedEmitter<RecipeSubscriptionEvents>();
+// Use globalThis to persist across HMR in development
+declare global {
+  // eslint-disable-next-line no-var
+  var __recipeEmitter__: TypedEmitter<RecipeSubscriptionEvents> | undefined;
+}
+
+export const recipeEmitter =
+  globalThis.__recipeEmitter__ ||
+  (globalThis.__recipeEmitter__ = createTypedEmitter<RecipeSubscriptionEvents>());
