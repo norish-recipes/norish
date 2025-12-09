@@ -5,6 +5,7 @@
  * All subscriptions use createSubscription() with async iterators.
  */
 
+import type Redis from "ioredis";
 import superjson from "superjson";
 
 import { getPublisherClient, createSubscriberClient } from "./client";
@@ -78,21 +79,9 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
     let resolveNext: ((value: TEvents[K]) => void) | null = null;
     let isAborted = false;
 
-    const cleanup = async () => {
-      isAborted = true;
-      try {
-        await subscriber.unsubscribe(channel);
-        await subscriber.quit();
-      } catch (err) {
-        redisLogger.debug({ err, channel }, "Error during subscription cleanup");
-      }
-    };
+    const messageHandler = (receivedChannel: string, message: string) => {
+      if (receivedChannel !== channel) return;
 
-    signal?.addEventListener("abort", () => {
-      cleanup();
-    });
-
-    await subscriber.subscribe(channel, (message: string) => {
       try {
         const data = superjson.parse<TEvents[K]>(message);
 
@@ -105,7 +94,26 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
       } catch (err) {
         redisLogger.error({ err, channel, message }, "Failed to parse Redis message");
       }
+    };
+
+    const cleanup = async (sub: Redis) => {
+      isAborted = true;
+      try {
+        sub.off("message", messageHandler);
+        await sub.unsubscribe(channel);
+        await sub.quit();
+      } catch (err) {
+        redisLogger.debug({ err, channel }, "Error during subscription cleanup");
+      }
+    };
+
+    signal?.addEventListener("abort", () => {
+      cleanup(subscriber);
     });
+
+    // IORedis: register message handler before subscribing
+    subscriber.on("message", messageHandler);
+    await subscriber.subscribe(channel);
 
     redisLogger.debug({ channel }, "Started Redis subscription");
 
@@ -124,7 +132,7 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
         }
       }
     } finally {
-      await cleanup();
+      await cleanup(subscriber);
       redisLogger.debug({ channel }, "Ended Redis subscription");
     }
   }

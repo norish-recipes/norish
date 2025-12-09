@@ -44,7 +44,7 @@
     "pino": "^10.1.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "redis": "^5.10.0",
+    "ioredis": "^5.8.2",
     "server-only": "^0.0.1",
     "sharp": "^0.34.4",
     "superjson": "^2.2.6",

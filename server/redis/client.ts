@@ -5,34 +5,30 @@
  * Redis requires separate connections for subscribers (they enter "subscribe mode").
  */
 
-import { createClient, RedisClientType } from "redis";
+import Redis from "ioredis";
 
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { createLogger } from "@/server/logger";
 
 const log = createLogger("redis");
 
-type RedisClient = RedisClientType;
-
-let publisherClient: RedisClient | null = null;
-let isConnecting = false;
-let connectionPromise: Promise<RedisClient> | null = null;
+let publisherClient: Redis | null = null;
+let connectionPromise: Promise<Redis> | null = null;
 
 /**
  * Get the publisher client (singleton).
  * Used for PUBLISH operations.
  */
-export async function getPublisherClient(): Promise<RedisClient> {
-  if (publisherClient?.isOpen) {
+export async function getPublisherClient(): Promise<Redis> {
+  if (publisherClient && publisherClient.status === "ready") {
     return publisherClient;
   }
 
   // Prevent multiple simultaneous connection attempts
-  if (isConnecting && connectionPromise) {
+  if (connectionPromise) {
     return connectionPromise;
   }
 
-  isConnecting = true;
   connectionPromise = connectPublisher();
 
   try {
@@ -40,16 +36,16 @@ export async function getPublisherClient(): Promise<RedisClient> {
 
     return publisherClient;
   } finally {
-    isConnecting = false;
     connectionPromise = null;
   }
 }
 
-async function connectPublisher(): Promise<RedisClient> {
+async function connectPublisher(): Promise<Redis> {
   log.info({ url: SERVER_CONFIG.REDIS_URL }, "Connecting to Redis");
 
-  const client = createClient({
-    url: SERVER_CONFIG.REDIS_URL,
+  const client = new Redis(SERVER_CONFIG.REDIS_URL, {
+    lazyConnect: true,
+    maxRetriesPerRequest: null,
   });
 
   client.on("error", (err) => {
@@ -63,7 +59,7 @@ async function connectPublisher(): Promise<RedisClient> {
   await client.connect();
   log.info("Redis publisher connected");
 
-  return client as RedisClient;
+  return client;
 }
 
 /**
@@ -71,7 +67,7 @@ async function connectPublisher(): Promise<RedisClient> {
  * Each subscriber needs its own connection because Redis clients
  * enter "subscribe mode" and can't do other operations.
  */
-export async function createSubscriberClient(): Promise<RedisClient> {
+export async function createSubscriberClient(): Promise<Redis> {
   const publisher = await getPublisherClient();
   const subscriber = publisher.duplicate();
 
@@ -79,10 +75,9 @@ export async function createSubscriberClient(): Promise<RedisClient> {
     log.error({ err }, "Redis subscriber error");
   });
 
-  await subscriber.connect();
   log.debug("Redis subscriber connected");
 
-  return subscriber as RedisClient;
+  return subscriber;
 }
 
 /**
@@ -90,7 +85,7 @@ export async function createSubscriberClient(): Promise<RedisClient> {
  * Call during server shutdown.
  */
 export async function closeRedisConnections(): Promise<void> {
-  if (publisherClient?.isOpen) {
+  if (publisherClient && publisherClient.status !== "end") {
     log.info("Closing Redis connections");
     await publisherClient.quit();
     publisherClient = null;
