@@ -62,7 +62,6 @@ async function discoverWebSocketEndpoint(baseUrl: string): Promise<string> {
 }
 
 function isIpAddress(host: string): boolean {
-  // Simple check for IPv4 and IPv6
   return /^(\d{1,3}\.){3}\d{1,3}$/.test(host) || host.includes(":");
 }
 
