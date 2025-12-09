@@ -106,7 +106,7 @@
     "postcss": "^8.5.6",
     "prettier": "^3.7.2",
     "prettier-plugin-tailwindcss": "^0.7.1",
-    "puppeteer-core": "npm:rebrowser-puppeteer-core@^24.8.1",
+    "playwright-core": "npm:rebrowser-playwright-core@^1.52.0",
     "react-virtuoso": "4.14.1",
     "tailwindcss": "^4.1.12",
     "tsdown": "^0.15.12",

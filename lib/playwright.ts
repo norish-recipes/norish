@@ -1,6 +1,6 @@
 import dns from "dns/promises";
 
-import puppeteer, { Browser } from "puppeteer-core";
+import { chromium, type Browser } from "playwright-core";
 
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { serverLogger as log } from "@/server/logger";
@@ -10,13 +10,6 @@ let browser: Browser | null = null;
 /**
  * Get the WebSocket endpoint from Chrome's remote debugging port.
  * Chrome exposes /json/version which contains the webSocketDebuggerUrl.
- *
- * IMPORTANT: Chrome DevTools has a security patch that rejects HTTP
- * requests with hostnames that aren't IP addresses or localhost.
- * See: https://bugs.chromium.org/p/chromium/issues/detail?id=813540
- *
- * To work around this, we resolve the hostname to an IP address before making
- * the HTTP request to discover the WebSocket endpoint.
  */
 async function discoverWebSocketEndpoint(baseUrl: string): Promise<string> {
   // Parse the URL and resolve hostname to IP address
@@ -24,8 +17,6 @@ async function discoverWebSocketEndpoint(baseUrl: string): Promise<string> {
   const url = new URL(httpUrl);
 
   // Resolve hostname to IP to bypass Chrome DevTools Host header security check
-  // Chrome rejects non-IP, non-localhost hostnames with "Host header is specified
-  // and is not an IP address or localhost"
   let resolvedHost = url.hostname;
 
   if (!isIpAddress(url.hostname) && !isLocalhost(url.hostname)) {
@@ -80,12 +71,12 @@ function isLocalhost(host: string): boolean {
 }
 
 export async function getBrowser(): Promise<Browser> {
-  if (browser && browser.connected) return browser;
+  if (browser && browser.isConnected()) return browser;
 
   try {
-    browser = await puppeteer.connect({
-      browserWSEndpoint: await discoverWebSocketEndpoint(SERVER_CONFIG.CHROME_WS_ENDPOINT),
-    });
+    const wsEndpoint = await discoverWebSocketEndpoint(SERVER_CONFIG.CHROME_WS_ENDPOINT);
+
+    browser = await chromium.connectOverCDP(wsEndpoint);
   } catch (error) {
     log.error({ err: error }, "Failed to connect to remote Chrome");
     throw new Error(
@@ -99,7 +90,7 @@ export async function getBrowser(): Promise<Browser> {
 export async function closeBrowser() {
   if (browser) {
     try {
-      await browser.disconnect();
+      await browser.close();
     } catch (error) {
       log.error({ err: error }, "Error closing browser");
     }

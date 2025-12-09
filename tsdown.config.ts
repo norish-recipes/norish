@@ -45,10 +45,8 @@ export default defineConfig({
     "@mozilla/readability",
     "microdata-node",
 
-    // Puppeteer
-    "puppeteer-core",
-    "chromium-bidi",
-    "devtools-protocol",
+    // Playwright
+    "playwright-core",
 
     // File handling
     "jszip",

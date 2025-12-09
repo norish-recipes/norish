@@ -1,4 +1,4 @@
-import { getBrowser } from "../puppeteer";
+import { getBrowser } from "../playwright";
 
 import { parserLogger as log } from "@/server/logger";
 
@@ -32,12 +32,36 @@ function getReferer(url: string): string {
   }
 }
 
-export async function fetchViaPuppeteer(targetUrl: string): Promise<string> {
+export async function fetchViaPlaywright(targetUrl: string): Promise<string> {
   try {
     const browser = await getBrowser();
-    const page = await browser.newPage();
+    const referer = getReferer(targetUrl);
 
-    await page.evaluateOnNewDocument(() => {
+    // Create a new browser context with anti-fingerprint settings
+    const context = await browser.newContext({
+      userAgent: BROWSER_HEADERS["User-Agent"],
+      viewport: { width: 1920, height: 1080 },
+      locale: "en-US",
+      extraHTTPHeaders: {
+        "Accept-Language": BROWSER_HEADERS["Accept-Language"],
+        "Cache-Control": BROWSER_HEADERS["Cache-Control"],
+        "Sec-Ch-Ua": BROWSER_HEADERS["Sec-Ch-Ua"],
+        "Sec-Ch-Ua-Mobile": BROWSER_HEADERS["Sec-Ch-Ua-Mobile"],
+        "Sec-Ch-Ua-Platform": BROWSER_HEADERS["Sec-Ch-Ua-Platform"],
+        "Sec-Fetch-Dest": BROWSER_HEADERS["Sec-Fetch-Dest"],
+        "Sec-Fetch-Mode": BROWSER_HEADERS["Sec-Fetch-Mode"],
+        "Sec-Fetch-Site": BROWSER_HEADERS["Sec-Fetch-Site"],
+        "Sec-Fetch-User": BROWSER_HEADERS["Sec-Fetch-User"],
+        "Upgrade-Insecure-Requests": BROWSER_HEADERS["Upgrade-Insecure-Requests"],
+        Referer: referer,
+        DNT: BROWSER_HEADERS["DNT"],
+      },
+    });
+
+    const page = await context.newPage();
+
+    // Add init script to override navigator properties (equivalent to evaluateOnNewDocument)
+    await page.addInitScript(() => {
       // Override the webdriver property
       Object.defineProperty(navigator, "webdriver", { get: () => false });
 
@@ -60,44 +84,8 @@ export async function fetchViaPuppeteer(targetUrl: string): Promise<string> {
           : originalQuery(parameters);
     });
 
-    const referer = getReferer(targetUrl);
-
-    // Set extra HTTP headers before navigation
-    await page.setExtraHTTPHeaders({
-      "Accept-Language": BROWSER_HEADERS["Accept-Language"],
-      "Cache-Control": BROWSER_HEADERS["Cache-Control"],
-      "Sec-Ch-Ua": BROWSER_HEADERS["Sec-Ch-Ua"],
-      "Sec-Ch-Ua-Mobile": BROWSER_HEADERS["Sec-Ch-Ua-Mobile"],
-      "Sec-Ch-Ua-Platform": BROWSER_HEADERS["Sec-Ch-Ua-Platform"],
-      "Sec-Fetch-Dest": BROWSER_HEADERS["Sec-Fetch-Dest"],
-      "Sec-Fetch-Mode": BROWSER_HEADERS["Sec-Fetch-Mode"],
-      "Sec-Fetch-Site": BROWSER_HEADERS["Sec-Fetch-Site"],
-      "Sec-Fetch-User": BROWSER_HEADERS["Sec-Fetch-User"],
-      "Upgrade-Insecure-Requests": BROWSER_HEADERS["Upgrade-Insecure-Requests"],
-      Referer: referer,
-      DNT: BROWSER_HEADERS["DNT"],
-    });
-
-    // Set user agent with client hints metadata
-    await page.setUserAgent(BROWSER_HEADERS["User-Agent"], {
-      brands: [
-        { brand: "Google Chrome", version: "131" },
-        { brand: "Chromium", version: "131" },
-        { brand: "Not_A Brand", version: "24" },
-      ],
-      fullVersion: "131.0.0.0",
-      platform: "Windows",
-      platformVersion: "10.0.0",
-      architecture: "x86",
-      model: "",
-      mobile: false,
-    });
-
-    // Set viewport to look like a real browser
-    await page.setViewport({ width: 1920, height: 1080 });
-
     await page.goto(targetUrl, {
-      waitUntil: "networkidle2", // Wait for network to be idle (helps with Cloudflare)
+      waitUntil: "networkidle", // Playwright uses "networkidle" (not "networkidle2")
       timeout: 30000,
     });
 
@@ -112,9 +100,9 @@ export async function fetchViaPuppeteer(targetUrl: string): Promise<string> {
 
     if (isChallenging) {
       // Wait for Cloudflare challenge to complete
-      await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => {});
+      await page.waitForURL("**/*", { waitUntil: "networkidle", timeout: 15000 }).catch(() => { });
       // Extra wait for any remaining JS execution
-      await new Promise((r) => setTimeout(r, 2000));
+      await page.waitForTimeout(2000);
     }
 
     // Wait for recipe content to be populated
@@ -187,12 +175,15 @@ export async function fetchViaPuppeteer(targetUrl: string): Promise<string> {
 
     const content = await page.content();
 
-    await page.close();
+    await context.close();
 
     return content;
   } catch (error) {
-    log.warn({ err: error }, "Puppeteer fetch failed, Chrome may not be available");
+    log.warn({ err: error }, "Playwright fetch failed, Chrome may not be available");
 
     return ""; // Fallback will use HTTP
   }
 }
+
+// Keep backwards compatibility alias
+export const fetchViaPuppeteer = fetchViaPlaywright;
