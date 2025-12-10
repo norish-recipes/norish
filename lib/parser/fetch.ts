@@ -1,8 +1,22 @@
+import fs from "fs";
+import path from "path";
+
 import { getBrowser } from "../playwright";
 
 import { parserLogger as log } from "@/server/logger";
 
-// Common browser headers to avoid bot detection
+// Load browser scripts at module initialization (avoids transpilation issues)
+// Use process.cwd() since import.meta.url resolves to .next/ during Turbopack bundling
+const SCRIPTS_DIR = path.join(process.cwd(), "lib", "parser", "scripts");
+const CHECK_CLOUDFLARE_SCRIPT = fs.readFileSync(
+  path.join(SCRIPTS_DIR, "check-cloudflare.js"),
+  "utf-8"
+);
+const WAIT_FOR_CONTENT_SCRIPT = fs.readFileSync(
+  path.join(SCRIPTS_DIR, "wait-for-content.js"),
+  "utf-8"
+);
+
 const BROWSER_HEADERS: Record<string, string> = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -60,114 +74,25 @@ export async function fetchViaPlaywright(targetUrl: string): Promise<string> {
 
     const page = await context.newPage();
 
-    // Add init script to override navigator properties (equivalent to evaluateOnNewDocument)
-    await page.addInitScript(() => {
-      // Override the webdriver property
-      Object.defineProperty(navigator, "webdriver", { get: () => false });
-
-      // Override plugins to look like a real browser
-      Object.defineProperty(navigator, "plugins", {
-        get: () => [1, 2, 3, 4, 5],
-      });
-
-      // Override languages
-      Object.defineProperty(navigator, "languages", {
-        get: () => ["en-US", "en", "nl"],
-      });
-
-      // Override permissions
-      const originalQuery = window.navigator.permissions.query;
-
-      window.navigator.permissions.query = (parameters: PermissionDescriptor) =>
-        parameters.name === "notifications"
-          ? Promise.resolve({ state: "denied" } as PermissionStatus)
-          : originalQuery(parameters);
-    });
+    // Note: Anti-fingerprinting is handled by playwright-extra stealth plugin see playwright.ts
 
     await page.goto(targetUrl, {
-      waitUntil: "networkidle", // Playwright uses "networkidle" (not "networkidle2")
+      waitUntil: "networkidle",
       timeout: 30000,
     });
 
     // Check for Cloudflare challenge and wait if needed
-    const isChallenging = await page.evaluate(() => {
-      return (
-        document.title.includes("Just a moment") ||
-        document.body?.textContent?.includes("Checking your browser") ||
-        document.querySelector("#challenge-running") !== null
-      );
-    });
+    // Using external script to avoid esbuild transpilation issues
+    const isChallenging = await page.evaluate(CHECK_CLOUDFLARE_SCRIPT);
 
     if (isChallenging) {
-      // Wait for Cloudflare challenge to complete
       await page.waitForURL("**/*", { waitUntil: "networkidle", timeout: 15000 }).catch(() => { });
-      // Extra wait for any remaining JS execution
       await page.waitForTimeout(2000);
     }
 
     // Wait for recipe content to be populated
-    const contentLoaded = await page.evaluate(() => {
-      return new Promise<boolean>((resolve) => {
-        const maxWait = 8000;
-        const checkInterval = 200;
-        let elapsed = 0;
-
-        const checkContent = () => {
-          // Check for JSON-LD
-          const jsonLd = document.querySelector('script[type="application/ld+json"]');
-
-          if (jsonLd?.textContent?.toLowerCase().includes("recipe")) {
-            resolve(true);
-
-            return;
-          }
-
-          // Check for populated ingredient/instruction containers
-          const ingredientContainers = document.querySelectorAll(
-            '.ingredients, .ingredient, [class*="ingredient"], [id*="ingredient"]'
-          );
-          const instructionContainers = document.querySelectorAll(
-            '.steps, .instructions, .directions, [class*="instruction"], [class*="direction"], [class*="step"], [id*="instruction"], [id*="step"]'
-          );
-
-          // Check if any container has actual content (not just empty)
-          for (const el of ingredientContainers) {
-            if (el.textContent && el.textContent.trim().length > 20) {
-              resolve(true);
-
-              return;
-            }
-          }
-          for (const el of instructionContainers) {
-            if (el.textContent && el.textContent.trim().length > 20) {
-              resolve(true);
-
-              return;
-            }
-          }
-
-          // Check for schema.org microdata
-          const schemaRecipe = document.querySelector('[itemtype*="Recipe"]');
-
-          if (schemaRecipe?.textContent && schemaRecipe.textContent.trim().length > 100) {
-            resolve(true);
-
-            return;
-          }
-
-          elapsed += checkInterval;
-          if (elapsed >= maxWait) {
-            resolve(false);
-
-            return;
-          }
-
-          setTimeout(checkContent, checkInterval);
-        };
-
-        checkContent();
-      });
-    });
+    // Using external script to avoid esbuild transpilation issues
+    const contentLoaded = await page.evaluate(WAIT_FOR_CONTENT_SCRIPT);
 
     if (!contentLoaded) {
       log.debug({ url: targetUrl }, "Recipe content containers remain empty after waiting");

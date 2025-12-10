@@ -27,12 +27,6 @@ export function calculateNextOccurrence(
   currentNextDate: string,
   fromDate?: string
 ): string {
-  // // console.log('[calculateNextOccurrence] Called with:', {
-  //   pattern,
-  //   currentNextDate,
-  //   fromDate,
-  // });
-
   const today = startOfDay(new Date());
   // When fromDate is provided (item is being checked), use it as base for calculation
   // When fromDate is not provided (creating new item), use currentNextDate
@@ -41,13 +35,6 @@ export function calculateNextOccurrence(
     : startOfDay(parseISO(currentNextDate));
   const isNewItem = !fromDate && isSameDay(baseDate, today);
 
-  // // console.log('[calculateNextOccurrence] Calculated dates:', {
-  //   today: format(today, 'yyyy-MM-dd'),
-  //   baseDate: format(baseDate, 'yyyy-MM-dd'),
-  //   isNewItem,
-  // });
-
-  // Calculate next occurrence based on rule
   let nextDate: Date;
 
   switch (pattern.rule) {
@@ -69,17 +56,13 @@ export function calculateNextOccurrence(
 
     case "week":
       if (pattern.weekday !== undefined) {
-        // // console.log(`[calculateNextOccurrence] Weekly on weekday ${pattern.weekday}`);
         nextDate = calculateNextWeekday(baseDate, pattern.interval, pattern.weekday, isNewItem);
       } else {
         if (isNewItem) {
           nextDate = today;
-          // // console.log('[calculateNextOccurrence] Weekly new item: starting today');
         } else {
           nextDate = addWeeks(baseDate, pattern.interval);
-          // // console.log(`[calculateNextOccurrence] Weekly existing: adding ${pattern.interval} weeks`);
         }
-        // Advance by full intervals until not in the past
         while (isBefore(nextDate, today)) {
           nextDate = addWeeks(nextDate, pattern.interval);
         }
@@ -88,7 +71,6 @@ export function calculateNextOccurrence(
 
     case "month":
       if (pattern.weekday !== undefined) {
-        // // console.log(`[calculateNextOccurrence] Monthly on weekday ${pattern.weekday}`);
         nextDate = calculateNextMonthlyWeekday(
           baseDate,
           pattern.interval,
@@ -98,10 +80,8 @@ export function calculateNextOccurrence(
       } else {
         if (isNewItem) {
           nextDate = today;
-          // console.log('[calculateNextOccurrence] Monthly new item: starting today');
         } else {
           nextDate = addMonths(baseDate, pattern.interval);
-          // console.log(`[calculateNextOccurrence] Monthly existing: adding ${pattern.interval} months`);
         }
         // Advance by full intervals until not in the past
         while (isBefore(nextDate, today)) {
@@ -112,12 +92,10 @@ export function calculateNextOccurrence(
 
     default:
       nextDate = addDays(baseDate, 1);
-    // console.log('[calculateNextOccurrence] Unknown rule: adding 1 day');
   }
 
   const result = format(nextDate, "yyyy-MM-dd");
 
-  // console.log('[calculateNextOccurrence] Final result:', result);
   return result;
 }
 
@@ -134,13 +112,10 @@ function calculateNextWeekday(
   const today = startOfDay(new Date());
   const currentWeekday = getDay(today);
 
-  // console.log(`[calculateNextWeekday] Called with target=${weekdayNames[targetWeekday]} (${targetWeekday}), interval=${intervalWeeks}, isNewItem=${isNewItem}, today=${weekdayNames[currentWeekday]} (${currentWeekday}), baseDate=${format(baseDate, 'yyyy-MM-dd')}`);
-
   // For new items, find the next occurrence of target weekday (including today if it matches)
   if (isNewItem) {
     // If today is the target weekday, start today
     if (currentWeekday === targetWeekday) {
-      // console.log('[calculateNextWeekday] New item: Today matches target weekday, starting today');
       return today;
     }
 
@@ -150,14 +125,12 @@ function calculateNextWeekday(
     if (daysUntilTarget === 0) daysUntilTarget = 7; // If same day, go to next week
 
     const nextDate = addDays(today, daysUntilTarget);
-    // console.log(`[calculateNextWeekday] New item: ${daysUntilTarget} days until ${weekdayNames[targetWeekday]}, result=${format(nextDate, 'yyyy-MM-dd')}`);
 
     return nextDate;
   }
 
   // For existing items (checking off), find the next target weekday
   // that is at least intervalWeeks weeks after the baseDate
-  // console.log(`[calculateNextWeekday] Existing item: baseDate=${format(baseDate, 'yyyy-MM-dd')}`);
 
   // First, find the next occurrence of target weekday from baseDate
   const baseDateWeekday = getDay(baseDate);
@@ -194,13 +167,10 @@ function calculateNextMonthlyWeekday(
   const today = startOfDay(new Date());
   const currentWeekday = getDay(today);
 
-  // console.log(`[calculateNextMonthlyWeekday] Called with target=${weekdayNames[targetWeekday]}, interval=${intervalMonths}, isNewItem=${isNewItem}`);
-
   // For new items, find the next occurrence of target weekday
   if (isNewItem) {
     // If today is the target weekday, start today
     if (currentWeekday === targetWeekday) {
-      // console.log('[calculateNextMonthlyWeekday] New item: Today matches target weekday');
       return today;
     }
 
@@ -210,30 +180,24 @@ function calculateNextMonthlyWeekday(
     if (daysUntilTarget === 0) daysUntilTarget = 7;
 
     const nextDate = addDays(today, daysUntilTarget);
-    // console.log(`[calculateNextMonthlyWeekday] New item: ${daysUntilTarget} days until ${weekdayNames[targetWeekday]}, result=${format(nextDate, 'yyyy-MM-dd')}`);
 
     return nextDate;
   }
 
   // For existing items (checking off), add the interval from baseDate
-  // console.log(`[calculateNextMonthlyWeekday] Existing item: baseDate=${format(baseDate, 'yyyy-MM-dd')}`);
 
   const nextMonth = addMonths(baseDate, intervalMonths);
   const nextMonthWeekday = getDay(nextMonth);
   let daysToAdd = (targetWeekday - nextMonthWeekday + 7) % 7;
   let nextDate = addDays(nextMonth, daysToAdd);
 
-  // console.log(`[calculateNextMonthlyWeekday] Existing item: added ${intervalMonths} months + ${daysToAdd} days to reach ${weekdayNames[targetWeekday]}, result=${format(nextDate, 'yyyy-MM-dd')}`);
-
   // Ensure we never go backwards from today
   while (isBefore(nextDate, today)) {
-    // console.log(`[calculateNextMonthlyWeekday] Result is before today, adding another ${intervalMonths} months`);
     const anotherMonth = addMonths(nextDate, intervalMonths);
     const anotherWeekday = getDay(anotherMonth);
 
     daysToAdd = (targetWeekday - anotherWeekday + 7) % 7;
     nextDate = addDays(anotherMonth, daysToAdd);
-    // console.log(`[calculateNextMonthlyWeekday] New result=${format(nextDate, 'yyyy-MM-dd')}`);
   }
 
   return nextDate;

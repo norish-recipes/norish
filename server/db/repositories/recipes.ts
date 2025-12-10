@@ -70,6 +70,64 @@ export async function getRecipeByUrl(url: string): Promise<FullRecipeDTO | null>
 }
 
 /**
+ * Check if recipe URL exists based on view policy.
+ * Used for queue deduplication before creating new recipes.
+ *
+ * - "everyone": Any recipe with this URL
+ * - "household": Any recipe with this URL owned by household members
+ * - "owner": Any recipe with this URL owned by the user
+ */
+export async function recipeExistsByUrlForPolicy(
+  url: string,
+  userId: string,
+  householdUserIds: string[] | null,
+  viewPolicy: "everyone" | "household" | "owner"
+): Promise<{ exists: boolean; existingRecipeId?: string }> {
+  let whereCondition;
+
+  switch (viewPolicy) {
+    case "everyone":
+      // Check if URL exists at all
+      whereCondition = eq(recipes.url, url);
+      break;
+
+    case "household":
+      // Check if URL exists for any household member
+      if (householdUserIds && householdUserIds.length > 0) {
+        const userIds = householdUserIds.includes(userId)
+          ? householdUserIds
+          : [...householdUserIds, userId];
+        whereCondition = and(eq(recipes.url, url), inArray(recipes.userId, userIds));
+      } else {
+        whereCondition = and(eq(recipes.url, url), eq(recipes.userId, userId));
+      }
+      break;
+
+    case "owner":
+      // Check if URL exists for this specific user
+      whereCondition = and(eq(recipes.url, url), eq(recipes.userId, userId));
+      break;
+
+    default:
+      whereCondition = and(eq(recipes.url, url), eq(recipes.userId, userId));
+  }
+
+  const existing = await db.query.recipes.findFirst({
+    where: whereCondition,
+    columns: { id: true },
+  });
+
+  if (existing) {
+    dbLogger.debug(
+      { url, recipeId: existing.id, viewPolicy },
+      "Found existing recipe by URL for policy"
+    );
+  }
+
+  return { exists: existing !== null, existingRecipeId: existing?.id };
+}
+
+/**
  * Check if a recipe already exists within a household context.
  * First checks by URL (if provided), then falls back to exact title match.
  * Returns the existing recipe ID if found, null otherwise.
@@ -379,12 +437,12 @@ export async function createRecipeWithRefs(
     const [inserted] = await tx
       .insert(recipes)
       .values(toInsert)
-      .onConflictDoNothing({ target: [recipes.url] })
+      .onConflictDoNothing({ target: [recipes.url, recipes.userId] })
       .returning({ id: recipes.id });
 
     if (!inserted) {
       const existing = await tx.query.recipes.findFirst({
-        where: eq(recipes.url, toInsert.url!),
+        where: and(eq(recipes.url, toInsert.url!), eq(recipes.userId, userId ?? "")),
         columns: { id: true },
       });
 

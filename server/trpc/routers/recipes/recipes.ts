@@ -5,7 +5,6 @@ import { authedProcedure } from "../../middleware";
 import { emitByPolicy } from "../../helpers";
 
 import { recipeEmitter } from "./emitter";
-import { importRecipeFromUrl } from "./import";
 
 import { trpcLogger as log } from "@/server/logger";
 import {
@@ -33,6 +32,7 @@ import {
   type PermissionAction,
 } from "@/server/auth/permissions";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { addImportJob } from "@/server/queue";
 import { FilterMode, SortOrder } from "@/types";
 
 interface UserContext {
@@ -263,11 +263,25 @@ const deleteProcedure = authedProcedure
 
 const importFromUrlProcedure = authedProcedure
   .input(RecipeImportInputSchema)
-  .mutation(({ ctx, input }) => {
+  .mutation(async ({ ctx, input }) => {
     const { url } = input;
     const recipeId = crypto.randomUUID();
 
-    importRecipeFromUrl({ userId: ctx.user.id, householdKey: ctx.householdKey }, recipeId, url);
+    // Add job to queue - returns conflict status if duplicate in queue
+    const result = await addImportJob({
+      url,
+      recipeId,
+      userId: ctx.user.id,
+      householdKey: ctx.householdKey,
+      householdUserIds: ctx.householdUserIds,
+    });
+
+    if (result.status === "exists" || result.status === "duplicate") {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "This recipe is already exist or is being imported",
+      });
+    }
 
     return recipeId;
   });
@@ -308,12 +322,12 @@ const convertMeasurements = authedProcedure
         // Check edit permission (uses recipe.userId directly since we have the full recipe)
         const permissionCheck = recipe.userId
           ? canAccessResource(
-              "edit",
-              ctx.user.id,
-              recipe.userId,
-              ctx.householdUserIds,
-              ctx.isServerAdmin
-            )
+            "edit",
+            ctx.user.id,
+            recipe.userId,
+            ctx.householdUserIds,
+            ctx.isServerAdmin
+          )
           : Promise.resolve(true);
 
         return permissionCheck.then((canEdit) => {
