@@ -13,7 +13,16 @@ export async function proxy(request: NextRequest) {
   }
 
   // Invalid or no session - redirect to login
-  const loginUrl = new URL("/login", request.url);
+  // Use X-Forwarded headers when behind a reverse proxy
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+
+  let loginUrl: URL;
+  if (forwardedHost) {
+    loginUrl = new URL("/login", `${forwardedProto}://${forwardedHost}`);
+  } else {
+    loginUrl = new URL("/login", request.url);
+  }
 
   loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
 
