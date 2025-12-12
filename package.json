@@ -1,6 +1,6 @@
 {
   "name": "norish",
-  "version": "0.13.6-beta",
+  "version": "0.13.7-beta",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.11.0",
@@ -40,7 +40,7 @@
     "heic-convert": "^2.1.0",
     "html-entities": "^2.6.0",
     "ioredis": "^5.8.2",
-    "next": "16.0.7",
+    "next": "16.0.10",
     "node-cron": "^4.2.1",
     "pg": "8.16.3",
     "pino": "^10.1.0",

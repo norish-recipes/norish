@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 
+import { SERVER_CONFIG } from "./config/env-config-server";
+
 import { auth } from "@/server/auth/auth";
 
 export async function proxy(request: NextRequest) {
@@ -13,11 +15,31 @@ export async function proxy(request: NextRequest) {
   }
 
   // Invalid or no session - redirect to login
-  const loginUrl = new URL("/login", request.url);
+  // Use X-Forwarded headers when behind a reverse proxy
+  const forwardedOrigin = getPublicOrigin(request);
+  let loginUrl: URL;
 
-  loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+  if (forwardedOrigin && SERVER_CONFIG.TRUSTED_ORIGINS.includes(forwardedOrigin)) {
+    loginUrl = new URL("/login", forwardedOrigin);
+  } else {
+    loginUrl = new URL("/login", SERVER_CONFIG.AUTH_URL);
+  }
+
+  loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname + request.nextUrl.search);
 
   return NextResponse.redirect(loginUrl, 307);
+}
+
+function getPublicOrigin(request: NextRequest) {
+  const h = request.headers;
+
+  const proto = h.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "");
+
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+
+  if (!host) return null;
+
+  return `${proto}://${host}`;
 }
 
 export const config = {
