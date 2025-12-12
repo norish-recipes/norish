@@ -212,7 +212,7 @@ export async function downloadVideoAudio(url: string): Promise<string> {
 
     // Cleanup on failure
     try {
-      await fs.unlink(outputFile).catch(() => { });
+      await fs.unlink(outputFile).catch(() => {});
     } catch (cleanupErr) {
       log.error({ err: cleanupErr }, "Failed to cleanup temp file");
     }
