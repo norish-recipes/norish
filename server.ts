@@ -4,7 +4,7 @@ import { initializeVideoProcessing } from "./server/startup/video-processing";
 import { startRecurringTasks, runScheduledCleanup } from "./server/startup/start-cron";
 import { createServer } from "./server/startup/http-server";
 import { initCaldavSync } from "./server/caldav/calendar-sync";
-import { startRecipeImportWorker } from "./server/queue";
+import { startWorkers } from "./server/startup/start-workers";
 
 import { initializeServerConfig, SERVER_CONFIG } from "@/config/env-config-server";
 import { serverLogger as log } from "@/server/logger";
@@ -38,10 +38,8 @@ async function main() {
   initCaldavSync();
   log.info("CalDAV sync service initialized");
 
-  // Start BullMQ recipe import worker
-  startRecipeImportWorker();
-  log.info("Recipe import worker started");
-
+  // Start BullMQ workers
+  startWorkers();
   const { server, hostname, port } = await createServer();
 
   server.listen(port, hostname, () => {

@@ -5,7 +5,6 @@ import { checkRecurringGroceries } from "@/server/scheduler/recurring-grocery-ch
 import { cleanupOrphanedImages, cleanupOrphanedAvatars } from "@/server/startup/image-cleanup";
 import { cleanupOldCalendarData } from "@/server/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@/server/scheduler/old-groceries-cleanup";
-import { retryFailedCalDavSyncs } from "@/server/scheduler/caldav-retry";
 
 export async function runScheduledCleanup() {
   schedulerLogger.info("Running all scheduled cleanup tasks");
@@ -74,19 +73,6 @@ export async function runScheduledCleanup() {
     schedulerLogger.info({ deleted: groceriesResult.deleted }, "Old groceries cleanup completed");
   } catch (err) {
     schedulerLogger.error({ err }, "Old groceries cleanup failed");
-  }
-
-  try {
-    // CalDAV Retry
-    schedulerLogger.info("CalDAV retry triggered");
-    const caldavResult = await retryFailedCalDavSyncs();
-
-    schedulerLogger.info(
-      { retried: caldavResult.retried, skipped: caldavResult.skipped },
-      "CalDAV retry completed"
-    );
-  } catch (err) {
-    schedulerLogger.error({ err }, "CalDAV retry failed");
   }
 }
 

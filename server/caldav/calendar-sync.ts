@@ -1,7 +1,7 @@
 /**
  * CalDAV Calendar Sync Service
  *
- * Listens to global calendar events and triggers CalDAV sync operations.
+ * Listens to global calendar events and adds CalDAV sync jobs to the queue.
  * Uses Redis pub/sub subscriptions with async iterators.
  */
 
@@ -9,21 +9,12 @@ import type { CalendarSubscriptionEvents } from "@/server/trpc/routers/calendar/
 import type { RecipeSubscriptionEvents } from "@/server/trpc/routers/recipes/types";
 import type { Slot } from "@/types";
 
-import { syncPlannedItem, deletePlannedItem } from "./sync-manager";
-
+import { addCaldavSyncJob } from "@/server/queue";
 import { calendarEmitter } from "@/server/trpc/routers/calendar/emitter";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
-import {
-  getCaldavSyncStatusByItemId,
-  getPendingOrFailedSyncStatuses,
-} from "@/server/db/repositories/caldav-sync-status";
-import {
-  getPlannedRecipeViewById,
-  getPlannedRecipesByRecipeId,
-  getFuturePlannedRecipes,
-} from "@/server/db/repositories/planned-recipe";
-import { getNoteViewById, getFutureNotes } from "@/server/db/repositories/notes";
-import { getRecipeFull } from "@/server/db/repositories/recipes";
+import { getCaldavSyncStatusByItemId } from "@/server/db/repositories/caldav-sync-status";
+import { getPlannedRecipesByRecipeId } from "@/server/db/repositories/planned-recipe";
+import { getCaldavConfigDecrypted } from "@/server/db/repositories/caldav-config";
 import { createLogger } from "@/server/logger";
 
 const log = createLogger("caldav-sync");
@@ -55,9 +46,6 @@ export function initCaldavSync(): void {
   log.info("CalDAV sync service initialized");
 }
 
-/**
- * Stop the CalDAV sync service and cleanup subscriptions.
- */
 export function stopCaldavSync(): void {
   if (!isInitialized || !abortController) {
     return;
@@ -69,6 +57,63 @@ export function stopCaldavSync(): void {
   isInitialized = false;
 }
 
+async function getCaldavServerUrl(userId: string): Promise<string | null> {
+  const config = await getCaldavConfigDecrypted(userId);
+
+  if (!config || !config.enabled) return null;
+  return config.serverUrl;
+}
+
+async function queueSyncJob(
+  userId: string,
+  itemId: string,
+  itemType: "recipe" | "note",
+  plannedItemId: string,
+  eventTitle: string,
+  date: string,
+  slot: Slot,
+  recipeId?: string
+): Promise<void> {
+  const caldavServerUrl = await getCaldavServerUrl(userId);
+  if (!caldavServerUrl) {
+    log.debug({ userId, itemId }, "CalDAV not configured, skipping sync");
+    return;
+  }
+
+  await addCaldavSyncJob({
+    userId,
+    itemId,
+    itemType,
+    plannedItemId,
+    eventTitle,
+    date,
+    slot,
+    recipeId,
+    operation: "sync",
+    caldavServerUrl,
+  });
+}
+
+async function queueDeleteJob(userId: string, itemId: string): Promise<void> {
+  const caldavServerUrl = await getCaldavServerUrl(userId);
+  if (!caldavServerUrl) {
+    log.debug({ userId, itemId }, "CalDAV not configured, skipping delete");
+    return;
+  }
+
+  await addCaldavSyncJob({
+    userId,
+    itemId,
+    itemType: "recipe", // Doesn't matter for delete
+    plannedItemId: null,
+    eventTitle: "",
+    date: "",
+    slot: "",
+    operation: "delete",
+    caldavServerUrl,
+  });
+}
+
 async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
   // Run all subscriptions concurrently
   await Promise.all([
@@ -78,12 +123,11 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       async (data: CalendarSubscriptionEvents["globalRecipePlanned"]) => {
         const { id, recipeId, recipeName, date, slot, userId } = data;
 
-        log.debug({ id, recipeId, userId }, "Recipe planned - syncing to CalDAV");
+        log.debug({ id, recipeId, userId }, "Recipe planned - queuing CalDAV sync");
         try {
-          await syncPlannedItem(userId, id, "recipe", id, recipeName, date, slot, recipeId);
-          log.info({ id, userId }, "CalDAV sync completed for planned recipe");
+          await queueSyncJob(userId, id, "recipe", id, recipeName, date, slot, recipeId);
         } catch (error) {
-          log.error({ err: error, id, userId }, "CalDAV sync failed for planned recipe");
+          log.error({ err: error, id, userId }, "Failed to queue CalDAV sync for planned recipe");
         }
       }
     ),
@@ -93,12 +137,11 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       async (data: CalendarSubscriptionEvents["globalRecipeDeleted"]) => {
         const { id, userId } = data;
 
-        log.debug({ id, userId }, "Recipe unplanned - removing from CalDAV");
+        log.debug({ id, userId }, "Recipe unplanned - queuing CalDAV delete");
         try {
-          await deletePlannedItem(userId, id);
-          log.info({ id, userId }, "CalDAV delete completed for unplanned recipe");
+          await queueDeleteJob(userId, id);
         } catch (error) {
-          log.error({ err: error, id, userId }, "CalDAV delete failed for unplanned recipe");
+          log.error({ err: error, id, userId }, "Failed to queue CalDAV delete for unplanned recipe");
         }
       }
     ),
@@ -108,19 +151,17 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       async (data: CalendarSubscriptionEvents["globalRecipeUpdated"]) => {
         const { id, recipeId, recipeName, newDate, slot, userId } = data;
 
-        log.debug({ id, userId, newDate }, "Recipe date updated - updating CalDAV");
+        log.debug({ id, userId, newDate }, "Recipe updated - queuing CalDAV sync");
         try {
           const syncStatus = await getCaldavSyncStatusByItemId(userId, id);
 
           if (!syncStatus) {
             log.debug({ id, userId }, "Recipe not synced to CalDAV, skipping update");
-
             return;
           }
-          await syncPlannedItem(userId, id, "recipe", id, recipeName, newDate, slot, recipeId);
-          log.info({ id, userId, newDate }, "CalDAV sync completed for recipe date update");
+          await queueSyncJob(userId, id, "recipe", id, recipeName, newDate, slot, recipeId);
         } catch (error) {
-          log.error({ err: error, id, userId }, "CalDAV sync failed for recipe date update");
+          log.error({ err: error, id, userId }, "Failed to queue CalDAV sync for recipe update");
         }
       }
     ),
@@ -130,12 +171,11 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       async (data: CalendarSubscriptionEvents["globalNotePlanned"]) => {
         const { id, title, date, slot, userId } = data;
 
-        log.debug({ id, title, userId }, "Note planned - syncing to CalDAV");
+        log.debug({ id, title, userId }, "Note planned - queuing CalDAV sync");
         try {
-          await syncPlannedItem(userId, id, "note", id, title, date, slot);
-          log.info({ id, userId }, "CalDAV sync completed for planned note");
+          await queueSyncJob(userId, id, "note", id, title, date, slot);
         } catch (error) {
-          log.error({ err: error, id, userId }, "CalDAV sync failed for planned note");
+          log.error({ err: error, id, userId }, "Failed to queue CalDAV sync for planned note");
         }
       }
     ),
@@ -145,12 +185,11 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       async (data: CalendarSubscriptionEvents["globalNoteDeleted"]) => {
         const { id, userId } = data;
 
-        log.debug({ id, userId }, "Note unplanned - removing from CalDAV");
+        log.debug({ id, userId }, "Note unplanned - queuing CalDAV delete");
         try {
-          await deletePlannedItem(userId, id);
-          log.info({ id, userId }, "CalDAV delete completed for unplanned note");
+          await queueDeleteJob(userId, id);
         } catch (error) {
-          log.error({ err: error, id, userId }, "CalDAV delete failed for unplanned note");
+          log.error({ err: error, id, userId }, "Failed to queue CalDAV delete for unplanned note");
         }
       }
     ),
@@ -160,19 +199,17 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       async (data: CalendarSubscriptionEvents["globalNoteUpdated"]) => {
         const { id, title, newDate, slot, userId } = data;
 
-        log.debug({ id, userId, newDate }, "Note date updated - updating CalDAV");
+        log.debug({ id, userId, newDate }, "Note updated - queuing CalDAV sync");
         try {
           const syncStatus = await getCaldavSyncStatusByItemId(userId, id);
 
           if (!syncStatus) {
             log.debug({ id, userId }, "Note not synced to CalDAV, skipping update");
-
             return;
           }
-          await syncPlannedItem(userId, id, "note", id, title, newDate, slot);
-          log.info({ id, userId, newDate }, "CalDAV sync completed for note date update");
+          await queueSyncJob(userId, id, "note", id, title, newDate, slot);
         } catch (error) {
-          log.error({ err: error, id, userId }, "CalDAV sync failed for note date update");
+          log.error({ err: error, id, userId }, "Failed to queue CalDAV sync for note update");
         }
       }
     ),
@@ -210,13 +247,13 @@ async function startRecipeSubscriptions(signal: AbortSignal): Promise<void> {
       const recipeId = recipe.id;
       const newName = recipe.name;
 
-      log.debug({ recipeId, newName }, "Recipe name updated - updating CalDAV events");
+      log.debug({ recipeId, newName }, "Recipe name updated - queuing CalDAV sync for all instances");
 
       try {
         const plannedInstances = await getPlannedRecipesByRecipeId(recipeId);
 
         for (const planned of plannedInstances) {
-          await syncPlannedItem(
+          await queueSyncJob(
             planned.userId,
             planned.id,
             "recipe",
@@ -229,10 +266,10 @@ async function startRecipeSubscriptions(signal: AbortSignal): Promise<void> {
         }
         log.info(
           { recipeId, count: plannedInstances.length },
-          "CalDAV sync completed for recipe name update"
+          "Queued CalDAV sync for recipe name update"
         );
       } catch (error) {
-        log.error({ err: error, recipeId }, "CalDAV sync failed for recipe name update");
+        log.error({ err: error, recipeId }, "Failed to queue CalDAV sync for recipe name update");
       }
     }
   } catch (err) {
@@ -246,6 +283,10 @@ export async function syncAllFutureItems(userId: string): Promise<{
   totalSynced: number;
   totalFailed: number;
 }> {
+  const { getFuturePlannedRecipes } = await import("@/server/db/repositories/planned-recipe");
+  const { getFutureNotes } = await import("@/server/db/repositories/notes");
+  const { getRecipeFull } = await import("@/server/db/repositories/recipes");
+
   log.info({ userId }, "Starting initial CalDAV sync for all future items");
 
   const today = new Date().toISOString().split("T")[0];
@@ -266,14 +307,14 @@ export async function syncAllFutureItems(userId: string): Promise<{
       "Found future items to sync"
     );
 
-    // Sync all future planned recipes
+    // Queue sync for all future planned recipes
     for (const planned of userRecipes) {
       try {
         const recipe = await getRecipeFull(planned.recipeId);
 
         if (!recipe) continue;
 
-        await syncPlannedItem(
+        await queueSyncJob(
           planned.userId,
           planned.id,
           "recipe",
@@ -287,16 +328,16 @@ export async function syncAllFutureItems(userId: string): Promise<{
       } catch (error) {
         log.error(
           { err: error, plannedId: planned.id, userId },
-          "Failed to sync planned recipe during initial sync"
+          "Failed to queue planned recipe during initial sync"
         );
         totalFailed++;
       }
     }
 
-    // Sync all future notes
+    // Queue sync for all future notes
     for (const note of userNotes) {
       try {
-        await syncPlannedItem(
+        await queueSyncJob(
           note.userId,
           note.id,
           "note",
@@ -309,13 +350,13 @@ export async function syncAllFutureItems(userId: string): Promise<{
       } catch (error) {
         log.error(
           { err: error, noteId: note.id, userId },
-          "Failed to sync note during initial sync"
+          "Failed to queue note during initial sync"
         );
         totalFailed++;
       }
     }
 
-    log.info({ userId, totalSynced, totalFailed }, "Initial CalDAV sync completed");
+    log.info({ userId, totalSynced, totalFailed }, "Initial CalDAV sync queued");
 
     return { totalSynced, totalFailed };
   } catch (error) {
@@ -324,10 +365,19 @@ export async function syncAllFutureItems(userId: string): Promise<{
   }
 }
 
+/**
+ * Retry pending/failed syncs for a user.
+ * Used by the tRPC procedures for manual retry.
+ */
 export async function retryFailedSyncs(userId: string): Promise<{
   totalRetried: number;
   totalFailed: number;
 }> {
+  const { getPendingOrFailedSyncStatuses } = await import("@/server/db/repositories/caldav-sync-status");
+  const { getPlannedRecipeViewById } = await import("@/server/db/repositories/planned-recipe");
+  const { getNoteViewById } = await import("@/server/db/repositories/notes");
+  const { getRecipeFull } = await import("@/server/db/repositories/recipes");
+
   log.info({ userId }, "Starting retry of pending/failed CalDAV syncs");
 
   let totalRetried = 0;
@@ -351,7 +401,7 @@ export async function retryFailedSyncs(userId: string): Promise<{
 
           if (!recipe) continue;
 
-          await syncPlannedItem(
+          await queueSyncJob(
             userId,
             item.itemId,
             "recipe",
@@ -367,7 +417,7 @@ export async function retryFailedSyncs(userId: string): Promise<{
 
           if (!note) continue;
 
-          await syncPlannedItem(
+          await queueSyncJob(
             userId,
             item.itemId,
             "note",
@@ -380,12 +430,12 @@ export async function retryFailedSyncs(userId: string): Promise<{
 
         totalRetried++;
       } catch (error) {
-        log.error({ err: error, itemId: item.itemId, userId }, "Failed to retry sync item");
+        log.error({ err: error, itemId: item.itemId, userId }, "Failed to queue retry sync item");
         totalFailed++;
       }
     }
 
-    log.info({ userId, totalRetried, totalFailed }, "CalDAV sync retry completed");
+    log.info({ userId, totalRetried, totalFailed }, "CalDAV sync retry queued");
 
     return { totalRetried, totalFailed };
   } catch (error) {
@@ -393,3 +443,4 @@ export async function retryFailedSyncs(userId: string): Promise<{
     throw error;
   }
 }
+

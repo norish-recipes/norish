@@ -1,4 +1,4 @@
-export { redisConnection, recipeImportJobOptions, QUEUE_NAMES } from "./config";
+export { redisConnection, recipeImportJobOptions, caldavSyncJobOptions, QUEUE_NAMES } from "./config";
 
 export { generateJobId, isJobInQueue } from "./helpers";
 
@@ -10,4 +10,13 @@ export {
 
 export { startRecipeImportWorker, stopRecipeImportWorker } from "./recipe-import/worker";
 
-export type { RecipeImportJobData, AddImportJobResult } from "@/types";
+export {
+  caldavSyncQueue,
+  addCaldavSyncJob,
+  closeCaldavSyncQueue,
+} from "./caldav-sync/queue";
+
+export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
+
+export type { RecipeImportJobData, AddImportJobResult, CaldavSyncJobData, CaldavSyncOperation } from "@/types";
+

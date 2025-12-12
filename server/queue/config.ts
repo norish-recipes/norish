@@ -18,6 +18,18 @@ export const recipeImportJobOptions: DefaultJobOptions = {
   removeOnFail: true
 };
 
+export const caldavSyncJobOptions: DefaultJobOptions = {
+  attempts: 10,
+  backoff: {
+    type: "exponential",
+    delay: 60000, // 1m, 2m, 4m, 8m... up to 17h
+  },
+  removeOnComplete: true,
+  removeOnFail: true, // Failed state persisted to Postgres
+};
+
 export const QUEUE_NAMES = {
   RECIPE_IMPORT: "recipe-import",
+  CALDAV_SYNC: "caldav-sync",
 } as const;
+
