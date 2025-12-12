@@ -225,7 +225,7 @@ Only a few environment variables are required. All other settings are managed vi
 
 ### Optional Variables
 
-| Variable                | Description                             | Default        | 
+| Variable                | Description                             | Default        |
 | ----------------------- | --------------------------------------- | -------------- |
 | `HOST`                  | Server bind address                     | `0.0.0.0`      |
 | `PORT`                  | Server port                             | `3000`         |
