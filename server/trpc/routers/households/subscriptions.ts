@@ -1,7 +1,5 @@
 import type { HouseholdSubscriptionEvents } from "./types";
 
-import { on } from "events";
-
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 
@@ -19,7 +17,7 @@ const onCreated = authedProcedure.subscription(async function* ({ ctx, signal })
   log.debug({ userId: ctx.user.id }, "Subscribed to household created events");
 
   try {
-    for await (const [data] of on(householdEmitter, eventName, { signal })) {
+    for await (const data of householdEmitter.createSubscription(eventName, signal)) {
       yield data as HouseholdSubscriptionEvents["created"];
     }
   } finally {
@@ -37,7 +35,7 @@ const onKicked = authedProcedure.subscription(async function* ({ ctx, signal }) 
   log.debug({ userId: ctx.user.id }, "Subscribed to user kicked events");
 
   try {
-    for await (const [data] of on(householdEmitter, eventName, { signal })) {
+    for await (const data of householdEmitter.createSubscription(eventName, signal)) {
       yield data as HouseholdSubscriptionEvents["userKicked"];
     }
   } finally {
@@ -54,7 +52,7 @@ const onFailed = authedProcedure.subscription(async function* ({ ctx, signal }) 
   log.debug({ userId: ctx.user.id }, "Subscribed to household failed events");
 
   try {
-    for await (const [data] of on(householdEmitter, eventName, { signal })) {
+    for await (const data of householdEmitter.createSubscription(eventName, signal)) {
       yield data as HouseholdSubscriptionEvents["failed"];
     }
   } finally {
@@ -82,7 +80,7 @@ const onUserJoined = authedProcedure.subscription(async function* ({ ctx, signal
   );
 
   try {
-    for await (const [data] of on(householdEmitter, eventName, { signal })) {
+    for await (const data of householdEmitter.createSubscription(eventName, signal)) {
       yield data as HouseholdSubscriptionEvents["userJoined"];
     }
   } finally {
@@ -100,7 +98,7 @@ const onUserLeft = authedProcedure.subscription(async function* ({ ctx, signal }
   log.debug({ userId: ctx.user.id }, "Subscribed to user left events");
 
   try {
-    for await (const [data] of on(householdEmitter, eventName, { signal })) {
+    for await (const data of householdEmitter.createSubscription(eventName, signal)) {
       yield data as HouseholdSubscriptionEvents["userLeft"];
     }
   } finally {
@@ -128,7 +126,7 @@ const onMemberRemoved = authedProcedure.subscription(async function* ({ ctx, sig
   );
 
   try {
-    for await (const [data] of on(householdEmitter, eventName, { signal })) {
+    for await (const data of householdEmitter.createSubscription(eventName, signal)) {
       yield data as HouseholdSubscriptionEvents["memberRemoved"];
     }
   } finally {
@@ -156,7 +154,7 @@ const onAdminTransferred = authedProcedure.subscription(async function* ({ ctx, 
   );
 
   try {
-    for await (const [data] of on(householdEmitter, eventName, { signal })) {
+    for await (const data of householdEmitter.createSubscription(eventName, signal)) {
       yield data as HouseholdSubscriptionEvents["adminTransferred"];
     }
   } finally {
@@ -184,7 +182,7 @@ const onJoinCodeRegenerated = authedProcedure.subscription(async function* ({ ct
   );
 
   try {
-    for await (const [data] of on(householdEmitter, eventName, { signal })) {
+    for await (const data of householdEmitter.createSubscription(eventName, signal)) {
       yield data as HouseholdSubscriptionEvents["joinCodeRegenerated"];
     }
   } finally {

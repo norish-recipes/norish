@@ -60,5 +60,6 @@ export const trpcLogger = createLogger("trpc");
 export const schedulerLogger = createLogger("scheduler");
 export const videoLogger = createLogger("video");
 export const parserLogger = createLogger("parser");
+export const redisLogger = createLogger("redis");
 
 export default logger;

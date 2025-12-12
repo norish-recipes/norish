@@ -17,6 +17,12 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           getNextPageParam: () => null,
         }),
       },
+      getPending: {
+        queryOptions: () => ({
+          queryKey: ["recipes", "getPending"],
+          queryFn: async () => [],
+        }),
+      },
       onCreated: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onCreated = options?.onData;

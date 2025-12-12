@@ -129,8 +129,8 @@ describe("useCalendarQuery", () => {
       expect(jan15Items.length).toBe(3); // 2 recipes + 1 note
 
       // Check item types
-      const recipeItems = jan15Items.filter((i) => i.itemType === "recipe");
-      const noteItems = jan15Items.filter((i) => i.itemType === "note");
+      const recipeItems = jan15Items.filter((i: { itemType: string }) => i.itemType === "recipe");
+      const noteItems = jan15Items.filter((i: { itemType: string }) => i.itemType === "note");
 
       expect(recipeItems.length).toBe(2);
       expect(noteItems.length).toBe(1);

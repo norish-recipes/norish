@@ -9,6 +9,7 @@ import { addToast, Button } from "@heroui/react";
 import Link from "next/link";
 
 import { useRecipesQuery } from "./use-recipes-query";
+import { usePendingRecipesQuery } from "./use-pending-recipes-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { createClientLogger } from "@/lib/logger";
@@ -24,6 +25,8 @@ type InfiniteRecipeData = InfiniteData<{
 /**
  * Hook that subscribes to all recipe-related WebSocket events
  * and updates the query cache accordingly.
+ *
+ * Also hydrates pending recipes from the server on mount.
  */
 export function useRecipesSubscription() {
   const trpc = useTRPC();
@@ -31,7 +34,9 @@ export function useRecipesSubscription() {
   const { setAllRecipesData, invalidate, addPendingRecipe, removePendingRecipe } =
     useRecipesQuery();
 
-  // Helper to add a recipe to the first page
+  // Hydrate pending recipes from the server on mount
+  usePendingRecipesQuery();
+
   const addRecipeToList = (recipe: RecipeDashboardDTO) => {
     setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
       if (!prev?.pages?.length) {
@@ -56,7 +61,6 @@ export function useRecipesSubscription() {
     });
   };
 
-  // Helper to update a recipe in the list
   const updateRecipeInList = (updatedRecipe: FullRecipeDTO) => {
     setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
       if (!prev?.pages) return prev;
@@ -68,17 +72,17 @@ export function useRecipesSubscription() {
           recipes: page.recipes.map((r) =>
             r.id === updatedRecipe.id
               ? {
-                  ...r,
-                  name: updatedRecipe.name,
-                  description: updatedRecipe.description,
-                  image: updatedRecipe.image,
-                  servings: updatedRecipe.servings,
-                  prepMinutes: updatedRecipe.prepMinutes,
-                  cookMinutes: updatedRecipe.cookMinutes,
-                  totalMinutes: updatedRecipe.totalMinutes,
-                  tags: updatedRecipe.tags,
-                  updatedAt: updatedRecipe.updatedAt,
-                }
+                ...r,
+                name: updatedRecipe.name,
+                description: updatedRecipe.description,
+                image: updatedRecipe.image,
+                servings: updatedRecipe.servings,
+                prepMinutes: updatedRecipe.prepMinutes,
+                cookMinutes: updatedRecipe.cookMinutes,
+                totalMinutes: updatedRecipe.totalMinutes,
+                tags: updatedRecipe.tags,
+                updatedAt: updatedRecipe.updatedAt,
+              }
               : r
           ),
         })),
@@ -124,8 +128,6 @@ export function useRecipesSubscription() {
     trpc.recipes.onImportStarted.subscriptionOptions(undefined, {
       onData: (payload) => {
         log.info({ recipeId: payload.recipeId, url: payload.url }, "[onImportStarted] Received");
-        // Add pending recipe for cross-device/user sync
-        // Local imports already add pending via mutation onSuccess
         addPendingRecipe(payload.recipeId);
       },
       onError: (err) => log.error({ err }, "[onImportStarted] Error"),

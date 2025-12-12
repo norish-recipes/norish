@@ -2,13 +2,11 @@ import type { PermissionsSubscriptionEvents } from "./types";
 
 import { createTypedEmitter, TypedEmitter } from "../../emitter";
 
-// Use global to persist emitter across module reloads
-const globalForEmitter = globalThis as unknown as {
-  permissionsEmitter: TypedEmitter<PermissionsSubscriptionEvents> | undefined;
-};
+// Use globalThis to persist across HMR in development
+declare global {
+  var __permissionsEmitter__: TypedEmitter<PermissionsSubscriptionEvents> | undefined;
+}
 
 export const permissionsEmitter =
-  globalForEmitter.permissionsEmitter ?? createTypedEmitter<PermissionsSubscriptionEvents>();
-
-// Always persist to globalThis to ensure singleton across all imports
-globalForEmitter.permissionsEmitter = permissionsEmitter;
+  globalThis.__permissionsEmitter__ ||
+  (globalThis.__permissionsEmitter__ = createTypedEmitter<PermissionsSubscriptionEvents>());

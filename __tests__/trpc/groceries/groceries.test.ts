@@ -232,11 +232,11 @@ describe("toggle procedure logic", () => {
     updateGroceries.mockResolvedValue(groceries.map((g) => ({ ...g, isDone: true })));
 
     const fetchedGroceries = await getGroceriesByIds(groceryIds);
-    const updatedGroceries = fetchedGroceries.map((g) => ({
+    const updatedGroceries = fetchedGroceries.map((g: ReturnType<typeof createMockGrocery>) => ({
       ...g,
       isDone: true,
     }));
 
-    expect(updatedGroceries.every((g) => g.isDone)).toBe(true);
+    expect(updatedGroceries.every((g: { isDone: boolean }) => g.isDone)).toBe(true);
   });
 });

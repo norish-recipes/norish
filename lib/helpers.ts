@@ -264,3 +264,28 @@ export function findBestMatchingToken(tag: string, rawInput: string): string | n
 
   return bestScore < 15 ? bestToken : null;
 }
+
+/**
+ * Normalize URL for consistent deduplication.
+ * Removes trailing slashes, normalizes protocol, and strips tracking params.
+ */
+export function normalizeUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+
+    // Remove trailing slash from pathname
+    parsed.pathname = parsed.pathname.replace(/\/+$/, "");
+
+    // Remove common tracking params
+    parsed.searchParams.delete("utm_source");
+    parsed.searchParams.delete("utm_medium");
+    parsed.searchParams.delete("utm_campaign");
+    parsed.searchParams.delete("ref");
+    parsed.searchParams.delete("fbclid");
+
+    return parsed.toString().toLowerCase();
+  } catch {
+    // If URL parsing fails, just lowercase and trim
+    return url.toLowerCase().trim();
+  }
+}

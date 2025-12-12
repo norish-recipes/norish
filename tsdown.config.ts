@@ -32,6 +32,11 @@ export default defineConfig({
     "yt-dlp-wrap",
 
     "server-only",
+
+    // Playwright must be external to avoid esbuild __name transpilation issues with page.evaluate()
+    "playwright-core",
+    "playwright-extra",
+    "puppeteer-extra-plugin-stealth",
   ],
 
   // Bundle everything else
@@ -44,11 +49,6 @@ export default defineConfig({
     "cheerio",
     "@mozilla/readability",
     "microdata-node",
-
-    // Puppeteer
-    "puppeteer-core",
-    "chromium-bidi",
-    "devtools-protocol",
 
     // File handling
     "jszip",
@@ -63,8 +63,5 @@ export default defineConfig({
     "parse-ingredient",
     "jsonrepair",
     "ws",
-
-    // Cron scheduling
-    "node-cron",
   ],
 });

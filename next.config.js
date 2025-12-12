@@ -2,7 +2,13 @@ export default {
   output: "standalone",
   allowedDevOrigins: ["localhost", "192.168.2.13"],
   devIndicators: false,
-  serverExternalPackages: ["pino", "pino-pretty", "thread-stream"],
+  serverExternalPackages: [
+    "pino",
+    "pino-pretty",
+    "thread-stream",
+    "playwright-extra",
+    "puppeteer-extra-plugin-stealth",
+  ],
   async headers() {
     return [
       {

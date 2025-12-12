@@ -33,10 +33,9 @@ export const recipes = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    // Common filters/sorts for dashboard lists
     index("idx_recipes_user_id").on(t.userId),
     index("idx_recipes_name").on(t.name),
-    unique("uq_recipes_url").on(t.url),
+    unique("uq_recipes_url_user").on(t.url, t.userId),
     index("idx_recipes_created_at_desc").on(t.createdAt.desc()),
     index("idx_recipes_total_minutes").on(t.totalMinutes),
     index("idx_recipes_prep_minutes").on(t.prepMinutes),

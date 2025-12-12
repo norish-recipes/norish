@@ -149,10 +149,12 @@ describe("useGroceriesQuery", () => {
       const newGrocery = createMockGrocery({ id: "g2", name: "Bread" });
 
       act(() => {
-        result.current.setGroceriesData((prev) => ({
-          ...prev!,
-          groceries: [...prev!.groceries, newGrocery],
-        }));
+        result.current.setGroceriesData(
+          (prev: ReturnType<typeof createMockGroceriesData> | undefined) => ({
+            ...prev!,
+            groceries: [...prev!.groceries, newGrocery],
+          })
+        );
       });
 
       // Query cache should be updated
@@ -177,11 +179,13 @@ describe("useGroceriesQuery", () => {
 
       // Should not throw when previous data is undefined
       act(() => {
-        result.current.setGroceriesData((prev) => {
-          if (!prev) return prev;
+        result.current.setGroceriesData(
+          (prev: ReturnType<typeof createMockGroceriesData> | undefined) => {
+            if (!prev) return prev;
 
-          return { ...prev, groceries: [] };
-        });
+            return { ...prev, groceries: [] };
+          }
+        );
       });
 
       expect(result.current.groceries).toEqual([]);

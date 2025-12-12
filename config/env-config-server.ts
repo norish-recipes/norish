@@ -130,6 +130,9 @@ const ServerConfigSchema = z.object({
 
   // Scheduler Configuration
   SCHEDULER_CLEANUP_MONTHS: z.coerce.number().default(3),
+
+  // Redis Configuration
+  REDIS_URL: z.string().url().default("redis://localhost:6379"),
 });
 
 export type ServerConfig = z.infer<typeof ServerConfigSchema>;

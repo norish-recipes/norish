@@ -2,13 +2,11 @@ import type { CalendarSubscriptionEvents } from "./types";
 
 import { createTypedEmitter, TypedEmitter } from "../../emitter";
 
-// Use global to persist emitter across module reloads
-const globalForEmitter = globalThis as unknown as {
-  calendarEmitter: TypedEmitter<CalendarSubscriptionEvents> | undefined;
-};
+// Use globalThis to persist across HMR in development
+declare global {
+  var __calendarEmitter__: TypedEmitter<CalendarSubscriptionEvents> | undefined;
+}
 
 export const calendarEmitter =
-  globalForEmitter.calendarEmitter ?? createTypedEmitter<CalendarSubscriptionEvents>();
-
-// Always persist to globalThis to ensure singleton across all imports
-globalForEmitter.calendarEmitter = calendarEmitter;
+  globalThis.__calendarEmitter__ ||
+  (globalThis.__calendarEmitter__ = createTypedEmitter<CalendarSubscriptionEvents>());
