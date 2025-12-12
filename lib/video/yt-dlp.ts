@@ -96,12 +96,10 @@ function getFfmpegPath(): string | null {
 }
 
 const ytDlpFilename = process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp";
+
 // In production (Docker), binary is pre-downloaded during build to /app/bin
 // In development, download to current directory on first use
-// YT_DLP_BIN_DIR env var allows custom path for self-hosted deployments (e.g., YunoHost)
-const binDir =
-  process.env.YT_DLP_BIN_DIR || (SERVER_CONFIG.NODE_ENV === "production" ? "/app/bin" : ".");
-const ytDlpPath = path.resolve(binDir, ytDlpFilename);
+const ytDlpPath = path.resolve(SERVER_CONFIG.YT_DLP_BIN_DIR, ytDlpFilename);
 const outputDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "video-temp");
 
 export async function ensureYtDlpBinary(): Promise<void> {
@@ -214,7 +212,7 @@ export async function downloadVideoAudio(url: string): Promise<string> {
 
     // Cleanup on failure
     try {
-      await fs.unlink(outputFile).catch(() => {});
+      await fs.unlink(outputFile).catch(() => { });
     } catch (cleanupErr) {
       log.error({ err: cleanupErr }, "Failed to cleanup temp file");
     }

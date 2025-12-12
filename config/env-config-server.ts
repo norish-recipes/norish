@@ -53,9 +53,9 @@ const ServerConfigSchema = z.object({
     .transform((val) =>
       val
         ? val
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
         : []
     )
     .pipe(z.array(z.string())),
@@ -107,6 +107,11 @@ const ServerConfigSchema = z.object({
     .default(false),
   VIDEO_MAX_LENGTH_SECONDS: z.coerce.number().default(120),
   YT_DLP_VERSION: z.string().default("2025.11.12"),
+  YT_DLP_BIN_DIR: z
+    .string()
+    .default(
+      process.env.NODE_ENV === "production" ? "/app/bin" : process.cwd()
+    ),
 
   // Transcription Configuration (separate from AI_PROVIDER)
   TRANSCRIPTION_PROVIDER: z
