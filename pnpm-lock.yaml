@@ -22,11 +22,10 @@ importers:
         version: 11.7.2(@tanstack/react-query@5.90.11(react@19.2.1))(@trpc/client@11.7.2(@trpc/server@11.7.2(typescript@5.9.2))(typescript@5.9.2))(@trpc/server@11.7.2(typescript@5.9.2))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.2)
       better-auth:
         specifier: ^1.4.2
-        version: 1.4.3(next@16.0.7(@babel/core@7.28.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        version: 1.4.3(next@16.0.10(@babel/core@7.28.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       bullmq:
         specifier: ^5.65.1
-        version: 5.65.1
-        version: 1.4.3(next@16.0.10(@babel/core@7.28.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        version: 5.66.0
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -48,9 +47,6 @@ importers:
       next:
         specifier: 16.0.10
         version: 16.0.10(@babel/core@7.28.5)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      node-cron:
-        specifier: ^4.2.1
-        version: 4.2.1
       pg:
         specifier: 8.16.3
         version: 8.16.3
@@ -115,9 +111,6 @@ importers:
       '@types/heic-convert':
         specifier: ^2.1.0
         version: 2.1.0
-      '@types/node-cron':
-        specifier: ^3.0.11
-        version: 3.0.11
       '@types/pg':
         specifier: 8.15.5
         version: 8.15.5
@@ -2565,9 +2558,6 @@ packages:
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
-  '@types/node-cron@3.0.11':
-    resolution: {integrity: sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==}
-
   '@types/node@10.17.60':
     resolution: {integrity: sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==}
 
@@ -2970,8 +2960,8 @@ packages:
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
-  bullmq@5.65.1:
-    resolution: {integrity: sha512-QgDAzX1G9L5IRy4Orva5CfQTXZT+5K+OfO/kbPrAqN+pmL9LJekCzxijXehlm/u2eXfWPfWvIdJJIqiuz3WJSg==}
+  bullmq@5.66.0:
+    resolution: {integrity: sha512-LSe8yEiVTllOOq97Q0C/EhczKS5Yd0AUJleGJCIh0cyJE5nWUqEpGC/uZQuuAYniBSoMT8LqwrxE7N5MZVrLoQ==}
 
   cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
@@ -4379,10 +4369,6 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
-
-  node-cron@4.2.1:
-    resolution: {integrity: sha512-lgimEHPE/QDgFlywTd8yTR61ptugX3Qer29efeyWw2rv259HtGBNn1vZVmp8lB9uo9wC0t/AT4iGqXxia+CJFg==}
-    engines: {node: '>=6.0.0'}
 
   node-gyp-build-optional-packages@5.2.2:
     resolution: {integrity: sha512-s+w+rBWnpTMwSFbaE0UXsRlg7hU4FjekKU4eyAih5T8nJuNZT1nNsskXpxmeqSK9UzkBl6UgRlnKc8hz8IEqOw==}
@@ -8339,8 +8325,6 @@ snapshots:
 
   '@types/ms@2.1.0': {}
 
-  '@types/node-cron@3.0.11': {}
-
   '@types/node@10.17.60': {}
 
   '@types/node@24.10.1':
@@ -8772,7 +8756,7 @@ snapshots:
 
   buffer-from@1.1.2: {}
 
-  bullmq@5.65.1:
+  bullmq@5.66.0:
     dependencies:
       cron-parser: 4.9.0
       ioredis: 5.8.2
@@ -10270,8 +10254,6 @@ snapshots:
       - babel-plugin-macros
 
   node-abort-controller@3.1.1: {}
-
-  node-cron@4.2.1: {}
 
   node-gyp-build-optional-packages@5.2.2:
     dependencies:

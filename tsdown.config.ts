@@ -63,8 +63,5 @@ export default defineConfig({
     "parse-ingredient",
     "jsonrepair",
     "ws",
-
-    // Cron scheduling
-    "node-cron",
   ],
 });

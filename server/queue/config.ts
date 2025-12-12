@@ -28,8 +28,19 @@ export const caldavSyncJobOptions: DefaultJobOptions = {
   removeOnFail: true, // Failed state persisted to Postgres
 };
 
+export const scheduledTasksJobOptions: DefaultJobOptions = {
+  attempts: 3,
+  backoff: {
+    type: "exponential",
+    delay: 5000, // 5s, 10s, 20s
+  },
+  removeOnComplete: true,
+  removeOnFail: true,
+};
+
 export const QUEUE_NAMES = {
   RECIPE_IMPORT: "recipe-import",
   CALDAV_SYNC: "caldav-sync",
+  SCHEDULED_TASKS: "scheduled-tasks",
 } as const;
 
