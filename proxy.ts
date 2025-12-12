@@ -15,16 +15,30 @@ export async function proxy(request: NextRequest) {
 
   // Invalid or no session - redirect to login
   // Use X-Forwarded headers when behind a reverse proxy
+  const forwardedOrigin = getPublicOrigin(request);
   let loginUrl: URL;
-  const origin = request.nextUrl.origin;
-  if (SERVER_CONFIG.TRUSTED_ORIGINS.includes(origin)) loginUrl = new URL("/login", `${origin}`);
-  else {
+
+  if (forwardedOrigin && SERVER_CONFIG.TRUSTED_ORIGINS.includes(forwardedOrigin)) {
+    loginUrl = new URL("/login", forwardedOrigin);
+  } else {
     loginUrl = new URL("/login", SERVER_CONFIG.AUTH_URL);
   }
 
-  loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+  loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname + request.nextUrl.search);
 
   return NextResponse.redirect(loginUrl, 307);
+}
+
+function getPublicOrigin(request: NextRequest) {
+  const h = request.headers;
+
+  const proto = h.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "");
+
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+
+  if (!host) return null;
+
+  return `${proto}://${host}`;
 }
 
 export const config = {
