@@ -5,6 +5,7 @@ import { use } from "react";
 import RecipePageDesktop from "./recipe-page-desktop";
 import RecipePageMobile from "./recipe-page-mobile";
 import { RecipeContextProvider, useRecipeContext } from "./context";
+import { WakeLockProvider } from "./components/wake-lock-context";
 
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { NotFoundView } from "@/components/shared/not-found-view";
@@ -49,7 +50,9 @@ export default function RecipeDetailPage({ params }: Props) {
 
   return (
     <RecipeContextProvider recipeId={id}>
-      <RecipePageContent />
+      <WakeLockProvider>
+        <RecipePageContent />
+      </WakeLockProvider>
     </RecipeContextProvider>
   );
 }

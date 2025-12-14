@@ -10,6 +10,7 @@ import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
+import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
 import { formatMinutesHM } from "@/lib/helpers";
 
 export default function RecipePageMobile() {
@@ -136,7 +137,10 @@ export default function RecipePageMobile() {
       {/* Steps Card */}
       <Card className="bg-content1 mx-3 mt-4 rounded-xl" shadow="sm">
         <CardBody className="space-y-3 px-4 py-5">
-          <h2 className="text-lg font-semibold">Steps</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Steps</h2>
+            <WakeLockToggle />
+          </div>
           <Divider />
           <div className="-mx-1">
             <StepsList />

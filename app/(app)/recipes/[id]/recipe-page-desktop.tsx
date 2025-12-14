@@ -20,6 +20,7 @@ import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-conver
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
+import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
 import ImageLightbox from "@/components/shared/image-lightbox";
 
 export default function RecipePageDesktop() {
@@ -176,8 +177,9 @@ export default function RecipePageDesktop() {
 
         {/* Steps */}
         <Card className="bg-content1 col-span-3">
-          <CardHeader className="px-5 pt-5">
+          <CardHeader className="flex items-center justify-between px-5 pt-5">
             <h2 className="text-lg font-semibold">Steps</h2>
+            <WakeLockToggle />
           </CardHeader>
           <CardBody className="px-2 pt-2 pb-4">
             <StepsList />

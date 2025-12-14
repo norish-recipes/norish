@@ -6,11 +6,13 @@ import {
   ShoppingCartIcon,
   PencilSquareIcon,
   TrashIcon,
+  DevicePhoneMobileIcon,
 } from "@heroicons/react/20/solid";
 import { EllipsisHorizontalIcon } from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
 
 import { useRecipeContextRequired } from "../context";
+import { useWakeLockContext } from "./wake-lock-context";
 
 import { cssButtonPill } from "@/config/css-tokens";
 import { MiniGroceries, MiniCalendar } from "@/components/Panel/consumers";
@@ -35,6 +37,7 @@ export default function ActionsMenu({ id }: Props) {
   const { canEditRecipe, canDeleteRecipe } = usePermissionsContext();
   const { deleteRecipe } = useRecipesContext();
   const { recipe } = useRecipeContextRequired();
+  const { isSupported, isActive, toggle } = useWakeLockContext();
 
   const canEdit = recipe.userId ? canEditRecipe(recipe.userId) : true;
   const canDelete = recipe.userId ? canDeleteRecipe(recipe.userId) : true;
@@ -69,6 +72,17 @@ export default function ActionsMenu({ id }: Props) {
       });
     }
 
+    if (isSupported) {
+      items.push({
+        key: "wake-lock",
+        label: isActive ? "Screen On" : "Keep Screen On",
+        icon: <DevicePhoneMobileIcon className="size-4" />,
+        onPress: toggle,
+        className: isActive ? "text-success" : "",
+        iconClassName: isActive ? "text-success" : "text-default-400",
+      });
+    }
+
     if (canDelete) {
       items.push({
         key: "delete",
@@ -81,7 +95,7 @@ export default function ActionsMenu({ id }: Props) {
     }
 
     return items;
-  }, [canEdit, canDelete, handleDelete, id, router]);
+  }, [canEdit, canDelete, handleDelete, id, router, isSupported, isActive, toggle]);
 
   return (
     <>
