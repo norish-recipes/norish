@@ -9,12 +9,18 @@ import type { PermissionLevel } from "@/server/db/zodSchemas/server-config";
 
 import { normalizeUrl } from "@/lib/helpers";
 
+export function sanitizeUrlForJobId(url: string): string {
+  const normalized = normalizeUrl(url);
+  return normalized.replace(/^https?:\/\//, "").replace(/[^a-zA-Z0-9.-]/g, "_");
+}
+
 /**
  * Generate a unique job ID based on the view policy.
+ * Note: BullMQ doesn't allow colons in job IDs, so we use underscores as delimiters.
  *
- * - "everyone": `import:${normalizedUrl}` - globally unique
- * - "household": `import:${householdKey}:${normalizedUrl}` - unique per household
- * - "owner": `import:${userId}:${normalizedUrl}` - unique per user
+ * - "everyone": `import_${sanitizedUrl}` - globally unique
+ * - "household": `import_${householdKey}_${sanitizedUrl}` - unique per household
+ * - "owner": `import_${userId}_${sanitizedUrl}` - unique per user
  */
 export function generateJobId(
   url: string,
@@ -22,18 +28,17 @@ export function generateJobId(
   householdKey: string,
   viewPolicy: PermissionLevel
 ): string {
-  const normalized = normalizeUrl(url);
+  const sanitized = sanitizeUrlForJobId(url);
 
   switch (viewPolicy) {
     case "everyone":
-      return `import:${normalized}`;
+      return `import_${sanitized}`;
     case "household":
-      return `import:${householdKey}:${normalized}`;
+      return `import_${householdKey}_${sanitized}`;
     case "owner":
-      return `import:${userId}:${normalized}`;
+      return `import_${userId}_${sanitized}`;
     default:
-      // Default policy
-      return `import:${normalized}`;
+      return `import_${sanitized}`;
   }
 }
 

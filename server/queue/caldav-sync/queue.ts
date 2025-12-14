@@ -9,6 +9,7 @@ import type { CaldavSyncJobData } from "@/types";
 import { Queue, Job } from "bullmq";
 
 import { redisConnection, caldavSyncJobOptions, QUEUE_NAMES } from "../config";
+import { sanitizeUrlForJobId } from "../helpers";
 
 import { createLogger } from "@/server/logger";
 
@@ -30,8 +31,8 @@ export const caldavSyncQueue = new Queue<CaldavSyncJobData>(
  * This prevents duplicate sync operations for the same item to the same calendar.
  */
 function generateCaldavJobId(caldavServerUrl: string, itemId: string): string {
-  const normalizedUrl = caldavServerUrl.replace(/\/$/, "").toLowerCase();
-  return `caldav:${normalizedUrl}:${itemId}`;
+  const sanitizedUrl = sanitizeUrlForJobId(caldavServerUrl);
+  return `caldav_${sanitizedUrl}_${itemId}`;
 }
 
 /**

@@ -23,7 +23,7 @@ export type CaldavSubscriptionEvents = {
 export const SaveCaldavConfigInputSchema = z.object({
   serverUrl: z.url(),
   username: z.string().min(1),
-  password: z.string().min(1),
+  password: z.string().optional(),
   enabled: z.boolean(),
   breakfastTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
   lunchTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
@@ -32,7 +32,7 @@ export const SaveCaldavConfigInputSchema = z.object({
 });
 
 export const TestCaldavConnectionInputSchema = z.object({
-  serverUrl: z.string().url(),
+  serverUrl: z.url(),
   username: z.string().min(1),
   password: z.string().min(1),
 });

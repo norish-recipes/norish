@@ -64,25 +64,25 @@ export const caldavRouter = router({
 
       log.info({ userId }, "Saving CalDAV configuration");
 
-      // Test connection before saving
-      const connectionResult = await testCalDavConnection(
-        input.serverUrl,
-        input.username,
-        input.password
-      );
+      // When updating, use existing password if not provided, as this is not sent when updating
+      let password = input.password;
+      if (!password) {
+        const existingConfig = await getCaldavConfigDecrypted(userId);
 
-      if (!connectionResult.success) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: connectionResult.message,
-        });
+        if (!existingConfig?.password) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Password is required for new configurations",
+          });
+        }
+
+        password = existingConfig.password;
       }
 
-      // Save the config
-      const _saved = await saveCaldavConfig(userId, {
+      await saveCaldavConfig(userId, {
         serverUrl: input.serverUrl,
         username: input.username,
-        password: input.password,
+        password,
         enabled: input.enabled,
         breakfastTime: input.breakfastTime,
         lunchTime: input.lunchTime,

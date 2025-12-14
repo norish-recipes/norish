@@ -1,21 +1,6 @@
-import fs from "fs";
-import path from "path";
-
 import { getBrowser } from "../playwright";
 
 import { parserLogger as log } from "@/server/logger";
-
-// Load browser scripts at module initialization (avoids transpilation issues)
-// Use process.cwd() since import.meta.url resolves to .next/ during Turbopack bundling
-const SCRIPTS_DIR = path.join(process.cwd(), "lib", "parser", "scripts");
-const CHECK_CLOUDFLARE_SCRIPT = fs.readFileSync(
-  path.join(SCRIPTS_DIR, "check-cloudflare.js"),
-  "utf-8"
-);
-const WAIT_FOR_CONTENT_SCRIPT = fs.readFileSync(
-  path.join(SCRIPTS_DIR, "wait-for-content.js"),
-  "utf-8"
-);
 
 const BROWSER_HEADERS: Record<string, string> = {
   "User-Agent":
@@ -50,8 +35,6 @@ export async function fetchViaPlaywright(targetUrl: string): Promise<string> {
   try {
     const browser = await getBrowser();
     const referer = getReferer(targetUrl);
-
-    // Create a new browser context with anti-fingerprint settings
     const context = await browser.newContext({
       userAgent: BROWSER_HEADERS["User-Agent"],
       viewport: { width: 1920, height: 1080 },
@@ -74,28 +57,30 @@ export async function fetchViaPlaywright(targetUrl: string): Promise<string> {
 
     const page = await context.newPage();
 
-    // Note: Anti-fingerprinting is handled by playwright-extra stealth plugin see playwright.ts
-
     await page.goto(targetUrl, {
       waitUntil: "networkidle",
       timeout: 30000,
     });
 
-    // Check for Cloudflare challenge and wait if needed
-    // Using external script to avoid esbuild transpilation issues
-    const isChallenging = await page.evaluate(CHECK_CLOUDFLARE_SCRIPT);
+    const title = await page.title();
+    const hasChallengeElement = await page.locator("#challenge-running").count() > 0;
+    const isChallenging = title.includes("Just a moment") || hasChallengeElement;
 
     if (isChallenging) {
-      await page.waitForURL("**/*", { waitUntil: "networkidle", timeout: 15000 }).catch(() => { });
-      await page.waitForTimeout(2000);
+      log.debug({ url: targetUrl }, "Cloudflare challenge detected, waiting for resolution");
+      await page.waitForFunction(() => !document.title.includes("Just a moment"), { timeout: 15000 }).catch(() => { });
+      await page.waitForLoadState("networkidle").catch(() => { });
     }
 
-    // Wait for recipe content to be populated
-    // Using external script to avoid esbuild transpilation issues
-    const contentLoaded = await page.evaluate(WAIT_FOR_CONTENT_SCRIPT);
-
-    if (!contentLoaded) {
-      log.debug({ url: targetUrl }, "Recipe content containers remain empty after waiting");
+    try {
+      await Promise.race([
+        page.locator('script[type="application/ld+json"]').first().waitFor({ timeout: 5000 }),
+        page.locator('[itemtype*="schema.org"]').first().waitFor({ timeout: 5000 }),
+        page.locator('main, article, [role="main"], .content, #content').first().waitFor({ timeout: 5000 }),
+      ]);
+    } catch {
+      // Timeout is acceptable - proceed with whatever content we have
+      log.debug({ url: targetUrl }, "Recipe content selectors not found within timeout, proceeding anyway");
     }
 
     const content = await page.content();
