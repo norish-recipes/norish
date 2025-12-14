@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   WrenchScrewdriverIcon,
   FireIcon,
@@ -19,9 +20,11 @@ import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-conver
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
+import ImageLightbox from "@/components/shared/image-lightbox";
 
 export default function RecipePageDesktop() {
   var { recipe } = useRecipeContextRequired();
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   return (
     <div className="hidden flex-col space-y-6 px-6 pb-10 md:flex">
@@ -40,17 +43,27 @@ export default function RecipePageDesktop() {
           {/* Image Section */}
           <div className="bg-default-200 h-100% relative min-h-[400px] overflow-hidden">
             {recipe.image ? (
-              <>
+              <button
+                className="group relative h-full w-full cursor-pointer focus:outline-none"
+                type="button"
+                onClick={() => setLightboxOpen(true)}
+              >
                 <Image
                   fill
                   unoptimized
                   alt={recipe.name ?? "Recipe image"}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   src={recipe.image}
                 />
                 {/* Gradient overlay for readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
-              </>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent transition-colors group-hover:from-black/40" />
+                {/* Hover indicator */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                  <span className="rounded-full bg-black/50 px-4 py-2 text-sm font-medium text-white">
+                    Click to enlarge
+                  </span>
+                </div>
+              </button>
             ) : (
               <div className="text-default-500 flex h-full w-full items-center justify-center">
                 <span className="text-sm font-medium opacity-70">No image available</span>
@@ -171,6 +184,15 @@ export default function RecipePageDesktop() {
           </CardBody>
         </Card>
       </div>
+
+      {recipe.image && (
+        <ImageLightbox
+          images={[{ src: recipe.image, alt: recipe.name ?? "Recipe image" }]}
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }
+

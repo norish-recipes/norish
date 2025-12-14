@@ -15,6 +15,7 @@ import { createManyRecipeStepsTx } from "./steps";
 import { attachTagsToRecipeByInputTx } from "./tags";
 
 import { stripHtmlTags } from "@/lib/helpers";
+import { deleteRecipeStepImagesDir } from "@/lib/downloader";
 import {
   RecipeDashboardDTO,
   FilterMode,
@@ -41,6 +42,7 @@ export async function GetTotalRecipeCount(): Promise<number> {
 }
 
 export async function deleteRecipeById(id: string): Promise<void> {
+  await deleteRecipeStepImagesDir(id);
   await db.delete(recipes).where(eq(recipes.id, id));
 }
 
@@ -531,6 +533,11 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       },
       steps: {
         columns: { step: true, systemUsed: true, order: true },
+        with: {
+          images: {
+            columns: { id: true, image: true, order: true },
+          },
+        },
       },
     },
   });
@@ -565,6 +572,11 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       step: s.step,
       systemUsed: s.systemUsed,
       order: s.order,
+      images: (s.images ?? []).map((img: any) => ({
+        id: img.id,
+        image: img.image,
+        order: Number(img.order) || 0,
+      })),
     })),
     createdAt: full.createdAt,
     updatedAt: full.updatedAt,

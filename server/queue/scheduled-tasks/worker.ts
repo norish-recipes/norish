@@ -4,7 +4,11 @@ import { redisConnection, QUEUE_NAMES } from "../config";
 
 import { createLogger } from "@/server/logger";
 import { checkRecurringGroceries } from "@/server/scheduler/recurring-grocery-check";
-import { cleanupOrphanedImages, cleanupOrphanedAvatars } from "@/server/startup/image-cleanup";
+import {
+  cleanupOrphanedImages,
+  cleanupOrphanedAvatars,
+  cleanupOrphanedStepImages,
+} from "@/server/startup/image-cleanup";
 import { cleanupOldCalendarData } from "@/server/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@/server/scheduler/old-groceries-cleanup";
 import { cleanupOldTempFiles } from "@/lib/video/cleanup";
@@ -39,11 +43,13 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
     case "image-cleanup": {
       const recipeResult = await cleanupOrphanedImages();
       const avatarResult = await cleanupOrphanedAvatars();
+      const stepResult = await cleanupOrphanedStepImages();
       log.info(
         {
           recipesDeleted: recipeResult.deleted,
           avatarsDeleted: avatarResult.deleted,
-          errors: recipeResult.errors + avatarResult.errors,
+          stepDirsDeleted: stepResult.deleted,
+          errors: recipeResult.errors + avatarResult.errors + stepResult.errors,
         },
         "Image cleanup completed"
       );

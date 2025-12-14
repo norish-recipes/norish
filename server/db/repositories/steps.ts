@@ -3,16 +3,20 @@ import type { StepDto, StepInsertDto } from "@/types/dto/steps";
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
-import { steps } from "@/server/db/schema";
+import { steps, stepImages } from "@/server/db/schema";
 import { StepSelectBaseSchema } from "@/server/db/zodSchemas/steps";
 import { dbLogger } from "@/server/logger";
 import { stripHtmlTags } from "@/lib/helpers";
 
 const StepArraySchema = z.array(StepSelectBaseSchema);
 
+export type StepInsertWithImages = StepInsertDto & {
+  images?: { image: string; order: number }[];
+};
+
 export async function createManyRecipeStepsTx(
   tx: any,
-  rawSteps: StepInsertDto[]
+  rawSteps: StepInsertWithImages[]
 ): Promise<StepDto[]> {
   if (!rawSteps.length) return [];
 
@@ -32,10 +36,21 @@ export async function createManyRecipeStepsTx(
     return true;
   });
 
-  await tx.insert(steps).values(unique).onConflictDoNothing();
+  // Insert steps (without images)
+  const stepsToInsert = unique.map(({ images, ...step }) => step);
+  await tx.insert(steps).values(stepsToInsert).onConflictDoNothing();
 
   const recipeIds = Array.from(new Set(unique.map((s) => s.recipeId)));
   const allSteps: StepDto[] = [];
+
+  // Map to track step text and images for insertion
+  const stepImagesMap = new Map<string, { image: string; order: number }[]>();
+  for (const s of unique) {
+    if (s.images && s.images.length > 0) {
+      const key = `${s.recipeId}-${s.systemUsed}-${s.step}`;
+      stepImagesMap.set(key, s.images);
+    }
+  }
 
   for (const recipeId of recipeIds) {
     const subset = unique.filter((s) => s.recipeId === recipeId);
@@ -57,6 +72,22 @@ export async function createManyRecipeStepsTx(
     if (!parsed.success) {
       dbLogger.error({ err: parsed.error }, "Failed to parse steps");
       throw new Error(`Failed to parse steps after insert for recipe ${recipeId}`);
+    }
+
+    // Insert step images
+    for (const stepRow of rows) {
+      const key = `${stepRow.recipeId}-${stepRow.systemUsed}-${stepRow.step}`;
+      const images = stepImagesMap.get(key);
+
+      if (images && images.length > 0) {
+        const imagesToInsert = images.map((img) => ({
+          stepId: stepRow.id,
+          image: img.image,
+          order: img.order.toString(),
+        }));
+
+        await tx.insert(stepImages).values(imagesToInsert).onConflictDoNothing();
+      }
     }
 
     allSteps.push(...parsed.data);

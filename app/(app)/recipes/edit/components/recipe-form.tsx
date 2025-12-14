@@ -17,7 +17,7 @@ import { useRecipesContext } from "@/context/recipes-context";
 import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { useUnitsQuery } from "@/hooks/config";
-import { useTRPC } from "@/app/providers/trpc-provider";
+import { useRecipeImages, useRecipeId } from "@/hooks/recipes";
 
 const log = createClientLogger("RecipeForm");
 
@@ -28,18 +28,16 @@ export interface RecipeFormProps {
 
 export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const router = useRouter();
-  const trpc = useTRPC();
   const { createRecipe, updateRecipe } = useRecipesContext();
   const { units } = useUnitsQuery();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
 
-  // Image upload/delete mutations via tRPC
-  const uploadImageMutation = useMutation(trpc.recipes.uploadImage.mutationOptions());
-  const deleteImageMutation = useMutation(trpc.recipes.deleteImage.mutationOptions());
+  // Use hooks for recipe images and ID reservation
+  const { uploadImage, deleteImage, isUploadingImage } = useRecipeImages();
+  const { recipeId, isLoading: isLoadingRecipeId, error: recipeIdError } = useRecipeId(mode, initialData?.id);
 
   // Form state
   const [name, setName] = useState(initialData?.name ?? "");
@@ -61,6 +59,13 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const [detectedSystem, setDetectedSystem] = useState<MeasurementSystem | null>(null);
   const [manuallySetSystem, setManuallySetSystem] = useState(false);
 
+  // Show recipe ID error if reservation failed
+  useEffect(() => {
+    if (recipeIdError) {
+      setErrors((prev) => ({ ...prev, general: recipeIdError }));
+    }
+  }, [recipeIdError]);
+
   // Initialize ingredients and steps from initialData
   useEffect(() => {
     if (initialData && mode === "edit") {
@@ -78,6 +83,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         step: s.step,
         order: s.order,
         systemUsed: s.systemUsed,
+        images: s.images || [],
       }));
 
       setSteps(initSteps);
@@ -109,15 +115,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
 
   const handleImageUpload = useCallback(
     async (file: File) => {
-      setImageUploading(true);
       setErrors((prev) => ({ ...prev, image: "" }));
 
       try {
-        const formData = new FormData();
-
-        formData.append("image", file);
-
-        const result = await uploadImageMutation.mutateAsync(formData);
+        const result = await uploadImage(file);
 
         if (!result.success) {
           throw new Error(result.error || "Failed to upload image");
@@ -126,11 +127,9 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         setImage(result.url!);
       } catch (err) {
         setErrors((prev) => ({ ...prev, image: (err as Error).message }));
-      } finally {
-        setImageUploading(false);
       }
     },
-    [uploadImageMutation]
+    [uploadImage]
   );
 
   const onImageInputChange = useCallback(
@@ -220,17 +219,18 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           step: s.step,
           order: idx,
           systemUsed: s.systemUsed,
+          images: s.images || [],
         })),
       };
 
       if (mode === "create") {
         try {
-          await createRecipe(recipeData);
+          await createRecipe({ ...recipeData, id: recipeId! });
         } catch (err) {
           // Clean up uploaded image on failure
           if (image && !initialData?.image) {
             try {
-              await deleteImageMutation.mutateAsync({ url: image });
+              await deleteImage(image);
             } catch (cleanupErr) {
               log.error({ err: cleanupErr }, "Failed to clean up image");
             }
@@ -263,7 +263,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     initialData,
     createRecipe,
     updateRecipe,
-    deleteImageMutation,
+    deleteImage,
+    recipeId,
   ]);
 
   const handleTimeChange = useCallback(
@@ -274,6 +275,15 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     },
     []
   );
+
+  // Show loading state while reserving recipe ID for create mode
+  if (isLoadingRecipeId) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-default-500">Initializing form...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 md:py-8">
@@ -308,7 +318,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             </span>
             Photo
           </h2>
-          <div className="ml-9">
+          <div className="ml-0 md:ml-9">
             {image ? (
               <div className="border-default-200 relative aspect-video max-h-80 w-full overflow-hidden rounded-xl border-2">
                 <img alt="Recipe" className="h-full w-full object-cover" src={image} />
@@ -329,7 +339,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                   dragActive
                     ? "border-primary bg-primary-50 dark:bg-primary-950/20 scale-[1.02]"
                     : "border-default-300 hover:border-primary-400 hover:bg-primary-50/50 dark:hover:bg-primary-950/10",
-                  imageUploading ? "pointer-events-none opacity-50" : "",
+                  isUploadingImage ? "pointer-events-none opacity-50" : "",
                 ].join(" ")}
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
@@ -337,11 +347,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                 onDragOver={onDragOver}
                 onDrop={onImageDrop}
               >
-                <div className="text-center">
+                  <div className="text-center">
                   <PhotoIcon className="text-default-400 mx-auto h-16 w-16" />
                   <div className="mt-4 flex flex-col items-center">
                     <span className="text-primary text-base font-semibold">
-                      {imageUploading ? "Uploading..." : "Click to upload or drag and drop"}
+                      {isUploadingImage ? "Uploading..." : "Click to upload or drag and drop"}
                     </span>
                     <p className="text-default-400 mt-2 text-xs">PNG, JPG, WEBP up to 5MB</p>
                   </div>
@@ -349,7 +359,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                     ref={imageInputRef}
                     accept="image/*"
                     className="sr-only"
-                    disabled={imageUploading}
+                    disabled={isUploadingImage}
                     type="file"
                     onChange={onImageInputChange}
                   />
@@ -368,7 +378,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             </span>
             Basic Information
           </h2>
-          <div className="ml-9 space-y-4">
+          <div className="ml-0 space-y-4 md:ml-9">
             <Input
               isRequired
               classNames={{
@@ -406,7 +416,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             Ingredients
             <span className="text-danger-500 text-lg">*</span>
           </h2>
-          <div className="ml-9">
+          <div className="ml-0 md:ml-9">
             <p className="text-default-500 mb-3 text-sm">
               Type ingredients like &quot;2 cups flour&quot; - we&apos;ll automatically parse
               amounts and units.
@@ -431,11 +441,16 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             Instructions
             <span className="text-danger-500 text-lg">*</span>
           </h2>
-          <div className="ml-9">
+          <div className="ml-0 md:ml-9">
             <p className="text-default-500 mb-3 text-sm">
               Write clear step-by-step instructions. Press Enter to move to the next step.
             </p>
-            <StepInput steps={steps} systemUsed={systemUsed} onChange={setSteps} />
+            <StepInput
+              recipeId={recipeId ?? undefined}
+              steps={steps}
+              systemUsed={systemUsed}
+              onChange={setSteps}
+            />
             {errors.steps && <p className="text-danger-600 mt-2 text-sm">{errors.steps}</p>}
           </div>
         </section>
@@ -448,7 +463,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             </span>
             Tags
           </h2>
-          <div className="ml-9">
+          <div className="ml-0 md:ml-9">
             <p className="text-default-500 mb-3 text-sm">
               Type tags and click suggestions to add. Selected tags are blue, new tags have a dashed
               border.
@@ -465,7 +480,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             </span>
             Details
           </h2>
-          <div className="ml-9 space-y-4">
+          <div className="ml-0 space-y-4 md:ml-9">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 classNames={{
@@ -506,7 +521,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             </span>
             Additional Information
           </h2>
-          <div className="ml-9 space-y-4">
+          <div className="ml-0 space-y-4 md:ml-9">
             <Input
               classNames={{
                 label: "font-medium text-base",

@@ -44,6 +44,7 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
 });
 
 export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
+  id: z.uuid().optional(),
   recipeIngredients: z.array(RecipeIngredientInputSchema).default([]),
   tags: z.array(TagNameSchema).default([]),
   steps: z.array(StepStepSchema).default([]),

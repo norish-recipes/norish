@@ -207,3 +207,67 @@ export async function deleteAvatarByFilename(filename: string | null | undefined
     schedulerLogger.warn({ err, filename }, "Could not delete avatar");
   }
 }
+
+export async function cleanupOrphanedStepImages(): Promise<{ deleted: number; errors: number }> {
+  let deleted = 0;
+  let errors = 0;
+
+  const recipesDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes");
+
+  try {
+    // Get all subdirectories in uploads/recipes/
+    let entries;
+
+    try {
+      entries = await fs.readdir(recipesDir, { withFileTypes: true });
+    } catch {
+      // Directory doesn't exist, nothing to clean up
+      return { deleted: 0, errors: 0 };
+    }
+
+    // Filter to directories only (these should be recipe IDs)
+    const recipeIdDirs = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+
+    if (recipeIdDirs.length === 0) {
+      return { deleted: 0, errors: 0 };
+    }
+
+    // Get all existing recipe IDs from database
+    const existingRecipes = await db.select({ id: recipes.id }).from(recipes);
+    const existingRecipeIds = new Set(existingRecipes.map((r) => r.id));
+
+    schedulerLogger.info(
+      { totalDirs: recipeIdDirs.length, existingRecipes: existingRecipeIds.size },
+      "Checking step image directories"
+    );
+
+    // Delete directories for recipes that no longer exist
+    for (const recipeId of recipeIdDirs) {
+      // Skip "images" directory (main recipe images directory)
+      if (recipeId === "images") {
+        continue;
+      }
+
+      if (!existingRecipeIds.has(recipeId)) {
+        try {
+          const dirPath = path.join(recipesDir, recipeId);
+
+          await fs.rm(dirPath, { recursive: true, force: true });
+          deleted++;
+          schedulerLogger.info({ recipeId }, "Deleted orphaned step images directory");
+        } catch (err) {
+          errors++;
+          schedulerLogger.error({ err, recipeId }, "Error deleting step images directory");
+        }
+      }
+    }
+
+    schedulerLogger.info({ deleted, errors }, "Step images cleanup complete");
+  } catch (err) {
+    schedulerLogger.error({ err }, "Fatal error during step images cleanup");
+    errors++;
+  }
+
+  return { deleted, errors };
+}
+

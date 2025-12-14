@@ -172,9 +172,14 @@ const get = authedProcedure.input(RecipeGetInputSchema).query(async ({ ctx, inpu
 });
 
 const create = authedProcedure.input(FullRecipeInsertSchema).mutation(({ ctx, input }) => {
-  const recipeId = crypto.randomUUID();
+  const recipeId = input.id ?? crypto.randomUUID();
 
-  log.info({ userId: ctx.user.id, recipeName: input.name }, "Creating recipe");
+  log.info({ userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id }, "Creating recipe");
+  log.debug({ recipe: input }, "Full recipe data");
+  
+  if (input.id && input.id !== recipeId) {
+    log.error({ inputId: input.id, generatedId: recipeId }, "Recipe ID mismatch detected!");
+  }
 
   createRecipeWithRefs(recipeId, ctx.user.id, input)
     .then(async (createdId) => {
@@ -209,6 +214,7 @@ const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, i
   const { id, data } = input;
 
   log.info({ userId: ctx.user.id, recipeId: id }, "Updating recipe");
+  log.debug({ recipe: input }, "Full recipe data");
 
   assertRecipeAccess(ctx, id, "edit")
     .then(async () => {
@@ -285,6 +291,12 @@ const importFromUrlProcedure = authedProcedure
 
     return recipeId;
   });
+
+const reserveId = authedProcedure.query(() => {
+  const recipeId = crypto.randomUUID();
+  log.debug({ recipeId }, "Reserved recipe ID for step image uploads");
+  return { recipeId };
+});
 
 const convertMeasurements = authedProcedure
   .input(RecipeConvertInputSchema)
@@ -426,4 +438,5 @@ export const recipesProcedures = router({
   delete: deleteProcedure,
   importFromUrl: importFromUrlProcedure,
   convertMeasurements,
+  reserveId,
 });

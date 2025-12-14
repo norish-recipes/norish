@@ -6,6 +6,7 @@ import { recipeTags } from "./recipe-tags";
 import { recipes } from "./recipes";
 import { tags } from "./tags";
 import { steps } from "./steps";
+import { stepImages } from "./step-images";
 import { households } from "./households";
 import { householdUsers } from "./household-users";
 import { users } from "./auth";
@@ -48,10 +49,18 @@ export const recipeIngredientsRelations = relations(recipeIngredients, ({ one })
   }),
 }));
 
-export const stepsRelations = relations(steps, ({ one }) => ({
+export const stepsRelations = relations(steps, ({ one, many }) => ({
   recipe: one(recipes, {
     fields: [steps.recipeId],
     references: [recipes.id],
+  }),
+  images: many(stepImages),
+}));
+
+export const stepImagesRelations = relations(stepImages, ({ one }) => ({
+  step: one(steps, {
+    fields: [stepImages.stepId],
+    references: [steps.id],
   }),
 }));
 

@@ -446,3 +446,81 @@ export async function saveImageBytes(bytes: Buffer, _nameHint?: string): Promise
 
   return `${RECIPES_WEB_PREFIX}/${fileName}`;
 }
+
+export async function saveStepImageBytes(bytes: Buffer, recipeId: string): Promise<string> {
+  const stepImagesDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes", recipeId, "steps");
+  await ensureDir(stepImagesDir);
+
+  // Validate buffer size
+  if (bytes.length > MAX_FILE_SIZE) {
+    throw new Error(`Image too large: ${bytes.length} bytes (max: ${MAX_FILE_SIZE})`);
+  }
+
+  // Validate it's an image
+  if (!isValidImageBuffer(bytes)) {
+    throw new Error("Buffer is not a valid image");
+  }
+
+  const detectedExt = extFromBuffer(bytes);
+
+  if (!detectedExt) {
+    throw new Error("Could not detect image format");
+  }
+
+  // Normalize to JPEG
+  const convertedBytes = await convertToJpeg(bytes, detectedExt);
+  const finalBytes = Buffer.from(new Uint8Array(convertedBytes));
+
+  const id = uuidFromBytes(finalBytes);
+  const fileName = `${id}.jpg`;
+  const filePath = path.join(stepImagesDir, fileName);
+
+  if (!(await fileExists(filePath))) {
+    await fs.writeFile(filePath, finalBytes);
+  }
+
+  return `/recipes/${recipeId}/steps/${fileName}`;
+}
+
+export async function deleteRecipeStepImagesDir(recipeId: string): Promise<void> {
+  const stepImagesDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes", recipeId, "steps");
+
+  try {
+    await fs.rm(stepImagesDir, { recursive: true, force: true });
+    log.info({ recipeId }, "Deleted step images directory");
+  } catch (err) {
+    // Ignore errors (directory might not exist)
+    log.warn({ err, recipeId }, "Could not delete step images directory");
+  }
+}
+
+export async function deleteStepImageByUrl(url: string): Promise<void> {
+  // URL format: /recipes/<recipeId>/steps/<filename>
+  const match = url.match(/^\/recipes\/([a-f0-9-]+)\/steps\/([^/]+)$/i);
+
+  if (!match) {
+    throw new Error("Invalid step image URL format");
+  }
+
+  const [, recipeId, filename] = match;
+
+  // Validate recipeId is a UUID
+  if (!/^[a-f0-9-]{36}$/i.test(recipeId)) {
+    throw new Error("Invalid recipe ID in URL");
+  }
+
+  // Validate filename
+  if (!/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(filename)) {
+    throw new Error("Invalid filename in URL");
+  }
+
+  const filePath = path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes", recipeId, "steps", filename);
+
+  try {
+    await fs.unlink(filePath);
+    log.info({ recipeId, filename }, "Deleted step image");
+  } catch (err) {
+    log.warn({ err, recipeId, filename }, "Could not delete step image");
+    throw err;
+  }
+}

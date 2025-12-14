@@ -5,6 +5,7 @@ export * from "./recipe-tags";
 export * from "./recipe-ingredients";
 export * from "./relations";
 export * from "./steps";
+export * from "./step-images";
 export * from "./households";
 export * from "./household-users";
 export * from "./planned-recipe";

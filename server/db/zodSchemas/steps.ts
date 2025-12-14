@@ -2,6 +2,7 @@ import { createInsertSchema, createSelectSchema, createUpdateSchema } from "driz
 import z from "zod";
 
 import { steps } from "@/server/db/schema";
+import { StepImageSchema } from "./step-images";
 
 export const StepSelectBaseSchema = createSelectSchema(steps);
 export const StepInsertBaseSchema = createInsertSchema(steps)
@@ -21,6 +22,7 @@ export const StepStepSchema = StepSelectBaseSchema.pick({
   systemUsed: true,
 }).extend({
   order: z.coerce.number(),
+  images: z.array(StepImageSchema).optional().default([]),
 });
 
 export const StepSelectWithoutId = StepSelectBaseSchema.omit({
@@ -31,3 +33,4 @@ export const StepSelectWithoutId = StepSelectBaseSchema.omit({
 }).extend({
   order: z.coerce.number(),
 });
+
