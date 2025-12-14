@@ -162,24 +162,24 @@ export default function RecipePageDesktop() {
       <div className="grid grid-cols-5 gap-6">
         {/* Ingredients */}
         <Card className="bg-content1 col-span-2">
-          <CardHeader className="flex items-center justify-between">
+          <CardHeader className="flex items-center justify-between px-5 pt-5">
             <h2 className="text-lg font-semibold">Ingredients</h2>
             <div className="flex items-center gap-2">
               {recipe.servings && <ServingsControl />}
               {recipe.systemUsed && <SystemConvertMenu />}
             </div>
           </CardHeader>
-          <CardBody>
+          <CardBody className="px-2 pt-2 pb-4">
             <IngredientsList />
           </CardBody>
         </Card>
 
         {/* Steps */}
-        <Card className="bg-content1 col-span-3 px-4">
-          <CardHeader>
+        <Card className="bg-content1 col-span-3">
+          <CardHeader className="px-5 pt-5">
             <h2 className="text-lg font-semibold">Steps</h2>
           </CardHeader>
-          <CardBody>
+          <CardBody className="px-2 pt-2 pb-4">
             <StepsList />
           </CardBody>
         </Card>

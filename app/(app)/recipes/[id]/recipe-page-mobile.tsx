@@ -127,7 +127,9 @@ export default function RecipePageMobile() {
 
           <Divider />
           {/* Ingredients list */}
-          <IngredientsList />
+          <div className="-mx-1">
+            <IngredientsList />
+          </div>
         </CardBody>
       </Card>
 
@@ -136,7 +138,9 @@ export default function RecipePageMobile() {
         <CardBody className="space-y-3 px-4 py-5">
           <h2 className="text-lg font-semibold">Steps</h2>
           <Divider />
-          <StepsList />
+          <div className="-mx-1">
+            <StepsList />
+          </div>
         </CardBody>
       </Card>
 
