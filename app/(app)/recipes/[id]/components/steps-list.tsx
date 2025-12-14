@@ -98,7 +98,11 @@ export default function StepsList() {
                         {stepImages.map((img, imgIndex) => (
                           <button
                             key={imgIndex}
-                            className="group/img relative h-16 w-16 overflow-hidden rounded-lg shadow-sm ring-1 ring-default-200 transition-all duration-200 hover:scale-105 hover:shadow-md hover:ring-primary-300 focus:outline-none focus:ring-2 focus:ring-primary dark:ring-default-700 dark:hover:ring-primary-600 md:h-20 md:w-20"
+                            className={`group/img relative h-16 w-16 overflow-hidden rounded-lg shadow-sm ring-1 ring-default-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary dark:ring-default-700 md:h-20 md:w-20 ${
+                              isDone
+                                ? "opacity-50 grayscale"
+                                : "hover:scale-105 hover:shadow-md hover:ring-primary-300 dark:hover:ring-primary-600"
+                            }`}
                             type="button"
                             onClick={(e) =>
                               openLightbox(
