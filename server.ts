@@ -2,7 +2,7 @@ import { runMigrations } from "./server/startup/migrations";
 import { seedServerConfig } from "./server/startup/seed-config";
 import { initializeVideoProcessing } from "./server/startup/video-processing";
 import { createServer } from "./server/startup/http-server";
-import { initCaldavSync } from "./server/caldav/calendar-sync";
+import { initCaldavSync } from "./server/caldav/event-listener";
 import { startWorkers } from "./server/queue/start-workers";
 
 import { initializeServerConfig, SERVER_CONFIG } from "@/config/env-config-server";

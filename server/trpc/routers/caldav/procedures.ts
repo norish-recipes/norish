@@ -1,9 +1,3 @@
-/**
- * CalDAV tRPC Procedures
- *
- * Handles CalDAV configuration management, connection testing, and sync operations.
- */
-
 import type { UserCaldavConfigWithoutPasswordDto } from "@/types";
 
 import { TRPCError } from "@trpc/server";
@@ -19,7 +13,8 @@ import {
 import { router } from "@/server/trpc/trpc";
 import { authedProcedure } from "@/server/trpc/middleware";
 import { createLogger } from "@/server/logger";
-import { syncAllFutureItems, retryFailedSyncs } from "@/server/caldav/calendar-sync";
+import { syncAllFutureItems, retryFailedSyncs } from "@/server/caldav/event-listener";
+import { CalDavClient, testCalDavConnection } from "@/server/caldav/client";
 import {
   getCaldavConfigWithoutPassword,
   getCaldavConfigDecrypted,
@@ -62,9 +57,6 @@ export const caldavRouter = router({
     return config?.password || null;
   }),
 
-  /**
-   * Save CalDAV configuration (create or update).
-   */
   saveConfig: authedProcedure
     .input(SaveCaldavConfigInputSchema)
     .mutation(async ({ ctx, input }): Promise<UserCaldavConfigWithoutPasswordDto> => {
@@ -72,31 +64,17 @@ export const caldavRouter = router({
 
       log.info({ userId }, "Saving CalDAV configuration");
 
-      // First test the connection before saving
-      try {
-        const authHeader =
-          "Basic " + Buffer.from(`${input.username}:${input.password}`).toString("base64");
+      // Test connection before saving
+      const connectionResult = await testCalDavConnection(
+        input.serverUrl,
+        input.username,
+        input.password
+      );
 
-        const response = await fetch(input.serverUrl, {
-          method: "PROPFIND",
-          headers: {
-            Authorization: authHeader,
-            Depth: "0",
-          },
-        });
-
-        if (!response.ok) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `Connection failed: ${response.status} ${response.statusText}`,
-          });
-        }
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-
+      if (!connectionResult.success) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: error instanceof Error ? error.message : "Connection test failed",
+          message: connectionResult.message,
         });
       }
 
@@ -153,35 +131,7 @@ export const caldavRouter = router({
   testConnection: authedProcedure
     .input(TestCaldavConnectionInputSchema)
     .mutation(async ({ input }): Promise<{ success: boolean; message: string }> => {
-      try {
-        const authHeader =
-          "Basic " + Buffer.from(`${input.username}:${input.password}`).toString("base64");
-
-        const response = await fetch(input.serverUrl, {
-          method: "PROPFIND",
-          headers: {
-            Authorization: authHeader,
-            Depth: "0",
-          },
-        });
-
-        if (!response.ok) {
-          return {
-            success: false,
-            message: `Connection failed: ${response.status} ${response.statusText}`,
-          };
-        }
-
-        return {
-          success: true,
-          message: "Connection successful",
-        };
-      } catch (error) {
-        return {
-          success: false,
-          message: error instanceof Error ? error.message : "Connection test failed",
-        };
-      }
+      return testCalDavConnection(input.serverUrl, input.username, input.password);
     }),
 
   /**
@@ -190,39 +140,23 @@ export const caldavRouter = router({
   checkConnection: authedProcedure.query(
     async ({ ctx }): Promise<{ success: boolean; message: string }> => {
       const userId = ctx.user.id;
+      const config = await getCaldavConfigDecrypted(userId);
+
+      if (!config) {
+        return {
+          success: false,
+          message: "No configuration found",
+        };
+      }
 
       try {
-        const config = await getCaldavConfigDecrypted(userId);
-
-        if (!config) {
-          return {
-            success: false,
-            message: "No configuration found",
-          };
-        }
-
-        const authHeader =
-          "Basic " + Buffer.from(`${config.username}:${config.password}`).toString("base64");
-
-        const response = await fetch(config.serverUrl, {
-          method: "PROPFIND",
-          headers: {
-            Authorization: authHeader,
-            Depth: "0",
-          },
+        const client = new CalDavClient({
+          baseUrl: config.serverUrl,
+          username: config.username,
+          password: config.password,
         });
 
-        if (!response.ok) {
-          return {
-            success: false,
-            message: `Connection failed: ${response.status} ${response.statusText}`,
-          };
-        }
-
-        return {
-          success: true,
-          message: "Connected",
-        };
+        return client.testConnection();
       } catch (error) {
         return {
           success: false,
@@ -241,9 +175,6 @@ export const caldavRouter = router({
       const userId = ctx.user.id;
 
       log.info({ userId, deleteEvents: input.deleteEvents }, "Deleting CalDAV configuration");
-
-      // TODO: If deleteEvents is true, delete all CalDAV events from the server
-      // This would require iterating through sync statuses and deleting each event
 
       await deleteCaldavConfig(userId);
 
@@ -282,9 +213,6 @@ export const caldavRouter = router({
     return getSyncStatusSummary(userId);
   }),
 
-  /**
-   * Manually trigger sync for pending/failed items.
-   */
   triggerSync: authedProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.user.id;
 
@@ -312,9 +240,6 @@ export const caldavRouter = router({
     return { started: true };
   }),
 
-  /**
-   * Sync all future items (for initial setup or re-sync).
-   */
   syncAll: authedProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.user.id;
 

@@ -1,10 +1,3 @@
-/**
- * CalDAV Calendar Sync Service
- *
- * Listens to global calendar events and adds CalDAV sync jobs to the queue.
- * Uses Redis pub/sub subscriptions with async iterators.
- */
-
 import type { CalendarSubscriptionEvents } from "@/server/trpc/routers/calendar/types";
 import type { RecipeSubscriptionEvents } from "@/server/trpc/routers/recipes/types";
 import type { Slot } from "@/types";
@@ -22,10 +15,6 @@ const log = createLogger("caldav-sync");
 let isInitialized = false;
 let abortController: AbortController | null = null;
 
-/**
- * Initialize the CalDAV sync service.
- * Starts background subscription loops for calendar and recipe events.
- */
 export function initCaldavSync(): void {
   if (isInitialized) {
     log.warn("CalDAV sync service already initialized");

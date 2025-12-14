@@ -30,7 +30,7 @@ vi.mock(
   () => import("../../mocks/caldav-sync-status")
 );
 vi.mock("@/server/trpc/routers/caldav/emitter", () => import("../../mocks/caldav-emitter"));
-vi.mock("@/server/caldav/calendar-sync", () => import("../../mocks/caldav-calendar-sync"));
+vi.mock("@/server/caldav/event-listener", () => import("../../mocks/caldav-calendar-sync"));
 vi.mock("@/config/server-config-loader", () => import("../../mocks/config"));
 
 // Mock global fetch for connection testing
