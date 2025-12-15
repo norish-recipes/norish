@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Textarea, Button, Image } from "@heroui/react";
+import { Button, Image } from "@heroui/react";
 import { XMarkIcon, PhotoIcon } from "@heroicons/react/16/solid";
 
+import SmartTextInput from "@/components/shared/smart-text-input";
+import SmartInputHelp from "@/components/shared/smart-input-help";
 import { MeasurementSystem } from "@/types";
 import { useRecipeImages } from "@/hooks/recipes";
 
@@ -199,105 +201,112 @@ export default function StepInput({
     fileInputRefs.current[index]?.click();
   };
 
+  // Track step numbers excluding headings
+  const getStepNumber = (index: number) => {
+    let stepNum = 0;
+    for (let i = 0; i <= index; i++) {
+      if (!inputs[i].text.trim().startsWith("#")) stepNum++;
+    }
+    return stepNum;
+  };
+
   return (
     <div className="flex flex-col gap-3 md:gap-4">
-      {inputs.map((item, index) => (
-        <div key={index} className="flex flex-col gap-2">
-          <div className="flex items-start gap-1 md:gap-2">
-            {/* Step number */}
-            <div className="text-default-500 flex h-10 w-6 flex-shrink-0 items-center justify-center text-sm font-medium md:w-8 md:text-base">
-              {index + 1}.
-            </div>
-            <div className="flex flex-1 flex-col gap-2">
-              <Textarea
-                ref={(el) => {
-                  textareaRefs.current[index] = el;
-                }}
-                classNames={{
-                  input: "text-base",
-                  inputWrapper: "border-default-200 dark:border-default-800",
-                }}
-                minRows={2}
-                placeholder={index === 0 ? `Step ${index + 1}: Describe the step...` : `Step ${index + 1}`}
-                value={item.text}
-                onBlur={() => handleBlur(index)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                onValueChange={(v) => handleInputChange(index, v)}
-              />
+      {inputs.map((item, index) => {
+        const isHeading = item.text.trim().startsWith("#");
+        const stepNumber = isHeading ? null : getStepNumber(index);
 
-              {/* Image thumbnails */}
-              {item.images.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {item.images.map((img, imgIndex) => (
-                    <div
-                      key={imgIndex}
-                      className="relative h-18 w-18 md:h-20 md:w-20"
-                    >
-                      <Image
-                        alt={`Step ${index + 1} image ${imgIndex + 1}`}
-                        className="h-14 w-14 rounded-lg object-cover md:h-16 md:w-16"
-                        src={img.image}
-                      />
-                      <button
-                        className="bg-danger hover:bg-danger-600 absolute top-0 right-0 z-10 flex h-6 w-6 items-center justify-center rounded-full shadow-lg transition-colors"
-                        type="button"
-                        onClick={() => handleRemoveImage(index, imgIndex)}
+        return (
+          <div key={index} className="flex flex-col gap-2">
+            <div className="flex items-start gap-1 md:gap-2">
+              {/* Step number */}
+              <div className="text-default-500 flex h-10 w-6 flex-shrink-0 items-center justify-center text-sm font-medium md:w-8 md:text-base">
+                {stepNumber ? `${stepNumber}.` : ""}
+              </div>
+              <div className="flex flex-1 flex-col gap-2">
+                <SmartTextInput
+                  minRows={2}
+                  placeholder={index === 0 ? `Step ${index + 1}: Describe the step...` : `Step ${index + 1}`}
+                  value={item.text}
+                  onBlur={() => handleBlur(index)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  onValueChange={(v) => handleInputChange(index, v)}
+                />
+
+                {/* Image thumbnails */}
+                {item.images.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {item.images.map((img, imgIndex) => (
+                      <div
+                        key={imgIndex}
+                        className="relative h-18 w-18 md:h-20 md:w-20"
                       >
-                        <XMarkIcon className="h-4 w-4 text-white" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                        <Image
+                          alt={`Step ${index + 1} image ${imgIndex + 1}`}
+                          className="h-14 w-14 rounded-lg object-cover md:h-16 md:w-16"
+                          src={img.image}
+                        />
+                        <button
+                          className="bg-danger hover:bg-danger-600 absolute top-0 right-0 z-10 flex h-6 w-6 items-center justify-center rounded-full shadow-lg transition-colors"
+                          type="button"
+                          onClick={() => handleRemoveImage(index, imgIndex)}
+                        >
+                          <XMarkIcon className="h-4 w-4 text-white" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            {/* Action buttons - stacked vertically */}
-            <div className="mt-1 flex flex-shrink-0 flex-col gap-0.5">
-              {/* Image upload button */}
-              {recipeId && (
-                <>
-                  <input
-                    ref={(el) => {
-                      fileInputRefs.current[index] = el;
-                    }}
-                    accept="image/*"
-                    className="hidden"
-                    type="file"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleImageUpload(index, file);
-                        e.target.value = "";
-                      }
-                    }}
-                  />
+              {/* Action buttons - stacked vertically */}
+              <div className="mt-1 flex flex-shrink-0 flex-col gap-0.5">
+                {/* Image upload button */}
+                {recipeId && (
+                  <>
+                    <input
+                      ref={(el) => {
+                        fileInputRefs.current[index] = el;
+                      }}
+                      accept="image/*"
+                      className="hidden"
+                      type="file"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImageUpload(index, file);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                    <Button
+                      isIconOnly
+                      isLoading={uploadingIndex === index}
+                      size="sm"
+                      variant="light"
+                      onPress={() => handleFileSelect(index)}
+                    >
+                      <PhotoIcon className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+
+                {/* Remove button */}
+                {inputs.length > 1 && (item.text || item.images.length > 0) && (
                   <Button
                     isIconOnly
-                    isLoading={uploadingIndex === index}
                     size="sm"
                     variant="light"
-                    onPress={() => handleFileSelect(index)}
+                    onPress={() => handleRemove(index)}
                   >
-                    <PhotoIcon className="h-4 w-4" />
+                    <XMarkIcon className="h-4 w-4" />
                   </Button>
-                </>
-              )}
-
-              {/* Remove button */}
-              {inputs.length > 1 && (item.text || item.images.length > 0) && (
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  onPress={() => handleRemove(index)}
-                >
-                  <XMarkIcon className="h-4 w-4" />
-                </Button>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

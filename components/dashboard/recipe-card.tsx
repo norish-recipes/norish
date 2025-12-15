@@ -11,6 +11,7 @@ import RecipeMetadata from "./recipe-metadata";
 import RecipeTags from "./recipe-tags";
 
 import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { RecipeDashboardDTO } from "@/types";
 import { formatMinutesHM } from "@/lib/helpers";
 import { useRecipesContext } from "@/context/recipes-context";
@@ -171,7 +172,7 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
                     }}
                     title={description}
                   >
-                    {description}
+                    <SmartMarkdownRenderer text={description} disableLinks />
                   </p>
                 )}
               </CardBody>

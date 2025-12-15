@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
@@ -17,6 +18,7 @@ import {
   dashboardRecipe,
   setActiveSystemForRecipe,
   addStepsAndIngredientsToRecipeByInput,
+  searchRecipesByName,
   FullRecipeInsertSchema,
   RecipeListInputSchema,
   RecipeGetInputSchema,
@@ -176,7 +178,7 @@ const create = authedProcedure.input(FullRecipeInsertSchema).mutation(({ ctx, in
 
   log.info({ userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id }, "Creating recipe");
   log.debug({ recipe: input }, "Full recipe data");
-  
+
   if (input.id && input.id !== recipeId) {
     log.error({ inputId: input.id, generatedId: recipeId }, "Recipe ID mismatch detected!");
   }
@@ -430,6 +432,22 @@ const convertMeasurements = authedProcedure
     return { success: true };
   });
 
+const autocomplete = authedProcedure
+  .input(z.object({ query: z.string().min(1).max(100) }))
+  .query(async ({ ctx, input }) => {
+    log.debug({ userId: ctx.user.id, query: input.query }, "Searching recipes for autocomplete");
+
+    const listCtx: RecipeListContext = {
+      userId: ctx.user.id,
+      householdUserIds: ctx.householdUserIds,
+      isServerAdmin: ctx.isServerAdmin,
+    };
+
+    const results = await searchRecipesByName(listCtx, input.query, 10);
+
+    return results;
+  });
+
 export const recipesProcedures = router({
   list,
   get,
@@ -439,4 +457,6 @@ export const recipesProcedures = router({
   importFromUrl: importFromUrlProcedure,
   convertMeasurements,
   reserveId,
+  autocomplete,
 });
+

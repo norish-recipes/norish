@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useRecipeContext } from "../context";
 
 import ImageLightbox from "@/components/shared/image-lightbox";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 
 export default function StepsList() {
   const { recipe } = useRecipeContext();
@@ -47,12 +48,34 @@ export default function StepsList() {
   return (
     <>
       <ol className="space-y-3">
-        {recipe?.steps
-          .filter((s) => s.systemUsed === recipe.systemUsed)
-          .sort((a, b) => a.order - b.order)
-          .map((s, i) => {
+        {(() => {
+          const filteredSteps = recipe?.steps
+            .filter((s) => s.systemUsed === recipe.systemUsed)
+            .sort((a, b) => a.order - b.order) ?? [];
+
+          let stepNumber = 0;
+
+          return filteredSteps.map((s, i) => {
+            const isHeading = s.step.trim().startsWith("#");
             const isDone = done.has(i);
             const stepImages = s.images || [];
+
+            if (isHeading) {
+              const headingText = s.step.trim().replace(/^#+\s*/, '');
+              return (
+                <li key={i} className="list-none">
+                  <div className="px-3 py-2">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {headingText}
+                    </h3>
+                  </div>
+                </li>
+              );
+            }
+
+            // Increment step number for actual steps
+            stepNumber++;
+            const currentStepNumber = stepNumber;
 
             return (
               <li key={i}>
@@ -67,29 +90,26 @@ export default function StepsList() {
                   {/* Step number badge */}
                   <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                     <span
-                      className={`absolute inset-0 flex items-center justify-center transition-all duration-200 ${
-                        isDone ? "scale-0 opacity-0" : "scale-100 opacity-100"
-                      }`}
+                      className={`absolute inset-0 flex items-center justify-center transition-all duration-200 ${isDone ? "scale-0 opacity-0" : "scale-100 opacity-100"
+                        }`}
                     >
-                      {i + 1}
+                      {currentStepNumber}
                     </span>
                     <CheckIcon
-                      className={`h-4 w-4 transition-all duration-200 ${
-                        isDone ? "scale-100 opacity-100" : "scale-0 opacity-0"
-                      }`}
+                      className={`h-4 w-4 transition-all duration-200 ${isDone ? "scale-100 opacity-100" : "scale-0 opacity-0"
+                        }`}
                     />
                   </div>
 
                   {/* Step content */}
                   <div className="flex min-w-0 flex-1 flex-col gap-3">
                     <p
-                      className={`text-[15px] leading-relaxed transition-all duration-200 ${
-                        isDone
-                          ? "text-default-400 line-through"
-                          : "text-foreground"
-                      }`}
+                      className={`text-[15px] leading-relaxed transition-all duration-200 ${isDone
+                        ? "text-default-400 line-through"
+                        : "text-foreground"
+                        }`}
                     >
-                      {s.step}
+                      <SmartMarkdownRenderer text={s.step} disableLinks={isDone} />
                     </p>
 
                     {/* Step images */}
@@ -98,17 +118,16 @@ export default function StepsList() {
                         {stepImages.map((img, imgIndex) => (
                           <button
                             key={imgIndex}
-                            className={`group/img relative h-16 w-16 overflow-hidden rounded-lg shadow-sm ring-1 ring-default-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary dark:ring-default-700 md:h-20 md:w-20 ${
-                              isDone
-                                ? "opacity-50 grayscale"
-                                : "hover:scale-105 hover:shadow-md hover:ring-primary-300 dark:hover:ring-primary-600"
-                            }`}
+                            className={`group/img relative h-16 w-16 overflow-hidden rounded-lg shadow-sm ring-1 ring-default-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary dark:ring-default-700 md:h-20 md:w-20 ${isDone
+                              ? "opacity-50 grayscale"
+                              : "hover:scale-105 hover:shadow-md hover:ring-primary-300 dark:hover:ring-primary-600"
+                              }`}
                             type="button"
                             onClick={(e) =>
                               openLightbox(
                                 stepImages.map((si) => ({
                                   src: si.image,
-                                  alt: `Step ${i + 1} image ${imgIndex + 1}`,
+                                  alt: `Step ${currentStepNumber} image ${imgIndex + 1}`,
                                 })),
                                 imgIndex,
                                 e
@@ -118,7 +137,7 @@ export default function StepsList() {
                             <Image
                               fill
                               unoptimized
-                              alt={`Step ${i + 1} image ${imgIndex + 1}`}
+                              alt={`Step ${currentStepNumber} image ${imgIndex + 1}`}
                               className="object-cover"
                               src={img.image}
                             />
@@ -131,7 +150,8 @@ export default function StepsList() {
                 </div>
               </li>
             );
-          })}
+          });
+        })()}
       </ol>
 
       <ImageLightbox

@@ -22,6 +22,7 @@ import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
 import ImageLightbox from "@/components/shared/image-lightbox";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 
 export default function RecipePageDesktop() {
   var { recipe } = useRecipeContextRequired();
@@ -99,7 +100,9 @@ export default function RecipePageDesktop() {
                     )}
                   </h1>
                   {recipe.description && (
-                    <p className="text-default-600 mt-3 max-w-md text-base">{recipe.description}</p>
+                    <p className="text-default-600 mt-3 max-w-md text-base">
+                      <SmartMarkdownRenderer text={recipe.description} />
+                    </p>
                   )}
                 </div>
 

@@ -5,6 +5,7 @@ import { CheckIcon } from "@heroicons/react/20/solid";
 
 import { useRecipeContextRequired } from "../context";
 
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { RecipeIngredientsDto } from "@/types/dto/recipe-ingredient";
 
 // Format amount as a clean decimal (e.g., 2.5, 0.25)
@@ -54,6 +55,21 @@ export default function IngredientsList() {
         .filter((it) => it.systemUsed === recipe.systemUsed)
         .sort((a, b) => a.order - b.order)
         .map((it, idx) => {
+          const isHeading = it.ingredientName.trim().startsWith("#");
+
+          if (isHeading) {
+            const headingText = it.ingredientName.trim().replace(/^#+\s*/, '');
+            return (
+              <li key={`heading-${idx}`} className="list-none">
+                <div className="px-3 py-2">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {headingText}
+                  </h3>
+                </div>
+              </li>
+            );
+          }
+
           const amount = formatAmount(it.amount);
           const unit = it.unit || "";
           const isChecked = checked.has(idx);
@@ -62,11 +78,10 @@ export default function IngredientsList() {
             <li key={`${it.ingredientName}-${idx}`}>
               <div
                 aria-pressed={isChecked}
-                className={`group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 select-none ${
-                  isChecked
-                    ? "bg-default-100/50 dark:bg-default-100/5"
-                    : "hover:bg-default-100 dark:hover:bg-default-100/10"
-                }`}
+                className={`group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 select-none ${isChecked
+                  ? "bg-default-100/50 dark:bg-default-100/5"
+                  : "hover:bg-default-100 dark:hover:bg-default-100/10"
+                  }`}
                 role="button"
                 tabIndex={0}
                 onClick={() => toggle(idx)}
@@ -74,20 +89,18 @@ export default function IngredientsList() {
               >
                 {/* Checkbox */}
                 <div
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all duration-200 ${
-                    isChecked
-                      ? "border-success bg-success"
-                      : "border-default-300 group-hover:border-primary-400 dark:border-default-600"
-                  }`}
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all duration-200 ${isChecked
+                    ? "border-success bg-success"
+                    : "border-default-300 group-hover:border-primary-400 dark:border-default-600"
+                    }`}
                 >
                   {isChecked && <CheckIcon className="h-3.5 w-3.5 text-white" />}
                 </div>
 
                 {/* Ingredient content */}
                 <div
-                  className={`flex flex-1 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 transition-opacity duration-200 ${
-                    isChecked ? "opacity-50" : ""
-                  }`}
+                  className={`flex flex-1 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 transition-opacity duration-200 ${isChecked ? "opacity-50" : ""
+                    }`}
                 >
                   {amount !== "" && (
                     <span
@@ -106,7 +119,7 @@ export default function IngredientsList() {
                   <span
                     className={`${isChecked ? "text-default-400 line-through" : "text-default-700 dark:text-default-300"}`}
                   >
-                    {it.ingredientName}
+                    <SmartMarkdownRenderer text={it.ingredientName} disableLinks={isChecked} />
                   </span>
                 </div>
               </div>

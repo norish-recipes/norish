@@ -12,6 +12,7 @@ import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
 import { formatMinutesHM } from "@/lib/helpers";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 
 export default function RecipePageMobile() {
   var { recipe } = useRecipeContextRequired();
@@ -98,7 +99,9 @@ export default function RecipePageMobile() {
 
           {/* Description */}
           {recipe.description && (
-            <p className="text-default-600 text-base leading-relaxed">{recipe.description}</p>
+            <p className="text-default-600 text-base leading-relaxed">
+              <SmartMarkdownRenderer text={recipe.description} />
+            </p>
           )}
 
           {/* Tags */}

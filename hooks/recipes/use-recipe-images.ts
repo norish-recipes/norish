@@ -5,18 +5,13 @@ import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type RecipeImagesResult = {
-  /** Upload a recipe main image */
   uploadImage: (file: File) => Promise<{ success: boolean; url?: string; error?: string }>;
-  /** Delete a recipe main image */
   deleteImage: (url: string) => Promise<{ success: boolean; error?: string }>;
-  /** Upload a step image */
   uploadStepImage: (
     file: File,
     recipeId: string
   ) => Promise<{ success: boolean; url?: string; error?: string }>;
-  /** Delete a step image */
   deleteStepImage: (url: string) => Promise<{ success: boolean; error?: string }>;
-  /** Loading states */
   isUploadingImage: boolean;
   isDeletingImage: boolean;
   isUploadingStepImage: boolean;

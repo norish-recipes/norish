@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { Input, Button } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { XMarkIcon } from "@heroicons/react/16/solid";
 
+import SmartTextInput from "@/components/shared/smart-text-input";
 import { parseIngredientWithDefaults, debounce } from "@/lib/helpers";
 import { useUnitsQuery } from "@/hooks/config";
 import { MeasurementSystem } from "@/types";
@@ -31,7 +32,7 @@ export default function IngredientInput({
 }: IngredientInputProps) {
   const { units } = useUnitsQuery();
   const [inputs, setInputs] = useState<string[]>([""]);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
   // Initialize from ingredients prop
   useEffect(() => {
@@ -121,13 +122,13 @@ export default function IngredientInput({
         e.preventDefault();
         // Move to next input or create new one
         if (index < inputs.length - 1) {
-          inputRefs.current[index + 1]?.focus();
+          textareaRefs.current[index + 1]?.focus();
         } else {
           const updated = [...inputs, ""];
 
           setInputs(updated);
           setTimeout(() => {
-            inputRefs.current[inputs.length]?.focus();
+            textareaRefs.current[inputs.length]?.focus();
           }, 0);
         }
       } else if (e.key === "Backspace" && !inputs[index] && index > 0) {
@@ -137,7 +138,7 @@ export default function IngredientInput({
         setInputs(updated);
         debouncedParse(updated);
         setTimeout(() => {
-          inputRefs.current[index - 1]?.focus();
+          textareaRefs.current[index - 1]?.focus();
         }, 0);
       }
     },
@@ -171,43 +172,44 @@ export default function IngredientInput({
 
   return (
     <div className="flex flex-col gap-2">
-      {inputs.map((value, index) => (
-        <div key={index} className="flex items-start gap-2">
-          <div className="text-default-500 flex h-10 w-8 flex-shrink-0 items-center justify-center font-medium">
-            {index + 1}.
-          </div>
-          <div className="flex-1">
-            <Input
-              ref={(el) => {
-                inputRefs.current[index] = el;
-              }}
-              classNames={{
-                input: "text-base",
-                inputWrapper: "border-default-200 dark:border-default-800",
-              }}
-              placeholder={index === 0 ? "e.g., 2 cups flour" : ""}
-              size="md"
-              value={value}
-              onBlur={() => handleBlur(index)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              onValueChange={(v) => handleInputChange(index, v)}
-            />
-          </div>
-          <div className="mt-1 h-8 w-8 min-w-8 flex-shrink-0">
-            {inputs.length > 1 && value && (
-              <Button
-                isIconOnly
-                className="h-full w-full"
-                size="sm"
-                variant="light"
-                onPress={() => handleRemove(index)}
-              >
-                <XMarkIcon className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      ))}
+      {(() => {
+        let ingredientNumber = 0;
+        return inputs.map((value, index) => {
+          const isHeading = value.trim().startsWith("#");
+          if (!isHeading) ingredientNumber++;
+
+          return (
+            <div key={index} className="flex items-start gap-2">
+              <div className="text-default-500 flex h-10 w-8 flex-shrink-0 items-center justify-center font-medium">
+                {isHeading ? "" : `${ingredientNumber}.`}
+              </div>
+              <div className="flex-1">
+                <SmartTextInput
+                  minRows={1}
+                  placeholder={index === 0 ? "e.g., 2 cups flour" : ""}
+                  value={value}
+                  onBlur={() => handleBlur(index)}
+                  onKeyDown={(e) => handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)}
+                  onValueChange={(v) => handleInputChange(index, v)}
+                />
+              </div>
+              <div className="mt-1 h-8 w-8 min-w-8 flex-shrink-0">
+                {inputs.length > 1 && value && (
+                  <Button
+                    isIconOnly
+                    className="h-full w-full"
+                    size="sm"
+                    variant="light"
+                    onPress={() => handleRemove(index)}
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          );
+        });
+      })()}
     </div>
   );
 }

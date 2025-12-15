@@ -714,3 +714,28 @@ export async function updateRecipeWithRefs(
     }
   });
 }
+
+export async function searchRecipesByName(
+  ctx: RecipeListContext,
+  query: string,
+  limit: number = 10
+): Promise<{ id: string; name: string; image: string | null }[]> {
+  const whereConditions: any[] = [];
+
+  const policyCondition = await buildViewPolicyCondition(ctx);
+  if (policyCondition) {
+    whereConditions.push(policyCondition);
+  }
+
+  whereConditions.push(ilike(recipes.name, `%${query}%`));
+  const whereClause = whereConditions.length ? and(...whereConditions) : undefined;
+  const rows = await db
+    .select({ id: recipes.id, name: recipes.name, image: recipes.image })
+    .from(recipes)
+    .where(whereClause)
+    .orderBy(asc(recipes.name))
+    .limit(limit);
+
+  return rows.map((r) => ({ id: r.id, name: r.name, image: r.image }));
+}
+

@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { Input, Textarea, Button } from "@heroui/react";
+import { Input, Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { PhotoIcon } from "@heroicons/react/16/solid";
-import { useMutation } from "@tanstack/react-query";
 
 import { FullRecipeDTO, MeasurementSystem } from "@/types";
 import { createClientLogger } from "@/lib/logger";
 import TagInput from "@/components/shared/tag-input";
+import SmartTextInput from "@/components/shared/smart-text-input";
+import SmartInputHelp from "@/components/shared/smart-input-help";
 import IngredientInput, { ParsedIngredient } from "@/components/recipes/ingredient-input";
 import StepInput, { Step } from "@/components/recipes/step-input";
 import TimeInputs from "@/components/recipes/time-inputs";
@@ -347,7 +348,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                 onDragOver={onDragOver}
                 onDrop={onImageDrop}
               >
-                  <div className="text-center">
+                <div className="text-center">
                   <PhotoIcon className="text-default-400 mx-auto h-16 w-16" />
                   <div className="mt-4 flex flex-col items-center">
                     <span className="text-primary text-base font-semibold">
@@ -394,16 +395,18 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               onValueChange={setName}
             />
 
-            <Textarea
-              classNames={{
-                label: "font-medium text-base",
-              }}
-              label="Description"
-              minRows={2}
-              placeholder="A brief description of what makes this recipe special..."
-              value={description}
-              onValueChange={setDescription}
-            />
+            <div>
+              <div className="mb-1.5 flex items-center gap-1">
+                <span className="text-sm font-medium text-foreground">Description</span>
+                <SmartInputHelp />
+              </div>
+              <SmartTextInput
+                minRows={2}
+                placeholder="A brief description of what makes this recipe special..."
+                value={description}
+                onValueChange={setDescription}
+              />
+            </div>
           </div>
         </section>
 
@@ -417,9 +420,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <span className="text-danger-500 text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-default-500 mb-3 text-sm">
+            <p className="text-default-500 mb-3 flex items-center gap-1 text-sm">
               Type ingredients like &quot;2 cups flour&quot; - we&apos;ll automatically parse
               amounts and units.
+              <SmartInputHelp />
             </p>
             <IngredientInput
               ingredients={ingredients}
@@ -442,8 +446,9 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <span className="text-danger-500 text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-default-500 mb-3 text-sm">
+            <p className="text-default-500 mb-3 flex items-center gap-1 text-sm">
               Write clear step-by-step instructions. Press Enter to move to the next step.
+              <SmartInputHelp />
             </p>
             <StepInput
               recipeId={recipeId ?? undefined}
