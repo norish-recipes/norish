@@ -45,7 +45,7 @@ function MiniGroceriesContent({
       // Filter out headings and recipe links
       const filteredIngredients = ingredients.filter((i) => {
         const name = i.ingredientName?.trim() ?? "";
-        // Skip headings 
+        // Skip headings
         if (name.startsWith("#")) return false;
         // Skip recipe links
         if (name.includes("(id:") || name.includes("/recipe:")) return false;
@@ -89,11 +89,11 @@ function MiniGroceriesContent({
         prev.map((i) =>
           i.ingredientId === id
             ? {
-              ...i,
-              ingredientName: parsed.description,
-              amount: parsed.quantity?.toString() ?? null,
-              unit: parsed.unitOfMeasure ?? null,
-            }
+                ...i,
+                ingredientName: parsed.description,
+                amount: parsed.quantity?.toString() ?? null,
+                unit: parsed.unitOfMeasure ?? null,
+              }
             : i
         )
       );

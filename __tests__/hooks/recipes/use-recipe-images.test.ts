@@ -111,7 +111,7 @@ describe("useRecipeImages", () => {
 
       // Create empty FormData (simulating no file)
       const mockFile = null as any;
-      
+
       try {
         await result.current.uploadImage(mockFile);
       } catch (error) {
@@ -203,9 +203,9 @@ describe("useRecipeImages", () => {
 
       const file = new File(["test"], "step.jpg", { type: "image/jpeg" });
       const recipeId = "recipe-456";
-      
+
       await result.current.uploadStepImage(file, recipeId);
-      
+
       expect(result.current).toBeDefined();
     });
 
@@ -233,9 +233,7 @@ describe("useRecipeImages", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const response = await result.current.deleteStepImage(
-        "/recipes/recipe-123/steps/step.jpg"
-      );
+      const response = await result.current.deleteStepImage("/recipes/recipe-123/steps/step.jpg");
 
       expect(response.success).toBe(true);
     });
@@ -258,9 +256,7 @@ describe("useRecipeImages", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const deletePromise = result.current.deleteStepImage(
-        "/recipes/recipe-123/steps/step.jpg"
-      );
+      const deletePromise = result.current.deleteStepImage("/recipes/recipe-123/steps/step.jpg");
 
       await deletePromise;
 

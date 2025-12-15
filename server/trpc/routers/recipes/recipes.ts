@@ -176,7 +176,10 @@ const get = authedProcedure.input(RecipeGetInputSchema).query(async ({ ctx, inpu
 const create = authedProcedure.input(FullRecipeInsertSchema).mutation(({ ctx, input }) => {
   const recipeId = input.id ?? crypto.randomUUID();
 
-  log.info({ userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id }, "Creating recipe");
+  log.info(
+    { userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id },
+    "Creating recipe"
+  );
   log.debug({ recipe: input }, "Full recipe data");
 
   if (input.id && input.id !== recipeId) {
@@ -336,12 +339,12 @@ const convertMeasurements = authedProcedure
         // Check edit permission (uses recipe.userId directly since we have the full recipe)
         const permissionCheck = recipe.userId
           ? canAccessResource(
-            "edit",
-            ctx.user.id,
-            recipe.userId,
-            ctx.householdUserIds,
-            ctx.isServerAdmin
-          )
+              "edit",
+              ctx.user.id,
+              recipe.userId,
+              ctx.householdUserIds,
+              ctx.isServerAdmin
+            )
           : Promise.resolve(true);
 
         return permissionCheck.then((canEdit) => {
@@ -459,4 +462,3 @@ export const recipesProcedures = router({
   reserveId,
   autocomplete,
 });
-

@@ -312,6 +312,9 @@ export async function listRecipes(
         recipeTags: {
           with: { tag: { columns: { id: true, name: true } } },
         },
+        ratings: {
+          columns: { rating: true },
+        },
       },
       where: whereClause,
       orderBy,
@@ -324,24 +327,34 @@ export async function listRecipes(
       .where(whereClause),
   ]);
 
-  const formatted = rows.map((r) => ({
-    id: r.id,
-    userId: r.userId,
-    name: r.name,
-    description: r.description ?? null,
-    url: r.url ?? null,
-    image: r.image ?? null,
-    servings: r.servings ?? 1,
-    prepMinutes: r.prepMinutes ?? null,
-    cookMinutes: r.cookMinutes ?? null,
-    totalMinutes: r.totalMinutes ?? null,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
-    tags: (r.recipeTags ?? [])
-      .map((rt: { tag?: { name?: string } | null }) => rt.tag?.name)
-      .filter((name: string | undefined | null): name is string => Boolean(name))
-      .map((name) => ({ name })),
-  }));
+  const formatted = rows.map((r) => {
+    // Compute average rating
+    const ratingValues = (r.ratings ?? []).map((rating) => rating.rating);
+    const ratingCount = ratingValues.length;
+    const averageRating =
+      ratingCount > 0 ? ratingValues.reduce((sum, val) => sum + val, 0) / ratingCount : null;
+
+    return {
+      id: r.id,
+      userId: r.userId,
+      name: r.name,
+      description: r.description ?? null,
+      url: r.url ?? null,
+      image: r.image ?? null,
+      servings: r.servings ?? 1,
+      prepMinutes: r.prepMinutes ?? null,
+      cookMinutes: r.cookMinutes ?? null,
+      totalMinutes: r.totalMinutes ?? null,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      tags: (r.recipeTags ?? [])
+        .map((rt: { tag?: { name?: string } | null }) => rt.tag?.name)
+        .filter((name: string | undefined | null): name is string => Boolean(name))
+        .map((name) => ({ name })),
+      averageRating,
+      ratingCount,
+    };
+  });
 
   const parsed = z.array(RecipeDashboardSchema).safeParse(formatted);
 
@@ -377,12 +390,21 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
           tag: { columns: { id: true, name: true } },
         },
       },
+      ratings: {
+        columns: { rating: true },
+      },
     },
     limit: 1,
   });
 
   if (rows.length === 0) return null;
   const r = rows[0];
+
+  // Compute average rating
+  const ratingValues = (r.ratings ?? []).map((rating) => rating.rating);
+  const ratingCount = ratingValues.length;
+  const averageRating =
+    ratingCount > 0 ? ratingValues.reduce((sum, val) => sum + val, 0) / ratingCount : null;
 
   const dto = {
     id: r.id,
@@ -401,6 +423,8 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
       .map((rt: any) => rt.tag?.name)
       .filter(nonEmpty)
       .map((name: string) => ({ name })),
+    averageRating,
+    ratingCount,
   };
 
   const parsed = RecipeDashboardSchema.safeParse(dto);
@@ -738,4 +762,3 @@ export async function searchRecipesByName(
 
   return rows.map((r) => ({ id: r.id, name: r.name, image: r.image }));
 }
-

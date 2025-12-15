@@ -157,4 +157,3 @@ export const imagesProcedures = router({
   uploadStepImage,
   deleteStepImage,
 });
-

@@ -15,7 +15,7 @@ export const recipeImportJobOptions: DefaultJobOptions = {
     delay: 1000, // 1s, 2s, 4s
   },
   removeOnComplete: true,
-  removeOnFail: true
+  removeOnFail: true,
 };
 
 export const caldavSyncJobOptions: DefaultJobOptions = {
@@ -43,4 +43,3 @@ export const QUEUE_NAMES = {
   CALDAV_SYNC: "caldav-sync",
   SCHEDULED_TASKS: "scheduled-tasks",
 } as const;
-

@@ -18,13 +18,10 @@ const log = createLogger("queue:caldav-sync");
 /**
  * CalDAV sync queue instance
  */
-export const caldavSyncQueue = new Queue<CaldavSyncJobData>(
-  QUEUE_NAMES.CALDAV_SYNC,
-  {
-    connection: redisConnection,
-    defaultJobOptions: caldavSyncJobOptions,
-  }
-);
+export const caldavSyncQueue = new Queue<CaldavSyncJobData>(QUEUE_NAMES.CALDAV_SYNC, {
+  connection: redisConnection,
+  defaultJobOptions: caldavSyncJobOptions,
+});
 
 /**
  * Generate a unique job ID based on CalDAV server URL and item ID.
@@ -41,9 +38,7 @@ function generateCaldavJobId(caldavServerUrl: string, itemId: string): string {
  *
  * @returns The created job
  */
-export async function addCaldavSyncJob(
-  data: CaldavSyncJobData
-): Promise<Job<CaldavSyncJobData>> {
+export async function addCaldavSyncJob(data: CaldavSyncJobData): Promise<Job<CaldavSyncJobData>> {
   const jobId = generateCaldavJobId(data.caldavServerUrl, data.itemId);
 
   // Supersede any existing job for this item (only sync latest state)

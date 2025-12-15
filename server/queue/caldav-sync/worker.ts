@@ -58,14 +58,7 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
   const isNewRecord = !existingStatus;
 
   // Perform the CalDAV sync (throws on error)
-  const { uid } = await syncPlannedItem(
-    userId,
-    itemId,
-    eventTitle,
-    date,
-    slot as Slot,
-    recipeId
-  );
+  const { uid } = await syncPlannedItem(userId, itemId, eventTitle, date, slot as Slot, recipeId);
 
   if (isNewRecord) {
     const insertData: CaldavSyncStatusInsertDto = {
@@ -189,14 +182,10 @@ export function startCaldavSyncWorker(): void {
     return;
   }
 
-  worker = new Worker<CaldavSyncJobData>(
-    QUEUE_NAMES.CALDAV_SYNC,
-    processCaldavSyncJob,
-    {
-      connection: redisConnection,
-      concurrency: 3, // Limit concurrent CalDAV operations
-    }
-  );
+  worker = new Worker<CaldavSyncJobData>(QUEUE_NAMES.CALDAV_SYNC, processCaldavSyncJob, {
+    connection: redisConnection,
+    concurrency: 3, // Limit concurrent CalDAV operations
+  });
 
   worker.on("completed", (job) => {
     log.debug({ jobId: job.id }, "CalDAV sync job completed");
@@ -224,4 +213,3 @@ export async function stopCaldavSyncWorker(): Promise<void> {
     log.info("CalDAV sync worker stopped");
   }
 }
-

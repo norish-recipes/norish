@@ -1,6 +1,7 @@
 import type { TypedEmitter } from "./emitter";
 import type { PermissionLevel } from "@/server/db/zodSchemas/server-config";
 
+import { authedProcedure } from "./middleware";
 import { trpcLogger as log } from "@/server/logger";
 
 /**
@@ -134,4 +135,25 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
     emitter.createSubscription(broadcastEventName, signal),
     emitter.createSubscription(userEventName, signal),
   ];
+}
+
+export function createPolicyAwareSubscription<
+  TEvents extends Record<string, unknown>,
+  K extends keyof TEvents & string,
+>(emitter: TypedEmitter<TEvents>, eventName: K, logMessage: string) {
+  return authedProcedure.subscription(async function* ({ ctx, signal }) {
+    const policyCtx = { userId: ctx.user.id, householdKey: ctx.householdKey };
+
+    log.debug({ userId: ctx.user.id, householdKey: ctx.householdKey }, `Subscribed to ${logMessage}`);
+
+    try {
+      const iterables = createPolicyAwareIterables(emitter, policyCtx, eventName, signal);
+
+      for await (const data of mergeAsyncIterables(iterables, signal)) {
+        yield data as TEvents[K];
+      }
+    } finally {
+      log.debug({ userId: ctx.user.id, householdKey: ctx.householdKey }, `Unsubscribed from ${logMessage}`);
+    }
+  });
 }

@@ -16,15 +16,20 @@ import { formatMinutesHM } from "@/lib/helpers";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import HeartButton from "@/components/shared/heart-button";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
+import StarRating from "@/components/shared/star-rating";
 import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
+import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 
 export default function RecipePageMobile() {
   var { recipe } = useRecipeContextRequired();
   const { isFavorite: checkFavorite } = useFavoritesQuery();
   const { toggleFavorite } = useFavoritesMutation();
+  const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
+  const { rateRecipe, isRating } = useRatingsMutation();
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
+  const handleRateRecipe = (rating: number) => rateRecipe(recipe.id, rating);
 
   return (
     <div className="flex w-full flex-col">
@@ -59,7 +64,7 @@ export default function RecipePageMobile() {
         )}
 
         {/* Heart button - bottom right (always visible) */}
-        <div className="absolute bottom-4 right-4 z-50">
+        <div className="absolute right-4 bottom-4 z-50">
           <HeartButton
             isFavorite={isFavorite}
             onToggle={handleToggleFavorite}
@@ -171,6 +176,16 @@ export default function RecipePageMobile() {
 
             <div className="-mx-1">
               <StepsList />
+            </div>
+
+            {/* Rating Section */}
+            <div className="bg-default-100 -mx-1 flex flex-col items-center gap-4 rounded-xl py-6">
+              <p className="text-default-600 font-medium">What did you think of this recipe?</p>
+              <StarRating
+                value={userRating ?? averageRating}
+                onChange={handleRateRecipe}
+                isLoading={isRating || isRatingLoading}
+              />
             </div>
           </div>
         </CardBody>

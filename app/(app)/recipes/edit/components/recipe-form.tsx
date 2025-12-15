@@ -38,7 +38,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
 
   // Use hooks for recipe images and ID reservation
   const { uploadImage, deleteImage, isUploadingImage } = useRecipeImages();
-  const { recipeId, isLoading: isLoadingRecipeId, error: recipeIdError } = useRecipeId(mode, initialData?.id);
+  const {
+    recipeId,
+    isLoading: isLoadingRecipeId,
+    error: recipeIdError,
+  } = useRecipeId(mode, initialData?.id);
 
   // Form state
   const [name, setName] = useState(initialData?.name ?? "");
@@ -397,7 +401,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
 
             <div>
               <div className="mb-1.5 flex items-center gap-1">
-                <span className="text-sm font-medium text-foreground">Description</span>
+                <span className="text-foreground text-sm font-medium">Description</span>
                 <SmartInputHelp />
               </div>
               <SmartTextInput

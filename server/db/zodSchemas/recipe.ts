@@ -34,6 +34,8 @@ export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
 }).extend({
   tags: z.array(TagNameSchema).default([]),
   author: AuthorSchema,
+  averageRating: z.number().nullable().optional(),
+  ratingCount: z.number().optional(),
 });
 
 export const FullRecipeSchema = RecipeSelectBaseSchema.extend({

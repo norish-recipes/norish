@@ -179,10 +179,11 @@ export default function ImageLightbox({
                 {images.map((img, idx) => (
                   <button
                     key={idx}
-                    className={`h-16 w-16 overflow-hidden rounded-lg border-2 transition-all ${idx === currentIndex
-                      ? "border-white opacity-100"
-                      : "border-transparent opacity-60 hover:opacity-80"
-                      }`}
+                    className={`h-16 w-16 overflow-hidden rounded-lg border-2 transition-all ${
+                      idx === currentIndex
+                        ? "border-white opacity-100"
+                        : "border-transparent opacity-60 hover:opacity-80"
+                    }`}
                     type="button"
                     onClick={() => {
                       setDirection(idx > currentIndex ? 1 : -1);

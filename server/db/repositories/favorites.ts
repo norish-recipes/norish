@@ -65,9 +65,7 @@ export async function getFavoritesByRecipeIds(
   const results = await db
     .select({ recipeId: recipeFavorites.recipeId })
     .from(recipeFavorites)
-    .where(
-      and(eq(recipeFavorites.userId, userId), inArray(recipeFavorites.recipeId, recipeIds))
-    );
+    .where(and(eq(recipeFavorites.userId, userId), inArray(recipeFavorites.recipeId, recipeIds)));
 
   return new Set(results.map((r) => r.recipeId));
 }

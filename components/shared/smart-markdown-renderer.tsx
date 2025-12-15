@@ -27,12 +27,12 @@ export default function SmartMarkdownRenderer({
         components={{
           // Style headings distinctly (matching card headers)
           h1: ({ children }) => (
-            <span className="block text-lg font-semibold text-foreground mt-2 mb-1">
+            <span className="text-foreground mt-2 mb-1 block text-lg font-semibold">
               {children}
             </span>
           ),
           h2: ({ children }) => (
-            <span className="block text-lg font-semibold text-foreground mt-2 mb-1">
+            <span className="text-foreground mt-2 mb-1 block text-lg font-semibold">
               {children}
             </span>
           ),
@@ -40,7 +40,7 @@ export default function SmartMarkdownRenderer({
             if (href?.startsWith("/recipes/")) {
               if (disableLinks) {
                 return (
-                  <span className="font-medium text-foreground underline decoration-default-400 underline-offset-2">
+                  <span className="text-foreground decoration-default-400 font-medium underline underline-offset-2">
                     {children}
                   </span>
                 );
@@ -48,7 +48,7 @@ export default function SmartMarkdownRenderer({
               return (
                 <Link
                   href={href}
-                  className="font-medium text-foreground underline decoration-default-400 underline-offset-2 hover:decoration-default-600 transition-colors"
+                  className="text-foreground decoration-default-400 hover:decoration-default-600 font-medium underline underline-offset-2 transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {children}
@@ -58,7 +58,7 @@ export default function SmartMarkdownRenderer({
 
             if (disableLinks) {
               return (
-                <span className="text-foreground underline decoration-default-400 underline-offset-2">
+                <span className="text-foreground decoration-default-400 underline underline-offset-2">
                   {children}
                 </span>
               );
@@ -69,7 +69,7 @@ export default function SmartMarkdownRenderer({
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground underline decoration-default-400 underline-offset-2 hover:decoration-default-600 transition-colors"
+                className="text-foreground decoration-default-400 hover:decoration-default-600 underline underline-offset-2 transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
                 {children}

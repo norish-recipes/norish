@@ -12,12 +12,13 @@ import { householdUsers } from "./household-users";
 import { users } from "./auth";
 import { groceries } from "./groceries";
 import { serverConfig } from "./server-config";
-import { recipeFavorites } from "./recipe-favorites";
+import { recipeRatings } from "./recipe-ratings";
 
 export const recipesRelations = relations(recipes, ({ many }) => ({
   ingredients: many(recipeIngredients),
   recipeTags: many(recipeTags),
   steps: many(steps),
+  ratings: many(recipeRatings),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -98,13 +99,13 @@ export const serverConfigRelations = relations(serverConfig, ({ one }) => ({
   }),
 }));
 
-export const recipeFavoritesRelations = relations(recipeFavorites, ({ one }) => ({
+export const recipeRatingsRelations = relations(recipeRatings, ({ one }) => ({
   user: one(users, {
-    fields: [recipeFavorites.userId],
+    fields: [recipeRatings.userId],
     references: [users.id],
   }),
   recipe: one(recipes, {
-    fields: [recipeFavorites.recipeId],
+    fields: [recipeRatings.recipeId],
     references: [recipes.id],
   }),
 }));

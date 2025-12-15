@@ -33,6 +33,7 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
   const [groceriesOpen, setGroceriesOpen] = useState(false);
 
   const isFavorite = checkFavorite(recipe.id);
+  const averageRating = recipe.averageRating ?? null;
 
   const handleNavigate = useCallback(() => {
     if (recipe.id && !open && !mobileSearchOpen) {
@@ -128,7 +129,7 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
                 onDoubleTap={handleToggleFavorite}
                 onSingleTap={handleNavigate}
                 disabled={open || mobileSearchOpen}
-                className="relative aspect-[4/3] w-full overflow-hidden cursor-pointer"
+                className="relative aspect-[4/3] w-full cursor-pointer overflow-hidden"
               >
                 {/* Image */}
                 <div className="pointer-events-none absolute inset-0 z-0">
@@ -155,6 +156,7 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
                   timeLabel={timeLabel}
                   isFavorite={isFavorite}
                   onToggleFavorite={handleToggleFavorite}
+                  averageRating={averageRating}
                   onOptionsPress={() => {
                     if (rowRef.current?.isOpen()) rowRef.current?.closeRow();
                     else rowRef.current?.openRow();

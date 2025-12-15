@@ -12,3 +12,4 @@ export * from "./recurring-groceries";
 export * from "./user";
 export * from "./server-config";
 export * from "./favorites";
+export * from "./ratings";

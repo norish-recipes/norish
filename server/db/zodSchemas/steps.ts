@@ -33,4 +33,3 @@ export const StepSelectWithoutId = StepSelectBaseSchema.omit({
 }).extend({
   order: z.coerce.number(),
 });
-

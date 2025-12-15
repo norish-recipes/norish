@@ -17,13 +17,10 @@ export interface ScheduledTaskJobData {
   taskType: ScheduledTaskType;
 }
 
-export const scheduledTasksQueue = new Queue<ScheduledTaskJobData>(
-  QUEUE_NAMES.SCHEDULED_TASKS,
-  {
-    connection: redisConnection,
-    defaultJobOptions: scheduledTasksJobOptions,
-  }
-);
+export const scheduledTasksQueue = new Queue<ScheduledTaskJobData>(QUEUE_NAMES.SCHEDULED_TASKS, {
+  connection: redisConnection,
+  defaultJobOptions: scheduledTasksJobOptions,
+});
 
 /**
  * Initialize repeatable jobs for all scheduled tasks.

@@ -36,10 +36,7 @@ const getPending = authedProcedure.query(async ({ ctx }) => {
     addedAt: job.timestamp,
   }));
 
-  log.debug(
-    { userId: ctx.user.id, count: pendingRecipes.length },
-    "Found pending recipe imports"
-  );
+  log.debug({ userId: ctx.user.id, count: pendingRecipes.length }, "Found pending recipe imports");
 
   return pendingRecipes;
 });

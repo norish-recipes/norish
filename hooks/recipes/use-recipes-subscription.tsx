@@ -72,17 +72,17 @@ export function useRecipesSubscription() {
           recipes: page.recipes.map((r) =>
             r.id === updatedRecipe.id
               ? {
-                ...r,
-                name: updatedRecipe.name,
-                description: updatedRecipe.description,
-                image: updatedRecipe.image,
-                servings: updatedRecipe.servings,
-                prepMinutes: updatedRecipe.prepMinutes,
-                cookMinutes: updatedRecipe.cookMinutes,
-                totalMinutes: updatedRecipe.totalMinutes,
-                tags: updatedRecipe.tags,
-                updatedAt: updatedRecipe.updatedAt,
-              }
+                  ...r,
+                  name: updatedRecipe.name,
+                  description: updatedRecipe.description,
+                  image: updatedRecipe.image,
+                  servings: updatedRecipe.servings,
+                  prepMinutes: updatedRecipe.prepMinutes,
+                  cookMinutes: updatedRecipe.cookMinutes,
+                  totalMinutes: updatedRecipe.totalMinutes,
+                  tags: updatedRecipe.tags,
+                  updatedAt: updatedRecipe.updatedAt,
+                }
               : r
           ),
         })),

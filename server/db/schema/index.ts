@@ -18,3 +18,4 @@ export * from "./caldav-sync-status";
 export * from "./server-config";
 export * from "./api-logs";
 export * from "./recipe-favorites";
+export * from "./recipe-ratings";

@@ -130,7 +130,10 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
         try {
           await queueDeleteJob(userId, id);
         } catch (error) {
-          log.error({ err: error, id, userId }, "Failed to queue CalDAV delete for unplanned recipe");
+          log.error(
+            { err: error, id, userId },
+            "Failed to queue CalDAV delete for unplanned recipe"
+          );
         }
       }
     ),
@@ -236,7 +239,10 @@ async function startRecipeSubscriptions(signal: AbortSignal): Promise<void> {
       const recipeId = recipe.id;
       const newName = recipe.name;
 
-      log.debug({ recipeId, newName }, "Recipe name updated - queuing CalDAV sync for all instances");
+      log.debug(
+        { recipeId, newName },
+        "Recipe name updated - queuing CalDAV sync for all instances"
+      );
 
       try {
         const plannedInstances = await getPlannedRecipesByRecipeId(recipeId);
@@ -362,7 +368,8 @@ export async function retryFailedSyncs(userId: string): Promise<{
   totalRetried: number;
   totalFailed: number;
 }> {
-  const { getPendingOrFailedSyncStatuses } = await import("@/server/db/repositories/caldav-sync-status");
+  const { getPendingOrFailedSyncStatuses } =
+    await import("@/server/db/repositories/caldav-sync-status");
   const { getPlannedRecipeViewById } = await import("@/server/db/repositories/planned-recipe");
   const { getNoteViewById } = await import("@/server/db/repositories/notes");
   const { getRecipeFull } = await import("@/server/db/repositories/recipes");
@@ -432,4 +439,3 @@ export async function retryFailedSyncs(userId: string): Promise<{
     throw error;
   }
 }
-

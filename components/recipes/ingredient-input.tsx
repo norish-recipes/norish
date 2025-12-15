@@ -189,7 +189,9 @@ export default function IngredientInput({
                   placeholder={index === 0 ? "e.g., 2 cups flour" : ""}
                   value={value}
                   onBlur={() => handleBlur(index)}
-                  onKeyDown={(e) => handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)}
+                  onKeyDown={(e) =>
+                    handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)
+                  }
                   onValueChange={(v) => handleInputChange(index, v)}
                 />
               </div>

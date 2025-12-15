@@ -7,7 +7,7 @@ import {
   ClockIcon,
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/16/solid";
-import { Card, CardBody, CardHeader, Chip, Divider } from "@heroui/react";
+import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -26,16 +26,21 @@ import ImageLightbox from "@/components/shared/image-lightbox";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import HeartButton from "@/components/shared/heart-button";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
+import StarRating from "@/components/shared/star-rating";
 import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
+import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 
 export default function RecipePageDesktop() {
   var { recipe } = useRecipeContextRequired();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const { isFavorite: checkFavorite } = useFavoritesQuery();
   const { toggleFavorite } = useFavoritesMutation();
+  const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
+  const { rateRecipe, isRating } = useRatingsMutation();
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
+  const handleRateRecipe = (rating: number) => rateRecipe(recipe.id, rating);
 
   return (
     <div className="hidden flex-col space-y-6 px-6 pb-10 md:flex">
@@ -56,7 +61,7 @@ export default function RecipePageDesktop() {
               {/* Title and Actions */}
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold leading-tight">
+                  <h1 className="text-2xl leading-tight font-bold">
                     {recipe.name}
                     {recipe.url && (
                       <a
@@ -184,23 +189,30 @@ export default function RecipePageDesktop() {
               <h2 className="text-lg font-semibold">Steps</h2>
               <WakeLockToggle />
             </CardHeader>
-            <CardBody className="px-3 pt-2 pb-6">
+            <CardBody className="px-3 pt-2 pb-0">
               <StepsList />
             </CardBody>
+
+            {/* Rating Section */}
+            <div className="bg-default-100 mx-3 mb-3 mt-4 flex flex-col items-center gap-4 rounded-xl py-6">
+              <p className="text-default-600 font-medium">What did you think of this recipe?</p>
+              <StarRating
+                value={userRating ?? averageRating}
+                onChange={handleRateRecipe}
+                isLoading={isRating || isRatingLoading}
+              />
+            </div>
           </Card>
         </div>
       </div>
 
-      {
-        recipe.image && (
-          <ImageLightbox
-            images={[{ src: recipe.image, alt: recipe.name ?? "Recipe image" }]}
-            isOpen={lightboxOpen}
-            onClose={() => setLightboxOpen(false)}
-          />
-        )
-      }
+      {recipe.image && (
+        <ImageLightbox
+          images={[{ src: recipe.image, alt: recipe.name ?? "Recipe image" }]}
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }
-

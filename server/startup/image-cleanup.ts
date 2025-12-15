@@ -270,4 +270,3 @@ export async function cleanupOrphanedStepImages(): Promise<{ deleted: number; er
 
   return { deleted, errors };
 }
-

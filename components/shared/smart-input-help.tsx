@@ -9,7 +9,7 @@ export default function SmartInputHelp() {
       <PopoverTrigger>
         <button
           type="button"
-          className="inline-flex items-center justify-center h-5 w-5 rounded-full text-default-400 hover:text-default-600 hover:bg-default-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="text-default-400 hover:text-default-600 hover:bg-default-100 focus:ring-primary/50 inline-flex h-5 w-5 items-center justify-center rounded-full transition-colors focus:ring-2 focus:outline-none"
           aria-label="Formatting help"
         >
           <QuestionMarkCircleIcon className="h-4 w-4" />
@@ -17,12 +17,10 @@ export default function SmartInputHelp() {
       </PopoverTrigger>
       <PopoverContent className="max-w-xs">
         <div className="px-1 py-2">
-          <p className="text-sm font-medium text-foreground mb-2">
-            Formatting Tips
-          </p>
-          <ul className="space-y-2 text-sm text-default-600">
+          <p className="text-foreground mb-2 text-sm font-medium">Formatting Tips</p>
+          <ul className="text-default-600 space-y-2 text-sm">
             <li className="flex items-start gap-2">
-              <code className="bg-default-100 px-1.5 py-0.5 rounded text-xs font-mono text-primary">
+              <code className="bg-default-100 text-primary rounded px-1.5 py-0.5 font-mono text-xs">
                 #
               </code>
               <span>
@@ -30,7 +28,7 @@ export default function SmartInputHelp() {
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <code className="bg-default-100 px-1.5 py-0.5 rounded text-xs font-mono text-primary">
+              <code className="bg-default-100 text-primary rounded px-1.5 py-0.5 font-mono text-xs">
                 /
               </code>
               <span>

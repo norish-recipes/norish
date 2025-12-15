@@ -14,13 +14,10 @@ const log = createLogger("queue:recipe-import");
 /**
  * Recipe import queue instance
  */
-export const recipeImportQueue = new Queue<RecipeImportJobData>(
-  QUEUE_NAMES.RECIPE_IMPORT,
-  {
-    connection: redisConnection,
-    defaultJobOptions: recipeImportJobOptions,
-  }
-);
+export const recipeImportQueue = new Queue<RecipeImportJobData>(QUEUE_NAMES.RECIPE_IMPORT, {
+  connection: redisConnection,
+  defaultJobOptions: recipeImportJobOptions,
+});
 
 /**
  * Add a recipe import job to the queue.
@@ -29,16 +26,11 @@ export const recipeImportQueue = new Queue<RecipeImportJobData>(
  *
  * @returns Object with status and either job or existingRecipeId
  */
-export async function addImportJob(
-  data: RecipeImportJobData
-): Promise<AddImportJobResult> {
+export async function addImportJob(data: RecipeImportJobData): Promise<AddImportJobResult> {
   const policy = await getRecipePermissionPolicy();
   const jobId = generateJobId(data.url, data.userId, data.householdKey, policy.view);
 
-  log.debug(
-    { url: data.url, jobId, policy: policy.view },
-    "Attempting to add import job"
-  );
+  log.debug({ url: data.url, jobId, policy: policy.view }, "Attempting to add import job");
 
   const existingCheck = await recipeExistsByUrlForPolicy(
     data.url,

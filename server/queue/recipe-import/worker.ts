@@ -135,14 +135,10 @@ export function startRecipeImportWorker(): void {
     return;
   }
 
-  worker = new Worker<RecipeImportJobData>(
-    QUEUE_NAMES.RECIPE_IMPORT,
-    processImportJob,
-    {
-      connection: redisConnection,
-      concurrency: 5, // I am not sure if this is a good value
-    }
-  );
+  worker = new Worker<RecipeImportJobData>(QUEUE_NAMES.RECIPE_IMPORT, processImportJob, {
+    connection: redisConnection,
+    concurrency: 5, // I am not sure if this is a good value
+  });
 
   worker.on("completed", (job) => {
     log.debug({ jobId: job.id }, "Recipe import job completed");

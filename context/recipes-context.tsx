@@ -8,6 +8,7 @@ import { RecipeDashboardDTO, FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@/
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useRecipesQuery, useRecipesMutations, useRecipesSubscription } from "@/hooks/recipes";
 import { useFavoritesQuery } from "@/hooks/favorites";
+import { useRatingsSubscription } from "@/hooks/ratings";
 
 type Ctx = {
   // Data
@@ -45,8 +46,15 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
     [filters]
   );
 
-  const { recipes: allRecipes, total: serverTotal, isLoading, hasMore, loadMore, pendingRecipeIds, invalidate } =
-    useRecipesQuery(queryFilters);
+  const {
+    recipes: allRecipes,
+    total: serverTotal,
+    isLoading,
+    hasMore,
+    loadMore,
+    pendingRecipeIds,
+    invalidate,
+  } = useRecipesQuery(queryFilters);
 
   const { favoriteIds, isLoading: isFavoritesLoading } = useFavoritesQuery();
 
@@ -66,8 +74,9 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
     deleteRecipe,
   } = useRecipesMutations();
 
-  // Subscribe to recipe events
+  // Subscribe to recipe and rating events
   useRecipesSubscription();
+  useRatingsSubscription();
 
   const importRecipe = useCallback(
     (url: string): void => {
@@ -117,6 +126,7 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
       recipes,
       total,
       isLoading,
+      isFavoritesLoading,
       hasMore,
       pendingRecipeIds,
       loadMore,

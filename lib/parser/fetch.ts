@@ -63,24 +63,32 @@ export async function fetchViaPlaywright(targetUrl: string): Promise<string> {
     });
 
     const title = await page.title();
-    const hasChallengeElement = await page.locator("#challenge-running").count() > 0;
+    const hasChallengeElement = (await page.locator("#challenge-running").count()) > 0;
     const isChallenging = title.includes("Just a moment") || hasChallengeElement;
 
     if (isChallenging) {
       log.debug({ url: targetUrl }, "Cloudflare challenge detected, waiting for resolution");
-      await page.waitForFunction(() => !document.title.includes("Just a moment"), { timeout: 15000 }).catch(() => { });
-      await page.waitForLoadState("networkidle").catch(() => { });
+      await page
+        .waitForFunction(() => !document.title.includes("Just a moment"), { timeout: 15000 })
+        .catch(() => {});
+      await page.waitForLoadState("networkidle").catch(() => {});
     }
 
     try {
       await Promise.race([
         page.locator('script[type="application/ld+json"]').first().waitFor({ timeout: 5000 }),
         page.locator('[itemtype*="schema.org"]').first().waitFor({ timeout: 5000 }),
-        page.locator('main, article, [role="main"], .content, #content').first().waitFor({ timeout: 5000 }),
+        page
+          .locator('main, article, [role="main"], .content, #content')
+          .first()
+          .waitFor({ timeout: 5000 }),
       ]);
     } catch {
       // Timeout is acceptable - proceed with whatever content we have
-      log.debug({ url: targetUrl }, "Recipe content selectors not found within timeout, proceeding anyway");
+      log.debug(
+        { url: targetUrl },
+        "Recipe content selectors not found within timeout, proceeding anyway"
+      );
     }
 
     const content = await page.content();

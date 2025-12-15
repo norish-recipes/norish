@@ -45,7 +45,12 @@ export default function StepInput({
 
   // Initialize from steps prop
   useEffect(() => {
-    if (steps.length > 0 && inputs.length === 1 && inputs[0].text === "" && inputs[0].images.length === 0) {
+    if (
+      steps.length > 0 &&
+      inputs.length === 1 &&
+      inputs[0].text === "" &&
+      inputs[0].images.length === 0
+    ) {
       setInputs([
         ...steps.map((s) => ({
           text: s.step,
@@ -118,7 +123,11 @@ export default function StepInput({
   const handleBlur = useCallback(
     (index: number) => {
       // Auto-remove empty rows on blur (except the last one)
-      if (!inputs[index].text.trim() && inputs[index].images.length === 0 && index < inputs.length - 1) {
+      if (
+        !inputs[index].text.trim() &&
+        inputs[index].images.length === 0 &&
+        index < inputs.length - 1
+      ) {
         const updated = inputs.filter((_, i) => i !== index);
         if (updated.length === 0) updated.push({ text: "", images: [] });
         setInputs(updated);
@@ -226,7 +235,9 @@ export default function StepInput({
               <div className="flex flex-1 flex-col gap-2">
                 <SmartTextInput
                   minRows={2}
-                  placeholder={index === 0 ? `Step ${index + 1}: Describe the step...` : `Step ${index + 1}`}
+                  placeholder={
+                    index === 0 ? `Step ${index + 1}: Describe the step...` : `Step ${index + 1}`
+                  }
                   value={item.text}
                   onBlur={() => handleBlur(index)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
@@ -237,10 +248,7 @@ export default function StepInput({
                 {item.images.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {item.images.map((img, imgIndex) => (
-                      <div
-                        key={imgIndex}
-                        className="relative h-18 w-18 md:h-20 md:w-20"
-                      >
+                      <div key={imgIndex} className="relative h-18 w-18 md:h-20 md:w-20">
                         <Image
                           alt={`Step ${index + 1} image ${imgIndex + 1}`}
                           className="h-14 w-14 rounded-lg object-cover md:h-16 md:w-16"
@@ -293,12 +301,7 @@ export default function StepInput({
 
                 {/* Remove button */}
                 {inputs.length > 1 && (item.text || item.images.length > 0) && (
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    variant="light"
-                    onPress={() => handleRemove(index)}
-                  >
+                  <Button isIconOnly size="sm" variant="light" onPress={() => handleRemove(index)}>
                     <XMarkIcon className="h-4 w-4" />
                   </Button>
                 )}

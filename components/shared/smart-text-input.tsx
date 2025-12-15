@@ -53,7 +53,8 @@ export default function SmartTextInput({
 
       if (lastSlashIndex !== -1) {
         const charBeforeSlash = lastSlashIndex > 0 ? textBeforeCursor[lastSlashIndex - 1] : " ";
-        const isValidSlash = charBeforeSlash === " " || charBeforeSlash === "\n" || lastSlashIndex === 0;
+        const isValidSlash =
+          charBeforeSlash === " " || charBeforeSlash === "\n" || lastSlashIndex === 0;
 
         if (isValidSlash) {
           const query = textBeforeCursor.slice(lastSlashIndex + 1);
@@ -129,8 +130,9 @@ export default function SmartTextInput({
 
       {showAutocomplete && (
         <div
-          className={`absolute left-0 right-0 z-50 max-h-64 overflow-auto rounded-xl bg-content1 shadow-lg ${openAbove ? "bottom-full mb-1" : "top-full mt-1"
-            }`}
+          className={`bg-content1 absolute right-0 left-0 z-50 max-h-64 overflow-auto rounded-xl shadow-lg ${
+            openAbove ? "bottom-full mb-1" : "top-full mt-1"
+          }`}
         >
           {isLoading ? (
             <div className="flex items-center justify-center py-6">
@@ -161,7 +163,7 @@ export default function SmartTextInput({
               )}
             </Listbox>
           ) : autocompleteQuery.length >= 1 ? (
-            <div className="px-4 py-3 text-sm text-default-500">No recipes found</div>
+            <div className="text-default-500 px-4 py-3 text-sm">No recipes found</div>
           ) : null}
         </div>
       )}

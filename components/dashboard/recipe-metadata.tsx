@@ -1,6 +1,11 @@
 "use client";
 
-import { ClockIcon, UserGroupIcon, EllipsisHorizontalIcon } from "@heroicons/react/16/solid";
+import {
+  ClockIcon,
+  UserGroupIcon,
+  EllipsisHorizontalIcon,
+  StarIcon,
+} from "@heroicons/react/16/solid";
 import { Chip, Button } from "@heroui/react";
 
 import HeartButton from "@/components/shared/heart-button";
@@ -12,6 +17,7 @@ interface RecipeMetadataProps {
   onOptionsPress?: () => void;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
+  averageRating?: number | null;
 }
 
 export default function RecipeMetadata({
@@ -20,6 +26,7 @@ export default function RecipeMetadata({
   onOptionsPress,
   isFavorite = false,
   onToggleFavorite,
+  averageRating,
 }: RecipeMetadataProps) {
   return (
     <>
@@ -38,6 +45,18 @@ export default function RecipeMetadata({
 
       {/* Right side metadata */}
       <div className="pointer-events-auto absolute top-2 right-2 z-20 flex items-center gap-2">
+        {typeof averageRating === "number" && averageRating > 0 && (
+          <Chip
+            className={`px-2 text-[11px] text-white ${cssGlassBackdropChip}`}
+            radius="full"
+            size="sm"
+            startContent={<StarIcon className="text-warning h-4 w-4" />}
+            variant="flat"
+          >
+            {averageRating.toFixed(1)}
+          </Chip>
+        )}
+
         {timeLabel && (
           <Chip
             className={`px-2 text-[11px] text-white ${cssGlassBackdropChip}`}

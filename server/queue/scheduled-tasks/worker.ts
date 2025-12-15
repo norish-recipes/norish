@@ -91,14 +91,10 @@ export function startScheduledTasksWorker(): void {
     return;
   }
 
-  worker = new Worker<ScheduledTaskJobData>(
-    QUEUE_NAMES.SCHEDULED_TASKS,
-    processScheduledTask,
-    {
-      connection: redisConnection,
-      concurrency: 1, // One task at a time to avoid resource contention.
-    }
-  );
+  worker = new Worker<ScheduledTaskJobData>(QUEUE_NAMES.SCHEDULED_TASKS, processScheduledTask, {
+    connection: redisConnection,
+    concurrency: 1, // One task at a time to avoid resource contention.
+  });
 
   worker.on("completed", (job) => {
     log.debug({ jobId: job.id, taskType: job.data.taskType }, "Scheduled task completed");
