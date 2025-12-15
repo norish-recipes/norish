@@ -42,9 +42,21 @@ function MiniGroceriesContent({
 
   useEffect(() => {
     if (ingredients.length > 0) {
-      setSelectedIds(ingredients.map((i) => i.ingredientId!).filter(Boolean));
+      // Filter out headings and recipe links
+      const filteredIngredients = ingredients.filter((i) => {
+        const name = i.ingredientName?.trim() ?? "";
+        // Skip headings 
+        if (name.startsWith("#")) return false;
+        // Skip recipe links
+        if (name.includes("(id:") || name.includes("/recipe:")) return false;
+        // Skip empty ingredient names
+        if (!name || !i.ingredientId) return false;
+        return true;
+      });
+
+      setSelectedIds(filteredIngredients.map((i) => i.ingredientId!).filter(Boolean));
       setLocalIngredients(
-        ingredients.map((i) => ({
+        filteredIngredients.map((i) => ({
           ingredientId: i.ingredientId!,
           ingredientName: i.ingredientName,
           amount: i.amount?.toString() ?? null,
@@ -77,11 +89,11 @@ function MiniGroceriesContent({
         prev.map((i) =>
           i.ingredientId === id
             ? {
-                ...i,
-                ingredientName: parsed.description,
-                amount: parsed.quantity?.toString() ?? null,
-                unit: parsed.unitOfMeasure ?? null,
-              }
+              ...i,
+              ingredientName: parsed.description,
+              amount: parsed.quantity?.toString() ?? null,
+              unit: parsed.unitOfMeasure ?? null,
+            }
             : i
         )
       );

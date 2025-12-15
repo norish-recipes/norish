@@ -20,6 +20,7 @@ import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-conver
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
+import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
 import ImageLightbox from "@/components/shared/image-lightbox";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
@@ -31,19 +32,109 @@ export default function RecipePageDesktop() {
   return (
     <div className="hidden flex-col space-y-6 px-6 pb-10 md:flex">
       {/* Back link */}
-      <div className="flex items-center justify-between">
-        <div className="w-fit">
-          <Link className="text-default-500 text-sm hover:underline" href="/">
-            ← Back to recipes
-          </Link>
-        </div>
+      <div className="w-fit">
+        <Link className="text-default-500 text-sm hover:underline" href="/">
+          ← Back to recipes
+        </Link>
       </div>
 
-      {/* Header section */}
-      <Card className="bg-content1 overflow-hidden rounded-2xl shadow-md">
-        <div className="grid grid-cols-2">
-          {/* Image Section */}
-          <div className="bg-default-200 h-100% relative min-h-[400px] overflow-hidden">
+      {/* Main content grid: 2 columns */}
+      <div className="grid grid-cols-5 gap-6">
+        {/* LEFT column: Info card + Ingredients card (stacked) */}
+        <div className="col-span-2 flex flex-col gap-6">
+          {/* Info Card */}
+          <Card className="bg-content1 rounded-2xl shadow-md">
+            <CardBody className="space-y-4 p-6">
+              {/* Title and Actions */}
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold leading-tight">
+                    {recipe.name}
+                    {recipe.url && (
+                      <a
+                        className="ml-2 inline-block align-middle"
+                        href={recipe.url}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                        title="View original recipe"
+                      >
+                        <ArrowTopRightOnSquareIcon className="text-default-400 hover:text-primary inline h-4 w-4" />
+                      </a>
+                    )}
+                  </h1>
+                </div>
+                <div className="ml-4 flex-shrink-0">
+                  <ActionsMenu id={recipe.id} />
+                </div>
+              </div>
+
+              {/* Description */}
+              {recipe.description && (
+                <p className="text-default-600 text-sm leading-relaxed">
+                  <SmartMarkdownRenderer text={recipe.description} />
+                </p>
+              )}
+
+              {/* Meta info row */}
+              {(recipe.prepMinutes || recipe.cookMinutes || recipe.totalMinutes !== 0) && (
+                <div className="text-default-500 flex flex-wrap items-center gap-4 text-sm">
+                  {recipe.prepMinutes && recipe.prepMinutes > 0 && (
+                    <span className="flex items-center gap-1">
+                      <WrenchScrewdriverIcon className="h-4 w-4" />
+                      {formatMinutesHM(recipe.prepMinutes)}
+                    </span>
+                  )}
+                  {recipe.cookMinutes && (
+                    <span className="flex items-center gap-1">
+                      <FireIcon className="h-4 w-4" />
+                      {formatMinutesHM(recipe.cookMinutes)}
+                    </span>
+                  )}
+                  {recipe.totalMinutes && recipe.totalMinutes !== 0 && (
+                    <span className="flex items-center gap-1">
+                      <ClockIcon className="h-4 w-4" />
+                      {formatMinutesHM(recipe.totalMinutes)}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Tags */}
+              {recipe.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {recipe.tags.map((t: { name: string }) => (
+                    <Chip key={t.name} size="sm" variant="flat">
+                      {t.name}
+                    </Chip>
+                  ))}
+                </div>
+              )}
+            </CardBody>
+          </Card>
+
+          {/* Ingredients Card (separate) */}
+          <Card className="bg-content1 rounded-2xl shadow-md">
+            <CardBody className="space-y-4 p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Ingredients</h2>
+                <div className="flex items-center gap-2">
+                  {recipe.servings && <ServingsControl />}
+                  {recipe.systemUsed && <SystemConvertMenu />}
+                </div>
+              </div>
+
+              <IngredientsList />
+
+              {/* Add to groceries button */}
+              <AddToGroceries recipeId={recipe.id} />
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* RIGHT column: Image + Steps (stacked) */}
+        <div className="col-span-3 flex flex-col gap-6">
+          {/* Hero image */}
+          <div className="bg-default-200 relative min-h-[400px] overflow-hidden rounded-2xl">
             {recipe.image ? (
               <button
                 className="group relative h-full w-full cursor-pointer focus:outline-none"
@@ -57,8 +148,8 @@ export default function RecipePageDesktop() {
                   className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   src={recipe.image}
                 />
-                {/* Gradient overlay for readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent transition-colors group-hover:from-black/40" />
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent transition-colors group-hover:from-black/30" />
                 {/* Hover indicator */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
                   <span className="rounded-full bg-black/50 px-4 py-2 text-sm font-medium text-white">
@@ -80,114 +171,17 @@ export default function RecipePageDesktop() {
             )}
           </div>
 
-          {/* Info Section */}
-          <div className="flex flex-col justify-between p-8">
-            <CardHeader className="flex-col items-start gap-2 px-0 pt-0">
-              <div className="flex w-full items-start justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold">
-                    {recipe.name}
-                    {recipe.url && (
-                      <a
-                        className="ml-2 inline-block align-middle"
-                        href={recipe.url}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                        title="View original recipe"
-                      >
-                        <ArrowTopRightOnSquareIcon className="text-default-400 hover:text-primary inline h-5 w-5" />
-                      </a>
-                    )}
-                  </h1>
-                  {recipe.description && (
-                    <p className="text-default-600 mt-3 max-w-md text-base">
-                      <SmartMarkdownRenderer text={recipe.description} />
-                    </p>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="mt-1 ml-4 flex-shrink-0">
-                  <ActionsMenu id={recipe.id} />
-                </div>
-              </div>
-
-              {/* Tags */}
-              {recipe.tags.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {recipe.tags.map((t: { name: string }) => (
-                    <Chip key={t.name} size="sm" variant="flat">
-                      {t.name}
-                    </Chip>
-                  ))}
-                </div>
-              )}
+          {/* Steps Card (below image in right column) */}
+          <Card className="bg-content1 rounded-2xl shadow-md">
+            <CardHeader className="flex items-center justify-between px-6 pt-6">
+              <h2 className="text-lg font-semibold">Steps</h2>
+              <WakeLockToggle />
             </CardHeader>
-
-            {/* Meta section */}
-            <CardBody className="space-y-6 px-0 pt-6 pb-0">
-              {/* Time info */}
-              {(recipe.prepMinutes || recipe.cookMinutes || recipe.totalMinutes !== 0) && (
-                <div className="text-default-500 flex flex-wrap items-center gap-4 text-sm">
-                  {recipe.prepMinutes && recipe.prepMinutes > 0 && (
-                    <span className="flex items-center gap-1">
-                      <WrenchScrewdriverIcon className="h-4 w-4" /> Prep{" "}
-                      {formatMinutesHM(recipe.prepMinutes)}
-                    </span>
-                  )}
-
-                  {recipe.prepMinutes && recipe.cookMinutes && (
-                    <Divider className="h-4" orientation="vertical" />
-                  )}
-
-                  {recipe.cookMinutes && (
-                    <span className="flex items-center gap-1">
-                      <FireIcon className="h-4 w-4" /> Cook {formatMinutesHM(recipe.cookMinutes)}
-                    </span>
-                  )}
-
-                  {(recipe.cookMinutes || recipe.prepMinutes) && recipe.totalMinutes !== 0 && (
-                    <Divider className="h-4" orientation="vertical" />
-                  )}
-
-                  {recipe.totalMinutes && recipe.totalMinutes !== 0 && (
-                    <span className="flex items-center gap-1">
-                      <ClockIcon className="h-4 w-4" /> Total {formatMinutesHM(recipe.totalMinutes)}
-                    </span>
-                  )}
-                </div>
-              )}
+            <CardBody className="px-3 pt-2 pb-6">
+              <StepsList />
             </CardBody>
-          </div>
+          </Card>
         </div>
-      </Card>
-
-      {/* Content grid */}
-      <div className="grid grid-cols-5 gap-6">
-        {/* Ingredients */}
-        <Card className="bg-content1 col-span-2">
-          <CardHeader className="flex items-center justify-between px-5 pt-5">
-            <h2 className="text-lg font-semibold">Ingredients</h2>
-            <div className="flex items-center gap-2">
-              {recipe.servings && <ServingsControl />}
-              {recipe.systemUsed && <SystemConvertMenu />}
-            </div>
-          </CardHeader>
-          <CardBody className="px-2 pt-2 pb-4">
-            <IngredientsList />
-          </CardBody>
-        </Card>
-
-        {/* Steps */}
-        <Card className="bg-content1 col-span-3">
-          <CardHeader className="flex items-center justify-between px-5 pt-5">
-            <h2 className="text-lg font-semibold">Steps</h2>
-            <WakeLockToggle />
-          </CardHeader>
-          <CardBody className="px-2 pt-2 pb-4">
-            <StepsList />
-          </CardBody>
-        </Card>
       </div>
 
       {recipe.image && (

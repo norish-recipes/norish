@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@heroui/react";
-import { ShoppingCartIcon } from "@heroicons/react/16/solid";
+import { PlusIcon } from "@heroicons/react/16/solid";
 
 import { MiniGroceries } from "@/components/Panel/consumers";
 
@@ -16,14 +16,12 @@ export default function AddToGroceries({ recipeId }: Props) {
   return (
     <>
       <Button
-        isIconOnly
-        aria-label="Add to shopping list"
-        className="text-default-500"
-        size="sm"
-        variant="light"
+        className="w-full"
+        color="primary"
+        startContent={<PlusIcon className="h-5 w-5" />}
         onPress={() => setOpen(true)}
       >
-        <ShoppingCartIcon className="h-5 w-5" />
+        Add to groceries
       </Button>
       <MiniGroceries open={open} recipeId={recipeId} onOpenChange={setOpen} />
     </>
