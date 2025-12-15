@@ -14,14 +14,25 @@ import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-conver
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
 import { formatMinutesHM } from "@/lib/helpers";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import HeartButton from "@/components/shared/heart-button";
+import DoubleTapContainer from "@/components/shared/double-tap-container";
+import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 
 export default function RecipePageMobile() {
   var { recipe } = useRecipeContextRequired();
+  const { isFavorite: checkFavorite } = useFavoritesQuery();
+  const { toggleFavorite } = useFavoritesMutation();
+
+  const isFavorite = checkFavorite(recipe.id);
+  const handleToggleFavorite = () => toggleFavorite(recipe.id);
 
   return (
     <div className="flex w-full flex-col">
       {/* Hero Image */}
-      <div className="bg-default-200 relative h-72 w-full overflow-hidden">
+      <DoubleTapContainer
+        onDoubleTap={handleToggleFavorite}
+        className="bg-default-200 relative h-72 w-full overflow-hidden"
+      >
         {recipe.image ? (
           <Image
             fill
@@ -46,7 +57,17 @@ export default function RecipePageMobile() {
             <AuthorChip image={recipe.author.image} name={recipe.author.name} />
           </div>
         )}
-      </div>
+
+        {/* Heart button - bottom right (always visible) */}
+        <div className="absolute bottom-4 right-4 z-50">
+          <HeartButton
+            isFavorite={isFavorite}
+            onToggle={handleToggleFavorite}
+            size="lg"
+            showBackground
+          />
+        </div>
+      </DoubleTapContainer>
 
       {/* Unified Content Card - contains all sections */}
       <Card

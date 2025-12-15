@@ -5,6 +5,7 @@ import {
   ArrowRightIcon,
   CheckIcon,
   ArrowPathIcon,
+  HeartIcon,
 } from "@heroicons/react/16/solid";
 import { Input, Button, Chip } from "@heroui/react";
 import { motion } from "framer-motion";
@@ -28,6 +29,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
   const [localFilterMode, setLocalFilterMode] = useState(filters.filterMode);
   const [localSortMode, setLocalSortMode] = useState(filters.sortMode);
   const [localInput, setLocalInput] = useState(filters.rawInput);
+  const [localFavoritesOnly, setLocalFavoritesOnly] = useState(filters.showFavoritesOnly);
 
   const { tags: allTags, isLoading } = useTagsQuery();
 
@@ -36,6 +38,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
     setLocalFilterMode(filters.filterMode);
     setLocalSortMode(filters.sortMode);
     setLocalInput(filters.rawInput);
+    setLocalFavoritesOnly(filters.showFavoritesOnly);
   }, [filters]);
 
   const toggleTag = useCallback((tag: string) => {
@@ -68,6 +71,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
       filterMode: localFilterMode,
       sortMode: localSortMode,
       rawInput: localInput,
+      showFavoritesOnly: localFavoritesOnly,
     });
 
     close();
@@ -156,6 +160,26 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
         </div>
       </section>
 
+      {/* Favorites */}
+      <section>
+        <h3 className="text-default-500 mb-2 text-[11px] font-medium tracking-wide uppercase">
+          Favorites
+        </h3>
+        <div className="flex gap-2">
+          <Button
+            className="h-9 px-3 text-xs"
+            color={localFavoritesOnly ? "danger" : "default"}
+            radius="full"
+            size="sm"
+            startContent={<HeartIcon className="size-3.5" />}
+            variant={localFavoritesOnly ? "solid" : "flat"}
+            onPress={() => setLocalFavoritesOnly(!localFavoritesOnly)}
+          >
+            Favorites only
+          </Button>
+        </div>
+      </section>
+
       {/* Tags */}
       <section>
         <h3 className="text-default-500 mb-3 text-xs font-medium tracking-wide uppercase">Tags</h3>
@@ -216,6 +240,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
             setLocalFilterMode("AND");
             setLocalSortMode("dateDesc");
             setLocalInput("");
+            setLocalFavoritesOnly(false);
             close();
           }}
         >

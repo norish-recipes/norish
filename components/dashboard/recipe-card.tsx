@@ -2,10 +2,11 @@
 
 import { ShoppingBagIcon, CalendarDaysIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Card, CardBody, Image } from "@heroui/react";
-import NextLink from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
+import DoubleTapContainer from "../shared/double-tap-container";
 
 import RecipeMetadata from "./recipe-metadata";
 import RecipeTags from "./recipe-tags";
@@ -17,15 +18,27 @@ import { formatMinutesHM } from "@/lib/helpers";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useAppStore } from "@/store/useAppStore";
 import { usePermissionsContext } from "@/context/permissions-context";
+import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 
 export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
+  const router = useRouter();
   const rowRef = useRef<SwipeableRowRef>(null);
   const { mobileSearchOpen } = useAppStore((s) => s);
   const { deleteRecipe } = useRecipesContext();
   const { canDeleteRecipe } = usePermissionsContext();
+  const { isFavorite: checkFavorite } = useFavoritesQuery();
+  const { toggleFavorite } = useFavoritesMutation();
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [groceriesOpen, setGroceriesOpen] = useState(false);
+
+  const isFavorite = checkFavorite(recipe.id);
+
+  const handleNavigate = useCallback(() => {
+    if (recipe.id && !open && !mobileSearchOpen) {
+      router.push(`/recipes/${recipe.id}`);
+    }
+  }, [router, recipe.id, open, mobileSearchOpen]);
 
   const totalMinutes =
     recipe.totalMinutes ?? ((recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0) || undefined);
@@ -38,6 +51,10 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
   function canClick() {
     return !open && !mobileSearchOpen;
   }
+
+  const handleToggleFavorite = useCallback(() => {
+    toggleFavorite(recipe.id);
+  }, [toggleFavorite, recipe.id]);
 
   const deleteRecipeButton = useCallback(() => {
     deleteRecipe(recipe.id);
@@ -107,18 +124,12 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
               className="relative w-full bg-transparent shadow-none focus-visible:outline-none"
               radius="none"
             >
-              {canClick() && (
-                <NextLink
-                  aria-label={recipe.name}
-                  className={`peer focus-visible:ring-primary absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${mobileSearchOpen ? "pointer-events-none" : "pointer-events-auto"}`}
-                  href={recipe.id ? `/recipes/${recipe.id}` : "#"}
-                  tabIndex={recipe.id && !mobileSearchOpen ? 0 : -1}
-                >
-                  <span className="sr-only">{recipe.name}</span>
-                </NextLink>
-              )}
-
-              <div className="relative aspect-[4/3] w-full overflow-hidden">
+              <DoubleTapContainer
+                onDoubleTap={handleToggleFavorite}
+                onSingleTap={handleNavigate}
+                disabled={open || mobileSearchOpen}
+                className="relative aspect-[4/3] w-full overflow-hidden cursor-pointer"
+              >
                 {/* Image */}
                 <div className="pointer-events-none absolute inset-0 z-0">
                   {recipe.image ? (
@@ -142,6 +153,8 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
                 <RecipeMetadata
                   servings={servings}
                   timeLabel={timeLabel}
+                  isFavorite={isFavorite}
+                  onToggleFavorite={handleToggleFavorite}
                   onOptionsPress={() => {
                     if (rowRef.current?.isOpen()) rowRef.current?.closeRow();
                     else rowRef.current?.openRow();
@@ -150,7 +163,7 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
 
                 {/* bottom tags */}
                 {allTags.length > 0 && <RecipeTags tags={allTags} />}
-              </div>
+              </DoubleTapContainer>
 
               {/* Body*/}
               <CardBody className="py-3 pr-3 pl-0">

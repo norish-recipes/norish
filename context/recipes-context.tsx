@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { RecipeDashboardDTO, FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@/types";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useRecipesQuery, useRecipesMutations, useRecipesSubscription } from "@/hooks/recipes";
+import { useFavoritesQuery } from "@/hooks/favorites";
 
 type Ctx = {
   // Data
@@ -44,8 +45,19 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
     [filters]
   );
 
-  const { recipes, total, isLoading, hasMore, loadMore, pendingRecipeIds, invalidate } =
+  const { recipes: allRecipes, total: serverTotal, isLoading, hasMore, loadMore, pendingRecipeIds, invalidate } =
     useRecipesQuery(queryFilters);
+
+  const { favoriteIds, isLoading: isFavoritesLoading } = useFavoritesQuery();
+
+  const { recipes, total } = useMemo(() => {
+    if (!filters.showFavoritesOnly) {
+      return { recipes: allRecipes, total: serverTotal };
+    }
+    const favoriteSet = new Set(favoriteIds);
+    const filtered = allRecipes.filter((r) => favoriteSet.has(r.id));
+    return { recipes: filtered, total: filtered.length };
+  }, [allRecipes, serverTotal, filters.showFavoritesOnly, favoriteIds]);
 
   const {
     importRecipe: importRecipeMutation,
@@ -91,7 +103,7 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
     () => ({
       recipes,
       total,
-      isLoading,
+      isLoading: isLoading || isFavoritesLoading,
       hasMore,
       pendingRecipeIds,
       loadMore,

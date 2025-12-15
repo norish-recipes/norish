@@ -13,6 +13,7 @@ export type * from "@/types/dto/caldav-config";
 export type * from "@/types/dto/caldav-sync-status";
 export type * from "@/types/dto/auth";
 export type * from "@/types/dto/queue";
+export type * from "@/types/dto/favorites";
 
 // Export upload types
 export * from "@/types/uploads";

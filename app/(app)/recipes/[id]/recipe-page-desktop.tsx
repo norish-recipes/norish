@@ -24,10 +24,18 @@ import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
 import ImageLightbox from "@/components/shared/image-lightbox";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import HeartButton from "@/components/shared/heart-button";
+import DoubleTapContainer from "@/components/shared/double-tap-container";
+import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 
 export default function RecipePageDesktop() {
   var { recipe } = useRecipeContextRequired();
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const { isFavorite: checkFavorite } = useFavoritesQuery();
+  const { toggleFavorite } = useFavoritesMutation();
+
+  const isFavorite = checkFavorite(recipe.id);
+  const handleToggleFavorite = () => toggleFavorite(recipe.id);
 
   return (
     <div className="hidden flex-col space-y-6 px-6 pb-10 md:flex">
@@ -134,34 +142,33 @@ export default function RecipePageDesktop() {
         {/* RIGHT column: Image + Steps (stacked) */}
         <div className="col-span-3 flex flex-col gap-6">
           {/* Hero image */}
-          <div className="bg-default-200 relative min-h-[400px] overflow-hidden rounded-2xl">
+          <DoubleTapContainer
+            onDoubleTap={handleToggleFavorite}
+            className="bg-default-200 relative min-h-[400px] overflow-hidden rounded-2xl"
+          >
             {recipe.image ? (
-              <button
-                className="group relative h-full w-full cursor-pointer focus:outline-none"
-                type="button"
-                onClick={() => setLightboxOpen(true)}
-              >
-                <Image
-                  fill
-                  unoptimized
-                  alt={recipe.name ?? "Recipe image"}
-                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  src={recipe.image}
-                />
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent transition-colors group-hover:from-black/30" />
-                {/* Hover indicator */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                  <span className="rounded-full bg-black/50 px-4 py-2 text-sm font-medium text-white">
-                    Click to enlarge
-                  </span>
-                </div>
-              </button>
+              <Image
+                fill
+                unoptimized
+                alt={recipe.name ?? "Recipe image"}
+                className="h-full w-full object-cover"
+                src={recipe.image}
+              />
             ) : (
               <div className="text-default-500 flex h-full w-full items-center justify-center">
                 <span className="text-sm font-medium opacity-70">No image available</span>
               </div>
             )}
+
+            {/* Heart button - top right (always visible) */}
+            <div className="absolute top-4 right-4 z-50">
+              <HeartButton
+                isFavorite={isFavorite}
+                onToggle={handleToggleFavorite}
+                size="lg"
+                showBackground
+              />
+            </div>
 
             {/* Author badge */}
             {recipe.author && (
@@ -169,7 +176,7 @@ export default function RecipePageDesktop() {
                 <AuthorChip image={recipe.author.image} name={recipe.author.name} />
               </div>
             )}
-          </div>
+          </DoubleTapContainer>
 
           {/* Steps Card (below image in right column) */}
           <Card className="bg-content1 rounded-2xl shadow-md">
@@ -184,13 +191,15 @@ export default function RecipePageDesktop() {
         </div>
       </div>
 
-      {recipe.image && (
-        <ImageLightbox
-          images={[{ src: recipe.image, alt: recipe.name ?? "Recipe image" }]}
-          isOpen={lightboxOpen}
-          onClose={() => setLightboxOpen(false)}
-        />
-      )}
+      {
+        recipe.image && (
+          <ImageLightbox
+            images={[{ src: recipe.image, alt: recipe.name ?? "Recipe image" }]}
+            isOpen={lightboxOpen}
+            onClose={() => setLightboxOpen(false)}
+          />
+        )
+      }
     </div>
   );
 }

@@ -10,6 +10,7 @@ export type RecipeFilters = {
   searchTags: string[];
   filterMode: FilterMode;
   sortMode: SortOrder;
+  showFavoritesOnly: boolean;
 };
 
 type FiltersCtx = {
@@ -27,6 +28,7 @@ export function RecipesFiltersProvider({ children }: { children: ReactNode }) {
     searchTags: [],
     filterMode: "AND",
     sortMode: "dateDesc",
+    showFavoritesOnly: false,
   });
 
   const setFilters = useCallback((newFilters: Partial<RecipeFilters>) => {
@@ -39,6 +41,7 @@ export function RecipesFiltersProvider({ children }: { children: ReactNode }) {
       searchTags: [],
       filterMode: "AND",
       sortMode: "dateDesc",
+      showFavoritesOnly: false,
     });
   }, []);
 
