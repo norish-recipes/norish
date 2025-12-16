@@ -58,7 +58,7 @@ function MiniRecipesContent({
 
   const handlePlan = useCallback(
     (recipe: RecipeDashboardDTO, slot: Slot) => {
-      planMeal(dateString, slot, recipe.id, recipe.name);
+      planMeal(dateString, slot, recipe.id, recipe.name, recipe.tags.map((t) => t.name));
       close();
     },
     [dateString, close, planMeal]

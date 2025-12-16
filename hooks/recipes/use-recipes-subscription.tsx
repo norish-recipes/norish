@@ -179,6 +179,8 @@ export function useRecipesSubscription() {
         queryClient.invalidateQueries({
           queryKey: [["recipes", "get"], { input: { id: payload.recipe.id }, type: "query" }],
         });
+
+        queryClient.invalidateQueries({ queryKey: [["calendar", "listRecipes"]] });
       },
       onError: (err) => log.error({ err }, "[onUpdated] Error"),
     })

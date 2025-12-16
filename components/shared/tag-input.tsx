@@ -70,10 +70,9 @@ export default function TagInput({
       allTags.forEach((tag) => {
         const tl = tag.toLowerCase();
 
-        // Skip if already seen, selected, or is exact match
+        // Skip if already seen or selected
         if (seenTags.has(tl)) return;
         if (value.some((sel) => sel.toLowerCase() === tl)) return;
-        if (tl === lower) return; // Exact matches don't go in suggestions
 
         // Must contain the word
         if (!tl.includes(lower)) return;
@@ -209,11 +208,10 @@ export default function TagInput({
             {/* Non-matching typed words (potential new tags) */}
             {typedWords.map((word, idx) => {
               const lower = word.toLowerCase();
-              const isExact = exactMatch && lower === exactMatch.toLowerCase();
               const isInSuggestions = suggestions.some((s) => s.toLowerCase().includes(lower));
 
-              // Don't show if it's an exact match (already shown inline) or if it's in suggestions
-              if (isExact || isInSuggestions) return null;
+              // Don't show if it's in suggestions (avoid duplicates)
+              if (isInSuggestions) return null;
 
               return (
                 <motion.button

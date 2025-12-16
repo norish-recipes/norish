@@ -19,7 +19,9 @@ import {
   getApiKeysForUser,
   getUserAllergies,
   updateUserAllergies,
+  getAllergiesForUsers,
 } from "@/server/db";
+import { householdEmitter } from "@/server/trpc/routers/households/emitter";
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { deleteAvatarByFilename } from "@/server/startup/image-cleanup";
 import { UpdateUserAllergiesSchema } from "@/server/db/zodSchemas/user-allergies";
@@ -241,6 +243,16 @@ const setAllergies = authedProcedure
     log.debug({ userId: ctx.user.id, count: input.allergies.length }, "Updating user allergies");
 
     await updateUserAllergies(ctx.user.id, input.allergies);
+
+if (ctx.household) {
+      const userIds = ctx.household.users.map((u) => u.id);
+      const allergiesRows = await getAllergiesForUsers(userIds);
+      const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
+      log.info({ householdId: ctx.household.id, allergies }, "Emitting allergiesUpdated to household");
+      householdEmitter.emitToHousehold(ctx.household.id, "allergiesUpdated", { allergies });
+    } else {
+      log.info({ userId: ctx.user.id }, "No household, skipping allergiesUpdated emit");
+    }
 
     log.info({ userId: ctx.user.id, allergies: input.allergies }, "User allergies updated");
 

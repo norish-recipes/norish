@@ -193,12 +193,11 @@ export function useUserMutations(): UserMutationsResult {
 
         if (result.success) {
           queryClient.setQueryData(allergiesQueryKey, { allergies: result.allergies });
+          // Household and calendar updates are handled via WebSocket subscription (onAllergiesUpdated)
         }
 
         return result;
       } catch (error) {
-        queryClient.invalidateQueries({ queryKey: allergiesQueryKey });
-
         return { success: false, error: String(error) };
       }
     },

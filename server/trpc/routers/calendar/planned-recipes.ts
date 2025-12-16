@@ -34,18 +34,9 @@ const list = authedProcedure.input(PlannedRecipeListSchema).query(async ({ ctx, 
     input.endISO
   );
 
-  // Fetch household allergies
+  // Fetch household allergies as a flat set
   const householdAllergies = await getAllergiesForUsers(ctx.userIds);
-
-  // Build a map of userId to userName for warning messages (use "You" for current user)
-  const userAllergyMap = new Map<string, Set<string>>();
-
-  for (const { userId, tagName } of householdAllergies) {
-    if (!userAllergyMap.has(userId)) {
-      userAllergyMap.set(userId, new Set());
-    }
-    userAllergyMap.get(userId)!.add(tagName.toLowerCase());
-  }
+  const allAllergies = new Set(householdAllergies.map((a) => a.tagName.toLowerCase()));
 
   // Get unique recipe IDs
   const recipeIds = [...new Set(recipes.map((r) => r.recipeId))];
@@ -62,13 +53,11 @@ const list = authedProcedure.input(PlannedRecipeListSchema).query(async ({ ctx, 
   // Compute allergy warnings for each planned recipe
   const recipesWithWarnings = recipes.map((recipe) => {
     const recipeTags = recipeTagsMap.get(recipe.recipeId) || [];
-    const allergyWarnings: { tag: string; userId: string }[] = [];
+    const allergyWarnings: string[] = [];
 
-    for (const [userId, allergies] of userAllergyMap) {
-      for (const allergy of allergies) {
-        if (recipeTags.includes(allergy)) {
-          allergyWarnings.push({ tag: allergy, userId });
-        }
+    for (const tag of recipeTags) {
+      if (allAllergies.has(tag)) {
+        allergyWarnings.push(tag);
       }
     }
 

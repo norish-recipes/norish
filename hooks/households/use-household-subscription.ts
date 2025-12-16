@@ -3,6 +3,7 @@
 import type { HouseholdAdminSettingsDto } from "@/types/dto/household";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
 
 import { useHouseholdQuery } from "./use-household-query";
@@ -14,6 +15,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
  */
 export function useHouseholdSubscription() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { setHouseholdData, invalidate, currentUserId } = useHouseholdQuery();
 
   // onCreated user-scoped: when current user creates or joins a household
@@ -159,6 +161,7 @@ export function useHouseholdSubscription() {
               id: prev.household.id,
               name: prev.household.name,
               users: updatedUsers,
+              allergies: prev.household.allergies,
             },
           };
         });
@@ -190,6 +193,27 @@ export function useHouseholdSubscription() {
             },
           };
         });
+      },
+    })
+  );
+
+  useSubscription(
+    trpc.households.onAllergiesUpdated.subscriptionOptions(undefined, {
+      onData: (payload) => {
+        setHouseholdData((prev) => {
+          if (!prev?.household) return prev;
+
+          return {
+            ...prev,
+            household: {
+              ...prev.household,
+              allergies: payload.allergies,
+            },
+          };
+        });
+
+        // Invalidate calendar to recompute allergy warnings
+        queryClient.invalidateQueries({ queryKey: [["calendar", "listRecipes"]] });
       },
     })
   );

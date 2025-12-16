@@ -19,6 +19,7 @@ import {
   regenerateJoinCode,
   transferHouseholdAdmin,
   isUserHouseholdAdmin,
+  getAllergiesForUsers,
 } from "@/server/db";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
 import {
@@ -35,7 +36,8 @@ import { permissionsEmitter } from "@/server/trpc/routers/permissions/emitter";
  */
 function toHouseholdDto(
   household: Awaited<ReturnType<typeof getHouseholdForUser>>,
-  userId: string
+  userId: string,
+  allergies: string[]
 ): HouseholdSettingsDto | HouseholdAdminSettingsDto | null {
   if (!household) return null;
 
@@ -57,6 +59,7 @@ function toHouseholdDto(
       joinCode: isJoinCodeExpired ? null : household.joinCode,
       joinCodeExpiresAt: isJoinCodeExpired ? null : household.joinCodeExpiresAt,
       users,
+      allergies,
     } as HouseholdAdminSettingsDto;
   }
 
@@ -64,6 +67,7 @@ function toHouseholdDto(
     id: household.id,
     name: household.name,
     users,
+    allergies,
   } as HouseholdSettingsDto;
 }
 
@@ -71,7 +75,10 @@ const get = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting household settings");
 
   const household = await getHouseholdForUser(ctx.user.id);
-  const dto = toHouseholdDto(household, ctx.user.id);
+  const userIds = household?.users.map((u) => u.id) ?? [];
+  const allergiesRows = await getAllergiesForUsers(userIds);
+  const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
+  const dto = toHouseholdDto(household, ctx.user.id, allergies);
 
   log.debug({ userId: ctx.user.id, hasHousehold: !!dto }, "Household settings retrieved");
 
@@ -105,7 +112,10 @@ const create = authedProcedure
 
         // Get full household data with users
         const fullHousehold = await getHouseholdForUser(ctx.user.id);
-        const dto = toHouseholdDto(fullHousehold, ctx.user.id);
+        const userIds = fullHousehold?.users.map((u) => u.id) ?? [];
+        const allergiesRows = await getAllergiesForUsers(userIds);
+        const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
+        const dto = toHouseholdDto(fullHousehold, ctx.user.id, allergies);
 
         // Emit to the user who created the household
         householdEmitter.emitToUser(ctx.user.id, "created", { household: dto! });
@@ -168,7 +178,10 @@ const join = authedProcedure
 
         // Get full household for the joining user
         const fullHousehold = await getHouseholdForUser(ctx.user.id);
-        const dto = toHouseholdDto(fullHousehold, ctx.user.id);
+        const userIds = fullHousehold?.users.map((u) => u.id) ?? [];
+        const allergiesRows = await getAllergiesForUsers(userIds);
+        const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
+        const dto = toHouseholdDto(fullHousehold, ctx.user.id, allergies);
 
         // Emit to the joining user
         householdEmitter.emitToUser(ctx.user.id, "created", { household: dto! });

@@ -135,6 +135,11 @@ export async function attachTagsToRecipeByInputTx(
   recipeId: string,
   tagNames: string[]
 ): Promise<void> {
+  // Delete existing tags for this recipe first
+  await tx.delete(recipeTags).where(eq(recipeTags.recipeId, recipeId));
+
+  if (!tagNames.length) return;
+
   const created = await getOrCreateManyTagsTx(tx, tagNames);
   const ids = created.map((t) => t.id);
 

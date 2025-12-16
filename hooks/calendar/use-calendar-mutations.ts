@@ -5,11 +5,12 @@ import type { Slot, CalendarItemViewDto } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 
 import { useCalendarQuery } from "./use-calendar-query";
+import { useHouseholdContext } from "@/context/household-context";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type CalendarMutationsResult = {
-  createPlannedRecipe: (date: string, slot: Slot, recipeId: string, recipeName: string) => void;
+  createPlannedRecipe: (date: string, slot: Slot, recipeId: string, recipeName: string, recipeTags?: string[]) => void;
   deletePlannedRecipe: (id: string, date: string) => void;
   updatePlannedRecipeDate: (id: string, newDate: string, oldDate: string) => void;
   createNote: (date: string, slot: Slot, title: string) => void;
@@ -27,6 +28,7 @@ export function useCalendarMutations(startISO: string, endISO: string): Calendar
     updateNoteInCache,
     invalidate,
   } = useCalendarQuery(startISO, endISO);
+  const { household } = useHouseholdContext();
 
   const createRecipeMutation = useMutation(trpc.calendar.createRecipe.mutationOptions());
   const deleteRecipeMutation = useMutation(trpc.calendar.deleteRecipe.mutationOptions());
@@ -39,14 +41,40 @@ export function useCalendarMutations(startISO: string, endISO: string): Calendar
     date: string,
     slot: Slot,
     recipeId: string,
-    recipeName: string
+    recipeName: string,
+    recipeTags?: string[]
   ): void => {
+    const allergyWarnings = new Set<string>();
+    if (recipeTags && household?.allergies) {
+      const tagSet = new Set(recipeTags.map(t => t.toLowerCase()));
+
+      household.allergies.forEach(allergy => {
+        if (tagSet.has(allergy.toLowerCase())) {
+          allergyWarnings.add(allergy);
+        }
+      });
+    }
     createRecipeMutation.mutate(
       { date, slot, recipeId },
       {
-        onSuccess: () => {
-          // Invalidate to fetch full data including allergy warnings
-          invalidate();
+        onSuccess: (id) => {
+          setCalendarData((prev) => {
+            const arr = prev[date] ?? [];
+
+            if (arr.some((i) => i.id === id)) return prev;
+
+            const item: CalendarItemViewDto = {
+              itemType: "recipe",
+              id,
+              recipeId,
+              recipeName,
+              slot,
+              date,
+              allergyWarnings: [...allergyWarnings],
+            };
+
+            return { ...prev, [date]: [...arr, item] };
+          });
         },
         onError: () => invalidate(),
       }

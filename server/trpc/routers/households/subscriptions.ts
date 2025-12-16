@@ -190,6 +190,31 @@ const onJoinCodeRegenerated = authedProcedure.subscription(async function* ({ ct
   }
 });
 
+const onAllergiesUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  // Only subscribe if user is in a household
+  if (!ctx.household) {
+    log.debug({ userId: ctx.user.id }, "No household, skipping allergiesUpdated subscription");
+
+    return;
+  }
+
+  const eventName = householdEmitter.householdEvent(ctx.household.id, "allergiesUpdated");
+
+  log.info(
+    { userId: ctx.user.id, householdId: ctx.household.id, eventName },
+    "Subscribed to allergies updated events"
+  );
+
+  try {
+    for await (const data of householdEmitter.createSubscription(eventName, signal)) {
+      log.info({ data }, "Received allergiesUpdated event");
+      yield data as HouseholdSubscriptionEvents["allergiesUpdated"];
+    }
+  } finally {
+    log.debug({ userId: ctx.user.id }, "Unsubscribed from allergies updated events");
+  }
+});
+
 export const householdSubscriptionsRouter = router({
   onCreated,
   onKicked,
@@ -199,4 +224,5 @@ export const householdSubscriptionsRouter = router({
   onMemberRemoved,
   onAdminTransferred,
   onJoinCodeRegenerated,
+  onAllergiesUpdated,
 });

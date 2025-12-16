@@ -4,11 +4,8 @@ import type { HouseholdSettingsDto, HouseholdAdminSettingsDto } from "@/types/dt
 
 import { createContext, useContext, ReactNode } from "react";
 
-import {
-  useHouseholdQuery,
-  useHouseholdMutations,
-  useHouseholdSubscription,
-} from "@/hooks/households";
+import { useHouseholdMutations } from "@/hooks/households";
+import { useHouseholdContext } from "@/context/household-context";
 
 type HouseholdSettingsContextType = {
   household: HouseholdSettingsDto | HouseholdAdminSettingsDto | null;
@@ -27,7 +24,7 @@ type HouseholdSettingsContextType = {
 const HouseholdSettingsContext = createContext<HouseholdSettingsContextType | null>(null);
 
 export function HouseholdSettingsProvider({ children }: { children: ReactNode }) {
-  const { household, currentUserId, isLoading } = useHouseholdQuery();
+  const { household, currentUserId, isLoading } = useHouseholdContext();
   const {
     createHousehold,
     joinHousehold,
@@ -36,9 +33,6 @@ export function HouseholdSettingsProvider({ children }: { children: ReactNode })
     regenerateJoinCode,
     transferAdmin,
   } = useHouseholdMutations();
-
-  // Subscribe to real-time updates
-  useHouseholdSubscription();
 
   return (
     <HouseholdSettingsContext.Provider

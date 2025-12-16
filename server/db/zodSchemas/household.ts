@@ -24,16 +24,14 @@ export const HouseholdUserInsertBaseSchema = createInsertSchema(householdUsers).
   createdAt: true,
 });
 
+export const HouseholdUserSchema = z.object({
+  id: z.string(),
+  name: z.string().nullable().optional(),
+  isAdmin: z.boolean().optional(),
+});
+
 export const HouseholdWithUsersNamesSchema = HouseholdSelectBaseSchema.extend({
-  users: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string().nullable().optional(),
-        isAdmin: z.boolean().optional(),
-      })
-    )
-    .default([]),
+  users: z.array(HouseholdUserSchema).default([]),
 });
 
 // Schema for household settings view - omits sensitive fields and unused timestamp fields
@@ -45,15 +43,8 @@ export const HouseholdSettingsSchema = HouseholdSelectBaseSchema.omit({
   joinCode: true,
   joinCodeExpiresAt: true,
 }).extend({
-  users: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string().nullable().optional(),
-        isAdmin: z.boolean().optional(),
-      })
-    )
-    .default([]),
+  users: z.array(HouseholdUserSchema).default([]),
+  allergies: z.array(z.string()).default([]),
 });
 
 // Schema for admin household settings view - includes joinCode and expiration
@@ -62,13 +53,6 @@ export const HouseholdAdminSettingsSchema = HouseholdSelectBaseSchema.omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  users: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string().nullable().optional(),
-        isAdmin: z.boolean().optional(),
-      })
-    )
-    .default([]),
+  users: z.array(HouseholdUserSchema).default([]),
+  allergies: z.array(z.string()).default([]),
 });

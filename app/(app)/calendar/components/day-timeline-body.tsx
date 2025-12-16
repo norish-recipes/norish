@@ -144,7 +144,7 @@ export function DayTimelineBody({
                             <div className="max-w-xs p-2">
                               <span className="font-medium">Allergy warning:</span>
                               <p className="text-default-500 text-sm">
-                                Contains: {it.allergyWarnings.map((w) => w.tag).join(", ")}
+                                Contains: {it.allergyWarnings.join(", ")}
                               </p>
                             </div>
                           </PopoverContent>

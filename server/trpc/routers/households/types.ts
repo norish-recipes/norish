@@ -33,6 +33,9 @@ export type HouseholdSubscriptionEvents = {
     joinCode: string;
     joinCodeExpiresAt: string;
   };
+  allergiesUpdated: {
+    allergies: string[];
+  };
   failed: {
     reason: string;
   };
