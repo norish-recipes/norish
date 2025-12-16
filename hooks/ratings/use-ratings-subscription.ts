@@ -54,6 +54,8 @@ export function useRatingsSubscription() {
             };
           }
         );
+
+        queryClient.invalidateQueries({ queryKey: [["recipes", "list"]] });
       },
     })
   );

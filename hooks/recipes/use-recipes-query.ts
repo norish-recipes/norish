@@ -13,6 +13,7 @@ export type RecipeFilters = {
   tags?: string[];
   filterMode?: "AND" | "OR";
   sortMode?: "titleAsc" | "titleDesc" | "dateAsc" | "dateDesc";
+  minRating?: number;
 };
 
 type InfiniteRecipeData = InfiniteData<{
@@ -48,7 +49,7 @@ export function useRecipesQuery(filters: RecipeFilters = {}): RecipesQueryResult
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const { search, tags, filterMode = "OR", sortMode = "dateDesc" } = filters;
+  const { search, tags, filterMode = "OR", sortMode = "dateDesc", minRating } = filters;
 
   // Use pending recipes from the query cache (shared across all hook instances)
   // Store as array to ensure React Query re-renders on changes
@@ -65,7 +66,7 @@ export function useRecipesQuery(filters: RecipeFilters = {}): RecipesQueryResult
   const pendingRecipeIds = useMemo(() => new Set(pendingQuery.data ?? []), [pendingQuery.data]);
 
   const infiniteQueryOptions = trpc.recipes.list.infiniteQueryOptions(
-    { limit: 50, search, tags, filterMode, sortMode },
+    { limit: 50, search, tags, filterMode, sortMode, minRating },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     }

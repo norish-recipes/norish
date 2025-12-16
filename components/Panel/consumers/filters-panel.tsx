@@ -15,6 +15,7 @@ import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useTagsQuery } from "@/hooks/config";
 import ChipSkeleton from "@/components/skeleton/chip-skeleton";
 import Panel from "@/components/Panel/Panel";
+import RatingStars from "@/components/shared/rating-stars";
 
 type FiltersPanelProps = {
   open: boolean;
@@ -30,6 +31,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
   const [localSortMode, setLocalSortMode] = useState(filters.sortMode);
   const [localInput, setLocalInput] = useState(filters.rawInput);
   const [localFavoritesOnly, setLocalFavoritesOnly] = useState(filters.showFavoritesOnly);
+  const [localMinRating, setLocalMinRating] = useState<number | null>(filters.minRating);
 
   const { tags: allTags, isLoading } = useTagsQuery();
 
@@ -39,6 +41,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
     setLocalSortMode(filters.sortMode);
     setLocalInput(filters.rawInput);
     setLocalFavoritesOnly(filters.showFavoritesOnly);
+    setLocalMinRating(filters.minRating);
   }, [filters]);
 
   const toggleTag = useCallback((tag: string) => {
@@ -72,6 +75,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
       sortMode: localSortMode,
       rawInput: localInput,
       showFavoritesOnly: localFavoritesOnly,
+      minRating: localMinRating,
     });
 
     close();
@@ -160,12 +164,12 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
         </div>
       </section>
 
-      {/* Favorites */}
+      {/* Favorites & Rating */}
       <section>
         <h3 className="text-default-500 mb-2 text-[11px] font-medium tracking-wide uppercase">
-          Favorites
+          Favorites & Rating
         </h3>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-4">
           <Button
             className="h-9 px-3 text-xs"
             color={localFavoritesOnly ? "danger" : "default"}
@@ -175,8 +179,10 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
             variant={localFavoritesOnly ? "solid" : "flat"}
             onPress={() => setLocalFavoritesOnly(!localFavoritesOnly)}
           >
-            Favorites only
+            Favorites
           </Button>
+
+          <RatingStars value={localMinRating} onChange={setLocalMinRating} />
         </div>
       </section>
 
@@ -241,6 +247,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
             setLocalSortMode("dateDesc");
             setLocalInput("");
             setLocalFavoritesOnly(false);
+            setLocalMinRating(null);
             close();
           }}
         >

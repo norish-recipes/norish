@@ -42,6 +42,7 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
       tags: filters.searchTags.length > 0 ? filters.searchTags : undefined,
       filterMode: filters.filterMode as "AND" | "OR",
       sortMode: filters.sortMode as "titleAsc" | "titleDesc" | "dateAsc" | "dateDesc",
+      minRating: filters.minRating ?? undefined,
     }),
     [filters]
   );

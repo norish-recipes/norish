@@ -231,7 +231,8 @@ export async function listRecipes(
   search?: string,
   tagNames?: string[],
   filterMode: FilterMode = "OR",
-  sortMode: SortOrder = "dateDesc"
+  sortMode: SortOrder = "dateDesc",
+  minRating?: number
 ): Promise<{ recipes: RecipeDashboardDTO[]; total: number }> {
   const whereConditions: any[] = [];
 
@@ -360,9 +361,17 @@ export async function listRecipes(
 
   if (!parsed.success) throw new Error("RecipeDashboardDTO parse failed");
 
+  // Filter by minimum rating if specified (post-fetch since rating is computed)
+  let filteredRecipes = parsed.data;
+  if (minRating !== undefined) {
+    filteredRecipes = parsed.data.filter(
+      (r) => r.averageRating != null && r.averageRating >= minRating
+    );
+  }
+
   return {
-    recipes: parsed.data,
-    total: Number(totalCount?.[0]?.count ?? 0),
+    recipes: filteredRecipes,
+    total: minRating !== undefined ? filteredRecipes.length : Number(totalCount?.[0]?.count ?? 0),
   };
 }
 

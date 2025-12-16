@@ -11,6 +11,7 @@ export type RecipeFilters = {
   filterMode: FilterMode;
   sortMode: SortOrder;
   showFavoritesOnly: boolean;
+  minRating: number | null;
 };
 
 type FiltersCtx = {
@@ -29,6 +30,7 @@ export function RecipesFiltersProvider({ children }: { children: ReactNode }) {
     filterMode: "AND",
     sortMode: "dateDesc",
     showFavoritesOnly: false,
+    minRating: null,
   });
 
   const setFilters = useCallback((newFilters: Partial<RecipeFilters>) => {
@@ -42,6 +44,7 @@ export function RecipesFiltersProvider({ children }: { children: ReactNode }) {
       filterMode: "AND",
       sortMode: "dateDesc",
       showFavoritesOnly: false,
+      minRating: null,
     });
   }, []);
 
