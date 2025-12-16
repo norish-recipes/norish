@@ -76,8 +76,21 @@ export function TRPCProviderWrapper({ children }: { children: ReactNode }) {
 
     queryClientRef.current = qc;
 
+    const MAX_RETRIES = 10;
+
     const wsClient = createWSClient({
       url: getWsUrl,
+      retryDelayMs: (attemptIndex) => {
+        // Stop retrying after MAX_RETRIES failures
+        if (attemptIndex >= MAX_RETRIES) {
+          log.warn({ attemptIndex }, "Max WebSocket retries reached, giving up");
+          return Infinity; // Effectively stop retrying
+        }
+        // Exponential backoff: 1s, 2s, 4s, 8s, 16s, max 30s
+        const delay = Math.min(1000 * Math.pow(2, attemptIndex), 30000);
+        log.debug({ attemptIndex, delay }, "WebSocket reconnecting");
+        return delay;
+      },
       onOpen: () => {
         log.info("WebSocket connected");
         setStatus("connected");

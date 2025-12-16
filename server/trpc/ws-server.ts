@@ -24,6 +24,11 @@ export function initTrpcWebSocket(server: Server) {
     wss: trpcWss,
     router: appRouter,
     createContext: createWsContext,
+    keepAlive: {
+      enabled: true,
+      pingMs: 20000, // Send ping every 20 seconds
+      pongWaitMs: 5000, // Wait 5 seconds for pong before closing
+    },
   });
 
   server.on("upgrade", (req, socket, head) => {

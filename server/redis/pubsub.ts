@@ -5,7 +5,8 @@
  * All subscriptions use createSubscription() with async iterators.
  */
 
-import type Redis from "ioredis";
+import { on } from "node:events";
+
 import superjson from "superjson";
 
 import { getPublisherClient, createSubscriberClient } from "./client";
@@ -68,71 +69,46 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
 
   /**
    * Create an async iterable subscription.
-   * Use with for-await-of to receive events.
+   * Uses Node.js built-in events.on() for clean async iteration with AbortSignal support.
    */
   async *createSubscription<K extends keyof TEvents & string>(
     channel: string,
     signal?: AbortSignal
   ): AsyncGenerator<TEvents[K]> {
     const subscriber = await createSubscriberClient();
-    const queue: TEvents[K][] = [];
-    let resolveNext: ((value: TEvents[K]) => void) | null = null;
-    let isAborted = false;
 
-    const messageHandler = (receivedChannel: string, message: string) => {
-      if (receivedChannel !== channel) return;
+    // Early exit if already aborted
+    if (signal?.aborted) {
+      await subscriber.quit();
+      return;
+    }
 
-      try {
-        const data = superjson.parse<TEvents[K]>(message);
-
-        if (resolveNext) {
-          resolveNext(data);
-          resolveNext = null;
-        } else {
-          queue.push(data);
-        }
-      } catch (err) {
-        redisLogger.error({ err, channel, message }, "Failed to parse Redis message");
-      }
-    };
-
-    const cleanup = async (sub: Redis) => {
-      isAborted = true;
-      try {
-        sub.off("message", messageHandler);
-        await sub.unsubscribe(channel);
-        await sub.quit();
-      } catch (err) {
-        redisLogger.debug({ err, channel }, "Error during subscription cleanup");
-      }
-    };
-
-    signal?.addEventListener("abort", () => {
-      cleanup(subscriber);
-    });
-
-    // IORedis: register message handler before subscribing
-    subscriber.on("message", messageHandler);
     await subscriber.subscribe(channel);
-
     redisLogger.debug({ channel }, "Started Redis subscription");
 
     try {
-      while (!isAborted) {
-        if (queue.length > 0) {
-          yield queue.shift()!;
-        } else {
-          const data = await new Promise<TEvents[K]>((resolve) => {
-            resolveNext = resolve;
-          });
-
-          if (!isAborted) {
-            yield data;
+      // Use Node.js built-in events.on() for async iteration with AbortSignal
+      for await (const [receivedChannel, message] of on(subscriber, "message", { signal })) {
+        if (receivedChannel === channel) {
+          try {
+            yield superjson.parse<TEvents[K]>(message);
+          } catch (err) {
+            redisLogger.error({ err, channel }, "Failed to parse Redis message");
           }
         }
       }
+    } catch (err) {
+      // AbortError is expected when signal is aborted - ignore it
+      if ((err as Error).name !== "AbortError") {
+        redisLogger.error({ err, channel }, "Subscription error");
+      }
     } finally {
-      await cleanup(subscriber);
+      try {
+        await subscriber.unsubscribe(channel);
+        await subscriber.quit();
+      } catch (err) {
+        redisLogger.debug({ err, channel }, "Error during subscription cleanup");
+      }
       redisLogger.debug({ channel }, "Ended Redis subscription");
     }
   }
