@@ -5,9 +5,10 @@ import {
   DocumentIcon,
   TrashIcon,
   EllipsisHorizontalIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/16/solid";
-import { Button } from "@heroui/react";
-import { useRef, useState, useCallback, useEffect } from "react";
+import { Button, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
+import { useRef, useState, useCallback } from "react";
 import { PanInfo } from "framer-motion";
 
 import { DraggableCalendarItem } from "./draggable-calendar-item";
@@ -17,8 +18,6 @@ import SwipeableRow, { SwipeableRowRef, SwipeAction } from "@/components/shared/
 import { MiniGroceries } from "@/components/Panel/consumers";
 import { MealIcon } from "@/lib/meal-icon";
 
-const truncate = (text: string, maxChars: number) =>
-  text.length > maxChars ? text.slice(0, maxChars).trim() + "…" : text;
 
 type DayTimelineBodyProps = {
   items: CalendarItemViewDto[];
@@ -36,26 +35,8 @@ export function DayTimelineBody({
   isDraggingAny,
 }: DayTimelineBodyProps) {
   const rowRefs = useRef<Record<string, SwipeableRowRef | null>>({});
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [maxChars, setMaxChars] = useState(25);
   const [groceriesOpen, setGroceriesOpen] = useState(false);
   const [currentRecipeId, setCurrentRecipeId] = useState<string | null>(null);
-
-  // Measure container width and calculate max chars
-  useEffect(() => {
-    const updateMaxChars = () => {
-      const width = containerRef.current?.clientWidth || 200;
-      // ~8px per char, subtract space for icon (24px) + gap (8px) + button (32px) + padding
-      const availableWidth = width - 72;
-
-      setMaxChars(Math.max(10, Math.floor(availableWidth / 8)));
-    };
-
-    updateMaxChars();
-    window.addEventListener("resize", updateMaxChars);
-
-    return () => window.removeEventListener("resize", updateMaxChars);
-  }, []);
 
   const openGroceries = useCallback((recipeId: string) => {
     setCurrentRecipeId(recipeId);
@@ -145,18 +126,40 @@ export function DayTimelineBody({
                   rowHeight={48}
                 >
                   <div className="flex h-full w-full items-center justify-between px-2">
-                    <div ref={containerRef} className="flex min-w-0 flex-1 items-center gap-2">
-                      <MealIcon slot={it.slot} />
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      {it.itemType === "recipe" &&
+                        it.allergyWarnings &&
+                        it.allergyWarnings.length > 0 ? (
+                        <Popover placement="top">
+                          <PopoverTrigger>
+                            <button
+                              aria-label="View allergen warning"
+                              className="flex-shrink-0"
+                              type="button"
+                            >
+                              <ExclamationTriangleIcon className="h-5 w-5 text-warning" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent>
+                            <div className="max-w-xs p-2">
+                              <span className="font-medium">Allergy warning:</span>
+                              <p className="text-default-500 text-sm">
+                                Contains: {it.allergyWarnings.map((w) => w.tag).join(", ")}
+                              </p>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      ) : (
+                        <MealIcon slot={it.slot} />
+                      )}
                       <span
-                        className={`text-sm md:text-base ${it.itemType === "note" ? "text-default-600 italic" : "text-foreground"} ${it.itemType === "recipe" ? "hover:text-primary cursor-pointer" : ""}`}
-                        title={
-                          displayName && displayName.length > maxChars ? displayName : undefined
-                        }
+                        className={`min-w-0 flex-1 truncate text-sm md:text-base ${it.itemType === "note" ? "text-default-600 italic" : "text-foreground"} ${it.itemType === "recipe" ? "hover:text-primary cursor-pointer" : ""}`}
+                        title={displayName || undefined}
                         onDoubleClick={
                           it.itemType === "recipe" ? () => navigateToRecipe(it.recipeId) : undefined
                         }
                       >
-                        {truncate(displayName || "", maxChars)}
+                        {displayName}
                       </span>
                     </div>
 

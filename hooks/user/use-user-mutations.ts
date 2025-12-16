@@ -3,7 +3,7 @@
 import type { User } from "@/types";
 import type { ApiKeyMetadataDto } from "@/server/trpc/routers/user/types";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { useUserSettingsQuery } from "./use-user-query";
 
@@ -23,6 +23,11 @@ export type UserMutationsResult = {
   deleteApiKey: (keyId: string) => Promise<{ success: boolean; error?: string }>;
   toggleApiKey: (keyId: string, enabled: boolean) => Promise<{ success: boolean; error?: string }>;
 
+  // Allergies
+  setAllergies: (
+    allergies: string[]
+  ) => Promise<{ success: boolean; allergies?: string[]; error?: string }>;
+
   // Loading states
   isUpdatingName: boolean;
   isUploadingAvatar: boolean;
@@ -31,6 +36,7 @@ export type UserMutationsResult = {
   isCreatingApiKey: boolean;
   isDeletingApiKey: boolean;
   isTogglingApiKey: boolean;
+  isUpdatingAllergies: boolean;
 };
 
 /**
@@ -39,7 +45,8 @@ export type UserMutationsResult = {
  */
 export function useUserMutations(): UserMutationsResult {
   const trpc = useTRPC();
-  const { setUserSettingsData, invalidate } = useUserSettingsQuery();
+  const { setUserSettingsData, invalidate, allergiesQueryKey } = useUserSettingsQuery();
+  const queryClient = useQueryClient();
 
   // Profile mutations
   const updateNameMutation = useMutation(trpc.user.updateName.mutationOptions());
@@ -51,6 +58,9 @@ export function useUserMutations(): UserMutationsResult {
   const createApiKeyMutation = useMutation(trpc.user.apiKeys.create.mutationOptions());
   const deleteApiKeyMutation = useMutation(trpc.user.apiKeys.delete.mutationOptions());
   const toggleApiKeyMutation = useMutation(trpc.user.apiKeys.toggle.mutationOptions());
+
+  // Allergies mutation
+  const setAllergiesMutation = useMutation(trpc.user.setAllergies.mutationOptions());
 
   return {
     // Profile updates
@@ -161,9 +171,9 @@ export function useUserMutations(): UserMutationsResult {
           setUserSettingsData((prev) =>
             prev
               ? {
-                  ...prev,
-                  apiKeys: prev.apiKeys.map((k) => (k.id === keyId ? { ...k, enabled } : k)),
-                }
+                ...prev,
+                apiKeys: prev.apiKeys.map((k) => (k.id === keyId ? { ...k, enabled } : k)),
+              }
               : prev
           );
         }
@@ -171,6 +181,23 @@ export function useUserMutations(): UserMutationsResult {
         return result;
       } catch (error) {
         invalidate();
+
+        return { success: false, error: String(error) };
+      }
+    },
+
+    // Allergies
+    setAllergies: async (allergies) => {
+      try {
+        const result = await setAllergiesMutation.mutateAsync({ allergies });
+
+        if (result.success) {
+          queryClient.setQueryData(allergiesQueryKey, { allergies: result.allergies });
+        }
+
+        return result;
+      } catch (error) {
+        queryClient.invalidateQueries({ queryKey: allergiesQueryKey });
 
         return { success: false, error: String(error) };
       }
@@ -184,5 +211,6 @@ export function useUserMutations(): UserMutationsResult {
     isCreatingApiKey: createApiKeyMutation.isPending,
     isDeletingApiKey: deleteApiKeyMutation.isPending,
     isTogglingApiKey: toggleApiKeyMutation.isPending,
+    isUpdatingAllergies: setAllergiesMutation.isPending,
   };
 }

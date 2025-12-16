@@ -145,13 +145,17 @@ export default function TagInput({
         } else if (exactMatch) {
           e.preventDefault();
           handleAddTag(exactMatch, false); // Don't try to remove text for exact matches
+        } else if (suggestions.length > 0 && currentWord.trim()) {
+          // Auto-select first suggestion when pressing space
+          e.preventDefault();
+          handleAddTag(suggestions[0], true);
         }
       } else if (e.key === "Backspace" && !rawInput && value.length > 0) {
         e.preventDefault();
         handleRemoveTag(value[value.length - 1]);
       }
     },
-    [exactMatch, handleAddTag, rawInput, value, handleRemoveTag, currentWord]
+    [exactMatch, handleAddTag, rawInput, value, handleRemoveTag, currentWord, suggestions]
   );
 
   return (

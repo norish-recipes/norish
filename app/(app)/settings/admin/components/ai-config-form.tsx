@@ -19,6 +19,7 @@ export default function AIConfigForm() {
   const [apiKey, setApiKey] = useState("");
   const [temperature, setTemperature] = useState(aiConfig?.temperature ?? 0);
   const [maxTokens, setMaxTokens] = useState(aiConfig?.maxTokens ?? 10000);
+  const [autoTagAllergies, setAutoTagAllergies] = useState(aiConfig?.autoTagAllergies ?? true);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -31,6 +32,7 @@ export default function AIConfigForm() {
       setModel(aiConfig.model);
       setTemperature(aiConfig.temperature);
       setMaxTokens(aiConfig.maxTokens);
+      setAutoTagAllergies(aiConfig.autoTagAllergies ?? true);
     }
   }, [aiConfig]);
 
@@ -80,6 +82,7 @@ export default function AIConfigForm() {
         apiKey: apiKey || undefined,
         temperature,
         maxTokens,
+        autoTagAllergies,
       });
     } finally {
       setSaving(false);
@@ -171,11 +174,25 @@ export default function AIConfigForm() {
         onValueChange={(v) => setMaxTokens(parseInt(v) || 10000)}
       />
 
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <span className="font-medium">Auto-detect Allergy Tags</span>
+          <span className="text-default-500 text-sm">
+            Automatically add allergy-related tags when importing recipes
+          </span>
+        </div>
+        <Switch
+          color="success"
+          isDisabled={!enabled}
+          isSelected={autoTagAllergies}
+          onValueChange={setAutoTagAllergies}
+        />
+      </div>
+
       {testResult && (
         <div
-          className={`flex items-center gap-2 rounded-lg p-2 ${
-            testResult.success ? "bg-success-100 text-success-700" : "bg-danger-100 text-danger-700"
-          }`}
+          className={`flex items-center gap-2 rounded-lg p-2 ${testResult.success ? "bg-success-100 text-success-700" : "bg-danger-100 text-danger-700"
+            }`}
         >
           {testResult.success ? (
             <>

@@ -7,7 +7,7 @@ import { loadPrompt } from "./prompts/loader";
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
-import { getUnits, isAIEnabled } from "@/config/server-config-loader";
+import { getUnits, isAIEnabled, getAIConfig } from "@/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
 
 function extractSanitizedBody(html: string): string {
@@ -286,6 +286,23 @@ export async function extractRecipeWithAI(
     ...usSteps,
   ];
 
+  const aiConfig = await getAIConfig();
+  aiLogger.debug({ aiConfig }, "AI config loaded");
+  if (aiConfig?.autoTagAllergies && Array.isArray(jsonLd.keywords) && jsonLd.keywords.length > 0) {
+    const existingTagNames = (normalized.tags ?? []).map((t) => t.name.toLowerCase());
+    const newKeywords = jsonLd.keywords.filter(
+      (keyword: string) => !existingTagNames.includes(keyword.toLowerCase())
+    );
+
+    const newTags = newKeywords.map((t: string) => ({ name: t.toLowerCase() }));
+
+    normalized.tags = [...(normalized.tags ?? []), ...newTags];
+    aiLogger.debug(
+      { addedTags: newKeywords, allTags: normalized.tags },
+      "Added AI-detected allergy/dietary tags"
+    );
+  }
+
   aiLogger.info(
     {
       url,
@@ -293,6 +310,7 @@ export async function extractRecipeWithAI(
       totalIngredients: normalized.recipeIngredients?.length ?? 0,
       totalSteps: normalized.steps?.length ?? 0,
       systemUsed: normalized.systemUsed,
+      tags: normalized.tags,
     },
     "AI recipe extraction completed"
   );

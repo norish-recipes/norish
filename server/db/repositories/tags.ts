@@ -140,3 +140,13 @@ export async function attachTagsToRecipeByInputTx(
 
   await attachTagsToRecipeTx(tx, recipeId, ids);
 }
+
+export async function getRecipeTagNames(recipeId: string): Promise<string[]> {
+  const rows = await db
+    .select({ name: tags.name })
+    .from(recipeTags)
+    .innerJoin(tags, eq(recipeTags.tagId, tags.id))
+    .where(eq(recipeTags.recipeId, recipeId));
+
+  return rows.map((r) => r.name);
+}

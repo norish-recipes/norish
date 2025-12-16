@@ -13,6 +13,14 @@ export const plannedRecipeViewSchema = createSelectSchema(plannedRecipes)
   })
   .extend({
     recipeName: z.string().nullable(),
+    allergyWarnings: z
+      .array(
+        z.object({
+          tag: z.string(),
+          userId: z.string(),
+        })
+      )
+      .optional(),
   });
 
 export const PlannedRecipeInsertBaseSchema = createInsertSchema(plannedRecipes).omit({

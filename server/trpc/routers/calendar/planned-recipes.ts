@@ -19,6 +19,8 @@ import {
   PlannedRecipeCreateSchema,
   PlannedRecipeDeleteSchema,
   PlannedRecipeUpdateDateSchema,
+  getAllergiesForUsers,
+  getRecipeTagNames,
 } from "@/server/db";
 import { assertHouseholdAccess } from "@/server/auth/permissions";
 
@@ -32,9 +34,53 @@ const list = authedProcedure.input(PlannedRecipeListSchema).query(async ({ ctx, 
     input.endISO
   );
 
-  log.debug({ count: recipes.length }, "Listed planned recipes");
+  // Fetch household allergies
+  const householdAllergies = await getAllergiesForUsers(ctx.userIds);
 
-  return recipes;
+  // Build a map of userId to userName for warning messages (use "You" for current user)
+  const userAllergyMap = new Map<string, Set<string>>();
+
+  for (const { userId, tagName } of householdAllergies) {
+    if (!userAllergyMap.has(userId)) {
+      userAllergyMap.set(userId, new Set());
+    }
+    userAllergyMap.get(userId)!.add(tagName.toLowerCase());
+  }
+
+  // Get unique recipe IDs
+  const recipeIds = [...new Set(recipes.map((r) => r.recipeId))];
+
+  // Fetch tags for all recipes
+  const recipeTagsMap = new Map<string, string[]>();
+
+  for (const recipeId of recipeIds) {
+    const tagNames = await getRecipeTagNames(recipeId);
+
+    recipeTagsMap.set(recipeId, tagNames.map((t: string) => t.toLowerCase()));
+  }
+
+  // Compute allergy warnings for each planned recipe
+  const recipesWithWarnings = recipes.map((recipe) => {
+    const recipeTags = recipeTagsMap.get(recipe.recipeId) || [];
+    const allergyWarnings: { tag: string; userId: string }[] = [];
+
+    for (const [userId, allergies] of userAllergyMap) {
+      for (const allergy of allergies) {
+        if (recipeTags.includes(allergy)) {
+          allergyWarnings.push({ tag: allergy, userId });
+        }
+      }
+    }
+
+    return {
+      ...recipe,
+      allergyWarnings,
+    };
+  });
+
+  log.debug({ count: recipesWithWarnings.length }, "Listed planned recipes with allergy warnings");
+
+  return recipesWithWarnings;
 });
 
 const create = authedProcedure.input(PlannedRecipeCreateSchema).mutation(({ ctx, input }) => {

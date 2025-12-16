@@ -44,24 +44,9 @@ export function useCalendarMutations(startISO: string, endISO: string): Calendar
     createRecipeMutation.mutate(
       { date, slot, recipeId },
       {
-        onSuccess: (id) => {
-          setCalendarData((prev) => {
-            const arr = prev[date] ?? [];
-
-            // Check if already exists (from subscription)
-            if (arr.some((i) => i.id === id)) return prev;
-
-            const item: CalendarItemViewDto = {
-              itemType: "recipe",
-              id,
-              recipeId,
-              recipeName,
-              slot,
-              date,
-            };
-
-            return { ...prev, [date]: [...arr, item] };
-          });
+        onSuccess: () => {
+          // Invalidate to fetch full data including allergy warnings
+          invalidate();
         },
         onError: () => invalidate(),
       }

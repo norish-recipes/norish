@@ -13,6 +13,7 @@ import { users } from "./auth";
 import { groceries } from "./groceries";
 import { serverConfig } from "./server-config";
 import { recipeRatings } from "./recipe-ratings";
+import { userAllergies } from "./user-allergies";
 
 export const recipesRelations = relations(recipes, ({ many }) => ({
   ingredients: many(recipeIngredients),
@@ -23,6 +24,7 @@ export const recipesRelations = relations(recipes, ({ many }) => ({
 
 export const tagsRelations = relations(tags, ({ many }) => ({
   recipeTags: many(recipeTags),
+  userAllergies: many(userAllergies),
 }));
 
 export const ingredientsRelations = relations(ingredients, ({ many }) => ({
@@ -107,5 +109,16 @@ export const recipeRatingsRelations = relations(recipeRatings, ({ one }) => ({
   recipe: one(recipes, {
     fields: [recipeRatings.recipeId],
     references: [recipes.id],
+  }),
+}));
+
+export const userAllergiesRelations = relations(userAllergies, ({ one }) => ({
+  user: one(users, {
+    fields: [userAllergies.userId],
+    references: [users.id],
+  }),
+  tag: one(tags, {
+    fields: [userAllergies.tagId],
+    references: [tags.id],
   }),
 }));

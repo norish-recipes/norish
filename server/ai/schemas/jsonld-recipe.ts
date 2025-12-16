@@ -60,6 +60,12 @@ export const jsonLdRecipeSchema = {
         required: ["metric", "us"],
         additionalProperties: false,
       },
+      keywords: {
+        anyOf: [
+          { type: "array", items: { type: "string" } },
+          { type: "null" },
+        ],
+      },
     },
     required: [
       "@context",
@@ -73,6 +79,7 @@ export const jsonLdRecipeSchema = {
       "totalTime",
       "recipeIngredient",
       "recipeInstructions",
+      "keywords",
     ],
     additionalProperties: false,
   },

@@ -65,7 +65,8 @@ export function createMockApiKey(overrides: Partial<ApiKeyMetadataDto> = {}): Ap
  */
 export function createMockUserSettingsData(
   user: User = createMockUser(),
-  apiKeys: ApiKeyMetadataDto[] = []
+  apiKeys: ApiKeyMetadataDto[] = [],
+  allergies: string[] = []
 ): UserSettingsData {
-  return { user, apiKeys };
+  return { user, apiKeys, allergies };
 }

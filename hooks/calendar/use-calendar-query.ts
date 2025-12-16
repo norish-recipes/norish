@@ -71,6 +71,7 @@ export function useCalendarQuery(startISO: string, endISO: string): CalendarQuer
           recipeName: r.recipeName ?? "Unknown",
           slot: r.slot as Slot,
           date: k,
+          allergyWarnings: r.allergyWarnings,
         });
       }
     }

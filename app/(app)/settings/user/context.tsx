@@ -13,6 +13,7 @@ import { useUserContext } from "@/context/user-context";
 type UserSettingsContextType = {
   user: User | null;
   apiKeys: ApiKeyMetadataDto[];
+  allergies: string[];
   isLoading: boolean;
 
   // Actions
@@ -22,17 +23,19 @@ type UserSettingsContextType = {
   deleteApiKey: (keyId: string) => void;
   toggleApiKey: (keyId: string, enabled: boolean) => void;
   deleteAccount: () => void;
+  updateAllergies: (allergies: string[]) => Promise<void>;
 
   // Loading states
   isUpdatingName: boolean;
   isUploadingAvatar: boolean;
   isDeletingAccount: boolean;
+  isUpdatingAllergies: boolean;
 };
 
 const UserSettingsContext = createContext<UserSettingsContextType | null>(null);
 
 export function UserSettingsProvider({ children }: { children: ReactNode }) {
-  const { user, apiKeys, isLoading } = useUserSettingsQuery();
+  const { user, apiKeys, allergies, isLoading } = useUserSettingsQuery();
   const mutations = useUserMutations();
   const { setUser } = useUserContext();
 
@@ -167,11 +170,27 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
       });
   }, [mutations]);
 
+  const updateAllergies = useCallback(
+    async (newAllergies: string[]) => {
+      try {
+        await mutations.setAllergies(newAllergies);
+      } catch (error) {
+        addToast({
+          title: "Failed to update allergies",
+          description: (error as Error).message,
+          color: "danger",
+        });
+      }
+    },
+    [mutations]
+  );
+
   return (
     <UserSettingsContext.Provider
       value={{
         user: user || null,
         apiKeys: apiKeys || [],
+        allergies: allergies || [],
         isLoading,
         updateName,
         updateImage,
@@ -179,9 +198,11 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
         deleteApiKey,
         toggleApiKey,
         deleteAccount,
+        updateAllergies,
         isUpdatingName: mutations.isUpdatingName,
         isUploadingAvatar: mutations.isUploadingAvatar,
         isDeletingAccount: mutations.isDeletingAccount,
+        isUpdatingAllergies: mutations.isUpdatingAllergies,
       }}
     >
       {children}

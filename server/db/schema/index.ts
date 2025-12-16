@@ -19,3 +19,4 @@ export * from "./server-config";
 export * from "./api-logs";
 export * from "./recipe-favorites";
 export * from "./recipe-ratings";
+export * from "./user-allergies";

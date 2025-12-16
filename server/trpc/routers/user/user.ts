@@ -17,9 +17,12 @@ import {
   clearUserAvatar,
   getHouseholdForUser,
   getApiKeysForUser,
+  getUserAllergies,
+  updateUserAllergies,
 } from "@/server/db";
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { deleteAvatarByFilename } from "@/server/startup/image-cleanup";
+import { UpdateUserAllergiesSchema } from "@/server/db/zodSchemas/user-allergies";
 
 /**
  * Get current user settings (user profile + API keys)
@@ -218,10 +221,38 @@ const deleteAccount = authedProcedure.mutation(async ({ ctx }) => {
   return { success: true };
 });
 
+/**
+ * Get current user's allergies
+ */
+const getAllergies = authedProcedure.query(async ({ ctx }) => {
+  log.debug({ userId: ctx.user.id }, "Getting user allergies");
+
+  const allergies = await getUserAllergies(ctx.user.id);
+
+  return { allergies };
+});
+
+/**
+ * Update user allergies
+ */
+const setAllergies = authedProcedure
+  .input(UpdateUserAllergiesSchema)
+  .mutation(async ({ ctx, input }) => {
+    log.debug({ userId: ctx.user.id, count: input.allergies.length }, "Updating user allergies");
+
+    await updateUserAllergies(ctx.user.id, input.allergies);
+
+    log.info({ userId: ctx.user.id, allergies: input.allergies }, "User allergies updated");
+
+    return { success: true, allergies: input.allergies };
+  });
+
 export const userProcedures = router({
   get,
   updateName,
   uploadAvatar,
   deleteAvatar,
   deleteAccount,
+  getAllergies,
+  setAllergies,
 });

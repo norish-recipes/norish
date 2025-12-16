@@ -10,6 +10,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 export type UserSettingsData = {
   user: User;
   apiKeys: ApiKeyMetadataDto[];
+  allergies: string[];
 };
 
 /**
@@ -21,8 +22,12 @@ export function useUserSettingsQuery() {
   const queryClient = useQueryClient();
 
   const queryKey = trpc.user.get.queryKey();
+  const allergiesQueryKey = trpc.user.getAllergies.queryKey();
 
   const { data, error, isLoading } = useQuery(trpc.user.get.queryOptions());
+  const { data: allergiesData, isLoading: isLoadingAllergies } = useQuery(
+    trpc.user.getAllergies.queryOptions()
+  );
 
   // Cache setter for optimistic updates
   const setUserSettingsData = (
@@ -39,9 +44,11 @@ export function useUserSettingsQuery() {
   return {
     user: data?.user ?? null,
     apiKeys: data?.apiKeys ?? [],
+    allergies: allergiesData?.allergies ?? [],
     error,
-    isLoading,
+    isLoading: isLoading || isLoadingAllergies,
     queryKey,
+    allergiesQueryKey,
     setUserSettingsData,
     invalidate,
   };
