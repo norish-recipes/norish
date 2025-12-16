@@ -5,6 +5,7 @@ import {
   type AuthProviderGitHub,
   type AuthProviderGoogle,
   type AuthProviderOIDC,
+  type PromptsConfig,
   DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "../db/zodSchemas/server-config";
 
@@ -118,7 +119,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
   },
   {
     key: ServerConfigKeys.PROMPTS,
-    getDefaultValue: () => loadDefaultPrompts(),
+    getDefaultValue: () => ({ ...loadDefaultPrompts(), isOverridden: false }),
     sensitive: false,
     description: "AI prompts for recipe extraction and unit conversion",
   },
@@ -139,6 +140,7 @@ export async function seedServerConfig(): Promise<void> {
   const seededCount = await seedMissingConfigs();
 
   await importEnvAuthProvidersIfMissing();
+  await syncPrompts();
   if (seededCount === 0) {
     serverLogger.info("All server configuration keys present");
   } else {
@@ -411,6 +413,37 @@ async function syncGoogleProvider(): Promise<void> {
   }
 }
 
+async function syncPrompts(): Promise<void> {
+  const existing = await getConfig<PromptsConfig>(ServerConfigKeys.PROMPTS);
+
+  if (!existing) {
+    serverLogger.warn("Prompts config not found in DB, will be seeded");
+    return;
+  }
+
+  if (existing.isOverridden) {
+    serverLogger.debug("Prompts are overridden by admin, skipping file sync");
+    return;
+  }
+
+  const defaultPrompts = loadDefaultPrompts();
+  const storedComparable = {
+    recipeExtraction: existing.recipeExtraction,
+    unitConversion: existing.unitConversion,
+  };
+
+  if (configsDiffer(storedComparable, defaultPrompts)) {
+    await setConfig(
+      ServerConfigKeys.PROMPTS,
+      { ...defaultPrompts, isOverridden: false },
+      null,
+      false
+    );
+
+    serverLogger.info("Updated prompts from default files (content changed)");
+  }
+}
+
 /**
  * Load default values from .default.json files
  * Used for "Restore to defaults" functionality
@@ -446,7 +479,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return DEFAULT_RECIPE_PERMISSION_POLICY;
     case ServerConfigKeys.PROMPTS:
-      return loadDefaultPrompts();
+      return { ...loadDefaultPrompts(), isOverridden: false };
     default:
       return null;
   }

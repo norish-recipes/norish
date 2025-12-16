@@ -10,7 +10,7 @@ import {
   ContentIndicatorsSchema,
   UnitsMapSchema,
   RecurrenceConfigSchema,
-  PromptsConfigSchema,
+  PromptsConfigInputSchema,
   type PromptsConfig,
 } from "@/server/db/zodSchemas/server-config";
 
@@ -104,15 +104,23 @@ const getPrompts = adminProcedure.query(async () => {
 
 /**
  * Update prompts config.
- * Accepts the PromptsConfig object directly.
+ * Accepts prompt strings and marks as admin-overridden.
  */
-const updatePrompts = adminProcedure.input(PromptsConfigSchema).mutation(async ({ input, ctx }) => {
-  log.info({ userId: ctx.user.id }, "Updating prompts config");
+const updatePrompts = adminProcedure
+  .input(PromptsConfigInputSchema)
+  .mutation(async ({ input, ctx }) => {
+    log.info({ userId: ctx.user.id }, "Updating prompts config");
 
-  await setConfig(ServerConfigKeys.PROMPTS, input, ctx.user.id, false);
+    // Mark as overridden
+    await setConfig(
+      ServerConfigKeys.PROMPTS,
+      { ...input, isOverridden: true },
+      ctx.user.id,
+      false
+    );
 
-  return { success: true };
-});
+    return { success: true };
+  });
 
 export const contentConfigProcedures = router({
   updateContentIndicators,
