@@ -14,11 +14,20 @@ import { getUnits } from "@/config/server-config-loader";
 async function buildVideoExtractionPrompt(
   transcript: string,
   metadata: VideoMetadata,
-  url: string
+  url: string,
+  allergies?: string[]
 ): Promise<string> {
   const prompt = await loadPrompt("recipe-extraction");
 
-  return `${prompt}
+  // Build allergy detection instruction
+  let allergyInstruction = "";
+  if (allergies && allergies.length > 0) {
+    allergyInstruction = `\nALLERGY DETECTION: Only detect these specific allergens/dietary tags: ${allergies.join(", ")}. Do not add any other allergy tags.`;
+  } else {
+    allergyInstruction = "\nALLERGY DETECTION: Skip allergy/dietary tag detection. Do not add any tags to the keywords array.";
+  }
+
+  return `${prompt}${allergyInstruction}
 
 SOURCE: Video transcript (${metadata.title})
 URL: ${url}
@@ -36,12 +45,13 @@ NOTE: This is a video transcript, not webpage text. Extract the recipe from the 
 export async function extractRecipeFromVideo(
   transcript: string,
   metadata: VideoMetadata,
-  url: string
+  url: string,
+  allergies?: string[]
 ): Promise<FullRecipeInsertDTO | null> {
   try {
     videoLogger.info({ url, title: metadata.title }, "Starting AI video recipe extraction");
 
-    const prompt = await buildVideoExtractionPrompt(transcript, metadata, url);
+    const prompt = await buildVideoExtractionPrompt(transcript, metadata, url, allergies);
 
     videoLogger.debug({ prompt }, "Built video extraction prompt");
     const provider = await getAIProvider();
@@ -63,6 +73,7 @@ export async function extractRecipeFromVideo(
       return null;
     }
 
+    jsonLd.image = metadata.thumbnail;
     videoLogger.debug(
       {
         url,

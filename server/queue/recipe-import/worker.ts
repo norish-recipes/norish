@@ -14,8 +14,13 @@ import { redisConnection, QUEUE_NAMES } from "../config";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
-import { createRecipeWithRefs, recipeExistsByUrlForPolicy, dashboardRecipe } from "@/server/db";
+import { getRecipePermissionPolicy, getAIConfig } from "@/config/server-config-loader";
+import {
+  createRecipeWithRefs,
+  recipeExistsByUrlForPolicy,
+  dashboardRecipe,
+  getAllergiesForUsers,
+} from "@/server/db";
 import { parseRecipeFromUrl } from "@/lib/parser";
 
 const log = createLogger("worker:recipe-import");
@@ -63,8 +68,20 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     return;
   }
 
+  // Fetch household allergies for targeted allergy detection (only if autoTagAllergies is enabled)
+  const aiConfig = await getAIConfig();
+  let allergyNames: string[] | undefined;
+
+  if (aiConfig?.autoTagAllergies) {
+    const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
+    allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
+    log.debug({ allergyCount: allergyNames.length, allergies: allergyNames }, "Fetched household allergies");
+  } else {
+    log.debug("Auto-tag allergies disabled, skipping allergy detection");
+  }
+
   // Parse and create recipe
-  const parsedRecipe = await parseRecipeFromUrl(url);
+  const parsedRecipe = await parseRecipeFromUrl(url, allergyNames);
   if (!parsedRecipe) {
     throw new Error("Failed to parse recipe from URL");
   }

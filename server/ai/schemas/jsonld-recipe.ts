@@ -15,9 +15,6 @@ export const jsonLdRecipeSchema = {
       description: {
         anyOf: [{ type: "string" }, { type: "null" }],
       },
-      image: {
-        anyOf: [{ type: "string" }, { type: "null" }],
-      },
       recipeYield: {
         anyOf: [{ type: "string" }, { type: "number" }, { type: "null" }],
       },
@@ -72,7 +69,6 @@ export const jsonLdRecipeSchema = {
       "@type",
       "name",
       "description",
-      "image",
       "recipeYield",
       "prepTime",
       "cookTime",

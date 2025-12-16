@@ -7,7 +7,7 @@ import type {
   AuthProviderGitHubInput,
   AuthProviderGoogleInput,
   RecipePermissionPolicy,
-  PromptsConfig,
+  PromptsConfigInput,
   ServerConfigKey,
 } from "@/server/db/zodSchemas/server-config";
 
@@ -44,7 +44,7 @@ export type AdminMutationsResult = {
   updateContentIndicators: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateUnits: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateRecurrenceConfig: (json: string) => Promise<{ success: boolean; error?: string }>;
-  updatePrompts: (config: PromptsConfig) => Promise<{ success: boolean; error?: string }>;
+  updatePrompts: (config: PromptsConfigInput) => Promise<{ success: boolean; error?: string }>;
 
   // AI & Video
   updateAIConfig: (config: AIConfig) => Promise<{ success: boolean; error?: string }>;

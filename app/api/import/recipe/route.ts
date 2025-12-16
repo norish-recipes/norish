@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/server/auth/auth";
-import { importRecipeFromUrl } from "@/server/trpc/routers/recipes/import";
-import { getHouseholdForUser } from "@/server/db";
+import { getHouseholdForUser, dashboardRecipe } from "@/server/db";
+import { addImportJob } from "@/server/queue";
 import { isUrl } from "@/lib/helpers";
 import { parserLogger as log } from "@/server/logger";
 
@@ -49,14 +49,38 @@ export async function POST(req: Request) {
 
     log.info({ userId: session.user.id, url }, "Recipe import requested via API");
 
-    // Build context and import
+    // Build job data
     const household = await getHouseholdForUser(session.user.id);
     const householdKey = household?.id ?? `user:${session.user.id}`;
+    const householdUserIds = household?.users?.map((u) => u.id) ?? null;
     const recipeId = crypto.randomUUID();
 
-    importRecipeFromUrl({ userId: session.user.id, householdKey }, recipeId, url);
+    // Add to BullMQ queue
+    const result = await addImportJob({
+      url,
+      recipeId,
+      userId: session.user.id,
+      householdKey,
+      householdUserIds,
+    });
 
-    return NextResponse.json({ recipeId }, { status: 202 });
+    if (result.status === "exists" && result.existingRecipeId) {
+      const existing = await dashboardRecipe(result.existingRecipeId);
+
+      return NextResponse.json(
+        { recipeId: result.existingRecipeId, recipe: existing, status: "exists" },
+        { status: 200 }
+      );
+    }
+
+    if (result.status === "duplicate") {
+      return NextResponse.json(
+        { error: "This recipe is already being imported", status: "duplicate" },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json({ recipeId, status: "queued" }, { status: 202 });
   } catch (err) {
     log.error({ err }, "POST /api/import/recipe failed");
 

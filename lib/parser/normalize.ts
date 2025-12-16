@@ -13,9 +13,9 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
   const ingSource = json.recipeIngredient ?? json.ingredients;
   const ingredients = Array.isArray(ingSource)
     ? parseIngredientWithDefaults(
-        ingSource.map((v: any) => v?.toString() || "").filter(Boolean),
-        units
-      )
+      ingSource.map((v: any) => v?.toString() || "").filter(Boolean),
+      units
+    )
     : typeof ingSource === "string"
       ? parseIngredientWithDefaults(ingSource.toString(), units)
       : [];
@@ -149,6 +149,8 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
       systemUsed,
       order: i,
     })),
-    tags: [],
+    tags: Array.isArray(json.keywords)
+      ? json.keywords.map((k: string) => ({ name: k.toLowerCase() }))
+      : [],
   };
 }

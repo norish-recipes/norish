@@ -18,12 +18,9 @@ import {
   type AuthProviderGoogleInput,
   type RecipePermissionPolicy,
   type PromptsConfig,
+  type PromptsConfigInput,
   type ServerConfigKey,
 } from "@/server/db/zodSchemas/server-config";
-
-// ============================================================================
-// Context Type
-// ============================================================================
 
 interface AdminSettingsContextValue {
   // Data
@@ -64,7 +61,7 @@ interface AdminSettingsContextValue {
   updateRecurrenceConfig: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateAIConfig: (config: AIConfig) => Promise<{ success: boolean; error?: string }>;
   updateVideoConfig: (config: VideoConfig) => Promise<{ success: boolean; error?: string }>;
-  updatePrompts: (config: PromptsConfig) => Promise<{ success: boolean; error?: string }>;
+  updatePrompts: (config: PromptsConfigInput) => Promise<{ success: boolean; error?: string }>;
   updateSchedulerMonths: (months: number) => Promise<{ success: boolean; error?: string }>;
   updateRecipePermissionPolicy: (
     policy: RecipePermissionPolicy
@@ -87,10 +84,6 @@ interface AdminSettingsContextValue {
 }
 
 const AdminSettingsContext = createContext<AdminSettingsContextValue | null>(null);
-
-// ============================================================================
-// Provider
-// ============================================================================
 
 export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   // Use tRPC hooks
@@ -207,7 +200,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   );
 
   const updatePromptsConfig = useCallback(
-    async (config: PromptsConfig) => {
+    async (config: PromptsConfigInput) => {
       return mutations.updatePrompts(config);
     },
     [mutations]
@@ -302,10 +295,6 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
 
   return <AdminSettingsContext.Provider value={value}>{children}</AdminSettingsContext.Provider>;
 }
-
-// ============================================================================
-// Hook
-// ============================================================================
 
 export function useAdminSettingsContext() {
   const context = useContext(AdminSettingsContext);

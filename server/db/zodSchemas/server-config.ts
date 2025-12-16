@@ -81,9 +81,13 @@ export type ContentIndicatorsConfig = z.infer<typeof ContentIndicatorsSchema>;
 export const PromptsConfigSchema = z.object({
   recipeExtraction: z.string(),
   unitConversion: z.string(),
+  isOverridden: z.boolean().default(false),
 });
 
 export type PromptsConfig = z.infer<typeof PromptsConfigSchema>;
+
+export const PromptsConfigInputSchema = PromptsConfigSchema.omit({ isOverridden: true });
+export type PromptsConfigInput = z.infer<typeof PromptsConfigInputSchema>;
 
 // ============================================================================
 // Units Schema

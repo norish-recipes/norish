@@ -5,7 +5,6 @@ export interface RecipeImportJobData {
   recipeId: string;
   userId: string;
   householdKey: string;
-  /** User IDs in the household (for policy-aware checks) */
   householdUserIds: string[] | null;
 }
 

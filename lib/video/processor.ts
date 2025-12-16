@@ -8,7 +8,10 @@ import { videoLogger as log } from "@/server/logger";
 import { isVideoParsingEnabled } from "@/config/server-config-loader";
 import { transcribeAudio } from "@/server/ai/transcriber";
 
-export async function processVideoRecipe(url: string): Promise<FullRecipeInsertDTO> {
+export async function processVideoRecipe(
+  url: string,
+  allergies?: string[]
+): Promise<FullRecipeInsertDTO> {
   const videoEnabled = await isVideoParsingEnabled();
 
   if (!videoEnabled) {
@@ -43,7 +46,7 @@ export async function processVideoRecipe(url: string): Promise<FullRecipeInsertD
     log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
     // Extract recipe from transcript + metadata
-    const recipe = await extractRecipeFromVideo(transcript, metadata, url);
+    const recipe = await extractRecipeFromVideo(transcript, metadata, url, allergies);
 
     if (!recipe) {
       throw new Error(

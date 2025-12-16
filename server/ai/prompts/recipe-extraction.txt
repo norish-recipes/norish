@@ -11,9 +11,3 @@ IMPORTANT RULES:
 - Extract ingredients as simple, clean strings without serving size prefixes (NO "Single portion:", "Five portions:", etc.)
 - If multiple serving sizes are listed chose and and represent this accuratly in recipeYield
 - If the recipe title, does not represent the recipe. Make one yourself.
-- Always extract the image that best represents the recipe
-
-KEYWORDS/TAGS RULES:
-- Analyze the recipe ingredients and detect common allergens/dietary indicators
-- Only include tags that are clearly present based on ingredients (e.g., include "nuts" if recipe contains almonds, walnuts, etc.)
-- Do not make up tags - only include what is evidenced by the ingredients

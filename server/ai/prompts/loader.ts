@@ -1,4 +1,4 @@
-import type { PromptsConfig } from "@/server/db/zodSchemas/server-config";
+import type { PromptsConfigInput } from "@/server/db/zodSchemas/server-config";
 
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -11,7 +11,7 @@ const PROMPTS_DIR = join(process.cwd(), "server", "ai", "prompts");
  * Load default prompts from text files.
  * Used for seeding database and "Restore to defaults" functionality.
  */
-export function loadDefaultPrompts(): PromptsConfig {
+export function loadDefaultPrompts(): PromptsConfigInput {
   return {
     recipeExtraction: readFileSync(join(PROMPTS_DIR, "recipe-extraction.txt"), "utf-8"),
     unitConversion: readFileSync(join(PROMPTS_DIR, "unit-conversion.txt"), "utf-8"),

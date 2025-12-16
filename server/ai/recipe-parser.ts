@@ -1,5 +1,3 @@
-import * as cheerio from "cheerio";
-
 import { getAIProvider } from "./providers/factory";
 import { jsonLdRecipeSchema } from "./schemas/jsonld-recipe";
 import { loadPrompt } from "./prompts/loader";
@@ -7,173 +5,15 @@ import { loadPrompt } from "./prompts/loader";
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
-import { getUnits, isAIEnabled, getAIConfig } from "@/config/server-config-loader";
+import { getUnits, isAIEnabled } from "@/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
+import { extractImageCandidates, extractSanitizedBody } from "./helpers";
 
-function extractSanitizedBody(html: string): string {
-  try {
-    const $ = cheerio.load(html);
-    const $body = $("body");
-
-    if ($body.length === 0) return html;
-
-    // Remove non-content elements
-    $body
-      .find(
-        "script, style, noscript, svg, iframe, canvas, link, meta, header, footer, nav, aside .ad, .advertisement, .sidebar, .comments, .social-share, .related-posts, .newsletter"
-      )
-      .remove();
-
-    const blocks: string[] = [];
-
-    // First, try to find recipe-specific containers (common recipe site patterns)
-    const recipeContainers = [
-      '[itemtype*="Recipe"]',
-      // Schema.org microdata containers
-      '[itemprop="recipeIngredient"]',
-      '[itemprop="recipeInstructions"]',
-      // Specific recipe content containers (not generic "recipe" class which might match sidebars)
-      ".recipe-content",
-      ".recipe-body",
-      "#recipe",
-      "#recipe-content",
-      // Common ingredient/instruction containers
-      ".ingredients",
-      ".steps",
-      ".instructions",
-      ".directions",
-      '[class*="ingredient-list"]',
-      '[class*="instruction-list"]',
-      // Generic content containers (last resort)
-      "article",
-      "main",
-      ".entry-content",
-      ".post-content",
-    ];
-
-    let $content = $body;
-    let foundSpecificContainer = false;
-
-    for (const selector of recipeContainers) {
-      const $found = $body.find(selector);
-
-      if ($found.length > 0) {
-        // For ingredient/step containers, we want ALL of them, not just the first
-        if (
-          selector.includes("ingredient") ||
-          selector.includes("step") ||
-          selector.includes("instruction") ||
-          selector.includes("direction")
-        ) {
-          // Collect text from all matching containers
-          $found.each((_, container) => {
-            $(container)
-              .find("li, p, div, span")
-              .each((_, el) => {
-                const t = $(el).text().trim();
-
-                if (t && t.length > 1) {
-                  blocks.push(t);
-                }
-              });
-          });
-          foundSpecificContainer = true;
-        } else {
-          // For article/main containers, use as content source
-          $content = $found.first();
-          foundSpecificContainer = true;
-          break;
-        }
-      }
-    }
-
-    // Also extract the title
-    const title = $body
-      .find('h1.entry-title, h1[itemprop="name"], .recipe-title, h1')
-      .first()
-      .text()
-      .trim();
-
-    if (title) {
-      blocks.unshift(title);
-    }
-
-    // If we found specific ingredient/step containers, we're done
-    if (foundSpecificContainer && blocks.length > 5) {
-      return blocks
-        .join("\n")
-        .replace(/\r/g, "")
-        .replace(/[\t ]{2,}/g, " ");
-    }
-
-    // Standard semantic elements plus div (for sites that don't use semantic HTML)
-    const selectors =
-      "h1,h2,h3,h4,h5,h6,p,li,dt,dd,th,td,figcaption,time,span,div,img,picture,source";
-
-    // Track seen text to avoid duplicates (child elements often repeat parent text)
-    const seenText = new Set<string>(blocks); // Include already found blocks
-
-    $content.find(selectors).each((_, el) => {
-      const name = (el as any).name?.toLowerCase?.();
-
-      if (name === "img") {
-        const alt = ($(el).attr("alt") || "").trim();
-        const src = (
-          $(el).attr("src") ||
-          $(el).attr("data-src") ||
-          $(el).attr("data-lazy-src") ||
-          ""
-        ).trim();
-        const srcset = ($(el).attr("srcset") || "").trim();
-        const url =
-          src ||
-          srcset
-            .split(",")
-            .map((s) => s.trim().split(" ")[0])
-            .find(Boolean) ||
-          "";
-
-        if (url) blocks.push(`[img] ${alt ? alt + " | " : ""}${url}`.trim());
-
-        return;
-      }
-
-      // For divs, only extract direct text content (not nested element text)
-      // This helps avoid duplicate content from parent/child relationships
-      if (name === "div") {
-        const directText = $(el)
-          .contents()
-          .filter((_, node) => node.type === "text")
-          .text()
-          .trim();
-
-        if (directText && directText.length > 2 && !seenText.has(directText)) {
-          seenText.add(directText);
-          blocks.push(directText);
-        }
-
-        return;
-      }
-
-      const t = $(el).text().trim();
-
-      // Skip if empty, too short, or already seen
-      if (t && t.length > 1 && !seenText.has(t)) {
-        seenText.add(t);
-        blocks.push(t);
-      }
-    });
-
-    return blocks
-      .join("\n")
-      .replace(/\r/g, "")
-      .replace(/[\t ]{2,}/g, " ");
-  } catch {
-    return html;
-  }
-}
-
-async function buildExtractionPrompt(url: string | undefined, html: string): Promise<string> {
+async function buildExtractionPrompt(
+  url: string | undefined,
+  html: string,
+  allergies?: string[]
+): Promise<string> {
   const sanitized = extractSanitizedBody(html);
   const truncated = sanitized.slice(0, 50000);
 
@@ -181,7 +21,15 @@ async function buildExtractionPrompt(url: string | undefined, html: string): Pro
 
   aiLogger.debug({ prompt }, "Loaded extraction prompt template");
 
-  return `${prompt}
+  // Build allergy detection instruction
+  let allergyInstruction = "";
+  if (allergies && allergies.length > 0) {
+    allergyInstruction = `\nALLERGY DETECTION: Only detect these specific allergens/dietary tags from the ingredients: ${allergies.join(", ")}. Do not add any other allergy tags.`;
+  } else {
+    allergyInstruction = "\nALLERGY DETECTION: Skip allergy/dietary tag detection. Do not add any tags to the keywords array.";
+  }
+
+  return `${prompt}${allergyInstruction}
 ${url ? `URL: ${url}\n` : ""}
 WEBPAGE TEXT:
 ${truncated}`;
@@ -189,7 +37,8 @@ ${truncated}`;
 
 export async function extractRecipeWithAI(
   html: string,
-  url?: string
+  url?: string,
+  allergies?: string[]
 ): Promise<FullRecipeInsertDTO | null> {
   // Guard: AI must be enabled
   const aiEnabled = await isAIEnabled();
@@ -203,7 +52,7 @@ export async function extractRecipeWithAI(
   aiLogger.info({ url }, "Starting AI recipe extraction");
 
   const provider = await getAIProvider();
-  const prompt = await buildExtractionPrompt(url, html);
+  const prompt = await buildExtractionPrompt(url, html, allergies);
 
   aiLogger.debug(
     { url, promptLength: prompt.length, prompt: prompt },
@@ -222,10 +71,13 @@ export async function extractRecipeWithAI(
     return null;
   }
 
+  jsonLd.image = extractImageCandidates(html);
+
   aiLogger.debug(
     {
       url,
       recipeName: jsonLd.name,
+      image: jsonLd.image,
       metricIngredients: jsonLd.recipeIngredient?.metric?.length ?? 0,
       usIngredients: jsonLd.recipeIngredient?.us?.length ?? 0,
       metricSteps: jsonLd.recipeInstructions?.metric?.length ?? 0,
@@ -285,23 +137,6 @@ export async function extractRecipeWithAI(
     ...(normalized.steps ?? []), // metric from normalizer
     ...usSteps,
   ];
-
-  const aiConfig = await getAIConfig();
-  aiLogger.debug({ aiConfig }, "AI config loaded");
-  if (aiConfig?.autoTagAllergies && Array.isArray(jsonLd.keywords) && jsonLd.keywords.length > 0) {
-    const existingTagNames = (normalized.tags ?? []).map((t) => t.name.toLowerCase());
-    const newKeywords = jsonLd.keywords.filter(
-      (keyword: string) => !existingTagNames.includes(keyword.toLowerCase())
-    );
-
-    const newTags = newKeywords.map((t: string) => ({ name: t.toLowerCase() }));
-
-    normalized.tags = [...(normalized.tags ?? []), ...newTags];
-    aiLogger.debug(
-      { addedTags: newKeywords, allTags: normalized.tags },
-      "Added AI-detected allergy/dietary tags"
-    );
-  }
 
   aiLogger.info(
     {

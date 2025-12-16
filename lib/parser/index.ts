@@ -11,7 +11,10 @@ import {
 import { isVideoUrl } from "@/lib/helpers";
 import { parserLogger as log } from "@/server/logger";
 
-export async function parseRecipeFromUrl(url: string): Promise<FullRecipeInsertDTO> {
+export async function parseRecipeFromUrl(
+  url: string,
+  allergies?: string[]
+): Promise<FullRecipeInsertDTO> {
   // Check if URL is a video platform (YouTube, Instagram, TikTok, etc.)
   if (await isVideoUrl(url)) {
     const videoEnabled = await isVideoParsingEnabled();
@@ -23,7 +26,7 @@ export async function parseRecipeFromUrl(url: string): Promise<FullRecipeInsertD
     try {
       const { processVideoRecipe } = await import("@/lib/video/processor");
 
-      return await processVideoRecipe(url);
+      return await processVideoRecipe(url, allergies);
     } catch (error: any) {
       log.error({ err: error }, "Video processing failed");
       throw error;
@@ -69,7 +72,7 @@ export async function parseRecipeFromUrl(url: string): Promise<FullRecipeInsertD
 
   if (aiEnabled) {
     log.info({ url }, "Falling back to AI extraction");
-    const ai = await extractRecipeWithAI(html, url);
+    const ai = await extractRecipeWithAI(html, url, allergies);
 
     if (ai) {
       return ai;
