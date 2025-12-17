@@ -23,17 +23,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22.21.0
+          node-version: 22.21.1
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.11.0
+          version: 10.26.0
           run_install: false
       - name: Verify pnpm installation
         run: pnpm --version
@@ -48,17 +48,17 @@ jobs:
     needs: install
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22.21.0
+          node-version: 22.21.1
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.11.0
+          version: 10.26.0
           run_install: false
       - name: Verify pnpm installation
         run: pnpm --version
@@ -75,17 +75,17 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22.21.0
+          node-version: 22.21.1
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.11.0
+          version: 10.26.0
           run_install: false
       - name: Verify pnpm installation
         run: pnpm --version
@@ -102,17 +102,17 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22.21.0
+          node-version: 22.21.1
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.11.0
+          version: 10.26.0
           run_install: false
       - name: Verify pnpm installation
         run: pnpm --version
@@ -129,16 +129,16 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22.21.0
+          node-version: 22.21.1
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.11.0
+          version: 10.26.0
           run_install: false
       - name: Verify pnpm installation
         run: pnpm --version
