@@ -28,10 +28,10 @@ importers:
         version: 4.1.0
       drizzle-orm:
         specifier: 0.44.5
-        version: 0.44.5(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)
+        version: 0.44.5(@types/pg@8.16.0)(kysely@0.28.8)(pg@8.16.3)
       drizzle-zod:
         specifier: 0.8.3
-        version: 0.8.3(drizzle-orm@0.44.5(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(zod@4.1.5)
+        version: 0.8.3(drizzle-orm@0.44.5(@types/pg@8.16.0)(kysely@0.28.8)(pg@8.16.3))(zod@4.1.5)
       heic-convert:
         specifier: ^2.1.0
         version: 2.1.0
@@ -106,8 +106,8 @@ importers:
         specifier: ^3.0.11
         version: 3.0.11
       '@types/pg':
-        specifier: 8.15.5
-        version: 8.15.5
+        specifier: 8.16.0
+        version: 8.16.0
       '@types/react':
         specifier: 19.2.7
         version: 19.2.7
@@ -2530,8 +2530,8 @@ packages:
   '@types/node@24.10.1':
     resolution: {integrity: sha512-GNWcUTRBgIRJD5zj+Tq0fKOJ5XZajIiBroOF0yvj2bSU1WvNdYS/dn9UxwsujGW4JX06dnHyjV2y9rRaybH0iQ==}
 
-  '@types/pg@8.15.5':
-    resolution: {integrity: sha512-LF7lF6zWEKxuT3/OR8wAZGzkg4ENGXFNyiV/JeOt9z5B+0ZVwbql9McqX5c/WStFq1GaGso7H1AzP/qSzmlCKQ==}
+  '@types/pg@8.16.0':
+    resolution: {integrity: sha512-RmhMd/wD+CF8Dfo+cVIy3RR5cl8CyfXQ0tGgW6XBL8L4LM/UTEbNXYRbLwU6w+CgrKBNbrQWt4FUtTfaU5jSYQ==}
 
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
@@ -8302,7 +8302,7 @@ snapshots:
     dependencies:
       undici-types: 7.16.0
 
-  '@types/pg@8.15.5':
+  '@types/pg@8.16.0':
     dependencies:
       '@types/node': 24.10.1
       pg-protocol: 1.10.3
@@ -9059,15 +9059,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.5(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3):
+  drizzle-orm@0.44.5(@types/pg@8.16.0)(kysely@0.28.8)(pg@8.16.3):
     optionalDependencies:
-      '@types/pg': 8.15.5
+      '@types/pg': 8.16.0
       kysely: 0.28.8
       pg: 8.16.3
 
-  drizzle-zod@0.8.3(drizzle-orm@0.44.5(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(zod@4.1.5):
+  drizzle-zod@0.8.3(drizzle-orm@0.44.5(@types/pg@8.16.0)(kysely@0.28.8)(pg@8.16.3))(zod@4.1.5):
     dependencies:
-      drizzle-orm: 0.44.5(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)
+      drizzle-orm: 0.44.5(@types/pg@8.16.0)(kysely@0.28.8)(pg@8.16.3)
       zod: 4.1.5
 
   dts-resolver@2.1.3: {}
