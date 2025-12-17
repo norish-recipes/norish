@@ -3,7 +3,7 @@
   "version": "0.13.7-beta",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "pnpm@10.26.0",
   "scripts": {
     "dev": "tsx watch server.ts",
     "build": "next build && pnpm run build:server && pnpm run update-sw",
