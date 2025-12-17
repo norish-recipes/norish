@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 
 import { createTestQueryClient, createTestWrapper } from "./test-utils";
@@ -13,7 +14,7 @@ vi.mock("@/lib/logger", () => ({
 
 describe("useRecipeId", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
-  let mockReserveId: ReturnType<typeof vi.fn>;
+  let mockReserveId: Mock<() => Promise<{ recipeId: string }>>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -31,7 +32,7 @@ describe("useRecipeId", () => {
             reserveId: {
               queryOptions: () => ({
                 queryKey: ["recipes", "reserveId"],
-                queryFn: async () => mockReserveId(),
+                queryFn: () => mockReserveId(),
               }),
             },
           },
@@ -56,7 +57,7 @@ describe("useRecipeId", () => {
             reserveId: {
               queryOptions: () => ({
                 queryKey: ["recipes", "reserveId"],
-                queryFn: async () => mockReserveId(),
+                queryFn: () => mockReserveId(),
               }),
             },
           },
@@ -84,7 +85,7 @@ describe("useRecipeId", () => {
             reserveId: {
               queryOptions: () => ({
                 queryKey: ["recipes", "reserveId"],
-                queryFn: async () => mockReserveId(),
+                queryFn: () => mockReserveId(),
               }),
             },
           },
@@ -112,7 +113,7 @@ describe("useRecipeId", () => {
             reserveId: {
               queryOptions: () => ({
                 queryKey: ["recipes", "reserveId"],
-                queryFn: async () => mockReserveId(),
+                queryFn: () => mockReserveId(),
               }),
             },
           },
@@ -143,7 +144,7 @@ describe("useRecipeId", () => {
             reserveId: {
               queryOptions: () => ({
                 queryKey: ["recipes", "reserveId"],
-                queryFn: async () => mockReserveId(),
+                queryFn: () => mockReserveId(),
               }),
             },
           },
@@ -172,7 +173,7 @@ describe("useRecipeId", () => {
             reserveId: {
               queryOptions: () => ({
                 queryKey: ["recipes", "reserveId"],
-                queryFn: async () => mockReserveId(),
+                queryFn: () => mockReserveId(),
               }),
             },
           },
@@ -200,7 +201,7 @@ describe("useRecipeId", () => {
             reserveId: {
               queryOptions: () => ({
                 queryKey: ["recipes", "reserveId"],
-                queryFn: async () => mockReserveId(),
+                queryFn: () => mockReserveId(),
               }),
             },
           },
@@ -228,7 +229,7 @@ describe("useRecipeId", () => {
             reserveId: {
               queryOptions: () => ({
                 queryKey: ["recipes", "reserveId"],
-                queryFn: async () => mockReserveId(),
+                queryFn: () => mockReserveId(),
               }),
             },
           },
@@ -263,7 +264,7 @@ describe("useRecipeId", () => {
             reserveId: {
               queryOptions: () => ({
                 queryKey: ["recipes", "reserveId"],
-                queryFn: async () => mockReserveId(),
+                queryFn: () => mockReserveId(),
               }),
             },
           },
