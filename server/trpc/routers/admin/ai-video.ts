@@ -70,7 +70,13 @@ const testAIEndpoint = adminProcedure
   .mutation(async ({ input, ctx }) => {
     log.info({ userId: ctx.user.id, provider: input.provider }, "Testing AI endpoint");
 
-    return await testAIEndpointFn(input);
+    let apiKey = input.apiKey;
+    if (!apiKey) {
+      const storedConfig = await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG, true);
+      apiKey = storedConfig?.apiKey;
+    }
+
+    return await testAIEndpointFn({ ...input, apiKey });
   });
 
 export const aiVideoProcedures = router({

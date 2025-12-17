@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/react";
-import { ArrowDownIcon, ArrowUpIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { ArrowDownTrayIcon, ArrowUpIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 import { UsersIcon } from "@heroicons/react/24/outline";
 import { AnimatePresence, motion } from "framer-motion";
@@ -101,7 +101,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
               size="md"
               startContent={
                 <span className="text-default-500">
-                  <ArrowDownIcon className="size-4" />
+                  <ArrowDownTrayIcon className="size-4" />
                 </span>
               }
               variant="light"

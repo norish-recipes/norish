@@ -1,3 +1,5 @@
+import { aiLogger } from "../logger";
+
 export async function testOIDCProvider(config: {
   issuer: string;
   wellknown?: string;
@@ -111,6 +113,7 @@ export async function testAIEndpoint(config: {
       signal: AbortSignal.timeout(10000),
     });
 
+    aiLogger.debug({ status: response.status, statusText: response.statusText, url: testUrl }, "Test AI endpoint");
     if (!response.ok) {
       return {
         success: false,

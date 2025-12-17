@@ -20,6 +20,7 @@ export default function AIConfigForm() {
   const [temperature, setTemperature] = useState(aiConfig?.temperature ?? 0);
   const [maxTokens, setMaxTokens] = useState(aiConfig?.maxTokens ?? 10000);
   const [autoTagAllergies, setAutoTagAllergies] = useState(aiConfig?.autoTagAllergies ?? true);
+  const [alwaysUseAI, setAlwaysUseAI] = useState(aiConfig?.alwaysUseAI ?? false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -33,6 +34,7 @@ export default function AIConfigForm() {
       setTemperature(aiConfig.temperature);
       setMaxTokens(aiConfig.maxTokens);
       setAutoTagAllergies(aiConfig.autoTagAllergies ?? true);
+      setAlwaysUseAI(aiConfig.alwaysUseAI ?? false);
     }
   }, [aiConfig]);
 
@@ -83,6 +85,7 @@ export default function AIConfigForm() {
         temperature,
         maxTokens,
         autoTagAllergies,
+        alwaysUseAI,
       });
     } finally {
       setSaving(false);
@@ -186,6 +189,21 @@ export default function AIConfigForm() {
           isDisabled={!enabled}
           isSelected={autoTagAllergies}
           onValueChange={setAutoTagAllergies}
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <span className="font-medium">Always Use AI Importing</span>
+          <span className="text-default-500 text-sm">
+            Skip structured parsers and extract recipes using AI only
+          </span>
+        </div>
+        <Switch
+          color="success"
+          isDisabled={!enabled}
+          isSelected={alwaysUseAI}
+          onValueChange={setAlwaysUseAI}
         />
       </div>
 

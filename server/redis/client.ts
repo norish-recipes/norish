@@ -75,7 +75,7 @@ export async function createSubscriberClient(): Promise<Redis> {
     log.error({ err }, "Redis subscriber error");
   });
 
-  log.debug("Redis subscriber connected");
+  log.trace("Redis subscriber connected");
 
   return subscriber;
 }

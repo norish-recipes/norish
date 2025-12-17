@@ -14,18 +14,20 @@ export function registerConnection(userId: string, ws: WebSocket): void {
   if (!userConnections.has(userId)) {
     userConnections.set(userId, new Set());
   }
+
   userConnections.get(userId)!.add(ws);
-  log.debug({ userId, total: userConnections.get(userId)!.size }, "Registered WebSocket connection");
 }
 
 export function unregisterConnection(userId: string, ws: WebSocket): void {
   const connections = userConnections.get(userId);
   if (connections) {
     connections.delete(ws);
+
     if (connections.size === 0) {
       userConnections.delete(userId);
     }
-    log.debug({ userId, remaining: connections?.size ?? 0 }, "Unregistered WebSocket connection");
+
+    log.trace({ userId, remaining: connections?.size ?? 0 }, "Unregistered WebSocket connection");
   }
 }
 
@@ -37,6 +39,7 @@ export function terminateUserConnections(userId: string, reason: string): void {
       // Close with code 4000 (custom application code) - client will auto-reconnect
       ws.close(4000, reason);
     }
+
     userConnections.delete(userId);
   }
 }
@@ -52,6 +55,7 @@ type InvalidationMessage = {
 export async function emitConnectionInvalidation(userId: string, reason: string): Promise<void> {
   const client = await getPublisherClient();
   const message: InvalidationMessage = { userId, reason };
+
   await client.publish(INVALIDATION_CHANNEL, superjson.stringify(message));
   log.debug({ userId, reason }, "Emitted connection invalidation");
 }

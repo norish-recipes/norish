@@ -121,6 +121,16 @@ export async function isAIEnabled(): Promise<boolean> {
 }
 
 /**
+ * Check if imports should always use AI (skip structured parsers)
+ * Only returns true if AI is enabled AND alwaysUseAI is set
+ */
+export async function shouldAlwaysUseAI(): Promise<boolean> {
+  const aiConfig = await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG);
+
+  return (aiConfig?.enabled && aiConfig?.alwaysUseAI) ?? false;
+}
+
+/**
  * Check if video parsing is enabled
  */
 export async function isVideoParsingEnabled(): Promise<boolean> {

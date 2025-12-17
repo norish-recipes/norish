@@ -10,7 +10,7 @@ import { trpcLogger as log } from "@/server/logger";
 const onCreated = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const eventName = groceryEmitter.householdEvent(ctx.householdKey, "created");
 
-  log.debug(
+  log.trace(
     { userId: ctx.user.id, householdKey: ctx.householdKey },
     "Subscribed to grocery created events"
   );
@@ -20,7 +20,7 @@ const onCreated = authedProcedure.subscription(async function* ({ ctx, signal })
       yield data as GrocerySubscriptionEvents["created"];
     }
   } finally {
-    log.debug(
+    log.trace(
       { userId: ctx.user.id, householdKey: ctx.householdKey },
       "Unsubscribed from grocery created events"
     );
@@ -30,7 +30,7 @@ const onCreated = authedProcedure.subscription(async function* ({ ctx, signal })
 const onUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const eventName = groceryEmitter.householdEvent(ctx.householdKey, "updated");
 
-  log.debug(
+  log.trace(
     { userId: ctx.user.id, householdKey: ctx.householdKey },
     "Subscribed to grocery updated events"
   );
@@ -40,7 +40,7 @@ const onUpdated = authedProcedure.subscription(async function* ({ ctx, signal })
       yield data as GrocerySubscriptionEvents["updated"];
     }
   } finally {
-    log.debug(
+    log.trace(
       { userId: ctx.user.id, householdKey: ctx.householdKey },
       "Unsubscribed from grocery updated events"
     );
@@ -50,7 +50,7 @@ const onUpdated = authedProcedure.subscription(async function* ({ ctx, signal })
 const onDeleted = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const eventName = groceryEmitter.householdEvent(ctx.householdKey, "deleted");
 
-  log.debug(
+  log.trace(
     { userId: ctx.user.id, householdKey: ctx.householdKey },
     "Subscribed to grocery deleted events"
   );
@@ -60,7 +60,7 @@ const onDeleted = authedProcedure.subscription(async function* ({ ctx, signal })
       yield data as GrocerySubscriptionEvents["deleted"];
     }
   } finally {
-    log.debug(
+    log.trace(
       { userId: ctx.user.id, householdKey: ctx.householdKey },
       "Unsubscribed from grocery deleted events"
     );
@@ -70,7 +70,7 @@ const onDeleted = authedProcedure.subscription(async function* ({ ctx, signal })
 const onRecurringCreated = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const eventName = groceryEmitter.householdEvent(ctx.householdKey, "recurringCreated");
 
-  log.debug(
+  log.trace(
     { userId: ctx.user.id, householdKey: ctx.householdKey },
     "Subscribed to recurring grocery created events"
   );
@@ -80,7 +80,7 @@ const onRecurringCreated = authedProcedure.subscription(async function* ({ ctx, 
       yield data as GrocerySubscriptionEvents["recurringCreated"];
     }
   } finally {
-    log.debug(
+    log.trace(
       { userId: ctx.user.id, householdKey: ctx.householdKey },
       "Unsubscribed from recurring grocery created events"
     );
@@ -90,7 +90,7 @@ const onRecurringCreated = authedProcedure.subscription(async function* ({ ctx, 
 const onRecurringUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const eventName = groceryEmitter.householdEvent(ctx.householdKey, "recurringUpdated");
 
-  log.debug(
+  log.trace(
     { userId: ctx.user.id, householdKey: ctx.householdKey },
     "Subscribed to recurring grocery updated events"
   );
@@ -100,7 +100,7 @@ const onRecurringUpdated = authedProcedure.subscription(async function* ({ ctx, 
       yield data as GrocerySubscriptionEvents["recurringUpdated"];
     }
   } finally {
-    log.debug(
+    log.trace(
       { userId: ctx.user.id, householdKey: ctx.householdKey },
       "Unsubscribed from recurring grocery updated events"
     );
@@ -110,7 +110,7 @@ const onRecurringUpdated = authedProcedure.subscription(async function* ({ ctx, 
 const onRecurringDeleted = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const eventName = groceryEmitter.householdEvent(ctx.householdKey, "recurringDeleted");
 
-  log.debug(
+  log.trace(
     { userId: ctx.user.id, householdKey: ctx.householdKey },
     "Subscribed to recurring grocery deleted events"
   );
@@ -120,7 +120,7 @@ const onRecurringDeleted = authedProcedure.subscription(async function* ({ ctx, 
       yield data as GrocerySubscriptionEvents["recurringDeleted"];
     }
   } finally {
-    log.debug(
+    log.trace(
       { userId: ctx.user.id, householdKey: ctx.householdKey },
       "Unsubscribed from recurring grocery deleted events"
     );
@@ -130,7 +130,7 @@ const onRecurringDeleted = authedProcedure.subscription(async function* ({ ctx, 
 const onFailed = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const eventName = groceryEmitter.householdEvent(ctx.householdKey, "failed");
 
-  log.debug(
+  log.trace(
     { userId: ctx.user.id, householdKey: ctx.householdKey },
     "Subscribed to grocery failed events"
   );
@@ -140,7 +140,7 @@ const onFailed = authedProcedure.subscription(async function* ({ ctx, signal }) 
       yield data as GrocerySubscriptionEvents["failed"];
     }
   } finally {
-    log.debug(
+    log.trace(
       { userId: ctx.user.id, householdKey: ctx.householdKey },
       "Unsubscribed from grocery failed events"
     );

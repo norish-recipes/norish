@@ -14,7 +14,7 @@ const onPolicyUpdated = authedProcedure.subscription(async function* ({ ctx, sig
   const broadcastEventName = permissionsEmitter.broadcastEvent("policyUpdated");
   const userEventName = permissionsEmitter.userEvent(ctx.user.id, "policyUpdated");
 
-  log.debug({ userId: ctx.user.id }, "Subscribed to permission policy updates");
+  log.trace({ userId: ctx.user.id }, "Subscribed to permission policy updates");
 
   try {
     // Merge both event sources
@@ -25,7 +25,7 @@ const onPolicyUpdated = authedProcedure.subscription(async function* ({ ctx, sig
       yield data as PermissionsSubscriptionEvents["policyUpdated"];
     }
   } finally {
-    log.debug({ userId: ctx.user.id }, "Unsubscribed from permission policy updates");
+    log.trace({ userId: ctx.user.id }, "Unsubscribed from permission policy updates");
   }
 });
 

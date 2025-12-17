@@ -145,7 +145,7 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
   const broadcastEventName = emitter.broadcastEvent(event);
   const userEventName = emitter.userEvent(ctx.userId, event);
 
-  log.debug(
+  log.trace(
     { event, householdEventName, broadcastEventName, userEventName },
     "Creating policy-aware iterables"
   );
@@ -164,7 +164,7 @@ export function createPolicyAwareSubscription<
   return authedProcedure.subscription(async function* ({ ctx, signal }) {
     const policyCtx = { userId: ctx.user.id, householdKey: ctx.householdKey };
 
-    log.debug({ userId: ctx.user.id, householdKey: ctx.householdKey }, `Subscribed to ${logMessage}`);
+    log.trace({ userId: ctx.user.id, householdKey: ctx.householdKey }, `Subscribed to ${logMessage}`);
 
     try {
       const iterables = createPolicyAwareIterables(emitter, policyCtx, eventName, signal);
@@ -173,7 +173,7 @@ export function createPolicyAwareSubscription<
         yield data as TEvents[K];
       }
     } finally {
-      log.debug({ userId: ctx.user.id, householdKey: ctx.householdKey }, `Unsubscribed from ${logMessage}`);
+      log.trace({ userId: ctx.user.id, householdKey: ctx.householdKey }, `Unsubscribed from ${logMessage}`);
     }
   });
 }

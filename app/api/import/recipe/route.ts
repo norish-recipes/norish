@@ -5,6 +5,7 @@ import { getHouseholdForUser, dashboardRecipe } from "@/server/db";
 import { addImportJob } from "@/server/queue";
 import { isUrl } from "@/lib/helpers";
 import { parserLogger as log } from "@/server/logger";
+import { shouldAlwaysUseAI } from "@/config/server-config-loader";
 
 /**
  * POST /api/import/recipe
@@ -55,6 +56,9 @@ export async function POST(req: Request) {
     const householdUserIds = household?.users?.map((u) => u.id) ?? null;
     const recipeId = crypto.randomUUID();
 
+    // Check if AI-only import is enabled globally
+    const forceAI = await shouldAlwaysUseAI();
+
     // Add to BullMQ queue
     const result = await addImportJob({
       url,
@@ -62,6 +66,7 @@ export async function POST(req: Request) {
       userId: session.user.id,
       householdKey,
       householdUserIds,
+      forceAI,
     });
 
     if (result.status === "exists" && result.existingRecipeId) {

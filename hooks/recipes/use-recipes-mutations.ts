@@ -11,6 +11,8 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 export type RecipesMutationsResult = {
   /** Import a recipe from URL. Fire-and-forget. */
   importRecipe: (url: string) => void;
+  /** Import a recipe from URL using AI only. Fire-and-forget. */
+  importRecipeWithAI: (url: string) => void;
   /** Create a recipe manually. Fire-and-forget. */
   createRecipe: (input: FullRecipeInsertDTO) => void;
   /** Update a recipe. Fire-and-forget. */
@@ -34,6 +36,18 @@ export function useRecipesMutations(): RecipesMutationsResult {
   const importRecipe = (url: string): void => {
     importMutation.mutate(
       { url },
+      {
+        onSuccess: (recipeId) => {
+          addPendingRecipe(recipeId);
+        },
+        onError: () => invalidate(),
+      }
+    );
+  };
+
+  const importRecipeWithAI = (url: string): void => {
+    importMutation.mutate(
+      { url, forceAI: true },
       {
         onSuccess: (recipeId) => {
           addPendingRecipe(recipeId);
@@ -81,9 +95,11 @@ export function useRecipesMutations(): RecipesMutationsResult {
 
   return {
     importRecipe,
+    importRecipeWithAI,
     createRecipe,
     updateRecipe,
     deleteRecipe,
     convertMeasurements,
   };
 }
+

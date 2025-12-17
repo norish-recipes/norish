@@ -274,9 +274,9 @@ const deleteProcedure = authedProcedure
   });
 
 const importFromUrlProcedure = authedProcedure
-  .input(RecipeImportInputSchema)
+  .input(RecipeImportInputSchema.extend({ forceAI: z.boolean().optional() }))
   .mutation(async ({ ctx, input }) => {
-    const { url } = input;
+    const { url, forceAI } = input;
     const recipeId = crypto.randomUUID();
 
     // Add job to queue - returns conflict status if duplicate in queue
@@ -286,6 +286,7 @@ const importFromUrlProcedure = authedProcedure
       userId: ctx.user.id,
       householdKey: ctx.householdKey,
       householdUserIds: ctx.householdUserIds,
+      forceAI,
     });
 
     if (result.status === "exists" || result.status === "duplicate") {
@@ -340,12 +341,12 @@ const convertMeasurements = authedProcedure
         // Check edit permission (uses recipe.userId directly since we have the full recipe)
         const permissionCheck = recipe.userId
           ? canAccessResource(
-              "edit",
-              ctx.user.id,
-              recipe.userId,
-              ctx.householdUserIds,
-              ctx.isServerAdmin
-            )
+            "edit",
+            ctx.user.id,
+            recipe.userId,
+            ctx.householdUserIds,
+            ctx.isServerAdmin
+          )
           : Promise.resolve(true);
 
         return permissionCheck.then((canEdit) => {

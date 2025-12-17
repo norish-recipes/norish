@@ -148,6 +148,7 @@ export const AIConfigSchema = z.object({
   temperature: z.number().min(0).max(2),
   maxTokens: z.number().int().positive(),
   autoTagAllergies: z.boolean().default(true),
+  alwaysUseAI: z.boolean().default(false),
 });
 
 export type AIConfig = z.infer<typeof AIConfigSchema>;

@@ -7,13 +7,15 @@ import {
   getContentIndicators,
   isAIEnabled,
   isVideoParsingEnabled,
+  shouldAlwaysUseAI,
 } from "@/config/server-config-loader";
 import { isVideoUrl } from "@/lib/helpers";
 import { parserLogger as log } from "@/server/logger";
 
 export async function parseRecipeFromUrl(
   url: string,
-  allergies?: string[]
+  allergies?: string[],
+  forceAI?: boolean
 ): Promise<FullRecipeInsertDTO> {
   // Check if URL is a video platform (YouTube, Instagram, TikTok, etc.)
   if (await isVideoUrl(url)) {
@@ -43,6 +45,27 @@ export async function parseRecipeFromUrl(
     throw new Error("Page does not appear to contain a recipe.");
   }
 
+  // Check if AI-only mode is requested or globally enabled
+  const useAIOnly = forceAI ?? (await shouldAlwaysUseAI());
+
+  if (useAIOnly) {
+    log.info({ url }, "AI-only mode enabled, skipping structured parsers");
+    const aiEnabled = await isAIEnabled();
+
+    if (!aiEnabled) {
+      throw new Error("AI-only import requested but AI is not enabled.");
+    }
+
+    const ai = await extractRecipeWithAI(html, url, allergies);
+
+    if (ai) {
+      return ai;
+    }
+
+    throw new Error("AI extraction failed - could not parse recipe.");
+  }
+
+  // Standard parsing flow: try structured parsers first, then AI fallback
   const jsonLdParsed = await tryExtractRecipeFromJsonLd(url, html);
   const containsStepsAndIngredients =
     !!jsonLdParsed &&

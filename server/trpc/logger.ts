@@ -41,16 +41,23 @@ class TrpcLogger {
   }
 
   async log(entry: LogEntry): Promise<void> {
-    const level: LogLevel = entry.success ? "info" : "error";
+    // Subscriptions at debug level (noisy), queries/mutations at info level
+    const level: LogLevel = entry.success
+      ? entry.type === "subscription"
+        ? "debug"
+        : "info"
+      : "error";
 
     // Console logging via pino
     if (this.enableConsole && this.shouldLog(level)) {
       const message = this.formatMessage(entry);
 
-      if (entry.success) {
-        log.info(message);
-      } else {
+      if (!entry.success) {
         log.error({ errorMessage: entry.errorMessage }, message);
+      } else if (entry.type === "subscription") {
+        log.debug(message);
+      } else {
+        log.info(message);
       }
     }
 

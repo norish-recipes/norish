@@ -41,7 +41,7 @@ export function initTrpcWebSocket(server: Server) {
     const host = req.headers.host || "localhost";
     const url = new URL(req.url || "/", `http://${host}`);
 
-    trpcLogger.debug({ pathname: url.pathname, host }, "WebSocket upgrade request");
+    trpcLogger.trace({ pathname: url.pathname, host }, "WebSocket upgrade request");
 
     if (url.pathname === "/trpc") {
       // Pre-authenticate to get userId for connection tracking
@@ -58,7 +58,7 @@ export function initTrpcWebSocket(server: Server) {
       }
 
       trpcWss!.handleUpgrade(req, socket, head, (ws) => {
-        trpcLogger.debug({ userId }, "WebSocket connection established");
+        trpcLogger.trace({ userId }, "WebSocket connection established");
 
         // Track connection by userId for server-side termination
         if (userId) {

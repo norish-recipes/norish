@@ -21,6 +21,7 @@ type Ctx = {
   // Actions (all void - fire and forget)
   loadMore: () => void;
   importRecipe: (url: string) => void;
+  importRecipeWithAI: (url: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
   deleteRecipe: (id: string) => void;
@@ -70,6 +71,7 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
 
   const {
     importRecipe: importRecipeMutation,
+    importRecipeWithAI: importRecipeWithAIMutation,
     createRecipe: createRecipeMutation,
     updateRecipe: updateRecipeMutation,
     deleteRecipe,
@@ -91,6 +93,20 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
       router.push("/");
     },
     [importRecipeMutation, router]
+  );
+
+  const importRecipeWithAI = useCallback(
+    (url: string): void => {
+      addToast({
+        severity: "default",
+        title: "Importing recipe with AI...",
+        description: "Import in progress, please wait...",
+      });
+
+      importRecipeWithAIMutation(url);
+      router.push("/");
+    },
+    [importRecipeWithAIMutation, router]
   );
 
   const createRecipe = useCallback(
@@ -118,6 +134,7 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
       pendingRecipeIds,
       loadMore,
       importRecipe,
+      importRecipeWithAI,
       createRecipe,
       updateRecipe,
       deleteRecipe,
@@ -132,6 +149,7 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
       pendingRecipeIds,
       loadMore,
       importRecipe,
+      importRecipeWithAI,
       createRecipe,
       updateRecipe,
       deleteRecipe,

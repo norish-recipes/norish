@@ -19,7 +19,7 @@ const CHANNEL_PREFIX = "norish";
  * Redis-backed typed event emitter.
  */
 export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
-  constructor(private readonly namespace: string = "default") {}
+  constructor(private readonly namespace: string = "default") { }
 
   async emitToHousehold<K extends keyof TEvents & string>(
     householdKey: string,
@@ -86,7 +86,7 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
     }
 
     await subscriber.subscribe(channel);
-    redisLogger.debug({ channel }, "Started Redis subscription");
+    redisLogger.trace({ channel }, "Started Redis subscription");
 
     try {
       // Use Node.js built-in events.on() for async iteration with AbortSignal
@@ -111,7 +111,7 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
       } catch (err) {
         redisLogger.debug({ err, channel }, "Error during subscription cleanup");
       }
-      redisLogger.debug({ channel }, "Ended Redis subscription");
+      redisLogger.trace({ channel }, "Ended Redis subscription");
     }
   }
 
