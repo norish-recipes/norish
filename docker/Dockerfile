@@ -3,7 +3,6 @@
 ##############################
 FROM node:25-alpine@sha256:26ded7f450a0ad37241d2ae97ea521a59cb551a1785c8a950f74b0a291ad3aea AS base
 
-
 RUN apk add --no-cache ca-certificates libc6-compat
 
 WORKDIR /app
@@ -99,42 +98,32 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOST="0.0.0.0"
 
-# Create non-root user with configurable UID/GID to match host user
+# Create non-root user with configurable UID/GID (always ensure norish exists)
 ARG UID=1000
 ARG GID=1000
 
-RUN if ! getent group ${GID} >/dev/null; then \
-      addgroup -g ${GID} -S norishapp; \
-    else \
-      addgroup -S norishapp || true; \
-    fi && \
-    \
-    # Create user if UID doesn't exist
-    if ! getent passwd ${UID} >/dev/null; then \
-      adduser -u ${UID} -S norish -G norishapp; \
-    else \
-      adduser -S norish -G norishapp || true; \
-    fi
+RUN addgroup -g ${GID} -S norishapp || true && \
+    adduser  -u ${UID} -S norish -G norishapp || true
 
 # Copy Next.js standalone output (includes minimal node_modules for Next.js itself)
-COPY --from=build --chown=norish:norishapp /app/.next/standalone ./
+COPY --from=build --chown=${UID}:${GID} /app/.next/standalone ./
 
 # Copy static assets
-COPY --from=build --chown=norish:norishapp /app/.next/static ./.next/static
-COPY --from=build --chown=norish:norishapp /app/public ./public
+COPY --from=build --chown=${UID}:${GID} /app/.next/static ./.next/static
+COPY --from=build --chown=${UID}:${GID} /app/public ./public
 
 # Copy compiled backend and configs
-COPY --from=build --chown=norish:norishapp /app/dist-server ./dist-server
-COPY --from=build --chown=norish:norishapp /app/config ./config
-COPY --from=build --chown=norish:norishapp /app/server/db ./server/db
-COPY --from=build --chown=norish:norishapp /app/server/ai/prompts ./server/ai/prompts
+COPY --from=build --chown=${UID}:${GID} /app/dist-server ./dist-server
+COPY --from=build --chown=${UID}:${GID} /app/config ./config
+COPY --from=build --chown=${UID}:${GID} /app/server/db ./server/db
+COPY --from=build --chown=${UID}:${GID} /app/server/ai/prompts ./server/ai/prompts
 
 # Copy pruned production node_modules (overwrites/merges with standalone's minimal deps)
-COPY --from=prod-deps --chown=norish:norishapp /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=${UID}:${GID} /app/node_modules ./node_modules
 
 # Create uploads, video temp, and binaries directories
 RUN mkdir -p /app/uploads/recipes /app/uploads/avatars /app/uploads/video-temp /app/bin && \
-    chown -R norish:norishapp /app/uploads /app/bin
+    chown -R ${UID}:${GID} /app/uploads /app/bin
 
 # Download yt-dlp standalone binary during build (architecture-specific for Alpine/musl)
 ARG TARGETARCH
@@ -144,9 +133,7 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
       YT_DLP_BINARY="yt-dlp_musllinux"; \
     fi && \
     wget -q "https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/${YT_DLP_BINARY}" -O /app/bin/yt-dlp && \
-    chmod +x /app/bin/yt-dlp && \
-    chown norish:norishapp /app/bin/yt-dlp && \
-    /app/bin/yt-dlp --version
+    chmod +x /app/bin/yt-dlp
 
 USER norish
 
