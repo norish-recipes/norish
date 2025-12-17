@@ -13,6 +13,8 @@ export type RecipesMutationsResult = {
   importRecipe: (url: string) => void;
   /** Import a recipe from URL using AI only. Fire-and-forget. */
   importRecipeWithAI: (url: string) => void;
+  /** Import a recipe from images using AI vision. Fire-and-forget. */
+  importRecipeFromImages: (files: File[]) => void;
   /** Create a recipe manually. Fire-and-forget. */
   createRecipe: (input: FullRecipeInsertDTO) => void;
   /** Update a recipe. Fire-and-forget. */
@@ -28,6 +30,7 @@ export function useRecipesMutations(): RecipesMutationsResult {
   const { addPendingRecipe, invalidate } = useRecipesQuery();
 
   const importMutation = useMutation(trpc.recipes.importFromUrl.mutationOptions());
+  const imageImportMutation = useMutation(trpc.recipes.importFromImages.mutationOptions());
   const createMutation = useMutation(trpc.recipes.create.mutationOptions());
   const updateMutation = useMutation(trpc.recipes.update.mutationOptions());
   const deleteMutation = useMutation(trpc.recipes.delete.mutationOptions());
@@ -93,9 +96,25 @@ export function useRecipesMutations(): RecipesMutationsResult {
     );
   };
 
+  const importRecipeFromImages = (files: File[]): void => {
+    // Build FormData with files
+    const formData = new FormData();
+    files.forEach((file, i) => {
+      formData.append(`file${i}`, file);
+    });
+
+    imageImportMutation.mutate(formData, {
+      onSuccess: (recipeId) => {
+        addPendingRecipe(recipeId);
+      },
+      onError: () => invalidate(),
+    });
+  };
+
   return {
     importRecipe,
     importRecipeWithAI,
+    importRecipeFromImages,
     createRecipe,
     updateRecipe,
     deleteRecipe,

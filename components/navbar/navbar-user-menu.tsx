@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/react";
-import { ArrowDownTrayIcon, ArrowUpIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { ArrowDownTrayIcon, ArrowUpIcon, PlusIcon, PhotoIcon } from "@heroicons/react/16/solid";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 import { UsersIcon } from "@heroicons/react/24/outline";
 import { AnimatePresence, motion } from "framer-motion";
@@ -14,8 +14,10 @@ import { useRouter } from "next/navigation";
 import { ThemeSwitch } from "./theme-switch";
 
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
+import ImportFromImageModal from "@/components/shared/import-from-image-modal";
 import { cssButtonPill, cssButtonPillDanger } from "@/config/css-tokens";
 import { useUserContext } from "@/context/user-context";
+import { usePermissionsContext } from "@/context/permissions-context";
 
 type TriggerVariant = "avatar" | "ellipsis";
 
@@ -25,8 +27,10 @@ interface NavbarUserMenuProps {
 
 export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuProps) {
   const { user, userMenuOpen, setUserMenuOpen, signOut } = useUserContext();
+  const { isAIEnabled } = usePermissionsContext();
   const router = useRouter();
   const [showUrlModal, setShowUrlModal] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -117,6 +121,34 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             </Button>
           </DropdownItem>
 
+          {isAIEnabled ? (
+            <DropdownItem
+              key="import-image"
+              className="py-2 data-[focus=true]:bg-transparent data-[hover=true]:bg-transparent"
+            >
+              <Button
+                className={`w-full justify-start bg-transparent ${cssButtonPill}`}
+                radius="full"
+                size="md"
+                startContent={
+                  <span className="text-default-500">
+                    <PhotoIcon className="size-4" />
+                  </span>
+                }
+                variant="light"
+                onPress={() => {
+                  setUserMenuOpen(false);
+                  setShowImageModal(true);
+                }}
+              >
+                <span className="flex flex-col items-start">
+                  <span className="text-sm leading-tight font-medium">Import from Image</span>
+                  <span className="text-default-500 text-xs leading-tight">Upload photos or PDF</span>
+                </span>
+              </Button>
+            </DropdownItem>
+          ) : null}
+
           <DropdownItem
             key="create-recipe"
             className="py-2 data-[focus=true]:bg-transparent data-[hover=true]:bg-transparent"
@@ -197,6 +229,9 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
 
       {/* Import from URL Modal */}
       <ImportRecipeModal isOpen={showUrlModal} onOpenChange={setShowUrlModal} />
+
+      {/* Import from Image Modal */}
+      <ImportFromImageModal isOpen={showImageModal} onOpenChange={setShowImageModal} />
 
       {/* Backdrop - only render on client */}
       {mounted &&

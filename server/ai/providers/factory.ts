@@ -13,28 +13,28 @@ export async function getAIProvider(): Promise<AIProvider> {
     throw new Error("AI is not enabled. Configure AI settings in the admin panel.");
   }
 
-  const { provider, model, endpoint, apiKey, temperature, maxTokens } = config;
+  const { provider, model, visionModel, endpoint, apiKey, temperature, maxTokens } = config;
 
   switch (provider) {
     case "openai":
       if (!apiKey) throw new Error("API Key is required for OpenAI provider");
 
-      return new OpenAIProvider({ apiKey, model, temperature, maxTokens });
+      return new OpenAIProvider({ apiKey, model, visionModel, temperature, maxTokens });
 
     case "ollama":
       if (!endpoint) throw new Error("Endpoint is required for Ollama provider");
 
-      return new OllamaProvider({ endpoint, model, temperature });
+      return new OllamaProvider({ endpoint, model, visionModel, temperature });
 
     case "lm-studio":
       if (!endpoint) throw new Error("Endpoint is required for LM Studio provider");
 
-      return new LMStudioProvider({ endpoint, model, temperature, maxTokens });
+      return new LMStudioProvider({ endpoint, model, visionModel, temperature, maxTokens });
 
     case "generic-openai":
       if (!endpoint) throw new Error("Endpoint is required for Generic OpenAI provider");
 
-      return new GenericOpenAIProvider({ endpoint, apiKey, model, temperature, maxTokens });
+      return new GenericOpenAIProvider({ endpoint, apiKey, model, visionModel, temperature, maxTokens });
 
     default:
       throw new Error(`Unknown AI provider: ${provider}`);

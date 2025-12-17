@@ -8,6 +8,10 @@ import {
   startRecipeImportWorker,
   stopRecipeImportWorker,
 } from "@/server/queue/recipe-import/worker";
+import {
+  startImageImportWorker,
+  stopImageImportWorker,
+} from "@/server/queue/image-import/worker";
 import { startCaldavSyncWorker, stopCaldavSyncWorker } from "@/server/queue/caldav-sync/worker";
 import {
   startScheduledTasksWorker,
@@ -23,6 +27,9 @@ export async function startWorkers(): Promise<void> {
   startRecipeImportWorker();
   log.info("Recipe import worker started");
 
+  startImageImportWorker();
+  log.info("Image import worker started");
+
   startCaldavSyncWorker();
   log.info("CalDAV sync worker started");
 
@@ -33,6 +40,7 @@ export async function startWorkers(): Promise<void> {
 
 export async function stopWorkers(): Promise<void> {
   await stopRecipeImportWorker();
+  await stopImageImportWorker();
   await stopCaldavSyncWorker();
   await stopScheduledTasksWorker();
   log.info("All BullMQ workers stopped");

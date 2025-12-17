@@ -16,6 +16,7 @@ export default function AIConfigForm() {
   const [provider, setProvider] = useState(aiConfig?.provider ?? "openai");
   const [endpoint, setEndpoint] = useState(aiConfig?.endpoint ?? "");
   const [model, setModel] = useState(aiConfig?.model ?? "gpt-4o-mini");
+  const [visionModel, setVisionModel] = useState(aiConfig?.visionModel ?? "");
   const [apiKey, setApiKey] = useState("");
   const [temperature, setTemperature] = useState(aiConfig?.temperature ?? 0);
   const [maxTokens, setMaxTokens] = useState(aiConfig?.maxTokens ?? 10000);
@@ -31,6 +32,7 @@ export default function AIConfigForm() {
       setProvider(aiConfig.provider);
       setEndpoint(aiConfig.endpoint ?? "");
       setModel(aiConfig.model);
+      setVisionModel(aiConfig.visionModel ?? "");
       setTemperature(aiConfig.temperature);
       setMaxTokens(aiConfig.maxTokens);
       setAutoTagAllergies(aiConfig.autoTagAllergies ?? true);
@@ -81,6 +83,7 @@ export default function AIConfigForm() {
         provider: provider as AIConfig["provider"],
         endpoint: endpoint || undefined,
         model,
+        visionModel: visionModel || undefined,
         apiKey: apiKey || undefined,
         temperature,
         maxTokens,
@@ -138,6 +141,15 @@ export default function AIConfigForm() {
         placeholder={provider === "openai" ? "gpt-4o-mini" : "llama3"}
         value={model}
         onValueChange={setModel}
+      />
+
+      <Input
+        description="Optional: Use a different model for image/vision tasks. Leave empty to use the model above."
+        isDisabled={!enabled}
+        label="Vision Model (Optional)"
+        placeholder={provider === "openai" ? "gpt-4o" : ""}
+        value={visionModel}
+        onValueChange={setVisionModel}
       />
 
       {needsApiKey && (

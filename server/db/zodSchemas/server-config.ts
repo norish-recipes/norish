@@ -144,6 +144,7 @@ export const AIConfigSchema = z.object({
   provider: AIProviderSchema,
   endpoint: z.url("Endpoint must be a valid URL").optional(),
   model: z.string().min(1, "Model is required"),
+  visionModel: z.string().optional(), // Optional: separate model for vision/image tasks
   apiKey: z.string().optional(),
   temperature: z.number().min(0).max(2),
   maxTokens: z.number().int().positive(),

@@ -37,3 +37,28 @@ export interface CaldavSyncJobData {
   /** CalDAV server URL for job deduplication */
   caldavServerUrl: string;
 }
+
+// Image import queue types
+export interface ImageImportFile {
+  data: string; // base64 encoded
+  mimeType: string;
+  filename: string;
+}
+
+export interface ImageImportJobData {
+  recipeId: string;
+  userId: string;
+  householdKey: string;
+  householdUserIds: string[] | null;
+  files: ImageImportFile[];
+}
+
+export type AddImageImportJobResult =
+  | { status: "queued"; job: Job<ImageImportJobData> }
+  | { status: "duplicate"; existingJobId: string };
+
+export interface PendingImageImportDTO {
+  recipeId: string;
+  fileCount: number;
+  addedAt: number;
+}

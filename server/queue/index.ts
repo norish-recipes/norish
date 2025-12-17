@@ -14,6 +14,14 @@ export { recipeImportQueue, addImportJob, closeRecipeImportQueue } from "./recip
 
 export { startRecipeImportWorker, stopRecipeImportWorker } from "./recipe-import/worker";
 
+export {
+  imageImportQueue,
+  addImageImportJob,
+  closeImageImportQueue,
+} from "./image-import/queue";
+
+export { startImageImportWorker, stopImageImportWorker } from "./image-import/worker";
+
 export { caldavSyncQueue, addCaldavSyncJob, closeCaldavSyncQueue } from "./caldav-sync/queue";
 
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
@@ -29,6 +37,8 @@ export { startScheduledTasksWorker, stopScheduledTasksWorker } from "./scheduled
 export type {
   RecipeImportJobData,
   AddImportJobResult,
+  ImageImportJobData,
+  AddImageImportJobResult,
   CaldavSyncJobData,
   CaldavSyncOperation,
 } from "@/types";

@@ -34,7 +34,7 @@ import {
   type PermissionAction,
 } from "@/server/auth/permissions";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
-import { addImportJob } from "@/server/queue";
+import { addImportJob, addImageImportJob } from "@/server/queue";
 import { FilterMode, SortOrder } from "@/types";
 
 interface UserContext {
@@ -453,6 +453,57 @@ const autocomplete = authedProcedure
     return results;
   });
 
+const importFromImagesProcedure = authedProcedure
+  .input(z.instanceof(FormData))
+  .mutation(async ({ ctx, input }) => {
+    const files: Array<{ data: string; mimeType: string; filename: string }> = [];
+
+    // Process files from FormData
+    for (const [key, value] of input.entries()) {
+      if (key.startsWith("file") && value instanceof File) {
+        const buffer = Buffer.from(await value.arrayBuffer());
+        const base64 = buffer.toString("base64");
+
+        files.push({
+          data: base64,
+          mimeType: value.type,
+          filename: value.name,
+        });
+      }
+    }
+
+    if (files.length === 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "No files provided",
+      });
+    }
+
+    const recipeId = crypto.randomUUID();
+
+    log.info(
+      { userId: ctx.user.id, fileCount: files.length, recipeId },
+      "Processing image import request"
+    );
+
+    const result = await addImageImportJob({
+      recipeId,
+      userId: ctx.user.id,
+      householdKey: ctx.householdKey,
+      householdUserIds: ctx.householdUserIds,
+      files,
+    });
+
+    if (result.status === "duplicate") {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "This import is already in progress",
+      });
+    }
+
+    return recipeId;
+  });
+
 export const recipesProcedures = router({
   list,
   get,
@@ -460,6 +511,7 @@ export const recipesProcedures = router({
   update,
   delete: deleteProcedure,
   importFromUrl: importFromUrlProcedure,
+  importFromImages: importFromImagesProcedure,
   convertMeasurements,
   reserveId,
   autocomplete,
