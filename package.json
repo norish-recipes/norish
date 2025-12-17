@@ -34,7 +34,7 @@
     "@trpc/tanstack-react-query": "^11.0.0",
     "better-auth": "^1.4.2",
     "date-fns": "^4.1.0",
-    "drizzle-orm": "0.44.5",
+    "drizzle-orm": "0.45.1",
     "drizzle-zod": "0.8.3",
     "heic-convert": "^2.1.0",
     "html-entities": "^2.6.0",
