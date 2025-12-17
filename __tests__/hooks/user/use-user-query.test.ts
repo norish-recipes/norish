@@ -11,7 +11,9 @@ import {
 
 // Mock the tRPC provider
 const mockQueryKey = ["user", "get"];
+const mockAllergiesQueryKey = ["user", "getAllergies"];
 const mockQueryOptions = vi.fn();
+const mockAllergiesQueryOptions = vi.fn();
 
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
@@ -19,6 +21,10 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       get: {
         queryKey: () => mockQueryKey,
         queryOptions: () => mockQueryOptions(),
+      },
+      getAllergies: {
+        queryKey: () => mockAllergiesQueryKey,
+        queryOptions: () => mockAllergiesQueryOptions(),
       },
     },
   }),
@@ -33,6 +39,12 @@ describe("useUserSettingsQuery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createTestQueryClient();
+
+    // Default allergies query to empty list
+    mockAllergiesQueryOptions.mockReturnValue({
+      queryKey: mockAllergiesQueryKey,
+      queryFn: async () => ({ allergies: [] }),
+    });
   });
 
   describe("initial state", () => {
@@ -49,7 +61,9 @@ describe("useUserSettingsQuery", () => {
 
       expect(result.current.user).toBeNull();
       expect(result.current.apiKeys).toEqual([]);
+      expect(result.current.allergies).toEqual([]);
       expect(result.current.queryKey).toEqual(mockQueryKey);
+      expect(result.current.allergiesQueryKey).toEqual(mockAllergiesQueryKey);
     });
 
     it("returns loading state initially", () => {

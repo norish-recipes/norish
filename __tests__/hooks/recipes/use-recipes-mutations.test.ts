@@ -15,6 +15,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         }),
       },
       importFromUrl: { mutationOptions: vi.fn() },
+      importFromImages: { mutationOptions: vi.fn() },
       create: { mutationOptions: vi.fn() },
       update: { mutationOptions: vi.fn() },
       delete: { mutationOptions: vi.fn() },

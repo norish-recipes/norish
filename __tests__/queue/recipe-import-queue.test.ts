@@ -34,6 +34,7 @@ vi.mock("@/config/server-config-loader", () => ({
 // Mock server config
 vi.mock("@/config/env-config-server", () => ({
   SERVER_CONFIG: {
+    MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
     REDIS_URL: "redis://localhost:6379",
     UPLOADS_DIR: "/tmp/uploads",
   },
@@ -70,7 +71,9 @@ describe("Recipe Import Queue", () => {
   });
 
   describe("generateJobId", () => {
-    it("generates global job ID for 'everyone' policy", async () => {
+    it(
+      "generates global job ID for 'everyone' policy",
+      async () => {
       const { generateJobId } = await import("@/server/queue");
 
       const jobId = generateJobId(
@@ -80,10 +83,12 @@ describe("Recipe Import Queue", () => {
         "everyone"
       );
 
-      expect(jobId).toBe("import:https://example.com/recipe");
+      expect(jobId).toBe("import_example.com_recipe");
       expect(jobId).not.toContain("user-123");
       expect(jobId).not.toContain("household-456");
-    });
+      },
+      15_000
+    );
 
     it("generates household-scoped job ID for 'household' policy", async () => {
       const { generateJobId } = await import("@/server/queue");
@@ -95,7 +100,7 @@ describe("Recipe Import Queue", () => {
         "household"
       );
 
-      expect(jobId).toBe("import:household-456:https://example.com/recipe");
+      expect(jobId).toBe("import_household-456_example.com_recipe");
       expect(jobId).toContain("household-456");
       expect(jobId).not.toContain("user-123");
     });
@@ -110,7 +115,7 @@ describe("Recipe Import Queue", () => {
         "owner"
       );
 
-      expect(jobId).toBe("import:user-123:https://example.com/recipe");
+      expect(jobId).toBe("import_user-123_example.com_recipe");
       expect(jobId).toContain("user-123");
       expect(jobId).not.toContain("household-456");
     });

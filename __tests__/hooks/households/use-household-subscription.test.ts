@@ -79,6 +79,13 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           return { enabled: true };
         }),
       },
+      onAllergiesUpdated: {
+        subscriptionOptions: vi.fn((_, options) => {
+          subscriptionCallbacks.onAllergiesUpdated = options?.onData;
+
+          return { enabled: true };
+        }),
+      },
     },
   }),
 }));

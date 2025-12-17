@@ -82,6 +82,15 @@ vi.mock("@/hooks/calendar/use-calendar-query", () => ({
   }),
 }));
 
+// Calendar mutations depend on household context (for allergy warnings)
+vi.mock("@/context/household-context", () => ({
+  useHouseholdContext: () => ({
+    household: {
+      allergies: [],
+    },
+  }),
+}));
+
 // Import after mocking
 import { useCalendarMutations } from "@/hooks/calendar/use-calendar-mutations";
 

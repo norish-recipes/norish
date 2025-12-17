@@ -20,6 +20,13 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           queryFn: async () => createMockUserSettingsData(),
         }),
       },
+      getAllergies: {
+        queryKey: () => ["user", "getAllergies"],
+        queryOptions: () => ({
+          queryKey: ["user", "getAllergies"],
+          queryFn: async () => ({ allergies: [] }),
+        }),
+      },
       updateName: { mutationOptions: vi.fn() },
       uploadAvatar: { mutationOptions: vi.fn() },
       deleteAvatar: { mutationOptions: vi.fn() },
@@ -29,6 +36,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         delete: { mutationOptions: vi.fn() },
         toggle: { mutationOptions: vi.fn() },
       },
+      setAllergies: { mutationOptions: vi.fn() },
     },
   }),
 }));
@@ -97,6 +105,7 @@ describe("useUserMutations", () => {
       expect(result.current).toHaveProperty("isCreatingApiKey");
       expect(result.current).toHaveProperty("isDeletingApiKey");
       expect(result.current).toHaveProperty("isTogglingApiKey");
+      expect(result.current).toHaveProperty("isUpdatingAllergies");
 
       // All should be booleans initially false
       expect(typeof result.current.isUpdatingName).toBe("boolean");
@@ -128,6 +137,7 @@ describe("useUserMutations", () => {
       expect(result.current.createApiKey.constructor.name).toBe("AsyncFunction");
       expect(result.current.deleteApiKey.constructor.name).toBe("AsyncFunction");
       expect(result.current.toggleApiKey.constructor.name).toBe("AsyncFunction");
+      expect(result.current.setAllergies.constructor.name).toBe("AsyncFunction");
     });
   });
 });

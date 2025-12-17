@@ -178,6 +178,8 @@ describe("admin procedures", () => {
         model: "gpt-4",
         temperature: 0.7,
         maxTokens: 4096,
+        autoTagAllergies: true,
+        alwaysUseAI: false,
       };
 
       // Current config has enabled: false
@@ -225,6 +227,8 @@ describe("admin procedures", () => {
         model: "gpt-4",
         temperature: 0.7,
         maxTokens: 4096,
+        autoTagAllergies: true,
+        alwaysUseAI: false,
       };
 
       // Current config also has enabled: false

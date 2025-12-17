@@ -17,6 +17,7 @@ describe("useRecipeId", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.resetModules();
     queryClient = createTestQueryClient();
     mockReserveId = vi.fn();
   });
@@ -28,7 +29,10 @@ describe("useRecipeId", () => {
         useTRPC: () => ({
           recipes: {
             reserveId: {
-              query: mockReserveId,
+              queryOptions: () => ({
+                queryKey: ["recipes", "reserveId"],
+                queryFn: async () => mockReserveId(),
+              }),
             },
           },
         }),
@@ -50,7 +54,10 @@ describe("useRecipeId", () => {
         useTRPC: () => ({
           recipes: {
             reserveId: {
-              query: mockReserveId,
+              queryOptions: () => ({
+                queryKey: ["recipes", "reserveId"],
+                queryFn: async () => mockReserveId(),
+              }),
             },
           },
         }),
@@ -75,7 +82,10 @@ describe("useRecipeId", () => {
         useTRPC: () => ({
           recipes: {
             reserveId: {
-              query: mockReserveId,
+              queryOptions: () => ({
+                queryKey: ["recipes", "reserveId"],
+                queryFn: async () => mockReserveId(),
+              }),
             },
           },
         }),
@@ -100,7 +110,10 @@ describe("useRecipeId", () => {
         useTRPC: () => ({
           recipes: {
             reserveId: {
-              query: mockReserveId,
+              queryOptions: () => ({
+                queryKey: ["recipes", "reserveId"],
+                queryFn: async () => mockReserveId(),
+              }),
             },
           },
         }),
@@ -128,7 +141,10 @@ describe("useRecipeId", () => {
         useTRPC: () => ({
           recipes: {
             reserveId: {
-              query: mockReserveId,
+              queryOptions: () => ({
+                queryKey: ["recipes", "reserveId"],
+                queryFn: async () => mockReserveId(),
+              }),
             },
           },
         }),
@@ -154,7 +170,10 @@ describe("useRecipeId", () => {
         useTRPC: () => ({
           recipes: {
             reserveId: {
-              query: mockReserveId,
+              queryOptions: () => ({
+                queryKey: ["recipes", "reserveId"],
+                queryFn: async () => mockReserveId(),
+              }),
             },
           },
         }),
@@ -179,7 +198,10 @@ describe("useRecipeId", () => {
         useTRPC: () => ({
           recipes: {
             reserveId: {
-              query: mockReserveId,
+              queryOptions: () => ({
+                queryKey: ["recipes", "reserveId"],
+                queryFn: async () => mockReserveId(),
+              }),
             },
           },
         }),
@@ -204,7 +226,10 @@ describe("useRecipeId", () => {
         useTRPC: () => ({
           recipes: {
             reserveId: {
-              query: mockReserveId,
+              queryOptions: () => ({
+                queryKey: ["recipes", "reserveId"],
+                queryFn: async () => mockReserveId(),
+              }),
             },
           },
         }),
@@ -236,7 +261,10 @@ describe("useRecipeId", () => {
         useTRPC: () => ({
           recipes: {
             reserveId: {
-              query: mockReserveId,
+              queryOptions: () => ({
+                queryKey: ["recipes", "reserveId"],
+                queryFn: async () => mockReserveId(),
+              }),
             },
           },
         }),
