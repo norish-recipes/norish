@@ -143,7 +143,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
               >
                 <span className="flex flex-col items-start">
                   <span className="text-sm leading-tight font-medium">Import from Image</span>
-                  <span className="text-default-500 text-xs leading-tight">Upload photos or PDF</span>
+                  <span className="text-default-500 text-xs leading-tight">Upload photos</span>
                 </span>
               </Button>
             </DropdownItem>

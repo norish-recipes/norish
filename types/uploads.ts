@@ -68,8 +68,7 @@ export const ALLOWED_OCR_MIME_TYPES = [
   "image/jpeg",
   "image/jpg",
   "image/png",
-  "image/webp",
-  "application/pdf",
+  "image/webp"
 ] as const;
 
 export type AllowedOcrMimeType = (typeof ALLOWED_OCR_MIME_TYPES)[number];

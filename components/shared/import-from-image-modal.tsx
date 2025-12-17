@@ -166,13 +166,13 @@ export default function ImportFromImageModal({
                     Drop images here or click to browse
                   </p>
                   <p className="text-default-400 text-xs">
-                    Supports JPG, PNG, WebP, PDF. Max 10MB per file.
+                    Supports JPG, PNG, WebP. Max 10MB per file.
                   </p>
                 </div>
                 <input
                   ref={fileInputRef}
                   multiple
-                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  accept="image/jpeg,image/png,image/webp"
                   className="hidden"
                   type="file"
                   onChange={(e) => handleFileSelect(e.target.files)}
@@ -184,17 +184,11 @@ export default function ImportFromImageModal({
                 <div className="mt-4 grid grid-cols-4 gap-2">
                   {files.map(({ id, file, preview }) => (
                     <div key={id} className="group relative">
-                      {file.type === "application/pdf" ? (
-                        <div className="bg-default-100 flex h-20 items-center justify-center rounded-lg">
-                          <span className="text-default-500 text-xs">PDF</span>
-                        </div>
-                      ) : (
-                        <img
-                          alt={file.name}
-                          className="h-20 w-full rounded-lg object-cover"
-                          src={preview}
-                        />
-                      )}
+                      <img
+                        alt={file.name}
+                        className="h-20 w-full rounded-lg object-cover"
+                        src={preview}
+                      />
                       <button
                         className="bg-danger absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-white opacity-0 transition-opacity group-hover:opacity-100"
                         type="button"
