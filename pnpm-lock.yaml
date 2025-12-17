@@ -196,8 +196,8 @@ importers:
         specifier: ^27.2.0
         version: 27.2.0
       jsonrepair:
-        specifier: 3.13.0
-        version: 3.13.0
+        specifier: 3.13.1
+        version: 3.13.1
       jszip:
         specifier: 3.10.1
         version: 3.10.1
@@ -4112,8 +4112,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  jsonrepair@3.13.0:
-    resolution: {integrity: sha512-5YRzlAQ7tuzV1nAJu3LvDlrKtBFIALHN2+a+I1MGJCt3ldRDBF/bZuvIPzae8Epot6KBXd0awRZZcuoeAsZ/mw==}
+  jsonrepair@3.13.1:
+    resolution: {integrity: sha512-WJeiE0jGfxYmtLwBTEk8+y/mYcaleyLXWaqp5bJu0/ZTSeG0KQq/wWQ8pmnkKenEdN6pdnn6QtcoSUkbqDHWNw==}
     hasBin: true
 
   jsx-ast-utils@3.3.5:
@@ -10022,7 +10022,7 @@ snapshots:
 
   json5@2.2.3: {}
 
-  jsonrepair@3.13.0: {}
+  jsonrepair@3.13.1: {}
 
   jsx-ast-utils@3.3.5:
     dependencies:

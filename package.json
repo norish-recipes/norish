@@ -92,7 +92,7 @@
     "idb-keyval": "6.2.2",
     "jose": "6.1.0",
     "jsdom": "^27.2.0",
-    "jsonrepair": "3.13.0",
+    "jsonrepair": "3.13.1",
     "jszip": "3.10.1",
     "microdata-node": "2.0.0",
     "mime": "4.1.0",
