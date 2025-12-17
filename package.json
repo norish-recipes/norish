@@ -108,7 +108,7 @@
     "puppeteer-core": "npm:rebrowser-puppeteer-core@^24.8.1",
     "react-virtuoso": "4.14.1",
     "tailwindcss": "^4.1.12",
-    "tsdown": "^0.15.12",
+    "tsdown": "^0.18.0",
     "tsx": "4.20.5",
     "typescript": "5.9.2",
     "uuid": "11.1.0",
