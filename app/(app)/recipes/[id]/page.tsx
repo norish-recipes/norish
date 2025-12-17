@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
 
 import RecipePageDesktop from "./recipe-page-desktop";
 import RecipePageMobile from "./recipe-page-mobile";
@@ -16,6 +16,11 @@ type Props = {
 
 function RecipePageContent() {
   const { recipe, isLoading, isNotFound } = useRecipeContext();
+
+  // Scroll to top when recipe page mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Show skeleton while loading
   if (isLoading) return <RecipeSkeleton />;

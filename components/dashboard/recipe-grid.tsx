@@ -40,13 +40,27 @@ export default function RecipeGrid() {
   const virtuosoRef = useRef<any>(null);
   const prevFiltersRef = useRef(filters);
 
-  // Get initial scroll index from saved state (add small offset to restore slightly lower)
+  // Get initial scroll index from saved state
   const initialTopMostItemIndex = useMemo(() => {
     const savedState = getScrollState();
     const savedIndex = savedState?.firstItemIndex ?? 0;
 
-    // Ensure we don't go negative
     return Math.max(0, savedIndex);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Restore exact scroll position after Virtuoso renders
+  useEffect(() => {
+    const savedState = getScrollState();
+    if (savedState?.scrollTop && savedState.scrollTop > 0) {
+      // Wait for Virtuoso to fully render before restoring scroll
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.scrollTo(0, savedState.scrollTop);
+        }, 50);
+      });
+    }
+    // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
