@@ -5,6 +5,26 @@ import { authedProcedure } from "./middleware";
 import { trpcLogger as log } from "@/server/logger";
 
 /**
+ * Wait for the abort signal to fire.
+ * Use this in subscriptions that can't proceed (e.g., no household)
+ * but need to stay "active" so they restart on reconnection.
+ *
+ * @example
+ * ```ts
+ * if (!ctx.household) {
+ *   await waitForAbort(signal);
+ *   return;
+ * }
+ * ```
+ */
+export async function waitForAbort(signal?: AbortSignal): Promise<void> {
+  if (!signal) return;
+  await new Promise<void>((_, reject) => {
+    signal.addEventListener("abort", () => reject(new Error("Aborted")));
+  }).catch(() => { });
+}
+
+/**
  * Context for policy-based event emission.
  */
 export interface PolicyEmitContext {

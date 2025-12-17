@@ -72,9 +72,7 @@ export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<
       isServerAdmin: sessionUser.isServerOwner || sessionUser.isServerAdmin || false,
     };
 
-    const household = await getHouseholdForUser(user.id);
-
-    return { user, household };
+    return { user, household: null };
   } catch {
     return { user: null, household: null };
   }

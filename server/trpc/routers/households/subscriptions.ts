@@ -2,6 +2,7 @@ import type { HouseholdSubscriptionEvents } from "./types";
 
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
+import { waitForAbort } from "../../helpers";
 
 import { householdEmitter } from "./emitter";
 
@@ -65,10 +66,10 @@ const onFailed = authedProcedure.subscription(async function* ({ ctx, signal }) 
  * Household-scoped: all household members receive this.
  */
 const onUserJoined = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  // Only subscribe if user is in a household
+  // If no household, wait for connection to be closed (will restart on reconnect)
   if (!ctx.household) {
-    log.debug({ userId: ctx.user.id }, "No household, skipping userJoined subscription");
-
+    log.debug({ userId: ctx.user.id }, "No household, waiting for reconnection");
+    await waitForAbort(signal);
     return;
   }
 
@@ -111,10 +112,10 @@ const onUserLeft = authedProcedure.subscription(async function* ({ ctx, signal }
  * Household-scoped: remaining members receive this.
  */
 const onMemberRemoved = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  // Only subscribe if user is in a household
+  // If no household, wait for connection to be closed (will restart on reconnect)
   if (!ctx.household) {
-    log.debug({ userId: ctx.user.id }, "No household, skipping memberRemoved subscription");
-
+    log.debug({ userId: ctx.user.id }, "No household, waiting for reconnection");
+    await waitForAbort(signal);
     return;
   }
 
@@ -139,10 +140,10 @@ const onMemberRemoved = authedProcedure.subscription(async function* ({ ctx, sig
  * Household-scoped: all household members receive this.
  */
 const onAdminTransferred = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  // Only subscribe if user is in a household
+  // If no household, wait for connection to be closed (will restart on reconnect)
   if (!ctx.household) {
-    log.debug({ userId: ctx.user.id }, "No household, skipping adminTransferred subscription");
-
+    log.debug({ userId: ctx.user.id }, "No household, waiting for reconnection");
+    await waitForAbort(signal);
     return;
   }
 
@@ -167,10 +168,10 @@ const onAdminTransferred = authedProcedure.subscription(async function* ({ ctx, 
  * Household-scoped: all household members receive this (only admin sees the code).
  */
 const onJoinCodeRegenerated = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  // Only subscribe if user is in a household
+  // If no household, wait for connection to be closed (will restart on reconnect)
   if (!ctx.household) {
-    log.debug({ userId: ctx.user.id }, "No household, skipping joinCodeRegenerated subscription");
-
+    log.debug({ userId: ctx.user.id }, "No household, waiting for reconnection");
+    await waitForAbort(signal);
     return;
   }
 
@@ -191,10 +192,10 @@ const onJoinCodeRegenerated = authedProcedure.subscription(async function* ({ ct
 });
 
 const onAllergiesUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  // Only subscribe if user is in a household
+  // If no household, wait for connection to be closed (will restart on reconnect)
   if (!ctx.household) {
-    log.debug({ userId: ctx.user.id }, "No household, skipping allergiesUpdated subscription");
-
+    log.debug({ userId: ctx.user.id }, "No household, waiting for reconnection");
+    await waitForAbort(signal);
     return;
   }
 

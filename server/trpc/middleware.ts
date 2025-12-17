@@ -6,6 +6,7 @@ import { TRPCError } from "@trpc/server";
 import { middleware, publicProcedure } from "./trpc";
 
 import { isUserServerAdmin } from "@/server/db";
+import { getCachedHouseholdForUser } from "@/server/db/cached-household";
 
 /**
  * Middleware that enforces authentication and provides full context:
@@ -20,18 +21,20 @@ const withAuth = middleware(async ({ ctx, next }) => {
     });
   }
 
-  const householdUserIds = ctx.household?.users.map((u: { id: string }) => u.id) ?? [];
+  const household = ctx.household ?? (await getCachedHouseholdForUser(ctx.user.id));
+
+  const householdUserIds = household?.users.map((u: { id: string }) => u.id) ?? [];
   const allUserIds = [ctx.user.id, ...householdUserIds].filter(
     (id, i, arr) => arr.indexOf(id) === i
   );
-  const householdKey = ctx.household?.id ?? ctx.user.id;
+  const householdKey = household?.id ?? ctx.user.id;
   const isServerAdmin = ctx.user.isServerAdmin ?? false;
 
   return next({
     ctx: {
       ...ctx,
       user: ctx.user,
-      household: ctx.household,
+      household,
       householdKey,
       userIds: allUserIds,
       householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
+import { emitConnectionInvalidation } from "../../connection-manager";
 
 import { UpdateNameInputSchema } from "./types";
 
@@ -218,6 +219,9 @@ const deleteAccount = authedProcedure.mutation(async ({ ctx }) => {
 
   await deleteUser(ctx.user.id);
 
+  // Terminate WebSocket connections so client doesn't stay connected
+  await emitConnectionInvalidation(ctx.user.id, "account-deleted");
+
   log.info({ userId: ctx.user.id }, "Account deleted");
 
   return { success: true };
@@ -244,7 +248,7 @@ const setAllergies = authedProcedure
 
     await updateUserAllergies(ctx.user.id, input.allergies);
 
-if (ctx.household) {
+    if (ctx.household) {
       const userIds = ctx.household.users.map((u) => u.id);
       const allergiesRows = await getAllergiesForUsers(userIds);
       const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
