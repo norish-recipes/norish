@@ -2,7 +2,7 @@
 
 import React, { useMemo, useCallback } from "react";
 import { Chip } from "@heroui/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useTagsQuery } from "@/hooks/config";
@@ -142,9 +142,8 @@ export default function TagCarousel({ className = "", variant = "default" }: Tag
               }}
             >
               <Chip
-                className={`cursor-pointer font-medium ${chipSize} ${
-                  !isSelected ? "bg-default-200 dark:bg-default-100 text-default-700" : ""
-                }`}
+                className={`cursor-pointer font-medium ${chipSize} ${!isSelected ? "bg-default-200 dark:bg-default-100 text-default-700" : ""
+                  }`}
                 color={isSelected ? "primary" : "default"}
                 radius="full"
                 size="sm"

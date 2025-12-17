@@ -2,7 +2,8 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@heroui/react";
-import { XMarkIcon } from "@heroicons/react/16/solid";
+import { XMarkIcon, Bars3Icon } from "@heroicons/react/16/solid";
+import { Reorder, useDragControls } from "motion/react";
 
 import SmartTextInput from "@/components/shared/smart-text-input";
 import { parseIngredientWithDefaults, debounce } from "@/lib/helpers";
@@ -24,6 +25,17 @@ export interface IngredientInputProps {
   onSystemDetected?: (system: MeasurementSystem) => void;
 }
 
+// Internal type with stable IDs for reordering
+interface IngredientItem {
+  id: string;
+  text: string;
+}
+
+let nextId = 0;
+function createItem(text: string): IngredientItem {
+  return { id: `ing-${nextId++}`, text };
+}
+
 export default function IngredientInput({
   ingredients,
   onChange,
@@ -31,12 +43,12 @@ export default function IngredientInput({
   onSystemDetected: _onSystemDetected,
 }: IngredientInputProps) {
   const { units } = useUnitsQuery();
-  const [inputs, setInputs] = useState<string[]>([""]);
+  const [items, setItems] = useState<IngredientItem[]>([createItem("")]);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
   // Initialize from ingredients prop
   useEffect(() => {
-    if (ingredients.length > 0 && inputs.length === 1 && inputs[0] === "") {
+    if (ingredients.length > 0 && items.length === 1 && items[0].text === "") {
       const formatted = ingredients.map((ing) => {
         const parts: string[] = [];
 
@@ -44,10 +56,10 @@ export default function IngredientInput({
         if (ing.unit) parts.push(ing.unit);
         if (ing.ingredientName) parts.push(ing.ingredientName);
 
-        return parts.join(" ");
+        return createItem(parts.join(" "));
       });
 
-      setInputs([...formatted, ""]);
+      setItems([...formatted, createItem("")]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ingredients.length]);
@@ -85,35 +97,35 @@ export default function IngredientInput({
   );
 
   const debouncedParse = useCallback(
-    (updatedInputs: string[]) => {
-      const doUpdate = debounce((inputs: string[]) => {
-        const parsed = inputs
-          .map((text, idx) => parseIngredient(text, idx))
+    (updatedItems: IngredientItem[]) => {
+      const doUpdate = debounce((items: IngredientItem[]) => {
+        const parsed = items
+          .map((item, idx) => parseIngredient(item.text, idx))
           .filter((ing): ing is ParsedIngredient => ing !== null);
 
         onChange(parsed);
       }, 300);
 
-      doUpdate(updatedInputs);
+      doUpdate(updatedItems);
     },
     [parseIngredient, onChange]
   );
 
   const handleInputChange = useCallback(
     (index: number, value: string) => {
-      const updated = [...inputs];
+      const updated = [...items];
 
-      updated[index] = value;
+      updated[index] = { ...updated[index], text: value };
 
       // Auto-add empty line at the end
-      if (index === inputs.length - 1 && value.trim()) {
-        updated.push("");
+      if (index === items.length - 1 && value.trim()) {
+        updated.push(createItem(""));
       }
 
-      setInputs(updated);
+      setItems(updated);
       debouncedParse(updated);
     },
-    [inputs, debouncedParse]
+    [items, debouncedParse]
   );
 
   const handleKeyDown = useCallback(
@@ -121,97 +133,179 @@ export default function IngredientInput({
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         // Move to next input or create new one
-        if (index < inputs.length - 1) {
+        if (index < items.length - 1) {
           textareaRefs.current[index + 1]?.focus();
         } else {
-          const updated = [...inputs, ""];
+          const updated = [...items, createItem("")];
 
-          setInputs(updated);
+          setItems(updated);
           setTimeout(() => {
-            textareaRefs.current[inputs.length]?.focus();
+            textareaRefs.current[items.length]?.focus();
           }, 0);
         }
-      } else if (e.key === "Backspace" && !inputs[index] && index > 0) {
+      } else if (e.key === "Backspace" && !items[index].text && index > 0) {
         e.preventDefault();
-        const updated = inputs.filter((_, i) => i !== index);
+        const updated = items.filter((_, i) => i !== index);
 
-        setInputs(updated);
+        setItems(updated);
         debouncedParse(updated);
         setTimeout(() => {
           textareaRefs.current[index - 1]?.focus();
         }, 0);
       }
     },
-    [inputs, debouncedParse]
+    [items, debouncedParse]
   );
 
   const handleBlur = useCallback(
     (index: number) => {
       // Auto-remove empty rows on blur (except the last one)
-      if (!inputs[index].trim() && index < inputs.length - 1) {
-        const updated = inputs.filter((_, i) => i !== index);
+      if (!items[index].text.trim() && index < items.length - 1) {
+        const updated = items.filter((_, i) => i !== index);
 
-        if (updated.length === 0) updated.push("");
-        setInputs(updated);
+        if (updated.length === 0) updated.push(createItem(""));
+        setItems(updated);
         debouncedParse(updated);
       }
     },
-    [inputs, debouncedParse]
+    [items, debouncedParse]
   );
 
   const handleRemove = useCallback(
     (index: number) => {
-      const updated = inputs.filter((_, i) => i !== index);
+      const updated = items.filter((_, i) => i !== index);
 
-      if (updated.length === 0) updated.push("");
-      setInputs(updated);
+      if (updated.length === 0) updated.push(createItem(""));
+      setItems(updated);
       debouncedParse(updated);
     },
-    [inputs, debouncedParse]
+    [items, debouncedParse]
   );
 
-  return (
-    <div className="flex flex-col gap-2">
-      {(() => {
-        let ingredientNumber = 0;
-        return inputs.map((value, index) => {
-          const isHeading = value.trim().startsWith("#");
-          if (!isHeading) ingredientNumber++;
+  const handleReorder = useCallback(
+    (newOrder: IngredientItem[]) => {
+      setItems(newOrder);
+      debouncedParse(newOrder);
+    },
+    [debouncedParse]
+  );
 
-          return (
-            <div key={index} className="flex items-start gap-2">
-              <div className="text-default-500 flex h-10 w-8 flex-shrink-0 items-center justify-center font-medium">
-                {isHeading ? "" : `${ingredientNumber}.`}
-              </div>
-              <div className="flex-1">
-                <SmartTextInput
-                  minRows={1}
-                  placeholder={index === 0 ? "e.g., 2 cups flour" : ""}
-                  value={value}
-                  onBlur={() => handleBlur(index)}
-                  onKeyDown={(e) =>
-                    handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)
-                  }
-                  onValueChange={(v) => handleInputChange(index, v)}
-                />
-              </div>
-              <div className="mt-1 h-8 w-8 min-w-8 flex-shrink-0">
-                {inputs.length > 1 && value && (
-                  <Button
-                    isIconOnly
-                    className="h-full w-full"
-                    size="sm"
-                    variant="light"
-                    onPress={() => handleRemove(index)}
-                  >
-                    <XMarkIcon className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          );
-        });
-      })()}
-    </div>
+  // Calculate ingredient numbers (excluding headings)
+  const getIngredientNumber = (index: number): number | null => {
+    let num = 0;
+    for (let i = 0; i <= index; i++) {
+      const isHeading = items[i].text.trim().startsWith("#");
+      if (!isHeading) num++;
+    }
+    const isCurrentHeading = items[index].text.trim().startsWith("#");
+    return isCurrentHeading ? null : num;
+  };
+
+  return (
+    <Reorder.Group
+      axis="y"
+      values={items}
+      onReorder={handleReorder}
+      className="flex flex-col gap-2"
+    >
+      {items.map((item, index) => (
+        <IngredientRow
+          key={item.id}
+          item={item}
+          index={index}
+          ingredientNumber={getIngredientNumber(index)}
+          isLast={index === items.length - 1}
+          showRemove={items.length > 1 && !!item.text}
+          onValueChange={(v) => handleInputChange(index, v)}
+          onKeyDown={(e) => handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)}
+          onBlur={() => handleBlur(index)}
+          onRemove={() => handleRemove(index)}
+        />
+      ))}
+    </Reorder.Group>
+  );
+}
+
+// Separate component for each row to use useDragControls
+interface IngredientRowProps {
+  item: IngredientItem;
+  index: number;
+  ingredientNumber: number | null;
+  isLast: boolean;
+  showRemove: boolean;
+  onValueChange: (value: string) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  onBlur: () => void;
+  onRemove: () => void;
+}
+
+function IngredientRow({
+  item,
+  index,
+  ingredientNumber,
+  isLast,
+  showRemove,
+  onValueChange,
+  onKeyDown,
+  onBlur,
+  onRemove,
+}: IngredientRowProps) {
+  const controls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={item}
+      dragListener={false}
+      dragControls={controls}
+      className="flex items-start gap-2"
+      style={{ position: "relative" }}
+    >
+      {/* Drag handle - only show for non-empty, non-last items */}
+      <div
+        className={`flex h-10 w-6 flex-shrink-0 touch-none items-center justify-center ${!isLast && item.text ? "cursor-grab active:cursor-grabbing" : ""
+          }`}
+        onPointerDown={(e) => {
+          if (!isLast && item.text) {
+            controls.start(e);
+          }
+        }}
+      >
+        {!isLast && item.text ? (
+          <Bars3Icon className="text-default-400 h-4 w-4" />
+        ) : null}
+      </div>
+
+      {/* Ingredient number */}
+      <div className="text-default-500 flex h-10 w-6 flex-shrink-0 items-center justify-center font-medium">
+        {ingredientNumber !== null ? `${ingredientNumber}.` : ""}
+      </div>
+
+      {/* Input field */}
+      <div className="flex-1">
+        <SmartTextInput
+          minRows={1}
+          placeholder={index === 0 ? "e.g., 2 cups flour" : ""}
+          value={item.text}
+          onBlur={onBlur}
+          onKeyDown={onKeyDown}
+          onValueChange={onValueChange}
+        />
+      </div>
+
+      {/* Remove button */}
+      <div className="mt-1 h-8 w-8 min-w-8 flex-shrink-0">
+        {showRemove && (
+          <Button
+            isIconOnly
+            className="h-full w-full"
+            size="sm"
+            variant="light"
+            onPress={onRemove}
+          >
+            <XMarkIcon className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </Reorder.Item>
   );
 }

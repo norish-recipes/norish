@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useDragControls, PanInfo, useMotionValue } from "framer-motion";
+import { motion, useDragControls, PanInfo, useMotionValue } from "motion/react";
 import { useRef, useState, useCallback } from "react";
 
 import { CalendarItemViewDto } from "@/types";

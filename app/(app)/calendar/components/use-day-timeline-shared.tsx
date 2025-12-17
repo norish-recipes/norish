@@ -1,6 +1,6 @@
 "use client";
 
-import type { PanInfo } from "framer-motion";
+import type { PanInfo } from "motion/react";
 import type { CaldavItemType } from "@/types";
 
 import { useMemo, useState, useCallback } from "react";

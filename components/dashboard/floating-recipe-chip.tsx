@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@heroui/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 import { FiltersPanel } from "@/components/Panel/consumers";
 import { useRecipesContext } from "@/context/recipes-context";

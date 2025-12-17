@@ -53,6 +53,9 @@ importers:
       pino:
         specifier: ^10.1.0
         version: 10.1.0
+      playwright-core:
+        specifier: npm:rebrowser-playwright-core@^1.52.0
+        version: rebrowser-playwright-core@1.52.0
       playwright-extra:
         specifier: ^4.3.6
         version: 4.3.6(rebrowser-playwright-core@1.52.0)
@@ -189,9 +192,6 @@ importers:
       ffprobe-static:
         specifier: ^3.1.0
         version: 3.1.0
-      framer-motion:
-        specifier: 12.23.22
-        version: 12.23.22(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       globals:
         specifier: ^16.5.0
         version: 16.5.0
@@ -234,9 +234,6 @@ importers:
       pino-pretty:
         specifier: ^13.1.2
         version: 13.1.2
-      playwright-core:
-        specifier: npm:rebrowser-playwright-core@^1.52.0
-        version: rebrowser-playwright-core@1.52.0
       postcss:
         specifier: ^8.5.6
         version: 8.5.6

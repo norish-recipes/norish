@@ -8,7 +8,7 @@ import {
   HeartIcon,
 } from "@heroicons/react/16/solid";
 import { Input, Button, Chip } from "@heroui/react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useState, useCallback, useEffect } from "react";
 
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";

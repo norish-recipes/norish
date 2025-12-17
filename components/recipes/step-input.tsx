@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Button, Image } from "@heroui/react";
-import { XMarkIcon, PhotoIcon } from "@heroicons/react/16/solid";
+import { XMarkIcon, PhotoIcon, Bars3Icon } from "@heroicons/react/16/solid";
+import { Reorder, useDragControls } from "motion/react";
 
 import SmartTextInput from "@/components/shared/smart-text-input";
-import SmartInputHelp from "@/components/shared/smart-input-help";
 import { MeasurementSystem } from "@/types";
 import { useRecipeImages } from "@/hooks/recipes";
 
@@ -28,15 +28,25 @@ export interface StepInputProps {
   recipeId?: string; // Required for image uploads
 }
 
+// Internal type with stable IDs for reordering
+interface StepItem {
+  id: string;
+  text: string;
+  images: StepImage[];
+}
+
+let nextId = 0;
+function createStepItem(text: string, images: StepImage[] = []): StepItem {
+  return { id: `step-${nextId++}`, text, images };
+}
+
 export default function StepInput({
   steps,
   onChange,
   systemUsed = "metric",
   recipeId,
 }: StepInputProps) {
-  const [inputs, setInputs] = useState<{ text: string; images: StepImage[] }[]>([
-    { text: "", images: [] },
-  ]);
+  const [items, setItems] = useState<StepItem[]>([createStepItem("", [])]);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
@@ -47,24 +57,21 @@ export default function StepInput({
   useEffect(() => {
     if (
       steps.length > 0 &&
-      inputs.length === 1 &&
-      inputs[0].text === "" &&
-      inputs[0].images.length === 0
+      items.length === 1 &&
+      items[0].text === "" &&
+      items[0].images.length === 0
     ) {
-      setInputs([
-        ...steps.map((s) => ({
-          text: s.step,
-          images: s.images || [],
-        })),
-        { text: "", images: [] },
+      setItems([
+        ...steps.map((s) => createStepItem(s.step, s.images || [])),
+        createStepItem("", []),
       ]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [steps.length]);
 
   const emitChanges = useCallback(
-    (updated: { text: string; images: StepImage[] }[]) => {
-      const parsed = updated
+    (updatedItems: StepItem[]) => {
+      const parsed = updatedItems
         .map((item, idx) => ({
           step: item.text.trim(),
           order: idx,
@@ -80,79 +87,79 @@ export default function StepInput({
 
   const handleInputChange = useCallback(
     (index: number, value: string) => {
-      const updated = [...inputs];
+      const updated = [...items];
       updated[index] = { ...updated[index], text: value };
 
       // Auto-add empty line at the end
-      if (index === inputs.length - 1 && value.trim()) {
-        updated.push({ text: "", images: [] });
+      if (index === items.length - 1 && value.trim()) {
+        updated.push(createStepItem("", []));
       }
 
-      setInputs(updated);
+      setItems(updated);
       emitChanges(updated);
     },
-    [inputs, emitChanges]
+    [items, emitChanges]
   );
 
   const handleKeyDown = useCallback(
-    (index: number, e: any) => {
+    (index: number, e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        if (index < inputs.length - 1) {
+        if (index < items.length - 1) {
           textareaRefs.current[index + 1]?.focus();
         } else {
-          const updated = [...inputs, { text: "", images: [] }];
-          setInputs(updated);
+          const updated = [...items, createStepItem("", [])];
+          setItems(updated);
           setTimeout(() => {
-            textareaRefs.current[inputs.length]?.focus();
+            textareaRefs.current[items.length]?.focus();
           }, 0);
         }
-      } else if (e.key === "Backspace" && !inputs[index].text && index > 0) {
+      } else if (e.key === "Backspace" && !items[index].text && index > 0) {
         e.preventDefault();
-        const updated = inputs.filter((_, i) => i !== index);
-        setInputs(updated);
+        const updated = items.filter((_, i) => i !== index);
+        setItems(updated);
         emitChanges(updated);
         setTimeout(() => {
           textareaRefs.current[index - 1]?.focus();
         }, 0);
       }
     },
-    [inputs, emitChanges]
+    [items, emitChanges]
   );
 
   const handleBlur = useCallback(
     (index: number) => {
       // Auto-remove empty rows on blur (except the last one)
       if (
-        !inputs[index].text.trim() &&
-        inputs[index].images.length === 0 &&
-        index < inputs.length - 1
+        !items[index].text.trim() &&
+        items[index].images.length === 0 &&
+        index < items.length - 1
       ) {
-        const updated = inputs.filter((_, i) => i !== index);
-        if (updated.length === 0) updated.push({ text: "", images: [] });
-        setInputs(updated);
+        const updated = items.filter((_, i) => i !== index);
+        if (updated.length === 0) updated.push(createStepItem("", []));
+        setItems(updated);
         emitChanges(updated);
       }
     },
-    [inputs, emitChanges]
+    [items, emitChanges]
   );
 
   const handleRemove = useCallback(
     (index: number) => {
       // Delete all images for this step
-      const stepImages = inputs[index].images;
+      const stepImages = items[index].images;
       stepImages.forEach((img) => {
         deleteStepImage(img.image).catch((err) => {
           console.error("Failed to delete step image:", err);
         });
       });
 
-      const updated = inputs.filter((_, i) => i !== index);
-      if (updated.length === 0) updated.push({ text: "", images: [] });
-      setInputs(updated);
+      const updated = items.filter((_, i) => i !== index);
+      if (updated.length === 0) updated.push(createStepItem("", []));
+      setItems(updated);
       emitChanges(updated);
     },
-    [inputs, emitChanges, deleteStepImage]
+    [items, emitChanges, deleteStepImage]
   );
 
   const handleImageUpload = useCallback(
@@ -165,7 +172,7 @@ export default function StepInput({
         const result = await uploadStepImage(file, recipeId);
 
         if (result.success && result.url) {
-          const updated = [...inputs];
+          const updated = [...items];
           const newImage: StepImage = {
             image: result.url,
             order: updated[index].images.length,
@@ -174,142 +181,234 @@ export default function StepInput({
             ...updated[index],
             images: [...updated[index].images, newImage],
           };
-          setInputs(updated);
+          setItems(updated);
           emitChanges(updated);
         }
       } finally {
         setUploadingIndex(null);
       }
     },
-    [recipeId, inputs, emitChanges, uploadStepImage]
+    [recipeId, items, emitChanges, uploadStepImage]
   );
 
   const handleRemoveImage = useCallback(
     (stepIndex: number, imageIndex: number) => {
-      const imageUrl = inputs[stepIndex].images[imageIndex]?.image;
+      const imageUrl = items[stepIndex].images[imageIndex]?.image;
       if (imageUrl) {
         deleteStepImage(imageUrl).catch((err) => {
           console.error("Failed to delete step image:", err);
         });
       }
 
-      const updated = [...inputs];
+      const updated = [...items];
       updated[stepIndex] = {
         ...updated[stepIndex],
         images: updated[stepIndex].images
           .filter((_, i) => i !== imageIndex)
           .map((img, i) => ({ ...img, order: i })),
       };
-      setInputs(updated);
+      setItems(updated);
       emitChanges(updated);
     },
-    [inputs, emitChanges, deleteStepImage]
+    [items, emitChanges, deleteStepImage]
   );
 
   const handleFileSelect = (index: number) => {
     fileInputRefs.current[index]?.click();
   };
 
+  const handleReorder = useCallback(
+    (newOrder: StepItem[]) => {
+      setItems(newOrder);
+      emitChanges(newOrder);
+    },
+    [emitChanges]
+  );
+
   // Track step numbers excluding headings
-  const getStepNumber = (index: number) => {
+  const getStepNumber = (index: number): number | null => {
     let stepNum = 0;
     for (let i = 0; i <= index; i++) {
-      if (!inputs[i].text.trim().startsWith("#")) stepNum++;
+      if (!items[i].text.trim().startsWith("#")) stepNum++;
     }
-    return stepNum;
+    const isHeading = items[index].text.trim().startsWith("#");
+    return isHeading ? null : stepNum;
   };
 
   return (
-    <div className="flex flex-col gap-3 md:gap-4">
-      {inputs.map((item, index) => {
-        const isHeading = item.text.trim().startsWith("#");
-        const stepNumber = isHeading ? null : getStepNumber(index);
+    <Reorder.Group
+      axis="y"
+      values={items}
+      onReorder={handleReorder}
+      className="flex flex-col gap-3 md:gap-4"
+    >
+      {items.map((item, index) => (
+        <StepRow
+          key={item.id}
+          item={item}
+          index={index}
+          stepNumber={getStepNumber(index)}
+          isLast={index === items.length - 1}
+          showRemove={items.length > 1 && (!!item.text || item.images.length > 0)}
+          recipeId={recipeId}
+          uploadingIndex={uploadingIndex}
+          fileInputRefs={fileInputRefs}
+          onValueChange={(v) => handleInputChange(index, v)}
+          onKeyDown={(e) => handleKeyDown(index, e)}
+          onBlur={() => handleBlur(index)}
+          onRemove={() => handleRemove(index)}
+          onImageUpload={(file) => handleImageUpload(index, file)}
+          onRemoveImage={(imgIndex) => handleRemoveImage(index, imgIndex)}
+          onFileSelect={() => handleFileSelect(index)}
+        />
+      ))}
+    </Reorder.Group>
+  );
+}
 
-        return (
-          <div key={index} className="flex flex-col gap-2">
-            <div className="flex items-start gap-1 md:gap-2">
-              {/* Step number */}
-              <div className="text-default-500 flex h-10 w-6 flex-shrink-0 items-center justify-center text-sm font-medium md:w-8 md:text-base">
-                {stepNumber ? `${stepNumber}.` : ""}
-              </div>
-              <div className="flex flex-1 flex-col gap-2">
-                <SmartTextInput
-                  minRows={2}
-                  placeholder={
-                    index === 0 ? `Step ${index + 1}: Describe the step...` : `Step ${index + 1}`
-                  }
-                  value={item.text}
-                  onBlur={() => handleBlur(index)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  onValueChange={(v) => handleInputChange(index, v)}
-                />
+// Separate component for each row to use useDragControls
+interface StepRowProps {
+  item: StepItem;
+  index: number;
+  stepNumber: number | null;
+  isLast: boolean;
+  showRemove: boolean;
+  recipeId?: string;
+  uploadingIndex: number | null;
+  fileInputRefs: React.MutableRefObject<(HTMLInputElement | null)[]>;
+  onValueChange: (value: string) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  onBlur: () => void;
+  onRemove: () => void;
+  onImageUpload: (file: File) => void;
+  onRemoveImage: (imageIndex: number) => void;
+  onFileSelect: () => void;
+}
 
-                {/* Image thumbnails */}
-                {item.images.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {item.images.map((img, imgIndex) => (
-                      <div key={imgIndex} className="relative h-18 w-18 md:h-20 md:w-20">
-                        <Image
-                          alt={`Step ${index + 1} image ${imgIndex + 1}`}
-                          className="h-14 w-14 rounded-lg object-cover md:h-16 md:w-16"
-                          src={img.image}
-                        />
-                        <button
-                          className="bg-danger hover:bg-danger-600 absolute top-0 right-0 z-10 flex h-6 w-6 items-center justify-center rounded-full shadow-lg transition-colors"
-                          type="button"
-                          onClick={() => handleRemoveImage(index, imgIndex)}
-                        >
-                          <XMarkIcon className="h-4 w-4 text-white" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+function StepRow({
+  item,
+  index,
+  stepNumber,
+  isLast,
+  showRemove,
+  recipeId,
+  uploadingIndex,
+  fileInputRefs,
+  onValueChange,
+  onKeyDown,
+  onBlur,
+  onRemove,
+  onImageUpload,
+  onRemoveImage,
+  onFileSelect,
+}: StepRowProps) {
+  const controls = useDragControls();
+  const hasContent = !!item.text || item.images.length > 0;
 
-              {/* Action buttons - stacked vertically */}
-              <div className="mt-1 flex flex-shrink-0 flex-col gap-0.5">
-                {/* Image upload button */}
-                {recipeId && (
-                  <>
-                    <input
-                      ref={(el) => {
-                        fileInputRefs.current[index] = el;
-                      }}
-                      accept="image/*"
-                      className="hidden"
-                      type="file"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          handleImageUpload(index, file);
-                          e.target.value = "";
-                        }
-                      }}
-                    />
-                    <Button
-                      isIconOnly
-                      isLoading={uploadingIndex === index}
-                      size="sm"
-                      variant="light"
-                      onPress={() => handleFileSelect(index)}
-                    >
-                      <PhotoIcon className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
+  return (
+    <Reorder.Item
+      value={item}
+      dragListener={false}
+      dragControls={controls}
+      className="flex flex-col gap-2"
+      style={{ position: "relative" }}
+    >
+      <div className="flex items-start gap-1 md:gap-2">
+        {/* Drag handle - only show for non-empty, non-last items */}
+        <div
+          className={`flex h-10 w-5 flex-shrink-0 touch-none items-center justify-center md:w-6 ${!isLast && hasContent ? "cursor-grab active:cursor-grabbing" : ""
+            }`}
+          onPointerDown={(e) => {
+            if (!isLast && hasContent) {
+              controls.start(e);
+            }
+          }}
+        >
+          {!isLast && hasContent ? (
+            <Bars3Icon className="text-default-400 h-4 w-4" />
+          ) : null}
+        </div>
 
-                {/* Remove button */}
-                {inputs.length > 1 && (item.text || item.images.length > 0) && (
-                  <Button isIconOnly size="sm" variant="light" onPress={() => handleRemove(index)}>
-                    <XMarkIcon className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
+        {/* Step number */}
+        <div className="text-default-500 flex h-10 w-5 flex-shrink-0 items-center justify-center text-sm font-medium md:w-6 md:text-base">
+          {stepNumber !== null ? `${stepNumber}.` : ""}
+        </div>
+
+        <div className="flex flex-1 flex-col gap-2">
+          <SmartTextInput
+            minRows={2}
+            placeholder={
+              index === 0 ? `Step ${index + 1}: Describe the step...` : `Step ${index + 1}`
+            }
+            value={item.text}
+            onBlur={onBlur}
+            onKeyDown={onKeyDown}
+            onValueChange={onValueChange}
+          />
+
+          {/* Image thumbnails */}
+          {item.images.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {item.images.map((img, imgIndex) => (
+                <div key={imgIndex} className="relative h-18 w-18 md:h-20 md:w-20">
+                  <Image
+                    alt={`Step ${index + 1} image ${imgIndex + 1}`}
+                    className="h-14 w-14 rounded-lg object-cover md:h-16 md:w-16"
+                    src={img.image}
+                  />
+                  <button
+                    className="bg-danger hover:bg-danger-600 absolute top-0 right-0 z-10 flex h-6 w-6 items-center justify-center rounded-full shadow-lg transition-colors"
+                    type="button"
+                    onClick={() => onRemoveImage(imgIndex)}
+                  >
+                    <XMarkIcon className="h-4 w-4 text-white" />
+                  </button>
+                </div>
+              ))}
             </div>
-          </div>
-        );
-      })}
-    </div>
+          )}
+        </div>
+
+        {/* Action buttons - stacked vertically */}
+        <div className="mt-1 flex flex-shrink-0 flex-col gap-0.5">
+          {/* Image upload button */}
+          {recipeId && (
+            <>
+              <input
+                ref={(el) => {
+                  fileInputRefs.current[index] = el;
+                }}
+                accept="image/*"
+                className="hidden"
+                type="file"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    onImageUpload(file);
+                    e.target.value = "";
+                  }
+                }}
+              />
+              <Button
+                isIconOnly
+                isLoading={uploadingIndex === index}
+                size="sm"
+                variant="light"
+                onPress={onFileSelect}
+              >
+                <PhotoIcon className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+
+          {/* Remove button */}
+          {showRemove && (
+            <Button isIconOnly size="sm" variant="light" onPress={onRemove}>
+              <XMarkIcon className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </Reorder.Item>
   );
 }

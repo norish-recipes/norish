@@ -1,6 +1,6 @@
 "use client";
 
-import { useScroll, useMotionValueEvent } from "framer-motion";
+import { useScroll, useMotionValueEvent } from "motion/react";
 import { useRef, useState, useEffect, useCallback } from "react";
 
 interface AutoHideOptions {

@@ -3,7 +3,7 @@
 import { useState, useTransition, useCallback, ChangeEvent } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { Image, Input, Button } from "@heroui/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { PlusIcon } from "@heroicons/react/16/solid";
 
 import Panel from "@/components/Panel/Panel";

@@ -4,7 +4,7 @@ import type { RecurrencePattern } from "@/types/recurrence";
 
 import { useState, useEffect } from "react";
 import { Button, ButtonGroup } from "@heroui/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { MinusIcon, PlusIcon, CalendarIcon } from "@heroicons/react/16/solid";
 
 import Panel, { PANEL_HEIGHT_MEDIUM } from "@/components/Panel/Panel";

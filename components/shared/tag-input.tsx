@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { XMarkIcon } from "@heroicons/react/16/solid";
 
 import { useTagsQuery } from "@/hooks/config";

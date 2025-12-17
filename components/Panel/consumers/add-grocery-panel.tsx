@@ -4,7 +4,7 @@ import type { RecurrencePattern } from "@/types/recurrence";
 
 import { useState, useEffect } from "react";
 import { Button, Input } from "@heroui/react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "motion/react";
 
 import { RecurrenceSuggestion } from "@/app/(app)/groceries/components/recurrence-suggestion";
 import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";

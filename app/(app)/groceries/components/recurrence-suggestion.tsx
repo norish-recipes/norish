@@ -2,7 +2,7 @@
 
 import type { RecurrencePattern } from "@/types/recurrence";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 import { RecurrencePill } from "./recurrence-pill";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { Accordion, AccordionItem, Checkbox, Button, Divider } from "@heroui/react";
 import { TrashIcon } from "@heroicons/react/20/solid";
 

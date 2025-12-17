@@ -2,7 +2,7 @@
 
 import type { RecurringGroceryDto } from "@/types";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/16/solid";
 
 import { formatRecurrenceSummary, formatNextOccurrence } from "@/lib/recurrence/formatter";

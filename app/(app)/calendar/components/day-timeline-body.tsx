@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/16/solid";
 import { Button, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
 import { useRef, useState, useCallback } from "react";
-import { PanInfo } from "framer-motion";
+import { PanInfo } from "motion/react";
 
 import { DraggableCalendarItem } from "./draggable-calendar-item";
 

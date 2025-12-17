@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "motion/react";
 import { Accordion, AccordionItem, Button } from "@heroui/react";
 import { CheckIcon } from "@heroicons/react/16/solid";
 

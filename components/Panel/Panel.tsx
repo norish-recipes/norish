@@ -10,7 +10,7 @@ import React, {
   createContext,
   useContext,
 } from "react";
-import { AnimatePresence, motion, useDragControls } from "framer-motion";
+import { AnimatePresence, motion, useDragControls } from "motion/react";
 import { createPortal } from "react-dom";
 import { Button } from "@heroui/react";
 import { XMarkIcon } from "@heroicons/react/16/solid";
@@ -36,7 +36,7 @@ const PanelContext = createContext<{
   open: boolean;
   close: () => void;
   toggle: () => void;
-}>({ open: false, close: () => {}, toggle: () => {} });
+}>({ open: false, close: () => { }, toggle: () => { } });
 
 export function usePanel() {
   return useContext(PanelContext);

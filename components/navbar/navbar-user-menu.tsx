@@ -7,7 +7,7 @@ import { Button } from "@heroui/react";
 import { ArrowDownTrayIcon, ArrowUpIcon, PlusIcon, PhotoIcon } from "@heroicons/react/16/solid";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 import { UsersIcon } from "@heroicons/react/24/outline";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 

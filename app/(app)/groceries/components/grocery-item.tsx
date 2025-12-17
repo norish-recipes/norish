@@ -3,7 +3,7 @@
 import type { RecurrencePattern } from "@/types/recurrence";
 
 import { useEffect, useState, useRef, memo } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Checkbox, Divider } from "@heroui/react";
 
 import { useGroceriesContext } from "../context";
@@ -180,9 +180,8 @@ function GroceryItemComponent({ id, index, totalItems }: GroceryItemProps) {
               <div className="flex flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`relative inline-block text-base font-semibold transition-colors duration-300 ${
-                      isCompleting ? "text-default-500" : ""
-                    } ${item.isDone ? "text-default-500 line-through" : ""}`}
+                    className={`relative inline-block text-base font-semibold transition-colors duration-300 ${isCompleting ? "text-default-500" : ""
+                      } ${item.isDone ? "text-default-500 line-through" : ""}`}
                   >
                     {item.name}
 
@@ -209,9 +208,8 @@ function GroceryItemComponent({ id, index, totalItems }: GroceryItemProps) {
 
                 {item.amount && (
                   <span
-                    className={`text-sm font-medium ${
-                      item.isDone ? "text-default-400" : "text-primary"
-                    }`}
+                    className={`text-sm font-medium ${item.isDone ? "text-default-400" : "text-primary"
+                      }`}
                   >
                     {item.amount} {item.unit ?? ""}
                   </span>
@@ -243,10 +241,10 @@ function GroceryItemComponent({ id, index, totalItems }: GroceryItemProps) {
         initialPattern={
           recurringGrocery
             ? {
-                rule: recurringGrocery.recurrenceRule as "day" | "week" | "month",
-                interval: recurringGrocery.recurrenceInterval,
-                weekday: recurringGrocery.recurrenceWeekday ?? undefined,
-              }
+              rule: recurringGrocery.recurrenceRule as "day" | "week" | "month",
+              interval: recurringGrocery.recurrenceInterval,
+              weekday: recurringGrocery.recurrenceWeekday ?? undefined,
+            }
             : null
         }
         open={recurrencePanelOpen}
