@@ -45,6 +45,7 @@ export default function IngredientInput({
   const { units } = useUnitsQuery();
   const [items, setItems] = useState<IngredientItem[]>([createItem("")]);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
+  const dragConstraintsRef = useRef<HTMLDivElement>(null);
 
   // Initialize from ingredients prop
   useEffect(() => {
@@ -184,8 +185,10 @@ export default function IngredientInput({
 
   const handleReorder = useCallback(
     (newOrder: IngredientItem[]) => {
-      setItems(newOrder);
-      debouncedParse(newOrder);
+      const normalized = normalizeIngredientItems(newOrder);
+
+      setItems(normalized);
+      debouncedParse(normalized);
     },
     [debouncedParse]
   );
@@ -203,6 +206,7 @@ export default function IngredientInput({
 
   return (
     <Reorder.Group
+      ref={dragConstraintsRef}
       axis="y"
       values={items}
       onReorder={handleReorder}
@@ -216,6 +220,7 @@ export default function IngredientInput({
           ingredientNumber={getIngredientNumber(index)}
           isLast={index === items.length - 1}
           showRemove={items.length > 1 && !!item.text}
+          dragConstraintsRef={dragConstraintsRef}
           onValueChange={(v) => handleInputChange(index, v)}
           onKeyDown={(e) => handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)}
           onBlur={() => handleBlur(index)}
@@ -226,6 +231,13 @@ export default function IngredientInput({
   );
 }
 
+function normalizeIngredientItems(next: IngredientItem[]): IngredientItem[] {
+  const withoutTrailingEmpty = next.filter((it) => it.text.trim().length > 0);
+  const normalized = [...withoutTrailingEmpty, createItem("")];
+
+  return normalized.length ? normalized : [createItem("")];
+}
+
 // Separate component for each row to use useDragControls
 interface IngredientRowProps {
   item: IngredientItem;
@@ -233,6 +245,7 @@ interface IngredientRowProps {
   ingredientNumber: number | null;
   isLast: boolean;
   showRemove: boolean;
+  dragConstraintsRef: React.RefObject<HTMLDivElement | null>;
   onValueChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onBlur: () => void;
@@ -245,18 +258,24 @@ function IngredientRow({
   ingredientNumber,
   isLast,
   showRemove,
+  dragConstraintsRef,
   onValueChange,
   onKeyDown,
   onBlur,
   onRemove,
 }: IngredientRowProps) {
   const controls = useDragControls();
+  const canDrag = !isLast && !!item.text.trim();
 
   return (
     <Reorder.Item
       value={item}
+      drag={canDrag ? "y" : false}
       dragListener={false}
       dragControls={controls}
+      dragConstraints={dragConstraintsRef}
+      dragElastic={0}
+      dragMomentum={false}
       className="flex items-start gap-2"
       style={{ position: "relative" }}
     >
@@ -265,12 +284,12 @@ function IngredientRow({
         className={`flex h-10 w-6 flex-shrink-0 touch-none items-center justify-center ${!isLast && item.text ? "cursor-grab active:cursor-grabbing" : ""
           }`}
         onPointerDown={(e) => {
-          if (!isLast && item.text) {
+          if (canDrag) {
             controls.start(e);
           }
         }}
       >
-        {!isLast && item.text ? (
+        {canDrag ? (
           <Bars3Icon className="text-default-400 h-4 w-4" />
         ) : null}
       </div>

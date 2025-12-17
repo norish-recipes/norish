@@ -2,9 +2,10 @@
 // FULLY AI GENERATED - DO NOT EDIT - I HAVE NO IDEA HOW THIS WORKS :D
 import {
   animate,
-  clamp,
   motion,
   MotionValue,
+  PanInfo,
+  useDragControls,
   useMotionValue,
   useMotionValueEvent,
   useSpring,
@@ -107,17 +108,11 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
     const swipeItemWidth = useRef(0);
     const actionsWidthPx = useRef(0);
     const buttonSize = useRef(calculateButtonSize(rowHeight));
-    const swipeStartX = useRef(0);
-    const swipeStartY = useRef(0);
-    const swipeStartOffset = useRef(0);
-    const fullSwipeSnapPosition = useRef<"left" | null>(null);
-
-    const isDraggingRef = useRef(false);
-    const directionRef = useRef<"h" | "v" | null>(null);
+    const dragControls = useDragControls();
+    const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
 
     // Row translate
     const swipeAmount = useMotionValue(0);
-    const swipeAmountSpring = useSpring(swipeAmount, SPRING_OPTIONS);
     const swipeProgress = useTransform(swipeAmount, (value) => {
       // Calculate progress relative to actions width, not row width
       // This ensures buttons appear correctly whether swiped manually or opened programmatically
@@ -175,6 +170,7 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
           swipeItemWidth.current = w;
           buttonSize.current = calculateButtonSize(rowHeight);
           actionsWidthPx.current = calculateActionsWidth(actions.length, buttonSize.current);
+          setDragConstraints({ left: -w, right: 0 });
         }
       };
 
@@ -238,13 +234,12 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
 
         // Reset
         swipeAmount.jump(0);
-        swipeAmountSpring.jump(0);
         if (swipeItemRef.current) swipeItemRef.current.style.opacity = "1";
         if (swipeContainerRef.current) swipeContainerRef.current.style.opacity = "1";
         overlayWidth.set(0);
         setCommitting(null);
       },
-      [overlayWidth, swipeAmount, swipeAmountSpring]
+      [overlayWidth, swipeAmount]
     );
 
     const closeRow = () => animate(swipeAmount, 0, { duration: 0.3, ease: "easeOut" });
@@ -296,113 +291,61 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
       }
     };
 
-    // Swipe gesture
-    useEffect(() => {
-      const handlePointerMove = (e: PointerEvent) => {
-        if (!isDraggingRef.current || committing) return;
-
-        const dx = e.clientX - swipeStartX.current;
-        const dy = Math.abs(e.clientY - swipeStartY.current);
-
-        if (!directionRef.current) {
-          if (Math.abs(dx) > 10 && Math.abs(dx) > dy) {
-            directionRef.current = "h";
-            swipeContainerRef.current?.setPointerCapture?.((e as any).pointerId);
-          } else if (dy > 10 && dy > Math.abs(dx)) {
-            directionRef.current = "v";
-            isDraggingRef.current = false;
-
-            return;
-          }
-        }
-        if (directionRef.current !== "h") return;
+    const handleDragEnd = useCallback(
+      (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+        if (committing) return;
 
         const w = swipeItemWidth.current;
 
         if (!w) return;
 
-        const delta = e.clientX - swipeStartX.current + swipeStartOffset.current;
-        const fullSwipeThreshold = w * FULL_SWIPE_THRESHOLD;
-        const beyond = Math.abs(delta) > fullSwipeThreshold;
-
-        if (fullSwipeSnapPosition.current) {
-          const back = Math.abs(delta) < fullSwipeThreshold;
-
-          if (back) {
-            fullSwipeSnapPosition.current = null;
-            swipeAmount.set(delta);
-          } else {
-            swipeAmount.set(-w);
-          }
-
-          return;
-        }
-
-        // Only allow full commit when not already open
-        if (beyond && !isOpen) {
-          fullSwipeSnapPosition.current = "left";
-          swipeAmount.set(-w);
-        } else {
-          swipeAmount.set(clamp(-w, 0, delta));
-        }
-      };
-
-      const handlePointerUp = () => {
-        if (!isDraggingRef.current && directionRef.current !== "h") {
-          directionRef.current = null;
-
-          return;
-        }
-        const wasHorizontal = directionRef.current === "h";
-
-        isDraggingRef.current = false;
-        if (!wasHorizontal || committing) {
-          directionRef.current = null;
-
-          return;
-        }
-
-        const w = swipeItemWidth.current;
-
-        if (!w) {
-          directionRef.current = null;
-
-          return;
-        }
-
         const current = swipeAmount.get();
-        let target = 0;
-        const snapPx = w * SNAP_THRESHOLD;
         const targetOpen = -actionsWidthPx.current;
+        const fullSwipeThreshold = w * FULL_SWIPE_THRESHOLD;
 
-        if (Math.abs(current) > snapPx) {
-          target = targetOpen;
-        }
+        const duration = 0.125 + actions.length * 0.025;
 
-        if (fullSwipeSnapPosition.current === "left" && !isOpen) {
+        // Full-swipe commit only when not already open
+        if (current <= -fullSwipeThreshold && !isOpen) {
           const primary = actions.find((a) => a.primary);
 
-          if (primary) commitDelete(primary);
-        } else {
-          // Dynamic duration based on action count for proportional feel
-          // 1 action: 0.15s, 2 actions: 0.175s, 3 actions: 0.2s
-          const duration = 0.125 + actions.length * 0.025;
-
-          animate(swipeAmount, target, { duration, ease: "easeOut" });
+          if (primary) {
+            swipeAmount.set(-w);
+            commitDelete(primary);
+            return;
+          }
         }
 
-        fullSwipeSnapPosition.current = null;
-        directionRef.current = null;
-      };
+        // Prefer direction + velocity, then fall back to the closest snap point.
+        // This makes "swipe right to close" feel reliable again.
+        const velocityX = info.velocity.x;
+        const shouldClose = velocityX > 500;
+        const shouldOpen = velocityX < -500;
 
-      document.addEventListener("pointermove", handlePointerMove, { passive: true });
-      document.addEventListener("pointerup", handlePointerUp, { passive: true });
+        if (targetOpen === 0) {
+          animate(swipeAmount, 0, { duration, ease: "easeOut" });
+          return;
+        }
 
-      return () => {
-        document.removeEventListener("pointermove", handlePointerMove);
-        document.removeEventListener("pointerup", handlePointerUp);
-      };
-    }, [actions, swipeAmount, isOpen, committing, swipeAmountSpring, commitDelete]);
+        if (shouldClose) {
+          animate(swipeAmount, 0, { duration, ease: "easeOut" });
+          return;
+        }
+
+        if (shouldOpen) {
+          animate(swipeAmount, targetOpen, { duration, ease: "easeOut" });
+          return;
+        }
+
+        // Closest snap point (open vs closed)
+        const distToClosed = Math.abs(current - 0);
+        const distToOpen = Math.abs(current - targetOpen);
+        const target = distToClosed <= distToOpen ? 0 : targetOpen;
+
+        animate(swipeAmount, target, { duration, ease: "easeOut" });
+      },
+      [actions, actions.length, committing, commitDelete, isOpen, swipeAmount]
+    );
 
     const shouldStartSwipe = (e: React.PointerEvent) => {
       if (!disableSwipeOnDesktop) return true;
@@ -426,14 +369,6 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
           style={{
             height: rowHeight ? rowHeight : "auto",
             touchAction: "pan-y",
-          }}
-          onPointerDown={(e) => {
-            if (!shouldStartSwipe(e) || committing) return;
-            isDraggingRef.current = true;
-            directionRef.current = null;
-            swipeStartX.current = e.clientX;
-            swipeStartY.current = e.clientY;
-            swipeStartOffset.current = swipeAmount.get();
           }}
         >
           {/* Commit overlay (right-anchored), icon centered */}
@@ -460,7 +395,7 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
             commitDelete={commitDelete}
             focusedIndex={focusedActionIndex}
             isOpen={isOpen}
-            swipeAmount={swipeAmountSpring}
+            swipeAmount={swipeAmount}
             swipeProgress={swipeProgress}
           />
 
@@ -468,7 +403,19 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
           <motion.div
             ref={swipeItemRef}
             className="relative z-20 h-full w-full"
-            style={{ x: swipeAmountSpring }}
+            drag="x"
+            dragConstraints={dragConstraints}
+            dragControls={dragControls}
+            dragDirectionLock={true}
+            dragElastic={0.05}
+            dragListener={false}
+            dragMomentum={false}
+            style={{ x: swipeAmount, touchAction: "pan-y" }}
+            onDragEnd={handleDragEnd}
+            onPointerDown={(e) => {
+              if (!shouldStartSwipe(e) || committing) return;
+              dragControls.start(e);
+            }}
             onClick={() => {
               if (isOpen) closeRow();
             }}

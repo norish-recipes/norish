@@ -29,6 +29,7 @@ export function DraggableCalendarItem({
   const containerRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const startPositionRef = useRef<{ x: number; y: number } | null>(null);
+  const pressEventRef = useRef<PointerEvent | null>(null);
   const y = useMotionValue(0);
 
   const cancelLongPress = useCallback(() => {
@@ -40,12 +41,14 @@ export function DraggableCalendarItem({
       containerRef.current.style.touchAction = "";
     }
     startPositionRef.current = null;
+    pressEventRef.current = null;
     setIsReady(false);
   }, []);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       startPositionRef.current = { x: e.clientX, y: e.clientY };
+      pressEventRef.current = e.nativeEvent as PointerEvent;
 
       longPressTimerRef.current = window.setTimeout(() => {
         setIsReady(true);
@@ -53,7 +56,10 @@ export function DraggableCalendarItem({
           containerRef.current.style.touchAction = "none";
         }
 
-        dragControls.start(e as any);
+        // Use the stored native PointerEvent to avoid relying on a stale React event
+        if (pressEventRef.current) {
+          dragControls.start(pressEventRef.current as any);
+        }
         longPressTimerRef.current = null;
       }, LONG_PRESS_DURATION);
     },
@@ -108,6 +114,7 @@ export function DraggableCalendarItem({
       className="relative touch-none select-none"
       drag="y"
       dragControls={dragControls}
+      dragDirectionLock={true}
       dragElastic={0.05}
       dragListener={false}
       dragMomentum={false}

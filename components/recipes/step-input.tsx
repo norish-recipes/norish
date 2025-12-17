@@ -50,6 +50,7 @@ export default function StepInput({
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const dragConstraintsRef = useRef<HTMLDivElement>(null);
 
   const { uploadStepImage, deleteStepImage } = useRecipeImages();
 
@@ -219,8 +220,10 @@ export default function StepInput({
 
   const handleReorder = useCallback(
     (newOrder: StepItem[]) => {
-      setItems(newOrder);
-      emitChanges(newOrder);
+      const normalized = normalizeStepItems(newOrder);
+
+      setItems(normalized);
+      emitChanges(normalized);
     },
     [emitChanges]
   );
@@ -237,6 +240,7 @@ export default function StepInput({
 
   return (
     <Reorder.Group
+      ref={dragConstraintsRef}
       axis="y"
       values={items}
       onReorder={handleReorder}
@@ -253,6 +257,7 @@ export default function StepInput({
           recipeId={recipeId}
           uploadingIndex={uploadingIndex}
           fileInputRefs={fileInputRefs}
+          dragConstraintsRef={dragConstraintsRef}
           onValueChange={(v) => handleInputChange(index, v)}
           onKeyDown={(e) => handleKeyDown(index, e)}
           onBlur={() => handleBlur(index)}
@@ -266,6 +271,15 @@ export default function StepInput({
   );
 }
 
+function normalizeStepItems(next: StepItem[]): StepItem[] {
+  const withoutTrailingEmpty = next.filter(
+    (it) => it.text.trim().length > 0 || (it.images && it.images.length > 0)
+  );
+  const normalized = [...withoutTrailingEmpty, createStepItem("", [])];
+
+  return normalized.length ? normalized : [createStepItem("", [])];
+}
+
 // Separate component for each row to use useDragControls
 interface StepRowProps {
   item: StepItem;
@@ -276,6 +290,7 @@ interface StepRowProps {
   recipeId?: string;
   uploadingIndex: number | null;
   fileInputRefs: React.MutableRefObject<(HTMLInputElement | null)[]>;
+  dragConstraintsRef: React.RefObject<HTMLDivElement | null>;
   onValueChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onBlur: () => void;
@@ -294,6 +309,7 @@ function StepRow({
   recipeId,
   uploadingIndex,
   fileInputRefs,
+  dragConstraintsRef,
   onValueChange,
   onKeyDown,
   onBlur,
@@ -304,12 +320,17 @@ function StepRow({
 }: StepRowProps) {
   const controls = useDragControls();
   const hasContent = !!item.text || item.images.length > 0;
+  const canDrag = !isLast && hasContent;
 
   return (
     <Reorder.Item
       value={item}
+      drag={canDrag ? "y" : false}
       dragListener={false}
       dragControls={controls}
+      dragConstraints={dragConstraintsRef}
+      dragElastic={0}
+      dragMomentum={false}
       className="flex flex-col gap-2"
       style={{ position: "relative" }}
     >
@@ -319,12 +340,12 @@ function StepRow({
           className={`flex h-10 w-5 flex-shrink-0 touch-none items-center justify-center md:w-6 ${!isLast && hasContent ? "cursor-grab active:cursor-grabbing" : ""
             }`}
           onPointerDown={(e) => {
-            if (!isLast && hasContent) {
+            if (canDrag) {
               controls.start(e);
             }
           }}
         >
-          {!isLast && hasContent ? (
+          {canDrag ? (
             <Bars3Icon className="text-default-400 h-4 w-4" />
           ) : null}
         </div>
