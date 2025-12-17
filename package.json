@@ -74,7 +74,7 @@
     "autoprefixer": "^10.4.21",
     "cheerio": "1.1.2",
     "cross-env": "10.0.0",
-    "dotenv": "17.2.1",
+    "dotenv": "17.2.3",
     "drizzle-kit": "0.31.4",
     "eslint": "9.34.0",
     "eslint-config-next": "16.0.4",
