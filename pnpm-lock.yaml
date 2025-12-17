@@ -217,8 +217,8 @@ importers:
         specifier: 5.16.0
         version: 5.16.0(ws@8.18.3)(zod@4.1.5)
       openid-client:
-        specifier: 6.7.1
-        version: 6.7.1
+        specifier: 6.8.1
+        version: 6.8.1
       parse-ingredient:
         specifier: 1.3.0
         version: 1.3.0
@@ -4433,8 +4433,8 @@ packages:
       zod:
         optional: true
 
-  openid-client@6.7.1:
-    resolution: {integrity: sha512-kOiE4q0kNogr90hXsxPrKeEDuY+V0kkZazvZScOwZkYept9slsaQ3usXTaKkm6I04vLNuw5caBoX7UfrwC6x8w==}
+  openid-client@6.8.1:
+    resolution: {integrity: sha512-VoYT6enBo6Vj2j3Q5Ec0AezS+9YGzQo1f5Xc42lreMGlfP4ljiXPKVDvCADh+XHCV/bqPu/wWSiCVXbJKvrODw==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -10290,7 +10290,7 @@ snapshots:
       ws: 8.18.3
       zod: 4.1.5
 
-  openid-client@6.7.1:
+  openid-client@6.8.1:
     dependencies:
       jose: 6.1.0
       oauth4webapi: 3.8.3
