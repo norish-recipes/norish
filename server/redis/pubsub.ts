@@ -19,6 +19,8 @@ const CHANNEL_PREFIX = "norish";
  * Redis-backed typed event emitter.
  */
 export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
+  constructor(private readonly namespace: string = "default") {}
+
   async emitToHousehold<K extends keyof TEvents & string>(
     householdKey: string,
     event: K,
@@ -30,7 +32,7 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
   }
 
   householdEvent<K extends keyof TEvents & string>(householdKey: string, event: K): string {
-    return `${CHANNEL_PREFIX}:household:${householdKey}:${event}`;
+    return `${CHANNEL_PREFIX}:${this.namespace}:household:${householdKey}:${event}`;
   }
 
   async emitToUser<K extends keyof TEvents & string>(
@@ -44,7 +46,7 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
   }
 
   userEvent<K extends keyof TEvents & string>(userId: string, event: K): string {
-    return `${CHANNEL_PREFIX}:user:${userId}:${event}`;
+    return `${CHANNEL_PREFIX}:${this.namespace}:user:${userId}:${event}`;
   }
 
   async broadcast<K extends keyof TEvents & string>(event: K, data: TEvents[K]): Promise<boolean> {
@@ -54,7 +56,7 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
   }
 
   broadcastEvent<K extends keyof TEvents & string>(event: K): string {
-    return `${CHANNEL_PREFIX}:broadcast:${event}`;
+    return `${CHANNEL_PREFIX}:${this.namespace}:broadcast:${event}`;
   }
 
   async emitGlobal<K extends keyof TEvents & string>(event: K, data: TEvents[K]): Promise<boolean> {
@@ -64,7 +66,7 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
   }
 
   globalEvent<K extends keyof TEvents & string>(event: K): string {
-    return `${CHANNEL_PREFIX}:global:${event}`;
+    return `${CHANNEL_PREFIX}:${this.namespace}:global:${event}`;
   }
 
   /**
@@ -132,8 +134,8 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
 
 export function createTypedEmitter<
   TEvents extends Record<string, unknown>,
->(): TypedRedisEmitter<TEvents> {
-  return new TypedRedisEmitter<TEvents>();
+>(namespace: string): TypedRedisEmitter<TEvents> {
+  return new TypedRedisEmitter<TEvents>(namespace);
 }
 
 export { TypedRedisEmitter as TypedEmitter };

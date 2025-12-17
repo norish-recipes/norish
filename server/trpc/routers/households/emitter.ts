@@ -9,4 +9,4 @@ declare global {
 
 export const householdEmitter =
   globalThis.__householdEmitter__ ||
-  (globalThis.__householdEmitter__ = createTypedEmitter<HouseholdSubscriptionEvents>());
+  (globalThis.__householdEmitter__ = createTypedEmitter<HouseholdSubscriptionEvents>("household"));

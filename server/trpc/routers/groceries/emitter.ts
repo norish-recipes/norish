@@ -9,4 +9,4 @@ declare global {
 
 export const groceryEmitter =
   globalThis.__groceryEmitter__ ||
-  (globalThis.__groceryEmitter__ = createTypedEmitter<GrocerySubscriptionEvents>());
+  (globalThis.__groceryEmitter__ = createTypedEmitter<GrocerySubscriptionEvents>("grocery"));

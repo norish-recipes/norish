@@ -9,4 +9,4 @@ declare global {
 
 export const recipeEmitter =
   globalThis.__recipeEmitter__ ||
-  (globalThis.__recipeEmitter__ = createTypedEmitter<RecipeSubscriptionEvents>());
+  (globalThis.__recipeEmitter__ = createTypedEmitter<RecipeSubscriptionEvents>("recipe"));

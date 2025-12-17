@@ -9,4 +9,4 @@ declare global {
 
 export const calendarEmitter =
   globalThis.__calendarEmitter__ ||
-  (globalThis.__calendarEmitter__ = createTypedEmitter<CalendarSubscriptionEvents>());
+  (globalThis.__calendarEmitter__ = createTypedEmitter<CalendarSubscriptionEvents>("calendar"));

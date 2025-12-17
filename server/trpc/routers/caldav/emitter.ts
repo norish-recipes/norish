@@ -9,4 +9,4 @@ declare global {
 
 export const caldavEmitter =
   globalThis.__caldavEmitter__ ||
-  (globalThis.__caldavEmitter__ = createTypedEmitter<CaldavSubscriptionEvents>());
+  (globalThis.__caldavEmitter__ = createTypedEmitter<CaldavSubscriptionEvents>("caldav"));

@@ -54,6 +54,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
                 isAdmin: true,
               },
             ],
+            allergies: [],
           };
 
           setHouseholdData((prev) => ({
@@ -151,6 +152,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
                 ...u,
                 isAdmin: u.id === newAdminId,
               })),
+              allergies: prev.household.allergies,
             };
 
             return {

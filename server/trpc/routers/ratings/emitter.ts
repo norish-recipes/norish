@@ -8,4 +8,4 @@ declare global {
 
 export const ratingsEmitter =
   globalThis.__ratingsEmitter__ ||
-  (globalThis.__ratingsEmitter__ = createTypedEmitter<RatingSubscriptionEvents>());
+  (globalThis.__ratingsEmitter__ = createTypedEmitter<RatingSubscriptionEvents>("rating"));
