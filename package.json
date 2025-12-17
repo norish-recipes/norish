@@ -90,7 +90,7 @@
     "framer-motion": "12.23.22",
     "globals": "^16.5.0",
     "idb-keyval": "6.2.2",
-    "jose": "6.1.0",
+    "jose": "6.1.3",
     "jsdom": "^27.2.0",
     "jsonrepair": "3.13.0",
     "jszip": "3.10.1",
