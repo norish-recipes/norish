@@ -110,7 +110,7 @@
     "tailwindcss": "^4.1.12",
     "tsdown": "^0.15.12",
     "tsx": "4.20.5",
-    "typescript": "5.9.2",
+    "typescript": "5.9.3",
     "uuid": "11.1.0",
     "vitest": "^4.0.14",
     "ws": "8.18.3",
