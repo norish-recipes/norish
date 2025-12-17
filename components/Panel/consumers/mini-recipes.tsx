@@ -78,7 +78,7 @@ function MiniRecipesContent({
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <Input
-          placeholder="Search recipes…"
+          placeholder="Search recipes or add notes..."
           style={{ fontSize: "16px" }}
           value={rawInput}
           onChange={handleInputChange}
@@ -95,7 +95,7 @@ function MiniRecipesContent({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <Input
-        placeholder="Search recipes…"
+        placeholder="Search recipes or add notes..."
         style={{ fontSize: "16px" }}
         value={rawInput}
         onChange={handleInputChange}

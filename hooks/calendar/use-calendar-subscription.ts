@@ -11,8 +11,14 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 
 export function useCalendarSubscription(startISO: string, endISO: string) {
   const trpc = useTRPC();
-  const { setCalendarData, removeRecipeFromCache, removeNoteFromCache, invalidate } =
-    useCalendarQuery(startISO, endISO);
+  const {
+    setCalendarData,
+    removeRecipeFromCache,
+    updateRecipeInCache,
+    removeNoteFromCache,
+    updateNoteInCache,
+    invalidate,
+  } = useCalendarQuery(startISO, endISO);
 
   // onRecipePlanned
   useSubscription(
@@ -33,6 +39,7 @@ export function useCalendarSubscription(startISO: string, endISO: string) {
             recipeName: plannedRecipe.recipeName ?? "Unknown",
             slot: plannedRecipe.slot as Slot,
             date: plannedRecipe.date,
+            allergyWarnings: plannedRecipe.allergyWarnings,
           };
 
           return { ...prev, [plannedRecipe.date]: [...arr, item] };
@@ -65,6 +72,10 @@ export function useCalendarSubscription(startISO: string, endISO: string) {
         const { plannedRecipe, oldDate } = payload;
         const newDate = plannedRecipe.date;
 
+        // Keep the base list query in sync so we don't show duplicates
+        // (base query still has the old date until refetch otherwise).
+        updateRecipeInCache(plannedRecipe.id, newDate);
+
         setCalendarData((prev) => {
           // Remove from old date
           const oldArr = (prev[oldDate] ?? []).filter((i) => i.id !== plannedRecipe.id);
@@ -73,13 +84,22 @@ export function useCalendarSubscription(startISO: string, endISO: string) {
           const newArr = prev[newDate] ?? [];
           const existsInNew = newArr.some((i) => i.id === plannedRecipe.id);
 
+          const existing =
+            (prev[oldDate] ?? []).find((i) => i.id === plannedRecipe.id) ??
+            (prev[newDate] ?? []).find((i) => i.id === plannedRecipe.id);
+
           const item: CalendarItemViewDto = {
             itemType: "recipe",
             id: plannedRecipe.id,
             recipeId: plannedRecipe.recipeId,
-            recipeName: plannedRecipe.recipeName ?? "Unknown",
+            recipeName:
+              plannedRecipe.recipeName ??
+              (existing && existing.itemType === "recipe" ? existing.recipeName : "Unknown"),
             slot: plannedRecipe.slot as Slot,
             date: plannedRecipe.date,
+            allergyWarnings:
+              plannedRecipe.allergyWarnings ??
+              (existing && existing.itemType === "recipe" ? existing.allergyWarnings : undefined),
           };
 
           return {
@@ -144,6 +164,9 @@ export function useCalendarSubscription(startISO: string, endISO: string) {
       onData: (payload) => {
         const { note, oldDate } = payload;
         const newDate = note.date;
+
+        // Keep the base list query in sync so we don't show duplicates.
+        updateNoteInCache(note.id, newDate);
 
         setCalendarData((prev) => {
           // Remove from old date

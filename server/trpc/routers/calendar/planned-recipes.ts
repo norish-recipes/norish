@@ -24,6 +24,18 @@ import {
 } from "@/server/db";
 import { assertHouseholdAccess } from "@/server/auth/permissions";
 
+async function computeAllergyWarningsForRecipe(recipeId: string, userIds: string[]) {
+  const householdAllergies = await getAllergiesForUsers(userIds);
+  const allAllergies = new Set(householdAllergies.map((a) => a.tagName.toLowerCase()));
+
+  const tagNames = await getRecipeTagNames(recipeId);
+  const warnings = tagNames
+    .map((t) => t.toLowerCase())
+    .filter((t) => allAllergies.has(t));
+
+  return [...new Set(warnings)];
+}
+
 // Procedures
 const list = authedProcedure.input(PlannedRecipeListSchema).query(async ({ ctx, input }) => {
   log.debug({ userId: ctx.user.id, input }, "Listing planned recipes");
@@ -92,9 +104,16 @@ const create = authedProcedure.input(PlannedRecipeCreateSchema).mutation(({ ctx,
         recipeName: recipe.name,
       }));
     })
-    .then(({ plannedRecipe, recipeName }) => {
+    .then(async ({ plannedRecipe, recipeName }) => {
+      const allergyWarnings = await computeAllergyWarningsForRecipe(plannedRecipe.recipeId, ctx.userIds);
+
       // Emit to household for UI updates
-      calendarEmitter.emitToHousehold(ctx.householdKey, "recipePlanned", { plannedRecipe });
+      calendarEmitter.emitToHousehold(ctx.householdKey, "recipePlanned", {
+        plannedRecipe: {
+          ...plannedRecipe,
+          allergyWarnings,
+        },
+      });
 
       // Emit global event for server-side listeners (e.g., CalDAV sync)
       calendarEmitter.emitGlobal("globalRecipePlanned", {
@@ -180,21 +199,22 @@ const updateDate = authedProcedure
 
         await assertHouseholdAccess(ctx.user.id, ownerId);
         const plannedRecipe = await updatePlannedRecipeDate(id, newDate);
+        const allergyWarnings = await computeAllergyWarningsForRecipe(plannedRecipe.recipeId, ctx.userIds);
 
         // Emit to household for UI updates
         calendarEmitter.emitToHousehold(ctx.householdKey, "recipeUpdated", {
-          plannedRecipe,
+          plannedRecipe: {
+            ...plannedRecipe,
+            allergyWarnings,
+          },
           oldDate,
         });
 
         // Emit global event for server-side listeners (e.g., CalDAV sync)
-        // Fetch recipe name for the global event
-        const recipe = await getRecipeFull(plannedRecipe.recipeId);
-
         calendarEmitter.emitGlobal("globalRecipeUpdated", {
           id: plannedRecipe.id,
           recipeId: plannedRecipe.recipeId,
-          recipeName: recipe?.name ?? "Recipe",
+          recipeName: plannedRecipe.recipeName ?? "Recipe",
           newDate: plannedRecipe.date,
           slot: plannedRecipe.slot as Slot,
           userId: ownerId,

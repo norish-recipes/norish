@@ -11,7 +11,9 @@ import {
 let subscriptionCallbacks: Record<string, (data: any) => void> = {};
 const mockSetCalendarData = vi.fn();
 const mockRemoveRecipeFromCache = vi.fn();
+const mockUpdateRecipeInCache = vi.fn();
 const mockRemoveNoteFromCache = vi.fn();
+const mockUpdateNoteInCache = vi.fn();
 const mockInvalidate = vi.fn();
 
 // Mock useSubscription to capture callbacks
@@ -104,7 +106,9 @@ vi.mock("@/hooks/calendar/use-calendar-query", () => ({
     calendarData: {},
     setCalendarData: mockSetCalendarData,
     removeRecipeFromCache: mockRemoveRecipeFromCache,
+    updateRecipeInCache: mockUpdateRecipeInCache,
     removeNoteFromCache: mockRemoveNoteFromCache,
+    updateNoteInCache: mockUpdateNoteInCache,
     invalidate: mockInvalidate,
   }),
 }));
@@ -146,11 +150,22 @@ describe("useCalendarSubscription", () => {
         id: "pr-new",
         date: "2025-01-15",
         recipeName: "New Recipe",
+        allergyWarnings: ["peanut"],
       });
 
       callback({ plannedRecipe: newRecipe });
 
       expect(mockSetCalendarData).toHaveBeenCalled();
+
+      const updater = mockSetCalendarData.mock.calls[0][0];
+      const next = updater({});
+
+      expect(next["2025-01-15"]).toHaveLength(1);
+      expect(next["2025-01-15"][0]).toMatchObject({
+        id: "pr-new",
+        itemType: "recipe",
+        allergyWarnings: ["peanut"],
+      });
     });
   });
 
@@ -184,6 +199,45 @@ describe("useCalendarSubscription", () => {
       callback({ plannedRecipe: updatedRecipe, oldDate: "2025-01-15" });
 
       expect(mockSetCalendarData).toHaveBeenCalled();
+      expect(mockUpdateRecipeInCache).toHaveBeenCalledWith("pr-123", "2025-01-20");
+    });
+
+    it("removes old date and preserves allergyWarnings when payload omits them", () => {
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onRecipeUpdated"];
+      expect(callback).toBeDefined();
+
+      const updatedRecipe = createMockPlannedRecipe({
+        id: "pr-123",
+        date: "2025-01-20",
+        allergyWarnings: undefined,
+      });
+
+      callback({ plannedRecipe: updatedRecipe, oldDate: "2025-01-15" });
+
+      const updater = mockSetCalendarData.mock.calls.at(-1)?.[0];
+      const next = updater({
+        "2025-01-15": [
+          {
+            itemType: "recipe",
+            id: "pr-123",
+            recipeId: "recipe-1",
+            recipeName: "Test",
+            slot: "Breakfast",
+            date: "2025-01-15",
+            allergyWarnings: ["peanut"],
+          },
+        ],
+      });
+
+      expect(next["2025-01-15"]).toHaveLength(0);
+      expect(next["2025-01-20"]).toHaveLength(1);
+      expect(next["2025-01-20"][0]).toMatchObject({
+        id: "pr-123",
+        itemType: "recipe",
+        allergyWarnings: ["peanut"],
+      });
     });
   });
 
@@ -237,6 +291,7 @@ describe("useCalendarSubscription", () => {
       callback({ note: updatedNote, oldDate: "2025-01-15" });
 
       expect(mockSetCalendarData).toHaveBeenCalled();
+      expect(mockUpdateNoteInCache).toHaveBeenCalledWith("note-123", "2025-01-20");
     });
   });
 
