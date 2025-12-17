@@ -53,7 +53,7 @@ services:
 
   # PostgreSQL Database
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     container_name: norish-db
     restart: unless-stopped
     environment:
