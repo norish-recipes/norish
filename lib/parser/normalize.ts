@@ -4,6 +4,44 @@ import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
 import { getUnits } from "@/config/server-config-loader";
 
+function parseNutritionValue(value: unknown): number | null {
+  if (value == null) return null;
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    // Extract numeric portion (handles "300 kcal", "25g", "25 grams", etc.)
+    const match = value.match(/^[\d.,]+/);
+    if (match) {
+      const parsed = parseFloat(match[0].replace(",", "."));
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+  }
+  return null;
+}
+
+function extractNutrition(json: any): {
+  calories: number | null;
+  fat: string | null;
+  carbs: string | null;
+  protein: string | null;
+} {
+  const nutrition = json?.nutrition;
+  if (!nutrition || typeof nutrition !== "object") {
+    return { calories: null, fat: null, carbs: null, protein: null };
+  }
+
+  const calories = parseNutritionValue(nutrition.calories);
+  const fat = parseNutritionValue(nutrition.fatContent);
+  const carbs = parseNutritionValue(nutrition.carbohydrateContent);
+  const protein = parseNutritionValue(nutrition.proteinContent);
+
+  return {
+    calories,
+    fat: fat != null ? fat.toString() : null,
+    carbs: carbs != null ? carbs.toString() : null,
+    protein: protein != null ? protein.toString() : null,
+  };
+}
+
 export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInsertDTO | null> {
   if (!json) return null;
 
@@ -116,6 +154,9 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
     }
   }
 
+  // --- NUTRITION ---
+  const nutrition = extractNutrition(json);
+
   const coreMaybe: Partial<FullRecipeInsertDTO> = {
     name: json.name ?? json.headline,
     image: await downloadBestImageFromJsonLd(images),
@@ -127,6 +168,7 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
     prepMinutes: json.prepTime ? parseIsoDuration(json.prepTime) : undefined,
     cookMinutes: json.cookTime ? parseIsoDuration(json.cookTime) : undefined,
     totalMinutes: json.totalTime ? parseIsoDuration(json.totalTime) : undefined,
+    ...nutrition,
   };
 
   // --- FINAL STRUCTURE ---
@@ -139,6 +181,10 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
     prepMinutes: coreMaybe.prepMinutes as any,
     cookMinutes: coreMaybe.cookMinutes as any,
     totalMinutes: coreMaybe.totalMinutes as any,
+    calories: coreMaybe.calories ?? null,
+    fat: coreMaybe.fat ?? null,
+    carbs: coreMaybe.carbs ?? null,
+    protein: coreMaybe.protein ?? null,
     systemUsed,
     steps: Array.isArray(coreMaybe.steps) ? (coreMaybe.steps as any) : steps,
     recipeIngredients: ingredients.map((ing, i) => ({
@@ -154,3 +200,4 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
       : [],
   };
 }
+

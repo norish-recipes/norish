@@ -13,6 +13,7 @@ export default function PromptsForm() {
 
   const [recipeExtraction, setRecipeExtraction] = useState("");
   const [unitConversion, setUnitConversion] = useState("");
+  const [nutritionEstimation, setNutritionEstimation] = useState("");
   const [saving, setSaving] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -22,6 +23,7 @@ export default function PromptsForm() {
     if (prompts) {
       setRecipeExtraction(prompts.recipeExtraction);
       setUnitConversion(prompts.unitConversion);
+      setNutritionEstimation(prompts.nutritionEstimation);
     }
   }, [prompts]);
 
@@ -29,17 +31,20 @@ export default function PromptsForm() {
   useEffect(() => {
     if (prompts) {
       const changed =
-        recipeExtraction !== prompts.recipeExtraction || unitConversion !== prompts.unitConversion;
+        recipeExtraction !== prompts.recipeExtraction ||
+        unitConversion !== prompts.unitConversion ||
+        nutritionEstimation !== prompts.nutritionEstimation;
 
       setHasChanges(changed);
     }
-  }, [recipeExtraction, unitConversion, prompts]);
+  }, [recipeExtraction, unitConversion, nutritionEstimation, prompts]);
 
   const handleSave = async () => {
     setSaving(true);
     await updatePrompts({
       recipeExtraction,
       unitConversion,
+      nutritionEstimation,
     }).finally(() => {
       setSaving(false);
     });
@@ -87,6 +92,19 @@ export default function PromptsForm() {
         />
       </div>
 
+      <div className="flex flex-col gap-2">
+        <Textarea
+          description={`This prompt is used when estimating nutrition information for a recipe.
+              Available variables: {{recipeName}}, {{servings}}, {{ingredients}}`}
+          label="Nutrition Estimation Prompt"
+          maxRows={15}
+          minRows={6}
+          placeholder="Enter the nutrition estimation prompt..."
+          value={nutritionEstimation}
+          onValueChange={setNutritionEstimation}
+        />
+      </div>
+
       <div className="flex items-center justify-between">
         <Button
           color="warning"
@@ -104,3 +122,4 @@ export default function PromptsForm() {
     </div>
   );
 }
+

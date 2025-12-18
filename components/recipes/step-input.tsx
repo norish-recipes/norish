@@ -289,7 +289,7 @@ interface StepRowProps {
   showRemove: boolean;
   recipeId?: string;
   uploadingIndex: number | null;
-  fileInputRefs: React.MutableRefObject<(HTMLInputElement | null)[]>;
+  fileInputRefs: React.RefObject<(HTMLInputElement | null)[]>;
   dragConstraintsRef: React.RefObject<HTMLDivElement | null>;
   onValueChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;

@@ -12,7 +12,7 @@ export const recipeImportJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {
     type: "exponential",
-    delay: 1000, // 1s, 2s, 4s
+    delay: 2000, // 2s, 4s, 8s
   },
   removeOnComplete: true,
   removeOnFail: true,
@@ -38,10 +38,22 @@ export const scheduledTasksJobOptions: DefaultJobOptions = {
   removeOnFail: true,
 };
 
+export const nutritionEstimationJobOptions: DefaultJobOptions = {
+  attempts: 3,
+  backoff: {
+    type: "exponential",
+    delay: 2000, // 2s, 4s, 8s
+  },
+  removeOnComplete: true,
+  removeOnFail: true,
+};
+
 export const QUEUE_NAMES = {
   RECIPE_IMPORT: "recipe-import",
   IMAGE_IMPORT: "image-recipe-import",
   PASTE_IMPORT: "paste-recipe-import",
   CALDAV_SYNC: "caldav-sync",
   SCHEDULED_TASKS: "scheduled-tasks",
+  NUTRITION_ESTIMATION: "nutrition-estimation",
 } as const;
+

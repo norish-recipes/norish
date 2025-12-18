@@ -76,3 +76,15 @@ export interface PasteImportJobData {
 export type AddPasteImportJobResult =
   | { status: "queued"; job: Job<PasteImportJobData> }
   | { status: "duplicate"; existingJobId: string };
+
+// Nutrition estimation queue types
+export interface NutritionEstimationJobData {
+  recipeId: string;
+  userId: string;
+  householdKey: string;
+  householdUserIds: string[] | null;
+}
+
+export type AddNutritionEstimationJobResult =
+  | { status: "queued"; job: Job<NutritionEstimationJobData> }
+  | { status: "duplicate"; existingJobId: string };

@@ -9,6 +9,7 @@ vi.mock("@/server/ai/prompts/loader", () => ({
   loadDefaultPrompts: vi.fn().mockReturnValue({
     recipeExtraction: "Default recipe extraction prompt",
     unitConversion: "Default unit conversion prompt",
+    nutritionEstimation: "Default nutrition estimation prompt",
   }),
 }));
 
@@ -72,6 +73,7 @@ describe("prompts procedures", () => {
       const mockPrompts: PromptsConfig = {
         recipeExtraction: "Custom extraction prompt",
         unitConversion: "Custom conversion prompt",
+        nutritionEstimation: "Custom nutrition estimation prompt",
         isOverridden: true,
       };
 
@@ -99,6 +101,7 @@ describe("prompts procedures", () => {
       const defaultPrompts = {
         recipeExtraction: "Default recipe extraction prompt",
         unitConversion: "Default unit conversion prompt",
+        nutritionEstimation: "Default nutrition estimation prompt",
       };
 
       getConfig.mockResolvedValue(null);
@@ -142,6 +145,7 @@ describe("prompts procedures", () => {
       const newPrompts: PromptsConfigInput = {
         recipeExtraction: "Updated extraction prompt",
         unitConversion: "Updated conversion prompt",
+        nutritionEstimation: "Updated nutrition estimation prompt",
       };
 
       setConfig.mockResolvedValue(undefined);
@@ -171,6 +175,7 @@ describe("prompts procedures", () => {
       const newPrompts: PromptsConfigInput = {
         recipeExtraction: "Updated extraction prompt",
         unitConversion: "Updated conversion prompt",
+        nutritionEstimation: "Updated nutrition estimation prompt",
       };
 
       const testRouter = t.router({
@@ -212,6 +217,7 @@ describe("prompts procedures", () => {
       const defaultPrompts = {
         recipeExtraction: "Default recipe extraction prompt",
         unitConversion: "Default unit conversion prompt",
+        nutritionEstimation: "Default nutrition estimation prompt",
       };
 
       (loadDefaultPrompts as any).mockReturnValue(defaultPrompts);

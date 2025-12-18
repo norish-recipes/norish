@@ -1,11 +1,13 @@
+import { z } from "zod";
+
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 
 import { trpcLogger as log } from "@/server/logger";
-import { recipeImportQueue } from "@/server/queue";
+import { recipeImportQueue, nutritionEstimationQueue } from "@/server/queue";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
 
-import type { RecipeImportJobData, PendingRecipeDTO } from "@/types";
+import type { RecipeImportJobData, PendingRecipeDTO, NutritionEstimationJobData } from "@/types";
 
 const getPending = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Fetching pending recipe imports");
@@ -41,6 +43,26 @@ const getPending = authedProcedure.query(async ({ ctx }) => {
   return pendingRecipes;
 });
 
+/**
+ * Check if a specific recipe has a pending nutrition estimation job.
+ */
+const isNutritionEstimating = authedProcedure
+  .input(z.object({ recipeId: z.uuid() }))
+  .query(async ({ ctx, input }) => {
+    const jobs = await nutritionEstimationQueue.getJobs(["waiting", "active", "delayed"]);
+
+    const isEstimating = jobs.some((job) => {
+      const data = job.data as NutritionEstimationJobData;
+      return data.recipeId === input.recipeId;
+    });
+
+    log.debug({ userId: ctx.user.id, recipeId: input.recipeId, isEstimating }, "Checked nutrition estimation status");
+
+    return isEstimating;
+  });
+
 export const pendingProcedures = router({
   getPending,
+  isNutritionEstimating,
 });
+

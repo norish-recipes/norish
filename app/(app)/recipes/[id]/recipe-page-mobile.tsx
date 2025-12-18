@@ -19,9 +19,10 @@ import DoubleTapContainer from "@/components/shared/double-tap-container";
 import StarRating from "@/components/shared/star-rating";
 import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import { NutritionSection } from "@/components/recipes/nutrition-card";
 
 export default function RecipePageMobile() {
-  var { recipe } = useRecipeContextRequired();
+  var { recipe, currentServings } = useRecipeContextRequired();
   const { isFavorite: checkFavorite } = useFavoritesQuery();
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
@@ -188,6 +189,17 @@ export default function RecipePageMobile() {
               />
             </div>
           </div>
+
+          {/* Nutrition Section */}
+          <NutritionSection
+            recipeId={recipe.id}
+            calories={recipe.calories ?? null}
+            fat={recipe.fat ?? null}
+            carbs={recipe.carbs ?? null}
+            protein={recipe.protein ?? null}
+            baseServings={recipe.servings ?? 1}
+            currentServings={currentServings}
+          />
         </CardBody>
       </Card>
 

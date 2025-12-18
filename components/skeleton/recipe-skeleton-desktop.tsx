@@ -57,6 +57,22 @@ export default function RecipeSkeletonDesktop() {
             </div>
             <Skeleton className="h-10 w-full rounded-lg" />
           </div>
+
+          {/* Nutrition Card */}
+          <div className="bg-content1 space-y-3 rounded-2xl p-5 shadow-md">
+            <Skeleton className="h-6 w-24 rounded-lg" />
+            <div className="space-y-1">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between py-1.5">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-4 w-16 rounded-md" />
+                  </div>
+                  <Skeleton className="h-4 w-12 rounded-md" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* RIGHT column: Image + Steps Card */}

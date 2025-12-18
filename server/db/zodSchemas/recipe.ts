@@ -31,6 +31,10 @@ export const AuthorSchema = z
 
 export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   systemUsed: true,
+  calories: true,
+  fat: true,
+  carbs: true,
+  protein: true,
 }).extend({
   tags: z.array(TagNameSchema).default([]),
   author: AuthorSchema,

@@ -24,6 +24,7 @@ type Ctx = {
   isNotFound: boolean;
   convertingTo: MeasurementSystem | null;
   adjustedIngredients: RecipeIngredientsDto[];
+  currentServings: number;
   setIngredientAmounts: (servings: number) => void;
   startConversion: (target: MeasurementSystem) => void;
   reset: () => void;
@@ -125,6 +126,7 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
       isNotFound,
       convertingTo,
       adjustedIngredients,
+      currentServings: _servings ?? recipe?.servings ?? 1,
       setIngredientAmounts,
       startConversion,
       reset,
@@ -136,6 +138,7 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
       isNotFound,
       convertingTo,
       adjustedIngredients,
+      _servings,
       setIngredientAmounts,
       startConversion,
       reset,

@@ -16,6 +16,10 @@ import {
   startPasteImportWorker,
   stopPasteImportWorker,
 } from "@/server/queue/paste-import/worker";
+import {
+  startNutritionEstimationWorker,
+  stopNutritionEstimationWorker,
+} from "@/server/queue/nutrition-estimation/worker";
 import { startCaldavSyncWorker, stopCaldavSyncWorker } from "@/server/queue/caldav-sync/worker";
 import {
   startScheduledTasksWorker,
@@ -37,6 +41,9 @@ export async function startWorkers(): Promise<void> {
   startPasteImportWorker();
   log.info("Paste import worker started");
 
+  startNutritionEstimationWorker();
+  log.info("Nutrition estimation worker started");
+
   startCaldavSyncWorker();
   log.info("CalDAV sync worker started");
 
@@ -49,7 +56,9 @@ export async function stopWorkers(): Promise<void> {
   await stopRecipeImportWorker();
   await stopImageImportWorker();
   await stopPasteImportWorker();
+  await stopNutritionEstimationWorker();
   await stopCaldavSyncWorker();
   await stopScheduledTasksWorker();
   log.info("All BullMQ workers stopped");
 }
+

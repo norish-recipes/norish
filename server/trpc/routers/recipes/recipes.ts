@@ -34,7 +34,7 @@ import {
   type PermissionAction,
 } from "@/server/auth/permissions";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
-import { addImportJob, addImageImportJob, addPasteImportJob } from "@/server/queue";
+import { addImportJob, addImageImportJob, addPasteImportJob, addNutritionEstimationJob } from "@/server/queue";
 import { FilterMode, SortOrder } from "@/types";
 import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
 
@@ -539,6 +539,54 @@ const importFromPasteProcedure = authedProcedure
     return recipeId;
   });
 
+const estimateNutrition = authedProcedure
+  .input(z.object({ recipeId: z.uuid() }))
+  .mutation(async ({ ctx, input }) => {
+    const { recipeId } = input;
+
+    log.info({ userId: ctx.user.id, recipeId }, "Queueing nutrition estimation for recipe");
+
+    const aiEnabled = await checkAIEnabled();
+    if (!aiEnabled) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "AI features are disabled",
+      });
+    }
+
+    const recipe = await getRecipeFull(recipeId);
+    if (!recipe) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Recipe not found",
+      });
+    }
+
+    if (recipe.recipeIngredients.length === 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Recipe has no ingredients to estimate from",
+      });
+    }
+
+    // Add to queue for background processing
+    const result = await addNutritionEstimationJob({
+      recipeId,
+      userId: ctx.user.id,
+      householdKey: ctx.householdKey,
+      householdUserIds: ctx.householdUserIds,
+    });
+
+    if (result.status === "duplicate") {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "Nutrition estimation is already in progress for this recipe",
+      });
+    }
+
+    return { success: true };
+  });
+
 export const recipesProcedures = router({
   list,
   get,
@@ -549,6 +597,8 @@ export const recipesProcedures = router({
   importFromImages: importFromImagesProcedure,
   importFromPaste: importFromPasteProcedure,
   convertMeasurements,
+  estimateNutrition,
   reserveId,
   autocomplete,
 });
+

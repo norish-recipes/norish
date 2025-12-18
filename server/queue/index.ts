@@ -26,6 +26,17 @@ export { pasteImportQueue, addPasteImportJob, closePasteImportQueue } from "./pa
 
 export { startPasteImportWorker, stopPasteImportWorker } from "./paste-import/worker";
 
+export {
+  nutritionEstimationQueue,
+  addNutritionEstimationJob,
+  closeNutritionEstimationQueue,
+} from "./nutrition-estimation/queue";
+
+export {
+  startNutritionEstimationWorker,
+  stopNutritionEstimationWorker,
+} from "./nutrition-estimation/worker";
+
 export { caldavSyncQueue, addCaldavSyncJob, closeCaldavSyncQueue } from "./caldav-sync/queue";
 
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
@@ -45,8 +56,11 @@ export type {
   AddImageImportJobResult,
   PasteImportJobData,
   AddPasteImportJobResult,
+  NutritionEstimationJobData,
+  AddNutritionEstimationJobResult,
   CaldavSyncJobData,
   CaldavSyncOperation,
 } from "@/types";
 
 export type { ScheduledTaskJobData, ScheduledTaskType } from "./scheduled-tasks/queue";
+

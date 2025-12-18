@@ -466,6 +466,10 @@ export async function createRecipeWithRefs(
     prepMinutes: payload.prepMinutes ?? null,
     cookMinutes: payload.cookMinutes ?? null,
     totalMinutes: payload.totalMinutes ?? null,
+    calories: payload.calories ?? null,
+    fat: payload.fat ?? null,
+    carbs: payload.carbs ?? null,
+    protein: payload.protein ?? null,
   };
 
   const finalRecipeId = await db.transaction(async (tx) => {
@@ -546,6 +550,10 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       cookMinutes: true,
       totalMinutes: true,
       systemUsed: true,
+      calories: true,
+      fat: true,
+      carbs: true,
+      protein: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -601,6 +609,10 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     cookMinutes: full.cookMinutes ?? null,
     totalMinutes: full.totalMinutes ?? null,
     systemUsed: full.systemUsed,
+    calories: full.calories ?? null,
+    fat: full.fat ?? null,
+    carbs: full.carbs ?? null,
+    protein: full.protein ?? null,
     steps: ((full.steps as any) ?? []).map((s: any) => ({
       step: s.step,
       systemUsed: s.systemUsed,
@@ -693,6 +705,11 @@ export async function updateRecipeWithRefs(
     if (payload.cookMinutes !== undefined) updateData.cookMinutes = payload.cookMinutes;
     if (payload.totalMinutes !== undefined) updateData.totalMinutes = payload.totalMinutes;
     if (payload.systemUsed !== undefined) updateData.systemUsed = payload.systemUsed;
+    if (payload.calories !== undefined) updateData.calories = payload.calories;
+    if (payload.fat !== undefined) updateData.fat = payload.fat;
+    if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
+    if (payload.protein !== undefined) updateData.protein = payload.protein;
+    
     updateData.updatedAt = new Date();
 
     if (Object.keys(updateData).length > 1) {

@@ -81,6 +81,7 @@ export type ContentIndicatorsConfig = z.infer<typeof ContentIndicatorsSchema>;
 export const PromptsConfigSchema = z.object({
   recipeExtraction: z.string(),
   unitConversion: z.string(),
+  nutritionEstimation: z.string(),
   isOverridden: z.boolean().default(false),
 });
 

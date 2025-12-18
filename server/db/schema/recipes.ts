@@ -1,6 +1,7 @@
 import {
   index,
   integer,
+  numeric,
   pgTable,
   text,
   timestamp,
@@ -29,6 +30,10 @@ export const recipes = pgTable(
     cookMinutes: integer("cook_minutes"),
     totalMinutes: integer("total_minutes"),
     systemUsed: measurementSystemEnum("system_used").notNull().default("metric"),
+    calories: integer("calories"),
+    fat: numeric("fat", { precision: 6, scale: 2 }),
+    carbs: numeric("carbs", { precision: 6, scale: 2 }),
+    protein: numeric("protein", { precision: 6, scale: 2 }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

@@ -90,6 +90,25 @@ export default function RecipeSkeletonMobile() {
               </div>
             </div>
           </div>
+
+          {/* Divider */}
+          <div className="bg-default-200 h-px w-full" />
+
+          {/* Nutrition Section */}
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-24 rounded-lg" />
+            <div className="space-y-1">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between py-1.5">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-4 w-16 rounded-md" />
+                  </div>
+                  <Skeleton className="h-4 w-12 rounded-md" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

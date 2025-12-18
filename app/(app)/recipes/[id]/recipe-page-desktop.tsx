@@ -29,9 +29,10 @@ import DoubleTapContainer from "@/components/shared/double-tap-container";
 import StarRating from "@/components/shared/star-rating";
 import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import NutritionCard from "@/components/recipes/nutrition-card";
 
 export default function RecipePageDesktop() {
-  var { recipe } = useRecipeContextRequired();
+  var { recipe, currentServings } = useRecipeContextRequired();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const { isFavorite: checkFavorite } = useFavoritesQuery();
   const { toggleFavorite } = useFavoritesMutation();
@@ -142,6 +143,17 @@ export default function RecipePageDesktop() {
               <AddToGroceries recipeId={recipe.id} />
             </CardBody>
           </Card>
+
+          {/* Nutrition Card */}
+          <NutritionCard
+            recipeId={recipe.id}
+            calories={recipe.calories ?? null}
+            fat={recipe.fat ?? null}
+            carbs={recipe.carbs ?? null}
+            protein={recipe.protein ?? null}
+            baseServings={recipe.servings ?? 1}
+            currentServings={currentServings}
+          />
         </div>
 
         {/* RIGHT column: Image + Steps (stacked) */}

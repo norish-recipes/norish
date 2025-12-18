@@ -65,6 +65,18 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const [detectedSystem, setDetectedSystem] = useState<MeasurementSystem | null>(null);
   const [manuallySetSystem, setManuallySetSystem] = useState(false);
 
+  // Nutrition state
+  const [calories, setCalories] = useState<number | null>(initialData?.calories ?? null);
+  const [fat, setFat] = useState<number | null>(
+    initialData?.fat != null ? Number(initialData.fat) : null
+  );
+  const [carbs, setCarbs] = useState<number | null>(
+    initialData?.carbs != null ? Number(initialData.carbs) : null
+  );
+  const [protein, setProtein] = useState<number | null>(
+    initialData?.protein != null ? Number(initialData.protein) : null
+  );
+
   // Show recipe ID error if reservation failed
   useEffect(() => {
     if (recipeIdError) {
@@ -219,6 +231,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         prepMinutes: prepMinutes ?? undefined,
         cookMinutes: cookMinutes ?? undefined,
         totalMinutes: totalMinutes ?? undefined,
+        calories: calories ?? undefined,
+        fat: fat != null ? fat.toString() : undefined,
+        carbs: carbs != null ? carbs.toString() : undefined,
+        protein: protein != null ? protein.toString() : undefined,
         systemUsed,
         tags: tags.map((t) => ({ name: t })),
         recipeIngredients: ingredients.map((ing, idx) => ({
@@ -279,6 +295,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     updateRecipe,
     deleteImage,
     recipeId,
+    calories,
+    fat,
+    carbs,
+    protein,
   ]);
 
   const handleTimeChange = useCallback(
@@ -496,11 +516,65 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 6. Details */}
+        {/* 6. Nutrition */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               6
+            </span>
+            Nutrition
+            <span className="text-default-400 text-sm font-normal">(per serving, optional)</span>
+          </h2>
+          <div className="ml-0 md:ml-9">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Input
+                classNames={{ label: "font-medium text-base" }}
+                label="Calories"
+                placeholder="—"
+                type="number"
+                min={0}
+                value={calories != null ? calories.toString() : ""}
+                onValueChange={(v) => setCalories(v ? parseInt(v, 10) || null : null)}
+              />
+              <Input
+                classNames={{ label: "font-medium text-base" }}
+                label="Fat (g)"
+                placeholder="—"
+                type="number"
+                min={0}
+                step={0.1}
+                value={fat != null ? fat.toString() : ""}
+                onValueChange={(v) => setFat(v ? parseFloat(v) || null : null)}
+              />
+              <Input
+                classNames={{ label: "font-medium text-base" }}
+                label="Carbs (g)"
+                placeholder="—"
+                type="number"
+                min={0}
+                step={0.1}
+                value={carbs != null ? carbs.toString() : ""}
+                onValueChange={(v) => setCarbs(v ? parseFloat(v) || null : null)}
+              />
+              <Input
+                classNames={{ label: "font-medium text-base" }}
+                label="Protein (g)"
+                placeholder="—"
+                type="number"
+                min={0}
+                step={0.1}
+                value={protein != null ? protein.toString() : ""}
+                onValueChange={(v) => setProtein(v ? parseFloat(v) || null : null)}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* 7. Details */}
+        <section>
+          <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
+            <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
+              7
             </span>
             Details
           </h2>
@@ -537,11 +611,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 7. Additional Information */}
+        {/* 8. Additional Information */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
-              7
+              8
             </span>
             Additional Information
           </h2>

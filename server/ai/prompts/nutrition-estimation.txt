@@ -1,0 +1,29 @@
+Recipe: {{recipeName}}
+Number of servings: {{servings}}
+
+Ingredients:
+{{ingredients}}
+
+Instruction:
+- Estimate the total nutritional values for the entire recipe based on the listed ingredients.
+- Do NOT divide the results by the number of servings.
+
+Output Requirements:
+- Provide the following values for the entire recipe:
+  - Calories (kcal)
+  - Fats (grams)
+  - Carbohydrates (grams)
+  - Proteins (grams)
+
+Your estimates must be internally consistent using these standard conversions:
+- Fat: 9 kcal per gram
+- Carbohydrates: 4 kcal per gram
+- Protein: 4 kcal per gram
+
+Use the formula:
+Calories = (fat × 9) + (carbs × 4) + (protein × 4)
+
+Additional Guidelines:
+- Base estimates on typical nutritional values for each ingredient.
+- Round results to reasonable whole numbers.
+- Ensure that calorie totals closely match the calculated macronutrient values.
