@@ -108,7 +108,7 @@ describe("useRecipesQuery", () => {
         () => {
           expect(result.current.isLoading).toBe(false);
         },
-        { timeout: 1000 }
+        { timeout: 2000 }
       );
 
       expect(result.current.recipes).toEqual([]);

@@ -49,6 +49,9 @@ export default function MembersCard() {
         title: "Failed to kick user",
         description: (error as Error).message,
         color: "danger",
+        timeout: 2000,
+        shouldShowTimeoutProgress: true,
+        radius: "full",
       });
     } finally {
       setShowKickModal(false);
@@ -61,12 +64,15 @@ export default function MembersCard() {
 
     try {
       await transferAdmin(household.id, userToTransfer.id);
-      addToast({ title: `Transferred admin to ${userToTransfer.name}`, color: "success" });
+      addToast({ title: `Transferred admin to ${userToTransfer.name}`, color: "success", timeout: 2000, shouldShowTimeoutProgress: true, radius: "full",});
     } catch (error) {
       addToast({
         title: "Failed to transfer admin",
         description: (error as Error).message,
         color: "danger",
+        timeout: 2000,
+        shouldShowTimeoutProgress: true,
+        radius: "full",
       });
     } finally {
       setShowTransferModal(false);

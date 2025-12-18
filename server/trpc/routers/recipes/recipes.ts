@@ -34,8 +34,9 @@ import {
   type PermissionAction,
 } from "@/server/auth/permissions";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
-import { addImportJob, addImageImportJob } from "@/server/queue";
+import { addImportJob, addImageImportJob, addPasteImportJob } from "@/server/queue";
 import { FilterMode, SortOrder } from "@/types";
+import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
 
 interface UserContext {
   user: { id: string };
@@ -504,6 +505,40 @@ const importFromImagesProcedure = authedProcedure
     return recipeId;
   });
 
+const importFromPasteProcedure = authedProcedure
+  .input(
+    z.object({
+      text: z.string().min(1).max(MAX_RECIPE_PASTE_CHARS),
+      forceAI: z.boolean().optional(),
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    const recipeId = crypto.randomUUID();
+
+    log.info(
+      { userId: ctx.user.id, recipeId, textLength: input.text.length },
+      "Processing paste import request"
+    );
+
+    const result = await addPasteImportJob({
+      recipeId,
+      userId: ctx.user.id,
+      householdKey: ctx.householdKey,
+      householdUserIds: ctx.householdUserIds,
+      text: input.text,
+      forceAI: input.forceAI,
+    });
+
+    if (result.status === "duplicate") {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "This import is already in progress",
+      });
+    }
+
+    return recipeId;
+  });
+
 export const recipesProcedures = router({
   list,
   get,
@@ -512,6 +547,7 @@ export const recipesProcedures = router({
   delete: deleteProcedure,
   importFromUrl: importFromUrlProcedure,
   importFromImages: importFromImagesProcedure,
+  importFromPaste: importFromPasteProcedure,
   convertMeasurements,
   reserveId,
   autocomplete,

@@ -38,6 +38,9 @@ export function useHouseholdSubscription() {
           title: "Removed from household",
           description: "You have been removed from the household by an admin.",
           color: "warning",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
 
         // Clear household from cache
@@ -57,6 +60,9 @@ export function useHouseholdSubscription() {
           title: "Household Error",
           description: payload.reason,
           color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
         invalidate();
       },

@@ -42,6 +42,9 @@ export function useRecipeSubscription(recipeId: string | null) {
           severity: "success",
           title: "Measurements converted",
           description: `Recipe converted to ${payload.recipe.systemUsed} units`,
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
       },
     })
@@ -58,6 +61,9 @@ export function useRecipeSubscription(recipeId: string | null) {
           severity: "warning",
           title: "Recipe deleted",
           description: "This recipe has been removed.",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
 
         router.push("/");
@@ -79,6 +85,9 @@ export function useRecipeSubscription(recipeId: string | null) {
           severity: "danger",
           title: "Recipe operation failed",
           description: payload.reason,
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
       },
     })

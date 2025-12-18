@@ -45,12 +45,18 @@ export function useArchiveImportMutation(): ArchiveImportMutationResult {
             severity: "default",
             title: "Recipe import started",
             description: `Importing ${result.total} recipes...`,
+            timeout: 2000,
+            shouldShowTimeoutProgress: true,
+            radius: "full",
           });
         } else {
           addToast({
             severity: "danger",
             title: "Import failed",
             description: result.error || "Unknown error",
+            timeout: 2000,
+            shouldShowTimeoutProgress: true,
+            radius: "full",
           });
         }
       },
@@ -59,6 +65,9 @@ export function useArchiveImportMutation(): ArchiveImportMutationResult {
           severity: "danger",
           title: "Import failed",
           description: String(error),
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
       },
     });

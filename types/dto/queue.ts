@@ -62,3 +62,17 @@ export interface PendingImageImportDTO {
   fileCount: number;
   addedAt: number;
 }
+
+// Paste import queue types
+export interface PasteImportJobData {
+  recipeId: string;
+  userId: string;
+  householdKey: string;
+  householdUserIds: string[] | null;
+  text: string;
+  forceAI?: boolean;
+}
+
+export type AddPasteImportJobResult =
+  | { status: "queued"; job: Job<PasteImportJobData> }
+  | { status: "duplicate"; existingJobId: string };

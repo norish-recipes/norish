@@ -142,6 +142,9 @@ export function useGroceriesSubscription() {
         addToast({
           severity: "danger",
           title: payload.reason,
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
         invalidate();
       },

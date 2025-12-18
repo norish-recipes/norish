@@ -153,6 +153,9 @@ export function useRecipesSubscription() {
           severity: "success",
           title: "Recipe imported",
           description: "Open recipe",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
           classNames: {
             closeButton: "opacity-100 absolute right-4 top-1/2 -translate-y-1/2",
           },
@@ -216,6 +219,9 @@ export function useRecipesSubscription() {
           severity: "success",
           title: "Measurements converted",
           description: `Recipe converted to ${payload.recipe.systemUsed} units`,
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
       },
       onError: (err) => log.error({ err }, "[onConverted] Error"),
@@ -238,6 +244,9 @@ export function useRecipesSubscription() {
         addToast({
           severity: "danger",
           title: "Recipe operation failed",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
           description: payload.reason,
           classNames: {
             closeButton: "opacity-100 absolute right-4 top-1/2 -translate-y-1/2",

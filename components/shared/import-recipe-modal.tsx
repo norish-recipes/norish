@@ -40,6 +40,9 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
         title: "Failed to import recipe",
         description: (e as Error).message,
         color: "danger",
+        timeout: 2000,
+        shouldShowTimeoutProgress: true,
+        radius: "full",
       });
     }
   }
@@ -58,6 +61,9 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
         title: "Failed to import recipe with AI",
         description: (e as Error).message,
         color: "danger",
+        timeout: 2000,
+        shouldShowTimeoutProgress: true,
+        radius: "full",
       });
     }
   }

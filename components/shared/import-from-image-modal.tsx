@@ -51,6 +51,9 @@ export default function ImportFromImageModal({
           title: "Invalid file type",
           description: `${file.name} is not a supported image format`,
           color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
         continue;
       }
@@ -61,6 +64,9 @@ export default function ImportFromImageModal({
           title: "File too large",
           description: `${file.name} exceeds the 10MB limit`,
           color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
         continue;
       }
@@ -80,6 +86,9 @@ export default function ImportFromImageModal({
           title: "Too many files",
           description: `Maximum ${MAX_OCR_FILES} files allowed`,
           color: "warning",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
         return [...prev, ...newFiles.slice(0, MAX_OCR_FILES - prev.length)];
       }
@@ -119,7 +128,10 @@ export default function ImportFromImageModal({
       addToast({
         severity: "default",
         title: "Importing recipe from images...",
-        description: "AI is analyzing your images, please wait...",
+        description: "Analyzing your images, please wait...",
+        timeout: 2000,
+        shouldShowTimeoutProgress: true,
+        radius: "full",
       });
 
       // Clean up and close
@@ -132,6 +144,9 @@ export default function ImportFromImageModal({
         title: "Import failed",
         description: (error as Error).message,
         color: "danger",
+        timeout: 2000,
+        shouldShowTimeoutProgress: true,
+        radius: "full",
       });
     } finally {
       setIsSubmitting(false);

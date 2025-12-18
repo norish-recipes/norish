@@ -41,6 +41,7 @@ export const scheduledTasksJobOptions: DefaultJobOptions = {
 export const QUEUE_NAMES = {
   RECIPE_IMPORT: "recipe-import",
   IMAGE_IMPORT: "image-recipe-import",
+  PASTE_IMPORT: "paste-recipe-import",
   CALDAV_SYNC: "caldav-sync",
   SCHEDULED_TASKS: "scheduled-tasks",
 } as const;

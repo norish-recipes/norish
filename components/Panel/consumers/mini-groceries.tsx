@@ -101,6 +101,9 @@ function MiniGroceriesContent({
       addToast({
         severity: "warning",
         title: "Could not parse ingredient. Keeping original.",
+        timeout: 2000,
+        shouldShowTimeoutProgress: true,
+        radius: "full",
       });
     }
 
@@ -125,12 +128,18 @@ function MiniGroceriesContent({
         addToast({
           severity: "success",
           title: "Ingredients added to grocery list.",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
       })
       .catch(() => {
         addToast({
           severity: "warning",
           title: "Failed to add ingredients to grocery list.",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
       });
   };

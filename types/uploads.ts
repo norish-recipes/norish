@@ -75,8 +75,6 @@ export type AllowedOcrMimeType = (typeof ALLOWED_OCR_MIME_TYPES)[number];
 
 export const ALLOWED_OCR_MIME_SET = new Set<string>(ALLOWED_OCR_MIME_TYPES);
 
-/**
- * File size limits for OCR import
- */
 export const MAX_OCR_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
 export const MAX_OCR_FILES = 10;
+export const MAX_RECIPE_PASTE_CHARS = 10_000;

@@ -22,6 +22,10 @@ export {
 
 export { startImageImportWorker, stopImageImportWorker } from "./image-import/worker";
 
+export { pasteImportQueue, addPasteImportJob, closePasteImportQueue } from "./paste-import/queue";
+
+export { startPasteImportWorker, stopPasteImportWorker } from "./paste-import/worker";
+
 export { caldavSyncQueue, addCaldavSyncJob, closeCaldavSyncQueue } from "./caldav-sync/queue";
 
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
@@ -39,6 +43,8 @@ export type {
   AddImportJobResult,
   ImageImportJobData,
   AddImageImportJobResult,
+  PasteImportJobData,
+  AddPasteImportJobResult,
   CaldavSyncJobData,
   CaldavSyncOperation,
 } from "@/types";

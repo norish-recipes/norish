@@ -204,6 +204,9 @@ export function useCalendarSubscription(startISO: string, endISO: string) {
         addToast({
           severity: "danger",
           title: payload.reason,
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
         invalidate();
       },

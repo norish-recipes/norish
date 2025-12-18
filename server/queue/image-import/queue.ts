@@ -1,9 +1,3 @@
-/**
- * Image Import Queue
- *
- * BullMQ queue for image-based recipe imports.
- */
-
 import type { ImageImportJobData, AddImageImportJobResult } from "@/types";
 
 import { Queue } from "bullmq";

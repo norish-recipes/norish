@@ -4,10 +4,16 @@ import React, { useState } from "react";
 import { Button } from "@heroui/react";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { useRouter } from "next/navigation";
-import { PlusIcon, ArrowDownTrayIcon, PhotoIcon } from "@heroicons/react/16/solid";
+import {
+  PlusIcon,
+  ArrowDownTrayIcon,
+  PhotoIcon,
+  ClipboardDocumentIcon,
+} from "@heroicons/react/16/solid";
 
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import ImportFromImageModal from "@/components/shared/import-from-image-modal";
+import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
 import { usePermissionsContext } from "@/context/permissions-context";
 
 export default function CreateRecipeButton() {
@@ -15,6 +21,7 @@ export default function CreateRecipeButton() {
   const { isAIEnabled } = usePermissionsContext();
   const [showImportModal, setShowImportModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showPasteModal, setShowPasteModal] = useState(false);
 
   const menuItems = (
     <>
@@ -24,6 +31,13 @@ export default function CreateRecipeButton() {
         onPress={() => setShowImportModal(true)}
       >
         URL
+      </DropdownItem>
+      <DropdownItem
+        key="paste"
+        startContent={<ClipboardDocumentIcon className="h-4 w-4" />}
+        onPress={() => setShowPasteModal(true)}
+      >
+        Paste
       </DropdownItem>
       {isAIEnabled ? (
         <DropdownItem
@@ -73,6 +87,7 @@ export default function CreateRecipeButton() {
       </Dropdown>
 
       <ImportRecipeModal isOpen={showImportModal} onOpenChange={setShowImportModal} />
+      <ImportFromPasteModal isOpen={showPasteModal} onOpenChange={setShowPasteModal} />
       {isAIEnabled && (
         <ImportFromImageModal isOpen={showImageModal} onOpenChange={setShowImageModal} />
       )}

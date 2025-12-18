@@ -45,6 +45,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
         addToast({
           title: "Name cannot be empty",
           color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
 
         return;
@@ -60,6 +63,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
               title: "Failed to update profile",
               description: result.error,
               color: "danger",
+              timeout: 2000,
+              shouldShowTimeoutProgress: true,
+              radius: "full",
             });
           }
         })
@@ -68,6 +74,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
             title: "Failed to update profile",
             description: (error as Error).message,
             color: "danger",
+            timeout: 2000,
+            shouldShowTimeoutProgress: true,
+            radius: "full",
           });
         });
     },
@@ -86,6 +95,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
             title: "Failed to upload image",
             description: result.error,
             color: "danger",
+            timeout: 2000,
+            shouldShowTimeoutProgress: true,
+            radius: "full",
           });
           throw new Error(result.error);
         }
@@ -94,6 +106,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
           title: "Failed to upload image",
           description: (error as Error).message,
           color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
         throw error;
       }
@@ -114,6 +129,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
           title: "Failed to generate API key",
           description: errorMsg,
           color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
         throw new Error(errorMsg);
       }
@@ -128,6 +146,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
           title: "Failed to delete API key",
           description: (error as Error).message,
           color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
       });
     },
@@ -141,6 +162,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
           title: `Failed to ${enabled ? "enable" : "disable"} API key`,
           description: (error as Error).message,
           color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
       });
     },
@@ -158,6 +182,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
             title: "Failed to delete account",
             description: result.error,
             color: "danger",
+            timeout: 2000,
+            shouldShowTimeoutProgress: true,
+            radius: "full",
           });
         }
       })
@@ -166,6 +193,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
           title: "Failed to delete account",
           description: (error as Error).message,
           color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
       });
   }, [mutations]);
@@ -179,6 +209,9 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
           title: "Failed to update allergies",
           description: (error as Error).message,
           color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
       }
     },

@@ -16,6 +16,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       },
       importFromUrl: { mutationOptions: vi.fn() },
       importFromImages: { mutationOptions: vi.fn() },
+      importFromPaste: { mutationOptions: vi.fn() },
       create: { mutationOptions: vi.fn() },
       update: { mutationOptions: vi.fn() },
       delete: { mutationOptions: vi.fn() },
@@ -44,12 +45,16 @@ describe("useRecipesMutations", () => {
       });
 
       expect(result.current).toHaveProperty("importRecipe");
+      expect(result.current).toHaveProperty("importRecipeFromPaste");
+      expect(result.current).toHaveProperty("importRecipeFromPasteWithAI");
       expect(result.current).toHaveProperty("createRecipe");
       expect(result.current).toHaveProperty("updateRecipe");
       expect(result.current).toHaveProperty("deleteRecipe");
       expect(result.current).toHaveProperty("convertMeasurements");
 
       expect(typeof result.current.importRecipe).toBe("function");
+      expect(typeof result.current.importRecipeFromPaste).toBe("function");
+      expect(typeof result.current.importRecipeFromPasteWithAI).toBe("function");
       expect(typeof result.current.createRecipe).toBe("function");
       expect(typeof result.current.updateRecipe).toBe("function");
       expect(typeof result.current.deleteRecipe).toBe("function");
@@ -69,6 +74,8 @@ describe("useRecipesMutations", () => {
 
       // Verify function signatures (they take arguments but return void)
       expect(result.current.importRecipe.length).toBe(1); // Takes url
+      expect(result.current.importRecipeFromPaste.length).toBe(1); // Takes text
+      expect(result.current.importRecipeFromPasteWithAI.length).toBe(1); // Takes text
       expect(result.current.createRecipe.length).toBe(1); // Takes input
       expect(result.current.updateRecipe.length).toBe(2); // Takes id, input
       expect(result.current.deleteRecipe.length).toBe(1); // Takes id

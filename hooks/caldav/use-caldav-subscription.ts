@@ -85,6 +85,9 @@ export function useCaldavSubscription() {
             title: "CalDAV Sync Complete",
             description: `Synced ${payload.totalSynced} items${payload.totalFailed > 0 ? `, ${payload.totalFailed} failed` : ""}`,
             color: payload.totalFailed > 0 ? "warning" : "success",
+            timeout: 2000,
+            shouldShowTimeoutProgress: true,
+            radius: "full",
           });
           invalidateSyncStatus();
           invalidateSummary();
@@ -152,6 +155,9 @@ export function useCaldavSyncCompleteSubscription() {
           title: "CalDAV Sync Complete",
           description: `Synced ${data.totalSynced} items${data.totalFailed > 0 ? `, ${data.totalFailed} failed` : ""}`,
           color: data.totalFailed > 0 ? "warning" : "success",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
         invalidateSyncStatus();
         invalidateSummary();

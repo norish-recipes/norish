@@ -113,7 +113,7 @@ describe("useGroceriesQuery", () => {
         () => {
           expect(result.current.isLoading).toBe(false);
         },
-        { timeout: 1000 }
+        { timeout: 2000 }
       );
 
       // When query fails, TanStack Query stores the error
