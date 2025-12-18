@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { Input, Button } from "@heroui/react";
+import { Input, Button, Kbd } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { PhotoIcon } from "@heroicons/react/16/solid";
 
@@ -19,6 +19,7 @@ import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { useUnitsQuery } from "@/hooks/config";
 import { useRecipeImages, useRecipeId } from "@/hooks/recipes";
+import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 
 const log = createClientLogger("RecipeForm");
 
@@ -157,6 +158,14 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     },
     [handleImageUpload]
   );
+
+  const { getOnPasteHandler } = useClipboardImagePaste({
+    onFiles: (pastedFiles) => {
+      const file = pastedFiles[0];
+      if (file) handleImageUpload(file);
+    },
+  });
+  const onImagePaste = getOnPasteHandler();
 
   const onDragOver = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
@@ -351,14 +360,20 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                 onDragLeave={onDragLeave}
                 onDragOver={onDragOver}
                 onDrop={onImageDrop}
+                onPaste={onImagePaste}
               >
                 <div className="text-center">
                   <PhotoIcon className="text-default-400 mx-auto h-16 w-16" />
-                  <div className="mt-4 flex flex-col items-center">
+                  <div className="mt-4 flex flex-col items-center gap-2">
                     <span className="text-primary text-base font-semibold">
                       {isUploadingImage ? "Uploading..." : "Click to upload or drag and drop"}
                     </span>
-                    <p className="text-default-400 mt-2 text-xs">PNG, JPG, WEBP up to 5MB</p>
+                    {!isUploadingImage && (
+                      <p className="text-default-500 flex items-center gap-1.5 text-xs">
+                        <Kbd keys={["ctrl"]}>V</Kbd> to paste
+                      </p>
+                    )}
+                    <p className="text-default-400 text-xs">PNG, JPG, WEBP up to 5MB</p>
                   </div>
                   <input
                     ref={imageInputRef}

@@ -8,12 +8,14 @@ import {
   ModalBody,
   ModalFooter,
   Button,
+  Kbd,
   addToast,
 } from "@heroui/react";
 import { PhotoIcon, XMarkIcon, SparklesIcon } from "@heroicons/react/20/solid";
 import { useRouter } from "next/navigation";
 
 import { useRecipesMutations } from "@/hooks/recipes";
+import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { ALLOWED_OCR_MIME_SET, MAX_OCR_FILE_SIZE, MAX_OCR_FILES } from "@/types";
 
 interface ImportFromImageModalProps {
@@ -37,13 +39,17 @@ export default function ImportFromImageModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = useCallback((selectedFiles: FileList | null) => {
+  const handleAddFiles = useCallback((selectedFiles: File[] | FileList | null) => {
     if (!selectedFiles) return;
+
+    const fileArray = Array.isArray(selectedFiles)
+      ? selectedFiles
+      : Array.from({ length: selectedFiles.length }, (_, idx) => selectedFiles[idx]!);
 
     const newFiles: FilePreview[] = [];
 
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
+    for (let i = 0; i < fileArray.length; i++) {
+      const file = fileArray[i]!;
 
       // Validate file type
       if (!ALLOWED_OCR_MIME_SET.has(file.type)) {
@@ -96,6 +102,11 @@ export default function ImportFromImageModal({
     });
   }, []);
 
+  useClipboardImagePaste({
+    enabled: isOpen,
+    onFiles: (pastedFiles) => handleAddFiles(pastedFiles),
+  });
+
   const handleRemoveFile = useCallback((id: string) => {
     setFiles((prev) => {
       const file = prev.find((f) => f.id === id);
@@ -107,9 +118,9 @@ export default function ImportFromImageModal({
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
-      handleFileSelect(e.dataTransfer.files);
+      handleAddFiles(e.dataTransfer.files);
     },
-    [handleFileSelect]
+    [handleAddFiles]
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -180,7 +191,10 @@ export default function ImportFromImageModal({
                   <p className="text-default-600 text-sm font-medium">
                     Drop images here or click to browse
                   </p>
-                  <p className="text-default-400 text-xs">
+                  <p className="text-default-500 mt-1 flex items-center justify-center gap-1.5 text-xs">
+                    <Kbd keys={["ctrl"]}>V</Kbd> to paste
+                  </p>
+                  <p className="text-default-400 mt-1 text-xs">
                     Supports JPG, PNG, WebP. Max 10MB per file.
                   </p>
                 </div>
@@ -190,7 +204,7 @@ export default function ImportFromImageModal({
                   accept="image/jpeg,image/png,image/webp"
                   className="hidden"
                   type="file"
-                  onChange={(e) => handleFileSelect(e.target.files)}
+                  onChange={(e) => handleAddFiles(e.target.files)}
                 />
               </div>
 
