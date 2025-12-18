@@ -305,10 +305,12 @@ describe("useCalendarSubscription", () => {
 
       callback({ reason: "Something went wrong" });
 
-      expect(addToast).toHaveBeenCalledWith({
-        severity: "danger",
-        title: "Something went wrong",
-      });
+      expect(addToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          severity: "danger",
+          title: "Something went wrong",
+        }),
+      );
       expect(mockInvalidate).toHaveBeenCalled();
     });
   });

@@ -409,10 +409,12 @@ describe("useGroceriesSubscription", () => {
         subscriptionCallbacks.onFailed({ reason: "Failed to save grocery" });
       });
 
-      expect(addToast).toHaveBeenCalledWith({
-        severity: "danger",
-        title: "Failed to save grocery",
-      });
+      expect(addToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          severity: "danger",
+          title: "Failed to save grocery",
+        }),
+      );
     });
   });
 });

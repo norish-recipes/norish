@@ -1,36 +1,23 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  DropdownSection,
-} from "@heroui/dropdown";
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/react";
 import {
   ArrowDownTrayIcon,
   ArrowUpIcon,
   PlusIcon,
-  PhotoIcon,
-  ClipboardDocumentIcon,
 } from "@heroicons/react/16/solid";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 import { UsersIcon } from "@heroicons/react/24/outline";
-import { AnimatePresence, motion } from "motion/react";
-import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 
 import { ThemeSwitch } from "./theme-switch";
 
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
-import ImportFromImageModal from "@/components/shared/import-from-image-modal";
-import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
 import { cssButtonPill, cssButtonPillDanger } from "@/config/css-tokens";
 import { useUserContext } from "@/context/user-context";
-import { usePermissionsContext } from "@/context/permissions-context";
 
 type TriggerVariant = "avatar" | "ellipsis";
 
@@ -40,16 +27,10 @@ interface NavbarUserMenuProps {
 
 export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuProps) {
   const { user, userMenuOpen, setUserMenuOpen, signOut } = useUserContext();
-  const { isAIEnabled } = usePermissionsContext();
   const router = useRouter();
   const [showUrlModal, setShowUrlModal] = useState(false);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [showPasteModal, setShowPasteModal] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-
-  useEffect(() => setMounted(true), []);
 
   // Reset image error and retry count when user changes
   useEffect(() => {
@@ -76,15 +57,17 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
       <Dropdown placement="bottom-end" onOpenChange={setUserMenuOpen}>
         <DropdownTrigger>
           {trigger === "avatar" ? (
-            <Avatar
-              className="isBordered h-13 w-13 cursor-pointer text-lg"
-              color="warning"
-              imgProps={{
-                onError: handleImageError,
-              }}
-              name={user?.name || user?.email || "U"}
-              src={!imageError && user?.image ? `${user.image}?retry=${retryCount}` : undefined}
-            />
+            <button aria-label="Open user menu" className="rounded-full" type="button">
+              <Avatar
+                className="isBordered h-13 w-13 cursor-pointer text-lg"
+                color="warning"
+                imgProps={{
+                  onError: handleImageError,
+                }}
+                name={user?.name || user?.email || "U"}
+                src={!imageError && user?.image ? `${user.image}?retry=${retryCount}` : undefined}
+              />
+            </button>
           ) : (
             <Button
               isIconOnly
@@ -109,98 +92,14 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
               <span className="text-default-500 text-xs"> ({user.email})</span>
             </DropdownItem>
           )}
-          <DropdownSection key="import-section" showDivider>
-            <DropdownItem
-              key="import-label"
-              isReadOnly
-              className="cursor-default pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-default-500 data-[focus=true]:bg-transparent data-[hover=true]:bg-transparent"
-            >
-              Import
-            </DropdownItem>
-            <DropdownItem
-              key="import-url"
-              className="py-2 data-[focus=true]:bg-transparent data-[hover=true]:bg-transparent"
-            >
-              <Button
-                className={`w-full justify-start bg-transparent ${cssButtonPill}`}
-                radius="full"
-                size="md"
-                startContent={
-                  <span className="text-default-500">
-                    <ArrowDownTrayIcon className="size-4" />
-                  </span>
-                }
-                variant="light"
-                onPress={() => {
-                  setUserMenuOpen(false);
-                  setShowUrlModal(true);
-                }}
-              >
-                <span className="flex flex-col items-start">
-                  <span className="text-sm leading-tight font-medium">Import from URL</span>
-                  <span className="text-default-500 text-xs leading-tight">Paste a recipe link</span>
-                </span>
-              </Button>
-            </DropdownItem>
-
-            <DropdownItem
-              key="import-paste"
-              className="py-2 data-[focus=true]:bg-transparent data-[hover=true]:bg-transparent"
-            >
-              <Button
-                className={`w-full justify-start bg-transparent ${cssButtonPill}`}
-                radius="full"
-                size="md"
-                startContent={
-                  <span className="text-default-500">
-                    <ClipboardDocumentIcon className="size-4" />
-                  </span>
-                }
-                variant="light"
-                onPress={() => {
-                  setUserMenuOpen(false);
-                  setShowPasteModal(true);
-                }}
-              >
-                <span className="flex flex-col items-start">
-                  <span className="text-sm leading-tight font-medium">Import from Paste</span>
-                  <span className="text-default-500 text-xs leading-tight">Paste text or JSON-LD</span>
-                </span>
-              </Button>
-            </DropdownItem>
-
-            {isAIEnabled ? (
-              <DropdownItem
-                key="import-image"
-                className="py-2 data-[focus=true]:bg-transparent data-[hover=true]:bg-transparent"
-              >
-                <Button
-                  className={`w-full justify-start bg-transparent ${cssButtonPill}`}
-                  radius="full"
-                  size="md"
-                  startContent={
-                    <span className="text-default-500">
-                      <PhotoIcon className="size-4" />
-                    </span>
-                  }
-                  variant="light"
-                  onPress={() => {
-                    setUserMenuOpen(false);
-                    setShowImageModal(true);
-                  }}
-                >
-                  <span className="flex flex-col items-start">
-                    <span className="text-sm leading-tight font-medium">Import from Image</span>
-                    <span className="text-default-500 text-xs leading-tight">Upload photos</span>
-                  </span>
-                </Button>
-              </DropdownItem>
-            ) : null}
-          </DropdownSection>
 
           <DropdownItem
             key="create-recipe"
             className="py-2 data-[focus=true]:bg-transparent data-[hover=true]:bg-transparent"
+            onPress={() => {
+              setUserMenuOpen(false);
+              router.push("/recipes/new");
+            }}
           >
             <Button
               className={`w-full justify-start bg-transparent ${cssButtonPill}`}
@@ -212,13 +111,36 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
                 </span>
               }
               variant="light"
-              onPress={() => router.push("/recipes/new")}
             >
               <span className="flex flex-col items-start">
-                <span className="text-sm leading-tight font-medium">Create Recipe</span>
-                <span className="text-default-500 text-xs leading-tight">
-                  Write your own recipe
+                <span className="text-sm leading-tight font-medium">New recipe</span>
+                <span className="text-default-500 text-xs leading-tight">Write your own recipe</span>
+              </span>
+            </Button>
+          </DropdownItem>
+
+          <DropdownItem
+            key="import-url"
+            className="py-2 data-[focus=true]:bg-transparent data-[hover=true]:bg-transparent"
+            onPress={() => {
+              setUserMenuOpen(false);
+              setShowUrlModal(true);
+            }}
+          >
+            <Button
+              className={`w-full justify-start bg-transparent ${cssButtonPill}`}
+              radius="full"
+              size="md"
+              startContent={
+                <span className="text-default-500">
+                  <ArrowDownTrayIcon className="size-4" />
                 </span>
+              }
+              variant="light"
+            >
+              <span className="flex flex-col items-start">
+                <span className="text-sm leading-tight font-medium">Import from URL</span>
+                <span className="text-default-500 text-xs leading-tight">Paste a recipe link</span>
               </span>
             </Button>
           </DropdownItem>
@@ -246,6 +168,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
                 </span>
               }
               variant="light"
+              onPress={() => setUserMenuOpen(false)}
             >
               <span className="flex flex-col items-start">
                 <span className="text-sm leading-tight font-medium">Settings</span>
@@ -268,7 +191,10 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
                 </span>
               }
               variant="light"
-              onPress={() => signOut()}
+              onPress={() => {
+                setUserMenuOpen(false);
+                signOut();
+              }}
             >
               <span className="text-sm font-medium">Logout</span>
             </Button>
@@ -278,30 +204,6 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
 
       {/* Import from URL Modal */}
       <ImportRecipeModal isOpen={showUrlModal} onOpenChange={setShowUrlModal} />
-
-      {/* Import from Paste Modal */}
-      <ImportFromPasteModal isOpen={showPasteModal} onOpenChange={setShowPasteModal} />
-
-      {/* Import from Image Modal */}
-      <ImportFromImageModal isOpen={showImageModal} onOpenChange={setShowImageModal} />
-
-      {/* Backdrop - only render on client */}
-      {mounted &&
-        createPortal(
-          <AnimatePresence>
-            {userMenuOpen && (
-              <motion.div
-                animate={{ opacity: 1 }}
-                className="fixed inset-0 z-[999] bg-black/40"
-                exit={{ opacity: 0 }}
-                initial={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                onClick={() => setUserMenuOpen(false)}
-              />
-            )}
-          </AnimatePresence>,
-          document.body
-        )}
     </>
   );
 }

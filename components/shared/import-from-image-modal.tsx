@@ -226,9 +226,6 @@ export default function ImportFromImageModal({
               )}
             </ModalBody>
             <ModalFooter>
-              <Button variant="light" onPress={handleClose}>
-                Cancel
-              </Button>
               <Button
                 className="bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500 text-white hover:brightness-110"
                 isDisabled={files.length === 0}
