@@ -11,7 +11,6 @@
  */
 
 import pino from "pino";
-import pretty from "pino-pretty";
 
 export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -28,15 +27,21 @@ const logLevel: LogLevel =
  * Development: Pretty colored output via pino-pretty stream
  * Production: Plain JSON to stdout for log aggregation
  */
-const stream = isDev
-  ? pretty({
+let logger = pino({ level: logLevel });
+
+// In development, dynamically import pino-pretty and recreate logger with pretty output
+if (isDev) {
+  import("pino-pretty").then((pinoPretty) => {
+    const stream = pinoPretty.default({
       colorize: true,
       translateTime: "HH:MM:ss",
       ignore: "pid,hostname",
-    })
-  : process.stdout;
+    });
+    logger = pino({ level: logLevel }, stream);
+  });
+}
 
-export const logger = pino({ level: logLevel }, stream);
+export { logger };
 
 /**
  * Create a child logger with a specific context/module name
