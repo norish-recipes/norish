@@ -24,7 +24,7 @@ vi.mock("bullmq", () => {
       on = vi.fn();
       close = vi.fn();
     },
-    Job: class MockJob { },
+    Job: class MockJob {},
   };
 });
 
