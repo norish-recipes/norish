@@ -584,6 +584,15 @@ const estimateNutrition = authedProcedure
       });
     }
 
+    const policy = await getRecipePermissionPolicy();
+    emitByPolicy(
+      recipeEmitter,
+      policy.view,
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "nutritionStarted",
+      { recipeId }
+    );
+
     return { success: true };
   });
 

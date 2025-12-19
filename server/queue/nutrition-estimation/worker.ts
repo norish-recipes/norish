@@ -99,7 +99,7 @@ async function handleJobFailed(
   );
 
   if (isFinalFailure) {
-    // Emit failed event
+    // Emit failed event with recipeId to clear loading state
     const policy = await getRecipePermissionPolicy();
     const ctx: PolicyEmitContext = { userId, householdKey };
 

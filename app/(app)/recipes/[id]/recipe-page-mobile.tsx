@@ -191,15 +191,7 @@ export default function RecipePageMobile() {
           </div>
 
           {/* Nutrition Section */}
-          <NutritionSection
-            recipeId={recipe.id}
-            calories={recipe.calories ?? null}
-            fat={recipe.fat ?? null}
-            carbs={recipe.carbs ?? null}
-            protein={recipe.protein ?? null}
-            baseServings={recipe.servings ?? 1}
-            currentServings={currentServings}
-          />
+          <NutritionSection />
         </CardBody>
       </Card>
 

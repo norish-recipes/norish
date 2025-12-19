@@ -14,7 +14,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 
-import { useRecipeQuery, useRecipeSubscription } from "@/hooks/recipes";
+import { useRecipeQuery, useRecipeSubscription, useNutritionQuery, useNutritionMutation, useNutritionSubscription } from "@/hooks/recipes";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 type Ctx = {
@@ -28,6 +28,9 @@ type Ctx = {
   setIngredientAmounts: (servings: number) => void;
   startConversion: (target: MeasurementSystem) => void;
   reset: () => void;
+  // Nutrition
+  isEstimatingNutrition: boolean;
+  estimateNutrition: () => void;
 };
 
 const RecipeContext = createContext<Ctx | null>(null);
@@ -42,9 +45,17 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
   const [adjustedIngredients, setAdjustedIngredients] = useState<RecipeIngredientsDto[]>(
     recipe?.recipeIngredients ?? []
   );
-
   // Subscribe to real-time updates for this recipe
   useRecipeSubscription(recipeId);
+
+  // Nutrition hooks
+  const { isEstimating: isEstimatingNutrition, setIsEstimating: setIsEstimatingNutrition } = useNutritionQuery(recipeId);
+  const { estimateNutrition } = useNutritionMutation(recipeId);
+  useNutritionSubscription(
+    recipeId,
+    () => setIsEstimatingNutrition(true),
+    () => setIsEstimatingNutrition(false)
+  );
 
   // Mutation for converting measurements
   const convertMutation = useMutation(trpc.recipes.convertMeasurements.mutationOptions());
@@ -130,6 +141,8 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
       setIngredientAmounts,
       startConversion,
       reset,
+      isEstimatingNutrition,
+      estimateNutrition,
     }),
     [
       recipe,
@@ -142,6 +155,8 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
       setIngredientAmounts,
       startConversion,
       reset,
+      isEstimatingNutrition,
+      estimateNutrition,
     ]
   );
 

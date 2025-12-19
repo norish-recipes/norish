@@ -10,6 +10,7 @@ const onUpdated = createPolicyAwareSubscription(recipeEmitter, "updated", "recip
 const onDeleted = createPolicyAwareSubscription(recipeEmitter, "deleted", "recipe deleted");
 const onConverted = createPolicyAwareSubscription(recipeEmitter, "converted", "recipe converted");
 const onFailed = createPolicyAwareSubscription(recipeEmitter, "failed", "recipe failed");
+const onNutritionStarted = createPolicyAwareSubscription(recipeEmitter, "nutritionStarted", "nutrition estimation started");
 const onRecipeBatchCreated = createPolicyAwareSubscription(recipeEmitter, "recipeBatchCreated", "recipe batch created");
 
 export const recipesSubscriptions = router({
@@ -20,5 +21,6 @@ export const recipesSubscriptions = router({
   onDeleted,
   onConverted,
   onFailed,
+  onNutritionStarted,
   onRecipeBatchCreated,
 });

@@ -145,15 +145,7 @@ export default function RecipePageDesktop() {
           </Card>
 
           {/* Nutrition Card */}
-          <NutritionCard
-            recipeId={recipe.id}
-            calories={recipe.calories ?? null}
-            fat={recipe.fat ?? null}
-            carbs={recipe.carbs ?? null}
-            protein={recipe.protein ?? null}
-            baseServings={recipe.servings ?? 1}
-            currentServings={currentServings}
-          />
+          <NutritionCard />
         </div>
 
         {/* RIGHT column: Image + Steps (stacked) */}

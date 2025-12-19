@@ -7,3 +7,6 @@ export { usePendingRecipesQuery } from "./use-pending-recipes-query";
 export { useRecipeImages, type RecipeImagesResult } from "./use-recipe-images";
 export { useRecipeId, type RecipeIdResult } from "./use-recipe-id";
 export { useRecipeAutocomplete } from "./use-recipe-autocomplete";
+export { useNutritionQuery } from "./use-nutrition-query";
+export { useNutritionMutation } from "./use-nutrition-mutation";
+export { useNutritionSubscription } from "./use-nutrition-subscription";
