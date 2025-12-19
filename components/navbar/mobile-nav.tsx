@@ -3,7 +3,7 @@
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useCallback, useTransition, useMemo } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   HomeIcon,
   CalendarDaysIcon,
@@ -31,7 +31,7 @@ export const MobileNav = () => {
   const { mobileSearchOpen, setMobileSearchOpen } = useAppStore((s) => s);
   const { filters, setFilters } = useRecipesFiltersContext();
   const { importRecipe } = useRecipesContext();
-  const { userMenuOpen } = useUserContext();
+  const { userMenuOpen, setUserMenuOpen } = useUserContext();
   const [_isPending, startTransition] = useTransition();
 
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -141,165 +141,196 @@ export const MobileNav = () => {
     [filters.rawInput, filters.searchTags.length]
   );
 
+  // Close both search and user menu
+  const closeAll = useCallback(() => {
+    if (mobileSearchOpen) {
+      closeSearch();
+    }
+    if (userMenuOpen) {
+      setUserMenuOpen(false);
+    }
+  }, [mobileSearchOpen, userMenuOpen, closeSearch, setUserMenuOpen]);
+
+  const showBackdrop = mobileSearchOpen || userMenuOpen;
+
   return (
-    <motion.div
-      animate={{
-        y: isVisible ? 0 : 100,
-        opacity: isVisible ? 1 : 0,
-      }}
-      className="fixed inset-x-0 z-50 px-5 md:hidden"
-      initial={{ y: 0, opacity: 1 }}
-      style={{ bottom: "max(calc(env(safe-area-inset-bottom) - 0.2rem), 1rem)" }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-    >
-      <div ref={rootRef} className="relative flex items-center justify-between">
-        {/* Left side */}
-        {isHome ? (
-          <div
-            className={`relative min-w-0 flex-1 transition-all duration-300 ${
-              mobileSearchOpen ? "z-[99] mr-3" : "z-[40] mr-0"
-            }`}
-          >
-            {mobileSearchOpen && (
-              <div className="pointer-events-auto absolute -top-10 right-0 left-0 z-[60] px-1 pb-1">
-                <TagCarousel />
-              </div>
-            )}
+    <>
+      {/* Backdrop overlay - blocks page interactions when menu is open */}
+      <AnimatePresence>
+        {showBackdrop && (
+          <motion.div
+            key="mobile-nav-backdrop"
+            animate={{ opacity: 1 }}
+            aria-hidden="true"
+            className="fixed inset-0 z-40 bg-black/30 md:hidden"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={closeAll}
+            onTouchEnd={closeAll}
+          />
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        animate={{
+          y: isVisible ? 0 : 100,
+          opacity: isVisible ? 1 : 0,
+        }}
+        className="fixed inset-x-0 z-50 px-5 md:hidden"
+        initial={{ y: 0, opacity: 1 }}
+        style={{ bottom: "max(calc(env(safe-area-inset-bottom) - 0.2rem), 1rem)" }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        <div ref={rootRef} className="relative flex items-center justify-between">
+          {/* Left side */}
+          {isHome ? (
             <div
-              aria-expanded={mobileSearchOpen}
-              className={`group relative h-13 overflow-visible rounded-full transition-[width] duration-300 ease-out ${cssGlassBackdrop} ${
-                mobileSearchOpen ? "z-[55] w-full" : "z-[55] w-[52px]"
+              className={`relative min-w-0 flex-1 transition-all duration-300 ${
+                mobileSearchOpen ? "z-[99] mr-3" : "z-[40] mr-0"
               }`}
             >
-              <div className="absolute inset-y-0 left-0 z-[56] flex w-[52px] items-center justify-center">
-                <Button
-                  isIconOnly
-                  aria-label="Toggle search"
-                  className={`relative h-10 w-10 !bg-transparent !shadow-none ${
-                    hasActiveSearch ? "text-primary" : "text-default-600 hover:text-foreground"
-                  }`}
-                  radius="full"
-                  size="md"
-                  variant="light"
-                  onPress={() => {
-                    setMobileSearchOpen(!mobileSearchOpen);
-                  }}
-                >
-                  <MagnifyingGlassIcon className="h-5 w-5" />
-                  {hasActiveSearch && (
-                    <span className="bg-primary shadow-background absolute top-2 right-2 h-2.5 w-2.5 rounded-full shadow-[0_0_0_2px]" />
-                  )}
-                </Button>
-              </div>
+              {mobileSearchOpen && (
+                <div className="pointer-events-auto absolute -top-10 right-0 left-0 z-[60] px-1 pb-1">
+                  <TagCarousel />
+                </div>
+              )}
               <div
-                className={`flex h-full items-center pl-[52px] transition-all duration-300 ease-out ${
+                aria-expanded={mobileSearchOpen}
+                className={`group relative h-13 overflow-visible rounded-full transition-[width] duration-300 ease-out ${cssGlassBackdrop} ${
+                  mobileSearchOpen ? "z-[55] w-full" : "z-[55] w-[52px]"
+                }`}
+              >
+                <div className="absolute inset-y-0 left-0 z-[56] flex w-[52px] items-center justify-center">
+                  <Button
+                    isIconOnly
+                    aria-label="Toggle search"
+                    className={`relative h-10 w-10 !bg-transparent !shadow-none ${
+                      hasActiveSearch ? "text-primary" : "text-default-600 hover:text-foreground"
+                    }`}
+                    radius="full"
+                    size="md"
+                    variant="light"
+                    onPress={() => {
+                      setMobileSearchOpen(!mobileSearchOpen);
+                    }}
+                  >
+                    <MagnifyingGlassIcon className="h-5 w-5" />
+                    {hasActiveSearch && (
+                      <span className="bg-primary shadow-background absolute top-2 right-2 h-2.5 w-2.5 rounded-full shadow-[0_0_0_2px]" />
+                    )}
+                  </Button>
+                </div>
+                <div
+                  className={`flex h-full items-center pl-[52px] transition-all duration-300 ease-out ${
+                    mobileSearchOpen ? "opacity-100" : "pointer-events-none opacity-0"
+                  }`}
+                >
+                  <Input
+                    ref={inputRef}
+                    isClearable
+                    className="w-full"
+                    classNames={{
+                      inputWrapper: `!bg-transparent h-13 px-3 ${cssInputNoHoverTransparent}`,
+                      input: "text-[15px] placeholder:text-default-500 !bg-transparent",
+                    }}
+                    id="mobile-search-input"
+                    placeholder="Search recipes..."
+                    radius="full"
+                    style={{ fontSize: "16px" }}
+                    value={filters.rawInput}
+                    variant="flat"
+                    onChange={handleSearchChange}
+                    onClear={() => setFilters({ rawInput: "" })}
+                    onKeyDown={(e) => e.key === "Escape" && closeSearch()}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mr-2 shrink-0">
+              <Button
+                isIconOnly
+                aria-label="Go back"
+                className={`h-13 w-13 ${cssGlassBackdrop} text-default-600 hover:text-foreground hover:bg-default-100/70`}
+                radius="full"
+                size="md"
+                variant="flat"
+                onPress={() => {
+                  if (typeof window !== "undefined") {
+                    if (window.history.length > 1) window.history.back();
+                    else window.location.href = "/";
+                  }
+                }}
+              >
+                <ArrowLeftIcon className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
+
+          {/* Center */}
+          <div className="absolute left-1/2 z-[45] -translate-x-1/2">
+            <div
+              className={`flex h-13 items-center gap-2 rounded-full px-4 ${cssGlassBackdrop} transition-all duration-300 ease-out ${
+                isHome && mobileSearchOpen
+                  ? "pointer-events-none translate-y-4 opacity-0"
+                  : "translate-y-0 opacity-100"
+              }`}
+            >
+              <ul className="flex items-center gap-2 text-[11px]">
+                {siteConfig.navItems.map((item) => {
+                  const isActive =
+                    pathname === item.href ||
+                    (item.href !== "/" && pathname?.startsWith(item.href + "/"));
+                  const Icon =
+                    item.href === "/"
+                      ? HomeIcon
+                      : item.href.startsWith("/calendar")
+                        ? CalendarDaysIcon
+                        : ClipboardDocumentListIcon;
+
+                  return (
+                    <li key={item.href}>
+                      <NextLink
+                        className={`flex w-[60px] flex-col items-center justify-center gap-1 rounded-full px-3 py-2 transition-colors ${
+                          isActive
+                            ? "text-primary font-semibold"
+                            : "text-default-600 hover:text-foreground hover:bg-default-100/70"
+                        }`}
+                        href={item.href}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="leading-none">{item.label}</span>
+                      </NextLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+
+          {/* Right side */}
+          <div className="flex h-13 shrink-0 items-center justify-center">
+            <div className="relative flex h-13 w-[60px] items-center justify-center">
+              <div
+                className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
                   mobileSearchOpen ? "opacity-100" : "pointer-events-none opacity-0"
                 }`}
               >
-                <Input
-                  ref={inputRef}
-                  isClearable
-                  className="w-full"
-                  classNames={{
-                    inputWrapper: `!bg-transparent h-13 px-3 ${cssInputNoHoverTransparent}`,
-                    input: "text-[15px] placeholder:text-default-500 !bg-transparent",
-                  }}
-                  id="mobile-search-input"
-                  placeholder="Search recipes..."
-                  radius="full"
-                  style={{ fontSize: "16px" }}
-                  value={filters.rawInput}
-                  variant="flat"
-                  onChange={handleSearchChange}
-                  onClear={() => setFilters({ rawInput: "" })}
-                  onKeyDown={(e) => e.key === "Escape" && closeSearch()}
-                />
+                <Filters isGlass />
+              </div>
+              <div
+                className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+                  mobileSearchOpen ? "pointer-events-none opacity-0" : "opacity-100"
+                }`}
+              >
+                <NavbarUserMenu />
               </div>
             </div>
           </div>
-        ) : (
-          <div className="mr-2 shrink-0">
-            <Button
-              isIconOnly
-              aria-label="Go back"
-              className={`h-13 w-13 ${cssGlassBackdrop} text-default-600 hover:text-foreground hover:bg-default-100/70`}
-              radius="full"
-              size="md"
-              variant="flat"
-              onPress={() => {
-                if (typeof window !== "undefined") {
-                  if (window.history.length > 1) window.history.back();
-                  else window.location.href = "/";
-                }
-              }}
-            >
-              <ArrowLeftIcon className="h-5 w-5" />
-            </Button>
-          </div>
-        )}
-
-        {/* Center */}
-        <div className="absolute left-1/2 z-[45] -translate-x-1/2">
-          <div
-            className={`flex h-13 items-center gap-2 rounded-full px-4 ${cssGlassBackdrop} transition-all duration-300 ease-out ${
-              isHome && mobileSearchOpen
-                ? "pointer-events-none translate-y-4 opacity-0"
-                : "translate-y-0 opacity-100"
-            }`}
-          >
-            <ul className="flex items-center gap-2 text-[11px]">
-              {siteConfig.navItems.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  (item.href !== "/" && pathname?.startsWith(item.href + "/"));
-                const Icon =
-                  item.href === "/"
-                    ? HomeIcon
-                    : item.href.startsWith("/calendar")
-                      ? CalendarDaysIcon
-                      : ClipboardDocumentListIcon;
-
-                return (
-                  <li key={item.href}>
-                    <NextLink
-                      className={`flex w-[60px] flex-col items-center justify-center gap-1 rounded-full px-3 py-2 transition-colors ${
-                        isActive
-                          ? "text-primary font-semibold"
-                          : "text-default-600 hover:text-foreground hover:bg-default-100/70"
-                      }`}
-                      href={item.href}
-                    >
-                      <Icon className="h-5 w-5" />
-                      <span className="leading-none">{item.label}</span>
-                    </NextLink>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
         </div>
-
-        {/* Right side */}
-        <div className="flex h-13 shrink-0 items-center justify-center">
-          <div className="relative flex h-13 w-[60px] items-center justify-center">
-            <div
-              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
-                mobileSearchOpen ? "opacity-100" : "pointer-events-none opacity-0"
-              }`}
-            >
-              <Filters isGlass />
-            </div>
-            <div
-              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
-                mobileSearchOpen ? "pointer-events-none opacity-0" : "opacity-100"
-              }`}
-            >
-              <NavbarUserMenu />
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 

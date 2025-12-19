@@ -7,8 +7,6 @@ import { apiKey, genericOAuth } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 
-import { getPublisherClient } from "@/server/redis/client";
-
 import {
   getCachedGitHubProvider,
   getCachedGoogleProvider,
@@ -16,6 +14,7 @@ import {
   getCachedPasswordAuthEnabled,
 } from "./provider-cache";
 
+import { getPublisherClient } from "@/server/redis/client";
 import { db } from "@/server/db/drizzle";
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { AUTH_SECRET, encrypt, hmacIndex, safeDecrypt } from "@/server/auth/crypto";
@@ -184,10 +183,12 @@ function createAuth() {
     secondaryStorage: {
       get: async (key: string) => {
         const redis = await getPublisherClient();
+
         return redis.get(key);
       },
       set: async (key: string, value: string, ttl?: number) => {
         const redis = await getPublisherClient();
+
         if (ttl) {
           await redis.setex(key, ttl, value);
         } else {
@@ -196,6 +197,7 @@ function createAuth() {
       },
       delete: async (key: string) => {
         const redis = await getPublisherClient();
+
         await redis.del(key);
       },
     },

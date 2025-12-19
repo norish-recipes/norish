@@ -327,10 +327,11 @@ The root config files (`eslint.config.mjs`, `vitest.config.ts`) re-export from t
 
 ### Backend
 
-- **Node.js** - Custom server that embeds the Next server for WS/Cron support.
+- **Node.js** - Custom server that embeds the Next server for WS/Redis support.
 - **tRPC**
 - **Better Auth**
 - **Pino**
+- **Redis**
 - **BullMQ** - Job queue for background tasks (recipe import, AI processing, etc.)
 
 ### Database

@@ -124,6 +124,17 @@ export function useAutoHide({
     }, idleDelay);
   });
 
+  // Clear timeout and stay visible when disabled
+  useEffect(() => {
+    if (disabled) {
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+        scrollTimeout.current = null;
+      }
+      setIsVisible(true);
+    }
+  }, [disabled]);
+
   useEffect(() => {
     return () => {
       if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
