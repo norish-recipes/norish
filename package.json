@@ -1,6 +1,6 @@
 {
   "name": "norish",
-  "version": "0.13.7-beta",
+  "version": "0.14.0-beta",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.26.0",
