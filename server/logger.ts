@@ -24,22 +24,10 @@ const logLevel: LogLevel =
 /**
  * Server-side pino logger
  *
- * Development: Pretty colored output via pino-pretty stream
+ * Development: Pipe output through pino-pretty in dev script
  * Production: Plain JSON to stdout for log aggregation
  */
-let logger = pino({ level: logLevel });
-
-// In development, dynamically import pino-pretty and recreate logger with pretty output
-if (isDev) {
-  import("pino-pretty").then((pinoPretty) => {
-    const stream = pinoPretty.default({
-      colorize: true,
-      translateTime: "HH:MM:ss",
-      ignore: "pid,hostname",
-    });
-    logger = pino({ level: logLevel }, stream);
-  });
-}
+const logger = pino({ level: logLevel });
 
 export { logger };
 

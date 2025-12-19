@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@10.26.0",
   "scripts": {
-    "dev": "tsx watch server.ts",
+    "dev": "tsx watch server.ts | pnpm exec pino-pretty",
     "build": "next build && pnpm run build:server && pnpm run update-sw",
     "build:server": "tsdown",
     "update-sw": "node scripts/update-sw-version.js",
