@@ -28,11 +28,10 @@ describe("recipes.reserveId", () => {
   });
 
   describe("ID generation", () => {
-    it("returns a valid UUID", async () => {
+    it("returns a valid UUID", () => {
       const _ctx = createMockAuthedContext();
-      const crypto = await import("crypto");
 
-      const recipeId = crypto.randomUUID();
+      const recipeId = globalThis.crypto.randomUUID();
 
       // Verify it's a valid UUID format
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -40,12 +39,10 @@ describe("recipes.reserveId", () => {
       expect(uuidRegex.test(recipeId)).toBe(true);
     });
 
-    it("generates unique IDs on each call", async () => {
-      const crypto = await import("crypto");
-
-      const id1 = crypto.randomUUID();
-      const id2 = crypto.randomUUID();
-      const id3 = crypto.randomUUID();
+    it("generates unique IDs on each call", () => {
+      const id1 = globalThis.crypto.randomUUID();
+      const id2 = globalThis.crypto.randomUUID();
+      const id3 = globalThis.crypto.randomUUID();
 
       expect(id1).not.toBe(id2);
       expect(id2).not.toBe(id3);
@@ -54,11 +51,10 @@ describe("recipes.reserveId", () => {
   });
 
   describe("return value", () => {
-    it("returns object with recipeId property", async () => {
+    it("returns object with recipeId property", () => {
       const _ctx = createMockAuthedContext();
-      const crypto = await import("crypto");
 
-      const result = { recipeId: crypto.randomUUID() };
+      const result = { recipeId: globalThis.crypto.randomUUID() };
 
       expect(result).toHaveProperty("recipeId");
       expect(typeof result.recipeId).toBe("string");
@@ -69,9 +65,8 @@ describe("recipes.reserveId", () => {
   describe("logging", () => {
     it("logs the reserved recipe ID", async () => {
       const { trpcLogger } = await import("@/server/logger");
-      const crypto = await import("crypto");
 
-      const recipeId = crypto.randomUUID();
+      const recipeId = globalThis.crypto.randomUUID();
 
       // Simulate the procedure logging
       trpcLogger.debug({ recipeId }, "Reserved recipe ID for step image uploads");
@@ -84,12 +79,11 @@ describe("recipes.reserveId", () => {
   });
 
   describe("use case", () => {
-    it("ID can be used for step image uploads before recipe creation", async () => {
+    it("ID can be used for step image uploads before recipe creation", () => {
       const _ctx = createMockAuthedContext();
-      const crypto = await import("crypto");
 
       // Reserve ID
-      const reservedId = crypto.randomUUID();
+      const reservedId = globalThis.crypto.randomUUID();
 
       // This ID should be usable for constructing step image paths
       const stepImagePath = `/recipes/${reservedId}/steps/image.jpg`;
@@ -97,10 +91,8 @@ describe("recipes.reserveId", () => {
       expect(stepImagePath).toMatch(/^\/recipes\/[0-9a-f-]{36}\/steps\/image\.jpg$/i);
     });
 
-    it("reserved ID can be passed to create mutation", async () => {
-      const crypto = await import("crypto");
-
-      const reservedId = crypto.randomUUID();
+    it("reserved ID can be passed to create mutation", () => {
+      const reservedId = globalThis.crypto.randomUUID();
 
       // Simulate passing to create mutation
       const createInput = {

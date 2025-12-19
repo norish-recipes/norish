@@ -225,13 +225,13 @@ Only a few environment variables are required. All other settings are managed vi
 
 ### Required Variables
 
-| Variable             | Description                                     | Example                               |
-| -------------------- | ----------------------------------------------- | ------------------------------------- |
-| `AUTH_URL`           | Public URL of your Norish instance              | `https://norish.example.com`          |
-| `DATABASE_URL`       | PostgreSQL connection string                    | `postgres://user:pass@db:5432/norish` |
-| `MASTER_KEY`         | Master key for deriving encryption keys         | `openssl rand -base64 32`             |
-| `CHROME_WS_ENDPOINT` | Puppeteer WebSocket endpoint for web scraping   | `ws://chrome-headless:3000`           |
-| `REDIS_URL`          | Redis connection URL for events and job queues  | `redis://redis:6379`                  |
+| Variable             | Description                                    | Example                               |
+| -------------------- | ---------------------------------------------- | ------------------------------------- |
+| `AUTH_URL`           | Public URL of your Norish instance             | `https://norish.example.com`          |
+| `DATABASE_URL`       | PostgreSQL connection string                   | `postgres://user:pass@db:5432/norish` |
+| `MASTER_KEY`         | Master key for deriving encryption keys        | `openssl rand -base64 32`             |
+| `CHROME_WS_ENDPOINT` | Puppeteer WebSocket endpoint for web scraping  | `ws://chrome-headless:3000`           |
+| `REDIS_URL`          | Redis connection URL for events and job queues | `redis://redis:6379`                  |
 
 ### Optional Variables
 

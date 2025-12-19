@@ -40,6 +40,47 @@ vi.mock("@/config/env-config-server", () => ({
   },
 }));
 
+// Mock queue config to avoid URL parsing issues
+vi.mock("@/server/queue/config", () => ({
+  redisConnection: {
+    host: "localhost",
+    port: 6379,
+    password: undefined,
+  },
+  recipeImportJobOptions: {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 2000 },
+    removeOnComplete: true,
+    removeOnFail: true,
+  },
+  caldavSyncJobOptions: {
+    attempts: 10,
+    backoff: { type: "exponential", delay: 60000 },
+    removeOnComplete: true,
+    removeOnFail: true,
+  },
+  scheduledTasksJobOptions: {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 5000 },
+    removeOnComplete: true,
+    removeOnFail: true,
+  },
+  nutritionEstimationJobOptions: {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 2000 },
+    removeOnComplete: true,
+    removeOnFail: true,
+  },
+  QUEUE_NAMES: {
+    RECIPE_IMPORT: "recipe-import",
+    IMAGE_IMPORT: "image-recipe-import",
+    PASTE_IMPORT: "paste-recipe-import",
+    CALDAV_SYNC: "caldav-sync",
+    SCHEDULED_TASKS: "scheduled-tasks",
+    NUTRITION_ESTIMATION: "nutrition-estimation",
+  },
+}));
+
 // Mock logger
 vi.mock("@/server/logger", () => ({
   createLogger: vi.fn(() => ({
