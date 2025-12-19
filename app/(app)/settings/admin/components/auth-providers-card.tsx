@@ -184,7 +184,7 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
         {config && (
           <Button
             color="danger"
-            startContent={<TrashIcon className="h-4 w-4" />}
+            startContent={<TrashIcon className="h-5 w-5" />}
             variant="flat"
             onPress={deleteModal.onOpen}
           >
@@ -194,7 +194,7 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
         <div className="ml-auto flex gap-2">
           <Button
             isLoading={testing}
-            startContent={<BeakerIcon className="h-4 w-4" />}
+            startContent={<BeakerIcon className="h-5 w-5" />}
             variant="flat"
             onPress={handleTest}
           >
@@ -203,7 +203,7 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
           <Button
             color="primary"
             isLoading={saving}
-            startContent={<CheckIcon className="h-4 w-4" />}
+            startContent={<CheckIcon className="h-5 w-5" />}
             onPress={handleSave}
           >
             Save

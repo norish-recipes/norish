@@ -60,7 +60,7 @@ export default function SystemCard() {
           <p className="text-default-500 text-xs">
             Delete planned meals older than this many months
           </p>
-          <div className="flex justify-start">
+          <div className="flex justify-end">
             <Button
               color="primary"
               isLoading={saving}
@@ -80,7 +80,7 @@ export default function SystemCard() {
             <p className="text-default-500 text-xs">
               Apply configuration changes that require a restart
             </p>
-            <div className="flex justify-start">
+            <div className="flex justify-end">
               <Button
                 color="warning"
                 startContent={<ArrowPathIcon className="h-5 w-5" />}

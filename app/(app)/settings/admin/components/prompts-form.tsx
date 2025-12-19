@@ -109,7 +109,7 @@ export default function PromptsForm() {
         <Button
           color="warning"
           isLoading={restoring}
-          startContent={!restoring && <ArrowPathIcon className="h-4 w-4" />}
+          startContent={!restoring && <ArrowPathIcon className="h-5 w-5" />}
           variant="flat"
           onPress={handleRestoreDefaults}
         >

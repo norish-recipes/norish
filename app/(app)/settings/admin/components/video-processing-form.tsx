@@ -189,7 +189,7 @@ export default function VideoProcessingForm() {
           color="primary"
           isDisabled={!canEnable}
           isLoading={saving}
-          startContent={<CheckIcon className="h-4 w-4" />}
+          startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}
         >
           Save

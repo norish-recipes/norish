@@ -130,31 +130,33 @@ export default function JsonEditor({
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button isDisabled={disabled || saving} size="sm" variant="flat" onPress={handleFormat}>
-            Format
-          </Button>
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          className="hidden sm:inline-flex"
+          isDisabled={disabled || saving}
+          variant="flat"
+          onPress={handleFormat}
+        >
+          Format
+        </Button>
 
-          {onRestoreDefaults && (
-            <Button
-              color="warning"
-              isDisabled={disabled || saving}
-              size="sm"
-              startContent={<ArrowPathIcon className="h-4 w-4" />}
-              variant="flat"
-              onPress={handleRestoreDefaults}
-            >
-              Restore Defaults
-            </Button>
-          )}
-        </div>
+        {onRestoreDefaults && (
+          <Button
+            color="warning"
+            isDisabled={disabled || saving}
+            startContent={<ArrowPathIcon className="h-5 w-5" />}
+            variant="flat"
+            onPress={handleRestoreDefaults}
+          >
+            Restore Defaults
+          </Button>
+        )}
 
         <Button
           color="primary"
           isDisabled={disabled || !!error || !isDirty}
           isLoading={saving}
-          startContent={<CheckIcon className="h-4 w-4" />}
+          startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}
         >
           Save

@@ -242,7 +242,7 @@ export default function AIConfigForm() {
         <Button
           isDisabled={!enabled}
           isLoading={testing}
-          startContent={<BeakerIcon className="h-4 w-4" />}
+          startContent={<BeakerIcon className="h-5 w-5" />}
           variant="flat"
           onPress={handleTest}
         >
@@ -252,7 +252,7 @@ export default function AIConfigForm() {
           color="primary"
           isDisabled={!canEnable}
           isLoading={saving}
-          startContent={<CheckIcon className="h-4 w-4" />}
+          startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}
         >
           Save
