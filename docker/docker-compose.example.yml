@@ -86,7 +86,7 @@ services:
 
   # Redis for real-time events
   redis:
-    image: redis:7-alpine
+    image: redis:8.4.0
     container_name: norish-redis
     restart: unless-stopped
     volumes:
