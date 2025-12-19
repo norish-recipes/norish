@@ -34,11 +34,11 @@ export default function RecipeMetadata({
       {onToggleFavorite && (
         <div className="pointer-events-auto absolute top-2 left-2 z-20">
           <HeartButton
-            isFavorite={isFavorite}
-            onToggle={onToggleFavorite}
-            size="md"
-            showBackground
             hideWhenNotFavorite
+            showBackground
+            isFavorite={isFavorite}
+            size="md"
+            onToggle={onToggleFavorite}
           />
         </div>
       )}

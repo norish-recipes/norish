@@ -29,6 +29,7 @@ export const caldavSyncQueue = new Queue<CaldavSyncJobData>(QUEUE_NAMES.CALDAV_S
  */
 function generateCaldavJobId(caldavServerUrl: string, itemId: string): string {
   const sanitizedUrl = sanitizeUrlForJobId(caldavServerUrl);
+
   return `caldav_${sanitizedUrl}_${itemId}`;
 }
 
@@ -43,8 +44,10 @@ export async function addCaldavSyncJob(data: CaldavSyncJobData): Promise<Job<Cal
 
   // Supersede any existing job for this item (only sync latest state)
   const existingJob = await caldavSyncQueue.getJob(jobId);
+
   if (existingJob) {
     const state = await existingJob.getState();
+
     if (state === "waiting" || state === "delayed") {
       await existingJob.remove();
       log.debug({ jobId, itemId: data.itemId }, "Superseded existing CalDAV sync job");

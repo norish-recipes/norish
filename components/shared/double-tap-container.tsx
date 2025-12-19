@@ -64,23 +64,34 @@ export default function DoubleTapContainer({
   );
 
   return (
-    <div className={`relative select-none ${className}`} onClick={handleClick}>
+    <div
+      className={`relative select-none ${className}`}
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick(e as unknown as React.MouseEvent);
+        }
+      }}
+    >
       {children}
 
       {/* Heart overlay animation */}
       <AnimatePresence>
         {showHeart && (
           <motion.div
-            className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center"
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
+            className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center"
             exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              initial={{ scale: 0 }}
               animate={{ scale: [0, 1.3, 1] }}
               exit={{ scale: 0, opacity: 0 }}
+              initial={{ scale: 0 }}
               transition={{
                 duration: 0.5,
                 times: [0, 0.4, 1],

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import { vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export function createTestQueryClient() {
@@ -21,4 +20,3 @@ export function createTestWrapper(queryClient: QueryClient) {
 export function createMockFavoritesData(favoriteIds: string[] = []) {
   return { favoriteIds };
 }
-

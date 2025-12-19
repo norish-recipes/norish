@@ -14,10 +14,7 @@ export default function RatingStars({ value, onChange }: RatingStarsProps) {
   const displayRating = hoverRating ?? value;
 
   return (
-    <div
-      className="flex items-center gap-0.5"
-      onMouseLeave={() => setHoverRating(null)}
-    >
+    <div className="flex items-center gap-0.5" onMouseLeave={() => setHoverRating(null)}>
       {[1, 2, 3, 4, 5].map((rating) => {
         const isFilled = displayRating !== null && rating <= displayRating;
 
@@ -36,9 +33,7 @@ export default function RatingStars({ value, onChange }: RatingStarsProps) {
           </button>
         );
       })}
-      {value !== null && (
-        <span className="text-default-500 ml-1 text-xs">{value}+</span>
-      )}
+      {value !== null && <span className="text-default-500 ml-1 text-xs">{value}+</span>}
     </div>
   );
 }

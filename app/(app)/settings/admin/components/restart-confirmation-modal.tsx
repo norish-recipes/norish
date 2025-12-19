@@ -24,7 +24,9 @@ export default function RestartConfirmationModal({
         <ModalBody>
           <p>Are you sure you want to restart the server?</p>
           <div className="bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800 mt-2 rounded-lg border p-4">
-            <p className="text-warning-700 dark:text-warning-300 text-base font-medium">Important:</p>
+            <p className="text-warning-700 dark:text-warning-300 text-base font-medium">
+              Important:
+            </p>
             <ul className="text-warning-600 dark:text-warning-400 mt-2 list-inside list-disc space-y-1 text-base">
               <li>All active connections will be disconnected</li>
               <li>The server will be unavailable for a few seconds</li>

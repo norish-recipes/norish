@@ -14,7 +14,13 @@ import { dateKey, startOfMonth, endOfMonth, addMonths } from "@/lib/helpers";
 type Ctx = {
   plannedItemsByDate: CalendarData;
   isLoading: boolean;
-  planMeal: (date: string, slot: Slot, recipeId: string, recipeName: string, recipeTags?: string[]) => void;
+  planMeal: (
+    date: string,
+    slot: Slot,
+    recipeId: string,
+    recipeName: string,
+    recipeTags?: string[]
+  ) => void;
   planNote: (date: string, slot: Slot, title: string) => void;
   deletePlanned: (id: string, date: string, itemType: CaldavItemType) => void;
   updateItemDate: (id: string, oldDate: string, newDate: string, itemType: CaldavItemType) => void;
@@ -50,7 +56,13 @@ export function CalendarContextProvider({ children }: { children: ReactNode }) {
   useCalendarSubscription(startISO, endISO);
 
   const planMeal = useCallback(
-    (date: string, slot: Slot, recipeId: string, recipeName: string, recipeTags?: string[]): void => {
+    (
+      date: string,
+      slot: Slot,
+      recipeId: string,
+      recipeName: string,
+      recipeTags?: string[]
+    ): void => {
       createPlannedRecipe(date, slot, recipeId, recipeName, recipeTags);
     },
     [createPlannedRecipe]

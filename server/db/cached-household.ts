@@ -1,6 +1,7 @@
 import superjson from "superjson";
 
 import { getHouseholdForUser as dbGetHouseholdForUser } from "./repositories/households";
+
 import { getPublisherClient } from "@/server/redis/client";
 
 const CACHE_PREFIX = "norish:cache:household:user:";
@@ -14,6 +15,7 @@ export async function getCachedHouseholdForUser(userId: string): Promise<CachedH
 
   // Try cache first
   const cached = await redis.get(cacheKey);
+
   if (cached) {
     return superjson.parse<CachedHousehold>(cached);
   }
@@ -29,6 +31,7 @@ export async function getCachedHouseholdForUser(userId: string): Promise<CachedH
 
 export async function invalidateHouseholdCache(userId: string): Promise<void> {
   const redis = await getPublisherClient();
+
   await redis.del(`${CACHE_PREFIX}${userId}`);
 }
 
@@ -37,5 +40,6 @@ export async function invalidateHouseholdCacheForUsers(userIds: string[]): Promi
 
   const redis = await getPublisherClient();
   const keys = userIds.map((id) => `${CACHE_PREFIX}${id}`);
+
   await redis.del(...keys);
 }

@@ -1,8 +1,9 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import z from "zod";
 
-import { steps } from "@/server/db/schema";
 import { StepImageSchema } from "./step-images";
+
+import { steps } from "@/server/db/schema";
 
 export const StepSelectBaseSchema = createSelectSchema(steps);
 export const StepInsertBaseSchema = createInsertSchema(steps)

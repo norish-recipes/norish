@@ -59,8 +59,9 @@ export const Navbar = () => {
                 return (
                   <NavbarItem key={item.href}>
                     <NextLink
-                      className={`hover:text-primary rounded-md px-3 py-1.5 font-medium transition-colors ${isActive ? "text-primary font-semibold" : "text-foreground/80"
-                        }`}
+                      className={`hover:text-primary rounded-md px-3 py-1.5 font-medium transition-colors ${
+                        isActive ? "text-primary font-semibold" : "text-foreground/80"
+                      }`}
                       href={item.href}
                     >
                       {item.label}

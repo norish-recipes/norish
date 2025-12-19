@@ -5,11 +5,12 @@
  * Reuses the same recipe extraction schema and normalization as URL parsing.
  */
 
+import type { ImageImportFile } from "@/types/dto/queue";
+
 import { getAIProvider } from "./providers/factory";
 import { jsonLdRecipeSchema } from "./schemas/jsonld-recipe";
 import { loadPrompt } from "./prompts/loader";
 
-import type { ImageImportFile } from "@/types/dto/queue";
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
@@ -24,16 +25,20 @@ async function buildImageExtractionPrompt(allergies?: string[]): Promise<string>
 
   // Modify prompt for image context
   const imagePrompt = basePrompt
-    .replace("You will receive the contents of a webpage or video transcript",
-      "You will receive images of a recipe (such as photos of a cookbook, printed recipe, or recipe card)")
+    .replace(
+      "You will receive the contents of a webpage or video transcript",
+      "You will receive images of a recipe (such as photos of a cookbook, printed recipe, or recipe card)"
+    )
     .replace("reads website data", "reads recipe images");
 
   // Build allergy detection instruction
   let allergyInstruction = "";
+
   if (allergies && allergies.length > 0) {
     allergyInstruction = `\nALLERGY DETECTION: Only detect these specific allergens/dietary tags from the ingredients: ${allergies.join(", ")}. Do not add any other allergy tags.`;
   } else {
-    allergyInstruction = "\nALLERGY DETECTION: Skip allergy/dietary tag detection. Do not add any tags to the keywords array.";
+    allergyInstruction =
+      "\nALLERGY DETECTION: Skip allergy/dietary tag detection. Do not add any tags to the keywords array.";
   }
 
   return `${imagePrompt}${allergyInstruction}

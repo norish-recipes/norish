@@ -32,7 +32,7 @@ import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import NutritionCard from "@/components/recipes/nutrition-card";
 
 export default function RecipePageDesktop() {
-  var { recipe, currentServings } = useRecipeContextRequired();
+  var { recipe, currentServings: _currentServings } = useRecipeContextRequired();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const { isFavorite: checkFavorite } = useFavoritesQuery();
   const { toggleFavorite } = useFavoritesMutation();
@@ -152,8 +152,8 @@ export default function RecipePageDesktop() {
         <div className="col-span-3 flex flex-col gap-6">
           {/* Hero image */}
           <DoubleTapContainer
-            onDoubleTap={handleToggleFavorite}
             className="bg-default-200 relative min-h-[400px] overflow-hidden rounded-2xl"
+            onDoubleTap={handleToggleFavorite}
           >
             {recipe.image ? (
               <Image
@@ -172,10 +172,10 @@ export default function RecipePageDesktop() {
             {/* Heart button - top right (always visible) */}
             <div className="absolute top-4 right-4 z-50">
               <HeartButton
-                isFavorite={isFavorite}
-                onToggle={handleToggleFavorite}
-                size="lg"
                 showBackground
+                isFavorite={isFavorite}
+                size="lg"
+                onToggle={handleToggleFavorite}
               />
             </div>
 
@@ -198,12 +198,12 @@ export default function RecipePageDesktop() {
             </CardBody>
 
             {/* Rating Section */}
-            <div className="bg-default-100 mx-3 mb-3 mt-4 flex flex-col items-center gap-4 rounded-xl py-6">
+            <div className="bg-default-100 mx-3 mt-4 mb-3 flex flex-col items-center gap-4 rounded-xl py-6">
               <p className="text-default-600 font-medium">What did you think of this recipe?</p>
               <StarRating
+                isLoading={isRating || isRatingLoading}
                 value={userRating ?? averageRating}
                 onChange={handleRateRecipe}
-                isLoading={isRating || isRatingLoading}
               />
             </div>
           </Card>

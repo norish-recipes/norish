@@ -5,12 +5,18 @@ import type { Slot, CalendarItemViewDto } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 
 import { useCalendarQuery } from "./use-calendar-query";
-import { useHouseholdContext } from "@/context/household-context";
 
+import { useHouseholdContext } from "@/context/household-context";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type CalendarMutationsResult = {
-  createPlannedRecipe: (date: string, slot: Slot, recipeId: string, recipeName: string, recipeTags?: string[]) => void;
+  createPlannedRecipe: (
+    date: string,
+    slot: Slot,
+    recipeId: string,
+    recipeName: string,
+    recipeTags?: string[]
+  ) => void;
   deletePlannedRecipe: (id: string, date: string) => void;
   updatePlannedRecipeDate: (id: string, newDate: string, oldDate: string) => void;
   createNote: (date: string, slot: Slot, title: string) => void;
@@ -45,10 +51,11 @@ export function useCalendarMutations(startISO: string, endISO: string): Calendar
     recipeTags?: string[]
   ): void => {
     const allergyWarnings = new Set<string>();
-    if (recipeTags && household?.allergies) {
-      const tagSet = new Set(recipeTags.map(t => t.toLowerCase()));
 
-      household.allergies.forEach(allergy => {
+    if (recipeTags && household?.allergies) {
+      const tagSet = new Set(recipeTags.map((t) => t.toLowerCase()));
+
+      household.allergies.forEach((allergy) => {
         if (tagSet.has(allergy.toLowerCase())) {
           allergyWarnings.add(allergy);
         }

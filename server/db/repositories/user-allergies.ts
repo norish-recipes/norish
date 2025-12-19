@@ -1,8 +1,9 @@
 import { eq, inArray, sql } from "drizzle-orm";
 
+import { getOrCreateManyTags } from "./tags";
+
 import { db } from "@/server/db/drizzle";
 import { userAllergies, tags } from "@/server/db/schema";
-import { getOrCreateManyTags } from "./tags";
 
 export async function getUserAllergies(userId: string): Promise<string[]> {
   const rows = await db

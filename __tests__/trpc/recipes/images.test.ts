@@ -29,13 +29,14 @@ describe("recipes.reserveId", () => {
 
   describe("ID generation", () => {
     it("returns a valid UUID", async () => {
-      const ctx = createMockAuthedContext();
+      const _ctx = createMockAuthedContext();
       const crypto = await import("crypto");
 
       const recipeId = crypto.randomUUID();
 
       // Verify it's a valid UUID format
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
       expect(uuidRegex.test(recipeId)).toBe(true);
     });
 
@@ -54,7 +55,7 @@ describe("recipes.reserveId", () => {
 
   describe("return value", () => {
     it("returns object with recipeId property", async () => {
-      const ctx = createMockAuthedContext();
+      const _ctx = createMockAuthedContext();
       const crypto = await import("crypto");
 
       const result = { recipeId: crypto.randomUUID() };
@@ -84,7 +85,7 @@ describe("recipes.reserveId", () => {
 
   describe("use case", () => {
     it("ID can be used for step image uploads before recipe creation", async () => {
-      const ctx = createMockAuthedContext();
+      const _ctx = createMockAuthedContext();
       const crypto = await import("crypto");
 
       // Reserve ID
@@ -126,6 +127,7 @@ describe("recipes image procedures", () => {
     it("accepts FormData with image file", () => {
       const formData = new FormData();
       const file = new File(["test"], "test.jpg", { type: "image/jpeg" });
+
       formData.append("image", file);
 
       expect(formData.get("image")).toBeDefined();
@@ -194,6 +196,7 @@ describe("recipes image procedures", () => {
     it("accepts FormData with image and recipeId", () => {
       const formData = new FormData();
       const file = new File(["test"], "step.jpg", { type: "image/jpeg" });
+
       formData.append("image", file);
       formData.append("recipeId", "recipe-123");
 
@@ -203,9 +206,11 @@ describe("recipes image procedures", () => {
 
     it("validates recipeId is provided", () => {
       const formData = new FormData();
+
       formData.append("recipeId", "recipe-123");
 
       const recipeId = formData.get("recipeId");
+
       expect(recipeId).toBeDefined();
       expect(recipeId).not.toBe("");
     });

@@ -8,14 +8,8 @@ import {
   startRecipeImportWorker,
   stopRecipeImportWorker,
 } from "@/server/queue/recipe-import/worker";
-import {
-  startImageImportWorker,
-  stopImageImportWorker,
-} from "@/server/queue/image-import/worker";
-import {
-  startPasteImportWorker,
-  stopPasteImportWorker,
-} from "@/server/queue/paste-import/worker";
+import { startImageImportWorker, stopImageImportWorker } from "@/server/queue/image-import/worker";
+import { startPasteImportWorker, stopPasteImportWorker } from "@/server/queue/paste-import/worker";
 import {
   startNutritionEstimationWorker,
   stopNutritionEstimationWorker,
@@ -26,7 +20,6 @@ import {
   stopScheduledTasksWorker,
 } from "@/server/queue/scheduled-tasks/worker";
 import { initializeScheduledJobs } from "@/server/queue/scheduled-tasks/queue";
-
 import { createLogger } from "@/server/logger";
 
 const log = createLogger("bullmq");
@@ -61,4 +54,3 @@ export async function stopWorkers(): Promise<void> {
   await stopScheduledTasksWorker();
   log.info("All BullMQ workers stopped");
 }
-

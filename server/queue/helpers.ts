@@ -11,6 +11,7 @@ import { normalizeUrl } from "@/lib/helpers";
 
 export function sanitizeUrlForJobId(url: string): string {
   const normalized = normalizeUrl(url);
+
   return normalized.replace(/^https?:\/\//, "").replace(/[^a-zA-Z0-9.-]/g, "_");
 }
 
@@ -52,5 +53,6 @@ export async function isJobInQueue<T>(queue: Queue<T>, jobId: string): Promise<b
   if (!job) return false;
 
   const state = await job.getState();
+
   return state === "waiting" || state === "active" || state === "delayed";
 }

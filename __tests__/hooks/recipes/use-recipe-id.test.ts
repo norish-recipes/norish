@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
+
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 
 import { createTestQueryClient, createTestWrapper } from "./test-utils";
@@ -65,6 +66,7 @@ describe("useRecipeId", () => {
       }));
 
       const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
+
       renderHook(() => useRecipeId("edit", "existing-id-456"), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -105,6 +107,7 @@ describe("useRecipeId", () => {
 
     it("fetches reserved ID from backend", async () => {
       const reservedId = "reserved-id-abc";
+
       mockReserveId.mockResolvedValue({ recipeId: reservedId });
 
       vi.doMock("@/app/providers/trpc-provider", () => ({
@@ -136,6 +139,7 @@ describe("useRecipeId", () => {
 
     it("sets error when reservation fails", async () => {
       const errorMessage = "Network error";
+
       mockReserveId.mockRejectedValue(new Error(errorMessage));
 
       vi.doMock("@/app/providers/trpc-provider", () => ({

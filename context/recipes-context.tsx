@@ -66,6 +66,7 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
     }
     const favoriteSet = new Set(favoriteIds);
     const filtered = allRecipes.filter((r) => favoriteSet.has(r.id));
+
     return { recipes: filtered, total: filtered.length };
   }, [allRecipes, serverTotal, filters.showFavoritesOnly, favoriteIds]);
 

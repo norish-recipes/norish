@@ -4,11 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/react";
-import {
-  ArrowDownTrayIcon,
-  ArrowUpIcon,
-  PlusIcon,
-} from "@heroicons/react/16/solid";
+import { ArrowDownTrayIcon, ArrowUpIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 import { UsersIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
@@ -26,7 +22,7 @@ interface NavbarUserMenuProps {
 }
 
 export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuProps) {
-  const { user, userMenuOpen, setUserMenuOpen, signOut } = useUserContext();
+  const { user, userMenuOpen: _userMenuOpen, setUserMenuOpen, signOut } = useUserContext();
   const router = useRouter();
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -114,7 +110,9 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             >
               <span className="flex flex-col items-start">
                 <span className="text-base leading-tight font-medium">New recipe</span>
-                <span className="text-default-500 text-xs leading-tight">Write your own recipe</span>
+                <span className="text-default-500 text-xs leading-tight">
+                  Write your own recipe
+                </span>
               </span>
             </Button>
           </DropdownItem>

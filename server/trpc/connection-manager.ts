@@ -20,6 +20,7 @@ export function registerConnection(userId: string, ws: WebSocket): void {
 
 export function unregisterConnection(userId: string, ws: WebSocket): void {
   const connections = userConnections.get(userId);
+
   if (connections) {
     connections.delete(ws);
 
@@ -33,6 +34,7 @@ export function unregisterConnection(userId: string, ws: WebSocket): void {
 
 export function terminateUserConnections(userId: string, reason: string): void {
   const connections = userConnections.get(userId);
+
   if (connections) {
     log.info({ userId, count: connections.size, reason }, "Terminating user WebSocket connections");
     for (const ws of connections) {
@@ -62,6 +64,7 @@ export async function emitConnectionInvalidation(userId: string, reason: string)
 
 export async function startInvalidationListener(): Promise<void> {
   const subscriber = await createSubscriberClient();
+
   await subscriber.subscribe(INVALIDATION_CHANNEL);
 
   log.info("Started connection invalidation listener");
@@ -71,6 +74,7 @@ export async function startInvalidationListener(): Promise<void> {
       if (channel === INVALIDATION_CHANNEL) {
         try {
           const { userId, reason } = superjson.parse<InvalidationMessage>(message);
+
           terminateUserConnections(userId, reason);
         } catch (err) {
           log.error({ err }, "Failed to parse invalidation message");

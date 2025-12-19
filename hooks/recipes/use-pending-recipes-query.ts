@@ -6,8 +6,6 @@ import { useEffect } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { createClientLogger } from "@/lib/logger";
 
-import type { PendingRecipeDTO } from "@/types";
-
 const log = createClientLogger("pending-recipes-query");
 
 // Key for storing pending recipe IDs in the query cache (shared state)

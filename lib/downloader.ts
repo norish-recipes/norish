@@ -449,6 +449,7 @@ export async function saveImageBytes(bytes: Buffer, _nameHint?: string): Promise
 
 export async function saveStepImageBytes(bytes: Buffer, recipeId: string): Promise<string> {
   const stepImagesDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes", recipeId, "steps");
+
   await ensureDir(stepImagesDir);
 
   // Validate buffer size

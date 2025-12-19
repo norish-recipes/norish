@@ -36,6 +36,7 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
   switch (taskType) {
     case "recurring-grocery-check": {
       const result = await checkRecurringGroceries();
+
       log.info({ unchecked: result.unchecked }, "Recurring grocery check completed");
       break;
     }
@@ -44,6 +45,7 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
       const recipeResult = await cleanupOrphanedImages();
       const avatarResult = await cleanupOrphanedAvatars();
       const stepResult = await cleanupOrphanedStepImages();
+
       log.info(
         {
           recipesDeleted: recipeResult.deleted,
@@ -58,6 +60,7 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
 
     case "calendar-cleanup": {
       const result = await cleanupOldCalendarData();
+
       log.info(
         {
           plannedRecipesDeleted: result.plannedRecipesDeleted,
@@ -70,6 +73,7 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
 
     case "groceries-cleanup": {
       const result = await cleanupOldGroceries();
+
       log.info({ deleted: result.deleted }, "Groceries cleanup completed");
       break;
     }
@@ -88,6 +92,7 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
 export function startScheduledTasksWorker(): void {
   if (worker) {
     log.warn("Scheduled tasks worker already running");
+
     return;
   }
 

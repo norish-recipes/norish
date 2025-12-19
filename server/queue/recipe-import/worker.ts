@@ -74,24 +74,31 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
 
   if (aiConfig?.autoTagAllergies) {
     const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
+
     allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
-    log.debug({ allergyCount: allergyNames.length, allergies: allergyNames }, "Fetched household allergies");
+    log.debug(
+      { allergyCount: allergyNames.length, allergies: allergyNames },
+      "Fetched household allergies"
+    );
   } else {
     log.debug("Auto-tag allergies disabled, skipping allergy detection");
   }
 
   // Parse and create recipe
   const parsedRecipe = await parseRecipeFromUrl(url, allergyNames, job.data.forceAI);
+
   if (!parsedRecipe) {
     throw new Error("Failed to parse recipe from URL");
   }
 
   const createdId = await createRecipeWithRefs(recipeId, userId, parsedRecipe);
+
   if (!createdId) {
     throw new Error("Failed to save imported recipe");
   }
 
   const dashboardDto = await dashboardRecipe(createdId);
+
   if (dashboardDto) {
     log.info({ jobId: job.id, recipeId: createdId, url }, "Recipe imported successfully");
 
@@ -149,6 +156,7 @@ async function handleJobFailed(
 export function startRecipeImportWorker(): void {
   if (worker) {
     log.warn("Recipe import worker already running");
+
     return;
   }
 

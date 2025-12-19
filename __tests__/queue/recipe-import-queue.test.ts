@@ -52,12 +52,15 @@ vi.mock("@/server/logger", () => ({
 
 // Mock DB functions
 const mockRecipeExistsByUrlForPolicy = vi.fn();
+
 vi.mock("@/server/db", () => ({
   recipeExistsByUrlForPolicy: mockRecipeExistsByUrlForPolicy,
 }));
 
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+// eslint-disable-next-line import/order -- Type imports must come after mocks are set up in test files
 import type { RecipePermissionPolicy } from "@/server/db/zodSchemas/server-config";
+
+import { getRecipePermissionPolicy } from "@/config/server-config-loader";
 
 describe("Recipe Import Queue", () => {
   beforeEach(() => {
@@ -71,9 +74,7 @@ describe("Recipe Import Queue", () => {
   });
 
   describe("generateJobId", () => {
-    it(
-      "generates global job ID for 'everyone' policy",
-      async () => {
+    it("generates global job ID for 'everyone' policy", async () => {
       const { generateJobId } = await import("@/server/queue");
 
       const jobId = generateJobId(
@@ -86,9 +87,7 @@ describe("Recipe Import Queue", () => {
       expect(jobId).toBe("import_example.com_recipe");
       expect(jobId).not.toContain("user-123");
       expect(jobId).not.toContain("household-456");
-      },
-      15_000
-    );
+    }, 15_000);
 
     it("generates household-scoped job ID for 'household' policy", async () => {
       const { generateJobId } = await import("@/server/queue");

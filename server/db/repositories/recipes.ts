@@ -99,6 +99,7 @@ export async function recipeExistsByUrlForPolicy(
         const userIds = householdUserIds.includes(userId)
           ? householdUserIds
           : [...householdUserIds, userId];
+
         whereCondition = and(eq(recipes.url, url), inArray(recipes.userId, userIds));
       } else {
         whereCondition = and(eq(recipes.url, url), eq(recipes.userId, userId));
@@ -363,6 +364,7 @@ export async function listRecipes(
 
   // Filter by minimum rating if specified (post-fetch since rating is computed)
   let filteredRecipes = parsed.data;
+
   if (minRating !== undefined) {
     filteredRecipes = parsed.data.filter(
       (r) => r.averageRating != null && r.averageRating >= minRating
@@ -709,7 +711,7 @@ export async function updateRecipeWithRefs(
     if (payload.fat !== undefined) updateData.fat = payload.fat;
     if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
     if (payload.protein !== undefined) updateData.protein = payload.protein;
-    
+
     updateData.updatedAt = new Date();
 
     if (Object.keys(updateData).length > 1) {
@@ -773,6 +775,7 @@ export async function searchRecipesByName(
   const whereConditions: any[] = [];
 
   const policyCondition = await buildViewPolicyCondition(ctx);
+
   if (policyCondition) {
     whereConditions.push(policyCondition);
   }

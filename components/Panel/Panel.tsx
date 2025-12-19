@@ -36,7 +36,7 @@ const PanelContext = createContext<{
   open: boolean;
   close: () => void;
   toggle: () => void;
-}>({ open: false, close: () => { }, toggle: () => { } });
+}>({ open: false, close: () => {}, toggle: () => {} });
 
 export function usePanel() {
   return useContext(PanelContext);

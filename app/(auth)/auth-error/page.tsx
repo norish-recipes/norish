@@ -102,7 +102,7 @@ function AuthErrorContent() {
 
           <div className="flex flex-col items-center space-y-2">
             <h1 className="text-2xl font-bold">{errorInfo.title}</h1>
-            <p className="text-default-500 text-center text-small leading-relaxed">
+            <p className="text-default-500 text-small text-center leading-relaxed">
               {errorInfo.description}
             </p>
             {error && error !== "registration_disabled" && (

@@ -9,4 +9,3 @@ export function resetRatingsMocks() {
   getUserRating.mockReset();
   getAverageRating.mockReset();
 }
-

@@ -2,6 +2,7 @@ import type { TypedEmitter } from "./emitter";
 import type { PermissionLevel } from "@/server/db/zodSchemas/server-config";
 
 import { authedProcedure } from "./middleware";
+
 import { trpcLogger as log } from "@/server/logger";
 
 /**
@@ -21,7 +22,7 @@ export async function waitForAbort(signal?: AbortSignal): Promise<void> {
   if (!signal) return;
   await new Promise<void>((_, reject) => {
     signal.addEventListener("abort", () => reject(new Error("Aborted")));
-  }).catch(() => { });
+  }).catch(() => {});
 }
 
 /**
@@ -164,7 +165,10 @@ export function createPolicyAwareSubscription<
   return authedProcedure.subscription(async function* ({ ctx, signal }) {
     const policyCtx = { userId: ctx.user.id, householdKey: ctx.householdKey };
 
-    log.trace({ userId: ctx.user.id, householdKey: ctx.householdKey }, `Subscribed to ${logMessage}`);
+    log.trace(
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      `Subscribed to ${logMessage}`
+    );
 
     try {
       const iterables = createPolicyAwareIterables(emitter, policyCtx, eventName, signal);
@@ -173,7 +177,10 @@ export function createPolicyAwareSubscription<
         yield data as TEvents[K];
       }
     } finally {
-      log.trace({ userId: ctx.user.id, householdKey: ctx.householdKey }, `Unsubscribed from ${logMessage}`);
+      log.trace(
+        { userId: ctx.user.id, householdKey: ctx.householdKey },
+        `Unsubscribed from ${logMessage}`
+      );
     }
   });
 }

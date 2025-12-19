@@ -107,4 +107,3 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
     </Modal>
   );
 }
-

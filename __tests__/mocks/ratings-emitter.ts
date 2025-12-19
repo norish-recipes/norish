@@ -5,4 +5,3 @@ export const ratingsEmitter = {
   emitToUser: vi.fn(),
   broadcast: vi.fn(),
 };
-

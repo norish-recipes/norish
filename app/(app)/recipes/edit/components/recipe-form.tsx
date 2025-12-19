@@ -174,6 +174,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const { getOnPasteHandler } = useClipboardImagePaste({
     onFiles: (pastedFiles) => {
       const file = pastedFiles[0];
+
       if (file) handleImageUpload(file);
     },
   });
@@ -530,39 +531,39 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               <Input
                 classNames={{ label: "font-medium text-base" }}
                 label="Calories"
+                min={0}
                 placeholder="—"
                 type="number"
-                min={0}
                 value={calories != null ? calories.toString() : ""}
                 onValueChange={(v) => setCalories(v ? parseInt(v, 10) || null : null)}
               />
               <Input
                 classNames={{ label: "font-medium text-base" }}
                 label="Fat (g)"
-                placeholder="—"
-                type="number"
                 min={0}
+                placeholder="—"
                 step={0.1}
+                type="number"
                 value={fat != null ? fat.toString() : ""}
                 onValueChange={(v) => setFat(v ? parseFloat(v) || null : null)}
               />
               <Input
                 classNames={{ label: "font-medium text-base" }}
                 label="Carbs (g)"
-                placeholder="—"
-                type="number"
                 min={0}
+                placeholder="—"
                 step={0.1}
+                type="number"
                 value={carbs != null ? carbs.toString() : ""}
                 onValueChange={(v) => setCarbs(v ? parseFloat(v) || null : null)}
               />
               <Input
                 classNames={{ label: "font-medium text-base" }}
                 label="Protein (g)"
-                placeholder="—"
-                type="number"
                 min={0}
+                placeholder="—"
                 step={0.1}
+                type="number"
                 value={protein != null ? protein.toString() : ""}
                 onValueChange={(v) => setProtein(v ? parseFloat(v) || null : null)}
               />

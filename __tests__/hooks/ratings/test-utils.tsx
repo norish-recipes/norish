@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import { vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export function createTestQueryClient() {
@@ -29,4 +28,3 @@ export function createMockAverageRatingData(
 export function createMockUserRatingData(recipeId: string, userRating: number | null = null) {
   return { recipeId, userRating };
 }
-

@@ -20,7 +20,8 @@ export default function AllergiesCard() {
   }, [allergies]);
 
   const hasChanges =
-    JSON.stringify(localAllergies.slice().sort()) !== JSON.stringify((allergies || []).slice().sort());
+    JSON.stringify(localAllergies.slice().sort()) !==
+    JSON.stringify((allergies || []).slice().sort());
 
   const handleSave = useCallback(async () => {
     await updateAllergies(localAllergies);

@@ -23,10 +23,7 @@ interface ImportFromPasteModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function ImportFromPasteModal({
-  isOpen,
-  onOpenChange,
-}: ImportFromPasteModalProps) {
+export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFromPasteModalProps) {
   const router = useRouter();
   const { isAIEnabled } = usePermissionsContext();
   const { importRecipeFromPaste, importRecipeFromPasteWithAI } = useRecipesMutations();
@@ -35,6 +32,7 @@ export default function ImportFromPasteModal({
 
   const handleImport = useCallback(() => {
     const trimmed = text.trim();
+
     if (!trimmed) return;
 
     if (trimmed.length > MAX_RECIPE_PASTE_CHARS) {
@@ -43,6 +41,7 @@ export default function ImportFromPasteModal({
         description: `Maximum ${MAX_RECIPE_PASTE_CHARS.toLocaleString()} characters allowed`,
         color: "warning",
       });
+
       return;
     }
 
@@ -79,6 +78,7 @@ export default function ImportFromPasteModal({
 
   const handleAIImport = useCallback(() => {
     const trimmed = text.trim();
+
     if (!trimmed) return;
 
     if (trimmed.length > MAX_RECIPE_PASTE_CHARS) {
@@ -87,6 +87,7 @@ export default function ImportFromPasteModal({
         description: `Maximum ${MAX_RECIPE_PASTE_CHARS.toLocaleString()} characters allowed`,
         color: "warning",
       });
+
       return;
     }
 
@@ -121,7 +122,7 @@ export default function ImportFromPasteModal({
     }
   }, [importRecipeFromPasteWithAI, onOpenChange, router, text]);
 
-  const handleClose = useCallback(() => {
+  const _handleClose = useCallback(() => {
     onOpenChange(false);
     setText("");
   }, [onOpenChange]);
@@ -142,7 +143,8 @@ export default function ImportFromPasteModal({
                 onValueChange={setText}
               />
               <p className="text-default-500 text-xs">
-                {text.length.toLocaleString()} / {MAX_RECIPE_PASTE_CHARS.toLocaleString()} characters
+                {text.length.toLocaleString()} / {MAX_RECIPE_PASTE_CHARS.toLocaleString()}{" "}
+                characters
               </p>
             </ModalBody>
             <ModalFooter>

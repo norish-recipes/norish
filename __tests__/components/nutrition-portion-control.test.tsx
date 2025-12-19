@@ -156,6 +156,7 @@ describe("NutritionPortionControl", () => {
       // This test verifies the component is controlled via props
       // and doesn't depend on any context
       const { rerender } = render(<NutritionPortionControl portions={1} onChange={onChange} />);
+
       expect(screen.getByText("1")).toBeInTheDocument();
 
       // Parent can update portions independently

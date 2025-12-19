@@ -49,7 +49,7 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
   const allTags = recipe.tags ?? [];
   const description = recipe.description?.trim() || "";
 
-  function canClick() {
+  function _canClick() {
     return !open && !mobileSearchOpen;
   }
 
@@ -126,10 +126,10 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
               radius="none"
             >
               <DoubleTapContainer
+                className="relative aspect-[4/3] w-full cursor-pointer overflow-hidden"
+                disabled={open || mobileSearchOpen}
                 onDoubleTap={handleToggleFavorite}
                 onSingleTap={handleNavigate}
-                disabled={open || mobileSearchOpen}
-                className="relative aspect-[4/3] w-full cursor-pointer overflow-hidden"
               >
                 {/* Image */}
                 <div className="pointer-events-none absolute inset-0 z-0">
@@ -152,15 +152,15 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
 
                 {/* top meta data */}
                 <RecipeMetadata
+                  averageRating={averageRating}
+                  isFavorite={isFavorite}
                   servings={servings}
                   timeLabel={timeLabel}
-                  isFavorite={isFavorite}
-                  onToggleFavorite={handleToggleFavorite}
-                  averageRating={averageRating}
                   onOptionsPress={() => {
                     if (rowRef.current?.isOpen()) rowRef.current?.closeRow();
                     else rowRef.current?.openRow();
                   }}
+                  onToggleFavorite={handleToggleFavorite}
                 />
 
                 {/* bottom tags */}
@@ -187,7 +187,7 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
                     }}
                     title={description}
                   >
-                    <SmartMarkdownRenderer text={description} disableLinks />
+                    <SmartMarkdownRenderer disableLinks text={description} />
                   </p>
                 )}
               </CardBody>

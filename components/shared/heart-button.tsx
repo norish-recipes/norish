@@ -44,10 +44,10 @@ export default function HeartButton({
 
   return (
     <button
-      type="button"
       aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
       aria-pressed={isFavorite}
       className={`group relative inline-flex items-center justify-center transition-all duration-300 ${showBackground ? "rounded-full bg-black/30 p-1.5 backdrop-blur-sm" : ""} ${isFavorite ? "scale-100 opacity-100" : "scale-90 opacity-70 hover:scale-100 hover:opacity-100"} ${className} `}
+      type="button"
       onClick={handleClick}
     >
       <HeartIcon

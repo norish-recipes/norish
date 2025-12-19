@@ -39,4 +39,3 @@ export function createMockAuthedContext(
     isServerAdmin: user.isServerAdmin ?? false,
   };
 }
-

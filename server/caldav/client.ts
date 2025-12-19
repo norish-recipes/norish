@@ -1,11 +1,12 @@
-import { v4 as uuidv4 } from "uuid";
-
 import type {
   CreateEventInput,
   CreatedEvent,
   CalDavClientOptions,
   ConnectionTestResult,
 } from "@/types/dto/caldav";
+
+import { v4 as uuidv4 } from "uuid";
+
 import { buildIcs } from "./ics-helpers";
 
 export type { CreateEventInput, CreatedEvent, CalDavClientOptions, ConnectionTestResult };
@@ -88,6 +89,7 @@ export class CalDavClient {
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
+
       throw new Error(`CalDAV createEvent failed ${res.status} ${res.statusText}: ${text}`);
     }
 
@@ -122,6 +124,7 @@ export async function testCalDavConnection(
 ): Promise<ConnectionTestResult> {
   try {
     const client = new CalDavClient({ baseUrl: serverUrl, username, password });
+
     return client.testConnection();
   } catch (error) {
     return {

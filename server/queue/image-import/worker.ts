@@ -28,10 +28,7 @@ let worker: Worker<ImageImportJobData> | null = null;
 async function processImageImportJob(job: Job<ImageImportJobData>): Promise<void> {
   const { recipeId, userId, householdKey, householdUserIds, files } = job.data;
 
-  log.info(
-    { jobId: job.id, recipeId, fileCount: files.length },
-    "Processing image import job"
-  );
+  log.info({ jobId: job.id, recipeId, fileCount: files.length }, "Processing image import job");
 
   const policy = await getRecipePermissionPolicy();
   const viewPolicy = policy.view;
@@ -49,15 +46,21 @@ async function processImageImportJob(job: Job<ImageImportJobData>): Promise<void
 
   if (aiConfig?.autoTagAllergies) {
     const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
+
     allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
-    log.debug({ allergyCount: allergyNames.length }, "Fetched household allergies for image import");
+    log.debug(
+      { allergyCount: allergyNames.length },
+      "Fetched household allergies for image import"
+    );
   }
 
   // Extract recipe from images using AI vision
   const parsedRecipe = await extractRecipeFromImages(files, allergyNames);
 
   if (!parsedRecipe) {
-    throw new Error("Failed to extract recipe from images. The images may not contain a valid recipe.");
+    throw new Error(
+      "Failed to extract recipe from images. The images may not contain a valid recipe."
+    );
   }
 
   // Save the recipe
@@ -118,6 +121,7 @@ async function handleJobFailed(
 export function startImageImportWorker(): void {
   if (worker) {
     log.warn("Image import worker already running");
+
     return;
   }
 

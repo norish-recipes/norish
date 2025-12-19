@@ -1,8 +1,9 @@
 import { nutritionEstimationSchema } from "./schemas/nutrition";
 import { getAIProvider } from "./providers/factory";
+import { loadPrompt, fillPrompt } from "./prompts/loader";
+
 import { isAIEnabled } from "@/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
-import { loadPrompt, fillPrompt } from "./prompts/loader";
 
 export interface NutritionEstimate {
   calories: number;
@@ -27,11 +28,12 @@ async function buildNutritionPrompt(
   const ingredientsList = ingredients
     .map((i) => {
       const parts: string[] = [];
-      
+
       if (i.amount != null) parts.push(i.amount.toString());
       if (i.unit) parts.push(i.unit);
 
       parts.push(i.ingredientName);
+
       return `- ${parts.join(" ")}`;
     })
     .join("\n");
@@ -56,11 +58,13 @@ export async function estimateNutritionFromIngredients(
 
   if (!aiEnabled) {
     aiLogger.info("AI features are disabled, skipping nutrition estimation");
+
     return null;
   }
 
   if (ingredients.length === 0) {
     aiLogger.warn("No ingredients provided for nutrition estimation");
+
     return null;
   }
 
@@ -83,6 +87,7 @@ export async function estimateNutritionFromIngredients(
 
     if (!result) {
       aiLogger.error({ recipeName }, "AI returned null for nutrition estimation");
+
       return null;
     }
 
@@ -94,6 +99,7 @@ export async function estimateNutritionFromIngredients(
       typeof result.protein !== "number"
     ) {
       aiLogger.error({ recipeName, result }, "Invalid nutrition estimation response");
+
       return null;
     }
 
@@ -111,7 +117,7 @@ export async function estimateNutritionFromIngredients(
     return result;
   } catch (error) {
     aiLogger.error({ err: error, recipeName }, "Failed to estimate nutrition");
+
     return null;
   }
 }
-

@@ -29,6 +29,7 @@ export async function rateRecipe(
   }
 
   await db.insert(recipeRatings).values({ userId, recipeId, rating });
+
   return { rating, isNew: true };
 }
 

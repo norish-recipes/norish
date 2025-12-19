@@ -36,6 +36,7 @@ interface StepItem {
 }
 
 let nextId = 0;
+
 function createStepItem(text: string, images: StepImage[] = []): StepItem {
   return { id: `step-${nextId++}`, text, images };
 }
@@ -89,6 +90,7 @@ export default function StepInput({
   const handleInputChange = useCallback(
     (index: number, value: string) => {
       const updated = [...items];
+
       updated[index] = { ...updated[index], text: value };
 
       // Auto-add empty line at the end
@@ -110,6 +112,7 @@ export default function StepInput({
           textareaRefs.current[index + 1]?.focus();
         } else {
           const updated = [...items, createStepItem("", [])];
+
           setItems(updated);
           setTimeout(() => {
             textareaRefs.current[items.length]?.focus();
@@ -118,6 +121,7 @@ export default function StepInput({
       } else if (e.key === "Backspace" && !items[index].text && index > 0) {
         e.preventDefault();
         const updated = items.filter((_, i) => i !== index);
+
         setItems(updated);
         emitChanges(updated);
         setTimeout(() => {
@@ -137,6 +141,7 @@ export default function StepInput({
         index < items.length - 1
       ) {
         const updated = items.filter((_, i) => i !== index);
+
         if (updated.length === 0) updated.push(createStepItem("", []));
         setItems(updated);
         emitChanges(updated);
@@ -149,13 +154,16 @@ export default function StepInput({
     (index: number) => {
       // Delete all images for this step
       const stepImages = items[index].images;
+
       stepImages.forEach((img) => {
         deleteStepImage(img.image).catch((err) => {
+          // eslint-disable-next-line no-console
           console.error("Failed to delete step image:", err);
         });
       });
 
       const updated = items.filter((_, i) => i !== index);
+
       if (updated.length === 0) updated.push(createStepItem("", []));
       setItems(updated);
       emitChanges(updated);
@@ -178,6 +186,7 @@ export default function StepInput({
             image: result.url,
             order: updated[index].images.length,
           };
+
           updated[index] = {
             ...updated[index],
             images: [...updated[index].images, newImage],
@@ -195,13 +204,16 @@ export default function StepInput({
   const handleRemoveImage = useCallback(
     (stepIndex: number, imageIndex: number) => {
       const imageUrl = items[stepIndex].images[imageIndex]?.image;
+
       if (imageUrl) {
         deleteStepImage(imageUrl).catch((err) => {
+          // eslint-disable-next-line no-console
           console.error("Failed to delete step image:", err);
         });
       }
 
       const updated = [...items];
+
       updated[stepIndex] = {
         ...updated[stepIndex],
         images: updated[stepIndex].images
@@ -231,10 +243,12 @@ export default function StepInput({
   // Track step numbers excluding headings
   const getStepNumber = (index: number): number | null => {
     let stepNum = 0;
+
     for (let i = 0; i <= index; i++) {
       if (!items[i].text.trim().startsWith("#")) stepNum++;
     }
     const isHeading = items[index].text.trim().startsWith("#");
+
     return isHeading ? null : stepNum;
   };
 
@@ -242,29 +256,29 @@ export default function StepInput({
     <Reorder.Group
       ref={dragConstraintsRef}
       axis="y"
+      className="flex flex-col gap-3 md:gap-4"
       values={items}
       onReorder={handleReorder}
-      className="flex flex-col gap-3 md:gap-4"
     >
       {items.map((item, index) => (
         <StepRow
           key={item.id}
-          item={item}
-          index={index}
-          stepNumber={getStepNumber(index)}
-          isLast={index === items.length - 1}
-          showRemove={items.length > 1 && (!!item.text || item.images.length > 0)}
-          recipeId={recipeId}
-          uploadingIndex={uploadingIndex}
-          fileInputRefs={fileInputRefs}
           dragConstraintsRef={dragConstraintsRef}
-          onValueChange={(v) => handleInputChange(index, v)}
-          onKeyDown={(e) => handleKeyDown(index, e)}
+          fileInputRefs={fileInputRefs}
+          index={index}
+          isLast={index === items.length - 1}
+          item={item}
+          recipeId={recipeId}
+          showRemove={items.length > 1 && (!!item.text || item.images.length > 0)}
+          stepNumber={getStepNumber(index)}
+          uploadingIndex={uploadingIndex}
           onBlur={() => handleBlur(index)}
-          onRemove={() => handleRemove(index)}
-          onImageUpload={(file) => handleImageUpload(index, file)}
-          onRemoveImage={(imgIndex) => handleRemoveImage(index, imgIndex)}
           onFileSelect={() => handleFileSelect(index)}
+          onImageUpload={(file) => handleImageUpload(index, file)}
+          onKeyDown={(e) => handleKeyDown(index, e)}
+          onRemove={() => handleRemove(index)}
+          onRemoveImage={(imgIndex) => handleRemoveImage(index, imgIndex)}
+          onValueChange={(v) => handleInputChange(index, v)}
         />
       ))}
     </Reorder.Group>
@@ -324,30 +338,29 @@ function StepRow({
 
   return (
     <Reorder.Item
-      value={item}
-      drag={canDrag ? "y" : false}
-      dragListener={false}
-      dragControls={controls}
-      dragConstraints={dragConstraintsRef}
-      dragElastic={0}
-      dragMomentum={false}
       className="flex flex-col gap-2"
+      drag={canDrag ? "y" : false}
+      dragConstraints={dragConstraintsRef}
+      dragControls={controls}
+      dragElastic={0}
+      dragListener={false}
+      dragMomentum={false}
       style={{ position: "relative" }}
+      value={item}
     >
       <div className="flex items-start gap-1 md:gap-2">
         {/* Drag handle - only show for non-empty, non-last items */}
         <div
-          className={`flex h-10 w-5 flex-shrink-0 touch-none items-center justify-center md:w-6 ${!isLast && hasContent ? "cursor-grab active:cursor-grabbing" : ""
-            }`}
+          className={`flex h-10 w-5 flex-shrink-0 touch-none items-center justify-center md:w-6 ${
+            !isLast && hasContent ? "cursor-grab active:cursor-grabbing" : ""
+          }`}
           onPointerDown={(e) => {
             if (canDrag) {
               controls.start(e);
             }
           }}
         >
-          {canDrag ? (
-            <Bars3Icon className="text-default-400 h-4 w-4" />
-          ) : null}
+          {canDrag ? <Bars3Icon className="text-default-400 h-4 w-4" /> : null}
         </div>
 
         {/* Step number */}
@@ -404,6 +417,7 @@ function StepRow({
                 type="file"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
+
                   if (file) {
                     onImageUpload(file);
                     e.target.value = "";

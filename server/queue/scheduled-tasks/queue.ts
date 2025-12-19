@@ -29,6 +29,7 @@ export const scheduledTasksQueue = new Queue<ScheduledTaskJobData>(QUEUE_NAMES.S
 export async function initializeScheduledJobs(): Promise<void> {
   // Remove any stale repeatable jobs first to ensure clean state
   const existing = await scheduledTasksQueue.getJobSchedulers();
+
   for (const job of existing) {
     await scheduledTasksQueue.removeJobScheduler(job.key);
   }

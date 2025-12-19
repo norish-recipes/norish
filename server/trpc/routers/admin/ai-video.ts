@@ -71,8 +71,10 @@ const testAIEndpoint = adminProcedure
     log.info({ userId: ctx.user.id, provider: input.provider }, "Testing AI endpoint");
 
     let apiKey = input.apiKey;
+
     if (!apiKey) {
       const storedConfig = await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG, true);
+
       apiKey = storedConfig?.apiKey;
     }
 

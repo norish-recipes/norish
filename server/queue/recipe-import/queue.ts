@@ -50,6 +50,7 @@ export async function addImportJob(data: RecipeImportJobData): Promise<AddImport
 
   if (await isJobInQueue(recipeImportQueue, jobId)) {
     log.warn({ url: data.url, jobId }, "Duplicate import job rejected");
+
     return { status: "duplicate", existingJobId: jobId };
   }
 

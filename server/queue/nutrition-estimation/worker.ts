@@ -34,6 +34,7 @@ async function processNutritionJob(job: Job<NutritionEstimationJobData>): Promis
   const ctx: PolicyEmitContext = { userId, householdKey };
 
   const recipe = await getRecipeFull(recipeId);
+
   if (!recipe) {
     throw new Error(`Recipe not found: ${recipeId}`);
   }
@@ -113,6 +114,7 @@ async function handleJobFailed(
 export function startNutritionEstimationWorker(): void {
   if (worker) {
     log.warn("Nutrition estimation worker already running");
+
     return;
   }
 

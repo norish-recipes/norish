@@ -112,12 +112,7 @@ const updatePrompts = adminProcedure
     log.info({ userId: ctx.user.id }, "Updating prompts config");
 
     // Mark as overridden
-    await setConfig(
-      ServerConfigKeys.PROMPTS,
-      { ...input, isOverridden: true },
-      ctx.user.id,
-      false
-    );
+    await setConfig(ServerConfigKeys.PROMPTS, { ...input, isOverridden: true }, ctx.user.id, false);
 
     return { success: true };
   });

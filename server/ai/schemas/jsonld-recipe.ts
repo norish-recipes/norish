@@ -58,10 +58,7 @@ export const jsonLdRecipeSchema = {
         additionalProperties: false,
       },
       keywords: {
-        anyOf: [
-          { type: "array", items: { type: "string" } },
-          { type: "null" },
-        ],
+        anyOf: [{ type: "array", items: { type: "string" } }, { type: "null" }],
       },
       nutrition: {
         anyOf: [
@@ -98,4 +95,3 @@ export const jsonLdRecipeSchema = {
   },
   strict: true,
 } as const;
-

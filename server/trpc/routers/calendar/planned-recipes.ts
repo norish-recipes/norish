@@ -29,9 +29,7 @@ async function computeAllergyWarningsForRecipe(recipeId: string, userIds: string
   const allAllergies = new Set(householdAllergies.map((a) => a.tagName.toLowerCase()));
 
   const tagNames = await getRecipeTagNames(recipeId);
-  const warnings = tagNames
-    .map((t) => t.toLowerCase())
-    .filter((t) => allAllergies.has(t));
+  const warnings = tagNames.map((t) => t.toLowerCase()).filter((t) => allAllergies.has(t));
 
   return [...new Set(warnings)];
 }
@@ -59,7 +57,10 @@ const list = authedProcedure.input(PlannedRecipeListSchema).query(async ({ ctx, 
   for (const recipeId of recipeIds) {
     const tagNames = await getRecipeTagNames(recipeId);
 
-    recipeTagsMap.set(recipeId, tagNames.map((t: string) => t.toLowerCase()));
+    recipeTagsMap.set(
+      recipeId,
+      tagNames.map((t: string) => t.toLowerCase())
+    );
   }
 
   // Compute allergy warnings for each planned recipe
@@ -105,7 +106,10 @@ const create = authedProcedure.input(PlannedRecipeCreateSchema).mutation(({ ctx,
       }));
     })
     .then(async ({ plannedRecipe, recipeName }) => {
-      const allergyWarnings = await computeAllergyWarningsForRecipe(plannedRecipe.recipeId, ctx.userIds);
+      const allergyWarnings = await computeAllergyWarningsForRecipe(
+        plannedRecipe.recipeId,
+        ctx.userIds
+      );
 
       // Emit to household for UI updates
       calendarEmitter.emitToHousehold(ctx.householdKey, "recipePlanned", {
@@ -199,7 +203,10 @@ const updateDate = authedProcedure
 
         await assertHouseholdAccess(ctx.user.id, ownerId);
         const plannedRecipe = await updatePlannedRecipeDate(id, newDate);
-        const allergyWarnings = await computeAllergyWarningsForRecipe(plannedRecipe.recipeId, ctx.userIds);
+        const allergyWarnings = await computeAllergyWarningsForRecipe(
+          plannedRecipe.recipeId,
+          ctx.userIds
+        );
 
         // Emit to household for UI updates
         calendarEmitter.emitToHousehold(ctx.householdKey, "recipeUpdated", {

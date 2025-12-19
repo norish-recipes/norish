@@ -21,10 +21,12 @@ async function buildVideoExtractionPrompt(
 
   // Build allergy detection instruction
   let allergyInstruction = "";
+
   if (allergies && allergies.length > 0) {
     allergyInstruction = `\nALLERGY DETECTION: Only detect these specific allergens/dietary tags: ${allergies.join(", ")}. Do not add any other allergy tags.`;
   } else {
-    allergyInstruction = "\nALLERGY DETECTION: Skip allergy/dietary tag detection. Do not add any tags to the keywords array.";
+    allergyInstruction =
+      "\nALLERGY DETECTION: Skip allergy/dietary tag detection. Do not add any tags to the keywords array.";
   }
 
   return `${prompt}${allergyInstruction}

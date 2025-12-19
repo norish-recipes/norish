@@ -129,6 +129,7 @@ describe("useFavoritesQuery", () => {
         queryKey: mockQueryKey,
         queryFn: async () => {
           fetchCount++;
+
           return createMockFavoritesData(["recipe-1"]);
         },
       });
@@ -154,4 +155,3 @@ describe("useFavoritesQuery", () => {
     });
   });
 });
-

@@ -8,7 +8,10 @@ export interface NutritionPortionControlProps {
   onChange: (portions: number) => void;
 }
 
-export default function NutritionPortionControl({ portions, onChange }: NutritionPortionControlProps) {
+export default function NutritionPortionControl({
+  portions,
+  onChange,
+}: NutritionPortionControlProps) {
   const dec = () => {
     if (portions <= 1) {
       onChange(Math.max(0.125, portions / 2));
@@ -29,6 +32,7 @@ export default function NutritionPortionControl({ portions, onChange }: Nutritio
 
   const formatPortions = (n: number): string => {
     if (Number.isInteger(n)) return String(n);
+
     return n.toFixed(2).replace(/\.?0+$/, "");
   };
 

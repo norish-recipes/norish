@@ -45,4 +45,3 @@ export function fillPrompt(template: string, vars: Record<string, string>): stri
 
   return result;
 }
-

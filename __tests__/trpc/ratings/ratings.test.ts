@@ -12,6 +12,7 @@ vi.mock("@/server/logger", () => ({
 }));
 
 import { rateRecipe, getUserRating, getAverageRating } from "../../mocks/ratings-repository";
+
 import { createMockUser, createMockHousehold, createMockAuthedContext } from "./test-utils";
 
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
@@ -37,6 +38,7 @@ describe("ratings procedures", () => {
           .input((v) => v as { recipeId: string })
           .query(async ({ input }) => {
             const rating = await getUserRating(ctx.user.id, input.recipeId);
+
             return { recipeId: input.recipeId, userRating: rating };
           }),
       });
@@ -56,6 +58,7 @@ describe("ratings procedures", () => {
           .input((v) => v as { recipeId: string })
           .query(async ({ input }) => {
             const rating = await getUserRating(ctx.user.id, input.recipeId);
+
             return { recipeId: input.recipeId, userRating: rating };
           }),
       });
@@ -76,6 +79,7 @@ describe("ratings procedures", () => {
           .input((v) => v as { recipeId: string })
           .query(async ({ input }) => {
             const stats = await getAverageRating(input.recipeId);
+
             return { recipeId: input.recipeId, ...stats };
           }),
       });
@@ -96,6 +100,7 @@ describe("ratings procedures", () => {
           .input((v) => v as { recipeId: string })
           .query(async ({ input }) => {
             const stats = await getAverageRating(input.recipeId);
+
             return { recipeId: input.recipeId, ...stats };
           }),
       });
@@ -118,6 +123,7 @@ describe("ratings procedures", () => {
           .input((v) => v as { recipeId: string; rating: number })
           .mutation(async ({ input }) => {
             await rateRecipe(ctx.user.id, input.recipeId, input.rating);
+
             return { success: true };
           }),
       });
@@ -138,6 +144,7 @@ describe("ratings procedures", () => {
           .input((v) => v as { recipeId: string; rating: number })
           .mutation(async ({ input }) => {
             const result = await rateRecipe(ctx.user.id, input.recipeId, input.rating);
+
             return { success: true, isNew: result.isNew };
           }),
       });
@@ -153,13 +160,16 @@ describe("ratings procedures", () => {
         rate: t.procedure
           .input((v) => {
             const input = v as { recipeId: string; rating: number };
+
             if (input.rating < 1 || input.rating > 5) {
               throw new Error("Rating must be between 1 and 5");
             }
+
             return input;
           })
           .mutation(async ({ input }) => {
             await rateRecipe(ctx.user.id, input.recipeId, input.rating);
+
             return { success: true };
           }),
       });
@@ -171,4 +181,3 @@ describe("ratings procedures", () => {
     });
   });
 });
-

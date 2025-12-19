@@ -11,9 +11,11 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         mutationOptions: () => ({
           mutationFn: vi.fn(async (formData: FormData) => {
             const file = formData.get("image");
+
             if (!file) {
               return { success: false, error: "No image provided" };
             }
+
             return { success: true, url: "/recipes/images/test-image.jpg" };
           }),
         }),
@@ -24,6 +26,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
             if (!url.startsWith("/recipes/images/")) {
               return { success: false, error: "Invalid URL" };
             }
+
             return { success: true };
           }),
         }),
@@ -33,9 +36,11 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           mutationFn: vi.fn(async (formData: FormData) => {
             const file = formData.get("image");
             const recipeId = formData.get("recipeId");
+
             if (!file || !recipeId) {
               return { success: false, error: "Missing file or recipeId" };
             }
+
             return { success: true, url: `/recipes/${recipeId}/steps/test-step.jpg` };
           }),
         }),
@@ -46,6 +51,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
             if (!url.match(/^\/recipes\/[^/]+\/steps\//)) {
               return { success: false, error: "Invalid step image URL" };
             }
+
             return { success: true };
           }),
         }),

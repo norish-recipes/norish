@@ -64,7 +64,9 @@ export default function PermissionPolicyCard() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">View Recipes</span>
-              <span className="text-default-500 text-base">Who can see recipes in the dashboard</span>
+              <span className="text-default-500 text-base">
+                Who can see recipes in the dashboard
+              </span>
             </div>
             <Select
               aria-label="View permission"

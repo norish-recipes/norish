@@ -22,17 +22,17 @@ export default function StarRating({ value, onChange, isLoading = false }: StarR
         return (
           <button
             key={starValue}
-            type="button"
-            disabled={isLoading}
+            aria-label={`Rate ${starValue} out of 5`}
             className="cursor-pointer transition-transform hover:scale-110 disabled:cursor-default disabled:opacity-50"
+            disabled={isLoading}
+            type="button"
             onClick={() => onChange(starValue)}
             onMouseEnter={() => setHoverValue(starValue)}
-            aria-label={`Rate ${starValue} out of 5`}
           >
             {isFilled ? (
-              <StarSolid className="h-8 w-8 text-warning" />
+              <StarSolid className="text-warning h-8 w-8" />
             ) : (
-              <StarOutline className="h-8 w-8 text-default-300" />
+              <StarOutline className="text-default-300 h-8 w-8" />
             )}
           </button>
         );

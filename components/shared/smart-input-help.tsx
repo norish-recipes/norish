@@ -5,12 +5,12 @@ import { QuestionMarkCircleIcon } from "@heroicons/react/16/solid";
 
 export default function SmartInputHelp() {
   return (
-    <Popover placement="top" showArrow>
+    <Popover showArrow placement="top">
       <PopoverTrigger>
         <button
-          type="button"
-          className="text-default-400 hover:text-default-600 hover:bg-default-100 focus:ring-primary/50 inline-flex h-5 w-5 items-center justify-center rounded-full transition-colors focus:ring-2 focus:outline-none"
           aria-label="Formatting help"
+          className="text-default-400 hover:text-default-600 hover:bg-default-100 focus:ring-primary/50 inline-flex h-5 w-5 items-center justify-center rounded-full transition-colors focus:ring-2 focus:outline-none"
+          type="button"
         >
           <QuestionMarkCircleIcon className="h-4 w-4" />
         </button>

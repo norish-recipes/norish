@@ -171,9 +171,9 @@ export function useUserMutations(): UserMutationsResult {
           setUserSettingsData((prev) =>
             prev
               ? {
-                ...prev,
-                apiKeys: prev.apiKeys.map((k) => (k.id === keyId ? { ...k, enabled } : k)),
-              }
+                  ...prev,
+                  apiKeys: prev.apiKeys.map((k) => (k.id === keyId ? { ...k, enabled } : k)),
+                }
               : prev
           );
         }

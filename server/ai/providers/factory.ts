@@ -34,7 +34,14 @@ export async function getAIProvider(): Promise<AIProvider> {
     case "generic-openai":
       if (!endpoint) throw new Error("Endpoint is required for Generic OpenAI provider");
 
-      return new GenericOpenAIProvider({ endpoint, apiKey, model, visionModel, temperature, maxTokens });
+      return new GenericOpenAIProvider({
+        endpoint,
+        apiKey,
+        model,
+        visionModel,
+        temperature,
+        maxTokens,
+      });
 
     default:
       throw new Error(`Unknown AI provider: ${provider}`);

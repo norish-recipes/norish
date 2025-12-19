@@ -221,8 +221,9 @@ export default function AIConfigForm() {
 
       {testResult && (
         <div
-          className={`flex items-center gap-2 rounded-lg p-2 ${testResult.success ? "bg-success-100 text-success-700" : "bg-danger-100 text-danger-700"
-            }`}
+          className={`flex items-center gap-2 rounded-lg p-2 ${
+            testResult.success ? "bg-success-100 text-success-700" : "bg-danger-100 text-danger-700"
+          }`}
         >
           {testResult.success ? (
             <>

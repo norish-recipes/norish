@@ -418,11 +418,13 @@ async function syncPrompts(): Promise<void> {
 
   if (!existing) {
     serverLogger.warn("Prompts config not found in DB, will be seeded");
+
     return;
   }
 
   if (existing.isOverridden) {
     serverLogger.debug("Prompts are overridden by admin, skipping file sync");
+
     return;
   }
 

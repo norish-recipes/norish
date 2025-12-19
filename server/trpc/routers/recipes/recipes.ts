@@ -34,7 +34,12 @@ import {
   type PermissionAction,
 } from "@/server/auth/permissions";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
-import { addImportJob, addImageImportJob, addPasteImportJob, addNutritionEstimationJob } from "@/server/queue";
+import {
+  addImportJob,
+  addImageImportJob,
+  addPasteImportJob,
+  addNutritionEstimationJob,
+} from "@/server/queue";
 import { FilterMode, SortOrder } from "@/types";
 import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
 
@@ -302,7 +307,9 @@ const importFromUrlProcedure = authedProcedure
 
 const reserveId = authedProcedure.query(() => {
   const recipeId = crypto.randomUUID();
+
   log.debug({ recipeId }, "Reserved recipe ID for step image uploads");
+
   return { recipeId };
 });
 
@@ -342,12 +349,12 @@ const convertMeasurements = authedProcedure
         // Check edit permission (uses recipe.userId directly since we have the full recipe)
         const permissionCheck = recipe.userId
           ? canAccessResource(
-            "edit",
-            ctx.user.id,
-            recipe.userId,
-            ctx.householdUserIds,
-            ctx.isServerAdmin
-          )
+              "edit",
+              ctx.user.id,
+              recipe.userId,
+              ctx.householdUserIds,
+              ctx.isServerAdmin
+            )
           : Promise.resolve(true);
 
         return permissionCheck.then((canEdit) => {
@@ -547,6 +554,7 @@ const estimateNutrition = authedProcedure
     log.info({ userId: ctx.user.id, recipeId }, "Queueing nutrition estimation for recipe");
 
     const aiEnabled = await checkAIEnabled();
+
     if (!aiEnabled) {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
@@ -555,6 +563,7 @@ const estimateNutrition = authedProcedure
     }
 
     const recipe = await getRecipeFull(recipeId);
+
     if (!recipe) {
       throw new TRPCError({
         code: "NOT_FOUND",
@@ -585,6 +594,7 @@ const estimateNutrition = authedProcedure
     }
 
     const policy = await getRecipePermissionPolicy();
+
     emitByPolicy(
       recipeEmitter,
       policy.view,
@@ -610,4 +620,3 @@ export const recipesProcedures = router({
   reserveId,
   autocomplete,
 });
-

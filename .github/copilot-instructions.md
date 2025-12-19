@@ -12,17 +12,17 @@ Norish is a **real-time recipe sharing app** built with Next.js 16 (App Router) 
 
 ## Directory Structure
 
-| Path | Purpose |
-|------|---------|
-| `server/` | Backend: tRPC routers, auth, DB, queue workers, AI, CalDAV |
-| `app/(app)/` | Authenticated pages (recipes, groceries, calendar, settings) |
-| `app/(auth)/` | Login/auth pages |
-| `hooks/` | React hooks organized by domain (`hooks/recipes/`, `hooks/groceries/`) |
-| `context/` | React contexts for global state (household, permissions, user) |
-| `lib/` | Shared utilities usable on client AND server |
-| `config/` | Server config loading (`env-config-server.ts` is server-only) |
-| `types/dto/` | TypeScript DTOs shared between client/server |
-| `tooling/` | ESLint and Vitest configs (re-exported from root) |
+| Path          | Purpose                                                                |
+| ------------- | ---------------------------------------------------------------------- |
+| `server/`     | Backend: tRPC routers, auth, DB, queue workers, AI, CalDAV             |
+| `app/(app)/`  | Authenticated pages (recipes, groceries, calendar, settings)           |
+| `app/(auth)/` | Login/auth pages                                                       |
+| `hooks/`      | React hooks organized by domain (`hooks/recipes/`, `hooks/groceries/`) |
+| `context/`    | React contexts for global state (household, permissions, user)         |
+| `lib/`        | Shared utilities usable on client AND server                           |
+| `config/`     | Server config loading (`env-config-server.ts` is server-only)          |
+| `types/dto/`  | TypeScript DTOs shared between client/server                           |
+| `tooling/`    | ESLint and Vitest configs (re-exported from root)                      |
 
 ## Development Commands
 
@@ -39,6 +39,7 @@ pnpm lint:fix     # ESLint with auto-fix
 ## Code Patterns
 
 ### tRPC Router Pattern
+
 Routers live in `server/trpc/routers/<domain>/`. Each domain exports procedures merged into main router:
 
 ```typescript
@@ -52,6 +53,7 @@ export const recipesRouter = router({
 Use `authedProcedure` for authenticated endpoints, `serverAdminProcedure` for admin-only.
 
 ### Real-time Updates
+
 Use typed emitters from `server/trpc/emitter.ts` for WebSocket broadcasts:
 
 ```typescript
@@ -60,20 +62,24 @@ emitter.emitToHousehold(householdId, "created", data);
 ```
 
 ### React Hooks Pattern
+
 Domain hooks follow naming: `use-{domain}-query.ts`, `use-{domain}-mutation.ts`, `use-{domain}-subscription.ts`
 
 ```typescript
 // hooks/recipes/use-recipes-query.ts
-export function useRecipesQuery(filters: RecipeFilters): RecipesQueryResult
+export function useRecipesQuery(filters: RecipeFilters): RecipesQueryResult;
 ```
 
 ### Database Access
+
 - Schema: `server/db/schema/` (Drizzle tables)
 - Repositories: `server/db/repositories/` (data access layer)
 - Always use repositories, not direct `db` queries in routers
 
 ### Import Paths
+
 Always use `@/` alias for imports:
+
 ```typescript
 import { db } from "@/server/db/drizzle";
 import { RecipeDashboardDTO } from "@/types";
@@ -97,6 +103,7 @@ import { createMockContext } from "@/__tests__/trpc/recipes/test-utils";
 ## Permission Model
 
 Three-tier permission policies for recipe view.
+
 - **everyone**: All users can access
 - **household**: Only owner and household members
 - **owner**: Only the resource owner
@@ -129,6 +136,7 @@ The app uses **subscription-driven cache updates** rather than traditional optim
 4. **Other household members** see real-time updates automatically
 
 Pattern in mutation hooks (`hooks/groceries/use-groceries-mutations.ts`):
+
 ```typescript
 createMutation.mutate(data, {
   onSuccess: (id) => {
@@ -140,6 +148,7 @@ createMutation.mutate(data, {
 ```
 
 Subscriptions (`hooks/groceries/use-groceries-subscription.ts`) handle cross-user sync:
+
 ```typescript
 useSubscription(trpc.groceries.onCreated.subscriptionOptions(undefined, {
   onData: (payload) => {

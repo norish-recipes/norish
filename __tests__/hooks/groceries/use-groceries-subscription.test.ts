@@ -413,7 +413,7 @@ describe("useGroceriesSubscription", () => {
         expect.objectContaining({
           severity: "danger",
           title: "Failed to save grocery",
-        }),
+        })
       );
     });
   });

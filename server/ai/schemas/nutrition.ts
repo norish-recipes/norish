@@ -5,7 +5,8 @@ export const nutritionEstimationSchema = {
     properties: {
       calories: {
         type: "number",
-        description: "Estimated calories per serving in kcal should be equal to fat * 9 + carbs * 4 + protein * 4",
+        description:
+          "Estimated calories per serving in kcal should be equal to fat * 9 + carbs * 4 + protein * 4",
       },
       fat: {
         type: "number",

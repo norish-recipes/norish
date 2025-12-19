@@ -30,6 +30,7 @@ export async function addNutritionEstimationJob(
 
   if (await isJobInQueue(nutritionEstimationQueue, jobId)) {
     log.warn({ recipeId: data.recipeId, jobId }, "Duplicate nutrition estimation job rejected");
+
     return { status: "duplicate", existingJobId: jobId };
   }
 

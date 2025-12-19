@@ -104,6 +104,7 @@ export function useRecipesMutations(): RecipesMutationsResult {
   const importRecipeFromImages = (files: File[]): void => {
     // Build FormData with files
     const formData = new FormData();
+
     files.forEach((file, i) => {
       formData.append(`file${i}`, file);
     });
@@ -152,4 +153,3 @@ export function useRecipesMutations(): RecipesMutationsResult {
     convertMeasurements,
   };
 }
-

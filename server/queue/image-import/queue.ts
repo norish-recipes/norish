@@ -45,10 +45,14 @@ export async function addImageImportJob(
 ): Promise<AddImageImportJobResult> {
   const jobId = generateImageJobId(data.recipeId);
 
-  log.debug({ recipeId: data.recipeId, jobId, fileCount: data.files.length }, "Adding image import job");
+  log.debug(
+    { recipeId: data.recipeId, jobId, fileCount: data.files.length },
+    "Adding image import job"
+  );
 
   if (await isJobInQueue(imageImportQueue, jobId)) {
     log.warn({ recipeId: data.recipeId, jobId }, "Duplicate image import job rejected");
+
     return { status: "duplicate", existingJobId: jobId };
   }
 

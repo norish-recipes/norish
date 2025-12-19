@@ -252,7 +252,11 @@ const setAllergies = authedProcedure
       const userIds = ctx.household.users.map((u) => u.id);
       const allergiesRows = await getAllergiesForUsers(userIds);
       const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
-      log.info({ householdId: ctx.household.id, allergies }, "Emitting allergiesUpdated to household");
+
+      log.info(
+        { householdId: ctx.household.id, allergies },
+        "Emitting allergiesUpdated to household"
+      );
       householdEmitter.emitToHousehold(ctx.household.id, "allergiesUpdated", { allergies });
     } else {
       log.info({ userId: ctx.user.id }, "No household, skipping allergiesUpdated emit");

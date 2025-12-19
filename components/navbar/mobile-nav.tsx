@@ -156,8 +156,9 @@ export const MobileNav = () => {
         {/* Left side */}
         {isHome ? (
           <div
-            className={`relative min-w-0 flex-1 transition-all duration-300 ${mobileSearchOpen ? "z-[99] mr-3" : "z-[40] mr-0"
-              }`}
+            className={`relative min-w-0 flex-1 transition-all duration-300 ${
+              mobileSearchOpen ? "z-[99] mr-3" : "z-[40] mr-0"
+            }`}
           >
             {mobileSearchOpen && (
               <div className="pointer-events-auto absolute -top-10 right-0 left-0 z-[60] px-1 pb-1">
@@ -166,15 +167,17 @@ export const MobileNav = () => {
             )}
             <div
               aria-expanded={mobileSearchOpen}
-              className={`group relative h-13 overflow-visible rounded-full transition-[width] duration-300 ease-out ${cssGlassBackdrop} ${mobileSearchOpen ? "z-[55] w-full" : "z-[55] w-[52px]"
-                }`}
+              className={`group relative h-13 overflow-visible rounded-full transition-[width] duration-300 ease-out ${cssGlassBackdrop} ${
+                mobileSearchOpen ? "z-[55] w-full" : "z-[55] w-[52px]"
+              }`}
             >
               <div className="absolute inset-y-0 left-0 z-[56] flex w-[52px] items-center justify-center">
                 <Button
                   isIconOnly
                   aria-label="Toggle search"
-                  className={`relative h-10 w-10 !bg-transparent !shadow-none ${hasActiveSearch ? "text-primary" : "text-default-600 hover:text-foreground"
-                    }`}
+                  className={`relative h-10 w-10 !bg-transparent !shadow-none ${
+                    hasActiveSearch ? "text-primary" : "text-default-600 hover:text-foreground"
+                  }`}
                   radius="full"
                   size="md"
                   variant="light"
@@ -189,8 +192,9 @@ export const MobileNav = () => {
                 </Button>
               </div>
               <div
-                className={`flex h-full items-center pl-[52px] transition-all duration-300 ease-out ${mobileSearchOpen ? "opacity-100" : "pointer-events-none opacity-0"
-                  }`}
+                className={`flex h-full items-center pl-[52px] transition-all duration-300 ease-out ${
+                  mobileSearchOpen ? "opacity-100" : "pointer-events-none opacity-0"
+                }`}
               >
                 <Input
                   ref={inputRef}
@@ -237,10 +241,11 @@ export const MobileNav = () => {
         {/* Center */}
         <div className="absolute left-1/2 z-[45] -translate-x-1/2">
           <div
-            className={`flex h-13 items-center gap-2 rounded-full px-4 ${cssGlassBackdrop} transition-all duration-300 ease-out ${isHome && mobileSearchOpen
+            className={`flex h-13 items-center gap-2 rounded-full px-4 ${cssGlassBackdrop} transition-all duration-300 ease-out ${
+              isHome && mobileSearchOpen
                 ? "pointer-events-none translate-y-4 opacity-0"
                 : "translate-y-0 opacity-100"
-              }`}
+            }`}
           >
             <ul className="flex items-center gap-2 text-[11px]">
               {siteConfig.navItems.map((item) => {
@@ -257,10 +262,11 @@ export const MobileNav = () => {
                 return (
                   <li key={item.href}>
                     <NextLink
-                      className={`flex w-[60px] flex-col items-center justify-center gap-1 rounded-full px-3 py-2 transition-colors ${isActive
+                      className={`flex w-[60px] flex-col items-center justify-center gap-1 rounded-full px-3 py-2 transition-colors ${
+                        isActive
                           ? "text-primary font-semibold"
                           : "text-default-600 hover:text-foreground hover:bg-default-100/70"
-                        }`}
+                      }`}
                       href={item.href}
                     >
                       <Icon className="h-5 w-5" />
@@ -277,14 +283,16 @@ export const MobileNav = () => {
         <div className="flex h-13 shrink-0 items-center justify-center">
           <div className="relative flex h-13 w-[60px] items-center justify-center">
             <div
-              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${mobileSearchOpen ? "opacity-100" : "pointer-events-none opacity-0"
-                }`}
+              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+                mobileSearchOpen ? "opacity-100" : "pointer-events-none opacity-0"
+              }`}
             >
               <Filters isGlass />
             </div>
             <div
-              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${mobileSearchOpen ? "pointer-events-none opacity-0" : "opacity-100"
-                }`}
+              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+                mobileSearchOpen ? "pointer-events-none opacity-0" : "opacity-100"
+              }`}
             >
               <NavbarUserMenu />
             </div>

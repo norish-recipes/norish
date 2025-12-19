@@ -18,7 +18,6 @@ import SwipeableRow, { SwipeableRowRef, SwipeAction } from "@/components/shared/
 import { MiniGroceries } from "@/components/Panel/consumers";
 import { MealIcon } from "@/lib/meal-icon";
 
-
 type DayTimelineBodyProps = {
   items: CalendarItemViewDto[];
   onDelete: (id: string, itemType: CaldavItemType) => void;
@@ -128,8 +127,8 @@ export function DayTimelineBody({
                   <div className="flex h-full w-full items-center justify-between px-2">
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                       {it.itemType === "recipe" &&
-                        it.allergyWarnings &&
-                        it.allergyWarnings.length > 0 ? (
+                      it.allergyWarnings &&
+                      it.allergyWarnings.length > 0 ? (
                         <Popover placement="top">
                           <PopoverTrigger>
                             <button
@@ -137,7 +136,7 @@ export function DayTimelineBody({
                               className="flex-shrink-0"
                               type="button"
                             >
-                              <ExclamationTriangleIcon className="h-5 w-5 text-warning" />
+                              <ExclamationTriangleIcon className="text-warning h-5 w-5" />
                             </button>
                           </PopoverTrigger>
                           <PopoverContent>

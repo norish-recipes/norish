@@ -66,4 +66,3 @@ export const favoritesProcedures = router({
   list,
   batchCheck,
 });
-

@@ -9,4 +9,5 @@ declare global {
 
 export const permissionsEmitter =
   globalThis.__permissionsEmitter__ ||
-  (globalThis.__permissionsEmitter__ = createTypedEmitter<PermissionsSubscriptionEvents>("permissions"));
+  (globalThis.__permissionsEmitter__ =
+    createTypedEmitter<PermissionsSubscriptionEvents>("permissions"));

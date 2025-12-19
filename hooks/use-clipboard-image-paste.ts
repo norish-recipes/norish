@@ -16,6 +16,7 @@ function extractFilesFromClipboardData(data: DataTransfer | null): File[] {
   for (const item of items) {
     if (item.kind !== "file") continue;
     const file = item.getAsFile();
+
     if (file) files.push(file);
   }
 
@@ -26,6 +27,7 @@ export function useClipboardImagePaste({ enabled = true, onFiles }: ClipboardIma
   const handlePaste = useCallback(
     (clipboardData: DataTransfer | null, preventDefault?: () => void) => {
       const files = extractFilesFromClipboardData(clipboardData);
+
       if (files.length === 0) return;
 
       // Only intercept when the clipboard actually contains files.
@@ -43,6 +45,7 @@ export function useClipboardImagePaste({ enabled = true, onFiles }: ClipboardIma
     };
 
     window.addEventListener("paste", onWindowPaste);
+
     return () => window.removeEventListener("paste", onWindowPaste);
   }, [enabled, handlePaste]);
 

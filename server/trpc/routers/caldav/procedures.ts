@@ -66,6 +66,7 @@ export const caldavRouter = router({
 
       // When updating, use existing password if not provided, as this is not sent when updating
       let password = input.password;
+
       if (!password) {
         const existingConfig = await getCaldavConfigDecrypted(userId);
 

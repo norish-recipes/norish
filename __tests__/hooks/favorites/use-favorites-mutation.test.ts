@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { waitFor } from "@testing-library/react";
 
 import { createTestQueryClient, createTestWrapper, createMockFavoritesData } from "./test-utils";
 
@@ -12,6 +11,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       toggle: {
         mutationOptions: (opts: unknown) => {
           mockMutationOptions(opts);
+
           return opts;
         },
       },
@@ -34,7 +34,7 @@ describe("useFavoritesMutation", () => {
       queryClient.setQueryData(mockQueryKey, createMockFavoritesData([]));
 
       const { renderHook, act } = require("@testing-library/react");
-      const { result } = renderHook(() => useFavoritesMutation(), {
+      const { result: _result } = renderHook(() => useFavoritesMutation(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -46,6 +46,7 @@ describe("useFavoritesMutation", () => {
       });
 
       const cachedData = queryClient.getQueryData<{ favoriteIds: string[] }>(mockQueryKey);
+
       expect(cachedData?.favoriteIds).toContain("recipe-1");
     });
 
@@ -53,7 +54,7 @@ describe("useFavoritesMutation", () => {
       queryClient.setQueryData(mockQueryKey, createMockFavoritesData(["recipe-1", "recipe-2"]));
 
       const { renderHook, act } = require("@testing-library/react");
-      const { result } = renderHook(() => useFavoritesMutation(), {
+      const { result: _result } = renderHook(() => useFavoritesMutation(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -64,16 +65,18 @@ describe("useFavoritesMutation", () => {
       });
 
       const cachedData = queryClient.getQueryData<{ favoriteIds: string[] }>(mockQueryKey);
+
       expect(cachedData?.favoriteIds).not.toContain("recipe-1");
       expect(cachedData?.favoriteIds).toContain("recipe-2");
     });
 
     it("rolls back on error", async () => {
       const initialData = createMockFavoritesData(["recipe-1"]);
+
       queryClient.setQueryData(mockQueryKey, initialData);
 
       const { renderHook, act } = require("@testing-library/react");
-      const { result } = renderHook(() => useFavoritesMutation(), {
+      const { result: _result } = renderHook(() => useFavoritesMutation(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -87,6 +90,7 @@ describe("useFavoritesMutation", () => {
 
       // Verify optimistic update happened
       let cachedData = queryClient.getQueryData<{ favoriteIds: string[] }>(mockQueryKey);
+
       expect(cachedData?.favoriteIds).toContain("recipe-2");
 
       // Simulate error - should rollback
@@ -103,7 +107,7 @@ describe("useFavoritesMutation", () => {
       // No data in cache initially
 
       const { renderHook, act } = require("@testing-library/react");
-      const { result } = renderHook(() => useFavoritesMutation(), {
+      const { result: _result } = renderHook(() => useFavoritesMutation(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -114,6 +118,7 @@ describe("useFavoritesMutation", () => {
       });
 
       const cachedData = queryClient.getQueryData<{ favoriteIds: string[] }>(mockQueryKey);
+
       expect(cachedData?.favoriteIds).toContain("recipe-1");
     });
   });
@@ -129,4 +134,3 @@ describe("useFavoritesMutation", () => {
     });
   });
 });
-

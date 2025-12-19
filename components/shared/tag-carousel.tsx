@@ -142,8 +142,9 @@ export default function TagCarousel({ className = "", variant = "default" }: Tag
               }}
             >
               <Chip
-                className={`cursor-pointer font-medium ${chipSize} ${!isSelected ? "bg-default-200 dark:bg-default-100 text-default-700" : ""
-                  }`}
+                className={`cursor-pointer font-medium ${chipSize} ${
+                  !isSelected ? "bg-default-200 dark:bg-default-100 text-default-700" : ""
+                }`}
                 color={isSelected ? "primary" : "default"}
                 radius="full"
                 size="sm"

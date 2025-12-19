@@ -46,12 +46,15 @@ export function initTrpcWebSocket(server: Server) {
     if (url.pathname === "/trpc") {
       // Pre-authenticate to get userId for connection tracking
       const headers = new Headers();
+
       if (req.headers.cookie) headers.set("cookie", String(req.headers.cookie));
       if (req.headers["x-api-key"]) headers.set("x-api-key", String(req.headers["x-api-key"]));
 
       let userId: string | undefined;
+
       try {
         const session = await auth.api.getSession({ headers });
+
         userId = session?.user?.id;
       } catch {
         // Auth failed, let createWsContext handle rejection
@@ -86,4 +89,3 @@ export function initTrpcWebSocket(server: Server) {
 
   trpcLogger.info("WebSocket server started at /trpc");
 }
-

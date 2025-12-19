@@ -206,6 +206,7 @@ describe("useCalendarSubscription", () => {
       renderSubscriptionHook();
 
       const callback = subscriptionCallbacks["onRecipeUpdated"];
+
       expect(callback).toBeDefined();
 
       const updatedRecipe = createMockPlannedRecipe({
@@ -309,7 +310,7 @@ describe("useCalendarSubscription", () => {
         expect.objectContaining({
           severity: "danger",
           title: "Something went wrong",
-        }),
+        })
       );
       expect(mockInvalidate).toHaveBeenCalled();
     });

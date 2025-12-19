@@ -45,10 +45,11 @@ export default function SmartMarkdownRenderer({
                   </span>
                 );
               }
+
               return (
                 <Link
-                  href={href}
                   className="text-foreground decoration-default-400 hover:decoration-default-600 font-medium underline underline-offset-2 transition-colors"
+                  href={href}
                   onClick={(e) => e.stopPropagation()}
                 >
                   {children}
@@ -66,10 +67,10 @@ export default function SmartMarkdownRenderer({
 
             return (
               <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="text-foreground decoration-default-400 hover:decoration-default-600 underline underline-offset-2 transition-colors"
+                href={href}
+                rel="noopener noreferrer"
+                target="_blank"
                 onClick={(e) => e.stopPropagation()}
               >
                 {children}
@@ -94,8 +95,10 @@ function preprocessText(text: string): string {
     .map((line) => {
       if (line.startsWith("#") && !line.startsWith("##")) {
         const content = line.slice(1).trim();
+
         return `## ${content}`;
       }
+
       return line;
     })
     .join("\n");

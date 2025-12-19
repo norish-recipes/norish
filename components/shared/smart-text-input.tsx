@@ -37,6 +37,7 @@ export default function SmartTextInput({
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const dropdownHeight = 256;
+
       setOpenAbove(spaceBelow < dropdownHeight && rect.top > dropdownHeight);
     }
   }, [showAutocomplete]);
@@ -46,6 +47,7 @@ export default function SmartTextInput({
       onValueChange(newValue);
 
       const cursorPos = textareaRef.current?.selectionStart ?? newValue.length;
+
       setCursorPosition(cursorPos);
 
       const textBeforeCursor = newValue.slice(0, cursorPos);
@@ -58,10 +60,12 @@ export default function SmartTextInput({
 
         if (isValidSlash) {
           const query = textBeforeCursor.slice(lastSlashIndex + 1);
+
           if (query.length >= 1 && !query.includes("\n")) {
             setSlashPosition(lastSlashIndex);
             setAutocompleteQuery(query);
             setShowAutocomplete(true);
+
             return;
           }
         }
@@ -89,6 +93,7 @@ export default function SmartTextInput({
         if (textareaRef.current) {
           textareaRef.current.focus();
           const newCursorPos = slashPosition + recipeName.length + recipeId.length + 7;
+
           textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
         }
       }, 0);
@@ -107,7 +112,9 @@ export default function SmartTextInput({
         setShowAutocomplete(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
@@ -145,6 +152,7 @@ export default function SmartTextInput({
               variant="flat"
               onAction={(key) => {
                 const recipe = suggestions.find((r) => r.id === key);
+
                 if (recipe) handleSelect(recipe.id, recipe.name);
               }}
             >

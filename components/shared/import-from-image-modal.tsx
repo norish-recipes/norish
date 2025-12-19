@@ -29,10 +29,7 @@ interface FilePreview {
   preview: string;
 }
 
-export default function ImportFromImageModal({
-  isOpen,
-  onOpenChange,
-}: ImportFromImageModalProps) {
+export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFromImageModalProps) {
   const router = useRouter();
   const { importRecipeFromImages } = useRecipesMutations();
   const [files, setFiles] = useState<FilePreview[]>([]);
@@ -87,6 +84,7 @@ export default function ImportFromImageModal({
 
     setFiles((prev) => {
       const total = prev.length + newFiles.length;
+
       if (total > MAX_OCR_FILES) {
         addToast({
           title: "Too many files",
@@ -96,8 +94,10 @@ export default function ImportFromImageModal({
           shouldShowTimeoutProgress: true,
           radius: "full",
         });
+
         return [...prev, ...newFiles.slice(0, MAX_OCR_FILES - prev.length)];
       }
+
       return [...prev, ...newFiles];
     });
   }, []);
@@ -110,7 +110,9 @@ export default function ImportFromImageModal({
   const handleRemoveFile = useCallback((id: string) => {
     setFiles((prev) => {
       const file = prev.find((f) => f.id === id);
+
       if (file) URL.revokeObjectURL(file.preview);
+
       return prev.filter((f) => f.id !== id);
     });
   }, []);
@@ -164,7 +166,7 @@ export default function ImportFromImageModal({
     }
   }, [files, importRecipeFromImages, onOpenChange, router]);
 
-  const handleClose = useCallback(() => {
+  const _handleClose = useCallback(() => {
     files.forEach((f) => URL.revokeObjectURL(f.preview));
     setFiles([]);
     onOpenChange(false);
@@ -175,16 +177,22 @@ export default function ImportFromImageModal({
       <ModalContent>
         {() => (
           <>
-            <ModalHeader className="flex flex-col gap-1">
-              Import from Image
-            </ModalHeader>
+            <ModalHeader className="flex flex-col gap-1">Import from Image</ModalHeader>
             <ModalBody>
               {/* Dropzone */}
               <div
                 className="border-default-300 hover:border-primary flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-6 transition-colors"
+                role="button"
+                tabIndex={0}
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
               >
                 <PhotoIcon className="text-default-400 h-12 w-12" />
                 <div className="text-center">

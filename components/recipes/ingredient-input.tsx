@@ -32,6 +32,7 @@ interface IngredientItem {
 }
 
 let nextId = 0;
+
 function createItem(text: string): IngredientItem {
   return { id: `ing-${nextId++}`, text };
 }
@@ -196,11 +197,14 @@ export default function IngredientInput({
   // Calculate ingredient numbers (excluding headings)
   const getIngredientNumber = (index: number): number | null => {
     let num = 0;
+
     for (let i = 0; i <= index; i++) {
       const isHeading = items[i].text.trim().startsWith("#");
+
       if (!isHeading) num++;
     }
     const isCurrentHeading = items[index].text.trim().startsWith("#");
+
     return isCurrentHeading ? null : num;
   };
 
@@ -208,23 +212,25 @@ export default function IngredientInput({
     <Reorder.Group
       ref={dragConstraintsRef}
       axis="y"
+      className="flex flex-col gap-2"
       values={items}
       onReorder={handleReorder}
-      className="flex flex-col gap-2"
     >
       {items.map((item, index) => (
         <IngredientRow
           key={item.id}
-          item={item}
+          dragConstraintsRef={dragConstraintsRef}
           index={index}
           ingredientNumber={getIngredientNumber(index)}
           isLast={index === items.length - 1}
+          item={item}
           showRemove={items.length > 1 && !!item.text}
-          dragConstraintsRef={dragConstraintsRef}
-          onValueChange={(v) => handleInputChange(index, v)}
-          onKeyDown={(e) => handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)}
           onBlur={() => handleBlur(index)}
+          onKeyDown={(e) =>
+            handleKeyDown(index, e as unknown as React.KeyboardEvent<HTMLInputElement>)
+          }
           onRemove={() => handleRemove(index)}
+          onValueChange={(v) => handleInputChange(index, v)}
         />
       ))}
     </Reorder.Group>
@@ -269,29 +275,28 @@ function IngredientRow({
 
   return (
     <Reorder.Item
-      value={item}
-      drag={canDrag ? "y" : false}
-      dragListener={false}
-      dragControls={controls}
-      dragConstraints={dragConstraintsRef}
-      dragElastic={0}
-      dragMomentum={false}
       className="flex items-start gap-2"
+      drag={canDrag ? "y" : false}
+      dragConstraints={dragConstraintsRef}
+      dragControls={controls}
+      dragElastic={0}
+      dragListener={false}
+      dragMomentum={false}
       style={{ position: "relative" }}
+      value={item}
     >
       {/* Drag handle - only show for non-empty, non-last items */}
       <div
-        className={`flex h-10 w-6 flex-shrink-0 touch-none items-center justify-center ${!isLast && item.text ? "cursor-grab active:cursor-grabbing" : ""
-          }`}
+        className={`flex h-10 w-6 flex-shrink-0 touch-none items-center justify-center ${
+          !isLast && item.text ? "cursor-grab active:cursor-grabbing" : ""
+        }`}
         onPointerDown={(e) => {
           if (canDrag) {
             controls.start(e);
           }
         }}
       >
-        {canDrag ? (
-          <Bars3Icon className="text-default-400 h-4 w-4" />
-        ) : null}
+        {canDrag ? <Bars3Icon className="text-default-400 h-4 w-4" /> : null}
       </div>
 
       {/* Ingredient number */}
@@ -314,13 +319,7 @@ function IngredientRow({
       {/* Remove button */}
       <div className="mt-1 h-8 w-8 min-w-8 flex-shrink-0">
         {showRemove && (
-          <Button
-            isIconOnly
-            className="h-full w-full"
-            size="sm"
-            variant="light"
-            onPress={onRemove}
-          >
+          <Button isIconOnly className="h-full w-full" size="sm" variant="light" onPress={onRemove}>
             <XMarkIcon className="h-4 w-4" />
           </Button>
         )}

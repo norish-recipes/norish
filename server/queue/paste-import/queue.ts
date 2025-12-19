@@ -33,10 +33,14 @@ export async function addPasteImportJob(
 ): Promise<AddPasteImportJobResult> {
   const jobId = generatePasteJobId(data.recipeId);
 
-  log.debug({ recipeId: data.recipeId, jobId, textLength: data.text.length }, "Adding paste import job");
+  log.debug(
+    { recipeId: data.recipeId, jobId, textLength: data.text.length },
+    "Adding paste import job"
+  );
 
   if (await isJobInQueue(pasteImportQueue, jobId)) {
     log.warn({ recipeId: data.recipeId, jobId }, "Duplicate paste import job rejected");
+
     return { status: "duplicate", existingJobId: jobId };
   }
 

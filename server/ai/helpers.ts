@@ -1,5 +1,6 @@
-import { MeasurementSystem } from "@/types/dto/recipe";
 import * as cheerio from "cheerio";
+
+import { MeasurementSystem } from "@/types/dto/recipe";
 
 export function normalizeIngredient(i: any, system: MeasurementSystem) {
   return {
@@ -31,6 +32,7 @@ export function extractImageCandidates(html: string): string[] {
 
   if (ogImage) {
     urls.add(ogImage);
+
     return [...urls];
   }
 
@@ -41,6 +43,7 @@ export function extractImageCandidates(html: string): string[] {
 
   $("img[src]").each((i, el) => {
     const src = $(el).attr("src");
+
     if (!src) return;
 
     if (src.endsWith(".svg")) return;
@@ -67,7 +70,7 @@ export function extractImageCandidates(html: string): string[] {
   candidates
     .sort((a, b) => b.score - a.score)
     .slice(0, 5)
-    .forEach(c => urls.add(c.src));
+    .forEach((c) => urls.add(c.src));
 
   return [...urls];
 }
@@ -76,10 +79,13 @@ export function extractSanitizedBody(html: string): string {
   try {
     const $ = cheerio.load(html);
     const $body = $("body");
+
     if (!$body.length) return "";
 
     // Remove obvious non-content
-    $body.find(`
+    $body
+      .find(
+        `
       script,
       style,
       noscript,
@@ -96,7 +102,9 @@ export function extractSanitizedBody(html: string): string {
       button,
       input,
       textarea
-    `).remove();
+    `
+      )
+      .remove();
 
     const blocks: string[] = [];
     const seen = new Set<string>();
@@ -113,12 +121,11 @@ export function extractSanitizedBody(html: string): string {
     };
 
     // Prefer main/article if present
-    const $root =
-      $body.find("main").first().length
-        ? $body.find("main").first()
-        : $body.find("article").first().length
-          ? $body.find("article").first()
-          : $body;
+    const $root = $body.find("main").first().length
+      ? $body.find("main").first()
+      : $body.find("article").first().length
+        ? $body.find("article").first()
+        : $body;
 
     // Title
     const title =

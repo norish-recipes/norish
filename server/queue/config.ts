@@ -56,4 +56,3 @@ export const QUEUE_NAMES = {
   SCHEDULED_TASKS: "scheduled-tasks",
   NUTRITION_ESTIMATION: "nutrition-estimation",
 } as const;
-

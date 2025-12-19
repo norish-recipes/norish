@@ -4,15 +4,44 @@ import { useMemo, useState } from "react";
 import { Card, CardBody, Button, Divider, Skeleton } from "@heroui/react";
 import { SparklesIcon, FireIcon, BeakerIcon, CubeIcon, BoltIcon } from "@heroicons/react/16/solid";
 
-import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
-import { usePermissionsContext } from "@/context/permissions-context";
 import NutritionPortionControl from "./nutrition-portion-control";
 
+import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
+import { usePermissionsContext } from "@/context/permissions-context";
+
 const MACROS = [
-  { key: "calories", label: "Calories", unit: "kcal", icon: FireIcon, color: "text-orange-500", bg: "bg-orange-100 dark:bg-orange-900/30" },
-  { key: "fat", label: "Fat", unit: "g", icon: BeakerIcon, color: "text-yellow-500", bg: "bg-yellow-100 dark:bg-yellow-900/30" },
-  { key: "carbs", label: "Carbs", unit: "g", icon: CubeIcon, color: "text-blue-500", bg: "bg-blue-100 dark:bg-blue-900/30" },
-  { key: "protein", label: "Protein", unit: "g", icon: BoltIcon, color: "text-rose-500", bg: "bg-rose-100 dark:bg-rose-900/30" },
+  {
+    key: "calories",
+    label: "Calories",
+    unit: "kcal",
+    icon: FireIcon,
+    color: "text-orange-500",
+    bg: "bg-orange-100 dark:bg-orange-900/30",
+  },
+  {
+    key: "fat",
+    label: "Fat",
+    unit: "g",
+    icon: BeakerIcon,
+    color: "text-yellow-500",
+    bg: "bg-yellow-100 dark:bg-yellow-900/30",
+  },
+  {
+    key: "carbs",
+    label: "Carbs",
+    unit: "g",
+    icon: CubeIcon,
+    color: "text-blue-500",
+    bg: "bg-blue-100 dark:bg-blue-900/30",
+  },
+  {
+    key: "protein",
+    label: "Protein",
+    unit: "g",
+    icon: BoltIcon,
+    color: "text-rose-500",
+    bg: "bg-rose-100 dark:bg-rose-900/30",
+  },
 ] as const;
 
 function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
@@ -26,9 +55,12 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
 
     const parsedFat = typeof recipe.fat === "string" ? parseFloat(recipe.fat) : recipe.fat;
     const parsedCarbs = typeof recipe.carbs === "string" ? parseFloat(recipe.carbs) : recipe.carbs;
-    const parsedProtein = typeof recipe.protein === "string" ? parseFloat(recipe.protein) : recipe.protein;
+    const parsedProtein =
+      typeof recipe.protein === "string" ? parseFloat(recipe.protein) : recipe.protein;
 
-    const hasData = recipe.calories != null || parsedFat != null || parsedCarbs != null || parsedProtein != null;
+    const hasData =
+      recipe.calories != null || parsedFat != null || parsedCarbs != null || parsedProtein != null;
+
     if (!hasData && !isAIEnabled) return null;
 
     return {
@@ -70,7 +102,9 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
           <div className="divide-default-100 divide-y">
             {MACROS.map(({ key, label, unit, icon: Icon, color, bg }) => {
               const value = nutritionData.values[key];
+
               if (value == null) return null;
+
               return (
                 <div key={key} className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">

@@ -17,7 +17,7 @@ import { createClientLogger } from "@/lib/logger";
 
 const log = createClientLogger("SwipeableRow");
 
-const SPRING_OPTIONS = { stiffness: 900, damping: 80 };
+const _SPRING_OPTIONS = { stiffness: 900, damping: 80 };
 
 // Button design constants
 const MAX_BUTTON_SIZE = 56; // Maximum button size
@@ -27,7 +27,7 @@ const CONTAINER_PADDING = 8; // Padding on sides
 const ROW_PADDING = 4; // Padding from top/bottom of row
 
 const FULL_SWIPE_THRESHOLD = 0.9; // 90% to snap full
-const SNAP_THRESHOLD = 0.02; // 2%swipe to snap open
+const _SNAP_THRESHOLD = 0.02; // 2%swipe to snap open
 
 // Calculate button size based on row height
 function calculateButtonSize(rowHeight?: number): number {
@@ -312,6 +312,7 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
           if (primary) {
             swipeAmount.set(-w);
             commitDelete(primary);
+
             return;
           }
         }
@@ -324,16 +325,19 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
 
         if (targetOpen === 0) {
           animate(swipeAmount, 0, { duration, ease: "easeOut" });
+
           return;
         }
 
         if (shouldClose) {
           animate(swipeAmount, 0, { duration, ease: "easeOut" });
+
           return;
         }
 
         if (shouldOpen) {
           animate(swipeAmount, targetOpen, { duration, ease: "easeOut" });
+
           return;
         }
 
@@ -344,7 +348,7 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
 
         animate(swipeAmount, target, { duration, ease: "easeOut" });
       },
-      [actions, actions.length, committing, commitDelete, isOpen, swipeAmount]
+      [actions, committing, commitDelete, isOpen, swipeAmount]
     );
 
     const shouldStartSwipe = (e: React.PointerEvent) => {
@@ -411,13 +415,13 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
             dragListener={false}
             dragMomentum={false}
             style={{ x: swipeAmount, touchAction: "pan-y" }}
+            onClick={() => {
+              if (isOpen) closeRow();
+            }}
             onDragEnd={handleDragEnd}
             onPointerDown={(e) => {
               if (!shouldStartSwipe(e) || committing) return;
               dragControls.start(e);
-            }}
-            onClick={() => {
-              if (isOpen) closeRow();
             }}
           >
             {children}

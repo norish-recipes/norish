@@ -151,11 +151,18 @@ describe("prompts procedures", () => {
       setConfig.mockResolvedValue(undefined);
 
       const testRouter = t.router({
-        updatePrompts: adminProcedure.input(PromptsConfigInputSchema).mutation(async ({ input }) => {
-          await setConfig(ServerConfigKeys.PROMPTS, { ...input, isOverridden: true }, ctx.user.id, false);
+        updatePrompts: adminProcedure
+          .input(PromptsConfigInputSchema)
+          .mutation(async ({ input }) => {
+            await setConfig(
+              ServerConfigKeys.PROMPTS,
+              { ...input, isOverridden: true },
+              ctx.user.id,
+              false
+            );
 
-          return { success: true };
-        }),
+            return { success: true };
+          }),
       });
 
       const caller = t.createCallerFactory(testRouter)(ctx);
@@ -179,11 +186,18 @@ describe("prompts procedures", () => {
       };
 
       const testRouter = t.router({
-        updatePrompts: adminProcedure.input(PromptsConfigInputSchema).mutation(async ({ input }) => {
-          await setConfig(ServerConfigKeys.PROMPTS, { ...input, isOverridden: true }, ctx.user.id, false);
+        updatePrompts: adminProcedure
+          .input(PromptsConfigInputSchema)
+          .mutation(async ({ input }) => {
+            await setConfig(
+              ServerConfigKeys.PROMPTS,
+              { ...input, isOverridden: true },
+              ctx.user.id,
+              false
+            );
 
-          return { success: true };
-        }),
+            return { success: true };
+          }),
       });
 
       const caller = t.createCallerFactory(testRouter)(ctx);
@@ -195,11 +209,18 @@ describe("prompts procedures", () => {
       const ctx = createMockAdminContext(mockAdmin);
 
       const testRouter = t.router({
-        updatePrompts: adminProcedure.input(PromptsConfigInputSchema).mutation(async ({ input }) => {
-          await setConfig(ServerConfigKeys.PROMPTS, { ...input, isOverridden: true }, ctx.user.id, false);
+        updatePrompts: adminProcedure
+          .input(PromptsConfigInputSchema)
+          .mutation(async ({ input }) => {
+            await setConfig(
+              ServerConfigKeys.PROMPTS,
+              { ...input, isOverridden: true },
+              ctx.user.id,
+              false
+            );
 
-          return { success: true };
-        }),
+            return { success: true };
+          }),
       });
 
       const caller = t.createCallerFactory(testRouter)(ctx);

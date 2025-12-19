@@ -37,7 +37,8 @@ export async function createManyRecipeStepsTx(
   });
 
   // Insert steps (without images)
-  const stepsToInsert = unique.map(({ images, ...step }) => step);
+  const stepsToInsert = unique.map(({ images: _images, ...step }) => step);
+
   await tx.insert(steps).values(stepsToInsert).onConflictDoNothing();
 
   const recipeIds = Array.from(new Set(unique.map((s) => s.recipeId)));
@@ -45,9 +46,11 @@ export async function createManyRecipeStepsTx(
 
   // Map to track step text and images for insertion
   const stepImagesMap = new Map<string, { image: string; order: number }[]>();
+
   for (const s of unique) {
     if (s.images && s.images.length > 0) {
       const key = `${s.recipeId}-${s.systemUsed}-${s.step}`;
+
       stepImagesMap.set(key, s.images);
     }
   }

@@ -13,6 +13,7 @@ import {
   getFavoriteRecipeIds,
   getFavoritesByRecipeIds,
 } from "../../mocks/favorites-repository";
+
 import { createMockUser, createMockHousehold, createMockAuthedContext } from "./test-utils";
 
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
@@ -38,6 +39,7 @@ describe("favorites procedures", () => {
           .input((v) => v as { recipeId: string })
           .mutation(async ({ input }) => {
             const result = await toggleFavorite(ctx.user.id, input.recipeId);
+
             return { recipeId: input.recipeId, isFavorite: result.isFavorite };
           }),
       });
@@ -57,6 +59,7 @@ describe("favorites procedures", () => {
           .input((v) => v as { recipeId: string })
           .mutation(async ({ input }) => {
             const result = await toggleFavorite(ctx.user.id, input.recipeId);
+
             return { recipeId: input.recipeId, isFavorite: result.isFavorite };
           }),
       });
@@ -77,6 +80,7 @@ describe("favorites procedures", () => {
           .input((v) => v as { recipeId: string })
           .query(async ({ input }) => {
             const result = await isFavorite(ctx.user.id, input.recipeId);
+
             return { recipeId: input.recipeId, isFavorite: result };
           }),
       });
@@ -96,6 +100,7 @@ describe("favorites procedures", () => {
           .input((v) => v as { recipeId: string })
           .query(async ({ input }) => {
             const result = await isFavorite(ctx.user.id, input.recipeId);
+
             return { recipeId: input.recipeId, isFavorite: result };
           }),
       });
@@ -110,11 +115,13 @@ describe("favorites procedures", () => {
   describe("list", () => {
     it("returns all favorite recipe IDs for user", async () => {
       const mockIds = ["recipe-1", "recipe-2", "recipe-3"];
+
       getFavoriteRecipeIds.mockResolvedValue(mockIds);
 
       const testRouter = t.router({
         list: t.procedure.query(async () => {
           const favoriteIds = await getFavoriteRecipeIds(ctx.user.id);
+
           return { favoriteIds };
         }),
       });
@@ -132,6 +139,7 @@ describe("favorites procedures", () => {
       const testRouter = t.router({
         list: t.procedure.query(async () => {
           const favoriteIds = await getFavoriteRecipeIds(ctx.user.id);
+
           return { favoriteIds };
         }),
       });
@@ -146,6 +154,7 @@ describe("favorites procedures", () => {
   describe("batchCheck", () => {
     it("returns favorited IDs from batch", async () => {
       const favoritesSet = new Set(["recipe-1", "recipe-3"]);
+
       getFavoritesByRecipeIds.mockResolvedValue(favoritesSet);
 
       const testRouter = t.router({
@@ -153,6 +162,7 @@ describe("favorites procedures", () => {
           .input((v) => v as { recipeIds: string[] })
           .query(async ({ input }) => {
             const favorites = await getFavoritesByRecipeIds(ctx.user.id, input.recipeIds);
+
             return { favoriteIds: Array.from(favorites) };
           }),
       });
@@ -178,6 +188,7 @@ describe("favorites procedures", () => {
           .input((v) => v as { recipeIds: string[] })
           .query(async ({ input }) => {
             const favorites = await getFavoritesByRecipeIds(ctx.user.id, input.recipeIds);
+
             return { favoriteIds: Array.from(favorites) };
           }),
       });
@@ -189,4 +200,3 @@ describe("favorites procedures", () => {
     });
   });
 });
-

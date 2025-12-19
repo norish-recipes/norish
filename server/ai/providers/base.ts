@@ -25,4 +25,3 @@ export interface AIProvider {
     systemMessage?: string
   ): Promise<T | null>;
 }
-

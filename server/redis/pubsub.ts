@@ -19,7 +19,7 @@ const CHANNEL_PREFIX = "norish";
  * Redis-backed typed event emitter.
  */
 export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
-  constructor(private readonly namespace: string = "default") { }
+  constructor(private readonly namespace: string = "default") {}
 
   async emitToHousehold<K extends keyof TEvents & string>(
     householdKey: string,
@@ -82,6 +82,7 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
     // Early exit if already aborted
     if (signal?.aborted) {
       await subscriber.quit();
+
       return;
     }
 
@@ -132,9 +133,9 @@ export class TypedRedisEmitter<TEvents extends Record<string, unknown>> {
   }
 }
 
-export function createTypedEmitter<
-  TEvents extends Record<string, unknown>,
->(namespace: string): TypedRedisEmitter<TEvents> {
+export function createTypedEmitter<TEvents extends Record<string, unknown>>(
+  namespace: string
+): TypedRedisEmitter<TEvents> {
   return new TypedRedisEmitter<TEvents>(namespace);
 }
 

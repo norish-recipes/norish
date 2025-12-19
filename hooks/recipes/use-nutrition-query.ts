@@ -9,7 +9,7 @@ export function useNutritionQuery(recipeId: string) {
   const trpc = useTRPC();
   const [isEstimating, setIsEstimating] = useState(false);
 
-   const { data: isEstimatingFromQueue } = useQuery({
+  const { data: isEstimatingFromQueue } = useQuery({
     ...trpc.recipes.isNutritionEstimating.queryOptions({ recipeId }),
     staleTime: 5000,
     refetchOnMount: true,

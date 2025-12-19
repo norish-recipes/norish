@@ -22,7 +22,7 @@ import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import { NutritionSection } from "@/components/recipes/nutrition-card";
 
 export default function RecipePageMobile() {
-  var { recipe, currentServings } = useRecipeContextRequired();
+  var { recipe, currentServings: _currentServings } = useRecipeContextRequired();
   const { isFavorite: checkFavorite } = useFavoritesQuery();
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
@@ -36,8 +36,8 @@ export default function RecipePageMobile() {
     <div className="flex w-full flex-col">
       {/* Hero Image */}
       <DoubleTapContainer
-        onDoubleTap={handleToggleFavorite}
         className="bg-default-200 relative h-72 w-full overflow-hidden"
+        onDoubleTap={handleToggleFavorite}
       >
         {recipe.image ? (
           <Image
@@ -67,10 +67,10 @@ export default function RecipePageMobile() {
         {/* Heart button - bottom right (always visible) */}
         <div className="absolute right-4 bottom-4 z-50">
           <HeartButton
-            isFavorite={isFavorite}
-            onToggle={handleToggleFavorite}
-            size="lg"
             showBackground
+            isFavorite={isFavorite}
+            size="lg"
+            onToggle={handleToggleFavorite}
           />
         </div>
       </DoubleTapContainer>
@@ -183,9 +183,9 @@ export default function RecipePageMobile() {
             <div className="bg-default-100 -mx-1 flex flex-col items-center gap-4 rounded-xl py-6">
               <p className="text-default-600 font-medium">What did you think of this recipe?</p>
               <StarRating
+                isLoading={isRating || isRatingLoading}
                 value={userRating ?? averageRating}
                 onChange={handleRateRecipe}
-                isLoading={isRating || isRatingLoading}
               />
             </div>
           </div>

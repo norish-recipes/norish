@@ -35,7 +35,9 @@ function escapeHtml(text: string): string {
 
 function looksLikeJson(text: string): boolean {
   const t = text.trim();
+
   if (t.startsWith("{") || t.startsWith("[")) return true;
+
   return t.includes("@context") || t.includes("@graph") || t.includes('"@type"');
 }
 
@@ -55,12 +57,14 @@ async function parseFromPastedText(
   forceAI?: boolean
 ): Promise<any> {
   const trimmed = text.trim();
+
   if (!trimmed) throw new Error("No text provided");
   if (trimmed.length > MAX_RECIPE_PASTE_CHARS) {
     throw new Error(`Paste is too large (max ${MAX_RECIPE_PASTE_CHARS} characters)`);
   }
 
   const aiEnabled = await isAIEnabled();
+
   if (forceAI) {
     if (!aiEnabled) {
       throw new Error("AI-only import requested but AI is not enabled.");
@@ -82,6 +86,7 @@ async function parseFromPastedText(
 
     if (nodes.length > 0) {
       const normalized = await normalizeRecipeFromJson(nodes[0]);
+
       if (normalized) {
         normalized.url = null;
         if (hasStepsAndIngredients(normalized)) {
@@ -108,7 +113,10 @@ async function parseFromPastedText(
 async function processPasteImportJob(job: Job<PasteImportJobData>): Promise<void> {
   const { recipeId, userId, householdKey, householdUserIds, text, forceAI } = job.data;
 
-  log.info({ jobId: job.id, recipeId, attempt: job.attemptsMade + 1 }, "Processing paste import job");
+  log.info(
+    { jobId: job.id, recipeId, attempt: job.attemptsMade + 1 },
+    "Processing paste import job"
+  );
 
   const policy = await getRecipePermissionPolicy();
   const viewPolicy = policy.view;
@@ -124,18 +132,24 @@ async function processPasteImportJob(job: Job<PasteImportJobData>): Promise<void
 
   if (aiConfig?.autoTagAllergies) {
     const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
+
     allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
-    log.debug({ allergyCount: allergyNames.length }, "Fetched household allergies for paste import");
+    log.debug(
+      { allergyCount: allergyNames.length },
+      "Fetched household allergies for paste import"
+    );
   }
 
   const parsedRecipe = await parseFromPastedText(text, allergyNames, forceAI);
 
   const createdId = await createRecipeWithRefs(recipeId, userId, parsedRecipe);
+
   if (!createdId) {
     throw new Error("Failed to save imported recipe");
   }
 
   const dashboardDto = await dashboardRecipe(createdId);
+
   if (dashboardDto) {
     log.info({ jobId: job.id, recipeId: createdId }, "Pasted recipe imported successfully");
 
@@ -146,7 +160,10 @@ async function processPasteImportJob(job: Job<PasteImportJobData>): Promise<void
   }
 }
 
-async function handleJobFailed(job: Job<PasteImportJobData> | undefined, error: Error): Promise<void> {
+async function handleJobFailed(
+  job: Job<PasteImportJobData> | undefined,
+  error: Error
+): Promise<void> {
   if (!job) return;
 
   const { recipeId, userId, householdKey } = job.data;
@@ -180,6 +197,7 @@ async function handleJobFailed(job: Job<PasteImportJobData> | undefined, error: 
 export function startPasteImportWorker(): void {
   if (worker) {
     log.warn("Paste import worker already running");
+
     return;
   }
 

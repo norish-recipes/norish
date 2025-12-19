@@ -1,3 +1,5 @@
+import type { RecipeImportJobData, PendingRecipeDTO, NutritionEstimationJobData } from "@/types";
+
 import { z } from "zod";
 
 import { router } from "../../trpc";
@@ -6,8 +8,6 @@ import { authedProcedure } from "../../middleware";
 import { trpcLogger as log } from "@/server/logger";
 import { recipeImportQueue, nutritionEstimationQueue } from "@/server/queue";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
-
-import type { RecipeImportJobData, PendingRecipeDTO, NutritionEstimationJobData } from "@/types";
 
 const getPending = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Fetching pending recipe imports");
@@ -53,10 +53,14 @@ const isNutritionEstimating = authedProcedure
 
     const isEstimating = jobs.some((job) => {
       const data = job.data as NutritionEstimationJobData;
+
       return data.recipeId === input.recipeId;
     });
 
-    log.debug({ userId: ctx.user.id, recipeId: input.recipeId, isEstimating }, "Checked nutrition estimation status");
+    log.debug(
+      { userId: ctx.user.id, recipeId: input.recipeId, isEstimating },
+      "Checked nutrition estimation status"
+    );
 
     return isEstimating;
   });
@@ -65,4 +69,3 @@ export const pendingProcedures = router({
   getPending,
   isNutritionEstimating,
 });
-

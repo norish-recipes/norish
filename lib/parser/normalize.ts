@@ -10,11 +10,14 @@ function parseNutritionValue(value: unknown): number | null {
   if (typeof value === "string") {
     // Extract numeric portion (handles "300 kcal", "25g", "25 grams", etc.)
     const match = value.match(/^[\d.,]+/);
+
     if (match) {
       const parsed = parseFloat(match[0].replace(",", "."));
+
       return Number.isFinite(parsed) ? parsed : null;
     }
   }
+
   return null;
 }
 
@@ -25,6 +28,7 @@ function extractNutrition(json: any): {
   protein: string | null;
 } {
   const nutrition = json?.nutrition;
+
   if (!nutrition || typeof nutrition !== "object") {
     return { calories: null, fat: null, carbs: null, protein: null };
   }
@@ -51,9 +55,9 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
   const ingSource = json.recipeIngredient ?? json.ingredients;
   const ingredients = Array.isArray(ingSource)
     ? parseIngredientWithDefaults(
-      ingSource.map((v: any) => v?.toString() || "").filter(Boolean),
-      units
-    )
+        ingSource.map((v: any) => v?.toString() || "").filter(Boolean),
+        units
+      )
     : typeof ingSource === "string"
       ? parseIngredientWithDefaults(ingSource.toString(), units)
       : [];
@@ -200,4 +204,3 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
       : [],
   };
 }
-

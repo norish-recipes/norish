@@ -61,6 +61,7 @@ export default function ImageLightbox({
     };
 
     window.addEventListener("keydown", handleKeyDown);
+
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, goToPrevious, goToNext, onClose]);
 

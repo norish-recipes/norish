@@ -47,6 +47,7 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
 
   if (operation === "delete") {
     await deletePlannedItem(userId, itemId);
+
     return;
   }
 
@@ -179,6 +180,7 @@ async function handleJobFailed(
 export function startCaldavSyncWorker(): void {
   if (worker) {
     log.warn("CalDAV sync worker already running");
+
     return;
   }
 

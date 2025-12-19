@@ -52,6 +52,7 @@ export default function RecipeGrid() {
   // Restore exact scroll position after Virtuoso renders
   useEffect(() => {
     const savedState = getScrollState();
+
     if (savedState?.scrollTop && savedState.scrollTop > 0) {
       // Wait for Virtuoso to fully render before restoring scroll
       requestAnimationFrame(() => {

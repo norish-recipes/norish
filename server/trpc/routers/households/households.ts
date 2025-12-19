@@ -211,6 +211,7 @@ const join = authedProcedure
           name: ctx.user.name ?? null,
           isAdmin: false,
         };
+
         householdEmitter.emitToHousehold(householdId, "userJoined", { user: userInfo });
 
         // Invalidate cache and terminate connection AFTER events are sent
@@ -317,7 +318,8 @@ const kick = authedProcedure
     }
 
     // Get remaining member IDs for cache invalidation
-    const remainingMemberIds = household?.users.filter((u) => u.id !== userIdToKick).map((u) => u.id) ?? [];
+    const remainingMemberIds =
+      household?.users.filter((u) => u.id !== userIdToKick).map((u) => u.id) ?? [];
 
     // Kick user async and emit events
     kickUserFromHousehold(householdId, userIdToKick, ctx.user.id)
@@ -333,6 +335,7 @@ const kick = authedProcedure
         // Emit policyUpdated to kicked user so their recipe view refreshes
         // (they lose access to household recipes)
         const recipePolicy = await getRecipePermissionPolicy();
+
         permissionsEmitter.emitToUser(userIdToKick, "policyUpdated", { recipePolicy });
 
         // Emit to remaining household members (household-scoped)

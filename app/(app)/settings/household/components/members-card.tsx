@@ -64,7 +64,13 @@ export default function MembersCard() {
 
     try {
       await transferAdmin(household.id, userToTransfer.id);
-      addToast({ title: `Transferred admin to ${userToTransfer.name}`, color: "success", timeout: 2000, shouldShowTimeoutProgress: true, radius: "full",});
+      addToast({
+        title: `Transferred admin to ${userToTransfer.name}`,
+        color: "success",
+        timeout: 2000,
+        shouldShowTimeoutProgress: true,
+        radius: "full",
+      });
     } catch (error) {
       addToast({
         title: "Failed to transfer admin",

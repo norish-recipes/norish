@@ -1,6 +1,7 @@
 import type { Slot } from "@/types";
 
 import { CalDavClient, type CreateEventInput } from "./client";
+
 import { getCaldavConfigDecrypted } from "@/server/db/repositories/caldav-config";
 import {
   updateCaldavSyncStatus,
@@ -13,6 +14,7 @@ export function truncateErrorMessage(error: string): string {
 
 function parseTimeRange(timeRange: string): { start: string; end: string } {
   const [start, end] = timeRange.split("-");
+
   return { start: start.trim(), end: end.trim() };
 }
 
@@ -110,6 +112,7 @@ export async function deletePlannedItem(userId: string, itemId: string): Promise
         lastSyncAt: new Date(),
       });
     }
+
     return;
   }
 
@@ -121,6 +124,7 @@ export async function deletePlannedItem(userId: string, itemId: string): Promise
       syncStatus: "removed",
       lastSyncAt: new Date(),
     });
+
     return;
   }
 

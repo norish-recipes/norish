@@ -28,7 +28,9 @@ export function useRecipeImages(): RecipeImagesResult {
 
   const uploadImage = async (file: File) => {
     const formData = new FormData();
+
     formData.append("image", file);
+
     return await uploadImageMutation.mutateAsync(formData);
   };
 
@@ -38,8 +40,10 @@ export function useRecipeImages(): RecipeImagesResult {
 
   const uploadStepImage = async (file: File, recipeId: string) => {
     const formData = new FormData();
+
     formData.append("image", file);
     formData.append("recipeId", recipeId);
+
     return await uploadStepImageMutation.mutateAsync(formData);
   };
 

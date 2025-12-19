@@ -50,6 +50,7 @@ async function getCaldavServerUrl(userId: string): Promise<string | null> {
   const config = await getCaldavConfigDecrypted(userId);
 
   if (!config || !config.enabled) return null;
+
   return config.serverUrl;
 }
 
@@ -64,8 +65,10 @@ async function queueSyncJob(
   recipeId?: string
 ): Promise<void> {
   const caldavServerUrl = await getCaldavServerUrl(userId);
+
   if (!caldavServerUrl) {
     log.debug({ userId, itemId }, "CalDAV not configured, skipping sync");
+
     return;
   }
 
@@ -85,8 +88,10 @@ async function queueSyncJob(
 
 async function queueDeleteJob(userId: string, itemId: string): Promise<void> {
   const caldavServerUrl = await getCaldavServerUrl(userId);
+
   if (!caldavServerUrl) {
     log.debug({ userId, itemId }, "CalDAV not configured, skipping delete");
+
     return;
   }
 
@@ -149,6 +154,7 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
 
           if (!syncStatus) {
             log.debug({ id, userId }, "Recipe not synced to CalDAV, skipping update");
+
             return;
           }
           await queueSyncJob(userId, id, "recipe", id, recipeName, newDate, slot, recipeId);
@@ -197,6 +203,7 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
 
           if (!syncStatus) {
             log.debug({ id, userId }, "Note not synced to CalDAV, skipping update");
+
             return;
           }
           await queueSyncJob(userId, id, "note", id, title, newDate, slot);

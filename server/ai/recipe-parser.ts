@@ -1,13 +1,13 @@
 import { getAIProvider } from "./providers/factory";
 import { jsonLdRecipeSchema } from "./schemas/jsonld-recipe";
 import { loadPrompt } from "./prompts/loader";
+import { extractImageCandidates, extractSanitizedBody } from "./helpers";
 
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
 import { getUnits, isAIEnabled } from "@/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
-import { extractImageCandidates, extractSanitizedBody } from "./helpers";
 
 async function buildExtractionPrompt(
   url: string | undefined,
@@ -23,6 +23,7 @@ async function buildExtractionPrompt(
 
   // Build allergy detection instruction
   let allergyInstruction = "";
+
   if (allergies && allergies.length > 0) {
     allergyInstruction = `
 ALLERGY DETECTION (STRICT):
@@ -32,7 +33,8 @@ ALLERGY DETECTION (STRICT):
 - NEVER add additional keywords
 `;
   } else {
-    allergyInstruction = "\nALLERGY DETECTION: Skip allergy/dietary tag detection. Do not add any tags to the keywords array.";
+    allergyInstruction =
+      "\nALLERGY DETECTION: Skip allergy/dietary tag detection. Do not add any tags to the keywords array.";
   }
 
   return `${prompt}${allergyInstruction}

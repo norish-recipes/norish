@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import {
-  createTestQueryClient,
-  createTestWrapper,
-  createMockUserRatingData,
-} from "./test-utils";
+import { createTestQueryClient, createTestWrapper, createMockUserRatingData } from "./test-utils";
 
 const mockMutationOptions = vi.fn();
 const mockQueryKey = vi.fn();
@@ -15,6 +11,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       rate: {
         mutationOptions: (opts: unknown) => {
           mockMutationOptions(opts);
+
           return opts;
         },
       },
@@ -36,7 +33,10 @@ import { useRatingsMutation } from "@/hooks/ratings/use-ratings-mutation";
 describe("useRatingsMutation", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
   const testRecipeId = "recipe-123";
-  const userRatingQueryKey = [["ratings", "getUserRating"], { input: { recipeId: testRecipeId }, type: "query" }];
+  const userRatingQueryKey = [
+    ["ratings", "getUserRating"],
+    { input: { recipeId: testRecipeId }, type: "query" },
+  ];
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,7 +49,7 @@ describe("useRatingsMutation", () => {
       queryClient.setQueryData(userRatingQueryKey, createMockUserRatingData(testRecipeId, null));
 
       const { renderHook, act } = require("@testing-library/react");
-      const { result } = renderHook(() => useRatingsMutation(), {
+      const { result: _result } = renderHook(() => useRatingsMutation(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -62,6 +62,7 @@ describe("useRatingsMutation", () => {
       const cachedData = queryClient.getQueryData<{ recipeId: string; userRating: number | null }>(
         userRatingQueryKey
       );
+
       expect(cachedData?.userRating).toBe(5);
     });
 
@@ -69,7 +70,7 @@ describe("useRatingsMutation", () => {
       queryClient.setQueryData(userRatingQueryKey, createMockUserRatingData(testRecipeId, 3));
 
       const { renderHook, act } = require("@testing-library/react");
-      const { result } = renderHook(() => useRatingsMutation(), {
+      const { result: _result } = renderHook(() => useRatingsMutation(), {
         wrapper: createTestWrapper(queryClient),
       });
 
@@ -82,6 +83,7 @@ describe("useRatingsMutation", () => {
       const cachedData = queryClient.getQueryData<{ recipeId: string; userRating: number | null }>(
         userRatingQueryKey
       );
+
       expect(cachedData?.userRating).toBe(5);
     });
   });
@@ -97,4 +99,3 @@ describe("useRatingsMutation", () => {
     });
   });
 });
-

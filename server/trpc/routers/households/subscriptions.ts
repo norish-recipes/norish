@@ -70,6 +70,7 @@ const onUserJoined = authedProcedure.subscription(async function* ({ ctx, signal
   if (!ctx.household) {
     log.trace({ userId: ctx.user.id }, "No household, waiting for reconnection");
     await waitForAbort(signal);
+
     return;
   }
 
@@ -116,6 +117,7 @@ const onMemberRemoved = authedProcedure.subscription(async function* ({ ctx, sig
   if (!ctx.household) {
     log.trace({ userId: ctx.user.id }, "No household, waiting for reconnection");
     await waitForAbort(signal);
+
     return;
   }
 
@@ -144,6 +146,7 @@ const onAdminTransferred = authedProcedure.subscription(async function* ({ ctx, 
   if (!ctx.household) {
     log.trace({ userId: ctx.user.id }, "No household, waiting for reconnection");
     await waitForAbort(signal);
+
     return;
   }
 
@@ -172,6 +175,7 @@ const onJoinCodeRegenerated = authedProcedure.subscription(async function* ({ ct
   if (!ctx.household) {
     log.trace({ userId: ctx.user.id }, "No household, waiting for reconnection");
     await waitForAbort(signal);
+
     return;
   }
 
@@ -196,6 +200,7 @@ const onAllergiesUpdated = authedProcedure.subscription(async function* ({ ctx, 
   if (!ctx.household) {
     log.trace({ userId: ctx.user.id }, "No household, waiting for reconnection");
     await waitForAbort(signal);
+
     return;
   }
 
