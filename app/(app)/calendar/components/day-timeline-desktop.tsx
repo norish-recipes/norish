@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/16/solid";
+import { ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useCallback } from "react";

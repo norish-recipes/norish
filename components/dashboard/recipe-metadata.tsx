@@ -5,7 +5,7 @@ import {
   UserGroupIcon,
   EllipsisHorizontalIcon,
   StarIcon,
-} from "@heroicons/react/16/solid";
+} from "@heroicons/react/20/solid";
 import { Chip, Button } from "@heroui/react";
 
 import HeartButton from "@/components/shared/heart-button";

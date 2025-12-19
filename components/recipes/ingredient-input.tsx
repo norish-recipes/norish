@@ -45,7 +45,7 @@ export default function IngredientInput({
   const { units } = useUnitsQuery();
   const [items, setItems] = useState<IngredientItem[]>([createItem("")]);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
-  const dragConstraintsRef = useRef<HTMLDivElement>(null);
+  const dragConstraintsRef = useRef<HTMLUListElement>(null);
 
   // Initialize from ingredients prop
   useEffect(() => {
@@ -245,7 +245,7 @@ interface IngredientRowProps {
   ingredientNumber: number | null;
   isLast: boolean;
   showRemove: boolean;
-  dragConstraintsRef: React.RefObject<HTMLDivElement | null>;
+  dragConstraintsRef: React.RefObject<HTMLUListElement | null>;
   onValueChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onBlur: () => void;

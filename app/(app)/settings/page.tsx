@@ -2,7 +2,7 @@
 
 import { Tabs, Tab } from "@heroui/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { UserCircleIcon, HomeIcon, ServerIcon, ShieldCheckIcon } from "@heroicons/react/24/solid";
+import { UserCircleIcon, HomeIcon, ServerIcon, ShieldCheckIcon } from "@heroicons/react/20/solid";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 

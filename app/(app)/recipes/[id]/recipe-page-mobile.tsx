@@ -1,4 +1,4 @@
-import { ClockIcon, FireIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
+import { ClockIcon, FireIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
 import { Card, CardBody, Chip, Divider, Link } from "@heroui/react";
 import Image from "next/image";
 

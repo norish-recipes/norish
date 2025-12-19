@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingBagIcon, CalendarDaysIcon, TrashIcon } from "@heroicons/react/16/solid";
+import { ShoppingBagIcon, CalendarDaysIcon, TrashIcon } from "@heroicons/react/20/solid";
 import { Card, CardBody, Image } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";

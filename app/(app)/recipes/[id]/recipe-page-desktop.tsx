@@ -6,7 +6,7 @@ import {
   FireIcon,
   ClockIcon,
   ArrowTopRightOnSquareIcon,
-} from "@heroicons/react/16/solid";
+} from "@heroicons/react/20/solid";
 import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";

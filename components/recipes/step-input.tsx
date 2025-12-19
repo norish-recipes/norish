@@ -50,7 +50,7 @@ export default function StepInput({
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
-  const dragConstraintsRef = useRef<HTMLDivElement>(null);
+  const dragConstraintsRef = useRef<HTMLUListElement>(null);
 
   const { uploadStepImage, deleteStepImage } = useRecipeImages();
 
@@ -290,7 +290,7 @@ interface StepRowProps {
   recipeId?: string;
   uploadingIndex: number | null;
   fileInputRefs: React.RefObject<(HTMLInputElement | null)[]>;
-  dragConstraintsRef: React.RefObject<HTMLDivElement | null>;
+  dragConstraintsRef: React.RefObject<HTMLUListElement | null>;
   onValueChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onBlur: () => void;

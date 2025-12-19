@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { AnimatePresence } from "motion/react";
 import { Accordion, AccordionItem, Button } from "@heroui/react";
-import { CheckIcon } from "@heroicons/react/16/solid";
+import { CheckIcon } from "@heroicons/react/20/solid";
 
 import { useGroceriesContext } from "../context";
 

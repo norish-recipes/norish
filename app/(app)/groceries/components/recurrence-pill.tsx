@@ -3,7 +3,7 @@
 import type { RecurringGroceryDto } from "@/types";
 
 import { motion } from "motion/react";
-import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/20/solid";
 
 import { formatRecurrenceSummary, formatNextOccurrence } from "@/lib/recurrence/formatter";
 import { isOverdue } from "@/lib/recurrence/calculator";
