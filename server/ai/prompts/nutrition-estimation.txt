@@ -5,11 +5,11 @@ Ingredients:
 {{ingredients}}
 
 Instruction:
-- Estimate the total nutritional values for the entire recipe based on the listed ingredients.
-- Do NOT divide the results by the number of servings.
+- Estimate the nutritional values PER SERVING for this recipe based on the listed ingredients.
+- Each value should represent what ONE serving contains.
 
 Output Requirements:
-- Provide the following values for the entire recipe:
+- Provide the following values for ONE serving:
   - Calories (kcal)
   - Fats (grams)
   - Carbohydrates (grams)

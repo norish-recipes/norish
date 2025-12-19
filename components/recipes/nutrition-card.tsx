@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardBody, Button, Divider, Skeleton } from "@heroui/react";
 import { SparklesIcon, FireIcon, BeakerIcon, CubeIcon, BoltIcon } from "@heroicons/react/16/solid";
 
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
 import { usePermissionsContext } from "@/context/permissions-context";
+import NutritionPortionControl from "./nutrition-portion-control";
 
 const MACROS = [
   { key: "calories", label: "Calories", unit: "kcal", icon: FireIcon, color: "text-orange-500", bg: "bg-orange-100 dark:bg-orange-900/30" },
@@ -15,39 +16,43 @@ const MACROS = [
 ] as const;
 
 function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
-  const { recipe, currentServings, isEstimatingNutrition, estimateNutrition } = useRecipeContext();
+  const { recipe, isEstimatingNutrition, estimateNutrition } = useRecipeContext();
   const { isAIEnabled } = usePermissionsContext();
+  // Independent portion state - defaults to 1 (per serving)
+  const [portions, setPortions] = useState(1);
 
   const nutritionData = useMemo(() => {
     if (!recipe) return null;
-    
+
     const parsedFat = typeof recipe.fat === "string" ? parseFloat(recipe.fat) : recipe.fat;
     const parsedCarbs = typeof recipe.carbs === "string" ? parseFloat(recipe.carbs) : recipe.carbs;
     const parsedProtein = typeof recipe.protein === "string" ? parseFloat(recipe.protein) : recipe.protein;
-    
+
     const hasData = recipe.calories != null || parsedFat != null || parsedCarbs != null || parsedProtein != null;
     if (!hasData && !isAIEnabled) return null;
-
-    const baseServings = recipe.servings || 1;
-    const scale = baseServings > 0 ? currentServings / baseServings : 1;
 
     return {
       hasData,
       values: {
-        calories: recipe.calories != null ? recipe.calories * scale : null,
-        fat: parsedFat != null ? parsedFat * scale : null,
-        carbs: parsedCarbs != null ? parsedCarbs * scale : null,
-        protein: parsedProtein != null ? parsedProtein * scale : null,
+        // Values are stored per-serving, multiply by portions to scale
+        calories: recipe.calories != null ? recipe.calories * portions : null,
+        fat: parsedFat != null ? parsedFat * portions : null,
+        carbs: parsedCarbs != null ? parsedCarbs * portions : null,
+        protein: parsedProtein != null ? parsedProtein * portions : null,
       },
-      scale,
     };
-  }, [recipe, currentServings, isAIEnabled]);
+  }, [recipe, portions, isAIEnabled]);
 
   if (!nutritionData) return null;
 
   const content = (
     <>
-      <h2 className={`text-lg font-semibold ${inCard ? "mb-3" : ""}`}>Nutrition</h2>
+      <div className={`flex items-center justify-between ${inCard ? "mb-3" : ""}`}>
+        <h2 className="text-lg font-semibold">Nutrition</h2>
+        {nutritionData.hasData && !isEstimatingNutrition && (
+          <NutritionPortionControl portions={portions} onChange={setPortions} />
+        )}
+      </div>
       {isEstimatingNutrition ? (
         <div className="space-y-1">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -82,9 +87,9 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
               );
             })}
           </div>
-          {nutritionData.scale !== 1 && (
+          {portions !== 1 && (
             <p className="text-default-400 mt-2 text-center text-xs">
-              Scaled for {currentServings} {currentServings === 1 ? "serving" : "servings"}
+              Showing values for {portions} {portions === 1 ? "portion" : "portions"}
             </p>
           )}
         </>
@@ -125,5 +130,3 @@ export function NutritionSection() {
 export default function NutritionCard() {
   return <NutritionDisplay inCard={true} />;
 }
-
-
