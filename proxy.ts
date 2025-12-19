@@ -6,6 +6,15 @@ import { SERVER_CONFIG } from "./config/env-config-server";
 import { auth } from "@/server/auth/auth";
 
 export async function proxy(request: NextRequest) {
+  // WebSocket upgrade requests should not be redirected - they'll be handled at the app level
+  const isWebSocket =
+    request.headers.get("upgrade")?.toLowerCase() === "websocket" &&
+    request.headers.get("connection")?.toLowerCase().includes("upgrade");
+
+  if (isWebSocket) {
+    return NextResponse.next();
+  }
+
   const session = await auth.api.getSession({
     headers: await headers(),
   });
