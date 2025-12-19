@@ -83,7 +83,7 @@ function MiniRecipesContent({
           value={rawInput}
           onChange={handleInputChange}
         />
-        <div className="flex flex-1 items-center justify-center text-sm text-red-500">
+        <div className="flex flex-1 items-center justify-center text-base text-red-500">
           Failed to load recipes.
         </div>
       </div>
@@ -129,7 +129,7 @@ function MiniRecipesContent({
         {isLoading && !recipes.length ? (
           <MiniRecipeSkeleton />
         ) : !isLoading && recipes.length === 0 ? (
-          <div className="text-default-500 flex h-full items-center justify-center text-sm">
+          <div className="text-default-500 flex h-full items-center justify-center text-base">
             No recipes found.
           </div>
         ) : (
@@ -158,7 +158,7 @@ function MiniRecipesContent({
                     <div className="flex min-w-0 flex-col">
                       <div className="truncate text-base font-medium">{recipe.name}</div>
                       {subtitle && (
-                        <div className="text-default-500 truncate text-sm">{subtitle}</div>
+                        <div className="text-default-500 truncate text-base">{subtitle}</div>
                       )}
                     </div>
                   </div>

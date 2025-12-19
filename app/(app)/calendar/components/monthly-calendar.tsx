@@ -91,11 +91,11 @@ export default function MonthlyCalendar() {
   return (
     <div className="flex h-full flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{monthFormatter.format(viewDate)}</h2>
+        <h2 className="text-lg font-semibold">{monthFormatter.format(viewDate)}</h2>
         <div className="flex items-center gap-2">
           <button
             aria-label="Previous month"
-            className="rounded-medium border-default-200 hover:bg-default-100 border px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-medium border-default-200 hover:bg-default-100 border px-2 py-1 text-base disabled:cursor-not-allowed disabled:opacity-50"
             disabled={offset <= -1}
             type="button"
             onClick={onPrevMonth}
@@ -104,7 +104,7 @@ export default function MonthlyCalendar() {
           </button>
           <button
             aria-label="Next month"
-            className="rounded-medium border-default-200 hover:bg-default-100 border px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-medium border-default-200 hover:bg-default-100 border px-2 py-1 text-base disabled:cursor-not-allowed disabled:opacity-50"
             disabled={offset >= 1}
             type="button"
             onClick={onNextMonth}

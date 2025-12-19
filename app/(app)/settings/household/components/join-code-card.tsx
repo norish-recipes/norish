@@ -86,7 +86,7 @@ export default function JoinCodeCard() {
   return (
     <Card>
       <CardHeader>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
           <ClipboardDocumentIcon className="h-5 w-5" />
           Join Code
         </h2>
@@ -94,7 +94,7 @@ export default function JoinCodeCard() {
       <CardBody className="gap-4">
         {adminHousehold.joinCode && !joinCodeExpired ? (
           <>
-            <p className="text-default-600 text-sm">
+            <p className="text-default-600 text-base">
               Share this code with others to invite them to your household.
             </p>
             <div className="flex gap-2">
@@ -108,7 +108,7 @@ export default function JoinCodeCard() {
               </Button>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-default-600 text-sm">
+              <span className="text-default-600 text-base">
                 Expires in: <span className="text-warning font-medium">{timeRemaining}</span>
               </span>
               <Button
@@ -124,7 +124,7 @@ export default function JoinCodeCard() {
           </>
         ) : (
           <>
-            <p className="text-default-600 text-sm">
+            <p className="text-default-600 text-base">
               No active join code. Generate one to invite new members.
             </p>
             <div className="flex justify-end">

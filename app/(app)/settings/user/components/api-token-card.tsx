@@ -71,13 +71,13 @@ export default function ApiKeyCard() {
     <>
       <Card>
         <CardHeader>
-          <h2 className="flex items-center gap-2 text-xl font-semibold">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
             <KeyIcon className="h-5 w-5" />
             API Keys
           </h2>
         </CardHeader>
         <CardBody className="gap-4">
-          <p className="text-default-600 text-sm">
+          <p className="text-default-600 text-base">
             API keys allow programmatic access to the Norish API. Use them for integrations,
             shortcuts, and automation.
           </p>
@@ -105,7 +105,7 @@ export default function ApiKeyCard() {
           {/* Existing keys list */}
           {apiKeys.length > 0 && (
             <div className="mt-4">
-              <h3 className="mb-2 text-sm font-medium">Your API Keys</h3>
+              <h3 className="mb-2 text-base font-medium">Your API Keys</h3>
               <Table aria-label="API keys">
                 <TableHeader>
                   <TableColumn>NAME</TableColumn>
@@ -168,7 +168,7 @@ export default function ApiKeyCard() {
           )}
 
           {apiKeys.length === 0 && (
-            <p className="text-default-500 py-4 text-sm">
+            <p className="text-default-500 py-4 text-base">
               No API keys yet. Create one to get started.
             </p>
           )}
@@ -182,7 +182,7 @@ export default function ApiKeyCard() {
             <>
               <ModalHeader>API Key Generated</ModalHeader>
               <ModalBody>
-                <p className="text-warning mb-4 text-sm">
+                <p className="text-warning mb-4 text-base">
                   <strong>Save this key now!</strong> You won&apos;t be able to see it again. We
                   store only a hash and cannot recover this key.
                 </p>

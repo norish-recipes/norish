@@ -28,10 +28,10 @@ export default function DangerZoneCard() {
     <>
       <Card className="border-danger-200 dark:border-danger-900">
         <CardHeader>
-          <h2 className="text-danger text-xl font-semibold">Danger Zone</h2>
+          <h2 className="text-danger text-lg font-semibold">Danger Zone</h2>
         </CardHeader>
         <CardBody className="gap-4">
-          <p className="text-default-600 text-sm">
+          <p className="text-default-600 text-base">
             Once you delete your account, there is no going back. Please be certain.
           </p>
           <div className="flex justify-end">

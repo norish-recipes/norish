@@ -108,7 +108,7 @@ export default function JsonEditor({
         </div>
       )}
 
-      {description && <p className="text-default-500 text-sm">{description}</p>}
+      {description && <p className="text-default-500 text-base">{description}</p>}
 
       <Textarea
         classNames={{
@@ -124,7 +124,7 @@ export default function JsonEditor({
       />
 
       {error && (
-        <div className="text-danger flex items-center gap-2 text-sm">
+        <div className="text-danger flex items-center gap-2 text-base">
           <ExclamationTriangleIcon className="h-4 w-4" />
           {error}
         </div>

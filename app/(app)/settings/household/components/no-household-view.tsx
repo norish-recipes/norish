@@ -31,20 +31,20 @@ export default function NoHouseholdView() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <h1 className="text-3xl font-bold">Household Settings</h1>
+      <h1 className="text-2xl font-bold">Household Settings</h1>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Create Household */}
         <Card>
           <CardHeader>
-            <h2 className="flex items-center gap-2 text-xl font-semibold">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
               <HomeIcon className="h-5 w-5" />
               Create Household
             </h2>
           </CardHeader>
           <CardBody>
             <form className="flex flex-col gap-4" onSubmit={handleCreateHousehold}>
-              <p className="text-default-600 text-sm">
+              <p className="text-default-600 text-base">
                 Create a new household to share recipes and groceries with family or friends.
               </p>
               <Input
@@ -66,14 +66,14 @@ export default function NoHouseholdView() {
         {/* Join Household */}
         <Card>
           <CardHeader>
-            <h2 className="flex items-center gap-2 text-xl font-semibold">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
               <UserGroupIcon className="h-5 w-5" />
               Join Household
             </h2>
           </CardHeader>
           <CardBody>
             <form className="flex flex-col gap-4" onSubmit={handleJoinHousehold}>
-              <p className="text-default-600 text-sm">
+              <p className="text-default-600 text-base">
                 Enter a join code to join an existing household.
               </p>
               <Input

@@ -15,9 +15,9 @@ export default function NoRecipesText() {
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-default-900 text-2xl font-semibold">
+            <h2 className="text-lg font-semibold">
               Your recipe collection awaits
-            </h3>
+            </h2>
             <p className="text-default-500 text-base">
               Paste a recipe URL in the search field above and watch the magic happen.
             </p>

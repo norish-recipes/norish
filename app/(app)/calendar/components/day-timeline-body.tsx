@@ -143,7 +143,7 @@ export function DayTimelineBody({
                           <PopoverContent>
                             <div className="max-w-xs p-2">
                               <span className="font-medium">Allergy warning:</span>
-                              <p className="text-default-500 text-sm">
+                              <p className="text-default-500 text-base">
                                 Contains: {it.allergyWarnings.join(", ")}
                               </p>
                             </div>
@@ -153,7 +153,7 @@ export function DayTimelineBody({
                         <MealIcon slot={it.slot} />
                       )}
                       <span
-                        className={`min-w-0 flex-1 truncate text-sm md:text-base ${it.itemType === "note" ? "text-default-600 italic" : "text-foreground"} ${it.itemType === "recipe" ? "hover:text-primary cursor-pointer" : ""}`}
+                        className={`min-w-0 flex-1 truncate text-base ${it.itemType === "note" ? "text-default-600 italic" : "text-foreground"} ${it.itemType === "recipe" ? "hover:text-primary cursor-pointer" : ""}`}
                         title={displayName || undefined}
                         onDoubleClick={
                           it.itemType === "recipe" ? () => navigateToRecipe(it.recipeId) : undefined

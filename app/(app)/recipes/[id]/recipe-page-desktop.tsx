@@ -47,7 +47,7 @@ export default function RecipePageDesktop() {
     <div className="hidden flex-col space-y-6 px-6 pb-10 md:flex">
       {/* Back link */}
       <div className="w-fit">
-        <Link className="text-default-500 text-sm hover:underline" href="/">
+        <Link className="text-default-500 text-base hover:underline" href="/">
           ← Back to recipes
         </Link>
       </div>
@@ -84,14 +84,14 @@ export default function RecipePageDesktop() {
 
               {/* Description */}
               {recipe.description && (
-                <p className="text-default-600 text-sm leading-relaxed">
+                <p className="text-default-600 text-base leading-relaxed">
                   <SmartMarkdownRenderer text={recipe.description} />
                 </p>
               )}
 
               {/* Meta info row */}
               {(recipe.prepMinutes || recipe.cookMinutes || recipe.totalMinutes !== 0) && (
-                <div className="text-default-500 flex flex-wrap items-center gap-4 text-sm">
+                <div className="text-default-500 flex flex-wrap items-center gap-4 text-base">
                   {recipe.prepMinutes && recipe.prepMinutes > 0 && (
                     <span className="flex items-center gap-1">
                       <WrenchScrewdriverIcon className="h-4 w-4" />
@@ -165,7 +165,7 @@ export default function RecipePageDesktop() {
               />
             ) : (
               <div className="text-default-500 flex h-full w-full items-center justify-center">
-                <span className="text-sm font-medium opacity-70">No image available</span>
+                <span className="text-base font-medium opacity-70">No image available</span>
               </div>
             )}
 

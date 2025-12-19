@@ -29,13 +29,13 @@ export default function AllergiesCard() {
   return (
     <Card>
       <CardHeader>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
           <ExclamationTriangleIcon className="h-5 w-5" />
           Allergies
         </h2>
       </CardHeader>
       <CardBody className="gap-4">
-        <p className="text-default-500 text-sm">
+        <p className="text-default-500 text-base">
           Add your food allergies to receive warnings when planning recipes that contain allergens.
           This information is used to warn you when a planned recipe contains ingredients that match
           your allergies.

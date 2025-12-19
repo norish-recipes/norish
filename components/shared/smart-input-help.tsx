@@ -17,8 +17,8 @@ export default function SmartInputHelp() {
       </PopoverTrigger>
       <PopoverContent className="max-w-xs">
         <div className="px-1 py-2">
-          <p className="text-foreground mb-2 text-sm font-medium">Formatting Tips</p>
-          <ul className="text-default-600 space-y-2 text-sm">
+          <p className="text-foreground mb-2 text-base font-medium">Formatting Tips</p>
+          <ul className="text-default-600 space-y-2 text-base">
             <li className="flex items-start gap-2">
               <code className="bg-default-100 text-primary rounded px-1.5 py-0.5 font-mono text-xs">
                 #

@@ -32,7 +32,7 @@ export default function NotFound() {
           <div className="flex flex-col items-center space-y-2">
             <h1 className="text-foreground text-4xl font-bold">404</h1>
             <h2 className="text-foreground text-xl font-semibold">Nora is confused.</h2>
-            <p className="text-default-500 mt-2 text-center text-sm leading-relaxed">
+            <p className="text-default-500 mt-2 text-center text-base leading-relaxed">
               She is sniffing around to find where you wanted to go.
             </p>
           </div>

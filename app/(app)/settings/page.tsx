@@ -40,7 +40,7 @@ function SettingsContent() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <h1 className="text-3xl font-bold">Settings</h1>
+      <h1 className="text-2xl font-bold">Settings</h1>
 
       <Tabs
         aria-label="Settings tabs"

@@ -87,8 +87,8 @@ export default function CalDavConfigCard() {
         <div className="flex items-center gap-3">
           <ServerIcon className="text-primary h-6 w-6" />
           <div>
-            <h2 className="text-xl font-semibold">Setup CalDAV Sync</h2>
-            <p className="text-default-500 mt-1 text-sm">
+            <h2 className="text-lg font-semibold">Setup CalDAV Sync</h2>
+            <p className="text-default-500 mt-1 text-base">
               Connect your CalDAV-compatible calendar to automatically sync your meal plans
             </p>
           </div>
@@ -101,7 +101,7 @@ export default function CalDavConfigCard() {
           <div className="flex gap-3">
             <InformationCircleIcon className="text-primary mt-0.5 h-5 w-5 flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-primary mb-2 text-sm font-medium">Getting Started with CalDAV</p>
+              <p className="text-primary mb-2 text-base font-medium">Getting Started with CalDAV</p>
               <p className="text-default-600 mb-2 text-xs">
                 You&apos;ll need a CalDAV-compatible calendar service. Popular providers include:
               </p>
@@ -224,7 +224,7 @@ export default function CalDavConfigCard() {
 
         {testResult && (
           <div
-            className={`rounded-lg p-3 text-sm ${
+            className={`rounded-lg p-3 text-base ${
               testResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
             }`}
           >

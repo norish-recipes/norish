@@ -263,14 +263,14 @@ export default function AuthProvidersCard() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <KeyIcon className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">Authentication Providers</h2>
+          <h2 className="text-lg font-semibold">Authentication Providers</h2>
           <Chip color="warning" size="sm" variant="flat">
             Requires restart
           </Chip>
         </div>
       </CardHeader>
       <CardBody className="flex flex-col gap-4">
-        <p className="text-default-500 text-sm">
+        <p className="text-default-500 text-base">
           Configure authentication methods. Changes require a server restart to take effect.
         </p>
 
@@ -279,7 +279,7 @@ export default function AuthProvidersCard() {
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-0.5">
                 <span className="font-medium">Email & Password</span>
-                <span className="text-default-500 text-sm">
+                <span className="text-default-500 text-base">
                   Allow users to sign in with email and password
                 </span>
               </div>
@@ -295,7 +295,7 @@ export default function AuthProvidersCard() {
 
         <Divider />
 
-        <p className="text-default-500 text-sm">
+        <p className="text-default-500 text-base">
           Configure OAuth providers for SSO authentication.
         </p>
 

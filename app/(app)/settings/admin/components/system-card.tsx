@@ -39,7 +39,7 @@ export default function SystemCard() {
   return (
     <Card>
       <CardHeader>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
           <Cog6ToothIcon className="h-5 w-5" />
           System Settings
         </h2>
@@ -48,21 +48,23 @@ export default function SystemCard() {
         {/* Scheduler Settings */}
         <div className="flex flex-col gap-4">
           <h3 className="font-medium">Cleanup Scheduler</h3>
-          <div className="flex items-end justify-between gap-4">
-            <Input
-              className="max-w-xs"
-              description="Delete planned meals older than this many months"
-              label="Cleanup Months"
-              max={24}
-              min={1}
-              type="number"
-              value={months.toString()}
-              onValueChange={(v) => setMonths(parseInt(v) || 3)}
-            />
+          <Input
+            className="max-w-xs"
+            label="Cleanup Months"
+            max={24}
+            min={1}
+            type="number"
+            value={months.toString()}
+            onValueChange={(v) => setMonths(parseInt(v) || 3)}
+          />
+          <p className="text-default-500 text-xs">
+            Delete planned meals older than this many months
+          </p>
+          <div className="flex justify-start">
             <Button
               color="primary"
               isLoading={saving}
-              startContent={<CheckIcon className="h-4 w-4" />}
+              startContent={<CheckIcon className="h-5 w-5" />}
               onPress={handleSaveScheduler}
             >
               Save
@@ -73,21 +75,21 @@ export default function SystemCard() {
         {/* Server Restart */}
         <div className="border-divider flex flex-col gap-4 border-t pt-4">
           <h3 className="font-medium">Server Management</h3>
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm">Restart Server</span>
-              <span className="text-default-500 text-xs">
-                Apply configuration changes that require a restart
-              </span>
+          <div className="flex flex-col gap-2">
+            <span className="text-base">Restart Server</span>
+            <p className="text-default-500 text-xs">
+              Apply configuration changes that require a restart
+            </p>
+            <div className="flex justify-start">
+              <Button
+                color="warning"
+                startContent={<ArrowPathIcon className="h-5 w-5" />}
+                variant="flat"
+                onPress={restartModal.onOpen}
+              >
+                Restart Server
+              </Button>
             </div>
-            <Button
-              color="warning"
-              startContent={<ArrowPathIcon className="h-4 w-4" />}
-              variant="flat"
-              onPress={restartModal.onOpen}
-            >
-              Restart Server
-            </Button>
           </div>
         </div>
       </CardBody>

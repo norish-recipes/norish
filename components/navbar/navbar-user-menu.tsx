@@ -113,7 +113,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
               variant="light"
             >
               <span className="flex flex-col items-start">
-                <span className="text-sm leading-tight font-medium">New recipe</span>
+                <span className="text-base leading-tight font-medium">New recipe</span>
                 <span className="text-default-500 text-xs leading-tight">Write your own recipe</span>
               </span>
             </Button>
@@ -139,7 +139,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
               variant="light"
             >
               <span className="flex flex-col items-start">
-                <span className="text-sm leading-tight font-medium">Import from URL</span>
+                <span className="text-base leading-tight font-medium">Import from URL</span>
                 <span className="text-default-500 text-xs leading-tight">Paste a recipe link</span>
               </span>
             </Button>
@@ -171,7 +171,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
               onPress={() => setUserMenuOpen(false)}
             >
               <span className="flex flex-col items-start">
-                <span className="text-sm leading-tight font-medium">Settings</span>
+                <span className="text-base leading-tight font-medium">Settings</span>
                 <span className="text-default-500 text-xs leading-tight">Manage your account</span>
               </span>
             </Button>
@@ -196,7 +196,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
                 signOut();
               }}
             >
-              <span className="text-sm font-medium">Logout</span>
+              <span className="text-base font-medium">Logout</span>
             </Button>
           </DropdownItem>
         </DropdownMenu>

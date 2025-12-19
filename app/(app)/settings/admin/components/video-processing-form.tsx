@@ -93,7 +93,7 @@ export default function VideoProcessingForm() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <span className="font-medium">Enable Video Parsing</span>
-          <span className="text-default-500 text-sm">
+          <span className="text-default-500 text-base">
             Extract recipes from TikTok, Instagram, YouTube Shorts or Facebook
           </span>
         </div>
@@ -101,7 +101,7 @@ export default function VideoProcessingForm() {
       </div>
 
       {showValidationWarning && (
-        <div className="text-warning bg-warning/10 rounded-lg p-3 text-sm">
+        <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
           Configure a transcription provider below to enable video processing.
         </div>
       )}
@@ -128,7 +128,7 @@ export default function VideoProcessingForm() {
       {/* Transcription Section */}
       <div className="flex flex-col gap-1">
         <span className="font-medium">Transcription</span>
-        <span className="text-default-500 text-sm">
+        <span className="text-default-500 text-base">
           Convert video audio to text for recipe extraction
         </span>
       </div>

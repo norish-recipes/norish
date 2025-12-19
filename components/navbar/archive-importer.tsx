@@ -177,9 +177,9 @@ export default function ArchiveImporter() {
           />
         )}
 
-        {status && <div className="text-default-600 text-sm">{status}</div>}
+        {status && <div className="text-default-600 text-base">{status}</div>}
         {allErrors.length > 0 && (
-          <ul className="text-danger list-disc pl-4 text-sm">
+          <ul className="text-danger list-disc pl-4 text-base">
             {allErrors.map((e, i) => (
               <li key={i}>
                 {e.file}: {String(e.error)}

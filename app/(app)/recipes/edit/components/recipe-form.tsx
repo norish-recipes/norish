@@ -406,7 +406,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                 </div>
               </button>
             )}
-            {errors.image && <p className="text-danger-600 mt-2 text-sm">{errors.image}</p>}
+            {errors.image && <p className="text-danger-600 mt-2 text-base">{errors.image}</p>}
           </div>
         </section>
 
@@ -459,7 +459,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <span className="text-danger-500 text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-default-500 mb-3 flex items-center gap-1 text-sm">
+            <p className="text-default-500 mb-3 flex items-center gap-1 text-base">
               Type ingredients like &quot;2 cups flour&quot; - we&apos;ll automatically parse
               amounts and units.
               <SmartInputHelp />
@@ -470,7 +470,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               onChange={setIngredients}
             />
             {errors.ingredients && (
-              <p className="text-danger-600 mt-2 text-sm">{errors.ingredients}</p>
+              <p className="text-danger-600 mt-2 text-base">{errors.ingredients}</p>
             )}
           </div>
         </section>
@@ -485,7 +485,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <span className="text-danger-500 text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-default-500 mb-3 flex items-center gap-1 text-sm">
+            <p className="text-default-500 mb-3 flex items-center gap-1 text-base">
               Write clear step-by-step instructions. Press Enter to move to the next step.
               <SmartInputHelp />
             </p>
@@ -495,7 +495,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               systemUsed={systemUsed}
               onChange={setSteps}
             />
-            {errors.steps && <p className="text-danger-600 mt-2 text-sm">{errors.steps}</p>}
+            {errors.steps && <p className="text-danger-600 mt-2 text-base">{errors.steps}</p>}
           </div>
         </section>
 
@@ -508,7 +508,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             Tags
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-default-500 mb-3 text-sm">
+            <p className="text-default-500 mb-3 text-base">
               Type tags and click suggestions to add. Selected tags are blue, new tags have a dashed
               border.
             </p>
@@ -596,7 +596,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             </div>
             <div>
               <span
-                className="text-default-700 mb-3 block text-sm font-medium"
+                className="text-default-700 mb-3 block text-base font-medium"
                 id="cooking-times-label"
               >
                 Cooking Times <span className="text-default-400 font-normal">(optional)</span>

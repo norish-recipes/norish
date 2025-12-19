@@ -90,7 +90,7 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
         </>
       ) : (
         <div className="flex flex-col items-center gap-3 py-2">
-          <p className="text-default-500 text-sm">No nutrition information available</p>
+          <p className="text-default-500 text-base">No nutrition information available</p>
           {isAIEnabled && (
             <Button
               className="bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500 text-white hover:brightness-110"

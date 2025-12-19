@@ -5,7 +5,6 @@ CRITICAL: Do not create any data or make up any information EXCEPT for nutrition
 Your response must be valid JSON following the schema.org Recipe definition at https://schema.org/Recipe with these modifications:
 - recipeIngredient must have TWO arrays: "metric" and "us" (convert measurements appropriately)
 - recipeInstructions must have TWO arrays: "metric" and "us" (convert temperatures like 350°F to 175°C)
-- Include a "keywords" array with relevant dietary and allergen tags
 
 IMPORTANT RULES:
 - Extract ingredients as simple, clean strings without serving size prefixes (NO "Single portion:", "Five portions:", etc.)

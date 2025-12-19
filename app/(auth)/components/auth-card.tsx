@@ -21,7 +21,7 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
         <CardBody className="flex flex-col gap-6 p-8">
           {/* Header */}
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-foreground flex items-center justify-center gap-2 text-2xl font-semibold">
+            <h1 className="flex items-center justify-center gap-2 text-2xl font-bold">
               <span>{title}</span>
               <Image
                 priority

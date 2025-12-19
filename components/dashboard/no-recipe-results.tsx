@@ -17,7 +17,7 @@ export default function NoRecipeResults({ onClear }: NoRecipeResultsProps) {
           </div>
 
           <div className="space-y-1">
-            <h3 className="text-default-900 text-xl font-semibold">No recipes found</h3>
+            <h3 className="text-base font-semibold">No recipes found</h3>
             <p className="text-default-500">Try adjusting or clearing your filters.</p>
           </div>
 

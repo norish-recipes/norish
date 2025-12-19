@@ -50,7 +50,7 @@ export default function RecipePageMobile() {
           />
         ) : (
           <div className="text-default-500 flex h-full w-full items-center justify-center">
-            <span className="text-sm font-medium opacity-70">No image available</span>
+            <span className="text-base font-medium opacity-70">No image available</span>
           </div>
         )}
 
@@ -85,7 +85,7 @@ export default function RecipePageMobile() {
           {/* Back link and Actions */}
           <div className="flex items-center justify-between">
             <div className="w-fit hover:underline">
-              <Link className="text-default-500 text-sm" href="/">
+              <Link className="text-default-500 text-base" href="/">
                 ← Back to recipes
               </Link>
             </div>
@@ -112,14 +112,14 @@ export default function RecipePageMobile() {
 
           {/* Description */}
           {recipe.description && (
-            <p className="text-default-600 text-sm leading-relaxed">
+            <p className="text-default-600 text-base leading-relaxed">
               <SmartMarkdownRenderer text={recipe.description} />
             </p>
           )}
 
           {/* Time info */}
           {(recipe.prepMinutes || recipe.totalMinutes) && (
-            <div className="text-default-500 flex flex-wrap items-center gap-4 text-sm">
+            <div className="text-default-500 flex flex-wrap items-center gap-4 text-base">
               {recipe.prepMinutes && (
                 <div className="flex items-center gap-1">
                   <ClockIcon className="h-4 w-4" />

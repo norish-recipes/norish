@@ -9,8 +9,8 @@ export default function ArchiveImportCard() {
     <Card>
       <CardHeader>
         <div>
-          <h2 className="text-xl font-semibold">Import Recipe Archive</h2>
-          <p className="text-default-500 mt-1 text-sm">
+          <h2 className="text-lg font-semibold">Import Recipe Archive</h2>
+          <p className="text-default-500 mt-1 text-base">
             Import recipes from Mela (.melarecipes), Mealie, or Tandoor (.zip) exports
           </p>
         </div>

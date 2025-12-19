@@ -93,7 +93,7 @@ export default function CalDavSyncStatusCard() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <ClockIcon className="text-primary h-6 w-6" />
-              <h2 className="text-xl font-semibold">Sync Status</h2>
+              <h2 className="text-lg font-semibold">Sync Status</h2>
             </div>
             <Button
               color="primary"
@@ -162,10 +162,10 @@ export default function CalDavSyncStatusCard() {
                   Clear filter
                 </Button>
               ) : (
-                <span className="text-default-400 text-sm">Click a badge to filter</span>
+                <span className="text-default-400 text-base">Click a badge to filter</span>
               )}
               {syncStatusTotal > 0 && (
-                <p className="text-default-500 text-sm">
+                <p className="text-default-500 text-base">
                   Showing {startIndex}-{endIndex} of {syncStatusTotal} items
                 </p>
               )}

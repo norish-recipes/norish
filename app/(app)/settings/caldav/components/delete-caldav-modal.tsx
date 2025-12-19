@@ -37,13 +37,13 @@ export default function DeleteCalDavModal({ isOpen, onClose, onConfirm }: Delete
       <ModalContent>
         <ModalHeader>Delete CalDAV Configuration</ModalHeader>
         <ModalBody>
-          <p className="text-default-600 text-sm">
+          <p className="text-default-600 text-base">
             Are you sure you want to delete your CalDAV configuration?
           </p>
           <div className="mt-4">
             <Switch isSelected={deleteEvents} onValueChange={setDeleteEvents}>
               <div>
-                <p className="text-sm font-medium">Delete synced events</p>
+                <p className="text-base font-medium">Delete synced events</p>
                 <p className="text-default-500 text-xs">
                   Remove all events that were created in your CalDAV calendar
                 </p>

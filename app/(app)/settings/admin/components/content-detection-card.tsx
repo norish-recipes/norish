@@ -23,13 +23,13 @@ export default function ContentDetectionCard() {
   return (
     <Card>
       <CardHeader>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
           <DocumentMagnifyingGlassIcon className="h-5 w-5" />
           Content Detection
         </h2>
       </CardHeader>
       <CardBody>
-        <p className="text-default-500 mb-4 text-sm">
+        <p className="text-default-500 mb-4 text-base">
           Configure how recipes are detected and parsed from web pages.
         </p>
         <Accordion selectionMode="multiple" variant="bordered">

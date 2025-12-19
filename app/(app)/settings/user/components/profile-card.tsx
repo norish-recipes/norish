@@ -64,7 +64,7 @@ export default function ProfileCard() {
   return (
     <Card>
       <CardHeader>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
           <UserCircleIcon className="h-5 w-5" />
           Profile
         </h2>

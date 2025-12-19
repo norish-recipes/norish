@@ -24,7 +24,13 @@ async function buildExtractionPrompt(
   // Build allergy detection instruction
   let allergyInstruction = "";
   if (allergies && allergies.length > 0) {
-    allergyInstruction = `\nALLERGY DETECTION: Only detect these specific allergens/dietary tags from the ingredients: ${allergies.join(", ")}. Do not add any other allergy tags.`;
+    allergyInstruction = `
+ALLERGY DETECTION (STRICT):
+- The "keywords" array MUST contain ONLY items from this list: ${allergies.join(", ")}
+- Do NOT add dietary tags, cuisine tags, or descriptive tags
+- If none are present, return an empty array
+- NEVER add additional keywords
+`;
   } else {
     allergyInstruction = "\nALLERGY DETECTION: Skip allergy/dietary tag detection. Do not add any tags to the keywords array.";
   }

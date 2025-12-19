@@ -13,11 +13,11 @@ export default function AIProcessingCard() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <SparklesIcon className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">AI & Processing</h2>
+          <h2 className="text-lg font-semibold">AI & Processing</h2>
         </div>
       </CardHeader>
       <CardBody>
-        <p className="text-default-500 mb-4 text-sm">
+        <p className="text-default-500 mb-4 text-base">
           Configure AI-powered features for recipe extraction and video processing.
         </p>
         <Accordion selectionMode="multiple" variant="bordered">

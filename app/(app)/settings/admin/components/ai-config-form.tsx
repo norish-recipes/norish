@@ -100,7 +100,7 @@ export default function AIConfigForm() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <span className="font-medium">Enable AI Features</span>
-          <span className="text-default-500 text-sm">
+          <span className="text-default-500 text-base">
             Use AI to extract recipes from unstructured content
           </span>
         </div>
@@ -108,7 +108,7 @@ export default function AIConfigForm() {
       </div>
 
       {showValidationWarning && (
-        <div className="text-warning bg-warning/10 rounded-lg p-3 text-sm">
+        <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
           Configure the AI provider settings below to enable AI features.
         </div>
       )}
@@ -192,7 +192,7 @@ export default function AIConfigForm() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <span className="font-medium">Auto-detect Allergy Tags</span>
-          <span className="text-default-500 text-sm">
+          <span className="text-default-500 text-base">
             Automatically add allergy-related tags when importing recipes
           </span>
         </div>
@@ -207,7 +207,7 @@ export default function AIConfigForm() {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <span className="font-medium">Always Use AI Importing</span>
-          <span className="text-default-500 text-sm">
+          <span className="text-default-500 text-base">
             Skip structured parsers and extract recipes using AI only
           </span>
         </div>

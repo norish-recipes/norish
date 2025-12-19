@@ -49,13 +49,13 @@ export default function PermissionPolicyCard() {
   return (
     <Card>
       <CardHeader>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
           <ShieldCheckIcon className="h-5 w-5" />
           Recipe Permissions
         </h2>
       </CardHeader>
       <CardBody className="gap-6">
-        <p className="text-default-500 text-sm">
+        <p className="text-default-500 text-base">
           Control who can view, edit, and delete recipes. Server admins always have full access.
         </p>
 
@@ -64,7 +64,7 @@ export default function PermissionPolicyCard() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">View Recipes</span>
-              <span className="text-default-500 text-sm">Who can see recipes in the dashboard</span>
+              <span className="text-default-500 text-base">Who can see recipes in the dashboard</span>
             </div>
             <Select
               aria-label="View permission"
@@ -96,7 +96,7 @@ export default function PermissionPolicyCard() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">Edit Recipes</span>
-              <span className="text-default-500 text-sm">Who can modify recipe details</span>
+              <span className="text-default-500 text-base">Who can modify recipe details</span>
             </div>
             <Select
               aria-label="Edit permission"
@@ -128,7 +128,7 @@ export default function PermissionPolicyCard() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">Delete Recipes</span>
-              <span className="text-default-500 text-sm">Who can remove recipes</span>
+              <span className="text-default-500 text-base">Who can remove recipes</span>
             </div>
             <Select
               aria-label="Delete permission"
@@ -157,7 +157,7 @@ export default function PermissionPolicyCard() {
           </div>
         </div>
 
-        <div className="bg-content2 text-default-600 mt-2 rounded-lg p-3 text-sm">
+        <div className="bg-content2 text-default-600 mt-2 rounded-lg p-3 text-base">
           <strong>Note:</strong> Groceries and Calendar items follow household rules automatically,
           household members can always edit/delete items belonging to anyone in the same household.
         </div>

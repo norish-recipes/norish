@@ -40,21 +40,21 @@ export default function HouseholdInfoCard() {
     <>
       <Card>
         <CardHeader>
-          <h2 className="flex items-center gap-2 text-xl font-semibold">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
             <HomeIcon className="h-5 w-5" />
             {household.name}
           </h2>
         </CardHeader>
         <CardBody className="gap-4">
           <div className="flex items-center justify-between">
-            <span className="text-default-600 text-sm">Your Role</span>
+            <span className="text-default-600 text-base">Your Role</span>
             <Chip color={isAdmin ? "primary" : "default"} size="sm" variant="flat">
               {isAdmin ? "Admin" : "Member"}
             </Chip>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-default-600 text-sm">Members</span>
-            <span className="text-sm font-medium">{household.users.length}</span>
+            <span className="text-default-600 text-base">Members</span>
+            <span className="text-base font-medium">{household.users.length}</span>
           </div>
           <Divider />
           <div className="flex justify-end">

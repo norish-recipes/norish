@@ -40,8 +40,8 @@ export function DayTimelineHeader({ date, isToday, weekday, month, onPanelOpenCh
       </div>
 
       <div className="-ml-1 flex flex-col leading-tight">
-        <div className="text-default-700 text-sm">{weekday}</div>
-        <div className="text-default-500 text-sm">{month}</div>
+        <div className="text-default-700 text-base">{weekday}</div>
+        <div className="text-default-500 text-base">{month}</div>
       </div>
 
       <div className="flex-1" />
