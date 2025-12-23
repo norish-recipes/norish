@@ -7,20 +7,23 @@ import {
   type AuthProviderGitHub,
   type AuthProviderGoogle,
 } from "@/server/db/zodSchemas/server-config";
+import { isLdapEnabled } from "@/server/auth/ldap-plugin";
 
 export async function getAvailableProviders(): Promise<ProviderInfo[]> {
   const providers: ProviderInfo[] = [];
 
-  // Check password auth
-  const passwordEnabled = await getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED);
+  // Check password auth (disabled when LDAP is enabled)
+  if (!isLdapEnabled()) {
+    const passwordEnabled = await getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED);
 
-  if (passwordEnabled) {
-    providers.push({
-      id: "credential",
-      name: "Email",
-      icon: "mdi:email-outline",
-      type: "credential",
-    });
+    if (passwordEnabled) {
+      providers.push({
+        id: "credential",
+        name: "Email",
+        icon: "mdi:email-outline",
+        type: "credential",
+      });
+    }
   }
 
   // Check GitHub provider
@@ -59,6 +62,16 @@ export async function getAvailableProviders(): Promise<ProviderInfo[]> {
     });
   }
 
+  // Check LDAP provider (configured via env vars)
+  if (isLdapEnabled()) {
+    providers.push({
+      id: "ldap",
+      name: "LDAP",
+      icon: "mdi:folder-network-outline",
+      type: "ldap",
+    });
+  }
+
   return providers;
 }
 
@@ -67,6 +80,9 @@ export async function isPasswordAuthEnabled(): Promise<boolean> {
 
   return passwordEnabled ?? false;
 }
+
+// Re-export from ldap-plugin for convenience
+export { isLdapEnabled } from "@/server/auth/ldap-plugin";
 
 export async function getConfiguredProviders(): Promise<Record<string, boolean>> {
   const [github, google, oidc, passwordEnabled] = await Promise.all([

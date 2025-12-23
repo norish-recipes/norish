@@ -242,8 +242,23 @@ Configure **one** auth provider via environment variables to create your first a
 | **OIDC**     | `OIDC_NAME`, `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_WELLKNOWN` (optional) | https://example.norish.com/api/auth/oauth2/callback/oidc |
 | **GitHub**   | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`                                                      | https://example.norish.com/api/auth/callback/github      |
 | **Google**   | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                                      | https://example.norish.com/api/auth/callback/google      |
+| **LDAP**     | `LDAP_URL`, `LDAP_BASE_DN`, `LDAP_BIND_DN` (optional), `LDAP_BIND_PASSWORD` (optional), `LDAP_USERNAME_ATTR`, `LDAP_SEARCH_FILTER` (optional) |  |
 
 After first login, manage all auth providers via **Settings => Admin**.
+
+### LDAP Authentication
+
+LDAP authentication allows users to sign in with their existing LDAP/Active Directory credentials. When LDAP is enabled, email/password signup is disabled - users must exist in the LDAP directory.
+
+| Variable              | Description                                      | Default |
+| --------------------- | ------------------------------------------------ | ------- |
+| `LDAP_URL`            | LDAP server URL                                  |         |
+| `LDAP_BASE_DN`        | Base DN for user search                          |         |
+| `LDAP_BIND_DN`        | Bind DN for authenticated search (optional)      |         |
+| `LDAP_BIND_PASSWORD`  | Bind password (optional)                         |         |
+| `LDAP_USERNAME_ATTR`  | Username attribute                               | `uid`   |
+| `LDAP_SEARCH_FILTER`  | Filter to restrict which users can login         |         |
+```
 
 ---
 

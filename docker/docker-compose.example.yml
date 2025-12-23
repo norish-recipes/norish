@@ -48,8 +48,18 @@ services:
       # Option 4: Google OAuth (uncomment and remove OIDC above)
       # GOOGLE_CLIENT_ID: <google-client-id>
       # GOOGLE_CLIENT_SECRET: <google-client-secret>
+
+      # Option 5: LDAP (Active Directory, OpenLDAP, FreeIPA, etc.)
+      # When LDAP is enabled, email/password signup is disabled - users must exist in LDAP directory.
+      # LDAP_URL: ldap://openldap:389
+      # LDAP_BASE_DN: ou=users,dc=example,dc=org
+      # LDAP_BIND_DN: cn=readonly,dc=example,dc=org  # Optional, for authenticated bind
+      # LDAP_BIND_PASSWORD: readonly                  # Optional
+      # LDAP_USERNAME_ATTR: uid                       # Default: uid (use sAMAccountName for Active Directory)
+      # LDAP_SEARCH_FILTER: (objectclass=inetOrgPerson)  # Optional, filter to restrict which users can login
     depends_on:
       - db
+      # - openldap  # Uncomment if using LDAP
 
   # PostgreSQL Database
   db:
@@ -80,7 +90,47 @@ services:
     ports:
       - "3003:3000"
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # LDAP Server (for development/testing only)
+  # ─────────────────────────────────────────────────────────────────────────
+  # Uncomment to enable OpenLDAP for testing LDAP authentication
+  # Default credentials: admin / admin
+  # Test user: testuser / testpassword
+  #
+  # openldap:
+  #   image: osixia/openldap:1.5.0
+  #   container_name: openldap
+  #   restart: unless-stopped
+  #   environment:
+  #     LDAP_ORGANISATION: "Example Inc"
+  #     LDAP_DOMAIN: "example.org"
+  #     LDAP_ADMIN_PASSWORD: "admin"
+  #     LDAP_READONLY_USER: "true"
+  #     LDAP_READONLY_USER_USERNAME: "readonly"
+  #     LDAP_READONLY_USER_PASSWORD: "readonly"
+  #   ports:
+  #     - "389:389"
+  #     - "636:636"
+  #   volumes:
+  #     - ldap_data:/var/lib/ldap
+  #     - ldap_config:/etc/ldap/slapd.d
+  #
+  # # phpLDAPadmin - Web UI for managing LDAP (optional)
+  # phpldapadmin:
+  #   image: osixia/phpldapadmin:latest
+  #   container_name: phpldapadmin
+  #   restart: unless-stopped
+  #   environment:
+  #     PHPLDAPADMIN_LDAP_HOSTS: openldap
+  #     PHPLDAPADMIN_HTTPS: "false"
+  #   ports:
+  #     - "8080:80"
+  #   depends_on:
+  #     - openldap
+
 # Use this or map the volume to a host path if you want to persist data
 volumes:
   db_data:
   norish_data:
+  # ldap_data:    # Uncomment if using LDAP
+  # ldap_config:  # Uncomment if using LDAP

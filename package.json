@@ -38,6 +38,7 @@
     "drizzle-zod": "0.8.3",
     "heic-convert": "^2.1.0",
     "html-entities": "^2.6.0",
+    "ldapts": "^8.0.20",
     "next": "16.0.7",
     "node-cron": "^4.2.1",
     "pg": "8.16.3",

@@ -7,6 +7,8 @@ import { apiKey, genericOAuth } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 
+import { ldapPlugin, isLdapEnabled } from "./ldap-plugin";
+
 import {
   getCachedGitHubProvider,
   getCachedGoogleProvider,
@@ -303,6 +305,9 @@ function createAuth() {
       }),
 
       nextCookies(),
+
+      // LDAP authentication (conditionally enabled)
+      ...(isLdapEnabled() ? [ldapPlugin()] : []),
     ],
 
     hooks: {

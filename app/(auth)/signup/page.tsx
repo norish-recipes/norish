@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { SignupClient } from "./components/signup-client";
 
-import { isPasswordAuthEnabled } from "@/server/auth/providers";
+import { isPasswordAuthEnabled, isLdapEnabled } from "@/server/auth/providers";
 import { isRegistrationEnabled } from "@/config/server-config-loader";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +13,11 @@ interface SignupPageProps {
 }
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
+  // Redirect to login if LDAP is enabled (users must use LDAP accounts)
+  if (isLdapEnabled()) {
+    redirect("/login");
+  }
+
   const [passwordEnabled, registrationEnabled] = await Promise.all([
     isPasswordAuthEnabled(),
     isRegistrationEnabled(),

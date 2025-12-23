@@ -9,6 +9,7 @@ import { AuthCard } from "../../components/auth-card";
 import { ProviderButton } from "./provider-button";
 import { AutoSignIn } from "./auto-sign-in";
 import { EmailPasswordForm } from "./email-password-form";
+import { LdapForm } from "./ldap-form";
 
 interface LoginClientProps {
   providers: ProviderInfo[];
@@ -23,23 +24,26 @@ export function LoginClient({
   autoRedirect = false,
   registrationEnabled = false,
 }: LoginClientProps) {
-  // Separate credential and OAuth providers
+  // Separate credential, LDAP and OAuth providers
   const credentialProvider = providers.find((p) => p.type === "credential");
-  const oauthProviders = providers.filter((p) => p.type !== "credential");
+  const ldapProvider = providers.find((p) => p.type === "ldap");
+  const oauthProviders = providers.filter((p) => p.type === "oauth");
 
-  // Auto-redirect for single OAuth provider setups (only if no credential provider)
-  if (autoRedirect && oauthProviders.length === 1 && !credentialProvider) {
+  // Auto-redirect for single OAuth provider setups (only if no credential/ldap provider)
+  if (autoRedirect && oauthProviders.length === 1 && !credentialProvider && !ldapProvider) {
     return <AutoSignIn callbackUrl={callbackUrl} provider={oauthProviders[0]} />;
   }
 
   const hasCredential = !!credentialProvider;
+  const hasLdap = !!ldapProvider;
   const hasOAuth = oauthProviders.length > 0;
+  const hasForm = hasCredential || hasLdap;
 
   return (
     <AuthCard
       footer={
         hasOAuth &&
-        !hasCredential && (
+        !hasForm && (
           <p className="text-small text-default-500 mt-6 text-center">
             You&apos;ll be securely redirected to your sign-in provider.
           </p>
@@ -48,13 +52,25 @@ export function LoginClient({
       subtitle="Nourish every moment."
       title="Sign in to"
     >
+      {/* LDAP form */}
+      {hasLdap && <LdapForm callbackUrl={callbackUrl} />}
+
+      {/* Divider between LDAP and Email/Password */}
+      {hasLdap && hasCredential && (
+        <div className="flex items-center gap-4">
+          <Divider className="flex-1" />
+          <span className="text-small text-default-400">or</span>
+          <Divider className="flex-1" />
+        </div>
+      )}
+
       {/* Email/Password form */}
       {hasCredential && (
         <EmailPasswordForm callbackUrl={callbackUrl} registrationEnabled={registrationEnabled} />
       )}
 
-      {/* Divider between form and OAuth */}
-      {hasCredential && hasOAuth && (
+      {/* Divider between forms and OAuth */}
+      {hasForm && hasOAuth && (
         <div className="flex items-center gap-4">
           <Divider className="flex-1" />
           <span className="text-small text-default-400">or</span>
@@ -78,7 +94,7 @@ export function LoginClient({
       )}
 
       {/* No providers message */}
-      {!hasCredential && !hasOAuth && (
+      {!hasForm && !hasOAuth && (
         <div className="py-4 text-center">
           <p className="text-small text-danger">No authentication providers configured.</p>
           <p className="text-tiny text-default-500 mt-2">Please contact your administrator.</p>

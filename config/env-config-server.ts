@@ -85,6 +85,14 @@ const ServerConfigSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 
+  // LDAP Configuration
+  LDAP_URL: z.string().optional(), // e.g., ldap://localhost:389
+  LDAP_BIND_DN: z.string().optional(), // e.g., cn=admin,dc=example,dc=org
+  LDAP_BIND_PASSWORD: z.string().optional(),
+  LDAP_BASE_DN: z.string().optional(), // e.g., ou=users,dc=example,dc=org
+  LDAP_USERNAME_ATTR: z.string().default("uid"),
+  LDAP_SEARCH_FILTER: z.string().optional(), // e.g., (objectclass=posixAccount)
+
   // During build (SKIP_ENV_VALIDATION=1), use a placeholder key for Next.js compilation
   // At runtime, require a real 32+ char key - the placeholder is never persisted in the image
   MASTER_KEY: isBuild
