@@ -149,7 +149,7 @@ function StoreSectionComponent({
         text: "text-default-500",
         border: "border-default-300",
         ring: "ring-default-400",
-        label: "Unsorted",
+        label: "Auto detect from history",
       };
 
   const activeCount = groceries.filter((g) => !g.isDone).length;

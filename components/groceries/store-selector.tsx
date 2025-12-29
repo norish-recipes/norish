@@ -33,7 +33,7 @@ export function StoreSelector({
   label = "Store",
   placeholder = "Select a store",
   size = "md",
-  noStoreLabel = "Unsorted",
+  noStoreLabel = "Auto detect from history",
   noStoreDescription,
   showWhenEmpty = false,
 }: StoreSelectorProps) {
