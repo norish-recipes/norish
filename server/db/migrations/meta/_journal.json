@@ -134,6 +134,13 @@
       "when": 1766997803671,
       "tag": "0018_talented_red_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1767011696690,
+      "tag": "0019_fluffy_giant_man",
+      "breakpoints": true
     }
   ]
 }

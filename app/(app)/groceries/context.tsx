@@ -38,6 +38,9 @@ type DataCtx = {
   deleteRecurringGrocery: (recurringGroceryId: string) => void;
   getRecurringGroceryForGrocery: (groceryId: string) => RecurringGroceryDto | null;
   assignGroceryToStore: (groceryId: string, storeId: string | null, savePreference?: boolean) => void;
+  reorderGroceriesInStore: (updates: { id: string; sortOrder: number }[], backendOnly?: boolean) => void;
+  markAllDoneInStore: (storeId: string | null) => void;
+  deleteDoneInStore: (storeId: string | null) => void;
 };
 
 const GroceriesContext = createContext<DataCtx | null>(null);

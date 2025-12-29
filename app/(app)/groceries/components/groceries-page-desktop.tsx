@@ -1,9 +1,10 @@
 "use client";
 
 import type { GroceryDto } from "@/types";
+import type { RecurrencePattern } from "@/types/recurrence";
 
-import { Button, Input } from "@heroui/react";
-import { PlusIcon, Cog6ToothIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { Button } from "@heroui/react";
+import { PlusIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
 import { useGroceriesContext, useGroceriesUIContext } from "../context";
@@ -11,6 +12,7 @@ import { useStoresContext } from "../stores-context";
 import { GroceryList, StoreManagerPanel } from "@/components/groceries";
 import AddGroceryPanel from "@/components/Panel/consumers/add-grocery-panel";
 import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
+import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
 
 export function GroceriesPageDesktop() {
   const {
@@ -25,7 +27,10 @@ export function GroceriesPageDesktop() {
     updateRecurringGrocery,
     deleteRecurringGrocery,
     assignGroceryToStore,
+    reorderGroceriesInStore,
     getRecurringGroceryForGrocery,
+    markAllDoneInStore,
+    deleteDoneInStore,
   } = useGroceriesContext();
 
   const { stores, storeManagerOpen, setStoreManagerOpen } = useStoresContext();
@@ -60,16 +65,21 @@ export function GroceriesPageDesktop() {
     ? getRecurringGroceryForGrocery(editingGrocery.id)
     : null;
 
-  const handleEditSave = (itemName: string, pattern: import("@/types/recurrence").RecurrencePattern | null) => {
+  const handleEditSave = (itemName: string, pattern: RecurrencePattern | null) => {
     if (!editingGrocery) return;
 
     if (editingRecurringGrocery) {
+      // Already recurring - update the recurring grocery
       updateRecurringGrocery(
         editingRecurringGrocery.id,
         editingGrocery.id,
         itemName,
         pattern
       );
+    } else if (pattern) {
+      updateGrocery(editingGrocery.id, itemName);
+      createRecurringGrocery(itemName, pattern, editingGrocery.storeId);
+      deleteGroceries([editingGrocery.id]);
     } else {
       updateGrocery(editingGrocery.id, itemName);
     }
@@ -99,16 +109,12 @@ export function GroceriesPageDesktop() {
     : groceries;
 
   if (isLoading) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-default-400">Loading...</div>
-      </div>
-    );
+    return <GrocerySkeleton />;
   }
 
   return (
     <>
-      <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col gap-6 p-6">
+      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Groceries</h1>
@@ -130,18 +136,6 @@ export function GroceriesPageDesktop() {
           </div>
         </div>
 
-        {/* Search */}
-        <Input
-          classNames={{
-            inputWrapper: "bg-content1",
-          }}
-          placeholder="Search groceries..."
-          size="sm"
-          startContent={<MagnifyingGlassIcon className="text-default-400 h-4 w-4" />}
-          value={searchQuery}
-          onValueChange={setSearchQuery}
-        />
-
         {/* Grocery list */}
         <div className="flex-1 overflow-y-auto">
           <GroceryList
@@ -151,7 +145,10 @@ export function GroceriesPageDesktop() {
             onAssignToStore={handleAssignToStore}
             onDelete={handleDelete}
             onEdit={handleEdit}
+            onReorderInStore={reorderGroceriesInStore}
             onToggle={handleToggle}
+            onMarkAllDoneInStore={markAllDoneInStore}
+            onDeleteDoneInStore={deleteDoneInStore}
           />
         </div>
       </div>

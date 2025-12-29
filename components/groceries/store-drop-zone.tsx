@@ -7,6 +7,7 @@ type StoreDropZoneProps = {
   storeId: string | null;
   children: React.ReactNode;
   onDrop?: (storeId: string | null) => void;
+  onDropWithinStore?: (dropY: number) => void;
   isDraggingItem: boolean;
   draggedItemStoreId: string | null | undefined;
 };
@@ -15,6 +16,7 @@ export function StoreDropZone({
   storeId,
   children,
   onDrop,
+  onDropWithinStore,
   isDraggingItem,
   draggedItemStoreId,
 }: StoreDropZoneProps) {
@@ -37,12 +39,18 @@ export function StoreDropZone({
     [isDraggingItem]
   );
 
-  const handlePointerUp = useCallback(() => {
-    if (isHovering && isDraggingItem && draggedItemStoreId !== storeId) {
-      onDrop?.(storeId);
+  const handlePointerUp = useCallback((e: PointerEvent) => {
+    if (isHovering && isDraggingItem) {
+      if (draggedItemStoreId !== storeId) {
+        // Moving to different store
+        onDrop?.(storeId);
+      } else {
+        // Dropping within same store - pass Y position for reordering
+        onDropWithinStore?.(e.clientY);
+      }
     }
     setIsHovering(false);
-  }, [isHovering, isDraggingItem, draggedItemStoreId, storeId, onDrop]);
+  }, [isHovering, isDraggingItem, draggedItemStoreId, storeId, onDrop, onDropWithinStore]);
 
   useEffect(() => {
     if (!isDraggingItem) {

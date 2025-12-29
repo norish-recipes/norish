@@ -15,6 +15,8 @@ interface GroceryItemProps {
   onToggle: (id: string, isDone: boolean) => void;
   onEdit: (grocery: GroceryDto) => void;
   onDelete: (id: string) => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 function GroceryItemComponent({
@@ -22,9 +24,13 @@ function GroceryItemComponent({
   recurringGrocery,
   onToggle,
   onEdit,
+  isFirst = false,
+  isLast = false,
 }: GroceryItemProps) {
+  const roundedClass = isFirst && isLast ? 'rounded-lg' : isFirst ? 'rounded-t-lg' : isLast ? 'rounded-b-lg' : '';
+  
   return (
-    <div className={`bg-content1 flex items-center gap-3 px-4 py-3 ${recurringGrocery ? "min-h-[72px]" : "min-h-14"}`}>
+    <div className={`bg-content1 flex items-center gap-3 px-4 py-3 ${roundedClass} ${recurringGrocery ? "min-h-[72px]" : "min-h-14"}`}>
       {/* Drag handle indicator */}
       <div className="text-default-300 -ml-1">
         <Bars2Icon className="h-5 w-5" />

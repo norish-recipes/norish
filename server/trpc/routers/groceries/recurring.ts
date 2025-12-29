@@ -67,7 +67,7 @@ const createRecurring = authedProcedure
           storeId: input.storeId ?? null,
         };
 
-        const grocery = await createGrocery(id, groceryData);
+        const grocery = await createGrocery(id, groceryData, ctx.userIds);
 
         log.info(
           { userId: ctx.user.id, recurringId: created.id, groceryId: id },

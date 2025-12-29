@@ -162,7 +162,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
               className="shrink-0"
               color="primary"
               startContent={<PlusIcon className="h-5 w-5" />}
-              variant="flat"
+              variant="solid"
               onPress={handleStartCreate}
             >
               Add Store

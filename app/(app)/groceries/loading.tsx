@@ -1,5 +1,5 @@
-import GroceriesSkeleton from "@/components/skeleton/groceries-skeleton";
+import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
 
 export default function Loading() {
-  return <GroceriesSkeleton />;
+  return <GrocerySkeleton />;
 }

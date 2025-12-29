@@ -15,6 +15,10 @@ import {
   deleteGroceryByIds,
   getGroceryOwnerIds,
   getGroceriesByIds,
+  reorderGroceriesInStore,
+  markAllDoneInStore,
+  deleteDoneInStore,
+  assignGroceryToStore,
   GroceryCreateSchema,
   GroceryUpdateBaseSchema,
   GroceryUpdateInputSchema,
@@ -153,6 +157,7 @@ const create = authedProcedure
             isDone: false,
             recurringGroceryId: null,
             storeId,
+            sortOrder: 0,
           });
         }
       }
@@ -174,7 +179,7 @@ const create = authedProcedure
 
     // Execute creates for new groceries
     if (groceriesToCreate.length > 0) {
-      createGroceries(groceriesToCreate)
+      createGroceries(groceriesToCreate, ctx.userIds)
         .then((createdGroceries) => {
           log.info({ userId: ctx.user.id, count: createdGroceries.length }, "Groceries created");
           groceryEmitter.emitToHousehold(ctx.householdKey, "created", {
@@ -339,53 +344,183 @@ const assignToStore = authedProcedure
       savePreference: z.boolean().default(true),
     })
   )
-  .mutation(async ({ ctx, input }) => {
+  .mutation(({ ctx, input }) => {
     const { groceryId, storeId, savePreference } = input;
 
     log.debug({ userId: ctx.user.id, groceryId, storeId }, "Assigning grocery to store");
 
-    // Check grocery ownership
-    const ownerIds = await getGroceryOwnerIds([groceryId]);
-    const ownerId = ownerIds.get(groceryId);
+    // Parallelize ownership checks
+    Promise.all([
+      getGroceryOwnerIds([groceryId]),
+      storeId ? getStoreOwnerId(storeId) : Promise.resolve(null),
+    ])
+      .then(async ([ownerIds, storeOwnerId]) => {
+        const ownerId = ownerIds.get(groceryId);
+        if (!ownerId) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Grocery not found" });
+        }
 
-    if (!ownerId) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Grocery not found" });
-    }
+        await assertHouseholdAccess(ctx.user.id, ownerId);
 
-    await assertHouseholdAccess(ctx.user.id, ownerId);
+        // If assigning to a store, check store ownership
+        if (storeId) {
+          if (!storeOwnerId) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
+          }
+          await assertHouseholdAccess(ctx.user.id, storeOwnerId);
+        }
 
-    // If assigning to a store, check store ownership
-    if (storeId) {
-      const storeOwnerId = await getStoreOwnerId(storeId);
-      if (!storeOwnerId) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
-      }
-      await assertHouseholdAccess(ctx.user.id, storeOwnerId);
-    }
+        // Get grocery for name (need it for preference saving)
+        const [grocery] = await getGroceriesByIds([groceryId]);
+        if (!grocery) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Grocery not found" });
+        }
 
-    // Get grocery for name
-    const [grocery] = await getGroceriesByIds([groceryId]);
-    if (!grocery) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Grocery not found" });
-    }
+        // Assign grocery to store (handles reordering in transaction)
+        const updated = await assignGroceryToStore(groceryId, storeId, ctx.userIds);
 
-    // Update grocery storeId
-    const updated = await updateGroceries([{ id: groceryId, storeId }]);
+        log.info({ userId: ctx.user.id, groceryId, storeId }, "Grocery assigned to store");
 
-    if (updated.length > 0) {
-      log.info({ userId: ctx.user.id, groceryId, storeId }, "Grocery assigned to store");
+        // Save preference if requested and grocery has a name
+        if (savePreference && storeId && grocery.name) {
+          const normalized = normalizeIngredientName(grocery.name);
+          await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
+          log.debug({ userId: ctx.user.id, normalized, storeId }, "Saved ingredient store preference");
+        }
 
-      // Save preference if requested and grocery has a name
-      if (savePreference && storeId && grocery.name) {
-        const normalized = normalizeIngredientName(grocery.name);
-        await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
-        log.debug({ userId: ctx.user.id, normalized, storeId }, "Saved ingredient store preference");
-      }
-
-      groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
-        changedGroceries: updated,
+        groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
+          changedGroceries: [updated],
+        });
+      })
+      .catch((err) => {
+        log.error({ err, userId: ctx.user.id, groceryId, storeId }, "Failed to assign grocery to store");
+        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+          reason: err.message || "Failed to assign grocery to store",
+        });
       });
+
+    return { success: true };
+  });
+
+const reorderInStore = authedProcedure
+  .input(
+    z.object({
+      updates: z.array(
+        z.object({
+          id: z.uuid(),
+          sortOrder: z.number().int().min(0),
+        })
+      ),
+    })
+  )
+  .mutation(({ ctx, input }) => {
+    const { updates } = input;
+
+    if (updates.length === 0) {
+      return { success: true };
     }
+
+    log.debug({ userId: ctx.user.id, count: updates.length }, "Reordering groceries");
+
+    // Verify all groceries exist and user has access
+    const groceryIds = updates.map((u) => u.id);
+    getGroceryOwnerIds(groceryIds)
+      .then(async (ownerIds) => {
+        if (ownerIds.size !== groceryIds.length) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Some groceries not found",
+          });
+        }
+
+        // Check household access for all groceries
+        for (const ownerId of ownerIds.values()) {
+          await assertHouseholdAccess(ctx.user.id, ownerId);
+        }
+
+        // Get groceries to validate they're in same store
+        const groceries = await getGroceriesByIds(groceryIds);
+        const storeIds = new Set(groceries.map((g) => g.storeId));
+
+        if (storeIds.size > 1) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Cannot reorder groceries across different stores",
+          });
+        }
+
+        // Perform reorder
+        const updated = await reorderGroceriesInStore(updates);
+
+        log.info({ userId: ctx.user.id, count: updated.length }, "Groceries reordered");
+        groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
+          changedGroceries: updated,
+        });
+      })
+      .catch((err) => {
+        log.error({ err, userId: ctx.user.id, updates }, "Failed to reorder groceries");
+        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+          reason: err.message || "Failed to reorder groceries",
+        });
+      });
+
+    return { success: true };
+  });
+
+const markAllDone = authedProcedure
+  .input(
+    z.object({
+      storeId: z.uuid().nullable(),
+    })
+  )
+  .mutation(({ ctx, input }) => {
+    const { storeId } = input;
+
+    log.info({ userId: ctx.user.id, storeId }, "Marking all groceries done in store");
+
+    markAllDoneInStore(ctx.userIds, storeId)
+      .then((updated) => {
+        if (updated.length > 0) {
+          log.info({ userId: ctx.user.id, count: updated.length }, "Groceries marked done");
+          groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
+            changedGroceries: updated,
+          });
+        }
+      })
+      .catch((err) => {
+        log.error({ err, userId: ctx.user.id, storeId }, "Failed to mark groceries as done");
+        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+          reason: err.message || "Failed to mark groceries as done",
+        });
+      });
+
+    return { success: true };
+  });
+
+const deleteDone = authedProcedure
+  .input(
+    z.object({
+      storeId: z.uuid().nullable(),
+    })
+  )
+  .mutation(({ ctx, input }) => {
+    const { storeId } = input;
+
+    log.info({ userId: ctx.user.id, storeId }, "Deleting done groceries in store");
+
+    deleteDoneInStore(ctx.userIds, storeId)
+      .then((deletedIds) => {
+        if (deletedIds.length > 0) {
+          log.info({ userId: ctx.user.id, count: deletedIds.length }, "Done groceries deleted");
+          groceryEmitter.emitToHousehold(ctx.householdKey, "deleted", { groceryIds: deletedIds });
+        }
+      })
+      .catch((err) => {
+        log.error({ err, userId: ctx.user.id, storeId }, "Failed to delete done groceries");
+        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+          reason: err.message || "Failed to delete done groceries",
+        });
+      });
 
     return { success: true };
   });
@@ -397,4 +532,7 @@ export const groceriesProcedures = router({
   toggle,
   delete: deleteGroceries,
   assignToStore,
+  reorderInStore,
+  markAllDone,
+  deleteDone,
 });

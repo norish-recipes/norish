@@ -3,10 +3,10 @@
 import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@/types";
 
 import { useMemo, useState, useCallback } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
+import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 
 import { StoreSection } from "./store-section";
-import { StoreDropZone } from "./store-drop-zone";
 
 interface GroceryListProps {
   groceries: GroceryDto[];
@@ -16,6 +16,9 @@ interface GroceryListProps {
   onEdit: (grocery: GroceryDto) => void;
   onDelete: (id: string) => void;
   onAssignToStore?: (groceryId: string, storeId: string | null) => void;
+  onReorderInStore?: (updates: { id: string; sortOrder: number }[], backendOnly?: boolean) => void;
+  onMarkAllDoneInStore?: (storeId: string | null) => void;
+  onDeleteDoneInStore?: (storeId: string | null) => void;
 }
 
 export function GroceryList({
@@ -26,37 +29,10 @@ export function GroceryList({
   onEdit,
   onDelete,
   onAssignToStore,
+  onReorderInStore,
+  onMarkAllDoneInStore,
+  onDeleteDoneInStore,
 }: GroceryListProps) {
-  // Track which grocery is being dragged
-  const [draggingGroceryId, setDraggingGroceryId] = useState<string | null>(null);
-
-  const handleDragStart = useCallback((groceryId: string) => {
-    setDraggingGroceryId(groceryId);
-  }, []);
-
-  const handleDragEnd = useCallback(() => {
-    // Delay clearing to allow drop zones to process the pointerup event
-    setTimeout(() => {
-      setDraggingGroceryId(null);
-    }, 100);
-  }, []);
-
-  const handleDrop = useCallback((targetStoreId: string | null) => {
-    if (draggingGroceryId && onAssignToStore) {
-      const grocery = groceries.find((g) => g.id === draggingGroceryId);
-      if (grocery && grocery.storeId !== targetStoreId) {
-        onAssignToStore(draggingGroceryId, targetStoreId);
-      }
-    }
-  }, [draggingGroceryId, groceries, onAssignToStore]);
-
-  // Get the current store of the dragged item
-  const draggedItemStoreId = useMemo(() => {
-    if (!draggingGroceryId) return undefined;
-    const grocery = groceries.find((g) => g.id === draggingGroceryId);
-    return grocery?.storeId ?? null;
-  }, [draggingGroceryId, groceries]);
-
   // Group groceries by storeId
   const groupedGroceries = useMemo(() => {
     const groups: Map<string | null, GroceryDto[]> = new Map();
@@ -86,6 +62,64 @@ export function GroceryList({
   // Get unsorted groceries
   const unsortedGroceries = groupedGroceries.get(null) ?? [];
 
+  // Track dragging state for cross-store assignment
+  const [draggingGroceryId, setDraggingGroceryId] = useState<string | null>(null);
+  const [draggingStoreId, setDraggingStoreId] = useState<string | null | 'unsorted'>(null);
+
+  const handleDragStart = useCallback((groceryId: string) => {
+    setDraggingGroceryId(groceryId);
+  }, []);
+
+  const handleDragEnd = useCallback((pointerPosition: { x: number; y: number }) => {
+    if (!draggingGroceryId) {
+      setDraggingGroceryId(null);
+      return;
+    }
+
+    const grocery = groceries.find((g) => g.id === draggingGroceryId);
+    if (!grocery) {
+      setDraggingGroceryId(null);
+      return;
+    }
+
+    // Check if dropped on a store section using pointer position
+    const { x, y } = pointerPosition;
+    const elementsAtPoint = document.elementsFromPoint(x, y);
+    
+    let foundStoreSection = false;
+    let targetStoreId: string | null = null;
+    
+    for (const element of elementsAtPoint) {
+      const storeIdAttr = element.getAttribute('data-store-id');
+      if (storeIdAttr !== null) {
+        foundStoreSection = true;
+        targetStoreId = storeIdAttr === 'unsorted' ? null : storeIdAttr;
+        break;
+      }
+    }
+
+    const currentStoreId = grocery.storeId ?? null;
+    
+    // Cross-store move - dropped on a different store
+    if (foundStoreSection && currentStoreId !== targetStoreId && onAssignToStore) {
+      onAssignToStore(draggingGroceryId, targetStoreId);
+    }
+    // Within-store reorder - dropped on same store
+    else if (foundStoreSection && currentStoreId === targetStoreId && onReorderInStore) {
+      // Send final positions to backend
+      const storeGroceries = groceries.filter(g => g.storeId === currentStoreId && !g.isDone);
+      const updates = storeGroceries.map((g, index) => ({
+        id: g.id,
+        sortOrder: index,
+      }));
+      if (updates.length > 0) {
+        onReorderInStore(updates, true); // true = updateBackend (send to backend)
+      }
+    }
+
+    setDraggingGroceryId(null);
+  }, [draggingGroceryId, groceries, onAssignToStore, onReorderInStore]);
+
   // Get store in order with their groceries
   const storeWithGroceries = useMemo(() => {
     return stores
@@ -103,11 +137,23 @@ export function GroceryList({
 
   if (!hasGroceries && !hasStores) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 py-12">
-        <div className="text-default-300 text-6xl">🛒</div>
-        <div className="text-center">
-          <p className="text-default-600 text-lg font-medium">Your list is empty</p>
-          <p className="text-default-400 text-sm">Add items using the button below</p>
+      <div className="flex flex-col items-center justify-center px-4 py-20">
+        <div className="bg-content1/90 shadow-large relative w-full max-w-xl rounded-xl backdrop-blur-xl">
+          <div className="flex flex-col items-center gap-6 p-10 text-center">
+            <div className="relative">
+              <div className="bg-primary-500/20 dark:bg-primary-400/15 absolute inset-0 scale-125 rounded-full blur-3xl" />
+              <div className="bg-primary-500/15 text-primary-500 relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
+                <ShoppingCartIcon className="h-7 w-7" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold">Your grocery list awaits</h2>
+              <p className="text-default-500 text-base">
+                Add items using the "Add Item" button above to get started.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -115,69 +161,63 @@ export function GroceryList({
 
   return (
     <div className="flex flex-col gap-3 p-1">
-      <AnimatePresence mode="popLayout">
-        {/* Unsorted section always first if it has items */}
-        {unsortedGroceries.length > 0 && (
-          <motion.div
-            key="unsorted"
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            initial={{ opacity: 0, scale: 0.95 }}
-            layout
-            transition={{ type: "spring", stiffness: 500, damping: 35 }}
-          >
-            <StoreDropZone
-              draggedItemStoreId={draggedItemStoreId}
-              isDraggingItem={draggingGroceryId !== null}
-              storeId={null}
-              onDrop={handleDrop}
-            >
-              <StoreSection
-                groceries={unsortedGroceries}
-                isDraggingAny={draggingGroceryId !== null}
-                recurringGroceries={recurringGroceries}
-                store={null}
-                onDelete={onDelete}
-                onDragEnd={handleDragEnd}
-                onDragStart={handleDragStart}
-                onEdit={onEdit}
-                onToggle={onToggle}
-              />
-            </StoreDropZone>
-          </motion.div>
-        )}
+      {/* Unsorted section always first if it has items */}
+      {unsortedGroceries.length > 0 && (
+        <motion.div
+          key="unsorted"
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          layout
+          style={{ zIndex: draggingStoreId === 'unsorted' ? 50 : 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 35 }}
+        >
+          <StoreSection
+            groceries={unsortedGroceries}
+            recurringGroceries={recurringGroceries}
+            store={null}
+            isDraggingAny={draggingGroceryId !== null}
+            onDelete={onDelete}
+            onDragEnd={handleDragEnd}
+            onDragStart={handleDragStart}
+            onDraggingInSection={(isDragging) => setDraggingStoreId(isDragging ? 'unsorted' : null)}
+            onEdit={onEdit}
+            onReorderInStore={onReorderInStore}
+            onToggle={onToggle}
+            onMarkAllDone={() => onMarkAllDoneInStore?.(null)}
+            onDeleteDone={() => onDeleteDoneInStore?.(null)}
+          />
+        </motion.div>
+      )}
 
-        {/* Store sections */}
-        {storeWithGroceries.map(({ store, groceries: storeGroceries }) => (
-          <motion.div
-            key={store.id}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            initial={{ opacity: 0, scale: 0.95 }}
-            layout
-            transition={{ type: "spring", stiffness: 500, damping: 35 }}
-          >
-            <StoreDropZone
-              draggedItemStoreId={draggedItemStoreId}
-              isDraggingItem={draggingGroceryId !== null}
-              storeId={store.id}
-              onDrop={handleDrop}
-            >
-              <StoreSection
-                groceries={storeGroceries}
-                isDraggingAny={draggingGroceryId !== null}
-                recurringGroceries={recurringGroceries}
-                store={store}
-                onDelete={onDelete}
-                onDragEnd={handleDragEnd}
-                onDragStart={handleDragStart}
-                onEdit={onEdit}
-                onToggle={onToggle}
-              />
-            </StoreDropZone>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+      {/* Store sections */}
+      {storeWithGroceries.map(({ store, groceries: storeGroceries }) => (
+        <motion.div
+          key={store.id}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          layout
+          style={{ zIndex: draggingStoreId === store.id ? 50 : 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 35 }}
+        >
+          <StoreSection
+            groceries={storeGroceries}
+            recurringGroceries={recurringGroceries}
+            store={store}
+            isDraggingAny={draggingGroceryId !== null}
+            onDelete={onDelete}
+            onDragEnd={handleDragEnd}
+            onDragStart={handleDragStart}
+            onDraggingInSection={(isDragging) => setDraggingStoreId(isDragging ? store.id : null)}
+            onEdit={onEdit}
+            onReorderInStore={onReorderInStore}
+            onToggle={onToggle}
+            onMarkAllDone={() => onMarkAllDoneInStore?.(store.id)}
+            onDeleteDone={() => onDeleteDoneInStore?.(store.id)}
+          />
+        </motion.div>
+      ))}
     </div>
   );
 }

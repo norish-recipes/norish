@@ -1,4 +1,4 @@
-import { boolean, index, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
 import { recipeIngredients } from "./recipe-ingredients";
@@ -25,6 +25,7 @@ export const groceries = pgTable(
     unit: text("unit"),
     amount: numeric("amount", { precision: 10, scale: 3 }),
     isDone: boolean("is_done").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -34,5 +35,6 @@ export const groceries = pgTable(
     index("idx_groceries_recurring_grocery_id").on(t.recurringGroceryId),
     index("idx_groceries_store_id").on(t.storeId),
     index("idx_groceries_is_done").on(t.isDone),
+    index("idx_groceries_sort_order").on(t.sortOrder),
   ]
 );

@@ -16,6 +16,7 @@ export const GrocerySelectBaseSchema = createSelectSchema(groceries)
     amount: z.coerce.number().nullable(),
     recurringGroceryId: z.string().uuid().nullable(),
     storeId: z.string().uuid().nullable(),
+    sortOrder: z.number().int(),
   });
 
 // Insert schema with explicit fields to avoid drizzle-zod type inference issues
@@ -25,6 +26,7 @@ export const GroceryInsertBaseSchema = z.object({
   unit: z.string().nullable(),
   amount: z.coerce.number().nullable(),
   isDone: z.boolean().default(false),
+  sortOrder: z.number().int().default(0),
   recipeIngredientId: z.uuid().nullable(),
   recurringGroceryId: z.uuid().nullable(),
   storeId: z.uuid().nullable().optional(),
@@ -37,6 +39,7 @@ export const GroceryUpdateBaseSchema = z.object({
   unit: z.string().nullable().optional(),
   amount: z.coerce.number().nullable().optional(),
   isDone: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
   userId: z.string().optional(),
   recipeIngredientId: z.string().uuid().nullable().optional(),
   recurringGroceryId: z.string().uuid().nullable().optional(),

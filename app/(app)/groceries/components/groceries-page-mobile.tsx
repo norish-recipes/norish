@@ -1,6 +1,7 @@
 "use client";
 
 import type { GroceryDto } from "@/types";
+import type { RecurrencePattern } from "@/types/recurrence";
 
 import { Button } from "@heroui/react";
 import { PlusIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
@@ -10,6 +11,7 @@ import { useStoresContext } from "../stores-context";
 import { GroceryList, StoreManagerPanel } from "@/components/groceries";
 import AddGroceryPanel from "@/components/Panel/consumers/add-grocery-panel";
 import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
+import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
 
 export function GroceriesPageMobile() {
   const {
@@ -24,7 +26,10 @@ export function GroceriesPageMobile() {
     updateRecurringGrocery,
     deleteRecurringGrocery,
     assignGroceryToStore,
+    reorderGroceriesInStore,
     getRecurringGroceryForGrocery,
+    markAllDoneInStore,
+    deleteDoneInStore,
   } = useGroceriesContext();
 
   const { stores, storeManagerOpen, setStoreManagerOpen } = useStoresContext();
@@ -57,7 +62,7 @@ export function GroceriesPageMobile() {
     ? getRecurringGroceryForGrocery(editingGrocery.id)
     : null;
 
-  const handleEditSave = (itemName: string, pattern: import("@/types/recurrence").RecurrencePattern | null) => {
+  const handleEditSave = (itemName: string, pattern: RecurrencePattern | null) => {
     if (!editingGrocery) return;
 
     if (editingRecurringGrocery) {
@@ -89,11 +94,7 @@ export function GroceriesPageMobile() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-default-400">Loading...</div>
-      </div>
-    );
+    return <GrocerySkeleton />;
   }
 
   return (
@@ -122,7 +123,10 @@ export function GroceriesPageMobile() {
             onAssignToStore={handleAssignToStore}
             onDelete={handleDelete}
             onEdit={handleEdit}
+            onReorderInStore={reorderGroceriesInStore}
             onToggle={handleToggle}
+            onMarkAllDoneInStore={markAllDoneInStore}
+            onDeleteDoneInStore={deleteDoneInStore}
           />
         </div>
 

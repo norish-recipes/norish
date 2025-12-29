@@ -137,6 +137,15 @@ export default function EditGroceryPanel({
                 onValueChange={setItemName}
               />
 
+              {/* Store selection */}
+              <StoreSelector
+                label="Store"
+                selectedStoreId={selectedStoreId}
+                showWhenEmpty
+                stores={stores}
+                onSelectionChange={handleStoreChange}
+              />
+
               {/* Recurrence Pills Container */}
               <AnimatePresence mode="popLayout">
                 <div className="flex flex-wrap items-center gap-2">
@@ -176,15 +185,6 @@ export default function EditGroceryPanel({
                   + Add repeat
                 </Button>
               )}
-
-              {/* Store selection */}
-              <StoreSelector
-                label="Store"
-                selectedStoreId={selectedStoreId}
-                showWhenEmpty
-                stores={stores}
-                onSelectionChange={handleStoreChange}
-              />
             </div>
 
             <div className="flex justify-end gap-2">
