@@ -1,13 +1,20 @@
-import AddGroceryButton from "./components/add-grocery-button";
 import { GroceriesContextProvider } from "./context";
+import { StoresContextProvider } from "./stores-context";
+import { GroceriesPageMobile } from "./components/groceries-page-mobile";
+import { GroceriesPageDesktop } from "./components/groceries-page-desktop";
 
 export default function GroceriesPage() {
   return (
-    <GroceriesContextProvider>
-      <div className="space-y-4 pb-16 md:p-6 md:pb-0">
-        <h1 className="text-2xl font-bold">Groceries</h1>
-        <AddGroceryButton />
-      </div>
-    </GroceriesContextProvider>
+    <StoresContextProvider>
+      <GroceriesContextProvider>
+        <div className="flex min-h-0 w-full flex-1 flex-col md:hidden">
+          <GroceriesPageMobile />
+        </div>
+
+        <div className="hidden min-h-0 w-full flex-1 flex-col md:flex">
+          <GroceriesPageDesktop />
+        </div>
+      </GroceriesContextProvider>
+    </StoresContextProvider>
   );
 }

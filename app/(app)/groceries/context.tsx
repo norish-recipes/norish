@@ -22,9 +22,9 @@ type DataCtx = {
   pendingGroceries: GroceryDto[];
   isLoading: boolean;
 
-  // Actions
-  createGrocery: (raw: string) => void;
-  createRecurringGrocery: (raw: string, pattern: RecurrencePattern) => void;
+  // Grocery Actions
+  createGrocery: (raw: string, storeId?: string | null) => void;
+  createRecurringGrocery: (raw: string, pattern: RecurrencePattern, storeId?: string | null) => void;
   toggleGroceries: (ids: string[], isDone: boolean) => void;
   toggleRecurringGrocery: (recurringGroceryId: string, groceryId: string, isDone: boolean) => void;
   updateGrocery: (id: string, updatedText: string) => void;
@@ -37,6 +37,7 @@ type DataCtx = {
   deleteGroceries: (ids: string[]) => void;
   deleteRecurringGrocery: (recurringGroceryId: string) => void;
   getRecurringGroceryForGrocery: (groceryId: string) => RecurringGroceryDto | null;
+  assignGroceryToStore: (groceryId: string, storeId: string | null, savePreference?: boolean) => void;
 };
 
 const GroceriesContext = createContext<DataCtx | null>(null);
@@ -50,6 +51,10 @@ type UICtx = {
   recurrencePanelGroceryId: string | null;
   openRecurrencePanel: (groceryId: string) => void;
   closeRecurrencePanel: () => void;
+  addGroceryPanelOpen: boolean;
+  setAddGroceryPanelOpen: (open: boolean) => void;
+  editingGrocery: GroceryDto | null;
+  setEditingGrocery: (grocery: GroceryDto | null) => void;
 };
 
 const GroceriesUIContext = createContext<UICtx | null>(null);
@@ -61,7 +66,7 @@ const GroceriesUIContext = createContext<UICtx | null>(null);
 export function GroceriesContextProvider({ children }: { children: ReactNode }) {
   // Data hooks
   const { groceries, recurringGroceries, isLoading } = useGroceriesQuery();
-  const mutations = useGroceriesMutations();
+  const groceryMutations = useGroceriesMutations();
 
   // Subscribe to WebSocket events (updates query cache)
   useGroceriesSubscription();
@@ -69,6 +74,8 @@ export function GroceriesContextProvider({ children }: { children: ReactNode }) 
   // UI State
   const [recurrencePanelOpen, setRecurrencePanelOpen] = useState(false);
   const [recurrencePanelGroceryId, setRecurrencePanelGroceryId] = useState<string | null>(null);
+  const [addGroceryPanelOpen, setAddGroceryPanelOpen] = useState(false);
+  const [editingGrocery, setEditingGrocery] = useState<GroceryDto | null>(null);
 
   const openRecurrencePanel = useCallback((groceryId: string) => {
     setRecurrencePanelGroceryId(groceryId);
@@ -111,9 +118,9 @@ export function GroceriesContextProvider({ children }: { children: ReactNode }) 
       doneGroceries,
       pendingGroceries,
       isLoading,
-      ...mutations,
+      ...groceryMutations,
     }),
-    [groceries, recurringGroceries, doneGroceries, pendingGroceries, isLoading, mutations]
+    [groceries, recurringGroceries, doneGroceries, pendingGroceries, isLoading, groceryMutations]
   );
 
   // UI context value
@@ -123,8 +130,12 @@ export function GroceriesContextProvider({ children }: { children: ReactNode }) 
       recurrencePanelGroceryId,
       openRecurrencePanel,
       closeRecurrencePanel,
+      addGroceryPanelOpen,
+      setAddGroceryPanelOpen,
+      editingGrocery,
+      setEditingGrocery,
     }),
-    [recurrencePanelOpen, recurrencePanelGroceryId, openRecurrencePanel, closeRecurrencePanel]
+    [recurrencePanelOpen, recurrencePanelGroceryId, openRecurrencePanel, closeRecurrencePanel, addGroceryPanelOpen, editingGrocery]
   );
 
   return (

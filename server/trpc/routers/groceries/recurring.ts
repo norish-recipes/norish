@@ -30,6 +30,7 @@ const createRecurring = authedProcedure
       recurrenceInterval: z.number().min(1),
       recurrenceWeekday: z.number().nullable(),
       nextPlannedFor: z.string(),
+      storeId: z.string().uuid().nullable().optional(),
     })
   )
   .mutation(async ({ ctx, input }) => {
@@ -63,6 +64,7 @@ const createRecurring = authedProcedure
           isDone: false,
           recurringGroceryId: created.id,
           recipeIngredientId: null,
+          storeId: input.storeId ?? null,
         };
 
         const grocery = await createGrocery(id, groceryData);

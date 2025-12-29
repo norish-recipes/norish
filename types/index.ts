@@ -8,6 +8,7 @@ export type * from "@/types/dto/planned-recipe";
 export type * from "@/types/dto/notes";
 export type * from "@/types/dto/groceries";
 export type * from "@/types/dto/recurring-groceries";
+export type * from "@/types/dto/stores";
 export type * from "@/types/dto/recipe-ingredient";
 export type * from "@/types/dto/caldav-config";
 export type * from "@/types/dto/caldav-sync-status";

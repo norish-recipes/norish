@@ -11,6 +11,7 @@ import { configRouter } from "./routers/config";
 import { archive } from "./routers/archive";
 import { favoritesRouter } from "./routers/favorites";
 import { ratingsRouter } from "./routers/ratings";
+import { storesRouter } from "./routers/stores";
 
 export const appRouter = router({
   groceries: groceriesRouter,
@@ -26,6 +27,7 @@ export const appRouter = router({
   archive,
   favorites: favoritesRouter,
   ratings: ratingsRouter,
+  stores: storesRouter,
 });
 
 // Export type definition of API

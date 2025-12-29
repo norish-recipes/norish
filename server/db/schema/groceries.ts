@@ -3,6 +3,7 @@ import { boolean, index, numeric, pgTable, text, timestamp, uuid } from "drizzle
 import { users } from "./auth";
 import { recipeIngredients } from "./recipe-ingredients";
 import { recurringGroceries } from "./recurring-groceries";
+import { stores } from "./stores";
 
 export const groceries = pgTable(
   "groceries",
@@ -17,6 +18,9 @@ export const groceries = pgTable(
     recurringGroceryId: uuid("recurring_grocery_id").references(() => recurringGroceries.id, {
       onDelete: "set null",
     }),
+    storeId: uuid("store_id").references(() => stores.id, {
+      onDelete: "set null",
+    }),
     name: text("name"),
     unit: text("unit"),
     amount: numeric("amount", { precision: 10, scale: 3 }),
@@ -28,6 +32,7 @@ export const groceries = pgTable(
     index("idx_groceries_user_id").on(t.userId),
     index("idx_groceries_recipe_ingredient_id").on(t.recipeIngredientId),
     index("idx_groceries_recurring_grocery_id").on(t.recurringGroceryId),
+    index("idx_groceries_store_id").on(t.storeId),
     index("idx_groceries_is_done").on(t.isDone),
   ]
 );

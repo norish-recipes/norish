@@ -6,12 +6,14 @@ import { PlusIcon } from "@heroicons/react/20/solid";
 import { motion } from "motion/react";
 
 import { useGroceriesContext } from "../context";
+import { useStoresContext } from "../stores-context";
 
 import { AddGroceryPanel } from "@/components/Panel/consumers";
 import { useAutoHide } from "@/hooks/auto-hide";
 
 export default function AddGroceryButton() {
   const { createGrocery, createRecurringGrocery } = useGroceriesContext();
+  const { stores } = useStoresContext();
   const [panelOpen, setPanelOpen] = useState(false);
   const { isVisible, show } = useAutoHide({ disabled: panelOpen });
 
@@ -51,6 +53,7 @@ export default function AddGroceryButton() {
       {/* Creation Panel */}
       <AddGroceryPanel
         open={panelOpen}
+        stores={stores}
         onCreate={createGrocery}
         onCreateRecurring={createRecurringGrocery}
         onOpenChange={setPanelOpen}

@@ -127,6 +127,13 @@
       "when": 1766082137157,
       "tag": "0017_nice_phil_sheldon",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1766997803671,
+      "tag": "0018_talented_red_skull",
+      "breakpoints": true
     }
   ]
 }

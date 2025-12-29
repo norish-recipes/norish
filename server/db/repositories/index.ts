@@ -3,6 +3,7 @@ export * from "@/server/db/repositories/recipes";
 export * from "@/server/db/repositories/notes";
 export * from "@/server/db/repositories/groceries";
 export * from "@/server/db/repositories/recurring-groceries";
+export * from "@/server/db/repositories/stores";
 export * from "@/server/db/repositories/households";
 export * from "@/server/db/repositories/ingredients";
 export * from "@/server/db/repositories/steps";

@@ -9,6 +9,7 @@ export * from "./planned-recipe";
 export * from "./notes";
 export * from "./groceries";
 export * from "./recurring-groceries";
+export * from "./stores";
 export * from "./user";
 export * from "./server-config";
 export * from "./favorites";

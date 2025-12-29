@@ -1,6 +1,6 @@
 "use client";
 
-import type { GroceryDto, RecurringGroceryDto } from "@/types";
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@/types";
 import type { RecurrencePattern } from "@/types/recurrence";
 
 import { useState, useEffect } from "react";
@@ -9,6 +9,7 @@ import { AnimatePresence } from "motion/react";
 
 import { RecurrenceSuggestion } from "@/app/(app)/groceries/components/recurrence-suggestion";
 import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";
+import { StoreSelector } from "@/components/groceries/store-selector";
 import { useGroceryFormState } from "@/hooks/use-grocery-form-state";
 import { useRecurrenceDetection } from "@/hooks/use-recurrence-detection";
 import Panel, { PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
@@ -18,7 +19,9 @@ type EditGroceryPanelProps = {
   onOpenChange: (open: boolean) => void;
   grocery: GroceryDto;
   recurringGrocery: RecurringGroceryDto | null;
+  stores: StoreDto[];
   onSave: (itemName: string, pattern: RecurrencePattern | null) => void;
+  onAssignToStore: (storeId: string | null, savePreference?: boolean) => void;
   onDelete: () => void;
 };
 
@@ -27,10 +30,14 @@ export default function EditGroceryPanel({
   onOpenChange,
   grocery,
   recurringGrocery,
+  stores,
   onSave,
+  onAssignToStore,
   onDelete,
 }: EditGroceryPanelProps) {
   const [recurrencePanelOpen, setRecurrencePanelOpen] = useState(false);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
+  const [hasStoreChanged, setHasStoreChanged] = useState(false);
 
   const {
     itemName,
@@ -53,6 +60,8 @@ export default function EditGroceryPanel({
       const text = [grocery.amount, grocery.unit, grocery.name].filter(Boolean).join(" ");
 
       setItemName(text);
+      setSelectedStoreId(grocery.storeId ?? null);
+      setHasStoreChanged(false);
 
       if (recurringGrocery) {
         setConfirmedPattern({
@@ -68,12 +77,23 @@ export default function EditGroceryPanel({
     }
   }, [open, grocery, recurringGrocery, setItemName, setConfirmedPattern, reset]);
 
+  const handleStoreChange = (storeId: string | null) => {
+    setSelectedStoreId(storeId);
+    setHasStoreChanged(storeId !== (grocery.storeId ?? null));
+  };
+
   const handleSubmit = () => {
     const trimmed = itemName.trim();
 
     if (!trimmed) return;
 
     onSave(trimmed, confirmedPattern);
+
+    // If store changed, save that too (with preference)
+    if (hasStoreChanged) {
+      onAssignToStore(selectedStoreId, true);
+    }
+
     onOpenChange(false);
   };
 
@@ -156,6 +176,15 @@ export default function EditGroceryPanel({
                   + Add repeat
                 </Button>
               )}
+
+              {/* Store selection */}
+              <StoreSelector
+                label="Store"
+                selectedStoreId={selectedStoreId}
+                showWhenEmpty
+                stores={stores}
+                onSelectionChange={handleStoreChange}
+              />
             </div>
 
             <div className="flex justify-end gap-2">

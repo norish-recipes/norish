@@ -12,6 +12,7 @@ export * from "./planned-recipe";
 export * from "./notes";
 export * from "./groceries";
 export * from "./recurring-groceries";
+export * from "./stores";
 export * from "./auth";
 export * from "./caldav-config";
 export * from "./caldav-sync-status";
