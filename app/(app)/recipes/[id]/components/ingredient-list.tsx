@@ -23,13 +23,10 @@ function formatAmount(n: number | null | string): string {
 
 export default function IngredientsList() {
   const { adjustedIngredients, recipe } = useRecipeContextRequired();
-  const [display, setDisplay] = useState<RecipeIngredientsDto[]>(recipe.recipeIngredients);
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
 
-  useEffect(() => {
-    if (adjustedIngredients?.length > 0) setDisplay(adjustedIngredients);
-    else setDisplay(recipe.recipeIngredients);
-  }, [adjustedIngredients, recipe.recipeIngredients]);
+  // Use adjustedIngredients directly, fall back to recipe ingredients only if empty
+  const display = adjustedIngredients?.length > 0 ? adjustedIngredients : recipe.recipeIngredients;
 
   const toggle = (idx: number) => {
     setChecked((prev) => {

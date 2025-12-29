@@ -10,3 +10,9 @@ export { useRecipeAutocomplete } from "./use-recipe-autocomplete";
 export { useNutritionQuery } from "./use-nutrition-query";
 export { useNutritionMutation } from "./use-nutrition-mutation";
 export { useNutritionSubscription } from "./use-nutrition-subscription";
+export {
+  useServingsScaler,
+  formatServings,
+  type ServingsScalerResult,
+  type ScaledIngredient,
+} from "./use-servings-scaler";

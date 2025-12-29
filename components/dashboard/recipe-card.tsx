@@ -201,7 +201,13 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
       <MiniCalendar open={calendarOpen} recipeId={recipe.id} onOpenChange={setCalendarOpen} />
 
       {/* Groceries panel */}
-      <MiniGroceries open={groceriesOpen} recipeId={recipe.id} onOpenChange={setGroceriesOpen} />
+      <MiniGroceries 
+        open={groceriesOpen} 
+        recipeId={recipe.id} 
+        initialServings={recipe.servings || 1}
+        originalServings={recipe.servings || 1}
+        onOpenChange={setGroceriesOpen} 
+      />
     </>
   );
 }

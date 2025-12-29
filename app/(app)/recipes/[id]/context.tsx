@@ -2,7 +2,7 @@
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeIngredientsDto } from "@/types";
 
-import {
+import React, {
   createContext,
   useContext,
   useEffect,
@@ -48,9 +48,14 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
   const { recipe, isLoading, error, invalidate: _invalidate } = useRecipeQuery(recipeId);
   const [_servings, setServings] = useState<number | null>(null);
   const [convertingTo, setConvertingTo] = useState<MeasurementSystem | null>(null);
-  const [adjustedIngredients, setAdjustedIngredients] = useState<RecipeIngredientsDto[]>(
-    recipe?.recipeIngredients ?? []
-  );
+  const [adjustedIngredients, setAdjustedIngredients] = useState<RecipeIngredientsDto[]>([]);
+  
+  // Track the last recipe ID to detect recipe changes
+  const lastRecipeIdRef = React.useRef<string | null>(null);
+  
+  // Ref for recipe to keep callbacks stable
+  const recipeRef = React.useRef(recipe);
+  recipeRef.current = recipe;
 
   // Subscribe to real-time updates for this recipe
   useRecipeSubscription(recipeId);
@@ -71,6 +76,43 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
 
   // Check if error is a 404 (NOT_FOUND)
   const isNotFound = error instanceof TRPCClientError && error.data?.code === "NOT_FOUND";
+
+  // Initialize adjusted ingredients when recipe first loads or changes to different recipe
+  useEffect(() => {
+    if (!recipe?.recipeIngredients) return;
+    
+    // If this is a different recipe, reset servings and use original ingredients
+    if (lastRecipeIdRef.current !== recipe.id) {
+      lastRecipeIdRef.current = recipe.id;
+      setServings(null);
+      setAdjustedIngredients(recipe.recipeIngredients);
+    }
+  }, [recipe?.id]);
+
+  // Recalculate ingredients when servings change
+  useEffect(() => {
+    if (!recipe?.recipeIngredients) return;
+    
+    // If we have custom servings, recalculate with those servings
+    if (_servings !== null && _servings !== recipe.servings) {
+      setAdjustedIngredients(
+        recipe.recipeIngredients.map((ing) => {
+          if (ing.amount == null) return ing;
+
+          const amountNum = Number(ing.amount);
+
+          if (isNaN(amountNum) || amountNum <= 0) return ing;
+
+          const newAmount = Math.round((amountNum / recipe.servings) * _servings * 10000) / 10000;
+
+          return { ...ing, amount: newAmount };
+        })
+      );
+    } else if (_servings === null) {
+      // No custom servings, use original amounts
+      setAdjustedIngredients(recipe.recipeIngredients);
+    }
+  }, [_servings, recipe?.servings]);
 
   // Clear converting state when recipe system matches target
   useEffect(() => {
@@ -110,32 +152,33 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
 
   const setIngredientAmounts = useCallback(
     (servings: number) => {
-      if (!recipe || servings == null) return;
+      const currentRecipe = recipeRef.current;
+      if (!currentRecipe || servings == null) return;
 
       setServings(servings);
 
       // If servings equals original recipe servings, reset to original amounts
-      if (servings === recipe.servings) {
-        setAdjustedIngredients(recipe.recipeIngredients);
+      if (servings === currentRecipe.servings) {
+        setAdjustedIngredients(currentRecipe.recipeIngredients);
 
         return;
       }
 
       setAdjustedIngredients(
-        recipe.recipeIngredients.map((ing) => {
+        currentRecipe.recipeIngredients.map((ing) => {
           if (ing.amount == null && ing.amount === "") return ing;
 
           const amountNum = Number(ing.amount);
 
           if (isNaN(amountNum) || amountNum <= 0) return ing;
 
-          const newAmount = Math.round((amountNum / recipe.servings) * servings * 10000) / 10000;
+          const newAmount = Math.round((amountNum / currentRecipe.servings) * servings * 10000) / 10000;
 
           return { ...ing, amount: newAmount };
         })
       );
     },
-    [recipe]
+    [] // No dependencies - uses ref for recipe
   );
 
   const value = useMemo<Ctx>(

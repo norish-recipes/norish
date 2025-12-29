@@ -5,6 +5,7 @@ import { Button } from "@heroui/react";
 import { PlusIcon } from "@heroicons/react/16/solid";
 
 import { MiniGroceries } from "@/components/Panel/consumers";
+import { useRecipeContextRequired } from "../context";
 
 type Props = {
   recipeId: string;
@@ -12,6 +13,7 @@ type Props = {
 
 export default function AddToGroceries({ recipeId }: Props) {
   const [open, setOpen] = useState(false);
+  const { currentServings, recipe } = useRecipeContextRequired();
 
   return (
     <>
@@ -23,7 +25,13 @@ export default function AddToGroceries({ recipeId }: Props) {
       >
         Add to groceries
       </Button>
-      <MiniGroceries open={open} recipeId={recipeId} onOpenChange={setOpen} />
+      <MiniGroceries 
+        open={open} 
+        recipeId={recipeId} 
+        initialServings={currentServings}
+        originalServings={recipe.servings}
+        onOpenChange={setOpen} 
+      />
     </>
   );
 }

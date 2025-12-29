@@ -24,11 +24,10 @@ export default function ServingsControl() {
     [setIngredientAmounts]
   );
 
+  // Only call adjust when servings changes, not when recipe updates
   useEffect(() => {
-    if (recipe.recipeIngredients == null || recipe.recipeIngredients.length === 0) return;
-
     adjust(servings);
-  }, [servings, adjust, recipe.recipeIngredients]);
+  }, [servings, adjust]);
 
   const dec = () =>
     setServings((s) => {
