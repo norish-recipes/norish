@@ -1,13 +1,24 @@
-import { normalizeIngredient, normalizeStep } from "./helpers";
-import { conversionSchema } from "./schemas/conversion";
-import { getAIProvider } from "./providers/factory";
-import { loadPrompt, fillPrompt } from "./prompts/loader";
+import { generateText, Output } from "ai";
 
-import { FullRecipeDTO, MeasurementSystem } from "@/types";
+import { normalizeIngredient, normalizeStep } from "./helpers";
+import { getModels, getGenerationSettings } from "./providers/registry";
+import { conversionSchema, type ConversionOutput } from "./schemas/conversion.schema";
+import { loadPrompt, fillPrompt } from "./prompts/loader";
+import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } from "./types/result";
+
+import { isAIEnabled } from "@/config/server-config-loader";
+import type { FullRecipeDTO, MeasurementSystem } from "@/types";
 import { RecipeIngredientInputSchema, StepStepSchema } from "@/server/db/zodSchemas";
 import { aiLogger } from "@/server/logger";
 
-/* ------------------ PROMPT BUILDER ------------------ */
+// Re-export types for consumers
+export type { ConversionOutput };
+
+export interface ConversionResult {
+  ingredients: ReturnType<typeof normalizeIngredient>[];
+  steps: ReturnType<typeof normalizeStep>[];
+}
+
 async function buildConversionPrompt(
   sourceSystem: MeasurementSystem,
   targetSystem: MeasurementSystem,
@@ -27,22 +38,21 @@ async function buildConversionPrompt(
     systemUsed: s.systemUsed,
   }));
 
-  const units = targetSystem === "metric" ? "g, ml, L, kg, °C" : "cups, tbsp, tsp, oz, lb, °F";
-  const prompt = await loadPrompt("unit-conversion");
+  const units = targetSystem === "metric" ? "g, ml, L, kg, C" : "cups, tbsp, tsp, oz, lb, F";
+  const template = await loadPrompt("unit-conversion");
 
-  aiLogger.debug({ prompt }, "Loaded unit conversion prompt template");
+  aiLogger.debug({ template }, "Loaded unit conversion prompt template");
 
-  const filled = fillPrompt(prompt, { sourceSystem, targetSystem, units });
+  const filled = fillPrompt(template, { sourceSystem, targetSystem, units });
 
   return `${filled}
 ${JSON.stringify({ ingredients, steps }, null, 2)}`;
 }
 
-/* ------------------ MAIN CONVERTER ------------------ */
 export async function convertRecipeDataWithAI(
   recipe: FullRecipeDTO,
   targetSystem: MeasurementSystem
-) {
+): Promise<AIResult<ConversionResult>> {
   const sourceSystem = recipe.systemUsed;
 
   aiLogger.info(
@@ -50,77 +60,112 @@ export async function convertRecipeDataWithAI(
     "Starting measurement conversion"
   );
 
+  // Early return if no conversion needed
   if (sourceSystem === targetSystem) {
     aiLogger.debug({ recipeId: recipe.id }, "Source and target systems match, skipping conversion");
 
-    return {
-      ingredients: recipe.recipeIngredients,
-      steps: recipe.steps,
-    };
+    return aiSuccess({
+      ingredients: recipe.recipeIngredients.map((i) => normalizeIngredient(i, targetSystem)),
+      steps: recipe.steps.map((s) => normalizeStep(s, targetSystem)),
+    });
   }
 
-  const provider = await getAIProvider();
+  // Guard: AI must be enabled
+  const aiEnabled = await isAIEnabled();
 
-  aiLogger.debug(
-    {
-      recipeId: recipe.id,
-      ingredientCount: recipe.recipeIngredients.length,
-      stepCount: recipe.steps.length,
-    },
-    "Sending conversion request to AI"
-  );
-
-  const obj = await provider.generateStructuredOutput<any>(
-    await buildConversionPrompt(sourceSystem, targetSystem, recipe),
-    conversionSchema,
-    "Convert recipe measurements between metric and US systems. Return valid JSON only."
-  );
-
-  if (!obj) {
-    aiLogger.error(
-      { recipeName: recipe.name, sourceSystem, targetSystem },
-      "AI returned null for recipe conversion"
-    );
-
-    return null;
+  if (!aiEnabled) {
+    aiLogger.info("AI features are disabled, cannot convert measurements");
+    return aiError("AI features are disabled", "AI_DISABLED");
   }
 
-  aiLogger.debug(
-    {
-      recipeId: recipe.id,
-      convertedIngredients: obj.ingredients?.length ?? 0,
-      convertedSteps: obj.steps?.length ?? 0,
-    },
-    "AI conversion response received"
-  );
+  try {
+    const { model, providerName } = await getModels();
+    const settings = await getGenerationSettings();
+    const prompt = await buildConversionPrompt(sourceSystem, targetSystem, recipe);
 
-  const ingredients = obj.ingredients.map((i: any) => ({ ...i, ingredientId: "" }));
-  const validatedIngredients = RecipeIngredientInputSchema.array().safeParse(ingredients);
-  const validatedSteps = StepStepSchema.array().safeParse(obj.steps);
-
-  if (!validatedIngredients.success || !validatedSteps.success) {
-    aiLogger.error(
+    aiLogger.debug(
       {
-        recipeName: recipe.name,
-        ingredientsValid: validatedIngredients.success,
-        stepsValid: validatedSteps.success,
-        ingredientsError: validatedIngredients.success
-          ? undefined
-          : validatedIngredients.error.message,
-        stepsError: validatedSteps.success ? undefined : validatedSteps.error.message,
+        recipeId: recipe.id,
+        provider: providerName,
+        ingredientCount: recipe.recipeIngredients.length,
+        stepCount: recipe.steps.length,
       },
-      "Validation failed for AI conversion"
+      "Sending conversion request to AI"
     );
-    throw new Error("AI conversion validation failed");
+
+    const result = await generateText({
+      model,
+      output: Output.object({ schema: conversionSchema }),
+      prompt,
+      system: "Convert recipe measurements between metric and US systems. Return valid JSON only.",
+      ...settings,
+    });
+
+    const output = result.output;
+
+    if (!output) {
+      aiLogger.error(
+        { recipeName: recipe.name, sourceSystem, targetSystem },
+        "AI returned empty output for recipe conversion"
+      );
+      return aiError("AI returned empty response", "EMPTY_RESPONSE");
+    }
+
+    aiLogger.debug(
+      {
+        recipeId: recipe.id,
+        convertedIngredients: output.ingredients?.length ?? 0,
+        convertedSteps: output.steps?.length ?? 0,
+      },
+      "AI conversion response received"
+    );
+
+    // Validate the converted data against our schemas
+    const ingredientsWithId = output.ingredients.map((i) => ({ ...i, ingredientId: "" }));
+    const validatedIngredients = RecipeIngredientInputSchema.array().safeParse(ingredientsWithId);
+    const validatedSteps = StepStepSchema.array().safeParse(output.steps);
+
+    if (!validatedIngredients.success) {
+      aiLogger.error(
+        { recipeName: recipe.name, error: validatedIngredients.error.message },
+        "Ingredient validation failed for AI conversion"
+      );
+      return aiError("AI response failed ingredient validation", "VALIDATION_ERROR");
+    }
+
+    if (!validatedSteps.success) {
+      aiLogger.error(
+        { recipeName: recipe.name, error: validatedSteps.error.message },
+        "Step validation failed for AI conversion"
+      );
+      return aiError("AI response failed step validation", "VALIDATION_ERROR");
+    }
+
+    aiLogger.info(
+      { recipeId: recipe.id, recipeName: recipe.name, targetSystem },
+      "Measurement conversion completed"
+    );
+
+    return aiSuccess(
+      {
+        ingredients: validatedIngredients.data.map((i) => normalizeIngredient(i, targetSystem)),
+        steps: validatedSteps.data.map((s) => normalizeStep(s, targetSystem)),
+      },
+      {
+        inputTokens: result.usage?.inputTokens ?? 0,
+        outputTokens: result.usage?.outputTokens ?? 0,
+        totalTokens: result.usage?.totalTokens ?? 0,
+      }
+    );
+  } catch (error) {
+    const code = mapErrorToCode(error);
+    const message = getErrorMessage(code, error instanceof Error ? error.message : undefined);
+
+    aiLogger.error(
+      { err: error, recipeId: recipe.id, recipeName: recipe.name, code },
+      "Failed to convert recipe measurements"
+    );
+
+    return aiError(message, code);
   }
-
-  aiLogger.info(
-    { recipeId: recipe.id, recipeName: recipe.name, targetSystem },
-    "Measurement conversion completed"
-  );
-
-  return {
-    ingredients: validatedIngredients.data.map((i) => normalizeIngredient(i, targetSystem)),
-    steps: validatedSteps.data.map((s) => normalizeStep(s, targetSystem)),
-  };
 }

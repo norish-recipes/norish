@@ -1,15 +1,23 @@
+import { generateText, Output } from "ai";
+
 import type { VideoMetadata } from "./types";
 
-import { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { videoLogger } from "@/server/logger";
+import { getModels, getGenerationSettings } from "@/server/ai/providers/registry";
+import { recipeExtractionSchema } from "@/server/ai/schemas/recipe.schema";
 import { loadPrompt } from "@/server/ai/prompts/loader";
+import {
+  aiError,
+  aiSuccess,
+  mapErrorToCode,
+  getErrorMessage,
+  type AIResult,
+} from "@/server/ai/types/result";
 import { downloadImage } from "@/lib/downloader";
-import { measurementSystems } from "@/server/db";
-import { getAIProvider } from "@/server/ai/providers/factory";
-import { jsonLdRecipeSchema } from "@/server/ai/schemas/jsonld-recipe";
 import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
-import { getUnits } from "@/config/server-config-loader";
+import { getUnits, isAIEnabled } from "@/config/server-config-loader";
 
 async function buildVideoExtractionPrompt(
   transcript: string,
@@ -49,33 +57,48 @@ export async function extractRecipeFromVideo(
   metadata: VideoMetadata,
   url: string,
   allergies?: string[]
-): Promise<FullRecipeInsertDTO | null> {
-  try {
-    videoLogger.info({ url, title: metadata.title }, "Starting AI video recipe extraction");
+): Promise<AIResult<FullRecipeInsertDTO>> {
+  // Guard: AI must be enabled
+  const aiEnabled = await isAIEnabled();
 
+  if (!aiEnabled) {
+    videoLogger.info("AI features are disabled, skipping video extraction");
+    return aiError("AI features are disabled", "AI_DISABLED");
+  }
+
+  videoLogger.info({ url, title: metadata.title }, "Starting AI video recipe extraction");
+
+  try {
+    const { model, providerName } = await getModels();
+    const settings = await getGenerationSettings();
     const prompt = await buildVideoExtractionPrompt(transcript, metadata, url, allergies);
 
-    videoLogger.debug({ prompt }, "Built video extraction prompt");
-    const provider = await getAIProvider();
-
     videoLogger.debug(
-      { url, promptLength: prompt.length, transcriptLength: transcript.length },
+      {
+        url,
+        promptLength: prompt.length,
+        transcriptLength: transcript.length,
+        provider: providerName,
+      },
       "Sending video transcript to AI"
     );
 
-    const jsonLd = await provider.generateStructuredOutput<any>(
+    const result = await generateText({
+      model,
+      output: Output.object({ schema: recipeExtractionSchema }),
       prompt,
-      jsonLdRecipeSchema,
-      "You extract recipe data from video transcripts as JSON-LD with both metric and US measurements. Return {} if no recipe found."
-    );
+      system:
+        "You extract recipe data from video transcripts as JSON-LD with both metric and US measurements. Return valid JSON only.",
+      ...settings,
+    });
+
+    const jsonLd = result.output;
 
     if (!jsonLd || Object.keys(jsonLd).length === 0) {
       videoLogger.error({ url }, "AI returned empty response - no recipe found in video");
-
-      return null;
+      return aiError("No recipe found in video transcript", "EMPTY_RESPONSE");
     }
 
-    jsonLd.image = metadata.thumbnail;
     videoLogger.debug(
       {
         url,
@@ -88,6 +111,7 @@ export async function extractRecipeFromVideo(
       "AI video response received"
     );
 
+    // Validate required fields
     if (
       !jsonLd.name ||
       !jsonLd.recipeIngredient?.metric?.length ||
@@ -105,12 +129,13 @@ export async function extractRecipeFromVideo(
         },
         "AI response missing required fields"
       );
-
-      return null;
+      return aiError("Video extraction failed - missing required fields", "VALIDATION_ERROR");
     }
 
+    // Build metric version for normalization
     const metricVersion = {
       ...jsonLd,
+      image: metadata.thumbnail,
       recipeIngredient: jsonLd.recipeIngredient.metric,
       recipeInstructions: jsonLd.recipeInstructions.metric,
     };
@@ -118,9 +143,8 @@ export async function extractRecipeFromVideo(
     const normalized = await normalizeRecipeFromJson(metricVersion);
 
     if (!normalized) {
-      videoLogger.error("Failed to normalize recipe from JSON-LD");
-
-      return null;
+      videoLogger.error({ url }, "Failed to normalize recipe from JSON-LD");
+      return aiError("Failed to normalize recipe data", "VALIDATION_ERROR");
     }
 
     // Add US system data
@@ -129,7 +153,7 @@ export async function extractRecipeFromVideo(
     const usSteps = jsonLd.recipeInstructions.us.map((step: string, i: number) => ({
       step,
       order: i + 1,
-      systemUsed: measurementSystems[1], // 'us',
+      systemUsed: "us" as const,
     }));
 
     normalized.url = url;
@@ -138,8 +162,9 @@ export async function extractRecipeFromVideo(
     if (metadata.thumbnail) {
       try {
         normalized.image = await downloadImage(metadata.thumbnail);
-      } catch (_error: any) {
+      } catch (_error) {
         // Continue without image rather than failing
+        videoLogger.debug({ url }, "Failed to download video thumbnail");
       }
     }
 
@@ -167,11 +192,17 @@ export async function extractRecipeFromVideo(
       "Video recipe extraction completed"
     );
 
-    return normalized;
-  } catch (error: any) {
-    videoLogger.error({ err: error, errorType: error.constructor.name }, "Error extracting recipe");
-    const errorMessage = error.message || "Unknown error";
+    return aiSuccess(normalized, {
+      inputTokens: result.usage?.inputTokens ?? 0,
+      outputTokens: result.usage?.outputTokens ?? 0,
+      totalTokens: result.usage?.totalTokens ?? 0,
+    });
+  } catch (error) {
+    const code = mapErrorToCode(error);
+    const message = getErrorMessage(code, error instanceof Error ? error.message : undefined);
 
-    throw new Error(`Failed to extract recipe from video: ${errorMessage}`);
+    videoLogger.error({ err: error, url, code }, "Failed to extract recipe from video");
+
+    return aiError(message, code);
   }
 }

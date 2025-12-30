@@ -56,13 +56,13 @@ export async function parseRecipeFromUrl(
       throw new Error("AI-only import requested but AI is not enabled.");
     }
 
-    const ai = await extractRecipeWithAI(html, url, allergies);
+    const aiResult = await extractRecipeWithAI(html, url, allergies);
 
-    if (ai) {
-      return ai;
+    if (aiResult.success) {
+      return aiResult.data;
     }
 
-    throw new Error("AI extraction failed - could not parse recipe.");
+    throw new Error(`AI extraction failed: ${aiResult.error}`);
   }
 
   // Standard parsing flow: try structured parsers first, then AI fallback
@@ -95,11 +95,13 @@ export async function parseRecipeFromUrl(
 
   if (aiEnabled) {
     log.info({ url }, "Falling back to AI extraction");
-    const ai = await extractRecipeWithAI(html, url, allergies);
+    const aiResult = await extractRecipeWithAI(html, url, allergies);
 
-    if (ai) {
-      return ai;
+    if (aiResult.success) {
+      return aiResult.data;
     }
+
+    log.warn({ url, error: aiResult.error, code: aiResult.code }, "AI fallback extraction failed");
   }
 
   log.error({ url }, "All extraction methods failed");

@@ -49,15 +49,17 @@ async function processNutritionJob(job: Job<NutritionEstimationJobData>): Promis
     unit: ri.unit,
   }));
 
-  const estimate = await estimateNutritionFromIngredients(
+  const result = await estimateNutritionFromIngredients(
     recipe.name,
     recipe.servings ?? 1,
     ingredients
   );
 
-  if (!estimate) {
-    throw new Error("Failed to estimate nutrition from AI");
+  if (!result.success) {
+    throw new Error(result.error);
   }
+
+  const estimate = result.data;
 
   // Update recipe with estimated nutrition
   await updateRecipeWithRefs(recipe.id, userId, {

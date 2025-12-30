@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Input, Button, Switch, Select, SelectItem, Divider } from "@heroui/react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  Input,
+  Button,
+  Switch,
+  Select,
+  SelectItem,
+  Divider,
+  Autocomplete,
+  AutocompleteItem,
+} from "@heroui/react";
 import { CheckIcon } from "@heroicons/react/16/solid";
 
 import { useAdminSettingsContext } from "../context";
 
 import { ServerConfigKeys, type TranscriptionProvider } from "@/server/db/zodSchemas/server-config";
+import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
 import SecretInput from "@/components/shared/secret-input";
 
 export default function VideoProcessingForm() {
@@ -49,6 +59,48 @@ export default function VideoProcessingForm() {
     !!videoConfig?.transcriptionApiKey && videoConfig.transcriptionApiKey !== "";
   // Check if AI config API key can be used as fallback
   const isAIApiKeyConfigured = !!aiConfig?.apiKey && aiConfig.apiKey !== "";
+
+  // Determine if we can fetch transcription models
+  const canFetchTranscriptionModels =
+    enabled &&
+    transcriptionEnabled &&
+    (transcriptionProvider === "openai"
+      ? transcriptionApiKey || isTranscriptionApiKeyConfigured || isAIApiKeyConfigured
+      : transcriptionEndpoint);
+
+  const {
+    models: availableTranscriptionModels,
+    isLoading: isLoadingTranscriptionModels,
+  } = useAvailableTranscriptionModelsQuery({
+    provider: transcriptionProvider,
+    endpoint: transcriptionEndpoint || undefined,
+    apiKey: transcriptionApiKey || undefined,
+    enabled: !!canFetchTranscriptionModels,
+  });
+
+  // Create transcription model options for autocomplete
+  const transcriptionModelOptions = useMemo(() => {
+    const options = availableTranscriptionModels.map((m) => ({
+      value: m.id,
+      label: m.name,
+    }));
+
+    // Add current model if not in list (allows keeping custom/typed values)
+    if (transcriptionModel && !options.some((o) => o.value === transcriptionModel)) {
+      options.unshift({ value: transcriptionModel, label: transcriptionModel });
+    }
+
+    return options;
+  }, [availableTranscriptionModels, transcriptionModel]);
+
+  // Clear transcription model when provider changes
+  const handleTranscriptionProviderChange = (newProvider: TranscriptionProvider) => {
+    setTranscriptionProvider(newProvider);
+    // Clear model when switching providers to avoid invalid model selection
+    if (newProvider !== transcriptionProvider) {
+      setTranscriptionModel(newProvider === "openai" ? "whisper-1" : "");
+    }
+  };
 
   // Validation: Can't enable video processing without valid transcription config
   // API key can fall back to AI config API key
@@ -139,7 +191,7 @@ export default function VideoProcessingForm() {
         label="Transcription Provider"
         selectedKeys={[transcriptionProvider]}
         onSelectionChange={(keys) =>
-          setTranscriptionProvider(Array.from(keys)[0] as TranscriptionProvider)
+          handleTranscriptionProviderChange(Array.from(keys)[0] as TranscriptionProvider)
         }
       >
         <SelectItem key="disabled">Disabled</SelectItem>
@@ -160,14 +212,24 @@ export default function VideoProcessingForm() {
             />
           )}
 
-          <Input
+          <Autocomplete
+            allowsCustomValue
+            defaultItems={transcriptionModelOptions}
             description="Whisper model to use for transcription"
+            inputValue={transcriptionModel}
             isDisabled={!enabled}
+            isLoading={isLoadingTranscriptionModels}
             label="Model"
             placeholder={transcriptionProvider === "openai" ? "whisper-1" : "whisper"}
-            value={transcriptionModel}
-            onValueChange={setTranscriptionModel}
-          />
+            onInputChange={setTranscriptionModel}
+            onSelectionChange={(key) => key && setTranscriptionModel(key as string)}
+          >
+            {(item) => (
+              <AutocompleteItem key={item.value} textValue={item.label}>
+                {item.label}
+              </AutocompleteItem>
+            )}
+          </Autocomplete>
 
           {needsTranscriptionApiKey && (
             <SecretInput

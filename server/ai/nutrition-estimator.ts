@@ -1,16 +1,15 @@
-import { nutritionEstimationSchema } from "./schemas/nutrition";
-import { getAIProvider } from "./providers/factory";
+import { generateText, Output } from "ai";
+
+import { getModels, getGenerationSettings } from "./providers/registry";
+import { nutritionEstimationSchema, type NutritionEstimate } from "./schemas/nutrition.schema";
 import { loadPrompt, fillPrompt } from "./prompts/loader";
+import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } from "./types/result";
 
 import { isAIEnabled } from "@/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
 
-export interface NutritionEstimate {
-  calories: number;
-  fat: number;
-  carbs: number;
-  protein: number;
-}
+// Re-export type for consumers
+export type { NutritionEstimate };
 
 export interface IngredientForEstimation {
   ingredientName: string;
@@ -18,6 +17,9 @@ export interface IngredientForEstimation {
   unit: string | null;
 }
 
+/**
+ * Build the prompt for nutrition estimation.
+ */
 async function buildNutritionPrompt(
   recipeName: string,
   servings: number,
@@ -45,27 +47,22 @@ async function buildNutritionPrompt(
   });
 }
 
-/**
- * Estimate nutrition information for a recipe based on its ingredients.
- * Returns null if AI is disabled or estimation fails.
- */
 export async function estimateNutritionFromIngredients(
   recipeName: string,
   servings: number,
   ingredients: IngredientForEstimation[]
-): Promise<NutritionEstimate | null> {
+): Promise<AIResult<NutritionEstimate>> {
+  // Guard: AI must be enabled
   const aiEnabled = await isAIEnabled();
 
   if (!aiEnabled) {
     aiLogger.info("AI features are disabled, skipping nutrition estimation");
-
-    return null;
+    return aiError("AI features are disabled", "AI_DISABLED");
   }
 
   if (ingredients.length === 0) {
     aiLogger.warn("No ingredients provided for nutrition estimation");
-
-    return null;
+    return aiError("No ingredients provided", "INVALID_INPUT");
   }
 
   aiLogger.info(
@@ -74,50 +71,61 @@ export async function estimateNutritionFromIngredients(
   );
 
   try {
-    const provider = await getAIProvider();
+    const { model, providerName } = await getModels();
+    const settings = await getGenerationSettings();
     const prompt = await buildNutritionPrompt(recipeName, servings, ingredients);
 
-    aiLogger.debug({ prompt }, "Sending nutrition estimation prompt to AI");
+    aiLogger.debug({ provider: providerName, prompt }, "Sending nutrition estimation prompt to AI");
 
-    const result = await provider.generateStructuredOutput<NutritionEstimate>(
+    const result = await generateText({
+      model,
+      output: Output.object({ schema: nutritionEstimationSchema }),
       prompt,
-      nutritionEstimationSchema,
-      "Estimate nutritional values for this recipe. Return valid JSON only."
-    );
+      system:
+        "Estimate nutritional values for this recipe based on the ingredients. Return accurate per-serving values.",
+      ...settings,
+    });
 
-    if (!result) {
-      aiLogger.error({ recipeName }, "AI returned null for nutrition estimation");
+    const output = result.output;
 
-      return null;
+    if (!output) {
+      aiLogger.error({ recipeName }, "AI returned empty output for nutrition estimation");
+      return aiError("AI returned empty response", "EMPTY_RESPONSE");
     }
 
     // Validate the response has reasonable values
     if (
-      typeof result.calories !== "number" ||
-      typeof result.fat !== "number" ||
-      typeof result.carbs !== "number" ||
-      typeof result.protein !== "number"
+      typeof output.calories !== "number" ||
+      typeof output.fat !== "number" ||
+      typeof output.carbs !== "number" ||
+      typeof output.protein !== "number"
     ) {
-      aiLogger.error({ recipeName, result }, "Invalid nutrition estimation response");
-
-      return null;
+      aiLogger.error({ recipeName, output }, "Invalid nutrition estimation response");
+      return aiError("AI response missing required fields", "VALIDATION_ERROR");
     }
 
     aiLogger.info(
       {
         recipeName,
-        calories: result.calories,
-        fat: result.fat,
-        carbs: result.carbs,
-        protein: result.protein,
+        calories: output.calories,
+        fat: output.fat,
+        carbs: output.carbs,
+        protein: output.protein,
       },
       "Nutrition estimation completed"
     );
 
-    return result;
+    return aiSuccess(output, {
+      inputTokens: result.usage?.inputTokens ?? 0,
+      outputTokens: result.usage?.outputTokens ?? 0,
+      totalTokens: result.usage?.totalTokens ?? 0,
+    });
   } catch (error) {
-    aiLogger.error({ err: error, recipeName }, "Failed to estimate nutrition");
+    const code = mapErrorToCode(error);
+    const message = getErrorMessage(code, error instanceof Error ? error.message : undefined);
 
-    return null;
+    aiLogger.error({ err: error, recipeName, code }, "Failed to estimate nutrition");
+
+    return aiError(message, code);
   }
 }

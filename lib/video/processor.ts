@@ -46,15 +46,16 @@ export async function processVideoRecipe(
     log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
     // Extract recipe from transcript + metadata
-    const recipe = await extractRecipeFromVideo(transcript, metadata, url, allergies);
+    const result = await extractRecipeFromVideo(transcript, metadata, url, allergies);
 
-    if (!recipe) {
+    if (!result.success) {
       throw new Error(
-        `No recipe found in video. The video may not contain a recipe or the content was not clear enough to extract.`
+        result.error ||
+          `No recipe found in video. The video may not contain a recipe or the content was not clear enough to extract.`
       );
     }
 
-    return recipe;
+    return result.data;
   } catch (error: any) {
     log.error({ err: error }, "Failed to process video");
 

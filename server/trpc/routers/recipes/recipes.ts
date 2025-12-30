@@ -394,15 +394,15 @@ const convertMeasurements = authedProcedure
         // Convert with AI
         return import("@/server/ai/unit-converter")
           .then(({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(recipe, targetSystem))
-          .then((converted) => {
-            if (!converted) {
+          .then((result) => {
+            if (!result.success) {
               throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
-                message: "Conversion failed, please try again.",
+                message: result.error ?? "Conversion failed, please try again.",
               });
             }
 
-            return { recipe, converted };
+            return { recipe, converted: result.data };
           });
       })
       .then((result) => {

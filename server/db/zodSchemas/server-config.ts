@@ -136,7 +136,13 @@ export type RecurrenceConfig = z.infer<typeof RecurrenceConfigSchema>;
 // AI Configuration Schema
 // ============================================================================
 
-export const AIProviderSchema = z.enum(["openai", "ollama", "lm-studio", "generic-openai"]);
+export const AIProviderSchema = z.enum([
+  "openai",
+  "ollama",
+  "lm-studio",
+  "generic-openai",
+  "perplexity",
+]);
 
 export type AIProvider = z.infer<typeof AIProviderSchema>;
 

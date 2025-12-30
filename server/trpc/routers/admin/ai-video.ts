@@ -8,11 +8,14 @@ import { trpcLogger as log } from "@/server/logger";
 import { setConfig, getConfig } from "@/server/db/repositories/server-config";
 import { testAIEndpoint as testAIEndpointFn } from "@/server/auth/connection-tests";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { listModels, listTranscriptionModels } from "@/server/ai/providers/registry";
 import {
   ServerConfigKeys,
   AIConfigSchema,
   VideoConfigSchema,
+  TranscriptionProviderSchema,
   type AIConfig,
+  type VideoConfig,
 } from "@/server/db/zodSchemas/server-config";
 
 /**
@@ -81,8 +84,81 @@ const testAIEndpoint = adminProcedure
     return await testAIEndpointFn({ ...input, apiKey });
   });
 
+/**
+ * List available models for a given AI provider.
+ * Used by the admin UI to populate model dropdowns.
+ */
+const listAvailableModels = adminProcedure
+  .input(
+    z.object({
+      provider: AIConfigSchema.shape.provider,
+      endpoint: z.string().optional(),
+      apiKey: z.string().optional(),
+    })
+  )
+  .query(async ({ input, ctx }) => {
+    log.debug({ userId: ctx.user.id, provider: input.provider }, "Listing available AI models");
+
+    let apiKey = input.apiKey;
+
+    // If no API key provided, try to get from stored config
+    if (!apiKey && input.provider === "openai") {
+      const storedConfig = await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG, true);
+      apiKey = storedConfig?.apiKey;
+    }
+
+    const models = await listModels(input.provider, {
+      endpoint: input.endpoint,
+      apiKey,
+    });
+
+    return { models };
+  });
+
+/**
+ * List available transcription models for a given provider.
+ * Used by the admin UI to populate transcription model dropdowns.
+ */
+const listAvailableTranscriptionModels = adminProcedure
+  .input(
+    z.object({
+      provider: TranscriptionProviderSchema,
+      endpoint: z.string().optional(),
+      apiKey: z.string().optional(),
+    })
+  )
+  .query(async ({ input, ctx }) => {
+    log.debug(
+      { userId: ctx.user.id, provider: input.provider },
+      "Listing available transcription models"
+    );
+
+    let apiKey = input.apiKey;
+
+    // If no API key provided, try to get from stored configs
+    if (!apiKey && (input.provider === "openai" || input.provider === "generic-openai")) {
+      // First try video config, then fall back to AI config
+      const videoConfig = await getConfig<VideoConfig>(ServerConfigKeys.VIDEO_CONFIG, true);
+      apiKey = videoConfig?.transcriptionApiKey;
+
+      if (!apiKey) {
+        const aiConfig = await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG, true);
+        apiKey = aiConfig?.apiKey;
+      }
+    }
+
+    const models = await listTranscriptionModels(input.provider, {
+      endpoint: input.endpoint,
+      apiKey,
+    });
+
+    return { models };
+  });
+
 export const aiVideoProcedures = router({
   updateAIConfig,
   updateVideoConfig,
   testAIEndpoint,
+  listAvailableModels,
+  listAvailableTranscriptionModels,
 });
