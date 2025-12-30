@@ -186,6 +186,8 @@ export type DueRecurringGrocery = {
     isDone: boolean;
     amount: number | null;
     recurringGroceryId: string | null;
+    storeId: string | null;
+    sortOrder: number;
   };
 };
 

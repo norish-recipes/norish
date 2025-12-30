@@ -1,4 +1,8 @@
-import type { UserCaldavConfigWithoutPasswordDto } from "@/types";
+import type {
+  UserCaldavConfigWithoutPasswordDto,
+  ConnectionTestResult,
+  CalDavCalendarInfo,
+} from "@/types";
 
 import { TRPCError } from "@trpc/server";
 
@@ -8,6 +12,7 @@ import {
   TestCaldavConnectionInputSchema,
   DeleteCaldavConfigInputSchema,
   GetSyncStatusInputSchema,
+  FetchCalendarsInputSchema,
 } from "./types";
 
 import { router } from "@/server/trpc/trpc";
@@ -82,6 +87,7 @@ export const caldavRouter = router({
 
       await saveCaldavConfig(userId, {
         serverUrl: input.serverUrl,
+        calendarUrl: input.calendarUrl ?? null,
         username: input.username,
         password,
         enabled: input.enabled,
@@ -127,45 +133,59 @@ export const caldavRouter = router({
     }),
 
   /**
-   * Test CalDAV connection without saving.
+   * Test CalDAV connection without saving. Returns available calendars on success.
    */
   testConnection: authedProcedure
     .input(TestCaldavConnectionInputSchema)
-    .mutation(async ({ input }): Promise<{ success: boolean; message: string }> => {
+    .mutation(async ({ input }): Promise<ConnectionTestResult> => {
       return testCalDavConnection(input.serverUrl, input.username, input.password);
+    }),
+
+  /**
+   * Fetch available calendars from a CalDAV server.
+   */
+  fetchCalendars: authedProcedure
+    .input(FetchCalendarsInputSchema)
+    .mutation(async ({ input }): Promise<CalDavCalendarInfo[]> => {
+      const client = new CalDavClient({
+        serverUrl: input.serverUrl,
+        username: input.username,
+        password: input.password,
+      });
+
+      return client.fetchCalendars();
     }),
 
   /**
    * Check connection status using stored credentials.
    */
-  checkConnection: authedProcedure.query(
-    async ({ ctx }): Promise<{ success: boolean; message: string }> => {
-      const userId = ctx.user.id;
-      const config = await getCaldavConfigDecrypted(userId);
+  checkConnection: authedProcedure.query(async ({ ctx }): Promise<ConnectionTestResult> => {
+    const userId = ctx.user.id;
+    const config = await getCaldavConfigDecrypted(userId);
 
-      if (!config) {
-        return {
-          success: false,
-          message: "No configuration found",
-        };
-      }
-
-      try {
-        const client = new CalDavClient({
-          baseUrl: config.serverUrl,
-          username: config.username,
-          password: config.password,
-        });
-
-        return client.testConnection();
-      } catch (error) {
-        return {
-          success: false,
-          message: error instanceof Error ? error.message : "Connection failed",
-        };
-      }
+    if (!config) {
+      return {
+        success: false,
+        message: "No configuration found",
+      };
     }
-  ),
+
+    try {
+      const client = new CalDavClient({
+        serverUrl: config.serverUrl,
+        calendarUrl: config.calendarUrl ?? undefined,
+        username: config.username,
+        password: config.password,
+      });
+
+      return client.testConnection();
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Connection failed",
+      };
+    }
+  }),
 
   /**
    * Delete CalDAV configuration.

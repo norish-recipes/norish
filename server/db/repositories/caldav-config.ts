@@ -43,6 +43,7 @@ export async function getCaldavConfigDecrypted(
   return {
     userId: config.userId,
     serverUrl: decrypt(config.serverUrlEnc),
+    calendarUrl: config.calendarUrlEnc ? decrypt(config.calendarUrlEnc) : null,
     username: decrypt(config.usernameEnc),
     password: decrypt(config.passwordEnc),
     enabled: config.enabled,
@@ -69,6 +70,7 @@ export async function getCaldavConfigWithoutPassword(
   return {
     userId: config.userId,
     serverUrl: decrypt(config.serverUrlEnc),
+    calendarUrl: config.calendarUrlEnc ? decrypt(config.calendarUrlEnc) : null,
     username: decrypt(config.usernameEnc),
     enabled: config.enabled,
     breakfastTime: config.breakfastTime,
@@ -91,6 +93,7 @@ export async function saveCaldavConfig(
   const encrypted: UserCaldavConfigInsertDto = {
     userId,
     serverUrlEnc: encrypt(validated.data.serverUrl),
+    calendarUrlEnc: validated.data.calendarUrl ? encrypt(validated.data.calendarUrl) : null,
     usernameEnc: encrypt(validated.data.username),
     passwordEnc: encrypt(validated.data.password),
     enabled: validated.data.enabled,
@@ -150,6 +153,7 @@ export async function getHouseholdCaldavConfigs(
     const decrypted: UserCaldavConfigDecryptedDto = {
       userId: row.userId,
       serverUrl: decrypt(row.serverUrlEnc),
+      calendarUrl: row.calendarUrlEnc ? decrypt(row.calendarUrlEnc) : null,
       username: decrypt(row.usernameEnc),
       password: decrypt(row.passwordEnc),
       enabled: row.enabled,

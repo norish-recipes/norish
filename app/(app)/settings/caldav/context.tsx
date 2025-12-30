@@ -1,7 +1,7 @@
 "use client";
 
 import type { CaldavSyncStatus } from "@/types/dto/caldav-sync-status";
-import type { UserCaldavConfigWithoutPasswordDto } from "@/types";
+import type { UserCaldavConfigWithoutPasswordDto, ConnectionTestResult, CalDavCalendarInfo } from "@/types";
 
 import { createContext, useContext, ReactNode, useCallback, useState } from "react";
 import { addToast } from "@heroui/react";
@@ -18,6 +18,7 @@ import {
 
 type SaveCaldavConfigInput = {
   serverUrl: string;
+  calendarUrl?: string | null;
   username: string;
   password: string;
   enabled: boolean;
@@ -51,7 +52,12 @@ type CalDavSettingsContextType = {
     serverUrl: string,
     username: string,
     password: string
-  ) => Promise<{ success: boolean; message: string }>;
+  ) => Promise<ConnectionTestResult>;
+  fetchCalendars: (
+    serverUrl: string,
+    username: string,
+    password: string
+  ) => Promise<CalDavCalendarInfo[]>;
   deleteConfig: (deleteEvents: boolean) => Promise<void>;
   triggerManualSync: () => Promise<void>;
   syncAll: () => Promise<void>;
@@ -61,6 +67,7 @@ type CalDavSettingsContextType = {
   // Loading states
   isSavingConfig: boolean;
   isTestingConnection: boolean;
+  isFetchingCalendars: boolean;
   isDeletingConfig: boolean;
   isTriggeringSync: boolean;
 };
@@ -93,11 +100,13 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
   const {
     saveConfig: saveConfigMutation,
     testConnection: testConnectionMutation,
+    fetchCalendars: fetchCalendarsMutation,
     deleteConfig: deleteConfigMutation,
     triggerSync,
     syncAll: syncAllMutation,
     isSavingConfig,
     isTestingConnection,
+    isFetchingCalendars,
     isDeletingConfig,
     isTriggeringSync,
     isSyncingAll: _isSyncingAll,
@@ -138,7 +147,7 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
       serverUrl: string,
       username: string,
       password: string
-    ): Promise<{ success: boolean; message: string }> => {
+    ): Promise<ConnectionTestResult> => {
       try {
         return await testConnectionMutation({ serverUrl, username, password });
       } catch (error) {
@@ -149,6 +158,29 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
       }
     },
     [testConnectionMutation]
+  );
+
+  const fetchCalendars = useCallback(
+    async (
+      serverUrl: string,
+      username: string,
+      password: string
+    ): Promise<CalDavCalendarInfo[]> => {
+      try {
+        return await fetchCalendarsMutation({ serverUrl, username, password });
+      } catch (error) {
+        addToast({
+          title: "Failed to fetch calendars",
+          description: (error as Error).message,
+          color: "danger",
+          timeout: 2000,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
+        });
+        return [];
+      }
+    },
+    [fetchCalendarsMutation]
   );
 
   const deleteConfig = useCallback(
@@ -258,6 +290,7 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
         isCheckingConnection,
         saveConfig,
         testConnection,
+        fetchCalendars,
         deleteConfig,
         triggerManualSync,
         syncAll,
@@ -265,6 +298,7 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
         getCaldavPassword,
         isSavingConfig,
         isTestingConnection,
+        isFetchingCalendars,
         isDeletingConfig,
         isTriggeringSync,
       }}

@@ -11,6 +11,7 @@ const mockSummaryQueryKey = ["caldav", "getSummary"];
 // Mock mutation functions
 const mockSaveConfigMutate = vi.fn();
 const mockTestConnectionMutate = vi.fn();
+const mockFetchCalendarsMutate = vi.fn();
 const mockDeleteConfigMutate = vi.fn();
 const mockTriggerSyncMutate = vi.fn();
 const mockSyncAllMutate = vi.fn();
@@ -50,6 +51,11 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       testConnection: {
         mutationOptions: () => ({
           mutationFn: mockTestConnectionMutate,
+        }),
+      },
+      fetchCalendars: {
+        mutationOptions: () => ({
+          mutationFn: mockFetchCalendarsMutate,
         }),
       },
       deleteConfig: {
@@ -341,12 +347,70 @@ describe("CalDAV Mutation Hooks", () => {
       expect(result.current.isTriggeringSync).toBe(false);
     });
 
+    it("tracks isFetchingCalendars loading state", async () => {
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      expect(result.current.isFetchingCalendars).toBe(false);
+    });
+
     it("tracks isSyncingAll loading state", async () => {
       const { result } = renderHook(() => useCaldavMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       expect(result.current.isSyncingAll).toBe(false);
+    });
+  });
+
+  describe("useCaldavMutations.fetchCalendars", () => {
+    it("calls fetchCalendars mutation with correct data", async () => {
+      const fetchInput = {
+        serverUrl: "https://caldav.example.com",
+        username: "testuser",
+        password: "testpass",
+      };
+
+      mockFetchCalendarsMutate.mockResolvedValueOnce([
+        { url: "https://caldav.example.com/cal/", displayName: "Default Calendar" },
+      ]);
+
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await act(async () => {
+        await result.current.fetchCalendars(fetchInput);
+      });
+
+      expect(mockFetchCalendarsMutate).toHaveBeenCalledWith(fetchInput, expect.anything());
+    });
+
+    it("returns calendar list on success", async () => {
+      const mockCalendars = [
+        { url: "https://caldav.example.com/cal/default/", displayName: "Default Calendar" },
+        { url: "https://caldav.example.com/cal/meals/", displayName: "Meals" },
+      ];
+
+      mockFetchCalendarsMutate.mockResolvedValueOnce(mockCalendars);
+
+      const { result } = renderHook(() => useCaldavMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      let calendars: any;
+
+      await act(async () => {
+        calendars = await result.current.fetchCalendars({
+          serverUrl: "https://caldav.example.com",
+          username: "testuser",
+          password: "testpass",
+        });
+      });
+
+      expect(calendars).toHaveLength(2);
+      expect(calendars[0].displayName).toBe("Default Calendar");
     });
   });
 });

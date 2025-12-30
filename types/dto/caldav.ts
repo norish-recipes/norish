@@ -16,12 +16,24 @@ export interface CreatedEvent {
 }
 
 export interface CalDavClientOptions {
-  baseUrl: string;
+  /** Base CalDAV server URL for discovery (e.g., https://dav.example.com/) */
+  serverUrl: string;
+  /** Specific calendar URL to use for operations (optional, falls back to first calendar) */
+  calendarUrl?: string;
   username: string;
   password: string;
+}
+
+export interface CalDavCalendarInfo {
+  url: string;
+  displayName: string;
+  description?: string;
+  ctag?: string;
 }
 
 export interface ConnectionTestResult {
   success: boolean;
   message: string;
+  /** Available calendars (only returned on successful connection) */
+  calendars?: CalDavCalendarInfo[];
 }

@@ -1,6 +1,10 @@
 "use client";
 
-import type { UserCaldavConfigWithoutPasswordDto } from "@/types";
+import type {
+  UserCaldavConfigWithoutPasswordDto,
+  ConnectionTestResult,
+  CalDavCalendarInfo,
+} from "@/types";
 
 import { useMutation } from "@tanstack/react-query";
 
@@ -14,6 +18,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type SaveCaldavConfigInput = {
   serverUrl: string;
+  calendarUrl?: string | null;
   username: string;
   password: string;
   enabled: boolean;
@@ -29,14 +34,22 @@ export type TestConnectionInput = {
   password: string;
 };
 
+export type FetchCalendarsInput = {
+  serverUrl: string;
+  username: string;
+  password: string;
+};
+
 export type CaldavMutationsResult = {
   saveConfig: (input: SaveCaldavConfigInput) => Promise<UserCaldavConfigWithoutPasswordDto>;
-  testConnection: (input: TestConnectionInput) => Promise<{ success: boolean; message: string }>;
+  testConnection: (input: TestConnectionInput) => Promise<ConnectionTestResult>;
+  fetchCalendars: (input: FetchCalendarsInput) => Promise<CalDavCalendarInfo[]>;
   deleteConfig: (deleteEvents?: boolean) => Promise<void>;
   triggerSync: () => Promise<void>;
   syncAll: () => Promise<void>;
   isSavingConfig: boolean;
   isTestingConnection: boolean;
+  isFetchingCalendars: boolean;
   isDeletingConfig: boolean;
   isTriggeringSync: boolean;
   isSyncingAll: boolean;
@@ -53,6 +66,7 @@ export function useCaldavMutations(): CaldavMutationsResult {
 
   const saveConfigMutation = useMutation(trpc.caldav.saveConfig.mutationOptions());
   const testConnectionMutation = useMutation(trpc.caldav.testConnection.mutationOptions());
+  const fetchCalendarsMutation = useMutation(trpc.caldav.fetchCalendars.mutationOptions());
   const deleteConfigMutation = useMutation(trpc.caldav.deleteConfig.mutationOptions());
   const triggerSyncMutation = useMutation(trpc.caldav.triggerSync.mutationOptions());
   const syncAllMutation = useMutation(trpc.caldav.syncAll.mutationOptions());
@@ -72,10 +86,12 @@ export function useCaldavMutations(): CaldavMutationsResult {
     return result;
   };
 
-  const testConnection = async (
-    input: TestConnectionInput
-  ): Promise<{ success: boolean; message: string }> => {
+  const testConnection = async (input: TestConnectionInput): Promise<ConnectionTestResult> => {
     return testConnectionMutation.mutateAsync(input);
+  };
+
+  const fetchCalendars = async (input: FetchCalendarsInput): Promise<CalDavCalendarInfo[]> => {
+    return fetchCalendarsMutation.mutateAsync(input);
   };
 
   const deleteConfig = async (deleteEvents: boolean = false): Promise<void> => {
@@ -103,11 +119,13 @@ export function useCaldavMutations(): CaldavMutationsResult {
   return {
     saveConfig,
     testConnection,
+    fetchCalendars,
     deleteConfig,
     triggerSync,
     syncAll,
     isSavingConfig: saveConfigMutation.isPending,
     isTestingConnection: testConnectionMutation.isPending,
+    isFetchingCalendars: fetchCalendarsMutation.isPending,
     isDeletingConfig: deleteConfigMutation.isPending,
     isTriggeringSync: triggerSyncMutation.isPending,
     isSyncingAll: syncAllMutation.isPending,

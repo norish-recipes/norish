@@ -8,6 +8,7 @@ export const userCaldavConfig = pgTable("user_caldav_config", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   serverUrlEnc: text("server_url_enc").notNull(),
+  calendarUrlEnc: text("calendar_url_enc"), // Optional: specific calendar URL selected by user
   usernameEnc: text("username_enc").notNull(),
   passwordEnc: text("password_enc").notNull(),
   enabled: boolean("enabled").notNull().default(false),

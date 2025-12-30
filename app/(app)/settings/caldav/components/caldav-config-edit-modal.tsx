@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import type { CalDavCalendarInfo } from "@/types";
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Modal,
   ModalContent,
@@ -12,6 +14,8 @@ import {
   Chip,
   Accordion,
   AccordionItem,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import { ServerIcon } from "@heroicons/react/24/outline";
 
@@ -28,6 +32,8 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
   const { config, saveConfig, testConnection, getCaldavPassword } = useCalDavSettingsContext();
 
   const [serverUrl, setServerUrl] = useState("");
+  const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
+  const [calendars, setCalendars] = useState<CalDavCalendarInfo[]>([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [enabled, setEnabled] = useState(true);
@@ -50,6 +56,9 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
     snack?: string;
   }>({});
 
+  // Track if we've already auto-tested to avoid duplicate calls
+  const hasAutoTestedRef = useRef(false);
+
   // Get user's timezone
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -60,6 +69,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
   useEffect(() => {
     if (config && isOpen) {
       setServerUrl(config.serverUrl);
+      setCalendarUrl(config.calendarUrl ?? null);
       setUsername(config.username);
       setPassword("");
       setEnabled(config.enabled);
@@ -68,12 +78,23 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
       setDinnerTime(config.dinnerTime);
       setSnackTime(config.snackTime);
       setTestResult(null);
+      setCalendars([]);
+      hasAutoTestedRef.current = false;
     }
   }, [config, isOpen]);
 
   const handleRevealPassword = useCallback(async () => {
-    return await getCaldavPassword();
-  }, [getCaldavPassword]);
+    const revealedPassword = await getCaldavPassword();
+    // Auto-test after revealing password
+    if (revealedPassword && serverUrl && username && !testing && !hasAutoTestedRef.current) {
+      hasAutoTestedRef.current = true;
+      // Small delay to allow state to update
+      setTimeout(() => {
+        performTestConnection(serverUrl, username, revealedPassword, calendarUrl);
+      }, 100);
+    }
+    return revealedPassword;
+  }, [getCaldavPassword, serverUrl, username, testing, calendarUrl]);
 
   const validateTimeFormat = (time: string, field: string) => {
     if (!timeRegex.test(time)) {
@@ -95,22 +116,41 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
     return true;
   };
 
-  const handleTestConnection = async () => {
+  const performTestConnection = async (url: string, user: string, pass: string, currentCalendarUrl: string | null = null) => {
     setTesting(true);
     setTestResult(null);
+    setCalendars([]);
     try {
-      // Use form values for test
-      const result = await testConnection(
-        serverUrl,
-        username,
-        password || config?.username || "" // Use current password if not changed
-      );
+      const result = await testConnection(url, user, pass);
 
       setTestResult(result);
+      
+      // Store returned calendars for selection
+      if (result.success && result.calendars && result.calendars.length > 0) {
+        setCalendars(result.calendars);
+        // Auto-select first calendar if none selected, or keep existing selection if valid
+        if (!currentCalendarUrl || !result.calendars.some(c => c.url === currentCalendarUrl)) {
+          setCalendarUrl(result.calendars[0].url);
+        }
+      }
     } finally {
       setTesting(false);
     }
   };
+
+  const handleTestConnection = async () => {
+    // Use form values for test
+    const passwordToUse = password || (config ? await getCaldavPassword() : null) || "";
+    await performTestConnection(serverUrl, username, passwordToUse, calendarUrl);
+  };
+
+  // Auto-test connection when password is entered (for new password)
+  useEffect(() => {
+    if (serverUrl && username && password && !testing && !hasAutoTestedRef.current && isOpen) {
+      hasAutoTestedRef.current = true;
+      performTestConnection(serverUrl, username, password, calendarUrl);
+    }
+  }, [password]);
 
   const handleSave = async () => {
     // Validate time formats
@@ -128,6 +168,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
     try {
       await saveConfig({
         serverUrl,
+        calendarUrl,
         username,
         password, // Empty string if not changed
         enabled,
@@ -142,7 +183,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
     }
   };
 
-  const canSave = serverUrl && username && (password || config);
+  const canSave = serverUrl && username && (password || config) && calendarUrl;
 
   return (
     <Modal isOpen={isOpen} scrollBehavior="inside" size="2xl" onClose={onClose}>
@@ -155,9 +196,9 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
           <div className="flex flex-col gap-4">
             <Input
               isRequired
-              description="Calendar collection URL ending with /"
+              description="Base URL of your CalDAV server (e.g., https://dav.example.com)"
               label="Server URL"
-              placeholder="https://dav.example.com/calendars/username/calendar/"
+              placeholder="https://dav.example.com"
               value={serverUrl}
               onValueChange={setServerUrl}
             />
@@ -187,6 +228,23 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                 {testResult.message}
               </Chip>
             )}
+
+            {/* Calendar Selection - always visible, disabled until calendars fetched */}
+            <Select
+              description={calendars.length === 0 ? "Test connection to load available calendars" : "Select which calendar to sync meal plans with"}
+              isDisabled={calendars.length === 0}
+              label="Calendar"
+              placeholder={calendars.length === 0 ? "Test connection first" : "Select a calendar"}
+              selectedKeys={calendarUrl ? [calendarUrl] : []}
+              onSelectionChange={(keys) => {
+                const selected = Array.from(keys)[0] as string;
+                setCalendarUrl(selected || null);
+              }}
+            >
+              {calendars.map((cal) => (
+                <SelectItem key={cal.url}>{cal.displayName}</SelectItem>
+              ))}
+            </Select>
 
             {/* Advanced Settings */}
             <Accordion>

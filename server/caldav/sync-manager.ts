@@ -77,7 +77,8 @@ export async function syncPlannedItem(
   }
 
   const client = new CalDavClient({
-    baseUrl: config.serverUrl,
+    serverUrl: config.serverUrl,
+    calendarUrl: config.calendarUrl ?? undefined,
     username: config.username,
     password: config.password,
   });
@@ -92,7 +93,6 @@ export async function syncPlannedItem(
     summary: eventTitle,
     start,
     end,
-    description: url,
     url,
   };
 
@@ -130,7 +130,8 @@ export async function deletePlannedItem(userId: string, itemId: string): Promise
 
   try {
     const client = new CalDavClient({
-      baseUrl: config.serverUrl,
+      serverUrl: config.serverUrl,
+      calendarUrl: config.calendarUrl ?? undefined,
       username: config.username,
       password: config.password,
     });

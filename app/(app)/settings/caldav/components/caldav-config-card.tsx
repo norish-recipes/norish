@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardBody, CardHeader, Input, Button, useDisclosure, Link } from "@heroui/react";
+import type { CalDavCalendarInfo } from "@/types";
+
+import { useState, useEffect, useRef } from "react";
+import { Card, CardBody, CardHeader, Input, Button, useDisclosure, Link, Select, SelectItem } from "@heroui/react";
 import {
   ServerIcon,
   EyeIcon,
@@ -24,6 +26,8 @@ export default function CalDavConfigCard() {
 
   // Initial setup form state (only used when no config exists)
   const [serverUrl, setServerUrl] = useState("");
+  const [calendarUrl, setCalendarUrl] = useState<string | null>(null);
+  const [calendars, setCalendars] = useState<CalDavCalendarInfo[]>([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,17 +40,42 @@ export default function CalDavConfigCard() {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
+  // Track if we've already auto-tested to avoid duplicate calls
+  const hasAutoTestedRef = useRef(false);
+
   const handleTestConnection = async () => {
     setTesting(true);
     setTestResult(null);
+    setCalendars([]);
     try {
       const result = await testConnection(serverUrl, username, password);
 
       setTestResult(result);
+      
+      // Store returned calendars for selection
+      if (result.success && result.calendars && result.calendars.length > 0) {
+        setCalendars(result.calendars);
+        // Auto-select first calendar
+        if (!calendarUrl) {
+          setCalendarUrl(result.calendars[0].url);
+        }
+      }
     } finally {
       setTesting(false);
     }
   };
+
+  // Auto-test connection when all credentials are filled
+  useEffect(() => {
+    if (serverUrl && username && password && !testing && !hasAutoTestedRef.current) {
+      hasAutoTestedRef.current = true;
+      handleTestConnection();
+    }
+    // Reset auto-test flag if credentials change after a test
+    if (!serverUrl || !username || !password) {
+      hasAutoTestedRef.current = false;
+    }
+  }, [serverUrl, username, password]);
 
   const handleInitialSetup = async () => {
     setSaving(true);
@@ -54,6 +83,7 @@ export default function CalDavConfigCard() {
     try {
       await saveConfig({
         serverUrl,
+        calendarUrl,
         username,
         password,
         enabled: true,
@@ -79,7 +109,7 @@ export default function CalDavConfigCard() {
   }
 
   // If no config, show initial setup form with guidance
-  const canSave = serverUrl && username && password;
+  const canSave = serverUrl && username && password && calendarUrl;
 
   return (
     <Card>
@@ -149,9 +179,9 @@ export default function CalDavConfigCard() {
         {/* Setup Form */}
         <Input
           isRequired
-          description="Calendar collection URL ending with /"
+          description="Base URL of your CalDAV server (e.g., https://dav.example.com)"
           label="Server URL"
-          placeholder="https://dav.example.com/calendars/username/calendar/"
+          placeholder="https://dav.example.com"
           value={serverUrl}
           onValueChange={setServerUrl}
         />
@@ -186,6 +216,23 @@ export default function CalDavConfigCard() {
             onValueChange={setPassword}
           />
         </div>
+
+        {/* Calendar Selection - always visible, disabled until calendars fetched */}
+        <Select
+          description={calendars.length === 0 ? "Test connection to load available calendars" : "Select which calendar to sync meal plans with"}
+          isDisabled={calendars.length === 0}
+          label="Calendar"
+          placeholder={calendars.length === 0 ? "Test connection first" : "Select a calendar"}
+          selectedKeys={calendarUrl ? [calendarUrl] : []}
+          onSelectionChange={(keys) => {
+            const selected = Array.from(keys)[0] as string;
+            setCalendarUrl(selected || null);
+          }}
+        >
+          {calendars.map((cal) => (
+            <SelectItem key={cal.url}>{cal.displayName}</SelectItem>
+          ))}
+        </Select>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
