@@ -1,0 +1,25 @@
+{
+  "navigation": {
+    "home": "Home",
+    "recipes": "Recipes",
+    "groceries": "Groceries",
+    "calendar": "Calendar",
+    "settings": "Settings",
+    "profile": "Profile"
+  },
+  "userMenu": {
+    "openMenu": "Open user menu",
+    "newRecipe": "New recipe",
+    "newRecipeDescription": "Write your own recipe",
+    "importUrl": "Import from URL",
+    "importUrlDescription": "Paste a recipe link",
+    "settings": "Settings",
+    "settingsDescription": "Manage your account",
+    "logout": "Logout"
+  },
+  "search": {
+    "placeholder": "Search recipes...",
+    "noResults": "No recipes found",
+    "recentSearches": "Recent searches"
+  }
+}

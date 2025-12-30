@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { ThemeSwitch } from "./theme-switch";
 
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
+import { LanguageSwitch } from "@/components/shared/language-switch";
 import { cssButtonPill, cssButtonPillDanger } from "@/config/css-tokens";
 import { useUserContext } from "@/context/user-context";
 
@@ -129,6 +130,9 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
 
           <DropdownItem key="theme" isReadOnly className={`py-3 ${cssButtonPill}`}>
             <ThemeSwitch />
+          </DropdownItem>
+          <DropdownItem key="language" isReadOnly className={`py-3 ${cssButtonPill}`}>
+            <LanguageSwitch isAuthenticated={true} />
           </DropdownItem>
           <DropdownItem
             key="settings"

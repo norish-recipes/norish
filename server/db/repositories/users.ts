@@ -381,3 +381,24 @@ export async function countUsers(): Promise<number> {
 
   return result.length;
 }
+
+/**
+ * Get user's locale preference
+ */
+export async function getUserLocale(userId: string): Promise<string | null> {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: {
+      locale: true,
+    },
+  });
+
+  return user?.locale ?? null;
+}
+
+/**
+ * Update user's locale preference
+ */
+export async function updateUserLocale(userId: string, locale: string | null): Promise<void> {
+  await db.update(users).set({ locale }).where(eq(users.id, userId));
+}

@@ -8,4 +8,5 @@ export const UserDtoSchema = z.object({
   name: z.string(),
   image: z.string().nullable().optional(),
   isServerAdmin: z.boolean().optional(),
+  locale: z.string().nullable().optional(),
 });
