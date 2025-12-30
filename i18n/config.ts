@@ -6,19 +6,13 @@
  * 1. Add the locale code to the `locales` array
  * 2. Add the country code mapping in `localeToCountry`
  * 3. Add the display name in `localeNames`
- * 4. Create translation files in `messages/{locale}/`
+ * 4. Create translation file in `i18n/messages/{locale}.json`
  */
 
 export const locales = ["en"] as const;
 export const defaultLocale = "en" as const;
 
 export type Locale = (typeof locales)[number];
-
-/**
- * Cookie name for storing locale preference
- * Used for unauthenticated users
- */
-export const LOCALE_COOKIE_NAME = "NEXT_LOCALE";
 
 /**
  * Map locale to ISO 3166-1 alpha-2 country code for flag icons

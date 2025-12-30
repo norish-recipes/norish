@@ -244,6 +244,7 @@ Only a few environment variables are required. All other settings are managed vi
 | `NEXT_PUBLIC_LOG_LEVEL` | Log level                               | `info`         |
 | `TRUSTED_ORIGINS`       | Comma seperated list of trusted origins | `empty`        |
 | `YT_DLP_BIN_DIR`        | Custom folder path for `yt-dlp`         | `/app/bin`     |
+| `DEFAULT_LOCALE`        | Instance default locale                 | `en`           |
 
 ### First-Time Auth Provider
 

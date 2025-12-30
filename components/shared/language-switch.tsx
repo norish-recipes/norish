@@ -5,17 +5,14 @@ import { GlobeAltIcon } from "@heroicons/react/16/solid";
 
 import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
 
-interface LanguageSwitchProps {
-  /** Whether user is authenticated (determines storage method) */
-  isAuthenticated?: boolean;
-}
-
 /**
  * Language switch component for use in dropdown menus
  * Cycles through available locales on click
+ *
+ * Used by authenticated users only - saves preference to database.
  */
-export const LanguageSwitch: FC<LanguageSwitchProps> = ({ isAuthenticated = true }) => {
-  const { mounted, icon, label, cycleLocale, isChanging } = useLanguageSwitch(isAuthenticated);
+export const LanguageSwitch: FC = () => {
+  const { mounted, icon, label, cycleLocale, isChanging } = useLanguageSwitch();
 
   if (!mounted) {
     return (

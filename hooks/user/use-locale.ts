@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { type Locale, isValidLocale, LOCALE_COOKIE_NAME } from "@/i18n/config";
+import { type Locale, isValidLocale } from "@/i18n/config";
 
 /**
  * Hook for managing user locale preference
  *
- * For authenticated users, saves preference to database.
- * For unauthenticated users, saves to cookie.
+ * Saves preference to database for authenticated users.
+ * After changing locale, refreshes the page to apply the new locale.
  */
 export function useLocale() {
   const router = useRouter();
@@ -40,22 +40,16 @@ export function useLocale() {
   /**
    * Change the locale
    *
-   * @param locale - The new locale to set
-   * @param isAuthenticated - Whether the user is authenticated (determines storage method)
+   * Saves to database and refreshes the page to apply the new locale.
    */
   const changeLocale = useCallback(
-    async (locale: Locale, isAuthenticated: boolean = true) => {
+    async (locale: Locale) => {
       if (!isValidLocale(locale)) {
         return;
       }
 
-      // Always set cookie for immediate effect
-      document.cookie = `${LOCALE_COOKIE_NAME}=${locale}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-
-      // If authenticated, also save to database
-      if (isAuthenticated) {
-        await setLocaleMutation.mutateAsync({ locale });
-      }
+      // Save to database
+      await setLocaleMutation.mutateAsync({ locale });
 
       // Refresh the page to apply the new locale
       startTransition(() => {
@@ -66,7 +60,7 @@ export function useLocale() {
   );
 
   return {
-    /** Current locale from database (for authenticated users) */
+    /** Current locale from database */
     locale: localeData?.locale as Locale | null | undefined,
     /** Change the locale */
     changeLocale,

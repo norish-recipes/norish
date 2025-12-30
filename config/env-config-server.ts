@@ -133,6 +133,11 @@ const ServerConfigSchema = z.object({
 
   // Redis Configuration
   REDIS_URL: z.string().url().default("redis://localhost:6379"),
+
+  // Internationalization
+  // Note: Validation against available locales happens in i18n/config.ts
+  // If invalid locale is specified, falls back to 'en'
+  DEFAULT_LOCALE: z.string().default("en"),
 });
 
 export type ServerConfig = z.infer<typeof ServerConfigSchema>;

@@ -132,7 +132,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             <ThemeSwitch />
           </DropdownItem>
           <DropdownItem key="language" isReadOnly className={`py-3 ${cssButtonPill}`}>
-            <LanguageSwitch isAuthenticated={true} />
+            <LanguageSwitch />
           </DropdownItem>
           <DropdownItem
             key="settings"
