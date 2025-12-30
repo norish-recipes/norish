@@ -31,8 +31,6 @@ export function isInstagramImagePost(metadata: VideoMetadata): boolean {
  * Instagram embeds the caption in meta tags and article content.
  */
 function extractInstagramCaption(html: string): string {
-  log.debug({ htmlLength: html.length }, "Attempting to extract caption from HTML");
-
   // Try meta description first (often contains the caption)
   const metaMatch = html.match(
     /<meta\s+(?:name|property)=["'](?:og:description|description)["']\s+content=["']([^"']+)["']/i
@@ -45,10 +43,6 @@ function extractInstagramCaption(html: string): string {
       .replace(/&gt;/g, ">")
       .replace(/&#x27;/g, "'")
       .replace(/&#39;/g, "'");
-    log.debug(
-      { source: "meta", decodedLength: decoded.length, preview: decoded.substring(0, 100) },
-      "Found caption in meta tag"
-    );
     if (decoded.length > 50) {
       return decoded;
     }
@@ -66,10 +60,6 @@ function extractInstagramCaption(html: string): string {
       .replace(/&gt;/g, ">")
       .replace(/&#x27;/g, "'")
       .replace(/&#39;/g, "'");
-    log.debug(
-      { source: "altMeta", decodedLength: decoded.length, preview: decoded.substring(0, 100) },
-      "Found caption in alternate meta tag format"
-    );
     if (decoded.length > 50) {
       return decoded;
     }
@@ -85,24 +75,10 @@ function extractInstagramCaption(html: string): string {
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
       .trim();
-    log.debug(
-      { source: "article", textLength: textContent.length, preview: textContent.substring(0, 100) },
-      "Found content in article tag"
-    );
     if (textContent.length > 50) {
       return textContent;
     }
   }
-
-  // Log what we found in the HTML for debugging
-  const metaTags = html.match(/<meta[^>]+>/gi) || [];
-  log.debug(
-    {
-      metaTagCount: metaTags.length,
-      metaTagSamples: metaTags.slice(0, 5),
-    },
-    "No caption found, dumping meta tag samples"
-  );
 
   return "";
 }
@@ -119,35 +95,17 @@ export async function processInstagramImagePost(
 ): Promise<FullRecipeInsertDTO> {
   let description = metadata.description?.trim() || "";
 
-  log.info(
-    {
-      url,
-      descriptionLength: description.length,
-      descriptionPreview: description.substring(0, 200),
-      title: metadata.title,
-      duration: metadata.duration,
-      uploader: metadata.uploader,
-    },
-    "Processing Instagram image post - initial metadata"
-  );
+  log.info({ url }, "Processing Instagram image post");
 
   // If yt-dlp returned empty description, try fetching via Playwright
   if (description.length < 50) {
-    log.info(
-      { url, currentDescriptionLength: description.length },
-      "Description from yt-dlp too short (<50 chars), attempting Playwright scrape"
-    );
+    log.info({ url }, "Description from yt-dlp too short, attempting Playwright scrape");
     try {
       const html = await fetchViaPlaywright(url);
       if (html) {
-        log.debug({ url, htmlLength: html.length }, "Playwright returned HTML");
         description = extractInstagramCaption(html);
         log.info(
-          {
-            url,
-            descriptionLength: description.length,
-            descriptionPreview: description.substring(0, 200),
-          },
+          { url, descriptionLength: description.length },
           "Extracted caption via Playwright"
         );
       } else {
@@ -156,16 +114,10 @@ export async function processInstagramImagePost(
     } catch (err) {
       log.warn({ url, err }, "Failed to fetch Instagram page via Playwright");
     }
-  } else {
-    log.info({ url }, "Using description from yt-dlp metadata (sufficient length)");
   }
 
   // Require meaningful description content
   if (!description || description.length < 50) {
-    log.warn(
-      { url, finalDescriptionLength: description.length },
-      "Final description too short, cannot extract recipe"
-    );
     throw new Error("Instagram image posts are only supported if the caption contains a recipe");
   }
 

@@ -147,28 +147,6 @@ export async function getVideoMetadata(url: string): Promise<VideoMetadata> {
     // Normalize to always work with the first/main entry
     const info = Array.isArray(rawInfo) ? (rawInfo[0] ?? {}) : rawInfo;
 
-    // Debug: Log raw yt-dlp response to diagnose Instagram image post issues
-    log.debug(
-      {
-        url,
-        isArray: Array.isArray(rawInfo),
-        arrayLength: Array.isArray(rawInfo) ? rawInfo.length : undefined,
-        rawKeys: Object.keys(info),
-        title: info.title,
-        description: info.description?.substring(0, 200),
-        descriptionLength: info.description?.length ?? 0,
-        duration: info.duration,
-        extractor: info.extractor,
-        extractorKey: info.extractor_key,
-        // Additional fields that might contain caption for Instagram
-        altTitle: info.alt_title,
-        fulltitle: info.fulltitle,
-        track: info.track,
-        artist: info.artist,
-      },
-      "Raw yt-dlp metadata response"
-    );
-
     return {
       title: info.title || "Untitled Video",
       description: info.description || "",

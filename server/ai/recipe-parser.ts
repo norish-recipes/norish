@@ -28,8 +28,6 @@ async function buildExtractionPrompt(
 
   const prompt = await loadPrompt("recipe-extraction");
 
-  aiLogger.debug({ prompt }, "Loaded extraction prompt template");
-
   // Build allergy detection instruction
   let allergyInstruction = "";
 

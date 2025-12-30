@@ -5,7 +5,6 @@ import { parseIngredient } from "parse-ingredient";
 import { decode } from "html-entities";
 
 import { httpUrlSchema } from "./schema";
-import { isSupportedVideoUrl } from "@/server/video/detector";
 
 export function stripHtmlTags(input: string): string {
   const withoutTags = input.replace(/<[^>]*>/g, " ");
@@ -130,12 +129,6 @@ export const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: nu
 
 export function isUrl(str: string): boolean {
   return httpUrlSchema.safeParse(str).success;
-}
-
-export async function isVideoUrl(str: string): Promise<boolean> {
-  if (!isUrl(str)) return false;
-
-  return isSupportedVideoUrl(str);
 }
 
 export const toArr = (v: any) => (Array.isArray(v) ? v : []);

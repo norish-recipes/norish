@@ -76,11 +76,21 @@ export function extractImageCandidates(html: string): string[] {
 }
 
 export function extractSanitizedBody(html: string): string {
+  // Check if input looks like HTML (has tags) or is plain text
+  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(html);
+
+  if (!hasHtmlTags) {
+    // Plain text input - just clean up whitespace and return
+    return html.replace(/\s+/g, " ").trim();
+  }
+
   try {
     const $ = cheerio.load(html);
     const $body = $("body");
 
-    if (!$body.length) return "";
+    if (!$body.length) {
+      return html.replace(/\s+/g, " ").trim();
+    }
 
     // Remove obvious non-content
     $body

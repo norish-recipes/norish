@@ -9,7 +9,7 @@ import {
   isVideoParsingEnabled,
   shouldAlwaysUseAI,
 } from "@/config/server-config-loader";
-import { isVideoUrl } from "@/lib/helpers";
+import { isVideoUrl } from "@/server/helpers";
 import { parserLogger as log } from "@/server/logger";
 
 export async function parseRecipeFromUrl(
