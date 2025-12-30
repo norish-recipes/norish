@@ -1,8 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
 **Generated:** 2025-12-30
-**Commit:** 7efe36f
-**Branch:** feature/grocery-page
 
 ## OVERVIEW
 
