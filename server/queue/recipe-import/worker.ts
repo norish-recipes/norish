@@ -21,7 +21,7 @@ import {
   dashboardRecipe,
   getAllergiesForUsers,
 } from "@/server/db";
-import { parseRecipeFromUrl } from "@/lib/parser";
+import { parseRecipeFromUrl } from "@/server/parser";
 
 const log = createLogger("worker:recipe-import");
 

@@ -5,6 +5,7 @@ import { parseIngredient } from "parse-ingredient";
 import { decode } from "html-entities";
 
 import { httpUrlSchema } from "./schema";
+import { isSupportedVideoUrl } from "@/server/video/detector";
 
 export function stripHtmlTags(input: string): string {
   const withoutTags = input.replace(/<[^>]*>/g, " ");
@@ -133,8 +134,6 @@ export function isUrl(str: string): boolean {
 
 export async function isVideoUrl(str: string): Promise<boolean> {
   if (!isUrl(str)) return false;
-
-  const { isSupportedVideoUrl } = await import("@/lib/video/detector");
 
   return isSupportedVideoUrl(str);
 }

@@ -1,19 +1,5 @@
 import { z } from "zod";
-
-/**
- * Nutrition information schema for recipes.
- * Used in both recipe extraction and nutrition estimation.
- */
-export const nutritionSchema = z
-  .object({
-    calories: z.number().nullable().describe("Calories in kcal"),
-    fatContent: z.number().nullable().describe("Fat in grams"),
-    carbohydrateContent: z.number().nullable().describe("Carbohydrates in grams"),
-    proteinContent: z.number().nullable().describe("Protein in grams"),
-  })
-  .strict();
-
-export type NutritionInfo = z.infer<typeof nutritionSchema>;
+import { nutritionEstimationSchema } from "./nutrition.schema";
 
 /**
  * Dual-system recipe schema for AI extraction.
@@ -57,7 +43,7 @@ export const recipeExtractionSchema = z
       .array(z.string())
       .nullable()
       .describe("Tags including detected allergens (e.g., gluten, dairy, nuts)"),
-    nutrition: nutritionSchema.nullable().describe("Nutritional information per serving"),
+    nutrition: nutritionEstimationSchema,
   })
   .strict();
 

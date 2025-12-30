@@ -1,4 +1,4 @@
-import { getBrowser } from "../playwright";
+import { getBrowser } from "@/server/playwright";
 
 import { parserLogger as log } from "@/server/logger";
 

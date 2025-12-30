@@ -2,7 +2,7 @@
 import * as cheerio from "cheerio";
 
 import { parseJsonWithRepair } from "@/lib/helpers";
-import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
+import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { parserLogger as log } from "@/server/logger";
 

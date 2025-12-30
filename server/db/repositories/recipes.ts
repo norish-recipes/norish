@@ -15,7 +15,7 @@ import { createManyRecipeStepsTx } from "./steps";
 import { attachTagsToRecipeByInputTx } from "./tags";
 
 import { stripHtmlTags } from "@/lib/helpers";
-import { deleteRecipeStepImagesDir } from "@/lib/downloader";
+import { deleteRecipeStepImagesDir } from "@/server/downloader";
 import {
   RecipeDashboardDTO,
   FilterMode,

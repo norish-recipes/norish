@@ -6,6 +6,7 @@ import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { getUnits } from "@/config/server-config-loader";
 import { FullRecipeInsertDTO } from "@/types";
 import { FullRecipeInsertSchema } from "@/server/db";
+import { saveImageBytes } from "../downloader";
 
 export type MealieDatabase = {
   recipes: MealieRecipe[];
@@ -154,8 +155,6 @@ export async function parseMealieRecipeToDTO(
   if (imageBuffer && imageBuffer.length > 0) {
     try {
       // Import saveImageBytes at the top to avoid dynamic import issues
-      const { saveImageBytes } = await import("@/lib/downloader");
-
       image = await saveImageBytes(imageBuffer, title);
     } catch (err) {
       // Log but ignore image failure, proceed without image

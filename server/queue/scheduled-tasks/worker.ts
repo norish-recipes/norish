@@ -11,7 +11,7 @@ import {
 } from "@/server/startup/image-cleanup";
 import { cleanupOldCalendarData } from "@/server/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@/server/scheduler/old-groceries-cleanup";
-import { cleanupOldTempFiles } from "@/lib/video/cleanup";
+import { cleanupOldTempFiles } from "@/server/video/cleanup";
 
 const log = createLogger("worker:scheduled-tasks");
 

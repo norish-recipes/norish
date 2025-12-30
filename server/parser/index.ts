@@ -1,7 +1,7 @@
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
-import { tryExtractRecipeFromJsonLd } from "@/lib/parser/jsonld";
-import { tryExtractRecipeFromMicrodata } from "@/lib/parser/microdata";
-import { fetchViaPuppeteer } from "@/lib/parser/fetch";
+import { tryExtractRecipeFromJsonLd } from "@/server/parser/jsonld";
+import { tryExtractRecipeFromMicrodata } from "@/server/parser/microdata";
+import { fetchViaPuppeteer } from "@/server/parser/fetch";
 import { extractRecipeWithAI } from "@/server/ai/recipe-parser";
 import {
   getContentIndicators,
@@ -26,7 +26,7 @@ export async function parseRecipeFromUrl(
     }
 
     try {
-      const { processVideoRecipe } = await import("@/lib/video/processor");
+      const { processVideoRecipe } = await import("@/server/video/processor");
 
       return await processVideoRecipe(url, allergies);
     } catch (error: any) {

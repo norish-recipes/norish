@@ -4,7 +4,7 @@ import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 
 import { trpcLogger as log } from "@/server/logger";
-import { saveImageBytes, saveStepImageBytes, deleteStepImageByUrl } from "@/lib/downloader";
+import { saveImageBytes, saveStepImageBytes, deleteStepImageByUrl } from "@/server/downloader";
 import { deleteImageByUrl } from "@/server/startup/image-cleanup";
 import { ALLOWED_IMAGE_MIME_SET, MAX_RECIPE_IMAGE_SIZE } from "@/types";
 

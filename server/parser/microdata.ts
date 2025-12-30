@@ -3,7 +3,7 @@
 // @ts-expect-error microdata-node has no types
 import microdata from "microdata-node";
 
-import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
+import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 
 /**

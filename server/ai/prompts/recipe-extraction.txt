@@ -16,6 +16,4 @@ NUTRITION / MACRONUTRIENTS (IMPORTANT OVERRIDE):
   MAY be estimated if they are not explicitly provided.
 - Estimation is allowed ONLY for the nutrition object.
 - Use standard ingredient-based nutritional knowledge and typical portion sizes.
-- If ingredients or quantities are insufficient to make a reasonable estimate,
-  set nutrition values to null.
 - Use the formula: Calories = (fat × 9) + (carbs × 4) + (protein × 4)

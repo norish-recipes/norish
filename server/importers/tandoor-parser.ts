@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { z } from "zod";
 
 import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
-import { saveImageBytes } from "@/lib/downloader";
+import { saveImageBytes } from "@/server/downloader";
 import { FullRecipeInsertDTO } from "@/types";
 import { FullRecipeInsertSchema } from "@/server/db";
 

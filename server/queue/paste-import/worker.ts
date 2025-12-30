@@ -15,8 +15,8 @@ import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
 import { getRecipePermissionPolicy, getAIConfig, isAIEnabled } from "@/config/server-config-loader";
 import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@/server/db";
-import { extractRecipeNodesFromJsonLd } from "@/lib/parser/jsonld";
-import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
+import { extractRecipeNodesFromJsonLd } from "@/server/parser/jsonld";
+import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 import { extractRecipeWithAI } from "@/server/ai/recipe-parser";
 import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
 

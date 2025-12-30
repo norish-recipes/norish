@@ -8,7 +8,7 @@ import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } fr
 
 import { isAIEnabled, getUnits } from "@/config/server-config-loader";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
-import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
+import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { aiLogger } from "@/server/logger";
 
@@ -51,7 +51,6 @@ ${url ? `URL: ${url}\n` : ""}
 WEBPAGE TEXT:
 ${truncated}`;
 }
-
 
 export async function extractRecipeWithAI(
   html: string,

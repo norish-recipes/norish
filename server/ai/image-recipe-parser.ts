@@ -8,7 +8,7 @@ import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } fr
 import type { ImageImportFile } from "@/types/dto/queue";
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
-import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
+import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 import { isAIEnabled, getUnits } from "@/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
 

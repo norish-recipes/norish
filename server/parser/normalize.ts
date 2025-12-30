@@ -1,5 +1,5 @@
 import { parseIsoDuration, parseIngredientWithDefaults } from "@/lib/helpers";
-import { downloadBestImageFromJsonLd } from "@/lib/downloader";
+import { downloadBestImageFromJsonLd } from "@/server/downloader";
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
 import { getUnits } from "@/config/server-config-loader";
@@ -33,10 +33,10 @@ function extractNutrition(json: any): {
     return { calories: null, fat: null, carbs: null, protein: null };
   }
 
-  const calories = parseNutritionValue(nutrition.calories);
-  const fat = parseNutritionValue(nutrition.fatContent);
-  const carbs = parseNutritionValue(nutrition.carbohydrateContent);
-  const protein = parseNutritionValue(nutrition.proteinContent);
+  const calories = parseNutritionValue(nutrition.calories || nutrition.calorieContent);
+  const fat = parseNutritionValue(nutrition.fatContent || nutrition.fat);
+  const carbs = parseNutritionValue(nutrition.carbohydrateContent || nutrition.carbs);
+  const protein = parseNutritionValue(nutrition.proteinContent || nutrition.protein);
 
   return {
     calories,

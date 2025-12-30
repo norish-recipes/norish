@@ -14,8 +14,8 @@ import {
   getErrorMessage,
   type AIResult,
 } from "@/server/ai/types/result";
-import { downloadImage } from "@/lib/downloader";
-import { normalizeRecipeFromJson } from "@/lib/parser/normalize";
+import { downloadImage } from "@/server/downloader";
+import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { getUnits, isAIEnabled } from "@/config/server-config-loader";
 

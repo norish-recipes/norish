@@ -6,8 +6,8 @@ export async function initializeVideoProcessing(): Promise<void> {
     return;
   }
 
-  const { ensureYtDlpBinary } = await import("@/lib/video/yt-dlp");
-  const { initializeCleanup } = await import("@/lib/video/cleanup");
+  const { ensureYtDlpBinary } = await import("@/server/video/yt-dlp");
+  const { initializeCleanup } = await import("@/server/video/cleanup");
 
   await ensureYtDlpBinary();
   await initializeCleanup();

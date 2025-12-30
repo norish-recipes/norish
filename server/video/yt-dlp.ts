@@ -5,7 +5,11 @@ import fsSync from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 
-import YTDlpWrap from "yt-dlp-wrap";
+import YTDlpWrapModule from "yt-dlp-wrap";
+
+// Handle CJS/ESM interop - the module may be wrapped in a default property
+const YTDlpWrap =
+  (YTDlpWrapModule as unknown as { default?: typeof YTDlpWrapModule }).default ?? YTDlpWrapModule;
 
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { getVideoConfig } from "@/config/server-config-loader";
@@ -136,7 +140,34 @@ export async function getVideoMetadata(url: string): Promise<VideoMetadata> {
   const ytDlpWrap = new YTDlpWrap(ytDlpPath);
 
   try {
-    const info = await ytDlpWrap.getVideoInfo(url);
+    const rawInfo = await ytDlpWrap.getVideoInfo(url);
+
+    // yt-dlp returns an array for Instagram carousel/image posts (one entry per image)
+    // For single videos, it returns an object directly
+    // Normalize to always work with the first/main entry
+    const info = Array.isArray(rawInfo) ? (rawInfo[0] ?? {}) : rawInfo;
+
+    // Debug: Log raw yt-dlp response to diagnose Instagram image post issues
+    log.debug(
+      {
+        url,
+        isArray: Array.isArray(rawInfo),
+        arrayLength: Array.isArray(rawInfo) ? rawInfo.length : undefined,
+        rawKeys: Object.keys(info),
+        title: info.title,
+        description: info.description?.substring(0, 200),
+        descriptionLength: info.description?.length ?? 0,
+        duration: info.duration,
+        extractor: info.extractor,
+        extractorKey: info.extractor_key,
+        // Additional fields that might contain caption for Instagram
+        altTitle: info.alt_title,
+        fulltitle: info.fulltitle,
+        track: info.track,
+        artist: info.artist,
+      },
+      "Raw yt-dlp metadata response"
+    );
 
     return {
       title: info.title || "Untitled Video",
@@ -146,21 +177,21 @@ export async function getVideoMetadata(url: string): Promise<VideoMetadata> {
       uploader: info.uploader || info.channel || undefined,
       uploadDate: info.upload_date || undefined,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error({ err: error }, "Failed to get video metadata");
 
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
     // Provide more specific error messages
-    if (error.message?.includes("Unsupported URL")) {
+    if (errorMessage.includes("Unsupported URL")) {
       throw new Error("Video platform not supported or URL is invalid.");
     }
-    if (error.message?.includes("Video unavailable") || error.message?.includes("private")) {
+    if (errorMessage.includes("Video unavailable") || errorMessage.includes("private")) {
       throw new Error("Video is unavailable or private.");
     }
-    if (error.message?.includes("Sign in to confirm")) {
+    if (errorMessage.includes("Sign in to confirm")) {
       throw new Error("Video requires authentication or age verification.");
     }
-
-    const errorMessage = error.message || "Unknown error";
 
     throw new Error(`Failed to fetch video information: ${errorMessage}`);
   }
