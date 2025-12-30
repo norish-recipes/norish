@@ -8,6 +8,7 @@ import { ArrowDownTrayIcon, ArrowUpIcon, PlusIcon } from "@heroicons/react/16/so
 import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
 import { UsersIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { ThemeSwitch } from "./theme-switch";
 
@@ -23,6 +24,7 @@ interface NavbarUserMenuProps {
 }
 
 export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuProps) {
+  const t = useTranslations("navbar.userMenu");
   const { user, userMenuOpen: _userMenuOpen, setUserMenuOpen, signOut } = useUserContext();
   const router = useRouter();
   const [showUrlModal, setShowUrlModal] = useState(false);
@@ -90,6 +92,10 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             </DropdownItem>
           )}
 
+          <DropdownItem key="language" isReadOnly className={`py-3 ${cssButtonPill}`}>
+            <LanguageSwitch />
+          </DropdownItem>
+
           <DropdownItem
             key="create-recipe"
             className={`py-3 ${cssButtonPill}`}
@@ -104,8 +110,10 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             }}
           >
             <div className="flex flex-col items-start">
-              <span className="text-base leading-tight font-medium">New recipe</span>
-              <span className="text-default-500 text-xs leading-tight">Write your own recipe</span>
+              <span className="text-base leading-tight font-medium">{t("newRecipe.title")}</span>
+              <span className="text-default-500 text-xs leading-tight">
+                {t("newRecipe.description")}
+              </span>
             </div>
           </DropdownItem>
 
@@ -123,16 +131,15 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             }}
           >
             <div className="flex flex-col items-start">
-              <span className="text-base leading-tight font-medium">Import from URL</span>
-              <span className="text-default-500 text-xs leading-tight">Paste a recipe link</span>
+              <span className="text-base leading-tight font-medium">{t("importUrl.title")}</span>
+              <span className="text-default-500 text-xs leading-tight">
+                {t("importUrl.description")}
+              </span>
             </div>
           </DropdownItem>
 
           <DropdownItem key="theme" isReadOnly className={`py-3 ${cssButtonPill}`}>
             <ThemeSwitch />
-          </DropdownItem>
-          <DropdownItem key="language" isReadOnly className={`py-3 ${cssButtonPill}`}>
-            <LanguageSwitch />
           </DropdownItem>
           <DropdownItem
             key="settings"
@@ -146,8 +153,10 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             onPress={() => setUserMenuOpen(false)}
           >
             <div className="flex flex-col items-start">
-              <span className="text-base leading-tight font-medium">Settings</span>
-              <span className="text-default-500 text-xs leading-tight">Manage your account</span>
+              <span className="text-base leading-tight font-medium">{t("settings.title")}</span>
+              <span className="text-default-500 text-xs leading-tight">
+                {t("settings.description")}
+              </span>
             </div>
           </DropdownItem>
           <DropdownItem
@@ -163,7 +172,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
               signOut();
             }}
           >
-            <span className="text-base font-medium">Logout</span>
+            <span className="text-base font-medium">{t("logout")}</span>
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>

@@ -1,0 +1,47 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "New recipe",
+      "description": "Write your own recipe"
+    },
+    "importUrl": {
+      "title": "Import from URL",
+      "description": "Paste a recipe link"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Manage your account"
+    },
+    "logout": "Logout"
+  },
+  "theme": {
+    "title": "Theme",
+    "loading": "Loading…",
+    "light": "Light mode",
+    "dark": "Dark mode",
+    "system": "System default"
+  },
+  "nav": {
+    "home": "Recipes",
+    "calendar": "Calendar",
+    "groceries": "Groceries"
+  },
+  "mobile": {
+    "searchPlaceholder": "Search recipes...",
+    "toggleSearch": "Toggle search",
+    "goBack": "Go back"
+  },
+  "archiveImporter": {
+    "uploading": "Uploading…",
+    "uploadFile": "Upload a file",
+    "dragDrop": "or drag and drop",
+    "formats": ".melarecipes (Mela), .zip (Mealie or Tandoor export)",
+    "uploadingFile": "Uploading file…",
+    "processing": "Processing: {details}",
+    "complete": "Complete: {details}",
+    "imported": "{count} imported",
+    "skipped": "{count} skipped",
+    "errors": "{count} errors",
+    "ofTotal": "{current} of {total}"
+  }
+}

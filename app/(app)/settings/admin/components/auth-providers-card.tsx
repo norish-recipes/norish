@@ -28,6 +28,7 @@ import {
   BeakerIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
 
@@ -58,6 +59,7 @@ interface AuthProviderFormProps {
 }
 
 function AuthProviderForm({ providerKey, providerName, config, fields }: AuthProviderFormProps) {
+  const t = useTranslations("settings.admin.authProviders.form");
   const {
     updateAuthProviderOIDC,
     updateAuthProviderGitHub,
@@ -176,7 +178,7 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
           ) : (
             <XMarkIcon className="h-4 w-4" />
           )}
-          {testResult.success ? "Connection successful" : testResult.error}
+          {testResult.success ? t("testSuccess") : testResult.error}
         </div>
       )}
 
@@ -188,7 +190,7 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
             variant="flat"
             onPress={deleteModal.onOpen}
           >
-            Remove
+            {t("remove")}
           </Button>
         )}
         <div className="ml-auto flex gap-2">
@@ -198,7 +200,7 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
             variant="flat"
             onPress={handleTest}
           >
-            Test
+            {t("test")}
           </Button>
           <Button
             color="primary"
@@ -206,7 +208,7 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
             startContent={<CheckIcon className="h-5 w-5" />}
             onPress={handleSave}
           >
-            Save
+            {t("save")}
           </Button>
         </div>
       </div>
@@ -215,17 +217,17 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
         <ModalContent>
           <ModalHeader className="flex items-center gap-2">
             <ExclamationTriangleIcon className="text-danger h-5 w-5" />
-            Remove {providerName}
+            {t("removeTitle", { provider: providerName })}
           </ModalHeader>
           <ModalBody>
-            <p>Are you sure you want to remove this provider?</p>
+            <p>{t("removeConfirm")}</p>
           </ModalBody>
           <ModalFooter>
             <Button variant="flat" onPress={deleteModal.onClose}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button color="danger" onPress={handleDelete}>
-              Remove
+              {t("remove")}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -239,16 +241,21 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
 // ============================================================================
 
 function EnvManagedBadge({ isOverridden }: { isOverridden?: boolean }) {
+  const t = useTranslations("settings.admin.authProviders.envBadge");
   if (isOverridden === undefined) return null;
 
   return (
     <Chip color={isOverridden ? "success" : "warning"} size="sm" variant="flat">
-      {isOverridden ? "Managed by DB" : "Managed by env"}
+      {isOverridden ? t("db") : t("env")}
     </Chip>
   );
 }
 
 export default function AuthProvidersCard() {
+  const t = useTranslations("settings.admin.authProviders");
+  const tOidc = useTranslations("settings.admin.authProviders.oidc.fields");
+  const tGithub = useTranslations("settings.admin.authProviders.github.fields");
+  const tGoogle = useTranslations("settings.admin.authProviders.google.fields");
   const {
     authProviderOIDC,
     authProviderGitHub,
@@ -263,24 +270,24 @@ export default function AuthProvidersCard() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <KeyIcon className="h-5 w-5" />
-          <h2 className="text-lg font-semibold">Authentication Providers</h2>
+          <h2 className="text-lg font-semibold">{t("title")}</h2>
           <Chip color="warning" size="sm" variant="flat">
-            Requires restart
+            {t("requiresRestart")}
           </Chip>
         </div>
       </CardHeader>
       <CardBody className="flex flex-col gap-4">
         <p className="text-default-500 text-base">
-          Configure authentication methods. Changes require a server restart to take effect.
+          {t("description")}
         </p>
 
         <div className="bg-default-50 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-0.5">
-                <span className="font-medium">Email & Password</span>
+                <span className="font-medium">{t("passwordAuth.title")}</span>
                 <span className="text-default-500 text-base">
-                  Allow users to sign in with email and password
+                  {t("passwordAuth.description")}
                 </span>
               </div>
             </div>
@@ -296,62 +303,62 @@ export default function AuthProvidersCard() {
         <Divider />
 
         <p className="text-default-500 text-base">
-          Configure OAuth providers for SSO authentication.
+          {t("oauthDescription")}
         </p>
 
         <Accordion selectionMode="multiple" variant="bordered">
           <AccordionItem
             key="oidc"
-            subtitle="Generic OpenID Connect"
+            subtitle={t("oidc.subtitle")}
             title={
               <span className="flex items-center gap-2">
-                OIDC Provider <EnvManagedBadge isOverridden={authProviderOIDC?.isOverridden} />
+                {t("oidc.title")} <EnvManagedBadge isOverridden={authProviderOIDC?.isOverridden} />
               </span>
             }
           >
             <AuthProviderForm
               config={authProviderOIDC as Record<string, unknown> | undefined}
               fields={[
-                { key: "name", label: "Provider Name", placeholder: "e.g., Authentik, Keycloak" },
-                { key: "issuer", label: "Issuer URL", placeholder: "https://your-idp.com" },
-                { key: "clientId", label: "Client ID" },
-                { key: "clientSecret", label: "Client Secret", secret: true },
+                { key: "name", label: tOidc("name"), placeholder: tOidc("namePlaceholder") },
+                { key: "issuer", label: tOidc("issuer"), placeholder: tOidc("issuerPlaceholder") },
+                { key: "clientId", label: tOidc("clientId") },
+                { key: "clientSecret", label: tOidc("clientSecret"), secret: true },
                 {
                   key: "wellknown",
-                  label: "Well-known URL (optional)",
-                  placeholder: "Auto-derived from issuer if not set",
+                  label: tOidc("wellknown"),
+                  placeholder: tOidc("wellknownPlaceholder"),
                   optional: true,
                 },
               ]}
               providerKey="oidc"
-              providerName="OIDC Provider"
+              providerName={t("oidc.title")}
             />
           </AccordionItem>
           <AccordionItem
             key="github"
-            subtitle="GitHub OAuth"
+            subtitle={t("github.subtitle")}
             title={
               <span className="flex items-center gap-2">
-                GitHub <EnvManagedBadge isOverridden={authProviderGitHub?.isOverridden} />
+                {t("github.title")} <EnvManagedBadge isOverridden={authProviderGitHub?.isOverridden} />
               </span>
             }
           >
             <AuthProviderForm
               config={authProviderGitHub as Record<string, unknown> | undefined}
               fields={[
-                { key: "clientId", label: "Client ID" },
-                { key: "clientSecret", label: "Client Secret", secret: true },
+                { key: "clientId", label: tGithub("clientId") },
+                { key: "clientSecret", label: tGithub("clientSecret"), secret: true },
               ]}
               providerKey="github"
-              providerName="GitHub"
+              providerName={t("github.title")}
             />
           </AccordionItem>
           <AccordionItem
             key="google"
-            subtitle="Google OAuth"
+            subtitle={t("google.subtitle")}
             title={
               <span className="flex items-center gap-2">
-                Google <EnvManagedBadge isOverridden={authProviderGoogle?.isOverridden} />
+                {t("google.title")} <EnvManagedBadge isOverridden={authProviderGoogle?.isOverridden} />
               </span>
             }
           >
@@ -360,13 +367,13 @@ export default function AuthProvidersCard() {
               fields={[
                 {
                   key: "clientId",
-                  label: "Client ID",
-                  placeholder: "*.apps.googleusercontent.com",
+                  label: tGoogle("clientId"),
+                  placeholder: tGoogle("clientIdPlaceholder"),
                 },
-                { key: "clientSecret", label: "Client Secret", secret: true },
+                { key: "clientSecret", label: tGoogle("clientSecret"), secret: true },
               ]}
               providerKey="google"
-              providerName="Google"
+              providerName={t("google.title")}
             />
           </AccordionItem>
         </Accordion>

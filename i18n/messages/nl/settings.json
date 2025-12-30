@@ -1,0 +1,361 @@
+{
+  "page": {
+    "title": "Instellingen",
+    "ariaLabel": "Instellingen tabs"
+  },
+  "tabs": {
+    "user": "Gebruiker",
+    "household": "Huishouden",
+    "caldav": "CalDAV",
+    "admin": "Admin"
+  },
+  "user": {
+    "profile": {
+      "title": "Profiel",
+      "nameLabel": "Naam",
+      "namePlaceholder": "Je naam",
+      "emailLabel": "E-mail",
+      "avatarHint": "Klik op je avatar om de afbeelding te wijzigen",
+      "saveChanges": "Wijzigingen opslaan"
+    },
+    "allergies": {
+      "title": "Allergieën",
+      "description": "Voeg je voedselallergieën toe om waarschuwingen te ontvangen bij het plannen van recepten die allergenen bevatten. Wordt gebruikt om je te waarschuwen wanneer een gepland recept ingrediënten bevat die overeenkomen met je allergieën.",
+      "placeholder": "Typ allergieën (bijv. gluten, noten, zuivel)...",
+      "saveButton": "Allergieën opslaan"
+    },
+    "apiKeys": {
+      "title": "API-sleutels",
+      "description": "API-sleutels bieden toegang tot de Norish API. Gebruik ze voor integraties, snelkoppelingen en automatisering.",
+      "keyNameLabel": "Sleutelnaam (optioneel)",
+      "keyNamePlaceholder": "bijv. iOS Snelkoppeling",
+      "createKey": "Sleutel aanmaken",
+      "yourKeys": "Jouw API-sleutels",
+      "noKeys": "Nog geen API-sleutels. Maak er een aan om te beginnen.",
+      "tableHeaders": {
+        "name": "NAAM",
+        "keyPrefix": "SLEUTELVOORVOEGSEL",
+        "created": "AANGEMAAKT",
+        "status": "STATUS",
+        "actions": "ACTIES"
+      },
+      "unnamed": "Naamloos",
+      "active": "Actief",
+      "disabled": "Uitgeschakeld",
+      "disableKey": "Sleutel uitschakelen",
+      "enableKey": "Sleutel inschakelen",
+      "deleteKey": "Sleutel verwijderen",
+      "generatedModal": {
+        "title": "API-sleutel gegenereerd",
+        "warning": "Sla deze sleutel nu op! Je kunt hem niet opnieuw zien. We slaan alleen een hash op en kunnen deze sleutel niet herstellen.",
+        "hint": "Gebruik deze sleutel in de <code>x-api-key</code> header bij het maken van API-aanvragen.",
+        "confirmButton": "Ik heb het opgeslagen"
+      },
+      "deleteModal": {
+        "title": "API-sleutel verwijderen",
+        "message": "Weet je zeker dat je deze API-sleutel wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+        "confirmButton": "Sleutel verwijderen"
+      }
+    },
+    "archiveImport": {
+      "title": "Importeer Receptarchief",
+      "description": "Importeer recepten van Mela (.melarecipes), Mealie, of Tandoor (.zip) exports"
+    },
+    "dangerZone": {
+      "title": "Gevaarlijke Zone",
+      "description": "Zodra je je account verwijdert, is er geen weg meer terug. Wees zeker.",
+      "deleteButton": "Verwijder mijn account",
+      "deleteModal": {
+        "title": "Account verwijderen",
+        "permanentWarning": "Deze actie is permanent en kan niet ongedaan worden gemaakt!",
+        "dataWarning": "Je persoonlijke gegevens, inclusief boodschappen, agenda-items en notities, worden permanent verwijderd.",
+        "recipesNote": "Recepten die je hebt gemaakt, worden bewaard maar zijn niet langer gekoppeld aan je account.",
+        "adminNote": "Als je de beheerder bent van een huishouden met andere leden, moet je eerst de admin overdragen.",
+        "confirmButton": "Verwijder mijn account"
+      }
+    }
+  },
+  "household": {
+    "pageTitle": "Instellingen huishouden",
+    "info": {
+      "yourRole": "Jouw rol",
+      "admin": "Beheerder",
+      "member": "Lid",
+      "members": "Leden",
+      "leaveButton": "Verlaat huishouden",
+      "leaveModal": {
+        "title": "Verlaat huishouden",
+        "confirmMessage": "Weet je zeker dat je {name} wilt verlaten?",
+        "adminWarning": "Je bent de beheerder. Je moet de admin overdragen voordat je vertrekt.",
+        "confirmButton": "Verlaat huishouden"
+      }
+    },
+    "members": {
+      "title": "Leden",
+      "tableHeaders": {
+        "name": "NAAM",
+        "role": "ROL",
+        "actions": "ACTIES"
+      },
+      "you": "Jij",
+      "kickButton": "Verwijder",
+      "makeAdminButton": "Maak beheerder",
+      "kickModal": {
+        "title": "Verwijder gebruiker",
+        "confirmMessage": "Weet je zeker dat je {name} uit het huishouden wilt verwijderen?",
+        "warning": "Ze verliezen toegang tot alle gedeelde recepten, boodschappen en agenda-items.",
+        "confirmButton": "Verwijder gebruiker"
+      },
+      "transferModal": {
+        "title": "Adminrechten overdragen",
+        "confirmMessage": "Weet je zeker dat je de adminrechten wilt overdragen aan {name}?",
+        "warning": "Je wordt een gewoon lid en kunt geen gebruikers meer verwijderen of toegangscodes beheren.",
+        "confirmButton": "Draag adminrechten over"
+      },
+      "toasts": {
+        "kickFailed": "Gebruiker verwijderen mislukt",
+        "transferSuccess": "Adminrechten overgedragen aan {name}",
+        "transferFailed": "Adminrechten overdracht mislukt"
+      }
+    },
+    "joinCode": {
+      "title": "Join Code",
+      "shareDescription": "Deel deze code met anderen om ze uit te nodigen voor je huishouden.",
+      "expiresIn": "Verloopt over:",
+      "regenerateButton": "Opnieuw genereren",
+      "expired": "Verlopen",
+      "noCodeDescription": "Geen actieve join code. Genereer er een om nieuwe leden uit te nodigen.",
+      "generateButton": "Genereer join Code"
+    },
+    "create": {
+      "title": "Huishouden aanmaken",
+      "description": "Maak een nieuw huishouden om recepten en boodschappen te delen met familie of vrienden.",
+      "nameLabel": "Naam",
+      "namePlaceholder": "bijv. Familie Jansen",
+      "submitButton": "Maak huishouden aan"
+    },
+    "join": {
+      "title": "Huishouden joinen",
+      "description": "Voer een join code in om lid te worden van een bestaand huishouden.",
+      "codeLabel": "Join code",
+      "codePlaceholder": "8-cijferige code",
+      "submitButton": "Join huishouden"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "CalDAV Sync instellen",
+      "description": "Verbind je calendar om geplande maaltijden te synchroniseren.",
+      "gettingStarted": "Aan de slag met CalDAV",
+      "providerDescription": "Je hebt een CalDAV-compatibele kalenderdienst nodig. Populaire providers zijn onder andere:",
+      "serverUrlLabel": "Server URL",
+      "serverUrlDescription": "Basis-URL van je CalDAV-server (bijv. https://dav.example.com)",
+      "serverUrlPlaceholder": "https://dav.example.com",
+      "usernameLabel": "Gebruikersnaam",
+      "usernamePlaceholder": "gebruikersnaam",
+      "passwordLabel": "Wachtwoord",
+      "passwordPlaceholder": "Voer wachtwoord in",
+      "calendarLabel": "Agenda",
+      "calendarPlaceholder": "Selecteer een agenda",
+      "calendarPlaceholderDisabled": "Test verbinding eerst",
+      "calendarDescription": "Selecteer welke agenda je wilt synchroniseren",
+      "calendarDescriptionDisabled": "Test verbinding om beschikbare agenda's te laden",
+      "timeFormat": "Formaat: HH:MM-HH:MM",
+      "timeFormatError": "Formaat moet HH:MM-HH:MM zijn",
+      "breakfastTime": "Ontbijttijd",
+      "lunchTime": "Lunchtijd",
+      "dinnerTime": "Dinnertijd",
+      "snackTime": "Snacktijd",
+      "testConnection": "Test verbinding",
+      "saveConfiguration": "Configuratie opslaan"
+    },
+    "config": {
+      "title": "CalDAV Configuratie",
+      "editTitle": "Bewerk CalDAV Configuratie",
+      "serverUrl": "Server URL",
+      "enabled": "Ingeschakeld",
+      "disabled": "Uitgeschakeld",
+      "editButton": "Bewerk",
+      "deleteButton": "Verwijder",
+      "saveChanges": "Wijzigingen opslaan",
+      "advancedSettings": "Geavanceerde instellingen",
+      "timezone": "Tijdzone: {timezone}",
+      "connectionStatus": {
+        "connected": "Verbonden",
+        "checking": "Controleren...",
+        "disconnected": "Verbonden",
+        "unknown": "Onbekend"
+      }
+    },
+    "deleteModal": {
+      "title": "Verwijder CalDAV Configuratie",
+      "confirmMessage": "Weet je zeker dat je je CalDAV-configuratie wilt verwijderen?",
+      "deleteEventsLabel": "Verwijder gesynchroniseerde evenementen",
+      "deleteEventsDescription": "Verwijder alle evenementen die in je CalDAV-agenda zijn aangemaakt",
+      "confirmButton": "Verwijderen"
+    },
+    "syncStatus": {
+      "title": "Sync Status",
+      "syncNow": "Nu synchroniseren",
+      "clearFilter": "Filter wissen",
+      "clickToFilter": "Klik op een badge om te filteren",
+      "showingItems": "Toont {start}-{end} van {total} items",
+      "tableHeaders": {
+        "item": "ITEM",
+        "type": "TYPE",
+        "date": "DATE",
+        "meal": "MAALTIJD",
+        "status": "STATUS",
+        "lastSync": "LAATSTE SYNC",
+        "error": "FOUT"
+      },
+      "statuses": {
+        "synced": "Gesynchroniseerd",
+        "pending": "In afwachting",
+        "failed": "Mislukt",
+        "removed": "Verwijderd"
+      },
+      "emptyFiltered": "Geen {status} items gevonden",
+      "emptyDefault": "Geen synchronisatiegegevens gevonden",
+      "errorDetails": "Foutdetails"
+    }
+  },
+  "admin": {
+    "registration": {
+      "title": "Registratie",
+      "allowRegistration": "Nieuwe registraties toestaan",
+      "description": "Wanneer uitgeschakeld, kunnen alleen bestaande gebruikers inloggen"
+    },
+    "permissions": {
+      "title": "Receptmachtigingen",
+      "description": "Beheer wie recepten kan bekijken, bewerken en verwijderen. Serverbeheerders hebben altijd volledige toegang.",
+      "viewRecipes": "Recepten bekijken",
+      "viewDescription": "Wie recepten kan zien in het dashboard",
+      "editRecipes": "Recepten bewerken",
+      "editDescription": "Wie receptdetails kan wijzigen",
+      "deleteRecipes": "Recepten verwijderen",
+      "deleteDescription": "Wie recepten kan verwijderen",
+      "levels": {
+        "everyone": "Iedereen",
+        "everyoneDescription": "Alle geverifieerde gebruikers",
+        "household": "Huishouden",
+        "householdDescription": "Recept eigenaar en hun huishoudleden",
+        "owner": "Alleen eigenaar",
+        "ownerDescription": "Alleen de eigenaar van het recept"
+      },
+      "note": "Opmerking: Boodschappen en agenda-items volgen automatisch de huishoudregels, huishoudleden kunnen altijd items bewerken/verwijderen die behoren tot iemand in hetzelfde huishouden."
+    },
+    "system": {
+      "title": "Systeeminstellingen",
+      "cleanup": {
+        "title": "Opruimplanner",
+        "label": "Opruimmaanden",
+        "description": "Verwijder geplande maaltijden ouder dan dit aantal maanden",
+        "save": "Opslaan"
+      },
+      "server": {
+        "title": "Server beheer",
+        "restartLabel": "Server herstarten",
+        "restartDescription": "Pas configuratiewijzigingen toe die een herstart vereisen",
+        "restartButton": "Server herstarten"
+      }
+    },
+    "restart": {
+      "title": "Server herstarten",
+      "confirmMessage": "Weet je zeker dat je de server wilt herstarten?",
+      "importantTitle": "Belangrijk:",
+      "warning1": "Alle actieve verbindingen worden verbroken",
+      "warning2": "De server is enkele seconden niet beschikbaar",
+      "warning3": "Zorg ervoor dat je deployment <code>restart: always</code> is geconfigureerd, anders start de server mogelijk niet opnieuw op",
+      "confirmButton": "Nu herstarten"
+    },
+    "authProviders": {
+      "title": "Authenticatieproviders",
+      "requiresRestart": "Herstart vereist",
+      "description": "Configureer authenticatiemethoden. Wijzigingen vereisen een herstart van de server.",
+      "passwordAuth": {
+        "title": "E-mail & Wachtwoord",
+        "description": "Sta gebruikers toe zich aan te melden met e-mail en wachtwoord"
+      },
+      "oauthDescription": "Configureer OAuth-providers voor SSO-authenticatie.",
+      "oidc": {
+        "title": "OIDC Provider",
+        "subtitle": "Generic OpenID Connect",
+        "fields": {
+          "name": "Providernaam",
+          "namePlaceholder": "bijv. Authentik, Keycloak",
+          "issuer": "Issuer URL",
+          "issuerPlaceholder": "https://your-idp.com",
+          "clientId": "Client ID",
+          "clientSecret": "Client Secret",
+          "wellknown": "Well-known URL (optioneel)",
+          "wellknownPlaceholder": "Automatisch afgeleid indien leeg"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "GitHub OAuth",
+        "fields": {
+          "clientId": "Client ID",
+          "clientSecret": "Client Secret"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "Google OAuth",
+        "fields": {
+          "clientId": "Client ID",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "Client Secret"
+        }
+      },
+      "form": {
+        "testSuccess": "Verbinding succesvol",
+        "remove": "Verwijderen",
+        "test": "Testen",
+        "save": "Opslaan",
+        "removeTitle": "Verwijder {provider}",
+        "removeConfirm": "Weet je zeker dat je deze provider wilt verwijderen?"
+      },
+      "envBadge": {
+        "db": "Beheerd door DB",
+        "env": "Beheerd door env"
+      }
+    },
+    "contentDetection": {
+      "title": "Content Detection",
+      "description": "Configure how recipes are detected and parsed from web pages.",
+      "contentIndicators": {
+        "title": "Content Indicatoren",
+        "subtitle": "Trefwoorden die receptpagina's identificeren",
+        "description": "Schema-indicatoren detecteren gestructureerde receptgegevens (JSON-LD, microdata). Contentindicatoren zijn trefwoorden die suggereren dat een pagina een recept bevat."
+      },
+      "units": {
+        "title": "Meeteenheden",
+        "subtitle": "Definities van meeteenheden voor parsing",
+        "description": "Definieer meeteenheden met hun korte vorm, meervoud en alternatieve schrijfwijzen. Wordt gebruikt bij het parseren van ingrediënthoeveelheden."
+      },
+      "recurrence": {
+        "title": "Herhalingspatronen",
+        "subtitle": "Natural language patterns voor herhalende boodschappen",
+        "description": "Definieer taalafhankelijk patronen voor het herkennen van herhalingsregels (bijv. 'elke week', 'om de dag')."
+      }
+    },
+    "aiProcessing": {
+      "title": "AI & Processing",
+      "description": "Configureer AI-gestuurde functies voor receptextractie en videobewerking.",
+      "aiConfig": {
+        "title": "AI Configuratie",
+        "subtitle": "Receptparsering en extractie"
+      },
+      "video": {
+        "title": "Video Verwerking",
+        "subtitle": "Social media video-extractie & transcriptie"
+      },
+      "prompts": {
+        "title": "Prompts",
+        "subtitle": "Pas AI-instructies aan voor receptverwerking"
+      }
+    }
+  }
+}

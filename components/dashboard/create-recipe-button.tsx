@@ -10,6 +10,7 @@ import {
   PhotoIcon,
   ClipboardDocumentIcon,
 } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import ImportFromImageModal from "@/components/shared/import-from-image-modal";
@@ -22,6 +23,8 @@ export default function CreateRecipeButton() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showPasteModal, setShowPasteModal] = useState(false);
+  const t = useTranslations("recipes.dashboard");
+  const tCommon = useTranslations("common.actions");
 
   const menuItems = (
     <>
@@ -30,14 +33,14 @@ export default function CreateRecipeButton() {
         startContent={<ArrowDownTrayIcon className="h-4 w-4" />}
         onPress={() => setShowImportModal(true)}
       >
-        URL
+        {t("importFromUrl")}
       </DropdownItem>
       <DropdownItem
         key="paste"
         startContent={<ClipboardDocumentIcon className="h-4 w-4" />}
         onPress={() => setShowPasteModal(true)}
       >
-        Paste
+        {t("importFromPaste")}
       </DropdownItem>
       {isAIEnabled ? (
         <DropdownItem
@@ -45,7 +48,7 @@ export default function CreateRecipeButton() {
           startContent={<PhotoIcon className="h-4 w-4" />}
           onPress={() => setShowImageModal(true)}
         >
-          Image
+          {t("importFromImage")}
         </DropdownItem>
       ) : null}
       <DropdownItem
@@ -53,7 +56,7 @@ export default function CreateRecipeButton() {
         startContent={<PlusIcon className="h-4 w-4" />}
         onPress={() => router.push("/recipes/new")}
       >
-        Create
+        {tCommon("create")}
       </DropdownItem>
     </>
   );
@@ -70,7 +73,7 @@ export default function CreateRecipeButton() {
             size="md"
             startContent={<PlusIcon className="h-4 w-4" />}
           >
-            Add Recipe
+            {t("addRecipe")}
           </Button>
         </DropdownTrigger>
         <DropdownMenu aria-label="Add recipe options">{menuItems}</DropdownMenu>

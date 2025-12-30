@@ -2,6 +2,7 @@
 
 import { FC } from "react";
 import { GlobeAltIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
 
@@ -12,6 +13,8 @@ import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
  * Used by authenticated users only - saves preference to database.
  */
 export const LanguageSwitch: FC = () => {
+  const t = useTranslations("common.language");
+  const tStatus = useTranslations("common.status");
   const { mounted, icon, label, cycleLocale, isChanging } = useLanguageSwitch();
 
   if (!mounted) {
@@ -21,8 +24,8 @@ export const LanguageSwitch: FC = () => {
           <GlobeAltIcon className="size-4" />
         </span>
         <div className="flex flex-col items-start opacity-50">
-          <span className="text-base leading-tight font-medium">Language</span>
-          <span className="text-default-500 text-xs leading-tight">Loading…</span>
+          <span className="text-base leading-tight font-medium">{t("title")}</span>
+          <span className="text-default-500 text-xs leading-tight">{tStatus("loading")}</span>
         </div>
       </div>
     );
@@ -43,9 +46,9 @@ export const LanguageSwitch: FC = () => {
     >
       <span className="text-default-500">{icon}</span>
       <div className="flex flex-col items-start">
-        <span className="text-base leading-tight font-medium">Language</span>
+        <span className="text-base leading-tight font-medium">{t("title")}</span>
         <span className="text-default-500 text-xs leading-tight">
-          {isChanging ? "Changing…" : label}
+          {isChanging ? tStatus("changing") : label}
         </span>
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
 } from "@heroui/react";
 import { PhotoIcon, XMarkIcon, SparklesIcon } from "@heroicons/react/20/solid";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useRecipesMutations } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
@@ -30,77 +31,82 @@ interface FilePreview {
 }
 
 export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFromImageModalProps) {
+  const t = useTranslations("common.import.image");
+  const tActions = useTranslations("common.actions");
   const router = useRouter();
   const { importRecipeFromImages } = useRecipesMutations();
   const [files, setFiles] = useState<FilePreview[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAddFiles = useCallback((selectedFiles: File[] | FileList | null) => {
-    if (!selectedFiles) return;
+  const handleAddFiles = useCallback(
+    (selectedFiles: File[] | FileList | null) => {
+      if (!selectedFiles) return;
 
-    const fileArray = Array.isArray(selectedFiles)
-      ? selectedFiles
-      : Array.from({ length: selectedFiles.length }, (_, idx) => selectedFiles[idx]!);
+      const fileArray = Array.isArray(selectedFiles)
+        ? selectedFiles
+        : Array.from({ length: selectedFiles.length }, (_, idx) => selectedFiles[idx]!);
 
-    const newFiles: FilePreview[] = [];
+      const newFiles: FilePreview[] = [];
 
-    for (let i = 0; i < fileArray.length; i++) {
-      const file = fileArray[i]!;
+      for (let i = 0; i < fileArray.length; i++) {
+        const file = fileArray[i]!;
 
-      // Validate file type
-      if (!ALLOWED_OCR_MIME_SET.has(file.type)) {
-        addToast({
-          title: "Invalid file type",
-          description: `${file.name} is not a supported image format`,
-          color: "danger",
-          timeout: 2000,
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+        // Validate file type
+        if (!ALLOWED_OCR_MIME_SET.has(file.type)) {
+          addToast({
+            title: t("invalidType"),
+            description: t("notSupported", { name: file.name }),
+            color: "danger",
+            timeout: 2000,
+            shouldShowTimeoutProgress: true,
+            radius: "full",
+          });
+          continue;
+        }
+
+        // Validate file size
+        if (file.size > MAX_OCR_FILE_SIZE) {
+          addToast({
+            title: t("tooLarge"),
+            description: t("exceeds", { name: file.name }),
+            color: "danger",
+            timeout: 2000,
+            shouldShowTimeoutProgress: true,
+            radius: "full",
+          });
+          continue;
+        }
+
+        // Create preview
+        newFiles.push({
+          id: `${Date.now()}-${i}-${file.name}`,
+          file,
+          preview: URL.createObjectURL(file),
         });
-        continue;
       }
 
-      // Validate file size
-      if (file.size > MAX_OCR_FILE_SIZE) {
-        addToast({
-          title: "File too large",
-          description: `${file.name} exceeds the 10MB limit`,
-          color: "danger",
-          timeout: 2000,
-          shouldShowTimeoutProgress: true,
-          radius: "full",
-        });
-        continue;
-      }
+      setFiles((prev) => {
+        const total = prev.length + newFiles.length;
 
-      // Create preview
-      newFiles.push({
-        id: `${Date.now()}-${i}-${file.name}`,
-        file,
-        preview: URL.createObjectURL(file),
+        if (total > MAX_OCR_FILES) {
+          addToast({
+            title: t("tooMany"),
+            description: t("maxFiles", { max: MAX_OCR_FILES }),
+            color: "warning",
+            timeout: 2000,
+            shouldShowTimeoutProgress: true,
+            radius: "full",
+          });
+
+          return [...prev, ...newFiles.slice(0, MAX_OCR_FILES - prev.length)];
+        }
+
+        return [...prev, ...newFiles];
       });
-    }
-
-    setFiles((prev) => {
-      const total = prev.length + newFiles.length;
-
-      if (total > MAX_OCR_FILES) {
-        addToast({
-          title: "Too many files",
-          description: `Maximum ${MAX_OCR_FILES} files allowed`,
-          color: "warning",
-          timeout: 2000,
-          shouldShowTimeoutProgress: true,
-          radius: "full",
-        });
-
-        return [...prev, ...newFiles.slice(0, MAX_OCR_FILES - prev.length)];
-      }
-
-      return [...prev, ...newFiles];
-    });
-  }, []);
+    },
+    [t]
+  );
 
   useClipboardImagePaste({
     enabled: isOpen,
@@ -140,8 +146,8 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
 
       addToast({
         severity: "default",
-        title: "Importing recipe from images...",
-        description: "Analyzing your images, please wait...",
+        title: t("importing"),
+        description: t("analyzing"),
         timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
@@ -154,7 +160,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
       router.push("/");
     } catch (error) {
       addToast({
-        title: "Import failed",
+        title: t("failed"),
         description: (error as Error).message,
         color: "danger",
         timeout: 2000,
@@ -164,7 +170,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
     } finally {
       setIsSubmitting(false);
     }
-  }, [files, importRecipeFromImages, onOpenChange, router]);
+  }, [files, importRecipeFromImages, onOpenChange, router, t]);
 
   const _handleClose = useCallback(() => {
     files.forEach((f) => URL.revokeObjectURL(f.preview));
@@ -177,7 +183,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
       <ModalContent>
         {() => (
           <>
-            <ModalHeader className="flex flex-col gap-1">Import from Image</ModalHeader>
+            <ModalHeader className="flex flex-col gap-1">{t("title")}</ModalHeader>
             <ModalBody>
               {/* Dropzone */}
               <div
@@ -196,15 +202,11 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
               >
                 <PhotoIcon className="text-default-400 h-12 w-12" />
                 <div className="text-center">
-                  <p className="text-default-600 text-sm font-medium">
-                    Drop images here or click to browse
-                  </p>
+                  <p className="text-default-600 text-sm font-medium">{t("dropzone")}</p>
                   <p className="text-default-500 mt-1 flex items-center justify-center gap-1.5 text-xs">
-                    <Kbd keys={["ctrl"]}>V</Kbd> to paste
+                    <Kbd keys={["ctrl"]}>V</Kbd> {t("paste")}
                   </p>
-                  <p className="text-default-400 mt-1 text-xs">
-                    Supports JPG, PNG, WebP. Max 10MB per file.
-                  </p>
+                  <p className="text-default-400 mt-1 text-xs">{t("formats")}</p>
                 </div>
                 <input
                   ref={fileInputRef}
@@ -243,7 +245,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
 
               {files.length > 1 && (
                 <p className="text-default-500 mt-2 text-center text-xs">
-                  {files.length} images selected - they will be combined as one recipe
+                  {t("selectedCount", { count: files.length })}
                 </p>
               )}
             </ModalBody>
@@ -255,7 +257,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
                 startContent={!isSubmitting && <SparklesIcon className="h-4 w-4" />}
                 onPress={handleImport}
               >
-                Import with AI
+                {tActions("importWithAI")}
               </Button>
             </ModalFooter>
           </>

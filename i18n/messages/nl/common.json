@@ -1,0 +1,123 @@
+{
+  "actions": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "create": "Aanmaken",
+    "add": "Toevoegen",
+    "remove": "Verwijderen",
+    "close": "Sluiten",
+    "apply": "Toepassen",
+    "reset": "Resetten",
+    "clear": "Wissen",
+    "confirm": "Bevestigen",
+    "back": "Terug",
+    "next": "Volgende",
+    "done": "Klaar",
+    "retry": "Opnieuw proberen",
+    "submit": "Verzenden",
+    "search": "Zoeken",
+    "filter": "Filteren",
+    "sort": "Sorteren",
+    "import": "Importeren",
+    "aiImport": "AI Importeren",
+    "importWithAI": "Importeren met AI",
+    "goHome": "Ga naar home"
+  },
+  "status": {
+    "loading": "Laden...",
+    "saving": "Opslaan...",
+    "deleting": "Verwijderen...",
+    "error": "Fout",
+    "success": "Succes",
+    "noResults": "Geen resultaten gevonden",
+    "changing": "Wijzigen..."
+  },
+  "filters": {
+    "title": "Filters",
+    "search": "Zoeken",
+    "sort": "Sorteren",
+    "mode": "Modus",
+    "modeAll": "Alles",
+    "modeAny": "Iets",
+    "tags": "Tags",
+    "searchTags": "Zoek tags",
+    "favoritesAndRating": "Favorieten & Beoordeling",
+    "favorites": "Favorieten",
+    "sortByTitle": "Titel",
+    "sortByDate": "Datum",
+    "clearFilters": "Filters wissen"
+  },
+  "time": {
+    "minutes": "min",
+    "hours": "uur"
+  },
+  "validation": {
+    "required": "Dit veld is verplicht",
+    "invalidUrl": "Voer een geldige URL in"
+  },
+  "slots": {
+    "breakfast": "Ontbijt",
+    "lunch": "Lunch",
+    "dinner": "Diner",
+    "snack": "Snack",
+    "chooseSlot": "Kies tijdslot"
+  },
+  "connection": {
+    "connecting": "Verbinden met Norish...",
+    "syncing": "Synchroniseren, even geduld...",
+    "checkInternet": "Controleer uw internetverbinding",
+    "gettingUpdates": "Even geduld terwijl we de laatste updates ophalen"
+  },
+  "language": {
+    "title": "Taal"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Pagina niet gevonden",
+    "message": "Oeps! Nora kon niet vinden wat je zocht.\nDe pagina is mogelijk verplaatst of bestaat niet."
+  },
+  "import": {
+    "url": {
+      "title": "Recept importeren",
+      "label": "Recept URL",
+      "placeholder": "https://example.com/your-recipe",
+      "failed": "Importeren van recept mislukt",
+      "failedWithAI": "Importeren van recept met AI mislukt"
+    },
+    "paste": {
+      "title": "Importeren vanuit klembord",
+      "label": "Recepttekst of JSON-LD",
+      "placeholder": "Plak hier een recept (vrije tekst) of JSON-LD...",
+      "characters": "{count} / {max} characters",
+      "tooLarge": "Tekst is te groot",
+      "maxCharacters": "Maximaal {max} tekens toegestaan",
+      "importing": "Importeren...",
+      "importingWithAI": "Importeren met AI...",
+      "inProgress": "Importeren bezig, even geduld...",
+      "failed": "Importeren mislukt"
+    },
+    "image": {
+      "title": "Importeren vanuit afbeelding",
+      "dropzone": "Sleep afbeeldingen hierheen of klik om te bladeren",
+      "paste": "om te plakken",
+      "formats": "Ondersteunt JPG, PNG, WebP. Maximaal 10MB per bestand.",
+      "invalidType": "Ongeldig bestandstype",
+      "notSupported": "{name} is geen ondersteund afbeeldingsformaat",
+      "tooLarge": "Bestand te groot",
+      "exceeds": "{name} overschrijdt de limiet van 10MB",
+      "tooMany": "Te veel bestanden",
+      "maxFiles": "Maximaal {max} bestanden toegestaan",
+      "importing": "Recept importeren vanuit afbeeldingen...",
+      "analyzing": "Afbeeldingen analyseren, even geduld...",
+      "failed": "Importeren mislukt",
+      "selectedCount": "{count} afbeeldingen geselecteerd - ze worden gecombineerd als één recept"
+    }
+  },
+  "formatting": {
+    "title": "Tips",
+    "heading": "Begin een regel met <strong>#</strong> voor een kop",
+    "recipeLink": "Typ <strong>/receptnaam</strong> om naar een ander recept te linken"
+  }
+}

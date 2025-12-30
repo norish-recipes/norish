@@ -2,6 +2,7 @@
 
 import { Card, CardBody, CardHeader, Accordion, AccordionItem } from "@heroui/react";
 import { DocumentMagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
 
@@ -10,6 +11,7 @@ import JsonEditor from "./json-editor";
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
 
 export default function ContentDetectionCard() {
+  const t = useTranslations("settings.admin.contentDetection");
   const {
     contentIndicators,
     units,
@@ -25,22 +27,22 @@ export default function ContentDetectionCard() {
       <CardHeader>
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <DocumentMagnifyingGlassIcon className="h-5 w-5" />
-          Content Detection
+          {t("title")}
         </h2>
       </CardHeader>
       <CardBody>
         <p className="text-default-500 mb-4 text-base">
-          Configure how recipes are detected and parsed from web pages.
+          {t("description")}
         </p>
         <Accordion selectionMode="multiple" variant="bordered">
           <AccordionItem
             key="content-indicators"
-            subtitle="Keywords that identify recipe pages"
-            title="Content Indicators"
+            subtitle={t("contentIndicators.subtitle")}
+            title={t("contentIndicators.title")}
           >
             <div className="p-2">
               <JsonEditor
-                description="Schema indicators detect structured recipe data (JSON-LD, microdata). Content indicators are keywords that suggest a page contains a recipe."
+                description={t("contentIndicators.description")}
                 value={contentIndicators}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.CONTENT_INDICATORS)}
                 onSave={updateContentIndicators}
@@ -50,12 +52,12 @@ export default function ContentDetectionCard() {
 
           <AccordionItem
             key="units"
-            subtitle="Measurement unit definitions for parsing"
-            title="Units of Measure"
+            subtitle={t("units.subtitle")}
+            title={t("units.title")}
           >
             <div className="p-2">
               <JsonEditor
-                description="Define measurement units with their short form, plural, and alternate spellings. Used when parsing ingredient quantities."
+                description={t("units.description")}
                 value={units}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.UNITS)}
                 onSave={updateUnits}
@@ -65,12 +67,12 @@ export default function ContentDetectionCard() {
 
           <AccordionItem
             key="recurrence"
-            subtitle="Natural language patterns for recurring items"
-            title="Recurrence Patterns"
+            subtitle={t("recurrence.subtitle")}
+            title={t("recurrence.title")}
           >
             <div className="p-2">
               <JsonEditor
-                description="Define locale-specific patterns for parsing recurrence rules from natural language (e.g., 'every week', 'om de dag')."
+                description={t("recurrence.description")}
                 value={recurrenceConfig}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.RECURRENCE_CONFIG)}
                 onSave={updateRecurrenceConfig}

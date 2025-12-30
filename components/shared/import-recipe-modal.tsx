@@ -12,6 +12,7 @@ import {
   addToast,
 } from "@heroui/react";
 import { SparklesIcon, ArrowDownTrayIcon } from "@heroicons/react/20/solid";
+import { useTranslations } from "next-intl";
 
 import { useRecipesContext } from "@/context/recipes-context";
 import { usePermissionsContext } from "@/context/permissions-context";
@@ -22,6 +23,8 @@ interface ImportRecipeModalProps {
 }
 
 export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipeModalProps) {
+  const t = useTranslations("common.import.url");
+  const tActions = useTranslations("common.actions");
   const { importRecipe, importRecipeWithAI } = useRecipesContext();
   const { isAIEnabled } = usePermissionsContext();
   const [importUrl, setImportUrl] = useState("");
@@ -37,7 +40,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
       onOpenChange(false);
       setImportUrl("");
       addToast({
-        title: "Failed to import recipe",
+        title: t("failed"),
         description: (e as Error).message,
         color: "danger",
         timeout: 2000,
@@ -58,7 +61,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
       onOpenChange(false);
       setImportUrl("");
       addToast({
-        title: "Failed to import recipe with AI",
+        title: t("failedWithAI"),
         description: (e as Error).message,
         color: "danger",
         timeout: 2000,
@@ -73,11 +76,11 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
       <ModalContent>
         {() => (
           <>
-            <ModalHeader className="flex flex-col gap-1">Import recipe</ModalHeader>
+            <ModalHeader className="flex flex-col gap-1">{t("title")}</ModalHeader>
             <ModalBody>
               <Input
-                label="Recipe URL"
-                placeholder="https://example.com/your-recipe"
+                label={t("label")}
+                placeholder={t("placeholder")}
                 type="url"
                 value={importUrl}
                 onChange={(e) => setImportUrl(e.target.value)}
@@ -90,7 +93,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
                   startContent={<SparklesIcon className="h-4 w-4" />}
                   onPress={handleAIImport}
                 >
-                  AI Import
+                  {tActions("aiImport")}
                 </Button>
               )}
               <Button
@@ -98,7 +101,7 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
                 startContent={<ArrowDownTrayIcon className="h-4 w-4" />}
                 onPress={handleImportFromUrl}
               >
-                Import
+                {tActions("import")}
               </Button>
             </ModalFooter>
           </>

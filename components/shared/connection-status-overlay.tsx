@@ -2,10 +2,12 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useConnectionStatus } from "@/app/providers/trpc-provider";
 
 export function ConnectionStatusOverlay() {
+  const t = useTranslations("common.connection");
   const { isConnected } = useConnectionStatus();
   const [show, setShow] = useState(false);
 
@@ -44,12 +46,10 @@ export function ConnectionStatusOverlay() {
             </div>
             <div className="text-center">
               <h3 className="text-lg font-semibold">
-                {!isConnected ? "Connecting to Norish..." : "Syncing please wait..."}
+                {!isConnected ? t("connecting") : t("syncing")}
               </h3>
               <p className="text-default-500 text-sm">
-                {!isConnected
-                  ? "Please check your internet connection"
-                  : "Just a moment while we get the latest updates"}
+                {!isConnected ? t("checkInternet") : t("gettingUpdates")}
               </p>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { Input } from "@heroui/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import Filters from "../shared/filters";
 
@@ -10,11 +11,8 @@ import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { isUrl } from "@/lib/helpers";
 
-interface SearchInputProps {
-  placeholder?: string;
-}
-
-export default function SearchInput({ placeholder = "Search or add recipe..." }: SearchInputProps) {
+export default function SearchInput() {
+  const t = useTranslations("recipes.dashboard");
   const { filters, setFilters } = useRecipesFiltersContext();
   const { importRecipe } = useRecipesContext();
   const [_isPending, startTransition] = useTransition();
@@ -57,7 +55,7 @@ export default function SearchInput({ placeholder = "Search or add recipe..." }:
           input: "text-[15px]",
         }}
         id="search-input"
-        placeholder={placeholder}
+        placeholder={t("searchPlaceholder")}
         radius="full"
         startContent={
           <MagnifyingGlassIcon

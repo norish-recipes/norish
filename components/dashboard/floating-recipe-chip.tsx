@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Button } from "@heroui/react";
 import { motion, AnimatePresence } from "motion/react";
+import { useTranslations } from "next-intl";
 
 import { FiltersPanel } from "@/components/Panel/consumers";
 import { useRecipesContext } from "@/context/recipes-context";
@@ -12,6 +13,7 @@ export default function FloatingRecipeChip() {
   const { total, isLoading } = useRecipesContext();
   const [isOpen, setIsOpen] = useState(false);
   const isVisibleByCount = !isLoading && total > 0;
+  const t = useTranslations("recipes.dashboard");
 
   const { isVisible } = useAutoHide();
 
@@ -37,9 +39,7 @@ export default function FloatingRecipeChip() {
                 variant="flat"
                 onPress={() => setIsOpen(true)}
               >
-                <span className="text-sm">
-                  {total} {total === 1 ? "recipe" : "recipes"}
-                </span>
+                <span className="text-sm">{t("recipeCount", { count: total })}</span>
               </Button>
               <FiltersPanel open={isOpen} onOpenChange={setIsOpen} />
             </div>

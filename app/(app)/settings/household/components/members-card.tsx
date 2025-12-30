@@ -21,10 +21,14 @@ import {
   addToast,
 } from "@heroui/react";
 import { UserGroupIcon, UserMinusIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
 
 export default function MembersCard() {
+  const t = useTranslations("settings.household.members");
+  const ti = useTranslations("settings.household.info");
+  const tActions = useTranslations("common.actions");
   const { household, currentUserId, kickUser, transferAdmin } = useHouseholdSettingsContext();
   const [showKickModal, setShowKickModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -46,7 +50,7 @@ export default function MembersCard() {
       await kickUser(household.id, userToKick.id);
     } catch (error) {
       addToast({
-        title: "Failed to kick user",
+        title: t("toasts.kickFailed"),
         description: (error as Error).message,
         color: "danger",
         timeout: 2000,
@@ -65,7 +69,7 @@ export default function MembersCard() {
     try {
       await transferAdmin(household.id, userToTransfer.id);
       addToast({
-        title: `Transferred admin to ${userToTransfer.name}`,
+        title: t("toasts.transferSuccess", { name: userToTransfer.name }),
         color: "success",
         timeout: 2000,
         shouldShowTimeoutProgress: true,
@@ -73,7 +77,7 @@ export default function MembersCard() {
       });
     } catch (error) {
       addToast({
-        title: "Failed to transfer admin",
+        title: t("toasts.transferFailed"),
         description: (error as Error).message,
         color: "danger",
         timeout: 2000,
@@ -92,15 +96,15 @@ export default function MembersCard() {
         <CardHeader>
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <UserGroupIcon className="h-5 w-5" />
-            Members
+            {t("title")}
           </h2>
         </CardHeader>
         <CardBody>
-          <Table aria-label="Household members">
+          <Table aria-label={t("title")}>
             <TableHeader>
-              <TableColumn>NAME</TableColumn>
-              <TableColumn>ROLE</TableColumn>
-              <TableColumn>ACTIONS</TableColumn>
+              <TableColumn>{t("tableHeaders.name")}</TableColumn>
+              <TableColumn>{t("tableHeaders.role")}</TableColumn>
+              <TableColumn>{t("tableHeaders.actions")}</TableColumn>
             </TableHeader>
             <TableBody>
               {household.users.map((user) => {
@@ -114,14 +118,14 @@ export default function MembersCard() {
                         {user.name}
                         {isSelf && (
                           <Chip color="default" size="sm" variant="flat">
-                            You
+                            {t("you")}
                           </Chip>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <Chip color={isUserAdmin ? "primary" : "default"} size="sm" variant="flat">
-                        {isUserAdmin ? "Admin" : "Member"}
+                        {isUserAdmin ? ti("admin") : ti("member")}
                       </Chip>
                     </TableCell>
                     <TableCell>
@@ -138,7 +142,7 @@ export default function MembersCard() {
                                 setShowKickModal(true);
                               }}
                             >
-                              Kick
+                              {t("kickButton")}
                             </Button>
                             {!isUserAdmin && (
                               <Button
@@ -151,7 +155,7 @@ export default function MembersCard() {
                                   setShowTransferModal(true);
                                 }}
                               >
-                                Make Admin
+                                {t("makeAdminButton")}
                               </Button>
                             )}
                           </>
@@ -171,22 +175,21 @@ export default function MembersCard() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>Kick User</ModalHeader>
+              <ModalHeader>{t("kickModal.title")}</ModalHeader>
               <ModalBody>
                 <p>
-                  Are you sure you want to kick{" "}
-                  <span className="font-semibold">{userToKick?.name}</span> from the household?
+                  {t("kickModal.confirmMessage", { name: userToKick?.name ?? "" })}
                 </p>
                 <p className="text-default-600 mt-2 text-base">
-                  They will lose access to all shared recipes, groceries, and calendar entries.
+                  {t("kickModal.warning")}
                 </p>
               </ModalBody>
               <ModalFooter>
                 <Button variant="flat" onPress={onClose}>
-                  Cancel
+                  {tActions("cancel")}
                 </Button>
                 <Button color="danger" onPress={handleKickUser}>
-                  Kick User
+                  {t("kickModal.confirmButton")}
                 </Button>
               </ModalFooter>
             </>
@@ -199,23 +202,21 @@ export default function MembersCard() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>Transfer Admin Privileges</ModalHeader>
+              <ModalHeader>{t("transferModal.title")}</ModalHeader>
               <ModalBody>
                 <p>
-                  Are you sure you want to transfer admin privileges to{" "}
-                  <span className="font-semibold">{userToTransfer?.name}</span>?
+                  {t("transferModal.confirmMessage", { name: userToTransfer?.name ?? "" })}
                 </p>
                 <p className="text-default-600 mt-2 text-base">
-                  You will become a regular member and will no longer be able to kick users or
-                  manage join codes.
+                  {t("transferModal.warning")}
                 </p>
               </ModalBody>
               <ModalFooter>
                 <Button variant="flat" onPress={onClose}>
-                  Cancel
+                  {tActions("cancel")}
                 </Button>
                 <Button color="primary" onPress={handleTransferAdmin}>
-                  Transfer Admin
+                  {t("transferModal.confirmButton")}
                 </Button>
               </ModalFooter>
             </>

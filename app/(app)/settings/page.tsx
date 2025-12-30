@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { UserCircleIcon, HomeIcon, ServerIcon, ShieldCheckIcon } from "@heroicons/react/20/solid";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 
 import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
 import { useUserRoleQuery } from "@/hooks/admin";
@@ -29,6 +30,7 @@ const AdminSettingsTab = dynamic(() => import("./admin/components/admin-settings
 });
 
 function SettingsContent() {
+  const t = useTranslations("settings");
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") || "user";
@@ -40,10 +42,10 @@ function SettingsContent() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <h1 className="text-2xl font-bold">Settings</h1>
+      <h1 className="text-2xl font-bold">{t("page.title")}</h1>
 
       <Tabs
-        aria-label="Settings tabs"
+        aria-label={t("page.ariaLabel")}
         classNames={{
           tabList: "overflow-x-auto",
           tab: "h-12",
@@ -56,7 +58,7 @@ function SettingsContent() {
           title={
             <div className="flex items-center gap-2">
               <UserCircleIcon className="h-5 w-5" />
-              <span>User</span>
+              <span>{t("tabs.user")}</span>
             </div>
           }
         >
@@ -70,7 +72,7 @@ function SettingsContent() {
           title={
             <div className="flex items-center gap-2">
               <HomeIcon className="h-5 w-5" />
-              <span>Household</span>
+              <span>{t("tabs.household")}</span>
             </div>
           }
         >
@@ -84,7 +86,7 @@ function SettingsContent() {
           title={
             <div className="flex items-center gap-2">
               <ServerIcon className="h-5 w-5" />
-              <span>CalDAV</span>
+              <span>{t("tabs.caldav")}</span>
             </div>
           }
         >
@@ -100,7 +102,7 @@ function SettingsContent() {
             title={
               <div className="flex items-center gap-2">
                 <ShieldCheckIcon className="h-5 w-5" />
-                <span>Admin</span>
+                <span>{t("tabs.admin")}</span>
               </div>
             }
           >
@@ -115,8 +117,10 @@ function SettingsContent() {
 }
 
 export default function SettingsPage() {
+  const t = useTranslations("settings");
+
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>{t("page.loading")}</div>}>
       <SettingsContent />
     </Suspense>
   );

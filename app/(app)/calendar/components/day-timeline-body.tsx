@@ -10,6 +10,7 @@ import {
 import { Button, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
 import { useRef, useState, useCallback } from "react";
 import { PanInfo } from "motion/react";
+import { useTranslations } from "next-intl";
 
 import { DraggableCalendarItem } from "./draggable-calendar-item";
 
@@ -36,6 +37,7 @@ export function DayTimelineBody({
   const rowRefs = useRef<Record<string, SwipeableRowRef | null>>({});
   const [groceriesOpen, setGroceriesOpen] = useState(false);
   const [currentRecipeId, setCurrentRecipeId] = useState<string | null>(null);
+  const t = useTranslations("calendar.timeline");
 
   const openGroceries = useCallback((recipeId: string) => {
     setCurrentRecipeId(recipeId);
@@ -55,7 +57,7 @@ export function DayTimelineBody({
     window.location.href = `/recipes/${recipeId}`;
   }, []);
 
-  const getItemActions = useCallback(
+const getItemActions = useCallback(
     (item: CalendarItemViewDto): SwipeAction[] => {
       const hasRecipe = item.itemType === "recipe" || (item.itemType === "note" && item.recipeId);
       const actions: SwipeAction[] = [];
@@ -68,7 +70,7 @@ export function DayTimelineBody({
           icon: ShoppingBagIcon,
           color: "blue",
           onPress: () => openGroceries(recipeId),
-          label: "View groceries",
+          label: t("viewGroceries"),
         });
 
         actions.push({
@@ -76,7 +78,7 @@ export function DayTimelineBody({
           icon: DocumentIcon,
           color: "yellow",
           onPress: () => navigateToRecipe(recipeId),
-          label: "Go to recipe",
+          label: t("goToRecipe"),
         });
       }
 
@@ -86,16 +88,16 @@ export function DayTimelineBody({
         color: "danger",
         onPress: () => onDelete(item.id, item.itemType),
         primary: true,
-        label: "Delete item",
+        label: t("deleteItem"),
       });
 
       return actions;
     },
-    [openGroceries, navigateToRecipe, onDelete]
+    [openGroceries, navigateToRecipe, onDelete, t]
   );
 
   if (!items?.length) {
-    return <span className="text-default-400 text-xs">No items</span>;
+    return <span className="text-default-400 text-xs">{t("noItems")}</span>;
   }
 
   return (
@@ -126,13 +128,13 @@ export function DayTimelineBody({
                 >
                   <div className="flex h-full w-full items-center justify-between px-2">
                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                      {it.itemType === "recipe" &&
+{it.itemType === "recipe" &&
                       it.allergyWarnings &&
                       it.allergyWarnings.length > 0 ? (
                         <Popover placement="top">
                           <PopoverTrigger>
                             <button
-                              aria-label="View allergen warning"
+                              aria-label={t("viewAllergenWarning")}
                               className="flex-shrink-0"
                               type="button"
                             >
@@ -141,9 +143,9 @@ export function DayTimelineBody({
                           </PopoverTrigger>
                           <PopoverContent>
                             <div className="max-w-xs p-2">
-                              <span className="font-medium">Allergy warning:</span>
+                              <span className="font-medium">{t("allergyWarning")}</span>
                               <p className="text-default-500 text-base">
-                                Contains: {it.allergyWarnings.join(", ")}
+                                {t("contains", { allergens: it.allergyWarnings.join(", ") })}
                               </p>
                             </div>
                           </PopoverContent>
@@ -162,12 +164,12 @@ export function DayTimelineBody({
                       </span>
                     </div>
 
-                    {/* Desktop trigger: opens swipe actions */}
+{/* Desktop trigger: opens swipe actions */}
                     <div className="hidden md:block">
                       <Button
                         key={`button-${index}`}
                         isIconOnly
-                        aria-label="Item actions"
+                        aria-label={t("itemActions")}
                         className="min-w-0 bg-transparent p-1 shadow-none data-[hover=true]:bg-transparent"
                         radius="none"
                         size="sm"

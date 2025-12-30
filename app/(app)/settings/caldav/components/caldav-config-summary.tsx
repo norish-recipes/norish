@@ -10,6 +10,7 @@ import {
   XCircleIcon,
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";
 
@@ -20,6 +21,7 @@ interface CalDavConfigSummaryProps {
 }
 
 export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummaryProps) {
+  const t = useTranslations("settings.caldav.config");
   const {
     config,
     syncStatusSummary: _syncStatusSummary,
@@ -117,13 +119,13 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
   const getConnectionStatusText = () => {
     switch (connectionStatus) {
       case "connected":
-        return "Connected";
+        return t("connectionStatus.connected");
       case "checking":
-        return "Checking...";
+        return t("connectionStatus.checking");
       case "disconnected":
-        return "Disconnected";
+        return t("connectionStatus.disconnected");
       default:
-        return "Unknown";
+        return t("connectionStatus.unknown");
     }
   };
 
@@ -134,7 +136,7 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
           <div className="flex flex-1 items-center gap-3">
             <ServerIcon className="text-primary h-6 w-6" />
             <div className="flex flex-col gap-1">
-              <h2 className="text-lg font-semibold">CalDAV Configuration</h2>
+              <h2 className="text-lg font-semibold">{t("title")}</h2>
               <Chip
                 color={getConnectionStatusColor()}
                 size="sm"
@@ -160,7 +162,7 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
               variant="flat"
               onPress={onEditClick}
             >
-              Edit
+              {t("editButton")}
             </Button>
             <Button
               color="danger"
@@ -169,7 +171,7 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
               variant="flat"
               onPress={onDeleteOpen}
             >
-              Delete
+              {t("deleteButton")}
             </Button>
           </div>
         </CardHeader>
@@ -178,12 +180,12 @@ export default function CalDavConfigSummary({ onEditClick }: CalDavConfigSummary
           {/* Server URL and Enabled Toggle */}
           <div className="bg-default-100 flex flex-col justify-between gap-4 rounded-lg p-3 sm:flex-row sm:items-center">
             <div className="min-w-0 flex-1">
-              <p className="text-default-700 mb-1 text-base font-medium">Server URL</p>
+              <p className="text-default-700 mb-1 text-base font-medium">{t("serverUrl")}</p>
               <p className="text-default-500 truncate text-xs">{config.serverUrl}</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-default-600 text-base">
-                {config.enabled ? "Enabled" : "Disabled"}
+                {config.enabled ? t("enabled") : t("disabled")}
               </span>
               <Switch isSelected={config.enabled} size="sm" onValueChange={handleToggleEnabled} />
             </div>

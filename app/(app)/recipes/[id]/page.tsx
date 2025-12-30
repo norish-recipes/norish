@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import RecipePageDesktop from "./recipe-page-desktop";
 import RecipePageMobile from "./recipe-page-mobile";
@@ -16,6 +17,7 @@ type Props = {
 
 function RecipePageContent() {
   const { recipe, isLoading, isNotFound } = useRecipeContext();
+  const t = useTranslations("recipes.detail");
 
   // Scroll to top when recipe page mounts
   useEffect(() => {
@@ -29,8 +31,8 @@ function RecipePageContent() {
   if (isNotFound || !recipe) {
     return (
       <NotFoundView
-        message="This recipe doesn't exist or you don't have permission to view it."
-        title="Recipe Not Found"
+        message={t("notFoundMessage")}
+        title={t("notFound")}
       />
     );
   }

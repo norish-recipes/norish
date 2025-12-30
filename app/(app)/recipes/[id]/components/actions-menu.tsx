@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { EllipsisHorizontalIcon } from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useRecipeContextRequired } from "../context";
 
@@ -39,6 +40,7 @@ export default function ActionsMenu({ id }: Props) {
   const { deleteRecipe } = useRecipesContext();
   const { recipe } = useRecipeContextRequired();
   const { isSupported, isActive, toggle } = useWakeLockContext();
+  const t = useTranslations("recipes.actions");
 
   const canEdit = recipe.userId ? canEditRecipe(recipe.userId) : true;
   const canDelete = recipe.userId ? canDeleteRecipe(recipe.userId) : true;
@@ -52,13 +54,13 @@ export default function ActionsMenu({ id }: Props) {
     const items: MenuItem[] = [
       {
         key: "plan",
-        label: "Plan",
+        label: t("plan"),
         icon: <CalendarDaysIcon className="size-4" />,
         onPress: () => setOpenCalendar(true),
       },
       {
         key: "groceries",
-        label: "Groceries",
+        label: t("groceries"),
         icon: <ShoppingCartIcon className="size-4" />,
         onPress: () => setOpenGroceries(true),
       },
@@ -67,7 +69,7 @@ export default function ActionsMenu({ id }: Props) {
     if (canEdit) {
       items.push({
         key: "edit",
-        label: "Edit",
+        label: t("edit"),
         icon: <PencilSquareIcon className="size-4" />,
         onPress: () => router.push(`/recipes/edit/${id}`),
       });
@@ -76,7 +78,7 @@ export default function ActionsMenu({ id }: Props) {
     if (isSupported) {
       items.push({
         key: "wake-lock",
-        label: isActive ? "Screen On" : "Keep Screen On",
+        label: isActive ? t("screenOn") : t("keepScreenOn"),
         icon: <DevicePhoneMobileIcon className="size-4" />,
         onPress: toggle,
         className: isActive ? "text-success" : "",
@@ -87,7 +89,7 @@ export default function ActionsMenu({ id }: Props) {
     if (canDelete) {
       items.push({
         key: "delete",
-        label: "Delete",
+        label: t("delete"),
         icon: <TrashIcon className="size-4" />,
         onPress: handleDelete,
         className: "text-danger",
@@ -96,15 +98,15 @@ export default function ActionsMenu({ id }: Props) {
     }
 
     return items;
-  }, [canEdit, canDelete, handleDelete, id, router, isSupported, isActive, toggle]);
+  }, [canEdit, canDelete, handleDelete, id, router, isSupported, isActive, toggle, t]);
 
-  return (
+return (
     <>
       <Dropdown>
         <DropdownTrigger>
           <Button
             isIconOnly
-            aria-label="Actions"
+            aria-label={t("actionsLabel")}
             className="transition active:scale-95"
             size="sm"
             variant="light"
@@ -113,7 +115,7 @@ export default function ActionsMenu({ id }: Props) {
           </Button>
         </DropdownTrigger>
 
-        <DropdownMenu aria-label="Recipe actions" items={menuItems}>
+        <DropdownMenu aria-label={t("actionsLabel")} items={menuItems}>
           {(item) => (
             <DropdownItem
               key={item.key}

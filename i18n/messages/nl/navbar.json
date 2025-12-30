@@ -1,0 +1,47 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Nieuw recept",
+      "description": "Schrijf je eigen recept"
+    },
+    "importUrl": {
+      "title": "Importeren van URL",
+      "description": "Plak een receptlink"
+    },
+    "settings": {
+      "title": "Instellingen",
+      "description": "Beheer je account"
+    },
+    "logout": "Uitloggen"
+  },
+  "theme": {
+    "title": "Thema",
+    "loading": "Laden…",
+    "light": "Lichte modus",
+    "dark": "Donkere modus",
+    "system": "Systeem"
+  },
+  "nav": {
+    "home": "Recepten",
+    "calendar": "Kalender",
+    "groceries": "Boodschappen"
+  },
+  "mobile": {
+    "searchPlaceholder": "Zoek recepten...",
+    "toggleSearch": "Zoekfunctie in- of uitschakelen",
+    "goBack": "Ga terug"
+  },
+  "archiveImporter": {
+    "uploading": "Uploaden...",
+    "uploadFile": "Upload een bestand",
+    "dragDrop": "of sleep en zet neer",
+    "formats": ".melarecipes (Mela), .zip (Mealie of Tandoor export)",
+    "uploadingFile": "Bestand uploaden…",
+    "processing": "Bezig met verwerken: {details}",
+    "complete": "Voltooid: {details}",
+    "imported": "{count} geïmporteerd",
+    "skipped": "{count} overgeslagen",
+    "errors": "{count} fouten",
+    "ofTotal": "{current} van {total}"
+  }
+}

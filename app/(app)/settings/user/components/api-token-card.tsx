@@ -28,10 +28,13 @@ import {
   PauseIcon,
   PlayIcon,
 } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
 
 export default function ApiKeyCard() {
+  const t = useTranslations("settings.user.apiKeys");
+  const tActions = useTranslations("common.actions");
   const { apiKeys, generateApiKey, deleteApiKey, toggleApiKey } = useUserSettingsContext();
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
@@ -73,21 +76,20 @@ export default function ApiKeyCard() {
         <CardHeader>
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <KeyIcon className="h-5 w-5" />
-            API Keys
+            {t("title")}
           </h2>
         </CardHeader>
         <CardBody className="gap-4">
           <p className="text-default-600 text-base">
-            API keys allow programmatic access to the Norish API. Use them for integrations,
-            shortcuts, and automation.
+            {t("description")}
           </p>
 
           {/* Create new key section */}
           <div className="flex items-end gap-2">
             <Input
               className="flex-1"
-              label="Key Name (optional)"
-              placeholder="e.g., iOS Shortcut"
+              label={t("keyNameLabel")}
+              placeholder={t("keyNamePlaceholder")}
               size="sm"
               value={newKeyName}
               onValueChange={setNewKeyName}
@@ -98,26 +100,26 @@ export default function ApiKeyCard() {
               startContent={<PlusIcon className="h-4 w-4" />}
               onPress={handleGenerateKey}
             >
-              Create Key
+              {t("createKey")}
             </Button>
           </div>
 
           {/* Existing keys list */}
           {apiKeys.length > 0 && (
             <div className="mt-4">
-              <h3 className="mb-2 text-base font-medium">Your API Keys</h3>
-              <Table aria-label="API keys">
+              <h3 className="mb-2 text-base font-medium">{t("yourKeys")}</h3>
+              <Table aria-label={t("title")}>
                 <TableHeader>
-                  <TableColumn>NAME</TableColumn>
-                  <TableColumn>KEY PREFIX</TableColumn>
-                  <TableColumn>CREATED</TableColumn>
-                  <TableColumn>STATUS</TableColumn>
-                  <TableColumn>ACTIONS</TableColumn>
+                  <TableColumn>{t("tableHeaders.name")}</TableColumn>
+                  <TableColumn>{t("tableHeaders.keyPrefix")}</TableColumn>
+                  <TableColumn>{t("tableHeaders.created")}</TableColumn>
+                  <TableColumn>{t("tableHeaders.status")}</TableColumn>
+                  <TableColumn>{t("tableHeaders.actions")}</TableColumn>
                 </TableHeader>
                 <TableBody>
                   {apiKeys.map((key) => (
                     <TableRow key={key.id}>
-                      <TableCell>{key.name || "Unnamed"}</TableCell>
+                      <TableCell>{key.name || t("unnamed")}</TableCell>
                       <TableCell>
                         <code className="bg-default-100 rounded px-2 py-1 text-xs">
                           {key.start || "***"}...
@@ -126,7 +128,7 @@ export default function ApiKeyCard() {
                       <TableCell>{new Date(key.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <Chip color={key.enabled ? "success" : "danger"} size="sm" variant="flat">
-                          {key.enabled ? "Active" : "Disabled"}
+                          {key.enabled ? t("active") : t("disabled")}
                         </Chip>
                       </TableCell>
                       <TableCell>
@@ -135,7 +137,7 @@ export default function ApiKeyCard() {
                             isIconOnly
                             color={key.enabled ? "warning" : "success"}
                             size="sm"
-                            title={key.enabled ? "Disable key" : "Enable key"}
+                            title={key.enabled ? t("disableKey") : t("enableKey")}
                             variant="light"
                             onPress={() => toggleApiKey(key.id, !key.enabled)}
                           >
@@ -149,7 +151,7 @@ export default function ApiKeyCard() {
                             isIconOnly
                             color="danger"
                             size="sm"
-                            title="Delete key"
+                            title={t("deleteKey")}
                             variant="light"
                             onPress={() => {
                               setKeyToDelete(key.id);
@@ -169,7 +171,7 @@ export default function ApiKeyCard() {
 
           {apiKeys.length === 0 && (
             <p className="text-default-500 py-4 text-base">
-              No API keys yet. Create one to get started.
+              {t("noKeys")}
             </p>
           )}
         </CardBody>
@@ -180,11 +182,10 @@ export default function ApiKeyCard() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>API Key Generated</ModalHeader>
+              <ModalHeader>{t("generatedModal.title")}</ModalHeader>
               <ModalBody>
                 <p className="text-warning mb-4 text-base">
-                  <strong>Save this key now!</strong> You won&apos;t be able to see it again. We
-                  store only a hash and cannot recover this key.
+                  {t("generatedModal.warning")}
                 </p>
                 <div className="flex gap-2">
                   <Input
@@ -197,8 +198,9 @@ export default function ApiKeyCard() {
                   </Button>
                 </div>
                 <p className="text-default-500 mt-2 text-xs">
-                  Use this key in the <code className="bg-default-100 rounded px-1">x-api-key</code>{" "}
-                  header when making API requests.
+                  {t.rich("generatedModal.hint", {
+                    code: (chunks) => <code className="bg-default-100 rounded px-1">{chunks}</code>,
+                  })}
                 </p>
               </ModalBody>
               <ModalFooter>
@@ -209,7 +211,7 @@ export default function ApiKeyCard() {
                     onClose();
                   }}
                 >
-                  I&apos;ve Saved It
+                  {t("generatedModal.confirmButton")}
                 </Button>
               </ModalFooter>
             </>
@@ -222,19 +224,18 @@ export default function ApiKeyCard() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>Delete API Key</ModalHeader>
+              <ModalHeader>{t("deleteModal.title")}</ModalHeader>
               <ModalBody>
                 <p>
-                  Are you sure you want to delete this API key? Any applications using it will
-                  immediately lose access. This cannot be undone.
+                  {t("deleteModal.message")}
                 </p>
               </ModalBody>
               <ModalFooter>
                 <Button variant="flat" onPress={onClose}>
-                  Cancel
+                  {tActions("cancel")}
                 </Button>
                 <Button color="danger" onPress={() => keyToDelete && handleDeleteKey(keyToDelete)}>
-                  Delete Key
+                  {t("deleteModal.confirmButton")}
                 </Button>
               </ModalFooter>
             </>

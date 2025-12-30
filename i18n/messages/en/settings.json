@@ -1,0 +1,362 @@
+{
+  "page": {
+    "title": "Settings",
+    "loading": "Loading...",
+    "ariaLabel": "Settings tabs"
+  },
+  "tabs": {
+    "user": "User",
+    "household": "Household",
+    "caldav": "CalDAV",
+    "admin": "Admin"
+  },
+  "user": {
+    "profile": {
+      "title": "Profile",
+      "nameLabel": "Name",
+      "namePlaceholder": "Your name",
+      "emailLabel": "Email",
+      "avatarHint": "Click your avatar to change picture",
+      "saveChanges": "Save Changes"
+    },
+    "allergies": {
+      "title": "Allergies",
+      "description": "Add your food allergies to receive warnings when planning recipes that contain allergens. This information is used to warn you when a planned recipe contains ingredients that match your allergies.",
+      "placeholder": "Type allergies (e.g., gluten, nuts, dairy)...",
+      "saveButton": "Save Allergies"
+    },
+    "apiKeys": {
+      "title": "API Keys",
+      "description": "API keys allow programmatic access to the Norish API. Use them for integrations, shortcuts, and automation.",
+      "keyNameLabel": "Key Name (optional)",
+      "keyNamePlaceholder": "e.g., iOS Shortcut",
+      "createKey": "Create Key",
+      "yourKeys": "Your API Keys",
+      "noKeys": "No API keys yet. Create one to get started.",
+      "tableHeaders": {
+        "name": "NAME",
+        "keyPrefix": "KEY PREFIX",
+        "created": "CREATED",
+        "status": "STATUS",
+        "actions": "ACTIONS"
+      },
+      "unnamed": "Unnamed",
+      "active": "Active",
+      "disabled": "Disabled",
+      "disableKey": "Disable key",
+      "enableKey": "Enable key",
+      "deleteKey": "Delete key",
+      "generatedModal": {
+        "title": "API Key Generated",
+        "warning": "Save this key now! You won't be able to see it again. We store only a hash and cannot recover this key.",
+        "hint": "Use this key in the <code>x-api-key</code> header when making API requests.",
+        "confirmButton": "I've Saved It"
+      },
+      "deleteModal": {
+        "title": "Delete API Key",
+        "message": "Are you sure you want to delete this API key? Any applications using it will immediately lose access. This cannot be undone.",
+        "confirmButton": "Delete Key"
+      }
+    },
+    "archiveImport": {
+      "title": "Import Recipe Archive",
+      "description": "Import recipes from Mela (.melarecipes), Mealie, or Tandoor (.zip) exports"
+    },
+    "dangerZone": {
+      "title": "Danger Zone",
+      "description": "Once you delete your account, there is no going back. Please be certain.",
+      "deleteButton": "Delete My Account",
+      "deleteModal": {
+        "title": "Delete Account",
+        "permanentWarning": "This action is permanent and cannot be undone!",
+        "dataWarning": "Your personal data including groceries, calendar entries, and notes will be permanently deleted.",
+        "recipesNote": "Recipes you created will be preserved but will no longer be linked to your account.",
+        "adminNote": "If you are the admin of a household with other members, you must transfer admin privileges first.",
+        "confirmButton": "Delete My Account"
+      }
+    }
+  },
+  "household": {
+    "pageTitle": "Household Settings",
+    "info": {
+      "yourRole": "Your Role",
+      "admin": "Admin",
+      "member": "Member",
+      "members": "Members",
+      "leaveButton": "Leave Household",
+      "leaveModal": {
+        "title": "Leave Household",
+        "confirmMessage": "Are you sure you want to leave {name}?",
+        "adminWarning": "You are the admin. You must transfer admin privileges before leaving.",
+        "confirmButton": "Leave Household"
+      }
+    },
+    "members": {
+      "title": "Members",
+      "tableHeaders": {
+        "name": "NAME",
+        "role": "ROLE",
+        "actions": "ACTIONS"
+      },
+      "you": "You",
+      "kickButton": "Kick",
+      "makeAdminButton": "Make Admin",
+      "kickModal": {
+        "title": "Kick User",
+        "confirmMessage": "Are you sure you want to kick {name} from the household?",
+        "warning": "They will lose access to all shared recipes, groceries, and calendar entries.",
+        "confirmButton": "Kick User"
+      },
+      "transferModal": {
+        "title": "Transfer Admin Privileges",
+        "confirmMessage": "Are you sure you want to transfer admin privileges to {name}?",
+        "warning": "You will become a regular member and will no longer be able to kick users or manage join codes.",
+        "confirmButton": "Transfer Admin"
+      },
+      "toasts": {
+        "kickFailed": "Failed to kick user",
+        "transferSuccess": "Transferred admin to {name}",
+        "transferFailed": "Failed to transfer admin"
+      }
+    },
+    "joinCode": {
+      "title": "Join Code",
+      "shareDescription": "Share this code with others to invite them to your household.",
+      "expiresIn": "Expires in:",
+      "regenerateButton": "Regenerate",
+      "expired": "Expired",
+      "noCodeDescription": "No active join code. Generate one to invite new members.",
+      "generateButton": "Generate Join Code"
+    },
+    "create": {
+      "title": "Create Household",
+      "description": "Create a new household to share recipes and groceries with family or friends.",
+      "nameLabel": "Household Name",
+      "namePlaceholder": "e.g., Smith Family",
+      "submitButton": "Create Household"
+    },
+    "join": {
+      "title": "Join Household",
+      "description": "Enter a join code to join an existing household.",
+      "codeLabel": "Join Code",
+      "codePlaceholder": "8-character code",
+      "submitButton": "Join Household"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "Setup CalDAV Sync",
+      "description": "Connect your CalDAV-compatible calendar to automatically sync your meal plans",
+      "gettingStarted": "Getting Started with CalDAV",
+      "providerDescription": "You'll need a CalDAV-compatible calendar service. Popular providers include:",
+      "serverUrlLabel": "Server URL",
+      "serverUrlDescription": "Base URL of your CalDAV server (e.g., https://dav.example.com)",
+      "serverUrlPlaceholder": "https://dav.example.com",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "username",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter password",
+      "calendarLabel": "Calendar",
+      "calendarPlaceholder": "Select a calendar",
+      "calendarPlaceholderDisabled": "Test connection first",
+      "calendarDescription": "Select which calendar to sync meal plans with",
+      "calendarDescriptionDisabled": "Test connection to load available calendars",
+      "timeFormat": "Format: HH:MM-HH:MM",
+      "timeFormatError": "Format must be HH:MM-HH:MM",
+      "breakfastTime": "Breakfast Time",
+      "lunchTime": "Lunch Time",
+      "dinnerTime": "Dinner Time",
+      "snackTime": "Snack Time",
+      "testConnection": "Test Connection",
+      "saveConfiguration": "Save Configuration"
+    },
+    "config": {
+      "title": "CalDAV Configuration",
+      "editTitle": "Edit CalDAV Configuration",
+      "serverUrl": "Server URL",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "editButton": "Edit",
+      "deleteButton": "Delete",
+      "saveChanges": "Save Changes",
+      "advancedSettings": "Advanced Settings",
+      "timezone": "Timezone: {timezone}",
+      "connectionStatus": {
+        "connected": "Connected",
+        "checking": "Checking...",
+        "disconnected": "Disconnected",
+        "unknown": "Unknown"
+      }
+    },
+    "deleteModal": {
+      "title": "Delete CalDAV Configuration",
+      "confirmMessage": "Are you sure you want to delete your CalDAV configuration?",
+      "deleteEventsLabel": "Delete synced events",
+      "deleteEventsDescription": "Remove all events that were created in your CalDAV calendar",
+      "confirmButton": "Delete"
+    },
+    "syncStatus": {
+      "title": "Sync Status",
+      "syncNow": "Sync Now",
+      "clearFilter": "Clear filter",
+      "clickToFilter": "Click a badge to filter",
+      "showingItems": "Showing {start}-{end} of {total} items",
+      "tableHeaders": {
+        "item": "ITEM",
+        "type": "TYPE",
+        "date": "DATE",
+        "meal": "MEAL",
+        "status": "STATUS",
+        "lastSync": "LAST SYNC",
+        "error": "ERROR"
+      },
+      "statuses": {
+        "synced": "Synced",
+        "pending": "Pending",
+        "failed": "Failed",
+        "removed": "Removed"
+      },
+      "emptyFiltered": "No {status} items found",
+      "emptyDefault": "No sync records found",
+      "errorDetails": "Error Details"
+    }
+  },
+  "admin": {
+    "registration": {
+      "title": "Registration",
+      "allowRegistration": "Allow new user registration",
+      "description": "When disabled, only existing users can sign in"
+    },
+    "permissions": {
+      "title": "Recipe Permissions",
+      "description": "Control who can view, edit, and delete recipes. Server admins always have full access.",
+      "viewRecipes": "View Recipes",
+      "viewDescription": "Who can see recipes in the dashboard",
+      "editRecipes": "Edit Recipes",
+      "editDescription": "Who can modify recipe details",
+      "deleteRecipes": "Delete Recipes",
+      "deleteDescription": "Who can remove recipes",
+      "levels": {
+        "everyone": "Everyone",
+        "everyoneDescription": "All authenticated users",
+        "household": "Household",
+        "householdDescription": "Recipe owner and their household members",
+        "owner": "Owner Only",
+        "ownerDescription": "Only the recipe owner"
+      },
+      "note": "Note: Groceries and Calendar items follow household rules automatically, household members can always edit/delete items belonging to anyone in the same household."
+    },
+    "system": {
+      "title": "System Settings",
+      "cleanup": {
+        "title": "Cleanup Scheduler",
+        "label": "Cleanup Months",
+        "description": "Delete planned meals older than this many months",
+        "save": "Save"
+      },
+      "server": {
+        "title": "Server Management",
+        "restartLabel": "Restart Server",
+        "restartDescription": "Apply configuration changes that require a restart",
+        "restartButton": "Restart Server"
+      }
+    },
+    "restart": {
+      "title": "Restart Server",
+      "confirmMessage": "Are you sure you want to restart the server?",
+      "importantTitle": "Important:",
+      "warning1": "All active connections will be disconnected",
+      "warning2": "The server will be unavailable for a few seconds",
+      "warning3": "Ensure your deployment has <code>restart: always</code> configured, or the server will not come back online automatically",
+      "confirmButton": "Restart Now"
+    },
+    "authProviders": {
+      "title": "Authentication Providers",
+      "requiresRestart": "Requires restart",
+      "description": "Configure authentication methods. Changes require a server restart to take effect.",
+      "passwordAuth": {
+        "title": "Email & Password",
+        "description": "Allow users to sign in with email and password"
+      },
+      "oauthDescription": "Configure OAuth providers for SSO authentication.",
+      "oidc": {
+        "title": "OIDC Provider",
+        "subtitle": "Generic OpenID Connect",
+        "fields": {
+          "name": "Provider Name",
+          "namePlaceholder": "e.g., Authentik, Keycloak",
+          "issuer": "Issuer URL",
+          "issuerPlaceholder": "https://your-idp.com",
+          "clientId": "Client ID",
+          "clientSecret": "Client Secret",
+          "wellknown": "Well-known URL (optional)",
+          "wellknownPlaceholder": "Auto-derived from issuer if not set"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "GitHub OAuth",
+        "fields": {
+          "clientId": "Client ID",
+          "clientSecret": "Client Secret"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "Google OAuth",
+        "fields": {
+          "clientId": "Client ID",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "Client Secret"
+        }
+      },
+      "form": {
+        "testSuccess": "Connection successful",
+        "remove": "Remove",
+        "test": "Test",
+        "save": "Save",
+        "removeTitle": "Remove {provider}",
+        "removeConfirm": "Are you sure you want to remove this provider?"
+      },
+      "envBadge": {
+        "db": "Managed by DB",
+        "env": "Managed by env"
+      }
+    },
+    "contentDetection": {
+      "title": "Content Detection",
+      "description": "Configure how recipes are detected and parsed from web pages.",
+      "contentIndicators": {
+        "title": "Content Indicators",
+        "subtitle": "Keywords that identify recipe pages",
+        "description": "Schema indicators detect structured recipe data (JSON-LD, microdata). Content indicators are keywords that suggest a page contains a recipe."
+      },
+      "units": {
+        "title": "Units of Measure",
+        "subtitle": "Measurement unit definitions for parsing",
+        "description": "Define measurement units with their short form, plural, and alternate spellings. Used when parsing ingredient quantities."
+      },
+      "recurrence": {
+        "title": "Recurrence Patterns",
+        "subtitle": "Natural language patterns for recurring items",
+        "description": "Define locale-specific patterns for parsing recurrence rules from natural language (e.g., 'every week', 'om de dag')."
+      }
+    },
+    "aiProcessing": {
+      "title": "AI & Processing",
+      "description": "Configure AI-powered features for recipe extraction and video processing.",
+      "aiConfig": {
+        "title": "AI Configuration",
+        "subtitle": "Recipe parsing and extraction"
+      },
+      "video": {
+        "title": "Video Processing",
+        "subtitle": "Social media video extraction & transcription"
+      },
+      "prompts": {
+        "title": "Prompts",
+        "subtitle": "Customize AI instructions for recipe processing"
+      }
+    }
+  }
+}

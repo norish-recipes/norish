@@ -13,6 +13,7 @@ import {
 } from "@heroui/react";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/20/solid";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useRecipesMutations } from "@/hooks/recipes";
 import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
@@ -24,6 +25,8 @@ interface ImportFromPasteModalProps {
 }
 
 export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFromPasteModalProps) {
+  const t = useTranslations("common.import.paste");
+  const tActions = useTranslations("common.actions");
   const router = useRouter();
   const { isAIEnabled } = usePermissionsContext();
   const { importRecipeFromPaste, importRecipeFromPasteWithAI } = useRecipesMutations();
@@ -37,8 +40,8 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
 
     if (trimmed.length > MAX_RECIPE_PASTE_CHARS) {
       addToast({
-        title: "Paste too large",
-        description: `Maximum ${MAX_RECIPE_PASTE_CHARS.toLocaleString()} characters allowed`,
+        title: t("tooLarge"),
+        description: t("maxCharacters", { max: MAX_RECIPE_PASTE_CHARS.toLocaleString() }),
         color: "warning",
       });
 
@@ -52,8 +55,8 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
 
       addToast({
         severity: "default",
-        title: "Importing recipe...",
-        description: "Import in progress, please wait...",
+        title: t("importing"),
+        description: t("inProgress"),
         timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
@@ -64,7 +67,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
       router.push("/");
     } catch (error) {
       addToast({
-        title: "Import failed",
+        title: t("failed"),
         description: (error as Error).message,
         color: "danger",
         timeout: 2000,
@@ -74,7 +77,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
     } finally {
       setIsSubmitting(false);
     }
-  }, [importRecipeFromPaste, onOpenChange, router, text]);
+  }, [importRecipeFromPaste, onOpenChange, router, t, text]);
 
   const handleAIImport = useCallback(() => {
     const trimmed = text.trim();
@@ -83,8 +86,8 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
 
     if (trimmed.length > MAX_RECIPE_PASTE_CHARS) {
       addToast({
-        title: "Paste too large",
-        description: `Maximum ${MAX_RECIPE_PASTE_CHARS.toLocaleString()} characters allowed`,
+        title: t("tooLarge"),
+        description: t("maxCharacters", { max: MAX_RECIPE_PASTE_CHARS.toLocaleString() }),
         color: "warning",
       });
 
@@ -98,8 +101,8 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
 
       addToast({
         severity: "default",
-        title: "Importing recipe with AI...",
-        description: "Import in progress, please wait...",
+        title: t("importingWithAI"),
+        description: t("inProgress"),
         timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
@@ -110,7 +113,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
       router.push("/");
     } catch (error) {
       addToast({
-        title: "Failed to import recipe with AI",
+        title: t("failed"),
         description: (error as Error).message,
         color: "danger",
         timeout: 2000,
@@ -120,7 +123,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
     } finally {
       setIsSubmitting(false);
     }
-  }, [importRecipeFromPasteWithAI, onOpenChange, router, text]);
+  }, [importRecipeFromPasteWithAI, onOpenChange, router, t, text]);
 
   const _handleClose = useCallback(() => {
     onOpenChange(false);
@@ -132,13 +135,13 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
       <ModalContent>
         {() => (
           <>
-            <ModalHeader className="flex flex-col gap-1">Import from paste</ModalHeader>
+            <ModalHeader className="flex flex-col gap-1">{t("title")}</ModalHeader>
             <ModalBody>
               <Textarea
-                label="Recipe text or JSON-LD"
+                label={t("label")}
                 maxRows={18}
                 minRows={8}
-                placeholder="Paste a recipe (free text) or JSON-LD here..."
+                placeholder={t("placeholder")}
                 value={text}
                 onValueChange={setText}
               />
@@ -156,7 +159,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
                   startContent={!isSubmitting && <SparklesIcon className="h-4 w-4" />}
                   onPress={handleAIImport}
                 >
-                  AI Import
+                  {tActions("aiImport")}
                 </Button>
               )}
               <Button
@@ -166,7 +169,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
                 startContent={!isSubmitting && <ArrowDownTrayIcon className="h-4 w-4" />}
                 onPress={handleImport}
               >
-                Import
+                {tActions("import")}
               </Button>
             </ModalFooter>
           </>

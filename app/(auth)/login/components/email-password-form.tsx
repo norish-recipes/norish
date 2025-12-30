@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input, Button, Link } from "@heroui/react";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { signIn } from "@/lib/auth/client";
 
@@ -16,6 +17,7 @@ export function EmailPasswordForm({
   callbackUrl = "/",
   registrationEnabled = false,
 }: EmailPasswordFormProps) {
+  const t = useTranslations("auth.emailPassword");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,12 +37,12 @@ export function EmailPasswordForm({
       });
 
       if (result.error) {
-        setError(result.error.message || "Invalid email or password");
+        setError(result.error.message || t("errors.invalidCredentials"));
       } else {
         router.push(callbackUrl);
       }
     } catch {
-      setError("An error occurred. Please try again.");
+      setError(t("errors.generic"));
     } finally {
       setIsLoading(false);
     }
@@ -51,8 +53,8 @@ export function EmailPasswordForm({
       <Input
         isRequired
         autoComplete="email"
-        label="Email"
-        placeholder="you@example.com"
+        label={t("email")}
+        placeholder={t("emailPlaceholder")}
         startContent={<EnvelopeIcon className="text-default-400 h-4 w-4" />}
         type="email"
         value={email}
@@ -65,8 +67,8 @@ export function EmailPasswordForm({
       <Input
         isRequired
         autoComplete="current-password"
-        label="Password"
-        placeholder="Enter your password"
+        label={t("password")}
+        placeholder={t("passwordPlaceholder")}
         startContent={<LockClosedIcon className="text-default-400 h-4 w-4" />}
         type="password"
         value={password}
@@ -85,17 +87,17 @@ export function EmailPasswordForm({
         isLoading={isLoading}
         type="submit"
       >
-        Sign in
+        {t("signIn")}
       </Button>
 
       {registrationEnabled && (
         <p className="text-small text-default-500 text-center">
-          {`Don't have an account? `}
+          {t("noAccount")}{" "}
           <Link
             className="text-small"
             href={`/signup${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
           >
-            Sign up
+            {t("signUp")}
           </Link>
         </p>
       )}

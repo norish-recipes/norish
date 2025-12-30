@@ -1,11 +1,13 @@
 "use client";
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import { Progress } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { useArchiveImportMutation } from "@/hooks/archive";
 import { useArchiveImportContext } from "@/context/archive-import-context";
 
 export default function ArchiveImporter() {
+  const t = useTranslations("navbar.archiveImporter");
   // Use archive context for state
   const {
     current,
@@ -87,7 +89,7 @@ export default function ArchiveImporter() {
   let status = "";
 
   if (isStarting) {
-    status = "Uploading file…";
+    status = t("uploadingFile");
   } else if (isImporting && total > 0) {
     const parts = [`${current} of ${total}`];
 
@@ -144,7 +146,7 @@ export default function ArchiveImporter() {
               className="text-primary focus-within:outline-primary hover:text-primary-400 relative cursor-pointer rounded-md bg-transparent font-semibold focus-within:outline-2 focus-within:outline-offset-2"
               htmlFor="archive-file-upload"
             >
-              <span>{isUploading ? "Uploading…" : "Upload a file"}</span>
+              <span>{isUploading ? t("uploading") : t("uploadFile")}</span>
               <input
                 key={isComplete ? "reset" : "active"}
                 ref={inputRef}
@@ -157,11 +159,9 @@ export default function ArchiveImporter() {
                 onChange={onInputChange}
               />
             </label>
-            <p className="pl-1">or drag and drop</p>
+            <p className="pl-1">{t("dragDrop")}</p>
           </div>
-          <p className="text-default-500 text-xs">
-            .melarecipes (Mela), .zip (Mealie or Tandoor export)
-          </p>
+          <p className="text-default-500 text-xs">{t("formats")}</p>
         </div>
       </div>
 

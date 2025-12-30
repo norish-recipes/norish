@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@heroui/react";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 
 import { useGroceriesContext } from "../context";
 import { useStoresContext } from "../stores-context";
@@ -16,6 +17,7 @@ export default function AddGroceryButton() {
   const { stores } = useStoresContext();
   const [panelOpen, setPanelOpen] = useState(false);
   const { isVisible, show } = useAutoHide({ disabled: panelOpen });
+  const t = useTranslations("groceries.page");
 
   return (
     <>
@@ -45,7 +47,7 @@ export default function AddGroceryButton() {
               show();
             }}
           >
-            Add items
+            {t("addItems")}
           </Button>
         </motion.div>
       </motion.div>

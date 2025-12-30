@@ -1,13 +1,10 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { GlobeAltIcon } from "@heroicons/react/16/solid";
 
 import { useLocale } from "@/hooks/user/use-locale";
-import { locales, localeNames, localeToCountry, type Locale } from "@/i18n/config";
-
-// Dynamically import flag icons to avoid SSR issues
-let FlagComponents: Record<string, FC<{ title: string; className?: string }>> = {};
+import { locales, localeNames, type Locale } from "@/i18n/config";
 
 /**
  * Hook to get locale state and cycle function for language switching UI
@@ -21,13 +18,6 @@ export function useLanguageSwitch() {
 
   useEffect(() => {
     setMounted(true);
-    // Dynamically import flags
-    import("country-flag-icons/react/3x2").then((flags) => {
-      FlagComponents = flags as unknown as Record<
-        string,
-        FC<{ title: string; className?: string }>
-      >;
-    });
   }, []);
 
   // Sync current locale index when locale changes
@@ -41,8 +31,6 @@ export function useLanguageSwitch() {
   }, [locale]);
 
   const currentLocale = locales[currentLocaleIndex];
-  const countryCode = localeToCountry[currentLocale];
-  const FlagIcon = FlagComponents[countryCode];
 
   const cycleLocale = () => {
     const nextIndex = (currentLocaleIndex + 1) % locales.length;
@@ -59,11 +47,7 @@ export function useLanguageSwitch() {
     }
   };
 
-  const icon = FlagIcon ? (
-    <FlagIcon className="h-3 w-4 rounded-sm" title={localeNames[currentLocale]} />
-  ) : (
-    <GlobeAltIcon className="size-4" />
-  );
+  const icon = <GlobeAltIcon className="size-4" />;
 
   const label = localeNames[currentLocale];
 
@@ -74,7 +58,6 @@ export function useLanguageSwitch() {
     currentLocale,
     locales,
     localeNames,
-    localeToCountry,
     cycleLocale,
     selectLocale,
     isChanging,

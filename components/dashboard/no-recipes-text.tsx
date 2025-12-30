@@ -1,8 +1,11 @@
 "use client";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Card, CardBody } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 export default function NoRecipesText() {
+  const t = useTranslations("recipes.empty");
+
   return (
     <div className="flex flex-col items-center justify-center px-4 py-20">
       <Card className="bg-content1/90 shadow-large relative w-full max-w-xl backdrop-blur-xl">
@@ -15,10 +18,8 @@ export default function NoRecipesText() {
           </div>
 
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold">Your recipe collection awaits</h2>
-            <p className="text-default-500 text-base">
-              Paste a recipe URL in the search field above and watch the magic happen.
-            </p>
+            <h2 className="text-lg font-semibold">{t("title")}</h2>
+            <p className="text-default-500 text-base">{t("description")}</p>
           </div>
         </CardBody>
       </Card>

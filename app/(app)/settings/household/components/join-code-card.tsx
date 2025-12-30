@@ -5,10 +5,12 @@ import type { HouseholdAdminSettingsDto } from "@/types/dto/household";
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button } from "@heroui/react";
 import { ClipboardDocumentIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
 
 export default function JoinCodeCard() {
+  const t = useTranslations("settings.household.joinCode");
   const { household, currentUserId, regenerateJoinCode } = useHouseholdSettingsContext();
   const [timeRemaining, setTimeRemaining] = useState<string>("");
 
@@ -88,14 +90,14 @@ export default function JoinCodeCard() {
       <CardHeader>
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <ClipboardDocumentIcon className="h-5 w-5" />
-          Join Code
+          {t("title")}
         </h2>
       </CardHeader>
       <CardBody className="gap-4">
         {adminHousehold.joinCode && !joinCodeExpired ? (
           <>
             <p className="text-default-600 text-base">
-              Share this code with others to invite them to your household.
+              {t("shareDescription")}
             </p>
             <div className="flex gap-2">
               <Input
@@ -109,7 +111,7 @@ export default function JoinCodeCard() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-default-600 text-base">
-                Expires in: <span className="text-warning font-medium">{timeRemaining}</span>
+                {t("expiresIn")} <span className="text-warning font-medium">{timeRemaining}</span>
               </span>
               <Button
                 color="primary"
@@ -118,14 +120,14 @@ export default function JoinCodeCard() {
                 variant="flat"
                 onPress={handleRegenerateCode}
               >
-                Regenerate
+                {t("regenerateButton")}
               </Button>
             </div>
           </>
         ) : (
           <>
             <p className="text-default-600 text-base">
-              No active join code. Generate one to invite new members.
+              {t("noCodeDescription")}
             </p>
             <div className="flex justify-end">
               <Button
@@ -133,7 +135,7 @@ export default function JoinCodeCard() {
                 startContent={<ArrowPathIcon className="h-4 w-4" />}
                 onPress={handleRegenerateCode}
               >
-                Generate Join Code
+                {t("generateButton")}
               </Button>
             </div>
           </>

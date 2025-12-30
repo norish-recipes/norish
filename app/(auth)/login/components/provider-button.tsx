@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { ProviderIcon } from "./provider-icon";
 
@@ -19,6 +20,7 @@ export function ProviderButton({
   icon,
   callbackUrl = "/",
 }: ProviderButtonProps) {
+  const t = useTranslations("auth.provider");
   const handleSignIn = async () => {
     const id = providerId.toLowerCase();
 
@@ -46,7 +48,7 @@ export function ProviderButton({
       variant="flat"
       onPress={handleSignIn}
     >
-      Continue with {providerName}
+      {t("signInWith", { provider: providerName })}
     </Button>
   );
 }

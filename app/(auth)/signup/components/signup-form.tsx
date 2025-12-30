@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input, Button, Link } from "@heroui/react";
 import { EnvelopeIcon, LockClosedIcon, UserIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { signUp } from "@/lib/auth/client";
 
@@ -12,6 +13,7 @@ interface SignupFormProps {
 }
 
 export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
+  const t = useTranslations("auth.signup");
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -27,19 +29,19 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
     e.preventDefault();
 
     if (!passwordsMatch) {
-      setError("Passwords do not match");
+      setError(t("errors.passwordMismatch"));
 
       return;
     }
 
     if (password.length < 8) {
-      setError("Password should be at least 8 characters");
+      setError(t("errors.passwordTooShort"));
 
       return;
     }
 
     if (password.length > 128) {
-      setError("Password can be at most 128 characters");
+      setError(t("errors.passwordTooLong"));
 
       return;
     }
@@ -56,12 +58,12 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
       });
 
       if (result.error) {
-        setError(result.error.message || "Failed to create account");
+        setError(result.error.message || t("errors.createFailed"));
       } else {
         router.push(callbackUrl);
       }
     } catch {
-      setError("An error occurred. Please try again.");
+      setError(t("errors.generic"));
     } finally {
       setIsLoading(false);
     }
@@ -72,8 +74,8 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
       <Input
         isRequired
         autoComplete="name"
-        label="Name"
-        placeholder="Your name"
+        label={t("name")}
+        placeholder={t("namePlaceholder")}
         startContent={<UserIcon className="text-default-400 h-4 w-4" />}
         type="text"
         value={name}
@@ -86,8 +88,8 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
       <Input
         isRequired
         autoComplete="email"
-        label="Email"
-        placeholder="you@example.com"
+        label={t("email")}
+        placeholder={t("emailPlaceholder")}
         startContent={<EnvelopeIcon className="text-default-400 h-4 w-4" />}
         type="email"
         value={email}
@@ -100,9 +102,9 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
       <Input
         isRequired
         autoComplete="new-password"
-        description="At least 8 characters"
-        label="Password"
-        placeholder="Create a password"
+        description={t("passwordDescription")}
+        label={t("password")}
+        placeholder={t("passwordPlaceholder")}
         startContent={<LockClosedIcon className="text-default-400 h-4 w-4" />}
         type="password"
         value={password}
@@ -115,8 +117,8 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
       <Input
         isRequired
         autoComplete="new-password"
-        label="Confirm Password"
-        placeholder="Confirm your password"
+        label={t("confirmPassword")}
+        placeholder={t("confirmPasswordPlaceholder")}
         startContent={<LockClosedIcon className="text-default-400 h-4 w-4" />}
         type="password"
         value={confirmPassword}
@@ -135,16 +137,16 @@ export function SignupForm({ callbackUrl = "/" }: SignupFormProps) {
         isLoading={isLoading}
         type="submit"
       >
-        Create account
+        {t("createAccount")}
       </Button>
 
       <p className="text-small text-default-500 text-center">
-        Already have an account?{" "}
+        {t("hasAccount")}{" "}
         <Link
           className="text-small"
           href={`/login${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
         >
-          Sign in
+          {t("signIn")}
         </Link>
       </p>
     </form>

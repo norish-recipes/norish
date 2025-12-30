@@ -12,6 +12,7 @@ import {
   ArrowLeftIcon,
 } from "@heroicons/react/20/solid";
 import { Button, Input } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import Filters from "../shared/filters";
 
@@ -27,6 +28,7 @@ import { useAutoHide } from "@/hooks/auto-hide";
 import { useUserContext } from "@/context/user-context";
 
 export const MobileNav = () => {
+  const t = useTranslations("navbar.mobile");
   const pathname = usePathname();
   const { mobileSearchOpen, setMobileSearchOpen } = useAppStore((s) => s);
   const { filters, setFilters } = useRecipesFiltersContext();
@@ -204,7 +206,7 @@ export const MobileNav = () => {
                 <div className="absolute inset-y-0 left-0 z-[56] flex w-[52px] items-center justify-center">
                   <Button
                     isIconOnly
-                    aria-label="Toggle search"
+                    aria-label={t("toggleSearch")}
                     className={`relative h-10 w-10 !bg-transparent !shadow-none ${
                       hasActiveSearch ? "text-primary" : "text-default-600 hover:text-foreground"
                     }`}
@@ -235,7 +237,7 @@ export const MobileNav = () => {
                       input: "text-[15px] placeholder:text-default-500 !bg-transparent",
                     }}
                     id="mobile-search-input"
-                    placeholder="Search recipes..."
+                    placeholder={t("searchPlaceholder")}
                     radius="full"
                     style={{ fontSize: "16px" }}
                     value={filters.rawInput}
@@ -251,7 +253,7 @@ export const MobileNav = () => {
             <div className="mr-2 shrink-0">
               <Button
                 isIconOnly
-                aria-label="Go back"
+                aria-label={t("goBack")}
                 className={`h-13 w-13 ${cssGlassBackdrop} text-default-600 hover:text-foreground hover:bg-default-100/70`}
                 radius="full"
                 size="md"

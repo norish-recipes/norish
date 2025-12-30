@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Calendar"
+  },
+  "navigation": {
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "prev": "Prev",
+    "next": "Next"
+  },
+  "weekdays": {
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  },
+  "timeline": {
+    "noItems": "No items",
+    "viewGroceries": "View groceries",
+    "goToRecipe": "Go to recipe",
+    "deleteItem": "Delete item",
+    "itemActions": "Item actions",
+    "viewAllergenWarning": "View allergen warning",
+    "allergyWarning": "Allergy warning:",
+    "contains": "Contains: {allergens}"
+  }
+}

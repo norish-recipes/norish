@@ -1,0 +1,44 @@
+{
+  "page": {
+    "title": "Boodschappen",
+    "addItem": "Item toevoegen",
+    "addItems": "Items toevoegen"
+  },
+  "empty": {
+    "title": "Je boodschappenlijst wacht op je",
+    "description": "Voeg items toe met de knop \"Item toevoegen\" hierboven om te beginnen."
+  },
+  "item": {
+    "unnamedItem": "Naamloos item"
+  },
+  "store": {
+    "unsorted": "Ongeordend",
+    "noItems": "Geen items in deze winkel",
+    "storeActions": "Winkelacties",
+    "markAllDone": "Markeer alles als gekocht",
+    "deleteDone": "Verwijder gekocht",
+    "done": "{count} gedaan"
+  },
+  "storeManager": {
+    "title": "Winkels beheren",
+    "addStore": "Winkel toevoegen",
+    "editStore": "Winkel bewerken",
+    "deleteStore": "Winkel verwijderen",
+    "storeName": "Winkelnaam",
+    "storeColor": "Kleur",
+    "storeIcon": "icoon",
+    "confirmDelete": "Weet je zeker dat je deze winkel wilt verwijderen?",
+    "deleteWarning": "Items in deze winkel worden verplaatst naar Ongeordend."
+  },
+  "panel": {
+    "addTitle": "Boodschap toevoegen",
+    "editTitle": "Boodschap bewerken",
+    "itemName": "boodschappen naam",
+    "itemNamePlaceholder": "bijv. Melk, Eieren, Brood...",
+    "selectStore": "Selecteer winkel",
+    "noStore": "Geen winkel",
+    "recurrence": "Herhaling",
+    "savePreference": "Onthoud winkel voor dit item",
+    "addAnother": "Voeg nog een toe"
+  }
+}

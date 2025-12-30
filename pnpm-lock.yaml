@@ -38,9 +38,6 @@ importers:
       bullmq:
         specifier: ^5.65.1
         version: 5.66.0
-      country-flag-icons:
-        specifier: ^1.6.4
-        version: 1.6.4
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -3585,9 +3582,6 @@ packages:
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
-
-  country-flag-icons@1.6.4:
-    resolution: {integrity: sha512-Z3Zi419FI889tlElMsVhCIS5eRkiLDWixr576J5DPiTe5RGxpbRi+enMpHdYVp5iK5WFjr8P/RgyIFAGhFsiFg==}
 
   cron-parser@4.9.0:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
@@ -10063,8 +10057,6 @@ snapshots:
       is-what: 5.5.0
 
   core-util-is@1.0.3: {}
-
-  country-flag-icons@1.6.4: {}
 
   cron-parser@4.9.0:
     dependencies:

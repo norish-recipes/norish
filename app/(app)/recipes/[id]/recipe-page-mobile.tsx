@@ -1,6 +1,7 @@
-import { ClockIcon, FireIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
+import { ClockIcon, FireIcon, ArrowTopRightOnSquareIcon, ArrowLeftIcon } from "@heroicons/react/20/solid";
 import { Card, CardBody, Chip, Divider, Link } from "@heroui/react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 import AuthorChip from "./components/author-chip";
 import { useRecipeContextRequired } from "./context";
@@ -27,6 +28,8 @@ export default function RecipePageMobile() {
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
+  const t = useTranslations("recipes.detail");
+  const tCard = useTranslations("recipes.card");
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -50,7 +53,7 @@ export default function RecipePageMobile() {
           />
         ) : (
           <div className="text-default-500 flex h-full w-full items-center justify-center">
-            <span className="text-base font-medium opacity-70">No image available</span>
+            <span className="text-base font-medium opacity-70">{tCard("noImage")}</span>
           </div>
         )}
 
@@ -85,8 +88,9 @@ export default function RecipePageMobile() {
           {/* Back link and Actions */}
           <div className="flex items-center justify-between">
             <div className="w-fit hover:underline">
-              <Link className="text-default-500 text-base" href="/">
-                ← Back to recipes
+              <Link className="text-default-500 flex items-center gap-1 text-base" href="/">
+                <ArrowLeftIcon className="h-4 w-4" />
+                {t("backToRecipes")}
               </Link>
             </div>
             <div className="flex-shrink-0">
@@ -103,7 +107,7 @@ export default function RecipePageMobile() {
                 href={recipe.url}
                 rel="noopener noreferrer"
                 target="_blank"
-                title="View original recipe"
+                title={t("viewOriginal")}
               >
                 <ArrowTopRightOnSquareIcon className="text-default-400 hover:text-primary inline h-4 w-4" />
               </a>
@@ -123,13 +127,13 @@ export default function RecipePageMobile() {
               {recipe.prepMinutes && (
                 <div className="flex items-center gap-1">
                   <ClockIcon className="h-4 w-4" />
-                  {formatMinutesHM(recipe.prepMinutes)} prep
+                  {formatMinutesHM(recipe.prepMinutes)} {t("prep")}
                 </div>
               )}
               {recipe.totalMinutes && recipe.totalMinutes !== 0 && (
                 <div className="flex items-center gap-1">
                   <FireIcon className="h-4 w-4" />
-                  {formatMinutesHM(recipe.totalMinutes)} total
+                  {formatMinutesHM(recipe.totalMinutes)} {t("total")}
                 </div>
               )}
             </div>
@@ -138,9 +142,9 @@ export default function RecipePageMobile() {
           {/* Tags */}
           {recipe.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {recipe.tags.map((t: { name: string }) => (
-                <Chip key={t.name} size="sm" variant="flat">
-                  {t.name}
+              {recipe.tags.map((tag: { name: string }) => (
+                <Chip key={tag.name} size="sm" variant="flat">
+                  {tag.name}
                 </Chip>
               ))}
             </div>
@@ -151,7 +155,7 @@ export default function RecipePageMobile() {
           {/* Ingredients Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Ingredients</h2>
+              <h2 className="text-lg font-semibold">{t("ingredients")}</h2>
               <div className="flex items-center gap-2">
                 <ServingsControl />
                 {recipe.systemUsed && <SystemConvertMenu />}
@@ -171,7 +175,7 @@ export default function RecipePageMobile() {
           {/* Steps Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Steps</h2>
+              <h2 className="text-lg font-semibold">{t("steps")}</h2>
               <WakeLockToggle />
             </div>
 
@@ -181,7 +185,7 @@ export default function RecipePageMobile() {
 
             {/* Rating Section */}
             <div className="bg-default-100 -mx-1 flex flex-col items-center gap-4 rounded-xl py-6">
-              <p className="text-default-600 font-medium">What did you think of this recipe?</p>
+              <p className="text-default-600 font-medium">{t("ratingPrompt")}</p>
               <StarRating
                 isLoading={isRating || isRatingLoading}
                 value={userRating ?? averageRating}

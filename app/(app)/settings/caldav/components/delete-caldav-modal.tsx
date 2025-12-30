@@ -10,6 +10,7 @@ import {
   Button,
   Switch,
 } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 interface DeleteCalDavModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ interface DeleteCalDavModalProps {
 }
 
 export default function DeleteCalDavModal({ isOpen, onClose, onConfirm }: DeleteCalDavModalProps) {
+  const t = useTranslations("settings.caldav.deleteModal");
+  const tActions = useTranslations("common.actions");
   const [deleteEvents, setDeleteEvents] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -35,17 +38,17 @@ export default function DeleteCalDavModal({ isOpen, onClose, onConfirm }: Delete
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalContent>
-        <ModalHeader>Delete CalDAV Configuration</ModalHeader>
+        <ModalHeader>{t("title")}</ModalHeader>
         <ModalBody>
           <p className="text-default-600 text-base">
-            Are you sure you want to delete your CalDAV configuration?
+            {t("confirmMessage")}
           </p>
           <div className="mt-4">
             <Switch isSelected={deleteEvents} onValueChange={setDeleteEvents}>
               <div>
-                <p className="text-base font-medium">Delete synced events</p>
+                <p className="text-base font-medium">{t("deleteEventsLabel")}</p>
                 <p className="text-default-500 text-xs">
-                  Remove all events that were created in your CalDAV calendar
+                  {t("deleteEventsDescription")}
                 </p>
               </div>
             </Switch>
@@ -53,10 +56,10 @@ export default function DeleteCalDavModal({ isOpen, onClose, onConfirm }: Delete
         </ModalBody>
         <ModalFooter>
           <Button variant="light" onPress={onClose}>
-            Cancel
+            {tActions("cancel")}
           </Button>
           <Button color="danger" isLoading={deleting} onPress={handleConfirm}>
-            Delete
+            {t("confirmButton")}
           </Button>
         </ModalFooter>
       </ModalContent>

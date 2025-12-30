@@ -15,10 +15,13 @@ import {
   ModalFooter,
 } from "@heroui/react";
 import { HomeIcon, ArrowRightIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
 
 export default function HouseholdInfoCard() {
+  const t = useTranslations("settings.household.info");
+  const tActions = useTranslations("common.actions");
   const { household, currentUserId, leaveHousehold } = useHouseholdSettingsContext();
   const [showLeaveModal, setShowLeaveModal] = useState(false);
 
@@ -47,13 +50,13 @@ export default function HouseholdInfoCard() {
         </CardHeader>
         <CardBody className="gap-4">
           <div className="flex items-center justify-between">
-            <span className="text-default-600 text-base">Your Role</span>
+            <span className="text-default-600 text-base">{t("yourRole")}</span>
             <Chip color={isAdmin ? "primary" : "default"} size="sm" variant="flat">
-              {isAdmin ? "Admin" : "Member"}
+              {isAdmin ? t("admin") : t("member")}
             </Chip>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-default-600 text-base">Members</span>
+            <span className="text-default-600 text-base">{t("members")}</span>
             <span className="text-base font-medium">{household.users.length}</span>
           </div>
           <Divider />
@@ -64,7 +67,7 @@ export default function HouseholdInfoCard() {
               variant="flat"
               onPress={() => setShowLeaveModal(true)}
             >
-              Leave Household
+              {t("leaveButton")}
             </Button>
           </div>
         </CardBody>
@@ -75,24 +78,23 @@ export default function HouseholdInfoCard() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>Leave Household</ModalHeader>
+              <ModalHeader>{t("leaveModal.title")}</ModalHeader>
               <ModalBody>
                 <p>
-                  Are you sure you want to leave{" "}
-                  <span className="font-semibold">{household.name}</span>?
+                  {t("leaveModal.confirmMessage", { name: household.name })}
                 </p>
                 {isAdmin && otherMembers.length > 0 && (
                   <p className="text-warning mt-2">
-                    You are the admin. You must transfer admin privileges before leaving.
+                    {t("leaveModal.adminWarning")}
                   </p>
                 )}
               </ModalBody>
               <ModalFooter>
                 <Button variant="flat" onPress={onClose}>
-                  Cancel
+                  {tActions("cancel")}
                 </Button>
                 <Button color="danger" onPress={handleLeaveHousehold}>
-                  Leave Household
+                  {t("leaveModal.confirmButton")}
                 </Button>
               </ModalFooter>
             </>

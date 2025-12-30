@@ -5,82 +5,47 @@ import { ShieldExclamationIcon, ExclamationTriangleIcon } from "@heroicons/react
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { useTranslations } from "next-intl";
 
 import { createClientLogger } from "@/lib/logger";
 
 const log = createClientLogger("AuthError");
 
-// Error messages mapped from BetterAuth error codes
-const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
-  // OAuth flow errors
-  state_mismatch: {
-    title: "Session Expired",
-    description: "Your sign-in session expired or the request was invalid. Please try again.",
-  },
-  invalid_state: {
-    title: "Invalid Request",
-    description: "The sign-in request was invalid. Please try again.",
-  },
-  access_denied: {
-    title: "Access Denied",
-    description: "You denied access to your account. Please try again if this was a mistake.",
-  },
-  oauth_code_verification_failed: {
-    title: "Verification Failed",
-    description: "Failed to verify your sign-in. Please try again.",
-  },
-  unable_to_get_user_info: {
-    title: "Provider Error",
-    description: "Could not get your account information from the provider. Please try again.",
-  },
-  provider_not_found: {
-    title: "Provider Not Found",
-    description: "The authentication provider is not configured.",
-  },
-  // Account linking errors
-  social_account_already_linked: {
-    title: "Account Already Linked",
-    description: "This social account is already linked to another user.",
-  },
-  account_not_found: {
-    title: "Account Not Found",
-    description: "No account found.",
-  },
-  registration_is_currently_disabled: {
-    title: "Registration Disabled",
-    description: "New registrations are currently disabled.",
-  },
-  user_not_found: {
-    title: "User Not Found",
-    description: "Your account was not found. Registration may be disabled.",
-  },
-  // Generic errors
-  internal_server_error: {
-    title: "Server Error",
-    description: "Something went wrong on our end. Please try again later.",
-  },
-  unauthorized: {
-    title: "Unauthorized",
-    description: "You are not authorized to access this resource.",
-  },
-  // Default for unknown errors
-  default: {
-    title: "Authentication Error",
-    description: "An error occurred during sign-in. Please try again.",
-  },
-};
+// List of known error codes for type-safe translation lookups
+const ERROR_CODES = [
+  "state_mismatch",
+  "invalid_state",
+  "access_denied",
+  "oauth_code_verification_failed",
+  "unable_to_get_user_info",
+  "provider_not_found",
+  "social_account_already_linked",
+  "account_not_found",
+  "registration_is_currently_disabled",
+  "user_not_found",
+  "internal_server_error",
+  "unauthorized",
+] as const;
+
+type ErrorCode = (typeof ERROR_CODES)[number];
+
+function isKnownErrorCode(code: string): code is ErrorCode {
+  return ERROR_CODES.includes(code as ErrorCode);
+}
 
 function AuthErrorContent() {
+  const t = useTranslations("auth.errors");
   const searchParams = useSearchParams();
   const error = searchParams.get("error")?.toLowerCase();
 
   log.debug({ error }, "Auth error");
-  // Get error info or use default for registration disabled
-  const errorInfo = error
-    ? ERROR_MESSAGES[error] || ERROR_MESSAGES.default
-    : ERROR_MESSAGES.default;
 
-  log.debug({ errorInfo }, "Auth error info");
+  // Get error info from translations
+  const errorKey = error && isKnownErrorCode(error) ? error : "default";
+  const title = t(`${errorKey}.title`);
+  const description = t(`${errorKey}.description`);
+
+  log.debug({ title, description }, "Auth error info");
   const isServerError = error === "internal_server_error";
 
   return (
@@ -101,18 +66,18 @@ function AuthErrorContent() {
           </div>
 
           <div className="flex flex-col items-center space-y-2">
-            <h1 className="text-2xl font-bold">{errorInfo.title}</h1>
+            <h1 className="text-2xl font-bold">{title}</h1>
             <p className="text-default-500 text-small text-center leading-relaxed">
-              {errorInfo.description}
+              {description}
             </p>
             {error && error !== "registration_disabled" && (
-              <p className="text-default-400 mt-2 text-xs">Error code: {error}</p>
+              <p className="text-default-400 mt-2 text-xs">{t("errorCode", { code: error })}</p>
             )}
           </div>
 
           <Link href="/login?logout=true">
             <Button className="mt-2 px-6" color="primary" radius="lg" variant="solid">
-              Back to Login
+              {t("backToLogin")}
             </Button>
           </Link>
         </CardBody>

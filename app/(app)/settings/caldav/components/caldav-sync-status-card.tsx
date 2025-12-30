@@ -20,10 +20,12 @@ import {
 } from "@heroui/react";
 import { ArrowPathIcon, ClockIcon, InformationCircleIcon } from "@heroicons/react/24/solid";
 import { formatDistanceToNow } from "date-fns";
+import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";
 
 export default function CalDavSyncStatusCard() {
+  const t = useTranslations("settings.caldav.syncStatus");
   const {
     syncStatuses,
     syncStatusPage,
@@ -93,7 +95,7 @@ export default function CalDavSyncStatusCard() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <ClockIcon className="text-primary h-6 w-6" />
-              <h2 className="text-lg font-semibold">Sync Status</h2>
+              <h2 className="text-lg font-semibold">{t("title")}</h2>
             </div>
             <Button
               color="primary"
@@ -102,7 +104,7 @@ export default function CalDavSyncStatusCard() {
               startContent={<ArrowPathIcon className="h-4 w-4" />}
               onPress={handleManualSync}
             >
-              Sync Now
+              {t("syncNow")}
             </Button>
           </div>
 
@@ -116,7 +118,7 @@ export default function CalDavSyncStatusCard() {
                 variant={syncStatusFilter === "synced" ? "solid" : "flat"}
                 onClick={() => handleFilterClick("synced")}
               >
-                Synced: {syncStatusSummary.synced}
+                {t("statuses.synced")}: {syncStatusSummary.synced}
               </Chip>
               <Chip
                 className="cursor-pointer transition-all"
@@ -125,7 +127,7 @@ export default function CalDavSyncStatusCard() {
                 variant={syncStatusFilter === "pending" ? "solid" : "flat"}
                 onClick={() => handleFilterClick("pending")}
               >
-                Pending: {syncStatusSummary.pending}
+                {t("statuses.pending")}: {syncStatusSummary.pending}
               </Chip>
               <Chip
                 className="cursor-pointer transition-all"
@@ -134,7 +136,7 @@ export default function CalDavSyncStatusCard() {
                 variant={syncStatusFilter === "failed" ? "solid" : "flat"}
                 onClick={() => handleFilterClick("failed")}
               >
-                Failed: {syncStatusSummary.failed}
+                {t("statuses.failed")}: {syncStatusSummary.failed}
               </Chip>
               <Chip
                 className="cursor-pointer transition-all"
@@ -143,7 +145,7 @@ export default function CalDavSyncStatusCard() {
                 variant={syncStatusFilter === "removed" ? "solid" : "flat"}
                 onClick={() => handleFilterClick("removed")}
               >
-                Removed: {syncStatusSummary.removed}
+                {t("statuses.removed")}: {syncStatusSummary.removed}
               </Chip>
             </div>
 
@@ -159,14 +161,14 @@ export default function CalDavSyncStatusCard() {
                     setSyncStatusPage(1);
                   }}
                 >
-                  Clear filter
+                  {t("clearFilter")}
                 </Button>
               ) : (
-                <span className="text-default-400 text-base">Click a badge to filter</span>
+                <span className="text-default-400 text-base">{t("clickToFilter")}</span>
               )}
               {syncStatusTotal > 0 && (
                 <p className="text-default-500 text-base">
-                  Showing {startIndex}-{endIndex} of {syncStatusTotal} items
+                  {t("showingItems", { start: startIndex, end: endIndex, total: syncStatusTotal })}
                 </p>
               )}
             </div>
@@ -182,17 +184,17 @@ export default function CalDavSyncStatusCard() {
           }}
         >
           <TableHeader>
-            <TableColumn>ITEM</TableColumn>
-            <TableColumn>TYPE</TableColumn>
-            <TableColumn>DATE</TableColumn>
-            <TableColumn>MEAL</TableColumn>
-            <TableColumn>STATUS</TableColumn>
-            <TableColumn>LAST SYNC</TableColumn>
-            <TableColumn>ERROR</TableColumn>
+            <TableColumn>{t("tableHeaders.item")}</TableColumn>
+            <TableColumn>{t("tableHeaders.type")}</TableColumn>
+            <TableColumn>{t("tableHeaders.date")}</TableColumn>
+            <TableColumn>{t("tableHeaders.meal")}</TableColumn>
+            <TableColumn>{t("tableHeaders.status")}</TableColumn>
+            <TableColumn>{t("tableHeaders.lastSync")}</TableColumn>
+            <TableColumn>{t("tableHeaders.error")}</TableColumn>
           </TableHeader>
           <TableBody
             emptyContent={
-              syncStatusFilter ? `No ${syncStatusFilter} items found` : "No sync records found"
+              syncStatusFilter ? t("emptyFiltered", { status: syncStatusFilter }) : t("emptyDefault")
             }
           >
             {syncStatuses.map((status) => (
@@ -235,7 +237,7 @@ export default function CalDavSyncStatusCard() {
                       </PopoverTrigger>
                       <PopoverContent className="max-w-xs">
                         <div className="px-1 py-2">
-                          <div className="text-small mb-1 font-bold">Error Details</div>
+                          <div className="text-small mb-1 font-bold">{t("errorDetails")}</div>
                           <div className="text-tiny text-danger">{status.errorMessage}</div>
                         </div>
                       </PopoverContent>

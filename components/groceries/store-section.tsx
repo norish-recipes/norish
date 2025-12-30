@@ -4,8 +4,14 @@ import type { GroceryDto, StoreDto, StoreColor, RecurringGroceryDto } from "@/ty
 
 import { memo, useState, useCallback, useRef, useEffect } from "react";
 import { motion, Reorder } from "motion/react";
-import { ChevronDownIcon, EllipsisVerticalIcon, CheckIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  EllipsisVerticalIcon,
+  CheckIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { GroceryItem } from "./grocery-item";
 import { DraggableGroceryStoreItem } from "./draggable-grocery-store-item";
@@ -16,12 +22,12 @@ function sortGroceries(groceries: GroceryDto[], transitioningIds: Set<string>): 
   return [...groceries].sort((a, b) => {
     const aEffectiveDone = a.isDone && !transitioningIds.has(a.id);
     const bEffectiveDone = b.isDone && !transitioningIds.has(b.id);
-    
+
     // Separate active and done items
     if (aEffectiveDone !== bEffectiveDone) {
       return aEffectiveDone ? 1 : -1;
     }
-    
+
     return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
   });
 }
@@ -67,7 +73,8 @@ function StoreSectionComponent({
   const dragConstraintsRef = useRef<HTMLDivElement>(null);
   const [isHoveringForDrop, setIsHoveringForDrop] = useState(false);
   const [hasDraggingItem, setHasDraggingItem] = useState(false);
-  
+  const t = useTranslations("groceries.store");
+
   // Track items that are transitioning (just toggled) - delay their reorder
   const [transitioningIds, setTransitioningIds] = useState<Set<string>>(new Set());
   const timeoutRefs = useRef<Map<string, NodeJS.Timeout>>(new Map());
@@ -163,7 +170,7 @@ function StoreSectionComponent({
       // Filter out any items that don't belong to this store
       const storeId = store?.id ?? null;
       const validItems = newOrder.filter((grocery) => grocery.storeId === storeId);
-      
+
       if (validItems.length === 0) return;
 
       // Create updates with new sort order
@@ -171,7 +178,7 @@ function StoreSectionComponent({
         id: grocery.id,
         sortOrder: index,
       }));
-      
+
       // Update optimistically (visual only, backend called on drag end)
       onReorderInStore(updates, false);
     },
@@ -192,113 +199,137 @@ function StoreSectionComponent({
       style={{ zIndex: hasDraggingItem ? 50 : 1 }}
       transition={{ duration: 0.15 }}
     >
-      <div className={`rounded-xl transition-all duration-200 ${isDraggingAny ? 'overflow-visible' : 'overflow-hidden'}`}>
-      {/* Header */}
-      <div className={`flex w-full items-center gap-3 px-4 py-3 ${colorClasses.bgLight}`} data-store-drop-target={store?.id ?? 'unsorted'}>
-        <button
-          className="flex min-w-0 flex-1 items-center gap-3 transition-colors hover:opacity-90"
-          onClick={() => setIsExpanded(!isExpanded)}
+      <div
+        className={`rounded-xl transition-all duration-200 ${isDraggingAny ? "overflow-visible" : "overflow-hidden"}`}
+      >
+        {/* Header */}
+        <div
+          className={`flex w-full items-center gap-3 px-4 py-3 ${colorClasses.bgLight}`}
+          data-store-drop-target={store?.id ?? "unsorted"}
         >
-          {/* Icon */}
-          <div className={`shrink-0 rounded-full p-1.5 ${colorClasses.bg}`}>
-            {store ? (
-              <DynamicHeroIcon className="h-4 w-4 text-white" iconName={store.icon} />
-            ) : (
-              <div className="h-4 w-4" />
-            )}
-          </div>
-
-          {/* Name and count */}
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="truncate font-semibold">{store?.name ?? "Unsorted"}</span>
-            <span className="text-default-400 shrink-0 text-sm">
-              {activeCount > 0 && <span>{activeCount}</span>}
-              {doneCount > 0 && (
-                <span className="text-default-300 ml-1">
-                  ({doneCount} done)
-                </span>
+          <button
+            className="flex min-w-0 flex-1 items-center gap-3 transition-colors hover:opacity-90"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            {/* Icon */}
+            <div className={`shrink-0 rounded-full p-1.5 ${colorClasses.bg}`}>
+              {store ? (
+                <DynamicHeroIcon className="h-4 w-4 text-white" iconName={store.icon} />
+              ) : (
+                <div className="h-4 w-4" />
               )}
-            </span>
-          </div>
+            </div>
 
-          {/* Expand/collapse chevron */}
-          <motion.div
-            animate={{ rotate: isExpanded ? 180 : 0 }}
-            className="text-default-400 shrink-0"
-            transition={{ duration: 0.2 }}
-          >
-            <ChevronDownIcon className="h-5 w-5" />
-          </motion.div>
-        </button>
+            {/* Name and count */}
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="truncate font-semibold">{store?.name ?? t("unsorted")}</span>
+              <span className="text-default-400 shrink-0 text-sm">
+                {activeCount > 0 && <span>{activeCount}</span>}
+                {doneCount > 0 && (
+                  <span className="text-default-300 ml-1">({t("done", { count: doneCount })})</span>
+                )}
+              </span>
+            </div>
 
-        {/* Bulk actions dropdown */}
-        {groceries.length > 0 && (
-          <Dropdown>
-            <DropdownTrigger>
-              <Button
-                isIconOnly
-                className="shrink-0"
-                size="sm"
-                variant="light"
-              >
-                <EllipsisVerticalIcon className="h-5 w-5" />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Store actions">
-              <DropdownItem
-                key="mark-done"
-                startContent={<CheckIcon className="h-4 w-4" />}
-                onPress={() => onMarkAllDone?.()}
-              >
-                Mark all done
-              </DropdownItem>
-              <DropdownItem
-                key="delete-done"
-                className="text-danger"
-                color="danger"
-                startContent={<TrashIcon className="h-4 w-4" />}
-                onPress={() => onDeleteDone?.()}
-              >
-                Delete done
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        )}
-      </div>
+            {/* Expand/collapse chevron */}
+            <motion.div
+              animate={{ rotate: isExpanded ? 180 : 0 }}
+              className="text-default-400 shrink-0"
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDownIcon className="h-5 w-5" />
+            </motion.div>
+          </button>
 
-      {/* Items */}
-      {isExpanded && (
-        <div ref={dragConstraintsRef} className="divide-default-100 divide-y">
-          {/* Active (not done) items - sortable */}
-          <Reorder.Group
-            axis="y"
-            className="divide-default-100 divide-y"
-            values={sortedGroceries.filter((g) => !g.isDone && !transitioningIds.has(g.id))}
-            onReorder={handleReorder}
-          >
+          {/* Bulk actions dropdown */}
+          {groceries.length > 0 && (
+            <Dropdown>
+              <DropdownTrigger>
+                <Button isIconOnly className="shrink-0" size="sm" variant="light">
+                  <EllipsisVerticalIcon className="h-5 w-5" />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label={t("storeActions")}>
+                <DropdownItem
+                  key="mark-done"
+                  startContent={<CheckIcon className="h-4 w-4" />}
+                  onPress={() => onMarkAllDone?.()}
+                >
+                  {t("markAllDone")}
+                </DropdownItem>
+                <DropdownItem
+                  key="delete-done"
+                  className="text-danger"
+                  color="danger"
+                  startContent={<TrashIcon className="h-4 w-4" />}
+                  onPress={() => onDeleteDone?.()}
+                >
+                  {t("deleteDone")}
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          )}
+        </div>
+
+        {/* Items */}
+        {isExpanded && (
+          <div ref={dragConstraintsRef} className="divide-default-100 divide-y">
+            {/* Active (not done) items - sortable */}
+            <Reorder.Group
+              axis="y"
+              className="divide-default-100 divide-y"
+              values={sortedGroceries.filter((g) => !g.isDone && !transitioningIds.has(g.id))}
+              onReorder={handleReorder}
+            >
+              {sortedGroceries
+                .filter((g) => !g.isDone && !transitioningIds.has(g.id))
+                .map((grocery, index, array) => {
+                  const recurringGrocery = grocery.recurringGroceryId
+                    ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
+                    : null;
+                  const isFirst = index === 0;
+                  const isLast = index === array.length - 1;
+                  return (
+                    <DraggableGroceryStoreItem
+                      key={grocery.id}
+                      grocery={grocery}
+                      onDragEnd={(pointerPosition: { x: number; y: number }) => {
+                        setHasDraggingItem(false);
+                        onDraggingInSection?.(false);
+                        onDragEnd?.(pointerPosition);
+                      }}
+                      onDragStart={(groceryId: string) => {
+                        setHasDraggingItem(true);
+                        onDraggingInSection?.(true);
+                        onDragStart?.(groceryId);
+                      }}
+                    >
+                      <GroceryItem
+                        grocery={grocery}
+                        recurringGrocery={recurringGrocery}
+                        store={store}
+                        onDelete={onDelete}
+                        onEdit={onEdit}
+                        onToggle={handleToggle}
+                        isFirst={isFirst}
+                        isLast={isLast}
+                      />
+                    </DraggableGroceryStoreItem>
+                  );
+                })}
+            </Reorder.Group>
+
+            {/* Done items - not sortable, just rendered */}
             {sortedGroceries
-              .filter((g) => !g.isDone && !transitioningIds.has(g.id))
+              .filter((g) => g.isDone || transitioningIds.has(g.id))
               .map((grocery, index, array) => {
                 const recurringGrocery = grocery.recurringGroceryId
-                  ? recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null
+                  ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
                   : null;
                 const isFirst = index === 0;
                 const isLast = index === array.length - 1;
                 return (
-                  <DraggableGroceryStoreItem
-                    key={grocery.id}
-                    grocery={grocery}
-                    onDragEnd={(pointerPosition: { x: number; y: number }) => {
-                      setHasDraggingItem(false);
-                      onDraggingInSection?.(false);
-                      onDragEnd?.(pointerPosition);
-                    }}
-                    onDragStart={(groceryId: string) => {
-                      setHasDraggingItem(true);
-                      onDraggingInSection?.(true);
-                      onDragStart?.(groceryId);
-                    }}
-                  >
+                  <div key={grocery.id}>
                     <GroceryItem
                       grocery={grocery}
                       recurringGrocery={recurringGrocery}
@@ -309,43 +340,15 @@ function StoreSectionComponent({
                       isFirst={isFirst}
                       isLast={isLast}
                     />
-                  </DraggableGroceryStoreItem>
+                  </div>
                 );
               })}
-          </Reorder.Group>
 
-          {/* Done items - not sortable, just rendered */}
-          {sortedGroceries
-            .filter((g) => g.isDone || transitioningIds.has(g.id))
-            .map((grocery, index, array) => {
-              const recurringGrocery = grocery.recurringGroceryId
-                ? recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null
-                : null;
-              const isFirst = index === 0;
-              const isLast = index === array.length - 1;
-              return (
-                <div key={grocery.id}>
-                  <GroceryItem
-                    grocery={grocery}
-                    recurringGrocery={recurringGrocery}
-                    store={store}
-                    onDelete={onDelete}
-                    onEdit={onEdit}
-                    onToggle={handleToggle}
-                    isFirst={isFirst}
-                    isLast={isLast}
-                  />
-                </div>
-              );
-            })}
-
-          {groceries.length === 0 && (
-            <div className="text-default-400 px-4 py-6 text-center text-sm">
-              No items in this store
-            </div>
-          )}
-        </div>
-      )}
+            {groceries.length === 0 && (
+              <div className="text-default-400 px-4 py-6 text-center text-sm">{t("noItems")}</div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Border overlay when hovering for drop */}

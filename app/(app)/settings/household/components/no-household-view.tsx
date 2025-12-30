@@ -3,10 +3,12 @@
 import { useState, FormEvent } from "react";
 import { Card, CardBody, CardHeader, Input, Button } from "@heroui/react";
 import { HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
 
 export default function NoHouseholdView() {
+  const t = useTranslations("settings.household");
   const { createHousehold, joinHousehold } = useHouseholdSettingsContext();
   const [householdName, setHouseholdName] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -31,7 +33,7 @@ export default function NoHouseholdView() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <h1 className="text-2xl font-bold">Household Settings</h1>
+      <h1 className="text-2xl font-bold">{t("pageTitle")}</h1>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Create Household */}
@@ -39,24 +41,24 @@ export default function NoHouseholdView() {
           <CardHeader>
             <h2 className="flex items-center gap-2 text-lg font-semibold">
               <HomeIcon className="h-5 w-5" />
-              Create Household
+              {t("create.title")}
             </h2>
           </CardHeader>
           <CardBody>
             <form className="flex flex-col gap-4" onSubmit={handleCreateHousehold}>
               <p className="text-default-600 text-base">
-                Create a new household to share recipes and groceries with family or friends.
+                {t("create.description")}
               </p>
               <Input
                 isRequired
-                label="Household Name"
-                placeholder="e.g., Smith Family"
+                label={t("create.nameLabel")}
+                placeholder={t("create.namePlaceholder")}
                 value={householdName}
                 onValueChange={setHouseholdName}
               />
               <div className="flex justify-end">
                 <Button color="primary" isLoading={isCreating} type="submit">
-                  Create Household
+                  {t("create.submitButton")}
                 </Button>
               </div>
             </form>
@@ -68,25 +70,25 @@ export default function NoHouseholdView() {
           <CardHeader>
             <h2 className="flex items-center gap-2 text-lg font-semibold">
               <UserGroupIcon className="h-5 w-5" />
-              Join Household
+              {t("join.title")}
             </h2>
           </CardHeader>
           <CardBody>
             <form className="flex flex-col gap-4" onSubmit={handleJoinHousehold}>
               <p className="text-default-600 text-base">
-                Enter a join code to join an existing household.
+                {t("join.description")}
               </p>
               <Input
                 isRequired
-                label="Join Code"
+                label={t("join.codeLabel")}
                 maxLength={8}
-                placeholder="8-character code"
+                placeholder={t("join.codePlaceholder")}
                 value={joinCode}
                 onValueChange={setJoinCode}
               />
               <div className="flex justify-end">
                 <Button color="primary" isLoading={isJoining} type="submit">
-                  Join Household
+                  {t("join.submitButton")}
                 </Button>
               </div>
             </form>

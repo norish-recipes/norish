@@ -2,8 +2,11 @@
 
 import { Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
 import { QuestionMarkCircleIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 export default function SmartInputHelp() {
+  const t = useTranslations("common.formatting");
+
   return (
     <Popover showArrow placement="top">
       <PopoverTrigger>
@@ -17,23 +20,19 @@ export default function SmartInputHelp() {
       </PopoverTrigger>
       <PopoverContent className="max-w-xs">
         <div className="px-1 py-2">
-          <p className="text-foreground mb-2 text-base font-medium">Formatting Tips</p>
+          <p className="text-foreground mb-2 text-base font-medium">{t("title")}</p>
           <ul className="text-default-600 space-y-2 text-base">
             <li className="flex items-start gap-2">
               <code className="bg-default-100 text-primary rounded px-1.5 py-0.5 font-mono text-xs">
                 #
               </code>
-              <span>
-                Start a line with <strong>#</strong> for a heading
-              </span>
+              <span dangerouslySetInnerHTML={{ __html: t.raw("heading") }} />
             </li>
             <li className="flex items-start gap-2">
               <code className="bg-default-100 text-primary rounded px-1.5 py-0.5 font-mono text-xs">
                 /
               </code>
-              <span>
-                Type <strong>/recipe name</strong> to link to another recipe
-              </span>
+              <span dangerouslySetInnerHTML={{ __html: t.raw("recipeLink") }} />
             </li>
           </ul>
         </div>

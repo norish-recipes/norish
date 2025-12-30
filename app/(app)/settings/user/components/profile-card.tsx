@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button, Avatar } from "@heroui/react";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 import { useRef } from "react";
+import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
 
 export default function ProfileCard() {
+  const t = useTranslations("settings.user.profile");
   const { user, updateName, updateImage } = useUserSettingsContext();
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -66,7 +68,7 @@ export default function ProfileCard() {
       <CardHeader>
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <UserCircleIcon className="h-5 w-5" />
-          Profile
+          {t("title")}
         </h2>
       </CardHeader>
       <CardBody className="gap-4">
@@ -88,11 +90,11 @@ export default function ProfileCard() {
             />
           </div>
           <div className="flex flex-1 flex-col gap-2">
-            <Input label="Name" placeholder="Your name" value={name} onValueChange={setName} />
-            <p className="text-default-500 text-xs">Click your avatar to change picture</p>
+            <Input label={t("nameLabel")} placeholder={t("namePlaceholder")} value={name} onValueChange={setName} />
+            <p className="text-default-500 text-xs">{t("avatarHint")}</p>
           </div>
         </div>
-        <Input isDisabled isReadOnly label="Email" value={user?.email || ""} />
+        <Input isDisabled isReadOnly label={t("emailLabel")} value={user?.email || ""} />
         <div className="flex justify-end">
           <Button
             color="primary"
@@ -100,7 +102,7 @@ export default function ProfileCard() {
             isLoading={saving}
             onPress={handleSaveProfile}
           >
-            Save Changes
+            {t("saveChanges")}
           </Button>
         </div>
       </CardBody>

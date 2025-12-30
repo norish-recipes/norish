@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardBody, CardHeader, Button } from "@heroui/react";
 import { ExclamationTriangleIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
 
 import TagInput from "@/components/shared/tag-input";
 
 export default function AllergiesCard() {
+  const t = useTranslations("settings.user.allergies");
   const { allergies, updateAllergies, isUpdatingAllergies } = useUserSettingsContext();
   const [localAllergies, setLocalAllergies] = useState<string[]>([]);
 
@@ -32,17 +34,15 @@ export default function AllergiesCard() {
       <CardHeader>
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <ExclamationTriangleIcon className="h-5 w-5" />
-          Allergies
+          {t("title")}
         </h2>
       </CardHeader>
       <CardBody className="gap-4">
         <p className="text-default-500 text-base">
-          Add your food allergies to receive warnings when planning recipes that contain allergens.
-          This information is used to warn you when a planned recipe contains ingredients that match
-          your allergies.
+          {t("description")}
         </p>
         <TagInput
-          placeholder="Type allergies (e.g., gluten, nuts, dairy)..."
+          placeholder={t("placeholder")}
           value={localAllergies}
           onChange={setLocalAllergies}
         />
@@ -54,7 +54,7 @@ export default function AllergiesCard() {
             startContent={<CheckIcon className="h-4 w-4" />}
             onPress={handleSave}
           >
-            Save Allergies
+            {t("saveButton")}
           </Button>
         </div>
       </CardBody>

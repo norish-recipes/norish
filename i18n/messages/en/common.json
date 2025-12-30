@@ -1,0 +1,123 @@
+{
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "add": "Add",
+    "remove": "Remove",
+    "close": "Close",
+    "apply": "Apply",
+    "reset": "Reset",
+    "clear": "Clear",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "retry": "Retry",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "import": "Import",
+    "aiImport": "AI Import",
+    "importWithAI": "Import with AI",
+    "goHome": "Go Home"
+  },
+  "status": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "deleting": "Deleting...",
+    "error": "Error",
+    "success": "Success",
+    "noResults": "No results found",
+    "changing": "Changing…"
+  },
+  "filters": {
+    "title": "Filters",
+    "search": "Search",
+    "sort": "Sort",
+    "mode": "Mode",
+    "modeAll": "All",
+    "modeAny": "Any",
+    "tags": "Tags",
+    "searchTags": "Search tags",
+    "favoritesAndRating": "Favorites & Rating",
+    "favorites": "Favorites",
+    "sortByTitle": "Title",
+    "sortByDate": "Date",
+    "clearFilters": "Clear filters"
+  },
+  "time": {
+    "minutes": "min",
+    "hours": "hr"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidUrl": "Please enter a valid URL"
+  },
+  "slots": {
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snack": "Snack",
+    "chooseSlot": "Choose slot"
+  },
+  "connection": {
+    "connecting": "Connecting to Norish...",
+    "syncing": "Syncing please wait...",
+    "checkInternet": "Please check your internet connection",
+    "gettingUpdates": "Just a moment while we get the latest updates"
+  },
+  "language": {
+    "title": "Language"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Page Not Found",
+    "message": "Oops! Nora couldn't find what you're looking for.\nThe page may have been moved or doesn't exist."
+  },
+  "import": {
+    "url": {
+      "title": "Import recipe",
+      "label": "Recipe URL",
+      "placeholder": "https://example.com/your-recipe",
+      "failed": "Failed to import recipe",
+      "failedWithAI": "Failed to import recipe with AI"
+    },
+    "paste": {
+      "title": "Import from paste",
+      "label": "Recipe text or JSON-LD",
+      "placeholder": "Paste a recipe (free text) or JSON-LD here...",
+      "characters": "{count} / {max} characters",
+      "tooLarge": "Paste too large",
+      "maxCharacters": "Maximum {max} characters allowed",
+      "importing": "Importing recipe...",
+      "importingWithAI": "Importing recipe with AI...",
+      "inProgress": "Import in progress, please wait...",
+      "failed": "Import failed"
+    },
+    "image": {
+      "title": "Import from Image",
+      "dropzone": "Drop images here or click to browse",
+      "paste": "to paste",
+      "formats": "Supports JPG, PNG, WebP. Max 10MB per file.",
+      "invalidType": "Invalid file type",
+      "notSupported": "{name} is not a supported image format",
+      "tooLarge": "File too large",
+      "exceeds": "{name} exceeds the 10MB limit",
+      "tooMany": "Too many files",
+      "maxFiles": "Maximum {max} files allowed",
+      "importing": "Importing recipe from images...",
+      "analyzing": "Analyzing your images, please wait...",
+      "failed": "Import failed",
+      "selectedCount": "{count} images selected - they will be combined as one recipe"
+    }
+  },
+  "formatting": {
+    "title": "Formatting Tips",
+    "heading": "Start a line with <strong>#</strong> for a heading",
+    "recipeLink": "Type <strong>/recipe name</strong> to link to another recipe"
+  }
+}

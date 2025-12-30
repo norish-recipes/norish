@@ -1,0 +1,44 @@
+{
+  "page": {
+    "title": "Groceries",
+    "addItem": "Add Item",
+    "addItems": "Add items"
+  },
+  "empty": {
+    "title": "Your grocery list awaits",
+    "description": "Add items using the \"Add Item\" button above to get started."
+  },
+  "item": {
+    "unnamedItem": "Unnamed item"
+  },
+  "store": {
+    "unsorted": "Unsorted",
+    "noItems": "No items in this store",
+    "storeActions": "Store actions",
+    "markAllDone": "Mark all done",
+    "deleteDone": "Delete done",
+    "done": "{count} done"
+  },
+  "storeManager": {
+    "title": "Manage Stores",
+    "addStore": "Add Store",
+    "editStore": "Edit Store",
+    "deleteStore": "Delete Store",
+    "storeName": "Store name",
+    "storeColor": "Color",
+    "storeIcon": "Icon",
+    "confirmDelete": "Are you sure you want to delete this store?",
+    "deleteWarning": "Items in this store will be moved to Unsorted."
+  },
+  "panel": {
+    "addTitle": "Add Grocery",
+    "editTitle": "Edit Grocery",
+    "itemName": "Item name",
+    "itemNamePlaceholder": "e.g., Milk, Eggs, Bread...",
+    "selectStore": "Select store",
+    "noStore": "No store",
+    "recurrence": "Recurrence",
+    "savePreference": "Remember store for this item",
+    "addAnother": "Add another"
+  }
+}

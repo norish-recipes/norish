@@ -3,6 +3,7 @@
 import type { ProviderInfo } from "@/types";
 
 import { Divider } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { AuthCard } from "../../components/auth-card";
 
@@ -23,6 +24,7 @@ export function LoginClient({
   autoRedirect = false,
   registrationEnabled = false,
 }: LoginClientProps) {
+  const t = useTranslations("auth.login");
   // Separate credential and OAuth providers
   const credentialProvider = providers.find((p) => p.type === "credential");
   const oauthProviders = providers.filter((p) => p.type !== "credential");
@@ -35,18 +37,18 @@ export function LoginClient({
   const hasCredential = !!credentialProvider;
   const hasOAuth = oauthProviders.length > 0;
 
-  return (
+return (
     <AuthCard
       footer={
         hasOAuth &&
         !hasCredential && (
           <p className="text-small text-default-500 mt-6 text-center">
-            You&apos;ll be securely redirected to your sign-in provider.
+            {t("redirectMessage")}
           </p>
         )
       }
-      subtitle="Nourish every moment."
-      title="Sign in to"
+      subtitle={t("subtitle")}
+      title={t("title")}
     >
       {/* Email/Password form */}
       {hasCredential && (
@@ -57,7 +59,7 @@ export function LoginClient({
       {hasCredential && hasOAuth && (
         <div className="flex items-center gap-4">
           <Divider className="flex-1" />
-          <span className="text-small text-default-400">or</span>
+          <span className="text-small text-default-400">{t("divider")}</span>
           <Divider className="flex-1" />
         </div>
       )}
@@ -80,8 +82,8 @@ export function LoginClient({
       {/* No providers message */}
       {!hasCredential && !hasOAuth && (
         <div className="py-4 text-center">
-          <p className="text-small text-danger">No authentication providers configured.</p>
-          <p className="text-tiny text-default-500 mt-2">Please contact your administrator.</p>
+          <p className="text-small text-danger">{t("noProviders.title")}</p>
+          <p className="text-tiny text-default-500 mt-2">{t("noProviders.contactAdmin")}</p>
         </div>
       )}
     </AuthCard>

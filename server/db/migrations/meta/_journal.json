@@ -148,6 +148,13 @@
       "when": 1767105866596,
       "tag": "0020_perpetual_lady_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1767125005458,
+      "tag": "0021_quick_natasha_romanoff",
+      "breakpoints": true
     }
   ]
 }

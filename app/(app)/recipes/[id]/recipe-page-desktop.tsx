@@ -6,10 +6,12 @@ import {
   FireIcon,
   ClockIcon,
   ArrowTopRightOnSquareIcon,
+  ArrowLeftIcon,
 } from "@heroicons/react/20/solid";
 import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import AuthorChip from "./components/author-chip";
 import { useRecipeContextRequired } from "./context";
@@ -38,6 +40,8 @@ export default function RecipePageDesktop() {
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
+  const t = useTranslations("recipes.detail");
+  const tCard = useTranslations("recipes.card");
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -47,8 +51,9 @@ export default function RecipePageDesktop() {
     <div className="hidden flex-col space-y-6 px-6 pb-10 md:flex">
       {/* Back link */}
       <div className="w-fit">
-        <Link className="text-default-500 text-base hover:underline" href="/">
-          ← Back to recipes
+        <Link className="text-default-500 flex items-center gap-1 text-base hover:underline" href="/">
+          <ArrowLeftIcon className="h-4 w-4" />
+          {t("backToRecipes")}
         </Link>
       </div>
 
@@ -70,7 +75,7 @@ export default function RecipePageDesktop() {
                         href={recipe.url}
                         rel="noopener noreferrer"
                         target="_blank"
-                        title="View original recipe"
+                        title={t("viewOriginal")}
                       >
                         <ArrowTopRightOnSquareIcon className="text-default-400 hover:text-primary inline h-4 w-4" />
                       </a>
@@ -116,9 +121,9 @@ export default function RecipePageDesktop() {
               {/* Tags */}
               {recipe.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {recipe.tags.map((t: { name: string }) => (
-                    <Chip key={t.name} size="sm" variant="flat">
-                      {t.name}
+                  {recipe.tags.map((tag: { name: string }) => (
+                    <Chip key={tag.name} size="sm" variant="flat">
+                      {tag.name}
                     </Chip>
                   ))}
                 </div>
@@ -130,7 +135,7 @@ export default function RecipePageDesktop() {
           <Card className="bg-content1 rounded-2xl shadow-md">
             <CardBody className="space-y-4 p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Ingredients</h2>
+                <h2 className="text-lg font-semibold">{t("ingredients")}</h2>
                 <div className="flex items-center gap-2">
                   {recipe.servings && <ServingsControl />}
                   {recipe.systemUsed && <SystemConvertMenu />}
@@ -165,7 +170,7 @@ export default function RecipePageDesktop() {
               />
             ) : (
               <div className="text-default-500 flex h-full w-full items-center justify-center">
-                <span className="text-base font-medium opacity-70">No image available</span>
+                <span className="text-base font-medium opacity-70">{tCard("noImage")}</span>
               </div>
             )}
 
@@ -190,7 +195,7 @@ export default function RecipePageDesktop() {
           {/* Steps Card (below image in right column) */}
           <Card className="bg-content1 rounded-2xl shadow-md">
             <CardHeader className="flex items-center justify-between px-6 pt-6">
-              <h2 className="text-lg font-semibold">Steps</h2>
+              <h2 className="text-lg font-semibold">{t("steps")}</h2>
               <WakeLockToggle />
             </CardHeader>
             <CardBody className="px-3 pt-2 pb-0">
@@ -199,7 +204,7 @@ export default function RecipePageDesktop() {
 
             {/* Rating Section */}
             <div className="bg-default-100 mx-3 mt-4 mb-3 flex flex-col items-center gap-4 rounded-xl py-6">
-              <p className="text-default-600 font-medium">What did you think of this recipe?</p>
+              <p className="text-default-600 font-medium">{t("ratingPrompt")}</p>
               <StarRating
                 isLoading={isRating || isRatingLoading}
                 value={userRating ?? averageRating}

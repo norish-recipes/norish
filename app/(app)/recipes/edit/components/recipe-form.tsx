@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Input, Button, Kbd } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { PhotoIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import { FullRecipeDTO, MeasurementSystem } from "@/types";
 import { createClientLogger } from "@/lib/logger";
@@ -36,6 +37,9 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
+  const t = useTranslations("recipes.form");
+  const tValidation = useTranslations("recipes.validation");
+  const tCommon = useTranslations("common.actions");
 
   // Use hooks for recipe images and ID reservation
   const { uploadImage, deleteImage, isUploadingImage } = useRecipeImages();
@@ -192,29 +196,29 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     setDragActive(false);
   };
 
-  const validate = useCallback((): boolean => {
+const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!name.trim()) {
-      newErrors.name = "Recipe name is required";
+      newErrors.name = tValidation("nameRequired");
     }
 
     if (ingredients.length === 0) {
-      newErrors.ingredients = "At least one ingredient is required";
+      newErrors.ingredients = tValidation("ingredientsRequired");
     }
 
     if (steps.length === 0) {
-      newErrors.steps = "At least one step is required";
+      newErrors.steps = tValidation("stepsRequired");
     }
 
     if (servings < 1) {
-      newErrors.servings = "Servings must be at least 1";
+      newErrors.servings = tValidation("servingsMin");
     }
 
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
-  }, [name, ingredients, steps, servings]);
+  }, [name, ingredients, steps, servings, tValidation]);
 
   const handleSubmit = useCallback(async () => {
     if (!validate()) return;
@@ -311,11 +315,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     []
   );
 
-  // Show loading state while reserving recipe ID for create mode
+// Show loading state while reserving recipe ID for create mode
   if (isLoadingRecipeId) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-default-500">Initializing form...</div>
+        <div className="text-default-500">{t("initializingForm")}</div>
       </div>
     );
   }
@@ -327,12 +331,12 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         <div className="mb-2 flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-              {mode === "create" ? "Create Recipe" : "Edit Recipe"}
+              {mode === "create" ? t("createTitle") : t("editTitle")}
             </h1>
             <p className="text-default-500 mt-2">
               {mode === "create"
-                ? "Add a new recipe to your collection"
-                : "Update your recipe details"}
+                ? t("createDescription")
+                : t("editDescription")}
             </p>
           </div>
         </div>
@@ -345,13 +349,13 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       </div>
 
       <form className="space-y-10">
-        {/* 1. Photo */}
+{/* 1. Photo */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               1
             </span>
-            Photo
+            {t("photo")}
           </h2>
           <div className="ml-0 md:ml-9">
             {image ? (
@@ -364,7 +368,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                   variant="shadow"
                   onPress={() => setImage("")}
                 >
-                  Remove
+                  {t("remove")}
                 </Button>
               </div>
             ) : (
@@ -387,14 +391,14 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                   <PhotoIcon className="text-default-400 mx-auto h-16 w-16" />
                   <div className="mt-4 flex flex-col items-center gap-2">
                     <span className="text-primary text-base font-semibold">
-                      {isUploadingImage ? "Uploading..." : "Click to upload or drag and drop"}
+                      {isUploadingImage ? t("uploading") : t("clickToUpload")}
                     </span>
                     {!isUploadingImage && (
                       <p className="text-default-500 flex items-center gap-1.5 text-xs">
-                        <Kbd keys={["ctrl"]}>V</Kbd> to paste
+                        <Kbd keys={["ctrl"]}>V</Kbd> {t("pasteToUpload")}
                       </p>
                     )}
-                    <p className="text-default-400 text-xs">PNG, JPG, WEBP up to 5MB</p>
+                    <p className="text-default-400 text-xs">{t("imageFormats")}</p>
                   </div>
                   <input
                     ref={imageInputRef}
@@ -411,13 +415,13 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 2. Basic Information */}
+{/* 2. Basic Information */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               2
             </span>
-            Basic Information
+            {t("basicInfo")}
           </h2>
           <div className="ml-0 space-y-4 md:ml-9">
             <Input
@@ -428,8 +432,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               }}
               errorMessage={errors.name}
               isInvalid={!!errors.name}
-              label="Recipe Name"
-              placeholder="e.g., Chocolate Chip Cookies"
+              label={t("recipeName")}
+              placeholder={t("recipeNamePlaceholder")}
               size="lg"
               value={name}
               onValueChange={setName}
@@ -437,12 +441,12 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
 
             <div>
               <div className="mb-1.5 flex items-center gap-1">
-                <span className="text-foreground text-sm font-medium">Description</span>
+                <span className="text-foreground text-sm font-medium">{t("description")}</span>
                 <SmartInputHelp />
               </div>
               <SmartTextInput
                 minRows={2}
-                placeholder="A brief description of what makes this recipe special..."
+                placeholder={t("descriptionPlaceholder")}
                 value={description}
                 onValueChange={setDescription}
               />
@@ -450,19 +454,18 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 3. Ingredients */}
+{/* 3. Ingredients */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               3
             </span>
-            Ingredients
+            {t("ingredients")}
             <span className="text-danger-500 text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
             <p className="text-default-500 mb-3 flex items-center gap-1 text-base">
-              Type ingredients like &quot;2 cups flour&quot; - we&apos;ll automatically parse
-              amounts and units.
+              {t("ingredientsHelp")}
               <SmartInputHelp />
             </p>
             <IngredientInput
@@ -476,18 +479,18 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 4. Instructions */}
+{/* 4. Instructions */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               4
             </span>
-            Instructions
+            {t("instructions")}
             <span className="text-danger-500 text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
             <p className="text-default-500 mb-3 flex items-center gap-1 text-base">
-              Write clear step-by-step instructions. Press Enter to move to the next step.
+              {t("instructionsHelp")}
               <SmartInputHelp />
             </p>
             <StepInput
@@ -500,37 +503,36 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 5. Tags */}
+{/* 5. Tags */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               5
             </span>
-            Tags
+            {t("tags")}
           </h2>
           <div className="ml-0 md:ml-9">
             <p className="text-default-500 mb-3 text-base">
-              Type tags and click suggestions to add. Selected tags are blue, new tags have a dashed
-              border.
+              {t("tagsHelp")}
             </p>
             <TagInput value={tags} onChange={setTags} />
           </div>
         </section>
 
-        {/* 6. Nutrition */}
+{/* 6. Nutrition */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               6
             </span>
-            Nutrition
-            <span className="text-default-400 text-sm font-normal">(per serving, optional)</span>
+            {t("nutrition")}
+            <span className="text-default-400 text-sm font-normal">{t("nutritionPerServing")}</span>
           </h2>
           <div className="ml-0 md:ml-9">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <Input
                 classNames={{ label: "font-medium text-base" }}
-                label="Calories"
+                label={t("calories")}
                 min={0}
                 placeholder="—"
                 type="number"
@@ -539,7 +541,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               />
               <Input
                 classNames={{ label: "font-medium text-base" }}
-                label="Fat (g)"
+                label={t("fat")}
                 min={0}
                 placeholder="—"
                 step={0.1}
@@ -549,7 +551,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               />
               <Input
                 classNames={{ label: "font-medium text-base" }}
-                label="Carbs (g)"
+                label={t("carbs")}
                 min={0}
                 placeholder="—"
                 step={0.1}
@@ -559,7 +561,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               />
               <Input
                 classNames={{ label: "font-medium text-base" }}
-                label="Protein (g)"
+                label={t("protein")}
                 min={0}
                 placeholder="—"
                 step={0.1}
@@ -571,13 +573,13 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 7. Details */}
+{/* 7. Details */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               7
             </span>
-            Details
+            {t("details")}
           </h2>
           <div className="ml-0 space-y-4 md:ml-9">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -587,7 +589,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                 }}
                 errorMessage={errors.servings}
                 isInvalid={!!errors.servings}
-                label="Servings"
+                label={t("servings")}
                 min={1}
                 placeholder="1"
                 type="number"
@@ -600,7 +602,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                 className="text-default-700 mb-3 block text-base font-medium"
                 id="cooking-times-label"
               >
-                Cooking Times <span className="text-default-400 font-normal">(optional)</span>
+                {t("cookingTimes")} <span className="text-default-400 font-normal">{t("optional")}</span>
               </span>
               <TimeInputs
                 cookMinutes={cookMinutes}
@@ -612,21 +614,21 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 8. Additional Information */}
+{/* 8. Additional Information */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               8
             </span>
-            Additional Information
+            {t("additionalInfo")}
           </h2>
           <div className="ml-0 space-y-4 md:ml-9">
             <Input
               classNames={{
                 label: "font-medium text-base",
               }}
-              label="Source URL"
-              placeholder="https://example.com/recipe"
+              label={t("sourceUrl")}
+              placeholder={t("sourceUrlPlaceholder")}
               value={url}
               onValueChange={setUrl}
             />
@@ -645,19 +647,17 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                 }}
               />
               <p className="text-default-400 mt-2 text-xs">
-                We auto-detect the measurement system from your ingredients, but you can override it
-                here.
-                {mode === "edit" &&
-                  " Note: This updates the system label but does not convert units. Use the Convert action after saving."}
+                {t("measurementSystemNote")}
+                {mode === "edit" && t("measurementSystemEditNote")}
               </p>
             </div>
           </div>
         </section>
 
-        {/* Submit */}
+{/* Submit */}
         <div className="flex justify-end gap-3 border-t pt-6">
           <Button isDisabled={isSubmitting} size="lg" variant="flat" onPress={() => router.back()}>
-            Cancel
+            {tCommon("cancel")}
           </Button>
           <Button
             color="primary"
@@ -666,7 +666,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             size="lg"
             onPress={handleSubmit}
           >
-            {mode === "create" ? "Create Recipe" : "Save Changes"}
+            {mode === "create" ? t("createRecipe") : t("saveChanges")}
           </Button>
         </div>
       </form>

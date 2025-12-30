@@ -5,6 +5,7 @@ import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@/types";
 import { memo } from "react";
 import { Checkbox } from "@heroui/react";
 import { Bars2Icon } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
 
@@ -27,10 +28,14 @@ function GroceryItemComponent({
   isFirst = false,
   isLast = false,
 }: GroceryItemProps) {
-  const roundedClass = isFirst && isLast ? 'rounded-lg' : isFirst ? 'rounded-t-lg' : isLast ? 'rounded-b-lg' : '';
-  
+  const roundedClass =
+    isFirst && isLast ? "rounded-lg" : isFirst ? "rounded-t-lg" : isLast ? "rounded-b-lg" : "";
+  const t = useTranslations("groceries.item");
+
   return (
-    <div className={`bg-content1 flex items-center gap-3 px-4 py-3 ${roundedClass} ${recurringGrocery ? "min-h-[72px]" : "min-h-14"}`}>
+    <div
+      className={`bg-content1 flex items-center gap-3 px-4 py-3 ${roundedClass} ${recurringGrocery ? "min-h-[72px]" : "min-h-14"}`}
+    >
       {/* Drag handle indicator */}
       <div className="text-default-300 -ml-1">
         <Bars2Icon className="h-5 w-5" />
@@ -66,16 +71,13 @@ function GroceryItemComponent({
               grocery.isDone ? "text-default-400 line-through" : "text-foreground"
             }`}
           >
-            {grocery.name || "Unnamed item"}
+            {grocery.name || t("unnamedItem")}
           </span>
         </div>
 
         {/* Recurring pill underneath */}
         {recurringGrocery && (
-          <RecurrencePill
-            className="mt-0.5"
-            recurringGrocery={recurringGrocery}
-          />
+          <RecurrencePill className="mt-0.5" recurringGrocery={recurringGrocery} />
         )}
       </button>
     </div>

@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button, useDisclosure } from "@heroui/react";
 import { Cog6ToothIcon, ArrowPathIcon, CheckIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
 
 import RestartConfirmationModal from "./restart-confirmation-modal";
 
 export default function SystemCard() {
+  const t = useTranslations("settings.admin.system");
   const { schedulerCleanupMonths, updateSchedulerMonths, restartServer } =
     useAdminSettingsContext();
 
@@ -41,16 +43,16 @@ export default function SystemCard() {
       <CardHeader>
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <Cog6ToothIcon className="h-5 w-5" />
-          System Settings
+          {t("title")}
         </h2>
       </CardHeader>
       <CardBody className="gap-6">
         {/* Scheduler Settings */}
         <div className="flex flex-col gap-4">
-          <h3 className="font-medium">Cleanup Scheduler</h3>
+          <h3 className="font-medium">{t("cleanup.title")}</h3>
           <Input
             className="max-w-xs"
-            label="Cleanup Months"
+            label={t("cleanup.label")}
             max={24}
             min={1}
             type="number"
@@ -58,7 +60,7 @@ export default function SystemCard() {
             onValueChange={(v) => setMonths(parseInt(v) || 3)}
           />
           <p className="text-default-500 text-xs">
-            Delete planned meals older than this many months
+            {t("cleanup.description")}
           </p>
           <div className="flex justify-end">
             <Button
@@ -67,18 +69,18 @@ export default function SystemCard() {
               startContent={<CheckIcon className="h-5 w-5" />}
               onPress={handleSaveScheduler}
             >
-              Save
+              {t("cleanup.save")}
             </Button>
           </div>
         </div>
 
         {/* Server Restart */}
         <div className="border-divider flex flex-col gap-4 border-t pt-4">
-          <h3 className="font-medium">Server Management</h3>
+          <h3 className="font-medium">{t("server.title")}</h3>
           <div className="flex flex-col gap-2">
-            <span className="text-base">Restart Server</span>
+            <span className="text-base">{t("server.restartLabel")}</span>
             <p className="text-default-500 text-xs">
-              Apply configuration changes that require a restart
+              {t("server.restartDescription")}
             </p>
             <div className="flex justify-end">
               <Button
@@ -87,7 +89,7 @@ export default function SystemCard() {
                 variant="flat"
                 onPress={restartModal.onOpen}
               >
-                Restart Server
+                {t("server.restartButton")}
               </Button>
             </div>
           </div>

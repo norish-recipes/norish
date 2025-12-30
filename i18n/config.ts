@@ -4,29 +4,21 @@
  * Central configuration for internationalization.
  * To add a new language:
  * 1. Add the locale code to the `locales` array
- * 2. Add the country code mapping in `localeToCountry`
- * 3. Add the display name in `localeNames`
- * 4. Create translation file in `i18n/messages/{locale}.json`
+ * 2. Add the display name in `localeNames`
+ * 3. Create translation files in `i18n/messages/{locale}/`
  */
 
-export const locales = ["en"] as const;
+export const locales = ["en", "nl"] as const;
 export const defaultLocale = "en" as const;
 
 export type Locale = (typeof locales)[number];
-
-/**
- * Map locale to ISO 3166-1 alpha-2 country code for flag icons
- * Used by country-flag-icons package
- */
-export const localeToCountry: Record<Locale, string> = {
-  en: "GB",
-};
 
 /**
  * Human-readable display names for each locale
  */
 export const localeNames: Record<Locale, string> = {
   en: "English",
+  nl: "Nederlands",
 };
 
 /**
@@ -54,6 +46,9 @@ export const dateFormats: Record<Locale, Intl.DateTimeFormatOptions> = {
   en: {
     dateStyle: "medium",
   },
+  nl: {
+    dateStyle: "medium",
+  },
 };
 
 /**
@@ -61,6 +56,9 @@ export const dateFormats: Record<Locale, Intl.DateTimeFormatOptions> = {
  */
 export const numberFormats: Record<Locale, Intl.NumberFormatOptions> = {
   en: {
+    maximumFractionDigits: 2,
+  },
+  nl: {
     maximumFractionDigits: 2,
   },
 };

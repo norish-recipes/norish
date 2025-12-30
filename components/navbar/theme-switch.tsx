@@ -3,6 +3,7 @@
 import { FC, useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { MoonIcon, SunIcon, ComputerDesktopIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 // Hook to get theme state and toggle function
 export function useThemeSwitch() {
@@ -31,14 +32,16 @@ export function useThemeSwitch() {
       <SunIcon className="size-4" />
     );
 
-  const label = theme === "system" ? "System default" : isDark ? "Dark mode" : "Light mode";
-
-  return { mounted, icon, label, cycleTheme };
+  // Return raw theme for label lookup
+  return { mounted, icon, theme, isDark, cycleTheme };
 }
 
 // Renders the content for inside the DropdownItem - includes icon for proper alignment
 export const ThemeSwitch: FC = () => {
-  const { mounted, icon, label, cycleTheme } = useThemeSwitch();
+  const t = useTranslations("navbar.theme");
+  const { mounted, icon, theme, isDark, cycleTheme } = useThemeSwitch();
+
+  const label = theme === "system" ? t("system") : isDark ? t("dark") : t("light");
 
   if (!mounted) {
     return (
@@ -47,8 +50,8 @@ export const ThemeSwitch: FC = () => {
           <SunIcon className="size-4" />
         </span>
         <div className="flex flex-col items-start opacity-50">
-          <span className="text-base leading-tight font-medium">Theme</span>
-          <span className="text-default-500 text-xs leading-tight">Loading…</span>
+          <span className="text-base leading-tight font-medium">{t("title")}</span>
+          <span className="text-default-500 text-xs leading-tight">{t("loading")}</span>
         </div>
       </div>
     );
@@ -69,7 +72,7 @@ export const ThemeSwitch: FC = () => {
     >
       <span className="text-default-500">{icon}</span>
       <div className="flex flex-col items-start">
-        <span className="text-base leading-tight font-medium">Theme</span>
+        <span className="text-base leading-tight font-medium">{t("title")}</span>
         <span className="text-default-500 text-xs leading-tight">{label}</span>
       </div>
     </div>

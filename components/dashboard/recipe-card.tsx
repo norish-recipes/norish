@@ -4,6 +4,7 @@ import { ShoppingBagIcon, CalendarDaysIcon, TrashIcon } from "@heroicons/react/2
 import { Card, CardBody, Image } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
 import DoubleTapContainer from "../shared/double-tap-container";
@@ -31,6 +32,7 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [groceriesOpen, setGroceriesOpen] = useState(false);
+  const t = useTranslations("recipes.card");
 
   const isFavorite = checkFavorite(recipe.id);
   const averageRating = recipe.averageRating ?? null;
@@ -72,14 +74,14 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
         icon: ShoppingBagIcon,
         color: "blue",
         onPress: () => setGroceriesOpen(true),
-        label: "View groceries",
+        label: t("viewGroceries"),
       },
       {
         key: "calendar",
         icon: CalendarDaysIcon,
         color: "yellow",
         onPress: () => setCalendarOpen(true),
-        label: "Add to calendar",
+        label: t("addToCalendar"),
       },
     ];
 
@@ -90,12 +92,12 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
         color: "danger",
         onPress: deleteRecipeButton,
         primary: true,
-        label: "Delete recipe",
+        label: t("deleteRecipe"),
       });
     }
 
     return baseActions;
-  }, [showDeleteAction, deleteRecipeButton]);
+  }, [showDeleteAction, deleteRecipeButton, t]);
 
   return (
     <>
@@ -145,7 +147,7 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
                     <div
                       className={`bg-default-200 text-default-500 flex h-full w-full items-center justify-center transition-all duration-300 ease-in-out ${open ? "scale-100" : "group-hover/row:scale-105"} `}
                     >
-                      <span className="text-sm font-medium opacity-70">No image available</span>
+                      <span className="text-sm font-medium opacity-70">{t("noImage")}</span>
                     </div>
                   )}
                 </div>
@@ -201,12 +203,12 @@ export default function RecipeCard({ recipe }: { recipe: RecipeDashboardDTO }) {
       <MiniCalendar open={calendarOpen} recipeId={recipe.id} onOpenChange={setCalendarOpen} />
 
       {/* Groceries panel */}
-      <MiniGroceries 
-        open={groceriesOpen} 
-        recipeId={recipe.id} 
+      <MiniGroceries
+        open={groceriesOpen}
+        recipeId={recipe.id}
         initialServings={recipe.servings || 1}
         originalServings={recipe.servings || 1}
-        onOpenChange={setGroceriesOpen} 
+        onOpenChange={setGroceriesOpen}
       />
     </>
   );

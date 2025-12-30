@@ -5,6 +5,7 @@ import type { RecurrencePattern } from "@/types/recurrence";
 
 import { Button } from "@heroui/react";
 import { PlusIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import { useGroceriesContext, useGroceriesUIContext } from "../context";
 import { useStoresContext } from "../stores-context";
@@ -40,6 +41,8 @@ export function GroceriesPage() {
     editingGrocery,
     setEditingGrocery,
   } = useGroceriesUIContext();
+
+  const t = useTranslations("groceries.page");
 
   const handleToggle = (id: string, isDone: boolean) => {
     toggleGroceries([id], isDone);
@@ -112,8 +115,8 @@ export function GroceriesPage() {
         {/* Header */}
         {/* Mobile: Sticky with backdrop blur */}
         {/* Desktop: Static with inline layout */}
-        <div className="bg-background/80 sticky top-0 z-10 flex items-center justify-between px-4 pb-3 pt-12 backdrop-blur-lg md:static md:bg-transparent md:px-0 md:pb-0 md:pt-0 md:backdrop-blur-none">
-          <h1 className="text-2xl font-bold">Groceries</h1>
+<div className="bg-background/80 sticky top-0 z-10 flex items-center justify-between px-4 pb-3 pt-12 backdrop-blur-lg md:static md:bg-transparent md:px-0 md:pb-0 md:pt-0 md:backdrop-blur-none">
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
           <div className="flex items-center gap-2">
             {/* Desktop add button: Full text with icon */}
             <Button
@@ -122,7 +125,7 @@ export function GroceriesPage() {
               startContent={<PlusIcon className="h-5 w-5" />}
               onPress={() => setAddGroceryPanelOpen(true)}
             >
-              Add Item
+              {t("addItem")}
             </Button>
             {/* Settings button: Different sizes and variants */}
             <Button
@@ -155,7 +158,7 @@ export function GroceriesPage() {
           />
         </div>
 
-        {/* Mobile: Centered floating add button at bottom */}
+{/* Mobile: Centered floating add button at bottom */}
         <div className="fixed bottom-24 left-0 right-0 z-20 flex justify-center pb-safe md:hidden">
           <Button
             className="shadow-lg px-6"
@@ -164,7 +167,7 @@ export function GroceriesPage() {
             startContent={<PlusIcon className="h-5 w-5" />}
             onPress={() => setAddGroceryPanelOpen(true)}
           >
-            Add items
+            {t("addItems")}
           </Button>
         </div>
       </div>

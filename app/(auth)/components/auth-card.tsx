@@ -6,6 +6,7 @@ import { Card, CardBody, Divider } from "@heroui/react";
 import Image from "next/image";
 
 import logo from "@/public/norish-logo.png";
+import { AuthLanguageSelector } from "@/components/shared/auth-language-selector";
 
 interface AuthCardProps {
   title: string;
@@ -19,6 +20,11 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
     <div className="flex min-h-full w-full flex-col items-center justify-center md:max-w-md">
       <Card className="w-full">
         <CardBody className="flex flex-col gap-6 p-8">
+          {/* Language selector - top right */}
+          <div className="absolute top-2 right-2">
+            <AuthLanguageSelector />
+          </div>
+
           {/* Header */}
           <div className="flex flex-col items-center gap-2 text-center">
             <h1 className="flex items-center justify-center gap-2 text-2xl font-bold">

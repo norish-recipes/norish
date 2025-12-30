@@ -2,12 +2,16 @@
 
 import { FunnelIcon } from "@heroicons/react/16/solid";
 import { Button, Card, CardBody } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 interface NoRecipeResultsProps {
   onClear: () => void;
 }
 
 export default function NoRecipeResults({ onClear }: NoRecipeResultsProps) {
+  const t = useTranslations("recipes.empty");
+  const tCommon = useTranslations("common.filters");
+
   return (
     <div className="flex flex-col items-center justify-center px-4 py-16">
       <Card className="bg-content1/80 shadow-large w-full max-w-2xl backdrop-blur-xl">
@@ -17,12 +21,12 @@ export default function NoRecipeResults({ onClear }: NoRecipeResultsProps) {
           </div>
 
           <div className="space-y-1">
-            <h3 className="text-base font-semibold">No recipes found</h3>
-            <p className="text-default-500">Try adjusting or clearing your filters.</p>
+            <h3 className="text-base font-semibold">{t("noResults")}</h3>
+            <p className="text-default-500">{t("noResultsHint")}</p>
           </div>
 
           <Button color="primary" radius="full" variant="solid" onPress={onClear}>
-            Clear filters
+            {tCommon("clearFilters")}
           </Button>
         </CardBody>
       </Card>

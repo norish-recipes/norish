@@ -10,6 +10,7 @@ import {
   Spinner,
 } from "@heroui/react";
 import { ArrowsRightLeftIcon } from "@heroicons/react/20/solid";
+import { useTranslations } from "next-intl";
 
 import { useRecipeContextRequired } from "../context";
 
@@ -27,6 +28,7 @@ type ConversionOption = {
 export default function SystemConvertMenu() {
   const { recipe, convertingTo, startConversion } = useRecipeContextRequired();
   const { isAIEnabled } = usePermissionsContext();
+  const t = useTranslations("recipes.convert");
 
   const availableSystems = useMemo(
     () => Array.from(new Set(recipe.recipeIngredients.map((ri) => ri.systemUsed))),
@@ -42,16 +44,16 @@ export default function SystemConvertMenu() {
 
     // Add metric option if available (has data) or AI is enabled
     if (!metricRequiresAI || isAIEnabled) {
-      options.push({ key: "metric", label: "Convert to Metric", requiresAI: metricRequiresAI });
+      options.push({ key: "metric", label: t("toMetric"), requiresAI: metricRequiresAI });
     }
 
     // Add US option if available (has data) or AI is enabled
     if (!usRequiresAI || isAIEnabled) {
-      options.push({ key: "us", label: "Convert to US", requiresAI: usRequiresAI });
+      options.push({ key: "us", label: t("toUS"), requiresAI: usRequiresAI });
     }
 
     return options;
-  }, [availableSystems, isAIEnabled]);
+  }, [availableSystems, isAIEnabled, t]);
 
   // If no conversion options available, don't show the menu
   if (conversionOptions.length === 0) {
@@ -86,8 +88,8 @@ export default function SystemConvertMenu() {
         </Button>
       </DropdownTrigger>
 
-      <DropdownMenu
-        aria-label="Convert measurement system"
+<DropdownMenu
+        aria-label={t("ariaLabel")}
         items={conversionOptions}
         selectedKeys={[currentSystem]}
         selectionMode="single"

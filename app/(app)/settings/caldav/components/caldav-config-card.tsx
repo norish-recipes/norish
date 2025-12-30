@@ -10,6 +10,7 @@ import {
   EyeSlashIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";
 
@@ -17,6 +18,7 @@ import CalDavConfigSummary from "./caldav-config-summary";
 import CalDavConfigEditModal from "./caldav-config-edit-modal";
 
 export default function CalDavConfigCard() {
+  const t = useTranslations("settings.caldav.setup");
   const { config, saveConfig, testConnection } = useCalDavSettingsContext();
   const {
     isOpen: isEditModalOpen,
@@ -117,9 +119,9 @@ export default function CalDavConfigCard() {
         <div className="flex items-center gap-3">
           <ServerIcon className="text-primary h-6 w-6" />
           <div>
-            <h2 className="text-lg font-semibold">Setup CalDAV Sync</h2>
+            <h2 className="text-lg font-semibold">{t("title")}</h2>
             <p className="text-default-500 mt-1 text-base">
-              Connect your CalDAV-compatible calendar to automatically sync your meal plans
+              {t("description")}
             </p>
           </div>
         </div>
@@ -131,9 +133,9 @@ export default function CalDavConfigCard() {
           <div className="flex gap-3">
             <InformationCircleIcon className="text-primary mt-0.5 h-5 w-5 flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-primary mb-2 text-base font-medium">Getting Started with CalDAV</p>
+              <p className="text-primary mb-2 text-base font-medium">{t("gettingStarted")}</p>
               <p className="text-default-600 mb-2 text-xs">
-                You&apos;ll need a CalDAV-compatible calendar service. Popular providers include:
+                {t("providerDescription")}
               </p>
               <ul className="text-default-600 ml-4 list-disc space-y-1 text-xs">
                 <li>
@@ -179,9 +181,9 @@ export default function CalDavConfigCard() {
         {/* Setup Form */}
         <Input
           isRequired
-          description="Base URL of your CalDAV server (e.g., https://dav.example.com)"
-          label="Server URL"
-          placeholder="https://dav.example.com"
+          description={t("serverUrlDescription")}
+          label={t("serverUrlLabel")}
+          placeholder={t("serverUrlPlaceholder")}
           value={serverUrl}
           onValueChange={setServerUrl}
         />
@@ -189,8 +191,8 @@ export default function CalDavConfigCard() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Input
             isRequired
-            label="Username"
-            placeholder="username"
+            label={t("usernameLabel")}
+            placeholder={t("usernamePlaceholder")}
             value={username}
             onValueChange={setUsername}
           />
@@ -209,8 +211,8 @@ export default function CalDavConfigCard() {
                 )}
               </button>
             }
-            label="Password"
-            placeholder="••••••••"
+            label={t("passwordLabel")}
+            placeholder={t("passwordPlaceholder")}
             type={showPassword ? "text" : "password"}
             value={password}
             onValueChange={setPassword}
@@ -219,10 +221,10 @@ export default function CalDavConfigCard() {
 
         {/* Calendar Selection - always visible, disabled until calendars fetched */}
         <Select
-          description={calendars.length === 0 ? "Test connection to load available calendars" : "Select which calendar to sync meal plans with"}
+          description={calendars.length === 0 ? t("calendarDescriptionDisabled") : t("calendarDescription")}
           isDisabled={calendars.length === 0}
-          label="Calendar"
-          placeholder={calendars.length === 0 ? "Test connection first" : "Select a calendar"}
+          label={t("calendarLabel")}
+          placeholder={calendars.length === 0 ? t("calendarPlaceholderDisabled") : t("calendarPlaceholder")}
           selectedKeys={calendarUrl ? [calendarUrl] : []}
           onSelectionChange={(keys) => {
             const selected = Array.from(keys)[0] as string;
@@ -236,32 +238,32 @@ export default function CalDavConfigCard() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
-            description="Format: HH:MM-HH:MM"
-            label="Breakfast Time"
+            description={t("timeFormat")}
+            label={t("breakfastTime")}
             placeholder="07:00-08:00"
             size="sm"
             value={breakfastTime}
             onValueChange={setBreakfastTime}
           />
           <Input
-            description="Format: HH:MM-HH:MM"
-            label="Lunch Time"
+            description={t("timeFormat")}
+            label={t("lunchTime")}
             placeholder="12:00-13:00"
             size="sm"
             value={lunchTime}
             onValueChange={setLunchTime}
           />
           <Input
-            description="Format: HH:MM-HH:MM"
-            label="Dinner Time"
+            description={t("timeFormat")}
+            label={t("dinnerTime")}
             placeholder="18:00-19:00"
             size="sm"
             value={dinnerTime}
             onValueChange={setDinnerTime}
           />
           <Input
-            description="Format: HH:MM-HH:MM"
-            label="Snack Time"
+            description={t("timeFormat")}
+            label={t("snackTime")}
             placeholder="15:00-16:00"
             size="sm"
             value={snackTime}
@@ -286,7 +288,7 @@ export default function CalDavConfigCard() {
             variant="bordered"
             onPress={handleTestConnection}
           >
-            Test Connection
+            {t("testConnection")}
           </Button>
           <Button
             color="primary"
@@ -294,7 +296,7 @@ export default function CalDavConfigCard() {
             isLoading={saving}
             onPress={handleInitialSetup}
           >
-            Save Configuration
+            {t("saveConfiguration")}
           </Button>
         </div>
       </CardBody>

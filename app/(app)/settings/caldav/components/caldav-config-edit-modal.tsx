@@ -18,6 +18,7 @@ import {
   SelectItem,
 } from "@heroui/react";
 import { ServerIcon } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";
 
@@ -29,6 +30,8 @@ interface CalDavConfigEditModalProps {
 }
 
 export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigEditModalProps) {
+  const t = useTranslations("settings.caldav.setup");
+  const tConfig = useTranslations("settings.caldav.config");
   const { config, saveConfig, testConnection, getCaldavPassword } = useCalDavSettingsContext();
 
   const [serverUrl, setServerUrl] = useState("");
@@ -190,23 +193,23 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
       <ModalContent>
         <ModalHeader className="flex items-center gap-2">
           <ServerIcon className="h-5 w-5" />
-          Edit CalDAV Configuration
+          {tConfig("editTitle")}
         </ModalHeader>
         <ModalBody>
           <div className="flex flex-col gap-4">
             <Input
               isRequired
-              description="Base URL of your CalDAV server (e.g., https://dav.example.com)"
-              label="Server URL"
-              placeholder="https://dav.example.com"
+              description={t("serverUrlDescription")}
+              label={t("serverUrlLabel")}
+              placeholder={t("serverUrlPlaceholder")}
               value={serverUrl}
               onValueChange={setServerUrl}
             />
 
             <Input
               isRequired
-              label="Username"
-              placeholder="username"
+              label={t("usernameLabel")}
+              placeholder={t("usernamePlaceholder")}
               value={username}
               onValueChange={setUsername}
             />
@@ -215,8 +218,8 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
             <SecretInput
               isRequired
               isConfigured={!!config}
-              label="Password"
-              placeholder="Enter password"
+              label={t("passwordLabel")}
+              placeholder={t("passwordPlaceholder")}
               value={password}
               onReveal={handleRevealPassword}
               onValueChange={setPassword}
@@ -231,10 +234,10 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
 
             {/* Calendar Selection - always visible, disabled until calendars fetched */}
             <Select
-              description={calendars.length === 0 ? "Test connection to load available calendars" : "Select which calendar to sync meal plans with"}
+              description={calendars.length === 0 ? t("calendarDescriptionDisabled") : t("calendarDescription")}
               isDisabled={calendars.length === 0}
-              label="Calendar"
-              placeholder={calendars.length === 0 ? "Test connection first" : "Select a calendar"}
+              label={t("calendarLabel")}
+              placeholder={calendars.length === 0 ? t("calendarPlaceholderDisabled") : t("calendarPlaceholder")}
               selectedKeys={calendarUrl ? [calendarUrl] : []}
               onSelectionChange={(keys) => {
                 const selected = Array.from(keys)[0] as string;
@@ -250,17 +253,17 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
             <Accordion>
               <AccordionItem
                 key="advanced"
-                aria-label="Advanced Settings"
-                title="Advanced Settings"
+                aria-label={tConfig("advancedSettings")}
+                title={tConfig("advancedSettings")}
               >
                 <div className="flex flex-col gap-4 pb-4">
-                  <p className="text-default-500 text-xs">Timezone: {timezone}</p>
+                  <p className="text-default-500 text-xs">{tConfig("timezone", { timezone })}</p>
 
                   <Input
-                    description="Format: HH:MM-HH:MM"
-                    errorMessage={timeErrors.breakfast}
+                    description={t("timeFormat")}
+                    errorMessage={timeErrors.breakfast ? t("timeFormatError") : undefined}
                     isInvalid={!!timeErrors.breakfast}
-                    label="Breakfast Time"
+                    label={t("breakfastTime")}
                     placeholder="07:00-08:00"
                     size="sm"
                     value={breakfastTime}
@@ -271,10 +274,10 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                   />
 
                   <Input
-                    description="Format: HH:MM-HH:MM"
-                    errorMessage={timeErrors.lunch}
+                    description={t("timeFormat")}
+                    errorMessage={timeErrors.lunch ? t("timeFormatError") : undefined}
                     isInvalid={!!timeErrors.lunch}
-                    label="Lunch Time"
+                    label={t("lunchTime")}
                     placeholder="12:00-13:00"
                     size="sm"
                     value={lunchTime}
@@ -285,10 +288,10 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                   />
 
                   <Input
-                    description="Format: HH:MM-HH:MM"
-                    errorMessage={timeErrors.dinner}
+                    description={t("timeFormat")}
+                    errorMessage={timeErrors.dinner ? t("timeFormatError") : undefined}
                     isInvalid={!!timeErrors.dinner}
-                    label="Dinner Time"
+                    label={t("dinnerTime")}
                     placeholder="18:00-19:00"
                     size="sm"
                     value={dinnerTime}
@@ -299,10 +302,10 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
                   />
 
                   <Input
-                    description="Format: HH:MM-HH:MM"
-                    errorMessage={timeErrors.snack}
+                    description={t("timeFormat")}
+                    errorMessage={timeErrors.snack ? t("timeFormatError") : undefined}
                     isInvalid={!!timeErrors.snack}
-                    label="Snack Time"
+                    label={t("snackTime")}
                     placeholder="15:00-16:00"
                     size="sm"
                     value={snackTime}
@@ -323,7 +326,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
             variant="bordered"
             onPress={handleTestConnection}
           >
-            Test Connection
+            {t("testConnection")}
           </Button>
           <Button
             color="primary"
@@ -331,7 +334,7 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
             isLoading={saving}
             onPress={handleSave}
           >
-            Save Changes
+            {tConfig("saveChanges")}
           </Button>
         </ModalFooter>
       </ModalContent>
