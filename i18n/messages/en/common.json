@@ -23,7 +23,11 @@
     "import": "Import",
     "aiImport": "AI Import",
     "importWithAI": "Import with AI",
-    "goHome": "Go Home"
+    "goHome": "Go Home",
+    "test": "Test",
+    "format": "Format",
+    "restoreDefaults": "Restore Defaults",
+    "saveChanges": "Save Changes"
   },
   "status": {
     "loading": "Loading...",

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Textarea, Button, Chip } from "@heroui/react";
 import { ArrowPathIcon, CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 interface JsonEditorProps {
   value: unknown;
@@ -21,6 +22,8 @@ export default function JsonEditor({
   description,
   disabled = false,
 }: JsonEditorProps) {
+  const t = useTranslations("settings.admin.jsonEditor");
+  const tActions = useTranslations("common.actions");
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -44,7 +47,7 @@ export default function JsonEditor({
       JSON.parse(newText);
       setError(null);
     } catch (_e) {
-      setError("Invalid JSON format");
+      setError(t("invalidJson"));
     }
   }, []);
 
@@ -61,7 +64,7 @@ export default function JsonEditor({
         setError(result.error);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save");
+      setError(e instanceof Error ? e.message : t("failedToSave"));
     } finally {
       setSaving(false);
     }
@@ -78,11 +81,11 @@ export default function JsonEditor({
         setError(result.error);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to restore defaults");
+      setError(e instanceof Error ? e.message : t("failedToRestore"));
     } finally {
       setSaving(false);
     }
-  }, [onRestoreDefaults]);
+  }, [onRestoreDefaults, t]);
 
   const handleFormat = useCallback(() => {
     try {
@@ -100,9 +103,9 @@ export default function JsonEditor({
       {label && (
         <div className="flex items-center gap-2">
           <span className="font-medium">{label}</span>
-          {isDirty && (
+        {isDirty && (
             <Chip color="warning" size="sm" variant="flat">
-              Unsaved changes
+              {t("unsavedChanges")}
             </Chip>
           )}
         </div>
@@ -118,7 +121,7 @@ export default function JsonEditor({
         isDisabled={disabled || saving}
         maxRows={20}
         minRows={8}
-        placeholder="Enter JSON configuration..."
+        placeholder={t("placeholder")}
         value={text}
         onValueChange={handleTextChange}
       />
@@ -137,7 +140,7 @@ export default function JsonEditor({
           variant="flat"
           onPress={handleFormat}
         >
-          Format
+          {tActions("format")}
         </Button>
 
         {onRestoreDefaults && (
@@ -148,7 +151,7 @@ export default function JsonEditor({
             variant="flat"
             onPress={handleRestoreDefaults}
           >
-            Restore Defaults
+            {tActions("restoreDefaults")}
           </Button>
         )}
 
@@ -159,7 +162,7 @@ export default function JsonEditor({
           startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}
         >
-          Save
+          {tActions("save")}
         </Button>
       </div>
     </div>

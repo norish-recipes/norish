@@ -251,8 +251,7 @@
       "cleanup": {
         "title": "Cleanup Scheduler",
         "label": "Cleanup Months",
-        "description": "Delete planned meals older than this many months",
-        "save": "Save"
+        "description": "Delete planned meals older than this many months"
       },
       "server": {
         "title": "Server Management",
@@ -312,9 +311,6 @@
       },
       "form": {
         "testSuccess": "Connection successful",
-        "remove": "Remove",
-        "test": "Test",
-        "save": "Save",
         "removeTitle": "Remove {provider}",
         "removeConfirm": "Are you sure you want to remove this provider?"
       },
@@ -357,6 +353,78 @@
         "title": "Prompts",
         "subtitle": "Customize AI instructions for recipe processing"
       }
+    },
+    "aiConfig": {
+      "enableAI": "Enable AI Features",
+      "enableAIDescription": "Use AI to extract recipes from unstructured content",
+      "configureWarning": "Configure the AI provider settings below to enable AI features.",
+      "provider": "AI Provider",
+      "providers": {
+        "openai": "OpenAI",
+        "perplexity": "Perplexity",
+        "ollama": "Ollama (Local)",
+        "lmStudio": "LM Studio (Local)",
+        "genericOpenai": "Generic OpenAI-compatible"
+      },
+      "endpointUrl": "Endpoint URL",
+      "model": "Model",
+      "visionModel": "Vision Model (Optional)",
+      "visionModelDescription": "Optional: Use a different model for image/vision tasks. Leave empty to use the model above.",
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "Enter API key",
+      "temperature": "Temperature: {value}",
+      "temperatureHint": "Lower = more focused, Higher = more creative",
+      "maxTokens": "Max Tokens",
+      "autoTagAllergies": "Auto-detect Allergy Tags",
+      "autoTagAllergiesDescription": "Automatically add allergy-related tags when importing recipes",
+      "alwaysUseAI": "Always Use AI Importing",
+      "alwaysUseAIDescription": "Skip structured parsers and extract recipes using AI only",
+      "connectionSuccess": "Connection successful",
+      "testConnection": "Test Connection",
+      "vision": "vision"
+    },
+    "videoConfig": {
+      "enableVideo": "Enable Video Parsing",
+      "enableVideoDescription": "Extract recipes from TikTok, Instagram, YouTube Shorts or Facebook",
+      "configureWarning": "Configure a transcription provider below to enable video processing.",
+      "maxLength": "Max Video Length (seconds)",
+      "maxLengthDescription": "Longer videos take more time and resources to process",
+      "ytDlpVersion": "yt-dlp Version",
+      "ytDlpVersionDescription": "Version of yt-dlp to use for video downloads",
+      "transcription": "Transcription",
+      "transcriptionDescription": "Convert video audio to text for recipe extraction",
+      "transcriptionProvider": "Transcription Provider",
+      "transcriptionProviderDescription": "Only OpenAI and OpenAI-compatible endpoints support Whisper transcription",
+      "transcriptionProviders": {
+        "disabled": "Disabled",
+        "openai": "OpenAI Whisper",
+        "genericOpenai": "Generic OpenAI-compatible"
+      },
+      "transcriptionEndpoint": "Endpoint URL",
+      "transcriptionEndpointDescription": "OpenAI-compatible endpoint with Whisper support",
+      "transcriptionModel": "Model",
+      "transcriptionModelDescription": "Whisper model to use for transcription",
+      "transcriptionApiKey": "API Key",
+      "transcriptionApiKeyDescription": "Falls back to AI Configuration API key if not set",
+      "transcriptionApiKeyPlaceholder": "Leave empty to use AI config key"
+    },
+    "promptsConfig": {
+      "recipeExtraction": "Recipe Extraction Prompt",
+      "recipeExtractionDescription": "This prompt is used when extracting recipe data from web pages or video transcripts.",
+      "recipeExtractionPlaceholder": "Enter the recipe extraction prompt...",
+      "unitConversion": "Unit Conversion Prompt",
+      "unitConversionDescription": "This prompt is used when converting recipe measurements between metric and US systems. Available variables: {{sourceSystem}}, {{targetSystem}}, {{units}}",
+      "unitConversionPlaceholder": "Enter the unit conversion prompt...",
+      "nutritionEstimation": "Nutrition Estimation Prompt",
+      "nutritionEstimationDescription": "This prompt is used when estimating nutrition information for a recipe. Available variables: {{recipeName}}, {{servings}}, {{ingredients}}",
+      "nutritionEstimationPlaceholder": "Enter the nutrition estimation prompt..."
+    },
+    "jsonEditor": {
+      "unsavedChanges": "Unsaved changes",
+      "placeholder": "Enter JSON configuration...",
+      "invalidJson": "Invalid JSON format",
+      "failedToSave": "Failed to save",
+      "failedToRestore": "Failed to restore defaults"
     }
   }
 }

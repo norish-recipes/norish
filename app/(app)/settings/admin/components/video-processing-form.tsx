@@ -12,6 +12,7 @@ import {
   AutocompleteItem,
 } from "@heroui/react";
 import { CheckIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
 
@@ -20,6 +21,8 @@ import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
 import SecretInput from "@/components/shared/secret-input";
 
 export default function VideoProcessingForm() {
+  const t = useTranslations("settings.admin.videoConfig");
+  const tActions = useTranslations("common.actions");
   const { videoConfig, updateVideoConfig, aiConfig, fetchConfigSecret } = useAdminSettingsContext();
 
   // Combined video + transcription config state
@@ -144,9 +147,9 @@ export default function VideoProcessingForm() {
       {/* Video Processing Section */}
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <span className="font-medium">Enable Video Parsing</span>
+          <span className="font-medium">{t("enableVideo")}</span>
           <span className="text-default-500 text-base">
-            Extract recipes from TikTok, Instagram, YouTube Shorts or Facebook
+            {t("enableVideoDescription")}
           </span>
         </div>
         <Switch color="success" isSelected={enabled} onValueChange={setEnabled} />
@@ -154,23 +157,23 @@ export default function VideoProcessingForm() {
 
       {showValidationWarning && (
         <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
-          Configure a transcription provider below to enable video processing.
+          {t("configureWarning")}
         </div>
       )}
 
       <Input
-        description="Longer videos take more time and resources to process"
+        description={t("maxLengthDescription")}
         isDisabled={!enabled}
-        label="Max Video Length (seconds)"
+        label={t("maxLength")}
         type="number"
         value={maxLengthSeconds.toString()}
         onValueChange={(v) => setMaxLengthSeconds(parseInt(v) || 120)}
       />
 
       <Input
-        description="Version of yt-dlp to use for video downloads"
+        description={t("ytDlpVersionDescription")}
         isDisabled={!enabled}
-        label="yt-dlp Version"
+        label={t("ytDlpVersion")}
         value={ytDlpVersion}
         onValueChange={setYtDlpVersion}
       />
@@ -179,33 +182,33 @@ export default function VideoProcessingForm() {
 
       {/* Transcription Section */}
       <div className="flex flex-col gap-1">
-        <span className="font-medium">Transcription</span>
+        <span className="font-medium">{t("transcription")}</span>
         <span className="text-default-500 text-base">
-          Convert video audio to text for recipe extraction
+          {t("transcriptionDescription")}
         </span>
       </div>
 
       <Select
-        description="Only OpenAI and OpenAI-compatible endpoints support Whisper transcription"
+        description={t("transcriptionProviderDescription")}
         isDisabled={!enabled}
-        label="Transcription Provider"
+        label={t("transcriptionProvider")}
         selectedKeys={[transcriptionProvider]}
         onSelectionChange={(keys) =>
           handleTranscriptionProviderChange(Array.from(keys)[0] as TranscriptionProvider)
         }
       >
-        <SelectItem key="disabled">Disabled</SelectItem>
-        <SelectItem key="openai">OpenAI Whisper</SelectItem>
-        <SelectItem key="generic-openai">Generic OpenAI-compatible</SelectItem>
+        <SelectItem key="disabled">{t("transcriptionProviders.disabled")}</SelectItem>
+        <SelectItem key="openai">{t("transcriptionProviders.openai")}</SelectItem>
+        <SelectItem key="generic-openai">{t("transcriptionProviders.genericOpenai")}</SelectItem>
       </Select>
 
       {transcriptionEnabled && (
         <>
           {needsTranscriptionEndpoint && (
             <Input
-              description="OpenAI-compatible endpoint with Whisper support"
+              description={t("transcriptionEndpointDescription")}
               isDisabled={!enabled}
-              label="Endpoint URL"
+              label={t("transcriptionEndpoint")}
               placeholder="https://api.example.com/v1"
               value={transcriptionEndpoint}
               onValueChange={setTranscriptionEndpoint}
@@ -215,11 +218,11 @@ export default function VideoProcessingForm() {
           <Autocomplete
             allowsCustomValue
             defaultItems={transcriptionModelOptions}
-            description="Whisper model to use for transcription"
+            description={t("transcriptionModelDescription")}
             inputValue={transcriptionModel}
             isDisabled={!enabled}
             isLoading={isLoadingTranscriptionModels}
-            label="Model"
+            label={t("transcriptionModel")}
             placeholder={transcriptionProvider === "openai" ? "whisper-1" : "whisper"}
             onInputChange={setTranscriptionModel}
             onSelectionChange={(key) => key && setTranscriptionModel(key as string)}
@@ -233,11 +236,11 @@ export default function VideoProcessingForm() {
 
           {needsTranscriptionApiKey && (
             <SecretInput
-              description="Falls back to AI Configuration API key if not set"
+              description={t("transcriptionApiKeyDescription")}
               isConfigured={isTranscriptionApiKeyConfigured}
               isDisabled={!enabled}
-              label="API Key"
-              placeholder="Leave empty to use AI config key"
+              label={t("transcriptionApiKey")}
+              placeholder={t("transcriptionApiKeyPlaceholder")}
               value={transcriptionApiKey}
               onReveal={handleRevealTranscriptionApiKey}
               onValueChange={setTranscriptionApiKey}
@@ -254,7 +257,7 @@ export default function VideoProcessingForm() {
           startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}
         >
-          Save
+          {tActions("save")}
         </Button>
       </div>
     </div>

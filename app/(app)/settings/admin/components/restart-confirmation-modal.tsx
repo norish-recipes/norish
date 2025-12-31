@@ -16,6 +16,7 @@ export default function RestartConfirmationModal({
   onConfirm,
 }: RestartConfirmationModalProps) {
   const t = useTranslations("settings.admin.restart");
+  const tActions = useTranslations("common.actions");
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -45,7 +46,7 @@ export default function RestartConfirmationModal({
         </ModalBody>
         <ModalFooter>
           <Button variant="flat" onPress={onClose}>
-            {t("cancel")}
+            {tActions("cancel")}
           </Button>
           <Button color="warning" onPress={onConfirm}>
             {t("confirmButton")}

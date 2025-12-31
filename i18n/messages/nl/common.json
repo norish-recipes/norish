@@ -2,11 +2,11 @@
   "actions": {
     "save": "Opslaan",
     "cancel": "Annuleren",
-    "delete": "Verwijderen",
+    "delete": "Verwijder",
     "edit": "Bewerken",
     "create": "Aanmaken",
     "add": "Toevoegen",
-    "remove": "Verwijderen",
+    "remove": "Verwijder",
     "close": "Sluiten",
     "apply": "Toepassen",
     "reset": "Resetten",
@@ -23,12 +23,16 @@
     "import": "Importeren",
     "aiImport": "AI Importeren",
     "importWithAI": "Importeren met AI",
-    "goHome": "Ga naar home"
+    "goHome": "Ga naar home",
+    "test": "Test",
+    "format": "Formatteren",
+    "restoreDefaults": "Resetten",
+    "saveChanges": "Wijzigingen opslaan"
   },
   "status": {
     "loading": "Laden...",
     "saving": "Opslaan...",
-    "deleting": "Verwijderen...",
+    "deleting": "Verwijder...",
     "error": "Fout",
     "success": "Succes",
     "noResults": "Geen resultaten gevonden",

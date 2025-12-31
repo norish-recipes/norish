@@ -60,6 +60,7 @@ interface AuthProviderFormProps {
 
 function AuthProviderForm({ providerKey, providerName, config, fields }: AuthProviderFormProps) {
   const t = useTranslations("settings.admin.authProviders.form");
+  const tActions = useTranslations("common.actions");
   const {
     updateAuthProviderOIDC,
     updateAuthProviderGitHub,
@@ -190,7 +191,7 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
             variant="flat"
             onPress={deleteModal.onOpen}
           >
-            {t("remove")}
+            {tActions("remove")}
           </Button>
         )}
         <div className="ml-auto flex gap-2">
@@ -200,7 +201,7 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
             variant="flat"
             onPress={handleTest}
           >
-            {t("test")}
+            {tActions("test")}
           </Button>
           <Button
             color="primary"
@@ -208,7 +209,7 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
             startContent={<CheckIcon className="h-5 w-5" />}
             onPress={handleSave}
           >
-            {t("save")}
+            {tActions("save")}
           </Button>
         </div>
       </div>
@@ -224,10 +225,10 @@ function AuthProviderForm({ providerKey, providerName, config, fields }: AuthPro
           </ModalBody>
           <ModalFooter>
             <Button variant="flat" onPress={deleteModal.onClose}>
-              {t("cancel")}
+              {tActions("cancel")}
             </Button>
             <Button color="danger" onPress={handleDelete}>
-              {t("remove")}
+              {tActions("remove")}
             </Button>
           </ModalFooter>
         </ModalContent>

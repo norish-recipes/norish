@@ -11,6 +11,7 @@ import RestartConfirmationModal from "./restart-confirmation-modal";
 
 export default function SystemCard() {
   const t = useTranslations("settings.admin.system");
+  const tActions = useTranslations("common.actions");
   const { schedulerCleanupMonths, updateSchedulerMonths, restartServer } =
     useAdminSettingsContext();
 
@@ -69,7 +70,7 @@ export default function SystemCard() {
               startContent={<CheckIcon className="h-5 w-5" />}
               onPress={handleSaveScheduler}
             >
-              {t("cleanup.save")}
+              {tActions("save")}
             </Button>
           </div>
         </div>

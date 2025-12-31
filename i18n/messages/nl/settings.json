@@ -183,7 +183,7 @@
       "connectionStatus": {
         "connected": "Verbonden",
         "checking": "Controleren...",
-        "disconnected": "Verbonden",
+        "disconnected": "Niet verbonden",
         "unknown": "Onbekend"
       }
     },
@@ -250,8 +250,7 @@
       "cleanup": {
         "title": "Opruimplanner",
         "label": "Opruimmaanden",
-        "description": "Verwijder geplande maaltijden ouder dan dit aantal maanden",
-        "save": "Opslaan"
+        "description": "Verwijder geplande maaltijden ouder dan dit aantal maanden"
       },
       "server": {
         "title": "Server beheer",
@@ -311,9 +310,6 @@
       },
       "form": {
         "testSuccess": "Verbinding succesvol",
-        "remove": "Verwijderen",
-        "test": "Testen",
-        "save": "Opslaan",
         "removeTitle": "Verwijder {provider}",
         "removeConfirm": "Weet je zeker dat je deze provider wilt verwijderen?"
       },
@@ -356,6 +352,78 @@
         "title": "Prompts",
         "subtitle": "Pas AI-instructies aan voor receptverwerking"
       }
+    },
+    "aiConfig": {
+      "enableAI": "AI-functies inschakelen",
+      "enableAIDescription": "Gebruik AI om recepten uit ongestructureerde inhoud te extraheren",
+      "configureWarning": "Configureer de AI-providerinstellingen hieronder om AI-functies in te schakelen.",
+      "provider": "AI Provider",
+      "providers": {
+        "openai": "OpenAI",
+        "perplexity": "Perplexity",
+        "ollama": "Ollama (Lokaal)",
+        "lmStudio": "LM Studio (Lokaal)",
+        "genericOpenai": "Generieke OpenAI-compatibel"
+      },
+      "endpointUrl": "Endpoint URL",
+      "model": "Model",
+      "visionModel": "Vision Model (Optioneel)",
+      "visionModelDescription": "Optioneel: Gebruik een ander model voor afbeelding/vision taken. Laat leeg om het bovenstaande model te gebruiken.",
+      "apiKey": "API-sleutel",
+      "apiKeyPlaceholder": "Voer API-sleutel in",
+      "temperature": "Temperatuur: {value}",
+      "temperatureHint": "Lager = gefocuster, Hoger = creatiever",
+      "maxTokens": "Max Tokens",
+      "autoTagAllergies": "Allergietags automatisch detecteren",
+      "autoTagAllergiesDescription": "Voeg automatisch allergiegerelateerde tags toe bij het importeren van recepten",
+      "alwaysUseAI": "Altijd AI gebruiken voor import",
+      "alwaysUseAIDescription": "Sla gestructureerde parsers over en extraheer recepten alleen met AI",
+      "connectionSuccess": "Verbinding succesvol",
+      "testConnection": "Test verbinding",
+      "vision": "vision"
+    },
+    "videoConfig": {
+      "enableVideo": "Video parsing inschakelen",
+      "enableVideoDescription": "Extraheer recepten van TikTok, Instagram, YouTube Shorts of Facebook",
+      "configureWarning": "Configureer hieronder een transcriptieprovider om videobewerking in te schakelen.",
+      "maxLength": "Max videolengte (seconden)",
+      "maxLengthDescription": "Langere video's kosten meer tijd en middelen om te verwerken",
+      "ytDlpVersion": "yt-dlp Versie",
+      "ytDlpVersionDescription": "Versie van yt-dlp voor video-downloads",
+      "transcription": "Transcriptie",
+      "transcriptionDescription": "Converteer video-audio naar tekst voor receptextractie",
+      "transcriptionProvider": "Transcriptieprovider",
+      "transcriptionProviderDescription": "Alleen OpenAI en OpenAI-compatibele endpoints ondersteunen Whisper-transcriptie",
+      "transcriptionProviders": {
+        "disabled": "Uitgeschakeld",
+        "openai": "OpenAI Whisper",
+        "genericOpenai": "Generieke OpenAI-compatibel"
+      },
+      "transcriptionEndpoint": "Endpoint URL",
+      "transcriptionEndpointDescription": "OpenAI-compatibele endpoint met Whisper-ondersteuning",
+      "transcriptionModel": "Model",
+      "transcriptionModelDescription": "Whisper-model voor transcriptie",
+      "transcriptionApiKey": "API-sleutel",
+      "transcriptionApiKeyDescription": "Valt terug op AI-configuratie API-sleutel indien niet ingesteld",
+      "transcriptionApiKeyPlaceholder": "Laat leeg om AI config sleutel te gebruiken"
+    },
+    "promptsConfig": {
+      "recipeExtraction": "Receptextractie Prompt",
+      "recipeExtractionDescription": "Deze prompt wordt gebruikt bij het extraheren van receptgegevens van webpagina's of videotranscripties.",
+      "recipeExtractionPlaceholder": "Voer de receptextractie prompt in...",
+      "unitConversion": "Eenheidsconversie Prompt",
+      "unitConversionDescription": "Deze prompt wordt gebruikt bij het converteren van receptmaten tussen metrische en US-systemen. Beschikbare variabelen: {{sourceSystem}}, {{targetSystem}}, {{units}}",
+      "unitConversionPlaceholder": "Voer de eenheidsconversie prompt in...",
+      "nutritionEstimation": "Voedingswaarde Schatting Prompt",
+      "nutritionEstimationDescription": "Deze prompt wordt gebruikt bij het schatten van voedingsinformatie voor een recept. Beschikbare variabelen: {{recipeName}}, {{servings}}, {{ingredients}}",
+      "nutritionEstimationPlaceholder": "Voer de voedingswaarde prompt in..."
+    },
+    "jsonEditor": {
+      "unsavedChanges": "Niet-opgeslagen wijzigingen",
+      "placeholder": "Voer JSON-configuratie in...",
+      "invalidJson": "Ongeldig JSON-formaat",
+      "failedToSave": "Opslaan mislukt",
+      "failedToRestore": "Resetten herstellen mislukt"
     }
   }
 }

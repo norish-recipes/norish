@@ -12,6 +12,7 @@ import {
   AutocompleteItem,
 } from "@heroui/react";
 import { CheckIcon, BeakerIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
 
@@ -20,6 +21,8 @@ import { useAvailableModelsQuery } from "@/hooks/admin";
 import SecretInput from "@/components/shared/secret-input";
 
 export default function AIConfigForm() {
+  const t = useTranslations("settings.admin.aiConfig");
+  const tActions = useTranslations("common.actions");
   const { aiConfig, updateAIConfig, testAIEndpoint, fetchConfigSecret } = useAdminSettingsContext();
 
   const [enabled, setEnabled] = useState(aiConfig?.enabled ?? false);
@@ -179,9 +182,9 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
     <div className="flex flex-col gap-4 p-2">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <span className="font-medium">Enable AI Features</span>
+          <span className="font-medium">{t("enableAI")}</span>
           <span className="text-default-500 text-base">
-            Use AI to extract recipes from unstructured content
+            {t("enableAIDescription")}
           </span>
         </div>
         <Switch color="success" isSelected={enabled} onValueChange={setEnabled} />
@@ -189,27 +192,27 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
 
       {showValidationWarning && (
         <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
-          Configure the AI provider settings below to enable AI features.
+          {t("configureWarning")}
         </div>
       )}
 
       <Select
         isDisabled={!enabled}
-        label="AI Provider"
+        label={t("provider")}
         selectedKeys={[provider]}
         onSelectionChange={(keys) => handleProviderChange(Array.from(keys)[0] as AIConfig["provider"])}
       >
-        <SelectItem key="openai">OpenAI</SelectItem>
-        <SelectItem key="perplexity">Perplexity</SelectItem>
-        <SelectItem key="ollama">Ollama (Local)</SelectItem>
-        <SelectItem key="lm-studio">LM Studio (Local)</SelectItem>
-        <SelectItem key="generic-openai">Generic OpenAI-compatible</SelectItem>
+        <SelectItem key="openai">{t("providers.openai")}</SelectItem>
+        <SelectItem key="perplexity">{t("providers.perplexity")}</SelectItem>
+        <SelectItem key="ollama">{t("providers.ollama")}</SelectItem>
+        <SelectItem key="lm-studio">{t("providers.lmStudio")}</SelectItem>
+        <SelectItem key="generic-openai">{t("providers.genericOpenai")}</SelectItem>
       </Select>
 
       {needsEndpoint && (
         <Input
           isDisabled={!enabled}
-          label="Endpoint URL"
+          label={t("endpointUrl")}
           placeholder={provider === "ollama" ? "http://localhost:11434" : "http://localhost:1234"}
           value={endpoint}
           onValueChange={setEndpoint}
@@ -222,7 +225,7 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
         inputValue={model}
         isDisabled={!enabled}
         isLoading={isLoadingModels}
-        label="Model"
+        label={t("model")}
         placeholder={provider === "openai" ? "gpt-5-mini" : "llama3"}
         onInputChange={setModel}
         onSelectionChange={(key) => key && setModel(key as string)}
@@ -232,7 +235,7 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
             <div className="flex items-center justify-between gap-2">
               <span>{item.label}</span>
               {item.supportsVision && (
-                <span className="text-success-500 text-xs">vision</span>
+                <span className="text-success-500 text-xs">{t("vision")}</span>
               )}
             </div>
           </AutocompleteItem>
@@ -242,11 +245,11 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
       <Autocomplete
         allowsCustomValue
         defaultItems={visionModelOptions}
-        description="Optional: Use a different model for image/vision tasks. Leave empty to use the model above."
+        description={t("visionModelDescription")}
         inputValue={visionModel}
         isDisabled={!enabled}
         isLoading={isLoadingModels}
-        label="Vision Model (Optional)"
+        label={t("visionModel")}
         placeholder={provider === "openai" ? "gpt-4o" : ""}
         onInputChange={setVisionModel}
         onSelectionChange={(key) => key && setVisionModel(key as string)}
@@ -256,7 +259,7 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
             <div className="flex items-center justify-between gap-2">
               <span>{item.label}</span>
               {item.supportsVision && (
-                <span className="text-success-500 text-xs">vision</span>
+                <span className="text-success-500 text-xs">{t("vision")}</span>
               )}
             </div>
           </AutocompleteItem>
@@ -267,8 +270,8 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
         <SecretInput
           isConfigured={isApiKeyConfigured}
           isDisabled={!enabled}
-          label="API Key"
-          placeholder="Enter API key"
+          label={t("apiKey")}
+          placeholder={t("apiKeyPlaceholder")}
           value={apiKey}
           onReveal={handleRevealApiKey}
           onValueChange={setApiKey}
@@ -276,7 +279,7 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
       )}
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium">Temperature: {temperature}</label>
+        <label className="text-sm font-medium">{t("temperature", { value: temperature })}</label>
         <Slider
           aria-label="Temperature"
           className="max-w-md"
@@ -288,13 +291,13 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
           onChange={(v) => setTemperature(v as number)}
         />
         <span className="text-default-500 text-xs">
-          Lower = more focused, Higher = more creative
+          {t("temperatureHint")}
         </span>
       </div>
 
       <Input
         isDisabled={!enabled}
-        label="Max Tokens"
+        label={t("maxTokens")}
         type="number"
         value={maxTokens.toString()}
         onValueChange={(v) => setMaxTokens(parseInt(v) || 10000)}
@@ -302,9 +305,9 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
 
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <span className="font-medium">Auto-detect Allergy Tags</span>
+          <span className="font-medium">{t("autoTagAllergies")}</span>
           <span className="text-default-500 text-base">
-            Automatically add allergy-related tags when importing recipes
+            {t("autoTagAllergiesDescription")}
           </span>
         </div>
         <Switch
@@ -317,9 +320,9 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
 
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <span className="font-medium">Always Use AI Importing</span>
+          <span className="font-medium">{t("alwaysUseAI")}</span>
           <span className="text-default-500 text-base">
-            Skip structured parsers and extract recipes using AI only
+            {t("alwaysUseAIDescription")}
           </span>
         </div>
         <Switch
@@ -339,7 +342,7 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
           {testResult.success ? (
             <>
               <CheckIcon className="h-4 w-4" />
-              Connection successful
+              {t("connectionSuccess")}
             </>
           ) : (
             <>
@@ -358,7 +361,7 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
           variant="flat"
           onPress={handleTest}
         >
-          Test Connection
+          {t("testConnection")}
         </Button>
         <Button
           color="primary"
@@ -367,7 +370,7 @@ const { models: availableModels, isLoading: isLoadingModels } = useAvailableMode
           startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}
         >
-          Save
+          {tActions("save")}
         </Button>
       </div>
     </div>
