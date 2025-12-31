@@ -25,6 +25,16 @@
     "itemActions": "Item actions",
     "viewAllergenWarning": "View allergen warning",
     "allergyWarning": "Allergy warning:",
-    "contains": "Contains: {allergens}"
+    "contains": "Contains: {allergens}",
+    "addItem": "Add item"
+  },
+  "panel": {
+    "addToCalendar": "Add to Calendar",
+    "addRecipe": "Add Recipe",
+    "noDaysAvailable": "No days available.",
+    "searchPlaceholder": "Search recipes or add notes...",
+    "addNote": "Add Note: {input}",
+    "noRecipesFound": "No recipes found.",
+    "failedToLoadRecipes": "Failed to load recipes."
   }
 }

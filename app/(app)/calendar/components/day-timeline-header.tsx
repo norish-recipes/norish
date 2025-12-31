@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from "react";
 import { Button } from "@heroui/react";
 import { PlusIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import { MiniRecipes } from "@/components/Panel/consumers";
 
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export function DayTimelineHeader({ date, isToday, weekday, month, onPanelOpenChange }: Props) {
+  const t = useTranslations("calendar.timeline");
   const dayNum = String(date.getDate()).padStart(2, "0");
   const [open, setOpen] = useState(false);
 
@@ -46,9 +48,9 @@ export function DayTimelineHeader({ date, isToday, weekday, month, onPanelOpenCh
 
       <div className="flex-1" />
 
-      <Button
+<Button
         isIconOnly
-        aria-label="Add"
+        aria-label={t("addItem")}
         className="min-w-0 bg-transparent p-1 shadow-none data-[hover=true]:bg-transparent"
         radius="none"
         size="sm"

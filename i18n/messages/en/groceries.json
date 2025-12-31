@@ -25,10 +25,22 @@
     "editStore": "Edit Store",
     "deleteStore": "Delete Store",
     "storeName": "Store name",
+    "storeNamePlaceholder": "e.g., Supermarket",
     "storeColor": "Color",
     "storeIcon": "Icon",
-    "confirmDelete": "Are you sure you want to delete this store?",
-    "deleteWarning": "Items in this store will be moved to Unsorted."
+    "confirmDelete": "Are you sure you want to delete {storeName}?",
+    "deleteWarning": "Items in this store will be moved to Unsorted.",
+    "noStoresYet": "No stores yet",
+    "createStoreHint": "Create a store to organize your groceries",
+    "hasItems": "This store has {count} grocery item.",
+    "hasItemsPlural": "This store has {count} grocery items.",
+    "whatToDo": "What would you like to do with them?",
+    "keepItems": "Keep items",
+    "keepItemsDescription": "Move items to Unsorted",
+    "deleteItems": "Delete items",
+    "deleteItemsDescription": "Remove all items in this store",
+    "noItems": "This store has no items.",
+    "create": "Create"
   },
   "panel": {
     "addTitle": "Add Grocery",
@@ -39,6 +51,19 @@
     "noStore": "No store",
     "recurrence": "Recurrence",
     "savePreference": "Remember store for this item",
-    "addAnother": "Add another"
+    "addAnother": "Add another",
+    "addRepeat": "+ Add repeat",
+    "storeOptional": "Store (optional)",
+    "autoDetectFromHistory": "Auto-detect from history",
+    "autoDetectOrSelect": "Auto-detect or select",
+    "placeholder": "e.g., 2 lbs chicken breast",
+    "editPlaceholder": "e.g., milk every week",
+    "servings": "Servings",
+    "loadingIngredients": "Loading ingredients...",
+    "noIngredients": "No ingredients.",
+    "addSelectedToGroceries": "Add to groceries",
+    "ingredientsAdded": "Ingredients added to grocery list.",
+    "ingredientsFailed": "Failed to add ingredients to grocery list.",
+    "addToGroceries": "Add to Groceries"
   }
 }

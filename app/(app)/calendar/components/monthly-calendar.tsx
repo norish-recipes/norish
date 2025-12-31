@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
 import { useCalendarContext } from "../context";
@@ -61,6 +61,7 @@ const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
 export default function MonthlyCalendar() {
   const t = useTranslations("calendar");
+  const locale = useLocale();
   const today = useMemo(() => new Date(), []);
   const [offset, setOffset] = useState(0);
   const viewDate = useMemo(
@@ -69,8 +70,8 @@ export default function MonthlyCalendar() {
   );
   const days = useMemo(() => getMonthDaysGrid(viewDate), [viewDate]);
   const monthFormatter = useMemo(
-    () => new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }),
-    []
+    () => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }),
+    [locale]
   );
 
   const { plannedItemsByDate, isLoading } = useCalendarContext();

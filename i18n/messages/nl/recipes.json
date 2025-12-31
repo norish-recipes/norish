@@ -95,5 +95,33 @@
     "ingredientsRequired": "Er is minimaal één ingrediënt vereist",
     "stepsRequired": "Er is minimaal één stap vereist",
     "servingsMin": "Minimaal één portie is vereist"
+  },
+  "nutrition": {
+    "title": "Voedingswaarden",
+    "calories": "Calorieën",
+    "fat": "Vetten",
+    "carbs": "Koolhydraten",
+    "protein": "Eiwitten",
+    "showingPortions": "Waardes voor {count} {count, plural, one {portie} other {porties}}",
+    "noInfo": "Geen voedingsinformatie beschikbaar",
+    "estimateWithAI": "Schatten met AI"
+  },
+  "measurementSystem": {
+    "label": "Meetsysteem",
+    "detected": "Gedetecteerd: {system}",
+    "metric": "Metrisch",
+    "us": "US"
+  },
+  "timeInputs": {
+    "prep": "Voorb.",
+    "cook": "Koken",
+    "total": "Totaal"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Stap {number}: Beschrijf de stap...",
+    "stepPlaceholderShort": "Stap {number}"
+  },
+  "ingredientInput": {
+    "placeholder": "bijv. 2 kopjes bloem"
   }
 }

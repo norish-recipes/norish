@@ -5,6 +5,7 @@ import { Virtuoso } from "react-virtuoso";
 import { Image, Input, Button } from "@heroui/react";
 import { motion, AnimatePresence } from "motion/react";
 import { PlusIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import Panel from "@/components/Panel/Panel";
 import { RecipeDashboardDTO, Slot } from "@/types";
@@ -27,6 +28,7 @@ function MiniRecipesContent({
   date: Date;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useTranslations("calendar.panel");
   const [rawInput, setRawInput] = useState("");
   const [search, setSearch] = useState("");
   const [, startTransition] = useTransition();
@@ -84,13 +86,13 @@ function MiniRecipesContent({
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <Input
-          placeholder="Search recipes or add notes..."
+          placeholder={t("searchPlaceholder")}
           style={{ fontSize: "16px" }}
           value={rawInput}
           onChange={handleInputChange}
         />
         <div className="flex flex-1 items-center justify-center text-base text-red-500">
-          Failed to load recipes.
+          {t("failedToLoadRecipes")}
         </div>
       </div>
     );
@@ -101,7 +103,7 @@ function MiniRecipesContent({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <Input
-        placeholder="Search recipes or add notes..."
+        placeholder={t("searchPlaceholder")}
         style={{ fontSize: "16px" }}
         value={rawInput}
         onChange={handleInputChange}
@@ -124,7 +126,7 @@ function MiniRecipesContent({
                 startContent={<PlusIcon className="h-4 w-4 shrink-0" />}
                 variant="solid"
               >
-                <span className="truncate">Add Note: {rawInput}</span>
+                <span className="truncate">{t("addNote", { input: rawInput })}</span>
               </Button>
             </SlotDropdown>
           </motion.div>
@@ -136,7 +138,7 @@ function MiniRecipesContent({
           <MiniRecipeSkeleton />
         ) : !isLoading && recipes.length === 0 ? (
           <div className="text-default-500 flex h-full items-center justify-center text-base">
-            No recipes found.
+            {t("noRecipesFound")}
           </div>
         ) : (
           <Virtuoso
@@ -181,8 +183,10 @@ function MiniRecipesContent({
 }
 
 export default function MiniRecipes({ open, onOpenChange, date }: MiniRecipesProps) {
+  const t = useTranslations("calendar.panel");
+
   return (
-    <Panel open={open} title="Add Recipe" onOpenChange={onOpenChange}>
+    <Panel open={open} title={t("addRecipe")} onOpenChange={onOpenChange}>
       {open && <MiniRecipesContent date={date} onOpenChange={onOpenChange} />}
     </Panel>
   );

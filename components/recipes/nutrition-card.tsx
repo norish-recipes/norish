@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Card, CardBody, Button, Divider, Skeleton } from "@heroui/react";
 import { SparklesIcon, FireIcon, BeakerIcon, CubeIcon, BoltIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import NutritionPortionControl from "./nutrition-portion-control";
 
@@ -12,7 +13,7 @@ import { usePermissionsContext } from "@/context/permissions-context";
 const MACROS = [
   {
     key: "calories",
-    label: "Calories",
+    labelKey: "calories",
     unit: "kcal",
     icon: FireIcon,
     color: "text-orange-500",
@@ -20,7 +21,7 @@ const MACROS = [
   },
   {
     key: "fat",
-    label: "Fat",
+    labelKey: "fat",
     unit: "g",
     icon: BeakerIcon,
     color: "text-yellow-500",
@@ -28,7 +29,7 @@ const MACROS = [
   },
   {
     key: "carbs",
-    label: "Carbs",
+    labelKey: "carbs",
     unit: "g",
     icon: CubeIcon,
     color: "text-blue-500",
@@ -36,7 +37,7 @@ const MACROS = [
   },
   {
     key: "protein",
-    label: "Protein",
+    labelKey: "protein",
     unit: "g",
     icon: BoltIcon,
     color: "text-rose-500",
@@ -47,6 +48,7 @@ const MACROS = [
 function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
   const { recipe, isEstimatingNutrition, estimateNutrition } = useRecipeContext();
   const { isAIEnabled } = usePermissionsContext();
+  const t = useTranslations("recipes.nutrition");
   // Independent portion state - defaults to 1 (per serving)
   const [portions, setPortions] = useState(1);
 
@@ -80,7 +82,7 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
   const content = (
     <>
       <div className={`flex items-center justify-between ${inCard ? "mb-3" : ""}`}>
-        <h2 className="text-lg font-semibold">Nutrition</h2>
+        <h2 className="text-lg font-semibold">{t("title")}</h2>
         {nutritionData.hasData && !isEstimatingNutrition && (
           <NutritionPortionControl portions={portions} onChange={setPortions} />
         )}
@@ -100,7 +102,7 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
       ) : nutritionData.hasData ? (
         <>
           <div className="divide-default-100 divide-y">
-            {MACROS.map(({ key, label, unit, icon: Icon, color, bg }) => {
+            {MACROS.map(({ key, labelKey, unit, icon: Icon, color, bg }) => {
               const value = nutritionData.values[key];
 
               if (value == null) return null;
@@ -111,7 +113,7 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
                     <div className={`flex h-8 w-8 items-center justify-center rounded-full ${bg}`}>
                       <Icon className={`h-4 w-4 ${color}`} />
                     </div>
-                    <span className="text-default-700 text-base">{label}</span>
+                    <span className="text-default-700 text-base">{t(labelKey)}</span>
                   </div>
                   <span className="text-foreground text-base font-semibold">
                     {Math.round(value)}
@@ -123,13 +125,13 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
           </div>
           {portions !== 1 && (
             <p className="text-default-400 mt-2 text-center text-xs">
-              Showing values for {portions} {portions === 1 ? "portion" : "portions"}
+              {t("showingPortions", { count: portions })}
             </p>
           )}
         </>
       ) : (
         <div className="flex flex-col items-center gap-3 py-2">
-          <p className="text-default-500 text-base">No nutrition information available</p>
+          <p className="text-default-500 text-base">{t("noInfo")}</p>
           {isAIEnabled && (
             <Button
               className="bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500 text-white hover:brightness-110"
@@ -137,7 +139,7 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
               startContent={<SparklesIcon className="h-4 w-4" />}
               onPress={estimateNutrition}
             >
-              Estimate with AI
+              {t("estimateWithAI")}
             </Button>
           )}
         </div>

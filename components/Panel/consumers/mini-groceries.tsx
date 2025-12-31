@@ -3,6 +3,8 @@
 import { addToast, Button, Checkbox, Divider, Input } from "@heroui/react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
+
 import { useUnitsQuery } from "@/hooks/config";
 import { useRecipeIngredients } from "@/hooks/recipes/use-recipe-ingredients";
 import { useGroceriesMutations } from "@/hooks/groceries";
@@ -28,6 +30,7 @@ function MiniGroceriesContent({
   initialServings: number;
   originalServings: number;
 }) {
+  const t = useTranslations("groceries.panel");
   const { createGroceriesFromData } = useGroceriesMutations();
 
   const { ingredients: rawIngredients, isLoading } = useRecipeIngredients(recipeId);
@@ -100,7 +103,7 @@ function MiniGroceriesContent({
         close();
         addToast({
           severity: "success",
-          title: "Ingredients added to grocery list.",
+          title: t("ingredientsAdded"),
           timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
@@ -109,7 +112,7 @@ function MiniGroceriesContent({
       .catch(() => {
         addToast({
           severity: "warning",
-          title: "Failed to add ingredients to grocery list.",
+          title: t("ingredientsFailed"),
           timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
@@ -118,14 +121,14 @@ function MiniGroceriesContent({
   };
 
   if (isLoading) {
-    return <div className="text-default-500 p-4 text-base">Loading ingredients…</div>;
+    return <div className="text-default-500 p-4 text-base">{t("loadingIngredients")}</div>;
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Servings Control */}
       <div className="mb-3 flex items-center justify-between px-2">
-        <span className="text-default-700 text-sm font-medium">Servings</span>
+        <span className="text-default-700 text-sm font-medium">{t("servings")}</span>
         <div className="inline-flex items-center gap-2">
           <Button
             isIconOnly
@@ -137,7 +140,9 @@ function MiniGroceriesContent({
           >
             <MinusIcon className="h-4 w-4" />
           </Button>
-          <span className="min-w-8 text-center text-sm font-semibold">{formatServings(servings)}</span>
+          <span className="min-w-8 text-center text-sm font-semibold">
+            {formatServings(servings)}
+          </span>
           <Button
             isIconOnly
             aria-label="Increase servings"
@@ -155,7 +160,7 @@ function MiniGroceriesContent({
 
       {scaledIngredients.length === 0 ? (
         <div className="text-default-500 flex flex-1 items-center justify-center text-base">
-          No ingredients.
+          {t("noIngredients")}
         </div>
       ) : (
         <div className="divide-default-200/40 flex flex-col divide-y overflow-y-auto">
@@ -225,7 +230,7 @@ function MiniGroceriesContent({
             className="bg-primary text-primary-foreground w-full rounded-md py-2 text-xs font-semibold transition hover:opacity-90"
             onClick={handleConfirm}
           >
-            Add selected to groceries
+            {t("addSelectedToGroceries")}
           </button>
         </div>
       )}
@@ -233,18 +238,20 @@ function MiniGroceriesContent({
   );
 }
 
-export default function MiniGroceries({ 
-  open, 
-  onOpenChange, 
+export default function MiniGroceries({
+  open,
+  onOpenChange,
   recipeId,
   initialServings = 1,
   originalServings = 1,
 }: MiniGroceriesProps) {
+  const t = useTranslations("groceries.panel");
+
   return (
-    <Panel open={open} title="Add to Groceries" onOpenChange={onOpenChange}>
+    <Panel open={open} title={t("addToGroceries")} onOpenChange={onOpenChange}>
       {open && (
-        <MiniGroceriesContent 
-          recipeId={recipeId} 
+        <MiniGroceriesContent
+          recipeId={recipeId}
           onOpenChange={onOpenChange}
           initialServings={initialServings}
           originalServings={originalServings}

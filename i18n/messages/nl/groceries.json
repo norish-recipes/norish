@@ -25,10 +25,22 @@
     "editStore": "Winkel bewerken",
     "deleteStore": "Winkel verwijderen",
     "storeName": "Winkelnaam",
+    "storeNamePlaceholder": "bijv. Supermarkt",
     "storeColor": "Kleur",
-    "storeIcon": "icoon",
-    "confirmDelete": "Weet je zeker dat je deze winkel wilt verwijderen?",
-    "deleteWarning": "Items in deze winkel worden verplaatst naar Ongeordend."
+    "storeIcon": "Icoon",
+    "confirmDelete": "Weet je zeker dat je {storeName} wilt verwijderen?",
+    "deleteWarning": "Items in deze winkel worden verplaatst naar Ongeordend.",
+    "noStoresYet": "Nog geen winkels",
+    "createStoreHint": "Maak een winkel aan om je boodschappen te organiseren",
+    "hasItems": "Deze winkel heeft {count} boodschap.",
+    "hasItemsPlural": "Deze winkel heeft {count} boodschappen.",
+    "whatToDo": "Wat wil je ermee doen?",
+    "keepItems": "Items behouden",
+    "keepItemsDescription": "Verplaats items naar Ongesorteerd",
+    "deleteItems": "Items verwijderen",
+    "deleteItemsDescription": "Verwijder alle items in deze winkel",
+    "noItems": "Deze winkel heeft geen items.",
+    "create": "Aanmaken"
   },
   "panel": {
     "addTitle": "Boodschap toevoegen",
@@ -39,6 +51,19 @@
     "noStore": "Geen winkel",
     "recurrence": "Herhaling",
     "savePreference": "Onthoud winkel voor dit item",
-    "addAnother": "Voeg nog een toe"
+    "addAnother": "Voeg nog een toe",
+    "addRepeat": "+ Herhaling toevoegen",
+    "storeOptional": "Winkel (optioneel)",
+    "autoDetectFromHistory": "Automatisch detecteren uit geschiedenis",
+    "autoDetectOrSelect": "Automatisch detecteren of selecteren",
+    "placeholder": "bijv. 1 kg kipfilet",
+    "editPlaceholder": "bijv. melk elke week",
+    "servings": "Porties",
+    "loadingIngredients": "Ingrediënten laden...",
+    "noIngredients": "Geen ingrediënten.",
+    "addSelectedToGroceries": "Voeg toe aan boodschappen",
+    "ingredientsAdded": "Ingrediënten toegevoegd aan boodschappenlijst.",
+    "ingredientsFailed": "Kan ingrediënten niet toevoegen aan boodschappenlijst.",
+    "addToGroceries": "Toevoegen aan boodschappen"
   }
 }

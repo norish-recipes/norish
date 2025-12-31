@@ -4,6 +4,7 @@ import type { PanInfo } from "motion/react";
 import type { CaldavItemType } from "@/types";
 
 import { useMemo, useState, useCallback } from "react";
+import { useLocale } from "next-intl";
 
 import { useCalendarContext } from "../context";
 
@@ -17,6 +18,7 @@ import DayTimelineSkeleton from "@/components/skeleton/day-timeline-skeleton";
 const SLOT_ORDER: Record<string, number> = { Breakfast: 0, Lunch: 1, Dinner: 2, Snack: 3 };
 
 export function useDayTimelineShared() {
+  const locale = useLocale();
   const today = useMemo(() => new Date(), []);
   const { plannedItemsByDate, isLoading, deletePlanned, updateItemDate } = useCalendarContext();
 
@@ -32,8 +34,14 @@ export function useDayTimelineShared() {
   const rangeEnd = useMemo(() => endOfMonth(addMonths(today, 1)), [today]);
   const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);
 
-  const weekdayLong = useMemo(() => new Intl.DateTimeFormat(undefined, { weekday: "long" }), []);
-  const monthLong = useMemo(() => new Intl.DateTimeFormat(undefined, { month: "long" }), []);
+  const weekdayLong = useMemo(
+    () => new Intl.DateTimeFormat(locale, { weekday: "long" }),
+    [locale]
+  );
+  const monthLong = useMemo(
+    () => new Intl.DateTimeFormat(locale, { month: "long" }),
+    [locale]
+  );
 
   const todayKey = useMemo(() => dateKey(today), [today]);
   const todayIndex = useMemo(

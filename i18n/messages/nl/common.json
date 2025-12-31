@@ -122,6 +122,46 @@
   "formatting": {
     "title": "Tips",
     "heading": "Begin een regel met <strong>#</strong> voor een kop",
-    "recipeLink": "Typ <strong>/receptnaam</strong> om naar een ander recept te linken"
+    "recipeLink": "Typ <strong>/receptnaam</strong> om naar een ander recept te linken",
+    "helpAriaLabel": "Formateringshulp"
+  },
+  "recurrence": {
+    "title": "Herhaling",
+    "frequency": "Frequentie",
+    "interval": "Interval",
+    "onDay": "Op dag",
+    "daily": "Dagelijks",
+    "weekly": "Wekelijks",
+    "monthly": "Maandelijks",
+    "day": "dag",
+    "days": "dagen",
+    "week": "week",
+    "weeks": "weken",
+    "month": "maand",
+    "months": "maanden",
+    "next": "Volgende:",
+    "every": "Elke",
+    "everyOther": "Om de",
+    "on": "op",
+    "today": "vandaag",
+    "tomorrow": "morgen",
+    "weekdays": {
+      "sun": "Zo",
+      "mon": "Ma",
+      "tue": "Di",
+      "wed": "Wo",
+      "thu": "Do",
+      "fri": "Vr",
+      "sat": "Za"
+    },
+    "weekdaysFull": {
+      "0": "zondag",
+      "1": "maandag",
+      "2": "dinsdag",
+      "3": "woensdag",
+      "4": "donderdag",
+      "5": "vrijdag",
+      "6": "zaterdag"
+    }
   }
 }

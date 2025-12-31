@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@heroui/react";
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/16/solid";
 import { Reorder, useDragControls } from "motion/react";
+import { useTranslations } from "next-intl";
 
 import SmartTextInput from "@/components/shared/smart-text-input";
 import { parseIngredientWithDefaults, debounce } from "@/lib/helpers";
@@ -44,6 +45,7 @@ export default function IngredientInput({
   onSystemDetected: _onSystemDetected,
 }: IngredientInputProps) {
   const { units } = useUnitsQuery();
+  const t = useTranslations("recipes.ingredientInput");
   const [items, setItems] = useState<IngredientItem[]>([createItem("")]);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   const dragConstraintsRef = useRef<HTMLUListElement>(null);
@@ -222,6 +224,7 @@ export default function IngredientInput({
           dragConstraintsRef={dragConstraintsRef}
           index={index}
           ingredientNumber={getIngredientNumber(index)}
+          ingredientPlaceholder={t("placeholder")}
           isLast={index === items.length - 1}
           item={item}
           showRemove={items.length > 1 && !!item.text}
@@ -252,6 +255,7 @@ interface IngredientRowProps {
   isLast: boolean;
   showRemove: boolean;
   dragConstraintsRef: React.RefObject<HTMLUListElement | null>;
+  ingredientPlaceholder: string;
   onValueChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onBlur: () => void;
@@ -265,6 +269,7 @@ function IngredientRow({
   isLast,
   showRemove,
   dragConstraintsRef,
+  ingredientPlaceholder,
   onValueChange,
   onKeyDown,
   onBlur,
@@ -308,7 +313,7 @@ function IngredientRow({
       <div className="flex-1">
         <SmartTextInput
           minRows={1}
-          placeholder={index === 0 ? "e.g., 2 cups flour" : ""}
+          placeholder={index === 0 ? ingredientPlaceholder : ""}
           value={item.text}
           onBlur={onBlur}
           onKeyDown={onKeyDown}

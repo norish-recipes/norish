@@ -6,9 +6,14 @@ import { useState, useEffect } from "react";
 import { Button, ButtonGroup } from "@heroui/react";
 import { motion, AnimatePresence } from "motion/react";
 import { MinusIcon, PlusIcon, CalendarIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 import Panel, { PANEL_HEIGHT_MEDIUM } from "@/components/Panel/Panel";
-import { formatNextOccurrence, formatRecurrenceSummary } from "@/lib/recurrence/formatter";
+import {
+  formatNextOccurrence,
+  formatRecurrenceSummary,
+  type RecurrenceTranslations,
+} from "@/lib/recurrence/formatter";
 import { calculateNextOccurrence, getTodayString } from "@/lib/recurrence/calculator";
 
 type RecurrencePanelProps = {
@@ -20,15 +25,7 @@ type RecurrencePanelProps = {
   height?: number;
 };
 
-const WEEKDAYS = [
-  { label: "Sun", value: 0 },
-  { label: "Mon", value: 1 },
-  { label: "Tue", value: 2 },
-  { label: "Wed", value: 3 },
-  { label: "Thu", value: 4 },
-  { label: "Fri", value: 5 },
-  { label: "Sat", value: 6 },
-];
+const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 export function RecurrencePanel({
   open,
@@ -38,7 +35,33 @@ export function RecurrencePanel({
   returnToPreviousPanel,
   height = PANEL_HEIGHT_MEDIUM,
 }: RecurrencePanelProps) {
+  const t = useTranslations("common.recurrence");
+  const tActions = useTranslations("common.actions");
   const [pattern, setPattern] = useState<RecurrencePattern | null>(initialPattern || null);
+
+  // Build translations object for the formatter
+  const formatterTranslations: RecurrenceTranslations = {
+    every: t("every"),
+    everyOther: t("everyOther"),
+    on: t("on"),
+    day: t("day"),
+    days: t("days"),
+    week: t("week"),
+    weeks: t("weeks"),
+    month: t("month"),
+    months: t("months"),
+    today: t("today"),
+    tomorrow: t("tomorrow"),
+    weekdaysFull: {
+      "0": t("weekdaysFull.0"),
+      "1": t("weekdaysFull.1"),
+      "2": t("weekdaysFull.2"),
+      "3": t("weekdaysFull.3"),
+      "4": t("weekdaysFull.4"),
+      "5": t("weekdaysFull.5"),
+      "6": t("weekdaysFull.6"),
+    },
+  };
 
   // Initialize pattern when panel opens
   useEffect(() => {
@@ -99,7 +122,7 @@ export function RecurrencePanel({
     <Panel
       height={height}
       open={open}
-      title="Repeat"
+      title={t("title")}
       onOpenChange={(isOpen) => {
         if (!isOpen && returnToPreviousPanel) {
           returnToPreviousPanel();
@@ -112,7 +135,7 @@ export function RecurrencePanel({
         {/* Frequency Selector */}
         <div>
           <span className="text-default-500 mb-2.5 block text-xs font-semibold tracking-wider uppercase">
-            Frequency
+            {t("frequency")}
           </span>
           <ButtonGroup fullWidth className="shadow-sm" size="md">
             <Button
@@ -121,7 +144,7 @@ export function RecurrencePanel({
               variant={pattern?.rule === "day" ? "solid" : "flat"}
               onPress={() => handleFrequencyChange("day")}
             >
-              Daily
+              {t("daily")}
             </Button>
             <Button
               className="font-medium"
@@ -129,7 +152,7 @@ export function RecurrencePanel({
               variant={pattern?.rule === "week" ? "solid" : "flat"}
               onPress={() => handleFrequencyChange("week")}
             >
-              Weekly
+              {t("weekly")}
             </Button>
             <Button
               className="font-medium"
@@ -137,7 +160,7 @@ export function RecurrencePanel({
               variant={pattern?.rule === "month" ? "solid" : "flat"}
               onPress={() => handleFrequencyChange("month")}
             >
-              Monthly
+              {t("monthly")}
             </Button>
           </ButtonGroup>
         </div>
@@ -150,7 +173,7 @@ export function RecurrencePanel({
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
           >
             <span className="text-default-500 mb-2.5 block text-xs font-semibold tracking-wider uppercase">
-              Interval
+              {t("interval")}
             </span>
             <div className="flex items-center gap-2">
               <Button
@@ -168,15 +191,15 @@ export function RecurrencePanel({
                 <span className="text-default-500 ml-1.5 text-xs">
                   {pattern.rule === "day"
                     ? pattern.interval === 1
-                      ? "day"
-                      : "days"
+                      ? t("day")
+                      : t("days")
                     : pattern.rule === "week"
                       ? pattern.interval === 1
-                        ? "week"
-                        : "weeks"
+                        ? t("week")
+                        : t("weeks")
                       : pattern.interval === 1
-                        ? "month"
-                        : "months"}
+                        ? t("month")
+                        : t("months")}
                 </span>
               </div>
               <Button
@@ -202,19 +225,19 @@ export function RecurrencePanel({
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
               <span className="text-default-500 mb-2.5 block text-xs font-semibold tracking-wider uppercase">
-                On Day
+                {t("onDay")}
               </span>
               <div className="flex gap-1.5">
-                {WEEKDAYS.map((day) => (
+                {WEEKDAY_KEYS.map((key, index) => (
                   <Button
-                    key={day.value}
+                    key={index}
                     className="min-w-0 flex-1 text-xs font-medium"
-                    color={pattern.weekday === day.value ? "primary" : "default"}
+                    color={pattern.weekday === index ? "primary" : "default"}
                     size="sm"
-                    variant={pattern.weekday === day.value ? "solid" : "flat"}
-                    onPress={() => handleWeekdayChange(day.value)}
+                    variant={pattern.weekday === index ? "solid" : "flat"}
+                    onPress={() => handleWeekdayChange(index)}
                   >
-                    {day.label}
+                    {t(`weekdays.${key}`)}
                   </Button>
                 ))}
               </div>
@@ -237,16 +260,16 @@ export function RecurrencePanel({
                 <CalendarIcon className="text-primary h-4 w-4 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-foreground text-sm font-semibold">
-                    {formatRecurrenceSummary(pattern)}
+                    {formatRecurrenceSummary(pattern, formatterTranslations)}
                   </p>
                 </div>
               </div>
               {nextOccurrence && (
                 <div className="ml-6.5 pl-0.5">
                   <p className="text-default-500 text-xs">
-                    Next:{" "}
+                    {t("next")}{" "}
                     <span className="text-default-700 font-medium">
-                      {formatNextOccurrence(nextOccurrence)}
+                      {formatNextOccurrence(nextOccurrence, formatterTranslations)}
                     </span>
                   </p>
                 </div>
@@ -265,7 +288,7 @@ export function RecurrencePanel({
               variant="light"
               onPress={handleRemove}
             >
-              Remove
+              {tActions("remove")}
             </Button>
           )}
           <Button
@@ -275,7 +298,7 @@ export function RecurrencePanel({
             size="sm"
             onPress={handleSave}
           >
-            Done
+            {tActions("done")}
           </Button>
         </div>
       </div>

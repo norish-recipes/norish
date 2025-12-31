@@ -4,6 +4,7 @@ import { PlusIcon } from "@heroicons/react/16/solid";
 import { Dropdown, DropdownTrigger, Button, DropdownMenu, DropdownItem } from "@heroui/react";
 import { useMemo, useRef, useCallback, memo } from "react";
 import { Virtuoso } from "react-virtuoso";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Slot } from "@/types";
 import DayTimelineSkeleton from "@/components/skeleton/day-timeline-skeleton";
@@ -28,6 +29,9 @@ const DayRow = memo(function DayRow({
   weekdayLong,
   monthLong,
   onPlan,
+  slotLabels,
+  noItemsLabel,
+  addItemLabel,
 }: {
   date: Date;
   dateKeyStr: string;
@@ -36,6 +40,9 @@ const DayRow = memo(function DayRow({
   weekdayLong: Intl.DateTimeFormat;
   monthLong: Intl.DateTimeFormat;
   onPlan: (dayKey: string, slot: Slot) => void;
+  slotLabels: Record<Slot, string>;
+  noItemsLabel: string;
+  addItemLabel: string;
 }) {
   return (
     <div className="divide-default-200 divide-y">
@@ -62,7 +69,7 @@ const DayRow = memo(function DayRow({
             <DropdownTrigger>
               <Button
                 isIconOnly
-                aria-label="Add"
+                aria-label={addItemLabel}
                 className="min-w-0 bg-transparent p-1 shadow-none data-[hover=true]:bg-transparent"
                 radius="none"
                 size="sm"
@@ -75,10 +82,10 @@ const DayRow = memo(function DayRow({
               aria-label="Choose slot"
               onAction={(slot) => onPlan(dateKeyStr, slot as Slot)}
             >
-              <DropdownItem key="Breakfast">Breakfast</DropdownItem>
-              <DropdownItem key="Lunch">Lunch</DropdownItem>
-              <DropdownItem key="Dinner">Dinner</DropdownItem>
-              <DropdownItem key="Snack">Snack</DropdownItem>
+              <DropdownItem key="Breakfast">{slotLabels.Breakfast}</DropdownItem>
+              <DropdownItem key="Lunch">{slotLabels.Lunch}</DropdownItem>
+              <DropdownItem key="Dinner">{slotLabels.Dinner}</DropdownItem>
+              <DropdownItem key="Snack">{slotLabels.Snack}</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>
@@ -87,7 +94,7 @@ const DayRow = memo(function DayRow({
 
         <div className="flex w-full flex-col">
           {items.length === 0 ? (
-            <span className="text-default-400 text-xs">No items</span>
+            <span className="text-default-400 text-xs">{noItemsLabel}</span>
           ) : (
             items.map((it, i) => (
               <div key={i} className="flex w-full items-center justify-between px-2 py-1.5">
@@ -116,6 +123,10 @@ function MiniCalendarContent({
   recipeId: string;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useTranslations("calendar.panel");
+  const tSlots = useTranslations("common.slots");
+  const tTimeline = useTranslations("calendar.timeline");
+  const locale = useLocale();
   const today = useMemo(() => new Date(), []);
   const rangeStart = useMemo(() => startOfMonth(addMonths(today, -1)), [today]);
   const rangeEnd = useMemo(() => endOfMonth(addMonths(today, 1)), [today]);
@@ -131,8 +142,8 @@ function MiniCalendarContent({
 
   const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);
 
-  const weekdayLong = useMemo(() => new Intl.DateTimeFormat(undefined, { weekday: "long" }), []);
-  const monthLong = useMemo(() => new Intl.DateTimeFormat(undefined, { month: "long" }), []);
+  const weekdayLong = useMemo(() => new Intl.DateTimeFormat(locale, { weekday: "long" }), [locale]);
+  const monthLong = useMemo(() => new Intl.DateTimeFormat(locale, { month: "long" }), [locale]);
   const todayKey = useMemo(() => dateKey(today), [today]);
   const todayIndex = useMemo(
     () => allDays.findIndex((d) => dateKey(d) === todayKey),
@@ -142,6 +153,19 @@ function MiniCalendarContent({
   const virtuosoRef = useRef<any>(null);
 
   const slotOrder: Record<Slot, number> = { Breakfast: 0, Lunch: 1, Dinner: 2, Snack: 3 };
+
+  const slotLabels: Record<Slot, string> = useMemo(
+    () => ({
+      Breakfast: tSlots("breakfast"),
+      Lunch: tSlots("lunch"),
+      Dinner: tSlots("dinner"),
+      Snack: tSlots("snack"),
+    }),
+    [tSlots]
+  );
+
+  const noItemsLabel = tTimeline("noItems");
+  const addItemLabel = tTimeline("addItem");
 
   const handlePlan = useCallback(
     (dayKey: string, slot: Slot) => {
@@ -160,7 +184,7 @@ function MiniCalendarContent({
   if (allDays.length === 0) {
     return (
       <div className="text-default-500 flex items-center justify-center p-4 text-sm">
-        No days available.
+        {t("noDaysAvailable")}
       </div>
     );
   }
@@ -180,11 +204,14 @@ function MiniCalendarContent({
         return (
           <DayRow
             key={key}
+            addItemLabel={addItemLabel}
             date={d}
             dateKeyStr={key}
             isToday={isToday}
             items={items}
             monthLong={monthLong}
+            noItemsLabel={noItemsLabel}
+            slotLabels={slotLabels}
             weekdayLong={weekdayLong}
             onPlan={handlePlan}
           />
@@ -196,8 +223,10 @@ function MiniCalendarContent({
 }
 
 export default function MiniCalendar({ open, onOpenChange, recipeId }: MiniCalendarProps) {
+  const t = useTranslations("calendar.panel");
+
   return (
-    <Panel open={open} title="Add to Calendar" onOpenChange={onOpenChange}>
+    <Panel open={open} title={t("addToCalendar")} onOpenChange={onOpenChange}>
       <div className="flex min-h-0 flex-1 flex-col">
         {open && <MiniCalendarContent recipeId={recipeId} onOpenChange={onOpenChange} />}
       </div>

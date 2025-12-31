@@ -25,6 +25,16 @@
     "itemActions": "Item acties",
     "viewAllergenWarning": "Bekijk allergenenwaarschuwing",
     "allergyWarning": "Waarschuwing:",
-    "contains": "Bevat: {allergens}"
+    "contains": "Bevat: {allergens}",
+    "addItem": "Item toevoegen"
+  },
+  "panel": {
+    "addToCalendar": "Toevoegen aan agenda",
+    "addRecipe": "Recept toevoegen",
+    "noDaysAvailable": "Geen dagen beschikbaar.",
+    "searchPlaceholder": "Zoek recepten of voeg notities toe...",
+    "addNote": "Notitie toevoegen: {input}",
+    "noRecipesFound": "Geen recepten gevonden.",
+    "failedToLoadRecipes": "Kan recepten niet laden."
   }
 }

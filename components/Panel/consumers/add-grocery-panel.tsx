@@ -6,6 +6,7 @@ import type { StoreDto } from "@/types";
 import { useState, useEffect } from "react";
 import { Button, Input } from "@heroui/react";
 import { AnimatePresence } from "motion/react";
+import { useTranslations } from "next-intl";
 
 import { RecurrenceSuggestion } from "@/app/(app)/groceries/components/recurrence-suggestion";
 import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";
@@ -19,7 +20,11 @@ type AddGroceryPanelProps = {
   onOpenChange: (open: boolean) => void;
   stores: StoreDto[];
   onCreate: (itemName: string, storeId?: string | null) => void;
-  onCreateRecurring: (itemName: string, pattern: RecurrencePattern, storeId?: string | null) => void;
+  onCreateRecurring: (
+    itemName: string,
+    pattern: RecurrencePattern,
+    storeId?: string | null
+  ) => void;
 };
 
 export default function AddGroceryPanel({
@@ -29,6 +34,8 @@ export default function AddGroceryPanel({
   onCreate,
   onCreateRecurring,
 }: AddGroceryPanelProps) {
+  const t = useTranslations("groceries.panel");
+  const tActions = useTranslations("common.actions");
   const [recurrencePanelOpen, setRecurrencePanelOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 
@@ -81,7 +88,7 @@ export default function AddGroceryPanel({
       <Panel
         height={PANEL_HEIGHT_COMPACT}
         open={open && !recurrencePanelOpen}
-        title="Add Grocery"
+        title={t("addTitle")}
         onOpenChange={onOpenChange}
       >
         <div className="flex flex-col gap-4">
@@ -98,7 +105,7 @@ export default function AddGroceryPanel({
                   input: "text-lg font-medium",
                   inputWrapper: "border-primary-200 dark:border-primary-800",
                 }}
-                placeholder="e.g., 2 lbs chicken breast"
+                placeholder={t("placeholder")}
                 size="lg"
                 style={{ fontSize: "16px" }}
                 value={itemName}
@@ -113,9 +120,9 @@ export default function AddGroceryPanel({
 
               {/* Store selection */}
               <StoreSelector
-                label="Store (optional)"
-                noStoreDescription="Auto-detect from history"
-                placeholder="Auto-detect or select"
+                label={t("storeOptional")}
+                noStoreDescription={t("autoDetectFromHistory")}
+                placeholder={t("autoDetectOrSelect")}
                 selectedStoreId={selectedStoreId}
                 size="sm"
                 stores={stores}
@@ -158,7 +165,7 @@ export default function AddGroceryPanel({
                   variant="light"
                   onPress={() => setRecurrencePanelOpen(true)}
                 >
-                  + Add repeat
+                  {t("addRepeat")}
                 </Button>
               )}
             </div>
@@ -171,7 +178,7 @@ export default function AddGroceryPanel({
                 size="sm"
                 onPress={handleSubmit}
               >
-                Add
+                {tActions("add")}
               </Button>
             </div>
           </form>

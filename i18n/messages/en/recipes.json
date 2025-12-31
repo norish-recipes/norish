@@ -92,5 +92,33 @@
     "ingredientsRequired": "At least one ingredient is required",
     "stepsRequired": "At least one step is required",
     "servingsMin": "Servings must be at least 1"
+  },
+  "nutrition": {
+    "title": "Nutrition",
+    "calories": "Calories",
+    "fat": "Fat",
+    "carbs": "Carbs",
+    "protein": "Protein",
+    "showingPortions": "Showing values for {count} {count, plural, one {portion} other {portions}}",
+    "noInfo": "No nutrition information available",
+    "estimateWithAI": "Estimate with AI"
+  },
+  "measurementSystem": {
+    "label": "Measurement System",
+    "detected": "Detected: {system}",
+    "metric": "Metric",
+    "us": "US"
+  },
+  "timeInputs": {
+    "prep": "Prep",
+    "cook": "Cook",
+    "total": "Total"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Step {number}: Describe the step...",
+    "stepPlaceholderShort": "Step {number}"
+  },
+  "ingredientInput": {
+    "placeholder": "e.g., 2 cups flour"
   }
 }

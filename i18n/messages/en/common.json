@@ -122,6 +122,46 @@
   "formatting": {
     "title": "Formatting Tips",
     "heading": "Start a line with <strong>#</strong> for a heading",
-    "recipeLink": "Type <strong>/recipe name</strong> to link to another recipe"
+    "recipeLink": "Type <strong>/recipe name</strong> to link to another recipe",
+    "helpAriaLabel": "Formatting help"
+  },
+  "recurrence": {
+    "title": "Repeat",
+    "frequency": "Frequency",
+    "interval": "Interval",
+    "onDay": "On Day",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "day": "day",
+    "days": "days",
+    "week": "week",
+    "weeks": "weeks",
+    "month": "month",
+    "months": "months",
+    "next": "Next:",
+    "every": "Every",
+    "everyOther": "Every other",
+    "on": "on",
+    "today": "today",
+    "tomorrow": "tomorrow",
+    "weekdays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "weekdaysFull": {
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    }
   }
 }

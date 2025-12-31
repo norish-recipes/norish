@@ -146,8 +146,10 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
                 onValueChange={setText}
               />
               <p className="text-default-500 text-xs">
-                {text.length.toLocaleString()} / {MAX_RECIPE_PASTE_CHARS.toLocaleString()}{" "}
-                characters
+                {t("characters", {
+                  count: text.length.toLocaleString(),
+                  max: MAX_RECIPE_PASTE_CHARS.toLocaleString(),
+                })}
               </p>
             </ModalBody>
             <ModalFooter>

@@ -4,7 +4,6 @@ import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@/types";
 
 import { memo } from "react";
 import { Checkbox } from "@heroui/react";
-import { Bars2Icon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
@@ -34,13 +33,8 @@ function GroceryItemComponent({
 
   return (
     <div
-      className={`bg-content1 flex items-center gap-3 px-4 py-3 ${roundedClass} ${recurringGrocery ? "min-h-[72px]" : "min-h-14"}`}
+      className={`bg-content1 flex items-center gap-3 px-4 py-3 pl-10 ${roundedClass} ${recurringGrocery ? "min-h-[72px]" : "min-h-14"}`}
     >
-      {/* Drag handle indicator */}
-      <div className="text-default-300 -ml-1">
-        <Bars2Icon className="h-5 w-5" />
-      </div>
-
       <Checkbox
         isSelected={grocery.isDone}
         radius="full"

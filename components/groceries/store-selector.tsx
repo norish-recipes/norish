@@ -65,7 +65,7 @@ export function StoreSelector({
       size={size}
       onSelectionChange={handleChange}
     >
-      <SelectItem key="none" textValue={noStoreLabel}>
+      <SelectItem key="none" textValue={noStoreDescription ?? noStoreLabel}>
         <div className="flex items-center gap-2">
           <div className="bg-default-400 shrink-0 rounded-full p-1">
             <div className="h-3 w-3" />

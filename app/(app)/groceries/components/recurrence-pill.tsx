@@ -4,8 +4,13 @@ import type { RecurringGroceryDto } from "@/types";
 
 import { motion } from "motion/react";
 import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { useTranslations } from "next-intl";
 
-import { formatRecurrenceSummary, formatNextOccurrence } from "@/lib/recurrence/formatter";
+import {
+  formatRecurrenceSummary,
+  formatNextOccurrence,
+  type RecurrenceTranslations,
+} from "@/lib/recurrence/formatter";
 import { isOverdue } from "@/lib/recurrence/calculator";
 
 type RecurrencePillProps = {
@@ -25,14 +30,40 @@ export function RecurrencePill({
   onClick,
   className = "",
 }: RecurrencePillProps) {
+  const t = useTranslations("common.recurrence");
+
+  // Build translations object for the formatter
+  const formatterTranslations: RecurrenceTranslations = {
+    every: t("every"),
+    everyOther: t("everyOther"),
+    on: t("on"),
+    day: t("day"),
+    days: t("days"),
+    week: t("week"),
+    weeks: t("weeks"),
+    month: t("month"),
+    months: t("months"),
+    today: t("today"),
+    tomorrow: t("tomorrow"),
+    weekdaysFull: {
+      "0": t("weekdaysFull.0"),
+      "1": t("weekdaysFull.1"),
+      "2": t("weekdaysFull.2"),
+      "3": t("weekdaysFull.3"),
+      "4": t("weekdaysFull.4"),
+      "5": t("weekdaysFull.5"),
+      "6": t("weekdaysFull.6"),
+    },
+  };
+
   const pattern = {
     rule: recurringGrocery.recurrenceRule as "day" | "week" | "month",
     interval: recurringGrocery.recurrenceInterval,
     weekday: recurringGrocery.recurrenceWeekday ?? undefined,
   };
 
-  const summary = formatRecurrenceSummary(pattern);
-  const nextDateText = formatNextOccurrence(recurringGrocery.nextPlannedFor);
+  const summary = formatRecurrenceSummary(pattern, formatterTranslations);
+  const nextDateText = formatNextOccurrence(recurringGrocery.nextPlannedFor, formatterTranslations);
   const nextText = nextDateText;
   const overdue = isOverdue(recurringGrocery.nextPlannedFor, recurringGrocery.lastCheckedDate);
 

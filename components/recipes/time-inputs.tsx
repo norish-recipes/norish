@@ -2,6 +2,7 @@
 
 import React, { useCallback } from "react";
 import { Input } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 export interface TimeInputsProps {
   prepMinutes?: number | null;
@@ -16,6 +17,8 @@ export default function TimeInputs({
   totalMinutes,
   onChange,
 }: TimeInputsProps) {
+  const t = useTranslations("recipes.timeInputs");
+
   const handleChange = useCallback(
     (field: "prepMinutes" | "cookMinutes" | "totalMinutes", value: string) => {
       // Allow empty string
@@ -69,7 +72,7 @@ export default function TimeInputs({
           inputWrapper: "border-default-200 dark:border-default-800",
         }}
         inputMode="numeric"
-        label="Prep"
+        label={t("prep")}
         pattern="[0-9]*"
         placeholder="0"
         size="md"
@@ -84,7 +87,7 @@ export default function TimeInputs({
           inputWrapper: "border-default-200 dark:border-default-800",
         }}
         inputMode="numeric"
-        label="Cook"
+        label={t("cook")}
         pattern="[0-9]*"
         placeholder="0"
         size="md"
@@ -99,7 +102,7 @@ export default function TimeInputs({
           inputWrapper: "border-default-200 dark:border-default-800",
         }}
         inputMode="numeric"
-        label="Total"
+        label={t("total")}
         pattern="[0-9]*"
         placeholder="0"
         size="md"

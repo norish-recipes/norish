@@ -11,6 +11,7 @@ import {
   RadioGroup,
   Radio,
 } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
@@ -32,6 +33,8 @@ export function DeleteStoreModal({
 }: DeleteStoreModalProps) {
   const [deleteOption, setDeleteOption] = useState<"keep" | "delete">("keep");
   const trpc = useTRPC();
+  const t = useTranslations("groceries.storeManager");
+  const tActions = useTranslations("common.actions");
 
   // Fetch grocery count for this store
   const { data: groceryCount } = useQuery({
@@ -61,17 +64,17 @@ export function DeleteStoreModal({
       onClose={onClose}
     >
       <ModalContent>
-        <ModalHeader>Delete Store</ModalHeader>
+        <ModalHeader>{t("deleteStore")}</ModalHeader>
         <ModalBody className="gap-4">
-          <p className="text-default-600 text-base">
-            Are you sure you want to delete <span className="font-semibold">{storeName}</span>?
-          </p>
+          <p className="text-default-600 text-base">{t("confirmDelete", { storeName })}</p>
 
           {itemCount > 0 && (
             <div>
               <p className="text-danger mb-3 text-sm font-medium">
-                This store has {itemCount} grocery item{itemCount !== 1 ? "s" : ""}.
-                What would you like to do with them?
+                {itemCount === 1
+                  ? t("hasItems", { count: itemCount })
+                  : t("hasItemsPlural", { count: itemCount })}{" "}
+                {t("whatToDo")}
               </p>
 
               <RadioGroup
@@ -81,30 +84,28 @@ export function DeleteStoreModal({
               >
                 <Radio value="keep">
                   <div className="ml-1">
-                    <p className="text-base font-medium">Keep items</p>
-                    <p className="text-default-500 text-xs">Move items to Unsorted</p>
+                    <p className="text-base font-medium">{t("keepItems")}</p>
+                    <p className="text-default-500 text-xs">{t("keepItemsDescription")}</p>
                   </div>
                 </Radio>
                 <Radio value="delete">
                   <div className="ml-1">
-                    <p className="text-base font-medium">Delete items</p>
-                    <p className="text-default-500 text-xs">Remove all items in this store</p>
+                    <p className="text-base font-medium">{t("deleteItems")}</p>
+                    <p className="text-default-500 text-xs">{t("deleteItemsDescription")}</p>
                   </div>
                 </Radio>
               </RadioGroup>
             </div>
           )}
 
-          {itemCount === 0 && (
-            <p className="text-default-500 text-sm">This store has no items.</p>
-          )}
+          {itemCount === 0 && <p className="text-default-500 text-sm">{t("noItems")}</p>}
         </ModalBody>
         <ModalFooter>
           <Button variant="light" onPress={onClose}>
-            Cancel
+            {tActions("cancel")}
           </Button>
           <Button color="danger" onPress={handleConfirm}>
-            Delete Store
+            {t("deleteStore")}
           </Button>
         </ModalFooter>
       </ModalContent>

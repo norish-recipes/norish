@@ -27,8 +27,16 @@ import { siteConfig } from "@/config/site";
 import { useAutoHide } from "@/hooks/auto-hide";
 import { useUserContext } from "@/context/user-context";
 
+// Map hrefs to translation keys (same as navbar.tsx)
+const navLabelKeys: Record<string, "home" | "calendar" | "groceries"> = {
+  "/": "home",
+  "/groceries": "groceries",
+  "/calendar": "calendar",
+};
+
 export const MobileNav = () => {
   const t = useTranslations("navbar.mobile");
+  const tNav = useTranslations("navbar.nav");
   const pathname = usePathname();
   const { mobileSearchOpen, setMobileSearchOpen } = useAppStore((s) => s);
   const { filters, setFilters } = useRecipesFiltersContext();
@@ -302,7 +310,9 @@ export const MobileNav = () => {
                         href={item.href}
                       >
                         <Icon className="h-5 w-5" />
-                        <span className="leading-none">{item.label}</span>
+                        <span className="leading-none">
+                          {tNav(navLabelKeys[item.href] ?? "home")}
+                        </span>
                       </NextLink>
                     </li>
                   );

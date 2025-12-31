@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Button, Image } from "@heroui/react";
 import { XMarkIcon, PhotoIcon, Bars3Icon } from "@heroicons/react/16/solid";
 import { Reorder, useDragControls } from "motion/react";
+import { useTranslations } from "next-intl";
 
 import SmartTextInput from "@/components/shared/smart-text-input";
 import { MeasurementSystem } from "@/types";
@@ -47,6 +48,7 @@ export default function StepInput({
   systemUsed = "metric",
   recipeId,
 }: StepInputProps) {
+  const t = useTranslations("recipes.stepInput");
   const [items, setItems] = useState<StepItem[]>([createStepItem("", [])]);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -271,6 +273,8 @@ export default function StepInput({
           recipeId={recipeId}
           showRemove={items.length > 1 && (!!item.text || item.images.length > 0)}
           stepNumber={getStepNumber(index)}
+          stepPlaceholder={t("stepPlaceholder", { number: index + 1 })}
+          stepPlaceholderShort={t("stepPlaceholderShort", { number: index + 1 })}
           uploadingIndex={uploadingIndex}
           onBlur={() => handleBlur(index)}
           onFileSelect={() => handleFileSelect(index)}
@@ -305,6 +309,8 @@ interface StepRowProps {
   uploadingIndex: number | null;
   fileInputRefs: React.RefObject<(HTMLInputElement | null)[]>;
   dragConstraintsRef: React.RefObject<HTMLUListElement | null>;
+  stepPlaceholder: string;
+  stepPlaceholderShort: string;
   onValueChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onBlur: () => void;
@@ -324,6 +330,8 @@ function StepRow({
   uploadingIndex,
   fileInputRefs,
   dragConstraintsRef,
+  stepPlaceholder,
+  stepPlaceholderShort,
   onValueChange,
   onKeyDown,
   onBlur,
@@ -371,9 +379,7 @@ function StepRow({
         <div className="flex flex-1 flex-col gap-2">
           <SmartTextInput
             minRows={2}
-            placeholder={
-              index === 0 ? `Step ${index + 1}: Describe the step...` : `Step ${index + 1}`
-            }
+            placeholder={index === 0 ? stepPlaceholder : stepPlaceholderShort}
             value={item.text}
             onBlur={onBlur}
             onKeyDown={onKeyDown}

@@ -5,7 +5,15 @@ import type { StoreDto, StoreColor } from "@/types";
 import { useState, useRef } from "react";
 import { Button, Input } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
-import { Bars3Icon, PencilIcon, TrashIcon, PlusIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  Bars3Icon,
+  PencilIcon,
+  TrashIcon,
+  PlusIcon,
+  CheckIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 import Panel, { PANEL_HEIGHT_LARGE } from "@/components/Panel/Panel";
 import { DynamicHeroIcon, STORE_ICON_NAMES } from "@/components/groceries/dynamic-hero-icon";
@@ -28,6 +36,8 @@ type EditingStore = {
 
 export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPanelProps) {
   const { createStore, updateStore, deleteStore, reorderStores } = useStoresMutations();
+  const t = useTranslations("groceries.storeManager");
+  const tActions = useTranslations("common.actions");
 
   const [editingStore, setEditingStore] = useState<EditingStore | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -97,19 +107,14 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
 
   return (
     <>
-      <Panel
-        height={PANEL_HEIGHT_LARGE}
-        open={open}
-        title="Manage Stores"
-        onOpenChange={onOpenChange}
-      >
+      <Panel height={PANEL_HEIGHT_LARGE} open={open} title={t("title")} onOpenChange={onOpenChange}>
         <div className="flex h-full flex-col gap-4">
           {/* Store list */}
           <div ref={dragConstraintsRef} className="flex-1 overflow-y-auto">
             {stores.length === 0 && !editingStore && (
               <div className="text-default-400 py-8 text-center">
-                <p>No stores yet</p>
-                <p className="text-sm">Create a store to organize your groceries</p>
+                <p>{t("noStoresYet")}</p>
+                <p className="text-sm">{t("createStoreHint")}</p>
               </div>
             )}
 
@@ -136,6 +141,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
               <div className="mt-2">
                 <StoreEditForm
                   editing={editingStore}
+                  translations={{ t, tActions }}
                   onCancel={handleCancel}
                   onChange={setEditingStore}
                   onSave={handleSave}
@@ -149,6 +155,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
             <div className="border-default-200 border-t pt-4">
               <StoreEditForm
                 editing={editingStore}
+                translations={{ t, tActions }}
                 onCancel={handleCancel}
                 onChange={setEditingStore}
                 onSave={handleSave}
@@ -165,7 +172,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
               variant="solid"
               onPress={handleStartCreate}
             >
-              Add Store
+              {t("addStore")}
             </Button>
           )}
         </div>
@@ -194,7 +201,13 @@ interface StoreListItemProps {
   onDelete: () => void;
 }
 
-function StoreListItem({ store, isEditing, dragConstraintsRef, onEdit, onDelete }: StoreListItemProps) {
+function StoreListItem({
+  store,
+  isEditing,
+  dragConstraintsRef,
+  onEdit,
+  onDelete,
+}: StoreListItemProps) {
   const controls = useDragControls();
   const colorClasses = getStoreColorClasses(store.color as StoreColor);
 
@@ -249,16 +262,22 @@ interface StoreEditFormProps {
   onChange: (store: EditingStore) => void;
   onSave: () => void;
   onCancel: () => void;
+  translations: {
+    t: ReturnType<typeof useTranslations<"groceries.storeManager">>;
+    tActions: ReturnType<typeof useTranslations<"common.actions">>;
+  };
 }
 
-function StoreEditForm({ editing, onChange, onSave, onCancel }: StoreEditFormProps) {
+function StoreEditForm({ editing, onChange, onSave, onCancel, translations }: StoreEditFormProps) {
+  const { t, tActions } = translations;
+
   return (
     <div className="bg-content2 flex flex-col gap-4 rounded-lg p-4">
       {/* Name input */}
       <Input
         autoFocus
-        label="Store name"
-        placeholder="e.g., Supermarket"
+        label={t("storeName")}
+        placeholder={t("storeNamePlaceholder")}
         size="sm"
         value={editing.name}
         onKeyDown={(e) => {
@@ -272,7 +291,7 @@ function StoreEditForm({ editing, onChange, onSave, onCancel }: StoreEditFormPro
 
       {/* Color picker */}
       <div>
-        <p className="text-default-600 mb-2 text-sm font-medium">Color</p>
+        <p className="text-default-600 mb-2 text-sm font-medium">{t("storeColor")}</p>
         <div className="flex flex-wrap gap-2">
           {STORE_COLOR_OPTIONS.map((color) => {
             const colorClasses = getStoreColorClasses(color);
@@ -282,7 +301,7 @@ function StoreEditForm({ editing, onChange, onSave, onCancel }: StoreEditFormPro
               <button
                 key={color}
                 className={`h-8 w-8 rounded-full transition-transform ${colorClasses.bg} ${
-                  isSelected ? "ring-2 ring-offset-2 scale-110" : ""
+                  isSelected ? "scale-110 ring-2 ring-offset-2" : ""
                 } ${colorClasses.ring}`}
                 type="button"
                 onClick={() => onChange({ ...editing, color })}
@@ -294,7 +313,7 @@ function StoreEditForm({ editing, onChange, onSave, onCancel }: StoreEditFormPro
 
       {/* Icon picker */}
       <div>
-        <p className="text-default-600 mb-2 text-sm font-medium">Icon</p>
+        <p className="text-default-600 mb-2 text-sm font-medium">{t("storeIcon")}</p>
         <div className="flex flex-wrap gap-2">
           {STORE_ICON_NAMES.map((iconName) => {
             const isSelected = editing.icon === iconName;
@@ -322,16 +341,11 @@ function StoreEditForm({ editing, onChange, onSave, onCancel }: StoreEditFormPro
       <div className="flex justify-end gap-2">
         <Button size="sm" variant="flat" onPress={onCancel}>
           <XMarkIcon className="h-4 w-4" />
-          Cancel
+          {tActions("cancel")}
         </Button>
-        <Button
-          color="primary"
-          isDisabled={!editing.name.trim()}
-          size="sm"
-          onPress={onSave}
-        >
+        <Button color="primary" isDisabled={!editing.name.trim()} size="sm" onPress={onSave}>
           <CheckIcon className="h-4 w-4" />
-          {editing.id ? "Save" : "Create"}
+          {editing.id ? tActions("save") : t("create")}
         </Button>
       </div>
     </div>
