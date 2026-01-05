@@ -73,20 +73,18 @@ export function useAutoHide({
       clearTimeout(scrollTimeout.current);
       scrollTimeout.current = null;
     }
-    // Ignore scroll events for 300ms to let scroll restoration settle
-    ignoreScrollUntil.current = Date.now() + 300;
-    // Sync lastScrollY after scroll restoration completes
-    const timer = setTimeout(() => {
-      lastScrollY.current = scrollY.get();
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [pathname, scrollY]);
-
-  // Initialize lastScrollY on mount
-  useEffect(() => {
+    // Reset lastScrollY immediately to current position to prevent
+    // scroll events from previous page affecting the new page
     lastScrollY.current = scrollY.get();
-  }, [scrollY]);
+    // Ignore scroll events for 1000ms to let Virtuoso/other content settle
+    ignoreScrollUntil.current = Date.now() + 1000;
+
+    return () => {
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+    };
+  }, [pathname, scrollY]);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const prev = lastScrollY.current;
