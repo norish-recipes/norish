@@ -270,28 +270,72 @@ describe("Mealie Parser", () => {
       expect(dto!.recipeIngredients![1].unit).toBe("tablespoon");
     });
 
-    it("returns null for recipe with unresolvable ingredient (no food_id, no original_text, no note)", async () => {
-      const unresolvableIngredients: MealieIngredient[] = [
+    it("throws error for recipe with all empty ingredients (no food_id, no original_text, no note)", async () => {
+      const emptyIngredients: MealieIngredient[] = [
         {
           id: 1,
           recipe_id: "recipe-1",
           food_id: null,
           unit_id: "unit-cup",
-          quantity: 2,
+          quantity: 0,
           note: "",
           original_text: null as any,
           position: 0,
+        },
+        {
+          id: 2,
+          recipe_id: "recipe-1",
+          food_id: null,
+          unit_id: "",
+          quantity: 0,
+          note: "",
+          original_text: null as any,
+          position: 1,
+        },
+      ];
+
+      await expect(
+        parseMealieRecipeToDTO(mockRecipe, emptyIngredients, mockInstructions, lookups)
+      ).rejects.toThrow("has no valid ingredients after filtering empty ones");
+    });
+
+    it("skips empty ingredients and imports recipe when some ingredients are valid", async () => {
+      const mixedIngredients: MealieIngredient[] = [
+        {
+          id: 1,
+          recipe_id: "recipe-1",
+          original_text: "2 cups tomatoes",
+          position: 0,
+        },
+        {
+          id: 2,
+          recipe_id: "recipe-1",
+          food_id: null,
+          unit_id: "",
+          quantity: 0,
+          note: "",
+          original_text: null as any,
+          position: 1, // This empty one should be skipped
+        },
+        {
+          id: 3,
+          recipe_id: "recipe-1",
+          original_text: "1 tablespoon olive oil",
+          position: 2,
         },
       ];
 
       const dto = await parseMealieRecipeToDTO(
         mockRecipe,
-        unresolvableIngredients,
+        mixedIngredients,
         mockInstructions,
         lookups
       );
 
-      expect(dto).toBeNull();
+      expect(dto).not.toBeNull();
+      expect(dto!.recipeIngredients).toHaveLength(2); // Empty ingredient skipped
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("2 cups tomatoes");
+      expect(dto!.recipeIngredients![1].ingredientName).toBe("1 tablespoon olive oil");
     });
 
     it("resolves tags from recipes_to_tags", async () => {
@@ -471,6 +515,31 @@ describe("Mealie Parser", () => {
       expect(dto).not.toBeNull();
       expect(dto!.recipeIngredients).toHaveLength(1);
       expect(dto!.recipeIngredients![0].ingredientName).toBe("some ingredient note");
+    });
+
+    it("treats quantity: 0 as null (ingredient text already contains quantity)", async () => {
+      const zeroQuantityIngredients: MealieIngredient[] = [
+        {
+          id: 1,
+          recipe_id: "recipe-1",
+          note: "500 g lean minced beef",
+          quantity: 0,
+          original_text: null as any,
+          position: 0,
+        },
+      ];
+
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        zeroQuantityIngredients,
+        mockInstructions,
+        lookups
+      );
+
+      expect(dto).not.toBeNull();
+      expect(dto!.recipeIngredients).toHaveLength(1);
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("500 g lean minced beef");
+      expect(dto!.recipeIngredients![0].amount).toBeNull(); // 0 should be treated as null
     });
   });
 });

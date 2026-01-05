@@ -24,7 +24,7 @@ export enum ArchiveFormat {
 export type ImportResult = {
   imported: RecipeDashboardDTO[];
   errors: Array<{ file: string; error: string }>; // keep going on partial failures
-  skipped: number; // duplicates
+  skipped: Array<{ file: string; reason: string }>; // duplicates
 };
 
 /**
@@ -122,11 +122,27 @@ type RecipeImportItem = {
 };
 
 /**
+ * Item that can be either a parsed recipe or a parsing error
+ */
+type RecipeImportItemOrError =
+  | RecipeImportItem
+  | { dto: undefined; fileName: string; parseError: string };
+
+/**
+ * Check if an import item is a parsing error
+ */
+function isParseError(
+  item: RecipeImportItemOrError
+): item is Extract<RecipeImportItemOrError, { parseError: string }> {
+  return "parseError" in item;
+}
+
+/**
  * Generic import loop that handles duplicate detection, persistence, and progress reporting.
- * Takes an async generator that yields parsed recipe DTOs.
+ * Takes an async generator that yields parsed recipe DTOs or parsing errors.
  */
 async function importRecipeItems(
-  items: AsyncGenerator<RecipeImportItem, void, unknown>,
+  items: AsyncGenerator<RecipeImportItemOrError, void, unknown>,
   userId: string | undefined,
   userIds: string[],
   onProgress?: (
@@ -137,18 +153,29 @@ async function importRecipeItems(
 ): Promise<ImportResult> {
   const imported: RecipeDashboardDTO[] = [];
   const errors: Array<{ file: string; error: string }> = [];
-  let skipped = 0;
+  const skipped: Array<{ file: string; reason: string }> = [];
   let current = 0;
 
-  for await (const { dto, fileName } of items) {
+  for await (const item of items) {
     current++;
+
+    // Handle parsing errors
+    if (isParseError(item)) {
+      const error = { file: item.fileName, error: item.parseError };
+      errors.push(error);
+      onProgress?.(current, undefined, error);
+      continue;
+    }
+
+    // Handle regular import items
+    const { dto, fileName } = item;
 
     try {
       // Check for duplicates
       const existingId = await findExistingRecipe(userIds, dto.url, dto.name);
 
       if (existingId) {
-        skipped++;
+        skipped.push({ file: fileName, reason: "Duplicate recipe" });
         onProgress?.(current, undefined, undefined);
         continue;
       }
@@ -175,7 +202,9 @@ async function importRecipeItems(
 /**
  * Generator for Mela recipes
  */
-async function* generateMelaRecipes(zip: JSZip): AsyncGenerator<RecipeImportItem, void, unknown> {
+async function* generateMelaRecipes(
+  zip: JSZip
+): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const melaRecipes = await parseMelaArchive(zip);
 
   for (let i = 0; i < melaRecipes.length; i++) {
@@ -188,37 +217,49 @@ async function* generateMelaRecipes(zip: JSZip): AsyncGenerator<RecipeImportItem
 /**
  * Generator for Mealie recipes
  * Builds lookup maps for foods, units, tags, and categories before processing recipes.
- * Skips recipes that have unresolvable ingredients (returns null from parseMealieRecipeToDTO).
+ * Catches parsing errors and yields them as error items instead of throwing.
  */
-async function* generateMealieRecipes(zip: JSZip): AsyncGenerator<RecipeImportItem, void, unknown> {
+async function* generateMealieRecipes(
+  zip: JSZip
+): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const { recipes, database } = await parseMealieArchive(zip);
 
   // Build lookup maps once for efficient resolution
   const lookups = buildMealieLookups(database);
 
   for (const mealieRecipe of recipes) {
-    const ingredients = database.recipes_ingredients.filter(
-      (ing) => ing.recipe_id === mealieRecipe.id
-    );
-    const instructions = database.recipe_instructions.filter(
-      (inst) => inst.recipe_id === mealieRecipe.id
-    );
-    const imageBuffer = await extractMealieRecipeImage(zip, mealieRecipe.id);
+    const recipeName = mealieRecipe.name || mealieRecipe.id;
+    const fileName = `recipe_${recipeName}`;
 
-    const dto = await parseMealieRecipeToDTO(
-      mealieRecipe,
-      ingredients,
-      instructions,
-      lookups,
-      imageBuffer
-    );
+    try {
+      const ingredients = database.recipes_ingredients.filter(
+        (ing) => ing.recipe_id === mealieRecipe.id
+      );
+      const instructions = database.recipe_instructions.filter(
+        (inst) => inst.recipe_id === mealieRecipe.id
+      );
+      const imageBuffer = await extractMealieRecipeImage(zip, mealieRecipe.id);
 
-    // Skip recipes that couldn't be parsed (e.g., unresolvable ingredients)
-    if (dto === null) {
-      continue;
+      const dto = await parseMealieRecipeToDTO(
+        mealieRecipe,
+        ingredients,
+        instructions,
+        lookups,
+        imageBuffer
+      );
+
+      if (dto) {
+        yield { dto, fileName };
+      }
+    } catch (error) {
+      // Yield error item instead of throwing to allow import to continue
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      yield {
+        dto: undefined,
+        fileName,
+        parseError: errorMessage,
+      };
     }
-
-    yield { dto, fileName: `recipe_${mealieRecipe.name || mealieRecipe.id}` };
   }
 }
 
@@ -227,7 +268,7 @@ async function* generateMealieRecipes(zip: JSZip): AsyncGenerator<RecipeImportIt
  */
 async function* generateTandoorRecipes(
   zip: JSZip
-): AsyncGenerator<RecipeImportItem, void, unknown> {
+): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const tandoorRecipes = await extractTandoorRecipes(zip);
 
   for (const { recipe, image, fileName } of tandoorRecipes) {
@@ -242,7 +283,7 @@ async function* generateTandoorRecipes(
  */
 async function* generatePaprikaRecipes(
   zip: JSZip
-): AsyncGenerator<RecipeImportItem, void, unknown> {
+): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const paprikaRecipes = await extractPaprikaRecipes(zip);
 
   for (const { recipe, image, fileName } of paprikaRecipes) {
@@ -280,7 +321,7 @@ export async function importArchive(
   }
 
   // Select generator based on format
-  let generator: AsyncGenerator<RecipeImportItem, void, unknown>;
+  let generator: AsyncGenerator<RecipeImportItemOrError, void, unknown>;
 
   switch (format) {
     case ArchiveFormat.MELA:

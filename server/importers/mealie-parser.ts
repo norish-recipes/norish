@@ -313,7 +313,7 @@ function resolveUnitName(ing: MealieIngredient, unitsMap: Map<string, MealieUnit
 /**
  * Parse a single Mealie recipe and map to our Recipe shape.
  * Supports both parsed ingredients (with food_id/unit_id) and unparsed (original_text/note).
- * Returns null if the recipe has ingredients that cannot be resolved.
+ * Throws error if the recipe has no valid ingredients or cannot be parsed.
  */
 export async function parseMealieRecipeToDTO(
   recipe: MealieRecipe,
@@ -321,7 +321,7 @@ export async function parseMealieRecipeToDTO(
   instructions: MealieInstruction[],
   lookups: MealieLookups,
   imageBuffer?: Buffer
-): Promise<FullRecipeInsertDTO | null> {
+): Promise<FullRecipeInsertDTO> {
   const title = recipe.name?.trim();
 
   if (!title) throw new Error("Missing recipe name");
@@ -353,23 +353,25 @@ export async function parseMealieRecipeToDTO(
   for (const ing of recipeIngredients) {
     const ingredientName = resolveIngredientName(ing, lookups.foods);
 
-    // If we can't resolve the ingredient name, skip the entire recipe
+    // Skip completely empty ingredients (no food_id, no original_text, empty note)
     if (!ingredientName) {
-      log.warn(
-        { title, ingredientId: ing.id, food_id: ing.food_id },
-        "Could not resolve ingredient name, skipping recipe"
-      );
-
-      return null;
+      log.warn({ title, ingredientId: ing.id, food_id: ing.food_id }, "Skipping empty ingredient");
+      continue;
     }
 
     const unitName = resolveUnitName(ing, lookups.units);
 
     ingredientArray.push({
       name: ingredientName,
-      amount: ing.quantity ?? null,
+      amount: ing.quantity && ing.quantity > 0 ? ing.quantity : null,
       unit: unitName,
     });
+  }
+
+  // After filtering empty ingredients, if no ingredients remain, throw error
+  if (ingredientArray.length === 0) {
+    log.error({ title }, "Recipe has no valid ingredients after filtering");
+    throw new Error(`Recipe "${title}" has no valid ingredients after filtering empty ones`);
   }
 
   // Infer measurement system from ingredients
@@ -468,7 +470,7 @@ export async function parseMealieRecipeToDTO(
 
   if (!parsed.success) {
     log.error({ title, issues: parsed.error.issues }, "Validation failed for recipe");
-    throw new Error(`Schema validation failed: ${parsed.error.message}`);
+    throw new Error(`Schema validation failed for recipe "${title}": ${parsed.error.message}`);
   }
 
   return parsed.data;

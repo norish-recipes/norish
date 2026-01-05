@@ -53,7 +53,7 @@ export default function RecipeMetadata({
             startContent={<StarIcon className="text-warning h-4 w-4" />}
             variant="flat"
           >
-            {averageRating.toFixed(1)}
+            {Math.round(averageRating)}
           </Chip>
         )}
 
