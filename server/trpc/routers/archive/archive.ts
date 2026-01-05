@@ -182,7 +182,7 @@ async function runArchiveImportAsync(
     const result = await runArchiveImport(userId, userIds, buffer, onProgress);
 
     // Update totals
-    skippedCount = result.skipped;
+    skippedCount = result.skipped.length;
 
     log.info(
       {

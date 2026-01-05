@@ -63,7 +63,14 @@ export function createModelsFromConfig(config: {
     case "ollama": {
       if (!endpoint) throw new Error("Endpoint is required for Ollama provider");
 
-      const ollama = createOllama({ baseURL: endpoint });
+      // Normalize endpoint: ensure it ends with /api for ollama-ai-provider-v2
+      let normalizedEndpoint = endpoint.replace(/\/+$/, "");
+
+      if (!normalizedEndpoint.endsWith("/api")) {
+        normalizedEndpoint = `${normalizedEndpoint}/api`;
+      }
+
+      const ollama = createOllama({ baseURL: normalizedEndpoint });
 
       return {
         model: ollama(model),

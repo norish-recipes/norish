@@ -162,6 +162,7 @@ async function importRecipeItems(
     // Handle parsing errors
     if (isParseError(item)) {
       const error = { file: item.fileName, error: item.parseError };
+
       errors.push(error);
       onProgress?.(current, undefined, error);
       continue;
@@ -254,6 +255,7 @@ async function* generateMealieRecipes(
     } catch (error) {
       // Yield error item instead of throwing to allow import to continue
       const errorMessage = error instanceof Error ? error.message : String(error);
+
       yield {
         dto: undefined,
         fileName,
