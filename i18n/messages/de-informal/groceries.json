@@ -1,0 +1,74 @@
+{
+  "page": {
+    "title": "Einkaufsliste",
+    "addItem": "Eintrag hinzufügen",
+    "addItems": "Einträge hinzufügen",
+    "viewByStore": "Nach Geschäft",
+    "viewByRecipe": "Nach Rezept",
+    "viewMode": "Ansicht",
+    "manageStores": "Geschäfte verwalten"
+  },
+  "empty": {
+    "title": "Deine Einkaufsliste wartet",
+    "description": "Nutze den Button \"Eintrag hinzufügen\" oben, um zu beginnen.",
+    "manual": "Manuelle Einträge"
+  },
+  "item": {
+    "unnamedItem": "Unbenannter Eintrag"
+  },
+  "store": {
+    "unsorted": "Unsortiert",
+    "noItems": "Keine Einträge in diesem Geschäft",
+    "storeActions": "Aktionen",
+    "markAllDone": "Alle abhaken",
+    "deleteDone": "Erledigte löschen",
+    "done": "{count} erledigt"
+  },
+  "storeManager": {
+    "title": "Geschäfte verwalten",
+    "addStore": "Geschäft hinzufügen",
+    "editStore": "Geschäft bearbeiten",
+    "deleteStore": "Geschäft löschen",
+    "storeName": "Name des Geschäfts",
+    "storeNamePlaceholder": "z.B. Supermarkt",
+    "storeColor": "Farbe",
+    "storeIcon": "Symbol",
+    "confirmDelete": "Möchtest du {storeName} wirklich löschen?",
+    "deleteWarning": "Einträge in diesem Geschäft werden in \"Unsortiert\" verschoben.",
+    "noStoresYet": "Noch keine Geschäfte",
+    "createStoreHint": "Erstelle ein Geschäft, um deine Einkaufsliste zu organisieren",
+    "hasItems": "Dieses Geschäft hat {count} Eintrag.",
+    "hasItemsPlural": "Dieses Geschäft hat {count} Einträge.",
+    "whatToDo": "Was möchtest du mit ihnen tun?",
+    "keepItems": "Einträge behalten",
+    "keepItemsDescription": "Verschiebe Einträge in Unsortiert",
+    "deleteItems": "Einträge löschen",
+    "deleteItemsDescription": "Entferne alle Einträge in diesem Geschäft",
+    "noItems": "Dieses Geschäft hat keine Einträge.",
+    "create": "Erstellen"
+  },
+  "panel": {
+    "addTitle": "Einkauf hinzufügen",
+    "editTitle": "Einkauf bearbeiten",
+    "itemName": "Name des Eintrags",
+    "itemNamePlaceholder": "z.B. Milch, Eier, Brot...",
+    "selectStore": "Geschäft auswählen",
+    "noStore": "Kein Geschäft",
+    "recurrence": "Wiederholung",
+    "savePreference": "Geschäft für diesen Eintrag merken",
+    "addAnother": "Weiteren hinzufügen",
+    "addRepeat": "+ Wiederholung hinzufügen",
+    "storeOptional": "Geschäft (optional)",
+    "autoDetectFromHistory": "Aus Verlauf erkennen",
+    "autoDetectOrSelect": "Erkennen oder auswählen",
+    "placeholder": "z.B. 500g Hähnchenbrust",
+    "editPlaceholder": "z.B. Milch jede Woche",
+    "servings": "Portionen",
+    "loadingIngredients": "Zutaten werden geladen...",
+    "noIngredients": "Keine Zutaten.",
+    "addSelectedToGroceries": "Zur Einkaufsliste hinzufügen",
+    "ingredientsAdded": "Zutaten zur Einkaufsliste hinzugefügt.",
+    "ingredientsFailed": "Fehler beim Hinzufügen der Zutaten zur Einkaufsliste.",
+    "addToGroceries": "Zur Einkaufsliste hinzufügen"
+  }
+}

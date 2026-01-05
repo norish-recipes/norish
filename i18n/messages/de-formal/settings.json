@@ -1,0 +1,455 @@
+{
+  "page": {
+    "title": "Einstellungen",
+    "loading": "Wird geladen...",
+    "ariaLabel": "Einstellungen-Reiter"
+  },
+  "tabs": {
+    "user": "Benutzer",
+    "household": "Haushalt",
+    "caldav": "CalDAV",
+    "admin": "Admin"
+  },
+  "user": {
+    "profile": {
+      "title": "Profil",
+      "nameLabel": "Name",
+      "namePlaceholder": "Ihr Name",
+      "emailLabel": "E-Mail",
+      "avatarHint": "Klicken Sie auf Ihr Bild, um das Profilfoto zu ändern",
+      "saveChanges": "Änderungen speichern"
+    },
+    "allergies": {
+      "title": "Allergien",
+      "description": "Geben Sie Ihre Lebensmittelallergien an, um Warnungen zu erhalten, wenn Sie Rezepte planen, die Allergene enthalten. Diese Informationen werden verwendet, um Sie zu warnen, wenn ein geplantes Rezept Zutaten enthält, die Ihren Allergien entsprechen.",
+      "placeholder": "Geben Sie Allergien an (z.B. Gluten, Nüsse, Milchprodukte)...",
+      "saveButton": "Allergien speichern"
+    },
+    "apiKeys": {
+      "title": "API-Schlüssel",
+      "description": "API-Schlüssel ermöglichen programmatischen Zugriff auf die Norish API. Nutzen Sie sie für Integrationen, Shortcuts und Automatisierung.",
+      "keyNameLabel": "Schlüsselbenennung (optional)",
+      "keyNamePlaceholder": "z.B. iOS-Verknüpfung",
+      "createKey": "Schlüssel erstellen",
+      "yourKeys": "Ihre API-Schlüssel",
+      "noKeys": "Noch keine API-Schlüssel. Erstellen Sie einen, um zu beginnen.",
+      "tableHeaders": {
+        "name": "NAME",
+        "keyPrefix": "SCHLÜSSELPRÄFIX",
+        "created": "ERSTELLT",
+        "status": "STATUS",
+        "actions": "AKTIONEN"
+      },
+      "unnamed": "Unbenannt",
+      "active": "Aktiv",
+      "disabled": "Deaktiviert",
+      "disableKey": "Schlüssel deaktivieren",
+      "enableKey": "Schlüssel aktivieren",
+      "deleteKey": "Schlüssel löschen",
+      "generatedModal": {
+        "title": "API-Schlüssel generiert",
+        "warning": "Speichern Sie diesen Schlüssel jetzt! Sie können ihn später nicht mehr sehen. Wir speichern nur einen Hash und können diesen Schlüssel nicht wiederherstellen.",
+        "hint": "Nutzen Sie diesen Schlüssel im <code>x-api-key</code>-Header bei API-Anfragen.",
+        "confirmButton": "Ich habe es gespeichert"
+      },
+      "deleteModal": {
+        "title": "API-Schlüssel löschen",
+        "message": "Sind Sie sicher, dass Sie diesen API-Schlüssel löschen möchten? Alle Anwendungen, die ihn nutzen, verlieren sofort den Zugriff. Das kann nicht rückgängig gemacht werden.",
+        "confirmButton": "Schlüssel löschen"
+      }
+    },
+    "archiveImport": {
+      "title": "Rezeptarchiv importieren",
+      "description": "Importiere Rezepte aus Mela (.melarecipes), Mealie, Tandoor oder Paprika (.zip)-Exporten"
+    },
+    "dangerZone": {
+      "title": "Gefahrenzone",
+      "description": "Wenn Sie Ihr Konto löschen, gibt es kein Zurück. Bitte seien Sie sich sicher.",
+      "deleteButton": "Mein Konto löschen",
+      "deleteModal": {
+        "title": "Konto löschen",
+        "permanentWarning": "Diese Aktion ist permanent und kann nicht rückgängig gemacht werden!",
+        "dataWarning": "Ihre persönlichen Daten, einschließlich Einkaufsliste, Kalendereinträge und Notizen, werden permanent gelöscht.",
+        "recipesNote": "Rezepte, die Sie erstellt haben, werden erhalten, aber nicht mehr mit Ihrem Konto verknüpft.",
+        "adminNote": "Wenn Sie Administrator eines Haushalts mit anderen Mitgliedern sind, müssen Sie die Admin-Berechtigung zunächst übertragen.",
+        "confirmButton": "Mein Konto löschen"
+      }
+    }
+  },
+  "household": {
+    "pageTitle": "Haushaltseinstellungen",
+    "info": {
+      "yourRole": "Ihre Rolle",
+      "admin": "Administrator",
+      "member": "Mitglied",
+      "members": "Mitglieder",
+      "leaveButton": "Haushalt verlassen",
+      "leaveModal": {
+        "title": "Haushalt verlassen",
+        "confirmMessage": "Sind Sie sicher, dass Sie {name} verlassen möchten?",
+        "adminWarning": "Sie sind der Administrator. Sie müssen die Admin-Berechtigung zunächst übertragen.",
+        "confirmButton": "Haushalt verlassen"
+      }
+    },
+    "members": {
+      "title": "Mitglieder",
+      "tableHeaders": {
+        "name": "NAME",
+        "role": "ROLLE",
+        "actions": "AKTIONEN"
+      },
+      "you": "Du",
+      "kickButton": "Entfernen",
+      "makeAdminButton": "Administrator machen",
+      "kickModal": {
+        "title": "Benutzer entfernen",
+        "confirmMessage": "Sind Sie sicher, dass Sie {name} aus dem Haushalt entfernen möchten?",
+        "warning": "Er/Sie verliert Zugriff auf alle gemeinsamen Rezepte, Einkaufsliste und Kalendereinträge.",
+        "confirmButton": "Benutzer entfernen"
+      },
+      "transferModal": {
+        "title": "Admin-Berechtigung übertragen",
+        "confirmMessage": "Sind Sie sicher, dass Sie die Admin-Berechtigung an {name} übertragen möchten?",
+        "warning": "Sie werden ein normales Mitglied und können keine Benutzer mehr entfernen oder Join-Codes verwalten.",
+        "confirmButton": "Admin übertragen"
+      },
+      "toasts": {
+        "kickFailed": "Fehler beim Entfernen des Benutzers",
+        "transferSuccess": "Admin übertragen an {name}",
+        "transferFailed": "Fehler beim Übertragen des Admin"
+      }
+    },
+    "joinCode": {
+      "title": "Join-Code",
+      "shareDescription": "Teilen Sie diesen Code mit anderen, um sie zu Ihrem Haushalt einzuladen.",
+      "expiresIn": "Gültig bis:",
+      "regenerateButton": "Neu generieren",
+      "expired": "Abgelaufen",
+      "noCodeDescription": "Kein aktiver Join-Code. Generieren Sie einen, um neue Mitglieder einzuladen.",
+      "generateButton": "Join-Code generieren"
+    },
+    "create": {
+      "title": "Haushalt erstellen",
+      "description": "Erstellen Sie einen neuen Haushalt, um Rezepte und Einkaufslisten mit Familie oder Freunden zu teilen.",
+      "nameLabel": "Haushaltsname",
+      "namePlaceholder": "z.B. Familie Müller",
+      "submitButton": "Haushalt erstellen"
+    },
+    "join": {
+      "title": "Haushalt beitreten",
+      "description": "Geben Sie einen Beitrittscode ein, um einem bestehenden Haushalt beizutreten.",
+      "codeLabel": "Beitrittscode",
+      "codePlaceholder": "8-stelliger Code",
+      "submitButton": "Haushalt beitreten"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "CalDAV-Synchronisierung einrichten",
+      "description": "Verbinden Sie Ihren CalDAV-kompatiblen Kalender, um Ihre Mahlzeitenpläne automatisch zu synchronisieren",
+      "gettingStarted": "Erste Schritte mit CalDAV",
+      "providerDescription": "Sie benötigen einen CalDAV-kompatiblen Kalenderdienst. Beliebte Anbieter sind:",
+      "serverUrlLabel": "Server-URL",
+      "serverUrlDescription": "Basis-URL Ihres CalDAV-Servers (z.B. https://dav.beispiel.de)",
+      "serverUrlPlaceholder": "https://dav.beispiel.de",
+      "usernameLabel": "Benutzername",
+      "usernamePlaceholder": "Benutzername",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "Passwort",
+      "calendarLabel": "Kalender",
+      "calendarPlaceholder": "Kalender auswählen",
+      "calendarPlaceholderDisabled": "Bitte testen Sie zuerst die Verbindung",
+      "calendarDescription": "Wählen Sie, welcher Kalender mit Mahlzeitenplänen synchronisiert werden soll",
+      "calendarDescriptionDisabled": "Verbindung zuerst testen, um verfügbare Kalender zu laden",
+      "timeFormat": "Format: HH:MM-HH:MM",
+      "timeFormatError": "Format muss HH:MM-HH:MM sein",
+      "breakfastTime": "Frühstückszeit",
+      "lunchTime": "Mittagessenszeit",
+      "dinnerTime": "Abendessenszeit",
+      "snackTime": "Snack-Zeit",
+      "testConnection": "Verbindung testen",
+      "saveConfiguration": "Konfiguration speichern"
+    },
+    "config": {
+      "title": "CalDAV-Konfiguration",
+      "editTitle": "CalDAV-Konfiguration bearbeiten",
+      "serverUrl": "Server-URL",
+      "enabled": "Aktiviert",
+      "disabled": "Deaktiviert",
+      "editButton": "Bearbeiten",
+      "deleteButton": "Löschen",
+      "saveChanges": "Änderungen speichern",
+      "advancedSettings": "Erweiterte Einstellungen",
+      "timezone": "Zeitzone: {timezone}",
+      "connectionStatus": {
+        "connected": "Verbunden",
+        "checking": "Wird überprüft...",
+        "disconnected": "Getrennt",
+        "unknown": "Unbekannt"
+      }
+    },
+    "deleteModal": {
+      "title": "CalDAV-Konfiguration löschen",
+      "confirmMessage": "Sind Sie sicher, dass Sie Ihre CalDAV-Konfiguration löschen möchten?",
+      "deleteEventsLabel": "Synchronisierte Ereignisse löschen",
+      "deleteEventsDescription": "Entfernen Sie alle Ereignisse, die in Ihrem CalDAV-Kalender erstellt wurden",
+      "confirmButton": "Löschen"
+    },
+    "syncStatus": {
+      "title": "Synchronisierungsstatus",
+      "syncNow": "Jetzt synchronisieren",
+      "clearFilter": "Filter löschen",
+      "clickToFilter": "Klick auf ein Badge zum Filtern",
+      "showingItems": "Zeige {start}-{end} von {total} Einträgen",
+      "tableHeaders": {
+        "item": "EINTRAG",
+        "type": "TYP",
+        "date": "DATUM",
+        "meal": "MAHLZEIT",
+        "status": "STATUS",
+        "lastSync": "ZULETZT SYNCHRONISIERT",
+        "error": "FEHLER"
+      },
+      "statuses": {
+        "synced": "Synchronisiert",
+        "pending": "Ausstehend",
+        "failed": "Fehlgeschlagen",
+        "removed": "Entfernt"
+      },
+      "emptyFiltered": "Keine {status}-Einträge gefunden",
+      "emptyDefault": "Keine Synchronisierungsdatensätze gefunden",
+      "errorDetails": "Fehlerdetails"
+    }
+  },
+  "admin": {
+    "registration": {
+      "title": "Registrierung",
+      "allowRegistration": "Neue Benutzerregistrierung zulassen",
+      "description": "Wenn deaktiviert, können sich nur bestehende Benutzer anmelden"
+    },
+    "permissions": {
+      "title": "Rezept-Berechtigungen",
+      "description": "Steuere, wer Rezepte ansehen, bearbeiten und löschen kann. Server-Administratoren haben immer vollen Zugriff.",
+      "viewRecipes": "Rezepte ansehen",
+      "viewDescription": "Wer kann Rezepte im Dashboard sehen",
+      "editRecipes": "Rezepte bearbeiten",
+      "editDescription": "Wer kann Rezeptdetails ändern",
+      "deleteRecipes": "Rezepte löschen",
+      "deleteDescription": "Wer kann Rezepte entfernen",
+      "levels": {
+        "everyone": "Alle",
+        "everyoneDescription": "Alle authentifizierten Benutzer",
+        "household": "Haushalt",
+        "householdDescription": "Rezept-Eigentümer und ihre Haushaltsmitglieder",
+        "owner": "Nur Eigentümer",
+        "ownerDescription": "Nur der Rezept-Eigentümer"
+      },
+      "note": "Einkaufslisten- und Kalendereinträge folgen automatisch den Haushaltsregeln. Haushaltsmitglieder können Einträge aller anderen im gleichen Haushalt immer bearbeiten/löschen."
+    },
+    "system": {
+      "title": "Systemeinstellungen",
+      "cleanup": {
+        "title": "Bereinigungsplaner",
+        "label": "Bereinigungsmonate",
+        "description": "Lösche geplante Mahlzeiten, die älter als diese Anzahl von Monaten sind"
+      },
+      "server": {
+        "title": "Serververwaltung",
+        "restartLabel": "Server neu starten",
+        "restartDescription": "Konfigurationsänderungen übernehmen, die einen Neustart erfordern",
+        "restartButton": "Server neu starten"
+      }
+    },
+    "restart": {
+      "title": "Server neu starten",
+      "confirmMessage": "Sind Sie sicher, dass Sie den Server neu starten möchten?",
+      "importantTitle": "Wichtig:",
+      "warning1": "Alle aktiven Verbindungen werden getrennt",
+      "warning2": "Der Server ist für ein paar Sekunden nicht verfügbar",
+      "warning3": "Stellen Sie sicher, dass Ihre Bereitstellung <code>restart: always</code> konfiguriert hat, sonst startet der Server nicht automatisch neu",
+      "confirmButton": "Jetzt neu starten"
+    },
+    "authProviders": {
+      "title": "Authentifizierungsanbieter",
+      "requiresRestart": "Neustart erforderlich",
+      "description": "Konfiguriere Authentifizierungsmethoden. Änderungen erfordern einen Server-Neustart.",
+      "passwordAuth": {
+        "title": "E-Mail & Passwort",
+        "description": "Erlauben Sie Benutzern, sich mit E-Mail und Passwort anzumelden"
+      },
+      "oauthDescription": "Konfiguriere OAuth-Anbieter für SSO-Authentifizierung.",
+      "oidc": {
+        "title": "OIDC-Anbieter",
+        "subtitle": "Generischer OpenID Connect",
+        "fields": {
+          "name": "Anbieter-Name",
+          "namePlaceholder": "z.B. Authentik, Keycloak",
+          "issuer": "Aussteller-URL",
+          "issuerPlaceholder": "https://Ihr-idp.de",
+          "clientId": "Client ID",
+          "clientSecret": "Client Secret",
+          "wellknown": "Well-known URL (optional)",
+          "wellknownPlaceholder": "Wird automatisch vom Aussteller abgeleitet, wenn nicht gesetzt"
+        },
+        "claimMapping": {
+          "title": "Claim-Zuordnung",
+          "description": "Automatisch Rollen und Haushalte basierend auf OIDC-Claims zuweisen. Benutzer mit der Admin-Gruppe erhalten Server-Admin-Privilegien. Benutzer mit einer Haushalts-Gruppe werden automatisch diesem Haushalt hinzugefügt.",
+          "securityWarning": "Warnung: Das Aktivieren der Claim-Zuordnung ermöglicht Ihrem Identitätsanbieter, Admin-Privilegien und Haushaltsmitgliedschaften zu kontrollieren. Aktivieren Sie dies nur, wenn Sie Ihrem OIDC-Anbieter vollständig vertrauen und die Group-Claims richtig konfiguriert haben.",
+          "scopes": "Zusätzliche Scopes",
+          "scopesPlaceholder": "groups, roles",
+          "scopesDescription": "Komma-getrennte Liste zusätzlicher OAuth-Scopes (z.B. groups für Keycloak)",
+          "groupsClaim": "Groups Claim",
+          "groupsClaimDescription": "Name des Claims mit Benutzergruppen/-rollen",
+          "adminGroup": "Admin-Gruppe",
+          "adminGroupDescription": "Gruppenname, der die Server-Admin-Rolle gewährt (Groß-/Kleinschreibung egal)",
+          "householdPrefix": "Haushalts-Präfix",
+          "householdPrefixDescription": "Präfix für Haushalts-Gruppennamen (z.B. norish_household_family => Haushalt 'family')"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "GitHub OAuth",
+        "fields": {
+          "clientId": "Client ID",
+          "clientSecret": "Client Secret"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "Google OAuth",
+        "fields": {
+          "clientId": "Client ID",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "Client Secret"
+        }
+      },
+      "form": {
+        "testSuccess": "Verbindung erfolgreich",
+        "removeTitle": "{provider} entfernen",
+        "removeConfirm": "Bist du sicher, dass du diesen Anbieter entfernen möchtest?"
+      },
+      "envBadge": {
+        "db": "Verwaltet von DB",
+        "env": "Verwaltet von Env"
+      }
+    },
+    "contentDetection": {
+      "title": "Inhalterkennung",
+      "description": "Konfiguriere, wie Rezepte von Webseiten erkannt und analysiert werden.",
+      "contentIndicators": {
+        "title": "Inhalts-Indikatoren",
+        "subtitle": "Schlüsselwörter, die Rezept-Seiten identifizieren",
+        "description": "Schema-Indikatoren erkennen strukturierte Rezeptdaten (JSON-LD, Microdata). Inhalts-Indikatoren sind Schlüsselwörter, die darauf hindeuten, dass eine Seite ein Rezept enthält."
+      },
+      "units": {
+        "title": "Maßeinheiten",
+        "subtitle": "Maßeinheits-Definitionen zum Analysieren",
+        "description": "Definiere Maßeinheiten mit ihrer Kurzform, Plural und alternativen Schreibweisen. Werden beim Analysieren von Zutat-Mengen verwendet."
+      },
+      "recurrence": {
+        "title": "Wiederholungsmuster",
+        "subtitle": "Natürlichsprachliche Muster für wiederkehrende Einträge",
+        "description": "Definiere Locale-spezifische Muster zum Analysieren von Wiederholungsregeln aus natürlicher Sprache (z.B. 'jede Woche', 'om de dag')."
+      }
+    },
+    "aiProcessing": {
+      "title": "KI & Verarbeitung",
+      "description": "Konfiguriere KI-gestützte Funktionen zum Extrahieren von Rezepten und zur Videoverarbeitung.",
+      "aiConfig": {
+        "title": "KI-Konfiguration",
+        "subtitle": "Rezept-Parsing und -Extraktion"
+      },
+      "video": {
+        "title": "Videoverarbeitung",
+        "subtitle": "Social-Media-Video-Extraktion & Transkription"
+      },
+      "prompts": {
+        "title": "Prompts",
+        "subtitle": "Passe KI-Anweisungen für Rezept-Verarbeitung an"
+      }
+    },
+    "aiConfig": {
+      "enableAI": "KI-Funktionen aktivieren",
+      "enableAIDescription": "Nutzen Sie KI, um Rezepte aus unstrukturierten Inhalten zu extrahieren",
+      "configureWarning": "Konfigurieren Sie die KI-Anbieter-Einstellungen unten, um KI-Funktionen zu aktivieren.",
+      "provider": "KI-Anbieter",
+      "providers": {
+        "openai": "OpenAI",
+        "perplexity": "Perplexity",
+        "ollama": "Ollama (Lokal)",
+        "lmStudio": "LM Studio (Lokal)",
+        "genericOpenai": "Generisch OpenAI-kompatibel"
+      },
+      "endpointUrl": "Endpoint-URL",
+      "model": "Modell",
+      "visionModel": "Vision-Modell (Optional)",
+      "visionModelDescription": "Optional: Nutzen Sie ein anderes Modell für Bild-/Vision-Aufgaben. Leer lassen, um das Modell oben zu nutzen.",
+      "apiKey": "API-Schlüssel",
+      "apiKeyPlaceholder": "Geben Sie API-Schlüssel ein",
+      "temperature": "Temperatur: {value}",
+      "temperatureHint": "Niedriger = fokussierter, Höher = kreativer",
+      "maxTokens": "Max Token",
+      "autoTagAllergies": "Allergene automatisch erkennen",
+      "autoTagAllergiesDescription": "Füge automatisch allergiebezogene Tags beim Importieren von Rezepten hinzu",
+      "alwaysUseAI": "Immer KI-Import verwenden",
+      "alwaysUseAIDescription": "Überspringe strukturierte Parser und extrahiere Rezepte nur mit KI",
+      "autoTaggingMode": "Auto-Tagging-Modus",
+      "autoTaggingModeDescription": "Weise importierten Rezepten automatisch Tags/Schlüsselwörter mit KI zu",
+      "autoTaggingModes": {
+        "disabled": "Deaktiviert",
+        "predefined": "Nur vordefinierte Tags",
+        "predefinedDb": "Vordefinierte + existierende Tags",
+        "freeform": "KI kann neue Tags erstellen"
+      },
+      "connectionSuccess": "Verbindung erfolgreich",
+      "testConnection": "Verbindung testen",
+      "vision": "Vision"
+    },
+    "videoConfig": {
+      "enableVideo": "Video-Parsing aktivieren",
+      "enableVideoDescription": "Extrahieren Sie Rezepte aus TikTok, Instagram, YouTube Shorts oder Facebook",
+      "configureWarning": "Konfigurieren Sie einen Transkriptions-Anbieter unten, um Video-Verarbeitung zu aktivieren.",
+      "maxLength": "Max. Videolänge (Sekunden)",
+      "maxLengthDescription": "Längere Videos brauchen mehr Zeit und Ressourcen zum Verarbeiten",
+      "ytDlpVersion": "yt-dlp-Version",
+      "ytDlpVersionDescription": "Version von yt-dlp zum Verwenden für Video-Downloads",
+      "transcription": "Transkription",
+      "transcriptionDescription": "Konvertiere Video-Audio zu Text für Rezept-Extraktion",
+      "transcriptionProvider": "Transkriptions-Anbieter",
+      "transcriptionProviderDescription": "Nur OpenAI und OpenAI-kompatible Endpoints unterstützen Whisper-Transkription",
+      "transcriptionProviders": {
+        "disabled": "Deaktiviert",
+        "openai": "OpenAI Whisper",
+        "genericOpenai": "Generisch OpenAI-kompatibel"
+      },
+      "transcriptionEndpoint": "Endpoint-URL",
+      "transcriptionEndpointDescription": "OpenAI-kompatibel Endpoint mit Whisper-Unterstützung",
+      "transcriptionModel": "Modell",
+      "transcriptionModelDescription": "Whisper-Modell zum Verwenden für Transkription",
+      "transcriptionApiKey": "API-Schlüssel",
+      "transcriptionApiKeyDescription": "Fällt auf KI-Konfigurations-API-Schlüssel zurück, wenn nicht gesetzt",
+      "transcriptionApiKeyPlaceholder": "Leer lassen, um KI-Konfigurations-Schlüssel zu verwenden"
+    },
+    "promptsConfig": {
+      "recipeExtraction": "Rezept-Extraktions-Prompt",
+      "recipeExtractionDescription": "Dieser Prompt wird verwendet, wenn Rezeptdaten von Webseiten oder Video-Transkripten extrahiert werden.",
+      "recipeExtractionPlaceholder": "Geben Sie den Rezept-Extraktions-Prompt ein...",
+      "unitConversion": "Einheiten-Konvertierungs-Prompt",
+      "unitConversionDescription": "Dieser Prompt wird verwendet, wenn Rezeptmaße zwischen metrischen und US-Systemen konvertiert werden. Verfügbare Variablen: sourceSystem, targetSystem, units",
+      "unitConversionPlaceholder": "Geben Sie den Einheiten-Konvertierungs-Prompt ein...",
+      "nutritionEstimation": "Nährwert-Schätzungs-Prompt",
+      "nutritionEstimationDescription": "Dieser Prompt wird verwendet, wenn Nährwertinformationen für ein Rezept geschätzt werden. Verfügbare Variablen: recipeName, servings, ingredients",
+      "nutritionEstimationPlaceholder": "Geben Sie den Nährwert-Schätzungs-Prompt ein...",
+      "autoTagging": "Auto-Tagging-Prompt",
+      "autoTaggingDescription": "Dieser Prompt wird verwendet, um Tags für importierte Rezepte zu generieren. Definiere Tagging-Regeln und vordefinierte Tags-Liste.",
+      "autoTaggingPlaceholder": "Geben Sie den Auto-Tagging-Prompt ein..."
+    },
+    "jsonEditor": {
+      "unsavedChanges": "Ungespeicherte Änderungen",
+      "placeholder": "Gib JSON-Konfiguration ein...",
+      "invalidJson": "Ungültiges JSON-Format",
+      "failedToSave": "Speichern fehlgeschlagen",
+      "failedToRestore": "Wiederherstellen der Standard fehlgeschlagen"
+    }
+  }
+}

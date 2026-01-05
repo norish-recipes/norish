@@ -5,10 +5,12 @@
  * To add a new language:
  * 1. Add the locale code to the `locales` array
  * 2. Add the display name in `localeNames`
- * 3. Create translation files in `i18n/messages/{locale}/`
+ * 3. Add the date format in `dateFormats`
+ * 4. Add the number format in `numberFormats`
+ * 5. Create translation files in `i18n/messages/{locale}/`
  */
 
-export const locales = ["en", "nl"] as const;
+export const locales = ["en", "nl", "de-informal", "de-formal"] as const;
 export const defaultLocale = "en" as const;
 
 export type Locale = (typeof locales)[number];
@@ -19,6 +21,8 @@ export type Locale = (typeof locales)[number];
 export const localeNames: Record<Locale, string> = {
   en: "English",
   nl: "Nederlands",
+  "de-informal": "Deutsch (Du)",
+  "de-formal": "Deutsch (Sie)",
 };
 
 /**
@@ -50,6 +54,12 @@ export const dateFormats: Record<Locale, Intl.DateTimeFormatOptions> = {
   nl: {
     dateStyle: "medium",
   },
+  "de-informal": {
+    dateStyle: "medium",
+  },
+  "de-formal": {
+    dateStyle: "medium",
+  },
 };
 
 /**
@@ -60,6 +70,12 @@ export const numberFormats: Record<Locale, Intl.NumberFormatOptions> = {
     maximumFractionDigits: 2,
   },
   nl: {
+    maximumFractionDigits: 2,
+  },
+  "de-informal": {
+    maximumFractionDigits: 2,
+  },
+  "de-formal": {
     maximumFractionDigits: 2,
   },
 };

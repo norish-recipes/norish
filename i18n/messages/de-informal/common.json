@@ -1,0 +1,167 @@
+{
+  "actions": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "add": "Hinzufügen",
+    "remove": "Entfernen",
+    "close": "Schließen",
+    "apply": "Anwenden",
+    "reset": "Zurücksetzen",
+    "clear": "Löschen",
+    "confirm": "Bestätigen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "done": "Fertig",
+    "retry": "Erneut versuchen",
+    "submit": "Absenden",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "sort": "Sortieren",
+    "import": "Importieren",
+    "aiImport": "KI-Import",
+    "importWithAI": "Mit KI importieren",
+    "goHome": "Zur Startseite",
+    "test": "Testen",
+    "format": "Formatieren",
+    "restoreDefaults": "Auf Standard zurücksetzen",
+    "saveChanges": "Änderungen speichern"
+  },
+  "status": {
+    "loading": "Wird geladen...",
+    "saving": "Wird gespeichert...",
+    "deleting": "Wird gelöscht...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "noResults": "Keine Ergebnisse gefunden",
+    "changing": "Wird geändert…"
+  },
+  "filters": {
+    "title": "Filter",
+    "search": "Suchen",
+    "sort": "Sortieren",
+    "mode": "Modus",
+    "modeAll": "Alle",
+    "modeAny": "Beliebig",
+    "tags": "Tags",
+    "searchTags": "Tags durchsuchen",
+    "favoritesAndRating": "Favoriten & Bewertung",
+    "favorites": "Favoriten",
+    "sortByTitle": "Titel",
+    "sortByDate": "Datum",
+    "clearFilters": "Filter löschen"
+  },
+  "time": {
+    "minutes": "Min",
+    "hours": "Std"
+  },
+  "validation": {
+    "required": "Dieses Feld ist erforderlich",
+    "invalidUrl": "Bitte gib eine gültige URL ein"
+  },
+  "slots": {
+    "breakfast": "Frühstück",
+    "lunch": "Mittagessen",
+    "dinner": "Abendessen",
+    "snack": "Snack",
+    "chooseSlot": "Zeitfenster auswählen"
+  },
+  "connection": {
+    "connecting": "Verbindung zu Norish wird hergestellt...",
+    "syncing": "Wird synchronisiert, bitte warten...",
+    "checkInternet": "Bitte überprüfe deine Internetverbindung",
+    "gettingUpdates": "Einen Moment, während wir die neuesten Updates abrufen"
+  },
+  "language": {
+    "title": "Sprache"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Seite nicht gefunden",
+    "message": "Oops! Ich konnte nicht finden, was du suchst.\nDie Seite wurde möglicherweise verschoben oder existiert nicht."
+  },
+  "import": {
+    "url": {
+      "title": "Rezept importieren",
+      "label": "Rezept-URL",
+      "placeholder": "https://example.com/your-recipe",
+      "failed": "Fehler beim Importieren des Rezepts",
+      "failedWithAI": "Fehler beim Importieren des Rezepts mit KI"
+    },
+    "paste": {
+      "title": "Aus Paste importieren",
+      "label": "Rezept-Text oder JSON-LD",
+      "placeholder": "Füge ein Rezept (Freitext) oder JSON-LD ein...",
+      "characters": "{count} / {max} Zeichen",
+      "tooLarge": "Paste zu groß",
+      "maxCharacters": "Maximal {max} Zeichen erlaubt",
+      "importing": "Rezept wird importiert...",
+      "importingWithAI": "Rezept wird mit KI importiert...",
+      "inProgress": "Import wird ausgeführt, bitte warten...",
+      "failed": "Import fehlgeschlagen"
+    },
+    "image": {
+      "title": "Aus Bild importieren",
+      "dropzone": "Bilder hier ablegen oder klicken zum Durchsuchen",
+      "paste": "zum Einfügen",
+      "formats": "Unterstützt JPG, PNG, WebP. Max 10 MB pro Datei.",
+      "invalidType": "Ungültiger Dateityp",
+      "notSupported": "{name} ist kein unterstütztes Bildformat",
+      "tooLarge": "Datei zu groß",
+      "exceeds": "{name} überschreitet das 10-MB-Limit",
+      "tooMany": "Zu viele Dateien",
+      "maxFiles": "Maximal {max} Dateien erlaubt",
+      "importing": "Rezept wird aus Bildern importiert...",
+      "analyzing": "Bilder werden analysiert, bitte warten...",
+      "failed": "Import fehlgeschlagen",
+      "selectedCount": "{count} Bilder ausgewählt - werden als ein Rezept kombiniert"
+    }
+  },
+  "formatting": {
+    "title": "Formatierungstipps",
+    "heading": "Starte eine Zeile mit <strong>#</strong> für eine Überschrift",
+    "recipeLink": "Gib <strong>/Rezeptname</strong> ein, um zu einem anderen Rezept zu verlinken",
+    "helpAriaLabel": "Formatierungshilfe"
+  },
+  "recurrence": {
+    "title": "Wiederholung",
+    "frequency": "Häufigkeit",
+    "interval": "Abstand",
+    "onDay": "Am Tag",
+    "daily": "Täglich",
+    "weekly": "Wöchentlich",
+    "monthly": "Monatlich",
+    "day": "Tag",
+    "days": "Tage",
+    "week": "Woche",
+    "weeks": "Wochen",
+    "month": "Monat",
+    "months": "Monate",
+    "next": "Nächste:",
+    "every": "Jeden/Jede",
+    "everyOther": "Jeden zweiten/Jede zweite",
+    "on": "am",
+    "today": "heute",
+    "tomorrow": "morgen",
+    "weekdays": {
+      "sun": "So",
+      "mon": "Mo",
+      "tue": "Di",
+      "wed": "Mi",
+      "thu": "Do",
+      "fri": "Fr",
+      "sat": "Sa"
+    },
+    "weekdaysFull": {
+      "0": "Sonntag",
+      "1": "Montag",
+      "2": "Dienstag",
+      "3": "Mittwoch",
+      "4": "Donnerstag",
+      "5": "Freitag",
+      "6": "Samstag"
+    }
+  }
+}
