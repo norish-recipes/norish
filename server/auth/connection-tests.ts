@@ -76,6 +76,38 @@ export async function testAIEndpoint(config: {
     case "openai":
       testUrl = "https://api.openai.com/v1/models";
       break;
+    case "azure":
+      // Azure uses deployment-specific endpoints, but we can test the base API
+      // If endpoint is provided, use it; otherwise we can't really test without knowing the resource URL
+      if (config.endpoint) {
+        testUrl = `${config.endpoint.replace(/\/$/, "")}/openai/models?api-version=2024-02-01`;
+      } else {
+        // Without an endpoint, we can only validate that an API key was provided
+        if (!config.apiKey) {
+          return { success: false, error: "API key is required for Azure OpenAI" };
+        }
+
+        return { success: true }; // Can't test without endpoint, assume valid if API key provided
+      }
+      break;
+    case "anthropic":
+      testUrl = "https://api.anthropic.com/v1/models";
+      break;
+    case "google":
+      if (!config.apiKey) {
+        return { success: false, error: "API key is required for Google AI" };
+      }
+      testUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${config.apiKey}`;
+      break;
+    case "mistral":
+      testUrl = "https://api.mistral.ai/v1/models";
+      break;
+    case "deepseek":
+      testUrl = "https://api.deepseek.com/models";
+      break;
+    case "groq":
+      testUrl = "https://api.groq.com/openai/v1/models";
+      break;
     case "ollama":
       if (!config.endpoint) {
         return { success: false, error: "Endpoint is required for Ollama" };
@@ -106,8 +138,24 @@ export async function testAIEndpoint(config: {
       Accept: "application/json",
     };
 
+    // Different providers use different auth headers
     if (config.apiKey) {
-      headers["Authorization"] = `Bearer ${config.apiKey}`;
+      switch (config.provider) {
+        case "anthropic":
+          headers["x-api-key"] = config.apiKey;
+          headers["anthropic-version"] = "2023-06-01";
+          break;
+        case "azure":
+          headers["api-key"] = config.apiKey;
+          break;
+        case "google":
+          // Google uses query param, already included in URL
+          break;
+        default:
+          // Most providers use Bearer token
+          headers["Authorization"] = `Bearer ${config.apiKey}`;
+          break;
+      }
     }
 
     const response = await fetch(testUrl, {

@@ -59,7 +59,6 @@ export {
   getModelCapabilities,
   listModels,
   listOllamaModels,
-  listOpenAIModels,
   listOpenAICompatibleModels,
   listTranscriptionModels,
   type ModelConfig,

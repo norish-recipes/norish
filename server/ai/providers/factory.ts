@@ -7,6 +7,12 @@ import type { ModelConfig, GenerationSettings, AIProvider } from "./types";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createPerplexity } from "@ai-sdk/perplexity";
+import { createAzure } from "@ai-sdk/azure";
+import { createMistral } from "@ai-sdk/mistral";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createDeepSeek } from "@ai-sdk/deepseek";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createGroq } from "@ai-sdk/groq";
 import { createOllama } from "ollama-ai-provider-v2";
 
 import { getAIConfig } from "@/config/server-config-loader";
@@ -101,6 +107,80 @@ export function createModelsFromConfig(config: {
         model: perplexity(model),
         visionModel: perplexity(visionModel || model),
         providerName: "Perplexity",
+      };
+    }
+
+    case "azure": {
+      if (!apiKey) throw new Error("API Key is required for Azure OpenAI provider");
+
+      // Azure uses deployment names as model identifiers
+      // The endpoint should be the Azure resource URL (e.g., https://your-resource.openai.azure.com)
+      const azure = endpoint ? createAzure({ apiKey, baseURL: endpoint }) : createAzure({ apiKey });
+
+      return {
+        model: azure(model),
+        visionModel: azure(visionModel || model),
+        providerName: "Azure OpenAI",
+      };
+    }
+
+    case "mistral": {
+      if (!apiKey) throw new Error("API Key is required for Mistral provider");
+
+      const mistral = createMistral({ apiKey });
+
+      return {
+        model: mistral(model),
+        visionModel: mistral(visionModel || model),
+        providerName: "Mistral",
+      };
+    }
+
+    case "anthropic": {
+      if (!apiKey) throw new Error("API Key is required for Anthropic provider");
+
+      const anthropic = createAnthropic({ apiKey });
+
+      return {
+        model: anthropic(model),
+        visionModel: anthropic(visionModel || model),
+        providerName: "Anthropic",
+      };
+    }
+
+    case "deepseek": {
+      if (!apiKey) throw new Error("API Key is required for DeepSeek provider");
+
+      const deepseek = createDeepSeek({ apiKey });
+
+      return {
+        model: deepseek(model),
+        visionModel: deepseek(visionModel || model),
+        providerName: "DeepSeek",
+      };
+    }
+
+    case "google": {
+      if (!apiKey) throw new Error("API Key is required for Google AI provider");
+
+      const google = createGoogleGenerativeAI({ apiKey });
+
+      return {
+        model: google(model),
+        visionModel: google(visionModel || model),
+        providerName: "Google AI",
+      };
+    }
+
+    case "groq": {
+      if (!apiKey) throw new Error("API Key is required for Groq provider");
+
+      const groq = createGroq({ apiKey });
+
+      return {
+        model: groq(model),
+        visionModel: groq(visionModel || model),
+        providerName: "Groq",
       };
     }
 

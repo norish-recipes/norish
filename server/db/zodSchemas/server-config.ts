@@ -166,6 +166,12 @@ export const AIProviderSchema = z.enum([
   "lm-studio",
   "generic-openai",
   "perplexity",
+  "azure",
+  "mistral",
+  "anthropic",
+  "deepseek",
+  "google",
+  "groq",
 ]);
 
 export type AIProvider = z.infer<typeof AIProviderSchema>;

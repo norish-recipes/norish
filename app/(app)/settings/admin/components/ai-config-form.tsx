@@ -47,16 +47,33 @@ export default function AIConfigForm() {
   const [saving, setSaving] = useState(false);
 
   // Fetch available models from the provider
-  const needsEndpoint = provider !== "openai" && provider !== "perplexity";
-  const needsApiKey =
-    provider === "openai" || provider === "generic-openai" || provider === "perplexity";
-  const isApiKeyConfigured = !!aiConfig?.apiKey;
+  // Cloud providers that don't require an endpoint (use official APIs)
+  const cloudProviders = [
+    "openai",
+    "azure",
+    "anthropic",
+    "google",
+    "mistral",
+    "deepseek",
+    "perplexity",
+    "groq",
+  ];
+  // Local providers that need an endpoint
+  const localProviders = ["ollama", "lm-studio"];
+  // Azure optionally accepts endpoint for custom resource URL
+  const needsEndpoint = localProviders.includes(provider) || provider === "generic-openai";
+  const supportsOptionalEndpoint = provider === "azure";
+  // Cloud providers need API key, local providers don't, generic-openai may need one
+  const needsApiKey = cloudProviders.includes(provider) || provider === "generic-openai";
+  // API key is only considered "configured" if the saved config matches the current provider
+  // This prevents validation from passing when switching between providers
+  const isApiKeyConfigured = !!aiConfig?.apiKey && aiConfig?.provider === provider;
 
   const canFetchModels =
     enabled &&
-    (provider === "openai" || provider === "perplexity"
+    (cloudProviders.includes(provider)
       ? apiKey || isApiKeyConfigured
-      : provider === "ollama" || provider === "lm-studio"
+      : localProviders.includes(provider)
         ? endpoint
         : endpoint); // generic-openai needs endpoint
 
@@ -131,21 +148,61 @@ export default function AIConfigForm() {
   const handleProviderChange = (newProvider: AIConfig["provider"]) => {
     if (newProvider !== provider) {
       setProvider(newProvider);
+      // Clear API key when switching providers
+      setApiKey("");
       // Set sensible defaults based on provider
-      if (newProvider === "openai") {
-        setModel("gpt-5-mini");
-        setVisionModel("");
-      } else if (newProvider === "perplexity") {
-        setModel("sonar");
-        setVisionModel("");
-      } else {
-        setModel("");
-        setVisionModel("");
+      switch (newProvider) {
+        case "openai":
+          setModel("gpt-5-mini");
+          setVisionModel("");
+          break;
+        case "azure":
+          setModel(""); // Azure uses deployment names, user must enter manually
+          setVisionModel("");
+          break;
+        case "anthropic":
+          setModel("claude-sonnet-latest");
+          setVisionModel("");
+          break;
+        case "google":
+          setModel("gemini-flash-latest");
+          setVisionModel("");
+          break;
+        case "mistral":
+          setModel("mistral-small-latest");
+          setVisionModel("");
+          break;
+        case "deepseek":
+          setModel("deepseek-chat");
+          setVisionModel("");
+          break;
+        case "perplexity":
+          setModel("sonar");
+          setVisionModel("");
+          break;
+        case "groq":
+          setModel("");
+          setVisionModel("");
+          break;
+        default:
+          setModel("");
+          setVisionModel("");
       }
-      // Clear endpoint when switching to OpenAI or Perplexity (don't need one)
-      if (newProvider === "openai" || newProvider === "perplexity") {
+      // Clear endpoint when switching to cloud providers (they don't need one)
+      const newCloudProviders = [
+        "openai",
+        "anthropic",
+        "google",
+        "mistral",
+        "deepseek",
+        "perplexity",
+        "groq",
+      ];
+
+      if (newCloudProviders.includes(newProvider)) {
         setEndpoint("");
       }
+      // Azure keeps endpoint as optional (for custom resource URL)
     }
   };
 
@@ -213,7 +270,13 @@ export default function AIConfigForm() {
         }
       >
         <SelectItem key="openai">{t("providers.openai")}</SelectItem>
+        <SelectItem key="azure">{t("providers.azure")}</SelectItem>
+        <SelectItem key="anthropic">{t("providers.anthropic")}</SelectItem>
+        <SelectItem key="google">{t("providers.google")}</SelectItem>
+        <SelectItem key="mistral">{t("providers.mistral")}</SelectItem>
+        <SelectItem key="deepseek">{t("providers.deepseek")}</SelectItem>
         <SelectItem key="perplexity">{t("providers.perplexity")}</SelectItem>
+        <SelectItem key="groq">{t("providers.groq")}</SelectItem>
         <SelectItem key="ollama">{t("providers.ollama")}</SelectItem>
         <SelectItem key="lm-studio">{t("providers.lmStudio")}</SelectItem>
         <SelectItem key="generic-openai">{t("providers.genericOpenai")}</SelectItem>
@@ -229,6 +292,17 @@ export default function AIConfigForm() {
         />
       )}
 
+      {supportsOptionalEndpoint && (
+        <Input
+          description={t("azureEndpointDescription")}
+          isDisabled={!enabled}
+          label={t("azureEndpoint")}
+          placeholder="https://your-resource.openai.azure.com"
+          value={endpoint}
+          onValueChange={setEndpoint}
+        />
+      )}
+
       <Autocomplete
         allowsCustomValue
         defaultItems={modelOptions}
@@ -236,7 +310,7 @@ export default function AIConfigForm() {
         isDisabled={!enabled}
         isLoading={isLoadingModels}
         label={t("model")}
-        placeholder={provider === "openai" ? "gpt-5-mini" : "llama3"}
+        placeholder={provider === "openai" ? "gpt-5-mini" : ""}
         onInputChange={setModel}
         onSelectionChange={(key) => key && setModel(key as string)}
       >
@@ -260,7 +334,7 @@ export default function AIConfigForm() {
         isDisabled={!enabled}
         isLoading={isLoadingModels}
         label={t("visionModel")}
-        placeholder={provider === "openai" ? "gpt-4o" : ""}
+        placeholder={provider === "openai" ? "gpt-5-mini" : ""}
         onInputChange={setVisionModel}
         onSelectionChange={(key) => key && setVisionModel(key as string)}
       >

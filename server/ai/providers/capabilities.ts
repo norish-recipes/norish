@@ -60,6 +60,55 @@ export async function getModelCapabilities(
           supportsStructuredOutput: false, // May not support json_schema
         };
 
+      case "perplexity":
+        return {
+          ...defaults,
+          supportsVision: false,
+          supportsStructuredOutput: false, // Perplexity models don't support structured output
+        };
+
+      case "azure":
+        return {
+          ...defaults,
+          supportsVision: true, // Azure OpenAI supports vision on GPT-4+ models
+          supportsStructuredOutput: true,
+        };
+
+      case "mistral":
+        return {
+          ...defaults,
+          supportsVision: true, // Pixtral models support vision
+          supportsStructuredOutput: true,
+        };
+
+      case "anthropic":
+        return {
+          ...defaults,
+          supportsVision: true, // Claude 3+ models support vision
+          supportsStructuredOutput: true,
+        };
+
+      case "deepseek":
+        return {
+          ...defaults,
+          supportsVision: false, // DeepSeek models don't support image input
+          supportsStructuredOutput: false, // Limited structured output support
+        };
+
+      case "google":
+        return {
+          ...defaults,
+          supportsVision: true, // Gemini models support vision
+          supportsStructuredOutput: true,
+        };
+
+      case "groq":
+        return {
+          ...defaults,
+          supportsVision: true, // Some Llama 3.2 models on Groq support vision
+          supportsStructuredOutput: true,
+        };
+
       default:
         return defaults;
     }

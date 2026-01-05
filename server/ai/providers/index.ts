@@ -24,7 +24,6 @@ export { getModelCapabilities } from "./capabilities";
 export {
   listModels,
   listOllamaModels,
-  listOpenAIModels,
   listOpenAICompatibleModels,
   listTranscriptionModels,
   listOpenAITranscriptionModels,
