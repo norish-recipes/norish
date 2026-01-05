@@ -1,9 +1,11 @@
 ##############################
 # Base image (minimal, no pnpm needed at runtime)
 ##############################
-FROM node:25-alpine@sha256:26ded7f450a0ad37241d2ae97ea521a59cb551a1785c8a950f74b0a291ad3aea AS base
+FROM node:25-alpine AS base
 
-RUN apk add --no-cache ca-certificates libc6-compat
+# Security: upgrade all packages to latest versions to fix CVEs
+RUN apk upgrade --no-cache && \
+    apk add --no-cache ca-certificates libc6-compat
 
 WORKDIR /app
 
@@ -87,8 +89,9 @@ FROM base AS runtime
 
 ARG YT_DLP_VERSION=2025.11.12
 
-# PostgreSQL client lib + ffmpeg + vips (for sharp) - runtime only, no -dev packages
-RUN apk add --no-cache libpq ffmpeg vips && \
+# Security: upgrade all packages first, then install runtime deps
+RUN apk upgrade --no-cache && \
+    apk add --no-cache libpq ffmpeg vips && \
     # Clean up npm (not needed, we use node directly)
     rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack && \
     rm -rf /var/cache/apk/* /tmp/* /root/.npm

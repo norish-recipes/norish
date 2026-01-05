@@ -2,7 +2,11 @@ import { z } from "zod";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 
 import { TagNameSchema } from "./tag";
-import { RecipeIngredientInputSchema, RecipeIngredientsWithIdSchema } from "./recipe-ingredients";
+import {
+  RecipeIngredientInputSchema,
+  RecipeIngredientInputBaseSchema,
+  RecipeIngredientsWithIdSchema,
+} from "./recipe-ingredients";
 import { StepStepSchema } from "./steps";
 import { RecipeImageSchema, RecipeImagesArraySchema } from "./recipe-images";
 
@@ -58,7 +62,7 @@ export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
 });
 
 export const FullRecipeUpdateSchema = RecipeUpdateBaseSchema.extend({
-  recipeIngredients: z.array(RecipeIngredientInputSchema.partial()).optional(),
+  recipeIngredients: z.array(RecipeIngredientInputBaseSchema.partial()).optional(),
   tags: z.array(TagNameSchema).optional(),
   steps: z.array(StepStepSchema).optional(),
   images: z.array(RecipeImageSchema).max(10).optional(),

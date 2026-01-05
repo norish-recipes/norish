@@ -5,7 +5,7 @@ env:
   DATABASE_URL: postgres://ci-user:ci-password@localhost:5432/ci-db
   MASTER_KEY: test-master-key
   SKIP_ENV_VALIDATION: "1"
-  
+
 on:
   push:
     branches:
@@ -28,12 +28,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22.21.1
+          node-version: 24.12.0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.26.0
+          version: 10.27.0
           run_install: false
       - name: Verify pnpm installation
         run: pnpm --version

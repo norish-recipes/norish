@@ -5,7 +5,6 @@ import { ingredients } from "@/server/db/schema";
 export const IngredientSelectBaseSchema = createSelectSchema(ingredients);
 export const IngredientInsertBaseSchema = createInsertSchema(ingredients).omit({
   id: true,
-  updatedAt: true,
   createdAt: true,
 });
 export const IngredientUpdateBaseSchema = createUpdateSchema(ingredients);
