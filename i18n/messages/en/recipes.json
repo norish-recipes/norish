@@ -51,6 +51,8 @@
     "autoTagging": "Generating tags...",
     "detectAllergies": "Detect Allergies",
     "detectingAllergies": "Detecting allergies...",
+    "estimateNutrition": "Estimate Nutrition",
+    "estimatingNutrition": "Estimating nutrition...",
     "screenOn": "Screen On",
     "keepScreenOn": "Keep Screen On",
     "actionsLabel": "Actions"

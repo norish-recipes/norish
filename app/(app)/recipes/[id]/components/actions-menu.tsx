@@ -44,8 +44,15 @@ export default function ActionsMenu({ id }: Props) {
   const { canEditRecipe, canDeleteRecipe, isAutoTaggingEnabled, isAIEnabled } =
     usePermissionsContext();
   const { deleteRecipe } = useRecipesContext();
-  const { recipe, isAutoTagging, triggerAutoTag, isDetectingAllergies, triggerAllergyDetection } =
-    useRecipeContextRequired();
+  const {
+    recipe,
+    isAutoTagging,
+    triggerAutoTag,
+    isDetectingAllergies,
+    triggerAllergyDetection,
+    isEstimatingNutrition,
+    estimateNutrition,
+  } = useRecipeContextRequired();
   const { allergies } = useActiveAllergies();
   const { isSupported, isActive, toggle } = useWakeLockContext();
   const t = useTranslations("recipes.actions");
@@ -121,6 +128,19 @@ export default function ActionsMenu({ id }: Props) {
       });
     }
 
+    // Show nutrition estimation when AI is enabled and user can edit
+    if (isAIEnabled && canEdit) {
+      items.push({
+        key: "estimate-nutrition",
+        label: isEstimatingNutrition ? t("estimatingNutrition") : t("estimateNutrition"),
+        icon: <SparklesIcon className="size-4" />,
+        onPress: estimateNutrition,
+        labelClassName: cssAIGradientText,
+        iconClassName: cssAIIconColor,
+        isDisabled: isEstimatingNutrition,
+      });
+    }
+
     if (canDelete) {
       items.push({
         key: "delete",
@@ -150,6 +170,8 @@ export default function ActionsMenu({ id }: Props) {
     allergies,
     isDetectingAllergies,
     triggerAllergyDetection,
+    isEstimatingNutrition,
+    estimateNutrition,
   ]);
 
   return (
