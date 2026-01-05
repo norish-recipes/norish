@@ -3,37 +3,66 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   parseMealieDatabase,
   parseMealieRecipeToDTO,
+  buildMealieLookups,
   type MealieRecipe,
   type MealieIngredient,
   type MealieInstruction,
+  type MealieDatabase,
+  type MealieLookups,
 } from "@/server/importers/mealie-parser";
 
 // @vitest-environment node
 
-// Mock the server config loader to avoid database calls
-vi.mock("@/config/server-config-loader", () => ({
-  getUnits: vi.fn().mockResolvedValue({
-    volume: {},
-    mass: {},
-    length: {},
-    temperature: {},
-  }),
-  getContentIndicators: vi.fn().mockResolvedValue([]),
-  getRecurrenceConfig: vi.fn().mockResolvedValue({}),
-}));
-
 // Mock the downloader to avoid actual image saving
-vi.mock("@/lib/downloader", () => ({
+vi.mock("@/server/downloader", () => ({
   saveImageBytes: vi.fn().mockResolvedValue("mocked-image-guid"),
 }));
 
+/**
+ * Helper to create empty lookups for simple tests
+ */
+function createEmptyLookups(): MealieLookups {
+  return {
+    foods: new Map(),
+    units: new Map(),
+    tags: new Map(),
+    categories: new Map(),
+    recipeTags: new Map(),
+    recipeCategories: new Map(),
+  };
+}
+
+/**
+ * Helper to create a minimal database for testing
+ */
+function createMinimalDatabase(overrides: Partial<MealieDatabase> = {}): MealieDatabase {
+  return {
+    recipes: [],
+    recipes_ingredients: [],
+    recipe_instructions: [],
+    ingredient_foods: [],
+    ingredient_units: [],
+    tags: [],
+    recipes_to_tags: [],
+    categories: [],
+    recipes_to_categories: [],
+    ...overrides,
+  };
+}
+
 describe("Mealie Parser", () => {
   describe("parseMealieDatabase", () => {
-    it("parses valid database.json", async () => {
+    it("parses valid database.json with all tables", async () => {
       const json = JSON.stringify({
         recipes: [{ id: "1", name: "Test Recipe" }],
         recipes_ingredients: [{ id: 1, recipe_id: "1", note: "1 cup flour" }],
         recipe_instructions: [{ id: "i1", recipe_id: "1", position: 0, text: "Mix ingredients" }],
+        ingredient_foods: [{ id: "food-1", name: "flour" }],
+        ingredient_units: [{ id: "unit-1", name: "cup" }],
+        tags: [{ id: "tag-1", name: "Dinner" }],
+        recipes_to_tags: [{ recipe_id: "1", tag_id: "tag-1" }],
+        categories: [{ id: "cat-1", name: "Italian" }],
+        recipes_to_categories: [{ recipe_id: "1", category_id: "cat-1" }],
       });
 
       const result = await parseMealieDatabase(json);
@@ -41,6 +70,12 @@ describe("Mealie Parser", () => {
       expect(result.recipes).toHaveLength(1);
       expect(result.recipes_ingredients).toHaveLength(1);
       expect(result.recipe_instructions).toHaveLength(1);
+      expect(result.ingredient_foods).toHaveLength(1);
+      expect(result.ingredient_units).toHaveLength(1);
+      expect(result.tags).toHaveLength(1);
+      expect(result.recipes_to_tags).toHaveLength(1);
+      expect(result.categories).toHaveLength(1);
+      expect(result.recipes_to_categories).toHaveLength(1);
     });
 
     it("handles missing arrays", async () => {
@@ -50,6 +85,12 @@ describe("Mealie Parser", () => {
       expect(result.recipes).toEqual([]);
       expect(result.recipes_ingredients).toEqual([]);
       expect(result.recipe_instructions).toEqual([]);
+      expect(result.ingredient_foods).toEqual([]);
+      expect(result.ingredient_units).toEqual([]);
+      expect(result.tags).toEqual([]);
+      expect(result.recipes_to_tags).toEqual([]);
+      expect(result.categories).toEqual([]);
+      expect(result.recipes_to_categories).toEqual([]);
     });
 
     it("throws on invalid JSON", async () => {
@@ -59,10 +100,46 @@ describe("Mealie Parser", () => {
     });
   });
 
+  describe("buildMealieLookups", () => {
+    it("builds lookup maps correctly", () => {
+      const database = createMinimalDatabase({
+        ingredient_foods: [
+          { id: "food-1", name: "flour" },
+          { id: "food-2", name: "sugar" },
+        ],
+        ingredient_units: [
+          { id: "unit-1", name: "cup" },
+          { id: "unit-2", name: "tablespoon" },
+        ],
+        tags: [
+          { id: "tag-1", name: "Dinner" },
+          { id: "tag-2", name: "Quick" },
+        ],
+        categories: [{ id: "cat-1", name: "Italian" }],
+        recipes_to_tags: [
+          { recipe_id: "recipe-1", tag_id: "tag-1" },
+          { recipe_id: "recipe-1", tag_id: "tag-2" },
+        ],
+        recipes_to_categories: [{ recipe_id: "recipe-1", category_id: "cat-1" }],
+      });
+
+      const lookups = buildMealieLookups(database);
+
+      expect(lookups.foods.get("food-1")?.name).toBe("flour");
+      expect(lookups.foods.get("food-2")?.name).toBe("sugar");
+      expect(lookups.units.get("unit-1")?.name).toBe("cup");
+      expect(lookups.tags.get("tag-1")?.name).toBe("Dinner");
+      expect(lookups.categories.get("cat-1")?.name).toBe("Italian");
+      expect(lookups.recipeTags.get("recipe-1")).toEqual(["tag-1", "tag-2"]);
+      expect(lookups.recipeCategories.get("recipe-1")).toEqual(["cat-1"]);
+    });
+  });
+
   describe("parseMealieRecipeToDTO", () => {
     let mockRecipe: MealieRecipe;
     let mockIngredients: MealieIngredient[];
     let mockInstructions: MealieInstruction[];
+    let lookups: MealieLookups;
 
     beforeEach(() => {
       mockRecipe = {
@@ -76,6 +153,7 @@ describe("Mealie Parser", () => {
         total_time: 45,
       };
 
+      // Ingredients with original_text (unparsed)
       mockIngredients = [
         {
           id: 1,
@@ -86,7 +164,7 @@ describe("Mealie Parser", () => {
         {
           id: 2,
           recipe_id: "recipe-1",
-          note: "1 tablespoon olive oil",
+          original_text: "1 tablespoon olive oil",
           position: 1,
         },
       ];
@@ -105,34 +183,183 @@ describe("Mealie Parser", () => {
           text: "Add tomatoes and simmer",
         },
       ];
+
+      lookups = createEmptyLookups();
     });
 
     it("maps Mealie recipe to DTO correctly", async () => {
-      const dto = await parseMealieRecipeToDTO(mockRecipe, mockIngredients, mockInstructions);
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        mockIngredients,
+        mockInstructions,
+        lookups
+      );
 
-      expect(dto.name).toBe("Vegetarian Shakshuka");
-      expect(dto.description).toBe("A delicious vegetarian dish");
-      expect(dto.url).toBe("https://example.com/recipe");
-      expect(dto.servings).toBe(4);
-      expect(dto.prepMinutes).toBe(15);
-      expect(dto.cookMinutes).toBe(30);
-      expect(dto.totalMinutes).toBe(45);
+      expect(dto).not.toBeNull();
+      expect(dto!.name).toBe("Vegetarian Shakshuka");
+      expect(dto!.description).toBe("A delicious vegetarian dish");
+      expect(dto!.url).toBe("https://example.com/recipe");
+      expect(dto!.servings).toBe(4);
+      expect(dto!.prepMinutes).toBe(15);
+      expect(dto!.cookMinutes).toBe(30);
+      expect(dto!.totalMinutes).toBe(45);
     });
 
-    it("prioritizes original_text over note for ingredients", async () => {
-      const dto = await parseMealieRecipeToDTO(mockRecipe, mockIngredients, mockInstructions);
+    it("parses ingredients from original_text", async () => {
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        mockIngredients,
+        mockInstructions,
+        lookups
+      );
 
-      expect(dto.recipeIngredients?.length).toBeGreaterThan(0);
-      // Should parse both ingredients
-      expect(dto.recipeIngredients?.length).toBe(2);
+      expect(dto).not.toBeNull();
+      expect(dto!.recipeIngredients).toHaveLength(2);
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("2 cups tomatoes, diced");
+      expect(dto!.recipeIngredients![1].ingredientName).toBe("1 tablespoon olive oil");
+    });
+
+    it("resolves parsed ingredients with food_id", async () => {
+      // Simulate Mealie "parsed" ingredients with food_id and unit_id
+      const parsedIngredients: MealieIngredient[] = [
+        {
+          id: 1,
+          recipe_id: "recipe-1",
+          food_id: "food-flour",
+          unit_id: "unit-cup",
+          quantity: 2,
+          note: "",
+          original_text: null as any,
+          position: 0,
+        },
+        {
+          id: 2,
+          recipe_id: "recipe-1",
+          food_id: "food-sugar",
+          unit_id: "unit-tbsp",
+          quantity: 1,
+          note: "packed",
+          original_text: null as any,
+          position: 1,
+        },
+      ];
+
+      const parsedLookups = createEmptyLookups();
+
+      parsedLookups.foods.set("food-flour", { id: "food-flour", name: "flour" });
+      parsedLookups.foods.set("food-sugar", { id: "food-sugar", name: "brown sugar" });
+      parsedLookups.units.set("unit-cup", { id: "unit-cup", name: "cup" });
+      parsedLookups.units.set("unit-tbsp", { id: "unit-tbsp", name: "tablespoon" });
+
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        parsedIngredients,
+        mockInstructions,
+        parsedLookups
+      );
+
+      expect(dto).not.toBeNull();
+      expect(dto!.recipeIngredients).toHaveLength(2);
+      // First ingredient: food name only (no note)
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("flour");
+      expect(dto!.recipeIngredients![0].amount).toBe(2);
+      expect(dto!.recipeIngredients![0].unit).toBe("cup");
+      // Second ingredient: food name + note
+      expect(dto!.recipeIngredients![1].ingredientName).toBe("brown sugar, packed");
+      expect(dto!.recipeIngredients![1].amount).toBe(1);
+      expect(dto!.recipeIngredients![1].unit).toBe("tablespoon");
+    });
+
+    it("returns null for recipe with unresolvable ingredient (no food_id, no original_text, no note)", async () => {
+      const unresolvableIngredients: MealieIngredient[] = [
+        {
+          id: 1,
+          recipe_id: "recipe-1",
+          food_id: null,
+          unit_id: "unit-cup",
+          quantity: 2,
+          note: "",
+          original_text: null as any,
+          position: 0,
+        },
+      ];
+
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        unresolvableIngredients,
+        mockInstructions,
+        lookups
+      );
+
+      expect(dto).toBeNull();
+    });
+
+    it("resolves tags from recipes_to_tags", async () => {
+      const lookupsWithTags = createEmptyLookups();
+
+      lookupsWithTags.tags.set("tag-1", { id: "tag-1", name: "Dinner" });
+      lookupsWithTags.tags.set("tag-2", { id: "tag-2", name: "Quick Meals" });
+      lookupsWithTags.recipeTags.set("recipe-1", ["tag-1", "tag-2"]);
+
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        mockIngredients,
+        mockInstructions,
+        lookupsWithTags
+      );
+
+      expect(dto).not.toBeNull();
+      expect(dto!.tags).toHaveLength(2);
+      expect(dto!.tags!.map((t) => t.name)).toContain("Dinner");
+      expect(dto!.tags!.map((t) => t.name)).toContain("Quick Meals");
+    });
+
+    it("resolves categories as tags", async () => {
+      const lookupsWithCategories = createEmptyLookups();
+
+      lookupsWithCategories.categories.set("cat-1", { id: "cat-1", name: "Italian" });
+      lookupsWithCategories.recipeCategories.set("recipe-1", ["cat-1"]);
+
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        mockIngredients,
+        mockInstructions,
+        lookupsWithCategories
+      );
+
+      expect(dto).not.toBeNull();
+      expect(dto!.tags).toHaveLength(1);
+      expect(dto!.tags![0].name).toBe("Italian");
+    });
+
+    it("deduplicates tags and categories by name (case-insensitive)", async () => {
+      const lookupsWithDuplicates = createEmptyLookups();
+
+      lookupsWithDuplicates.tags.set("tag-1", { id: "tag-1", name: "Dinner" });
+      lookupsWithDuplicates.categories.set("cat-1", { id: "cat-1", name: "dinner" }); // same but lowercase
+      lookupsWithDuplicates.recipeTags.set("recipe-1", ["tag-1"]);
+      lookupsWithDuplicates.recipeCategories.set("recipe-1", ["cat-1"]);
+
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        mockIngredients,
+        mockInstructions,
+        lookupsWithDuplicates
+      );
+
+      expect(dto).not.toBeNull();
+      // Should deduplicate - only one "Dinner" tag
+      expect(dto!.tags).toHaveLength(1);
+      expect(dto!.tags![0].name).toBe("Dinner");
     });
 
     it("sorts instructions by position", async () => {
       const shuffled = [mockInstructions[1], mockInstructions[0]];
-      const dto = await parseMealieRecipeToDTO(mockRecipe, mockIngredients, shuffled);
+      const dto = await parseMealieRecipeToDTO(mockRecipe, mockIngredients, shuffled, lookups);
 
-      expect(dto.steps?.[0]?.step).toBe("Heat oil in a pan");
-      expect(dto.steps?.[1]?.step).toBe("Add tomatoes and simmer");
+      expect(dto).not.toBeNull();
+      expect(dto!.steps![0].step).toBe("Heat oil in a pan");
+      expect(dto!.steps![1].step).toBe("Add tomatoes and simmer");
     });
 
     it("handles null time fields", async () => {
@@ -140,48 +367,47 @@ describe("Mealie Parser", () => {
       mockRecipe.cook_time = null;
       mockRecipe.total_time = null;
 
-      const dto = await parseMealieRecipeToDTO(mockRecipe, mockIngredients, mockInstructions);
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        mockIngredients,
+        mockInstructions,
+        lookups
+      );
 
-      expect(dto.prepMinutes).toBeUndefined();
-      expect(dto.cookMinutes).toBeUndefined();
-      expect(dto.totalMinutes).toBeUndefined();
+      expect(dto).not.toBeNull();
+      expect(dto!.prepMinutes).toBeUndefined();
+      expect(dto!.cookMinutes).toBeUndefined();
+      expect(dto!.totalMinutes).toBeUndefined();
     });
 
     it("uses perform_time as fallback for total_time", async () => {
       mockRecipe.total_time = null;
       mockRecipe.perform_time = 50;
 
-      const dto = await parseMealieRecipeToDTO(mockRecipe, mockIngredients, mockInstructions);
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        mockIngredients,
+        mockInstructions,
+        lookups
+      );
 
-      expect(dto.totalMinutes).toBe(50);
+      expect(dto).not.toBeNull();
+      expect(dto!.totalMinutes).toBe(50);
     });
 
     it("handles missing servings with fallback to recipe_yield_quantity", async () => {
       mockRecipe.recipe_servings = 0;
       mockRecipe.recipe_yield_quantity = 6;
 
-      const dto = await parseMealieRecipeToDTO(mockRecipe, mockIngredients, mockInstructions);
-
-      expect(dto.servings).toBe(6);
-    });
-
-    it("filters out empty ingredient text", async () => {
-      const emptyIngredient: MealieIngredient = {
-        id: 3,
-        recipe_id: "recipe-1",
-        note: "",
-        original_text: "",
-        position: 2,
-      };
-
       const dto = await parseMealieRecipeToDTO(
         mockRecipe,
-        [...mockIngredients, emptyIngredient],
-        mockInstructions
+        mockIngredients,
+        mockInstructions,
+        lookups
       );
 
-      // Should only parse the 2 valid ingredients
-      expect(dto.recipeIngredients?.length).toBe(2);
+      expect(dto).not.toBeNull();
+      expect(dto!.servings).toBe(6);
     });
 
     it("filters out empty instructions", async () => {
@@ -192,19 +418,22 @@ describe("Mealie Parser", () => {
         text: "",
       };
 
-      const dto = await parseMealieRecipeToDTO(mockRecipe, mockIngredients, [
-        ...mockInstructions,
-        emptyInstruction,
-      ]);
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        mockIngredients,
+        [...mockInstructions, emptyInstruction],
+        lookups
+      );
 
-      expect(dto.steps?.length).toBe(2);
+      expect(dto).not.toBeNull();
+      expect(dto!.steps).toHaveLength(2);
     });
 
     it("throws when recipe name is missing", async () => {
       mockRecipe.name = "";
 
       await expect(
-        parseMealieRecipeToDTO(mockRecipe, mockIngredients, mockInstructions)
+        parseMealieRecipeToDTO(mockRecipe, mockIngredients, mockInstructions, lookups)
       ).rejects.toThrow("Missing recipe name");
     });
 
@@ -214,11 +443,34 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
+        lookups,
         imageBuffer
       );
 
-      // Image processing is tested separately, just verify it doesn't crash
-      expect(dto).toBeDefined();
+      expect(dto).not.toBeNull();
+      expect(dto!.image).toBe("mocked-image-guid");
+    });
+
+    it("falls back to note when original_text is missing", async () => {
+      const noteOnlyIngredients: MealieIngredient[] = [
+        {
+          id: 1,
+          recipe_id: "recipe-1",
+          note: "some ingredient note",
+          position: 0,
+        },
+      ];
+
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        noteOnlyIngredients,
+        mockInstructions,
+        lookups
+      );
+
+      expect(dto).not.toBeNull();
+      expect(dto!.recipeIngredients).toHaveLength(1);
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("some ingredient note");
     });
   });
 });

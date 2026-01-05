@@ -5,6 +5,7 @@ import {
   parseMealieArchive,
   parseMealieRecipeToDTO,
   extractMealieRecipeImage,
+  buildMealieLookups,
 } from "./mealie-parser";
 import { extractTandoorRecipes, parseTandoorRecipeToDTO } from "./tandoor-parser";
 import { extractPaprikaRecipes, parsePaprikaRecipeToDTO } from "./paprika-parser";
@@ -186,9 +187,14 @@ async function* generateMelaRecipes(zip: JSZip): AsyncGenerator<RecipeImportItem
 
 /**
  * Generator for Mealie recipes
+ * Builds lookup maps for foods, units, tags, and categories before processing recipes.
+ * Skips recipes that have unresolvable ingredients (returns null from parseMealieRecipeToDTO).
  */
 async function* generateMealieRecipes(zip: JSZip): AsyncGenerator<RecipeImportItem, void, unknown> {
   const { recipes, database } = await parseMealieArchive(zip);
+
+  // Build lookup maps once for efficient resolution
+  const lookups = buildMealieLookups(database);
 
   for (const mealieRecipe of recipes) {
     const ingredients = database.recipes_ingredients.filter(
@@ -199,7 +205,18 @@ async function* generateMealieRecipes(zip: JSZip): AsyncGenerator<RecipeImportIt
     );
     const imageBuffer = await extractMealieRecipeImage(zip, mealieRecipe.id);
 
-    const dto = await parseMealieRecipeToDTO(mealieRecipe, ingredients, instructions, imageBuffer);
+    const dto = await parseMealieRecipeToDTO(
+      mealieRecipe,
+      ingredients,
+      instructions,
+      lookups,
+      imageBuffer
+    );
+
+    // Skip recipes that couldn't be parsed (e.g., unresolvable ingredients)
+    if (dto === null) {
+      continue;
+    }
 
     yield { dto, fileName: `recipe_${mealieRecipe.name || mealieRecipe.id}` };
   }

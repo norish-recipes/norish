@@ -94,6 +94,9 @@ export async function testAIEndpoint(config: {
       }
       testUrl = `${config.endpoint.replace(/\/$/, "")}/v1/models`;
       break;
+    case "perplexity":
+      testUrl = "https://api.perplexity.ai/models";
+      break;
     default:
       return { success: false, error: `Unknown provider: ${config.provider}` };
   }
