@@ -35,7 +35,7 @@ async function getCurrentVersion(): Promise<string> {
   }
 
   // Read from package.json
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+
   const packageJson = require("../package.json") as { version: string };
   const version = packageJson.version;
 

@@ -20,12 +20,14 @@ import {
   type PromptsConfig,
   type PromptsConfigInput,
   type ServerConfigKey,
+  type I18nLocaleConfig,
 } from "@/server/db/zodSchemas/server-config";
 
 interface AdminSettingsContextValue {
   // Data
   registrationEnabled: boolean | undefined;
   passwordAuthEnabled: boolean | undefined;
+  localeConfig: I18nLocaleConfig | undefined;
   authProviderOIDC: AuthProviderOIDC | undefined;
   authProviderGitHub: AuthProviderGitHub | undefined;
   authProviderGoogle: AuthProviderGoogle | undefined;
@@ -44,6 +46,10 @@ interface AdminSettingsContextValue {
   // Actions
   updateRegistration: (enabled: boolean) => Promise<void>;
   updatePasswordAuth: (enabled: boolean) => Promise<{ success: boolean; error?: string }>;
+  updateLocaleConfig: (config: {
+    defaultLocale: string;
+    enabledLocales: string[];
+  }) => Promise<{ success: boolean; error?: string }>;
   updateAuthProviderOIDC: (
     config: AuthProviderOIDCInput
   ) => Promise<{ success: boolean; error?: string }>;
@@ -95,6 +101,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const passwordAuthEnabled = configs[ServerConfigKeys.PASSWORD_AUTH_ENABLED] as
     | boolean
     | undefined;
+  const localeConfig = configs[ServerConfigKeys.LOCALE_CONFIG] as I18nLocaleConfig | undefined;
   const authProviderOIDC = configs[ServerConfigKeys.AUTH_PROVIDER_OIDC] as
     | AuthProviderOIDC
     | undefined;
@@ -132,6 +139,13 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const updatePasswordAuth = useCallback(
     async (enabled: boolean) => {
       return mutations.updatePasswordAuth(enabled);
+    },
+    [mutations]
+  );
+
+  const updateLocale = useCallback(
+    async (config: { defaultLocale: string; enabledLocales: string[] }) => {
+      return mutations.updateLocaleConfig(config);
     },
     [mutations]
   );
@@ -259,6 +273,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const value: AdminSettingsContextValue = {
     registrationEnabled,
     passwordAuthEnabled,
+    localeConfig,
     authProviderOIDC,
     authProviderGitHub,
     authProviderGoogle,
@@ -273,6 +288,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     isLoading,
     updateRegistration,
     updatePasswordAuth,
+    updateLocaleConfig: updateLocale,
     updateAuthProviderOIDC: updateAuthOIDC,
     updateAuthProviderGitHub: updateAuthGitHub,
     updateAuthProviderGoogle: updateAuthGoogle,

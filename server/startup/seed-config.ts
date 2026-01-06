@@ -10,6 +10,7 @@ import {
 } from "../db/zodSchemas/server-config";
 
 import { SERVER_CONFIG } from "@/config/env-config-server";
+import { DEFAULT_LOCALE_CONFIG, buildLocaleConfigFromEnv } from "@/config/server-config-loader";
 import { setAuthProviderCache } from "@/server/auth/provider-cache";
 import { serverLogger } from "@/server/logger";
 import defaultUnits from "@/config/units.default.json";
@@ -122,6 +123,12 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     getDefaultValue: () => ({ ...loadDefaultPrompts(), isOverridden: false }),
     sensitive: false,
     description: "AI prompts for recipe extraction and unit conversion",
+  },
+  {
+    key: ServerConfigKeys.LOCALE_CONFIG,
+    getDefaultValue: () => buildLocaleConfigFromEnv(),
+    sensitive: false,
+    description: `Locale config (${Object.keys(DEFAULT_LOCALE_CONFIG.locales).length} locales)`,
   },
 ];
 
@@ -486,6 +493,8 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       return DEFAULT_RECIPE_PERMISSION_POLICY;
     case ServerConfigKeys.PROMPTS:
       return { ...loadDefaultPrompts(), isOverridden: false };
+    case ServerConfigKeys.LOCALE_CONFIG:
+      return DEFAULT_LOCALE_CONFIG;
     default:
       return null;
   }

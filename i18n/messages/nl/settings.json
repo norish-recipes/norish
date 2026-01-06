@@ -222,6 +222,19 @@
     }
   },
   "admin": {
+    "general": {
+      "title": "Algemeen",
+      "allowRegistration": "Nieuwe registraties toestaan",
+      "registrationDescription": "Wanneer uitgeschakeld, kunnen alleen bestaande gebruikers inloggen",
+      "locales": "Ingeschakelde talen",
+      "localesDescription": "Selecteer welke talen gebruikers kunnen kiezen",
+      "defaultLocale": "Standaardtaal",
+      "defaultLocaleDescription": "Taal voor nieuwe gebruikers en als fallback",
+      "saveLocales": "Taalinstellingen opslaan",
+      "localesSaved": "Taalinstellingen opgeslagen",
+      "localesError": "Taalinstellingen opslaan mislukt",
+      "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn"
+    },
     "registration": {
       "title": "Registratie",
       "allowRegistration": "Nieuwe registraties toestaan",

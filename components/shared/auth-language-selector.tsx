@@ -1,20 +1,38 @@
 "use client";
 
 import { GlobeAltIcon } from "@heroicons/react/16/solid";
-import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react";
+import {
+  Button,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Skeleton,
+} from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useLocaleCookie } from "@/hooks/user/use-locale-cookie";
-import { locales, localeNames, type Locale } from "@/i18n/config";
+import { type Locale, isValidLocale } from "@/i18n/config";
 
 /**
  * Language selector for auth pages (login/signup)
  *
  * Uses cookie-based locale storage since user is not authenticated.
+ * Fetches enabled locales from the public API.
  */
 export function AuthLanguageSelector() {
   const t = useTranslations("common.language");
-  const { locale, changeLocale, isChanging } = useLocaleCookie();
+  const { locale, changeLocale, isChanging, isLoadingConfig, enabledLocales } = useLocaleCookie();
+
+  // Show skeleton while loading config
+  if (isLoadingConfig) {
+    return <Skeleton className="h-8 w-8 rounded-full" />;
+  }
+
+  // Don't render if only one locale is enabled (no choice to make)
+  if (enabledLocales.length <= 1) {
+    return null;
+  }
 
   return (
     <Dropdown placement="bottom">
@@ -35,15 +53,15 @@ export function AuthLanguageSelector() {
         selectedKeys={[locale]}
         selectionMode="single"
         onSelectionChange={(keys) => {
-          const selected = Array.from(keys)[0] as Locale;
+          const selected = Array.from(keys)[0] as string;
 
-          if (selected) {
-            changeLocale(selected);
+          if (selected && isValidLocale(selected)) {
+            changeLocale(selected as Locale);
           }
         }}
       >
-        {locales.map((loc) => (
-          <DropdownItem key={loc}>{localeNames[loc]}</DropdownItem>
+        {enabledLocales.map((loc) => (
+          <DropdownItem key={loc.code}>{loc.name}</DropdownItem>
         ))}
       </DropdownMenu>
     </Dropdown>

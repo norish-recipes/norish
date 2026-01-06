@@ -222,6 +222,19 @@
     }
   },
   "admin": {
+    "general": {
+      "title": "Allgemein",
+      "allowRegistration": "Neue Benutzerregistrierung zulassen",
+      "registrationDescription": "Wenn deaktiviert, können sich nur bestehende Benutzer anmelden",
+      "locales": "Aktivierte Sprachen",
+      "localesDescription": "Wähle aus, welche Sprachen Benutzer auswählen können",
+      "defaultLocale": "Standardsprache",
+      "defaultLocaleDescription": "Sprache für neue Benutzer und als Fallback",
+      "saveLocales": "Spracheinstellungen speichern",
+      "localesSaved": "Spracheinstellungen gespeichert",
+      "localesError": "Spracheinstellungen konnten nicht gespeichert werden",
+      "atLeastOneLocale": "Mindestens eine Sprache muss aktiviert sein"
+    },
     "registration": {
       "title": "Registrierung",
       "allowRegistration": "Neue Benutzerregistrierung zulassen",

@@ -187,8 +187,8 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
           {/* Version info - discrete footer */}
           <DropdownItem
             key="version"
-            isReadOnly={!updateAvailable}
             className="border-default-100 cursor-default border-t pt-2 data-[hover=true]:bg-transparent"
+            isReadOnly={!updateAvailable}
             textValue="Version"
           >
             <div className="text-default-400 flex items-center justify-end gap-2 text-xs">

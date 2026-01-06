@@ -1,7 +1,7 @@
 import { router } from "../../trpc";
 
 import { adminConfigProcedures } from "./config";
-import { registrationProcedures } from "./registration";
+import { generalProcedures } from "./general";
 import { authProvidersProcedures } from "./auth-providers";
 import { contentConfigProcedures } from "./content-config";
 import { aiVideoProcedures } from "./ai-video";
@@ -12,8 +12,8 @@ export const adminRouter = router({
   // Config queries
   ...adminConfigProcedures._def.procedures,
 
-  // Registration
-  ...registrationProcedures._def.procedures,
+  // General (registration, locale config)
+  ...generalProcedures._def.procedures,
 
   // Auth providers
   auth: authProvidersProcedures,

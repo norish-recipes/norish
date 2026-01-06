@@ -269,6 +269,7 @@ Only a few environment variables are required. All other settings are managed vi
 | `TRUSTED_ORIGINS`       | Comma seperated list of trusted origins | `empty`        |
 | `YT_DLP_BIN_DIR`        | Custom folder path for `yt-dlp`         | `/app/bin`     |
 | `DEFAULT_LOCALE`        | Instance default locale                 | `en`           |
+| `ENABLED_LOCALES`       | Comma-separated list of enabled locales | (all enabled)  |
 
 ### First-Time Auth Provider
 

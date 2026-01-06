@@ -3,38 +3,32 @@ import "server-only";
 import { getRequestConfig } from "next-intl/server";
 import { cookies, headers } from "next/headers";
 
-import { isValidLocale, type Locale } from "./config";
+import { isValidLocale, type Locale, DEFAULT_LOCALE } from "./config";
 
 import { auth } from "@/server/auth/auth";
 import { getUserLocale } from "@/server/db/repositories/users";
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import {
+  getDefaultLocale as getConfigDefaultLocale,
+  isValidEnabledLocale,
+} from "@/config/server-config-loader";
 
 const LOCALE_COOKIE_NAME = "NEXT_LOCALE";
-
-/**
- * Get the validated default locale from server config
- * Falls back to 'en' if configured locale is not valid
- */
-function getDefaultLocale(): Locale {
-  const configuredLocale = SERVER_CONFIG.DEFAULT_LOCALE;
-
-  if (isValidLocale(configuredLocale)) {
-    return configuredLocale;
-  }
-
-  return "en";
-}
 
 /**
  * Resolve the locale for the current request
  *
  * Priority:
- * 1. User's saved preference (if authenticated)
- * 2. Cookie preference (for unauthenticated users)
- * 3. Instance default locale (DEFAULT_LOCALE env var, validated)
+ * 1. User's saved preference (if authenticated and locale is enabled)
+ * 2. Cookie preference (for unauthenticated users, if locale is enabled)
+ * 3. Instance default locale from server config
+ *
+ * Note: Locales must be ENABLED (not just valid) to be used.
+ * If a user has a saved locale that was later disabled, they fall back to default.
  */
 async function resolveLocale(): Promise<Locale> {
-  const defaultLocale = getDefaultLocale();
+  // Get default from server config (DB > env > fallback)
+  const configDefaultLocale = await getConfigDefaultLocale();
+  const defaultLocale = isValidLocale(configDefaultLocale) ? configDefaultLocale : DEFAULT_LOCALE;
 
   // 1. Check if user is authenticated and has a locale preference
   try {
@@ -45,7 +39,8 @@ async function resolveLocale(): Promise<Locale> {
     if (session?.user?.id) {
       const userLocale = await getUserLocale(session.user.id);
 
-      if (userLocale && isValidLocale(userLocale)) {
+      // User's locale must be valid AND enabled
+      if (userLocale && isValidLocale(userLocale) && (await isValidEnabledLocale(userLocale))) {
         return userLocale;
       }
     }
@@ -58,7 +53,12 @@ async function resolveLocale(): Promise<Locale> {
     const cookieStore = await cookies();
     const localeCookie = cookieStore.get(LOCALE_COOKIE_NAME);
 
-    if (localeCookie?.value && isValidLocale(localeCookie.value)) {
+    // Cookie locale must be valid AND enabled
+    if (
+      localeCookie?.value &&
+      isValidLocale(localeCookie.value) &&
+      (await isValidEnabledLocale(localeCookie.value))
+    ) {
       return localeCookie.value;
     }
   } catch {

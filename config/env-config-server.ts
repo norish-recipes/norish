@@ -156,9 +156,22 @@ const ServerConfigSchema = z.object({
   REDIS_URL: z.string().url().default("redis://localhost:6379"),
 
   // Internationalization
-  // Note: Validation against available locales happens in i18n/config.ts
   // If invalid locale is specified, falls back to 'en'
   DEFAULT_LOCALE: z.string().default("en"),
+  // If not set, all available locales are enabled
+  // Can be overridden by admin UI settings stored in database
+  ENABLED_LOCALES: z
+    .string()
+    .optional()
+    .transform((val) =>
+      val
+        ? val
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : []
+    )
+    .pipe(z.array(z.string())),
 });
 
 export type ServerConfig = z.infer<typeof ServerConfigSchema>;

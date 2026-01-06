@@ -22,6 +22,12 @@ export type AdminMutationsResult = {
   updateRegistration: (enabled: boolean) => Promise<{ success: boolean }>;
   updatePasswordAuth: (enabled: boolean) => Promise<{ success: boolean; error?: string }>;
 
+  // Locale config
+  updateLocaleConfig: (config: {
+    defaultLocale: string;
+    enabledLocales: string[];
+  }) => Promise<{ success: boolean; error?: string }>;
+
   // Auth providers (input types - isOverridden is set server-side)
   updateAuthProviderOIDC: (
     config: AuthProviderOIDCInput
@@ -81,6 +87,9 @@ export function useAdminMutations(): AdminMutationsResult {
   const updateRegistrationMutation = useMutation(trpc.admin.updateRegistration.mutationOptions());
   const updatePasswordAuthMutation = useMutation(trpc.admin.updatePasswordAuth.mutationOptions());
 
+  // Locale config
+  const updateLocaleConfigMutation = useMutation(trpc.admin.updateLocaleConfig.mutationOptions());
+
   // Auth providers
   const updateOIDCMutation = useMutation(trpc.admin.auth.updateOIDC.mutationOptions());
   const updateGitHubMutation = useMutation(trpc.admin.auth.updateGitHub.mutationOptions());
@@ -135,6 +144,11 @@ export function useAdminMutations(): AdminMutationsResult {
     },
     updatePasswordAuth: async (enabled) => {
       return withInvalidate(updatePasswordAuthMutation.mutateAsync(enabled));
+    },
+
+    // Locale config
+    updateLocaleConfig: async (config) => {
+      return withInvalidate(updateLocaleConfigMutation.mutateAsync(config));
     },
 
     // Auth providers

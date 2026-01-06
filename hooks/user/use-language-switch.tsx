@@ -1,18 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { GlobeAltIcon } from "@heroicons/react/16/solid";
 
 import { useLocale } from "@/hooks/user/use-locale";
-import { locales, localeNames, type Locale } from "@/i18n/config";
+import { useLocaleConfigQuery } from "@/hooks/config";
+import { type Locale, isValidLocale, ALL_LOCALE_NAMES } from "@/i18n/config";
 
 /**
  * Hook to get locale state and cycle function for language switching UI
  *
  * Used by authenticated users only - saves preference to database.
+ * Fetches enabled locales from the API.
  */
 export function useLanguageSwitch() {
   const { locale, changeLocale, isChanging } = useLocale();
+  const { enabledLocales, isLoading: isLoadingConfig } = useLocaleConfigQuery();
   const [mounted, setMounted] = useState(false);
   const [currentLocaleIndex, setCurrentLocaleIndex] = useState(0);
 
@@ -20,29 +23,51 @@ export function useLanguageSwitch() {
     setMounted(true);
   }, []);
 
-  // Sync current locale index when locale changes
+  // Get enabled locale codes as Locale[]
+  const enabledLocaleCodes = useMemo(
+    () => enabledLocales.map((l) => l.code).filter(isValidLocale),
+    [enabledLocales]
+  );
+
+  // Build locale names map from enabled locales
+  const localeNames = useMemo(() => {
+    const names: Record<string, string> = {};
+
+    for (const l of enabledLocales) {
+      names[l.code] = l.name;
+    }
+
+    return names;
+  }, [enabledLocales]);
+
+  // Sync current locale index when locale or enabled locales change
   useEffect(() => {
-    if (locale) {
-      const index = locales.indexOf(locale);
+    if (locale && enabledLocaleCodes.length > 0) {
+      const index = enabledLocaleCodes.indexOf(locale);
 
       if (index !== -1) {
         setCurrentLocaleIndex(index);
+      } else {
+        // If current locale is not in enabled list, reset to first
+        setCurrentLocaleIndex(0);
       }
     }
-  }, [locale]);
+  }, [locale, enabledLocaleCodes]);
 
-  const currentLocale = locales[currentLocaleIndex];
+  const currentLocale = enabledLocaleCodes[currentLocaleIndex] ?? locale ?? "en";
 
   const cycleLocale = () => {
-    const nextIndex = (currentLocaleIndex + 1) % locales.length;
-    const nextLocale = locales[nextIndex];
+    if (enabledLocaleCodes.length === 0) return;
+
+    const nextIndex = (currentLocaleIndex + 1) % enabledLocaleCodes.length;
+    const nextLocale = enabledLocaleCodes[nextIndex];
 
     setCurrentLocaleIndex(nextIndex);
     changeLocale(nextLocale);
   };
 
   const selectLocale = (newLocale: Locale) => {
-    const index = locales.indexOf(newLocale);
+    const index = enabledLocaleCodes.indexOf(newLocale);
 
     if (index !== -1) {
       setCurrentLocaleIndex(index);
@@ -52,18 +77,24 @@ export function useLanguageSwitch() {
 
   const icon = <GlobeAltIcon className="size-4" />;
 
-  const label = localeNames[currentLocale];
+  // Use enabled locale name, fallback to static names
+  const label =
+    localeNames[currentLocale] ?? ALL_LOCALE_NAMES[currentLocale as Locale] ?? currentLocale;
 
   return {
     mounted,
     icon,
     label,
     currentLocale,
-    locales,
+    /** Enabled locales only */
+    locales: enabledLocaleCodes,
     localeNames,
+    /** Full enabled locale objects */
+    enabledLocales,
     cycleLocale,
     selectLocale,
     isChanging,
+    isLoadingConfig,
   };
 }
 
