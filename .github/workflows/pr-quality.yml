@@ -147,3 +147,25 @@ jobs:
 
       - name: Run format check
         run: pnpm run format:check
+
+  i18n:
+    name: Locale Keys Check
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.12.0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.27.0
+          run_install: false
+
+      - name: Check locale keys
+        run: pnpm run i18n:check

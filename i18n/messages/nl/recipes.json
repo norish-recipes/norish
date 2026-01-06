@@ -100,8 +100,7 @@
     "uploading": "Bezig met uploaden...",
     "clickToUpload": "Klik om te uploaden of sleep en zet neer",
     "pasteToUpload": "om te plakken",
-    "imageFormats": "PNG, JPG, WEBP tot 5MB",
-    "remove": "Verwijder"
+    "imageFormats": "PNG, JPG, WEBP tot 5MB"
   },
   "gallery": {
     "addImage": "Afbeelding toevoegen",

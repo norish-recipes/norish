@@ -64,6 +64,7 @@ pnpm dev
 | `pnpm lint:fix`      | Fix linting errors automatically         |
 | `pnpm format`        | Format code with Prettier                |
 | `pnpm format:check`  | Check formatting without changes         |
+| `pnpm i18n:check`    | Check for missing locale keys            |
 | `pnpm db:push`       | Push schema changes to database          |
 
 ## Project Structure
@@ -169,6 +170,7 @@ git checkout -b fix/your-bug-fix
 ```bash
 pnpm lint
 pnpm test:run
+pnpm i18n:check
 pnpm build
 ```
 
@@ -227,7 +229,22 @@ Create a new folder `i18n/messages/{your-locale}/` with the following files:
 
 Copy the structure from `i18n/messages/en/` as a starting point.
 
-### 3. Add Locale to Default Config
+### 3. Verify Translations
+
+Run the locale check to ensure all keys are present:
+
+```bash
+pnpm i18n:check
+```
+
+This command uses `en` as the source of truth and reports:
+
+- **Missing keys**: Keys that exist in `en` but not in your locale (CI will fail)
+- **Extra keys**: Keys in your locale that don't exist in `en` (warning only)
+
+The check runs automatically in CI and will block PRs with missing translations.
+
+### 4. Add Locale to Default Config
 
 Add the locale entry to `DEFAULT_LOCALE_CONFIG` in `config/server-config-loader.ts`:
 
@@ -246,11 +263,11 @@ export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
 
 This is the single source of truth - `seed-config.ts` imports from here automatically.
 
-### 4. Enable the Locale
+### 5. Enable the Locale
 
 New locales are **disabled by default** until enabled via one of these methods:
 
-- **Admin UI**: Go to **Settings → Admin → General** and check the locale checkbox
+- **Admin UI**: Go to **Settings => Admin => General** and check the locale checkbox
 - **Environment variable**: Set `ENABLED_LOCALES=en,nl,your-locale` (comma-separated list)
 
 ## License
