@@ -12,7 +12,10 @@
       "title": "Instellingen",
       "description": "Beheer je account"
     },
-    "logout": "Uitloggen"
+    "logout": "Uitloggen",
+    "version": {
+      "updateAvailable": "v{version} beschikbaar"
+    }
   },
   "theme": {
     "title": "Thema",

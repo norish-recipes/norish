@@ -12,7 +12,10 @@
       "title": "Settings",
       "description": "Manage your account"
     },
-    "logout": "Logout"
+    "logout": "Logout",
+    "version": {
+      "updateAvailable": "v{version} available"
+    }
   },
   "theme": {
     "title": "Theme",

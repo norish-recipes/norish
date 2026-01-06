@@ -16,6 +16,7 @@ import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitch } from "@/components/shared/language-switch";
 import { cssButtonPill, cssButtonPillDanger } from "@/config/css-tokens";
 import { useUserContext } from "@/context/user-context";
+import { useVersionQuery } from "@/hooks/config";
 
 type TriggerVariant = "avatar" | "ellipsis";
 
@@ -30,6 +31,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const { currentVersion, latestVersion, updateAvailable, releaseUrl } = useVersionQuery();
 
   // Reset image error and retry count when user changes
   useEffect(() => {
@@ -56,7 +58,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
       <Dropdown placement="bottom-end" onOpenChange={setUserMenuOpen}>
         <DropdownTrigger>
           {trigger === "avatar" ? (
-            <button aria-label="Open user menu" className="rounded-full" type="button">
+            <button aria-label="Open user menu" className="relative rounded-full" type="button">
               <Avatar
                 className="isBordered h-13 w-13 cursor-pointer text-lg"
                 color="warning"
@@ -66,6 +68,12 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
                 name={user?.name || user?.email || "U"}
                 src={!imageError && user?.image ? `${user.image}?retry=${retryCount}` : undefined}
               />
+              {updateAvailable && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+                  <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
+                  <span className="bg-primary relative inline-flex h-3 w-3 rounded-full" />
+                </span>
+              )}
             </button>
           ) : (
             <Button
@@ -159,6 +167,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
               </span>
             </div>
           </DropdownItem>
+
           <DropdownItem
             key="logout"
             className={`text-danger-400 py-3 ${cssButtonPillDanger}`}
@@ -173,6 +182,29 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             }}
           >
             <span className="text-base font-medium">{t("logout")}</span>
+          </DropdownItem>
+
+          {/* Version info - discrete footer */}
+          <DropdownItem
+            key="version"
+            isReadOnly={!updateAvailable}
+            className="border-default-100 cursor-default border-t pt-2 data-[hover=true]:bg-transparent"
+            textValue="Version"
+          >
+            <div className="text-default-400 flex items-center justify-end gap-2 text-xs">
+              {updateAvailable && releaseUrl && latestVersion && (
+                <a
+                  className="text-primary hover:text-primary-600 hover:underline"
+                  href={releaseUrl}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {t("version.updateAvailable", { version: latestVersion })}
+                </a>
+              )}
+              <span>v{currentVersion ?? "..."}</span>
+            </div>
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
