@@ -1,4 +1,4 @@
-{
+﻿{
   "page": {
     "title": "Einstellungen",
     "loading": "Wird geladen...",
@@ -388,12 +388,20 @@
       "provider": "KI-Anbieter",
       "providers": {
         "openai": "OpenAI",
+        "azure": "Azure OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google AI",
+        "mistral": "Mistral AI",
+        "deepseek": "DeepSeek",
         "perplexity": "Perplexity",
+        "groq": "Groq",
         "ollama": "Ollama (Lokal)",
         "lmStudio": "LM Studio (Lokal)",
         "genericOpenai": "Generisch OpenAI-kompatibel"
       },
       "endpointUrl": "Endpoint-URL",
+      "azureEndpoint": "Azure Resource URL (Optional)",
+      "azureEndpointDescription": "Benutzerdefinierter Azure OpenAI Endpunkt. Leer lassen für den Standard.",
       "model": "Modell",
       "visionModel": "Vision-Modell (Optional)",
       "visionModelDescription": "Optional: Nutzen Sie ein anderes Modell für Bild-/Vision-Aufgaben. Leer lassen, um das Modell oben zu nutzen.",
@@ -466,3 +474,4 @@
     }
   }
 }
+

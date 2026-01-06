@@ -1,4 +1,4 @@
-{
+﻿{
   "dashboard": {
     "title": "Alle Rezepte",
     "searchPlaceholder": "Rezept suchen oder hinzufügen...",
@@ -51,6 +51,8 @@
     "autoTagging": "Tags werden generiert...",
     "detectAllergies": "Allergene erkennen",
     "detectingAllergies": "Allergene werden erkannt...",
+    "estimateNutrition": "Nährwerte schätzen",
+    "estimatingNutrition": "Schätze Nährwerte...",
     "screenOn": "Bildschirm an",
     "keepScreenOn": "Bildschirm an",
     "actionsLabel": "Aktionen"
@@ -167,3 +169,4 @@
     "open": "Öffnen"
   }
 }
+
