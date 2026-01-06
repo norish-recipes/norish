@@ -185,11 +185,14 @@ export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
  * 3. Default config (all locales enabled)
  */
 export async function getLocaleConfig(): Promise<I18nLocaleConfig> {
-  // 1. Try DB first (admin override)
-  const dbConfig = await getConfig<I18nLocaleConfig>(ServerConfigKeys.LOCALE_CONFIG);
+  try {
+    const dbConfig = await getConfig<I18nLocaleConfig>(ServerConfigKeys.LOCALE_CONFIG);
 
-  if (dbConfig) {
-    return dbConfig;
+    if (dbConfig) {
+      return dbConfig;
+    }
+  } catch {
+    // DB unavailable (e.g., during build/CI), fall through to env config
   }
 
   // 2. Build from env var + defaults
