@@ -65,7 +65,7 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
   const [convertingTo, setConvertingTo] = useState<MeasurementSystem | null>(null);
   const [adjustedIngredients, setAdjustedIngredients] = useState<RecipeIngredientsDto[]>([]);
 
-  // Track the last recipe ID to detect recipe changes
+  // Track the last recipe ID to detect recipe navigation
   const lastRecipeIdRef = React.useRef<string | null>(null);
 
   // Ref for recipe to keep callbacks stable
@@ -126,23 +126,21 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
   // Check if error is a 404 (NOT_FOUND)
   const isNotFound = error instanceof TRPCClientError && error.data?.code === "NOT_FOUND";
 
-  // Initialize adjusted ingredients when recipe first loads or changes to different recipe
+  // Reset servings when navigating to a different recipe
   useEffect(() => {
-    if (!recipe?.recipeIngredients) return;
+    if (!recipe) return;
 
-    // If this is a different recipe, reset servings and use original ingredients
     if (lastRecipeIdRef.current !== recipe.id) {
       lastRecipeIdRef.current = recipe.id;
       setServings(null);
-      setAdjustedIngredients(recipe.recipeIngredients);
     }
-  }, [recipe?.id, recipe?.recipeIngredients]);
+  }, [recipe?.id]);
 
-  // Recalculate ingredients when servings change
+  // Sync adjustedIngredients with recipe.recipeIngredients
   useEffect(() => {
     if (!recipe?.recipeIngredients) return;
 
-    // If we have custom servings, recalculate with those servings
+    // If user has custom servings, scale the new ingredients
     if (_servings !== null && _servings !== recipe.servings) {
       setAdjustedIngredients(
         recipe.recipeIngredients.map((ing) => {
@@ -157,11 +155,11 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
           return { ...ing, amount: newAmount };
         })
       );
-    } else if (_servings === null) {
-      // No custom servings, use original amounts
+    } else {
+      // No custom servings, use ingredients as-is
       setAdjustedIngredients(recipe.recipeIngredients);
     }
-  }, [_servings, recipe?.servings, recipe?.recipeIngredients]);
+  }, [recipe?.recipeIngredients, recipe?.servings, _servings]);
 
   // Clear converting state when recipe system matches target
   useEffect(() => {

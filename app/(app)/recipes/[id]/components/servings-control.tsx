@@ -17,6 +17,11 @@ export default function ServingsControl() {
   const { recipe, setIngredientAmounts } = useRecipeContextRequired();
   const [servings, setServings] = React.useState<number>(Math.max(0.125, recipe.servings ?? 1));
 
+  // Sync local servings with recipe when recipe.servings changes from server
+  useEffect(() => {
+    setServings(Math.max(0.125, recipe.servings ?? 1));
+  }, [recipe.servings]);
+
   const adjust = useCallback(
     (servingsValue: number) => {
       setIngredientAmounts(servingsValue);
@@ -29,7 +34,7 @@ export default function ServingsControl() {
     adjust(servings);
   }, [servings, adjust]);
 
-  const dec = () =>
+  const dec = () => {
     setServings((s) => {
       // If at or below 1, halve it (1 -> 0.5 -> 0.25 -> 0.125)
       if (s <= 1) return Math.max(0.125, s / 2);
@@ -39,8 +44,9 @@ export default function ServingsControl() {
       // Otherwise decrement by 1
       return s - 1;
     });
+  };
 
-  const inc = () =>
+  const inc = () => {
     setServings((s) => {
       // If below 1, double it (0.125 -> 0.25 -> 0.5 -> 1)
       if (s < 1) return Math.min(1, s * 2);
@@ -48,6 +54,7 @@ export default function ServingsControl() {
       // Otherwise increment by 1
       return s + 1;
     });
+  };
 
   return (
     <div className="inline-flex items-center gap-2">
