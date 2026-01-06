@@ -194,7 +194,7 @@ export default function GeneralCard() {
                 {allLocales.map((locale) => (
                   <div
                     key={locale.code}
-                    className="flex w-full items-center justify-between px-4 py-3 hover:bg-default-100"
+                    className="hover:bg-default-100 flex w-full items-center justify-between px-4 py-3"
                   >
                     <span className="flex-1 text-sm">{locale.name}</span>
                     <Switch

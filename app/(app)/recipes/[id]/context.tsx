@@ -134,7 +134,7 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
       lastRecipeIdRef.current = recipe.id;
       setServings(null);
     }
-  }, [recipe?.id]);
+  }, [recipe]);
 
   // Sync adjustedIngredients with recipe.recipeIngredients
   useEffect(() => {

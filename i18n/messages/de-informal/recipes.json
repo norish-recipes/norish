@@ -1,4 +1,4 @@
-﻿{
+{
   "dashboard": {
     "title": "Alle Rezepte",
     "searchPlaceholder": "Rezept suchen oder hinzufügen...",
@@ -169,4 +169,3 @@
     "open": "Öffnen"
   }
 }
-

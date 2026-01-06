@@ -3,10 +3,14 @@
  *
  * Tests for AI-based recipe auto-tagging functionality.
  */
+import { generateText } from "ai";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { isAIEnabled, getAutoTaggingMode } from "@/config/server-config-loader";
+import { generateTagsForRecipe } from "@/server/ai/auto-tagger";
+import { listAllTagNames } from "@/server/db/repositories/tags";
 
-// Mock dependencies before imports
+// Mock dependencies - vi.mock is hoisted by Vitest
 vi.mock("ai", () => ({
   generateText: vi.fn(),
   Output: {
@@ -47,12 +51,6 @@ vi.mock("@/server/logger", () => ({
     error: vi.fn(),
   },
 }));
-
-import { generateText } from "ai";
-
-import { isAIEnabled, getAutoTaggingMode } from "@/config/server-config-loader";
-import { generateTagsForRecipe } from "@/server/ai/auto-tagger";
-import { listAllTagNames } from "@/server/db/repositories/tags";
 
 describe("Auto-Tagger", () => {
   const mockRecipe = {

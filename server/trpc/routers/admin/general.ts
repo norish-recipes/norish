@@ -72,80 +72,71 @@ const UpdateLocaleConfigInputSchema = z.object({
 const updateLocaleConfig = adminProcedure
   .input(UpdateLocaleConfigInputSchema)
   .mutation(async ({ input, ctx }) => {
-  log.info(
-    {
-      userId: ctx.user.id,
+    log.info(
+      {
+        userId: ctx.user.id,
+        defaultLocale: input.defaultLocale,
+        enabledCount: input.enabledLocales.length,
+      },
+      "Updating locale config"
+    );
+
+    const currentConfig = await getConfig<I18nLocaleConfig>(ServerConfigKeys.LOCALE_CONFIG);
+
+    if (!currentConfig) {
+      return {
+        success: false,
+        error: "Locale configuration not found. Please restart the server.",
+      };
+    }
+
+    const enabledLocales = new Set(input.enabledLocales);
+    const validLocales = Object.keys(currentConfig.locales);
+
+    // Default locale must be enabled
+    if (!enabledLocales.has(input.defaultLocale)) {
+      return {
+        success: false,
+        error: "Default locale must be one of the enabled locales.",
+      };
+    }
+
+    // All enabled locales must exist
+    const invalidLocales = [...enabledLocales].filter((code) => !validLocales.includes(code));
+
+    if (invalidLocales.length > 0) {
+      return {
+        success: false,
+        error: `Invalid locale codes: ${invalidLocales.join(", ")}`,
+      };
+    }
+
+    const newConfig: I18nLocaleConfig = {
       defaultLocale: input.defaultLocale,
-      enabledCount: input.enabledLocales.length,
-    },
-    "Updating locale config"
-  );
-
-  const currentConfig =
-    await getConfig<I18nLocaleConfig>(ServerConfigKeys.LOCALE_CONFIG);
-
-  if (!currentConfig) {
-    return {
-      success: false,
-      error: "Locale configuration not found. Please restart the server.",
+      locales: Object.fromEntries(
+        Object.entries(currentConfig.locales).map(([code, entry]) => [
+          code,
+          {
+            name: entry.name,
+            enabled: enabledLocales.has(code),
+          },
+        ])
+      ),
     };
-  }
 
-  const enabledLocales = new Set(input.enabledLocales);
-  const validLocales = Object.keys(currentConfig.locales);
+    const validation = I18nLocaleConfigSchema.safeParse(newConfig);
 
-  // Default locale must be enabled
-  if (!enabledLocales.has(input.defaultLocale)) {
-    return {
-      success: false,
-      error: "Default locale must be one of the enabled locales.",
-    };
-  }
+    if (!validation.success) {
+      return {
+        success: false,
+        error: "Invalid locale configuration format.",
+      };
+    }
 
-  // All enabled locales must exist
-  const invalidLocales = [...enabledLocales].filter(
-    (code) => !validLocales.includes(code)
-  );
+    await setConfig(ServerConfigKeys.LOCALE_CONFIG, newConfig, ctx.user.id, false);
 
-  if (invalidLocales.length > 0) {
-    return {
-      success: false,
-      error: `Invalid locale codes: ${invalidLocales.join(", ")}`,
-    };
-  }
-
-  const newConfig: I18nLocaleConfig = {
-    defaultLocale: input.defaultLocale,
-    locales: Object.fromEntries(
-      Object.entries(currentConfig.locales).map(([code, entry]) => [
-        code,
-        {
-          name: entry.name,
-          enabled: enabledLocales.has(code),
-        },
-      ])
-    ),
-  };
-
-  const validation = I18nLocaleConfigSchema.safeParse(newConfig);
-
-  if (!validation.success) {
-    return {
-      success: false,
-      error: "Invalid locale configuration format.",
-    };
-  }
-
-  await setConfig(
-    ServerConfigKeys.LOCALE_CONFIG,
-    newConfig,
-    ctx.user.id,
-    false
-  );
-
-  return { success: true };
-});
-
+    return { success: true };
+  });
 
 export const generalProcedures = router({
   updateRegistration,

@@ -1,4 +1,4 @@
-﻿{
+{
   "userMenu": {
     "newRecipe": {
       "title": "Neues Rezept",
@@ -13,7 +13,7 @@
       "description": "Verwalten Sie Ihr Konto"
     },
     "logout": "Abmelden",
-    "version": {"updateAvailable":"v{version} verfügbar"}
+    "version": { "updateAvailable": "v{version} verfügbar" }
   },
   "theme": {
     "title": "Design",
@@ -46,4 +46,3 @@
     "ofTotal": "{current} von {total}"
   }
 }
-

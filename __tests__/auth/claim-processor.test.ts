@@ -4,18 +4,37 @@ import { parseOIDCClaims, processClaimsForUser } from "@/server/auth/claim-proce
 
 // Mock dependencies
 const mockSetUserAdminStatus = vi.fn();
+const mockGetUserById = vi.fn();
 const mockGetHouseholdForUser = vi.fn();
 const mockFindOrCreateHouseholdByName = vi.fn();
 const mockAddUserToHousehold = vi.fn();
+const mockGetUsersByHouseholdId = vi.fn();
 
 vi.mock("@/server/db/repositories/users", () => ({
   setUserAdminStatus: (...args: unknown[]) => mockSetUserAdminStatus(...args),
+  getUserById: (...args: unknown[]) => mockGetUserById(...args),
 }));
 
 vi.mock("@/server/db/repositories/households", () => ({
   getHouseholdForUser: (...args: unknown[]) => mockGetHouseholdForUser(...args),
   findOrCreateHouseholdByName: (...args: unknown[]) => mockFindOrCreateHouseholdByName(...args),
   addUserToHousehold: (...args: unknown[]) => mockAddUserToHousehold(...args),
+  getUsersByHouseholdId: (...args: unknown[]) => mockGetUsersByHouseholdId(...args),
+}));
+
+vi.mock("@/server/db/cached-household", () => ({
+  invalidateHouseholdCacheForUsers: vi.fn(),
+}));
+
+vi.mock("@/server/trpc/connection-manager", () => ({
+  emitConnectionInvalidation: vi.fn(),
+}));
+
+vi.mock("@/server/trpc/routers/households/emitter", () => ({
+  householdEmitter: {
+    emit: vi.fn(),
+    emitToHousehold: vi.fn(),
+  },
 }));
 
 vi.mock("@/server/logger", () => ({
@@ -25,6 +44,13 @@ vi.mock("@/server/logger", () => ({
     warn: vi.fn(),
     error: vi.fn(),
   },
+  createLogger: vi.fn(() => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    child: vi.fn(),
+  })),
 }));
 
 describe("parseOIDCClaims", () => {
@@ -233,6 +259,13 @@ describe("processClaimsForUser", () => {
     mockFindOrCreateHouseholdByName.mockResolvedValue({ id: "household-456", name: "test" });
     mockAddUserToHousehold.mockResolvedValue(undefined);
     mockSetUserAdminStatus.mockResolvedValue(undefined);
+    mockGetUsersByHouseholdId.mockResolvedValue([]);
+    mockGetUserById.mockResolvedValue({
+      id: "user-123",
+      name: "Test User",
+      email: "test@example.com",
+      image: null,
+    });
   });
 
   afterEach(() => {
