@@ -1,12 +1,17 @@
 import type { OIDCClaimConfig } from "@/server/db/zodSchemas/server-config";
+import type { HouseholdUserInfo } from "@/server/trpc/routers/households/types";
 
 import { authLogger } from "@/server/logger";
 import {
   findOrCreateHouseholdByName,
   addUserToHousehold,
   getHouseholdForUser,
+  getUsersByHouseholdId,
 } from "@/server/db/repositories/households";
-import { setUserAdminStatus } from "@/server/db/repositories/users";
+import { setUserAdminStatus, getUserById } from "@/server/db/repositories/users";
+import { invalidateHouseholdCacheForUsers } from "@/server/db/cached-household";
+import { emitConnectionInvalidation } from "@/server/trpc/connection-manager";
+import { householdEmitter } from "@/server/trpc/routers/households/emitter";
 
 const DEFAULT_CONFIG: Required<OIDCClaimConfig> = {
   enabled: false,
@@ -128,6 +133,10 @@ export async function processClaimsForUser(
     // Find or create the household
     const household = await findOrCreateHouseholdByName(claims.householdName, userId);
 
+    // Get existing members before adding the new user (for notifications)
+    const existingMembers = await getUsersByHouseholdId(household.id);
+    const existingMemberIds = existingMembers.map((m) => m.userId);
+
     // Add user to household
     await addUserToHousehold({ householdId: household.id, userId });
 
@@ -135,5 +144,22 @@ export async function processClaimsForUser(
       { userId, householdId: household.id, householdName: claims.householdName },
       "User joined household via OIDC claim"
     );
+
+    // Emit WebSocket events for real-time sync
+    const user = await getUserById(userId);
+    const userInfo: HouseholdUserInfo = {
+      id: userId,
+      name: user?.name ?? null,
+      isAdmin: false,
+    };
+
+    // Notify existing household members about the new user
+    householdEmitter.emitToHousehold(household.id, "userJoined", { user: userInfo });
+
+    // Invalidate cache for all affected users
+    await invalidateHouseholdCacheForUsers([userId, ...existingMemberIds]);
+
+    // Emit connection invalidation for the joining user to refresh their session
+    await emitConnectionInvalidation(userId, "household-joined-via-oidc");
   }
 }
