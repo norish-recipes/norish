@@ -1,0 +1,47 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Neues Rezept",
+      "description": "Schreiben Sie Ihr eigenes Rezept"
+    },
+    "importUrl": {
+      "title": "Von URL importieren",
+      "description": "Fügen Sie einen Rezept-Link ein"
+    },
+    "settings": {
+      "title": "Einstellungen",
+      "description": "Verwalten Sie Ihr Konto"
+    },
+    "logout": "Abmelden"
+  },
+  "theme": {
+    "title": "Design",
+    "loading": "Wird geladen…",
+    "light": "Helles Design",
+    "dark": "Dunkles Design",
+    "system": "Systemstandard"
+  },
+  "nav": {
+    "home": "Rezepte",
+    "calendar": "Kalender",
+    "groceries": "Einkaufsliste"
+  },
+  "mobile": {
+    "searchPlaceholder": "Rezepte durchsuchen...",
+    "toggleSearch": "Suche umschalten",
+    "goBack": "Zurück"
+  },
+  "archiveImporter": {
+    "uploading": "Wird hochgeladen…",
+    "uploadFile": "Datei hochladen",
+    "dragDrop": "oder per Drag & Drop",
+    "formats": ".melarecipes (Mela), .zip (Mealie, Tandoor oder Paprika-Export)",
+    "uploadingFile": "Datei wird hochgeladen…",
+    "processing": "Wird verarbeitet: {details}",
+    "complete": "Fertig: {details}",
+    "imported": "{count} importiert",
+    "skipped": "{count} übersprungen",
+    "errors": "{count} Fehler",
+    "ofTotal": "{current} von {total}"
+  }
+}
