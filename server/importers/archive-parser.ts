@@ -12,6 +12,7 @@ import { extractPaprikaRecipes, parsePaprikaRecipeToDTO } from "./paprika-parser
 
 import { RecipeDashboardDTO, FullRecipeInsertDTO } from "@/types";
 import { createRecipeWithRefs, getRecipeFull, findExistingRecipe } from "@/server/db";
+import { rateRecipe } from "@/server/db/repositories/ratings";
 
 export enum ArchiveFormat {
   MELA = "mela",
@@ -119,6 +120,8 @@ export function calculateBatchSize(total: number): number {
 type RecipeImportItem = {
   dto: FullRecipeInsertDTO;
   fileName: string;
+  /** Optional imported rating (1-5) to save for the importing user */
+  importedRating?: number;
 };
 
 /**
@@ -169,7 +172,7 @@ async function importRecipeItems(
     }
 
     // Handle regular import items
-    const { dto, fileName } = item;
+    const { dto, fileName, importedRating } = item;
 
     try {
       // Check for duplicates
@@ -184,6 +187,15 @@ async function importRecipeItems(
       const id = crypto.randomUUID();
       const created = await createRecipeWithRefs(id, userId, dto);
       const recipe = await getRecipeFull(created as string);
+
+      // Save imported rating if present and user is authenticated
+      if (importedRating && userId && created) {
+        try {
+          await rateRecipe(userId, created as string, importedRating);
+        } catch {
+          // Ignore rating errors - don't fail the import
+        }
+      }
 
       if (recipe) {
         imported.push(recipe as RecipeDashboardDTO);
@@ -219,6 +231,7 @@ async function* generateMelaRecipes(
  * Generator for Mealie recipes
  * Builds lookup maps for foods, units, tags, and categories before processing recipes.
  * Catches parsing errors and yields them as error items instead of throwing.
+ * Calculates average rating from Mealie's users_to_recipes and saves to importing user.
  */
 async function* generateMealieRecipes(
   zip: JSZip
@@ -249,8 +262,19 @@ async function* generateMealieRecipes(
         imageBuffer
       );
 
+      // Calculate average rating from Mealie's users_to_recipes
+      let importedRating: number | undefined;
+      const ratings = lookups.recipeRatings.get(mealieRecipe.id);
+
+      if (ratings && ratings.length > 0) {
+        const avg = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
+
+        // Round to nearest integer (1-5), clamped to valid range
+        importedRating = Math.max(1, Math.min(5, Math.round(avg)));
+      }
+
       if (dto) {
-        yield { dto, fileName };
+        yield { dto, fileName, importedRating };
       }
     } catch (error) {
       // Yield error item instead of throwing to allow import to continue

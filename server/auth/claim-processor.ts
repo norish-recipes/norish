@@ -27,6 +27,7 @@ export async function storeOIDCProfile(
 ): Promise<void> {
   try {
     const redis = await getPublisherClient();
+
     await redis.setex(
       `${OIDC_PROFILE_PREFIX}${accountId}`,
       OIDC_PROFILE_TTL,
@@ -50,12 +51,14 @@ export async function getPendingOIDCProfile(
 
     if (data) {
       await redis.del(key); // Clean up after retrieval
+
       return JSON.parse(data);
     }
 
     return null;
   } catch (error) {
     authLogger.error({ error, accountId }, "Failed to retrieve OIDC profile from Redis");
+
     return null;
   }
 }

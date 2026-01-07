@@ -42,6 +42,14 @@ export type ArchiveImportError = {
 };
 
 /**
+ * Skipped recipe during archive import (e.g., duplicates)
+ */
+export type ArchiveSkippedItem = {
+  file: string;
+  reason: string;
+};
+
+/**
  * Progress update for archive import
  * Recipe data is sent separately via recipeBatchCreated event
  */
@@ -58,6 +66,7 @@ export type ArchiveProgressPayload = {
 export type ArchiveCompletedPayload = {
   imported: number;
   skipped: number;
+  skippedItems: ArchiveSkippedItem[];
   errors: ArchiveImportError[];
 };
 

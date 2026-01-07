@@ -1,6 +1,6 @@
 "use client";
 
-import type { ArchiveImportError } from "@/types/uploads";
+import type { ArchiveImportError, ArchiveSkippedItem } from "@/types/uploads";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -16,6 +16,7 @@ type ArchiveImportState = {
   total: number;
   imported: number;
   skipped: number;
+  skippedItems: ArchiveSkippedItem[];
   isImporting: boolean;
   errors: ArchiveImportError[];
 };
@@ -25,6 +26,7 @@ const defaultState: ArchiveImportState = {
   total: 0,
   imported: 0,
   skipped: 0,
+  skippedItems: [],
   isImporting: false,
   errors: [],
 };
@@ -34,6 +36,7 @@ export type ArchiveImportQueryResult = {
   total: number;
   imported: number;
   skipped: number;
+  skippedItems: ArchiveSkippedItem[];
   isImporting: boolean;
   errors: ArchiveImportError[];
   setImportState: (updater: (prev: ArchiveImportState) => ArchiveImportState) => void;
@@ -81,6 +84,7 @@ export function useArchiveImportQuery(): ArchiveImportQueryResult {
     total: state?.total ?? 0,
     imported: state?.imported ?? 0,
     skipped: state?.skipped ?? 0,
+    skippedItems: state?.skippedItems ?? [],
     isImporting: state?.isImporting ?? false,
     errors: state?.errors ?? [],
     setImportState,
