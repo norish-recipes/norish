@@ -67,16 +67,17 @@ export default function ArchiveImporter() {
   // Detect completion: import was active, now finished, and we have results
   const isComplete = !isImporting && current > 0 && current === total;
 
-  // Auto-clear import state after completion (after 5 seconds)
+  // Auto-clear import state after completion
   useEffect(() => {
     if (isComplete) {
+      const timeout = 60000;
       const timer = setTimeout(() => {
         clearImport();
-      }, 5000);
+      }, timeout);
 
       return () => clearTimeout(timer);
     }
-  }, [isComplete, clearImport]);
+  }, [isComplete, skippedItems.length, clearImport]);
 
   // Combine local errors with progress errors
   const allErrors = [

@@ -434,25 +434,31 @@ export async function parseMealieRecipeToDTO(
   }> = [];
 
   for (const ing of recipeIngredients) {
-    // Check if this is an unparsed ingredient (has original_text but no parsed food_id)
-    const isUnparsed = !ing.food_id && ing.original_text?.trim();
+    // Determine the raw text to parse from (priority: original_text > note)
+    const rawText = ing.original_text?.trim() || ing.note?.trim();
+
+    // Check if this is an unparsed ingredient:
+    // - No food_id (not parsed by Mealie)
+    // - Has raw text to parse
+    // - quantity is 0 or missing (meaning the quantity is embedded in the text)
+    const isUnparsed = !ing.food_id && rawText && (!ing.quantity || ing.quantity === 0);
 
     if (isUnparsed) {
-      // Parse the original_text to extract amount, unit, and description
-      const parsed = parseIngredientWithDefaults(ing.original_text!.trim(), units);
+      // Parse the text to extract amount, unit, and description
+      const parsed = parseIngredientWithDefaults(rawText, units);
 
       if (parsed.length > 0 && parsed[0]) {
         const p = parsed[0];
 
         ingredientArray.push({
-          name: p.description || ing.original_text!.trim(),
+          name: p.description || rawText,
           amount: p.quantity != null ? p.quantity : null,
           unit: p.unitOfMeasureID || null,
         });
       } else {
-        // Fallback: use the original text as-is if parsing fails
+        // Fallback: use the raw text as-is if parsing fails
         ingredientArray.push({
-          name: ing.original_text!.trim(),
+          name: rawText,
           amount: null,
           unit: null,
         });
@@ -516,13 +522,13 @@ export async function parseMealieRecipeToDTO(
   const cookMinutes = parseTime(recipe.cook_time);
   const totalMinutes = parseTime(recipe.total_time) || parseTime(recipe.perform_time);
 
-  // Normalize servings
+  // Normalize servings (must be an integer for the schema)
   let servings: number | undefined = undefined;
 
   if (recipe.recipe_servings && recipe.recipe_servings > 0) {
-    servings = recipe.recipe_servings;
+    servings = Math.round(recipe.recipe_servings);
   } else if (recipe.recipe_yield_quantity && recipe.recipe_yield_quantity > 0) {
-    servings = recipe.recipe_yield_quantity;
+    servings = Math.round(recipe.recipe_yield_quantity);
   }
 
   // Resolve tags from recipes_to_tags
@@ -553,7 +559,9 @@ export async function parseMealieRecipeToDTO(
 
   // Extract nutrition data from lookups
   const nutrition = lookups.recipeNutrition.get(recipe.id);
-  const calories = nutrition ? parseNutritionValue(nutrition.calories) : null;
+  const caloriesRaw = nutrition ? parseNutritionValue(nutrition.calories) : null;
+  // Calories must be an integer for the schema
+  const calories = caloriesRaw != null ? Math.round(caloriesRaw) : null;
   const fat = nutrition ? parseNutritionValue(nutrition.fat_content) : null;
   const carbs = nutrition ? parseNutritionValue(nutrition.carbohydrate_content) : null;
   const protein = nutrition ? parseNutritionValue(nutrition.protein_content) : null;

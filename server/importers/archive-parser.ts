@@ -11,7 +11,7 @@ import { extractTandoorRecipes, parseTandoorRecipeToDTO } from "./tandoor-parser
 import { extractPaprikaRecipes, parsePaprikaRecipeToDTO } from "./paprika-parser";
 
 import { RecipeDashboardDTO, FullRecipeInsertDTO } from "@/types";
-import { createRecipeWithRefs, getRecipeFull, findExistingRecipe } from "@/server/db";
+import { createRecipeWithRefs, dashboardRecipe, findExistingRecipe } from "@/server/db";
 import { rateRecipe } from "@/server/db/repositories/ratings";
 
 export enum ArchiveFormat {
@@ -151,7 +151,8 @@ async function importRecipeItems(
   onProgress?: (
     current: number,
     recipe?: RecipeDashboardDTO,
-    error?: { file: string; error: string }
+    error?: { file: string; error: string },
+    skipped?: { file: string; reason: string }
   ) => void
 ): Promise<ImportResult> {
   const imported: RecipeDashboardDTO[] = [];
@@ -167,7 +168,7 @@ async function importRecipeItems(
       const error = { file: item.fileName, error: item.parseError };
 
       errors.push(error);
-      onProgress?.(current, undefined, error);
+      onProgress?.(current, undefined, error, undefined);
       continue;
     }
 
@@ -179,14 +180,15 @@ async function importRecipeItems(
       const existingId = await findExistingRecipe(userIds, dto.url, dto.name);
 
       if (existingId) {
-        skipped.push({ file: fileName, reason: "Duplicate recipe" });
-        onProgress?.(current, undefined, undefined);
+        const skippedItem = { file: fileName, reason: "Duplicate recipe" };
+
+        skipped.push(skippedItem);
+        onProgress?.(current, undefined, undefined, skippedItem);
         continue;
       }
 
       const id = crypto.randomUUID();
       const created = await createRecipeWithRefs(id, userId, dto);
-      const recipe = await getRecipeFull(created as string);
 
       // Save imported rating if present and user is authenticated
       if (importedRating && userId && created) {
@@ -197,15 +199,18 @@ async function importRecipeItems(
         }
       }
 
+      // Fetch recipe AFTER saving rating so averageRating is included in the DTO
+      const recipe = await dashboardRecipe(created as string);
+
       if (recipe) {
-        imported.push(recipe as RecipeDashboardDTO);
-        onProgress?.(current, recipe as RecipeDashboardDTO);
+        imported.push(recipe);
+        onProgress?.(current, recipe, undefined, undefined);
       }
     } catch (e: unknown) {
       const error = { file: fileName, error: String((e as Error)?.message || e) };
 
       errors.push(error);
-      onProgress?.(current, undefined, error);
+      onProgress?.(current, undefined, error, undefined);
     }
   }
 
@@ -329,7 +334,8 @@ export async function importArchive(
   onProgress?: (
     current: number,
     recipe?: RecipeDashboardDTO,
-    error?: { file: string; error: string }
+    error?: { file: string; error: string },
+    skipped?: { file: string; reason: string }
   ) => void
 ): Promise<ImportResult> {
   const arrayBuffer = zipBytes.buffer.slice(

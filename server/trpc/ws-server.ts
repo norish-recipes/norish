@@ -43,35 +43,45 @@ export function initTrpcWebSocket(server: Server) {
 
     trpcLogger.trace({ pathname: url.pathname, host }, "WebSocket upgrade request");
 
-    if (url.pathname === "/trpc") {
-      // Pre-authenticate to get userId for connection tracking
-      const headers = new Headers();
+    // Only handle /trpc WebSocket path, let other paths (like HMR) fall through
+    if (url.pathname !== "/trpc") {
+      return;
+    }
 
-      if (req.headers.cookie) headers.set("cookie", String(req.headers.cookie));
-      if (req.headers["x-api-key"]) headers.set("x-api-key", String(req.headers["x-api-key"]));
+    // Pre-authenticate to get userId for connection tracking
+    const headers = new Headers();
 
-      let userId: string | undefined;
+    if (req.headers.cookie) headers.set("cookie", String(req.headers.cookie));
+    if (req.headers["x-api-key"]) headers.set("x-api-key", String(req.headers["x-api-key"]));
 
-      try {
-        const session = await auth.api.getSession({ headers });
+    let userId: string | undefined;
 
-        userId = session?.user?.id;
-      } catch {
-        // Auth failed, let createWsContext handle rejection
+    try {
+      const session = await auth.api.getSession({ headers });
+
+      userId = session?.user?.id;
+      if (!session || !session.user) {
+        throw new Error("No session");
+      }
+    } catch {
+      trpcLogger.debug("Rejecting unauthenticated WebSocket connection");
+      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+      socket.destroy();
+
+      return;
+    }
+
+    trpcWss!.handleUpgrade(req, socket, head, (ws) => {
+      trpcLogger.trace({ userId }, "WebSocket connection established");
+
+      // Track connection by userId for server-side termination
+      if (userId) {
+        registerConnection(userId, ws);
+        ws.on("close", () => unregisterConnection(userId, ws));
       }
 
-      trpcWss!.handleUpgrade(req, socket, head, (ws) => {
-        trpcLogger.trace({ userId }, "WebSocket connection established");
-
-        // Track connection by userId for server-side termination
-        if (userId) {
-          registerConnection(userId, ws);
-          ws.on("close", () => unregisterConnection(userId, ws));
-        }
-
-        trpcWss!.emit("connection", ws, req);
-      });
-    }
+      trpcWss!.emit("connection", ws, req);
+    });
   });
 
   // Start listening for connection invalidation events

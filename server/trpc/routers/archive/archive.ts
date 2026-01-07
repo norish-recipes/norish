@@ -107,7 +107,7 @@ async function runArchiveImportAsync(
 ): Promise<void> {
   const allImported: RecipeDashboardDTO[] = [];
   const allErrors: ArchiveImportError[] = [];
-  let allSkipped: ArchiveSkippedItem[] = [];
+  const allSkipped: ArchiveSkippedItem[] = [];
 
   // Calculate dynamic batch size based on total
   const batchSize = Math.max(1, calculateBatchSize(total));
@@ -121,7 +121,8 @@ async function runArchiveImportAsync(
   const onProgress = (
     currentCount: number,
     recipe?: RecipeDashboardDTO,
-    error?: ArchiveImportError
+    error?: ArchiveImportError,
+    skipped?: ArchiveSkippedItem
   ) => {
     current = currentCount;
 
@@ -133,6 +134,10 @@ async function runArchiveImportAsync(
     if (error) {
       batchErrors.push(error);
       allErrors.push(error);
+    }
+
+    if (skipped) {
+      allSkipped.push(skipped);
     }
 
     // Emit on batch boundaries or completion
@@ -177,15 +182,12 @@ async function runArchiveImportAsync(
     // Import archive (auto-detects format)
     const result = await runArchiveImport(userId, userIds, buffer, onProgress);
 
-    // Store skipped items for completion event
-    allSkipped = result.skipped;
-
     log.info(
       {
         total,
         batchSize,
         imported: result.imported.length,
-        skipped: result.skipped.length,
+        skipped: allSkipped.length,
         errors: result.errors.length,
       },
       "Archive import complete"

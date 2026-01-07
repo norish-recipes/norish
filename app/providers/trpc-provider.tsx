@@ -23,7 +23,7 @@ const log = createClientLogger("trpc");
 
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
 
-export type ConnectionStatus = "connecting" | "connected" | "disconnected";
+export type ConnectionStatus = "idle" | "connecting" | "connected" | "disconnected";
 
 type ConnectionContextValue = {
   status: ConnectionStatus;
@@ -31,7 +31,7 @@ type ConnectionContextValue = {
 };
 
 const ConnectionContext = createContext<ConnectionContextValue>({
-  status: "connecting",
+  status: "idle",
   isConnected: false,
 });
 
@@ -56,8 +56,9 @@ function getWsUrl() {
 }
 
 export function TRPCProviderWrapper({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<ConnectionStatus>("connecting");
-  const previousStatusRef = useRef<ConnectionStatus>("connecting");
+  // Start as "idle" since we're using lazy WebSocket (won't connect until subscription is used)
+  const [status, setStatus] = useState<ConnectionStatus>("idle");
+  const previousStatusRef = useRef<ConnectionStatus>("idle");
   const queryClientRef = useRef<QueryClient | null>(null);
 
   // Create clients once
@@ -80,6 +81,12 @@ export function TRPCProviderWrapper({ children }: { children: ReactNode }) {
 
     const wsClient = createWSClient({
       url: getWsUrl,
+      // Lazy mode: don't connect until a subscription is actually used
+      // This prevents WebSocket connection attempts on unauthenticated pages
+      lazy: {
+        enabled: true,
+        closeMs: 0, // Don't auto-close after inactivity (we want persistent connection once established)
+      },
       retryDelayMs: (attemptIndex) => {
         // Stop retrying after MAX_RETRIES failures
         if (attemptIndex >= MAX_RETRIES) {

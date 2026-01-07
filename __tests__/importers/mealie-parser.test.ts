@@ -538,7 +538,7 @@ describe("Mealie Parser", () => {
       expect(dto!.recipeIngredients![0].ingredientName).toBe("some ingredient note");
     });
 
-    it("treats quantity: 0 as null (ingredient text already contains quantity)", async () => {
+    it("parses quantity from note when quantity is 0 (quantity embedded in text)", async () => {
       const zeroQuantityIngredients: MealieIngredient[] = [
         {
           id: 1,
@@ -559,8 +559,10 @@ describe("Mealie Parser", () => {
 
       expect(dto).not.toBeNull();
       expect(dto!.recipeIngredients).toHaveLength(1);
-      expect(dto!.recipeIngredients![0].ingredientName).toBe("500 g lean minced beef");
-      expect(dto!.recipeIngredients![0].amount).toBeNull(); // 0 should be treated as null
+      // Now parses the note to extract quantity/unit, so scaling works correctly
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("lean minced beef");
+      expect(dto!.recipeIngredients![0].amount).toBe(500);
+      expect(dto!.recipeIngredients![0].unit).toBe("gram");
     });
   });
 });
