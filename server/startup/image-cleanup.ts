@@ -2,29 +2,31 @@ import fs from "fs/promises";
 import path from "path";
 
 import { db } from "../db/drizzle";
-import { recipes } from "../db/schema";
+import { recipes, recipeImages } from "../db/schema";
 import { getAllUserAvatars } from "../db/repositories";
 
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { schedulerLogger } from "@/server/logger";
 
-const RECIPES_DISK_DIR = path.join(SERVER_CONFIG.UPLOADS_DIR, "uploads", "recipes");
+const RECIPES_DISK_DIR = path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes");
 const RECIPES_WEB_PREFIX = "/recipes/images";
 const AVATARS_DISK_DIR = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
 
 /**
- * Clean up orphaned recipe images that aren't referenced in the database
+ * Clean up orphaned recipe images that aren't referenced in the database.
+ * Checks both the legacy `recipes.image` field and the `recipe_images` gallery table.
  */
 export async function cleanupOrphanedImages(): Promise<{ deleted: number; errors: number }> {
   let deleted = 0;
   let errors = 0;
 
   try {
-    // Get all image files from disk
+    // Get all image files from disk (main images directory)
+    const imagesDir = path.join(RECIPES_DISK_DIR, "images");
     let files;
 
     try {
-      files = await fs.readdir(RECIPES_DISK_DIR);
+      files = await fs.readdir(imagesDir);
     } catch {
       // Directory doesn't exist, nothing to clean up
       return { deleted: 0, errors: 0 };
@@ -40,22 +42,31 @@ export async function cleanupOrphanedImages(): Promise<{ deleted: number; errors
       return { deleted: 0, errors: 0 };
     }
 
-    // Get all image URLs from database
-    const allRecipes = await db.select({ image: recipes.image }).from(recipes);
-    const usedImages = new Set(
-      allRecipes
-        .map((r) => r.image)
-        .filter(Boolean)
-        .map((url) => {
-          // Extract filename from URL like "/recipes/images/abc123.jpg"
-          if (url && url.startsWith(RECIPES_WEB_PREFIX)) {
-            return url.substring(RECIPES_WEB_PREFIX.length + 1);
-          }
+    // Get all image URLs from database - both legacy field and gallery table
+    const [allRecipes, allGalleryImages] = await Promise.all([
+      db.select({ image: recipes.image }).from(recipes),
+      db.select({ image: recipeImages.image }).from(recipeImages),
+    ]);
 
-          return null;
-        })
-        .filter(Boolean) as string[]
-    );
+    const usedImages = new Set<string>();
+
+    // Add images from legacy recipes.image field
+    for (const r of allRecipes) {
+      if (r.image && r.image.startsWith(RECIPES_WEB_PREFIX)) {
+        const filename = r.image.substring(RECIPES_WEB_PREFIX.length + 1);
+
+        usedImages.add(filename);
+      }
+    }
+
+    // Add images from recipe_images gallery table
+    for (const img of allGalleryImages) {
+      if (img.image && img.image.startsWith(RECIPES_WEB_PREFIX)) {
+        const filename = img.image.substring(RECIPES_WEB_PREFIX.length + 1);
+
+        usedImages.add(filename);
+      }
+    }
 
     schedulerLogger.info(
       { total: imageFiles.length, referenced: usedImages.size },
@@ -66,7 +77,7 @@ export async function cleanupOrphanedImages(): Promise<{ deleted: number; errors
     for (const file of imageFiles) {
       if (!usedImages.has(file)) {
         try {
-          const filePath = path.join(RECIPES_DISK_DIR, file);
+          const filePath = path.join(imagesDir, file);
 
           await fs.unlink(filePath);
           deleted++;
@@ -96,7 +107,7 @@ export async function deleteImageByUrl(imageUrl: string | null | undefined): Pro
   }
 
   const filename = imageUrl.substring(RECIPES_WEB_PREFIX.length + 1);
-  const filePath = path.join(RECIPES_DISK_DIR, filename);
+  const filePath = path.join(RECIPES_DISK_DIR, "images", filename);
 
   try {
     await fs.unlink(filePath);

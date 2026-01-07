@@ -1,4 +1,3 @@
-import { isSupportedVideoUrl } from "@/server/video/detector";
 import { httpUrlSchema } from "@/lib/schema";
 
 /**
@@ -14,5 +13,18 @@ export function isUrl(str: string): boolean {
 export function isVideoUrl(str: string): boolean {
   if (!isUrl(str)) return false;
 
-  return isSupportedVideoUrl(str);
+  try {
+    const hostname = new URL(str).hostname.toLowerCase();
+
+    return (
+      hostname.includes("youtube.com") ||
+      hostname.includes("youtu.be") ||
+      hostname.includes("instagram.com") ||
+      hostname.includes("tiktok.com") ||
+      hostname.includes("facebook.com") ||
+      hostname.includes("fb.watch")
+    );
+  } catch {
+    return false;
+  }
 }
