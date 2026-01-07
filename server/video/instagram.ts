@@ -108,10 +108,15 @@ export async function processInstagramImagePost(
   if (description.length < 50) {
     log.info({ url }, "Description from yt-dlp too short, attempting Playwright scrape");
     try {
-      const html = await fetchViaPlaywright(url);
+      const fetchResult = await fetchViaPlaywright(url);
 
-      if (html) {
-        description = extractInstagramCaption(html);
+      // Clean up browser resources
+      if (fetchResult.context) {
+        await fetchResult.context.close();
+      }
+
+      if (fetchResult.html) {
+        description = extractInstagramCaption(fetchResult.html);
         log.info(
           { url, descriptionLength: description.length },
           "Extracted caption via Playwright"

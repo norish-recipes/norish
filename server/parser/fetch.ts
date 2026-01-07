@@ -1,5 +1,23 @@
+import type { Page, BrowserContext } from "playwright-core";
+
 import { getBrowser } from "@/server/playwright";
 import { parserLogger as log } from "@/server/logger";
+import { getProviderForUrl, type PageProvider } from "@/server/parser/providers";
+
+/**
+ * Result from fetching a page via Playwright
+ * Includes the HTML content and optionally the page/context for later extraction
+ */
+export interface FetchResult {
+  /** Full HTML content from page.content() */
+  html: string;
+  /** Playwright Page object (kept open for provider extraction) */
+  page?: Page;
+  /** Matched provider for this URL (if any) */
+  provider?: PageProvider;
+  /** Browser context (must be closed by caller) */
+  context?: BrowserContext;
+}
 
 const BROWSER_HEADERS: Record<string, string> = {
   "User-Agent":
@@ -30,7 +48,37 @@ function getReferer(url: string): string {
   }
 }
 
-export async function fetchViaPlaywright(targetUrl: string): Promise<string> {
+/**
+ * Default wait strategy for recipe content
+ * Waits for any of: JSON-LD, microdata, or main content areas
+ */
+function defaultWaitStrategy(page: Page): Promise<void> {
+  return Promise.race([
+    page.locator('script[type="application/ld+json"]').first().waitFor({ timeout: 5000 }),
+    page.locator('[itemtype*="schema.org"]').first().waitFor({ timeout: 5000 }),
+    page
+      .locator('main, article, [role="main"], .content, #content')
+      .first()
+      .waitFor({ timeout: 5000 }),
+  ]);
+}
+
+/**
+ * Use provider-specific wait strategy if available
+ * Falls back to default strategy if provider doesn't implement getContentSelectors
+ */
+async function providerWaitForContent(page: Page, provider: PageProvider): Promise<void> {
+  if (provider.getContentSelectors) {
+    const { selectors, timeout = 5000 } = provider.getContentSelectors();
+
+    await Promise.race(selectors.map((s) => page.locator(s).first().waitFor({ timeout })));
+  } else {
+    // Fallback to default wait strategy if provider doesn't specify selectors
+    await defaultWaitStrategy(page);
+  }
+}
+
+export async function fetchViaPlaywright(targetUrl: string): Promise<FetchResult> {
   try {
     const browser = await getBrowser();
     const referer = getReferer(targetUrl);
@@ -73,32 +121,49 @@ export async function fetchViaPlaywright(targetUrl: string): Promise<string> {
       await page.waitForLoadState("networkidle").catch(() => {});
     }
 
+    // Get provider for this URL
+    const provider = getProviderForUrl(targetUrl);
+
+    if (provider) {
+      log.debug({ url: targetUrl, provider: provider.name }, "Matched provider for URL");
+    } else {
+      log.debug({ url: targetUrl }, "No specific provider matched, using default wait strategy");
+    }
+
+    // Wait for content to load using provider or default strategy
     try {
-      await Promise.race([
-        page.locator('script[type="application/ld+json"]').first().waitFor({ timeout: 5000 }),
-        page.locator('[itemtype*="schema.org"]').first().waitFor({ timeout: 5000 }),
-        page
-          .locator('main, article, [role="main"], .content, #content')
-          .first()
-          .waitFor({ timeout: 5000 }),
-      ]);
-    } catch {
+      if (provider) {
+        await providerWaitForContent(page, provider);
+        log.debug(
+          { url: targetUrl, provider: provider.name },
+          "Provider wait strategy completed successfully"
+        );
+      } else {
+        await defaultWaitStrategy(page);
+        log.debug({ url: targetUrl }, "Default wait strategy completed successfully");
+      }
+    } catch (error) {
       // Timeout is acceptable - proceed with whatever content we have
       log.debug(
-        { url: targetUrl },
-        "Recipe content selectors not found within timeout, proceeding anyway"
+        { url: targetUrl, err: error, provider: provider?.name },
+        "Wait strategy timed out, proceeding with current page content"
       );
     }
 
     const content = await page.content();
 
-    await context.close();
-
-    return content;
+    // Return page and context for potential later extraction
+    // IMPORTANT: Caller must close context when done
+    return {
+      html: content,
+      page,
+      provider: provider ?? undefined,
+      context,
+    };
   } catch (error) {
     log.warn({ err: error }, "Playwright fetch failed, Chrome may not be available");
 
-    return ""; // Fallback will use HTTP
+    return { html: "" }; // Fallback will use HTTP
   }
 }
 
