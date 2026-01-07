@@ -95,7 +95,6 @@ export function useArchiveImportSubscription(): void {
           severity: hasErrors ? "warning" : "success",
           title: "Recipe import complete",
           description,
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });

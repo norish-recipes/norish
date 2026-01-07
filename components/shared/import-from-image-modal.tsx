@@ -58,7 +58,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
             title: t("invalidType"),
             description: t("notSupported", { name: file.name }),
             color: "danger",
-            timeout: 2000,
             shouldShowTimeoutProgress: true,
             radius: "full",
           });
@@ -71,7 +70,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
             title: t("tooLarge"),
             description: t("exceeds", { name: file.name }),
             color: "danger",
-            timeout: 2000,
             shouldShowTimeoutProgress: true,
             radius: "full",
           });
@@ -94,7 +92,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
             title: t("tooMany"),
             description: t("maxFiles", { max: MAX_OCR_FILES }),
             color: "warning",
-            timeout: 2000,
             shouldShowTimeoutProgress: true,
             radius: "full",
           });
@@ -148,7 +145,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
         severity: "default",
         title: t("importing"),
         description: t("analyzing"),
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -163,7 +159,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
         title: t("failed"),
         description: (error as Error).message,
         color: "danger",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });

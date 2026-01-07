@@ -71,7 +71,6 @@ export function useRatingsSubscription() {
           severity: "danger",
           title: "Failed to rate recipe",
           description: reason,
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });

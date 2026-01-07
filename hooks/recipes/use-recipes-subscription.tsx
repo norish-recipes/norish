@@ -161,7 +161,6 @@ export function useRecipesSubscription() {
           addToast({
             severity: "success",
             title: t("imported"),
-            timeout: 2000,
             shouldShowTimeoutProgress: true,
             radius: "full",
             classNames: {
@@ -229,7 +228,6 @@ export function useRecipesSubscription() {
           severity: "success",
           title: t("converted"),
           description: t("convertedDescription", { system: payload.recipe.systemUsed }),
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });
@@ -257,7 +255,6 @@ export function useRecipesSubscription() {
         addToast({
           severity: "danger",
           title: t("failed"),
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
           description: payload.reason,

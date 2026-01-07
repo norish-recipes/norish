@@ -93,7 +93,6 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
         severity: "default",
         title: "Importing recipe...",
         description: "Import in progress, please wait...",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -110,7 +109,6 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
         severity: "default",
         title: "Importing recipe with AI...",
         description: "Import in progress, please wait...",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
