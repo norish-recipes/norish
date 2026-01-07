@@ -224,9 +224,64 @@ export type AIConfig = z.infer<typeof AIConfigSchema>;
 // Video Configuration Schema (includes transcription settings)
 // ============================================================================
 
-export const TranscriptionProviderSchema = z.enum(["openai", "generic-openai", "disabled"]);
+export const TranscriptionProviderSchema = z.enum([
+  "openai",
+  "groq",
+  "azure",
+  "generic-openai",
+  "ollama",
+  "disabled",
+]);
 
 export type TranscriptionProvider = z.infer<typeof TranscriptionProviderSchema>;
+
+/** All enabled (non-disabled) transcription providers. */
+export const TRANSCRIPTION_PROVIDERS_ENABLED = [
+  "openai",
+  "groq",
+  "azure",
+  "generic-openai",
+  "ollama",
+] as const satisfies readonly TranscriptionProvider[];
+
+/** Cloud providers that require an API key. */
+export const TRANSCRIPTION_PROVIDERS_CLOUD = [
+  "openai",
+  "groq",
+  "azure",
+] as const satisfies readonly TranscriptionProvider[];
+
+/** Providers that require an endpoint URL. */
+export const TRANSCRIPTION_PROVIDERS_NEED_ENDPOINT = [
+  "generic-openai",
+  "azure",
+  "ollama",
+] as const satisfies readonly TranscriptionProvider[];
+
+/** Providers that support dynamic model listing. */
+export const TRANSCRIPTION_PROVIDERS_WITH_MODEL_LISTING = [
+  "openai",
+  "groq",
+  "generic-openai",
+  "ollama",
+] as const satisfies readonly TranscriptionProvider[];
+
+/** Check if provider is a cloud provider (requires API key). */
+export function isCloudTranscriptionProvider(provider: TranscriptionProvider): boolean {
+  return (TRANSCRIPTION_PROVIDERS_CLOUD as readonly string[]).includes(provider);
+}
+
+/** Check if provider needs an endpoint URL. */
+export function transcriptionProviderNeedsEndpoint(provider: TranscriptionProvider): boolean {
+  return (TRANSCRIPTION_PROVIDERS_NEED_ENDPOINT as readonly string[]).includes(provider);
+}
+
+/** Check if provider supports dynamic model listing. */
+export function transcriptionProviderSupportsModelListing(
+  provider: TranscriptionProvider
+): boolean {
+  return (TRANSCRIPTION_PROVIDERS_WITH_MODEL_LISTING as readonly string[]).includes(provider);
+}
 
 export const VideoConfigSchema = z.object({
   enabled: z.boolean(),

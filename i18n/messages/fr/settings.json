@@ -441,15 +441,22 @@
       "transcriptionProviders": {
         "disabled": "Désactivé",
         "openai": "OpenAI Whisper",
+        "groq": "Groq Whisper",
+        "azure": "Azure OpenAI Whisper",
+        "ollama": "Ollama",
         "genericOpenai": "Compatible OpenAI générique"
       },
-      "transcriptionEndpoint": "URL de l’endpoint",
-      "transcriptionEndpointDescription": "Endpoint compatible OpenAI supportant Whisper",
+      "transcriptionEndpoint": "URL de l'endpoint",
+      "transcriptionEndpointDescription": "Endpoint compatible OpenAI supportant Whisper, ou endpoint Ollama",
       "transcriptionModel": "Modèle",
       "transcriptionModelDescription": "Modèle Whisper utilisé pour la transcription",
+      "transcriptionModelPlaceholder": "Sélectionnez ou entrez le nom du modèle",
       "transcriptionApiKey": "Clé API",
       "transcriptionApiKeyDescription": "Utilise la clé AI config si vide",
-      "transcriptionApiKeyPlaceholder": "Laisser vide pour utiliser la clé IA"
+      "transcriptionApiKeyPlaceholder": "Laisser vide pour utiliser la clé IA",
+      "transcriptionApiKeyOptional": "Clé API (Optionnelle)",
+      "transcriptionApiKeyOptionalDescription": "La plupart des serveurs Whisper locaux ne nécessitent pas de clé API",
+      "transcriptionApiKeyOptionalPlaceholder": "Laisser vide pour les serveurs locaux"
     },
     "promptsConfig": {
       "recipeExtraction": "Prompt d'extraction de recette",

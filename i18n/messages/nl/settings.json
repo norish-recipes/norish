@@ -441,15 +441,22 @@
       "transcriptionProviders": {
         "disabled": "Uitgeschakeld",
         "openai": "OpenAI Whisper",
+        "groq": "Groq Whisper",
+        "azure": "Azure OpenAI Whisper",
+        "ollama": "Ollama",
         "genericOpenai": "Generieke OpenAI-compatibel"
       },
       "transcriptionEndpoint": "Endpoint URL",
-      "transcriptionEndpointDescription": "OpenAI-compatibele endpoint met Whisper-ondersteuning",
+      "transcriptionEndpointDescription": "OpenAI-compatibele endpoint met Whisper-ondersteuning, of Ollama endpoint",
       "transcriptionModel": "Model",
       "transcriptionModelDescription": "Whisper-model voor transcriptie",
+      "transcriptionModelPlaceholder": "Selecteer of voer modelnaam in",
       "transcriptionApiKey": "API-sleutel",
       "transcriptionApiKeyDescription": "Valt terug op AI-configuratie API-sleutel indien niet ingesteld",
-      "transcriptionApiKeyPlaceholder": "Laat leeg om AI config sleutel te gebruiken"
+      "transcriptionApiKeyPlaceholder": "Laat leeg om AI config sleutel te gebruiken",
+      "transcriptionApiKeyOptional": "API-sleutel (Optioneel)",
+      "transcriptionApiKeyOptionalDescription": "De meeste lokale Whisper-servers vereisen geen API-sleutel",
+      "transcriptionApiKeyOptionalPlaceholder": "Laat leeg voor lokale servers"
     },
     "promptsConfig": {
       "recipeExtraction": "Receptextractie Prompt",

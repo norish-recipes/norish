@@ -137,7 +137,7 @@ const listAvailableTranscriptionModels = adminProcedure
     let apiKey = input.apiKey;
 
     // If no API key provided, try to get from stored configs
-    if (!apiKey && (input.provider === "openai" || input.provider === "generic-openai")) {
+    if (!apiKey && ["openai", "groq", "azure", "generic-openai"].includes(input.provider)) {
       // First try video config, then fall back to AI config
       const videoConfig = await getConfig<VideoConfig>(ServerConfigKeys.VIDEO_CONFIG, true);
 
