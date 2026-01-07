@@ -137,6 +137,7 @@ export async function ensureYtDlpBinary(): Promise<void> {
 }
 
 export async function getVideoMetadata(url: string): Promise<VideoMetadata> {
+  await ensureYtDlpBinary();
   const ytDlpWrap = new YTDlpWrap(ytDlpPath);
 
   try {
@@ -176,6 +177,7 @@ export async function getVideoMetadata(url: string): Promise<VideoMetadata> {
 }
 
 export async function downloadVideoAudio(url: string): Promise<string> {
+  await ensureYtDlpBinary();
   await fs.mkdir(outputDir, { recursive: true });
 
   const ytDlpWrap = new YTDlpWrap(ytDlpPath);
