@@ -1,4 +1,5 @@
 import { parseIsoDuration, parseIngredientWithDefaults } from "@/lib/helpers";
+import { decode } from "html-entities";
 import { downloadAllImagesFromJsonLd } from "@/server/downloader";
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
@@ -56,11 +57,11 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
   const ingSource = json.recipeIngredient ?? json.ingredients;
   const ingredients = Array.isArray(ingSource)
     ? parseIngredientWithDefaults(
-        ingSource.map((v: any) => v?.toString() || "").filter(Boolean),
+        ingSource.map((v: any) => decode(v?.toString() || "")).filter(Boolean),
         units
       )
     : typeof ingSource === "string"
-      ? parseIngredientWithDefaults(ingSource.toString(), units)
+      ? parseIngredientWithDefaults(decode(ingSource.toString()), units)
       : [];
 
   const systemUsed = inferSystemUsedFromParsed(ingredients);
@@ -71,7 +72,7 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
     if (!node) return;
 
     if (typeof node === "string") {
-      const s = node.trim();
+      const s = decode(node).trim();
 
       if (s) rawSteps.push(s);
 
@@ -100,7 +101,7 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
           : item && typeof item.name === "string"
             ? item.name
             : undefined;
-      const chosen = (text || name || "").toString().trim();
+      const chosen = decode((text || name || "").toString()).trim();
 
       if (chosen) {
         if (
