@@ -11,6 +11,7 @@ import {
 
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { DEFAULT_LOCALE_CONFIG, buildLocaleConfigFromEnv } from "@/config/server-config-loader";
+import type { I18nLocaleConfig } from "@/server/db/zodSchemas/server-config";
 import { setAuthProviderCache } from "@/server/auth/provider-cache";
 import { serverLogger } from "@/server/logger";
 import defaultUnits from "@/config/units.default.json";
@@ -148,6 +149,7 @@ export async function seedServerConfig(): Promise<void> {
 
   await importEnvAuthProvidersIfMissing();
   await syncPrompts();
+  await syncLocales();
   if (seededCount === 0) {
     serverLogger.info("All server configuration keys present");
   } else {
@@ -454,6 +456,39 @@ async function syncPrompts(): Promise<void> {
     );
 
     serverLogger.info("Updated prompts from default files (content changed)");
+  }
+}
+
+/**
+ * Add any new locales from DEFAULT_LOCALE_CONFIG to the DB config.
+ * Preserves existing locale settings (enabled/disabled state).
+ * Respects ENABLED_LOCALES env var when adding new locales.
+ */
+async function syncLocales(): Promise<void> {
+  const existing = await getConfig<I18nLocaleConfig>(ServerConfigKeys.LOCALE_CONFIG);
+
+  if (!existing) {
+    return;
+  }
+
+  const envEnabledLocales = SERVER_CONFIG.ENABLED_LOCALES;
+  const hasEnvFilter = envEnabledLocales.length > 0;
+
+  const newLocales: string[] = [];
+
+  for (const [locale, entry] of Object.entries(DEFAULT_LOCALE_CONFIG.locales)) {
+    if (!existing.locales[locale]) {
+      newLocales.push(locale);
+      // If ENABLED_LOCALES env is set, only enable if locale is in that list
+      // Otherwise use the default enabled state
+      const enabled = hasEnvFilter ? envEnabledLocales.includes(locale) : entry.enabled;
+      existing.locales[locale] = { ...entry, enabled };
+    }
+  }
+
+  if (newLocales.length > 0) {
+    await setConfig(ServerConfigKeys.LOCALE_CONFIG, existing, null, false);
+    serverLogger.info({ locales: newLocales }, "Added new locales to config");
   }
 }
 
