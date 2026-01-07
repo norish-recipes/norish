@@ -1,0 +1,167 @@
+{
+  "actions": {
+    "save": "Sauver",
+    "cancel": "Annuler",
+    "delete": "Effacer",
+    "edit": "Editer",
+    "create": "Créer",
+    "add": "Ajouter",
+    "remove": "Enlever",
+    "close": "Fermer",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser",
+    "clear": "Nettoyer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "done": "OK",
+    "retry": "Réessayer",
+    "submit": "Soumettre",
+    "search": "Chercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "import": "Importer",
+    "aiImport": "AI Importation",
+    "importWithAI": "Importer avec l'AI",
+    "goHome": "Aller à l'accueil",
+    "test": "Test",
+    "format": "Format",
+    "restoreDefaults": "Recharger paramètres par défaut",
+    "saveChanges": "Sauvegarder changements"
+  },
+  "status": {
+    "loading": "Chargement...",
+    "saving": "Sauvegarde...",
+    "deleting": "Suppression...",
+    "error": "Erreur",
+    "success": "Succès",
+    "noResults": "Auncun resultat trouvé",
+    "changing": "Modification…"
+  },
+  "filters": {
+    "title": "Filtres",
+    "search": "Recherche",
+    "sort": "Tri",
+    "mode": "Mode",
+    "modeAll": "Tous",
+    "modeAny": "Tout",
+    "tags": "Etiquettes",
+    "searchTags": "Recherche étiquettes",
+    "favoritesAndRating": "Favoris et évaluation",
+    "favorites": "Favoris",
+    "sortByTitle": "Titre",
+    "sortByDate": "Date",
+    "clearFilters": "Effacer les filtres"
+  },
+  "time": {
+    "minutes": "min",
+    "hours": "hr"
+  },
+  "validation": {
+    "required": "Ce champ est requis",
+    "invalidUrl": "Entrez une URL valide"
+  },
+  "slots": {
+    "breakfast": "Petit déjeuner",
+    "lunch": "Déjeuner",
+    "dinner": "Diner",
+    "snack": "Gouter",
+    "chooseSlot": "Choisir repas"
+  },
+  "connection": {
+    "connecting": "Connection à Norish...",
+    "syncing": "Synchronisation veuillez patienter...",
+    "checkInternet": "Veuillez vérifier votre connexion internet",
+    "gettingUpdates": "Un instant, nous récupérons les dernières informations."
+  },
+  "language": {
+    "title": "Langue"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Page introuvable",
+    "message": "Oups! Nora n'a pas trouvé ce que vous cherchez.\nLa page a peut-être été déplacée ou n'existe plus."
+  },
+  "import": {
+    "url": {
+      "title": "Import recette",
+      "label": "Recette URL",
+      "placeholder": "https://example.com/votre-recette",
+      "failed": "Échec de l'importation de la recette",
+      "failedWithAI": "Échec de l'importation de la recette avec l'IA"
+    },
+    "paste": {
+      "title": "Importer depuis le presse papier",
+      "label": "Texte de la recette ou JSON-LD",
+      "placeholder": "Collez ici une recette (texte libre) ou un fichier JSON-LD...",
+      "characters": "{count} / {max} caractères",
+      "tooLarge": "Presse papier trop gros",
+      "maxCharacters": "Nombre {max} maximum de caractères atteint",
+      "importing": "Importation recette...",
+      "importingWithAI": "Importion recette avec l'IA...",
+      "inProgress": "Importation en cours, veuillez patienter...",
+      "failed": "Importation échouée"
+    },
+    "image": {
+      "title": "Importation depuis une image",
+      "dropzone": "Glissez les images ici or cliquez pour sélectionner",
+      "paste": "Coller",
+      "formats": "Supporte JPG, PNG, WebP. Max 10MB par fichier.",
+      "invalidType": "Type de fichier invalide",
+      "notSupported": "{name} n'est pas un formet d'image supporté",
+      "tooLarge": "Fichier trop volumineux",
+      "exceeds": "{name} dépasse la limite de 10Mo",
+      "tooMany": "Trop de fichiers",
+      "maxFiles": "Nombre {max} maximum de fichiers atteint",
+      "importing": "Importation recette depuis une image...",
+      "analyzing": "Analyse de vos images, veuillez patienter...",
+      "failed": "Importation échouée",
+      "selectedCount": "{count} images sélectionnées - elles seront combinées en une seule recette"
+    }
+  },
+  "formatting": {
+    "title": "Conseils de mise en forme",
+    "heading": "Commencez une ligne par <strong>#</strong> pour un titre",
+    "recipeLink": "Tapez <strong>/nom de la recette</strong> pour accéder à une autre recette",
+    "helpAriaLabel": "Aide à la mise en forme"
+  },
+  "recurrence": {
+    "title": "Répétition",
+    "frequency": "Fréquence",
+    "interval": "Intervale",
+    "onDay": "Le jour",
+    "daily": "Quotidien",
+    "weekly": "Hebdomadaire",
+    "monthly": "Mensuel",
+    "day": "jour",
+    "days": "jours",
+    "week": "semaine",
+    "weeks": "semaines",
+    "month": "mois",
+    "months": "mois",
+    "next": "Suivant:",
+    "every": "Chaque",
+    "everyOther": "Chaque autre",
+    "on": "le",
+    "today": "aujourd'hui",
+    "tomorrow": "demain",
+    "weekdays": {
+      "sun": "Dim",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam"
+    },
+    "weekdaysFull": {
+      "0": "Dimanche",
+      "1": "Lundi",
+      "2": "Mardi",
+      "3": "Mercredi",
+      "4": "Jeudi",
+      "5": "Vendredi",
+      "6": "Samedi"
+    }
+  }
+}
