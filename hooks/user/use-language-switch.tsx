@@ -5,7 +5,7 @@ import { GlobeAltIcon } from "@heroicons/react/16/solid";
 
 import { useLocale } from "@/hooks/user/use-locale";
 import { useLocaleConfigQuery } from "@/hooks/config";
-import { type Locale, isValidLocale, ALL_LOCALE_NAMES } from "@/i18n/config";
+import { type Locale, isValidLocale } from "@/i18n/config";
 
 /**
  * Hook to get locale state and cycle function for language switching UI
@@ -78,8 +78,7 @@ export function useLanguageSwitch() {
   const icon = <GlobeAltIcon className="size-4" />;
 
   // Use enabled locale name, fallback to static names
-  const label =
-    localeNames[currentLocale] ?? ALL_LOCALE_NAMES[currentLocale as Locale] ?? currentLocale;
+  const label = localeNames[currentLocale] ?? currentLocale;
 
   return {
     mounted,
