@@ -1,4 +1,5 @@
 import type { WebSocket } from "ws";
+import type Redis from "ioredis";
 
 import { on } from "node:events";
 
@@ -9,6 +10,10 @@ import { trpcLogger as log } from "@/server/logger";
 
 // Map user IDs to their active WebSocket connections
 const userConnections = new Map<string, Set<WebSocket>>();
+
+// Track invalidation listener state for cleanup
+let invalidationAbortController: AbortController | null = null;
+let invalidationSubscriber: Redis | null = null;
 
 export function registerConnection(userId: string, ws: WebSocket): void {
   if (!userConnections.has(userId)) {
@@ -63,14 +68,24 @@ export async function emitConnectionInvalidation(userId: string, reason: string)
 }
 
 export async function startInvalidationListener(): Promise<void> {
-  const subscriber = await createSubscriberClient();
+  // Prevent duplicate listeners
+  if (invalidationAbortController) {
+    log.warn("Invalidation listener already running");
 
-  await subscriber.subscribe(INVALIDATION_CHANNEL);
+    return;
+  }
+
+  invalidationAbortController = new AbortController();
+  const signal = invalidationAbortController.signal;
+
+  invalidationSubscriber = await createSubscriberClient();
+
+  await invalidationSubscriber.subscribe(INVALIDATION_CHANNEL);
 
   log.info("Started connection invalidation listener");
 
   try {
-    for await (const [channel, message] of on(subscriber, "message")) {
+    for await (const [channel, message] of on(invalidationSubscriber, "message", { signal })) {
       if (channel === INVALIDATION_CHANNEL) {
         try {
           const { userId, reason } = superjson.parse<InvalidationMessage>(message);
@@ -82,6 +97,35 @@ export async function startInvalidationListener(): Promise<void> {
       }
     }
   } catch (err) {
-    log.error({ err }, "Connection invalidation listener error");
+    // AbortError is expected when signal is aborted - ignore it
+    if ((err as Error).name !== "AbortError") {
+      log.error({ err }, "Connection invalidation listener error");
+    }
+  } finally {
+    // Always cleanup Redis subscriber
+    if (invalidationSubscriber) {
+      try {
+        await invalidationSubscriber.unsubscribe(INVALIDATION_CHANNEL);
+        await invalidationSubscriber.quit();
+      } catch (err) {
+        log.debug({ err }, "Error during invalidation listener cleanup");
+      }
+      invalidationSubscriber = null;
+    }
+    invalidationAbortController = null;
+    log.info("Stopped connection invalidation listener");
+  }
+}
+
+/**
+ * Stop the invalidation listener.
+ * Call during server shutdown.
+ */
+export async function stopInvalidationListener(): Promise<void> {
+  if (invalidationAbortController) {
+    log.info("Stopping connection invalidation listener...");
+    invalidationAbortController.abort();
+    // Give the listener time to cleanup
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 }

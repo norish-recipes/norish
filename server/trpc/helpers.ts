@@ -20,9 +20,16 @@ import { trpcLogger as log } from "@/server/logger";
  */
 export async function waitForAbort(signal?: AbortSignal): Promise<void> {
   if (!signal) return;
-  await new Promise<void>((_, reject) => {
-    signal.addEventListener("abort", () => reject(new Error("Aborted")));
-  }).catch(() => {});
+  if (signal.aborted) return;
+
+  await new Promise<void>((resolve) => {
+    const handler = () => {
+      signal.removeEventListener("abort", handler);
+      resolve();
+    };
+
+    signal.addEventListener("abort", handler, { once: true });
+  });
 }
 
 /**

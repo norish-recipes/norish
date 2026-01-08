@@ -9,6 +9,7 @@ import {
   registerConnection,
   unregisterConnection,
   startInvalidationListener,
+  stopInvalidationListener,
 } from "./connection-manager";
 
 import { auth } from "@/server/auth/auth";
@@ -79,8 +80,9 @@ export function initTrpcWebSocket(server: Server) {
     trpcLogger.error({ err }, "Failed to start invalidation listener");
   });
 
-  server.on("close", () => {
+  server.on("close", async () => {
     trpcHandler?.broadcastReconnectNotification();
+    await stopInvalidationListener();
     trpcWss?.close();
 
     trpcWss = null;
