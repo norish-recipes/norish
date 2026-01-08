@@ -54,7 +54,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
     it("decodes smart quotes (&#8220;/&#8221;) in ingredients", async () => {
       const json = {
         name: "Test Recipe",
-        recipeIngredient: ['1 cup &#8220;raw&#8221; sugar'],
+        recipeIngredient: ["1 cup &#8220;raw&#8221; sugar"],
         recipeInstructions: ["Mix"],
       };
 
@@ -125,9 +125,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
       const json = {
         name: "Test Recipe",
         recipeIngredient: ["1 cup flour"],
-        recipeInstructions: [
-          "Preheat oven to 350&#176;F &#8211; use convection if available",
-        ],
+        recipeInstructions: ["Preheat oven to 350&#176;F &#8211; use convection if available"],
       };
 
       const result = await normalizeRecipeFromJson(json);
