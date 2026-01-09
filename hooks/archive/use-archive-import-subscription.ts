@@ -32,6 +32,7 @@ export function useArchiveImportSubscription(): void {
               total: payload.total,
               imported: payload.imported,
               skipped: payload.current - payload.imported - payload.errors.length,
+              skippedItems: [], // Will be populated on completion
               isImporting: true,
               errors: payload.errors,
             };
@@ -68,6 +69,7 @@ export function useArchiveImportSubscription(): void {
             total: total,
             imported: payload.imported,
             skipped: payload.skipped,
+            skippedItems: payload.skippedItems,
             isImporting: false,
             errors: payload.errors,
           };
@@ -93,7 +95,6 @@ export function useArchiveImportSubscription(): void {
           severity: hasErrors ? "warning" : "success",
           title: "Recipe import complete",
           description,
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });

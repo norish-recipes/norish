@@ -141,7 +141,11 @@ export async function processInstagramImagePost(
 
   if (metadata.thumbnail) {
     try {
-      recipe.image = await downloadImage(metadata.thumbnail);
+      const imagePath = await downloadImage(metadata.thumbnail);
+
+      recipe.image = imagePath;
+      // Also populate the gallery images array for v0.15.0+ gallery support
+      recipe.images = [{ image: imagePath, order: 0 }];
     } catch {
       log.debug({ url }, "Failed to download Instagram thumbnail");
     }

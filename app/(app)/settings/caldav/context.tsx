@@ -127,7 +127,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
           title: "Configuration saved",
           description: "Your CalDAV settings have been saved successfully.",
           color: "success",
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });
@@ -136,7 +135,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
           title: "Failed to save configuration",
           description: (error as Error).message,
           color: "danger",
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });
@@ -177,7 +175,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
           title: "Failed to fetch calendars",
           description: (error as Error).message,
           color: "danger",
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });
@@ -196,7 +193,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
           title: "Configuration deleted",
           description: "Your CalDAV settings have been removed.",
           color: "success",
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });
@@ -205,7 +201,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
           title: "Failed to delete configuration",
           description: (error as Error).message,
           color: "danger",
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });
@@ -222,7 +217,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
         title: "Sync started",
         description: "Retrying pending and failed items...",
         color: "primary",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -231,7 +225,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
         title: "Failed to trigger sync",
         description: (error as Error).message,
         color: "danger",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -246,7 +239,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
         title: "Full sync started",
         description: "Syncing all future items to CalDAV...",
         color: "primary",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -255,7 +247,6 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
         title: "Failed to start sync",
         description: (error as Error).message,
         color: "danger",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });

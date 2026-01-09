@@ -12,6 +12,153 @@ import { setUserAdminStatus, getUserById } from "@/server/db/repositories/users"
 import { invalidateHouseholdCacheForUsers } from "@/server/db/cached-household";
 import { emitConnectionInvalidation } from "@/server/trpc/connection-manager";
 import { householdEmitter } from "@/server/trpc/routers/households/emitter";
+import { getPublisherClient } from "@/server/redis/client";
+
+// Redis key prefix and TTL for OIDC profiles during auth flow
+const OIDC_PROFILE_PREFIX = "oidc:profile:";
+const OIDC_PROFILE_TTL = 300; // 5 minutes
+
+/**
+ * Store OIDC profile in Redis for claim processing after account creation.
+ */
+export async function storeOIDCProfile(
+  accountId: string,
+  profile: Record<string, unknown>
+): Promise<void> {
+  try {
+    const redis = await getPublisherClient();
+
+    await redis.setex(
+      `${OIDC_PROFILE_PREFIX}${accountId}`,
+      OIDC_PROFILE_TTL,
+      JSON.stringify(profile)
+    );
+  } catch (error) {
+    authLogger.error({ error, accountId }, "Failed to store OIDC profile in Redis");
+  }
+}
+
+/**
+ * Retrieve and delete OIDC profile from Redis.
+ */
+export async function getPendingOIDCProfile(
+  accountId: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    const redis = await getPublisherClient();
+    const key = `${OIDC_PROFILE_PREFIX}${accountId}`;
+    const data = await redis.get(key);
+
+    if (data) {
+      await redis.del(key); // Clean up after retrieval
+
+      return JSON.parse(data);
+    }
+
+    return null;
+  } catch (error) {
+    authLogger.error({ error, accountId }, "Failed to retrieve OIDC profile from Redis");
+
+    return null;
+  }
+}
+
+/**
+ * Decode a JWT payload without verification.
+ * Used to extract claims from ID tokens - verification is handled by BetterAuth.
+ */
+export function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+
+    if (parts.length !== 3) return null;
+
+    // JWT payload is the second part, base64url encoded
+    const payload = parts[1]!;
+    // Convert base64url to base64
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    // Decode and parse
+    const json = Buffer.from(base64, "base64").toString("utf-8");
+
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+export interface OIDCTokens {
+  accessToken: string;
+  idToken?: string;
+}
+
+export interface MergedClaimsResult {
+  profile: Record<string, unknown>;
+  groupsSource: "id_token" | "userinfo" | "none";
+}
+
+/**
+ * Merge claims from ID token and userinfo endpoint.
+ * ID token claims take precedence (especially for groups from Authentik/Keycloak).
+ * Userinfo is fetched as fallback/base (works for PocketID).
+ */
+export async function mergeOIDCTokenClaims(
+  tokens: OIDCTokens,
+  discoveryUrl: string
+): Promise<MergedClaimsResult | null> {
+  let idTokenClaims: Record<string, unknown> = {};
+  let userInfoClaims: Record<string, unknown> = {};
+
+  // 1. Try to decode ID token first (contains groups for Authentik, Keycloak, etc.)
+  if (tokens.idToken) {
+    const decoded = decodeJwtPayload(tokens.idToken);
+
+    if (decoded) {
+      idTokenClaims = decoded;
+      authLogger.debug(
+        { sub: decoded.sub, hasGroups: "groups" in decoded },
+        "Decoded ID token claims"
+      );
+    }
+  }
+
+  // 2. Fetch from userinfo endpoint (contains groups for PocketID, some other providers)
+  try {
+    const discoveryRes = await fetch(discoveryUrl);
+    const discovery = await discoveryRes.json();
+    const userInfoUrl = discovery.userinfo_endpoint;
+
+    if (userInfoUrl) {
+      const userInfoRes = await fetch(userInfoUrl, {
+        headers: { Authorization: `Bearer ${tokens.accessToken}` },
+      });
+
+      if (userInfoRes.ok) {
+        userInfoClaims = await userInfoRes.json();
+        authLogger.debug(
+          { sub: userInfoClaims.sub, hasGroups: "groups" in userInfoClaims },
+          "Fetched userinfo claims"
+        );
+      }
+    }
+  } catch (error) {
+    authLogger.warn({ error }, "Failed to fetch userinfo, using ID token only");
+  }
+
+  // 3. Merge claims: userinfo as base, ID token overwrites (especially for groups)
+  const profile = { ...userInfoClaims, ...idTokenClaims };
+
+  // Ensure we have a sub claim
+  if (!profile.sub) {
+    authLogger.error("No sub claim found in ID token or userinfo");
+
+    return null;
+  }
+
+  const groupsSource =
+    "groups" in idTokenClaims ? "id_token" : "groups" in userInfoClaims ? "userinfo" : "none";
+
+  return { profile, groupsSource };
+}
 
 const DEFAULT_CONFIG: Required<OIDCClaimConfig> = {
   enabled: false,

@@ -144,8 +144,37 @@ export async function normalizeRecipeFromJson(json: any): Promise<FullRecipeInse
 
   const imageField = json.image;
 
-  // Download all images (up to MAX_RECIPE_IMAGES)
-  const downloadedImages = await downloadAllImagesFromJsonLd(imageField, MAX_RECIPE_IMAGES);
+  // Handle images - check if they're already downloaded (local paths) or need downloading
+  let downloadedImages: string[] = [];
+
+  if (imageField) {
+    // Check if image is already a local web path (from video parsing/pre-download)
+    const isLocalPath = (img: unknown): img is string =>
+      typeof img === "string" && img.startsWith("/recipes/");
+
+    if (isLocalPath(imageField)) {
+      // Single pre-downloaded image
+      downloadedImages = [imageField];
+    } else if (Array.isArray(imageField)) {
+      // Check if all are local paths
+      const localPaths = imageField.filter(isLocalPath);
+      const remotePaths = imageField.filter((img) => !isLocalPath(img));
+
+      // Use local paths directly, download remote ones
+      downloadedImages = [...localPaths];
+      if (remotePaths.length > 0) {
+        const downloaded = await downloadAllImagesFromJsonLd(
+          remotePaths,
+          MAX_RECIPE_IMAGES - localPaths.length
+        );
+
+        downloadedImages.push(...downloaded);
+      }
+    } else {
+      // Remote URLs - download them
+      downloadedImages = await downloadAllImagesFromJsonLd(imageField, MAX_RECIPE_IMAGES);
+    }
+  }
 
   // First image becomes the legacy `image` field for backwards compatibility
   const primaryImage = downloadedImages.length > 0 ? downloadedImages[0] : undefined;

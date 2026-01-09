@@ -1,4 +1,4 @@
-import type { RecipeDashboardDTO, ArchiveImportError } from "@/types";
+import type { RecipeDashboardDTO, ArchiveImportError, ArchiveSkippedItem } from "@/types";
 
 import { z } from "zod";
 
@@ -78,6 +78,7 @@ const importArchive = authedProcedure
           recipeEmitter.emitToUser(ctx.user.id, "archiveCompleted", {
             imported: 0,
             skipped: 0,
+            skippedItems: [],
             errors: [{ file: "archive", error: String(err) }],
           });
         }
@@ -106,7 +107,7 @@ async function runArchiveImportAsync(
 ): Promise<void> {
   const allImported: RecipeDashboardDTO[] = [];
   const allErrors: ArchiveImportError[] = [];
-  let skippedCount = 0;
+  const allSkipped: ArchiveSkippedItem[] = [];
 
   // Calculate dynamic batch size based on total
   const batchSize = Math.max(1, calculateBatchSize(total));
@@ -120,7 +121,8 @@ async function runArchiveImportAsync(
   const onProgress = (
     currentCount: number,
     recipe?: RecipeDashboardDTO,
-    error?: ArchiveImportError
+    error?: ArchiveImportError,
+    skipped?: ArchiveSkippedItem
   ) => {
     current = currentCount;
 
@@ -134,9 +136,8 @@ async function runArchiveImportAsync(
       allErrors.push(error);
     }
 
-    // If neither recipe nor error, it's a skipped recipe
-    if (!recipe && !error) {
-      skippedCount++;
+    if (skipped) {
+      allSkipped.push(skipped);
     }
 
     // Emit on batch boundaries or completion
@@ -164,7 +165,7 @@ async function runArchiveImportAsync(
           current,
           total,
           imported: allImported.length,
-          skipped: skippedCount,
+          skipped: allSkipped.length,
           batchSize: batchRecipes.length,
           errors: batchErrors.length,
         },
@@ -181,15 +182,12 @@ async function runArchiveImportAsync(
     // Import archive (auto-detects format)
     const result = await runArchiveImport(userId, userIds, buffer, onProgress);
 
-    // Update totals
-    skippedCount = result.skipped.length;
-
     log.info(
       {
         total,
         batchSize,
         imported: result.imported.length,
-        skipped: result.skipped,
+        skipped: allSkipped.length,
         errors: result.errors.length,
       },
       "Archive import complete"
@@ -202,12 +200,13 @@ async function runArchiveImportAsync(
   // Emit completion to importing user only
   recipeEmitter.emitToUser(userId, "archiveCompleted", {
     imported: allImported.length,
-    skipped: skippedCount,
+    skipped: allSkipped.length,
+    skippedItems: allSkipped,
     errors: allErrors,
   });
 
   log.info(
-    { imported: allImported.length, skipped: skippedCount, errors: allErrors.length },
+    { imported: allImported.length, skipped: allSkipped.length, errors: allErrors.length },
     "Archive import completed"
   );
 }

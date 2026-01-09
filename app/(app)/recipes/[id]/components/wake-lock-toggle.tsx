@@ -3,12 +3,19 @@
 import { Switch, Tooltip } from "@heroui/react";
 import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 
 import { useWakeLockContext } from "./wake-lock-context";
 
 export default function WakeLockToggle() {
   const { isSupported, isActive, toggle } = useWakeLockContext();
   const t = useTranslations("recipes.wakeLock");
+
+  useEffect(() => {
+    if (isSupported && !isActive) {
+      toggle();
+    }
+  }, [isSupported, isActive, toggle]);
 
   if (!isSupported) {
     return (

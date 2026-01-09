@@ -38,6 +38,7 @@ export function useArchiveImportMutation(): ArchiveImportMutationResult {
             imported: 0,
             skipped: 0,
             isImporting: true,
+            skippedItems: [],
             errors: [],
           }));
 
@@ -45,7 +46,6 @@ export function useArchiveImportMutation(): ArchiveImportMutationResult {
             severity: "default",
             title: "Recipe import started",
             description: `Importing ${result.total} recipes...`,
-            timeout: 2000,
             shouldShowTimeoutProgress: true,
             radius: "full",
           });
@@ -54,7 +54,6 @@ export function useArchiveImportMutation(): ArchiveImportMutationResult {
             severity: "danger",
             title: "Import failed",
             description: result.error || "Unknown error",
-            timeout: 2000,
             shouldShowTimeoutProgress: true,
             radius: "full",
           });
@@ -65,7 +64,6 @@ export function useArchiveImportMutation(): ArchiveImportMutationResult {
           severity: "danger",
           title: "Import failed",
           description: String(error),
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });

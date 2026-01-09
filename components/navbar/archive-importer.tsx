@@ -13,6 +13,7 @@ export default function ArchiveImporter() {
     current,
     imported,
     skipped,
+    skippedItems,
     total,
     errors: progressErrors,
     isImporting,
@@ -21,6 +22,7 @@ export default function ArchiveImporter() {
   const { startImport, isStarting } = useArchiveImportMutation();
   const [dragActive, setDragActive] = useState(false);
   const [localErrors, setLocalErrors] = useState<{ file: string; error: string }[]>([]);
+  const [showSkipped, setShowSkipped] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const uploadFile = useCallback(
@@ -65,16 +67,17 @@ export default function ArchiveImporter() {
   // Detect completion: import was active, now finished, and we have results
   const isComplete = !isImporting && current > 0 && current === total;
 
-  // Auto-clear import state after completion (after 5 seconds)
+  // Auto-clear import state after completion
   useEffect(() => {
     if (isComplete) {
+      const timeout = 60000;
       const timer = setTimeout(() => {
         clearImport();
-      }, 5000);
+      }, timeout);
 
       return () => clearTimeout(timer);
     }
-  }, [isComplete, clearImport]);
+  }, [isComplete, skippedItems.length, clearImport]);
 
   // Combine local errors with progress errors
   const allErrors = [
@@ -175,6 +178,30 @@ export default function ArchiveImporter() {
         )}
 
         {status && <div className="text-default-600 text-base">{status}</div>}
+
+        {/* Show skipped recipes with toggle */}
+        {isComplete && skippedItems.length > 0 && (
+          <div className="text-default-500 text-sm">
+            <button
+              className="hover:text-default-700 underline underline-offset-2"
+              type="button"
+              onClick={() => setShowSkipped(!showSkipped)}
+            >
+              {showSkipped ? "Hide" : "Show"} {skippedItems.length} skipped recipe
+              {skippedItems.length !== 1 ? "s" : ""}
+            </button>
+            {showSkipped && (
+              <ul className="mt-1 list-disc pl-4">
+                {skippedItems.map((s, i) => (
+                  <li key={i}>
+                    {s.file}: {s.reason}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         {allErrors.length > 0 && (
           <ul className="text-danger list-disc pl-4 text-base">
             {allErrors.map((e, i) => (

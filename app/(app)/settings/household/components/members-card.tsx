@@ -53,7 +53,6 @@ export default function MembersCard() {
         title: t("toasts.kickFailed"),
         description: (error as Error).message,
         color: "danger",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -71,7 +70,6 @@ export default function MembersCard() {
       addToast({
         title: t("toasts.transferSuccess", { name: userToTransfer.name }),
         color: "success",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -80,7 +78,6 @@ export default function MembersCard() {
         title: t("toasts.transferFailed"),
         description: (error as Error).message,
         color: "danger",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });

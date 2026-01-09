@@ -57,7 +57,6 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
         severity: "default",
         title: t("importing"),
         description: t("inProgress"),
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -70,7 +69,6 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
         title: t("failed"),
         description: (error as Error).message,
         color: "danger",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -103,7 +101,6 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
         severity: "default",
         title: t("importingWithAI"),
         description: t("inProgress"),
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -116,7 +113,6 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
         title: t("failed"),
         description: (error as Error).message,
         color: "danger",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });

@@ -18,6 +18,11 @@ vi.mock("@/server/downloader", () => ({
   saveImageBytes: vi.fn().mockResolvedValue("mocked-image-guid"),
 }));
 
+// Mock getUnits to avoid database calls
+vi.mock("@/config/server-config-loader", () => ({
+  getUnits: vi.fn().mockResolvedValue({}),
+}));
+
 /**
  * Helper to create empty lookups for simple tests
  */
@@ -29,6 +34,8 @@ function createEmptyLookups(): MealieLookups {
     categories: new Map(),
     recipeTags: new Map(),
     recipeCategories: new Map(),
+    recipeRatings: new Map(),
+    recipeNutrition: new Map(),
   };
 }
 
@@ -46,6 +53,8 @@ function createMinimalDatabase(overrides: Partial<MealieDatabase> = {}): MealieD
     recipes_to_tags: [],
     categories: [],
     recipes_to_categories: [],
+    users_to_recipes: [],
+    recipe_nutrition: [],
     ...overrides,
   };
 }
@@ -215,8 +224,14 @@ describe("Mealie Parser", () => {
 
       expect(dto).not.toBeNull();
       expect(dto!.recipeIngredients).toHaveLength(2);
-      expect(dto!.recipeIngredients![0].ingredientName).toBe("2 cups tomatoes, diced");
-      expect(dto!.recipeIngredients![1].ingredientName).toBe("1 tablespoon olive oil");
+      // Ingredients are now parsed - amount/unit extracted, description remains
+      // Note: parseIngredientWithDefaults normalizes units to singular form
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("tomatoes, diced");
+      expect(dto!.recipeIngredients![0].amount).toBe(2);
+      expect(dto!.recipeIngredients![0].unit).toBe("cup");
+      expect(dto!.recipeIngredients![1].ingredientName).toBe("olive oil");
+      expect(dto!.recipeIngredients![1].amount).toBe(1);
+      expect(dto!.recipeIngredients![1].unit).toBe("tablespoon");
     });
 
     it("resolves parsed ingredients with food_id", async () => {
@@ -334,8 +349,14 @@ describe("Mealie Parser", () => {
 
       expect(dto).not.toBeNull();
       expect(dto!.recipeIngredients).toHaveLength(2); // Empty ingredient skipped
-      expect(dto!.recipeIngredients![0].ingredientName).toBe("2 cups tomatoes");
-      expect(dto!.recipeIngredients![1].ingredientName).toBe("1 tablespoon olive oil");
+      // Ingredients are now parsed - amount/unit extracted, description remains
+      // Note: parseIngredientWithDefaults normalizes units to singular form
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("tomatoes");
+      expect(dto!.recipeIngredients![0].amount).toBe(2);
+      expect(dto!.recipeIngredients![0].unit).toBe("cup");
+      expect(dto!.recipeIngredients![1].ingredientName).toBe("olive oil");
+      expect(dto!.recipeIngredients![1].amount).toBe(1);
+      expect(dto!.recipeIngredients![1].unit).toBe("tablespoon");
     });
 
     it("resolves tags from recipes_to_tags", async () => {
@@ -517,7 +538,7 @@ describe("Mealie Parser", () => {
       expect(dto!.recipeIngredients![0].ingredientName).toBe("some ingredient note");
     });
 
-    it("treats quantity: 0 as null (ingredient text already contains quantity)", async () => {
+    it("parses quantity from note when quantity is 0 (quantity embedded in text)", async () => {
       const zeroQuantityIngredients: MealieIngredient[] = [
         {
           id: 1,
@@ -538,8 +559,10 @@ describe("Mealie Parser", () => {
 
       expect(dto).not.toBeNull();
       expect(dto!.recipeIngredients).toHaveLength(1);
-      expect(dto!.recipeIngredients![0].ingredientName).toBe("500 g lean minced beef");
-      expect(dto!.recipeIngredients![0].amount).toBeNull(); // 0 should be treated as null
+      // Now parses the note to extract quantity/unit, so scaling works correctly
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("lean minced beef");
+      expect(dto!.recipeIngredients![0].amount).toBe(500);
+      expect(dto!.recipeIngredients![0].unit).toBe("gram");
     });
   });
 });

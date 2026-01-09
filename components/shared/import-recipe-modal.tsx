@@ -43,7 +43,6 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
         title: t("failed"),
         description: (e as Error).message,
         color: "danger",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });
@@ -64,7 +63,6 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
         title: t("failedWithAI"),
         description: (e as Error).message,
         color: "danger",
-        timeout: 2000,
         shouldShowTimeoutProgress: true,
         radius: "full",
       });

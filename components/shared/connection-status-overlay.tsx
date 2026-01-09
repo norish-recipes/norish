@@ -8,11 +8,16 @@ import { useConnectionStatus } from "@/app/providers/trpc-provider";
 
 export function ConnectionStatusOverlay() {
   const t = useTranslations("common.connection");
-  const { isConnected } = useConnectionStatus();
+  const { status, isConnected } = useConnectionStatus();
   const [show, setShow] = useState(false);
 
-  // Show overlay whenever we're not connected - simple as that
-  const shouldShowOverlay = !isConnected;
+  // Show overlay when:
+  // - "connecting" = actively trying to establish connection
+  // - "disconnected" = lost connection, attempting to reconnect
+  // Don't show when:
+  // - "idle" = WebSocket not needed yet (lazy mode, no subscriptions active)
+  // - "connected" = all good
+  const shouldShowOverlay = status === "connecting" || status === "disconnected";
 
   // Small delay to avoid flashing on quick reconnects, but not so long it feels laggy
   useEffect(() => {

@@ -108,7 +108,6 @@ function MiniGroceriesContent({
         addToast({
           severity: "success",
           title: t("ingredientsAdded"),
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });
@@ -117,7 +116,6 @@ function MiniGroceriesContent({
         addToast({
           severity: "warning",
           title: t("ingredientsFailed"),
-          timeout: 2000,
           shouldShowTimeoutProgress: true,
           radius: "full",
         });
