@@ -70,8 +70,12 @@ export default function VideoProcessingForm() {
   // Providers that support dynamic model listing
   const supportsModelListing = transcriptionProviderSupportsModelListing(transcriptionProvider);
   // Check if API key is configured (masked value will be "••••••••")
+  // Only consider it configured if the provider hasn't changed from saved config
+  const providerMatchesSaved = transcriptionProvider === videoConfig?.transcriptionProvider;
   const isTranscriptionApiKeyConfigured =
-    !!videoConfig?.transcriptionApiKey && videoConfig.transcriptionApiKey !== "";
+    providerMatchesSaved &&
+    !!videoConfig?.transcriptionApiKey &&
+    videoConfig.transcriptionApiKey !== "";
   // Check if AI config API key can be used as fallback
   const isAIApiKeyConfigured = !!aiConfig?.apiKey && aiConfig.apiKey !== "";
 
@@ -119,12 +123,17 @@ export default function VideoProcessingForm() {
     }
   }, [availableTranscriptionModels, transcriptionModel, isLoadingTranscriptionModels]);
 
-  // Clear transcription model when provider changes - will auto-select first available
+  // Clear transcription config when provider changes - will auto-select first available model
   const handleTranscriptionProviderChange = (newProvider: TranscriptionProvider) => {
+    if (newProvider === transcriptionProvider) return;
+    
     setTranscriptionProvider(newProvider);
-    // Clear model when switching providers - auto-select will pick first available
-    if (newProvider !== transcriptionProvider) {
-      setTranscriptionModel("");
+    // Clear API key and model when switching providers
+    setTranscriptionApiKey("");
+    setTranscriptionModel("");
+    // Clear endpoint when switching to cloud providers (they don't need one)
+    if (!transcriptionProviderNeedsEndpoint(newProvider)) {
+      setTranscriptionEndpoint("");
     }
   };
 
