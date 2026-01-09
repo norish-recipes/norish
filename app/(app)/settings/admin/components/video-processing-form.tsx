@@ -243,38 +243,6 @@ export default function VideoProcessingForm() {
             />
           )}
 
-          {needsTranscriptionModel && supportsModelListing && (
-            <Autocomplete
-              allowsCustomValue
-              defaultItems={transcriptionModelOptions}
-              description={t("transcriptionModelDescription")}
-              inputValue={transcriptionModel}
-              isDisabled={!enabled}
-              isLoading={isLoadingTranscriptionModels}
-              label={t("transcriptionModel")}
-              placeholder={t("transcriptionModelPlaceholder")}
-              onInputChange={setTranscriptionModel}
-              onSelectionChange={(key) => key && setTranscriptionModel(key as string)}
-            >
-              {(item) => (
-                <AutocompleteItem key={item.value} textValue={item.label}>
-                  {item.label}
-                </AutocompleteItem>
-              )}
-            </Autocomplete>
-          )}
-
-          {needsTranscriptionModel && !supportsModelListing && (
-            <Input
-              description={t("transcriptionModelDescription")}
-              isDisabled={!enabled}
-              label={t("transcriptionModel")}
-              placeholder={t("transcriptionModelPlaceholder")}
-              value={transcriptionModel}
-              onValueChange={setTranscriptionModel}
-            />
-          )}
-
           {needsTranscriptionApiKey && (
             <SecretInput
               description={t("transcriptionApiKeyDescription")}
@@ -298,6 +266,38 @@ export default function VideoProcessingForm() {
               value={transcriptionApiKey}
               onReveal={handleRevealTranscriptionApiKey}
               onValueChange={setTranscriptionApiKey}
+            />
+          )}
+
+          {needsTranscriptionModel && supportsModelListing && (
+            <Autocomplete
+              allowsCustomValue
+              defaultItems={transcriptionModelOptions}
+              description={t("transcriptionModelDescription")}
+              inputValue={transcriptionModel}
+              isDisabled={!transcriptionApiKey && !isTranscriptionApiKeyConfigured}
+              isLoading={isLoadingTranscriptionModels}
+              label={t("transcriptionModel")}
+              placeholder={t("transcriptionModelPlaceholder")}
+              onInputChange={setTranscriptionModel}
+              onSelectionChange={(key) => key && setTranscriptionModel(key as string)}
+            >
+              {(item) => (
+                <AutocompleteItem key={item.value} textValue={item.label}>
+                  {item.label}
+                </AutocompleteItem>
+              )}
+            </Autocomplete>
+          )}
+
+          {needsTranscriptionModel && !supportsModelListing && (
+            <Input
+              description={t("transcriptionModelDescription")}
+              isDisabled={!enabled}
+              label={t("transcriptionModel")}
+              placeholder={t("transcriptionModelPlaceholder")}
+              value={transcriptionModel}
+              onValueChange={setTranscriptionModel}
             />
           )}
         </>
