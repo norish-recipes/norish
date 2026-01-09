@@ -2,14 +2,14 @@
  * Paste Import Worker
  *
  * Processes pasted recipe text or pasted JSON-LD.
+ * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { PasteImportJobData, FullRecipeInsertDTO } from "@/types";
 import type { Job } from "bullmq";
 
-import { Worker } from "bullmq";
-
 import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
@@ -26,13 +26,6 @@ import { extractRecipeWithAI } from "@/server/ai/recipe-parser";
 import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
 
 const log = createLogger("worker:paste-import");
-
-// Use globalThis to survive HMR in development
-const globalForWorker = globalThis as unknown as {
-  pasteImportWorker: Worker<PasteImportJobData> | null;
-};
-
-let worker: Worker<PasteImportJobData> | null = globalForWorker.pasteImportWorker ?? null;
 
 function escapeHtml(text: string): string {
   return text
@@ -235,41 +228,20 @@ async function handleJobFailed(
   }
 }
 
-export function startPasteImportWorker(): void {
-  if (worker) {
-    log.warn("Paste import worker already running");
-
-    return;
-  }
-
-  worker = new Worker<PasteImportJobData>(QUEUE_NAMES.PASTE_IMPORT, processPasteImportJob, {
-    connection: getBullClient(),
-    ...baseWorkerOptions,
-    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.PASTE_IMPORT],
-    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.PASTE_IMPORT],
-  });
-
-  worker.on("completed", (job) => {
-    log.debug({ jobId: job.id }, "Paste import job completed");
-  });
-
-  worker.on("failed", (job, error) => {
-    handleJobFailed(job, error);
-  });
-
-  worker.on("error", (error) => {
-    log.error({ err: error }, "Paste import worker error");
-  });
-
-  globalForWorker.pasteImportWorker = worker;
-  log.info("Paste import worker started");
+export async function startPasteImportWorker(): Promise<void> {
+  await createLazyWorker<PasteImportJobData>(
+    QUEUE_NAMES.PASTE_IMPORT,
+    processPasteImportJob,
+    {
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.PASTE_IMPORT],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.PASTE_IMPORT],
+    },
+    handleJobFailed
+  );
 }
 
 export async function stopPasteImportWorker(): Promise<void> {
-  if (worker) {
-    await worker.close();
-    worker = null;
-    globalForWorker.pasteImportWorker = null;
-    log.info("Paste import worker stopped");
-  }
+  await stopLazyWorker(QUEUE_NAMES.PASTE_IMPORT);
 }

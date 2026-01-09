@@ -47,7 +47,7 @@ export const STALLED_INTERVAL = {
   [QUEUE_NAMES.IMAGE_IMPORT]: 5_000, // 5s - user waiting
   [QUEUE_NAMES.PASTE_IMPORT]: 5_000, // 5s - user waiting
   [QUEUE_NAMES.CALDAV_SYNC]: 120_000, // 2 min - background sync
-  [QUEUE_NAMES.SCHEDULED_TASKS]: 600_000, // 10 min - maintenance
+  [QUEUE_NAMES.SCHEDULED_TASKS]: 3_600_000, // 1 hour - daily cron jobs only
   [QUEUE_NAMES.NUTRITION_ESTIMATION]: 60_000, // 1 min - background enhancement
   [QUEUE_NAMES.AUTO_TAGGING]: 60_000, // 1 min - background enhancement
   [QUEUE_NAMES.ALLERGY_DETECTION]: 60_000, // 1 min - background enhancement

@@ -3,14 +3,14 @@
  *
  * Processes image-based recipe import jobs from the queue.
  * Uses AI vision models to extract recipe data from images.
+ * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { ImageImportJobData } from "@/types";
 import type { Job } from "bullmq";
 
-import { Worker } from "bullmq";
-
 import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
@@ -27,13 +27,6 @@ import { extractRecipeFromImages } from "@/server/ai/image-recipe-parser";
 import { saveImageBytes } from "@/server/downloader";
 
 const log = createLogger("worker:image-import");
-
-// Use globalThis to survive HMR in development
-const globalForWorker = globalThis as unknown as {
-  imageImportWorker: Worker<ImageImportJobData> | null;
-};
-
-let worker: Worker<ImageImportJobData> | null = globalForWorker.imageImportWorker ?? null;
 
 /**
  * Process a single image import job.
@@ -153,43 +146,22 @@ async function handleJobFailed(
 }
 
 /**
- * Start the image import worker.
+ * Start the image import worker (lazy - starts on demand).
  */
-export function startImageImportWorker(): void {
-  if (worker) {
-    log.warn("Image import worker already running");
-
-    return;
-  }
-
-  worker = new Worker<ImageImportJobData>(QUEUE_NAMES.IMAGE_IMPORT, processImageImportJob, {
-    connection: getBullClient(),
-    ...baseWorkerOptions,
-    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.IMAGE_IMPORT],
-    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.IMAGE_IMPORT],
-  });
-
-  worker.on("completed", (job) => {
-    log.debug({ jobId: job.id }, "Image import job completed");
-  });
-
-  worker.on("failed", (job, error) => {
-    handleJobFailed(job, error);
-  });
-
-  worker.on("error", (error) => {
-    log.error({ err: error }, "Image import worker error");
-  });
-
-  globalForWorker.imageImportWorker = worker;
-  log.info("Image import worker started");
+export async function startImageImportWorker(): Promise<void> {
+  await createLazyWorker<ImageImportJobData>(
+    QUEUE_NAMES.IMAGE_IMPORT,
+    processImageImportJob,
+    {
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.IMAGE_IMPORT],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.IMAGE_IMPORT],
+    },
+    handleJobFailed
+  );
 }
 
 export async function stopImageImportWorker(): Promise<void> {
-  if (worker) {
-    await worker.close();
-    worker = null;
-    globalForWorker.imageImportWorker = null;
-    log.info("Image import worker stopped");
-  }
+  await stopLazyWorker(QUEUE_NAMES.IMAGE_IMPORT);
 }

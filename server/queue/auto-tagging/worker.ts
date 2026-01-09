@@ -3,15 +3,14 @@
  *
  * Processes auto-tagging jobs from the queue.
  * Generates AI-based tags for recipes that were imported via structured parsers.
- * Runs in-process with the main server.
+ * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { AutoTaggingJobData } from "@/types";
 import type { Job } from "bullmq";
 
-import { Worker } from "bullmq";
-
 import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
@@ -24,13 +23,6 @@ import { db } from "@/server/db/drizzle";
 import { generateTagsForRecipe } from "@/server/ai/auto-tagger";
 
 const log = createLogger("worker:auto-tagging");
-
-// Use globalThis to survive HMR in development
-const globalForWorker = globalThis as unknown as {
-  autoTaggingWorker: Worker<AutoTaggingJobData> | null;
-};
-
-let worker: Worker<AutoTaggingJobData> | null = globalForWorker.autoTaggingWorker ?? null;
 
 async function processAutoTaggingJob(job: Job<AutoTaggingJobData>): Promise<void> {
   const { recipeId, userId, householdKey } = job.data;
@@ -160,41 +152,20 @@ async function handleJobFailed(
   // since it's a background enhancement, not a user-initiated action
 }
 
-export function startAutoTaggingWorker(): void {
-  if (worker) {
-    log.warn("Auto-tagging worker already running");
-
-    return;
-  }
-
-  worker = new Worker<AutoTaggingJobData>(QUEUE_NAMES.AUTO_TAGGING, processAutoTaggingJob, {
-    connection: getBullClient(),
-    ...baseWorkerOptions,
-    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.AUTO_TAGGING],
-    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.AUTO_TAGGING],
-  });
-
-  worker.on("completed", (job) => {
-    log.debug({ jobId: job.id }, "Auto-tagging job completed");
-  });
-
-  worker.on("failed", (job, error) => {
-    handleJobFailed(job, error);
-  });
-
-  worker.on("error", (error) => {
-    log.error({ err: error }, "Auto-tagging worker error");
-  });
-
-  globalForWorker.autoTaggingWorker = worker;
-  log.info("Auto-tagging worker started");
+export async function startAutoTaggingWorker(): Promise<void> {
+  await createLazyWorker<AutoTaggingJobData>(
+    QUEUE_NAMES.AUTO_TAGGING,
+    processAutoTaggingJob,
+    {
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.AUTO_TAGGING],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.AUTO_TAGGING],
+    },
+    handleJobFailed
+  );
 }
 
 export async function stopAutoTaggingWorker(): Promise<void> {
-  if (worker) {
-    await worker.close();
-    worker = null;
-    globalForWorker.autoTaggingWorker = null;
-    log.info("Auto-tagging worker stopped");
-  }
+  await stopLazyWorker(QUEUE_NAMES.AUTO_TAGGING);
 }

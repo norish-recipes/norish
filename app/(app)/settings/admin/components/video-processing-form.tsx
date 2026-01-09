@@ -126,7 +126,7 @@ export default function VideoProcessingForm() {
   // Clear transcription config when provider changes - will auto-select first available model
   const handleTranscriptionProviderChange = (newProvider: TranscriptionProvider) => {
     if (newProvider === transcriptionProvider) return;
-    
+
     setTranscriptionProvider(newProvider);
     // Clear API key and model when switching providers
     setTranscriptionApiKey("");

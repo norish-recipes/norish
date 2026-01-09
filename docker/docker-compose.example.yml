@@ -52,6 +52,12 @@ services:
 
       # Redis for real-time events (required)
       REDIS_URL: redis://redis:6379
+    healthcheck:
+      test: ["CMD", "curl", "--connect-timeout", "15", "--silent", "--show-error", "--fail", "http://localhost:3000/api/health"]
+      interval: 1m
+      timeout: 15s
+      retries: 3
+      start_period: 1m
     depends_on:
       - db
       - redis

@@ -2,6 +2,7 @@ import type { GrocerySubscriptionEvents } from "./types";
 
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
+import { createSubscriptionIterable } from "../../helpers";
 
 import { groceryEmitter } from "./emitter";
 
@@ -16,7 +17,12 @@ const onCreated = authedProcedure.subscription(async function* ({ ctx, signal })
   );
 
   try {
-    for await (const data of groceryEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      groceryEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as GrocerySubscriptionEvents["created"];
     }
   } finally {
@@ -36,7 +42,12 @@ const onUpdated = authedProcedure.subscription(async function* ({ ctx, signal })
   );
 
   try {
-    for await (const data of groceryEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      groceryEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as GrocerySubscriptionEvents["updated"];
     }
   } finally {
@@ -56,7 +67,12 @@ const onDeleted = authedProcedure.subscription(async function* ({ ctx, signal })
   );
 
   try {
-    for await (const data of groceryEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      groceryEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as GrocerySubscriptionEvents["deleted"];
     }
   } finally {
@@ -76,7 +92,12 @@ const onRecurringCreated = authedProcedure.subscription(async function* ({ ctx, 
   );
 
   try {
-    for await (const data of groceryEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      groceryEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as GrocerySubscriptionEvents["recurringCreated"];
     }
   } finally {
@@ -96,7 +117,12 @@ const onRecurringUpdated = authedProcedure.subscription(async function* ({ ctx, 
   );
 
   try {
-    for await (const data of groceryEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      groceryEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as GrocerySubscriptionEvents["recurringUpdated"];
     }
   } finally {
@@ -116,7 +142,12 @@ const onRecurringDeleted = authedProcedure.subscription(async function* ({ ctx, 
   );
 
   try {
-    for await (const data of groceryEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      groceryEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as GrocerySubscriptionEvents["recurringDeleted"];
     }
   } finally {
@@ -136,7 +167,12 @@ const onFailed = authedProcedure.subscription(async function* ({ ctx, signal }) 
   );
 
   try {
-    for await (const data of groceryEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      groceryEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as GrocerySubscriptionEvents["failed"];
     }
   } finally {

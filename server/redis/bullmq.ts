@@ -90,6 +90,11 @@ export function getBullClient(): Redis {
     return bullClient;
   }
 
+  // Clean up old client listeners before creating new one
+  if (bullClient) {
+    bullClient.removeAllListeners();
+  }
+
   // Create new client if none exists or previous one was closed
   bullClient = new Redis({
     ...getBaseOptions(),

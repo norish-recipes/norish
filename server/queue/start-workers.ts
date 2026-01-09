@@ -2,29 +2,22 @@
  * BullMQ Workers Startup
  *
  * Initializes all BullMQ workers at server boot.
- * Workers share a Redis connection via the centralized bullmq module.
+ * Most workers use lazy loading (start on-demand, pause when idle).
+ * Only scheduled-tasks runs continuously for cron jobs.
  */
 
-import {
-  startRecipeImportWorker,
-  stopRecipeImportWorker,
-} from "@/server/queue/recipe-import/worker";
-import { startImageImportWorker, stopImageImportWorker } from "@/server/queue/image-import/worker";
-import { startPasteImportWorker, stopPasteImportWorker } from "@/server/queue/paste-import/worker";
-import {
-  startNutritionEstimationWorker,
-  stopNutritionEstimationWorker,
-} from "@/server/queue/nutrition-estimation/worker";
-import { startAutoTaggingWorker, stopAutoTaggingWorker } from "@/server/queue/auto-tagging/worker";
-import {
-  startAllergyDetectionWorker,
-  stopAllergyDetectionWorker,
-} from "@/server/queue/allergy-detection/worker";
-import { startCaldavSyncWorker, stopCaldavSyncWorker } from "@/server/queue/caldav-sync/worker";
+import { startRecipeImportWorker } from "@/server/queue/recipe-import/worker";
+import { startImageImportWorker } from "@/server/queue/image-import/worker";
+import { startPasteImportWorker } from "@/server/queue/paste-import/worker";
+import { startNutritionEstimationWorker } from "@/server/queue/nutrition-estimation/worker";
+import { startAutoTaggingWorker } from "@/server/queue/auto-tagging/worker";
+import { startAllergyDetectionWorker } from "@/server/queue/allergy-detection/worker";
+import { startCaldavSyncWorker } from "@/server/queue/caldav-sync/worker";
 import {
   startScheduledTasksWorker,
   stopScheduledTasksWorker,
 } from "@/server/queue/scheduled-tasks/worker";
+import { stopAllLazyWorkers } from "@/server/queue/lazy-worker-manager";
 import { initializeQueues, getQueues, closeAllQueues } from "@/server/queue/registry";
 import { initializeScheduledJobs } from "@/server/queue/scheduled-tasks/producer";
 import { closeBullConnection } from "@/server/redis/bullmq";
@@ -35,6 +28,12 @@ const log = createLogger("bullmq");
 /**
  * Start all workers at boot.
  * Initializes queue registry first, then starts workers.
+ *
+ * Lazy workers (recipe-import, image-import, paste-import, nutrition-estimation,
+ * auto-tagging, allergy-detection, caldav-sync) start in paused state and only
+ * begin processing when jobs are added. They pause again after 30s of idle time.
+ *
+ * Scheduled-tasks worker runs continuously for daily cron jobs.
  */
 export async function startWorkers(): Promise<void> {
   log.info("Starting all BullMQ workers...");
@@ -42,22 +41,24 @@ export async function startWorkers(): Promise<void> {
   // Initialize all queues first
   initializeQueues();
 
-  // Import workers
-  startRecipeImportWorker();
-  startImageImportWorker();
-  startPasteImportWorker();
+  // Lazy import workers (start on-demand when jobs are added)
+  // All lazy workers must be awaited to ensure Redis connections are ready
+  // and existing waiting jobs are processed
+  await Promise.all([
+    startRecipeImportWorker(),
+    startImageImportWorker(),
+    startPasteImportWorker(),
+    startNutritionEstimationWorker(),
+    startAutoTaggingWorker(),
+    startAllergyDetectionWorker(),
+    startCaldavSyncWorker(),
+  ]);
 
-  // Background processing workers
-  startNutritionEstimationWorker();
-  startAutoTaggingWorker();
-  startAllergyDetectionWorker();
-  startCaldavSyncWorker();
-
-  // Scheduled tasks
+  // Scheduled tasks (always-running for cron jobs)
   startScheduledTasksWorker();
   await initializeScheduledJobs(getQueues().scheduledTasks);
 
-  log.info("All BullMQ workers started");
+  log.info("All BullMQ workers started (lazy workers waiting for jobs)");
 }
 
 /**
@@ -66,17 +67,12 @@ export async function startWorkers(): Promise<void> {
 export async function stopWorkers(): Promise<void> {
   log.info("Stopping all BullMQ workers...");
 
-  // Stop all workers first
-  await Promise.all([
-    stopRecipeImportWorker(),
-    stopImageImportWorker(),
-    stopPasteImportWorker(),
-    stopNutritionEstimationWorker(),
-    stopAutoTaggingWorker(),
-    stopAllergyDetectionWorker(),
-    stopCaldavSyncWorker(),
-    stopScheduledTasksWorker(),
-  ]);
+  // Stop all lazy workers (recipe-import, image-import, paste-import,
+  // nutrition-estimation, auto-tagging, allergy-detection, caldav-sync)
+  await stopAllLazyWorkers();
+
+  // Stop the always-running scheduled tasks worker
+  await stopScheduledTasksWorker();
 
   // Close all queue connections via registry
   await closeAllQueues();

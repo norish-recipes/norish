@@ -132,6 +132,7 @@ export function startScheduledTasksWorker(): void {
 
 export async function stopScheduledTasksWorker(): Promise<void> {
   if (worker) {
+    worker.removeAllListeners();
     await worker.close();
     worker = null;
     globalForWorker.scheduledTasksWorker = null;

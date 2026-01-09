@@ -1,5 +1,7 @@
 import type { Server } from "node:http";
 
+import { randomUUID } from "node:crypto";
+
 import { WebSocketServer } from "ws";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 
@@ -14,6 +16,14 @@ import {
 
 import { auth } from "@/server/auth/auth";
 import { trpcLogger } from "@/server/logger";
+import { SERVER_CONFIG } from "@/config/env-config-server";
+
+// Extend IncomingMessage to include connectionId
+declare module "node:http" {
+  interface IncomingMessage {
+    connectionId?: string;
+  }
+}
 
 // Use globalThis to survive HMR in development
 const globalForWs = globalThis as unknown as {
@@ -52,8 +62,16 @@ export function initTrpcWebSocket(server: Server) {
 
     trpcLogger.trace({ pathname: url.pathname, host }, "WebSocket upgrade request");
 
-    // Only handle /trpc WebSocket path, let other paths (like HMR) fall through
+    // Only handle /trpc WebSocket path
     if (url.pathname !== "/trpc") {
+      // In development, let Next.js HMR handle other WebSocket paths
+      // In production, reject unknown WebSocket upgrades to prevent socket leaks
+      if (SERVER_CONFIG.NODE_ENV !== "development") {
+        trpcLogger.debug({ pathname: url.pathname }, "Rejecting non-tRPC WebSocket upgrade");
+        socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
+        socket.destroy();
+      }
+
       return;
     }
 
@@ -81,11 +99,15 @@ export function initTrpcWebSocket(server: Server) {
     }
 
     trpcWss!.handleUpgrade(req, socket, head, (ws) => {
-      trpcLogger.trace({ userId }, "WebSocket connection established");
+      // Generate unique connection ID for multiplexer management
+      const connectionId = randomUUID();
+
+      req.connectionId = connectionId;
+      trpcLogger.trace({ userId, connectionId }, "WebSocket connection established");
 
       // Track connection by userId for server-side termination
       if (userId) {
-        registerConnection(userId, ws);
+        registerConnection(userId, ws, connectionId);
         ws.on("close", () => unregisterConnection(userId, ws));
       }
 

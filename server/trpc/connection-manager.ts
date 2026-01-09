@@ -6,11 +6,13 @@ import { on } from "node:events";
 import superjson from "superjson";
 
 import { getPublisherClient, createSubscriberClient } from "@/server/redis/client";
+import { closeMultiplexer } from "@/server/redis/subscription-multiplexer";
 import { trpcLogger as log } from "@/server/logger";
 
 // Use globalThis to survive HMR in development
 const globalForConnectionManager = globalThis as unknown as {
   userConnections: Map<string, Set<WebSocket>> | undefined;
+  wsConnectionIds: WeakMap<WebSocket, string> | undefined;
   invalidationAbortController: AbortController | null;
   invalidationSubscriber: Redis | null;
 };
@@ -19,21 +21,31 @@ const globalForConnectionManager = globalThis as unknown as {
 const userConnections =
   globalForConnectionManager.userConnections ?? new Map<string, Set<WebSocket>>();
 
+// Map WebSocket to connectionId for multiplexer cleanup
+const wsConnectionIds =
+  globalForConnectionManager.wsConnectionIds ?? new WeakMap<WebSocket, string>();
+
 globalForConnectionManager.userConnections = userConnections;
+globalForConnectionManager.wsConnectionIds = wsConnectionIds;
 
 // Track invalidation listener state for cleanup
 let invalidationAbortController = globalForConnectionManager.invalidationAbortController ?? null;
 let invalidationSubscriber = globalForConnectionManager.invalidationSubscriber ?? null;
 
-export function registerConnection(userId: string, ws: WebSocket): void {
+export function registerConnection(userId: string, ws: WebSocket, connectionId?: string): void {
   if (!userConnections.has(userId)) {
     userConnections.set(userId, new Set());
   }
 
   userConnections.get(userId)!.add(ws);
+
+  // Store connectionId for multiplexer cleanup on disconnect
+  if (connectionId) {
+    wsConnectionIds.set(ws, connectionId);
+  }
 }
 
-export function unregisterConnection(userId: string, ws: WebSocket): void {
+export async function unregisterConnection(userId: string, ws: WebSocket): Promise<void> {
   const connections = userConnections.get(userId);
 
   if (connections) {
@@ -44,6 +56,14 @@ export function unregisterConnection(userId: string, ws: WebSocket): void {
     }
 
     log.trace({ userId, remaining: connections?.size ?? 0 }, "Unregistered WebSocket connection");
+  }
+
+  // Cleanup the multiplexer for this connection
+  const connectionId = wsConnectionIds.get(ws);
+
+  if (connectionId) {
+    await closeMultiplexer(connectionId);
+    // WeakMap auto-cleans when ws is GC'd, no need to delete
   }
 }
 

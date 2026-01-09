@@ -1,6 +1,7 @@
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import type { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
 import type { HouseholdWithUsersNamesDto, User } from "@/types";
+import type { SubscriptionMultiplexer } from "@/server/redis/subscription-multiplexer";
 
 import { auth } from "@/server/auth/auth";
 import { getHouseholdForUser } from "@/server/db";
@@ -8,6 +9,10 @@ import { getHouseholdForUser } from "@/server/db";
 export type Context = {
   user: User | null;
   household: HouseholdWithUsersNamesDto | null;
+  /** Unique ID for this WebSocket connection (WS only) */
+  connectionId: string | null;
+  /** Subscription multiplexer for this connection (WS only, set lazily in middleware) */
+  multiplexer: SubscriptionMultiplexer | null;
 };
 
 /**
@@ -23,7 +28,7 @@ export async function createContext(opts: FetchCreateContextFnOptions): Promise<
     });
 
     if (!session?.user?.id) {
-      return { user: null, household: null };
+      return { user: null, household: null, connectionId: null, multiplexer: null };
     }
 
     const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
@@ -37,14 +42,16 @@ export async function createContext(opts: FetchCreateContextFnOptions): Promise<
 
     const household = await getHouseholdForUser(user.id);
 
-    return { user, household };
+    return { user, household, connectionId: null, multiplexer: null };
   } catch {
-    return { user: null, household: null };
+    return { user: null, household: null, connectionId: null, multiplexer: null };
   }
 }
 
 export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<Context> {
   const { req } = opts;
+  // connectionId is set by ws-server.ts during upgrade
+  const connectionId = (req as { connectionId?: string }).connectionId ?? null;
 
   try {
     const headers = new Headers();
@@ -60,7 +67,7 @@ export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<
     const session = await auth.api.getSession({ headers });
 
     if (!session?.user?.id) {
-      return { user: null, household: null };
+      return { user: null, household: null, connectionId, multiplexer: null };
     }
 
     const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
@@ -72,8 +79,8 @@ export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<
       isServerAdmin: sessionUser.isServerOwner || sessionUser.isServerAdmin || false,
     };
 
-    return { user, household: null };
+    return { user, household: null, connectionId, multiplexer: null };
   } catch {
-    return { user: null, household: null };
+    return { user: null, household: null, connectionId, multiplexer: null };
   }
 }

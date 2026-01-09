@@ -1,5 +1,6 @@
 import type { Context } from "./context";
 import type { HouseholdWithUsersNamesDto, User } from "@/types";
+import type { SubscriptionMultiplexer } from "@/server/redis/subscription-multiplexer";
 
 import { TRPCError } from "@trpc/server";
 
@@ -7,6 +8,7 @@ import { middleware, publicProcedure } from "./trpc";
 
 import { isUserServerAdmin } from "@/server/db";
 import { getCachedHouseholdForUser } from "@/server/db/cached-household";
+import { getOrCreateMultiplexer } from "@/server/redis/subscription-multiplexer";
 
 /**
  * Middleware that enforces authentication and provides full context:
@@ -30,6 +32,14 @@ const withAuth = middleware(async ({ ctx, next }) => {
   const householdKey = household?.id ?? ctx.user.id;
   const isServerAdmin = ctx.user.isServerAdmin ?? false;
 
+  // Get or create the subscription multiplexer for this WebSocket connection
+  // The multiplexer consolidates all Redis subscriptions into a single connection
+  let multiplexer: SubscriptionMultiplexer | null = ctx.multiplexer;
+
+  if (!multiplexer && ctx.connectionId) {
+    multiplexer = getOrCreateMultiplexer(ctx.connectionId, ctx.user.id, householdKey);
+  }
+
   return next({
     ctx: {
       ...ctx,
@@ -39,6 +49,7 @@ const withAuth = middleware(async ({ ctx, next }) => {
       userIds: allUserIds,
       householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
       isServerAdmin,
+      multiplexer,
     },
   });
 });
@@ -58,6 +69,7 @@ export type AuthedProcedureContext = Context & {
   userIds: string[];
   householdUserIds: string[] | null;
   isServerAdmin: boolean;
+  multiplexer: SubscriptionMultiplexer | null;
 };
 
 /**

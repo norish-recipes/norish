@@ -2,15 +2,14 @@
  * Recipe Import Worker
  *
  * Processes recipe import jobs from the queue.
- * Runs in-process with the main server.
+ * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { RecipeImportJobData } from "@/types";
 import type { Job } from "bullmq";
 
-import { Worker } from "bullmq";
-
 import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
@@ -29,13 +28,6 @@ import {
 import { parseRecipeFromUrl } from "@/server/parser";
 
 const log = createLogger("worker:recipe-import");
-
-// Use globalThis to survive HMR in development
-const globalForWorker = globalThis as unknown as {
-  recipeImportWorker: Worker<RecipeImportJobData> | null;
-};
-
-let worker: Worker<RecipeImportJobData> | null = globalForWorker.recipeImportWorker ?? null;
 
 /**
  * Process a single recipe import job.
@@ -188,44 +180,23 @@ async function handleJobFailed(
 }
 
 /**
- * Start the recipe import worker.
+ * Start the recipe import worker (lazy - starts on demand).
  * Call during server startup.
  */
-export function startRecipeImportWorker(): void {
-  if (worker) {
-    log.warn("Recipe import worker already running");
-
-    return;
-  }
-
-  worker = new Worker<RecipeImportJobData>(QUEUE_NAMES.RECIPE_IMPORT, processImportJob, {
-    connection: getBullClient(),
-    ...baseWorkerOptions,
-    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.RECIPE_IMPORT],
-    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.RECIPE_IMPORT],
-  });
-
-  worker.on("completed", (job) => {
-    log.debug({ jobId: job.id }, "Recipe import job completed");
-  });
-
-  worker.on("failed", (job, error) => {
-    handleJobFailed(job, error);
-  });
-
-  worker.on("error", (error) => {
-    log.error({ err: error }, "Recipe import worker error");
-  });
-
-  globalForWorker.recipeImportWorker = worker;
-  log.info("Recipe import worker started");
+export async function startRecipeImportWorker(): Promise<void> {
+  await createLazyWorker<RecipeImportJobData>(
+    QUEUE_NAMES.RECIPE_IMPORT,
+    processImportJob,
+    {
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.RECIPE_IMPORT],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.RECIPE_IMPORT],
+    },
+    handleJobFailed
+  );
 }
 
 export async function stopRecipeImportWorker(): Promise<void> {
-  if (worker) {
-    await worker.close();
-    worker = null;
-    globalForWorker.recipeImportWorker = null;
-    log.info("Recipe import worker stopped");
-  }
+  await stopLazyWorker(QUEUE_NAMES.RECIPE_IMPORT);
 }
