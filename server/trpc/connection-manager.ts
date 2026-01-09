@@ -8,12 +8,21 @@ import superjson from "superjson";
 import { getPublisherClient, createSubscriberClient } from "@/server/redis/client";
 import { trpcLogger as log } from "@/server/logger";
 
+// Use globalThis to survive HMR in development
+const globalForConnectionManager = globalThis as unknown as {
+  userConnections: Map<string, Set<WebSocket>> | undefined;
+  invalidationAbortController: AbortController | null;
+  invalidationSubscriber: Redis | null;
+};
+
 // Map user IDs to their active WebSocket connections
-const userConnections = new Map<string, Set<WebSocket>>();
+const userConnections =
+  globalForConnectionManager.userConnections ?? new Map<string, Set<WebSocket>>();
+globalForConnectionManager.userConnections = userConnections;
 
 // Track invalidation listener state for cleanup
-let invalidationAbortController: AbortController | null = null;
-let invalidationSubscriber: Redis | null = null;
+let invalidationAbortController = globalForConnectionManager.invalidationAbortController ?? null;
+let invalidationSubscriber = globalForConnectionManager.invalidationSubscriber ?? null;
 
 export function registerConnection(userId: string, ws: WebSocket): void {
   if (!userConnections.has(userId)) {
@@ -76,9 +85,11 @@ export async function startInvalidationListener(): Promise<void> {
   }
 
   invalidationAbortController = new AbortController();
+  globalForConnectionManager.invalidationAbortController = invalidationAbortController;
   const signal = invalidationAbortController.signal;
 
   invalidationSubscriber = await createSubscriberClient();
+  globalForConnectionManager.invalidationSubscriber = invalidationSubscriber;
 
   await invalidationSubscriber.subscribe(INVALIDATION_CHANNEL);
 
@@ -111,8 +122,10 @@ export async function startInvalidationListener(): Promise<void> {
         log.debug({ err }, "Error during invalidation listener cleanup");
       }
       invalidationSubscriber = null;
+      globalForConnectionManager.invalidationSubscriber = null;
     }
     invalidationAbortController = null;
+    globalForConnectionManager.invalidationAbortController = null;
     log.info("Stopped connection invalidation listener");
   }
 }

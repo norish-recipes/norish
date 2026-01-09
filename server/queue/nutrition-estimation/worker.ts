@@ -142,7 +142,7 @@ export function startNutritionEstimationWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Nutrition estimation worker error");
+    log.error({ err: error }, "Nutrition estimation worker error");
   });
 
   log.info("Nutrition estimation worker started");

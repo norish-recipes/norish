@@ -201,7 +201,7 @@ export function startAllergyDetectionWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Allergy detection worker error");
+    log.error({ err: error }, "Allergy detection worker error");
   });
 
   log.info("Allergy detection worker started");

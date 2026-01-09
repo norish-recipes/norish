@@ -178,7 +178,7 @@ export function startAutoTaggingWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Auto-tagging worker error");
+    log.error({ err: error }, "Auto-tagging worker error");
   });
 
   log.info("Auto-tagging worker started");

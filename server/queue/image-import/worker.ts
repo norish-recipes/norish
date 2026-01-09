@@ -151,7 +151,7 @@ export function startImageImportWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Image import worker error");
+    log.error({ err: error }, "Image import worker error");
   });
 
   log.info("Image import worker started");

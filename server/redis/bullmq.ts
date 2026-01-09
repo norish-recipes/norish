@@ -54,8 +54,7 @@ function getBaseOptions(): RedisOptions {
     lazyConnect: true,
     keepAlive: 30_000,
     connectTimeout: 10_000,
-    commandTimeout: 5_000,
-
+    
     // Retry strategy with exponential backoff
     retryStrategy: (times: number) => {
       if (times > 20) {
@@ -81,26 +80,30 @@ let bullClient = globalForBull.bullClient ?? null;
  * Used for all Queue and Worker instances.
  */
 export function getBullClient(): Redis {
-  if (!bullClient) {
-    bullClient = new Redis({
-      ...getBaseOptions(),
-      connectionName: `norish:${process.pid}:bull`,
-    });
-
-    bullClient.on("error", (err) => {
-      log.error({ err }, "BullMQ Redis error");
-    });
-
-    bullClient.on("connect", () => {
-      log.debug("BullMQ Redis connected");
-    });
-
-    bullClient.on("close", () => {
-      log.debug("BullMQ Redis closed");
-    });
-
-    globalForBull.bullClient = bullClient;
+  // Check if existing client is still usable
+  if (bullClient && bullClient.status !== "end" && bullClient.status !== "close") {
+    return bullClient;
   }
+
+  // Create new client if none exists or previous one was closed
+  bullClient = new Redis({
+    ...getBaseOptions(),
+    connectionName: `norish:${process.pid}:bull`,
+  });
+
+  bullClient.on("error", (err) => {
+    log.error({ err }, "BullMQ Redis error");
+  });
+
+  bullClient.on("connect", () => {
+    log.debug("BullMQ Redis connected");
+  });
+
+  bullClient.on("close", () => {
+    log.debug("BullMQ Redis closed");
+  });
+
+  globalForBull.bullClient = bullClient;
 
   return bullClient;
 }

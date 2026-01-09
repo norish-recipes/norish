@@ -206,7 +206,7 @@ export function startRecipeImportWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Recipe import worker error");
+    log.error({ err: error }, "Recipe import worker error");
   });
 
   log.info("Recipe import worker started");

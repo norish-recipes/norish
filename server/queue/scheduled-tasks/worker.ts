@@ -118,7 +118,7 @@ export function startScheduledTasksWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Scheduled tasks worker error");
+    log.error({ err: error }, "Scheduled tasks worker error");
   });
 
   log.info("Scheduled tasks worker started");

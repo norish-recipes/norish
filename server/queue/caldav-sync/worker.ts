@@ -202,7 +202,7 @@ export function startCaldavSyncWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "CalDAV sync worker error");
+    log.error({ err: error }, "CalDAV sync worker error");
   });
 
   log.info("CalDAV sync worker started");

@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment node
+ */
 import type { RecipeExtractionOutput } from "@/server/ai/schemas/recipe.schema";
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 

@@ -250,7 +250,7 @@ export function startPasteImportWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Paste import worker error");
+    log.error({ err: error }, "Paste import worker error");
   });
 
   log.info("Paste import worker started");
