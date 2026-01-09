@@ -54,7 +54,7 @@ function getBaseOptions(): RedisOptions {
     lazyConnect: true,
     keepAlive: 30_000,
     connectTimeout: 10_000,
-    
+
     // Retry strategy with exponential backoff
     retryStrategy: (times: number) => {
       if (times > 20) {

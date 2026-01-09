@@ -18,6 +18,7 @@ const globalForConnectionManager = globalThis as unknown as {
 // Map user IDs to their active WebSocket connections
 const userConnections =
   globalForConnectionManager.userConnections ?? new Map<string, Set<WebSocket>>();
+
 globalForConnectionManager.userConnections = userConnections;
 
 // Track invalidation listener state for cleanup
