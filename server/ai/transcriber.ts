@@ -13,7 +13,6 @@
  */
 
 import type { TranscriptionProvider } from "@/server/db/zodSchemas/server-config";
-import { isCloudTranscriptionProvider } from "@/server/db/zodSchemas/server-config";
 import type { AIResult } from "./types/result";
 import type { Experimental_TranscriptionResult as TranscriptionResult } from "ai";
 
@@ -27,9 +26,11 @@ import { createGroq } from "@ai-sdk/groq";
 import { createAzure } from "@ai-sdk/azure";
 import OpenAI from "openai";
 
+import { aiSuccess, aiError, mapErrorToCode, getErrorMessage } from "./types/result";
+
 import { getVideoConfig, getAIConfig } from "@/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
-import { aiSuccess, aiError, mapErrorToCode, getErrorMessage } from "./types/result";
+import { isCloudTranscriptionProvider } from "@/server/db/zodSchemas/server-config";
 
 // ============================================================================
 // Shared Helpers
@@ -70,9 +71,11 @@ function logAISDKCompletion(provider: string, result: TranscriptionResult): void
  */
 function validateTranscript(text: string | undefined): AIResult<string> {
   const transcript = text?.trim() || "";
+
   if (!transcript) {
     return aiError("Transcription returned empty text", "EMPTY_RESPONSE");
   }
+
   return aiSuccess(transcript);
 }
 
@@ -90,6 +93,7 @@ function getAudioFormat(audioPath: string): string {
     webm: "webm",
     aac: "aac",
   };
+
   return formatMap[ext] || "wav";
 }
 
@@ -117,6 +121,7 @@ async function transcribeWithOpenAI(
   });
 
   logAISDKCompletion("OpenAI", result);
+
   return validateTranscript(result.text);
 }
 
@@ -140,6 +145,7 @@ async function transcribeWithGroq(
   });
 
   logAISDKCompletion("Groq", result);
+
   return validateTranscript(result.text);
 }
 
@@ -163,6 +169,7 @@ async function transcribeWithAzure(
   });
 
   logAISDKCompletion("Azure", result);
+
   return validateTranscript(result.text);
 }
 
@@ -177,6 +184,7 @@ async function transcribeWithGenericOpenAI(
   endpoint?: string
 ): Promise<AIResult<string>> {
   let baseURL = endpoint;
+
   if (baseURL) {
     baseURL = baseURL.replace(/\/+$/, "");
     if (!baseURL.endsWith("/v1")) {
@@ -199,6 +207,7 @@ async function transcribeWithGenericOpenAI(
   });
 
   aiLogger.debug({ provider: "generic-openai" }, "Generic OpenAI transcription completed");
+
   return validateTranscript(response.text);
 }
 
@@ -247,7 +256,9 @@ async function transcribeWithOllama(
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "Unknown error");
+
     aiLogger.error({ status: response.status, error: errorText }, "Ollama transcription failed");
+
     return aiError(`Ollama API error: ${response.status} - ${errorText}`, "PROVIDER_ERROR");
   }
 

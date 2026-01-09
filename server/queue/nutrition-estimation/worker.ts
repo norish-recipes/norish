@@ -22,7 +22,13 @@ import { estimateNutritionFromIngredients } from "@/server/ai/nutrition-estimato
 
 const log = createLogger("worker:nutrition-estimation");
 
-let worker: Worker<NutritionEstimationJobData> | null = null;
+// Use globalThis to survive HMR in development
+const globalForWorker = globalThis as unknown as {
+  nutritionEstimationWorker: Worker<NutritionEstimationJobData> | null;
+};
+
+let worker: Worker<NutritionEstimationJobData> | null =
+  globalForWorker.nutritionEstimationWorker ?? null;
 
 async function processNutritionJob(job: Job<NutritionEstimationJobData>): Promise<void> {
   const { recipeId, userId, householdKey } = job.data;
@@ -145,6 +151,7 @@ export function startNutritionEstimationWorker(): void {
     log.error({ err: error }, "Nutrition estimation worker error");
   });
 
+  globalForWorker.nutritionEstimationWorker = worker;
   log.info("Nutrition estimation worker started");
 }
 
@@ -152,6 +159,7 @@ export async function stopNutritionEstimationWorker(): Promise<void> {
   if (worker) {
     await worker.close();
     worker = null;
+    globalForWorker.nutritionEstimationWorker = null;
     log.info("Nutrition estimation worker stopped");
   }
 }

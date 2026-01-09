@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 
 // Mock dependencies
@@ -28,14 +29,17 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result).toBeTruthy();
+      expect(result).not.toBeNull();
       expect(result?.recipeIngredients).toHaveLength(2);
       // Should decode entity and keep comment
-      expect(result?.recipeIngredients[0].ingredientName).toContain("–"); // en dash
-      expect(result?.recipeIngredients[0].ingredientName).toContain("nonfat");
-      expect(result?.recipeIngredients[0].ingredientName).not.toContain("&#8211;");
-      expect(result?.recipeIngredients[1].ingredientName).toContain("–");
-      expect(result?.recipeIngredients[1].ingredientName).toContain("seeds removed");
+      const first = result?.recipeIngredients?.[0];
+      const second = result?.recipeIngredients?.[1];
+
+      expect(first?.ingredientName).toContain("–"); // en dash
+      expect(first?.ingredientName).toContain("nonfat");
+      expect(first?.ingredientName).not.toContain("&#8211;");
+      expect(second?.ingredientName).toContain("–");
+      expect(second?.ingredientName).toContain("seeds removed");
     });
 
     it("decodes apostrophe (&#39;) in ingredients", async () => {
@@ -47,8 +51,11 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.recipeIngredients[0].ingredientName).toContain("'");
-      expect(result?.recipeIngredients[0].ingredientName).not.toContain("&#39;");
+      expect(result).not.toBeNull();
+      const ingredient = result?.recipeIngredients?.[0];
+
+      expect(ingredient?.ingredientName).toContain("'");
+      expect(ingredient?.ingredientName).not.toContain("&#39;");
     });
 
     it("decodes smart quotes (&#8220;/&#8221;) in ingredients", async () => {
@@ -60,9 +67,12 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.recipeIngredients[0].ingredientName).toContain("\u201C");
-      expect(result?.recipeIngredients[0].ingredientName).toContain("\u201D");
-      expect(result?.recipeIngredients[0].ingredientName).not.toContain("&#8220;");
+      expect(result).not.toBeNull();
+      const ingredient = result?.recipeIngredients?.[0];
+
+      expect(ingredient?.ingredientName).toContain("\u201C");
+      expect(ingredient?.ingredientName).toContain("\u201D");
+      expect(ingredient?.ingredientName).not.toContain("&#8220;");
     });
 
     it("decodes multiple entity types in single ingredient", async () => {
@@ -74,10 +84,13 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.recipeIngredients[0].ingredientName).toContain("\u201C");
-      expect(result?.recipeIngredients[0].ingredientName).toContain("'");
-      expect(result?.recipeIngredients[0].ingredientName).toContain("–");
-      expect(result?.recipeIngredients[0].ingredientName).toContain("sifted");
+      expect(result).not.toBeNull();
+      const ingredient = result?.recipeIngredients?.[0];
+
+      expect(ingredient?.ingredientName).toContain("\u201C");
+      expect(ingredient?.ingredientName).toContain("'");
+      expect(ingredient?.ingredientName).toContain("–");
+      expect(ingredient?.ingredientName).toContain("sifted");
     });
 
     it("handles string ingredient (not array) with entities", async () => {
@@ -89,8 +102,11 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.recipeIngredients[0].ingredientName).toContain("–");
-      expect(result?.recipeIngredients[0].ingredientName).toContain("sifted");
+      expect(result).not.toBeNull();
+      const ingredient = result?.recipeIngredients?.[0];
+
+      expect(ingredient?.ingredientName).toContain("–");
+      expect(ingredient?.ingredientName).toContain("sifted");
     });
 
     it("preserves ingredients without entities", async () => {
@@ -102,8 +118,9 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.recipeIngredients[0].ingredientName).toBe("flour");
-      expect(result?.recipeIngredients[1].ingredientName).toContain("egg");
+      expect(result).not.toBeNull();
+      expect(result?.recipeIngredients?.[0]?.ingredientName).toBe("flour");
+      expect(result?.recipeIngredients?.[1]?.ingredientName).toContain("egg");
     });
 
     it("decodes degree symbol (&#176;) in ingredients", async () => {
@@ -115,8 +132,11 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.recipeIngredients[0].ingredientName).toContain("°");
-      expect(result?.recipeIngredients[0].ingredientName).not.toContain("&#176;");
+      expect(result).not.toBeNull();
+      const ingredient = result?.recipeIngredients?.[0];
+
+      expect(ingredient?.ingredientName).toContain("°");
+      expect(ingredient?.ingredientName).not.toContain("&#176;");
     });
   });
 
@@ -130,12 +150,15 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
+      expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(1);
-      expect(result?.steps[0].step).toContain("–");
-      expect(result?.steps[0].step).toContain("°");
-      expect(result?.steps[0].step).toContain("use convection if available");
-      expect(result?.steps[0].step).not.toContain("&#8211;");
-      expect(result?.steps[0].step).not.toContain("&#176;");
+      const step = result?.steps?.[0];
+
+      expect(step?.step).toContain("–");
+      expect(step?.step).toContain("°");
+      expect(step?.step).toContain("use convection if available");
+      expect(step?.step).not.toContain("&#8211;");
+      expect(step?.step).not.toContain("&#176;");
     });
 
     it("decodes entities in HowToStep text field", async () => {
@@ -152,10 +175,13 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.steps[0].step).toContain("'");
-      expect(result?.steps[0].step).toContain("–");
-      expect(result?.steps[0].step).toContain("about 2 minutes");
-      expect(result?.steps[0].step).not.toContain("&#39;");
+      expect(result).not.toBeNull();
+      const step = result?.steps?.[0];
+
+      expect(step?.step).toContain("'");
+      expect(step?.step).toContain("–");
+      expect(step?.step).toContain("about 2 minutes");
+      expect(step?.step).not.toContain("&#39;");
     });
 
     it("decodes entities in HowToStep name field", async () => {
@@ -172,9 +198,12 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.steps[0].step).toContain("°");
-      expect(result?.steps[0].step).toContain("–");
-      expect(result?.steps[0].step).toContain("gas mark 4");
+      expect(result).not.toBeNull();
+      const step = result?.steps?.[0];
+
+      expect(step?.step).toContain("°");
+      expect(step?.step).toContain("–");
+      expect(step?.step).toContain("gas mark 4");
     });
 
     it("decodes entities in nested HowToStep structures", async () => {
@@ -194,8 +223,11 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.steps[0].step).toContain("–");
-      expect(result?.steps[0].step).not.toContain("&#8211;");
+      expect(result).not.toBeNull();
+      const step = result?.steps?.[0];
+
+      expect(step?.step).toContain("–");
+      expect(step?.step).not.toContain("&#8211;");
     });
 
     it("handles mixed string and object instructions", async () => {
@@ -213,10 +245,11 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
+      expect(result).not.toBeNull();
       expect(result?.steps).toHaveLength(2);
-      expect(result?.steps[0].step).toContain("–");
-      expect(result?.steps[0].step).toContain("°");
-      expect(result?.steps[1].step).toContain("'");
+      expect(result?.steps?.[0]?.step).toContain("–");
+      expect(result?.steps?.[0]?.step).toContain("°");
+      expect(result?.steps?.[1]?.step).toContain("'");
     });
   });
 
@@ -230,6 +263,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
+      expect(result).not.toBeNull();
       expect(result?.recipeIngredients).toHaveLength(0);
     });
 
@@ -241,6 +275,7 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
+      expect(result).not.toBeNull();
       expect(result?.recipeIngredients).toHaveLength(0);
     });
 
@@ -253,7 +288,8 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.recipeIngredients.length).toBeGreaterThan(0);
+      expect(result).not.toBeNull();
+      expect(result?.recipeIngredients?.length).toBeGreaterThan(0);
     });
 
     it("decodes numeric entities (&#NNN;)", async () => {
@@ -265,8 +301,9 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.recipeIngredients[0].ingredientName).toContain("ø");
-      expect(result?.steps[0].step).toContain("ø");
+      expect(result).not.toBeNull();
+      expect(result?.recipeIngredients?.[0]?.ingredientName).toContain("ø");
+      expect(result?.steps?.[0]?.step).toContain("ø");
     });
 
     it("decodes hex entities (&#xHH;)", async () => {
@@ -278,8 +315,9 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.recipeIngredients[0].ingredientName).toContain("é");
-      expect(result?.steps[0].step).toContain("é");
+      expect(result).not.toBeNull();
+      expect(result?.recipeIngredients?.[0]?.ingredientName).toContain("é");
+      expect(result?.steps?.[0]?.step).toContain("é");
     });
 
     it("handles named HTML entities", async () => {
@@ -291,8 +329,9 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
 
       const result = await normalizeRecipeFromJson(json);
 
-      expect(result?.recipeIngredients[0].ingredientName).toContain("&");
-      expect(result?.steps[0].step).toContain("<");
+      expect(result).not.toBeNull();
+      expect(result?.recipeIngredients?.[0]?.ingredientName).toContain("&");
+      expect(result?.steps?.[0]?.step).toContain("<");
     });
   });
 });

@@ -29,7 +29,12 @@ interface ScheduledTaskJobData {
   taskType: ScheduledTaskType;
 }
 
-let worker: Worker<ScheduledTaskJobData> | null = null;
+// Use globalThis to survive HMR in development
+const globalForWorker = globalThis as unknown as {
+  scheduledTasksWorker: Worker<ScheduledTaskJobData> | null;
+};
+
+let worker: Worker<ScheduledTaskJobData> | null = globalForWorker.scheduledTasksWorker ?? null;
 
 async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<void> {
   const { taskType } = job.data;
@@ -121,6 +126,7 @@ export function startScheduledTasksWorker(): void {
     log.error({ err: error }, "Scheduled tasks worker error");
   });
 
+  globalForWorker.scheduledTasksWorker = worker;
   log.info("Scheduled tasks worker started");
 }
 
@@ -128,6 +134,7 @@ export async function stopScheduledTasksWorker(): Promise<void> {
   if (worker) {
     await worker.close();
     worker = null;
+    globalForWorker.scheduledTasksWorker = null;
     log.info("Scheduled tasks worker stopped");
   }
 }

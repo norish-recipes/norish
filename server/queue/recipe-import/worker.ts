@@ -17,8 +17,9 @@ import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
 import { getRecipePermissionPolicy, getAIConfig } from "@/config/server-config-loader";
-import { addAutoTaggingJob } from "@/server/queue/auto-tagging/queue";
-import { addAllergyDetectionJob } from "@/server/queue/allergy-detection/queue";
+import { getQueues } from "@/server/queue/registry";
+import { addAutoTaggingJob } from "@/server/queue/auto-tagging/producer";
+import { addAllergyDetectionJob } from "@/server/queue/allergy-detection/producer";
 import {
   createRecipeWithRefs,
   recipeExistsByUrlForPolicy,
@@ -29,7 +30,12 @@ import { parseRecipeFromUrl } from "@/server/parser";
 
 const log = createLogger("worker:recipe-import");
 
-let worker: Worker<RecipeImportJobData> | null = null;
+// Use globalThis to survive HMR in development
+const globalForWorker = globalThis as unknown as {
+  recipeImportWorker: Worker<RecipeImportJobData> | null;
+};
+
+let worker: Worker<RecipeImportJobData> | null = globalForWorker.recipeImportWorker ?? null;
 
 /**
  * Process a single recipe import job.
@@ -122,7 +128,9 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     // Trigger auto-tagging only if AI was NOT used for extraction
     // (AI extraction already includes auto-tagging instructions in the prompt)
     if (!parseResult.usedAI) {
-      await addAutoTaggingJob({
+      const queues = getQueues();
+
+      await addAutoTaggingJob(queues.autoTagging, {
         recipeId: createdId,
         userId,
         householdKey,
@@ -130,7 +138,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
 
       // Trigger allergy detection for structured imports
       // (AI extraction already handles allergy detection inline)
-      await addAllergyDetectionJob({
+      await addAllergyDetectionJob(queues.allergyDetection, {
         recipeId: createdId,
         userId,
         householdKey,
@@ -209,6 +217,7 @@ export function startRecipeImportWorker(): void {
     log.error({ err: error }, "Recipe import worker error");
   });
 
+  globalForWorker.recipeImportWorker = worker;
   log.info("Recipe import worker started");
 }
 
@@ -216,6 +225,7 @@ export async function stopRecipeImportWorker(): Promise<void> {
   if (worker) {
     await worker.close();
     worker = null;
+    globalForWorker.recipeImportWorker = null;
     log.info("Recipe import worker stopped");
   }
 }

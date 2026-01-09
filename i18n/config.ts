@@ -30,6 +30,7 @@ export type Locale = string;
  */
 export function isValidLocale(locale: unknown): locale is Locale {
   if (typeof locale !== "string") return false;
+
   // Basic format check: 2-3 letter language code, optionally with region/variant
   // Examples: en, nl, de-formal, de-informal, pt-BR
   return /^[a-z]{2,3}(-[a-zA-Z]{2,10})?$/.test(locale);

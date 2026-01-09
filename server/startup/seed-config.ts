@@ -1,3 +1,5 @@
+import type { I18nLocaleConfig } from "@/server/db/zodSchemas/server-config";
+
 import { setConfig, configExists, getConfig, deleteConfig } from "../db/repositories/server-config";
 import {
   ServerConfigKeys,
@@ -11,7 +13,6 @@ import {
 
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { DEFAULT_LOCALE_CONFIG, buildLocaleConfigFromEnv } from "@/config/server-config-loader";
-import type { I18nLocaleConfig } from "@/server/db/zodSchemas/server-config";
 import { setAuthProviderCache } from "@/server/auth/provider-cache";
 import { serverLogger } from "@/server/logger";
 import defaultUnits from "@/config/units.default.json";
@@ -482,6 +483,7 @@ async function syncLocales(): Promise<void> {
       // If ENABLED_LOCALES env is set, only enable if locale is in that list
       // Otherwise use the default enabled state
       const enabled = hasEnvFilter ? envEnabledLocales.includes(locale) : entry.enabled;
+
       existing.locales[locale] = { ...entry, enabled };
     }
   }

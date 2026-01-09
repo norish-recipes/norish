@@ -17,12 +17,23 @@ import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
 import { getRecipePermissionPolicy, getAIConfig } from "@/config/server-config-loader";
-import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@/server/db";
+import {
+  createRecipeWithRefs,
+  dashboardRecipe,
+  getAllergiesForUsers,
+  addRecipeImages,
+} from "@/server/db";
 import { extractRecipeFromImages } from "@/server/ai/image-recipe-parser";
+import { saveImageBytes } from "@/server/downloader";
 
 const log = createLogger("worker:image-import");
 
-let worker: Worker<ImageImportJobData> | null = null;
+// Use globalThis to survive HMR in development
+const globalForWorker = globalThis as unknown as {
+  imageImportWorker: Worker<ImageImportJobData> | null;
+};
+
+let worker: Worker<ImageImportJobData> | null = globalForWorker.imageImportWorker ?? null;
 
 /**
  * Process a single image import job.
@@ -73,6 +84,22 @@ async function processImageImportJob(job: Job<ImageImportJobData>): Promise<void
 
   if (!createdId) {
     throw new Error("Failed to save imported recipe");
+  }
+
+  // Save the first uploaded image as the recipe image
+  if (files.length > 0) {
+    const firstFile = files[0];
+
+    try {
+      const imageBytes = Buffer.from(firstFile.data, "base64");
+      const imagePath = await saveImageBytes(imageBytes, firstFile.filename);
+
+      await addRecipeImages(createdId, [{ image: imagePath, order: 0 }]);
+      log.debug({ recipeId: createdId }, "Saved first uploaded image as recipe image");
+    } catch (imageError) {
+      // Log but don't fail the import if image saving fails
+      log.warn({ err: imageError, recipeId: createdId }, "Failed to save uploaded image");
+    }
   }
 
   const dashboardDto = await dashboardRecipe(createdId);
@@ -154,6 +181,7 @@ export function startImageImportWorker(): void {
     log.error({ err: error }, "Image import worker error");
   });
 
+  globalForWorker.imageImportWorker = worker;
   log.info("Image import worker started");
 }
 
@@ -161,6 +189,7 @@ export async function stopImageImportWorker(): Promise<void> {
   if (worker) {
     await worker.close();
     worker = null;
+    globalForWorker.imageImportWorker = null;
     log.info("Image import worker stopped");
   }
 }

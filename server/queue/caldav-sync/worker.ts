@@ -23,7 +23,12 @@ import { caldavEmitter } from "@/server/trpc/routers/caldav/emitter";
 
 const log = createLogger("worker:caldav-sync");
 
-let worker: Worker<CaldavSyncJobData> | null = null;
+// Use globalThis to survive HMR in development
+const globalForWorker = globalThis as unknown as {
+  caldavSyncWorker: Worker<CaldavSyncJobData> | null;
+};
+
+let worker: Worker<CaldavSyncJobData> | null = globalForWorker.caldavSyncWorker ?? null;
 
 /**
  * Process a single CalDAV sync job.
@@ -205,6 +210,7 @@ export function startCaldavSyncWorker(): void {
     log.error({ err: error }, "CalDAV sync worker error");
   });
 
+  globalForWorker.caldavSyncWorker = worker;
   log.info("CalDAV sync worker started");
 }
 
@@ -216,6 +222,7 @@ export async function stopCaldavSyncWorker(): Promise<void> {
   if (worker) {
     await worker.close();
     worker = null;
+    globalForWorker.caldavSyncWorker = null;
     log.info("CalDAV sync worker stopped");
   }
 }

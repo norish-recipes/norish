@@ -25,7 +25,12 @@ import { generateTagsForRecipe } from "@/server/ai/auto-tagger";
 
 const log = createLogger("worker:auto-tagging");
 
-let worker: Worker<AutoTaggingJobData> | null = null;
+// Use globalThis to survive HMR in development
+const globalForWorker = globalThis as unknown as {
+  autoTaggingWorker: Worker<AutoTaggingJobData> | null;
+};
+
+let worker: Worker<AutoTaggingJobData> | null = globalForWorker.autoTaggingWorker ?? null;
 
 async function processAutoTaggingJob(job: Job<AutoTaggingJobData>): Promise<void> {
   const { recipeId, userId, householdKey } = job.data;
@@ -181,6 +186,7 @@ export function startAutoTaggingWorker(): void {
     log.error({ err: error }, "Auto-tagging worker error");
   });
 
+  globalForWorker.autoTaggingWorker = worker;
   log.info("Auto-tagging worker started");
 }
 
@@ -188,6 +194,7 @@ export async function stopAutoTaggingWorker(): Promise<void> {
   if (worker) {
     await worker.close();
     worker = null;
+    globalForWorker.autoTaggingWorker = null;
     log.info("Auto-tagging worker stopped");
   }
 }

@@ -70,6 +70,7 @@ export async function processVideoRecipe(
     }
 
     const transcript = transcriptionResult.data;
+
     log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
     // Extract recipe from transcript + metadata

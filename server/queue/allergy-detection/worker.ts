@@ -25,7 +25,12 @@ import { detectAllergiesInRecipe } from "@/server/ai/allergy-detector";
 
 const log = createLogger("worker:allergy-detection");
 
-let worker: Worker<AllergyDetectionJobData> | null = null;
+// Use globalThis to survive HMR in development
+const globalForWorker = globalThis as unknown as {
+  allergyDetectionWorker: Worker<AllergyDetectionJobData> | null;
+};
+
+let worker: Worker<AllergyDetectionJobData> | null = globalForWorker.allergyDetectionWorker ?? null;
 
 async function processAllergyDetectionJob(job: Job<AllergyDetectionJobData>): Promise<void> {
   const { recipeId, userId, householdKey } = job.data;
@@ -204,6 +209,7 @@ export function startAllergyDetectionWorker(): void {
     log.error({ err: error }, "Allergy detection worker error");
   });
 
+  globalForWorker.allergyDetectionWorker = worker;
   log.info("Allergy detection worker started");
 }
 
@@ -211,6 +217,7 @@ export async function stopAllergyDetectionWorker(): Promise<void> {
   if (worker) {
     await worker.close();
     worker = null;
+    globalForWorker.allergyDetectionWorker = null;
     log.info("Allergy detection worker stopped");
   }
 }

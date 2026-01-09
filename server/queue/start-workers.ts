@@ -25,7 +25,8 @@ import {
   startScheduledTasksWorker,
   stopScheduledTasksWorker,
 } from "@/server/queue/scheduled-tasks/worker";
-import { initializeScheduledJobs } from "@/server/queue/scheduled-tasks/queue";
+import { initializeQueues, getQueues, closeAllQueues } from "@/server/queue/registry";
+import { initializeScheduledJobs } from "@/server/queue/scheduled-tasks/producer";
 import { closeBullConnection } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 
@@ -33,9 +34,13 @@ const log = createLogger("bullmq");
 
 /**
  * Start all workers at boot.
+ * Initializes queue registry first, then starts workers.
  */
 export async function startWorkers(): Promise<void> {
   log.info("Starting all BullMQ workers...");
+
+  // Initialize all queues first
+  initializeQueues();
 
   // Import workers
   startRecipeImportWorker();
@@ -50,7 +55,7 @@ export async function startWorkers(): Promise<void> {
 
   // Scheduled tasks
   startScheduledTasksWorker();
-  await initializeScheduledJobs();
+  await initializeScheduledJobs(getQueues().scheduledTasks);
 
   log.info("All BullMQ workers started");
 }
@@ -61,6 +66,7 @@ export async function startWorkers(): Promise<void> {
 export async function stopWorkers(): Promise<void> {
   log.info("Stopping all BullMQ workers...");
 
+  // Stop all workers first
   await Promise.all([
     stopRecipeImportWorker(),
     stopImageImportWorker(),
@@ -72,7 +78,10 @@ export async function stopWorkers(): Promise<void> {
     stopScheduledTasksWorker(),
   ]);
 
-  // Close shared Redis connection after all workers are stopped
+  // Close all queue connections via registry
+  await closeAllQueues();
+
+  // Close shared Redis connection after all workers and queues are stopped
   await closeBullConnection();
 
   log.info("All BullMQ workers stopped");

@@ -1,8 +1,12 @@
 /**
  * BullMQ Redis Connection Management
  *
- * Provides a shared Redis connection singleton for all BullMQ queues.
- * Workers use this same connection - BullMQ handles blocking internally.
+ * Provides a shared Redis connection for BullMQ producers (Queue.add).
+ *
+ * IMPORTANT: When passed to Workers, BullMQ internally duplicates this
+ * connection to create separate blocking (for job polling) and non-blocking
+ * (for commands) connections. Workers don't share a single socket - they
+ * share connection OPTIONS via this template connection.
  */
 
 import type { RedisOptions } from "ioredis";
@@ -42,16 +46,13 @@ function getBaseOptions(): RedisOptions {
     host,
     port,
     password,
-
-    // CRITICAL: Required for BullMQ workers - they use blocking operations
     maxRetriesPerRequest: null,
 
     // Performance optimizations
     enableReadyCheck: false,
     enableOfflineQueue: true,
 
-    // Connection management
-    lazyConnect: true,
+    lazyConnect: false,
     keepAlive: 30_000,
     connectTimeout: 10_000,
 
@@ -77,7 +78,11 @@ let bullClient = globalForBull.bullClient ?? null;
 
 /**
  * Get the shared BullMQ Redis connection (singleton).
- * Used for all Queue and Worker instances.
+ *
+ * For Queues (producers): This connection is reused directly.
+ * For Workers: BullMQ duplicates this connection internally to create
+ * separate blocking/non-blocking connections. The connection passed
+ * serves as a template for connection options.
  */
 export function getBullClient(): Redis {
   // Check if existing client is still usable

@@ -8,9 +8,10 @@
 import type { RecipeExtractionOutput } from "@/server/ai/schemas/recipe.schema";
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 
+import { decode } from "html-entities";
+
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
-import { decode } from "html-entities";
 import { getUnits } from "@/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
 

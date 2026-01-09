@@ -19,6 +19,7 @@ const AUDIO_MODEL_KEYWORDS = ["whisper", "audio", "speech", "transcri", "voice"]
  */
 function isAudioModel(modelId: string): boolean {
   const lower = modelId.toLowerCase();
+
   return AUDIO_MODEL_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
@@ -176,6 +177,16 @@ const providerConfigs: Record<string, ProviderConfig> = {
       };
     },
   },
+
+  deepseek: {
+    url: "https://api.deepseek.com/models",
+    headers: (apiKey) => ({ Authorization: `Bearer ${apiKey}` }),
+    mapper: (m) => ({
+      id: m.id,
+      name: m.id,
+      supportsVision: false, // DeepSeek models don't support vision yet
+    }),
+  },
 };
 
 /**
@@ -325,11 +336,11 @@ export async function listModels(
     case "perplexity":
       // Perplexity doesn't have a models list endpoint
       return [
-        { id: "sonar", name: "Sonar", supportsVision: false },
-        { id: "sonar-pro", name: "Sonar Pro", supportsVision: false },
-        { id: "sonar-reasoning", name: "Sonar Reasoning", supportsVision: false },
-        { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro", supportsVision: false },
-        { id: "sonar-deep-research", name: "Sonar Deep Research", supportsVision: false },
+        { id: "sonar", name: "Sonar", supportsVision: true },
+        { id: "sonar-pro", name: "Sonar Pro", supportsVision: true },
+        { id: "sonar-reasoning", name: "Sonar Reasoning", supportsVision: true },
+        { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro", supportsVision: true },
+        { id: "sonar-deep-research", name: "Sonar Deep Research", supportsVision: true },
       ];
 
     case "azure":
@@ -337,13 +348,6 @@ export async function listModels(
       aiLogger.debug("Azure OpenAI uses deployment names - manual entry required");
 
       return [];
-
-    case "deepseek":
-      // DeepSeek doesn't have a public models list endpoint
-      return [
-        { id: "deepseek-chat", name: "DeepSeek Chat", supportsVision: false },
-        { id: "deepseek-reasoner", name: "DeepSeek Reasoner", supportsVision: false },
-      ];
 
     default:
       aiLogger.debug({ provider }, "Unknown provider for model listing");

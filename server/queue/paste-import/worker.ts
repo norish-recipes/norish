@@ -16,8 +16,9 @@ import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
 import { getRecipePermissionPolicy, getAIConfig, isAIEnabled } from "@/config/server-config-loader";
-import { addAutoTaggingJob } from "@/server/queue/auto-tagging/queue";
-import { addAllergyDetectionJob } from "@/server/queue/allergy-detection/queue";
+import { getQueues } from "@/server/queue/registry";
+import { addAutoTaggingJob } from "@/server/queue/auto-tagging/producer";
+import { addAllergyDetectionJob } from "@/server/queue/allergy-detection/producer";
 import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@/server/db";
 import { extractRecipeNodesFromJsonLd } from "@/server/parser/jsonld";
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
@@ -26,7 +27,12 @@ import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
 
 const log = createLogger("worker:paste-import");
 
-let worker: Worker<PasteImportJobData> | null = null;
+// Use globalThis to survive HMR in development
+const globalForWorker = globalThis as unknown as {
+  pasteImportWorker: Worker<PasteImportJobData> | null;
+};
+
+let worker: Worker<PasteImportJobData> | null = globalForWorker.pasteImportWorker ?? null;
 
 function escapeHtml(text: string): string {
   return text
@@ -176,7 +182,9 @@ async function processPasteImportJob(job: Job<PasteImportJobData>): Promise<void
     // Trigger auto-tagging only if AI was NOT used for extraction
     // (AI extraction already includes auto-tagging instructions in the prompt)
     if (!parseResult.usedAI) {
-      await addAutoTaggingJob({
+      const queues = getQueues();
+
+      await addAutoTaggingJob(queues.autoTagging, {
         recipeId: createdId,
         userId,
         householdKey,
@@ -184,7 +192,7 @@ async function processPasteImportJob(job: Job<PasteImportJobData>): Promise<void
 
       // Trigger allergy detection for structured imports
       // (AI extraction already handles allergy detection inline)
-      await addAllergyDetectionJob({
+      await addAllergyDetectionJob(queues.allergyDetection, {
         recipeId: createdId,
         userId,
         householdKey,
@@ -253,6 +261,7 @@ export function startPasteImportWorker(): void {
     log.error({ err: error }, "Paste import worker error");
   });
 
+  globalForWorker.pasteImportWorker = worker;
   log.info("Paste import worker started");
 }
 
@@ -260,6 +269,7 @@ export async function stopPasteImportWorker(): Promise<void> {
   if (worker) {
     await worker.close();
     worker = null;
+    globalForWorker.pasteImportWorker = null;
     log.info("Paste import worker stopped");
   }
 }
