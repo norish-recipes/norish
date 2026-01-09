@@ -6,11 +6,13 @@
  */
 
 import type { NutritionEstimationJobData } from "@/types";
+import type { Job } from "bullmq";
 
-import { Worker, Job } from "bullmq";
+import { Worker } from "bullmq";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
@@ -124,8 +126,10 @@ export function startNutritionEstimationWorker(): void {
     QUEUE_NAMES.NUTRITION_ESTIMATION,
     processNutritionJob,
     {
-      connection: redisConnection,
-      concurrency: 3,
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.NUTRITION_ESTIMATION],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.NUTRITION_ESTIMATION],
     }
   );
 

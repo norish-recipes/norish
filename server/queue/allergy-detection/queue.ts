@@ -2,9 +2,10 @@ import type { AllergyDetectionJobData, AddAllergyDetectionJobResult } from "@/ty
 
 import { Queue } from "bullmq";
 
-import { redisConnection, allergyDetectionJobOptions, QUEUE_NAMES } from "../config";
+import { allergyDetectionJobOptions, QUEUE_NAMES } from "../config";
 import { isJobInQueue } from "../helpers";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { isAIEnabled, getAIConfig } from "@/config/server-config-loader";
 import { getAllergiesForUsers, getHouseholdMemberIds } from "@/server/db";
@@ -17,7 +18,7 @@ const log = createLogger("queue:allergy-detection");
 export const allergyDetectionQueue = new Queue<AllergyDetectionJobData>(
   QUEUE_NAMES.ALLERGY_DETECTION,
   {
-    connection: redisConnection,
+    connection: getBullClient(),
     defaultJobOptions: allergyDetectionJobOptions,
   }
 );

@@ -2,29 +2,19 @@ import type { ImageImportJobData, AddImageImportJobResult } from "@/types";
 
 import { Queue } from "bullmq";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
+import { QUEUE_NAMES, imageImportJobOptions } from "../config";
 import { isJobInQueue } from "../helpers";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 
 const log = createLogger("queue:image-import");
 
 /**
- * Job options for image imports:
- * - 1 attempt (OCR/vision is deterministic)
- * - 5 minute timeout (images take longer to process)
- */
-const imageImportJobOptions = {
-  attempts: 1,
-  removeOnComplete: true,
-  removeOnFail: true,
-};
-
-/**
  * Image import queue instance
  */
 export const imageImportQueue = new Queue<ImageImportJobData>(QUEUE_NAMES.IMAGE_IMPORT, {
-  connection: redisConnection,
+  connection: getBullClient(),
   defaultJobOptions: imageImportJobOptions,
 });
 

@@ -15,7 +15,7 @@
     "db:push": "pnpm run db:ensure && drizzle-kit push --config ./server/db/drizzle.config.ts",
     "db:generate": "drizzle-kit generate --config ./server/db/drizzle.config.ts",
     "migrate": "pnpm run db:ensure && drizzle-kit push --config ./server/db/drizzle.config.ts",
-    "docker:build": "docker build -f docker/Dockerfile -t norishapp/norish:latest .",
+    "docker:build": "docker build -f docker/Dockerfile -t norishapp/norish:test .",
     "docker:up": "docker-compose -f docker/docker-compose.yml up",
     "docker:down": "docker-compose -f docker/docker-compose.yml down",
     "start": "node dist-server/server.cjs",

@@ -2,25 +2,16 @@ import type { PasteImportJobData, AddPasteImportJobResult } from "@/types";
 
 import { Queue } from "bullmq";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
+import { QUEUE_NAMES, pasteImportJobOptions } from "../config";
 import { isJobInQueue } from "../helpers";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 
 const log = createLogger("queue:paste-import");
 
-const pasteImportJobOptions = {
-  attempts: 3,
-  backoff: {
-    type: "exponential" as const,
-    delay: 1000,
-  },
-  removeOnComplete: true,
-  removeOnFail: true,
-};
-
 export const pasteImportQueue = new Queue<PasteImportJobData>(QUEUE_NAMES.PASTE_IMPORT, {
-  connection: redisConnection,
+  connection: getBullClient(),
   defaultJobOptions: pasteImportJobOptions,
 });
 

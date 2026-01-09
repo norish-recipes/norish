@@ -1,11 +1,13 @@
 import type { CaldavSyncJobData } from "@/types";
 import type { CaldavSyncStatusInsertDto } from "@/types/dto/caldav-sync-status";
 import type { Slot } from "@/types";
+import type { Job } from "bullmq";
 
-import { Worker, Job } from "bullmq";
+import { Worker } from "bullmq";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import {
   syncPlannedItem,
@@ -185,8 +187,10 @@ export function startCaldavSyncWorker(): void {
   }
 
   worker = new Worker<CaldavSyncJobData>(QUEUE_NAMES.CALDAV_SYNC, processCaldavSyncJob, {
-    connection: redisConnection,
-    concurrency: 3, // Limit concurrent CalDAV operations
+    connection: getBullClient(),
+    ...baseWorkerOptions,
+    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.CALDAV_SYNC],
+    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.CALDAV_SYNC],
   });
 
   worker.on("completed", (job) => {

@@ -1,7 +1,10 @@
-import { Worker, Job } from "bullmq";
+import type { Job } from "bullmq";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
+import { Worker } from "bullmq";
 
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
+
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { checkRecurringGroceries } from "@/server/scheduler/recurring-grocery-check";
 import {
@@ -97,8 +100,10 @@ export function startScheduledTasksWorker(): void {
   }
 
   worker = new Worker<ScheduledTaskJobData>(QUEUE_NAMES.SCHEDULED_TASKS, processScheduledTask, {
-    connection: redisConnection,
-    concurrency: 1, // One task at a time to avoid resource contention.
+    connection: getBullClient(),
+    ...baseWorkerOptions,
+    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.SCHEDULED_TASKS],
+    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.SCHEDULED_TASKS],
   });
 
   worker.on("completed", (job) => {

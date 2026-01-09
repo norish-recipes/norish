@@ -4,12 +4,14 @@
  * Processes pasted recipe text or pasted JSON-LD.
  */
 
-import type { PasteImportJobData } from "@/types";
+import type { PasteImportJobData, FullRecipeInsertDTO } from "@/types";
+import type { Job } from "bullmq";
 
-import { Worker, type Job } from "bullmq";
+import { Worker } from "bullmq";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
@@ -43,7 +45,7 @@ function looksLikeJson(text: string): boolean {
   return t.includes("@context") || t.includes("@graph") || t.includes('"@type"');
 }
 
-function hasStepsAndIngredients(parsed: any): boolean {
+function hasStepsAndIngredients(parsed: FullRecipeInsertDTO): boolean {
   return (
     !!parsed &&
     Array.isArray(parsed.recipeIngredients) &&
@@ -54,7 +56,7 @@ function hasStepsAndIngredients(parsed: any): boolean {
 }
 
 interface ParseResult {
-  recipe: any;
+  recipe: FullRecipeInsertDTO;
   usedAI: boolean;
 }
 
@@ -233,8 +235,10 @@ export function startPasteImportWorker(): void {
   }
 
   worker = new Worker<PasteImportJobData>(QUEUE_NAMES.PASTE_IMPORT, processPasteImportJob, {
-    connection: redisConnection,
-    concurrency: 2,
+    connection: getBullClient(),
+    ...baseWorkerOptions,
+    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.PASTE_IMPORT],
+    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.PASTE_IMPORT],
   });
 
   worker.on("completed", (job) => {
