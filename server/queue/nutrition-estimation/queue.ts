@@ -2,9 +2,10 @@ import type { NutritionEstimationJobData, AddNutritionEstimationJobResult } from
 
 import { Queue } from "bullmq";
 
-import { redisConnection, nutritionEstimationJobOptions, QUEUE_NAMES } from "../config";
+import { nutritionEstimationJobOptions, QUEUE_NAMES } from "../config";
 import { isJobInQueue } from "../helpers";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 
 const log = createLogger("queue:nutrition-estimation");
@@ -12,7 +13,7 @@ const log = createLogger("queue:nutrition-estimation");
 export const nutritionEstimationQueue = new Queue<NutritionEstimationJobData>(
   QUEUE_NAMES.NUTRITION_ESTIMATION,
   {
-    connection: redisConnection,
+    connection: getBullClient(),
     defaultJobOptions: nutritionEstimationJobOptions,
   }
 );

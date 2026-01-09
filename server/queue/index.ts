@@ -1,9 +1,11 @@
 export {
-  redisConnection,
   recipeImportJobOptions,
   caldavSyncJobOptions,
   scheduledTasksJobOptions,
   QUEUE_NAMES,
+  baseWorkerOptions,
+  WORKER_CONCURRENCY,
+  STALLED_INTERVAL,
 } from "./config";
 
 export { generateJobId, isJobInQueue } from "./helpers";

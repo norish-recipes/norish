@@ -7,11 +7,13 @@
  */
 
 import type { AllergyDetectionJobData } from "@/types";
+import type { Job } from "bullmq";
 
-import { Worker, Job } from "bullmq";
+import { Worker } from "bullmq";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
@@ -183,8 +185,10 @@ export function startAllergyDetectionWorker(): void {
     QUEUE_NAMES.ALLERGY_DETECTION,
     processAllergyDetectionJob,
     {
-      connection: redisConnection,
-      concurrency: 3,
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.ALLERGY_DETECTION],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.ALLERGY_DETECTION],
     }
   );
 
@@ -197,7 +201,7 @@ export function startAllergyDetectionWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Allergy detection worker error");
+    log.error({ err: error }, "Allergy detection worker error");
   });
 
   log.info("Allergy detection worker started");

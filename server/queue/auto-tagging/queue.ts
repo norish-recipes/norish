@@ -2,9 +2,10 @@ import type { AutoTaggingJobData, AddAutoTaggingJobResult } from "@/types";
 
 import { Queue } from "bullmq";
 
-import { redisConnection, autoTaggingJobOptions, QUEUE_NAMES } from "../config";
+import { autoTaggingJobOptions, QUEUE_NAMES } from "../config";
 import { isJobInQueue } from "../helpers";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { getAutoTaggingMode } from "@/config/server-config-loader";
 
@@ -14,7 +15,7 @@ const log = createLogger("queue:auto-tagging");
  * Auto-tagging queue instance
  */
 export const autoTaggingQueue = new Queue<AutoTaggingJobData>(QUEUE_NAMES.AUTO_TAGGING, {
-  connection: redisConnection,
+  connection: getBullClient(),
   defaultJobOptions: autoTaggingJobOptions,
 });
 

@@ -9,13 +9,20 @@ import {
   registerConnection,
   unregisterConnection,
   startInvalidationListener,
+  stopInvalidationListener,
 } from "./connection-manager";
 
 import { auth } from "@/server/auth/auth";
 import { trpcLogger } from "@/server/logger";
 
-let trpcWss: WebSocketServer | null = null;
-let trpcHandler: ReturnType<typeof applyWSSHandler> | null = null;
+// Use globalThis to survive HMR in development
+const globalForWs = globalThis as unknown as {
+  trpcWss: WebSocketServer | null;
+  trpcHandler: ReturnType<typeof applyWSSHandler> | null;
+};
+
+let trpcWss = globalForWs.trpcWss ?? null;
+let trpcHandler = globalForWs.trpcHandler ?? null;
 
 export function initTrpcWebSocket(server: Server) {
   if (trpcWss) {
@@ -25,6 +32,7 @@ export function initTrpcWebSocket(server: Server) {
   }
 
   trpcWss = new WebSocketServer({ noServer: true });
+  globalForWs.trpcWss = trpcWss;
 
   trpcHandler = applyWSSHandler({
     wss: trpcWss,
@@ -36,6 +44,7 @@ export function initTrpcWebSocket(server: Server) {
       pongWaitMs: 5000, // Wait 5 seconds for pong before closing
     },
   });
+  globalForWs.trpcHandler = trpcHandler;
 
   server.on("upgrade", async (req, socket, head) => {
     const host = req.headers.host || "localhost";
@@ -89,12 +98,15 @@ export function initTrpcWebSocket(server: Server) {
     trpcLogger.error({ err }, "Failed to start invalidation listener");
   });
 
-  server.on("close", () => {
+  server.on("close", async () => {
     trpcHandler?.broadcastReconnectNotification();
+    await stopInvalidationListener();
     trpcWss?.close();
 
     trpcWss = null;
     trpcHandler = null;
+    globalForWs.trpcWss = null;
+    globalForWs.trpcHandler = null;
   });
 
   trpcLogger.info("WebSocket server started at /trpc");

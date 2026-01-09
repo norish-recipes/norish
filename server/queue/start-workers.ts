@@ -1,7 +1,8 @@
 /**
  * BullMQ Workers Startup
  *
- * Initializes all BullMQ workers for background job processing.
+ * Initializes all BullMQ workers at server boot.
+ * Workers share a Redis connection via the centralized bullmq module.
  */
 
 import {
@@ -25,45 +26,54 @@ import {
   stopScheduledTasksWorker,
 } from "@/server/queue/scheduled-tasks/worker";
 import { initializeScheduledJobs } from "@/server/queue/scheduled-tasks/queue";
+import { closeBullConnection } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 
 const log = createLogger("bullmq");
 
+/**
+ * Start all workers at boot.
+ */
 export async function startWorkers(): Promise<void> {
+  log.info("Starting all BullMQ workers...");
+
+  // Import workers
   startRecipeImportWorker();
-  log.info("Recipe import worker started");
-
   startImageImportWorker();
-  log.info("Image import worker started");
-
   startPasteImportWorker();
-  log.info("Paste import worker started");
 
+  // Background processing workers
   startNutritionEstimationWorker();
-  log.info("Nutrition estimation worker started");
-
   startAutoTaggingWorker();
-  log.info("Auto-tagging worker started");
-
   startAllergyDetectionWorker();
-  log.info("Allergy detection worker started");
-
   startCaldavSyncWorker();
-  log.info("CalDAV sync worker started");
 
+  // Scheduled tasks
   startScheduledTasksWorker();
   await initializeScheduledJobs();
-  log.info("Scheduled tasks worker started");
+
+  log.info("All BullMQ workers started");
 }
 
+/**
+ * Stop all workers gracefully.
+ */
 export async function stopWorkers(): Promise<void> {
-  await stopRecipeImportWorker();
-  await stopImageImportWorker();
-  await stopPasteImportWorker();
-  await stopNutritionEstimationWorker();
-  await stopAutoTaggingWorker();
-  await stopAllergyDetectionWorker();
-  await stopCaldavSyncWorker();
-  await stopScheduledTasksWorker();
+  log.info("Stopping all BullMQ workers...");
+
+  await Promise.all([
+    stopRecipeImportWorker(),
+    stopImageImportWorker(),
+    stopPasteImportWorker(),
+    stopNutritionEstimationWorker(),
+    stopAutoTaggingWorker(),
+    stopAllergyDetectionWorker(),
+    stopCaldavSyncWorker(),
+    stopScheduledTasksWorker(),
+  ]);
+
+  // Close shared Redis connection after all workers are stopped
+  await closeBullConnection();
+
   log.info("All BullMQ workers stopped");
 }

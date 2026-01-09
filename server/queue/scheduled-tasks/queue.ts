@@ -1,7 +1,8 @@
 import { Queue } from "bullmq";
 
-import { redisConnection, scheduledTasksJobOptions, QUEUE_NAMES } from "../config";
+import { scheduledTasksJobOptions, QUEUE_NAMES } from "../config";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 
 const log = createLogger("queue:scheduled-tasks");
@@ -18,7 +19,7 @@ export interface ScheduledTaskJobData {
 }
 
 export const scheduledTasksQueue = new Queue<ScheduledTaskJobData>(QUEUE_NAMES.SCHEDULED_TASKS, {
-  connection: redisConnection,
+  connection: getBullClient(),
   defaultJobOptions: scheduledTasksJobOptions,
 });
 

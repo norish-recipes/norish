@@ -12,8 +12,14 @@ import { createLogger } from "@/server/logger";
 
 const log = createLogger("redis");
 
-let publisherClient: Redis | null = null;
-let connectionPromise: Promise<Redis> | null = null;
+// Use globalThis to survive HMR in development
+const globalForRedis = globalThis as unknown as {
+  publisherClient: Redis | null;
+  connectionPromise: Promise<Redis> | null;
+};
+
+let publisherClient = globalForRedis.publisherClient ?? null;
+let connectionPromise = globalForRedis.connectionPromise ?? null;
 
 /**
  * Get the publisher client (singleton).
@@ -30,13 +36,16 @@ export async function getPublisherClient(): Promise<Redis> {
   }
 
   connectionPromise = connectPublisher();
+  globalForRedis.connectionPromise = connectionPromise;
 
   try {
     publisherClient = await connectionPromise;
+    globalForRedis.publisherClient = publisherClient;
 
     return publisherClient;
   } finally {
     connectionPromise = null;
+    globalForRedis.connectionPromise = null;
   }
 }
 
@@ -89,6 +98,7 @@ export async function closeRedisConnections(): Promise<void> {
     log.info("Closing Redis connections");
     await publisherClient.quit();
     publisherClient = null;
+    globalForRedis.publisherClient = null;
   }
 }
 

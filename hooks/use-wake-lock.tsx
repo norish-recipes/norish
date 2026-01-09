@@ -18,6 +18,7 @@ export function useWakeLock(): UseWakeLockReturn {
   const [isSupported, setIsSupported] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const releaseHandlerRef = useRef<(() => void) | null>(null);
 
   // Check browser support on mount
   useEffect(() => {
@@ -37,11 +38,16 @@ export function useWakeLock(): UseWakeLockReturn {
       setIsActive(true);
       logger.info("Wake lock activated");
 
-      // Listen for wake lock release
-      wakeLockRef.current.addEventListener("release", () => {
+      // Create handler and store reference for cleanup
+      const handleRelease = () => {
         logger.info("Wake lock released");
         setIsActive(false);
-      });
+      };
+
+      releaseHandlerRef.current = handleRelease;
+
+      // Listen for wake lock release
+      wakeLockRef.current.addEventListener("release", handleRelease);
     } catch (err) {
       logger.error(err, "Failed to activate wake lock");
       setIsActive(false);
@@ -50,6 +56,11 @@ export function useWakeLock(): UseWakeLockReturn {
 
   const disable = useCallback(() => {
     if (wakeLockRef.current) {
+      // Remove event listener before release
+      if (releaseHandlerRef.current) {
+        wakeLockRef.current.removeEventListener("release", releaseHandlerRef.current);
+        releaseHandlerRef.current = null;
+      }
       wakeLockRef.current.release();
       wakeLockRef.current = null;
       setIsActive(false);
@@ -84,6 +95,11 @@ export function useWakeLock(): UseWakeLockReturn {
   useEffect(() => {
     return () => {
       if (wakeLockRef.current) {
+        // Remove event listener before release
+        if (releaseHandlerRef.current) {
+          wakeLockRef.current.removeEventListener("release", releaseHandlerRef.current);
+          releaseHandlerRef.current = null;
+        }
         wakeLockRef.current.release();
         wakeLockRef.current = null;
       }

@@ -8,9 +8,10 @@ import type { CaldavSyncJobData } from "@/types";
 
 import { Queue, Job } from "bullmq";
 
-import { redisConnection, caldavSyncJobOptions, QUEUE_NAMES } from "../config";
+import { caldavSyncJobOptions, QUEUE_NAMES } from "../config";
 import { sanitizeUrlForJobId } from "../helpers";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 
 const log = createLogger("queue:caldav-sync");
@@ -19,7 +20,7 @@ const log = createLogger("queue:caldav-sync");
  * CalDAV sync queue instance
  */
 export const caldavSyncQueue = new Queue<CaldavSyncJobData>(QUEUE_NAMES.CALDAV_SYNC, {
-  connection: redisConnection,
+  connection: getBullClient(),
   defaultJobOptions: caldavSyncJobOptions,
 });
 

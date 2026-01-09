@@ -2,9 +2,10 @@ import type { RecipeImportJobData, AddImportJobResult } from "@/types";
 
 import { Queue } from "bullmq";
 
-import { redisConnection, recipeImportJobOptions, QUEUE_NAMES } from "../config";
+import { recipeImportJobOptions, QUEUE_NAMES } from "../config";
 import { generateJobId, isJobInQueue } from "../helpers";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
 import { recipeExistsByUrlForPolicy } from "@/server/db";
@@ -15,7 +16,7 @@ const log = createLogger("queue:recipe-import");
  * Recipe import queue instance
  */
 export const recipeImportQueue = new Queue<RecipeImportJobData>(QUEUE_NAMES.RECIPE_IMPORT, {
-  connection: redisConnection,
+  connection: getBullClient(),
   defaultJobOptions: recipeImportJobOptions,
 });
 

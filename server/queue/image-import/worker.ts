@@ -6,11 +6,13 @@
  */
 
 import type { ImageImportJobData } from "@/types";
+import type { Job } from "bullmq";
 
-import { Worker, Job } from "bullmq";
+import { Worker } from "bullmq";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
@@ -134,8 +136,10 @@ export function startImageImportWorker(): void {
   }
 
   worker = new Worker<ImageImportJobData>(QUEUE_NAMES.IMAGE_IMPORT, processImageImportJob, {
-    connection: redisConnection,
-    concurrency: 2, // Lower concurrency due to heavier AI load
+    connection: getBullClient(),
+    ...baseWorkerOptions,
+    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.IMAGE_IMPORT],
+    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.IMAGE_IMPORT],
   });
 
   worker.on("completed", (job) => {
@@ -147,7 +151,7 @@ export function startImageImportWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Image import worker error");
+    log.error({ err: error }, "Image import worker error");
   });
 
   log.info("Image import worker started");

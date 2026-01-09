@@ -6,11 +6,13 @@
  */
 
 import type { RecipeImportJobData } from "@/types";
+import type { Job } from "bullmq";
 
-import { Worker, Job } from "bullmq";
+import { Worker } from "bullmq";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
@@ -189,8 +191,10 @@ export function startRecipeImportWorker(): void {
   }
 
   worker = new Worker<RecipeImportJobData>(QUEUE_NAMES.RECIPE_IMPORT, processImportJob, {
-    connection: redisConnection,
-    concurrency: 5, // I am not sure if this is a good value
+    connection: getBullClient(),
+    ...baseWorkerOptions,
+    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.RECIPE_IMPORT],
+    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.RECIPE_IMPORT],
   });
 
   worker.on("completed", (job) => {
@@ -202,7 +206,7 @@ export function startRecipeImportWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Recipe import worker error");
+    log.error({ err: error }, "Recipe import worker error");
   });
 
   log.info("Recipe import worker started");
