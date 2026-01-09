@@ -226,12 +226,12 @@ Automatically assign server admin roles and household memberships based on OIDC 
 - **Admin Role Assignment**: Users with the configured admin group (default: `norish_admin`) are granted server admin privileges. This is synced on every login - removing the group revokes admin on next login.
 - **Household Auto-Join**: Users with a household group (default prefix: `norish_household_<your_household_name>`) are automatically joined to that household on first login. If the household doesn't exist, it's created with the user as admin.
 
-| Setting                       | Description                                          | Default             |
-| ----------------------------- | ---------------------------------------------------- | ------------------- |
-| `OIDC_CLAIM_MAPPING_ENABLED`  | Enable claim-based role/household assignment         | `false`             |
-| `OIDC_SCOPES`                 | Additional OAuth scopes to request (comma-separated) | (empty)             |
-| `OIDC_GROUPS_CLAIM`           | Claim name containing user groups                    | `groups`            |
-| `OIDC_ADMIN_GROUP`            | Group name that grants admin role                    | `norish_admin`      |
+| Setting                       | Description                                          | Default                                  |
+| ----------------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| `OIDC_CLAIM_MAPPING_ENABLED`  | Enable claim-based role/household assignment         | `false`                                  |
+| `OIDC_SCOPES`                 | Additional OAuth scopes to request (comma-separated) | (empty)                                  |
+| `OIDC_GROUPS_CLAIM`           | Claim name containing user groups                    | `groups`                                 |
+| `OIDC_ADMIN_GROUP`            | Group name that grants admin role                    | `norish_admin`                           |
 | `OIDC_HOUSEHOLD_GROUP_PREFIX` | Prefix for household group names                     | `norish_household_<your_household_name>` |
 
 **Example**: With claim mapping enabled and default settings, a user with groups `["norish_admin", "norish_household_smiths"]` would:
