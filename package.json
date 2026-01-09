@@ -135,9 +135,12 @@
     "ws": "8.18.3",
     "zustand": "5.0.9"
   },
-  "overrides": {
-    "zod": "4.3.5",
-    "@types/react": "19.2.7",
-    "@types/react-dom": "19.2.3"
+  "pnpm": {
+    "overrides": {
+      "zod": "4.3.5",
+      "@types/react": "19.2.7",
+      "@types/react-dom": "19.2.3",
+      "ioredis": "^5.9.1"
+    }
   }
 }
