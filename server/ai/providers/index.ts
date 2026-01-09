@@ -1,7 +1,7 @@
 /**
  * AI Providers module.
  *
- * Manages AI model creation, capabilities detection, and model listing
+ * Manages AI model creation and model listing
  * across different providers (OpenAI, Ollama, LM Studio, Perplexity, etc.).
  */
 
@@ -16,9 +16,6 @@ export type {
 
 // Factory - create model instances
 export { getModels, createModelsFromConfig, getGenerationSettings } from "./factory";
-
-// Capabilities - query what models can do
-export { getModelCapabilities } from "./capabilities";
 
 // Listing - discover available models
 export {

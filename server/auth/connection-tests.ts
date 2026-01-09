@@ -122,10 +122,15 @@ export async function testAIEndpoint(config: {
       testUrl = "https://api.openai.com/v1/models";
       break;
     case "azure":
-      // Azure uses deployment-specific endpoints, but we can test the base API
-      // If endpoint is provided, use it; otherwise we can't really test without knowing the resource URL
       if (config.endpoint) {
-        testUrl = `${config.endpoint.replace(/\/$/, "")}/openai/models?api-version=2024-02-01`;
+        let baseUrl = config.endpoint.replace(/\/+$/, "");
+
+        // Ensure /openai path is included
+        if (!baseUrl.endsWith("/openai")) {
+          baseUrl = `${baseUrl}/openai`;
+        }
+
+        testUrl = `${baseUrl}/models?api-version=2024-02-01`;
       } else {
         // Without an endpoint, we can only validate that an API key was provided
         if (!config.apiKey) {

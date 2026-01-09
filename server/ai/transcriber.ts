@@ -159,8 +159,21 @@ async function transcribeWithAzure(
   endpoint?: string
 ): Promise<AIResult<string>> {
   logStart("Azure", audioPath, model, { endpoint });
+  let azure;
 
-  const azure = endpoint ? createAzure({ apiKey, baseURL: endpoint }) : createAzure({ apiKey });
+  if (endpoint) {
+    let baseUrl = endpoint.replace(/\/+$/, "");
+
+    // Ensure /openai path is included for SDK compatibility
+    if (!baseUrl.endsWith("/openai")) {
+      baseUrl = `${baseUrl}/openai`;
+    }
+
+    azure = createAzure({ apiKey, baseURL: baseUrl });
+  } else {
+    azure = createAzure({ apiKey });
+  }
+
   const audioData = await readFile(audioPath);
 
   const result = await transcribe({

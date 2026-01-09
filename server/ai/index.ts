@@ -49,14 +49,13 @@ export {
 } from "./core/types";
 
 // ============================================================================
-// Providers - Model creation and capabilities
+// Providers - Model creation and listing
 // ============================================================================
 
 export {
   getModels,
   createModelsFromConfig,
   getGenerationSettings,
-  getModelCapabilities,
   listModels,
   listOllamaModels,
   listOpenAICompatibleModels,

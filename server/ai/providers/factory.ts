@@ -120,9 +120,20 @@ export function createModelsFromConfig(config: {
     case "azure": {
       if (!apiKey) throw new Error("API Key is required for Azure OpenAI provider");
 
-      // Azure uses deployment names as model identifiers
-      // The endpoint should be the Azure resource URL (e.g., https://your-resource.openai.azure.com)
-      const azure = endpoint ? createAzure({ apiKey, baseURL: endpoint }) : createAzure({ apiKey });
+      let azure;
+
+      if (endpoint) {
+        let baseUrl = endpoint.replace(/\/+$/, "");
+
+        // Ensure /openai path is included for SDK compatibility
+        if (!baseUrl.endsWith("/openai")) {
+          baseUrl = `${baseUrl}/openai`;
+        }
+
+        azure = createAzure({ apiKey, baseURL: baseUrl });
+      } else {
+        azure = createAzure({ apiKey });
+      }
 
       return {
         model: azure(model),
