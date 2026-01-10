@@ -161,23 +161,24 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
       }
     });
 
-    // Measure width
+    // Update measurements on mount only (resize handled by CSS)
     useEffect(() => {
+      const el = swipeItemRef.current;
+
+      if (!el) return;
+
       const measure = () => {
-        const w = swipeItemRef.current?.getBoundingClientRect().width;
+        const w = el.getBoundingClientRect().width;
 
         if (w) {
           swipeItemWidth.current = w;
           buttonSize.current = calculateButtonSize(rowHeight);
           actionsWidthPx.current = calculateActionsWidth(actions.length, buttonSize.current);
-          setDragConstraints({ left: -w, right: 0 });
+          setDragConstraints((prev) => (prev.left === -w ? prev : { left: -w, right: 0 }));
         }
       };
 
       measure();
-      window.addEventListener("resize", measure);
-
-      return () => window.removeEventListener("resize", measure);
     }, [actions.length, rowHeight]);
 
     // Close on outside click / any scroll

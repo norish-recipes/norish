@@ -11,6 +11,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     recipes: {
       list: {
+        queryKey: () => [["recipes", "list"], { input: {}, type: "query" }],
         infiniteQueryOptions: () => ({
           queryKey: ["recipes", "list", {}],
           queryFn: async () => ({ recipes: [], total: 0, nextCursor: null }),
@@ -18,18 +19,21 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         }),
       },
       getPending: {
+        queryKey: () => [["recipes", "getPending"], { type: "query" }],
         queryOptions: () => ({
           queryKey: ["recipes", "getPending"],
           queryFn: async () => [],
         }),
       },
       getPendingAutoTagging: {
+        queryKey: () => [["recipes", "getPendingAutoTagging"], { type: "query" }],
         queryOptions: () => ({
           queryKey: ["recipes", "getPendingAutoTagging"],
           queryFn: async () => [],
         }),
       },
       getPendingAllergyDetection: {
+        queryKey: () => [["recipes", "getPendingAllergyDetection"], { type: "query" }],
         queryOptions: () => ({
           queryKey: ["recipes", "getPendingAllergyDetection"],
           queryFn: async () => [],

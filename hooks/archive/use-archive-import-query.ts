@@ -4,12 +4,10 @@ import type { ArchiveImportError, ArchiveSkippedItem } from "@/types/uploads";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { ARCHIVE_IMPORT_KEY } from "./use-archive-cache";
 import { createClientLogger } from "@/lib/logger";
 
 const log = createClientLogger("ArchiveImport");
-
-// Single query key for the active import
-const ARCHIVE_IMPORT_KEY = ["archive-import"] as const;
 
 type ArchiveImportState = {
   current: number;

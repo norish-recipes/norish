@@ -19,24 +19,19 @@ import { formatMinutesHM } from "@/lib/helpers";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useAppStore } from "@/store/useAppStore";
 import { usePermissionsContext } from "@/context/permissions-context";
-import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
-import { useActiveAllergies } from "@/hooks/user";
 
 function RecipeCardComponent({ recipe }: { recipe: RecipeDashboardDTO }) {
   const router = useRouter();
   const rowRef = useRef<SwipeableRowRef>(null);
-  const { mobileSearchOpen } = useAppStore((s) => s);
-  const { deleteRecipe } = useRecipesContext();
+  const mobileSearchOpen = useAppStore((s) => s.mobileSearchOpen);
+  const { deleteRecipe, isFavorite, toggleFavorite, allergies } = useRecipesContext();
   const { canDeleteRecipe } = usePermissionsContext();
-  const { isFavorite: checkFavorite } = useFavoritesQuery();
-  const { toggleFavorite } = useFavoritesMutation();
-  const { allergies } = useActiveAllergies();
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [groceriesOpen, setGroceriesOpen] = useState(false);
   const t = useTranslations("recipes.card");
 
-  const isFavorite = checkFavorite(recipe.id);
+  const recipeIsFavorite = isFavorite(recipe.id);
   const averageRating = recipe.averageRating ?? null;
 
   const handleNavigate = useCallback(() => {
@@ -160,7 +155,7 @@ function RecipeCardComponent({ recipe }: { recipe: RecipeDashboardDTO }) {
                 {/* top meta data */}
                 <RecipeMetadata
                   averageRating={averageRating}
-                  isFavorite={isFavorite}
+                  isFavorite={recipeIsFavorite}
                   servings={servings}
                   timeLabel={timeLabel}
                   onOptionsPress={() => {

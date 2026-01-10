@@ -133,12 +133,26 @@ export async function* mergeAsyncIterables<T>(
   const iterators = iterables.map((it) => it[Symbol.asyncIterator]());
   const pending = new Map<number, Promise<{ index: number; result: IteratorResult<T> }>>();
 
+  // Helper to schedule next() on microtask queue to prevent synchronous promise chain buildup.
+  const scheduleNext = (idx: number) => {
+    // Guard against scheduling after abort to avoid dangling microtasks after teardown
+    if (signal?.aborted) return;
+
+    pending.set(
+      idx,
+      new Promise((resolve) => {
+        queueMicrotask(() => {
+          // Double-check abort inside microtask since signal may have changed
+          if (signal?.aborted) return;
+          iterators[idx].next().then((result) => resolve({ index: idx, result }));
+        });
+      })
+    );
+  };
+
   // Start all iterators
   for (let i = 0; i < iterators.length; i++) {
-    pending.set(
-      i,
-      iterators[i].next().then((result) => ({ index: i, result }))
-    );
+    scheduleNext(i);
   }
 
   try {
@@ -151,10 +165,7 @@ export async function* mergeAsyncIterables<T>(
         pending.delete(index);
       } else {
         yield result.value;
-        pending.set(
-          index,
-          iterators[index].next().then((r) => ({ index, result: r }))
-        );
+        scheduleNext(index);
       }
     }
   } finally {

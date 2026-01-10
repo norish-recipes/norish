@@ -4,6 +4,7 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 export default withNextIntl({
   output: "standalone",
+  productionBrowserSourceMaps: false,
   allowedDevOrigins: ["localhost", "192.168.2.13"],
   devIndicators: false,
   serverExternalPackages: [

@@ -100,10 +100,9 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   }),
 }));
 
-// Mock the query hook
-vi.mock("@/hooks/calendar/use-calendar-query", () => ({
-  useCalendarQuery: () => ({
-    calendarData: {},
+// Mock the cache helpers hook
+vi.mock("@/hooks/calendar/use-calendar-cache", () => ({
+  useCalendarCacheHelpers: () => ({
     setCalendarData: mockSetCalendarData,
     removeRecipeFromCache: mockRemoveRecipeFromCache,
     updateRecipeInCache: mockUpdateRecipeInCache,
@@ -131,7 +130,7 @@ describe("useCalendarSubscription", () => {
   // Helper to render the hook and capture subscription callbacks
   function renderSubscriptionHook() {
     const { renderHook } = require("@testing-library/react");
-    const { result } = renderHook(() => useCalendarSubscription("2025-01-01", "2025-01-31"), {
+    const { result } = renderHook(() => useCalendarSubscription(), {
       wrapper: createTestWrapper(queryClient),
     });
 

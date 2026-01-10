@@ -36,6 +36,7 @@ export function createMockTrpcClient() {
   return {
     recipes: {
       list: {
+        queryKey: vi.fn(() => [["recipes", "list"], { input: {}, type: "query" }]),
         infiniteQueryOptions: vi.fn(() => ({
           queryKey: ["recipes", "list", {}],
           queryFn: vi.fn(),
@@ -47,6 +48,27 @@ export function createMockTrpcClient() {
         queryOptions: vi.fn(() => ({
           queryKey: ["recipes", "get"],
           queryFn: vi.fn(),
+        })),
+      },
+      getPending: {
+        queryKey: vi.fn(() => [["recipes", "getPending"], { type: "query" }]),
+        queryOptions: vi.fn(() => ({
+          queryKey: [["recipes", "getPending"], { type: "query" }],
+          queryFn: vi.fn(() => []),
+        })),
+      },
+      getPendingAutoTagging: {
+        queryKey: vi.fn(() => [["recipes", "getPendingAutoTagging"], { type: "query" }]),
+        queryOptions: vi.fn(() => ({
+          queryKey: [["recipes", "getPendingAutoTagging"], { type: "query" }],
+          queryFn: vi.fn(() => []),
+        })),
+      },
+      getPendingAllergyDetection: {
+        queryKey: vi.fn(() => [["recipes", "getPendingAllergyDetection"], { type: "query" }]),
+        queryOptions: vi.fn(() => ({
+          queryKey: [["recipes", "getPendingAllergyDetection"], { type: "query" }],
+          queryFn: vi.fn(() => []),
         })),
       },
       importFromUrl: {
@@ -93,6 +115,24 @@ export function createMockTrpcClient() {
         subscriptionOptions: vi.fn(),
       },
       onFailed: {
+        subscriptionOptions: vi.fn(),
+      },
+      onAutoTaggingStarted: {
+        subscriptionOptions: vi.fn(),
+      },
+      onAutoTaggingCompleted: {
+        subscriptionOptions: vi.fn(),
+      },
+      onAllergyDetectionStarted: {
+        subscriptionOptions: vi.fn(),
+      },
+      onAllergyDetectionCompleted: {
+        subscriptionOptions: vi.fn(),
+      },
+      onProcessingToast: {
+        subscriptionOptions: vi.fn(),
+      },
+      onRecipeBatchCreated: {
         subscriptionOptions: vi.fn(),
       },
     },

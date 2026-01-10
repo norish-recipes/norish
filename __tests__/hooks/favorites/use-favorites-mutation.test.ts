@@ -8,6 +8,9 @@ const mockMutationOptions = vi.fn();
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     favorites: {
+      list: {
+        queryKey: () => mockQueryKey,
+      },
       toggle: {
         mutationOptions: (opts: unknown) => {
           mockMutationOptions(opts);

@@ -8,6 +8,9 @@ import { useMemo, useCallback } from "react";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 
+// Prefix for combined calendar queries (local-only, not tRPC)
+const CALENDAR_COMBINED_PREFIX = ["calendar", "combined"] as const;
+
 export type CalendarData = Record<string, CalendarItemViewDto[]>;
 
 export type CalendarQueryResult = {
@@ -32,7 +35,7 @@ export function useCalendarQuery(startISO: string, endISO: string): CalendarQuer
   const recipesQueryKey = trpc.calendar.listRecipes.queryKey({ startISO, endISO });
   const notesQueryKey = trpc.calendar.listNotes.queryKey({ startISO, endISO });
   const combinedQueryKey = useMemo(
-    () => ["calendar", "combined", startISO, endISO],
+    () => [...CALENDAR_COMBINED_PREFIX, startISO, endISO],
     [startISO, endISO]
   );
 

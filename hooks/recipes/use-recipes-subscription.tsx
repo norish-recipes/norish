@@ -1,7 +1,6 @@
 "use client";
 
 import type { RecipeDashboardDTO, FullRecipeDTO } from "@/types";
-import type { InfiniteData } from "@tanstack/react-query";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,30 +8,25 @@ import { addToast, Button } from "@heroui/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-import { useRecipesQuery } from "./use-recipes-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { createClientLogger } from "@/lib/logger";
+import { useRecipesCacheHelpers, type InfiniteRecipeData } from "./use-recipes-cache";
 
 const log = createClientLogger("recipes-subscription");
-
-type InfiniteRecipeData = InfiniteData<{
-  recipes: RecipeDashboardDTO[];
-  total: number;
-  nextCursor: number | null;
-}>;
 
 /**
  * Hook that subscribes to all recipe-related WebSocket events
  * and updates the query cache accordingly.
  *
- * State hydration for pending recipes and auto-tagging happens automatically
- * via useRecipesQuery -> usePendingRecipesQuery/useAutoTaggingQuery.
+ * Uses useRecipesCacheHelpers internally to get cache manipulation functions
+ * WITHOUT creating query observers - this prevents the recursion issue.
  */
 export function useRecipesSubscription() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const t = useTranslations("recipes.toasts");
+
+  // Get cache helpers - these don't create query observers, so no recursion
   const {
     setAllRecipesData,
     invalidate,
@@ -42,7 +36,7 @@ export function useRecipesSubscription() {
     removeAutoTaggingRecipe,
     addAllergyDetectionRecipe,
     removeAllergyDetectionRecipe,
-  } = useRecipesQuery();
+  } = useRecipesCacheHelpers();
 
   const addRecipeToList = (recipe: RecipeDashboardDTO) => {
     setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
@@ -97,12 +91,10 @@ export function useRecipesSubscription() {
     });
   };
 
-  // Helper to remove a recipe from the list
   const removeRecipeFromList = (id: string) => {
     setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
       if (!prev?.pages) return prev;
 
-      // Check if recipe exists in any page before modifying
       const recipeExists = prev.pages.some((page) => page.recipes.some((r) => r.id === id));
 
       if (!recipeExists) return prev;
@@ -149,14 +141,11 @@ export function useRecipesSubscription() {
           { recipeId: payload.recipe.id, pendingRecipeId: payload.pendingRecipeId },
           "[onImported] Received"
         );
-        // Remove pending skeleton - use pendingRecipeId if provided (duplicate case),
-        // otherwise use the recipe id
         const pendingId = payload.pendingRecipeId ?? payload.recipe.id;
 
         removePendingRecipe(pendingId);
         addRecipeToList(payload.recipe);
 
-        // Only show toast if backend indicates no processing will follow
         if (payload.toast === "imported") {
           addToast({
             severity: "success",
@@ -186,12 +175,9 @@ export function useRecipesSubscription() {
       onData: (payload) => {
         log.info({ recipeId: payload.recipe.id }, "[onUpdated] Received");
         updateRecipeInList(payload.recipe);
-        // Note: Completion toasts are now handled by dedicated onAutoTaggingCompleted/onAllergyDetectionCompleted subscriptions
-        // Also invalidate the single recipe query if it's cached
         queryClient.invalidateQueries({
           queryKey: [["recipes", "get"], { input: { id: payload.recipe.id }, type: "query" }],
         });
-
         queryClient.invalidateQueries({ queryKey: [["calendar", "listRecipes"]] });
       },
       onError: (err) => log.error({ err }, "[onUpdated] Error"),
@@ -204,7 +190,6 @@ export function useRecipesSubscription() {
       onData: (payload) => {
         log.info({ recipeId: payload.id }, "[onDeleted] Received");
         removeRecipeFromList(payload.id);
-        // Also invalidate the single recipe query if it's cached
         queryClient.invalidateQueries({
           queryKey: [["recipes", "get"], { input: { id: payload.id }, type: "query" }],
         });
@@ -219,7 +204,6 @@ export function useRecipesSubscription() {
       onData: (payload) => {
         log.info({ recipeId: payload.recipe.id }, "[onConverted] Received");
         updateRecipeInList(payload.recipe);
-        // Also invalidate the single recipe query if it's cached
         queryClient.invalidateQueries({
           queryKey: [["recipes", "get"], { input: { id: payload.recipe.id }, type: "query" }],
         });
@@ -241,15 +225,12 @@ export function useRecipesSubscription() {
     trpc.recipes.onFailed.subscriptionOptions(undefined, {
       onData: (payload) => {
         log.info({ reason: payload.reason, recipeId: payload.recipeId }, "[onFailed] Received");
-        // Remove from pending if it was a pending recipe
         if (payload.recipeId) {
           removePendingRecipe(payload.recipeId);
-          // Also remove from auto-tagging and allergy detection sets in case it was a processing failure
           removeAutoTaggingRecipe(payload.recipeId);
           removeAllergyDetectionRecipe(payload.recipeId);
         }
 
-        // Invalidate to get correct state
         invalidate();
 
         addToast({
@@ -267,7 +248,7 @@ export function useRecipesSubscription() {
     })
   );
 
-  // onAutoTaggingStarted - Auto-tagging job started (show skeleton on dashboard)
+  // onAutoTaggingStarted
   useSubscription(
     trpc.recipes.onAutoTaggingStarted.subscriptionOptions(undefined, {
       onData: (payload) => {
@@ -278,7 +259,7 @@ export function useRecipesSubscription() {
     })
   );
 
-  // onAllergyDetectionStarted - Allergy detection job started
+  // onAllergyDetectionStarted
   useSubscription(
     trpc.recipes.onAllergyDetectionStarted.subscriptionOptions(undefined, {
       onData: (payload) => {
@@ -289,7 +270,7 @@ export function useRecipesSubscription() {
     })
   );
 
-  // onAutoTaggingCompleted - Auto-tagging job completed
+  // onAutoTaggingCompleted
   useSubscription(
     trpc.recipes.onAutoTaggingCompleted.subscriptionOptions(undefined, {
       onData: (payload) => {
@@ -300,7 +281,7 @@ export function useRecipesSubscription() {
     })
   );
 
-  // onAllergyDetectionCompleted - Allergy detection job completed
+  // onAllergyDetectionCompleted
   useSubscription(
     trpc.recipes.onAllergyDetectionCompleted.subscriptionOptions(undefined, {
       onData: (payload) => {
@@ -311,7 +292,7 @@ export function useRecipesSubscription() {
     })
   );
 
-  // onProcessingToast - Show toast with i18n key sent from backend
+  // onProcessingToast
   useSubscription(
     trpc.recipes.onProcessingToast.subscriptionOptions(undefined, {
       onData: (payload) => {
@@ -341,14 +322,12 @@ export function useRecipesSubscription() {
     })
   );
 
-  // onRecipeBatchCreated - Bulk recipe creation (archive imports)
-  // Note: Toast is handled by onArchiveCompleted subscription in use-archive-import-subscription.ts
+  // onRecipeBatchCreated
   useSubscription(
     trpc.recipes.onRecipeBatchCreated.subscriptionOptions(undefined, {
       onData: (payload) => {
         log.info({ count: payload.recipes.length }, "[onRecipeBatchCreated] Received");
 
-        // Add all recipes from the batch to the list
         setAllRecipesData(
           (prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
             if (!prev?.pages?.length) {
@@ -361,8 +340,6 @@ export function useRecipesSubscription() {
             }
 
             const firstPage = prev.pages[0];
-
-            // Filter out any recipes that already exist
             const existingIds = new Set(firstPage.recipes.map((r) => r.id));
             const newRecipes = payload.recipes.filter((r) => !existingIds.has(r.id));
 

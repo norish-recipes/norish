@@ -10,6 +10,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     favorites: {
       list: {
+        queryKey: () => mockQueryKey,
         queryOptions: () => mockQueryOptions(),
       },
     },

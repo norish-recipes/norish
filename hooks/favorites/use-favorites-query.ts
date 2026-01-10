@@ -7,6 +7,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 export function useFavoritesQuery() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const queryKey = trpc.favorites.list.queryKey();
 
   const query = useQuery(trpc.favorites.list.queryOptions());
 
@@ -17,7 +18,7 @@ export function useFavoritesQuery() {
   };
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: [["favorites", "list"]] });
+    queryClient.invalidateQueries({ queryKey });
   };
 
   return {

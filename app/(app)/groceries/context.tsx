@@ -104,7 +104,7 @@ export function GroceriesContextProvider({ children }: { children: ReactNode }) 
     useGroceriesQuery();
   const groceryMutations = useGroceriesMutations();
 
-  // Subscribe to WebSocket events (updates query cache)
+  // Subscribe to WebSocket events (updates query cache via internal cache helpers)
   useGroceriesSubscription();
 
   // UI State

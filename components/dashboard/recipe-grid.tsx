@@ -17,21 +17,21 @@ import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 
 const ListComponent = React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(
   ({ style, ...props }, ref) => (
-    <div ref={ref} {...props} className="flex flex-wrap gap-4" style={{ ...style }} />
+    <div ref={ref} {...props} className="flex flex-wrap" style={{ ...style }} />
   )
 );
 
 ListComponent.displayName = "ListComponent";
 
 const ItemComponent = React.memo((props: React.HTMLProps<HTMLDivElement>) => (
-  <div {...props} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]" />
+  <div {...props} className="w-full p-2 sm:w-1/2 lg:w-1/4" />
 ));
 
 ItemComponent.displayName = "ItemComponent";
 
 // Placeholder shown during fast scrolling to reduce flicker
 const ScrollSeekPlaceholder = React.memo(() => (
-  <div className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]">
+  <div className="w-full p-2 sm:w-1/2 lg:w-1/4">
     <RecipeCardSkeleton />
   </div>
 ));
@@ -206,10 +206,10 @@ export default function RecipeGrid() {
             computeItemKey={computeItemKey}
             data={displayData}
             endReached={loadMore}
-            increaseViewportBy={{ top: 400, bottom: 400 }}
+            increaseViewportBy={{ top: 100, bottom: 100 }}
             initialTopMostItemIndex={initialTopMostItemIndex}
             itemContent={itemContent}
-            overscan={1200}
+            overscan={200}
             rangeChanged={handleRangeChanged}
             scrollSeekConfiguration={scrollSeekConfiguration}
           />

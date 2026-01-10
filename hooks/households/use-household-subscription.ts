@@ -3,20 +3,23 @@
 import type { HouseholdAdminSettingsDto } from "@/types/dto/household";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
-import { useQueryClient } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
 
-import { useHouseholdQuery } from "./use-household-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useUser } from "@/hooks/use-user";
+import { useHouseholdCacheHelpers } from "./use-household-cache";
 
 /**
- * Hook that subscribes to all household-related WebSocket events
+ * Hook that subscribes to all household-related WebSocket events.
+ *
+ * Uses internal cache helpers and useUser for current user ID.
+ * No props required.
  */
 export function useHouseholdSubscription() {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const { setHouseholdData, invalidate, currentUserId } = useHouseholdQuery();
+  const { user } = useUser();
+  const currentUserId = user?.id;
+  const { setHouseholdData, invalidate, invalidateCalendar } = useHouseholdCacheHelpers();
 
   // onCreated user-scoped: when current user creates or joins a household
   useSubscription(
@@ -217,7 +220,7 @@ export function useHouseholdSubscription() {
         });
 
         // Invalidate calendar to recompute allergy warnings
-        queryClient.invalidateQueries({ queryKey: [["calendar", "listRecipes"]] });
+        invalidateCalendar();
       },
     })
   );

@@ -12,14 +12,17 @@ import {
 // Track subscription callbacks
 const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefined> = {};
 
+// Define query keys to match mock format
+const householdQueryKey = [["households", "get"], { type: "query" }];
+
 // Mock tRPC provider
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     households: {
       get: {
-        queryKey: () => ["households", "get"],
+        queryKey: () => [["households", "get"], { type: "query" }],
         queryOptions: () => ({
-          queryKey: ["households", "get"],
+          queryKey: [["households", "get"], { type: "query" }],
           queryFn: async () => createMockHouseholdData(),
         }),
       },
@@ -87,6 +90,11 @@ vi.mock("@/app/providers/trpc-provider", () => ({
         }),
       },
     },
+    calendar: {
+      listRecipes: {
+        queryKey: () => [["calendar", "listRecipes"], { type: "query" }],
+      },
+    },
   }),
 }));
 
@@ -121,7 +129,7 @@ describe("useHouseholdSubscription", () => {
     it("sets up all subscription handlers", async () => {
       const initialData = createMockHouseholdData(null, "current-user");
 
-      queryClient.setQueryData(["households", "get"], initialData);
+      queryClient.setQueryData(householdQueryKey, initialData);
 
       const { useHouseholdSubscription } =
         await import("@/hooks/households/use-household-subscription");
@@ -141,7 +149,7 @@ describe("useHouseholdSubscription", () => {
     it("updates cache with new household data", async () => {
       const initialData = createMockHouseholdData(null, "current-user");
 
-      queryClient.setQueryData(["households", "get"], initialData);
+      queryClient.setQueryData(householdQueryKey, initialData);
 
       const { useHouseholdSubscription } =
         await import("@/hooks/households/use-household-subscription");
@@ -171,7 +179,7 @@ describe("useHouseholdSubscription", () => {
       });
       const initialData = createMockHouseholdData(initialHousehold, "user-1");
 
-      queryClient.setQueryData(["households", "get"], initialData);
+      queryClient.setQueryData(householdQueryKey, initialData);
 
       const { useHouseholdSubscription } =
         await import("@/hooks/households/use-household-subscription");
@@ -200,7 +208,7 @@ describe("useHouseholdSubscription", () => {
       });
       const initialData = createMockHouseholdData(initialHousehold, "user-1");
 
-      queryClient.setQueryData(["households", "get"], initialData);
+      queryClient.setQueryData(householdQueryKey, initialData);
 
       const { useHouseholdSubscription } =
         await import("@/hooks/households/use-household-subscription");
@@ -224,7 +232,7 @@ describe("useHouseholdSubscription", () => {
       const initialHousehold = createMockHouseholdSettings({ id: "h1" });
       const initialData = createMockHouseholdData(initialHousehold, "current-user");
 
-      queryClient.setQueryData(["households", "get"], initialData);
+      queryClient.setQueryData(householdQueryKey, initialData);
 
       const { useHouseholdSubscription } =
         await import("@/hooks/households/use-household-subscription");

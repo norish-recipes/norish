@@ -35,3 +35,6 @@ export {
   useCaldavItemStatusSubscription,
   useCaldavSyncCompleteSubscription,
 } from "./use-caldav-subscription";
+
+// Cache Helpers
+export { useCaldavCacheHelpers, type CaldavCacheHelpers } from "./use-caldav-cache";

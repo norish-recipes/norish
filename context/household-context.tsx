@@ -18,6 +18,7 @@ const HouseholdContext = createContext<HouseholdContextType | null>(null);
 export function HouseholdProvider({ children }: { children: ReactNode }) {
   const { household, currentUserId, isLoading } = useHouseholdQuery();
 
+  // Subscribe to WebSocket events (uses internal cache helpers + useUser for currentUserId)
   useHouseholdSubscription();
 
   return (

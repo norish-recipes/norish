@@ -26,6 +26,7 @@ export function StoresContextProvider({ children }: { children: ReactNode }) {
   const { stores, isLoading } = useStoresQuery();
   const storeMutations = useStoresMutations();
 
+  // Subscribe to WebSocket events (updates query cache via internal cache helpers)
   useStoresSubscription();
 
   // UI State

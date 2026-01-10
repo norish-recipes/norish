@@ -40,8 +40,7 @@ export class SubscriptionMultiplexer {
     private readonly userId: string,
     private readonly householdKey: string | null
   ) {
-    // Unlimited listeners - bounded by client WebSocket behavior, not server
-    this.emitter.setMaxListeners(0);
+  this.emitter.setMaxListeners(0);
   }
 
   /**
@@ -89,16 +88,15 @@ export class SubscriptionMultiplexer {
 
     // Handle incoming messages and route to appropriate listeners
     this.subscriber.on("pmessage", (_pattern: string, channel: string, message: string) => {
-      // Emit to any listeners registered for this specific channel
-      if (this.emitter.listenerCount(channel) > 0) {
-        try {
-          const parsed = superjson.parse(message);
+      if (this.emitter.listenerCount(channel) === 0) return;
 
-          this.emitter.emit(channel, parsed);
+      queueMicrotask(() => {
+        try {
+          this.emitter.emit(channel, superjson.parse(message));
         } catch (err) {
           log.error({ err, channel }, "Failed to parse multiplexed message");
         }
-      }
+      });
     });
 
     this.subscriber.on("error", (err) => {
@@ -132,26 +130,34 @@ export class SubscriptionMultiplexer {
     const queue: T[] = [];
     let resolve: (() => void) | null = null;
     let rejected = false;
+    let cleanedUp = false;
 
     const listener = (data: T) => {
       queue.push(data);
       if (resolve) {
-        resolve();
+        const r = resolve;
+
         resolve = null;
+        queueMicrotask(r);
       }
     };
 
     const cleanup = () => {
+      // Make cleanup idempotent to prevent double-cleanup crashes
+      if (cleanedUp) return;
+      cleanedUp = true;
+
       this.emitter.off(channel, listener);
       const count = this.channelListenerCounts.get(channel) ?? 1;
 
-      this.channelListenerCounts.set(channel, count - 1);
-      if (count - 1 <= 0) {
+      if (count <= 1) {
         this.channelListenerCounts.delete(channel);
+      } else {
+        this.channelListenerCounts.set(channel, count - 1);
       }
       log.trace({ channel, listenerCount: count - 1 }, "Removed multiplexed listener");
       rejected = true;
-      if (resolve) resolve();
+      resolve?.();
     };
 
     this.emitter.on(channel, listener);
@@ -163,13 +169,15 @@ export class SubscriptionMultiplexer {
       while (!rejected && !this.closed) {
         if (signal?.aborted) break;
 
-        // Yield any queued messages
-        while (queue.length > 0) {
+        // Yield any queued messages first
+        if (queue.length > 0) {
           yield queue.shift()!;
+          continue;
         }
 
         // Wait for next message
         await new Promise<void>((r) => {
+          if (rejected || this.closed) return r();
           resolve = r;
         });
       }
@@ -212,10 +220,19 @@ export class SubscriptionMultiplexer {
   }
 
   /**
+   * Check if multiplexer has been explicitly closed.
+   */
+  get isClosed(): boolean {
+    return this.closed;
+  }
+
+  /**
    * Check if multiplexer is still active.
+   * Returns true if not closed and either initialized or currently initializing.
+   * This prevents race conditions where multiple subscriptions start before init() completes.
    */
   get isActive(): boolean {
-    return !this.closed && this.subscriber !== null;
+    return !this.closed && (this.subscriber !== null || this.initPromise !== null);
   }
 
   /**
@@ -235,8 +252,15 @@ export class SubscriptionMultiplexer {
 /**
  * Registry of active multiplexers by WebSocket connection.
  * Each WebSocket gets its own multiplexer instance.
+ * Uses globalThis to survive HMR in development and ensure single registry instance.
  */
-const multiplexerRegistry = new Map<string, SubscriptionMultiplexer>();
+const globalForMultiplexer = globalThis as unknown as {
+  multiplexerRegistry: Map<string, SubscriptionMultiplexer> | undefined;
+};
+
+const multiplexerRegistry =
+  globalForMultiplexer.multiplexerRegistry ??
+  (globalForMultiplexer.multiplexerRegistry = new Map<string, SubscriptionMultiplexer>());
 
 /**
  * Get or create a multiplexer for a WebSocket connection.
@@ -249,7 +273,9 @@ export function getOrCreateMultiplexer(
 ): SubscriptionMultiplexer {
   let multiplexer = multiplexerRegistry.get(connectionId);
 
-  if (!multiplexer || !multiplexer.isActive) {
+  // Only create a new multiplexer if one doesn't exist or was explicitly closed.
+  // Don't check isActive here - a multiplexer is valid even before init() is called.
+  if (!multiplexer || multiplexer.isClosed) {
     multiplexer = new SubscriptionMultiplexer(userId, householdKey);
     multiplexerRegistry.set(connectionId, multiplexer);
     log.debug({ connectionId, userId, householdKey }, "Created new multiplexer");

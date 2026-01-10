@@ -52,8 +52,8 @@ export function CalendarContextProvider({ children }: { children: ReactNode }) {
     updateNoteDate,
   } = useCalendarMutations(startISO, endISO);
 
-  // Subscribe to WebSocket events
-  useCalendarSubscription(startISO, endISO);
+  // Subscribe to WebSocket events (updates query cache via internal cache helpers)
+  useCalendarSubscription();
 
   const planMeal = useCallback(
     (

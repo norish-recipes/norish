@@ -138,7 +138,7 @@ function MiniCalendarContent({
   const { calendarData, isLoading } = useCalendarQuery(startISO, endISO);
   const { createPlannedRecipe } = useCalendarMutations(startISO, endISO);
 
-  useCalendarSubscription(startISO, endISO);
+  useCalendarSubscription();
 
   const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);
 
