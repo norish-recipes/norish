@@ -214,7 +214,7 @@ function RecipeCardComponent({ recipe }: { recipe: RecipeDashboardDTO }) {
   );
 }
 
-// Memoize to prevent unnecessary re-renders during VirtuosoGrid scroll
+// Memoize to prevent unnecessary re-renders during virtual list scroll
 // The component only needs to re-render when the recipe data changes
 const RecipeCard = memo(RecipeCardComponent, (prevProps, nextProps) => {
   const prev = prevProps.recipe;

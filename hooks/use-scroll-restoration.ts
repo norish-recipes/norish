@@ -1,6 +1,6 @@
-import { useCallback } from "react";
-
 import type { VirtualItem } from "@tanstack/react-virtual";
+
+import { useCallback } from "react";
 
 // Store scroll state outside component lifecycle
 interface ScrollState {

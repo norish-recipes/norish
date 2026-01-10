@@ -76,7 +76,7 @@ export function useAutoHide({
     // Reset lastScrollY immediately to current position to prevent
     // scroll events from previous page affecting the new page
     lastScrollY.current = scrollY.get();
-    // Ignore scroll events for 1000ms to let Virtuoso/other content settle
+    // Ignore scroll events for 1000ms to let virtual list content settle
     ignoreScrollUntil.current = Date.now() + 1000;
 
     return () => {

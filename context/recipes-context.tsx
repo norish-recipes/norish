@@ -70,14 +70,6 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
     pendingRecipeIds,
     autoTaggingRecipeIds,
     invalidate,
-    // Helpers for subscription hook - pass these instead of calling useRecipesQuery again
-    setAllRecipesData,
-    addPendingRecipe,
-    removePendingRecipe,
-    addAutoTaggingRecipe,
-    removeAutoTaggingRecipe,
-    addAllergyDetectionRecipe,
-    removeAllergyDetectionRecipe,
   } = useRecipesQuery(queryFilters);
 
   // Favorites - single query at context level, exposed to all children

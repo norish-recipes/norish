@@ -3,10 +3,14 @@
 import { ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
-import { useRef, useCallback } from "react";
-import { Virtuoso } from "react-virtuoso";
+import { useRef, useCallback, useEffect, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { useDayTimelineShared } from "./use-day-timeline-shared";
+
+import { dateKey } from "@/lib/helpers";
+
+const ESTIMATED_DAY_HEIGHT = 200;
 
 export default function DayTimelineMobile() {
   const {
@@ -22,55 +26,108 @@ export default function DayTimelineMobile() {
     LoadingSkeleton,
   } = useDayTimelineShared();
 
-  const virtuosoRef = useRef<any>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const [hasScrolledToToday, setHasScrolledToToday] = useState(false);
+
+  // Calculate initial offset to show today's header (scroll to previous day)
+  const scrollTargetIndex = todayIndex >= 0 ? Math.max(0, todayIndex - 1) : 0;
+  const initialOffset = scrollTargetIndex * ESTIMATED_DAY_HEIGHT;
+
+  const virtualizer = useVirtualizer({
+    count: allDays.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ESTIMATED_DAY_HEIGHT,
+    overscan: 5,
+    getItemKey: (index) => dateKey(allDays[index]),
+    initialOffset,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
+  // Track visible range to show/hide today button
+  useEffect(() => {
+    if (virtualItems.length === 0 || todayIndex < 0) return;
+
+    const startIndex = virtualItems[0]?.index ?? 0;
+    const endIndex = virtualItems[virtualItems.length - 1]?.index ?? 0;
+
+    const visible = startIndex <= todayIndex && todayIndex <= endIndex;
+
+    setTodayVisible(visible);
+
+    if (!visible) {
+      if (todayIndex < startIndex) setArrowDir("up");
+      else if (todayIndex > endIndex) setArrowDir("down");
+    }
+  }, [virtualItems, todayIndex, setTodayVisible, setArrowDir]);
+
+  // Scroll to today after first render if measurements are ready
+  useEffect(() => {
+    if (hasScrolledToToday || todayIndex < 0 || !parentRef.current) return;
+
+    const timeoutId = setTimeout(() => {
+      // Scroll to the day before today so today's header is visible at the top
+      const targetIndex = Math.max(0, todayIndex - 1);
+
+      virtualizer.scrollToIndex(targetIndex, { align: "start" });
+      setHasScrolledToToday(true);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [todayIndex, hasScrolledToToday, virtualizer]);
 
   const scrollToToday = useCallback(() => {
     if (todayIndex >= 0) {
-      setTodayVisible(true);
-      virtuosoRef.current?.scrollToIndex({
-        index: todayIndex,
-        behavior: "smooth",
-      });
+      // Scroll to the day before today so today's header is visible
+      const targetIndex = Math.max(0, todayIndex - 1);
+
+      virtualizer.scrollToIndex(targetIndex, { align: "start", behavior: "smooth" });
     }
-  }, [todayIndex, setTodayVisible]);
-
-  const handleRangeChanged = useCallback(
-    ({ startIndex, endIndex }: { startIndex: number; endIndex: number }) => {
-      if (todayIndex < 0) return;
-      const visible = startIndex <= todayIndex && todayIndex <= endIndex;
-
-      setTodayVisible(visible);
-
-      if (!visible) {
-        if (todayIndex < startIndex) setArrowDir("up");
-        else if (todayIndex > endIndex) setArrowDir("down");
-      }
-    },
-    [todayIndex, setTodayVisible, setArrowDir]
-  );
+  }, [todayIndex, virtualizer]);
 
   if (isLoading) return <LoadingSkeleton />;
   if (allDays.length === 0) return <EmptyState />;
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col">
-      <Virtuoso
-        ref={virtuosoRef}
-        useWindowScroll
-        data={allDays}
-        initialTopMostItemIndex={Math.max(todayIndex, 0)}
-        itemContent={(_, d) => renderDayContent(d)}
-        rangeChanged={handleRangeChanged}
-      />
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div ref={parentRef} className="absolute inset-0 overflow-auto">
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          {virtualItems.map((virtualItem) => {
+            const d = allDays[virtualItem.index];
+
+            return (
+              <div
+                key={virtualItem.key}
+                ref={virtualizer.measureElement}
+                data-index={virtualItem.index}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                {renderDayContent(d)}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <AnimatePresence>
         {!todayVisible && (
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="fixed right-6 z-20"
+            className="absolute right-3 bottom-3 z-20"
             exit={{ opacity: 0, y: 12 }}
             initial={{ opacity: 0, y: 12 }}
-            style={{ bottom: "calc(max(env(safe-area-inset-bottom), 1rem) + 4.5rem)" }}
             transition={{ type: "spring", stiffness: 320, damping: 30 }}
           >
             <Button

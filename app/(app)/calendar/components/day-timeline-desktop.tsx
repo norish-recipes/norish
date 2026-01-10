@@ -3,10 +3,14 @@
 import { ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
-import { useRef, useCallback } from "react";
-import { Virtuoso } from "react-virtuoso";
+import { useRef, useCallback, useEffect, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { useDayTimelineShared } from "./use-day-timeline-shared";
+
+import { dateKey } from "@/lib/helpers";
+
+const ESTIMATED_DAY_HEIGHT = 200;
 
 export default function DayTimelineDesktop() {
   const {
@@ -22,46 +26,94 @@ export default function DayTimelineDesktop() {
     LoadingSkeleton,
   } = useDayTimelineShared();
 
-  const virtuosoRef = useRef<any>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const [hasScrolledToToday, setHasScrolledToToday] = useState(false);
+
+  // Calculate initial offset to start at today
+  const initialOffset = todayIndex >= 0 ? todayIndex * ESTIMATED_DAY_HEIGHT : 0;
+
+  const virtualizer = useVirtualizer({
+    count: allDays.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ESTIMATED_DAY_HEIGHT,
+    overscan: 3,
+    getItemKey: (index) => dateKey(allDays[index]),
+    initialOffset,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
+  // Track visible range to show/hide today button
+  useEffect(() => {
+    if (virtualItems.length === 0 || todayIndex < 0) return;
+
+    const startIndex = virtualItems[0]?.index ?? 0;
+    const endIndex = virtualItems[virtualItems.length - 1]?.index ?? 0;
+
+    const visible = startIndex <= todayIndex && todayIndex <= endIndex;
+
+    setTodayVisible(visible);
+
+    if (!visible) {
+      if (todayIndex < startIndex) setArrowDir("up");
+      else if (todayIndex > endIndex) setArrowDir("down");
+    }
+  }, [virtualItems, todayIndex, setTodayVisible, setArrowDir]);
+
+  // Scroll to today after first render if measurements are ready
+  useEffect(() => {
+    if (hasScrolledToToday || todayIndex < 0 || !parentRef.current) return;
+
+    // Wait for DOM to be ready and scroll element to have dimensions
+    const timeoutId = setTimeout(() => {
+      virtualizer.scrollToIndex(todayIndex, { align: "start" });
+      setHasScrolledToToday(true);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [todayIndex, hasScrolledToToday, virtualizer]);
 
   const scrollToToday = useCallback(() => {
     if (todayIndex >= 0) {
-      setTodayVisible(true);
-      virtuosoRef.current?.scrollToIndex({
-        index: todayIndex,
-        behavior: "smooth",
-      });
+      virtualizer.scrollToIndex(todayIndex, { align: "start", behavior: "smooth" });
     }
-  }, [todayIndex, setTodayVisible]);
-
-  const handleRangeChanged = useCallback(
-    ({ startIndex, endIndex }: { startIndex: number; endIndex: number }) => {
-      if (todayIndex < 0) return;
-      const visible = startIndex <= todayIndex && todayIndex <= endIndex;
-
-      setTodayVisible(visible);
-
-      if (!visible) {
-        if (todayIndex < startIndex) setArrowDir("up");
-        else if (todayIndex > endIndex) setArrowDir("down");
-      }
-    },
-    [todayIndex, setTodayVisible, setArrowDir]
-  );
+  }, [todayIndex, virtualizer]);
 
   if (isLoading) return <LoadingSkeleton />;
   if (allDays.length === 0) return <EmptyState />;
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col">
-      <Virtuoso
-        ref={virtuosoRef}
-        data={allDays}
-        initialTopMostItemIndex={Math.max(todayIndex, 0)}
-        itemContent={(_, d) => renderDayContent(d)}
-        rangeChanged={handleRangeChanged}
-        style={{ height: "100%", flex: "1 1 auto" }}
-      />
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div ref={parentRef} className="absolute inset-0 overflow-auto">
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          {virtualItems.map((virtualItem) => {
+            const d = allDays[virtualItem.index];
+
+            return (
+              <div
+                key={virtualItem.key}
+                ref={virtualizer.measureElement}
+                data-index={virtualItem.index}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                {renderDayContent(d)}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <AnimatePresence>
         {!todayVisible && (

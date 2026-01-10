@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition, useCallback, ChangeEvent, memo } from "react";
-import { Virtuoso } from "react-virtuoso";
+import { useState, useTransition, useCallback, ChangeEvent, memo, useRef, useEffect } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Image, Input, Button } from "@heroui/react";
 import { motion, AnimatePresence } from "motion/react";
 import { PlusIcon } from "@heroicons/react/16/solid";
@@ -14,6 +14,8 @@ import MiniRecipeSkeleton from "@/components/skeleton/mini-recipe-skeleton";
 import { dateKey } from "@/lib/helpers";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
+
+const ESTIMATED_ITEM_HEIGHT = 88; // ~80px image + 8px padding
 
 type MiniRecipesProps = {
   open: boolean;
@@ -50,6 +52,100 @@ const MiniRecipeItem = memo(function MiniRecipeItem({
         </div>
       </div>
     </SlotDropdown>
+  );
+});
+
+// Virtualized recipe list using TanStack Virtual
+const VirtualizedRecipeList = memo(function VirtualizedRecipeList({
+  recipes,
+  isLoading,
+  loadMore,
+  noRecipesFound,
+  onPlan,
+}: {
+  recipes: RecipeDashboardDTO[];
+  isLoading: boolean;
+  loadMore: () => void;
+  noRecipesFound: string;
+  onPlan: (recipe: RecipeDashboardDTO, slot: Slot) => void;
+}) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const loadMoreTriggeredRef = useRef(false);
+
+  const virtualizer = useVirtualizer({
+    count: recipes.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ESTIMATED_ITEM_HEIGHT,
+    overscan: 5,
+    getItemKey: (index) => recipes[index].id,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+
+  // Infinite scroll: trigger loadMore when near end
+  useEffect(() => {
+    if (virtualItems.length === 0) return;
+
+    const lastItem = virtualItems[virtualItems.length - 1];
+
+    if (!lastItem) return;
+
+    // Check if we're within 3 items of the end
+    const isNearEnd = lastItem.index >= recipes.length - 3;
+
+    if (isNearEnd && !isLoading && !loadMoreTriggeredRef.current) {
+      loadMoreTriggeredRef.current = true;
+      loadMore();
+    }
+
+    if (!isNearEnd) {
+      loadMoreTriggeredRef.current = false;
+    }
+  }, [virtualItems, recipes.length, isLoading, loadMore]);
+
+  if (isLoading && !recipes.length) {
+    return <MiniRecipeSkeleton />;
+  }
+
+  if (!isLoading && recipes.length === 0) {
+    return (
+      <div className="text-default-500 flex h-full items-center justify-center text-base">
+        {noRecipesFound}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={parentRef} className="min-h-0 flex-1 overflow-auto">
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {virtualItems.map((virtualItem) => {
+          const recipe = recipes[virtualItem.index];
+
+          return (
+            <div
+              key={virtualItem.key}
+              ref={virtualizer.measureElement}
+              data-index={virtualItem.index}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              <MiniRecipeItem recipe={recipe} onPlan={onPlan} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 });
 
@@ -165,25 +261,13 @@ function MiniRecipesContent({
         )}
       </AnimatePresence>
 
-      <div className="min-h-0 flex-1">
-        {isLoading && !recipes.length ? (
-          <MiniRecipeSkeleton />
-        ) : !isLoading && recipes.length === 0 ? (
-          <div className="text-default-500 flex h-full items-center justify-center text-base">
-            {t("noRecipesFound")}
-          </div>
-        ) : (
-          <Virtuoso
-            computeItemKey={(_, recipe) => recipe.id}
-            data={recipes}
-            endReached={loadMore}
-            increaseViewportBy={{ top: 100, bottom: 100 }}
-            itemContent={(_, recipe) => <MiniRecipeItem recipe={recipe} onPlan={handlePlan} />}
-            overscan={200}
-            style={{ height: "100%" }}
-          />
-        )}
-      </div>
+      <VirtualizedRecipeList
+        isLoading={isLoading}
+        loadMore={loadMore}
+        noRecipesFound={t("noRecipesFound")}
+        recipes={recipes}
+        onPlan={handlePlan}
+      />
     </div>
   );
 }

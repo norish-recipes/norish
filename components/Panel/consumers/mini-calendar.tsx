@@ -2,8 +2,8 @@
 
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Dropdown, DropdownTrigger, Button, DropdownMenu, DropdownItem } from "@heroui/react";
-import { useMemo, useRef, useCallback, memo } from "react";
-import { Virtuoso } from "react-virtuoso";
+import { useMemo, useRef, useCallback, memo, useEffect, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Slot } from "@/types";
@@ -13,6 +13,8 @@ import { useRecipeQuery } from "@/hooks/recipes";
 import { MealIcon } from "@/lib/meal-icon";
 import Panel from "@/components/Panel/Panel";
 import { useCalendarQuery, useCalendarMutations, useCalendarSubscription } from "@/hooks/calendar";
+
+const ESTIMATED_DAY_HEIGHT = 140; // Approximate height of a day row
 
 type MiniCalendarProps = {
   open: boolean;
@@ -150,7 +152,34 @@ function MiniCalendarContent({
     [allDays, todayKey]
   );
 
-  const virtuosoRef = useRef<any>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const [hasScrolledToToday, setHasScrolledToToday] = useState(false);
+
+  // Calculate initial offset to start at today
+  const initialOffset = todayIndex >= 0 ? todayIndex * ESTIMATED_DAY_HEIGHT : 0;
+
+  const virtualizer = useVirtualizer({
+    count: allDays.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ESTIMATED_DAY_HEIGHT,
+    overscan: 3,
+    getItemKey: (index) => dateKey(allDays[index]),
+    initialOffset,
+  });
+
+  // Scroll to today after first render
+  useEffect(() => {
+    if (hasScrolledToToday || todayIndex < 0 || !parentRef.current) return;
+
+    const timeoutId = setTimeout(() => {
+      virtualizer.scrollToIndex(todayIndex, { align: "start" });
+      setHasScrolledToToday(true);
+    }, 50);
+
+    return () => clearTimeout(timeoutId);
+  }, [todayIndex, hasScrolledToToday, virtualizer]);
+
+  const virtualItems = virtualizer.getVirtualItems();
 
   const slotOrder: Record<Slot, number> = { Breakfast: 0, Lunch: 1, Dinner: 2, Snack: 3 };
 
@@ -190,35 +219,54 @@ function MiniCalendarContent({
   }
 
   return (
-    <Virtuoso
-      ref={virtuosoRef}
-      data={allDays}
-      initialTopMostItemIndex={Math.max(todayIndex, 0)}
-      itemContent={(_, d) => {
-        const key = dateKey(d);
-        const items = (calendarData[key] ?? []).sort(
-          (a, b) => slotOrder[a.slot] - slotOrder[b.slot]
-        );
-        const isToday = key === todayKey;
+    <div className="relative min-h-0 flex-1">
+      <div ref={parentRef} className="absolute inset-0 overflow-auto">
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          {virtualItems.map((virtualItem) => {
+            const d = allDays[virtualItem.index];
+            const key = dateKey(d);
+            const items = (calendarData[key] ?? []).sort(
+              (a, b) => slotOrder[a.slot] - slotOrder[b.slot]
+            );
+            const isToday = key === todayKey;
 
-        return (
-          <DayRow
-            key={key}
-            addItemLabel={addItemLabel}
-            date={d}
-            dateKeyStr={key}
-            isToday={isToday}
-            items={items}
-            monthLong={monthLong}
-            noItemsLabel={noItemsLabel}
-            slotLabels={slotLabels}
-            weekdayLong={weekdayLong}
-            onPlan={handlePlan}
-          />
-        );
-      }}
-      style={{ height: "100%" }}
-    />
+            return (
+              <div
+                key={virtualItem.key}
+                ref={virtualizer.measureElement}
+                data-index={virtualItem.index}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <DayRow
+                  addItemLabel={addItemLabel}
+                  date={d}
+                  dateKeyStr={key}
+                  isToday={isToday}
+                  items={items}
+                  monthLong={monthLong}
+                  noItemsLabel={noItemsLabel}
+                  slotLabels={slotLabels}
+                  weekdayLong={weekdayLong}
+                  onPlan={handlePlan}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
