@@ -5,9 +5,10 @@ import type { HouseholdAdminSettingsDto } from "@/types/dto/household";
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { addToast } from "@heroui/react";
 
+import { useHouseholdCacheHelpers } from "./use-household-cache";
+
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUser } from "@/hooks/use-user";
-import { useHouseholdCacheHelpers } from "./use-household-cache";
 
 /**
  * Hook that subscribes to all household-related WebSocket events.

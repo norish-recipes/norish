@@ -81,7 +81,9 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
     (recipeId: string) => {
       queryClient.setQueryData<PendingRecipeDTO[]>(pendingKey, (prev) => {
         const arr = prev ?? [];
+
         if (arr.some((p) => p.recipeId === recipeId)) return arr;
+
         // Add with minimal info - the skeleton just needs the ID
         return [...arr, { recipeId, url: "", addedAt: Date.now() }];
       });
@@ -93,6 +95,7 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
     (recipeId: string) => {
       queryClient.setQueryData<PendingRecipeDTO[]>(pendingKey, (prev) => {
         const arr = prev ?? [];
+
         return arr.filter((p) => p.recipeId !== recipeId);
       });
     },
@@ -104,7 +107,9 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
     (recipeId: string) => {
       queryClient.setQueryData<string[]>(autoTaggingKey, (prev) => {
         const arr = prev ?? [];
+
         if (arr.includes(recipeId)) return arr;
+
         return [...arr, recipeId];
       });
     },
@@ -115,6 +120,7 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
     (recipeId: string) => {
       queryClient.setQueryData<string[]>(autoTaggingKey, (prev) => {
         const arr = prev ?? [];
+
         return arr.filter((id) => id !== recipeId);
       });
     },
@@ -126,7 +132,9 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
     (recipeId: string) => {
       queryClient.setQueryData<string[]>(allergyDetectionKey, (prev) => {
         const arr = prev ?? [];
+
         if (arr.includes(recipeId)) return arr;
+
         return [...arr, recipeId];
       });
     },
@@ -137,6 +145,7 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
     (recipeId: string) => {
       queryClient.setQueryData<string[]>(allergyDetectionKey, (prev) => {
         const arr = prev ?? [];
+
         return arr.filter((id) => id !== recipeId);
       });
     },

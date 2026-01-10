@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useCallback, useState, useEffect, useRef } from "react";
-import { VirtuosoGrid, VirtuosoGridHandle } from "react-virtuoso";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { Spinner } from "@heroui/react";
+import { useWindowSize } from "usehooks-ts";
 
 import RecipeCardSkeleton from "../skeleton/recipe-card-skeleton";
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
@@ -14,42 +15,10 @@ import NoRecipeResults from "./no-recipe-results";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
+import { useContainerColumns } from "@/hooks/use-container-columns";
 
-const ListComponent = React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(
-  ({ style, ...props }, ref) => (
-    <div ref={ref} {...props} className="flex flex-wrap" style={{ ...style }} />
-  )
-);
-
-ListComponent.displayName = "ListComponent";
-
-const ItemComponent = React.memo((props: React.HTMLProps<HTMLDivElement>) => (
-  <div {...props} className="w-full p-2 sm:w-1/2 lg:w-1/4" />
-));
-
-ItemComponent.displayName = "ItemComponent";
-
-// Placeholder shown during fast scrolling to reduce flicker
-const ScrollSeekPlaceholder = React.memo(() => (
-  <div className="w-full p-2 sm:w-1/2 lg:w-1/4">
-    <RecipeCardSkeleton />
-  </div>
-));
-
-ScrollSeekPlaceholder.displayName = "ScrollSeekPlaceholder";
-
-const gridComponents = {
-  List: ListComponent,
-  Item: ItemComponent,
-  ScrollSeekPlaceholder,
-};
-
-// Scroll seek configuration: show placeholders during fast scrolling
-// Enter when velocity > 800px/s, exit when velocity < 200px/s
-const scrollSeekConfiguration = {
-  enter: (velocity: number) => Math.abs(velocity) > 800,
-  exit: (velocity: number) => Math.abs(velocity) < 200,
-};
+// Estimated row height (card height + gap)
+const ESTIMATED_ROW_HEIGHT = 380;
 
 export default function RecipeGrid() {
   const {
@@ -65,10 +34,25 @@ export default function RecipeGrid() {
 
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [isLoadedOnce, setIsLoadedOnce] = useState(false);
-  const virtuosoRef = useRef<VirtuosoGridHandle>(null);
-  const prevFiltersRef = useRef(filters);
-  const isRestoringScrollRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hasTriggeredLoadMoreRef = useRef(false);
 
+  // Responsive column count from CSS variable
+  const columnCount = useContainerColumns();
+
+  // Track window size to recalculate scrollMargin on resize
+  const { height: _windowHeight } = useWindowSize();
+
+  // Calculate scrollMargin from container position
+  const scrollMargin = useMemo(() => {
+    if (!containerRef.current) return 0;
+    const rect = containerRef.current.getBoundingClientRect();
+
+    return rect.top + window.scrollY;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [_windowHeight]); // Recalculate when window resizes
+
+  // Merge pending skeletons with actual recipes
   const displayData = useMemo(() => {
     const pendingSkeletons = Array.from(pendingRecipeIds).map((id) => ({
       id,
@@ -78,94 +62,55 @@ export default function RecipeGrid() {
     return [...pendingSkeletons, ...recipes];
   }, [pendingRecipeIds, recipes]);
 
-  // Get initial scroll index from saved state
-  const initialTopMostItemIndex = useMemo(() => {
-    const savedState = getScrollState();
-    const savedIndex = savedState?.firstItemIndex ?? 0;
+  // Calculate row count for virtualization
+  const rowCount = useMemo(() => {
+    return Math.ceil(displayData.length / columnCount);
+  }, [displayData.length, columnCount]);
 
-    return Math.max(0, savedIndex);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Get saved scroll state for initialization
+  const savedState = getScrollState();
 
-  // Restore exact scroll position after Virtuoso renders
-  useEffect(() => {
-    const savedState = getScrollState();
-
-    if (savedState?.scrollTop && savedState.scrollTop > 0) {
-      // Mark as restoring to prevent rangeChanged from overwriting saved state
-      isRestoringScrollRef.current = true;
-      // Wait for Virtuoso to fully render before restoring scroll
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          window.scrollTo(0, savedState.scrollTop);
-          // Allow scroll state to settle before enabling saves again
-          setTimeout(() => {
-            isRestoringScrollRef.current = false;
-          }, 200);
-        }, 50);
-      });
-    }
-    // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Track filter changes to update the prevFiltersRef
-  useEffect(() => {
-    prevFiltersRef.current = filters;
-  }, [filters]);
-
-  const hasAppliedFilters = useMemo(() => {
-    const hasSearch = filters.rawInput.trim().length > 0;
-    const hasTags = filters.searchTags.length > 0;
-
-    return hasSearch || hasTags;
-  }, [filters.rawInput, filters.searchTags]);
-
-  const showEmptyState = !isLoading && displayData.length === 0;
-
-  const itemContent = useCallback(
-    (_: number, item: any) =>
-      item.isLoading ? (
-        <RecipeCardSkeleton key={`skeleton-${item.id}`} />
-      ) : (
-        <RecipeCard key={`recipe-${item.id}`} recipe={item} />
-      ),
-    []
-  );
-
-  // Stable item keys using item.id - this is called with the actual item data
-  // IMPORTANT: Don't depend on displayData in this callback to prevent recreation on data change
-  const computeItemKey = useCallback((_index: number, item: any) => {
-    return item?.id ?? `item-${_index}`;
-  }, []);
-
-  // Track scroll position and first visible item to save (debounced)
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const handleRangeChanged = useCallback(
-    (range: { startIndex: number; endIndex: number }) => {
-      // Don't save during scroll restoration
-      if (isRestoringScrollRef.current) return;
-
-      // Debounce saves to avoid excessive updates
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+  // Window virtualizer for row-based virtualization
+  const virtualizer = useWindowVirtualizer({
+    count: rowCount,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    overscan: 3,
+    scrollMargin,
+    initialOffset: savedState?.scrollOffset,
+    initialMeasurementsCache: savedState?.measurementsCache,
+    onChange: (instance) => {
+      // Save state when not scrolling (after scroll settles)
+      if (!instance.isScrolling) {
+        saveScrollState(instance.scrollOffset ?? 0, instance.measurementsCache);
       }
-      saveTimeoutRef.current = setTimeout(() => {
-        saveScrollState(window.scrollY, range.startIndex);
-      }, 150);
     },
-    [saveScrollState]
-  );
+  });
 
-  // Cleanup timeout on unmount
+  const virtualRows = virtualizer.getVirtualItems();
+
+  // Infinite scroll: trigger loadMore when near the end
   useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
+    if (virtualRows.length === 0) return;
 
+    const lastRow = virtualRows[virtualRows.length - 1];
+
+    if (!lastRow) return;
+
+    // Check if we're within 2 rows of the end
+    const isNearEnd = lastRow.index >= rowCount - 2;
+
+    if (isNearEnd && !isFetchingMore && !hasTriggeredLoadMoreRef.current) {
+      hasTriggeredLoadMoreRef.current = true;
+      loadMore();
+    }
+
+    // Reset the trigger when we're no longer near the end
+    if (!isNearEnd) {
+      hasTriggeredLoadMoreRef.current = false;
+    }
+  }, [virtualRows, rowCount, isFetchingMore, loadMore]);
+
+  // Show skeleton loading state logic
   useEffect(() => {
     if (!isLoadedOnce && isLoading) {
       setShowSkeleton(true);
@@ -187,10 +132,30 @@ export default function RecipeGrid() {
     }
   }, [isLoading, recipes.length, isLoadedOnce]);
 
+  // Check for empty states
+  const hasAppliedFilters = useMemo(() => {
+    const hasSearch = filters.rawInput.trim().length > 0;
+    const hasTags = filters.searchTags.length > 0;
+
+    return hasSearch || hasTags;
+  }, [filters.rawInput, filters.searchTags]);
+
+  const showEmptyState = !isLoading && displayData.length === 0;
+
+  // Render a single item (skeleton or card)
+  const renderItem = useCallback((item: (typeof displayData)[number]) => {
+    if ("isLoading" in item && item.isLoading) {
+      return <RecipeCardSkeleton key={`skeleton-${item.id}`} />;
+    }
+
+    return <RecipeCard key={`recipe-${item.id}`} recipe={item as any} />;
+  }, []);
+
+  // Show skeleton during initial load
   if (showSkeleton) return <RecipeGridSkeleton />;
 
   return (
-    <div className="relative flex h-full flex-col">
+    <div ref={containerRef} className="relative flex h-full flex-col">
       {showEmptyState ? (
         hasAppliedFilters ? (
           <NoRecipeResults onClear={clearFilters} />
@@ -199,20 +164,48 @@ export default function RecipeGrid() {
         )
       ) : (
         <>
-          <VirtuosoGrid
-            ref={virtuosoRef}
-            useWindowScroll
-            components={gridComponents}
-            computeItemKey={computeItemKey}
-            data={displayData}
-            endReached={loadMore}
-            increaseViewportBy={{ top: 100, bottom: 100 }}
-            initialTopMostItemIndex={initialTopMostItemIndex}
-            itemContent={itemContent}
-            overscan={200}
-            rangeChanged={handleRangeChanged}
-            scrollSeekConfiguration={scrollSeekConfiguration}
-          />
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {virtualRows.map((virtualRow) => {
+              // Calculate which items belong to this row
+              const startIndex = virtualRow.index * columnCount;
+              const rowItems = displayData.slice(startIndex, startIndex + columnCount);
+
+              return (
+                <div
+                  key={virtualRow.key}
+                  ref={virtualizer.measureElement}
+                  data-index={virtualRow.index}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualRow.start - scrollMargin}px)`,
+                  }}
+                >
+                  <div
+                    className="grid gap-4"
+                    style={{
+                      gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {rowItems.map((item) => (
+                      <div key={item.id} className="p-2">
+                        {renderItem(item)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           {isFetchingMore && (
             <div className="flex justify-center py-8">
               <Spinner color="primary" size="lg" />

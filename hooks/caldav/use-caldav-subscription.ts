@@ -6,9 +6,10 @@ import type { CaldavSubscriptionEvents } from "@/server/trpc/routers/caldav/type
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { addToast } from "@heroui/react";
 
+import { useCaldavCacheHelpers } from "./use-caldav-cache";
+
 import { createClientLogger } from "@/lib/logger";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { useCaldavCacheHelpers } from "./use-caldav-cache";
 
 const log = createClientLogger("CaldavSubscription");
 

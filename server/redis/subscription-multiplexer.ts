@@ -40,7 +40,7 @@ export class SubscriptionMultiplexer {
     private readonly userId: string,
     private readonly householdKey: string | null
   ) {
-  this.emitter.setMaxListeners(0);
+    this.emitter.setMaxListeners(0);
   }
 
   /**

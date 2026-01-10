@@ -51,6 +51,7 @@ export function useHouseholdCacheHelpers(): HouseholdCacheHelpers {
   const invalidateCalendar = useCallback(() => {
     // Get the base key without params - this matches all listRecipes queries
     const baseKey = calendarQueryKey({} as { startISO: string; endISO: string });
+
     // Use just the procedure path for partial matching
     queryClient.invalidateQueries({ queryKey: [baseKey[0]] });
   }, [queryClient, calendarQueryKey]);

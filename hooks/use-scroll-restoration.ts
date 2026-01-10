@@ -1,10 +1,11 @@
 import { useCallback } from "react";
 
+import type { VirtualItem } from "@tanstack/react-virtual";
+
 // Store scroll state outside component lifecycle
-// Stores both scrollTop (for window scroll) and firstItemIndex (for Virtuoso)
 interface ScrollState {
-  scrollTop: number;
-  firstItemIndex: number;
+  scrollOffset: number;
+  measurementsCache: VirtualItem[];
 }
 
 const scrollStateStore = new Map<string, ScrollState>();
@@ -25,10 +26,10 @@ export function useScrollRestoration<T extends Record<string, any>>(filters: T) 
   }, [filters]);
 
   const saveScrollState = useCallback(
-    (scrollTop: number, firstItemIndex: number = 0) => {
+    (scrollOffset: number, measurementsCache: VirtualItem[]) => {
       const hash = getFilterHash();
 
-      scrollStateStore.set(hash, { scrollTop, firstItemIndex });
+      scrollStateStore.set(hash, { scrollOffset, measurementsCache });
     },
     [getFilterHash]
   );

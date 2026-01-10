@@ -5,8 +5,9 @@ import type { CalendarItemViewDto, Slot } from "@/types";
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { addToast } from "@heroui/react";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useCalendarCacheHelpers } from "./use-calendar-cache";
+
+import { useTRPC } from "@/app/providers/trpc-provider";
 
 /**
  * Hook that subscribes to all calendar-related WebSocket events

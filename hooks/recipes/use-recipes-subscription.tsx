@@ -8,9 +8,10 @@ import { addToast, Button } from "@heroui/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
+import { useRecipesCacheHelpers, type InfiniteRecipeData } from "./use-recipes-cache";
+
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { createClientLogger } from "@/lib/logger";
-import { useRecipesCacheHelpers, type InfiniteRecipeData } from "./use-recipes-cache";
 
 const log = createClientLogger("recipes-subscription");
 

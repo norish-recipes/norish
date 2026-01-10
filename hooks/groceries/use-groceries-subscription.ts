@@ -3,8 +3,9 @@
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { addToast } from "@heroui/react";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useGroceriesCacheHelpers } from "./use-groceries-cache";
+
+import { useTRPC } from "@/app/providers/trpc-provider";
 
 /**
  * Hook that subscribes to all grocery-related WebSocket events
