@@ -1,7 +1,10 @@
-import { Worker, Job } from "bullmq";
+import type { Job } from "bullmq";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
+import { Worker } from "bullmq";
 
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
+
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { checkRecurringGroceries } from "@/server/scheduler/recurring-grocery-check";
 import {
@@ -26,7 +29,12 @@ interface ScheduledTaskJobData {
   taskType: ScheduledTaskType;
 }
 
-let worker: Worker<ScheduledTaskJobData> | null = null;
+// Use globalThis to survive HMR in development
+const globalForWorker = globalThis as unknown as {
+  scheduledTasksWorker: Worker<ScheduledTaskJobData> | null;
+};
+
+let worker: Worker<ScheduledTaskJobData> | null = globalForWorker.scheduledTasksWorker ?? null;
 
 async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<void> {
   const { taskType } = job.data;
@@ -97,8 +105,10 @@ export function startScheduledTasksWorker(): void {
   }
 
   worker = new Worker<ScheduledTaskJobData>(QUEUE_NAMES.SCHEDULED_TASKS, processScheduledTask, {
-    connection: redisConnection,
-    concurrency: 1, // One task at a time to avoid resource contention.
+    connection: getBullClient(),
+    ...baseWorkerOptions,
+    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.SCHEDULED_TASKS],
+    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.SCHEDULED_TASKS],
   });
 
   worker.on("completed", (job) => {
@@ -113,16 +123,19 @@ export function startScheduledTasksWorker(): void {
   });
 
   worker.on("error", (error) => {
-    log.error({ error }, "Scheduled tasks worker error");
+    log.error({ err: error }, "Scheduled tasks worker error");
   });
 
+  globalForWorker.scheduledTasksWorker = worker;
   log.info("Scheduled tasks worker started");
 }
 
 export async function stopScheduledTasksWorker(): Promise<void> {
   if (worker) {
+    worker.removeAllListeners();
     await worker.close();
     worker = null;
+    globalForWorker.scheduledTasksWorker = null;
     log.info("Scheduled tasks worker stopped");
   }
 }

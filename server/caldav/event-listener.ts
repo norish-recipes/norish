@@ -2,7 +2,8 @@ import type { CalendarSubscriptionEvents } from "@/server/trpc/routers/calendar/
 import type { RecipeSubscriptionEvents } from "@/server/trpc/routers/recipes/types";
 import type { Slot } from "@/types";
 
-import { addCaldavSyncJob } from "@/server/queue";
+import { getQueues } from "@/server/queue/registry";
+import { addCaldavSyncJob } from "@/server/queue/caldav-sync/producer";
 import { calendarEmitter } from "@/server/trpc/routers/calendar/emitter";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
 import { getCaldavSyncStatusByItemId } from "@/server/db/repositories/caldav-sync-status";
@@ -72,7 +73,7 @@ async function queueSyncJob(
     return;
   }
 
-  await addCaldavSyncJob({
+  await addCaldavSyncJob(getQueues().caldavSync, {
     userId,
     itemId,
     itemType,
@@ -95,7 +96,7 @@ async function queueDeleteJob(userId: string, itemId: string): Promise<void> {
     return;
   }
 
-  await addCaldavSyncJob({
+  await addCaldavSyncJob(getQueues().caldavSync, {
     userId,
     itemId,
     itemType: "recipe", // Doesn't matter for delete

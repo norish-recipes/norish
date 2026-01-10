@@ -2,15 +2,16 @@
  * Nutrition Estimation Worker
  *
  * Processes nutrition estimation jobs from the queue.
- * Runs in-process with the main server.
+ * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { NutritionEstimationJobData } from "@/types";
+import type { Job } from "bullmq";
 
-import { Worker, Job } from "bullmq";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
-
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
@@ -19,8 +20,6 @@ import { getRecipeFull, updateRecipeWithRefs } from "@/server/db";
 import { estimateNutritionFromIngredients } from "@/server/ai/nutrition-estimator";
 
 const log = createLogger("worker:nutrition-estimation");
-
-let worker: Worker<NutritionEstimationJobData> | null = null;
 
 async function processNutritionJob(job: Job<NutritionEstimationJobData>): Promise<void> {
   const { recipeId, userId, householdKey } = job.data;
@@ -113,41 +112,20 @@ async function handleJobFailed(
   }
 }
 
-export function startNutritionEstimationWorker(): void {
-  if (worker) {
-    log.warn("Nutrition estimation worker already running");
-
-    return;
-  }
-
-  worker = new Worker<NutritionEstimationJobData>(
+export async function startNutritionEstimationWorker(): Promise<void> {
+  await createLazyWorker<NutritionEstimationJobData>(
     QUEUE_NAMES.NUTRITION_ESTIMATION,
     processNutritionJob,
     {
-      connection: redisConnection,
-      concurrency: 3,
-    }
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.NUTRITION_ESTIMATION],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.NUTRITION_ESTIMATION],
+    },
+    handleJobFailed
   );
-
-  worker.on("completed", (job) => {
-    log.debug({ jobId: job.id }, "Nutrition estimation job completed");
-  });
-
-  worker.on("failed", (job, error) => {
-    handleJobFailed(job, error);
-  });
-
-  worker.on("error", (error) => {
-    log.error({ error }, "Nutrition estimation worker error");
-  });
-
-  log.info("Nutrition estimation worker started");
 }
 
 export async function stopNutritionEstimationWorker(): Promise<void> {
-  if (worker) {
-    await worker.close();
-    worker = null;
-    log.info("Nutrition estimation worker stopped");
-  }
+  await stopLazyWorker(QUEUE_NAMES.NUTRITION_ESTIMATION);
 }

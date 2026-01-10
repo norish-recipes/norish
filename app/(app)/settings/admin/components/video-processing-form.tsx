@@ -16,7 +16,13 @@ import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
 
-import { ServerConfigKeys, type TranscriptionProvider } from "@/server/db/zodSchemas/server-config";
+import {
+  ServerConfigKeys,
+  type TranscriptionProvider,
+  isCloudTranscriptionProvider,
+  transcriptionProviderNeedsEndpoint,
+  transcriptionProviderSupportsModelListing,
+} from "@/server/db/zodSchemas/server-config";
 import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
 import SecretInput from "@/components/shared/secret-input";
 
@@ -37,7 +43,7 @@ export default function VideoProcessingForm() {
   );
   const [transcriptionApiKey, setTranscriptionApiKey] = useState("");
   const [transcriptionModel, setTranscriptionModel] = useState(
-    videoConfig?.transcriptionModel ?? "whisper-1"
+    videoConfig?.transcriptionModel ?? ""
   );
 
   const [saving, setSaving] = useState(false);
@@ -54,20 +60,32 @@ export default function VideoProcessingForm() {
   }, [videoConfig]);
 
   const transcriptionEnabled = transcriptionProvider !== "disabled";
-  const needsTranscriptionEndpoint = transcriptionProvider === "generic-openai";
-  const needsTranscriptionApiKey =
-    transcriptionProvider === "openai" || transcriptionProvider === "generic-openai";
+  const needsTranscriptionEndpoint = transcriptionProviderNeedsEndpoint(transcriptionProvider);
+  // API key only required for cloud providers, not for local models (generic-openai, ollama)
+  const needsTranscriptionApiKey = isCloudTranscriptionProvider(transcriptionProvider);
+  // API key is optional for generic-openai (Ollama, LM Studio, etc.)
+  const supportsOptionalApiKey = transcriptionProvider === "generic-openai";
+  // All enabled providers need a model
+  const needsTranscriptionModel = transcriptionEnabled;
+  // Providers that support dynamic model listing
+  const supportsModelListing = transcriptionProviderSupportsModelListing(transcriptionProvider);
   // Check if API key is configured (masked value will be "••••••••")
+  // Only consider it configured if the provider hasn't changed from saved config
+  const providerMatchesSaved = transcriptionProvider === videoConfig?.transcriptionProvider;
   const isTranscriptionApiKeyConfigured =
-    !!videoConfig?.transcriptionApiKey && videoConfig.transcriptionApiKey !== "";
+    providerMatchesSaved &&
+    !!videoConfig?.transcriptionApiKey &&
+    videoConfig.transcriptionApiKey !== "";
   // Check if AI config API key can be used as fallback
   const isAIApiKeyConfigured = !!aiConfig?.apiKey && aiConfig.apiKey !== "";
 
   // Determine if we can fetch transcription models
+  // Cloud providers need API key, local providers need endpoint
   const canFetchTranscriptionModels =
     enabled &&
     transcriptionEnabled &&
-    (transcriptionProvider === "openai"
+    supportsModelListing &&
+    (needsTranscriptionApiKey
       ? transcriptionApiKey || isTranscriptionApiKeyConfigured || isAIApiKeyConfigured
       : transcriptionEndpoint);
 
@@ -94,12 +112,28 @@ export default function VideoProcessingForm() {
     return options;
   }, [availableTranscriptionModels, transcriptionModel]);
 
-  // Clear transcription model when provider changes
+  // Auto-select first available model if none selected
+  useEffect(() => {
+    if (
+      !transcriptionModel &&
+      availableTranscriptionModels.length > 0 &&
+      !isLoadingTranscriptionModels
+    ) {
+      setTranscriptionModel(availableTranscriptionModels[0].id);
+    }
+  }, [availableTranscriptionModels, transcriptionModel, isLoadingTranscriptionModels]);
+
+  // Clear transcription config when provider changes - will auto-select first available model
   const handleTranscriptionProviderChange = (newProvider: TranscriptionProvider) => {
+    if (newProvider === transcriptionProvider) return;
+
     setTranscriptionProvider(newProvider);
-    // Clear model when switching providers to avoid invalid model selection
-    if (newProvider !== transcriptionProvider) {
-      setTranscriptionModel(newProvider === "openai" ? "whisper-1" : "");
+    // Clear API key and model when switching providers
+    setTranscriptionApiKey("");
+    setTranscriptionModel("");
+    // Clear endpoint when switching to cloud providers (they don't need one)
+    if (!transcriptionProviderNeedsEndpoint(newProvider)) {
+      setTranscriptionEndpoint("");
     }
   };
 
@@ -107,7 +141,7 @@ export default function VideoProcessingForm() {
   // API key can fall back to AI config API key
   const hasValidTranscription =
     transcriptionEnabled &&
-    (transcriptionModel ?? "").trim() !== "" &&
+    (!needsTranscriptionModel || (transcriptionModel ?? "").trim() !== "") &&
     (!needsTranscriptionEndpoint || (transcriptionEndpoint ?? "").trim() !== "") &&
     (!needsTranscriptionApiKey ||
       (transcriptionApiKey ?? "").trim() !== "" ||
@@ -193,6 +227,9 @@ export default function VideoProcessingForm() {
       >
         <SelectItem key="disabled">{t("transcriptionProviders.disabled")}</SelectItem>
         <SelectItem key="openai">{t("transcriptionProviders.openai")}</SelectItem>
+        <SelectItem key="groq">{t("transcriptionProviders.groq")}</SelectItem>
+        <SelectItem key="azure">{t("transcriptionProviders.azure")}</SelectItem>
+        <SelectItem key="ollama">{t("transcriptionProviders.ollama")}</SelectItem>
         <SelectItem key="generic-openai">{t("transcriptionProviders.genericOpenai")}</SelectItem>
       </Select>
 
@@ -203,30 +240,17 @@ export default function VideoProcessingForm() {
               description={t("transcriptionEndpointDescription")}
               isDisabled={!enabled}
               label={t("transcriptionEndpoint")}
-              placeholder="https://api.example.com/v1"
+              placeholder={
+                transcriptionProvider === "ollama"
+                  ? "http://localhost:11434"
+                  : transcriptionProvider === "generic-openai"
+                    ? "http://localhost:8000 (faster-whisper-server) or http://localhost:8080 (LocalAI)"
+                    : "https://api.example.com/v1"
+              }
               value={transcriptionEndpoint}
               onValueChange={setTranscriptionEndpoint}
             />
           )}
-
-          <Autocomplete
-            allowsCustomValue
-            defaultItems={transcriptionModelOptions}
-            description={t("transcriptionModelDescription")}
-            inputValue={transcriptionModel}
-            isDisabled={!enabled}
-            isLoading={isLoadingTranscriptionModels}
-            label={t("transcriptionModel")}
-            placeholder={transcriptionProvider === "openai" ? "whisper-1" : "whisper"}
-            onInputChange={setTranscriptionModel}
-            onSelectionChange={(key) => key && setTranscriptionModel(key as string)}
-          >
-            {(item) => (
-              <AutocompleteItem key={item.value} textValue={item.label}>
-                {item.label}
-              </AutocompleteItem>
-            )}
-          </Autocomplete>
 
           {needsTranscriptionApiKey && (
             <SecretInput
@@ -238,6 +262,51 @@ export default function VideoProcessingForm() {
               value={transcriptionApiKey}
               onReveal={handleRevealTranscriptionApiKey}
               onValueChange={setTranscriptionApiKey}
+            />
+          )}
+
+          {supportsOptionalApiKey && (
+            <SecretInput
+              description={t("transcriptionApiKeyOptionalDescription")}
+              isConfigured={isTranscriptionApiKeyConfigured}
+              isDisabled={!enabled}
+              label={t("transcriptionApiKeyOptional")}
+              placeholder={t("transcriptionApiKeyOptionalPlaceholder")}
+              value={transcriptionApiKey}
+              onReveal={handleRevealTranscriptionApiKey}
+              onValueChange={setTranscriptionApiKey}
+            />
+          )}
+
+          {needsTranscriptionModel && supportsModelListing && (
+            <Autocomplete
+              allowsCustomValue
+              defaultItems={transcriptionModelOptions}
+              description={t("transcriptionModelDescription")}
+              inputValue={transcriptionModel}
+              isDisabled={!transcriptionApiKey && !isTranscriptionApiKeyConfigured}
+              isLoading={isLoadingTranscriptionModels}
+              label={t("transcriptionModel")}
+              placeholder={t("transcriptionModelPlaceholder")}
+              onInputChange={setTranscriptionModel}
+              onSelectionChange={(key) => key && setTranscriptionModel(key as string)}
+            >
+              {(item) => (
+                <AutocompleteItem key={item.value} textValue={item.label}>
+                  {item.label}
+                </AutocompleteItem>
+              )}
+            </Autocomplete>
+          )}
+
+          {needsTranscriptionModel && !supportsModelListing && (
+            <Input
+              description={t("transcriptionModelDescription")}
+              isDisabled={!enabled}
+              label={t("transcriptionModel")}
+              placeholder={t("transcriptionModelPlaceholder")}
+              value={transcriptionModel}
+              onValueChange={setTranscriptionModel}
             />
           )}
         </>

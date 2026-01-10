@@ -5,3 +5,4 @@ export {
   checkRedisHealth,
 } from "./client";
 export { TypedRedisEmitter, TypedEmitter, createTypedEmitter } from "./pubsub";
+export { getBullClient } from "./bullmq";

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/server/auth/auth";
 import { getHouseholdForUser, dashboardRecipe } from "@/server/db";
-import { addImportJob } from "@/server/queue";
+import { addImportJob, getQueues } from "@/server/queue";
 import { isUrl } from "@/lib/helpers";
 import { parserLogger as log } from "@/server/logger";
 import { shouldAlwaysUseAI } from "@/config/server-config-loader";
@@ -60,7 +60,8 @@ export async function POST(req: Request) {
     const forceAI = await shouldAlwaysUseAI();
 
     // Add to BullMQ queue
-    const result = await addImportJob({
+    const queues = getQueues();
+    const result = await addImportJob(queues.recipeImport, {
       url,
       recipeId,
       userId: session.user.id,

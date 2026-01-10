@@ -2,6 +2,7 @@ import type { CalendarSubscriptionEvents } from "./types";
 
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
+import { createSubscriptionIterable } from "../../helpers";
 
 import { calendarEmitter } from "./emitter";
 
@@ -16,7 +17,12 @@ const onRecipePlanned = authedProcedure.subscription(async function* ({ ctx, sig
   );
 
   try {
-    for await (const data of calendarEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CalendarSubscriptionEvents["recipePlanned"];
     }
   } finally {
@@ -36,7 +42,12 @@ const onRecipeDeleted = authedProcedure.subscription(async function* ({ ctx, sig
   );
 
   try {
-    for await (const data of calendarEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CalendarSubscriptionEvents["recipeDeleted"];
     }
   } finally {
@@ -56,7 +67,12 @@ const onRecipeUpdated = authedProcedure.subscription(async function* ({ ctx, sig
   );
 
   try {
-    for await (const data of calendarEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CalendarSubscriptionEvents["recipeUpdated"];
     }
   } finally {
@@ -76,7 +92,12 @@ const onNotePlanned = authedProcedure.subscription(async function* ({ ctx, signa
   );
 
   try {
-    for await (const data of calendarEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CalendarSubscriptionEvents["notePlanned"];
     }
   } finally {
@@ -96,7 +117,12 @@ const onNoteDeleted = authedProcedure.subscription(async function* ({ ctx, signa
   );
 
   try {
-    for await (const data of calendarEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CalendarSubscriptionEvents["noteDeleted"];
     }
   } finally {
@@ -116,7 +142,12 @@ const onNoteUpdated = authedProcedure.subscription(async function* ({ ctx, signa
   );
 
   try {
-    for await (const data of calendarEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CalendarSubscriptionEvents["noteUpdated"];
     }
   } finally {
@@ -136,7 +167,12 @@ const onFailed = authedProcedure.subscription(async function* ({ ctx, signal }) 
   );
 
   try {
-    for await (const data of calendarEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CalendarSubscriptionEvents["failed"];
     }
   } finally {

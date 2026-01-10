@@ -34,6 +34,7 @@ import {
   type PermissionAction,
 } from "@/server/auth/permissions";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { getQueues } from "@/server/queue/registry";
 import {
   addImportJob,
   addImageImportJob,
@@ -289,7 +290,8 @@ const importFromUrlProcedure = authedProcedure
     const recipeId = crypto.randomUUID();
 
     // Add job to queue - returns conflict status if duplicate in queue
-    const result = await addImportJob({
+    const queues = getQueues();
+    const result = await addImportJob(queues.recipeImport, {
       url,
       recipeId,
       userId: ctx.user.id,
@@ -497,7 +499,8 @@ const importFromImagesProcedure = authedProcedure
       "Processing image import request"
     );
 
-    const result = await addImageImportJob({
+    const queues = getQueues();
+    const result = await addImageImportJob(queues.imageImport, {
       recipeId,
       userId: ctx.user.id,
       householdKey: ctx.householdKey,
@@ -530,7 +533,8 @@ const importFromPasteProcedure = authedProcedure
       "Processing paste import request"
     );
 
-    const result = await addPasteImportJob({
+    const queues = getQueues();
+    const result = await addPasteImportJob(queues.pasteImport, {
       recipeId,
       userId: ctx.user.id,
       householdKey: ctx.householdKey,
@@ -582,7 +586,8 @@ const estimateNutrition = authedProcedure
     }
 
     // Add to queue for background processing
-    const result = await addNutritionEstimationJob({
+    const queues = getQueues();
+    const result = await addNutritionEstimationJob(queues.nutritionEstimation, {
       recipeId,
       userId: ctx.user.id,
       householdKey: ctx.householdKey,
@@ -642,7 +647,8 @@ const triggerAutoTag = authedProcedure
     }
 
     // Add to queue for background processing
-    const result = await addAutoTaggingJob({
+    const queues = getQueues();
+    const result = await addAutoTaggingJob(queues.autoTagging, {
       recipeId,
       userId: ctx.user.id,
       householdKey: ctx.householdKey,
@@ -708,7 +714,8 @@ const triggerAllergyDetection = authedProcedure
     }
 
     // Add to queue for background processing
-    const result = await addAllergyDetectionJob({
+    const queues = getQueues();
+    const result = await addAllergyDetectionJob(queues.allergyDetection, {
       recipeId,
       userId: ctx.user.id,
       householdKey: ctx.householdKey,

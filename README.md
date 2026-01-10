@@ -126,6 +126,22 @@ services:
       # Option 4: Google OAuth (uncomment and remove OIDC above)
       # GOOGLE_CLIENT_ID: <google-client-id>
       # GOOGLE_CLIENT_SECRET: <google-client-secret>
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "--connect-timeout",
+          "15",
+          "--silent",
+          "--show-error",
+          "--fail",
+          "http://localhost:3000/api/health",
+        ]
+      interval: 1m
+      timeout: 15s
+      retries: 3
+      start_period: 1m
     depends_on:
       - db
       - redis
@@ -208,15 +224,15 @@ Automatically assign server admin roles and household memberships based on OIDC 
 **Security Warning**: This feature is disabled by default. Enabling claim mapping allows your identity provider to control admin privileges and household membership. Only enable this if you fully trust your OIDC provider and have properly configured the group claims.
 
 - **Admin Role Assignment**: Users with the configured admin group (default: `norish_admin`) are granted server admin privileges. This is synced on every login - removing the group revokes admin on next login.
-- **Household Auto-Join**: Users with a household group (default prefix: `norish_household_`) are automatically joined to that household on first login. If the household doesn't exist, it's created with the user as admin.
+- **Household Auto-Join**: Users with a household group (default prefix: `norish_household_<your_household_name>`) are automatically joined to that household on first login. If the household doesn't exist, it's created with the user as admin.
 
-| Setting                       | Description                                          | Default             |
-| ----------------------------- | ---------------------------------------------------- | ------------------- |
-| `OIDC_CLAIM_MAPPING_ENABLED`  | Enable claim-based role/household assignment         | `false`             |
-| `OIDC_SCOPES`                 | Additional OAuth scopes to request (comma-separated) | (empty)             |
-| `OIDC_GROUPS_CLAIM`           | Claim name containing user groups                    | `groups`            |
-| `OIDC_ADMIN_GROUP`            | Group name that grants admin role                    | `norish_admin`      |
-| `OIDC_HOUSEHOLD_GROUP_PREFIX` | Prefix for household group names                     | `norish_household_` |
+| Setting                       | Description                                          | Default                                  |
+| ----------------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| `OIDC_CLAIM_MAPPING_ENABLED`  | Enable claim-based role/household assignment         | `false`                                  |
+| `OIDC_SCOPES`                 | Additional OAuth scopes to request (comma-separated) | (empty)                                  |
+| `OIDC_GROUPS_CLAIM`           | Claim name containing user groups                    | `groups`                                 |
+| `OIDC_ADMIN_GROUP`            | Group name that grants admin role                    | `norish_admin`                           |
+| `OIDC_HOUSEHOLD_GROUP_PREFIX` | Prefix for household group names                     | `norish_household_<your_household_name>` |
 
 **Example**: With claim mapping enabled and default settings, a user with groups `["norish_admin", "norish_household_smiths"]` would:
 

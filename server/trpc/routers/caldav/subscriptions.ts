@@ -10,7 +10,7 @@ import { caldavEmitter } from "./emitter";
 
 import { router } from "@/server/trpc/trpc";
 import { authedProcedure } from "@/server/trpc/middleware";
-import { mergeAsyncIterables } from "@/server/trpc/helpers";
+import { mergeAsyncIterables, createSubscriptionIterable } from "@/server/trpc/helpers";
 import { trpcLogger as log } from "@/server/logger";
 
 /**
@@ -19,6 +19,7 @@ import { trpcLogger as log } from "@/server/logger";
  */
 const onSyncEvent = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const userId = ctx.user.id;
+  const multiplexer = ctx.multiplexer;
 
   log.trace({ userId }, "Subscribed to CalDAV sync events");
 
@@ -39,7 +40,12 @@ const onSyncEvent = authedProcedure.subscription(async function* ({ ctx, signal 
     const userEventName = caldavEmitter.userEvent(userId, eventName);
 
     return (async function* () {
-      for await (const data of caldavEmitter.createSubscription(userEventName, signal)) {
+      for await (const data of createSubscriptionIterable(
+        caldavEmitter,
+        multiplexer,
+        userEventName,
+        signal
+      )) {
         yield { type: eventName, data } as {
           type: EventName;
           data: CaldavSubscriptionEvents[EventName];
@@ -68,7 +74,12 @@ const onItemStatusUpdated = authedProcedure.subscription(async function* ({ ctx,
   log.trace({ userId }, "Subscribed to CalDAV item status updates");
 
   try {
-    for await (const data of caldavEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      caldavEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CaldavSubscriptionEvents["itemStatusUpdated"];
     }
   } finally {
@@ -86,7 +97,12 @@ const onSyncCompleted = authedProcedure.subscription(async function* ({ ctx, sig
   log.trace({ userId }, "Subscribed to CalDAV sync completed events");
 
   try {
-    for await (const data of caldavEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      caldavEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CaldavSubscriptionEvents["syncCompleted"];
     }
   } finally {
@@ -104,7 +120,12 @@ const onSyncFailed = authedProcedure.subscription(async function* ({ ctx, signal
   log.trace({ userId }, "Subscribed to CalDAV sync failed events");
 
   try {
-    for await (const data of caldavEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      caldavEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CaldavSubscriptionEvents["syncFailed"];
     }
   } finally {
@@ -122,7 +143,12 @@ const onInitialSyncComplete = authedProcedure.subscription(async function* ({ ct
   log.trace({ userId }, "Subscribed to CalDAV initial sync complete events");
 
   try {
-    for await (const data of caldavEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      caldavEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as CaldavSubscriptionEvents["initialSyncComplete"];
     }
   } finally {

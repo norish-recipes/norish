@@ -8,6 +8,8 @@
 import type { RecipeExtractionOutput } from "@/server/ai/schemas/recipe.schema";
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 
+import { decode } from "html-entities";
+
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { getUnits } from "@/config/server-config-loader";
@@ -124,9 +126,12 @@ export async function normalizeExtractionOutput(
 
   // Parse US ingredients and steps
   const units = await getUnits();
-  const usIngredients = parseIngredientWithDefaults(output.recipeIngredient.us, units);
+  const usIngredients = parseIngredientWithDefaults(
+    output.recipeIngredient.us.map((ing: string) => decode(ing)),
+    units
+  );
   const usSteps = output.recipeInstructions.us.map((step: string, i: number) => ({
-    step,
+    step: decode(step),
     order: i + 1,
     systemUsed: "us" as const,
   }));

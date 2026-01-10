@@ -1,71 +1,69 @@
+/**
+ * Queue Module Exports
+ *
+ * New architecture:
+ * - Registry: Central lifecycle management (initializeQueues, getQueues, closeAllQueues)
+ * - Queue factories: createXxxQueue() in each queue.ts
+ * - Producers: addXxxJob(queue, data) in each producer.ts
+ */
+
+// Config
 export {
-  redisConnection,
   recipeImportJobOptions,
   caldavSyncJobOptions,
   scheduledTasksJobOptions,
   QUEUE_NAMES,
+  baseWorkerOptions,
+  WORKER_CONCURRENCY,
+  STALLED_INTERVAL,
 } from "./config";
 
+// Helpers
 export { generateJobId, isJobInQueue } from "./helpers";
 
+// Registry - centralized lifecycle
+export { initializeQueues, getQueues, closeAllQueues } from "./registry";
+
+// Start/Stop workers
 export { startWorkers, stopWorkers } from "./start-workers";
 
-export { recipeImportQueue, addImportJob, closeRecipeImportQueue } from "./recipe-import/queue";
+// Queue factories
+export { createRecipeImportQueue } from "./recipe-import/queue";
+export { createImageImportQueue } from "./image-import/queue";
+export { createPasteImportQueue } from "./paste-import/queue";
+export { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
+export { createAutoTaggingQueue } from "./auto-tagging/queue";
+export { createAllergyDetectionQueue } from "./allergy-detection/queue";
+export { createCaldavSyncQueue } from "./caldav-sync/queue";
+export { createScheduledTasksQueue } from "./scheduled-tasks/queue";
 
+// Producers
+export { addImportJob } from "./recipe-import/producer";
+export { addImageImportJob } from "./image-import/producer";
+export { addPasteImportJob } from "./paste-import/producer";
+export { addNutritionEstimationJob } from "./nutrition-estimation/producer";
+export { addAutoTaggingJob, isAutoTaggingJobActive } from "./auto-tagging/producer";
+export { addAllergyDetectionJob, isAllergyDetectionJobActive } from "./allergy-detection/producer";
+export { addCaldavSyncJob } from "./caldav-sync/producer";
+export { initializeScheduledJobs } from "./scheduled-tasks/producer";
+
+// Workers
 export { startRecipeImportWorker, stopRecipeImportWorker } from "./recipe-import/worker";
-
-export { imageImportQueue, addImageImportJob, closeImageImportQueue } from "./image-import/queue";
-
 export { startImageImportWorker, stopImageImportWorker } from "./image-import/worker";
-
-export { pasteImportQueue, addPasteImportJob, closePasteImportQueue } from "./paste-import/queue";
-
 export { startPasteImportWorker, stopPasteImportWorker } from "./paste-import/worker";
-
-export {
-  nutritionEstimationQueue,
-  addNutritionEstimationJob,
-  closeNutritionEstimationQueue,
-} from "./nutrition-estimation/queue";
-
 export {
   startNutritionEstimationWorker,
   stopNutritionEstimationWorker,
 } from "./nutrition-estimation/worker";
-
-export {
-  autoTaggingQueue,
-  addAutoTaggingJob,
-  closeAutoTaggingQueue,
-  isAutoTaggingJobActive,
-} from "./auto-tagging/queue";
-
 export { startAutoTaggingWorker, stopAutoTaggingWorker } from "./auto-tagging/worker";
-
-export {
-  allergyDetectionQueue,
-  addAllergyDetectionJob,
-  closeAllergyDetectionQueue,
-  isAllergyDetectionJobActive,
-} from "./allergy-detection/queue";
-
 export {
   startAllergyDetectionWorker,
   stopAllergyDetectionWorker,
 } from "./allergy-detection/worker";
-
-export { caldavSyncQueue, addCaldavSyncJob, closeCaldavSyncQueue } from "./caldav-sync/queue";
-
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
-
-export {
-  scheduledTasksQueue,
-  initializeScheduledJobs,
-  closeScheduledTasksQueue,
-} from "./scheduled-tasks/queue";
-
 export { startScheduledTasksWorker, stopScheduledTasksWorker } from "./scheduled-tasks/worker";
 
+// Types from @/types
 export type {
   RecipeImportJobData,
   AddImportJobResult,
@@ -83,4 +81,5 @@ export type {
   CaldavSyncOperation,
 } from "@/types";
 
+// Types from scheduled-tasks
 export type { ScheduledTaskJobData, ScheduledTaskType } from "./scheduled-tasks/queue";

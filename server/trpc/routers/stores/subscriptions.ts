@@ -2,6 +2,7 @@ import type { StoreSubscriptionEvents } from "./types";
 
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
+import { createSubscriptionIterable } from "../../helpers";
 
 import { storeEmitter } from "./emitter";
 
@@ -16,7 +17,12 @@ const onCreated = authedProcedure.subscription(async function* ({ ctx, signal })
   );
 
   try {
-    for await (const data of storeEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      storeEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as StoreSubscriptionEvents["created"];
     }
   } finally {
@@ -36,7 +42,12 @@ const onUpdated = authedProcedure.subscription(async function* ({ ctx, signal })
   );
 
   try {
-    for await (const data of storeEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      storeEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as StoreSubscriptionEvents["updated"];
     }
   } finally {
@@ -56,7 +67,12 @@ const onDeleted = authedProcedure.subscription(async function* ({ ctx, signal })
   );
 
   try {
-    for await (const data of storeEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      storeEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as StoreSubscriptionEvents["deleted"];
     }
   } finally {
@@ -76,7 +92,12 @@ const onReordered = authedProcedure.subscription(async function* ({ ctx, signal 
   );
 
   try {
-    for await (const data of storeEmitter.createSubscription(eventName, signal)) {
+    for await (const data of createSubscriptionIterable(
+      storeEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
       yield data as StoreSubscriptionEvents["reordered"];
     }
   } finally {

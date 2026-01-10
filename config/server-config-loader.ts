@@ -173,6 +173,7 @@ export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
     nl: { name: "Nederlands", enabled: true },
     "de-formal": { name: "Deutsch (Sie)", enabled: true },
     "de-informal": { name: "Deutsch (Du)", enabled: true },
+    fr: { name: "Français", enabled: true },
   },
 };
 

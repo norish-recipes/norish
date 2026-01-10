@@ -3,8 +3,25 @@
  */
 
 import type { AvailableModel, AIProvider } from "./types";
+import type { TranscriptionProvider } from "@/server/db/zodSchemas/server-config";
 
 import { aiLogger } from "@/server/logger";
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/** Keywords for identifying audio/transcription models. */
+const AUDIO_MODEL_KEYWORDS = ["whisper", "audio", "speech", "transcri", "voice"];
+
+/**
+ * Check if a model ID/name matches audio model keywords.
+ */
+function isAudioModel(modelId: string): boolean {
+  const lower = modelId.toLowerCase();
+
+  return AUDIO_MODEL_KEYWORDS.some((kw) => lower.includes(kw));
+}
 
 // ============================================================================
 // Generic Fetch Helper
@@ -160,6 +177,16 @@ const providerConfigs: Record<string, ProviderConfig> = {
       };
     },
   },
+
+  deepseek: {
+    url: "https://api.deepseek.com/models",
+    headers: (apiKey) => ({ Authorization: `Bearer ${apiKey}` }),
+    mapper: (m) => ({
+      id: m.id,
+      name: m.id,
+      supportsVision: false, // DeepSeek models don't support vision yet
+    }),
+  },
 };
 
 /**
@@ -309,11 +336,11 @@ export async function listModels(
     case "perplexity":
       // Perplexity doesn't have a models list endpoint
       return [
-        { id: "sonar", name: "Sonar", supportsVision: false },
-        { id: "sonar-pro", name: "Sonar Pro", supportsVision: false },
-        { id: "sonar-reasoning", name: "Sonar Reasoning", supportsVision: false },
-        { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro", supportsVision: false },
-        { id: "sonar-deep-research", name: "Sonar Deep Research", supportsVision: false },
+        { id: "sonar", name: "Sonar", supportsVision: true },
+        { id: "sonar-pro", name: "Sonar Pro", supportsVision: true },
+        { id: "sonar-reasoning", name: "Sonar Reasoning", supportsVision: true },
+        { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro", supportsVision: true },
+        { id: "sonar-deep-research", name: "Sonar Deep Research", supportsVision: true },
       ];
 
     case "azure":
@@ -321,13 +348,6 @@ export async function listModels(
       aiLogger.debug("Azure OpenAI uses deployment names - manual entry required");
 
       return [];
-
-    case "deepseek":
-      // DeepSeek doesn't have a public models list endpoint
-      return [
-        { id: "deepseek-chat", name: "DeepSeek Chat", supportsVision: false },
-        { id: "deepseek-reasoner", name: "DeepSeek Reasoner", supportsVision: false },
-      ];
 
     default:
       aiLogger.debug({ provider }, "Unknown provider for model listing");
@@ -351,7 +371,23 @@ export async function listOpenAITranscriptionModels(apiKey: string): Promise<Ava
   });
 
   return models
-    .filter((m) => m.id.toLowerCase().includes("whisper"))
+    .filter((m) => isAudioModel(m.id))
+    .map((m) => ({ id: m.id, name: m.id, supportsVision: false }))
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/**
+ * List available transcription models from Groq.
+ */
+export async function listGroqTranscriptionModels(apiKey: string): Promise<AvailableModel[]> {
+  const models = await fetchModelsRaw({
+    url: "https://api.groq.com/openai/v1/models",
+    headers: { Authorization: `Bearer ${apiKey}` },
+    provider: "Groq",
+  });
+
+  return models
+    .filter((m) => isAudioModel(m.id))
     .map((m) => ({ id: m.id, name: m.id, supportsVision: false }))
     .sort((a, b) => a.id.localeCompare(b.id));
 }
@@ -382,18 +418,41 @@ export async function listOpenAICompatibleTranscriptionModels(
     provider: "OpenAI-compatible",
   });
 
-  // Prefer whisper models, but return all if none found
-  const whisperModels = models.filter((m) => m.id.toLowerCase().includes("whisper"));
-  const modelsToReturn = whisperModels.length > 0 ? whisperModels : models;
+  // Prefer audio models, but return all if none found
+  const audioModels = models.filter((m) => isAudioModel(m.id));
+  const modelsToReturn = audioModels.length > 0 ? audioModels : models;
 
   return modelsToReturn.map((m) => ({ id: m.id, name: m.id, supportsVision: false }));
+}
+
+/**
+ * List available transcription models from Ollama.
+ * Prioritizes audio models at the top, then shows all other models.
+ */
+export async function listOllamaTranscriptionModels(endpoint: string): Promise<AvailableModel[]> {
+  const models = await listOllamaModels(endpoint);
+
+  // Separate audio models from the rest
+  const audioModels: AvailableModel[] = [];
+  const otherModels: AvailableModel[] = [];
+
+  for (const m of models) {
+    if (isAudioModel(m.name)) {
+      audioModels.push(m);
+    } else {
+      otherModels.push(m);
+    }
+  }
+
+  // Return audio models first, then all others
+  return [...audioModels, ...otherModels];
 }
 
 /**
  * List available transcription models for a given provider.
  */
 export async function listTranscriptionModels(
-  provider: "openai" | "generic-openai" | "disabled",
+  provider: TranscriptionProvider,
   options: { endpoint?: string; apiKey?: string }
 ): Promise<AvailableModel[]> {
   const { endpoint, apiKey } = options;
@@ -407,6 +466,32 @@ export async function listTranscriptionModels(
       }
 
       return listOpenAITranscriptionModels(apiKey);
+
+    case "groq":
+      if (!apiKey) {
+        aiLogger.debug("Cannot list Groq transcription models without API key");
+
+        return [];
+      }
+
+      return listGroqTranscriptionModels(apiKey);
+
+    case "azure":
+      // Azure uses deployment names - return common whisper models as suggestions
+      return [
+        { id: "whisper-1", name: "Whisper v1", supportsVision: false },
+        { id: "gpt-4o-transcribe", name: "GPT-4o Transcribe", supportsVision: false },
+        { id: "gpt-4o-mini-transcribe", name: "GPT-4o Mini Transcribe", supportsVision: false },
+      ];
+
+    case "ollama":
+      if (!endpoint) {
+        aiLogger.debug("Cannot list Ollama transcription models without endpoint");
+
+        return [];
+      }
+
+      return listOllamaTranscriptionModels(endpoint);
 
     case "generic-openai":
       if (!endpoint) {

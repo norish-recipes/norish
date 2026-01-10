@@ -32,7 +32,7 @@ export default function AIConfigForm() {
   const [enabled, setEnabled] = useState(aiConfig?.enabled ?? false);
   const [provider, setProvider] = useState(aiConfig?.provider ?? "openai");
   const [endpoint, setEndpoint] = useState(aiConfig?.endpoint ?? "");
-  const [model, setModel] = useState(aiConfig?.model ?? "gpt-5-mini");
+  const [model, setModel] = useState(aiConfig?.model ?? "");
   const [visionModel, setVisionModel] = useState(aiConfig?.visionModel ?? "");
   const [apiKey, setApiKey] = useState("");
   const [temperature, setTemperature] = useState(aiConfig?.temperature ?? 0);
@@ -88,13 +88,12 @@ export default function AIConfigForm() {
   const modelOptions = useMemo(() => {
     const options = availableModels.map((m) => ({
       value: m.id,
-      label: m.name,
       supportsVision: m.supportsVision,
     }));
 
     // Add current model if not in list (allows keeping custom/typed values)
     if (model && !options.some((o) => o.value === model)) {
-      options.unshift({ value: model, label: model, supportsVision: undefined });
+      options.unshift({ value: model, supportsVision: undefined });
     }
 
     return options;
@@ -104,13 +103,12 @@ export default function AIConfigForm() {
   const visionModelOptions = useMemo(() => {
     const options = availableModels.map((m) => ({
       value: m.id,
-      label: m.name,
       supportsVision: m.supportsVision,
     }));
 
     // Add current vision model if not in list
     if (visionModel && !options.some((o) => o.value === visionModel)) {
-      options.unshift({ value: visionModel, label: visionModel, supportsVision: undefined });
+      options.unshift({ value: visionModel, supportsVision: undefined });
     }
 
     return options;
@@ -148,46 +146,10 @@ export default function AIConfigForm() {
   const handleProviderChange = (newProvider: AIConfig["provider"]) => {
     if (newProvider !== provider) {
       setProvider(newProvider);
-      // Clear API key when switching providers
+      // Clear API key and models when switching providers - user must select from list
       setApiKey("");
-      // Set sensible defaults based on provider
-      switch (newProvider) {
-        case "openai":
-          setModel("gpt-5-mini");
-          setVisionModel("");
-          break;
-        case "azure":
-          setModel(""); // Azure uses deployment names, user must enter manually
-          setVisionModel("");
-          break;
-        case "anthropic":
-          setModel("claude-sonnet-latest");
-          setVisionModel("");
-          break;
-        case "google":
-          setModel("gemini-flash-latest");
-          setVisionModel("");
-          break;
-        case "mistral":
-          setModel("mistral-small-latest");
-          setVisionModel("");
-          break;
-        case "deepseek":
-          setModel("deepseek-chat");
-          setVisionModel("");
-          break;
-        case "perplexity":
-          setModel("sonar");
-          setVisionModel("");
-          break;
-        case "groq":
-          setModel("");
-          setVisionModel("");
-          break;
-        default:
-          setModel("");
-          setVisionModel("");
-      }
+      setModel("");
+      setVisionModel("");
       // Clear endpoint when switching to cloud providers (they don't need one)
       const newCloudProviders = [
         "openai",
@@ -303,21 +265,32 @@ export default function AIConfigForm() {
         />
       )}
 
+      {needsApiKey && (
+        <SecretInput
+          isConfigured={isApiKeyConfigured}
+          isDisabled={!enabled}
+          label={t("apiKey")}
+          placeholder={t("apiKeyPlaceholder")}
+          value={apiKey}
+          onReveal={handleRevealApiKey}
+          onValueChange={setApiKey}
+        />
+      )}
+
       <Autocomplete
         allowsCustomValue
         defaultItems={modelOptions}
         inputValue={model}
-        isDisabled={!enabled}
+        isDisabled={!enabled || !canFetchModels}
         isLoading={isLoadingModels}
         label={t("model")}
-        placeholder={provider === "openai" ? "gpt-5-mini" : ""}
         onInputChange={setModel}
         onSelectionChange={(key) => key && setModel(key as string)}
       >
         {(item) => (
-          <AutocompleteItem key={item.value} textValue={item.label}>
+          <AutocompleteItem key={item.value} textValue={item.value}>
             <div className="flex items-center justify-between gap-2">
-              <span>{item.label}</span>
+              <span>{item.value}</span>
               {item.supportsVision && (
                 <span className="text-success-500 text-xs">{t("vision")}</span>
               )}
@@ -331,17 +304,16 @@ export default function AIConfigForm() {
         defaultItems={visionModelOptions}
         description={t("visionModelDescription")}
         inputValue={visionModel}
-        isDisabled={!enabled}
+        isDisabled={!enabled || !canFetchModels}
         isLoading={isLoadingModels}
         label={t("visionModel")}
-        placeholder={provider === "openai" ? "gpt-5-mini" : ""}
         onInputChange={setVisionModel}
         onSelectionChange={(key) => key && setVisionModel(key as string)}
       >
         {(item) => (
-          <AutocompleteItem key={item.value} textValue={item.label}>
+          <AutocompleteItem key={item.value} textValue={item.value}>
             <div className="flex items-center justify-between gap-2">
-              <span>{item.label}</span>
+              <span>{item.value}</span>
               {item.supportsVision && (
                 <span className="text-success-500 text-xs">{t("vision")}</span>
               )}
@@ -349,18 +321,6 @@ export default function AIConfigForm() {
           </AutocompleteItem>
         )}
       </Autocomplete>
-
-      {needsApiKey && (
-        <SecretInput
-          isConfigured={isApiKeyConfigured}
-          isDisabled={!enabled}
-          label={t("apiKey")}
-          placeholder={t("apiKeyPlaceholder")}
-          value={apiKey}
-          onReveal={handleRevealApiKey}
-          onValueChange={setApiKey}
-        />
-      )}
 
       <div className="flex flex-col gap-2">
         <label className="text-sm font-medium">{t("temperature", { value: temperature })}</label>

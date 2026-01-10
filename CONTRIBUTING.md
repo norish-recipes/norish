@@ -197,23 +197,26 @@ pnpm test
 
 ## Adding Translations
 
-Norish uses a configurable locale system. Locales are defined in code but can be enabled/disabled at runtime via the Admin UI or environment variables.
+Norish uses a configurable locale system. Locales are defined in `config/server-config-loader.ts` and can be enabled/disabled at runtime via the Admin UI or environment variables.
 
-### 1. Add Locale to ALL_LOCALES
+### 1. Add Locale to DEFAULT_LOCALE_CONFIG
 
-Edit `i18n/config.ts` to add the new locale code:
+Edit `config/server-config-loader.ts` to add the new locale:
 
 ```typescript
-export const ALL_LOCALES = ["en", "nl", "de-formal", "de-informal", "your-locale"] as const;
-
-export const ALL_LOCALE_NAMES: Record<Locale, string> = {
-  en: "English",
-  nl: "Nederlands",
-  "de-formal": "Deutsch (Sie)",
-  "de-informal": "Deutsch (Du)",
-  "your-locale": "Your Language",
+export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
+  defaultLocale: "en",
+  locales: {
+    en: { name: "English", enabled: true },
+    nl: { name: "Nederlands", enabled: true },
+    "de-formal": { name: "Deutsch (Sie)", enabled: true },
+    "de-informal": { name: "Deutsch (Du)", enabled: true },
+    "your-locale": { name: "Your Language", enabled: true },
+  },
 };
 ```
+
+This is the single source of truth for all locale configuration.
 
 ### 2. Create Translation Files
 
@@ -244,30 +247,11 @@ This command uses `en` as the source of truth and reports:
 
 The check runs automatically in CI and will block PRs with missing translations.
 
-### 4. Add Locale to Default Config
+### 4. Enable the Locale
 
-Add the locale entry to `DEFAULT_LOCALE_CONFIG` in `config/server-config-loader.ts`:
+New locales are **enabled by default** when added to `DEFAULT_LOCALE_CONFIG`. You can also control this via:
 
-```typescript
-export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
-  defaultLocale: "en",
-  locales: {
-    en: { name: "English", enabled: true },
-    nl: { name: "Nederlands", enabled: true },
-    "de-formal": { name: "Deutsch (Sie)", enabled: true },
-    "de-informal": { name: "Deutsch (Du)", enabled: true },
-    "your-locale": { name: "Your Language", enabled: true },
-  },
-};
-```
-
-This is the single source of truth - `seed-config.ts` imports from here automatically.
-
-### 5. Enable the Locale
-
-New locales are **disabled by default** until enabled via one of these methods:
-
-- **Admin UI**: Go to **Settings => Admin => General** and check the locale checkbox
+- **Admin UI**: Go to **Settings => Admin => General** to enable/disable locales
 - **Environment variable**: Set `ENABLED_LOCALES=en,nl,your-locale` (comma-separated list)
 
 ## License

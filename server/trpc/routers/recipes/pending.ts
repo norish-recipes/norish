@@ -2,8 +2,10 @@ import type {
   RecipeImportJobData,
   PendingRecipeDTO,
   NutritionEstimationJobData,
+  AutoTaggingJobData,
   AllergyDetectionJobData,
 } from "@/types";
+import type { Job } from "bullmq";
 
 import { z } from "zod";
 
@@ -11,23 +13,19 @@ import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 
 import { trpcLogger as log } from "@/server/logger";
-import {
-  recipeImportQueue,
-  nutritionEstimationQueue,
-  autoTaggingQueue,
-  allergyDetectionQueue,
-} from "@/server/queue";
+import { getQueues } from "@/server/queue/registry";
 import { getRecipePermissionPolicy } from "@/config/server-config-loader";
 
 const getPending = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Fetching pending recipe imports");
 
   const policy = await getRecipePermissionPolicy();
+  const queues = getQueues();
 
-  const jobs = await recipeImportQueue.getJobs(["waiting", "active", "delayed"]);
+  const jobs = await queues.recipeImport.getJobs(["waiting", "active", "delayed"]);
 
-  const filteredJobs = jobs.filter((job) => {
-    const data = job.data as RecipeImportJobData;
+  const filteredJobs = jobs.filter((job: Job<RecipeImportJobData>) => {
+    const data = job.data;
 
     switch (policy.view) {
       case "everyone":
@@ -42,7 +40,7 @@ const getPending = authedProcedure.query(async ({ ctx }) => {
     }
   });
 
-  const pendingRecipes: PendingRecipeDTO[] = filteredJobs.map((job) => ({
+  const pendingRecipes: PendingRecipeDTO[] = filteredJobs.map((job: Job<RecipeImportJobData>) => ({
     recipeId: job.data.recipeId,
     url: job.data.url,
     addedAt: job.timestamp,
@@ -59,12 +57,11 @@ const getPending = authedProcedure.query(async ({ ctx }) => {
 const isNutritionEstimating = authedProcedure
   .input(z.object({ recipeId: z.uuid() }))
   .query(async ({ ctx, input }) => {
-    const jobs = await nutritionEstimationQueue.getJobs(["waiting", "active", "delayed"]);
+    const queues = getQueues();
+    const jobs = await queues.nutritionEstimation.getJobs(["waiting", "active", "delayed"]);
 
-    const isEstimating = jobs.some((job) => {
-      const data = job.data as NutritionEstimationJobData;
-
-      return data.recipeId === input.recipeId;
+    const isEstimating = jobs.some((job: Job<NutritionEstimationJobData>) => {
+      return job.data.recipeId === input.recipeId;
     });
 
     log.debug(
@@ -82,12 +79,16 @@ const isNutritionEstimating = authedProcedure
 const getPendingAutoTagging = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Fetching pending auto-tagging jobs");
 
-  const jobs = await autoTaggingQueue.getJobs(["waiting", "active", "delayed"]);
+  const queues = getQueues();
+  const jobs = await queues.autoTagging.getJobs(["waiting", "active", "delayed"]);
 
   // Auto-tagging jobs are per-recipe and user-scoped
   const recipeIds = jobs
-    .filter((job) => job.data.userId === ctx.user.id || job.data.householdKey === ctx.householdKey)
-    .map((job) => job.data.recipeId);
+    .filter(
+      (job: Job<AutoTaggingJobData>) =>
+        job.data.userId === ctx.user.id || job.data.householdKey === ctx.householdKey
+    )
+    .map((job: Job<AutoTaggingJobData>) => job.data.recipeId);
 
   log.debug({ userId: ctx.user.id, count: recipeIds.length }, "Found pending auto-tagging jobs");
 
@@ -100,9 +101,12 @@ const getPendingAutoTagging = authedProcedure.query(async ({ ctx }) => {
 const isAutoTagging = authedProcedure
   .input(z.object({ recipeId: z.uuid() }))
   .query(async ({ ctx, input }) => {
-    const jobs = await autoTaggingQueue.getJobs(["waiting", "active", "delayed"]);
+    const queues = getQueues();
+    const jobs = await queues.autoTagging.getJobs(["waiting", "active", "delayed"]);
 
-    const isActive = jobs.some((job) => job.data.recipeId === input.recipeId);
+    const isActive = jobs.some(
+      (job: Job<AutoTaggingJobData>) => job.data.recipeId === input.recipeId
+    );
 
     log.debug(
       { userId: ctx.user.id, recipeId: input.recipeId, isActive },
@@ -119,16 +123,15 @@ const isAutoTagging = authedProcedure
 const getPendingAllergyDetection = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Fetching pending allergy detection jobs");
 
-  const jobs = await allergyDetectionQueue.getJobs(["waiting", "active", "delayed"]);
+  const queues = getQueues();
+  const jobs = await queues.allergyDetection.getJobs(["waiting", "active", "delayed"]);
 
   // Allergy detection jobs are per-recipe and user-scoped
   const recipeIds = jobs
-    .filter((job) => {
-      const data = job.data as AllergyDetectionJobData;
-
-      return data.userId === ctx.user.id || data.householdKey === ctx.householdKey;
+    .filter((job: Job<AllergyDetectionJobData>) => {
+      return job.data.userId === ctx.user.id || job.data.householdKey === ctx.householdKey;
     })
-    .map((job) => job.data.recipeId);
+    .map((job: Job<AllergyDetectionJobData>) => job.data.recipeId);
 
   log.debug(
     { userId: ctx.user.id, count: recipeIds.length },
@@ -144,12 +147,11 @@ const getPendingAllergyDetection = authedProcedure.query(async ({ ctx }) => {
 const isAllergyDetecting = authedProcedure
   .input(z.object({ recipeId: z.uuid() }))
   .query(async ({ ctx, input }) => {
-    const jobs = await allergyDetectionQueue.getJobs(["waiting", "active", "delayed"]);
+    const queues = getQueues();
+    const jobs = await queues.allergyDetection.getJobs(["waiting", "active", "delayed"]);
 
-    const isActive = jobs.some((job) => {
-      const data = job.data as AllergyDetectionJobData;
-
-      return data.recipeId === input.recipeId;
+    const isActive = jobs.some((job: Job<AllergyDetectionJobData>) => {
+      return job.data.recipeId === input.recipeId;
     });
 
     log.debug(

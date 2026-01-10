@@ -1,11 +1,12 @@
 import type { CaldavSyncJobData } from "@/types";
 import type { CaldavSyncStatusInsertDto } from "@/types/dto/caldav-sync-status";
 import type { Slot } from "@/types";
+import type { Job } from "bullmq";
 
-import { Worker, Job } from "bullmq";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
-
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import {
   syncPlannedItem,
@@ -20,8 +21,6 @@ import {
 import { caldavEmitter } from "@/server/trpc/routers/caldav/emitter";
 
 const log = createLogger("worker:caldav-sync");
-
-let worker: Worker<CaldavSyncJobData> | null = null;
 
 /**
  * Process a single CalDAV sync job.
@@ -174,34 +173,21 @@ async function handleJobFailed(
 }
 
 /**
- * Start the CalDAV sync worker.
+ * Start the CalDAV sync worker (lazy - starts on demand).
  * Call during server startup.
  */
-export function startCaldavSyncWorker(): void {
-  if (worker) {
-    log.warn("CalDAV sync worker already running");
-
-    return;
-  }
-
-  worker = new Worker<CaldavSyncJobData>(QUEUE_NAMES.CALDAV_SYNC, processCaldavSyncJob, {
-    connection: redisConnection,
-    concurrency: 3, // Limit concurrent CalDAV operations
-  });
-
-  worker.on("completed", (job) => {
-    log.debug({ jobId: job.id }, "CalDAV sync job completed");
-  });
-
-  worker.on("failed", (job, error) => {
-    handleJobFailed(job, error);
-  });
-
-  worker.on("error", (error) => {
-    log.error({ error }, "CalDAV sync worker error");
-  });
-
-  log.info("CalDAV sync worker started");
+export async function startCaldavSyncWorker(): Promise<void> {
+  await createLazyWorker<CaldavSyncJobData>(
+    QUEUE_NAMES.CALDAV_SYNC,
+    processCaldavSyncJob,
+    {
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.CALDAV_SYNC],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.CALDAV_SYNC],
+    },
+    handleJobFailed
+  );
 }
 
 /**
@@ -209,9 +195,5 @@ export function startCaldavSyncWorker(): void {
  * Call during server shutdown.
  */
 export async function stopCaldavSyncWorker(): Promise<void> {
-  if (worker) {
-    await worker.close();
-    worker = null;
-    log.info("CalDAV sync worker stopped");
-  }
+  await stopLazyWorker(QUEUE_NAMES.CALDAV_SYNC);
 }

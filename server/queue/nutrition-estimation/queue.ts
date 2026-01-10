@@ -1,47 +1,25 @@
-import type { NutritionEstimationJobData, AddNutritionEstimationJobResult } from "@/types";
+/**
+ * Nutrition Estimation Queue - Infrastructure
+ *
+ * Pure factory for creating queue instances.
+ * Callers are responsible for lifecycle (close on shutdown).
+ */
+
+import type { NutritionEstimationJobData } from "@/types";
 
 import { Queue } from "bullmq";
 
-import { redisConnection, nutritionEstimationJobOptions, QUEUE_NAMES } from "../config";
-import { isJobInQueue } from "../helpers";
+import { nutritionEstimationJobOptions, QUEUE_NAMES } from "../config";
 
-import { createLogger } from "@/server/logger";
+import { getBullClient } from "@/server/redis/bullmq";
 
-const log = createLogger("queue:nutrition-estimation");
-
-export const nutritionEstimationQueue = new Queue<NutritionEstimationJobData>(
-  QUEUE_NAMES.NUTRITION_ESTIMATION,
-  {
-    connection: redisConnection,
+/**
+ * Create a nutrition estimation queue instance.
+ * One queue instance per process is expected.
+ */
+export function createNutritionEstimationQueue(): Queue<NutritionEstimationJobData> {
+  return new Queue<NutritionEstimationJobData>(QUEUE_NAMES.NUTRITION_ESTIMATION, {
+    connection: getBullClient(),
     defaultJobOptions: nutritionEstimationJobOptions,
-  }
-);
-
-function generateNutritionJobId(recipeId: string): string {
-  return `nutrition_${recipeId}`;
-}
-
-export async function addNutritionEstimationJob(
-  data: NutritionEstimationJobData
-): Promise<AddNutritionEstimationJobResult> {
-  const jobId = generateNutritionJobId(data.recipeId);
-
-  log.debug({ recipeId: data.recipeId, jobId }, "Attempting to add nutrition estimation job");
-
-  if (await isJobInQueue(nutritionEstimationQueue, jobId)) {
-    log.warn({ recipeId: data.recipeId, jobId }, "Duplicate nutrition estimation job rejected");
-
-    return { status: "duplicate", existingJobId: jobId };
-  }
-
-  const job = await nutritionEstimationQueue.add("estimate", data, { jobId });
-
-  log.info({ recipeId: data.recipeId, jobId: job.id }, "Nutrition estimation job added to queue");
-
-  return { status: "queued", job };
-}
-
-export async function closeNutritionEstimationQueue(): Promise<void> {
-  await nutritionEstimationQueue.close();
-  log.info("Nutrition estimation queue closed");
+  });
 }

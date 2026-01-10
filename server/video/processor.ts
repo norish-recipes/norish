@@ -63,7 +63,13 @@ export async function processVideoRecipe(
 
     // Transcribe audio
     log.info({ url }, "Starting audio transcription");
-    const transcript = await transcribeAudio(audioPath);
+    const transcriptionResult = await transcribeAudio(audioPath);
+
+    if (!transcriptionResult.success) {
+      throw new Error(transcriptionResult.error);
+    }
+
+    const transcript = transcriptionResult.data;
 
     log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 

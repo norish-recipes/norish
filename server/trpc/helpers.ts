@@ -1,5 +1,6 @@
 import type { TypedEmitter } from "./emitter";
 import type { PermissionLevel } from "@/server/db/zodSchemas/server-config";
+import type { SubscriptionMultiplexer } from "@/server/redis/subscription-multiplexer";
 
 import { authedProcedure } from "./middleware";
 
@@ -20,9 +21,16 @@ import { trpcLogger as log } from "@/server/logger";
  */
 export async function waitForAbort(signal?: AbortSignal): Promise<void> {
   if (!signal) return;
-  await new Promise<void>((_, reject) => {
-    signal.addEventListener("abort", () => reject(new Error("Aborted")));
-  }).catch(() => {});
+  if (signal.aborted) return;
+
+  await new Promise<void>((resolve) => {
+    const handler = () => {
+      signal.removeEventListener("abort", handler);
+      resolve();
+    };
+
+    signal.addEventListener("abort", handler, { once: true });
+  });
 }
 
 /**
@@ -31,6 +39,37 @@ export async function waitForAbort(signal?: AbortSignal): Promise<void> {
 export interface PolicyEmitContext {
   userId: string;
   householdKey: string;
+}
+
+/**
+ * Extended context for subscriptions that includes the multiplexer.
+ */
+export interface PolicySubscribeContext extends PolicyEmitContext {
+  multiplexer: SubscriptionMultiplexer | null;
+}
+
+/**
+ * Create a subscription iterable that uses the multiplexer if available.
+ * Falls back to direct emitter subscription for HTTP or test contexts.
+ *
+ * @example
+ * ```ts
+ * for await (const data of createSubscriptionIterable(emitter, ctx.multiplexer, channelName, signal)) {
+ *   yield data;
+ * }
+ * ```
+ */
+export function createSubscriptionIterable<T>(
+  emitter: TypedEmitter<Record<string, T>>,
+  multiplexer: SubscriptionMultiplexer | null,
+  channel: string,
+  signal?: AbortSignal
+): AsyncIterable<T> {
+  if (multiplexer) {
+    return multiplexer.subscribe<T>(channel, signal);
+  }
+
+  return emitter.createSubscription(channel, signal) as AsyncIterable<T>;
 }
 
 /**
@@ -126,11 +165,11 @@ export async function* mergeAsyncIterables<T>(
 
 /**
  * Creates iterables for all three event channels (household, broadcast, user).
- * Use with mergeAsyncIterables to listen to events regardless of view policy.
+ * Uses the multiplexer if available (WebSocket connections), falls back to direct subscriptions.
  *
  * @example
  * ```ts
- * const iterables = createPolicyAwareIterables(recipeEmitter, ctx, "imported", signal);
+ * const iterables = createPolicyAwareIterables(emitter, ctx, "imported", signal);
  * for await (const data of mergeAsyncIterables(iterables, signal)) {
  *   yield data as RecipeSubscriptionEvents["imported"];
  * }
@@ -138,7 +177,7 @@ export async function* mergeAsyncIterables<T>(
  */
 export function createPolicyAwareIterables<TEvents extends Record<string, unknown>>(
   emitter: TypedEmitter<TEvents>,
-  ctx: PolicyEmitContext,
+  ctx: PolicySubscribeContext,
   event: keyof TEvents & string,
   signal?: AbortSignal
 ): AsyncIterable<TEvents[typeof event]>[] {
@@ -147,10 +186,27 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
   const userEventName = emitter.userEvent(ctx.userId, event);
 
   log.trace(
-    { event, householdEventName, broadcastEventName, userEventName },
+    {
+      event,
+      householdEventName,
+      broadcastEventName,
+      userEventName,
+      hasMultiplexer: !!ctx.multiplexer,
+    },
     "Creating policy-aware iterables"
   );
 
+  // Use multiplexer if available (WebSocket connections)
+  // This consolidates all subscriptions into a single Redis connection
+  if (ctx.multiplexer) {
+    return [
+      ctx.multiplexer.subscribe<TEvents[typeof event]>(householdEventName, signal),
+      ctx.multiplexer.subscribe<TEvents[typeof event]>(broadcastEventName, signal),
+      ctx.multiplexer.subscribe<TEvents[typeof event]>(userEventName, signal),
+    ];
+  }
+
+  // Fallback to direct subscriptions (HTTP polling, tests, etc.)
   return [
     emitter.createSubscription(householdEventName, signal),
     emitter.createSubscription(broadcastEventName, signal),
@@ -163,10 +219,14 @@ export function createPolicyAwareSubscription<
   K extends keyof TEvents & string,
 >(emitter: TypedEmitter<TEvents>, eventName: K, logMessage: string) {
   return authedProcedure.subscription(async function* ({ ctx, signal }) {
-    const policyCtx = { userId: ctx.user.id, householdKey: ctx.householdKey };
+    const policyCtx: PolicySubscribeContext = {
+      userId: ctx.user.id,
+      householdKey: ctx.householdKey,
+      multiplexer: ctx.multiplexer,
+    };
 
     log.trace(
-      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      { userId: ctx.user.id, householdKey: ctx.householdKey, hasMultiplexer: !!ctx.multiplexer },
       `Subscribed to ${logMessage}`
     );
 

@@ -1,6 +1,7 @@
 import type { RecipeSubscriptionEvents } from "../recipes/types";
 
 import { authedProcedure } from "../../middleware";
+import { createSubscriptionIterable } from "../../helpers";
 import { recipeEmitter } from "../recipes/emitter";
 import { router } from "../../trpc";
 
@@ -11,7 +12,12 @@ const onArchiveProgress = authedProcedure.subscription(async function* ({ ctx, s
   const userId = ctx.user.id;
   const eventName = recipeEmitter.userEvent(userId, "archiveProgress");
 
-  for await (const data of recipeEmitter.createSubscription(eventName, signal)) {
+  for await (const data of createSubscriptionIterable(
+    recipeEmitter,
+    ctx.multiplexer,
+    eventName,
+    signal
+  )) {
     yield data as RecipeSubscriptionEvents["archiveProgress"];
   }
 });
@@ -20,7 +26,12 @@ const onArchiveCompleted = authedProcedure.subscription(async function* ({ ctx, 
   const userId = ctx.user.id;
   const eventName = recipeEmitter.userEvent(userId, "archiveCompleted");
 
-  for await (const data of recipeEmitter.createSubscription(eventName, signal)) {
+  for await (const data of createSubscriptionIterable(
+    recipeEmitter,
+    ctx.multiplexer,
+    eventName,
+    signal
+  )) {
     yield data as RecipeSubscriptionEvents["archiveCompleted"];
   }
 });

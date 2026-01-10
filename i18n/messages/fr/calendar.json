@@ -1,0 +1,40 @@
+{
+  "page": {
+    "title": "Calendrier"
+  },
+  "navigation": {
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "prev": "Précédent",
+    "next": "Suivant"
+  },
+  "weekdays": {
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mer",
+    "thu": "Jeu",
+    "fri": "Ven",
+    "sat": "Sam",
+    "sun": "Dim"
+  },
+  "timeline": {
+    "noItems": "Aucun article",
+    "viewGroceries": "Voir les épiceries",
+    "goToRecipe": "Aller aux recettes",
+    "deleteItem": "Effacer l'article",
+    "itemActions": "Actions sur l'article",
+    "viewAllergenWarning": "Voir l'avertissement relatif aux allergènes",
+    "allergyWarning": "Avertissement concernant les allergies :",
+    "contains": "Contient: {allergens}",
+    "addItem": "Ajouter article"
+  },
+  "panel": {
+    "addToCalendar": "Ajouter au calendrier",
+    "addRecipe": "Ajouter une recette",
+    "noDaysAvailable": "Aucun jour disponible.",
+    "searchPlaceholder": "Rechercher des recettes ou ajouter des notes...",
+    "addNote": "Ajouter une note : {input}",
+    "noRecipesFound": "Pas de recette trouvée.",
+    "failedToLoadRecipes": "Impossible de charger les recettes."
+  }
+}

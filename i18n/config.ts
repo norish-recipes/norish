@@ -1,61 +1,44 @@
 /**
- * i18n Configuration
+ * i18n Configuration - Client-side utilities
  *
- * Central configuration for internationalization.
- *
- * LOCALE CONFIGURATION:
- * Locale settings are stored in the server config database and can be managed via:
- * - Environment variables: DEFAULT_LOCALE, ENABLED_LOCALES
- * - Admin UI: Settings => Admin => General
+ * This file provides type definitions and validation utilities for locales.
+ * The actual locale configuration (enabled locales, names, etc.) is managed by
+ * the server via `config/server-config-loader.ts` and stored in the database.
  *
  * TO ADD A NEW LANGUAGE:
- * 1. Add the locale code and name to ALL_LOCALES below
- * 2. Create translation files in `i18n/messages/{locale}/`
- * 3. Update `server/startup/seed-config.ts` DEFAULT_LOCALE_CONFIG
- * 4. Update `config/server-config-loader.ts` DEFAULT_LOCALE_CONFIG
- *
- * The locale will be disabled by default until enabled via Admin UI or ENABLED_LOCALES env var.
+ * 1. Create translation files in `i18n/messages/{locale}/`
+ * 2. Add the locale entry to DEFAULT_LOCALE_CONFIG in `config/server-config-loader.ts`
+ * 3. The locale will be available immediately (enabled by default)
  */
 
 /**
- * All available locales in the system.
- * This is the static source of truth for what locales exist.
- * Enabled/disabled status is controlled via server config.
+ * Default locale used as ultimate fallback when no locale is set.
+ * The actual default locale for the instance is configured in the database.
  */
-export const ALL_LOCALES = ["en", "nl", "de-formal", "de-informal"] as const;
+export const DEFAULT_LOCALE = "en";
 
 /**
- * Type for any valid locale code
+ * Type for any valid locale code.
+ * This is a loose string type since locales are now dynamically configured.
  */
-export type Locale = (typeof ALL_LOCALES)[number];
+export type Locale = string;
 
 /**
- * Human-readable display names for each locale
- */
-export const ALL_LOCALE_NAMES: Record<Locale, string> = {
-  en: "English",
-  nl: "Nederlands",
-  "de-formal": "Deutsch (Sie)",
-  "de-informal": "Deutsch (Du)",
-};
-
-/**
- * Default locale used as ultimate fallback
- */
-export const DEFAULT_LOCALE: Locale = "en";
-
-/**
- * Check if a string is a valid locale code (exists in ALL_LOCALES)
- * Note: This checks if the locale exists, not if it's enabled.
+ * Check if a string is a valid locale code format.
+ * Note: This only checks format validity, not if the locale is enabled.
  * For enabled check, use isValidEnabledLocale from server-config-loader.
  */
-export function isValidLocale(locale: string): locale is Locale {
-  return ALL_LOCALES.includes(locale as Locale);
+export function isValidLocale(locale: unknown): locale is Locale {
+  if (typeof locale !== "string") return false;
+
+  // Basic format check: 2-3 letter language code, optionally with region/variant
+  // Examples: en, nl, de-formal, de-informal, pt-BR
+  return /^[a-z]{2,3}(-[a-zA-Z]{2,10})?$/.test(locale);
 }
 
 /**
- * Get a valid locale from a string, falling back to default
- * Note: This validates against ALL locales, not just enabled ones.
+ * Get a valid locale from a string, falling back to default.
+ * Note: This validates format only, not if the locale is enabled.
  */
 export function getValidLocale(locale: string | null | undefined): Locale {
   if (locale && isValidLocale(locale)) {
@@ -66,74 +49,34 @@ export function getValidLocale(locale: string | null | undefined): Locale {
 }
 
 /**
- * Default date/time format options
- * Used for consistent date formatting across the app
- * Same format for all locales (Intl.DateTimeFormat handles locale-specific rendering)
+ * Default date/time format options.
+ * Used for consistent date formatting across the app.
+ * Intl.DateTimeFormat handles locale-specific rendering automatically.
  */
 export const DEFAULT_DATE_FORMAT: Intl.DateTimeFormatOptions = {
   dateStyle: "medium",
 };
 
 /**
- * Default number format options
- * Same format for all locales (Intl.NumberFormat handles locale-specific rendering)
+ * Default number format options.
+ * Intl.NumberFormat handles locale-specific rendering automatically.
  */
 export const DEFAULT_NUMBER_FORMAT: Intl.NumberFormatOptions = {
   maximumFractionDigits: 2,
 };
 
 /**
- * Get date format for a locale
- * Currently returns the same format for all locales
+ * Get date format for a locale.
+ * Currently returns the same format for all locales.
  */
 export function getDateFormat(_locale: Locale): Intl.DateTimeFormatOptions {
   return DEFAULT_DATE_FORMAT;
 }
 
 /**
- * Get number format for a locale
- * Currently returns the same format for all locales
+ * Get number format for a locale.
+ * Currently returns the same format for all locales.
  */
 export function getNumberFormat(_locale: Locale): Intl.NumberFormatOptions {
   return DEFAULT_NUMBER_FORMAT;
 }
-
-// ============================================================================
-// Legacy exports for backward compatibility
-// These will be removed in a future version
-// ============================================================================
-
-/**
- * @deprecated Use ALL_LOCALES instead
- */
-export const locales = ALL_LOCALES;
-
-/**
- * @deprecated Use DEFAULT_LOCALE instead
- */
-export const defaultLocale = DEFAULT_LOCALE;
-
-/**
- * @deprecated Use ALL_LOCALE_NAMES instead
- */
-export const localeNames = ALL_LOCALE_NAMES;
-
-/**
- * @deprecated Use getDateFormat() instead
- */
-export const dateFormats: Record<Locale, Intl.DateTimeFormatOptions> = {
-  en: DEFAULT_DATE_FORMAT,
-  nl: DEFAULT_DATE_FORMAT,
-  "de-formal": DEFAULT_DATE_FORMAT,
-  "de-informal": DEFAULT_DATE_FORMAT,
-};
-
-/**
- * @deprecated Use getNumberFormat() instead
- */
-export const numberFormats: Record<Locale, Intl.NumberFormatOptions> = {
-  en: DEFAULT_NUMBER_FORMAT,
-  nl: DEFAULT_NUMBER_FORMAT,
-  "de-formal": DEFAULT_NUMBER_FORMAT,
-  "de-informal": DEFAULT_NUMBER_FORMAT,
-};

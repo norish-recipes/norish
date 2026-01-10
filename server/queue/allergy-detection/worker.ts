@@ -3,15 +3,16 @@
  *
  * Processes allergy detection jobs from the queue.
  * Detects allergens in recipes imported via structured parsers.
- * Runs in-process with the main server.
+ * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
 import type { AllergyDetectionJobData } from "@/types";
+import type { Job } from "bullmq";
 
-import { Worker, Job } from "bullmq";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
-import { redisConnection, QUEUE_NAMES } from "../config";
-
+import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
@@ -22,8 +23,6 @@ import { db } from "@/server/db/drizzle";
 import { detectAllergiesInRecipe } from "@/server/ai/allergy-detector";
 
 const log = createLogger("worker:allergy-detection");
-
-let worker: Worker<AllergyDetectionJobData> | null = null;
 
 async function processAllergyDetectionJob(job: Job<AllergyDetectionJobData>): Promise<void> {
   const { recipeId, userId, householdKey } = job.data;
@@ -172,41 +171,20 @@ async function handleJobFailed(
   // since it's a background enhancement, not a user-initiated action
 }
 
-export function startAllergyDetectionWorker(): void {
-  if (worker) {
-    log.warn("Allergy detection worker already running");
-
-    return;
-  }
-
-  worker = new Worker<AllergyDetectionJobData>(
+export async function startAllergyDetectionWorker(): Promise<void> {
+  await createLazyWorker<AllergyDetectionJobData>(
     QUEUE_NAMES.ALLERGY_DETECTION,
     processAllergyDetectionJob,
     {
-      connection: redisConnection,
-      concurrency: 3,
-    }
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.ALLERGY_DETECTION],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.ALLERGY_DETECTION],
+    },
+    handleJobFailed
   );
-
-  worker.on("completed", (job) => {
-    log.debug({ jobId: job.id }, "Allergy detection job completed");
-  });
-
-  worker.on("failed", (job, error) => {
-    handleJobFailed(job, error);
-  });
-
-  worker.on("error", (error) => {
-    log.error({ error }, "Allergy detection worker error");
-  });
-
-  log.info("Allergy detection worker started");
 }
 
 export async function stopAllergyDetectionWorker(): Promise<void> {
-  if (worker) {
-    await worker.close();
-    worker = null;
-    log.info("Allergy detection worker stopped");
-  }
+  await stopLazyWorker(QUEUE_NAMES.ALLERGY_DETECTION);
 }

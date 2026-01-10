@@ -1,0 +1,74 @@
+{
+  "page": {
+    "title": "Courses",
+    "addItem": "Ajouter un article",
+    "addItems": "Ajouter des articles",
+    "viewByStore": "Par magasin",
+    "viewByRecipe": "Par recette",
+    "viewMode": "Mode d’affichage",
+    "manageStores": "Gérer les magasins"
+  },
+  "empty": {
+    "title": "Votre liste de courses vous attend",
+    "description": "Ajoutez des articles en utilisant le bouton « Ajouter un article » ci‑dessus pour commencer.",
+    "manual": "Articles manuels"
+  },
+  "item": {
+    "unnamedItem": "Article sans nom"
+  },
+  "store": {
+    "unsorted": "Non trié",
+    "noItems": "Aucun article dans ce magasin",
+    "storeActions": "Actions du magasin",
+    "markAllDone": "Tout marquer comme fait",
+    "deleteDone": "Supprimer les articles faits",
+    "done": "{count} effectués"
+  },
+  "storeManager": {
+    "title": "Gérer les magasins",
+    "addStore": "Ajouter un magasin",
+    "editStore": "Modifier le magasin",
+    "deleteStore": "Supprimer le magasin",
+    "storeName": "Nom du magasin",
+    "storeNamePlaceholder": "ex. : Supermarché",
+    "storeColor": "Couleur",
+    "storeIcon": "Icône",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer {storeName} ?",
+    "deleteWarning": "Les articles de ce magasin seront déplacés vers Non trié.",
+    "noStoresYet": "Aucun magasin pour le moment",
+    "createStoreHint": "Créez un magasin pour organiser vos courses",
+    "hasItems": "Ce magasin contient {count} article.",
+    "hasItemsPlural": "Ce magasin contient {count} articles.",
+    "whatToDo": "Que souhaitez-vous en faire ?",
+    "keepItems": "Conserver les articles",
+    "keepItemsDescription": "Déplacer les articles dans Non trié",
+    "deleteItems": "Supprimer les articles",
+    "deleteItemsDescription": "Supprimer tous les articles de ce magasin",
+    "noItems": "Ce magasin n’a aucun article.",
+    "create": "Créer"
+  },
+  "panel": {
+    "addTitle": "Ajouter un article",
+    "editTitle": "Modifier l’article",
+    "itemName": "Nom de l’article",
+    "itemNamePlaceholder": "ex. : Lait, Œufs, Pain…",
+    "selectStore": "Sélectionner un magasin",
+    "noStore": "Aucun magasin",
+    "recurrence": "Récurrence",
+    "savePreference": "Se souvenir du magasin pour cet article",
+    "addAnother": "Ajouter un autre",
+    "addRepeat": "+ Ajouter une répétition",
+    "storeOptional": "Magasin (optionnel)",
+    "autoDetectFromHistory": "Détection automatique depuis l’historique",
+    "autoDetectOrSelect": "Détection automatique ou sélection",
+    "placeholder": "ex. : 1 kg de poulet",
+    "editPlaceholder": "ex. : lait toutes les semaines",
+    "servings": "Portions",
+    "loadingIngredients": "Chargement des ingrédients…",
+    "noIngredients": "Aucun ingrédient.",
+    "addSelectedToGroceries": "Ajouter aux courses",
+    "ingredientsAdded": "Ingrédients ajoutés à la liste de courses.",
+    "ingredientsFailed": "Échec de l’ajout des ingrédients à la liste de courses.",
+    "addToGroceries": "Ajouter aux courses"
+  }
+}

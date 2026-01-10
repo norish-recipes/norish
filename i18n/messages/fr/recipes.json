@@ -1,0 +1,171 @@
+{
+  "dashboard": {
+    "title": "Toutes les recettes",
+    "searchPlaceholder": "Rechercher ou ajouter une recette...",
+    "searchRecipesPlaceholder": "Rechercher des recettes...",
+    "recipeCount": "{count, plural, one {# recette} other {# recettes}}",
+    "addRecipe": "Ajouter une recette",
+    "importFromUrl": "URL",
+    "importFromPaste": "Coller",
+    "importFromImage": "Image",
+    "searchFields": {
+      "title": "Titre",
+      "description": "Description",
+      "ingredients": "Ingrédients",
+      "steps": "Étapes",
+      "tags": "Tags"
+    }
+  },
+  "empty": {
+    "title": "Votre collection de recettes vous attend",
+    "description": "Collez une URL de recette dans le champ de recherche ci-dessus et laissez opérer la magie.",
+    "noResults": "Aucune recette trouvée",
+    "noResultsHint": "Essayez d’ajuster ou de réinitialiser vos filtres."
+  },
+  "card": {
+    "noImage": "Aucune image disponible",
+    "viewGroceries": "Voir les courses",
+    "addToCalendar": "Ajouter au calendrier",
+    "deleteRecipe": "Supprimer la recette"
+  },
+  "detail": {
+    "backToRecipes": "Retour aux recettes",
+    "viewOriginal": "Voir la recette originale",
+    "ingredients": "Ingrédients",
+    "steps": "Étapes",
+    "addToGroceries": "Ajouter aux courses",
+    "ratingPrompt": "Qu’avez-vous pensé de cette recette ?",
+    "notFound": "Recette introuvable",
+    "notFoundMessage": "Cette recette n'existe pas ou vous n'avez pas la permission de la consulter.",
+    "prep": "préparation",
+    "total": "total",
+    "planMeal": "Planifier un repas",
+    "recipeActions": "Actions de la recette"
+  },
+  "actions": {
+    "plan": "Planifier",
+    "groceries": "Courses",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "autoTag": "Auto‑taguer",
+    "autoTagging": "Génération des tags...",
+    "detectAllergies": "Détecter les allergies",
+    "detectingAllergies": "Détection des allergies...",
+    "estimateNutrition": "Estimer la nutrition",
+    "estimatingNutrition": "Estimation de la nutrition...",
+    "screenOn": "Écran allumé",
+    "keepScreenOn": "Garder l’écran allumé",
+    "actionsLabel": "Actions"
+  },
+  "convert": {
+    "ariaLabel": "Convertir le système de mesure",
+    "toMetric": "Convertir en métrique",
+    "toUS": "Convertir en US"
+  },
+  "form": {
+    "createTitle": "Créer une recette",
+    "editTitle": "Modifier la recette",
+    "createDescription": "Ajoutez une nouvelle recette à votre collection",
+    "editDescription": "Modifiez les détails de votre recette",
+    "initializingForm": "Initialisation du formulaire...",
+    "photo": "Photo",
+    "basicInfo": "Informations de base",
+    "ingredients": "Ingrédients",
+    "instructions": "Instructions",
+    "tags": "Tags",
+    "nutrition": "Nutrition",
+    "nutritionPerServing": "(par portion, optionnel)",
+    "details": "Détails",
+    "additionalInfo": "Informations supplémentaires",
+    "recipeName": "Nom de la recette",
+    "recipeNamePlaceholder": "ex. : Cookies aux pépites de chocolat",
+    "description": "Description",
+    "descriptionPlaceholder": "Une brève description de ce qui rend cette recette spéciale...",
+    "ingredientsHelp": "Saisissez les ingrédients comme « 2 tasses de farine » — nous détecterons automatiquement les quantités et unités.",
+    "instructionsHelp": "Rédigez des instructions claires étape par étape. Appuyez sur Entrée pour passer à l’étape suivante.",
+    "tagsHelp": "Tapez des tags et cliquez sur les suggestions pour ajouter. Les tags sélectionnés sont bleus, les nouveaux ont une bordure en pointillé.",
+    "calories": "Calories",
+    "fat": "Lipides (g)",
+    "carbs": "Glucides (g)",
+    "protein": "Protéines (g)",
+    "servings": "Portions",
+    "cookingTimes": "Temps de cuisson",
+    "optional": "(optionnel)",
+    "sourceUrl": "URL source",
+    "sourceUrlPlaceholder": "https://exemple.com/recette",
+    "measurementSystemNote": "Nous détectons automatiquement le système de mesure à partir des ingrédients, mais vous pouvez le modifier ici.",
+    "measurementSystemEditNote": " Remarque : ceci met à jour le système indiqué mais ne convertit pas les unités. Utilisez l’action Convertir après l’enregistrement.",
+    "createRecipe": "Créer la recette",
+    "saveChanges": "Enregistrer les modifications",
+    "uploading": "Téléversement...",
+    "clickToUpload": "Cliquez pour téléverser ou glissez-déposez",
+    "pasteToUpload": "pour coller",
+    "imageFormats": "PNG, JPG, WEBP jusqu’à 5 Mo"
+  },
+  "gallery": {
+    "addImage": "Ajouter une image",
+    "uploading": "Téléversement...",
+    "uploadFailed": "Échec du téléversement",
+    "dragToReorder": "Glissez les images pour réorganiser"
+  },
+  "carousel": {
+    "noImageAvailable": "Aucune image disponible"
+  },
+  "validation": {
+    "nameRequired": "Le nom de la recette est requis",
+    "ingredientsRequired": "Au moins un ingrédient est requis",
+    "stepsRequired": "Au moins une étape est requise",
+    "servingsMin": "Le nombre de portions doit être d’au moins 1"
+  },
+  "nutrition": {
+    "title": "Nutrition",
+    "calories": "Calories",
+    "fat": "Lipides",
+    "carbs": "Glucides",
+    "protein": "Protéines",
+    "showingPortions": "Affichage des valeurs pour {count} {count, plural, one {portion} other {portions}}",
+    "noInfo": "Aucune information nutritionnelle disponible",
+    "estimateWithAI": "Estimer avec l’IA"
+  },
+  "measurementSystem": {
+    "label": "Système de mesure",
+    "detected": "Détecté : {system}",
+    "metric": "Métrique",
+    "us": "US"
+  },
+  "timeInputs": {
+    "prep": "Préparation",
+    "cook": "Cuisson",
+    "total": "Total"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Étape {number} : Décrivez l’étape...",
+    "stepPlaceholderShort": "Étape {number}"
+  },
+  "ingredientInput": {
+    "placeholder": "ex. : 2 tasses de farine"
+  },
+  "wakeLock": {
+    "keepScreenOn": "Garder l’écran allumé",
+    "notSupported": "Le maintien de l’écran allumé n’est pas pris en charge par ce navigateur",
+    "activeTooltip": "L’écran restera allumé pendant la cuisson",
+    "inactiveTooltip": "Garder l’écran allumé pendant les étapes",
+    "ariaLabel": "Garder l’écran éveillé"
+  },
+  "toasts": {
+    "processingBoth": "Traitement des tags et des allergies",
+    "processingTags": "Génération des tags",
+    "processingAllergies": "Détection des allergies",
+    "bothComplete": "Tags et allergies mis à jour",
+    "tagsComplete": "Tags générés",
+    "allergiesComplete": "Allergies détectées",
+    "imported": "Recette importée",
+    "converted": "Mesures converties",
+    "convertedDescription": "Recette convertie en unités {system}",
+    "failed": "Échec de l’opération",
+    "batchImported": "Recettes importées",
+    "batchImportedDescription": "{count} recettes importées depuis l’archive",
+    "view": "Voir",
+    "open": "Ouvrir"
+  }
+}

@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment node
+ */
 import type { RecipeExtractionOutput } from "@/server/ai/schemas/recipe.schema";
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 
@@ -6,6 +9,7 @@ import { describe, it, expect, vi } from "vitest";
 import {
   validateExtractionOutput,
   getExtractionLogContext,
+  normalizeExtractionOutput,
 } from "@/server/ai/features/recipe-extraction/normalizer";
 
 // Mock the normalizeExtractionOutput dependencies for isolation
@@ -263,3 +267,251 @@ function createPartialOutput(overrides: Partial<RecipeExtractionOutput>): Recipe
     ...overrides,
   } as RecipeExtractionOutput;
 }
+
+describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
+  it("decodes HTML entities in US ingredients and keeps comments", async () => {
+    const output: RecipeExtractionOutput = {
+      "@context": "https://schema.org",
+      "@type": "Recipe",
+      name: "Test Recipe",
+      description: "Test",
+      recipeIngredient: {
+        metric: ["100g flour"],
+        us: ["1 cup flour &#8211; all-purpose", "2 eggs &#8211; beaten"],
+      },
+      recipeInstructions: {
+        metric: ["Mix well"],
+        us: ["Mix well"],
+      },
+      recipeYield: "4",
+      cookTime: null,
+      prepTime: null,
+      totalTime: null,
+      keywords: [],
+      nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
+    };
+
+    // Mock normalizeRecipeFromJson to return metric version
+    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+
+    vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
+      name: "Test Recipe",
+      description: "Test",
+      url: null,
+      image: undefined,
+      servings: undefined,
+      prepMinutes: undefined,
+      cookMinutes: undefined,
+      totalMinutes: undefined,
+      calories: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+      recipeIngredients: [
+        {
+          ingredientId: null,
+          ingredientName: "flour",
+          amount: 100,
+          unit: "g",
+          systemUsed: "metric",
+          order: 0,
+        },
+      ],
+      steps: [{ step: "Mix well", order: 1, systemUsed: "metric", images: [] }],
+      systemUsed: "metric",
+      tags: [],
+      images: [],
+    } as any);
+
+    const result = await normalizeExtractionOutput(output);
+
+    expect(result).toBeTruthy();
+    // Check US ingredients were decoded (with &#8211;)
+    const usIngredients = result?.recipeIngredients?.filter((ing) => ing.systemUsed === "us");
+
+    expect(usIngredients).toHaveLength(2);
+    expect(usIngredients?.[0].ingredientName).toContain("–"); // en dash
+    expect(usIngredients?.[0].ingredientName).toContain("all-purpose"); // comment preserved
+    expect(usIngredients?.[0].ingredientName).not.toContain("&#8211;");
+    expect(usIngredients?.[1].ingredientName).toContain("–");
+    expect(usIngredients?.[1].ingredientName).toContain("beaten");
+  });
+
+  it("decodes HTML entities in US steps and keeps full text", async () => {
+    const output: RecipeExtractionOutput = {
+      "@context": "https://schema.org",
+      "@type": "Recipe",
+      name: "Test Recipe",
+      description: "Test",
+      recipeIngredient: {
+        metric: ["100g flour"],
+        us: ["1 cup flour"],
+      },
+      recipeInstructions: {
+        metric: ["Mix well"],
+        us: [
+          "Bake at 350&#176;F &#8211; use convection",
+          "Cool for 10 minutes &#8211; don&#39;t rush",
+        ],
+      },
+      recipeYield: "4",
+      cookTime: null,
+      prepTime: null,
+      totalTime: null,
+      keywords: [],
+      nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
+    };
+
+    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+
+    vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
+      name: "Test Recipe",
+      description: "Test",
+      url: null,
+      image: undefined,
+      servings: undefined,
+      prepMinutes: undefined,
+      cookMinutes: undefined,
+      totalMinutes: undefined,
+      calories: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+      recipeIngredients: [],
+      steps: [{ step: "Mix well", order: 1, systemUsed: "metric", images: [] }],
+      systemUsed: "metric",
+      tags: [],
+      images: [],
+    } as any);
+
+    const result = await normalizeExtractionOutput(output);
+
+    const usSteps = result?.steps?.filter((s) => s.systemUsed === "us");
+
+    expect(usSteps).toHaveLength(2);
+    expect(usSteps?.[0].step).toContain("°"); // degree symbol
+    expect(usSteps?.[0].step).toContain("–"); // en dash
+    expect(usSteps?.[0].step).toContain("use convection"); // comment preserved
+    expect(usSteps?.[0].step).not.toContain("&#176;");
+    expect(usSteps?.[0].step).not.toContain("&#8211;");
+    expect(usSteps?.[1].step).toContain("'"); // apostrophe
+    expect(usSteps?.[1].step).toContain("don't rush");
+    expect(usSteps?.[1].step).not.toContain("&#39;");
+  });
+
+  it("decodes multiple entity types in US content", async () => {
+    const output: RecipeExtractionOutput = {
+      "@context": "https://schema.org",
+      "@type": "Recipe",
+      name: "Test Recipe",
+      description: "Test",
+      recipeIngredient: {
+        metric: ["100g flour"],
+        us: ["1 cup &#8220;baker&#39;s&#8221; flour &#8211; premium grade"],
+      },
+      recipeInstructions: {
+        metric: ["Mix"],
+        us: ["It&#39;s ready when it&#8217;s smooth &#8211; about 5 minutes"],
+      },
+      recipeYield: "4",
+      cookTime: null,
+      prepTime: null,
+      totalTime: null,
+      keywords: [],
+      nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
+    };
+
+    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+
+    vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
+      name: "Test Recipe",
+      description: "Test",
+      url: null,
+      image: undefined,
+      servings: undefined,
+      prepMinutes: undefined,
+      cookMinutes: undefined,
+      totalMinutes: undefined,
+      calories: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+      recipeIngredients: [],
+      steps: [],
+      systemUsed: "metric",
+      tags: [],
+      images: [],
+    } as any);
+
+    const result = await normalizeExtractionOutput(output);
+
+    const usIngredient = result?.recipeIngredients?.find((ing) => ing.systemUsed === "us");
+
+    expect(usIngredient?.ingredientName).toContain("\u201C"); // left double quote
+    expect(usIngredient?.ingredientName).toContain("'"); // apostrophe
+    expect(usIngredient?.ingredientName).toContain("\u201D"); // right double quote
+    expect(usIngredient?.ingredientName).toContain("–"); // en dash
+    expect(usIngredient?.ingredientName).toContain("premium grade");
+
+    const usStep = result?.steps?.find((s) => s.systemUsed === "us");
+
+    expect(usStep?.step).toContain("'"); // apostrophe (It's)
+    expect(usStep?.step).toContain("\u2019"); // right single quote (it's)
+    expect(usStep?.step).toContain("–"); // en dash
+    expect(usStep?.step).toContain("about 5 minutes");
+  });
+
+  it("handles US ingredients without entities", async () => {
+    const output: RecipeExtractionOutput = {
+      "@context": "https://schema.org",
+      "@type": "Recipe",
+      name: "Test Recipe",
+      description: "Test",
+      recipeIngredient: {
+        metric: ["100g flour"],
+        us: ["1 cup flour", "2 eggs"],
+      },
+      recipeInstructions: {
+        metric: ["Mix well"],
+        us: ["Mix well"],
+      },
+      recipeYield: "4",
+      cookTime: null,
+      prepTime: null,
+      totalTime: null,
+      keywords: [],
+      nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
+    };
+
+    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+
+    vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
+      name: "Test Recipe",
+      description: "Test",
+      url: null,
+      image: undefined,
+      servings: undefined,
+      prepMinutes: undefined,
+      cookMinutes: undefined,
+      totalMinutes: undefined,
+      calories: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+      recipeIngredients: [],
+      steps: [],
+      systemUsed: "metric",
+      tags: [],
+      images: [],
+    } as any);
+
+    const result = await normalizeExtractionOutput(output);
+
+    const usIngredients = result?.recipeIngredients?.filter((ing) => ing.systemUsed === "us");
+
+    expect(usIngredients).toHaveLength(2);
+    // Plain text should pass through unchanged
+    expect(usIngredients?.[0].ingredientName).toBe("flour");
+    expect(usIngredients?.[1].ingredientName).toContain("egg");
+  });
+});
