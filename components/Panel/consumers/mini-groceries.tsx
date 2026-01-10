@@ -1,7 +1,7 @@
 "use client";
 
 import { addToast, Button, Checkbox, Divider, Input } from "@heroui/react";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
@@ -61,11 +61,13 @@ function MiniGroceriesContent({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+  const hasInitialized = useRef(false);
 
-  // Update selected IDs when ingredients change
+  // Update selected IDs only once when ingredients first load
   useEffect(() => {
-    if (scaledIngredients.length > 0) {
+    if (scaledIngredients.length > 0 && !hasInitialized.current) {
       setSelectedIds(scaledIngredients.map((i) => i.ingredientId!).filter(Boolean));
+      hasInitialized.current = true;
     }
   }, [scaledIngredients]);
 
