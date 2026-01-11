@@ -87,6 +87,8 @@ RUN pnpm run build && \
 ##############################
 FROM base AS runtime
 
+LABEL org.opencontainers.image.source="https://github.com/norish-recipes/norish"
+
 ARG YT_DLP_VERSION=2025.11.12
 
 # Security: upgrade all packages first, then install runtime deps
