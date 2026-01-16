@@ -94,7 +94,6 @@ export default function VideoProcessingForm() {
       ? transcriptionApiKey || isTranscriptionApiKeyConfigured || isAIApiKeyConfigured
       : transcriptionEndpoint);
 
-
   const { models: availableTranscriptionModels, isLoading: isLoadingTranscriptionModels } =
     useAvailableTranscriptionModelsQuery({
       provider: transcriptionProvider,
@@ -182,7 +181,6 @@ export default function VideoProcessingForm() {
       setSaving(false);
     }
   };
-
 
   return (
     <div className="flex flex-col gap-4 p-2">

@@ -2,9 +2,9 @@
 
 import type { GroceryDto, RecurringGroceryDto } from "@/types";
 import type { GroceryGroup, GroupedGrocerySource } from "@/lib/grocery-grouping";
+import type { ReactNode } from "react";
 
 import { memo, useState, useCallback } from "react";
-import type { ReactNode } from "react";
 import { Checkbox } from "@heroui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "motion/react";

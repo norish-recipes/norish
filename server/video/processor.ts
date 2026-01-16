@@ -55,6 +55,7 @@ export async function processVideoRecipe(
 
     // Download video file for saving
     let canSaveVideo = true;
+
     try {
       log.info({ url }, "Downloading video file");
       const downloadedVideo = await downloadVideo(url);
@@ -95,7 +96,10 @@ export async function processVideoRecipe(
         const result = await processInstagramImagePost(url, recipeId, metadata, allergies);
 
         // Add video if we managed to save it
-        const savedVideo = canSaveVideo ? await saveVideo(videoPath!, recipeId, metadata.duration).catch(() => null) : null;
+        const savedVideo = canSaveVideo
+          ? await saveVideo(videoPath!, recipeId, metadata.duration).catch(() => null)
+          : null;
+
         if (savedVideo) {
           result.videos = [{ video: savedVideo.video, duration: savedVideo.duration, order: 0 }];
         }
@@ -128,7 +132,10 @@ export async function processVideoRecipe(
     }
 
     // Add video to the recipe if we saved it
-    const savedVideo = canSaveVideo ? await saveVideo(videoPath!, recipeId, metadata.duration).catch(() => null) : null;
+    const savedVideo = canSaveVideo
+      ? await saveVideo(videoPath!, recipeId, metadata.duration).catch(() => null)
+      : null;
+
     if (savedVideo) {
       result.data.videos = [{ video: savedVideo.video, duration: savedVideo.duration, order: 0 }];
     }
@@ -155,7 +162,8 @@ export async function processVideoRecipe(
 const saveVideo = async (videoPath: string, recipeId: string, duration: number | undefined) => {
   // Save the video file to the recipe directory
   const savedVideo = await saveVideoFile(videoPath, recipeId, duration);
+
   log.info({ video: savedVideo.video }, "Video saved to recipe directory");
 
   return savedVideo;
-}
+};
