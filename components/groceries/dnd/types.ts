@@ -32,6 +32,8 @@ export interface DndGroceryProviderProps {
 /** Container ID → group keys mapping (visual order during drag) */
 export type GroupItemsState = Record<ContainerId, string[]>;
 
+export type GroupDragHandle = (options: { dragHandle: React.ReactNode }) => React.ReactNode;
+
 /** Context value provided by DndGroupedGroceryProvider */
 export interface DndGroupedGroceryContextValue {
   activeGroupKey: string | null;

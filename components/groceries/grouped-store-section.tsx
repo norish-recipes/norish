@@ -208,15 +208,18 @@ function GroupedStoreSectionComponent({
 
               return (
                 <SortableGroupItem key={group.groupKey} group={group}>
-                  <GroupedGroceryItem
-                    group={group}
-                    isFirst={isFirst}
-                    isLast={isLast}
-                    recurringGroceries={recurringGroceries}
-                    onEdit={onEdit}
-                    onToggle={onToggle}
-                    onToggleGroup={onToggleGroup}
-                  />
+                  {({ dragHandle }) => (
+                    <GroupedGroceryItem
+                      dragHandle={dragHandle}
+                      group={group}
+                      isFirst={isFirst}
+                      isLast={isLast}
+                      recurringGroceries={recurringGroceries}
+                      onEdit={onEdit}
+                      onToggle={onToggle}
+                      onToggleGroup={onToggleGroup}
+                    />
+                  )}
                 </SortableGroupItem>
               );
             })}
