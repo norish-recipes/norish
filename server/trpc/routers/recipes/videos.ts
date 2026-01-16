@@ -8,7 +8,7 @@ import { authedProcedure } from "../../middleware";
 import { trpcLogger as log } from "@/server/logger";
 import { saveVideoBytes, deleteVideoByUrl } from "@/server/downloader";
 import { ALLOWED_VIDEO_MIME_SET } from "@/types";
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { getMaxVideoFileSize } from "@/config/server-config-loader";
 import {
   addRecipeVideos,
   deleteRecipeVideoById,
@@ -41,8 +41,10 @@ async function extractAndValidateVideo(formData: FormData): Promise<VideoValidat
     };
   }
 
-  if (file.size > SERVER_CONFIG.MAX_VIDEO_FILE_SIZE) {
-    const maxMB = Math.round(SERVER_CONFIG.MAX_VIDEO_FILE_SIZE / 1024 / 1024);
+  const maxVideoFileSize = await getMaxVideoFileSize();
+
+  if (file.size > maxVideoFileSize) {
+    const maxMB = Math.round(maxVideoFileSize / 1024 / 1024);
 
     return { success: false, error: `Video too large. Maximum size is ${maxMB}MB.` };
   }

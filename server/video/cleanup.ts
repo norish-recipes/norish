@@ -12,10 +12,6 @@ export async function cleanupFile(filePath: string): Promise<void> {
   }
 }
 
-export async function cleanupFiles(filePaths: string[]): Promise<void> {
-  await Promise.all(filePaths.map(cleanupFile));
-}
-
 export async function cleanupOldTempFiles(maxAgeMs: number = 60 * 60 * 1000): Promise<void> {
   const tempDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "video-temp");
 

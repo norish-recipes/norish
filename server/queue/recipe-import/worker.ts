@@ -26,6 +26,7 @@ import {
   getAllergiesForUsers,
 } from "@/server/db";
 import { parseRecipeFromUrl } from "@/server/parser";
+import { deleteRecipeImagesDir } from "@/server/downloader";
 
 const log = createLogger("worker:recipe-import");
 
@@ -166,6 +167,8 @@ async function handleJobFailed(
     },
     "Recipe import job failed"
   );
+
+  await deleteRecipeImagesDir(recipeId);
 
   if (isFinalFailure) {
     // Emit failed event to remove skeleton

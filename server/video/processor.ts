@@ -54,8 +54,7 @@ export async function processVideoRecipe(
     log.debug({ url }, "Video length validated");
 
     // Download video file for saving
-    let savedVideo: { video: string; duration: number | null } | null = null;
-
+    let canSaveVideo = true;
     try {
       log.info({ url }, "Downloading video file");
       const downloadedVideo = await downloadVideo(url);
@@ -72,11 +71,8 @@ export async function processVideoRecipe(
         { method: convertResult.method, converted: convertResult.converted },
         "Video conversion complete"
       );
-
-      // Save the video file to the recipe directory
-      savedVideo = await saveVideoFile(videoPath, recipeId, metadata.duration);
-      log.info({ video: savedVideo.video }, "Video saved to recipe directory");
     } catch (videoDownloadErr) {
+      canSaveVideo = false;
       log.warn(
         { err: videoDownloadErr },
         "Failed to download/save video file, continuing with recipe extraction"
@@ -99,6 +95,7 @@ export async function processVideoRecipe(
         const result = await processInstagramImagePost(url, recipeId, metadata, allergies);
 
         // Add video if we managed to save it
+        const savedVideo = canSaveVideo ? await saveVideo(videoPath!, recipeId, metadata.duration).catch(() => null) : null;
         if (savedVideo) {
           result.videos = [{ video: savedVideo.video, duration: savedVideo.duration, order: 0 }];
         }
@@ -131,6 +128,7 @@ export async function processVideoRecipe(
     }
 
     // Add video to the recipe if we saved it
+    const savedVideo = canSaveVideo ? await saveVideo(videoPath!, recipeId, metadata.duration).catch(() => null) : null;
     if (savedVideo) {
       result.data.videos = [{ video: savedVideo.video, duration: savedVideo.duration, order: 0 }];
     }
@@ -152,4 +150,12 @@ export async function processVideoRecipe(
       await cleanupFile(videoPath);
     }
   }
+}
+
+const saveVideo = async (videoPath: string, recipeId: string, duration: number | undefined) => {
+  // Save the video file to the recipe directory
+  const savedVideo = await saveVideoFile(videoPath, recipeId, duration);
+  log.info({ video: savedVideo.video }, "Video saved to recipe directory");
+
+  return savedVideo;
 }

@@ -8,6 +8,7 @@ import sharp from "sharp";
 import convert from "heic-convert";
 
 import { SERVER_CONFIG } from "@/config/env-config-server";
+import { getMaxVideoFileSize } from "@/config/server-config-loader";
 import { serverLogger as log } from "@/server/logger";
 
 // TODO: This file needs a lot of cleaning up
@@ -831,11 +832,10 @@ export async function saveVideoFile(
 
   // Validate file size
   const stats = await fs.stat(sourcePath);
+  const maxVideoFileSize = await getMaxVideoFileSize();
 
-  if (stats.size > SERVER_CONFIG.MAX_VIDEO_FILE_SIZE) {
-    throw new Error(
-      `Video file too large: ${stats.size} bytes (max: ${SERVER_CONFIG.MAX_VIDEO_FILE_SIZE})`
-    );
+  if (stats.size > maxVideoFileSize) {
+    throw new Error(`Video file too large: ${stats.size} bytes (max: ${maxVideoFileSize})`);
   }
 
   const ext = path.extname(sourcePath).toLowerCase();
@@ -929,10 +929,10 @@ export async function saveVideoBytes(
   await ensureDir(recipeDir);
 
   // Validate buffer size
-  if (bytes.length > SERVER_CONFIG.MAX_VIDEO_FILE_SIZE) {
-    throw new Error(
-      `Video too large: ${bytes.length} bytes (max: ${SERVER_CONFIG.MAX_VIDEO_FILE_SIZE})`
-    );
+  const maxVideoFileSize = await getMaxVideoFileSize();
+
+  if (bytes.length > maxVideoFileSize) {
+    throw new Error(`Video too large: ${bytes.length} bytes (max: ${maxVideoFileSize})`);
   }
 
   // Detect extension from magic bytes or use provided

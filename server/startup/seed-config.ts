@@ -105,6 +105,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     getDefaultValue: () => ({
       enabled: SERVER_CONFIG.VIDEO_PARSING_ENABLED,
       maxLengthSeconds: SERVER_CONFIG.VIDEO_MAX_LENGTH_SECONDS,
+      maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
       ytDlpVersion: SERVER_CONFIG.YT_DLP_VERSION,
       transcriptionProvider: SERVER_CONFIG.TRANSCRIPTION_PROVIDER,
       transcriptionEndpoint: SERVER_CONFIG.TRANSCRIPTION_ENDPOINT || undefined,
@@ -522,6 +523,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       return {
         enabled: false,
         maxLengthSeconds: 120,
+        maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
         ytDlpVersion: "2025.11.12",
         transcriptionProvider: "disabled",
         transcriptionModel: "whisper-1",

@@ -34,6 +34,9 @@ export default function VideoProcessingForm() {
   // Combined video + transcription config state
   const [enabled, setEnabled] = useState(videoConfig?.enabled ?? false);
   const [maxLengthSeconds, setMaxLengthSeconds] = useState(videoConfig?.maxLengthSeconds ?? 120);
+  const [maxVideoFileSizeMB, setMaxVideoFileSizeMB] = useState(
+    videoConfig ? Math.round(videoConfig.maxVideoFileSize / (1024 * 1024)) : 100
+  );
   const [ytDlpVersion, setYtDlpVersion] = useState(videoConfig?.ytDlpVersion ?? "2025.11.12");
   const [transcriptionProvider, setTranscriptionProvider] = useState<TranscriptionProvider>(
     videoConfig?.transcriptionProvider ?? "disabled"
@@ -52,6 +55,7 @@ export default function VideoProcessingForm() {
     if (videoConfig) {
       setEnabled(videoConfig.enabled);
       setMaxLengthSeconds(videoConfig.maxLengthSeconds);
+      setMaxVideoFileSizeMB(Math.round(videoConfig.maxVideoFileSize / (1024 * 1024)));
       setYtDlpVersion(videoConfig.ytDlpVersion);
       setTranscriptionProvider(videoConfig.transcriptionProvider);
       setTranscriptionEndpoint(videoConfig.transcriptionEndpoint ?? "");
@@ -78,6 +82,7 @@ export default function VideoProcessingForm() {
     videoConfig.transcriptionApiKey !== "";
   // Check if AI config API key can be used as fallback
   const isAIApiKeyConfigured = !!aiConfig?.apiKey && aiConfig.apiKey !== "";
+  const isAIEnabled = aiConfig?.enabled ?? false;
 
   // Determine if we can fetch transcription models
   // Cloud providers need API key, local providers need endpoint
@@ -88,6 +93,7 @@ export default function VideoProcessingForm() {
     (needsTranscriptionApiKey
       ? transcriptionApiKey || isTranscriptionApiKeyConfigured || isAIApiKeyConfigured
       : transcriptionEndpoint);
+
 
   const { models: availableTranscriptionModels, isLoading: isLoadingTranscriptionModels } =
     useAvailableTranscriptionModelsQuery({
@@ -150,6 +156,8 @@ export default function VideoProcessingForm() {
 
   const canEnable = !enabled || hasValidTranscription;
   const showValidationWarning = enabled && !hasValidTranscription;
+  const isVideoUiDisabled = !enabled || !isAIEnabled;
+  const showAiDisabledWarning = !isAIEnabled;
 
   const handleRevealTranscriptionApiKey = useCallback(async () => {
     return await fetchConfigSecret(ServerConfigKeys.VIDEO_CONFIG, "transcriptionApiKey");
@@ -163,6 +171,7 @@ export default function VideoProcessingForm() {
       await updateVideoConfig({
         enabled,
         maxLengthSeconds,
+        maxVideoFileSize: maxVideoFileSizeMB * 1024 * 1024, // Convert MB to bytes
         ytDlpVersion,
         transcriptionProvider,
         transcriptionEndpoint: transcriptionEndpoint || undefined,
@@ -174,6 +183,7 @@ export default function VideoProcessingForm() {
     }
   };
 
+
   return (
     <div className="flex flex-col gap-4 p-2">
       {/* Video Processing Section */}
@@ -182,8 +192,19 @@ export default function VideoProcessingForm() {
           <span className="font-medium">{t("enableVideo")}</span>
           <span className="text-default-500 text-base">{t("enableVideoDescription")}</span>
         </div>
-        <Switch color="success" isSelected={enabled} onValueChange={setEnabled} />
+        <Switch
+          color="success"
+          isDisabled={!isAIEnabled}
+          isSelected={enabled}
+          onValueChange={setEnabled}
+        />
       </div>
+
+      {showAiDisabledWarning && (
+        <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
+          {t("aiDisabledWarning")}
+        </div>
+      )}
 
       {showValidationWarning && (
         <div className="text-warning bg-warning/10 rounded-lg p-3 text-base">
@@ -193,7 +214,7 @@ export default function VideoProcessingForm() {
 
       <Input
         description={t("maxLengthDescription")}
-        isDisabled={!enabled}
+        isDisabled={isVideoUiDisabled}
         label={t("maxLength")}
         type="number"
         value={maxLengthSeconds.toString()}
@@ -201,8 +222,19 @@ export default function VideoProcessingForm() {
       />
 
       <Input
+        description={t("maxFileSizeDescription")}
+        endContent={<span className="text-default-400 text-sm">MB</span>}
+        isDisabled={isVideoUiDisabled}
+        label={t("maxFileSize")}
+        min={1}
+        type="number"
+        value={maxVideoFileSizeMB.toString()}
+        onValueChange={(v) => setMaxVideoFileSizeMB(parseInt(v) || 100)}
+      />
+
+      <Input
         description={t("ytDlpVersionDescription")}
-        isDisabled={!enabled}
+        isDisabled={isVideoUiDisabled}
         label={t("ytDlpVersion")}
         value={ytDlpVersion}
         onValueChange={setYtDlpVersion}
@@ -218,7 +250,7 @@ export default function VideoProcessingForm() {
 
       <Select
         description={t("transcriptionProviderDescription")}
-        isDisabled={!enabled}
+        isDisabled={isVideoUiDisabled}
         label={t("transcriptionProvider")}
         selectedKeys={[transcriptionProvider]}
         onSelectionChange={(keys) =>
@@ -238,7 +270,7 @@ export default function VideoProcessingForm() {
           {needsTranscriptionEndpoint && (
             <Input
               description={t("transcriptionEndpointDescription")}
-              isDisabled={!enabled}
+              isDisabled={isVideoUiDisabled}
               label={t("transcriptionEndpoint")}
               placeholder={
                 transcriptionProvider === "ollama"
@@ -256,7 +288,7 @@ export default function VideoProcessingForm() {
             <SecretInput
               description={t("transcriptionApiKeyDescription")}
               isConfigured={isTranscriptionApiKeyConfigured}
-              isDisabled={!enabled}
+              isDisabled={isVideoUiDisabled}
               label={t("transcriptionApiKey")}
               placeholder={t("transcriptionApiKeyPlaceholder")}
               value={transcriptionApiKey}
@@ -269,7 +301,7 @@ export default function VideoProcessingForm() {
             <SecretInput
               description={t("transcriptionApiKeyOptionalDescription")}
               isConfigured={isTranscriptionApiKeyConfigured}
-              isDisabled={!enabled}
+              isDisabled={isVideoUiDisabled}
               label={t("transcriptionApiKeyOptional")}
               placeholder={t("transcriptionApiKeyOptionalPlaceholder")}
               value={transcriptionApiKey}
@@ -284,7 +316,9 @@ export default function VideoProcessingForm() {
               defaultItems={transcriptionModelOptions}
               description={t("transcriptionModelDescription")}
               inputValue={transcriptionModel}
-              isDisabled={!transcriptionApiKey && !isTranscriptionApiKeyConfigured}
+              isDisabled={
+                isVideoUiDisabled || (!transcriptionApiKey && !isTranscriptionApiKeyConfigured)
+              }
               isLoading={isLoadingTranscriptionModels}
               label={t("transcriptionModel")}
               placeholder={t("transcriptionModelPlaceholder")}
@@ -302,7 +336,7 @@ export default function VideoProcessingForm() {
           {needsTranscriptionModel && !supportsModelListing && (
             <Input
               description={t("transcriptionModelDescription")}
-              isDisabled={!enabled}
+              isDisabled={isVideoUiDisabled}
               label={t("transcriptionModel")}
               placeholder={t("transcriptionModelPlaceholder")}
               value={transcriptionModel}

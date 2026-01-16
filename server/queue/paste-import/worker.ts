@@ -24,6 +24,7 @@ import { extractRecipeNodesFromJsonLd } from "@/server/parser/jsonld";
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 import { extractRecipeWithAI } from "@/server/ai/recipe-parser";
 import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
+import { deleteRecipeImagesDir } from "@/server/downloader";
 
 const log = createLogger("worker:paste-import");
 
@@ -216,6 +217,8 @@ async function handleJobFailed(
     },
     "Paste import job failed"
   );
+
+  await deleteRecipeImagesDir(recipeId);
 
   if (isFinalFailure) {
     const policy = await getRecipePermissionPolicy();

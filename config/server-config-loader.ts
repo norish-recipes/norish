@@ -87,6 +87,16 @@ export async function getVideoConfig(includeSecrets = false): Promise<VideoConfi
 }
 
 /**
+ * Get maximum video file size in bytes
+ * Returns value from DB config, falls back to SERVER_CONFIG default if not configured
+ */
+export async function getMaxVideoFileSize(): Promise<number> {
+  const videoConfig = await getConfig<VideoConfig>(ServerConfigKeys.VIDEO_CONFIG);
+
+  return videoConfig?.maxVideoFileSize ?? SERVER_CONFIG.MAX_VIDEO_FILE_SIZE;
+}
+
+/**
  * Get scheduler cleanup months
  */
 export async function getSchedulerCleanupMonths(): Promise<number> {
