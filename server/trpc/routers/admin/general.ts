@@ -12,6 +12,7 @@ import {
   type I18nLocaleConfig,
   type ThemeConfig,
 } from "@/server/db/zodSchemas/server-config";
+import { safeFetch, validateUrlForSSRF } from "@/server/lib/ssrf-protection";
 
 /**
  * Update registration enabled setting.
@@ -155,21 +156,15 @@ const updateThemeConfig = adminProcedure
 
 /**
  * Test theme CSS by fetching it and validating it's valid CSS.
+ * Includes SSRF protection to prevent attacks on internal networks.
  */
 const testThemeCss = adminProcedure.input(z.string().url()).mutation(async ({ input: url }) => {
   log.info({ url }, "Testing theme CSS");
 
-  // Validate HTTPS (or localhost for development)
+  // Parse and validate URL protocol
+  let urlObj: URL;
   try {
-    const urlObj = new URL(url);
-    const isLocalhost = urlObj.hostname === "localhost" || urlObj.hostname === "127.0.0.1";
-    
-    if (urlObj.protocol !== "https:" && !isLocalhost) {
-      return {
-        success: false,
-        error: "URL must be HTTPS (or localhost for testing)",
-      };
-    }
+    urlObj = new URL(url);
   } catch (error) {
     return {
       success: false,
@@ -177,13 +172,59 @@ const testThemeCss = adminProcedure.input(z.string().url()).mutation(async ({ in
     };
   }
 
+  // Check if URL is localhost (skip SSRF checks for local development)
+  const isLocalhost = 
+    urlObj.hostname === "localhost" || 
+    urlObj.hostname === "127.0.0.1" ||
+    urlObj.hostname === "::1";
+
+  if (isLocalhost) {
+    // Localhost URLs: only validate HTTPS or HTTP
+    if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
+      return {
+        success: false,
+        error: "Localhost URLs must use HTTP or HTTPS protocol",
+      };
+    }
+  } else {
+    // External URLs: enforce HTTPS
+    if (urlObj.protocol !== "https:") {
+      return {
+        success: false,
+        error: "External URLs must use HTTPS protocol",
+      };
+    }
+
+    // Validate against SSRF attacks
+    const ssrfValidation = await validateUrlForSSRF(url);
+    if (!ssrfValidation.valid) {
+      log.warn({ url, error: ssrfValidation.error }, "Theme URL failed SSRF validation");
+      return {
+        success: false,
+        error: ssrfValidation.error || "URL validation failed for security reasons",
+      };
+    }
+  }
+
+  // Fetch the CSS with protection
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "User-Agent": "Norish-ThemeValidator/1.0",
-      },
-    });
+    const response = isLocalhost
+      ? await fetch(url, {
+          method: "GET",
+          headers: {
+            "User-Agent": "Norish-ThemeValidator/1.0",
+          },
+        })
+      : await safeFetch(
+          url,
+          {
+            method: "GET",
+            headers: {
+              "User-Agent": "Norish-ThemeValidator/1.0",
+            },
+          },
+          10000 // 10 second timeout
+        );
 
     if (!response.ok) {
       return {
