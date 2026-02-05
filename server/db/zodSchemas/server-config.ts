@@ -19,7 +19,11 @@ export const ServerConfigKeys = {
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
   PROMPTS: "prompts",
   LOCALE_CONFIG: "locale_config",
+<<<<<<< HEAD
   TIMER_KEYWORDS: "timer_keywords",
+=======
+  THEME_CONFIG: "theme_config",
+>>>>>>> 7a3d030 (feat(backend): add theme configuration schema)
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
@@ -132,6 +136,19 @@ export type PromptsConfig = z.infer<typeof PromptsConfigSchema>;
 
 export const PromptsConfigInputSchema = PromptsConfigSchema.omit({ isOverridden: true });
 export type PromptsConfigInput = z.infer<typeof PromptsConfigInputSchema>;
+
+// ============================================================================
+// Theme Configuration Schema
+// ============================================================================
+
+export const ThemeConfigSchema = z.object({
+  cssUrl: z.string().url("CSS URL must be a valid URL").optional().nullable(),
+});
+
+export type ThemeConfig = z.infer<typeof ThemeConfigSchema>;
+
+export const ThemeConfigInputSchema = ThemeConfigSchema;
+export type ThemeConfigInput = z.infer<typeof ThemeConfigInputSchema>;
 
 // ============================================================================
 // i18n Locale Configuration Schema
@@ -437,8 +454,13 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return PromptsConfigSchema;
     case ServerConfigKeys.LOCALE_CONFIG:
       return I18nLocaleConfigSchema;
+<<<<<<< HEAD
     case ServerConfigKeys.TIMER_KEYWORDS:
       return TimerKeywordsSchema;
+=======
+    case ServerConfigKeys.THEME_CONFIG:
+      return ThemeConfigSchema;
+>>>>>>> 7a3d030 (feat(backend): add theme configuration schema)
     default:
       return z.any();
   }

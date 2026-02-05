@@ -8,7 +8,9 @@ import { setConfig, configExists, getConfig } from "@/server/db/repositories/ser
 import {
   ServerConfigKeys,
   I18nLocaleConfigSchema,
+  ThemeConfigSchema,
   type I18nLocaleConfig,
+  type ThemeConfig,
 } from "@/server/db/zodSchemas/server-config";
 
 /**
@@ -138,8 +140,95 @@ const updateLocaleConfig = adminProcedure
     return { success: true };
   });
 
+/**
+ * Update theme configuration (external CSS URL).
+ */
+const updateThemeConfig = adminProcedure
+  .input(ThemeConfigSchema)
+  .mutation(async ({ input, ctx }) => {
+    log.info({ userId: ctx.user.id, cssUrl: input.cssUrl }, "Updating theme config");
+
+    await setConfig(ServerConfigKeys.THEME_CONFIG, input, ctx.user.id, false);
+
+    return { success: true };
+  });
+
+/**
+ * Test theme CSS by fetching it and validating it's valid CSS.
+ */
+const testThemeCss = adminProcedure.input(z.string().url()).mutation(async ({ input: url }) => {
+  log.info({ url }, "Testing theme CSS");
+
+  // Validate HTTPS (or localhost for development)
+  try {
+    const urlObj = new URL(url);
+    const isLocalhost = urlObj.hostname === "localhost" || urlObj.hostname === "127.0.0.1";
+    
+    if (urlObj.protocol !== "https:" && !isLocalhost) {
+      return {
+        success: false,
+        error: "URL must be HTTPS (or localhost for testing)",
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: "Invalid URL format",
+    };
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Norish-ThemeValidator/1.0",
+      },
+    });
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `Failed to fetch CSS: HTTP ${response.status} ${response.statusText}`,
+      };
+    }
+
+    const contentType = response.headers.get("content-type");
+    const isValidCss = contentType?.includes("text/css") || contentType?.includes("text/plain");
+    
+    if (!isValidCss) {
+      log.warn({ url, contentType }, "CSS URL returned invalid content type");
+      return {
+        success: false,
+        error: `Invalid content type: Expected text/css but got ${contentType || "none"}`,
+      };
+    }
+
+    const cssText = await response.text();
+    
+    // Basic CSS syntax validation - check if it looks like CSS
+    if (cssText.trim().length === 0) {
+      return {
+        success: false,
+        error: "CSS file is empty",
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log.warn({ url, error: errorMessage }, "Theme CSS test failed");
+
+    return {
+      success: false,
+      error: `Could not fetch CSS: ${errorMessage}`,
+    };
+  }
+});
+
 export const generalProcedures = router({
   updateRegistration,
   updatePasswordAuth,
   updateLocaleConfig,
+  updateThemeConfig,
+  testThemeCss,
 });
