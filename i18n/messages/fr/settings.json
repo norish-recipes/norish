@@ -287,6 +287,28 @@
       },
       "note": "Note : Les courses et éléments de calendrier suivent automatiquement les règles de foyer. Les membres du même foyer peuvent modifier ou supprimer ces éléments."
     },
+    "theme": {
+      "title": "Configuration du thème",
+      "description": "Personnalisez l'apparence de l'application en liant un référentiel CSS externe. Le CSS du thème doit supporter les modes clair et sombre.",
+      "cssUrlLabel": "URL du CSS de thème",
+      "cssUrlPlaceholder": "https://example.com/theme.css",
+      "cssUrlHint": "Doit être HTTPS. Le CSS doit utiliser des variables CSS pour les couleurs des thèmes clair et sombre.",
+      "testButton": "Tester le CSS",
+      "saveButton": "Enregistrer le thème",
+      "clearButton": "Effacer",
+      "currentTheme": "URL du thème actuel",
+      "testSuccess": "CSS chargé avec succès !",
+      "howItWorks": "Comment ça fonctionne :",
+      "howItWorks1": "Collez une URL vers votre fichier CSS personnalisé (doit être HTTPS)",
+      "howItWorks2": "Testez l'URL pour vous assurer qu'elle est accessible et que le CSS est valide",
+      "howItWorks3": "Enregistrez pour appliquer le thème à tous les utilisateurs. Les variables CSS clair et sombre seront appliquées automatiquement.",
+      "errors": {
+        "emptyUrl": "Veuillez entrer une URL CSS",
+        "invalidUrl": "Veuillez entrer une URL valide",
+        "https": "L'URL doit être HTTPS (ou localhost pour tester)",
+        "testFailed": "Impossible de tester le CSS. Veuillez vérifier l'URL et réessayer."
+      }
+    },
     "system": {
       "title": "Paramètres système",
       "cleanup": {
