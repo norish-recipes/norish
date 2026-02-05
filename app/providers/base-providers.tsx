@@ -10,6 +10,7 @@ import { ToastProvider } from "@heroui/toast";
 import { TRPCProviderWrapper } from "./trpc-provider";
 
 import { TimerDock } from "@/components/timer-dock";
+import { ThemeLoader } from "@/components/theme-loader";
 
 export interface BaseProvidersProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export function BaseProviders({ children, themeProps }: BaseProvidersProps) {
     <NextThemesProvider enableSystem attribute="class" defaultTheme="system" {...themeProps}>
       <HeroUIProvider navigate={(path) => router.push(path)}>
         <TRPCProviderWrapper>
+          <ThemeLoader />
           <ToastProvider placement="top-center" toastOffset={48} toastProps={{ timeout: 5000 }} />
           {children}
           <TimerDock />
