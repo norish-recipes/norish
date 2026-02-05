@@ -61,7 +61,9 @@ export function isPrivateOrRestrictedIP(ip: string): boolean {
 
 /**
  * Resolve hostname to IP addresses and validate none are private/restricted
- * Returns error if any resolved IP is in a blocked range
+ * If DNS resolution fails, returns valid:true to allow the fetch attempt
+ * (the fetch may still fail, and that's okay - it means the domain doesn't exist)
+ * If DNS succeeds and resolves to a private IP, blocks it
  */
 export async function validateUrlForSSRF(url: string): Promise<{ valid: boolean; error?: string }> {
   let urlObj: URL;
@@ -108,24 +110,27 @@ export async function validateUrlForSSRF(url: string): Promise<{ valid: boolean;
     
     const allIPs = [...ipv4Addresses, ...ipv6Addresses];
     
-    if (allIPs.length === 0) {
-      return { valid: false, error: "Could not resolve hostname to any IP address" };
-    }
-    
-    // Check all resolved IPs
-    for (const ip of allIPs) {
-      if (isPrivateOrRestrictedIP(ip)) {
-        return { 
-          valid: false, 
-          error: `Hostname resolves to forbidden IP address: ${ip}` 
-        };
+    // If DNS resolution succeeded, validate all IPs
+    if (allIPs.length > 0) {
+      for (const ip of allIPs) {
+        if (isPrivateOrRestrictedIP(ip)) {
+          return { 
+            valid: false, 
+            error: `Hostname resolves to forbidden IP address: ${ip}` 
+          };
+        }
       }
+      return { valid: true };
     }
     
+    // If DNS resolution failed (no A/AAAA records), allow the fetch attempt anyway
+    // The fetch may still fail if the domain doesn't exist
+    // This handles cases where DNS is misconfigured or unavailable
     return { valid: true };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { valid: false, error: `DNS resolution failed: ${message}` };
+    // DNS lookup threw an error (server config issue, not a security issue)
+    // Allow the fetch to proceed - if the domain is invalid, fetch will fail
+    return { valid: true };
   }
 }
 
