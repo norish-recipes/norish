@@ -1,0 +1,94 @@
+/**
+ * Norish Test Theme - Orange Square
+ * 
+ * A minimal test theme that sets:
+ * - Primary colors to pastel orange
+ * - All border radius to 0 (square corners)
+ * 
+ * Supports both light and dark modes.
+ */
+
+/* =============================================================================
+   LIGHT MODE
+   ============================================================================= */
+
+:root,
+[data-theme="light"] {
+  /* Primary - Pastel Orange */
+  --primary-50: #fff7ed;
+  --primary-100: #ffedd5;
+  --primary-200: #fed7aa;
+  --primary-300: #fdba74;
+  --primary-400: #fb923c;
+  --primary-500: #f97316;
+  --primary-600: #ea580c;
+  --primary-700: #c2410c;
+  --primary-800: #9a3412;
+  --primary-900: #7c2d12;
+  --primary: #fb923c;
+  --primary-foreground: #ffffff;
+}
+
+/* =============================================================================
+   DARK MODE
+   ============================================================================= */
+
+[data-theme="dark"] {
+  /* Primary - Bright Pastel Orange */
+  --primary-50: #2d1a0a;
+  --primary-100: #4d2d15;
+  --primary-200: #7d4a1f;
+  --primary-300: #ad6729;
+  --primary-400: #dd8433;
+  --primary-500: #ffa14d;
+  --primary-600: #ffb366;
+  --primary-700: #ffc580;
+  --primary-800: #ffd799;
+  --primary-900: #ffe9b3;
+  --primary: #ffb366;
+  --primary-foreground: #0f0e0d;
+}
+
+/* =============================================================================
+   BORDER RADIUS - ALL CORNERS SQUARE
+   ============================================================================= */
+
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  /* Remove all border radius */
+  --radius-small: 0px;
+  --radius-medium: 0px;
+  --radius-large: 0px;
+  --radius: 0px;
+  
+  /* Override common radius variables */
+  --rounded: 0px;
+  --rounded-sm: 0px;
+  --rounded-md: 0px;
+  --rounded-lg: 0px;
+  --rounded-xl: 0px;
+  --rounded-2xl: 0px;
+  --rounded-3xl: 0px;
+  --rounded-full: 0px;
+}
+
+/* Force square corners on all elements */
+* {
+  border-radius: 0 !important;
+}
+
+/* Ensure buttons, cards, inputs etc. are all square */
+button,
+[role="button"],
+input,
+textarea,
+select,
+[class*="card"],
+[class*="Card"],
+[class*="button"],
+[class*="Button"],
+[class*="input"],
+[class*="Input"] {
+  border-radius: 0 !important;
+}

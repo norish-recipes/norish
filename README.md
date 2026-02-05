@@ -83,6 +83,7 @@ Norish is intentionally minimal. It focuses on practical day-to-day planning.
 - **Households** with shared groceries and planning.
 - **CalDAV sync** for calendar integration.
 - **Mobile-first design** with light/dark mode support.
+- **Custom themes** Apply custom CSS themes to change the frontend appearance.
 - **Authentication options**: OIDC, OAuth providers, and first-time password auth fallback.
 - **Admin settings UI** for runtime configuration.
 - **Permission policies** for recipe visibility/edit/delete scopes.
@@ -196,7 +197,10 @@ Server owners/admins can manage:
 - OIDC claim mapping for admin role assignment + household auto-join.
 - Content detection settings (units, content indicators, recurrence config).
 - AI + video processing settings.
+- Appearance & Themes (Custom CSS).
 - System scheduler and server restart actions.
+
+See [public/example-theme/](./public/example-theme/) for reference themes, hosting options, and creation guidelines.
 
 ---
 
