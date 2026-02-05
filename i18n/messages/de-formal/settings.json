@@ -260,6 +260,28 @@
       },
       "note": "Einkaufslisten- und Kalendereinträge folgen automatisch den Haushaltsregeln. Haushaltsmitglieder können Einträge aller anderen im gleichen Haushalt immer bearbeiten/löschen."
     },
+    "theme": {
+      "title": "Themakonfiguration",
+      "description": "Personalisieren Sie das Aussehen der App, indem Sie auf ein externes CSS-Repository verlinken. Thema-CSS muss hellen und dunklen Modus unterstützen.",
+      "cssUrlLabel": "Thema CSS URL",
+      "cssUrlPlaceholder": "https://example.com/theme.css",
+      "cssUrlHint": "Muss HTTPS sein. Das CSS sollte CSS-Variablen für helle und dunkle Themfarben verwenden.",
+      "testButton": "CSS testen",
+      "saveButton": "Thema speichern",
+      "clearButton": "Löschen",
+      "currentTheme": "Aktuelle Thema-URL",
+      "testSuccess": "CSS erfolgreich geladen!",
+      "howItWorks": "So funktioniert es:",
+      "howItWorks1": "Fügen Sie eine URL zu Ihrer benutzerdefinierten CSS-Datei ein (muss HTTPS sein)",
+      "howItWorks2": "Testen Sie die URL, um sicherzustellen, dass sie erreichbar ist und das CSS gültig ist",
+      "howItWorks3": "Speichern Sie, um das Thema auf alle Benutzer anzuwenden. Helle und dunkle CSS-Variablen werden automatisch angewendet.",
+      "errors": {
+        "emptyUrl": "Bitte geben Sie eine CSS-URL ein",
+        "invalidUrl": "Bitte geben Sie eine gültige URL ein",
+        "https": "URL muss HTTPS sein (oder localhost zum Testen)",
+        "testFailed": "CSS konnte nicht getestet werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut."
+      }
+    },
     "system": {
       "title": "Systemeinstellungen",
       "cleanup": {

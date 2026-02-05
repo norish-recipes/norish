@@ -260,6 +260,28 @@
       },
       "note": "Opmerking: Boodschappen en agenda-items volgen automatisch de huishoudregels, huishoudleden kunnen altijd items bewerken/verwijderen die behoren tot iemand in hetzelfde huishouden."
     },
+    "theme": {
+      "title": "Themaconfiguratie",
+      "description": "Personaliseer het uiterlijk van de app door naar een externe CSS-repository te linken. Thema-CSS moet zowel heldere als donkere modi ondersteunen.",
+      "cssUrlLabel": "Thema CSS URL",
+      "cssUrlPlaceholder": "https://example.com/theme.css",
+      "cssUrlHint": "Moet HTTPS zijn. De CSS moet CSS-variabelen gebruiken voor heldere en donkere themakleuren.",
+      "testButton": "CSS testen",
+      "saveButton": "Thema opslaan",
+      "clearButton": "Wissen",
+      "currentTheme": "Huidige thema-URL",
+      "testSuccess": "CSS succesvol geladen!",
+      "howItWorks": "Hoe het werkt:",
+      "howItWorks1": "Plak een URL naar uw aangepaste CSS-bestand (moet HTTPS zijn)",
+      "howItWorks2": "Test de URL om er zeker van te zijn dat deze toegankelijk is en de CSS geldig is",
+      "howItWorks3": "Sla op om het thema toe te passen op alle gebruikers. Heldere en donkere CSS-variabelen worden automatisch toegepast.",
+      "errors": {
+        "emptyUrl": "Voer alstublieft een CSS-URL in",
+        "invalidUrl": "Voer alstublieft een geldige URL in",
+        "https": "URL moet HTTPS zijn (of localhost voor testen)",
+        "testFailed": "CSS kan niet worden getest. Controleer de URL en probeer het opnieuw."
+      }
+    },
     "system": {
       "title": "Systeeminstellingen",
       "cleanup": {

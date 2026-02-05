@@ -260,6 +260,28 @@
       },
       "note": "Note: Groceries and Calendar items follow household rules automatically, household members can always edit/delete items belonging to anyone in the same household."
     },
+    "theme": {
+      "title": "Theme Configuration",
+      "description": "Customize the app's appearance by linking to an external CSS repository. Theme CSS must support both light and dark modes.",
+      "cssUrlLabel": "Theme CSS URL",
+      "cssUrlPlaceholder": "https://example.com/theme.css",
+      "cssUrlHint": "Must be HTTPS. The CSS should use CSS variables for light and dark theme colors.",
+      "testButton": "Test CSS",
+      "saveButton": "Save Theme",
+      "clearButton": "Clear",
+      "currentTheme": "Current Theme URL",
+      "testSuccess": "CSS loaded successfully!",
+      "howItWorks": "How it works:",
+      "howItWorks1": "Paste a URL to your custom CSS file (must be HTTPS)",
+      "howItWorks2": "Test the URL to ensure it's accessible and valid CSS",
+      "howItWorks3": "Save to apply the theme to all users. Light and dark CSS variables will be applied automatically.",
+      "errors": {
+        "emptyUrl": "Please enter a CSS URL",
+        "invalidUrl": "Please enter a valid URL",
+        "https": "URL must be HTTPS (or localhost for testing)",
+        "testFailed": "Failed to test CSS. Please check the URL and try again."
+      }
+    },
     "system": {
       "title": "System Settings",
       "cleanup": {
