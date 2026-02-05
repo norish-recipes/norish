@@ -5,10 +5,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 /**
- * Automatically prefetch recipe data when card comes into view.
+ * Automatically prefetch recipe data when element comes into view.
  * Uses IntersectionObserver for efficient viewport detection.
+ * 
+ * Can be used in recipe cards, calendar items, or any component that links to recipes.
  */
-export function useRecipeCardPrefetch(recipeId: string, enabled = true) {
+export function useRecipePrefetch(recipeId: string, enabled = true) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const elementRef = useRef<HTMLDivElement>(null);

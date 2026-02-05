@@ -19,7 +19,7 @@ import { RecipeDashboardDTO } from "@/types";
 import { formatMinutesHM } from "@/lib/helpers";
 import { useAppStore } from "@/store/useAppStore";
 import { usePermissionsContext } from "@/context/permissions-context";
-import { useRecipeCardPrefetch } from "@/hooks/recipes/use-recipe-card-prefetch";
+import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
 
 type RecipeCardProps = {
   recipe: RecipeDashboardDTO;
@@ -45,15 +45,15 @@ function RecipeCardComponent({
   const [groceriesOpen, setGroceriesOpen] = useState(false);
   const t = useTranslations("recipes.card");
 
-  // Automatically prefetch when card enters viewport
-  const cardRef = useRecipeCardPrefetch(recipe.id);
+  // Automatically prefetch recipe when card enters viewport
+  const cardRef = useRecipePrefetch(recipe.id);
 
   const averageRating = recipe.averageRating ?? null;
 
   const handleNavigate = useCallback(() => {
     if (recipe.id && !open && !mobileSearchOpen) {
       // Navigate immediately - skeleton shows while data loads
-      // Prefetch is already happening via useRecipeCardPrefetch hook
+      // Prefetch is already happening via useRecipePrefetch hook
       router.push(`/recipes/${recipe.id}`);
     }
   }, [router, recipe.id, open, mobileSearchOpen]);
