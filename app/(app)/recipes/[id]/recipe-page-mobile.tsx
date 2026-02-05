@@ -75,7 +75,7 @@ export default function RecipePageMobile() {
         )}
 
         {/* Heart button - bottom right (always visible) */}
-        <div className="absolute right-4 bottom-4 z-50">
+        <div className="absolute right-4 bottom-8 z-50">
           <HeartButton
             showBackground
             isFavorite={isFavorite}
