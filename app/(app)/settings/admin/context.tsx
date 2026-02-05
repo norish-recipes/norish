@@ -10,6 +10,7 @@ import {
   type RecurrenceConfig,
   type AIConfig,
   type VideoConfig,
+  type ThemeConfig,
   type AuthProviderOIDC,
   type AuthProviderOIDCInput,
   type AuthProviderGitHub,
@@ -38,6 +39,7 @@ interface AdminSettingsContextValue {
   recurrenceConfig: RecurrenceConfig | undefined;
   aiConfig: AIConfig | undefined;
   videoConfig: VideoConfig | undefined;
+  themeConfig: ThemeConfig | undefined;
   schedulerCleanupMonths: number | undefined;
   recipePermissionPolicy: RecipePermissionPolicy | undefined;
   prompts: PromptsConfig | undefined;
@@ -70,6 +72,8 @@ interface AdminSettingsContextValue {
   updateRecurrenceConfig: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateAIConfig: (config: AIConfig) => Promise<{ success: boolean; error?: string }>;
   updateVideoConfig: (config: VideoConfig) => Promise<{ success: boolean; error?: string }>;
+  updateThemeConfig: (config: ThemeConfig) => Promise<{ success: boolean; error?: string }>;
+  testThemeCss: (url: string) => Promise<{ success: boolean; error?: string }>;
   updatePrompts: (config: PromptsConfigInput) => Promise<{ success: boolean; error?: string }>;
   updateTimerKeywords: (
     config: TimerKeywordsInput
@@ -129,6 +133,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     | undefined;
   const aiConfig = configs[ServerConfigKeys.AI_CONFIG] as AIConfig | undefined;
   const videoConfig = configs[ServerConfigKeys.VIDEO_CONFIG] as VideoConfig | undefined;
+  const themeConfig = configs[ServerConfigKeys.THEME_CONFIG] as ThemeConfig | undefined;
   const schedulerCleanupMonths = configs[ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS] as
     | number
     | undefined;
@@ -223,6 +228,20 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     [mutations]
   );
 
+  const updateTheme = useCallback(
+    async (config: ThemeConfig) => {
+      return mutations.updateThemeConfig(config);
+    },
+    [mutations]
+  );
+
+  const testTheme = useCallback(
+    async (url: string) => {
+      return mutations.testThemeCss(url);
+    },
+    [mutations]
+  );
+
   const updatePromptsConfig = useCallback(
     async (config: PromptsConfigInput) => {
       return mutations.updatePrompts(config);
@@ -299,6 +318,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     recurrenceConfig,
     aiConfig,
     videoConfig,
+    themeConfig,
     schedulerCleanupMonths,
     recipePermissionPolicy,
     prompts,
@@ -316,6 +336,8 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     updateRecurrenceConfig: updateRecurrence,
     updateAIConfig: updateAI,
     updateVideoConfig: updateVideo,
+    updateThemeConfig: updateTheme,
+    testThemeCss: testTheme,
     updatePrompts: updatePromptsConfig,
     updateTimerKeywords: updateTimerKeywordsConfig,
     updateSchedulerMonths: updateScheduler,

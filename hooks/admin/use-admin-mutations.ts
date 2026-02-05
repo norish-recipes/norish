@@ -9,6 +9,7 @@ import type {
   RecipePermissionPolicy,
   PromptsConfigInput,
   TimerKeywordsInput,
+  ThemeConfigInput,
   ServerConfigKey,
 } from "@/server/db/zodSchemas/server-config";
 
@@ -68,6 +69,10 @@ export type AdminMutationsResult = {
     policy: RecipePermissionPolicy
   ) => Promise<{ success: boolean; error?: string }>;
 
+  // Theme
+  updateThemeConfig: (config: ThemeConfigInput) => Promise<{ success: boolean; error?: string }>;
+  testThemeCss: (url: string) => Promise<{ success: boolean; error?: string }>;
+
   // System
   updateSchedulerMonths: (months: number) => Promise<{ success: boolean; error?: string }>;
   restoreDefault: (key: ServerConfigKey) => Promise<{ success: boolean; error?: string }>;
@@ -123,6 +128,10 @@ export function useAdminMutations(): AdminMutationsResult {
   const updatePermissionPolicyMutation = useMutation(
     trpc.admin.updateRecipePermissionPolicy.mutationOptions()
   );
+
+  // Theme
+  const updateThemeConfigMutation = useMutation(trpc.admin.updateThemeConfig.mutationOptions());
+  const testThemeCssMutation = useMutation(trpc.admin.testThemeCss.mutationOptions());
 
   // System
   const updateSchedulerMonthsMutation = useMutation(
@@ -217,6 +226,15 @@ export function useAdminMutations(): AdminMutationsResult {
     // Permissions
     updateRecipePermissionPolicy: async (policy) => {
       return withInvalidate(updatePermissionPolicyMutation.mutateAsync(policy));
+    },
+
+    // Theme
+    updateThemeConfig: async (config) => {
+      return withInvalidate(updateThemeConfigMutation.mutateAsync(config));
+    },
+    testThemeCss: async (url) => {
+      // Test doesn't need invalidate
+      return testThemeCssMutation.mutateAsync(url);
     },
 
     // System
