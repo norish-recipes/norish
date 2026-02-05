@@ -92,8 +92,8 @@ export const Navbar = () => {
           </NavbarContent>
 
           {/* Right */}
-          <NavbarContent justify="end">
-            <NavbarItem>
+          <NavbarContent className="items-center" justify="end">
+            <NavbarItem className="flex items-center">
               <NavbarUserMenu />
             </NavbarItem>
           </NavbarContent>
