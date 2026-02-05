@@ -1,6 +1,6 @@
 "use client";
 import React, { useMemo } from "react";
-import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react";
+import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, useDisclosure } from "@heroui/react";
 import {
   CalendarDaysIcon,
   ShoppingCartIcon,
@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { useRecipeContextRequired } from "../context";
+import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 
 import { useWakeLockContext } from "./wake-lock-context";
 
@@ -40,6 +41,7 @@ export default function ActionsMenu({ id }: Props) {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [openCalendar, setOpenCalendar] = React.useState(false);
   const [openGroceries, setOpenGroceries] = React.useState(false);
+  const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure();
   const router = useRouter();
   const { canEditRecipe, canDeleteRecipe, isAutoTaggingEnabled, isAIEnabled } =
     usePermissionsContext();
@@ -62,10 +64,15 @@ export default function ActionsMenu({ id }: Props) {
   const canEdit = recipe.userId ? canEditRecipe(recipe.userId) : true;
   const canDelete = recipe.userId ? canDeleteRecipe(recipe.userId) : true;
 
-  const handleDelete = React.useCallback(() => {
+  const handleDeleteClick = React.useCallback(() => {
+    onDeleteModalOpen();
+  }, [onDeleteModalOpen]);
+
+  const handleDeleteConfirm = React.useCallback(() => {
+    onDeleteModalClose();
     deleteRecipe(id);
     router.push("/");
-  }, [deleteRecipe, id, router]);
+  }, [deleteRecipe, id, router, onDeleteModalClose]);
 
   const menuItems = useMemo(() => {
     const items: MenuItem[] = [
@@ -160,7 +167,7 @@ export default function ActionsMenu({ id }: Props) {
         key: "delete",
         label: t("delete"),
         icon: <TrashIcon className="size-4" />,
-        onPress: handleDelete,
+        onPress: handleDeleteClick,
         labelClassName: "text-danger",
         iconClassName: "text-danger",
       });
@@ -170,7 +177,7 @@ export default function ActionsMenu({ id }: Props) {
   }, [
     canEdit,
     canDelete,
-    handleDelete,
+    handleDeleteClick,
     id,
     router,
     isSupported,
@@ -241,6 +248,13 @@ export default function ActionsMenu({ id }: Props) {
       <MiniGroceries open={openGroceries} recipeId={id} onOpenChange={setOpenGroceries} />
 
       <MiniCalendar open={openCalendar} recipeId={id} onOpenChange={setOpenCalendar} />
+
+      <DeleteRecipeModal
+        isOpen={isDeleteModalOpen}
+        recipeName={recipe.name}
+        onClose={onDeleteModalClose}
+        onConfirm={handleDeleteConfirm}
+      />
     </>
   );
 }

@@ -65,6 +65,11 @@
     "toMetric": "In metrisch umwandeln",
     "toUS": "In US umwandeln"
   },
+  "deleteModal": {
+    "title": "Rezept löschen",
+    "confirmMessage": "Sind Sie sicher, dass Sie \"{recipeName}\" löschen möchten?",
+    "warning": "Diese Aktion kann nicht rückgängig gemacht werden."
+  },
   "form": {
     "createTitle": "Rezept erstellen",
     "editTitle": "Rezept bearbeiten",

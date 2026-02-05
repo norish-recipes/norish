@@ -1,7 +1,7 @@
 "use client";
 
 import { ShoppingBagIcon, CalendarDaysIcon, TrashIcon } from "@heroicons/react/20/solid";
-import { Card, CardBody } from "@heroui/react";
+import { Card, CardBody, useDisclosure } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
 import DoubleTapContainer from "../shared/double-tap-container";
 import FallbackImage from "../shared/fallback-image";
+import { DeleteRecipeModal } from "../shared/delete-recipe-modal";
 
 import RecipeMetadata from "./recipe-metadata";
 import RecipeTags from "./recipe-tags";
@@ -42,6 +43,7 @@ function RecipeCardComponent({
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [groceriesOpen, setGroceriesOpen] = useState(false);
+  const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure();
   const t = useTranslations("recipes.card");
 
   const averageRating = recipe.averageRating ?? null;
@@ -71,9 +73,19 @@ function RecipeCardComponent({
     onToggleFavorite(recipe.id);
   }, [onToggleFavorite, recipe.id]);
 
-  const deleteRecipeButton = useCallback(() => {
-    onDelete(recipe.id);
-  }, [onDelete, recipe.id]);
+  const handleDeleteClick = useCallback(() => {
+    onDeleteModalOpen();
+    // Keep the row open for the delete animation after confirmation
+    setTimeout(() => rowRef.current?.openRow(), 0);
+  }, [onDeleteModalOpen]);
+
+  const handleDeleteConfirm = useCallback(() => {
+    onDeleteModalClose();
+    // Trigger the delete animation, then delete the recipe
+    rowRef.current?.triggerDeleteAnimation(() => {
+      onDelete(recipe.id);
+    });
+  }, [onDelete, recipe.id, onDeleteModalClose]);
 
   // Check if user can delete this recipe
   // Recipes without owner don not have restrictions
@@ -102,14 +114,14 @@ function RecipeCardComponent({
         key: "delete",
         icon: TrashIcon,
         color: "danger",
-        onPress: deleteRecipeButton,
-        primary: true,
+        onPress: handleDeleteClick,
+        primary: false,
         label: t("deleteRecipe"),
       });
     }
 
     return baseActions;
-  }, [showDeleteAction, deleteRecipeButton, t]);
+  }, [showDeleteAction, handleDeleteClick, t]);
 
   return (
     <>
@@ -224,6 +236,13 @@ function RecipeCardComponent({
         originalServings={recipe.servings || 1}
         recipeId={recipe.id}
         onOpenChange={setGroceriesOpen}
+      />
+
+      <DeleteRecipeModal
+        isOpen={isDeleteModalOpen}
+        recipeName={recipe.name}
+        onClose={onDeleteModalClose}
+        onConfirm={handleDeleteConfirm}
       />
     </>
   );

@@ -65,6 +65,11 @@
     "toMetric": "Convert to Metric",
     "toUS": "Convert to US"
   },
+  "deleteModal": {
+    "title": "Delete Recipe",
+    "confirmMessage": "Are you sure you want to delete \"{recipeName}\"?",
+    "warning": "This action cannot be undone."
+  },
   "form": {
     "createTitle": "Create Recipe",
     "editTitle": "Edit Recipe",
