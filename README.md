@@ -56,6 +56,7 @@ On my _todolist_ are still in order of current priority:
 - **CalDav sync** Sync your recipes with any caldav provider(only tested with radicale)
 - **Mobile-first design** for use in the kitchen
 - **Light & dark mode** support
+- **Custom themes** Apply custom CSS themes to change the frontend appearance.
 - **SSO (OIDC/OAuth2)** Norish supports login via OIDC/OAuth2. There are no plans to start supporting password login.
   - If no auth provider is configured email and password authentication will be enabled by default.
 - **Admin Settings UI** for server owners to manage configuration without editing files
@@ -252,6 +253,12 @@ Configure via environment variables or in **Settings => Admin => Authentication 
 - **AI Configuration** - Provider, endpoint, model, API key, temperature, max tokens
 - **Video Processing** - Enable/disable, max video length, yt-dlp version
 - **Transcription** - Provider, API key, model for video transcription
+
+### Appearance & Themes
+
+- **Custom Theme Configuration** - Create, share and use custom themes created by the community
+
+See [public/example-theme/](./public/example-theme/) for reference themes, hosting options, and creation guidelines.
 
 ### System
 
