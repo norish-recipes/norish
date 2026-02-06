@@ -53,7 +53,7 @@ export default function StepsList({ autoScrollOnCheck = false }: StepsListProps)
       return;
     }
 
-    target.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+  target.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
   };
 
   const toggle = (i: number) => {
@@ -140,6 +140,7 @@ export default function StepsList({ autoScrollOnCheck = false }: StepsListProps)
                     stepRefs.current.delete(i);
                   }
                 }}
+                className="scroll-mt-20"
               >
                 <div
                   aria-pressed={isDone}
