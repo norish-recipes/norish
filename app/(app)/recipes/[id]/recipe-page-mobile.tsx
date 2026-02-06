@@ -241,7 +241,7 @@ export default function RecipePageMobile() {
             </div>
 
             <div className="-mx-1">
-              <StepsList />
+              <StepsList autoScrollOnCheck />
             </div>
 
             {/* Rating Section */}
