@@ -1,7 +1,7 @@
 "use client";
 
 import { Switch, Tooltip } from "@heroui/react";
-import { DevicePhoneMobileIcon } from "@heroicons/react/16/solid";
+import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
@@ -21,7 +21,7 @@ export default function WakeLockToggle() {
     return (
       <Tooltip content={t("notSupported")}>
         <div className="flex items-center gap-2 opacity-50">
-          <DevicePhoneMobileIcon className="h-4 w-4" />
+          <DevicePhoneMobileIcon className="h-5 w-5" />
           <span className="text-sm">{t("keepScreenOn")}</span>
         </div>
       </Tooltip>
