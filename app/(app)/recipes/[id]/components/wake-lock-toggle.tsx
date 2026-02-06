@@ -1,7 +1,7 @@
 "use client";
 
 import { Switch, Tooltip } from "@heroui/react";
-import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
+import { DevicePhoneMobileIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
@@ -31,7 +31,7 @@ export default function WakeLockToggle() {
   return (
     <Tooltip content={isActive ? t("activeTooltip") : t("inactiveTooltip")}>
       <div className="flex items-center gap-2">
-        <DevicePhoneMobileIcon className="h-4 w-4" />
+        <DevicePhoneMobileIcon className="h-5 w-5" />
         <Switch
           aria-label={t("ariaLabel")}
           color="success"

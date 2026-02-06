@@ -15,7 +15,8 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@heroui/react";
-import { Cog6ToothIcon, ChevronDownIcon } from "@heroicons/react/16/solid";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";

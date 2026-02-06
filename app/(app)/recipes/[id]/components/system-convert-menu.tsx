@@ -9,7 +9,7 @@ import {
   DropdownTrigger,
   Spinner,
 } from "@heroui/react";
-import { ArrowsRightLeftIcon, SparklesIcon } from "@heroicons/react/20/solid";
+import { ArrowsRightLeftIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useRecipeContextRequired } from "../context";

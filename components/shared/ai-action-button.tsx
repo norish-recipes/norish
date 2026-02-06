@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "@heroui/react";
-import { SparklesIcon } from "@heroicons/react/20/solid";
+import { SparklesIcon } from "@heroicons/react/16/solid";
 
 import { cssAIGradientBg } from "@/config/css-tokens";
 

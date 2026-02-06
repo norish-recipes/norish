@@ -11,7 +11,7 @@ import {
   Textarea,
   addToast,
 } from "@heroui/react";
-import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/20/solid";
+import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 

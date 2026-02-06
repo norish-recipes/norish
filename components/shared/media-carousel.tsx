@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Button } from "@heroui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { AnimatePresence, motion } from "motion/react";
 import NextImage from "next/image";
 

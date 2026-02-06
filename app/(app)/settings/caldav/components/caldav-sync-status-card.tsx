@@ -18,7 +18,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@heroui/react";
-import { ArrowPathIcon, ClockIcon, InformationCircleIcon } from "@heroicons/react/24/solid";
+import { ArrowPathIcon, ClockIcon, InformationCircleIcon } from "@heroicons/react/16/solid";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslations } from "next-intl";
 
