@@ -2,7 +2,18 @@
 
 import { Tabs, Tab } from "@heroui/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { UserCircleIcon, HomeIcon, ServerIcon, ShieldCheckIcon } from "@heroicons/react/20/solid";
+import {
+  UserCircleIcon as UserCircleIconSolid,
+  HomeIcon as HomeIconSolid,
+  ServerIcon as ServerIconSolid,
+  ShieldCheckIcon as ShieldCheckIconSolid,
+} from "@heroicons/react/20/solid";
+import {
+  UserCircleIcon as UserCircleIconOutline,
+  HomeIcon as HomeIconOutline,
+  ServerIcon as ServerIconOutline,
+  ShieldCheckIcon as ShieldCheckIconOutline,
+} from "@heroicons/react/24/outline";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
@@ -57,7 +68,11 @@ function SettingsContent() {
           key="user"
           title={
             <div className="flex items-center gap-2">
-              <UserCircleIcon className="h-5 w-5" />
+              {currentTab === "user" ? (
+                <UserCircleIconSolid className="h-5 w-5" />
+              ) : (
+                <UserCircleIconOutline className="h-5 w-5" />
+              )}
               <span>{t("tabs.user")}</span>
             </div>
           }
@@ -71,7 +86,11 @@ function SettingsContent() {
           key="household"
           title={
             <div className="flex items-center gap-2">
-              <HomeIcon className="h-5 w-5" />
+              {currentTab === "household" ? (
+                <HomeIconSolid className="h-5 w-5" />
+              ) : (
+                <HomeIconOutline className="h-5 w-5" />
+              )}
               <span>{t("tabs.household")}</span>
             </div>
           }
@@ -85,7 +104,11 @@ function SettingsContent() {
           key="caldav"
           title={
             <div className="flex items-center gap-2">
-              <ServerIcon className="h-5 w-5" />
+              {currentTab === "caldav" ? (
+                <ServerIconSolid className="h-5 w-5" />
+              ) : (
+                <ServerIconOutline className="h-5 w-5" />
+              )}
               <span>{t("tabs.caldav")}</span>
             </div>
           }
@@ -101,7 +124,11 @@ function SettingsContent() {
             key="admin"
             title={
               <div className="flex items-center gap-2">
-                <ShieldCheckIcon className="h-5 w-5" />
+                {currentTab === "admin" ? (
+                  <ShieldCheckIconSolid className="h-5 w-5" />
+                ) : (
+                  <ShieldCheckIconOutline className="h-5 w-5" />
+                )}
                 <span>{t("tabs.admin")}</span>
               </div>
             }
