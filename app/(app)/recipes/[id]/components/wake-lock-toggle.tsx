@@ -15,7 +15,7 @@ export default function WakeLockToggle() {
     if (isSupported && !isActive) {
       toggle();
     }
-  }, [isSupported, isActive, toggle]);
+  }, []);
 
   if (!isSupported) {
     return (
