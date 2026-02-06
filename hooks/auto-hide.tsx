@@ -13,7 +13,7 @@ interface AutoHideOptions {
 
 export function useAutoHide({
   scrollThreshold = 2,
-  idleDelay = 1500,
+  idleDelay = 4000,
   topOffset = 50,
   disabled = false,
 }: AutoHideOptions = {}) {
