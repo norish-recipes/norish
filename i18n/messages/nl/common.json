@@ -133,6 +133,9 @@
     "recipeLink": "Typ <strong>/receptnaam</strong> om naar een ander recept te linken",
     "helpAriaLabel": "Formateringshulp"
   },
+  "tagInput": {
+    "placeholder": "Typ tags gescheiden door spaties..."
+  },
   "recurrence": {
     "title": "Herhaling",
     "frequency": "Frequentie",

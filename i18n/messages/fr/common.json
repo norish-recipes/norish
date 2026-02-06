@@ -133,6 +133,9 @@
     "recipeLink": "Tapez <strong>/nom de la recette</strong> pour accéder à une autre recette",
     "helpAriaLabel": "Aide à la mise en forme"
   },
+  "tagInput": {
+    "placeholder": "Saisissez les tags séparés par des espaces..."
+  },
   "recurrence": {
     "title": "Répétition",
     "frequency": "Fréquence",

@@ -133,6 +133,9 @@
     "recipeLink": "Gib <strong>/Rezeptname</strong> ein, um zu einem anderen Rezept zu verlinken",
     "helpAriaLabel": "Formatierungshilfe"
   },
+  "tagInput": {
+    "placeholder": "Geben Sie Tags getrennt durch Leerzeichen ein..."
+  },
   "recurrence": {
     "title": "Wiederholung",
     "frequency": "Häufigkeit",

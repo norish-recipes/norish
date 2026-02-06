@@ -133,6 +133,9 @@
     "recipeLink": "Type <strong>/recipe name</strong> to link to another recipe",
     "helpAriaLabel": "Formatting help"
   },
+  "tagInput": {
+    "placeholder": "Type tags separated by spaces..."
+  },
   "recurrence": {
     "title": "Repeat",
     "frequency": "Frequency",
