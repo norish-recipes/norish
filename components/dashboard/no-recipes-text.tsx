@@ -1,5 +1,5 @@
 "use client";
-import { PlusIcon } from "@heroicons/react/16/solid";
+import { BookOpenIcon } from "@heroicons/react/24/outline";
 import { Card, CardBody } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -13,7 +13,7 @@ export default function NoRecipesText() {
           <div className="relative">
             <div className="bg-primary-500/20 dark:bg-primary-400/15 absolute inset-0 scale-125 rounded-full blur-3xl" />
             <div className="bg-primary-500/15 text-primary-500 relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
-              <PlusIcon className="h-7 w-7" />
+              <BookOpenIcon className="h-7 w-7" />
             </div>
           </div>
 
