@@ -11,7 +11,9 @@ import {
   UnitsMapSchema,
   RecurrenceConfigSchema,
   PromptsConfigInputSchema,
+  TimerKeywordsInputSchema,
   type PromptsConfig,
+  type TimerKeywordsConfig,
 } from "@/server/db/zodSchemas/server-config";
 
 /**
@@ -124,10 +126,40 @@ const updatePrompts = adminProcedure
     return { success: true };
   });
 
+/**
+ * Get timer keywords config.
+ * Returns the current timer keywords from the database.
+ */
+const getTimerKeywords = adminProcedure.query(async () => {
+  return await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+});
+
+/**
+ * Update timer keywords config.
+ * Accepts keywords config and marks as admin-overridden.
+ */
+const updateTimerKeywords = adminProcedure
+  .input(TimerKeywordsInputSchema)
+  .mutation(async ({ input, ctx }) => {
+    log.info({ userId: ctx.user.id }, "Updating timer keywords config");
+
+    // Mark as overridden
+    await setConfig(
+      ServerConfigKeys.TIMER_KEYWORDS,
+      { ...input, isOverridden: true },
+      ctx.user.id,
+      false
+    );
+
+    return { success: true };
+  });
+
 export const contentConfigProcedures = router({
   updateContentIndicators,
   updateUnits,
   updateRecurrenceConfig,
   getPrompts,
   updatePrompts,
+  getTimerKeywords,
+  updateTimerKeywords,
 });

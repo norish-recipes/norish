@@ -65,6 +65,11 @@
     "toMetric": "Convertir en métrique",
     "toUS": "Convertir en US"
   },
+  "deleteModal": {
+    "title": "Supprimer la recette",
+    "confirmMessage": "Êtes-vous sûr de vouloir supprimer \"{recipeName}\" ?",
+    "warning": "Cette action ne peut pas être annulée."
+  },
   "form": {
     "createTitle": "Créer une recette",
     "editTitle": "Modifier la recette",

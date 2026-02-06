@@ -132,6 +132,7 @@ describe("getExtractionLogContext", () => {
 
     expect(context).toEqual({
       recipeName: "Chocolate Cake",
+      categories: null,
       metricIngredients: 2,
       usIngredients: 2,
       metricSteps: 2,
@@ -190,6 +191,7 @@ describe("getExtractionLogContext", () => {
 
     expect(context).toEqual({
       recipeName: "Chocolate Cake",
+      categories: null,
       metricIngredients: 2,
       usIngredients: 2,
       metricSteps: 2,
@@ -222,6 +224,7 @@ describe("getExtractionLogContext", () => {
 
     expect(context).toEqual({
       recipeName: "Test Recipe",
+      categories: null,
       metricIngredients: 0,
       usIngredients: 0,
       metricSteps: 0,

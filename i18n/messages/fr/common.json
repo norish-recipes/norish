@@ -174,5 +174,9 @@
       "5": "Vendredi",
       "6": "Samedi"
     }
+  },
+  "timer": {
+    "done": "Terminé",
+    "done_action": "Terminé"
   }
 }

@@ -19,6 +19,7 @@ export const ServerConfigKeys = {
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
   PROMPTS: "prompts",
   LOCALE_CONFIG: "locale_config",
+  TIMER_KEYWORDS: "timer_keywords",
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
@@ -97,6 +98,23 @@ export const ContentIndicatorsSchema = z.object({
 });
 
 export type ContentIndicatorsConfig = z.infer<typeof ContentIndicatorsSchema>;
+
+// ============================================================================
+// Timer Keywords Schema
+// ============================================================================
+
+export const TimerKeywordsSchema = z.object({
+  enabled: z.boolean().default(true),
+  hours: z.array(z.string()).default([]),
+  minutes: z.array(z.string()).default([]),
+  seconds: z.array(z.string()).default([]),
+  isOverridden: z.boolean().default(false),
+});
+
+export type TimerKeywordsConfig = z.infer<typeof TimerKeywordsSchema>;
+
+export const TimerKeywordsInputSchema = TimerKeywordsSchema.omit({ isOverridden: true });
+export type TimerKeywordsInput = z.infer<typeof TimerKeywordsInputSchema>;
 
 // ============================================================================
 // Prompts Schema
@@ -419,6 +437,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return PromptsConfigSchema;
     case ServerConfigKeys.LOCALE_CONFIG:
       return I18nLocaleConfigSchema;
+    case ServerConfigKeys.TIMER_KEYWORDS:
+      return TimerKeywordsSchema;
     default:
       return z.any();
   }

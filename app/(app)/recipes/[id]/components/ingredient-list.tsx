@@ -95,14 +95,14 @@ export default function IngredientsList() {
                 >
                   {amount !== "" && (
                     <span
-                      className={`text-base font-semibold tabular-nums ${isChecked ? "text-default-500 line-through" : "text-foreground"}`}
+                      className={`text-base font-bold tabular-nums ${isChecked ? "text-default-500 line-through" : "text-foreground"}`}
                     >
                       {amount}
                     </span>
                   )}
                   {unit && (
                     <span
-                      className={`text-base font-medium ${isChecked ? "text-default-400 line-through" : "text-primary-600 dark:text-primary-400"}`}
+                      className={`text-base font-bold ${isChecked ? "text-default-400 line-through" : "text-primary-600 dark:text-primary-400"}`}
                     >
                       {unit}
                     </span>

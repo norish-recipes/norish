@@ -15,6 +15,7 @@ export default defineConfig({
       MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
     },
     setupFiles: ["./tooling/vitest/setup.ts"],
+    globalSetup: ["./__tests__/setup/global-setup.ts"],
     include: ["**/*.{test,spec}.{ts,tsx}"],
     exclude: ["node_modules", "dist-server", ".next"],
     // NOTE: In Vitest 4.x, environmentMatchGlobs was removed.

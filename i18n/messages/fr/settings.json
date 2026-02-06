@@ -353,7 +353,11 @@
       "contentIndicators": {
         "title": "Indicateurs de contenu",
         "subtitle": "Mots-clés identifiant les pages de recettes",
-        "description": "Les indicateurs Schema détectent les données structurées (JSON-LD, microdata). Les indicateurs de contenu sont des mots-clés suggérant qu’une page contient une recette."
+        "description": "Les indicateurs Schema détectent les données structurées (JSON-LD, microdata). Les indicateurs de contenu sont des mots-clés suggérant qu’une page contient une recette.",
+        "timersEnabled": {
+          "title": "Activer les minuteurs de recette",
+          "description": "Détecter et afficher des minuteurs interactifs dans les recettes"
+        }
       },
       "units": {
         "title": "Unités de mesure",
@@ -361,9 +365,25 @@
         "description": "Définissez les unités avec leurs abréviations, pluriels et variantes orthographiques. Utilisé lors de l’analyse des ingrédients."
       },
       "recurrence": {
-        "title": "Récurrences",
-        "subtitle": "Motifs de langage naturel pour les répétitions",
-        "description": "Définissez les motifs de langage pour détecter les règles comme « chaque semaine », « tous les deux jours », etc."
+        "title": "Modèles de récurrence",
+        "subtitle": "Modèles en langage naturel pour les éléments récurrents",
+        "description": "Définissez des modèles spécifiques à la langue pour analyser les règles de récurrence à partir du langage naturel (par exemple, 'chaque semaine', 'tous les jours')."
+      },
+      "timerKeywords": {
+        "title": "Mots-clés de minuterie",
+        "subtitle": "Mots-clés d'unité de temps pour la détection de minuterie",
+        "description": "Configurez les mots-clés utilisés pour détecter les minuteries dans les instructions de recette. Supporte plusieurs langues.",
+        "enableToggle": "Activer la détection de minuterie",
+        "hoursLabel": "Mots-clés pour heures",
+        "hoursPlaceholder": "heure, heures, h",
+        "hoursHelp": "Mots-clés pour les heures (par ex. heure, hour, stunde, uur)",
+        "minutesLabel": "Mots-clés pour minutes",
+        "minutesPlaceholder": "minute, minutes, min",
+        "minutesHelp": "Mots-clés pour les minutes (par ex. minute, minuten, minuut)",
+        "secondsLabel": "Mots-clés pour secondes",
+        "secondsPlaceholder": "seconde, secondes, sec, s",
+        "secondsHelp": "Mots-clés pour les secondes (par ex. seconde, second, sekunde)",
+        "unsavedChanges": "Modifications non enregistrées"
       }
     },
     "aiProcessing": {

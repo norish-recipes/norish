@@ -1,12 +1,13 @@
 "use client";
 
-import { Card, CardBody, CardHeader, Accordion, AccordionItem } from "@heroui/react";
+import { Card, CardBody, CardHeader, Accordion, AccordionItem, Switch } from "@heroui/react";
 import { DocumentMagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
 
 import JsonEditor from "./json-editor";
+import TimerKeywordsEditor from "./timer-keywords-editor";
 
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
 
@@ -16,9 +17,11 @@ export default function ContentDetectionCard() {
     contentIndicators,
     units,
     recurrenceConfig,
+    timerKeywords,
     updateContentIndicators,
     updateUnits,
     updateRecurrenceConfig,
+    updateTimerKeywords,
     restoreDefaultConfig,
   } = useAdminSettingsContext();
 
@@ -32,7 +35,24 @@ export default function ContentDetectionCard() {
       </CardHeader>
       <CardBody>
         <p className="text-default-500 mb-4 text-base">{t("description")}</p>
+
         <Accordion selectionMode="multiple" variant="bordered">
+          <AccordionItem
+            key="timer-keywords"
+            subtitle={t("timerKeywords.subtitle")}
+            title={t("timerKeywords.title")}
+          >
+            <div className="p-2">
+              <TimerKeywordsEditor
+                enabled={timerKeywords?.enabled ?? true}
+                hours={timerKeywords?.hours ?? []}
+                minutes={timerKeywords?.minutes ?? []}
+                seconds={timerKeywords?.seconds ?? []}
+                onUpdate={updateTimerKeywords}
+                onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.TIMER_KEYWORDS)}
+              />
+            </div>
+          </AccordionItem>
           <AccordionItem
             key="content-indicators"
             subtitle={t("contentIndicators.subtitle")}
@@ -47,7 +67,6 @@ export default function ContentDetectionCard() {
               />
             </div>
           </AccordionItem>
-
           <AccordionItem key="units" subtitle={t("units.subtitle")} title={t("units.title")}>
             <div className="p-2">
               <JsonEditor
@@ -58,7 +77,6 @@ export default function ContentDetectionCard() {
               />
             </div>
           </AccordionItem>
-
           <AccordionItem
             key="recurrence"
             subtitle={t("recurrence.subtitle")}

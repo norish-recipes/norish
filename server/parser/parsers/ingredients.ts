@@ -11,6 +11,8 @@ import { decode } from "html-entities";
 
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
+import { normalizeUnit } from "@/lib/unit-localization";
+import { getUnits } from "@/config/server-config-loader";
 
 export interface ParsedIngredient {
   ingredientId: null;
@@ -50,17 +52,7 @@ function normalizeIngredientSource(ingSource: unknown): string[] {
 }
 
 /**
- * Parse ingredients from JSON-LD into normalized ingredient objects.
- *
- * This function:
- * 1. Extracts raw ingredient strings from recipeIngredient or ingredients field
- * 2. Decodes HTML entities
- * 3. Parses quantities and units using parseIngredientWithDefaults
- * 4. Infers the measurement system used
- *
- * @param json - The JSON-LD recipe node
- * @param units - Unit configuration for parsing
- * @returns Parsed ingredients and inferred measurement system
+ * Parse ingredients from JSON-LD recipe data.
  */
 export function parseIngredients(
   json: Record<string, unknown>,
@@ -76,7 +68,7 @@ export function parseIngredients(
     ingredientId: null,
     ingredientName: ing.description,
     amount: ing.quantity != null ? ing.quantity : null,
-    unit: ing.unitOfMeasure,
+    unit: normalizeUnit(ing.unitOfMeasure ?? "", units),
     systemUsed,
     order: i,
   }));

@@ -18,6 +18,8 @@ import {
 import { MeasurementSystem } from "@/types";
 import { dbLogger } from "@/server/logger";
 import { stripHtmlTags } from "@/lib/helpers";
+import { normalizeUnit } from "@/lib/unit-localization";
+import { getUnits } from "@/config/server-config-loader";
 
 const IngredientArraySchema = z.array(IngredientSelectBaseSchema);
 
@@ -159,6 +161,9 @@ export async function attachIngredientsToRecipeByInputTx(
   }
   const items = parsedInput.data;
 
+  // Get units config for normalization
+  const units = await getUnits();
+
   // Separate items with ingredientId (already exist) from those needing creation (ingredientName)
   const itemsWithId = items.filter((ri) => ri.ingredientId);
   const itemsNeedingCreation = items.filter((ri) => !ri.ingredientId && ri.ingredientName);
@@ -174,7 +179,7 @@ export async function attachIngredientsToRecipeByInputTx(
     recipeId: ri.recipeId,
     ingredientId: ri.ingredientId!,
     amount: ri.amount != null ? Number(ri.amount) : null,
-    unit: ri.unit ?? "",
+    unit: normalizeUnit(ri.unit ?? "", units),
     order: ri.order,
     systemUsed: (ri.systemUsed as MeasurementSystem) || "metric",
   }));
@@ -196,7 +201,7 @@ export async function attachIngredientsToRecipeByInputTx(
         recipeId: ri.recipeId,
         ingredientId: ing.id,
         amount: ri.amount != null ? Number(ri.amount) : null,
-        unit: ri.unit ?? "",
+        unit: normalizeUnit(ri.unit ?? "", units), // ← Normalize unit to canonical ID
         order: ri.order,
         systemUsed: (ri.systemUsed as MeasurementSystem) || "metric",
       };
@@ -234,7 +239,7 @@ export async function attachIngredientsToRecipeByInputTx(
   const insertedWithNames = inserted.map((ri: any) => ({
     ...ri,
     amount: ri.amount != null ? Number(ri.amount) : null,
-    ingredientName: allIngredients.find((i) => i.id === ri.ingredientId)?.name ?? "",
+    ingredientName: allIngredients.find((i: any) => i.id === ri.ingredientId)?.name ?? "",
     order: ri.order,
   }));
 

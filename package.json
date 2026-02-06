@@ -46,6 +46,7 @@
     "@trpc/client": "^11.8.1",
     "@trpc/server": "^11.8.1",
     "@trpc/tanstack-react-query": "^11.8.1",
+    "@types/uuid": "^11.0.0",
     "ai": "^6.0.23",
     "better-auth": "^1.4.10",
     "bullmq": "^5.66.4",
@@ -72,6 +73,7 @@
     "sharp": "^0.34.5",
     "superjson": "^2.2.6",
     "tsdav": "^2.1.6",
+    "use-sound": "^5.0.0",
     "usehooks-ts": "^3.1.1",
     "yt-dlp-wrap": "^2.3.12",
     "zod": "4.3.5"

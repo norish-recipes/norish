@@ -2,16 +2,16 @@ import type { UnitsMap, FlatUnitsMap } from "@/server/db/zodSchemas/server-confi
 
 /**
  * Flatten locale-aware units config to flat format for parse-ingredient library.
- * Uses the first locale's short and plural forms as defaults.
+ * Uses the first locale's short and plural forms so the parser can recognize both.
  */
 export function flattenForLibrary(config: UnitsMap): FlatUnitsMap {
   const flattened: FlatUnitsMap = {};
 
   for (const [unitId, unitDef] of Object.entries(config)) {
     flattened[unitId] = {
-      short: unitDef.short[0]?.name || unitId,
-      plural: unitDef.plural[0]?.name || unitId,
-      alternates: unitDef.alternates,
+      short: unitDef.short[0]?.name || unitId, // e.g., "tbsp"
+      plural: unitDef.plural[0]?.name || unitId, // e.g., "tablespoons"
+      alternates: unitDef.alternates, // e.g., ["T", "tb", ...]
     };
   }
 
@@ -19,17 +19,70 @@ export function flattenForLibrary(config: UnitsMap): FlatUnitsMap {
 }
 
 /**
+ * Normalize a unit string to its canonical unit ID.
+ * Used when SAVING ingredients to database.
+ *
+ * This searches through the units config to find which canonical ID
+ * this abbreviation/alternate belongs to.
+ *
+ * Examples:
+ *   "gr" → "gram" (found in gram.alternates)
+ *   "grammen" → "gram" (found in gram.alternates)
+ *   "scheutje" → "dash" (found in dash.alternates)
+ *   "EL" → "tablespoon" (found in tablespoon.short or alternates)
+ */
+export function normalizeUnit(unit: string, config: UnitsMap): string {
+  if (!unit || unit.trim() === "") return "";
+  const lowerUnit = unit.toLowerCase();
+
+  // Check each unit definition to see if this abbreviation matches
+  for (const [unitId, unitDef] of Object.entries(config)) {
+    // Skip if unitDef is not properly defined
+    if (!unitDef) continue;
+
+    // Check if it's already the canonical ID
+    if (unitId.toLowerCase() === lowerUnit) {
+      return unitId;
+    }
+
+    // Check short forms (with null safety)
+    if (unitDef.short && Array.isArray(unitDef.short)) {
+      if (unitDef.short.some((form) => form?.name?.toLowerCase() === lowerUnit)) {
+        return unitId;
+      }
+    }
+
+    // Check plural forms (with null safety)
+    if (unitDef.plural && Array.isArray(unitDef.plural)) {
+      if (unitDef.plural.some((form) => form?.name?.toLowerCase() === lowerUnit)) {
+        return unitId;
+      }
+    }
+
+    // Check alternates (with null safety)
+    if (unitDef.alternates && Array.isArray(unitDef.alternates)) {
+      if (unitDef.alternates.some((alt) => alt?.toLowerCase() === lowerUnit)) {
+        return unitId;
+      }
+    }
+  }
+
+  // Not found in config - return as-is
+  return unit;
+}
+
+/**
  * Format a unit for display based on user's locale.
  * Always uses the short/abbreviated form for consistency (e.g., "g", "tbsp", "tsp").
  *
- * @param unitId - The canonical English unit ID (e.g., "gram", "tablespoon")
+ * @param unitId - The canonical unit ID (e.g., "gram", "tablespoon", "dash")
  * @param userLocale - User's locale (e.g., "en", "de-formal", "nl")
  * @param config - The locale-aware units configuration
  * @returns The localized unit name
  *
  * @example
  * formatUnit("gram", "en", config) → "g"
- * formatUnit("tablespoon", "de-formal", config) → "EL" (matches base "de")
+ * formatUnit("gram", "de", config) → "g"
  */
 export function formatUnit(unitId: string, userLocale: string, config: UnitsMap): string {
   const unitDef = config[unitId];

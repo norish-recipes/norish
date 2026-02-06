@@ -174,5 +174,9 @@
       "5": "vrijdag",
       "6": "zaterdag"
     }
+  },
+  "timer": {
+    "done": "Klaar",
+    "done_action": "Klaar"
   }
 }

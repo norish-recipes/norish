@@ -8,9 +8,22 @@ import { httpUrlSchema } from "./schema";
 import { flattenForLibrary } from "./unit-localization";
 
 export function stripHtmlTags(input: string): string {
+  // 1. Remove HTML tags first (replace with space to preserve word boundaries)
   const withoutTags = input.replace(/<[^>]*>/g, " ");
 
-  return decode(withoutTags).trim().replace(/\s+/g, " ");
+  // 2. Decode HTML entities
+  const decoded = decode(withoutTags);
+
+  // 3. Normalize whitespace (collapse multiple spaces, newlines, tabs)
+  const normalized = decoded.replace(/\s+/g, " ");
+
+  // 4. Trim leading/trailing whitespace
+  const trimmed = normalized.trim();
+
+  // 5. Remove space before closing punctuation at end (including Unicode quotes)
+  const cleaned = trimmed.replace(/\s+(["\u201D\u201C\u2019\u2018'»\]\)]+)$/g, "$1");
+
+  return cleaned;
 }
 
 export const parseJsonWithRepair = (input: string): any | null => {

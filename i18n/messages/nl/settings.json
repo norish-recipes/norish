@@ -353,7 +353,11 @@
       "contentIndicators": {
         "title": "Content Indicatoren",
         "subtitle": "Trefwoorden die receptpagina's identificeren",
-        "description": "Schema-indicatoren detecteren gestructureerde receptgegevens (JSON-LD, microdata). Contentindicatoren zijn trefwoorden die suggereren dat een pagina een recept bevat."
+        "description": "Schema-indicatoren detecteren gestructureerde receptgegevens (JSON-LD, microdata). Contentindicatoren zijn trefwoorden die suggereren dat een pagina een recept bevat.",
+        "timersEnabled": {
+          "title": "Recepttimers inschakelen",
+          "description": "Detecteer en toon interactieve timers in recepten"
+        }
       },
       "units": {
         "title": "Meeteenheden",
@@ -362,8 +366,24 @@
       },
       "recurrence": {
         "title": "Herhalingspatronen",
-        "subtitle": "Natural language patterns voor herhalende boodschappen",
-        "description": "Definieer taalafhankelijk patronen voor het herkennen van herhalingsregels (bijv. 'elke week', 'om de dag')."
+        "subtitle": "Natuurlijke taalpatronen voor terugkerende items",
+        "description": "Definieer locale-specifieke patronen voor het parsen van herhalingsregels uit natuurlijke taal (bijv. 'elke week', 'om de dag')."
+      },
+      "timerKeywords": {
+        "title": "Timer trefwoorden",
+        "subtitle": "Tijdseenheid trefwoorden voor timer detectie",
+        "description": "Configureer trefwoorden voor het detecteren van timers in receptinstructies. Ondersteunt meerdere talen.",
+        "enableToggle": "Timer detectie inschakelen",
+        "hoursLabel": "Uur trefwoorden",
+        "hoursPlaceholder": "uur, uren, u",
+        "hoursHelp": "Trefwoorden voor uren (bijv. uur, hour, stunde, heure)",
+        "minutesLabel": "Minuut trefwoorden",
+        "minutesPlaceholder": "minuut, minuten, min",
+        "minutesHelp": "Trefwoorden voor minuten (bijv. minuut, minute, minuten)",
+        "secondsLabel": "Seconde trefwoorden",
+        "secondsPlaceholder": "seconde, seconden, sec",
+        "secondsHelp": "Trefwoorden voor seconden (bijv. seconde, second, sekunde)",
+        "unsavedChanges": "Niet opgeslagen wijzigingen"
       }
     },
     "aiProcessing": {

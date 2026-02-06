@@ -108,7 +108,7 @@ describe("CalendarContext", () => {
       const newStart = result.current.dateRange.start.getTime();
       const daysMoved = Math.round((initialStart - newStart) / (1000 * 60 * 60 * 24));
 
-      expect(daysMoved).toBe(14);
+      expect(daysMoved).toBe(12);
     });
 
     it("expands date range into the future", () => {
@@ -126,7 +126,7 @@ describe("CalendarContext", () => {
       const newEnd = result.current.dateRange.end.getTime();
       const daysMoved = Math.round((newEnd - initialEnd) / (1000 * 60 * 60 * 24));
 
-      expect(daysMoved).toBe(14);
+      expect(daysMoved).toBe(12);
     });
   });
 

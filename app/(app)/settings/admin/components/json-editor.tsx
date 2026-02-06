@@ -7,10 +7,10 @@ import { useTranslations } from "next-intl";
 
 interface JsonEditorProps {
   value: unknown;
-  onSave: (json: string) => Promise<{ success: boolean; error?: string }>;
-  onRestoreDefaults?: () => Promise<{ success: boolean; error?: string }>;
   label?: string;
-  description?: string;
+  description: string;
+  onSave: (jsonString: string) => Promise<{ success: boolean; error?: string }>;
+  onRestoreDefaults?: () => Promise<{ success: boolean; error?: string }>;
   disabled?: boolean;
 }
 
@@ -117,16 +117,16 @@ export default function JsonEditor({
       {description && <p className="text-default-500 text-base">{description}</p>}
 
       <Textarea
+        value={text}
+        onChange={(e) => handleTextChange(e.target.value)}
+        placeholder={t("placeholder")}
+        minRows={10}
         classNames={{
           input: "font-mono text-sm",
-          inputWrapper: error ? "border-danger" : "",
         }}
-        isDisabled={disabled || saving}
-        maxRows={20}
-        minRows={8}
-        placeholder={t("placeholder")}
-        value={text}
-        onValueChange={handleTextChange}
+        isInvalid={!!error && text !== ""}
+        errorMessage={error || undefined}
+        isDisabled={disabled}
       />
 
       {error && (

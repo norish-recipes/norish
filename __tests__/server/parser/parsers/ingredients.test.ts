@@ -88,9 +88,13 @@ describe("parseIngredients", () => {
       expect(result.ingredients[0].unit).toBe("grams");
     });
 
-    it("returns plural for custom units when quantity > 1", () => {
+    it("normalizes custom units to canonical ID", () => {
       const customUnits = {
-        stuk: { short: "st", plural: "stuks", alternates: ["stuk"] },
+        stuk: {
+          short: [{ locale: "nl", name: "st" }],
+          plural: [{ locale: "nl", name: "stuks" }],
+          alternates: ["stuk"],
+        },
       };
       const json = {
         recipeIngredient: ["2 stuk appel"],
@@ -98,12 +102,17 @@ describe("parseIngredients", () => {
 
       const result = parseIngredients(json, customUnits);
 
-      expect(result.ingredients[0].unit).toBe("stuks");
+      // After normalization, should return canonical ID "stuk"
+      expect(result.ingredients[0].unit).toBe("stuk");
     });
 
     it("returns singular for custom units when quantity = 1", () => {
       const customUnits = {
-        stuk: { short: "st", plural: "stuks", alternates: ["stuk"] },
+        stuk: {
+          short: [{ locale: "nl", name: "st" }],
+          plural: [{ locale: "nl", name: "stuks" }],
+          alternates: ["stuk"],
+        },
       };
       const json = {
         recipeIngredient: ["1 stuk appel"],
@@ -134,6 +143,45 @@ describe("parseIngredients", () => {
       const result = parseIngredients(json, emptyUnits);
 
       expect(result.systemUsed).toBe("us");
+    });
+  });
+
+  describe("unit normalization to canonical IDs", () => {
+    it("normalizes Dutch 'scheut' to canonical 'splash'", () => {
+      const unitsConfig = {
+        splash: {
+          short: [
+            { locale: "en", name: "splash" },
+            { locale: "nl", name: "scheut" },
+          ],
+          plural: [
+            { locale: "en", name: "splashes" },
+            { locale: "nl", name: "scheuten" },
+          ],
+          alternates: ["scheut", "scheuten", "scheutje", "scheutjes", "splash", "splashes"],
+        },
+      };
+
+      const json = {
+        recipeIngredient: ["1 scheut olie"],
+      };
+
+      const result = parseIngredients(json, unitsConfig);
+
+      expect(result.ingredients[0].unit).toBe("splash");
+      expect(result.ingredients[0].ingredientName).toBe("olie");
+    });
+
+    it("returns empty string when unit not recognized by parser", () => {
+      const json = {
+        recipeIngredient: ["1 unknown-unit flour"],
+      };
+
+      const result = parseIngredients(json, emptyUnits);
+
+      // parse-ingredient library returns null/undefined for unrecognized units
+      // normalizeUnit converts null to empty string
+      expect(result.ingredients[0].unit).toBe("");
     });
   });
 });

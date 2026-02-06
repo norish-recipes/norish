@@ -1,4 +1,4 @@
-import type { I18nLocaleConfig, UnitsMap } from "@/server/db/zodSchemas/server-config";
+import type { I18nLocaleConfig } from "@/server/db/zodSchemas/server-config";
 
 import { setConfig, configExists, getConfig, deleteConfig } from "../db/repositories/server-config";
 import {
@@ -8,6 +8,7 @@ import {
   type AuthProviderGoogle,
   type AuthProviderOIDC,
   type PromptsConfig,
+  type TimerKeywordsConfig,
   DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "../db/zodSchemas/server-config";
 
@@ -18,6 +19,7 @@ import { serverLogger } from "@/server/logger";
 import defaultUnits from "@/config/units.default.json";
 import defaultContentIndicators from "@/config/content-indicators.default.json";
 import defaultRecurrenceConfig from "@/config/recurrence-config.default.json";
+import defaultTimerKeywords from "@/config/timer-keywords.default.json";
 import { loadDefaultPrompts } from "@/server/ai/prompts/loader";
 
 /**
@@ -64,7 +66,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
   },
   {
     key: ServerConfigKeys.UNITS,
-    getDefaultValue: () => ({ units: defaultUnits, isOverwritten: false }),
+    getDefaultValue: () => defaultUnits,
     sensitive: false,
     description: `Units (${Object.keys(defaultUnits).length} definitions)`,
   },
@@ -133,6 +135,12 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     sensitive: false,
     description: `Locale config (${Object.keys(DEFAULT_LOCALE_CONFIG.locales).length} locales)`,
   },
+  {
+    key: ServerConfigKeys.TIMER_KEYWORDS,
+    getDefaultValue: () => ({ ...defaultTimerKeywords, isOverridden: false }),
+    sensitive: false,
+    description: "Timer detection keywords for multilingual support",
+  },
 ];
 
 /**
@@ -151,8 +159,9 @@ export async function seedServerConfig(): Promise<void> {
 
   await importEnvAuthProvidersIfMissing();
   await syncPrompts();
-  await syncUnits();
   await syncLocales();
+  await syncTimerKeywords();
+
   if (seededCount === 0) {
     serverLogger.info("All server configuration keys present");
   } else {
@@ -463,39 +472,52 @@ async function syncPrompts(): Promise<void> {
 }
 
 /**
- * Sync units from default file to DB
- * - If DB config doesn't exist: will be seeded by seedMissingConfigs
- * - If DB config exists and isOverridden=false: update if default file changed
- * - If DB config exists and isOverridden=true: never touch (admin customized)
+ * Sync timer keywords from default config file
+ * Updates DB if file changes and user hasn't overridden
  */
-async function syncUnits(): Promise<void> {
-  const existing = await getConfig<{ units: UnitsMap; isOverridden: boolean }>(
-    ServerConfigKeys.UNITS
-  );
+async function syncTimerKeywords(): Promise<void> {
+  const existing = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
 
+  // If user has overridden, don't touch it
+  if (existing?.isOverridden) {
+    serverLogger.debug("Timer keywords are overridden by admin, skipping file sync");
+    return;
+  }
+
+  const fileDefaults = { ...defaultTimerKeywords, isOverridden: false };
+
+  // If no config exists, seed it
   if (!existing) {
-    serverLogger.warn("Units config not found in DB, will be seeded");
-
+    await setConfig(ServerConfigKeys.TIMER_KEYWORDS, fileDefaults, null, false);
+    serverLogger.info("Seeded timer keywords from default config file");
     return;
   }
 
-  if (existing.isOverridden) {
-    serverLogger.debug("Units are overridden by admin, skipping file sync");
+  // If config exists but isOverridden=false, check if file has changed
+  const storedComparable = {
+    enabled: existing.enabled,
+    hours: existing.hours,
+    minutes: existing.minutes,
+    seconds: existing.seconds,
+  };
+  const fileComparable = {
+    enabled: fileDefaults.enabled,
+    hours: fileDefaults.hours,
+    minutes: fileDefaults.minutes,
+    seconds: fileDefaults.seconds,
+  };
 
-    return;
+  if (configsDiffer(storedComparable, fileComparable)) {
+    await setConfig(ServerConfigKeys.TIMER_KEYWORDS, fileDefaults, null, false);
+    serverLogger.info("Updated timer keywords from default file (content changed)");
   }
+}
 
-  // Compare stored units with default file
-  if (configsDiffer(existing.units, defaultUnits)) {
-    await setConfig(
-      ServerConfigKeys.UNITS,
-      { units: defaultUnits, isOverwritten: false },
-      null,
-      false
-    );
-
-    serverLogger.info("Updated units from default file (content changed)");
-  }
+/**
+ * Export for testing - seeds timer keywords if not present or if not overridden
+ */
+export async function seedDefaultTimerKeywords(): Promise<void> {
+  await syncTimerKeywords();
 }
 
 /**
@@ -541,7 +563,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
     case ServerConfigKeys.REGISTRATION_ENABLED:
       return true;
     case ServerConfigKeys.UNITS:
-      return { units: defaultUnits, isOverwritten: false };
+      return defaultUnits;
     case ServerConfigKeys.CONTENT_INDICATORS:
       return defaultContentIndicators;
     case ServerConfigKeys.RECURRENCE_CONFIG:
@@ -571,6 +593,8 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       return { ...loadDefaultPrompts(), isOverridden: false };
     case ServerConfigKeys.LOCALE_CONFIG:
       return DEFAULT_LOCALE_CONFIG;
+    case ServerConfigKeys.TIMER_KEYWORDS:
+      return { ...defaultTimerKeywords, isOverridden: false };
     default:
       return null;
   }

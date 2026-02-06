@@ -65,6 +65,11 @@
     "toMetric": "Converteer naar metrisch",
     "toUS": "Converteer naar US"
   },
+  "deleteModal": {
+    "title": "Recept verwijderen",
+    "confirmMessage": "Weet je zeker dat je \"{recipeName}\" wilt verwijderen?",
+    "warning": "Deze actie kan niet ongedaan worden gemaakt."
+  },
   "form": {
     "createTitle": "Recept Maken",
     "editTitle": "Recept Bewerken",

@@ -16,18 +16,29 @@ export function useUnitFormatter() {
   /**
    * Format amount and unit for display (e.g., "500 g" or "2 tbsp")
    * Handles spacing automatically (short units get no space: "500g", longer ones do: "2 tbsp")
+   * If amount is null/undefined but unit exists, returns just the unit
    */
   const formatAmountUnit = (
     amount: number | null | undefined,
     unit: string | null | undefined
   ): string => {
-    if (!amount && amount !== 0) return "";
+    // If no unit, handle amount-only case
+    if (!unit) {
+      if (!amount && amount !== 0) return "";
+      const formattedAmount = amount % 1 === 0 ? amount.toString() : amount.toFixed(1);
+      return `${formattedAmount}×`;
+    }
 
-    const formattedAmount = amount % 1 === 0 ? amount.toString() : amount.toFixed(1);
-
-    if (!unit) return `${formattedAmount}×`;
-
+    // Format the unit
     const localizedUnit = formatUnit(unit, locale, units);
+
+    // If no amount, return just the unit
+    if (!amount && amount !== 0) {
+      return localizedUnit;
+    }
+
+    // Format amount + unit
+    const formattedAmount = amount % 1 === 0 ? amount.toString() : amount.toFixed(1);
     const needsSpace = localizedUnit.length > 2;
 
     return needsSpace

@@ -11,6 +11,7 @@ import { WakeLockProvider } from "./components/wake-lock-context";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { NotFoundView } from "@/components/shared/not-found-view";
 
+
 type Props = {
   params: Promise<{ id: string }>;
 };

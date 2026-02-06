@@ -353,7 +353,11 @@
       "contentIndicators": {
         "title": "Content Indicators",
         "subtitle": "Keywords that identify recipe pages",
-        "description": "Schema indicators detect structured recipe data (JSON-LD, microdata). Content indicators are keywords that suggest a page contains a recipe."
+        "description": "Schema indicators detect structured recipe data (JSON-LD, microdata). Content indicators are keywords that suggest a page contains a recipe.",
+        "timersEnabled": {
+          "title": "Enable Recipe Timers",
+          "description": "Detect and show interactive timers in recipes"
+        }
       },
       "units": {
         "title": "Units of Measure",
@@ -364,6 +368,22 @@
         "title": "Recurrence Patterns",
         "subtitle": "Natural language patterns for recurring items",
         "description": "Define locale-specific patterns for parsing recurrence rules from natural language (e.g., 'every week', 'om de dag')."
+      },
+      "timerKeywords": {
+        "title": "Timer Keywords",
+        "subtitle": "Time unit keywords for timer detection",
+        "description": "Configure keywords used to detect timers in recipe instructions. Supports multiple languages.",
+        "enableToggle": "Enable Timer Detection",
+        "hoursLabel": "Hour Keywords",
+        "hoursPlaceholder": "hour, hours, hr, hrs, h",
+        "hoursHelp": "Keywords for hours (e.g., hour, stunde, heure, uur)",
+        "minutesLabel": "Minute Keywords",
+        "minutesPlaceholder": "minute, minutes, min, mins, m",
+        "minutesHelp": "Keywords for minutes (e.g., minute, minuten, minuut)",
+        "secondsLabel": "Second Keywords",
+        "secondsPlaceholder": "second, seconds, sec, secs, s",
+        "secondsHelp": "Keywords for seconds (e.g., second, sekunde, seconde)",
+        "unsavedChanges": "Unsaved changes"
       }
     },
     "aiProcessing": {

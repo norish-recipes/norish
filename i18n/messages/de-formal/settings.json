@@ -353,7 +353,11 @@
       "contentIndicators": {
         "title": "Inhalts-Indikatoren",
         "subtitle": "Schlüsselwörter, die Rezept-Seiten identifizieren",
-        "description": "Schema-Indikatoren erkennen strukturierte Rezeptdaten (JSON-LD, Microdata). Inhalts-Indikatoren sind Schlüsselwörter, die darauf hindeuten, dass eine Seite ein Rezept enthält."
+        "description": "Schema-Indikatoren erkennen strukturierte Rezeptdaten (JSON-LD, Microdata). Inhalts-Indikatoren sind Schlüsselwörter, die darauf hindeuten, dass eine Seite ein Rezept enthält.",
+        "timersEnabled": {
+          "title": "Rezept-Timer aktivieren",
+          "description": "Interaktive Timer in Rezepten erkennen und anzeigen"
+        }
       },
       "units": {
         "title": "Maßeinheiten",
@@ -362,8 +366,24 @@
       },
       "recurrence": {
         "title": "Wiederholungsmuster",
-        "subtitle": "Natürlichsprachliche Muster für wiederkehrende Einträge",
-        "description": "Definiere Locale-spezifische Muster zum Analysieren von Wiederholungsregeln aus natürlicher Sprache (z.B. 'jede Woche', 'om de dag')."
+        "subtitle": "Natürlichsprachige Muster für wiederkehrende Einträge",
+        "description": "Definieren Sie gebietsschemaspezifische Muster zum Parsen von Wiederholungsregeln aus natürlicher Sprache (z. B. 'jede Woche', 'jeden Tag')."
+      },
+      "timerKeywords": {
+        "title": "Timer-Schlüsselwörter",
+        "subtitle": "Zeiteinheit-Schlüsselwörter für Timer-Erkennung",
+        "description": "Konfigurieren Sie Schlüsselwörter zur Timer-Erkennung in Rezeptanweisungen. Unterstützt mehrere Sprachen.",
+        "enableToggle": "Timer-Erkennung aktivieren",
+        "hoursLabel": "Stunden-Schlüsselwörter",
+        "hoursPlaceholder": "stunde, stunden, std, h",
+        "hoursHelp": "Schlüsselwörter für Stunden (z.B. stunde, hour, heure, uur)",
+        "minutesLabel": "Minuten-Schlüsselwörter",
+        "minutesPlaceholder": "minute, minuten, min",
+        "minutesHelp": "Schlüsselwörter für Minuten (z.B. minute, minuten, minuut)",
+        "secondsLabel": "Sekunden-Schlüsselwörter",
+        "secondsPlaceholder": "sekunde, sekunden, sek, s",
+        "secondsHelp": "Schlüsselwörter für Sekunden (z.B. sekunde, second, seconde)",
+        "unsavedChanges": "Nicht gespeicherte Änderungen"
       }
     },
     "aiProcessing": {
