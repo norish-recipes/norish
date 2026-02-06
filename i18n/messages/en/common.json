@@ -49,6 +49,11 @@
     "searchTags": "Search tags",
     "favoritesAndRating": "Favorites & Rating",
     "favorites": "Favorites",
+    "cookingTime": "Cooking time",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
     "categories": "Categories",
     "category": {
       "breakfast": "Breakfast",

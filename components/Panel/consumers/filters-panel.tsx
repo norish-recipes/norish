@@ -1,26 +1,34 @@
 "use client";
 
+import type { FilterMode, RecipeCategory, SortOrder } from "@/types";
+
 import {
-  MagnifyingGlassIcon,
+  ArrowPathIcon,
   ArrowRightIcon,
   CheckIcon,
-  ArrowPathIcon,
   HeartIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/16/solid";
-import { Input, Button, Chip } from "@heroui/react";
+import { Button, Chip, Input } from "@heroui/react";
 import { motion } from "motion/react";
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import Panel from "@/components/Panel/Panel";
+import SearchFieldToggles from "@/components/dashboard/search-field-toggles";
+import ChipSkeleton from "@/components/skeleton/chip-skeleton";
+import RatingStars from "@/components/shared/rating-stars";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useTagsQuery } from "@/hooks/config";
-import ChipSkeleton from "@/components/skeleton/chip-skeleton";
-import Panel from "@/components/Panel/Panel";
-import RatingStars from "@/components/shared/rating-stars";
-import SearchFieldToggles from "@/components/dashboard/search-field-toggles";
-import { RecipeCategory } from "@/types";
 
 const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
+
+const COOKING_TIME_OPTIONS: Array<{ value: number; labelKey: string }> = [
+  { value: 15, labelKey: "cookingTimeUnder15" },
+  { value: 30, labelKey: "cookingTimeUnder30" },
+  { value: 60, labelKey: "cookingTimeUnder60" },
+  { value: 120, labelKey: "cookingTimeUnder120" },
+];
 
 type FiltersPanelProps = {
   open: boolean;
@@ -36,11 +44,14 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
   const [tagFilter, setTagFilter] = useState("");
   const [workingTags, setWorkingTags] = useState<string[]>(filters.searchTags);
   const [workingCategories, setWorkingCategories] = useState<RecipeCategory[]>(filters.categories);
-  const [localFilterMode, setLocalFilterMode] = useState(filters.filterMode);
-  const [localSortMode, setLocalSortMode] = useState(filters.sortMode);
+  const [localFilterMode, setLocalFilterMode] = useState<FilterMode>(filters.filterMode);
+  const [localSortMode, setLocalSortMode] = useState<SortOrder>(filters.sortMode);
   const [localInput, setLocalInput] = useState(filters.rawInput);
   const [localFavoritesOnly, setLocalFavoritesOnly] = useState(filters.showFavoritesOnly);
   const [localMinRating, setLocalMinRating] = useState<number | null>(filters.minRating);
+  const [localMaxCookingTime, setLocalMaxCookingTime] = useState<number | null>(
+    filters.maxCookingTime ?? null
+  );
 
   const { tags: allTags, isLoading } = useTagsQuery();
 
@@ -52,6 +63,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
     setLocalInput(filters.rawInput);
     setLocalFavoritesOnly(filters.showFavoritesOnly);
     setLocalMinRating(filters.minRating);
+    setLocalMaxCookingTime(filters.maxCookingTime ?? null);
   }, [filters]);
 
   const toggleTag = useCallback((tag: string) => {
@@ -64,9 +76,13 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
     );
   }, []);
 
+  const toggleCookingTime = useCallback((value: number) => {
+    setLocalMaxCookingTime((prev) => (prev === value ? null : value));
+  }, []);
+
   const decideSortOrder = (type: "title" | "date") => {
-    const asc = (type + "Asc") as typeof localSortMode;
-    const desc = (type + "Desc") as typeof localSortMode;
+    const asc = `${type}Asc` as SortOrder;
+    const desc = `${type}Desc` as SortOrder;
 
     if (localSortMode === asc) {
       setLocalSortMode(desc);
@@ -84,7 +100,20 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
 
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
 
-  const apply = () => {
+  const handleReset = useCallback(() => {
+    clearFilters();
+    setWorkingTags([]);
+    setWorkingCategories([]);
+    setLocalFilterMode("AND");
+    setLocalSortMode("dateDesc");
+    setLocalInput("");
+    setLocalFavoritesOnly(false);
+    setLocalMinRating(null);
+    setLocalMaxCookingTime(null);
+    close();
+  }, [clearFilters, close]);
+
+  const apply = useCallback(() => {
     setFilters({
       searchTags: [...workingTags],
       categories: [...workingCategories],
@@ -93,10 +122,22 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
       rawInput: localInput,
       showFavoritesOnly: localFavoritesOnly,
       minRating: localMinRating,
+      maxCookingTime: localMaxCookingTime,
     });
 
     close();
-  };
+  }, [
+    setFilters,
+    workingTags,
+    workingCategories,
+    localFilterMode,
+    localSortMode,
+    localInput,
+    localFavoritesOnly,
+    localMinRating,
+    localMaxCookingTime,
+    close,
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -177,7 +218,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
               size="sm"
               startContent={<CheckIcon className="size-3.5" />}
               variant={localFilterMode === value ? "solid" : "flat"}
-              onPress={() => setLocalFilterMode(value as any)}
+              onPress={() => setLocalFilterMode(value as FilterMode)}
             >
               {label}
             </Button>
@@ -204,6 +245,32 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
           </Button>
 
           <RatingStars value={localMinRating} onChange={setLocalMinRating} />
+        </div>
+      </section>
+
+      {/* Cooking time */}
+      <section>
+        <h3 className="text-default-500 mb-2 text-[11px] font-medium tracking-wide uppercase">
+          {t("cookingTime")}
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {COOKING_TIME_OPTIONS.map(({ value, labelKey }) => {
+            const active = localMaxCookingTime === value;
+
+            return (
+              <Button
+                key={value}
+                className="h-9 px-3 text-xs"
+                color={active ? "primary" : "default"}
+                radius="full"
+                size="sm"
+                variant={active ? "solid" : "flat"}
+                onPress={() => toggleCookingTime(value)}
+              >
+                {t(labelKey)}
+              </Button>
+            );
+          })}
         </div>
       </section>
 
@@ -288,17 +355,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
           size="sm"
           startContent={<ArrowPathIcon className="size-4" />}
           variant="flat"
-          onPress={() => {
-            clearFilters();
-            setWorkingTags([]);
-            setWorkingCategories([]);
-            setLocalFilterMode("AND");
-            setLocalSortMode("dateDesc");
-            setLocalInput("");
-            setLocalFavoritesOnly(false);
-            setLocalMinRating(null);
-            close();
-          }}
+          onPress={handleReset}
         >
           {tActions("reset")}
         </Button>

@@ -49,6 +49,11 @@
     "searchTags": "Zoek tags",
     "favoritesAndRating": "Favorieten & Beoordeling",
     "favorites": "Favorieten",
+    "cookingTime": "Kooktijd",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
     "categories": "Categorieën",
     "category": {
       "breakfast": "Ontbijt",

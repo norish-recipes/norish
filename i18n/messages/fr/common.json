@@ -49,6 +49,11 @@
     "searchTags": "Recherche étiquettes",
     "favoritesAndRating": "Favoris et évaluation",
     "favorites": "Favoris",
+    "cookingTime": "Temps de cuisson",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
     "categories": "Catégories",
     "category": {
       "breakfast": "Petit-déjeuner",

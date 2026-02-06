@@ -423,6 +423,7 @@ describe("recipe permission enforcement", () => {
               input.filterMode,
               input.sortMode,
               input.minRating,
+              input.maxCookingTime,
               input.categories
             );
 
@@ -442,6 +443,7 @@ describe("recipe permission enforcement", () => {
         },
         50,
         0,
+        undefined,
         undefined,
         undefined,
         undefined,
