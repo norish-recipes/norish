@@ -59,23 +59,6 @@ export function TimerChip({
     }
   };
 
-  // Inactive timer - show as link
-  // if (!timer) {
-  //   return (
-  //     <Link
-  //       isBlock={false}
-  //       color="primary"
-  //       href="#"
-  //       underline="always"
-  //       onClick={handleClick}
-  //       className="mx-1 inline-flex items-center gap-1"
-  //     >
-  //       {originalText}
-  //       <ClockIcon className="h-4 w-4" />
-  //     </Link>
-  //   );
-  // }
-
   if (!timer) {
     return (
       <Chip
@@ -88,7 +71,6 @@ export function TimerChip({
         className="mx-1 text-base translate-y-[1px] align-baseline pl-2.5 pr-1.5 font-lg"
       >
         {originalText}
-        {/* <ClockIcon className="h-4 w-4" /> */}
       </Chip>
     );
   }
@@ -96,7 +78,6 @@ export function TimerChip({
   const isCompleted = timer.status === "completed";
   const isRunning = timer.status === "running";
 
-  // Active timer - show as chip
   if (isCompleted) {
     return (
       <Chip
