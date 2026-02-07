@@ -8,10 +8,24 @@ export function flattenForLibrary(config: UnitsMap): FlatUnitsMap {
   const flattened: FlatUnitsMap = {};
 
   for (const [unitId, unitDef] of Object.entries(config)) {
+    // Collect all locale-specific short and plural names
+    const shortNames: string[] = Array.isArray(unitDef.short)
+      ? unitDef.short.map((s) => s?.name).filter(Boolean as any)
+      : [];
+
+    const pluralNames: string[] = Array.isArray(unitDef.plural)
+      ? unitDef.plural.map((p) => p?.name).filter(Boolean as any)
+      : [];
+
+    // Merge existing alternates with locale-specific forms and remove duplicates
+    const mergedAlternates = Array.from(
+      new Set([...(unitDef.alternates || []), ...shortNames, ...pluralNames])
+    );
+
     flattened[unitId] = {
-      short: unitDef.short[0]?.name || unitId, // e.g., "tbsp"
-      plural: unitDef.plural[0]?.name || unitId, // e.g., "tablespoons"
-      alternates: unitDef.alternates, // e.g., ["T", "tb", ...]
+      short: shortNames[0] || unitId, // prefer first short form
+      plural: pluralNames[0] || unitId, // prefer first plural form
+      alternates: mergedAlternates,
     };
   }
 
