@@ -1753,7 +1753,7 @@
       },
       {
         "locale": "de",
-        "name": "knapper EL"
+        "name": "gestr. EL"
       },
       {
         "locale": "nl",
@@ -1767,7 +1767,7 @@
       },
       {
         "locale": "de",
-        "name": "knappe EL"
+        "name": "gestr. EL"
       },
       {
         "locale": "nl",
@@ -1781,6 +1781,7 @@
       "gestrichener el",
       "gestrichener esslöffel",
       "knappe el",
+      "knapper el",
       "knappe esslöffel",
       "knapper esslöffel",
       "scant tablespoon",
@@ -2181,7 +2182,7 @@
       },
       {
         "locale": "de",
-        "name": "knapper TL"
+        "name": "gestr. TL"
       },
       {
         "locale": "nl",
@@ -2195,7 +2196,7 @@
       },
       {
         "locale": "de",
-        "name": "knappe TL"
+        "name": "gestr. TL"
       },
       {
         "locale": "nl",
