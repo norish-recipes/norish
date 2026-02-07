@@ -32,12 +32,12 @@ function RecipePageContent() {
   return (
     <>
       {/* Desktop layout - smooth fade in */}
-      <div className="hidden animate-in fade-in duration-300 md:block">
+      <div key={recipe?.id} className="hidden fade-in md:block">
         <RecipePageDesktop />
       </div>
 
       {/* Mobile layout - full width, smooth fade in */}
-      <div className="-mx-6 -mt-10 flex w-screen flex-col animate-in fade-in duration-300 md:hidden">
+      <div key={recipe?.id} className="-mx-6 -mt-10 flex w-screen flex-col fade-in md:hidden">
         <RecipePageMobile />
       </div>
     </>

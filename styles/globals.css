@@ -5,3 +5,25 @@
 
 /* Import our custom theme colors */
 @import "../tooling/tailwind/theme.css";
+
+/* Custom fade-in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility fade-in {
+  animation: fade-in var(--duration, 300ms) ease-in;
+}
+
+@utility fade-in-fast {
+  animation: fade-in 150ms ease-in;
+}
+
+@utility fade-in-slow {
+  animation: fade-in 500ms ease-in;
+}
