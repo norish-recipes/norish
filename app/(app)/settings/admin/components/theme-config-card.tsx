@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button } from "@heroui/react";
-import { PaintBrushIcon, CheckIcon, ExclamationCircleIcon } from "@heroicons/react/16/solid";
+import { CheckIcon, ExclamationCircleIcon, BeakerIcon, TrashIcon } from "@heroicons/react/16/solid";
+import { PaintBrushIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
@@ -158,6 +159,7 @@ export default function ThemeConfigCard() {
             <Button
               isDisabled={saving || !cssUrl}
               isLoading={testing}
+              startContent={<BeakerIcon className="h-5 w-5" />}
               variant="flat"
               onPress={handleTest}
             >
@@ -167,6 +169,7 @@ export default function ThemeConfigCard() {
             <div className="flex gap-2">
               <Button
                 isDisabled={saving || testing || (!cssUrl && !themeConfig?.cssUrl)}
+                startContent={<TrashIcon className="h-5 w-5" />}
                 variant="flat"
                 onPress={handleClear}
               >
@@ -177,6 +180,7 @@ export default function ThemeConfigCard() {
                 isDisabled={testing}
                 isLoading={saving}
                 color="primary"
+                startContent={<CheckIcon className="h-5 w-5" />}
                 onPress={handleSave}
               >
                 {t("saveButton")}
