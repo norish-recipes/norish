@@ -1,5 +1,6 @@
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import type { VideoProcessorContext, VideoMetadata } from "../types";
+import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
 
 import { BaseVideoProcessor } from "../base-processor";
 import { videoLogger as log } from "@/server/logger";
@@ -70,17 +71,17 @@ export class InstagramProcessor extends BaseVideoProcessor {
   readonly name: string = "InstagramProcessor";
 
   async process(context: VideoProcessorContext): Promise<FullRecipeInsertDTO> {
-    const { url, recipeId, allergies } = context;
+    const { url, recipeId, allergies, tokens } = context;
 
     log.info({ url }, "Processing Instagram post");
 
-    const metadata = await this.getMetadata(url);
+    const metadata = await this.getMetadata(url, tokens);
 
     if (isImagePost(metadata)) {
-      return this.processImagePost(url, recipeId, metadata, allergies);
+      return this.processImagePost(url, recipeId, metadata, allergies, tokens);
     }
 
-    return this.processVideoPost(url, recipeId, metadata, allergies);
+    return this.processVideoPost(url, recipeId, metadata, allergies, tokens);
   }
 
   /**
@@ -91,7 +92,8 @@ export class InstagramProcessor extends BaseVideoProcessor {
     url: string,
     recipeId: string,
     metadata: VideoMetadata,
-    allergies?: string[]
+    allergies?: string[],
+    tokens?: SiteAuthTokenDecryptedDto[]
   ): Promise<FullRecipeInsertDTO> {
     log.info({ url }, "Detected Instagram image post");
 
@@ -101,7 +103,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
     if (description.length < 50) {
       log.info({ url }, "Description too short, attempting Playwright scrape");
       try {
-        const html = await fetchViaPlaywright(url);
+        const html = await fetchViaPlaywright(url, tokens);
         if (html) {
           description = extractCaptionFromHtml(html);
           log.info(
@@ -154,7 +156,8 @@ export class InstagramProcessor extends BaseVideoProcessor {
     url: string,
     recipeId: string,
     metadata: VideoMetadata,
-    allergies?: string[]
+    allergies?: string[],
+    tokens?: SiteAuthTokenDecryptedDto[]
   ): Promise<FullRecipeInsertDTO> {
     let audioPath: string | null = null;
     let videoPath: string | null = null;
@@ -162,10 +165,10 @@ export class InstagramProcessor extends BaseVideoProcessor {
     try {
       log.info({ url }, "Processing Instagram video post");
 
-      await this.validateLength(url);
+      await this.validateLength(url, tokens);
 
       // Download video file
-      videoPath = await this.downloadAndConvertVideo(url);
+      videoPath = await this.downloadAndConvertVideo(url, tokens);
 
       // Try extraction from description first
       const descriptionText = metadata.description?.trim() || "";
@@ -197,7 +200,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
 
       // Fall back to audio transcription
       try {
-        audioPath = await this.downloadAudio(url);
+        audioPath = await this.downloadAudio(url, tokens);
       } catch (audioError) {
         // If audio download fails, try description-based extraction as last resort
         log.warn(

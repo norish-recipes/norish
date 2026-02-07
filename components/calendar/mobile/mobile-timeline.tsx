@@ -319,6 +319,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   };
 
   return (
+    <div className="fade-in">
     <DndContext
       collisionDetection={collisionDetection}
       sensors={sensors}
@@ -390,5 +391,6 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
         {activeItem ? <TimelineDragOverlay item={activeItem} /> : null}
       </DragOverlay>
     </DndContext>
+    </div>
   );
 }

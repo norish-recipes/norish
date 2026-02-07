@@ -185,6 +185,7 @@ export default function MediaGalleryInput({
   maxVideos = MAX_RECIPE_VIDEOS,
 }: MediaGalleryInputProps) {
   const t = useTranslations("recipes.gallery");
+  const tActions = useTranslations("common.actions");
   const { uploadGalleryImage, deleteGalleryImage } = useRecipeImages();
   const { uploadGalleryVideo, deleteGalleryVideo } = useRecipeVideos();
 
@@ -460,7 +461,7 @@ export default function MediaGalleryInput({
                   ) : (
                     <div className="text-default-400 flex flex-col items-center gap-1">
                       <PhotoIcon className="h-8 w-8" />
-                      <span className="text-primary text-xs font-medium">Add</span>
+                      <span className="text-primary text-xs font-medium">{tActions("add")}</span>
                     </div>
                   )}
 

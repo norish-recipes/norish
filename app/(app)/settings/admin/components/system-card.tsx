@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button, useDisclosure } from "@heroui/react";
-import { Cog6ToothIcon, ArrowPathIcon, CheckIcon } from "@heroicons/react/16/solid";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, CheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";

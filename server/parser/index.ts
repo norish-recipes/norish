@@ -1,4 +1,5 @@
 import { fetchViaPlaywright } from "./fetch";
+import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
 
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { tryExtractRecipeFromJsonLd, extractRecipeNodesFromJsonLd } from "@/server/parser/jsonld";
@@ -118,7 +119,8 @@ async function tryStructuredParsers(
 async function tryHandleVideoUrl(
   url: string,
   recipeId: string,
-  allergies?: string[]
+  allergies?: string[],
+  tokens?: SiteAuthTokenDecryptedDto[]
 ): Promise<ParseRecipeResult | null> {
   if (!isVideoUrl(url)) return null;
 
@@ -128,7 +130,7 @@ async function tryHandleVideoUrl(
 
   try {
     const { processVideoRecipe } = await import("@/server/video/processor");
-    const recipe = await processVideoRecipe(url, recipeId, allergies);
+    const recipe = await processVideoRecipe(url, recipeId, allergies, tokens);
 
     return { recipe, usedAI: true };
   } catch (error: unknown) {
@@ -141,13 +143,14 @@ export async function parseRecipeFromUrl(
   url: string,
   recipeId: string,
   allergies?: string[],
-  forceAI?: boolean
+  forceAI?: boolean,
+  tokens?: SiteAuthTokenDecryptedDto[]
 ): Promise<ParseRecipeResult> {
-  const videoResult = await tryHandleVideoUrl(url, recipeId, allergies);
+  const videoResult = await tryHandleVideoUrl(url, recipeId, allergies, tokens);
 
   if (videoResult) return videoResult;
 
-  const html = await fetchViaPlaywright(url);
+  const html = await fetchViaPlaywright(url, tokens);
 
   if (!html) throw new Error("Cannot fetch recipe page.");
 

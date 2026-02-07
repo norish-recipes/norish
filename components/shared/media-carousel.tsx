@@ -2,9 +2,10 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Button } from "@heroui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { AnimatePresence, motion } from "motion/react";
 import NextImage from "next/image";
+import { useTranslations } from "next-intl";
 
 import VideoPlayer from "@/components/shared/video-player";
 import ImageLightbox from "@/components/shared/image-lightbox";
@@ -97,6 +98,7 @@ export default function MediaCarousel({
   // Touch handling state
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const t = useTranslations("recipes.carousel");
 
   // Sort items: order ascending, then videos before images
   const sortedItems = useMemo(() => {
@@ -196,7 +198,7 @@ export default function MediaCarousel({
       <div
         className={`bg-default-200 relative w-full overflow-hidden ${roundedClass} ${aspectRatioClass} ${className} flex items-center justify-center`}
       >
-        <span className="text-default-500 font-medium">No media available</span>
+        <span className="text-default-500 font-medium">{t("noMediaAvailable")}</span>
       </div>
     );
   }

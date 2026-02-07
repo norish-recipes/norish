@@ -23,6 +23,7 @@ export type RecipeFilters = {
   sortMode: SortOrder;
   showFavoritesOnly: boolean;
   minRating: number | null;
+  maxCookingTime: number | null;
   categories: RecipeCategory[];
 };
 
@@ -40,6 +41,7 @@ const DEFAULT_PERSISTED: PersistedFilters = {
   sortMode: "dateDesc",
   showFavoritesOnly: false,
   minRating: null,
+  maxCookingTime: null,
   categories: [],
 };
 
@@ -68,6 +70,10 @@ function validateFilters(data: unknown): PersistedFilters | null {
     d.minRating === null || (typeof d.minRating === "number" && d.minRating >= 0)
       ? (d.minRating as number | null)
       : null;
+  const maxCookingTime =
+    d.maxCookingTime === null || (typeof d.maxCookingTime === "number" && d.maxCookingTime > 0)
+      ? (d.maxCookingTime as number | null)
+      : null;
   const categories = Array.isArray(d.categories)
     ? d.categories.filter((c): c is RecipeCategory =>
         VALID_CATEGORIES.includes(c as RecipeCategory)
@@ -84,6 +90,7 @@ function validateFilters(data: unknown): PersistedFilters | null {
     searchFields: searchFields ?? [...DEFAULT_PERSISTED.searchFields],
     showFavoritesOnly: showFavoritesOnly ?? DEFAULT_PERSISTED.showFavoritesOnly,
     minRating: minRating ?? DEFAULT_PERSISTED.minRating,
+    maxCookingTime: maxCookingTime ?? DEFAULT_PERSISTED.maxCookingTime,
     categories: categories ?? DEFAULT_PERSISTED.categories,
   };
 }

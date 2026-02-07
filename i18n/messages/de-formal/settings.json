@@ -63,9 +63,36 @@
       "title": "Rezeptarchiv importieren",
       "description": "Importiere Rezepte aus Mela (.melarecipes), Mealie, Tandoor oder Paprika (.zip)-Exporten"
     },
+    "siteAuthTokens": {
+      "title": "Website-Authentifizierungstoken",
+      "description": "Fügen Sie Header oder Cookies hinzu, die beim Importieren von Rezepten von bestimmten Websites gesendet werden. Nützlich für Websites, die eine Anmeldung erfordern (z.B. Instagram, Facebook).",
+      "domain": "Domain",
+      "domainPlaceholder": "z.B. instagram.com",
+      "name": "Name",
+      "namePlaceholder": "z.B. Cookie oder Authorization",
+      "value": "Wert",
+      "valuePlaceholder": "Token- oder Cookie-Wert",
+      "type": "Typ",
+      "typeHeader": "Header",
+      "typeCookie": "Cookie",
+      "addButton": "Token hinzufügen",
+      "noTokens": "Keine Website-Authentifizierungstoken konfiguriert.",
+      "tableHeaders": {
+        "domain": "DOMAIN",
+        "name": "NAME",
+        "type": "TYP",
+        "created": "ERSTELLT",
+        "actions": "AKTIONEN"
+      },
+      "deleteModal": {
+        "title": "Token löschen",
+        "message": "Sind Sie sicher, dass Sie dieses Authentifizierungstoken löschen möchten? Importe von dieser Website funktionieren möglicherweise nicht mehr.",
+        "confirmButton": "Token löschen"
+      }
+    },
     "dangerZone": {
       "title": "Gefahrenzone",
-      "description": "Wenn Sie Ihr Konto löschen, gibt es kein Zurück. Bitte seien Sie sich sicher.",
+      "description": "Sobald Sie Ihr Konto löschen, gibt es kein Zurück mehr. Bitte seien Sie sich sicher.",
       "deleteButton": "Mein Konto löschen",
       "deleteModal": {
         "title": "Konto löschen",

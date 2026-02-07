@@ -1,4 +1,5 @@
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
 
 import { videoLogger as log } from "@/server/logger";
 import { isVideoParsingEnabled } from "@/config/server-config-loader";
@@ -31,7 +32,8 @@ function getFactory(): VideoProcessorFactory {
 export async function processVideoRecipe(
   url: string,
   recipeId: string,
-  allergies?: string[]
+  allergies?: string[],
+  tokens?: SiteAuthTokenDecryptedDto[]
 ): Promise<FullRecipeInsertDTO> {
   const videoEnabled = await isVideoParsingEnabled();
 
@@ -45,7 +47,7 @@ export async function processVideoRecipe(
   log.info({ url, processor: processor.name }, "Starting video recipe processing");
 
   try {
-    return await processor.process({ url, recipeId, allergies });
+    return await processor.process({ url, recipeId, allergies, tokens });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     log.error({ err: error, processor: processor.name }, "Failed to process video");

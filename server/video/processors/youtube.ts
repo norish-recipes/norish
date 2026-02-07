@@ -15,7 +15,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
   readonly name = "YouTubeProcessor";
 
   async process(context: VideoProcessorContext): Promise<FullRecipeInsertDTO> {
-    const { url, recipeId, allergies } = context;
+    const { url, recipeId, allergies, tokens } = context;
 
     let audioPath: string | null = null;
     let videoPath: string | null = null;
@@ -24,17 +24,17 @@ export class YouTubeProcessor extends BaseVideoProcessor {
     try {
       log.info({ url }, "Processing YouTube video");
 
-      const metadata = await this.getMetadata(url);
-      await this.validateLength(url);
+      const metadata = await this.getMetadata(url, tokens);
+      await this.validateLength(url, tokens);
 
       // Download video file
-      videoPath = await this.downloadAndConvertVideo(url);
+      videoPath = await this.downloadAndConvertVideo(url, tokens);
 
       // Try to get captions first (cheaper than audio transcription)
       let captionText: string | null = null;
       try {
         log.info({ url }, "Attempting to download captions");
-        const captionResult = await downloadCaptions(url);
+        const captionResult = await downloadCaptions(url, tokens);
 
         if (captionResult.found && captionResult.filePath) {
           captionPath = captionResult.filePath;
@@ -80,7 +80,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
       }
 
       // Fall back to audio transcription
-      audioPath = await this.downloadAudio(url);
+      audioPath = await this.downloadAudio(url, tokens);
       log.info({ url }, "Starting audio transcription");
 
       const transcriptionResult = await transcribeAudio(audioPath);

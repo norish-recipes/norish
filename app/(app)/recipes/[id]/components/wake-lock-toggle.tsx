@@ -21,7 +21,7 @@ export default function WakeLockToggle() {
     return (
       <Tooltip content={t("notSupported")}>
         <div className="flex items-center gap-2 opacity-50">
-          <DevicePhoneMobileIcon className="h-4 w-4" />
+          <DevicePhoneMobileIcon className="h-5 w-5" />
           <span className="text-sm">{t("keepScreenOn")}</span>
         </div>
       </Tooltip>
@@ -31,7 +31,7 @@ export default function WakeLockToggle() {
   return (
     <Tooltip content={isActive ? t("activeTooltip") : t("inactiveTooltip")}>
       <div className="flex items-center gap-2">
-        <DevicePhoneMobileIcon className="h-4 w-4" />
+        <DevicePhoneMobileIcon className="h-5 w-5" />
         <Switch
           aria-label={t("ariaLabel")}
           color="success"

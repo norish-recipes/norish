@@ -27,7 +27,11 @@
     "test": "Testen",
     "format": "Formatieren",
     "restoreDefaults": "Auf Standard zurücksetzen",
-    "saveChanges": "Änderungen speichern"
+    "saveChanges": "Änderungen speichern",
+    "revealSecret": "Geheimnis anzeigen",
+    "hideSecret": "Geheimnis verbergen",
+    "enterNewValue": "Neuen Wert eingeben",
+    "cancelEditing": "Bearbeitung abbrechen"
   },
   "status": {
     "loading": "Wird geladen...",
@@ -49,6 +53,11 @@
     "searchTags": "Tags durchsuchen",
     "favoritesAndRating": "Favoriten & Bewertung",
     "favorites": "Favoriten",
+    "cookingTime": "Kochzeit",
+    "cookingTimeUnder15": "<15 Min",
+    "cookingTimeUnder30": "<30 Min",
+    "cookingTimeUnder60": "<60 Min",
+    "cookingTimeUnder120": "<120 Min",
     "categories": "Kategorien",
     "category": {
       "breakfast": "Frühstück",
@@ -132,6 +141,9 @@
     "bold": "Umgebe Text mit <strong>**doppelten Sternchen**</strong> für fett",
     "recipeLink": "Gib <strong>/Rezeptname</strong> ein, um zu einem anderen Rezept zu verlinken",
     "helpAriaLabel": "Formatierungshilfe"
+  },
+  "tagInput": {
+    "placeholder": "Geben Sie Tags getrennt durch Leerzeichen ein..."
   },
   "recurrence": {
     "title": "Wiederholung",

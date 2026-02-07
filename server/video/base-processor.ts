@@ -1,5 +1,6 @@
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import type { VideoProcessor, VideoProcessorContext, VideoMetadata } from "./types";
+import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
 
 import { videoLogger as log } from "@/server/logger";
 import { cleanupFile } from "@/server/video/cleanup";
@@ -32,25 +33,31 @@ export abstract class BaseVideoProcessor implements VideoProcessor {
   /**
    * Get video metadata from URL.
    */
-  protected async getMetadata(url: string): Promise<VideoMetadata> {
-    return getVideoMetadata(url);
+  protected async getMetadata(
+    url: string,
+    tokens?: SiteAuthTokenDecryptedDto[]
+  ): Promise<VideoMetadata> {
+    return getVideoMetadata(url, tokens);
   }
 
   /**
    * Validate video length against configured maximum.
    */
-  protected async validateLength(url: string): Promise<void> {
-    await validateVideoLength(url);
+  protected async validateLength(url: string, tokens?: SiteAuthTokenDecryptedDto[]): Promise<void> {
+    await validateVideoLength(url, tokens);
   }
 
   /**
    * Download video file and convert to MP4 if needed.
    * Returns the file path or null if download fails.
    */
-  protected async downloadAndConvertVideo(url: string): Promise<string | null> {
+  protected async downloadAndConvertVideo(
+    url: string,
+    tokens?: SiteAuthTokenDecryptedDto[]
+  ): Promise<string | null> {
     try {
       log.info({ url }, "Downloading video file");
-      const downloadedVideo = await downloadVideo(url);
+      const downloadedVideo = await downloadVideo(url, tokens);
 
       const ffmpegPath = getFfmpegPath();
       const convertResult = await convertToMp4(downloadedVideo.filePath, ffmpegPath);
@@ -70,8 +77,11 @@ export abstract class BaseVideoProcessor implements VideoProcessor {
   /**
    * Download audio from video for transcription.
    */
-  protected async downloadAudio(url: string): Promise<string> {
-    return downloadVideoAudio(url);
+  protected async downloadAudio(
+    url: string,
+    tokens?: SiteAuthTokenDecryptedDto[]
+  ): Promise<string> {
+    return downloadVideoAudio(url, tokens);
   }
 
   /**

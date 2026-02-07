@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button, Avatar } from "@heroui/react";
-import { UserCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { UserCircleIcon } from "@heroicons/react/24/outline";
+import { TrashIcon } from "@heroicons/react/16/solid";
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
 

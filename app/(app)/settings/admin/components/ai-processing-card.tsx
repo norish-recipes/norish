@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardBody, CardHeader, Accordion, AccordionItem } from "@heroui/react";
-import { SparklesIcon } from "@heroicons/react/16/solid";
+import { SparklesIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 import AIConfigForm from "./ai-config-form";

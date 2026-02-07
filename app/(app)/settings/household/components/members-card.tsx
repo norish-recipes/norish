@@ -20,7 +20,8 @@ import {
   ModalFooter,
   addToast,
 } from "@heroui/react";
-import { UserGroupIcon, UserMinusIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
+import { UserGroupIcon } from "@heroicons/react/24/outline";
+import { UserMinusIcon, ShieldCheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";

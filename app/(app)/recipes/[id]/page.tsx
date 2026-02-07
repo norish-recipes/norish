@@ -8,7 +8,6 @@ import RecipePageMobile from "./recipe-page-mobile";
 import { RecipeContextProvider, useRecipeContext } from "./context";
 import { WakeLockProvider } from "./components/wake-lock-context";
 
-import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { NotFoundView } from "@/components/shared/not-found-view";
 
 
@@ -17,7 +16,7 @@ type Props = {
 };
 
 function RecipePageContent() {
-  const { recipe, isLoading, isNotFound } = useRecipeContext();
+  const { recipe, isNotFound } = useRecipeContext();
   const t = useTranslations("recipes.detail");
 
   // Scroll to top when recipe page mounts
@@ -25,23 +24,21 @@ function RecipePageContent() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Show skeleton while loading
-  if (isLoading) return <RecipeSkeleton />;
-
   // Recipe not found or no access - show 404
+  // (Skeleton is shown via loading.tsx, not here)
   if (isNotFound || !recipe) {
     return <NotFoundView message={t("notFoundMessage")} title={t("notFound")} />;
   }
 
   return (
     <>
-      {/* Desktop layout */}
-      <div className="hidden md:block">
+      {/* Desktop layout - smooth fade in */}
+      <div key={recipe?.id} className="hidden fade-in md:block">
         <RecipePageDesktop />
       </div>
 
-      {/* Mobile layout - full width */}
-      <div className="-mx-6 -mt-10 flex w-screen flex-col md:hidden">
+      {/* Mobile layout - full width, smooth fade in */}
+      <div key={recipe?.id} className="-mx-6 -mt-10 flex w-screen flex-col fade-in md:hidden">
         <RecipePageMobile />
       </div>
     </>

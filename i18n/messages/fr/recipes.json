@@ -129,6 +129,7 @@
   },
   "carousel": {
     "noImageAvailable": "Aucune image disponible",
+    "noMediaAvailable": "Aucun média disponible",
     "videoPlayer": {
       "mute": "Couper le son",
       "unmute": "Activer le son",

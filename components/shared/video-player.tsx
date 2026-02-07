@@ -8,7 +8,7 @@ import {
   PlayIcon,
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
-} from "@heroicons/react/24/solid";
+} from "@heroicons/react/16/solid";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 

@@ -63,6 +63,33 @@
       "title": "Importer une archive de recettes",
       "description": "Importer des recettes depuis Mela (.melarecipes), Mealie, Tandoor ou des exports Paprika (.zip)"
     },
+    "siteAuthTokens": {
+      "title": "Jetons d'authentification de site",
+      "description": "Ajoutez des en-têtes ou cookies envoyés lors de l'importation de recettes depuis des sites spécifiques. Utile pour les sites nécessitant une connexion (ex. Instagram, Facebook).",
+      "domain": "Domaine",
+      "domainPlaceholder": "ex. instagram.com",
+      "name": "Nom",
+      "namePlaceholder": "ex. Cookie ou Authorization",
+      "value": "Valeur",
+      "valuePlaceholder": "Valeur du jeton ou cookie",
+      "type": "Type",
+      "typeHeader": "En-tête",
+      "typeCookie": "Cookie",
+      "addButton": "Ajouter un jeton",
+      "noTokens": "Aucun jeton d'authentification de site configuré.",
+      "tableHeaders": {
+        "domain": "DOMAINE",
+        "name": "NOM",
+        "type": "TYPE",
+        "created": "CRÉÉ",
+        "actions": "ACTIONS"
+      },
+      "deleteModal": {
+        "title": "Supprimer le jeton",
+        "message": "Êtes-vous sûr de vouloir supprimer ce jeton d'authentification ? Les importations depuis ce site pourraient ne plus fonctionner.",
+        "confirmButton": "Supprimer le jeton"
+      }
+    },
     "dangerZone": {
       "title": "Zone de danger",
       "description": "Une fois votre compte supprimé, il n’y a plus de retour. Soyez certain de votre choix.",

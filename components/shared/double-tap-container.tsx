@@ -1,6 +1,6 @@
 "use client";
 
-import { HeartIcon } from "@heroicons/react/24/solid";
+import { HeartIcon } from "@heroicons/react/16/solid";
 import { motion, AnimatePresence } from "motion/react";
 import { useCallback, useRef, useState } from "react";
 

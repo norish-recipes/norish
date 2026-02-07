@@ -128,8 +128,18 @@ async function assertRecipeAccess(
 
 // Procedures
 const list = authedProcedure.input(RecipeListInputSchema).query(async ({ ctx, input }) => {
-  const { cursor, limit, search, searchFields, tags, filterMode, sortMode, minRating, categories } =
-    input;
+  const {
+    cursor,
+    limit,
+    search,
+    searchFields,
+    tags,
+    filterMode,
+    sortMode,
+    minRating,
+    maxCookingTime,
+    categories,
+  } = input;
 
   log.debug({ userId: ctx.user.id, cursor, limit }, "Listing recipes");
 
@@ -149,6 +159,7 @@ const list = authedProcedure.input(RecipeListInputSchema).query(async ({ ctx, in
     filterMode as FilterMode,
     sortMode as SortOrder,
     minRating,
+    maxCookingTime,
     categories
   );
 

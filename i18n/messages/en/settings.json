@@ -63,6 +63,33 @@
       "title": "Import Recipe Archive",
       "description": "Import recipes from Mela (.melarecipes), Mealie, Tandoor, or Paprika (.zip) exports"
     },
+    "siteAuthTokens": {
+      "title": "Site Authentication Tokens",
+      "description": "Add headers or cookies that are sent when importing recipes from specific sites. Useful for sites that require login (e.g. Instagram, Facebook).",
+      "domain": "Domain",
+      "domainPlaceholder": "e.g. instagram.com",
+      "name": "Name",
+      "namePlaceholder": "e.g. Cookie or Authorization",
+      "value": "Value",
+      "valuePlaceholder": "Token or cookie value",
+      "type": "Type",
+      "typeHeader": "Header",
+      "typeCookie": "Cookie",
+      "addButton": "Add Token",
+      "noTokens": "No site authentication tokens configured.",
+      "tableHeaders": {
+        "domain": "DOMAIN",
+        "name": "NAME",
+        "type": "TYPE",
+        "created": "CREATED",
+        "actions": "ACTIONS"
+      },
+      "deleteModal": {
+        "title": "Delete Token",
+        "message": "Are you sure you want to delete this authentication token? Imports from this site may stop working.",
+        "confirmButton": "Delete Token"
+      }
+    },
     "dangerZone": {
       "title": "Danger Zone",
       "description": "Once you delete your account, there is no going back. Please be certain.",

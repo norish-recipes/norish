@@ -129,6 +129,7 @@
   },
   "carousel": {
     "noImageAvailable": "Geen afbeelding beschikbaar",
+    "noMediaAvailable": "Geen media beschikbaar",
     "videoPlayer": {
       "mute": "Dempen",
       "unmute": "Geluid aan",

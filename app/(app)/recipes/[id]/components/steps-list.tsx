@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckIcon } from "@heroicons/react/20/solid";
+import { CheckIcon } from "@heroicons/react/16/solid";
 import Image from "next/image";
 
 import { useRecipeContext } from "../context";

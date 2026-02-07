@@ -26,6 +26,7 @@ import {
   dashboardRecipe,
   getAllergiesForUsers,
 } from "@/server/db";
+import { getDecryptedTokensByUserId } from "@/server/db/repositories/site-auth-tokens";
 import { parseRecipeFromUrl } from "@/server/parser";
 import { deleteRecipeImagesDir } from "@/server/downloader";
 
@@ -91,7 +92,14 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   }
 
   // Parse and create recipe
-  const parseResult = await parseRecipeFromUrl(url, recipeId, allergyNames, job.data.forceAI);
+  const userTokens = await getDecryptedTokensByUserId(userId);
+  const parseResult = await parseRecipeFromUrl(
+    url,
+    recipeId,
+    allergyNames,
+    job.data.forceAI,
+    userTokens.length > 0 ? userTokens : undefined
+  );
 
   log.debug({ parseResult }, "Recipe parse result");
   if (!parseResult.recipe) {

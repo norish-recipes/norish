@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Input, Button, Chip } from "@heroui/react";
 import { EyeIcon, EyeSlashIcon, PencilIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { useTranslations } from "next-intl";
 
 interface SecretInputProps {
   label: string;
@@ -40,6 +41,7 @@ export default function SecretInput({
   isRequired = false,
   className,
 }: SecretInputProps) {
+  const tActions = useTranslations("common.actions");
   const [isRevealed, setIsRevealed] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -146,7 +148,7 @@ export default function SecretInput({
             isDisabled={isDisabled}
             isLoading={isLoading}
             size="md"
-            title="Reveal secret"
+            title={tActions("revealSecret")}
             variant="flat"
             onPress={handleReveal}
           >
@@ -161,7 +163,7 @@ export default function SecretInput({
             className="h-15"
             isDisabled={isDisabled}
             size="md"
-            title="Hide secret"
+            title={tActions("hideSecret")}
             variant="flat"
             onPress={handleHide}
           >
@@ -176,7 +178,7 @@ export default function SecretInput({
             className="h-15"
             isDisabled={isDisabled}
             size="md"
-            title="Enter new value"
+            title={tActions("enterNewValue")}
             variant="flat"
             onPress={handleStartEditing}
           >
@@ -192,7 +194,7 @@ export default function SecretInput({
             color="danger"
             isDisabled={isDisabled}
             size="md"
-            title="Cancel editing"
+            title={tActions("cancelEditing")}
             variant="flat"
             onPress={handleCancelEditing}
           >

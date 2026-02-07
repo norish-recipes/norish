@@ -83,23 +83,24 @@ export default function ApiKeyCard() {
           <p className="text-default-600 text-base">{t("description")}</p>
 
           {/* Create new key section */}
-          <div className="flex items-end gap-2">
+          <div className="flex flex-col gap-3">
             <Input
-              className="flex-1"
               label={t("keyNameLabel")}
               placeholder={t("keyNamePlaceholder")}
               size="sm"
               value={newKeyName}
               onValueChange={setNewKeyName}
             />
-            <Button
-              color="primary"
-              isLoading={generatingKey}
-              startContent={<PlusIcon className="h-4 w-4" />}
-              onPress={handleGenerateKey}
-            >
-              {t("createKey")}
-            </Button>
+            <div className="flex justify-end">
+              <Button
+                color="primary"
+                isLoading={generatingKey}
+                startContent={<PlusIcon className="h-4 w-4" />}
+                onPress={handleGenerateKey}
+              >
+                {t("createKey")}
+              </Button>
+            </div>
           </div>
 
           {/* Existing keys list */}

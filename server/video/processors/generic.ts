@@ -14,7 +14,7 @@ export class GenericVideoProcessor extends BaseVideoProcessor {
   readonly name = "GenericVideoProcessor";
 
   async process(context: VideoProcessorContext): Promise<FullRecipeInsertDTO> {
-    const { url, recipeId, allergies } = context;
+    const { url, recipeId, allergies, tokens } = context;
 
     let audioPath: string | null = null;
     let videoPath: string | null = null;
@@ -22,14 +22,14 @@ export class GenericVideoProcessor extends BaseVideoProcessor {
     try {
       log.info({ url }, "Processing generic video");
 
-      const metadata = await this.getMetadata(url);
-      await this.validateLength(url);
+      const metadata = await this.getMetadata(url, tokens);
+      await this.validateLength(url, tokens);
 
       // Download video file
-      videoPath = await this.downloadAndConvertVideo(url);
+      videoPath = await this.downloadAndConvertVideo(url, tokens);
 
       // Download and transcribe audio
-      audioPath = await this.downloadAudio(url);
+      audioPath = await this.downloadAudio(url, tokens);
       log.info({ url }, "Starting audio transcription");
 
       const transcriptionResult = await transcribeAudio(audioPath);
