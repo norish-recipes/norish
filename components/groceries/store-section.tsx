@@ -9,7 +9,7 @@ import {
   EllipsisVerticalIcon,
   CheckIcon,
   TrashIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/16/solid";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

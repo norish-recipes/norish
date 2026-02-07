@@ -129,6 +129,7 @@
   },
   "carousel": {
     "noImageAvailable": "Kein Bild verfügbar",
+    "noMediaAvailable": "Keine Medien verfügbar",
     "videoPlayer": {
       "mute": "Stummschalten",
       "unmute": "Ton einschalten",

@@ -14,3 +14,4 @@ export * from "@/server/db/repositories/server-config";
 export * from "@/server/db/repositories/favorites";
 export * from "@/server/db/repositories/user-allergies";
 export * from "@/server/db/repositories/planned-items";
+export * from "@/server/db/repositories/site-auth-tokens";

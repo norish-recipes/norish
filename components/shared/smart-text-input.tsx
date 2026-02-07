@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Textarea, Listbox, ListboxItem, User, Spinner } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { useRecipeAutocomplete } from "@/hooks/recipes";
 
@@ -29,6 +30,7 @@ export default function SmartTextInput({
   const [openAbove, setOpenAbove] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const t = useTranslations("recipes.empty");
 
   const { suggestions, isLoading } = useRecipeAutocomplete(autocompleteQuery, showAutocomplete);
 
@@ -171,7 +173,7 @@ export default function SmartTextInput({
               )}
             </Listbox>
           ) : autocompleteQuery.length >= 1 ? (
-            <div className="text-default-500 px-4 py-3 text-sm">No recipes found</div>
+            <div className="text-default-500 px-4 py-3 text-sm">{t("noResults")}</div>
           ) : null}
         </div>
       )}

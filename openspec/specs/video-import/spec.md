@@ -34,7 +34,7 @@ The video import system SHALL use existing YouTube captions when available, comb
 
 ### Requirement: Platform-Specific Video Processing
 
-The video import system SHALL use dedicated processors for each supported platform to handle platform-specific extraction strategies.
+The video import system SHALL use dedicated processors for each supported platform to handle platform-specific extraction strategies. All video processing functions SHALL accept optional site auth tokens for authenticated downloads.
 
 #### Scenario: Instagram image post with OCR
 
@@ -80,6 +80,13 @@ The video import system SHALL use dedicated processors for each supported platfo
 - **WHEN** a video URL is submitted for import
 - **THEN** the system SHALL detect the platform from the URL hostname
 - **AND** the system SHALL route to the appropriate platform processor
+
+#### Scenario: Authenticated video download
+
+- **WHEN** a video URL is submitted for import and the user has matching site auth tokens
+- **THEN** the system SHALL load the user's tokens for the URL domain
+- **AND** the system SHALL pass the tokens to the yt-dlp download functions
+- **AND** the tokens SHALL be injected as `--add-header` or `--cookies` arguments
 
 ### Requirement: Video Processor Architecture
 

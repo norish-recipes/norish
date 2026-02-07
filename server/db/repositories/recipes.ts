@@ -1,4 +1,4 @@
-import { eq, ilike, inArray, and, asc, desc, sql, or } from "drizzle-orm";
+import { eq, ilike, inArray, and, asc, desc, lte, sql, or } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "../drizzle";
@@ -246,6 +246,7 @@ export async function listRecipes(
   filterMode: FilterMode = "OR",
   sortMode: SortOrder = "dateDesc",
   minRating?: number,
+  maxCookingTime?: number,
   categories?: RecipeCategory[]
 ): Promise<{ recipes: RecipeDashboardDTO[]; total: number }> {
   const whereConditions: any[] = [];
@@ -385,6 +386,13 @@ export async function listRecipes(
   if (categories?.length) {
     const categoryArray = `{${categories.join(",")}}`;
     whereConditions.push(sql`${recipes.categories} && ${categoryArray}::recipe_category[]`);
+  }
+
+  if (maxCookingTime !== undefined) {
+    const hasTime = sql`(${recipes.totalMinutes} IS NOT NULL OR ${recipes.prepMinutes} IS NOT NULL OR ${recipes.cookMinutes} IS NOT NULL)`;
+    const effectiveMinutes = sql<number>`CASE WHEN ${recipes.totalMinutes} IS NOT NULL THEN ${recipes.totalMinutes} ELSE COALESCE(${recipes.prepMinutes}, 0) + COALESCE(${recipes.cookMinutes}, 0) END`;
+
+    whereConditions.push(and(hasTime, lte(effectiveMinutes, maxCookingTime)));
   }
 
   const whereClause = whereConditions.length ? and(...whereConditions) : undefined;

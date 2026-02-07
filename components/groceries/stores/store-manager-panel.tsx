@@ -12,7 +12,7 @@ import {
   PlusIcon,
   CheckIcon,
   XMarkIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/24/solid";
 import { useTranslations } from "next-intl";
 
 import { DeleteStoreModal } from "./delete-store-modal";

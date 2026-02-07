@@ -4,9 +4,13 @@ import React, { useEffect, useState } from "react";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/react";
-import { ArrowDownTrayIcon, ArrowUpIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { EllipsisVerticalIcon } from "@heroicons/react/20/solid";
-import { UsersIcon } from "@heroicons/react/24/outline";
+import { 
+  ArrowDownTrayIcon, 
+  ArrowLeftStartOnRectangleIcon,
+  PlusIcon, 
+  EllipsisVerticalIcon, 
+  Cog6ToothIcon,
+} from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -109,7 +113,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             className={`py-3 ${cssButtonPill}`}
             startContent={
               <span className="text-default-500">
-                <PlusIcon className="size-4" />
+                <PlusIcon className="size-5" />
               </span>
             }
             onPress={() => {
@@ -130,7 +134,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             className={`py-3 ${cssButtonPill}`}
             startContent={
               <span className="text-default-500">
-                <ArrowDownTrayIcon className="size-4" />
+                <ArrowDownTrayIcon className="size-5" />
               </span>
             }
             onPress={() => {
@@ -155,7 +159,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             href="/settings?tab=user"
             startContent={
               <span className="text-default-500">
-                <UsersIcon className="size-4" />
+                <Cog6ToothIcon className="size-5" />
               </span>
             }
             onPress={() => setUserMenuOpen(false)}
@@ -173,7 +177,7 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
             className={`text-danger-400 py-3 ${cssButtonPillDanger}`}
             startContent={
               <span className="text-danger-400">
-                <ArrowUpIcon className="size-4" />
+                <ArrowLeftStartOnRectangleIcon className="size-5" />
               </span>
             }
             onPress={() => {

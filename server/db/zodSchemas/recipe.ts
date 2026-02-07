@@ -90,6 +90,7 @@ export const RecipeListInputSchema = z.object({
   filterMode: z.enum(["AND", "OR"]).default("OR"),
   sortMode: z.enum(["titleAsc", "titleDesc", "dateAsc", "dateDesc"]).default("dateDesc"),
   minRating: z.number().min(1).max(5).optional(),
+  maxCookingTime: z.number().int().min(1).optional(),
 });
 
 export const RecipeGetInputSchema = z.object({

@@ -1,4 +1,5 @@
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
 
 export interface VideoMetadata {
   title: string;
@@ -16,6 +17,7 @@ export interface VideoProcessorContext {
   url: string;
   recipeId: string;
   allergies?: string[];
+  tokens?: SiteAuthTokenDecryptedDto[];
 }
 
 /**

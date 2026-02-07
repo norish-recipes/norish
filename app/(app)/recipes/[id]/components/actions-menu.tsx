@@ -2,14 +2,14 @@
 import React, { useMemo } from "react";
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, useDisclosure } from "@heroui/react";
 import {
+  EllipsisHorizontalIcon,
   CalendarDaysIcon,
   ShoppingCartIcon,
   PencilSquareIcon,
   TrashIcon,
   DevicePhoneMobileIcon,
-} from "@heroicons/react/20/solid";
-import { SparklesIcon } from "@heroicons/react/24/outline";
-import { EllipsisHorizontalIcon } from "@heroicons/react/16/solid";
+  SparklesIcon,
+} from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 

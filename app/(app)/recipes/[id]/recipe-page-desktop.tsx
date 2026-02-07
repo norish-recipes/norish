@@ -8,8 +8,8 @@ import {
   ArrowLeftIcon,
   SunIcon,
   MoonIcon,
-} from "@heroicons/react/20/solid";
-import { CakeIcon } from "@heroicons/react/24/solid";
+  CakeIcon,
+} from "@heroicons/react/16/solid";
 import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";

@@ -78,6 +78,7 @@ describe("recipes procedures", () => {
               input.filterMode,
               input.sortMode,
               input.minRating,
+              input.maxCookingTime,
               input.categories
             );
 
@@ -114,6 +115,7 @@ describe("recipes procedures", () => {
         "OR",
         "dateDesc",
         undefined,
+        undefined,
         ["Breakfast", "Dinner"]
       );
       expect(result.recipes).toEqual(mockRecipes);
@@ -149,6 +151,7 @@ describe("recipes procedures", () => {
               input.filterMode,
               input.sortMode,
               input.minRating,
+              input.maxCookingTime,
               input.categories
             );
 
@@ -172,6 +175,7 @@ describe("recipes procedures", () => {
         },
         50,
         0,
+        undefined,
         undefined,
         undefined,
         undefined,
@@ -212,6 +216,7 @@ describe("recipes procedures", () => {
               input.filterMode,
               input.sortMode,
               input.minRating,
+              input.maxCookingTime,
               input.categories
             );
 
@@ -234,6 +239,7 @@ describe("recipes procedures", () => {
         },
         50,
         0,
+        undefined,
         undefined,
         undefined,
         undefined,

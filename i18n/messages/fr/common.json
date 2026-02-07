@@ -27,7 +27,11 @@
     "test": "Test",
     "format": "Format",
     "restoreDefaults": "Recharger paramètres par défaut",
-    "saveChanges": "Sauvegarder changements"
+    "saveChanges": "Sauvegarder changements",
+    "revealSecret": "Révéler le secret",
+    "hideSecret": "Masquer le secret",
+    "enterNewValue": "Saisir une nouvelle valeur",
+    "cancelEditing": "Annuler la modification"
   },
   "status": {
     "loading": "Chargement...",
@@ -49,6 +53,11 @@
     "searchTags": "Recherche étiquettes",
     "favoritesAndRating": "Favoris et évaluation",
     "favorites": "Favoris",
+    "cookingTime": "Temps de cuisson",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
     "categories": "Catégories",
     "category": {
       "breakfast": "Petit-déjeuner",
@@ -62,7 +71,7 @@
   },
   "time": {
     "minutes": "min",
-    "hours": "hr"
+    "hours": "h"
   },
   "validation": {
     "required": "Ce champ est requis",
@@ -132,6 +141,9 @@
     "bold": "Entourez le texte de <strong>**doubles astérisques**</strong> pour le gras",
     "recipeLink": "Tapez <strong>/nom de la recette</strong> pour accéder à une autre recette",
     "helpAriaLabel": "Aide à la mise en forme"
+  },
+  "tagInput": {
+    "placeholder": "Saisissez les tags séparés par des espaces..."
   },
   "recurrence": {
     "title": "Répétition",

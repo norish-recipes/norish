@@ -62,6 +62,7 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
       filterMode: filters.filterMode as "AND" | "OR",
       sortMode: filters.sortMode as "titleAsc" | "titleDesc" | "dateAsc" | "dateDesc",
       minRating: filters.minRating ?? undefined,
+      maxCookingTime: filters.maxCookingTime ?? undefined,
     }),
     [filters]
   );
@@ -163,9 +164,10 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
     const hasSearch = filters.rawInput.trim().length > 0;
     const hasTags = filters.searchTags.length > 0;
     const hasCategories = filters.categories.length > 0;
+    const hasCookingTime = filters.maxCookingTime !== null;
 
-    return hasSearch || hasTags || hasCategories;
-  }, [filters.rawInput, filters.searchTags, filters.categories]);
+    return hasSearch || hasTags || hasCategories || hasCookingTime;
+  }, [filters.rawInput, filters.searchTags, filters.categories, filters.maxCookingTime]);
 
   const value = useMemo<Ctx>(
     () => ({

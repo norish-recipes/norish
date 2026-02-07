@@ -190,6 +190,13 @@
       "when": 1768837431115,
       "tag": "0026_chief_skreet",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1770472302818,
+      "tag": "0027_yellow_kulan_gath",
+      "breakpoints": true
     }
   ]
 }

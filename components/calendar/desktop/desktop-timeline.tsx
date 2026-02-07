@@ -319,6 +319,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   };
 
   return (
+    <div className="fade-in">
     <DndContext
       collisionDetection={collisionDetection}
       sensors={sensors}
@@ -398,5 +399,6 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
         {activeItem ? <DesktopDragOverlay item={activeItem} /> : null}
       </DragOverlay>
     </DndContext>
+    </div>
   );
 }

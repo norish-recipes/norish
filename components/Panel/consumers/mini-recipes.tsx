@@ -4,8 +4,7 @@ import { useState, useTransition, useCallback, ChangeEvent, memo, useRef, useEff
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Image, Input, Button } from "@heroui/react";
 import { motion, AnimatePresence } from "motion/react";
-import { PlusIcon } from "@heroicons/react/16/solid";
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, ArrowPathIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import Panel from "@/components/Panel/Panel";

@@ -27,7 +27,11 @@
     "test": "Test",
     "format": "Format",
     "restoreDefaults": "Restore Defaults",
-    "saveChanges": "Save Changes"
+    "saveChanges": "Save Changes",
+    "revealSecret": "Reveal secret",
+    "hideSecret": "Hide secret",
+    "enterNewValue": "Enter new value",
+    "cancelEditing": "Cancel editing"
   },
   "status": {
     "loading": "Loading...",
@@ -49,6 +53,11 @@
     "searchTags": "Search tags",
     "favoritesAndRating": "Favorites & Rating",
     "favorites": "Favorites",
+    "cookingTime": "Cooking time",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
     "categories": "Categories",
     "category": {
       "breakfast": "Breakfast",
@@ -132,6 +141,9 @@
     "bold": "Wrap in <strong>**double asterisks**</strong> for bold",
     "recipeLink": "Type <strong>/recipe name</strong> to link to another recipe",
     "helpAriaLabel": "Formatting help"
+  },
+  "tagInput": {
+    "placeholder": "Type tags separated by spaces..."
   },
   "recurrence": {
     "title": "Repeat",

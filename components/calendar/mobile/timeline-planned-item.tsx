@@ -7,6 +7,7 @@ import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import { PlannedItemContent } from "./planned-item-content";
+import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
 
 type TimelinePlannedItemProps = {
   item: PlannedItemDisplay;
@@ -30,6 +31,9 @@ export const TimelinePlannedItem = memo(function TimelinePlannedItem({
   });
 
   const isRecipe = item.itemType === "recipe";
+
+  // Prefetch recipe data when item enters viewport
+  const prefetchRef = useRecipePrefetch(item.recipeId ?? "", isRecipe && !!item.recipeId);
 
   const handleClick = useCallback(() => {
     if (isRecipe && onRecipeClick) {
@@ -60,6 +64,7 @@ export const TimelinePlannedItem = memo(function TimelinePlannedItem({
   if (onRecipeClick || onNoteClick) {
     return (
       <button
+        ref={prefetchRef}
         className="block w-full text-left focus:outline-none"
         type="button"
         onClick={handleClick}
@@ -70,5 +75,5 @@ export const TimelinePlannedItem = memo(function TimelinePlannedItem({
     );
   }
 
-  return content;
+  return <div ref={prefetchRef}>{content}</div>;
 });

@@ -5,8 +5,8 @@ import {
   ArrowLeftIcon,
   SunIcon,
   MoonIcon,
-} from "@heroicons/react/20/solid";
-import { CakeIcon } from "@heroicons/react/24/solid";
+  CakeIcon,
+} from "@heroicons/react/16/solid";
 import { Card, CardBody, Chip, Divider, Link } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -52,9 +52,15 @@ export default function RecipePageMobile() {
   const mediaItems = buildMediaItems(recipe);
 
   return (
-    <div className="flex w-full flex-col overflow-x-hidden">
+    <div
+      className="flex w-full flex-col"
+      style={{ marginTop: "calc(-1.5rem - env(safe-area-inset-top))" }}
+    >
       {/* Hero Image/Video Carousel */}
-      <div className="relative w-full overflow-hidden" style={{ height: "18rem" }}>
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ height: "calc(22rem + env(safe-area-inset-top))" }}
+      >
         <DoubleTapContainer className="h-full w-full" onDoubleTap={handleToggleFavorite}>
           <MediaCarousel
             aspectRatio="4/3"
@@ -68,14 +74,14 @@ export default function RecipePageMobile() {
         {recipe?.author && (
           <div
             className="absolute left-4 z-50"
-            style={{ top: `calc(1rem + env(safe-area-inset-top))` }}
+            style={{ top: `calc(3.5rem + env(safe-area-inset-top))` }}
           >
             <AuthorChip image={recipe.author.image} name={recipe.author.name} />
           </div>
         )}
 
         {/* Heart button - bottom right (always visible) */}
-        <div className="absolute right-4 bottom-4 z-50">
+        <div className="absolute right-4 bottom-8 z-50">
           <HeartButton
             showBackground
             isFavorite={isFavorite}

@@ -11,7 +11,7 @@ import {
   Kbd,
   addToast,
 } from "@heroui/react";
-import { PhotoIcon, XMarkIcon, SparklesIcon } from "@heroicons/react/20/solid";
+import { PhotoIcon, XMarkIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 

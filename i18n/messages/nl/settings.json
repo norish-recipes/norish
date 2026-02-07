@@ -63,6 +63,33 @@
       "title": "Importeer Receptarchief",
       "description": "Importeer recepten van Mela (.melarecipes), Mealie, Tandoor of Paprika (.zip) exports"
     },
+    "siteAuthTokens": {
+      "title": "Site-authenticatietokens",
+      "description": "Voeg headers of cookies toe die worden meegestuurd bij het importeren van recepten van specifieke sites. Handig voor sites die inloggen vereisen (bijv. Instagram, Facebook).",
+      "domain": "Domein",
+      "domainPlaceholder": "bijv. instagram.com",
+      "name": "Naam",
+      "namePlaceholder": "bijv. Cookie of Authorization",
+      "value": "Waarde",
+      "valuePlaceholder": "Token- of cookiewaarde",
+      "type": "Type",
+      "typeHeader": "Header",
+      "typeCookie": "Cookie",
+      "addButton": "Token toevoegen",
+      "noTokens": "Geen site-authenticatietokens geconfigureerd.",
+      "tableHeaders": {
+        "domain": "DOMEIN",
+        "name": "NAAM",
+        "type": "TYPE",
+        "created": "AANGEMAAKT",
+        "actions": "ACTIES"
+      },
+      "deleteModal": {
+        "title": "Token verwijderen",
+        "message": "Weet je zeker dat je dit authenticatietoken wilt verwijderen? Imports van deze site werken mogelijk niet meer.",
+        "confirmButton": "Token verwijderen"
+      }
+    },
     "dangerZone": {
       "title": "Gevaarlijke Zone",
       "description": "Zodra je je account verwijdert, is er geen weg meer terug. Wees zeker.",
@@ -197,7 +224,7 @@
       "confirmButton": "Verwijderen"
     },
     "syncStatus": {
-      "title": "Sync Status",
+      "title": "Synchronisatiestatus",
       "syncNow": "Nu synchroniseren",
       "clearFilter": "Filter wissen",
       "clickToFilter": "Klik op een badge om te filteren",
@@ -205,7 +232,7 @@
       "tableHeaders": {
         "item": "ITEM",
         "type": "TYPE",
-        "date": "DATE",
+        "date": "DATUM",
         "meal": "MAALTIJD",
         "status": "STATUS",
         "lastSync": "LAATSTE SYNC",
@@ -293,8 +320,8 @@
       },
       "oauthDescription": "Configureer OAuth-providers voor SSO-authenticatie.",
       "oidc": {
-        "title": "OIDC Provider",
-        "subtitle": "Generic OpenID Connect",
+        "title": "OIDC-aanbieder",
+        "subtitle": "Generiek OpenID Connect",
         "fields": {
           "name": "Providernaam",
           "namePlaceholder": "bijv. Authentik, Keycloak",
@@ -306,13 +333,13 @@
           "wellknownPlaceholder": "Automatisch afgeleid indien leeg"
         },
         "claimMapping": {
-          "title": "Claim Mapping",
+          "title": "Claim-toewijzing",
           "description": "Wijs automatisch rollen en huishoudens toe op basis van OIDC claims. Gebruikers met de admin-groep krijgen serverbeheerdersrechten. Gebruikers met een huishoudgroep worden automatisch aan dat huishouden toegevoegd.",
           "securityWarning": "Let op: Het inschakelen van claim mapping geeft je identity provider controle over adminrechten en huishoudens. Schakel dit alleen in als je je OIDC provider volledig vertrouwt en correct hebt geconfigureerd.",
           "scopes": "Extra Scopes",
           "scopesPlaceholder": "groups, roles",
           "scopesDescription": "Kommagescheiden lijst van extra OAuth scopes om aan te vragen (bijv. groups voor Keycloak)",
-          "groupsClaim": "Groups Claim",
+          "groupsClaim": "Groepen Claim",
           "groupsClaimDescription": "Naam van de claim die gebruikersgroepen/rollen bevat",
           "adminGroup": "Admin Groep",
           "adminGroupDescription": "Groepsnaam die serverbeheerderrol verleent (hoofdletterongevoelig)",
@@ -348,8 +375,8 @@
       }
     },
     "contentDetection": {
-      "title": "Content Detection",
-      "description": "Configure how recipes are detected and parsed from web pages.",
+      "title": "Inhoudsdetectie",
+      "description": "Configureer hoe recepten worden gedetecteerd en verwerkt van webpagina's.",
       "contentIndicators": {
         "title": "Content Indicatoren",
         "subtitle": "Trefwoorden die receptpagina's identificeren",
@@ -387,7 +414,7 @@
       }
     },
     "aiProcessing": {
-      "title": "AI & Processing",
+      "title": "AI & Verwerking",
       "description": "Configureer AI-gestuurde functies voor receptextractie en videobewerking.",
       "aiConfig": {
         "title": "AI Configuratie",
@@ -415,7 +442,7 @@
       "enableAI": "AI-functies inschakelen",
       "enableAIDescription": "Gebruik AI om recepten uit ongestructureerde inhoud te extraheren",
       "configureWarning": "Configureer de AI-providerinstellingen hieronder om AI-functies in te schakelen.",
-      "provider": "AI Provider",
+      "provider": "AI-aanbieder",
       "providers": {
         "openai": "OpenAI",
         "azure": "Azure OpenAI",

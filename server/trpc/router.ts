@@ -12,6 +12,7 @@ import { archive } from "./routers/archive";
 import { favoritesRouter } from "./routers/favorites";
 import { ratingsRouter } from "./routers/ratings";
 import { storesRouter } from "./routers/stores";
+import { siteAuthTokensRouter } from "./routers/site-auth-tokens";
 
 export const appRouter = router({
   groceries: groceriesRouter,
@@ -28,6 +29,7 @@ export const appRouter = router({
   favorites: favoritesRouter,
   ratings: ratingsRouter,
   stores: storesRouter,
+  siteAuthTokens: siteAuthTokensRouter,
 });
 
 // Export type definition of API
