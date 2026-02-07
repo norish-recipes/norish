@@ -21,7 +21,7 @@
       },
       {
         "locale": "de",
-        "name": "Zentiliter"
+        "name": "cl"
       },
       {
         "locale": "nl",
@@ -31,7 +31,8 @@
     "alternates": [
       "centiliter",
       "centiliters",
-      "cl"
+      "zentiliter",
+      "cl."
     ]
   },
   "deciliter": {
@@ -56,7 +57,7 @@
       },
       {
         "locale": "de",
-        "name": "Deziliter"
+        "name": "dl"
       },
       {
         "locale": "nl",
@@ -66,7 +67,8 @@
     "alternates": [
       "deciliter",
       "deciliters",
-      "dl"
+      "deziliter",
+      "dl."
     ]
   },
   "gram": {
@@ -99,9 +101,11 @@
       }
     ],
     "alternates": [
+      "g",
+      "g.",
       "gr",
       "gr.",
-      "gram",
+      "gramm",
       "grammen"
     ]
   },
@@ -177,7 +181,7 @@
       "eetlepel",
       "eetlepels",
       "el",
-      "el.",
+      "el.",      
       "essl",
       "essl.",
       "esslöffel"
@@ -205,7 +209,7 @@
       },
       {
         "locale": "de",
-        "name": "Messerspitzen"
+        "name": "Msp."
       },
       {
         "locale": "nl",
@@ -217,7 +221,9 @@
       "mespuntje",
       "mespuntjes",
       "messerspitze",
-      "msp"
+      "messerspitzen",
+      "msp",
+      "msp."
     ]
   },
   "pinch": {
@@ -250,6 +256,8 @@
       }
     ],
     "alternates": [
+      "prise(n)",
+      "prise/n",
       "a pinch",
       "dash",
       "pinch",
@@ -282,7 +290,7 @@
       },
       {
         "locale": "de",
-        "name": "Stücke"
+        "name": "Stk."
       },
       {
         "locale": "nl",
@@ -297,12 +305,14 @@
       "piece",
       "pieces",
       "stk",
+      "stk.",
+      "stück",
+      "stücke",
       "stuk",
       "stukje",
       "stukjes",
       "stuks",
-      "stückchen",
-      "stücke"
+      "stückchen"
     ]
   },
   "clove": {
@@ -335,6 +345,8 @@
       }
     ],
     "alternates": [
+      "zehe(n)",
+      "zehe/n",
       "teen",
       "teentje",
       "teentjes",
@@ -522,7 +534,7 @@
       },
       {
         "locale": "de",
-        "name": "Packungen"
+        "name": "Pck."
       },
       {
         "locale": "nl",
@@ -535,11 +547,13 @@
       "packets",
       "packs",
       "packung",
+      "packungen",
       "pak",
       "pakje",
       "pakjes",
       "pakken",
       "pck",
+      "pck.",
       "pkg",
       "pkg.",
       "pkgs",
@@ -576,6 +590,8 @@
       }
     ],
     "alternates": [
+      "dose(n)",
+      "dose/n",
       "blik",
       "blikje",
       "blikjes",
@@ -657,7 +673,7 @@
       },
       {
         "locale": "de",
-        "name": "Flaschen"
+        "name": "Fl."
       },
       {
         "locale": "nl",
@@ -665,12 +681,14 @@
       }
     ],
     "alternates": [
+      "flasche",
+      "flaschen",
       "bottle",
       "bottles",
       "btl",
       "btls",
       "fl",
-      "flasche",
+      "fl.",
       "fles",
       "flesje",
       "flesjes",
@@ -700,7 +718,7 @@
       },
       {
         "locale": "de",
-        "name": "Beutel"
+        "name": "Btl."
       },
       {
         "locale": "nl",
@@ -711,6 +729,8 @@
       "bag",
       "bags",
       "btl",
+      "btl.",
+      "beutel",
       "sack",
       "tütchen",
       "tüte",
@@ -961,6 +981,8 @@
       }
     ],
     "alternates": [
+      "scheibe(n)",
+      "scheibe/n",
       "plakje",
       "plakjes",
       "plakken",
@@ -1714,6 +1736,7 @@
     "alternates": [
       "gehäufte esslöffel",
       "gehäufter esslöffel",
+      "el, gehäuft",
       "großzügige el",
       "großzügige esslöffel",
       "großzügiger el",
@@ -1752,6 +1775,7 @@
       }
     ],
     "alternates": [
+      "el, gestr.",
       "gestrichene el",
       "gestrichene esslöffel",
       "gestrichener el",
@@ -2031,7 +2055,7 @@
       },
       {
         "locale": "de",
-        "name": "Pfund"
+        "name": "Pfd."
       },
       {
         "locale": "nl",
@@ -2039,7 +2063,8 @@
       }
     ],
     "alternates": [
-      "pfd"
+      "pfd",
+      "pfd."
     ]
   },
   "bar": {
@@ -2139,6 +2164,7 @@
       }
     ],
     "alternates": [
+      "tl, gehäuft",
       "gehäufte teelöffel",
       "gehäufter teelöffel",
       "großzügige teelöffel",
@@ -2177,6 +2203,7 @@
       }
     ],
     "alternates": [
+      "tl, gestr.",
       "gestrichene teelöffel",
       "gestrichene tl",
       "gestrichener teelöffel",
@@ -2240,7 +2267,7 @@
       },
       {
         "locale": "de",
-        "name": "Tropfen"
+        "name": "Tr."
       },
       {
         "locale": "nl",
@@ -2249,8 +2276,10 @@
     ],
     "alternates": [
       "tr",
+      "tr.",
       "trpf",
-      "trpf."
+      "trpf.",
+      "tröpfchen"
     ]
   },
   "ounce": {
