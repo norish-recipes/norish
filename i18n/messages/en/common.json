@@ -184,8 +184,19 @@
       "6": "Saturday"
     }
   },
+  "badges": {
+    "new": "New"
+  },
   "timer": {
     "done": "Done",
-    "done_action": "Done"
+    "done_action": "Done",
+    "one": "Timer",
+    "other": "Timers",
+    "label_one": "1 Timer",
+    "label_other": "{count} Timers",
+    "notification_title": "Timer Complete",
+    "notification_body": "{label} is done!",
+    "notifications_disabled": "Notifications are disabled",
+    "notifications_disabled_hint": "Enable notifications in your browser settings to get alerts when timers finish in the background."
   }
 }

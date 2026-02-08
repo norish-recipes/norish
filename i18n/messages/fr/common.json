@@ -184,8 +184,19 @@
       "6": "Samedi"
     }
   },
+  "badges": {
+    "new": "Nouveau"
+  },
   "timer": {
-    "done": "Terminé",
-    "done_action": "Terminé"
+    "done": "Termin\u00e9",
+    "done_action": "Termin\u00e9",
+    "one": "Minuteur",
+    "other": "Minuteurs",
+    "label_one": "1 minuteur",
+    "label_other": "{count} minuteurs",
+    "notification_title": "Minuteur termin\u00e9",
+    "notification_body": "{label} est pr\u00eat\u00a0!",
+    "notifications_disabled": "Les notifications sont d\u00e9sactiv\u00e9es",
+    "notifications_disabled_hint": "Activez les notifications dans les param\u00e8tres de votre navigateur pour recevoir des alertes lorsque les minuteurs se terminent en arri\u00e8re-plan."
   }
 }

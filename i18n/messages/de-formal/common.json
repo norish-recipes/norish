@@ -184,8 +184,19 @@
       "6": "Samstag"
     }
   },
+  "badges": {
+    "new": "Neu"
+  },
   "timer": {
     "done": "Fertig",
-    "done_action": "Fertig"
+    "done_action": "Fertig",
+    "one": "Timer",
+    "other": "Timer",
+    "label_one": "1 Timer",
+    "label_other": "{count} Timer",
+    "notification_title": "Timer abgelaufen",
+    "notification_body": "{label} ist fertig!",
+    "notifications_disabled": "Benachrichtigungen sind deaktiviert",
+    "notifications_disabled_hint": "Aktivieren Sie Benachrichtigungen in Ihren Browser-Einstellungen, um Hinweise zu erhalten, wenn Timer im Hintergrund ablaufen."
   }
 }

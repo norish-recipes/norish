@@ -4,6 +4,40 @@ import { createClientLogger } from "@/lib/logger";
 
 const logger = createClientLogger("timers");
 
+/**
+ * Show an OS notification via the service worker when a timer completes
+ * while the app is in the background (document.hidden === true).
+ */
+function showTimerNotification(timer: { label: string; recipeName?: string }) {
+  try {
+    if (
+      typeof document === "undefined" ||
+      !document.hidden ||
+      typeof navigator === "undefined" ||
+      !("serviceWorker" in navigator) ||
+      Notification.permission !== "granted"
+    ) {
+      return;
+    }
+
+    navigator.serviceWorker.ready
+      .then((registration) => {
+        const title = timer.recipeName ? `${timer.label} — ${timer.recipeName}` : timer.label;
+
+        registration.showNotification(title, {
+          body: "Timer complete!",
+          icon: "/android-chrome-192x192.png",
+          tag: "timer-complete",
+        } as NotificationOptions);
+      })
+      .catch((err) => {
+        logger.warn(err, "Failed to show timer notification");
+      });
+  } catch {
+    // Graceful fallback — audio still works in foreground
+  }
+}
+
 export type TimerStatus = "running" | "paused" | "completed";
 
 export type Timer = {
@@ -154,6 +188,7 @@ export const useTimerStore = create<TimerState>()(
 
             if (newRemaining === 0 && t.remainingMs > 0) {
               hasChanges = true;
+              showTimerNotification(t);
               return { ...t, remainingMs: 0, status: "completed", lastTickAt: now };
             }
 

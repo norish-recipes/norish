@@ -79,6 +79,21 @@ export const parseIsoDuration = (iso: string): number | undefined => {
   return hours * 60 + minutes;
 };
 
+/**
+ * Format milliseconds as a timer display string (e.g. "5:03" or "1:02:30").
+ */
+export function formatTimerMs(ms: number): string {
+  const totalSeconds = Math.ceil(ms / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+
+  if (h > 0) {
+    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 export const formatMinutesHM = (mins?: number): string | undefined => {
   if (mins == null || mins < 0) return undefined;
   if (mins < 60) return `${mins}m`;

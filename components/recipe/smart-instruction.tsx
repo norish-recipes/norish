@@ -19,12 +19,21 @@ interface SmartInstructionProps {
   stepIndex: number;
 }
 
+interface TimerSegmentData {
+  timerId: string;
+  recipeId: string;
+  recipeName?: string;
+  label: string;
+  durationMs: number;
+  originalText: string;
+}
+
 type Segment = {
   type: "text" | "timer";
   content: string;
   startIndex: number;
   endIndex: number;
-  data?: any;
+  data?: TimerSegmentData;
 };
 
 export function SmartInstruction({ text, recipeId, recipeName, stepIndex }: SmartInstructionProps) {
@@ -199,17 +208,19 @@ function insertTimers(text: string, segments: Segment[]): React.ReactNode[] {
     }
 
     // Add the timer chip
-    result.push(
-      <TimerChip
-        key={`timer-${segment.data.timerId}`}
-        id={segment.data.timerId}
-        recipeId={segment.data.recipeId}
-        recipeName={segment.data.recipeName}
-        initialLabel={segment.data.label}
-        durationMs={segment.data.durationMs}
-        originalText={segment.data.originalText}
-      />
-    );
+    if (segment.data) {
+      result.push(
+        <TimerChip
+          key={`timer-${segment.data.timerId}`}
+          id={segment.data.timerId}
+          recipeId={segment.data.recipeId}
+          recipeName={segment.data.recipeName}
+          initialLabel={segment.data.label}
+          durationMs={segment.data.durationMs}
+          originalText={segment.data.originalText}
+        />
+      );
+    }
 
     currentIndex = segmentPosition + segment.content.length;
   });

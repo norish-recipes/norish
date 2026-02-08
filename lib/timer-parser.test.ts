@@ -184,5 +184,35 @@ describe("parseTimerDurations", () => {
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(5 * 60);
     });
+
+    it("does not false-match double suffixes like 'minutess'", () => {
+      const matches = parseTimerDurations("Wait 5 minutess");
+      expect(matches).toHaveLength(0);
+    });
+
+    it("does not false-match 'minuteen' when keyword is 'minute'", () => {
+      const matches = parseTimerDurations("Wait 5 minuteen");
+      expect(matches).toHaveLength(0);
+    });
+
+    it("does not match 'ms' when keyword is 'm'", () => {
+      const matches = parseTimerDurations("Latency is 200 ms", {
+        hours: ["h"],
+        minutes: ["m"],
+        seconds: ["s"],
+      });
+      // 'ms' should not match 'm' followed by an 's' suffix
+      expect(matches).toHaveLength(0);
+    });
+
+    it("matches keywords that already include plural forms", () => {
+      const matches = parseTimerDurations("Bake for 20 minuten", {
+        hours: ["uur", "uren"],
+        minutes: ["minuut", "minuten"],
+        seconds: ["seconde", "seconden"],
+      });
+      expect(matches).toHaveLength(1);
+      expect(matches[0].durationSeconds).toBe(20 * 60);
+    });
   });
 });

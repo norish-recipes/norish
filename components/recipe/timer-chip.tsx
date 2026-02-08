@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { ArrowPathIcon, PauseIcon, PlayIcon } from "@heroicons/react/24/solid";
+import React from "react";
+import { ArrowPathIcon, PauseIcon, PlayIcon, ClockIcon } from "@heroicons/react/16/solid";
+import { Chip } from "@heroui/react";
 
 import { useTimerStore } from "@/stores/timers";
+import { formatTimerMs } from "@/lib/helpers";
+import { useNotificationPermission } from "@/hooks/use-notification-permission";
 
 interface TimerChipProps {
   id: string;
@@ -12,18 +15,6 @@ interface TimerChipProps {
   initialLabel: string;
   durationMs: number;
   originalText: string;
-}
-
-function formatTime(ms: number) {
-  const totalSeconds = Math.ceil(ms / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-
-  if (h > 0) {
-    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  }
-  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 export function TimerChip({
@@ -39,12 +30,15 @@ export function TimerChip({
   const startTimer = useTimerStore((state) => state.startTimer);
   const pauseTimer = useTimerStore((state) => state.pauseTimer);
   const resetTimer = useTimerStore((state) => state.resetTimer);
+  const { requestPermission } = useNotificationPermission();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (!timer) {
+      // Request notification permission on first timer interaction
+      requestPermission();
       addTimer(id, recipeId, initialLabel, durationMs, recipeName);
       startTimer(id);
     } else if (timer.status === "running") {
@@ -58,45 +52,44 @@ export function TimerChip({
 
   if (!timer) {
     return (
-      <button
-        type="button"
+      <Chip
+        as="button"
         onClick={handleClick}
-        className="mx-1 inline-flex translate-y-[1px] transform items-center rounded-md bg-orange-100 px-2 py-0.5 align-baseline text-base font-medium text-orange-700 transition-colors hover:bg-orange-200"
+        startContent={<ClockIcon className="h-4 w-4" />}
+        color="default"
+        radius="full"
+        variant="bordered"
+        className="mx-1 translate-y-[1px] pr-1.5 pl-2.5 align-baseline text-base"
       >
-        <PlayIcon className="mr-1 h-3 w-3" />
         {originalText}
-      </button>
+      </Chip>
     );
   }
 
   const isCompleted = timer.status === "completed";
   const isRunning = timer.status === "running";
 
-  let styles = "bg-orange-100 text-orange-700";
-  if (isRunning) styles = "bg-orange-600 text-white shadow-sm";
-  if (isCompleted) styles = "bg-red-600 text-white animate-pulse";
+  // Active timer - show as chip
+  const icon = isCompleted ? (
+    <ArrowPathIcon className="h-3 w-3" />
+  ) : isRunning ? (
+    <PauseIcon className="h-3 w-3" />
+  ) : (
+    <PlayIcon className="h-3 w-3" />
+  );
 
   return (
-    <button
-      type="button"
+    <Chip
+      as="button"
       onClick={handleClick}
-      className={`mx-1 inline-flex translate-y-[1px] transform items-center rounded-md px-2 py-0.5 align-baseline font-mono text-base font-medium transition-all ${styles}`}
+      startContent={icon}
+      color={isCompleted ? "danger" : isRunning ? "primary" : "warning"}
+      radius="full"
+      size="md"
+      variant="bordered"
+      className="mx-1 translate-y-[1px] pr-1.5 pl-2.5 align-baseline text-base"
     >
-      {isCompleted ? (
-        <>
-          <ArrowPathIcon className="mr-1 h-3 w-3" />
-          DONE
-        </>
-      ) : (
-        <>
-          {isRunning ? (
-            <PauseIcon className="mr-1 h-3 w-3" />
-          ) : (
-            <PlayIcon className="mr-1 h-3 w-3" />
-          )}
-          {formatTime(timer.remainingMs)}
-        </>
-      )}
-    </button>
+      {formatTimerMs(timer.remainingMs)}
+    </Chip>
   );
 }

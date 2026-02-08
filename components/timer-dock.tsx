@@ -2,22 +2,25 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
+import { Button } from "@heroui/react";
 import { useTimerStore } from "@/stores/timers";
 import {
   ChevronUpIcon,
   ChevronDownIcon,
   PlayIcon,
   PauseIcon,
-  TrashIcon,
   PlusIcon,
   MinusIcon,
-} from "@heroicons/react/24/solid";
+  XMarkIcon,
+} from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
 import useSound from "use-sound";
 import { useTimersEnabledQuery } from "@/hooks/config";
 import { useTranslations } from "next-intl";
 import { createClientLogger } from "@/lib/logger";
+import { formatTimerMs } from "@/lib/helpers";
 import { useAutoHide } from "@/hooks/auto-hide";
+import { useNotificationPermission } from "@/hooks/use-notification-permission";
 
 const logger = createClientLogger("timer-dock");
 
@@ -45,30 +48,23 @@ function TimerTicker() {
   return null;
 }
 
-function formatTime(ms: number) {
-  const totalSeconds = Math.ceil(ms / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
 export function TimerDock() {
   const { timersEnabled } = useTimersEnabledQuery();
   const timers = useTimerStore((state) => state.timers);
   const clearAll = useTimerStore((state) => state.clearAll);
-  const activeTimers = timers.filter((t) => t.status !== "paused" && t.status !== "completed");
+  const runningTimers = timers.filter((t) => t.status === "running");
   const pausedTimers = timers.filter((t) => t.status === "paused");
   const completedTimers = timers.filter((t) => t.status === "completed");
 
-  const allActiveOrPaused = [...activeTimers, ...pausedTimers, ...completedTimers];
+  const allActiveOrPaused = [...runningTimers, ...pausedTimers, ...completedTimers];
   const t = useTranslations("common");
   const router = useRouter();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const { isDenied: notificationsDenied, isSupported: notificationsSupported } =
+    useNotificationPermission();
 
   // Auto-hide with nav (disabled when expanded to keep it visible)
   const { isVisible } = useAutoHide({ disabled: isExpanded });
@@ -121,7 +117,7 @@ export function TimerDock() {
   }, [stop]);
 
   if (!isClient || !timersEnabled) return null;
-  if (allActiveOrPaused.length === 0) return <TimerTicker />;
+  if (allActiveOrPaused.length === 0) return null;
 
   // Sort: completed first (to alert), then active by remaining time
   const sortedTimers = [...allActiveOrPaused].sort((a, b) => {
@@ -161,10 +157,8 @@ export function TimerDock() {
           layout
           className={`overflow-hidden shadow-xl ring-1 ring-black/5 backdrop-blur-sm ${
             isExpanded
-              ? "w-80 rounded-xl bg-white dark:bg-zinc-800 dark:ring-white/10"
-              : topTimer.status === "completed"
-                ? "rounded-full bg-red-600 ring-0"
-                : "rounded-full bg-white/90 dark:bg-zinc-800/90 dark:ring-white/10"
+              ? "bg-content1 w-80 rounded-2xl dark:ring-white/10"
+              : "bg-content1/90 rounded-full dark:ring-white/10"
           }`}
           transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
         >
@@ -178,14 +172,16 @@ export function TimerDock() {
               {/* Header */}
               <button
                 type="button"
-                className="flex w-full items-center justify-between border-b border-zinc-200/50 bg-zinc-50/80 p-4 transition-all hover:bg-zinc-100/80 dark:border-zinc-700/50 dark:bg-zinc-700/50 dark:hover:bg-zinc-600/50"
+                className="border-default-100 flex w-full cursor-pointer items-center justify-between border-b p-4"
                 onClick={() => setIsExpanded(false)}
                 aria-label="Close timer summary"
               >
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  {timerCount === 1 ? "1 Timer" : `${timerCount} Timers`}
+                <h3 className="text-foreground text-sm font-semibold">
+                  {timerCount === 1
+                    ? t("timer.label_one")
+                    : t("timer.label_other", { count: timerCount })}
                 </h3>
-                <ChevronDownIcon className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+                <ChevronDownIcon className="text-default-500 h-4 w-4" />
               </button>
 
               {/* Timer List */}
@@ -200,6 +196,13 @@ export function TimerDock() {
                   />
                 ))}
               </div>
+
+              {/* Notifications disabled hint */}
+              {notificationsSupported && notificationsDenied && (
+                <div className="border-default-200 text-default-500 border-t px-4 py-2 text-xs">
+                  {t("timer.notifications_disabled_hint")}
+                </div>
+              )}
             </motion.div>
           ) : (
             <motion.button
@@ -209,16 +212,20 @@ export function TimerDock() {
               transition={{ duration: 0.15, delay: 0.2 }}
               type="button"
               onClick={() => setIsExpanded(true)}
-              className={`group flex items-center gap-3 px-4 py-3 transition-all hover:shadow-xl ${
-                topTimer.status === "completed" ? "text-white" : "text-zinc-900 dark:text-white"
-              }`}
+              className={`group text-foreground flex items-center gap-3 px-4 py-3 transition-all hover:shadow-xl`}
             >
               <div className="flex flex-col items-start">
                 <span className="mb-1 max-w-[120px] truncate text-xs leading-none font-medium opacity-75">
-                  {timerCount === 1 ? topTimer.label : `${timerCount} timers`}
+                  {timerCount === 1
+                    ? topTimer.label
+                    : t("timer.label_other", { count: timerCount })}
                 </span>
-                <span className="font-mono text-lg leading-none font-bold tabular-nums">
-                  {formatTime(topTimer.remainingMs)}
+                <span
+                  className={`font-mono text-lg leading-none font-bold tabular-nums ${
+                    topTimer.status === "completed" ? "text-danger" : ""
+                  }`}
+                >
+                  {formatTimerMs(topTimer.remainingMs)}
                 </span>
               </div>
 
@@ -267,82 +274,93 @@ function TimerRow({
   return (
     <div
       className={`flex items-center gap-4 p-4 ${
-        !isLast ? "border-b border-zinc-200/50 dark:border-zinc-700/50" : ""
-      } ${isCompleted ? "bg-red-50/50 dark:bg-red-900/10" : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50"} transition-colors`}
+        !isLast ? "border-default-100 border-b" : ""
+      } hover:bg-default-100/50 transition-colors`}
     >
       {/* Timer Info - Clickable */}
       <button
         type="button"
-        className="min-w-0 flex-1 text-left transition-opacity hover:opacity-70"
+        className="min-w-0 flex-1 cursor-pointer text-left transition-opacity hover:opacity-80"
         onClick={handleTimerClick}
         aria-label={`Go to recipe for ${timer.label}`}
       >
-        <h4 className="mb-1 truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+        <h4
+          className={`mb-1 truncate text-sm font-medium ${isCompleted ? "text-danger" : "text-foreground"}`}
+        >
           {timer.label}
         </h4>
         {timer.recipeName && (
-          <p className="mb-1.5 truncate text-xs text-zinc-500 dark:text-zinc-400">
-            {timer.recipeName}
-          </p>
+          <p className="text-default-500 mb-1.5 truncate text-xs">{timer.recipeName}</p>
         )}
         <div
           className={`font-mono text-xl font-semibold ${
-            isCompleted ? "text-red-600 dark:text-red-500" : "text-zinc-900 dark:text-zinc-100"
+            isCompleted ? "text-danger" : "text-foreground"
           }`}
         >
-          {formatTime(timer.remainingMs)}
+          {formatTimerMs(timer.remainingMs)}
         </div>
       </button>
 
       {/* Controls */}
       <div className="flex shrink-0 items-center gap-2">
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => adjustTimer(timer.id, -smartIncrement)}
-            className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-white"
-            title={`-${formatTime(smartIncrement)}`}
+          <Button
+            isIconOnly
+            aria-label={`Decrease time by ${formatTimerMs(smartIncrement)}`}
+            size="sm"
+            title={`-${formatTimerMs(smartIncrement)}`}
+            variant="light"
+            onPress={() => adjustTimer(timer.id, -smartIncrement)}
           >
             <MinusIcon className="h-4 w-4" />
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={() => adjustTimer(timer.id, smartIncrement)}
-            className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-white"
-            title={`+${formatTime(smartIncrement)}`}
+          <Button
+            isIconOnly
+            aria-label={`Increase time by ${formatTimerMs(smartIncrement)}`}
+            size="sm"
+            title={`+${formatTimerMs(smartIncrement)}`}
+            variant="light"
+            onPress={() => adjustTimer(timer.id, smartIncrement)}
           >
             <PlusIcon className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
-        <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-700" />
+        <div className="bg-default-200 h-8 w-px" />
 
         {isCompleted ? (
-          <button
-            type="button"
-            onClick={() => removeTimer(timer.id)}
-            className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-red-700 hover:shadow"
+          <Button
+            aria-label="Dismiss completed timer"
+            color="danger"
+            size="sm"
+            variant="flat"
+            onPress={() => removeTimer(timer.id)}
           >
             {t("timer.done_action")}
-          </button>
+          </Button>
         ) : (
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => (isRunning ? pauseTimer(timer.id) : startTimer(timer.id))}
-              className="rounded-lg p-2 text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            <Button
+              isIconOnly
+              aria-label={isRunning ? "Pause timer" : "Start timer"}
+              size="sm"
+              variant="light"
+              onPress={() => (isRunning ? pauseTimer(timer.id) : startTimer(timer.id))}
             >
-              {isRunning ? <PauseIcon className="h-5 w-5" /> : <PlayIcon className="h-5 w-5" />}
-            </button>
+              {isRunning ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
+            </Button>
 
-            <button
-              type="button"
-              onClick={() => removeTimer(timer.id)}
-              className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-red-500 dark:hover:bg-zinc-700"
+            <Button
+              isIconOnly
+              aria-label="Dismiss timer"
+              color="danger"
+              size="sm"
+              variant="light"
+              onPress={() => removeTimer(timer.id)}
             >
-              <TrashIcon className="h-5 w-5" />
-            </button>
+              <XMarkIcon className="h-4 w-4" />
+            </Button>
           </div>
         )}
       </div>
