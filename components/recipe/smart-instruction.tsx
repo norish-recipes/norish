@@ -124,6 +124,18 @@ export function SmartInstruction({ text, recipeId, recipeName, stepIndex }: Smar
               </a>
             );
           },
+          strong: ({ children }) => {
+            if (timersEnabled && timerKeywords.enabled && segments.length > 0) {
+              return <strong>{renderWithTimers(children, segments)}</strong>;
+            }
+            return <strong>{children}</strong>;
+          },
+          em: ({ children }) => {
+            if (timersEnabled && timerKeywords.enabled && segments.length > 0) {
+              return <em>{renderWithTimers(children, segments)}</em>;
+            }
+            return <em>{children}</em>;
+          },
           p: ({ children }) => {
             if (timersEnabled && timerKeywords.enabled && segments.length > 0) {
               return <span>{renderWithTimers(children, segments)}</span>;
