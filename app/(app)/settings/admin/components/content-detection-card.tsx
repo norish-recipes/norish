@@ -1,10 +1,11 @@
 "use client";
 
-import { Card, CardBody, CardHeader, Accordion, AccordionItem, Switch, Chip } from "@heroui/react";
+import { Card, CardBody, CardHeader, Accordion, AccordionItem } from "@heroui/react";
 import { DocumentMagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
+import NewFeatureChip from "../../components/new-feature-chip";
 
 import JsonEditor from "./json-editor";
 import TimerKeywordsEditor from "./timer-keywords-editor";
@@ -13,7 +14,6 @@ import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
 
 export default function ContentDetectionCard() {
   const t = useTranslations("settings.admin.contentDetection");
-  const tCommon = useTranslations("common");
   const {
     contentIndicators,
     units,
@@ -44,16 +44,7 @@ export default function ContentDetectionCard() {
             title={
               <div className="flex items-center gap-2">
                 {t("timerKeywords.title")}
-                <Chip
-                  classNames={{
-                    base: "bg-linear-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
-                    content: "drop-shadow-xs shadow-black text-white",
-                  }}
-                  variant="shadow"
-                  size="sm"
-                >
-                  {tCommon("badges.new")}
-                </Chip>
+                <NewFeatureChip />
               </div>
             }
           >
@@ -63,8 +54,8 @@ export default function ContentDetectionCard() {
                 hours={timerKeywords?.hours ?? []}
                 minutes={timerKeywords?.minutes ?? []}
                 seconds={timerKeywords?.seconds ?? []}
-                onUpdate={updateTimerKeywords}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.TIMER_KEYWORDS)}
+                onUpdate={updateTimerKeywords}
               />
             </div>
           </AccordionItem>

@@ -28,6 +28,8 @@ import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 
+import NewFeatureChip from "../../components/new-feature-chip";
+
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export default function SiteAuthTokensCard() {
@@ -113,6 +115,7 @@ export default function SiteAuthTokensCard() {
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <ShieldCheckIcon className="h-5 w-5" />
             {t("title")}
+            <NewFeatureChip />
           </h2>
         </CardHeader>
         <CardBody className="gap-4">
