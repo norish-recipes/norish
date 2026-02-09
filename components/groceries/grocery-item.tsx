@@ -7,6 +7,7 @@ import { Checkbox } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 
 interface GroceryItemProps {
   grocery: GroceryDto;
@@ -32,7 +33,10 @@ function GroceryItemComponent({
   const roundedClass =
     isFirst && isLast ? "rounded-lg" : isFirst ? "rounded-t-lg" : isLast ? "rounded-b-lg" : "";
   const t = useTranslations("groceries.item");
+  const { formatAmountUnit } = useUnitFormatter();
   const hasSubtitle = Boolean(recurringGrocery || recipeName);
+
+  const amountDisplay = formatAmountUnit(grocery.amount, grocery.unit);
 
   return (
     <div
@@ -54,13 +58,13 @@ function GroceryItemComponent({
         {/* Main row: amount/unit + name */}
         <div className="flex w-full items-baseline gap-1.5">
           {/* Highlighted amount/unit */}
-          {(grocery.amount || grocery.unit) && (
+          {amountDisplay && (
             <span
               className={`shrink-0 font-medium ${
                 grocery.isDone ? "text-default-400" : "text-primary"
               }`}
             >
-              {formatAmountUnit(grocery)}
+              {amountDisplay}
             </span>
           )}
           <span
@@ -84,27 +88,6 @@ function GroceryItemComponent({
       </button>
     </div>
   );
-}
-
-/**
- * Format amount and unit for highlighted display
- */
-function formatAmountUnit(grocery: GroceryDto): string {
-  const parts: string[] = [];
-
-  if (grocery.amount && grocery.amount > 0) {
-    // Format amount: show as integer if whole number, otherwise 1 decimal
-    const formattedAmount =
-      grocery.amount % 1 === 0 ? grocery.amount.toString() : grocery.amount.toFixed(1);
-
-    parts.push(formattedAmount);
-  }
-
-  if (grocery.unit) {
-    parts.push(grocery.unit);
-  }
-
-  return parts.join(" ");
 }
 
 export const GroceryItem = memo(GroceryItemComponent);

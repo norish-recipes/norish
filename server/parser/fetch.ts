@@ -1,4 +1,5 @@
 import type { BrowserContext } from "playwright-core";
+import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
 
 import { getBrowser } from "@/server/playwright";
 import { parserLogger as log } from "@/server/logger";
@@ -32,32 +33,65 @@ function getReferer(url: string): string {
   }
 }
 
-export async function fetchViaPlaywright(targetUrl: string): Promise<string> {
+export async function fetchViaPlaywright(
+  targetUrl: string,
+  tokens?: SiteAuthTokenDecryptedDto[]
+): Promise<string> {
   let context: BrowserContext | undefined;
 
   try {
     const browser = await getBrowser();
     const referer = getReferer(targetUrl);
 
+    // Build extra HTTP headers, merging any user-provided header tokens
+    const extraHTTPHeaders: Record<string, string> = {
+      "Accept-Language": BROWSER_HEADERS["Accept-Language"],
+      "Cache-Control": BROWSER_HEADERS["Cache-Control"],
+      "Sec-Ch-Ua": BROWSER_HEADERS["Sec-Ch-Ua"],
+      "Sec-Ch-Ua-Mobile": BROWSER_HEADERS["Sec-Ch-Ua-Mobile"],
+      "Sec-Ch-Ua-Platform": BROWSER_HEADERS["Sec-Ch-Ua-Platform"],
+      "Sec-Fetch-Dest": BROWSER_HEADERS["Sec-Fetch-Dest"],
+      "Sec-Fetch-Mode": BROWSER_HEADERS["Sec-Fetch-Mode"],
+      "Sec-Fetch-Site": BROWSER_HEADERS["Sec-Fetch-Site"],
+      "Sec-Fetch-User": BROWSER_HEADERS["Sec-Fetch-User"],
+      "Upgrade-Insecure-Requests": BROWSER_HEADERS["Upgrade-Insecure-Requests"],
+      Referer: referer,
+      DNT: BROWSER_HEADERS["DNT"],
+    };
+
+    const headerTokens = tokens?.filter((t) => t.type === "header") ?? [];
+
+    for (const token of headerTokens) {
+      extraHTTPHeaders[token.name] = token.value;
+    }
+
     context = await browser.newContext({
       userAgent: BROWSER_HEADERS["User-Agent"],
       viewport: { width: 1920, height: 1080 },
       locale: "en-US",
-      extraHTTPHeaders: {
-        "Accept-Language": BROWSER_HEADERS["Accept-Language"],
-        "Cache-Control": BROWSER_HEADERS["Cache-Control"],
-        "Sec-Ch-Ua": BROWSER_HEADERS["Sec-Ch-Ua"],
-        "Sec-Ch-Ua-Mobile": BROWSER_HEADERS["Sec-Ch-Ua-Mobile"],
-        "Sec-Ch-Ua-Platform": BROWSER_HEADERS["Sec-Ch-Ua-Platform"],
-        "Sec-Fetch-Dest": BROWSER_HEADERS["Sec-Fetch-Dest"],
-        "Sec-Fetch-Mode": BROWSER_HEADERS["Sec-Fetch-Mode"],
-        "Sec-Fetch-Site": BROWSER_HEADERS["Sec-Fetch-Site"],
-        "Sec-Fetch-User": BROWSER_HEADERS["Sec-Fetch-User"],
-        "Upgrade-Insecure-Requests": BROWSER_HEADERS["Upgrade-Insecure-Requests"],
-        Referer: referer,
-        DNT: BROWSER_HEADERS["DNT"],
-      },
+      extraHTTPHeaders,
     });
+
+    // Inject cookie-type tokens into the browser context
+    const cookieTokens = tokens?.filter((t) => t.type === "cookie") ?? [];
+
+    if (cookieTokens.length > 0) {
+      let domain: string;
+
+      try {
+        domain = new URL(targetUrl).hostname;
+      } catch {
+        domain = targetUrl;
+      }
+      await context.addCookies(
+        cookieTokens.map((token) => ({
+          name: token.name,
+          value: token.value,
+          domain,
+          path: "/",
+        }))
+      );
+    }
 
     const page = await context.newPage();
 

@@ -1,6 +1,4 @@
-export * from "@/server/db/repositories/planned-recipe";
 export * from "@/server/db/repositories/recipes";
-export * from "@/server/db/repositories/notes";
 export * from "@/server/db/repositories/groceries";
 export * from "@/server/db/repositories/recurring-groceries";
 export * from "@/server/db/repositories/stores";
@@ -15,3 +13,5 @@ export * from "@/server/db/repositories/users";
 export * from "@/server/db/repositories/server-config";
 export * from "@/server/db/repositories/favorites";
 export * from "@/server/db/repositories/user-allergies";
+export * from "@/server/db/repositories/planned-items";
+export * from "@/server/db/repositories/site-auth-tokens";

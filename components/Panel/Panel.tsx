@@ -13,9 +13,7 @@ import React, {
 import { AnimatePresence, motion, useDragControls } from "motion/react";
 import { createPortal } from "react-dom";
 import { Button } from "@heroui/react";
-import { XMarkIcon } from "@heroicons/react/20/solid";
-
-import { useKeyboardOffset } from "@/hooks/use-keyboard-offset";
+import { XMarkIcon } from "@heroicons/react/16/solid";
 
 export const PANEL_HEIGHT_COMPACT = 40;
 export const PANEL_HEIGHT_MEDIUM = 60;
@@ -69,7 +67,6 @@ export const Panel: React.FC<PanelProps> = ({
   const toggle = useCallback(() => setOpen(!open), [open, setOpen]);
   const controls = useDragControls();
   const ref = useRef<HTMLDivElement>(null);
-  const keyboardOffset = useKeyboardOffset();
 
   useEffect(() => setMounted(true), []);
 
@@ -135,8 +132,7 @@ export const Panel: React.FC<PanelProps> = ({
                     initial={{ y: "100%", opacity: 1 }}
                     role="dialog"
                     style={{
-                      height: `calc(${height}dvh + ${keyboardOffset * 0.8}px)`,
-                      transition: "min-height 0.1s ease-out",
+                      height: `${height}dvh`,
                     }}
                     onClick={(e) => e.stopPropagation()}
                     onDragEnd={(_, info) => {

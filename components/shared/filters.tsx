@@ -19,10 +19,18 @@ export default function Filters({ isGlass = false }: FiltersProps) {
   const hasActiveFilters = useMemo(() => {
     const hasSearch = filters.rawInput.trim().length > 0;
     const hasTags = filters.searchTags.length > 0;
+    const hasCategories = filters.categories.length > 0;
     const hasRating = filters.minRating !== null;
+    const hasCookingTime = filters.maxCookingTime !== null;
 
-    return hasSearch || hasTags || hasRating;
-  }, [filters.rawInput, filters.searchTags, filters.minRating]);
+    return hasSearch || hasTags || hasCategories || hasRating || hasCookingTime;
+  }, [
+    filters.rawInput,
+    filters.searchTags,
+    filters.categories,
+    filters.minRating,
+    filters.maxCookingTime,
+  ]);
 
   return (
     <>

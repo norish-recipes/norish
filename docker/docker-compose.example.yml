@@ -53,7 +53,7 @@ services:
       # Redis for real-time events (required)
       REDIS_URL: redis://redis:6379
     healthcheck:
-      test: ["CMD", "curl", "--connect-timeout", "15", "--silent", "--show-error", "--fail", "http://localhost:3000/api/health"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode===200?0:1))\""]
       interval: 1m
       timeout: 15s
       retries: 3
@@ -64,7 +64,7 @@ services:
 
   # PostgreSQL Database
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     container_name: norish-db
     restart: unless-stopped
     environment:

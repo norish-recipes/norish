@@ -24,6 +24,8 @@ import {
   useAutoTaggingMutation,
   useAllergyDetection,
   useAllergyDetectionMutation,
+  useAutoCategorization,
+  useAutoCategorizationMutation,
 } from "@/hooks/recipes";
 import { useActiveAllergies } from "@/hooks/user";
 import { useTRPC } from "@/app/providers/trpc-provider";
@@ -45,6 +47,8 @@ type Ctx = {
   // Auto-tagging
   isAutoTagging: boolean;
   triggerAutoTag: () => void;
+  isCategorizing: boolean;
+  triggerAutoCategorize: () => void;
   // Allergy detection
   isDetectingAllergies: boolean;
   triggerAllergyDetection: () => void;
@@ -101,6 +105,20 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
     if (!recipe) return;
     autoTagMutation.mutate({ recipeId: recipe.id });
   }, [recipe, autoTagMutation]);
+
+  const [isCategorizing, setIsCategorizing] = useState(false);
+  const autoCategorizeMutation = useAutoCategorizationMutation();
+
+  useAutoCategorization(
+    recipeId,
+    () => setIsCategorizing(true),
+    () => setIsCategorizing(false)
+  );
+
+  const triggerAutoCategorize = useCallback(() => {
+    if (!recipe) return;
+    autoCategorizeMutation.mutate({ recipeId: recipe.id });
+  }, [recipe, autoCategorizeMutation]);
 
   // Allergy detection hooks
   const [isDetectingAllergies, setIsDetectingAllergies] = useState(false);
@@ -246,6 +264,8 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
       estimateNutrition,
       isAutoTagging,
       triggerAutoTag,
+      isCategorizing,
+      triggerAutoCategorize,
       isDetectingAllergies,
       triggerAllergyDetection,
       allergies,
@@ -266,6 +286,8 @@ export function RecipeContextProvider({ recipeId, children }: ProviderProps) {
       estimateNutrition,
       isAutoTagging,
       triggerAutoTag,
+      isCategorizing,
+      triggerAutoCategorize,
       isDetectingAllergies,
       triggerAllergyDetection,
       allergies,

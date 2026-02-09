@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button, useDisclosure } from "@heroui/react";
-import { Cog6ToothIcon, ArrowPathIcon, CheckIcon } from "@heroicons/react/16/solid";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, CheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
 
 import RestartConfirmationModal from "./restart-confirmation-modal";
+import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function SystemCard() {
   const t = useTranslations("settings.admin.system");
@@ -18,6 +20,8 @@ export default function SystemCard() {
   const [months, setMonths] = useState(schedulerCleanupMonths ?? 3);
   const [saving, setSaving] = useState(false);
   const restartModal = useDisclosure();
+  const hasSchedulerChanges =
+    schedulerCleanupMonths !== undefined && months !== schedulerCleanupMonths;
 
   useEffect(() => {
     if (schedulerCleanupMonths !== undefined) {
@@ -50,7 +54,10 @@ export default function SystemCard() {
       <CardBody className="gap-6">
         {/* Scheduler Settings */}
         <div className="flex flex-col gap-4">
-          <h3 className="font-medium">{t("cleanup.title")}</h3>
+          <h3 className="flex items-center gap-2 font-medium">
+            {t("cleanup.title")}
+            {hasSchedulerChanges && <UnsavedChangesChip />}
+          </h3>
           <Input
             className="max-w-xs"
             label={t("cleanup.label")}
@@ -64,6 +71,7 @@ export default function SystemCard() {
           <div className="flex justify-end">
             <Button
               color="primary"
+              isDisabled={!hasSchedulerChanges}
               isLoading={saving}
               startContent={<CheckIcon className="h-5 w-5" />}
               onPress={handleSaveScheduler}

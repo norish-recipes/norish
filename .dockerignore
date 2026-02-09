@@ -21,3 +21,4 @@ Dockerfile*
 .dockerignore
 .github
 uploads/
+.sisyphus

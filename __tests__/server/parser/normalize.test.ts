@@ -945,7 +945,6 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
       const result = await normalizeRecipeFromJson(json);
 
       expect(result).not.toBeNull();
-      // Empty name should be ignored, just use text
       expect(result?.steps?.[0]?.step).toBe("Mix ingredients.");
     });
 
@@ -965,7 +964,6 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
       const result = await normalizeRecipeFromJson(json);
 
       expect(result).not.toBeNull();
-      // Whitespace name should be ignored
       expect(result?.steps?.[0]?.step).toBe("Mix ingredients.");
     });
 
@@ -985,7 +983,6 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
       const result = await normalizeRecipeFromJson(json);
 
       expect(result).not.toBeNull();
-      // Empty text should result in name only (no bold formatting)
       expect(result?.steps?.[0]?.step).toBe("Mix everything");
     });
 
@@ -1027,5 +1024,80 @@ describe("normalizeRecipeFromJson - Notes", () => {
 
     expect(result).not.toBeNull();
     expect(result?.notes).toBe("Use ripe tomatoes and rest for 10 minutes.");
+  });
+});
+
+describe("recipeCategory extraction", () => {
+  it("extracts recipeCategory as string and maps to enum", async () => {
+    const json = {
+      name: "Pancakes",
+      recipeIngredient: ["flour"],
+      recipeInstructions: ["Mix"],
+      recipeCategory: "breakfast",
+    };
+    const result = await normalizeRecipeFromJson(json);
+
+    expect(result?.categories).toEqual(["Breakfast"]);
+  });
+
+  it("extracts recipeCategory as array", async () => {
+    const json = {
+      name: "Eggs",
+      recipeIngredient: ["eggs"],
+      recipeInstructions: ["Cook"],
+      recipeCategory: ["breakfast", "dinner"],
+    };
+    const result = await normalizeRecipeFromJson(json);
+
+    expect(result?.categories).toContain("Breakfast");
+    expect(result?.categories).toContain("Dinner");
+  });
+
+  it("handles comma-separated recipeCategory string", async () => {
+    const json = {
+      name: "Toast",
+      recipeIngredient: ["bread"],
+      recipeInstructions: ["Toast"],
+      recipeCategory: "breakfast, snack",
+    };
+    const result = await normalizeRecipeFromJson(json);
+
+    expect(result?.categories).toContain("Breakfast");
+    expect(result?.categories).toContain("Snack");
+  });
+
+  it("ignores unmappable recipeCategory values gracefully", async () => {
+    const json = {
+      name: "Mystery",
+      recipeIngredient: ["stuff"],
+      recipeInstructions: ["Do things"],
+      recipeCategory: "exotic fusion cuisine",
+    };
+    const result = await normalizeRecipeFromJson(json);
+
+    expect(result?.categories).toEqual([]);
+  });
+
+  it("returns empty categories when recipeCategory missing", async () => {
+    const json = {
+      name: "Simple",
+      recipeIngredient: ["water"],
+      recipeInstructions: ["Boil"],
+    };
+    const result = await normalizeRecipeFromJson(json);
+
+    expect(result?.categories).toEqual([]);
+  });
+
+  it("maps alternative category names (entree -> Dinner)", async () => {
+    const json = {
+      name: "Steak",
+      recipeIngredient: ["steak"],
+      recipeInstructions: ["Grill"],
+      recipeCategory: "entree",
+    };
+    const result = await normalizeRecipeFromJson(json);
+
+    expect(result?.categories).toEqual(["Dinner"]);
   });
 });

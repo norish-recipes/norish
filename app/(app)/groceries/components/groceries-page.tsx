@@ -18,7 +18,7 @@ import {
   BuildingStorefrontIcon,
   BookOpenIcon,
   CheckIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useGroceriesContext, useGroceriesUIContext } from "../context";
@@ -127,19 +127,17 @@ export function GroceriesPage() {
 
   return (
     <>
-      {/* Mobile: Full screen breakout layout */}
-      {/* Desktop: Contained layout with max-width */}
-      <div className="-mx-6 -mt-10 flex min-h-0 w-screen flex-1 flex-col md:mx-auto md:mt-0 md:w-full md:max-w-7xl md:gap-6 md:p-6">
+      <div className="flex min-h-0 w-full flex-1 flex-col">
         {/* Header */}
-        {/* Mobile: Sticky with backdrop blur */}
-        {/* Desktop: Static with inline layout */}
-        <div className="bg-background/80 sticky top-0 z-10 flex items-center justify-between px-4 pt-12 pb-3 backdrop-blur-lg md:static md:bg-transparent md:px-0 md:pt-0 md:pb-0 md:backdrop-blur-none">
+        <div className="mb-6 flex min-h-10 shrink-0 items-center justify-between">
           <h1 className="text-2xl font-bold">{t("title")}</h1>
           <div className="flex items-center gap-2">
             {/* Desktop add button: Full text with icon */}
             <Button
-              className="hidden md:flex"
+              className="hidden font-medium md:flex"
               color="primary"
+              radius="full"
+              size="md"
               startContent={<PlusIcon className="h-5 w-5" />}
               onPress={() => setAddGroceryPanelOpen(true)}
             >
@@ -211,9 +209,7 @@ export function GroceriesPage() {
         </div>
 
         {/* Grocery list */}
-        {/* Mobile: Padding for fixed add button */}
-        {/* Desktop: Standard overflow */}
-        <div className="flex-1 overflow-y-auto px-4 pb-24 md:px-0 md:pb-0">
+        <div className="flex-1 overflow-y-auto">
           {viewMode === "store" ? (
             <GroceryList
               getRecipeNameForGrocery={getRecipeNameForGrocery}

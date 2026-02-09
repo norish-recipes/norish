@@ -320,10 +320,13 @@ async function extractMealieImage(zip: JSZip, recipeId: string): Promise<Buffer 
  */
 function resolveIngredientName(
   ing: MealieIngredient,
-  foodsMap: Map<string, MealieFood>
+  foodsMap: Map<string, MealieFood>,
+  options?: { preferOriginalText?: boolean }
 ): string | null {
+  const preferOriginalText = options?.preferOriginalText ?? true;
+
   // Priority 1: original_text is the complete unparsed input
-  if (ing.original_text && ing.original_text.trim()) {
+  if (preferOriginalText && ing.original_text && ing.original_text.trim()) {
     return ing.original_text.trim();
   }
 
@@ -442,7 +445,8 @@ export async function parseMealieRecipeToDTO(
 
   for (const ing of recipeIngredients) {
     // Determine the raw text to parse from (priority: original_text > note)
-    const rawText = ing.original_text?.trim() || ing.note?.trim();
+    const originalText = ing.original_text?.trim();
+    const rawText = originalText || ing.note?.trim();
 
     // Check if this is an unparsed ingredient:
     // - No food_id (not parsed by Mealie)
@@ -474,8 +478,15 @@ export async function parseMealieRecipeToDTO(
       continue;
     }
 
-    // For parsed ingredients, use the resolved values from Mealie
-    const ingredientName = resolveIngredientName(ing, lookups.foods);
+    const parsedFromOriginalText = originalText
+      ? parseIngredientWithDefaults(originalText, units)[0]
+      : null;
+
+    // For parsed ingredients, prefer parsed description from original_text to avoid
+    // duplicating amount/unit in ingredientName (e.g. "1 tbsp 1 tablespoon butter").
+    const ingredientName =
+      parsedFromOriginalText?.description?.trim() ||
+      resolveIngredientName(ing, lookups.foods, { preferOriginalText: false });
 
     // Skip completely empty ingredients (no food_id, no original_text, empty note)
     if (!ingredientName) {
@@ -487,8 +498,13 @@ export async function parseMealieRecipeToDTO(
 
     ingredientArray.push({
       name: ingredientName,
-      amount: ing.quantity && ing.quantity > 0 ? ing.quantity : null,
-      unit: unitName,
+      amount:
+        parsedFromOriginalText?.quantity != null
+          ? parsedFromOriginalText.quantity
+          : ing.quantity && ing.quantity > 0
+            ? ing.quantity
+            : null,
+      unit: parsedFromOriginalText?.unitOfMeasureID || unitName,
     });
   }
 

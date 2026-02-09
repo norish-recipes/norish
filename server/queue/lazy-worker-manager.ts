@@ -33,6 +33,12 @@ const WARM_IDLE_TIMEOUT_MS = 30_000; // 30 seconds - pause worker
  */
 const COLD_SHUTDOWN_TIMEOUT_MS = 300_000; // 5 minutes - destroy worker
 
+/**
+ * Polling interval to catch any jobs that might have been missed due to
+ * Redis pub/sub message loss or race conditions during initialization.
+ */
+const POLLING_INTERVAL_MS = 3_600_000; // 1 hour
+
 interface LazyWorkerConfig<T> {
   queueName: string;
   processor: Processor<T>;
@@ -48,6 +54,8 @@ interface LazyWorkerState<T> {
   isRunning: boolean;
   warmIdleTimer: NodeJS.Timeout | null;
   coldShutdownTimer: NodeJS.Timeout | null;
+  pollingTimer: NodeJS.Timeout | null;
+  operationLock: Promise<void>; // Mutex for state transitions
 }
 
 // Use globalThis to survive HMR in development
@@ -115,6 +123,8 @@ export async function createLazyWorker<T>(
     isRunning: false,
     warmIdleTimer: null,
     coldShutdownTimer: null,
+    pollingTimer: null,
+    operationLock: Promise.resolve(),
   };
 
   registry.set(queueName, state as LazyWorkerState<unknown>);
@@ -144,12 +154,28 @@ async function initializeQueueEvents<T>(state: LazyWorkerState<T>): Promise<void
 
   state.queueEvents = queueEvents;
 
+  // CRITICAL: Check for existing waiting jobs BEFORE attaching event listeners
+  // This eliminates the race condition where jobs could be added between
+  // waitUntilReady() and the 'waiting' event listener attachment
+  const initialCounts = await queue.getJobCounts("waiting");
+
+  if (initialCounts.waiting > 0) {
+    log.info(
+      { queueName, waiting: initialCounts.waiting },
+      "Found existing waiting jobs during init, starting worker"
+    );
+    await ensureWorkerRunning(state);
+  }
+
   // Use 'waiting' event - more reliable than 'added'
   // 'waiting' fires when job is ready to be processed
   queueEvents.on("waiting", ({ jobId }) => {
     log.debug({ queueName, jobId }, "Job waiting, ensuring worker is running");
     clearAllTimers(state);
-    ensureWorkerRunning(state);
+    // CRITICAL: Await ensureWorkerRunning to prevent race conditions
+    void ensureWorkerRunning(state).catch((err) => {
+      log.error({ err, queueName }, "Failed to ensure worker running on waiting event");
+    });
   });
 
   // Set idle timer when queue empties
@@ -158,49 +184,55 @@ async function initializeQueueEvents<T>(state: LazyWorkerState<T>): Promise<void
     scheduleWarmIdle(state);
   });
 
-  // CRITICAL: Check for jobs that were already waiting before we attached listeners
-  // This handles jobs added before server started or during the initialization gap
-  const counts = await queue.getJobCounts("waiting");
-
-  if (counts.waiting > 0) {
-    log.info(
-      { queueName, waiting: counts.waiting },
-      "Found existing waiting jobs, starting worker"
-    );
-    ensureWorkerRunning(state);
-  }
+  // Start periodic polling as a safety net for missed events
+  startPolling(state);
 }
 
 /**
  * Ensure the worker is running. Creates if needed, resumes if paused.
+ * Uses mutex to prevent race conditions during state transitions.
  */
 async function ensureWorkerRunning<T>(state: LazyWorkerState<T>): Promise<void> {
   const { queueName } = state.config;
 
-  // Already running and not paused
-  if (state.worker && state.isRunning && !state.worker.isPaused()) {
-    return;
-  }
+  // Use mutex to prevent concurrent state modifications
+  const previousLock = state.operationLock;
+  let releaseLock: () => void;
 
-  // Worker exists but is paused - resume it
-  if (state.worker && state.worker.isPaused()) {
-    log.info({ queueName }, "Resuming paused lazy worker");
+  state.operationLock = new Promise<void>((resolve) => {
+    releaseLock = resolve;
+  });
 
-    try {
-      await state.worker.resume();
-      state.isRunning = true;
-    } catch (err) {
-      log.error({ err, queueName }, "Failed to resume lazy worker, recreating");
-      await destroyWorker(state);
-      await createWorkerInstance(state);
+  try {
+    await previousLock;
+
+    // Already running and not paused
+    if (state.worker && state.isRunning && !state.worker.isPaused()) {
+      return;
     }
 
-    return;
-  }
+    // Worker exists but is paused - resume it
+    if (state.worker && state.worker.isPaused()) {
+      log.info({ queueName }, "Resuming paused lazy worker");
 
-  // No worker exists - create one
-  if (!state.worker) {
-    await createWorkerInstance(state);
+      try {
+        await state.worker.resume();
+        state.isRunning = true;
+      } catch (err) {
+        log.error({ err, queueName }, "Failed to resume lazy worker, recreating");
+        await destroyWorker(state);
+        await createWorkerInstance(state);
+      }
+
+      return;
+    }
+
+    // No worker exists - create one
+    if (!state.worker) {
+      await createWorkerInstance(state);
+    }
+  } finally {
+    releaseLock!();
   }
 }
 
@@ -283,6 +315,49 @@ function clearAllTimers<T>(state: LazyWorkerState<T>): void {
   if (state.coldShutdownTimer) {
     clearTimeout(state.coldShutdownTimer);
     state.coldShutdownTimer = null;
+  }
+}
+
+/**
+ * Start periodic polling as a safety net for missed Redis events.
+ * Checks every hour for any waiting jobs that might have been missed.
+ */
+function startPolling<T>(state: LazyWorkerState<T>): void {
+  const { queueName } = state.config;
+
+  // Clear existing polling timer if any
+  if (state.pollingTimer) {
+    clearInterval(state.pollingTimer);
+  }
+
+  state.pollingTimer = setInterval(async () => {
+    if (!state.queue) return;
+
+    try {
+      const counts = await state.queue.getJobCounts("waiting");
+
+      if (counts.waiting > 0) {
+        log.info(
+          { queueName, waiting: counts.waiting },
+          "Polling: found waiting jobs, ensuring worker is running"
+        );
+        await ensureWorkerRunning(state);
+      }
+    } catch (err) {
+      log.error({ err, queueName }, "Polling: failed to check job counts");
+    }
+  }, POLLING_INTERVAL_MS);
+
+  log.debug({ queueName, intervalMs: POLLING_INTERVAL_MS }, "Started polling safety net");
+}
+
+/**
+ * Stop polling for a lazy worker.
+ */
+function stopPolling<T>(state: LazyWorkerState<T>): void {
+  if (state.pollingTimer) {
+    clearInterval(state.pollingTimer);
+    state.pollingTimer = null;
   }
 }
 
@@ -381,6 +456,7 @@ export async function stopLazyWorker(queueName: string): Promise<void> {
   log.info({ queueName }, "Stopping lazy worker");
 
   clearAllTimers(state);
+  stopPolling(state as LazyWorkerState<unknown>);
 
   // Destroy worker
   await destroyWorker(state as LazyWorkerState<unknown>);

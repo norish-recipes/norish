@@ -1,17 +1,15 @@
 import { startOfMonth, subMonths, format } from "date-fns";
+import { lte } from "drizzle-orm";
 
 import { SERVER_CONFIG } from "@/config/env-config-server";
-import { deletePlannedRecipesBefore } from "@/server/db/repositories/planned-recipe";
-import { deleteNotesBefore } from "@/server/db/repositories/notes";
+import { db } from "@/server/db/drizzle";
+import { plannedItems } from "@/server/db/schema";
 import { schedulerLogger } from "@/server/logger";
 
-// Cleans up planned recipes and notes older.
 export async function cleanupOldCalendarData(): Promise<{
-  plannedRecipesDeleted: number;
-  notesDeleted: number;
+  plannedItemsDeleted: number;
 }> {
   try {
-    // Calculate cutoff date - first day of (currentMonth - X)
     const retentionMonths = SERVER_CONFIG.SCHEDULER_CLEANUP_MONTHS;
     const today = new Date();
     const cutoffDate = startOfMonth(subMonths(today, retentionMonths));
@@ -22,22 +20,16 @@ export async function cleanupOldCalendarData(): Promise<{
       "Deleting old calendar data"
     );
 
-    // Delete old planned recipes
-    const plannedRecipesDeleted = await deletePlannedRecipesBefore(cutoffDateString);
+    const result = await db.delete(plannedItems).where(lte(plannedItems.date, cutoffDateString));
 
-    schedulerLogger.info({ deleted: plannedRecipesDeleted }, "Deleted old planned recipes");
+    const plannedItemsDeleted = result.rowCount ?? 0;
 
-    // Delete old notes
-    const notesDeleted = await deleteNotesBefore(cutoffDateString);
+    schedulerLogger.info({ deleted: plannedItemsDeleted }, "Old calendar cleanup complete");
 
-    schedulerLogger.info({ deleted: notesDeleted }, "Deleted old notes");
-
-    schedulerLogger.info({ plannedRecipesDeleted, notesDeleted }, "Old calendar cleanup complete");
-
-    return { plannedRecipesDeleted, notesDeleted };
+    return { plannedItemsDeleted };
   } catch (err) {
     schedulerLogger.error({ err }, "Fatal error during calendar cleanup");
 
-    return { plannedRecipesDeleted: 0, notesDeleted: 0 };
+    return { plannedItemsDeleted: 0 };
   }
 }

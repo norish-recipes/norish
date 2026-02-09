@@ -11,7 +11,7 @@ import {
   Button,
   addToast,
 } from "@heroui/react";
-import { SparklesIcon, ArrowDownTrayIcon } from "@heroicons/react/20/solid";
+import { SparklesIcon, ArrowDownTrayIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useRecipesContext } from "@/context/recipes-context";

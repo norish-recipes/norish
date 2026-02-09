@@ -3,7 +3,7 @@
 import type { RecurringGroceryDto } from "@/types";
 
 import { motion } from "motion/react";
-import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import {

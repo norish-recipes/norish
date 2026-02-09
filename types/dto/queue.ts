@@ -89,7 +89,6 @@ export type AddNutritionEstimationJobResult =
   | { status: "queued"; job: Job<NutritionEstimationJobData> }
   | { status: "duplicate"; existingJobId: string };
 
-// Auto-tagging queue types
 export interface AutoTaggingJobData {
   recipeId: string;
   userId: string;
@@ -101,7 +100,17 @@ export type AddAutoTaggingJobResult =
   | { status: "duplicate"; existingJobId: string }
   | { status: "skipped"; reason: "disabled" };
 
-// Allergy detection queue types
+export interface AutoCategorizationJobData {
+  recipeId: string;
+  userId: string;
+  householdKey: string;
+}
+
+export type AddAutoCategorizationJobResult =
+  | { status: "queued"; job: Job<AutoCategorizationJobData> }
+  | { status: "duplicate"; existingJobId: string }
+  | { status: "skipped"; reason: "disabled" };
+
 export interface AllergyDetectionJobData {
   recipeId: string;
   userId: string;

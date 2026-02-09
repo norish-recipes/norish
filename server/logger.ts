@@ -27,7 +27,10 @@ const logLevel: LogLevel =
  * Development: Pipe output through pino-pretty in dev script
  * Production: Plain JSON to stdout for log aggregation
  */
-const logger = pino({ level: logLevel });
+const logger = pino({
+  level: logLevel,
+  transport: isDev ? { target: "pino-pretty", options: { colorize: true } } : undefined,
+});
 
 export { logger };
 

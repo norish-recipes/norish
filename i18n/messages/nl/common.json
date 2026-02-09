@@ -27,7 +27,11 @@
     "test": "Test",
     "format": "Formatteren",
     "restoreDefaults": "Resetten",
-    "saveChanges": "Wijzigingen opslaan"
+    "saveChanges": "Wijzigingen opslaan",
+    "revealSecret": "Geheim tonen",
+    "hideSecret": "Geheim verbergen",
+    "enterNewValue": "Nieuwe waarde invoeren",
+    "cancelEditing": "Bewerking annuleren"
   },
   "status": {
     "loading": "Laden...",
@@ -49,6 +53,18 @@
     "searchTags": "Zoek tags",
     "favoritesAndRating": "Favorieten & Beoordeling",
     "favorites": "Favorieten",
+    "cookingTime": "Kooktijd",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
+    "categories": "Categorieën",
+    "category": {
+      "breakfast": "Ontbijt",
+      "lunch": "Lunch",
+      "dinner": "Diner",
+      "snack": "Snack"
+    },
     "sortByTitle": "Titel",
     "sortByDate": "Datum",
     "clearFilters": "Filters wissen"
@@ -94,7 +110,7 @@
       "title": "Importeren vanuit klembord",
       "label": "Recepttekst of JSON-LD",
       "placeholder": "Plak hier een recept (vrije tekst) of JSON-LD...",
-      "characters": "{count} / {max} characters",
+      "characters": "{count} / {max} tekens",
       "tooLarge": "Tekst is te groot",
       "maxCharacters": "Maximaal {max} tekens toegestaan",
       "importing": "Importeren...",
@@ -125,6 +141,9 @@
     "bold": "Gebruik <strong>**dubbele sterretjes**</strong> voor bold tekst",
     "recipeLink": "Typ <strong>/receptnaam</strong> om naar een ander recept te linken",
     "helpAriaLabel": "Formateringshulp"
+  },
+  "tagInput": {
+    "placeholder": "Typ tags gescheiden door spaties..."
   },
   "recurrence": {
     "title": "Herhaling",
@@ -164,5 +183,20 @@
       "5": "vrijdag",
       "6": "zaterdag"
     }
+  },
+  "badges": {
+    "new": "Nieuw"
+  },
+  "timer": {
+    "done": "Klaar",
+    "done_action": "Klaar",
+    "one": "Timer",
+    "other": "Timers",
+    "label_one": "1 Timer",
+    "label_other": "{count} Timers",
+    "notification_title": "Timer afgelopen",
+    "notification_body": "{label} is klaar!",
+    "notifications_disabled": "Meldingen zijn uitgeschakeld",
+    "notifications_disabled_hint": "Schakel meldingen in via je browserinstellingen om waarschuwingen te ontvangen wanneer timers op de achtergrond aflopen."
   }
 }

@@ -26,7 +26,7 @@ export const caldavSyncStatus = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     itemId: uuid("item_id").notNull(),
     itemType: caldavItemTypeEnum("item_type").notNull(),
-    plannedItemId: uuid("planned_item_id"), // References planned_recipes.id or notes.id
+    plannedItemId: uuid("planned_item_id"),
     eventTitle: text("event_title").notNull(),
     syncStatus: caldavSyncStatusEnum("sync_status").notNull().default("pending"),
     caldavEventUid: text("caldav_event_uid"),

@@ -27,7 +27,11 @@
     "test": "Testen",
     "format": "Formatieren",
     "restoreDefaults": "Auf Standard zurücksetzen",
-    "saveChanges": "Änderungen speichern"
+    "saveChanges": "Änderungen speichern",
+    "revealSecret": "Geheimnis anzeigen",
+    "hideSecret": "Geheimnis verbergen",
+    "enterNewValue": "Neuen Wert eingeben",
+    "cancelEditing": "Bearbeitung abbrechen"
   },
   "status": {
     "loading": "Wird geladen...",
@@ -42,13 +46,25 @@
     "title": "Filter",
     "search": "Suchen",
     "sort": "Sortieren",
-    "mode": "Modus",
+    "mode": "Übereinstimmung",
     "modeAll": "Alle",
     "modeAny": "Beliebig",
     "tags": "Tags",
     "searchTags": "Tags durchsuchen",
     "favoritesAndRating": "Favoriten & Bewertung",
     "favorites": "Favoriten",
+    "cookingTime": "Kochzeit",
+    "cookingTimeUnder15": "<15 Min",
+    "cookingTimeUnder30": "<30 Min",
+    "cookingTimeUnder60": "<60 Min",
+    "cookingTimeUnder120": "<120 Min",
+    "categories": "Kategorien",
+    "category": {
+      "breakfast": "Frühstück",
+      "lunch": "Mittagessen",
+      "dinner": "Abendessen",
+      "snack": "Snack"
+    },
     "sortByTitle": "Titel",
     "sortByDate": "Datum",
     "clearFilters": "Filter löschen"
@@ -126,6 +142,9 @@
     "recipeLink": "Gib <strong>/Rezeptname</strong> ein, um zu einem anderen Rezept zu verlinken",
     "helpAriaLabel": "Formatierungshilfe"
   },
+  "tagInput": {
+    "placeholder": "Geben Sie Tags getrennt durch Leerzeichen ein..."
+  },
   "recurrence": {
     "title": "Wiederholung",
     "frequency": "Häufigkeit",
@@ -164,5 +183,20 @@
       "5": "Freitag",
       "6": "Samstag"
     }
+  },
+  "badges": {
+    "new": "Neu"
+  },
+  "timer": {
+    "done": "Fertig",
+    "done_action": "Fertig",
+    "one": "Timer",
+    "other": "Timer",
+    "label_one": "1 Timer",
+    "label_other": "{count} Timer",
+    "notification_title": "Timer abgelaufen",
+    "notification_body": "{label} ist fertig!",
+    "notifications_disabled": "Benachrichtigungen sind deaktiviert",
+    "notifications_disabled_hint": "Aktivieren Sie Benachrichtigungen in Ihren Browser-Einstellungen, um Hinweise zu erhalten, wenn Timer im Hintergrund ablaufen."
   }
 }

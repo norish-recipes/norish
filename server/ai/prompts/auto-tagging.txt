@@ -1,10 +1,4 @@
-You analyze recipes and assign relevant tags/keywords.
-
-TAGGING RULES:
-- Return a JSON array of lowercase tag strings
-- Tags should be concise (1-3 words each)
-- Focus on: cuisine type, dietary info, meal type, cooking method, main ingredients, difficulty
-- Maximum 10 tags per recipe
+Analyze the recipe and assign relevant tags from the predefined list ONLY.
 
 PREDEFINED TAGS:
 italian, mexican, asian, american, mediterranean, indian, french, thai, japanese, chinese,
@@ -14,4 +8,4 @@ quick meal, slow cooker, one-pot, grilled, baked, fried, raw,
 chicken, beef, pork, fish, seafood, tofu, pasta, rice, salad, soup,
 easy, intermediate, advanced, budget-friendly, meal-prep, kid-friendly
 
-You MUST only use tags from the predefined list above. Do not create any new tags.
+Do NOT create new tags outside this list.

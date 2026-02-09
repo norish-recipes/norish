@@ -52,6 +52,7 @@
     "delete": "Löschen",
     "autoTag": "Auto-Tagging",
     "autoTagging": "Tags werden generiert...",
+    "autoCategorize": "Automatisch kategorisieren",
     "detectAllergies": "Allergene erkennen",
     "detectingAllergies": "Allergene werden erkannt...",
     "estimateNutrition": "Nährwerte schätzen",
@@ -64,6 +65,11 @@
     "ariaLabel": "Maßeinheit umwandeln",
     "toMetric": "In metrisch umwandeln",
     "toUS": "In US umwandeln"
+  },
+  "deleteModal": {
+    "title": "Rezept löschen",
+    "confirmMessage": "Sind Sie sicher, dass Sie \"{recipeName}\" löschen möchten?",
+    "warning": "Diese Aktion kann nicht rückgängig gemacht werden."
   },
   "form": {
     "createTitle": "Rezept erstellen",
@@ -89,6 +95,14 @@
     "ingredientsHelp": "Geben Sie Zutaten wie \"2 Tassen Mehl\" ein - wir analysieren die Mengen und Einheiten automatisch.",
     "instructionsHelp": "Schreiben Sie klare Schritt-für-Schritt-Anleitungen. Drücken Sie Enter, um zum nächsten Schritt zu gehen.",
     "tagsHelp": "Geben Sie Tags ein und klicken Sie auf Vorschläge zum Hinzufügen. Ausgewählte Tags sind blau, neue Tags haben einen gestrichelten Rahmen.",
+    "tagsAndCategories": "Tags & Kategorien",
+    "categoriesHelp": "Wählen Sie Mahlzeitkategorien für dieses Rezept.",
+    "category": {
+      "breakfast": "Frühstück",
+      "lunch": "Mittagessen",
+      "dinner": "Abendessen",
+      "snack": "Snack"
+    },
     "calories": "Kalorien",
     "fat": "Fett (g)",
     "carbs": "Kohlenhydrate (g)",
@@ -118,9 +132,12 @@
   },
   "carousel": {
     "noImageAvailable": "Kein Bild verfügbar",
+    "noMediaAvailable": "Keine Medien verfügbar",
     "videoPlayer": {
       "mute": "Stummschalten",
-      "unmute": "Ton einschalten"
+      "unmute": "Ton einschalten",
+      "fullscreen": "Vollbild",
+      "exitFullscreen": "Vollbild beenden"
     }
   },
   "validation": {

@@ -3,7 +3,7 @@
 import type { PermissionLevel } from "@/server/db/zodSchemas/server-config";
 
 import { Card, CardBody, CardHeader, Select, SelectItem } from "@heroui/react";
-import { ShieldCheckIcon } from "@heroicons/react/16/solid";
+import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 

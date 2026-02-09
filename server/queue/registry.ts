@@ -14,6 +14,7 @@ import type { ImageImportJobData } from "@/types";
 import type { PasteImportJobData } from "@/types";
 import type { NutritionEstimationJobData } from "@/types";
 import type { AutoTaggingJobData } from "@/types";
+import type { AutoCategorizationJobData } from "@/types";
 import type { AllergyDetectionJobData } from "@/types";
 import type { CaldavSyncJobData } from "@/types";
 
@@ -22,6 +23,7 @@ import { createImageImportQueue } from "./image-import/queue";
 import { createPasteImportQueue } from "./paste-import/queue";
 import { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
 import { createAutoTaggingQueue } from "./auto-tagging/queue";
+import { createAutoCategorizationQueue } from "./auto-categorization/queue";
 import { createAllergyDetectionQueue } from "./allergy-detection/queue";
 import { createCaldavSyncQueue } from "./caldav-sync/queue";
 import { createScheduledTasksQueue, type ScheduledTaskJobData } from "./scheduled-tasks/queue";
@@ -44,6 +46,7 @@ interface QueueRegistry {
   pasteImport: Queue<PasteImportJobData>;
   nutritionEstimation: Queue<NutritionEstimationJobData>;
   autoTagging: Queue<AutoTaggingJobData>;
+  autoCategorization: Queue<AutoCategorizationJobData>;
   allergyDetection: Queue<AllergyDetectionJobData>;
   caldavSync: Queue<CaldavSyncJobData>;
   scheduledTasks: Queue<ScheduledTaskJobData>;
@@ -70,6 +73,7 @@ export function initializeQueues(): QueueRegistry {
     pasteImport: createPasteImportQueue(),
     nutritionEstimation: createNutritionEstimationQueue(),
     autoTagging: createAutoTaggingQueue(),
+    autoCategorization: createAutoCategorizationQueue(),
     allergyDetection: createAllergyDetectionQueue(),
     caldavSync: createCaldavSyncQueue(),
     scheduledTasks: createScheduledTasksQueue(),
@@ -112,6 +116,7 @@ export async function closeAllQueues(): Promise<void> {
     registry.pasteImport.close(),
     registry.nutritionEstimation.close(),
     registry.autoTagging.close(),
+    registry.autoCategorization.close(),
     registry.allergyDetection.close(),
     registry.caldavSync.close(),
     registry.scheduledTasks.close(),

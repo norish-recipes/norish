@@ -22,7 +22,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     className="relative flex min-h-dvh flex-col overflow-x-hidden"
                   >
                     <Navbar />
-                    <main className="container mx-auto flex max-w-7xl flex-1 flex-col px-6 pt-10 pb-20 md:pb-6">
+                    <main
+                      className="container mx-auto flex max-w-7xl flex-1 flex-col px-6 pb-20 md:pb-6"
+                      style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top))" }}
+                    >
                       {children}
                     </main>
                   </div>

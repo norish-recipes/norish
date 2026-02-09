@@ -1,4 +1,4 @@
-import { eq, ilike, inArray, and, asc, desc, sql, or } from "drizzle-orm";
+import { eq, ilike, inArray, and, asc, desc, lte, sql, or } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "../drizzle";
@@ -27,6 +27,7 @@ import { stripHtmlTags } from "@/lib/helpers";
 import { deleteRecipeImagesDir } from "@/server/downloader";
 import {
   RecipeDashboardDTO,
+  RecipeCategory,
   FilterMode,
   SortOrder,
   FullRecipeInsertDTO,
@@ -95,7 +96,7 @@ export async function recipeExistsByUrlForPolicy(
   householdUserIds: string[] | null,
   viewPolicy: "everyone" | "household" | "owner"
 ): Promise<{ exists: boolean; existingRecipeId?: string }> {
-  let whereCondition;
+  let whereCondition: ReturnType<typeof and> | ReturnType<typeof or> | ReturnType<typeof eq>;
 
   switch (viewPolicy) {
     case "everyone":
@@ -244,7 +245,9 @@ export async function listRecipes(
   tagNames?: string[],
   filterMode: FilterMode = "OR",
   sortMode: SortOrder = "dateDesc",
-  minRating?: number
+  minRating?: number,
+  maxCookingTime?: number,
+  categories?: RecipeCategory[]
 ): Promise<{ recipes: RecipeDashboardDTO[]; total: number }> {
   const whereConditions: any[] = [];
 
@@ -380,6 +383,19 @@ export async function listRecipes(
     whereConditions.push(inArray(recipes.id, tagFilteredIds));
   }
 
+  if (categories?.length) {
+    const categoryArray = `{${categories.join(",")}}`;
+
+    whereConditions.push(sql`${recipes.categories} && ${categoryArray}::recipe_category[]`);
+  }
+
+  if (maxCookingTime !== undefined) {
+    const hasTime = sql`(${recipes.totalMinutes} IS NOT NULL OR ${recipes.prepMinutes} IS NOT NULL OR ${recipes.cookMinutes} IS NOT NULL)`;
+    const effectiveMinutes = sql<number>`CASE WHEN ${recipes.totalMinutes} IS NOT NULL THEN ${recipes.totalMinutes} ELSE COALESCE(${recipes.prepMinutes}, 0) + COALESCE(${recipes.cookMinutes}, 0) END`;
+
+    whereConditions.push(and(hasTime, lte(effectiveMinutes, maxCookingTime)));
+  }
+
   const whereClause = whereConditions.length ? and(...whereConditions) : undefined;
 
   const sortMap = {
@@ -407,6 +423,8 @@ export async function listRecipes(
         prepMinutes: true,
         cookMinutes: true,
         totalMinutes: true,
+        calories: true,
+        categories: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -449,6 +467,8 @@ export async function listRecipes(
       prepMinutes: r.prepMinutes ?? null,
       cookMinutes: r.cookMinutes ?? null,
       totalMinutes: r.totalMinutes ?? null,
+      calories: r.calories ?? null,
+      categories: r.categories ?? [],
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
       tags: (r.recipeTags ?? [])
@@ -494,6 +514,8 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
       prepMinutes: true,
       cookMinutes: true,
       totalMinutes: true,
+      calories: true,
+      categories: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -533,6 +555,8 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
     prepMinutes: r.prepMinutes ?? null,
     cookMinutes: r.cookMinutes ?? null,
     totalMinutes: r.totalMinutes ?? null,
+    calories: r.calories ?? null,
+    categories: r.categories ?? [],
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
     tags: (r.recipeTags ?? [])
@@ -579,6 +603,7 @@ export async function createRecipeWithRefs(
     fat: payload.fat ?? null,
     carbs: payload.carbs ?? null,
     protein: payload.protein ?? null,
+    categories: payload.categories ?? [],
   };
 
   const finalRecipeId = await db.transaction(async (tx) => {
@@ -668,6 +693,25 @@ export async function setActiveSystemForRecipe(
   await db.update(recipes).set({ systemUsed: system }).where(eq(recipes.id, recipeId));
 }
 
+export async function updateRecipeCategories(
+  recipeId: string,
+  categories: RecipeCategory[]
+): Promise<void> {
+  await db
+    .update(recipes)
+    .set({ categories, updatedAt: new Date() })
+    .where(eq(recipes.id, recipeId));
+}
+
+export async function getRecipesWithoutCategories(): Promise<{ id: string; name: string }[]> {
+  const rows = await db
+    .select({ id: recipes.id, name: recipes.name })
+    .from(recipes)
+    .where(sql`cardinality(${recipes.categories}) = 0`);
+
+  return rows;
+}
+
 export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
   const full = await db.query.recipes.findFirst({
     where: eq(recipes.id, id),
@@ -688,6 +732,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       fat: true,
       carbs: true,
       protein: true,
+      categories: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -758,6 +803,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     fat: full.fat ?? null,
     carbs: full.carbs ?? null,
     protein: full.protein ?? null,
+    categories: full.categories ?? [],
     steps: ((full.steps as any) ?? []).map((s: any) => ({
       step: s.step,
       systemUsed: s.systemUsed,
@@ -865,6 +911,8 @@ export async function updateRecipeWithRefs(
     if (payload.totalMinutes !== undefined) updateData.totalMinutes = payload.totalMinutes;
     if (payload.systemUsed !== undefined) updateData.systemUsed = payload.systemUsed;
     if (payload.calories !== undefined) updateData.calories = payload.calories;
+    if (payload.categories != undefined && payload.categories?.length > 0)
+      updateData.categories = payload.categories;
     if (payload.fat !== undefined) updateData.fat = payload.fat;
     if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
     if (payload.protein !== undefined) updateData.protein = payload.protein;
@@ -887,8 +935,35 @@ export async function updateRecipeWithRefs(
 
     // Replace ingredients if provided
     if (payload.recipeIngredients !== undefined) {
-      // Delete existing ingredients for this recipe
-      await tx.delete(recipeIngredients).where(eq(recipeIngredients.recipeId, recipeId));
+      // Determine which system is being updated
+      let systemToUpdate = payload.systemUsed;
+
+      // If systemUsed is not provided at top level, infer it from the ingredients themselves
+      if (!systemToUpdate && payload.recipeIngredients.length > 0) {
+        const inferredSystems = new Set(
+          payload.recipeIngredients.map((ri) => ri.systemUsed).filter(Boolean)
+        );
+
+        // If all ingredients use the same system, use that
+        if (inferredSystems.size === 1) {
+          systemToUpdate = Array.from(inferredSystems)[0] as any;
+        }
+      }
+
+      // Only delete ingredients for the system being updated (preserve other systems)
+      if (systemToUpdate) {
+        await tx
+          .delete(recipeIngredients)
+          .where(
+            and(
+              eq(recipeIngredients.recipeId, recipeId),
+              eq(recipeIngredients.systemUsed, systemToUpdate)
+            )
+          );
+      } else {
+        // If we still can't determine the system, this is an error
+        throw new Error("Cannot determine which measurement system to update.");
+      }
 
       // Add new ones
       if (payload.recipeIngredients.length > 0) {
@@ -907,8 +982,28 @@ export async function updateRecipeWithRefs(
 
     // Replace steps if provided
     if (payload.steps !== undefined) {
-      // Delete existing steps for this recipe
-      await tx.delete(stepsTable).where(eq(stepsTable.recipeId, recipeId));
+      // Determine which system is being updated
+      let systemToUpdate = payload.systemUsed;
+
+      // If systemUsed is not provided at top level, infer it from the steps themselves
+      if (!systemToUpdate && payload.steps.length > 0) {
+        const inferredSystems = new Set(payload.steps.map((s) => s.systemUsed).filter(Boolean));
+
+        // If all steps use the same system, use that
+        if (inferredSystems.size === 1) {
+          systemToUpdate = Array.from(inferredSystems)[0] as any;
+        }
+      }
+
+      // Only delete steps for the system being updated (preserve other systems)
+      if (systemToUpdate) {
+        await tx
+          .delete(stepsTable)
+          .where(and(eq(stepsTable.recipeId, recipeId), eq(stepsTable.systemUsed, systemToUpdate)));
+      } else {
+        // If we still can't determine the system, this is an error
+        throw new Error("Cannot determine which measurement system to update.");
+      }
 
       // Add new ones
       if (payload.steps.length > 0) {
@@ -958,6 +1053,95 @@ export async function updateRecipeWithRefs(
       }
     }
   });
+}
+
+export interface RandomRecipeCandidate {
+  id: string;
+  name: string;
+  image: string | null;
+  categories: RecipeCategory[];
+  householdFavoriteCount: number;
+  householdAverageRating: number | null;
+}
+
+export async function getRandomRecipeCandidates(
+  ctx: RecipeListContext,
+  category?: RecipeCategory
+): Promise<RandomRecipeCandidate[]> {
+  const whereConditions: any[] = [];
+
+  const policyCondition = await buildViewPolicyCondition(ctx);
+
+  if (policyCondition) {
+    whereConditions.push(policyCondition);
+  }
+
+  if (category) {
+    whereConditions.push(sql`${category} = ANY(${recipes.categories})`);
+  }
+
+  const whereClause = whereConditions.length ? and(...whereConditions) : undefined;
+
+  const householdUserIds = ctx.householdUserIds ?? [ctx.userId];
+
+  const rows = await db
+    .select({
+      id: recipes.id,
+      name: recipes.name,
+      image: recipes.image,
+      categories: recipes.categories,
+    })
+    .from(recipes)
+    .where(whereClause);
+
+  if (rows.length === 0) return [];
+
+  const recipeIds = rows.map((r) => r.id);
+
+  const { recipeFavorites } = await import("../schema/recipe-favorites");
+  const { recipeRatings } = await import("../schema/recipe-ratings");
+
+  const [favoriteCounts, ratingAverages] = await Promise.all([
+    db
+      .select({
+        recipeId: recipeFavorites.recipeId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(recipeFavorites)
+      .where(
+        and(
+          inArray(recipeFavorites.recipeId, recipeIds),
+          inArray(recipeFavorites.userId, householdUserIds)
+        )
+      )
+      .groupBy(recipeFavorites.recipeId),
+
+    db
+      .select({
+        recipeId: recipeRatings.recipeId,
+        avgRating: sql<number>`avg(${recipeRatings.rating})::float`,
+      })
+      .from(recipeRatings)
+      .where(
+        and(
+          inArray(recipeRatings.recipeId, recipeIds),
+          inArray(recipeRatings.userId, householdUserIds)
+        )
+      )
+      .groupBy(recipeRatings.recipeId),
+  ]);
+
+  const favoriteMap = new Map(favoriteCounts.map((f) => [f.recipeId, f.count]));
+  const ratingMap = new Map(ratingAverages.map((r) => [r.recipeId, r.avgRating]));
+
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    image: r.image,
+    categories: r.categories ?? [],
+    householdFavoriteCount: favoriteMap.get(r.id) ?? 0,
+    householdAverageRating: ratingMap.get(r.id) ?? null,
+  }));
 }
 
 export async function searchRecipesByName(

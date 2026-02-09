@@ -19,6 +19,7 @@ export const ServerConfigKeys = {
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
   PROMPTS: "prompts",
   LOCALE_CONFIG: "locale_config",
+  TIMER_KEYWORDS: "timer_keywords",
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
@@ -99,6 +100,23 @@ export const ContentIndicatorsSchema = z.object({
 export type ContentIndicatorsConfig = z.infer<typeof ContentIndicatorsSchema>;
 
 // ============================================================================
+// Timer Keywords Schema
+// ============================================================================
+
+export const TimerKeywordsSchema = z.object({
+  enabled: z.boolean().default(true),
+  hours: z.array(z.string()).default([]),
+  minutes: z.array(z.string()).default([]),
+  seconds: z.array(z.string()).default([]),
+  isOverridden: z.boolean().default(false),
+});
+
+export type TimerKeywordsConfig = z.infer<typeof TimerKeywordsSchema>;
+
+export const TimerKeywordsInputSchema = TimerKeywordsSchema.omit({ isOverridden: true });
+export type TimerKeywordsInput = z.infer<typeof TimerKeywordsInputSchema>;
+
+// ============================================================================
 // Prompts Schema
 // ============================================================================
 
@@ -137,17 +155,35 @@ export type I18nLocaleConfig = z.infer<typeof I18nLocaleConfigSchema>;
 // Units Schema
 // ============================================================================
 
-export const UnitDefSchema = z.object({
-  short: z.string(),
-  plural: z.string(),
-  alternates: z.array(z.string()),
-});
-
-export type UnitDef = z.infer<typeof UnitDefSchema>;
-
-export const UnitsMapSchema = z.record(z.string(), UnitDefSchema);
+// Locale-aware units configuration
+export const UnitsMapSchema = z.record(
+  z.string(),
+  z.object({
+    short: z.array(z.object({ locale: z.string().min(1), name: z.string().min(1) })).min(1),
+    plural: z.array(z.object({ locale: z.string().min(1), name: z.string().min(1) })).min(1),
+    alternates: z.array(z.string()),
+  })
+);
 
 export type UnitsMap = z.infer<typeof UnitsMapSchema>;
+
+// Units configuration with isOverwritten flag (for database storage)
+export const UnitsConfigSchema = z.object({
+  units: UnitsMapSchema,
+  isOverwritten: z.boolean().default(false),
+});
+
+export type UnitsConfig = z.infer<typeof UnitsConfigSchema>;
+
+// Flat units map (for parse-ingredient library compatibility)
+export type FlatUnitsMap = Record<
+  string,
+  {
+    short: string;
+    plural: string;
+    alternates: string[];
+  }
+>;
 
 // ============================================================================
 // Recurrence Config Schema
@@ -384,7 +420,7 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
     case ServerConfigKeys.AUTH_PROVIDER_GOOGLE:
       return AuthProviderGoogleSchema;
     case ServerConfigKeys.UNITS:
-      return UnitsMapSchema;
+      return UnitsConfigSchema;
     case ServerConfigKeys.CONTENT_INDICATORS:
       return ContentIndicatorsSchema;
     case ServerConfigKeys.RECURRENCE_CONFIG:
@@ -401,6 +437,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return PromptsConfigSchema;
     case ServerConfigKeys.LOCALE_CONFIG:
       return I18nLocaleConfigSchema;
+    case ServerConfigKeys.TIMER_KEYWORDS:
+      return TimerKeywordsSchema;
     default:
       return z.any();
   }

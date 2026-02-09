@@ -83,6 +83,7 @@ export function useRecipesSubscription() {
                   cookMinutes: updatedRecipe.cookMinutes,
                   totalMinutes: updatedRecipe.totalMinutes,
                   tags: updatedRecipe.tags,
+                  categories: updatedRecipe.categories,
                   updatedAt: updatedRecipe.updatedAt,
                 }
               : r

@@ -33,7 +33,6 @@ export function buildIcs(
     "PRODID:-//Norish//CalDavClient//EN",
     "VERSION:2.0",
     "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:${data.uid}`,
     `DTSTAMP:${formatDateUTC(now)}`,

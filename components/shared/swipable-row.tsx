@@ -81,6 +81,7 @@ export type SwipeableRowRef = {
   openRow: () => void;
   closeRow: () => void;
   isOpen: () => boolean;
+  triggerDeleteAnimation: (callback: () => void) => void;
 };
 
 type Props = {
@@ -124,6 +125,44 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
     // Commit overlay width (anchored to right:0)
     const overlayWidth = useMotionValue(0);
 
+    // Commit: right-anchored overlay expands, content fades, container fades, then callback
+    const commitDelete = useCallback(
+      async (action: SwipeAction) => {
+        const w = swipeItemWidth.current;
+
+        if (!w || !swipeContainerRef.current) return;
+
+        // Start overlay at one button width
+        const startW = buttonSize.current + CONTAINER_PADDING;
+
+        setCommitting(action);
+        overlayWidth.set(startW);
+        await new Promise<void>((r) => requestAnimationFrame(() => r()));
+
+        const expand = animate(overlayWidth, w, { duration: 0.22, ease: "easeOut" });
+        const fadeContent = swipeItemRef.current
+          ? animate(swipeItemRef.current, { opacity: 0 }, { duration: 0.18, ease: "easeOut" })
+          : Promise.resolve();
+
+        await Promise.all([expand, fadeContent]);
+
+        await animate(
+          swipeContainerRef.current,
+          { opacity: 0 },
+          { duration: 0.24, ease: "easeOut" }
+        );
+        action.onPress();
+
+        // Reset
+        swipeAmount.jump(0);
+        if (swipeItemRef.current) swipeItemRef.current.style.opacity = "1";
+        if (swipeContainerRef.current) swipeContainerRef.current.style.opacity = "1";
+        overlayWidth.set(0);
+        setCommitting(null);
+      },
+      [overlayWidth, swipeAmount]
+    );
+
     // Imperative API
     useImperativeHandle(
       ref,
@@ -147,8 +186,15 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
           return animate(swipeAmount, 0, { duration, ease: "easeOut" });
         },
         isOpen: () => isOpen,
+        triggerDeleteAnimation: (callback: () => void) => {
+          const dangerAction = actions.find((a) => a.color === "danger");
+
+          if (dangerAction) {
+            commitDelete({ ...dangerAction, onPress: callback });
+          }
+        },
       }),
-      [isOpen, actions.length, rowHeight, swipeAmount]
+      [isOpen, actions, rowHeight, swipeAmount, commitDelete]
     );
 
     // Open flag + callback
@@ -204,44 +250,6 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
         document.removeEventListener("scroll", onScroll, { capture: true } as any);
       };
     }, [isOpen, committing, swipeAmount]);
-
-    // Commit: right-anchored overlay expands, content fades, container fades, then callback
-    const commitDelete = useCallback(
-      async (action: SwipeAction) => {
-        const w = swipeItemWidth.current;
-
-        if (!w || !swipeContainerRef.current) return;
-
-        // Start overlay at one button width
-        const startW = buttonSize.current + CONTAINER_PADDING;
-
-        setCommitting(action);
-        overlayWidth.set(startW);
-        await new Promise<void>((r) => requestAnimationFrame(() => r()));
-
-        const expand = animate(overlayWidth, w, { duration: 0.22, ease: "easeOut" });
-        const fadeContent = swipeItemRef.current
-          ? animate(swipeItemRef.current, { opacity: 0 }, { duration: 0.18, ease: "easeOut" })
-          : Promise.resolve();
-
-        await Promise.all([expand, fadeContent]);
-
-        await animate(
-          swipeContainerRef.current,
-          { opacity: 0 },
-          { duration: 0.24, ease: "easeOut" }
-        );
-        action.onPress();
-
-        // Reset
-        swipeAmount.jump(0);
-        if (swipeItemRef.current) swipeItemRef.current.style.opacity = "1";
-        if (swipeContainerRef.current) swipeContainerRef.current.style.opacity = "1";
-        overlayWidth.set(0);
-        setCommitting(null);
-      },
-      [overlayWidth, swipeAmount]
-    );
 
     const closeRow = () => animate(swipeAmount, 0, { duration: 0.3, ease: "easeOut" });
 

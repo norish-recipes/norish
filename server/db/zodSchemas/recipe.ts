@@ -13,6 +13,8 @@ import { RecipeVideoSchema, RecipeVideosArraySchema } from "./recipe-videos";
 
 import { measurementSystemEnum, recipes } from "@/server/db/schema";
 
+export const recipeCategorySchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
+
 export const RecipeSelectBaseSchema = createSelectSchema(recipes).extend({
   userId: z.string().nullable(),
 });
@@ -34,12 +36,12 @@ export const AuthorSchema = z
 
 export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   systemUsed: true,
-  calories: true,
   fat: true,
   carbs: true,
   protein: true,
 }).extend({
   tags: z.array(TagNameSchema).default([]),
+  categories: z.array(recipeCategorySchema).default([]),
   author: AuthorSchema,
   averageRating: z.number().nullable().optional(),
   ratingCount: z.number().optional(),
@@ -49,6 +51,7 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientsWithIdSchema),
   steps: z.array(StepStepSchema).default([]),
   tags: z.array(TagNameSchema).default([]),
+  categories: z.array(recipeCategorySchema).default([]),
   author: AuthorSchema,
   images: RecipeImagesArraySchema.default([]),
   videos: RecipeVideosArraySchema.default([]),
@@ -58,6 +61,7 @@ export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
   id: z.uuid().optional(),
   recipeIngredients: z.array(RecipeIngredientInputSchema).default([]),
   tags: z.array(TagNameSchema).default([]),
+  categories: z.array(recipeCategorySchema).default([]),
   steps: z.array(StepStepSchema).default([]),
   images: z.array(RecipeImageSchema).max(10).default([]),
   videos: z.array(RecipeVideoSchema).default([]),
@@ -82,9 +86,11 @@ export const RecipeListInputSchema = z.object({
     .array(z.enum(["title", "description", "ingredients", "steps", "tags"]))
     .default(["title", "ingredients"]),
   tags: z.array(z.string()).optional(),
+  categories: z.array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"])).optional(),
   filterMode: z.enum(["AND", "OR"]).default("OR"),
   sortMode: z.enum(["titleAsc", "titleDesc", "dateAsc", "dateDesc"]).default("dateDesc"),
   minRating: z.number().min(1).max(5).optional(),
+  maxCookingTime: z.number().int().min(1).optional(),
 });
 
 export const RecipeGetInputSchema = z.object({

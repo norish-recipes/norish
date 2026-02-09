@@ -1,8 +1,10 @@
 import type { VideoMetadata } from "./types";
+import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
 
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import { execSync } from "node:child_process";
 
 import YTDlpWrapModule from "yt-dlp-wrap";
@@ -101,6 +103,9 @@ function getFfmpegPath(): string | null {
 
 const ytDlpFilename = process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp";
 
+export const DOWNLOAD_VIDEO_FORMAT_SELECTOR =
+  "best[ext=mp4]/bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best";
+
 // In production (Docker), binary is pre-downloaded during build to /app/bin
 // In development, download to current directory on first use
 const ytDlpPath = path.resolve(SERVER_CONFIG.YT_DLP_BIN_DIR, ytDlpFilename);
@@ -136,12 +141,74 @@ export async function ensureYtDlpBinary(): Promise<void> {
   }
 }
 
-export async function getVideoMetadata(url: string): Promise<VideoMetadata> {
+/**
+ * Build additional yt-dlp args for auth tokens.
+ * Header tokens become --add-header flags.
+ * Cookie tokens are written to a temporary Netscape cookie file and referenced via --cookies.
+ * Returns the extra args and a cleanup function for the temp cookie file.
+ */
+export async function buildAuthArgs(
+  tokens: SiteAuthTokenDecryptedDto[],
+  url: string
+): Promise<{ args: string[]; cleanup: () => Promise<void> }> {
+  const args: string[] = [];
+  let cookieFilePath: string | null = null;
+
+  const headerTokens = tokens.filter((t) => t.type === "header");
+
+  for (const token of headerTokens) {
+    args.push("--add-header", `${token.name}: ${token.value}`);
+  }
+
+  const cookieTokens = tokens.filter((t) => t.type === "cookie");
+
+  if (cookieTokens.length > 0) {
+    let domain: string;
+
+    try {
+      domain = new URL(url).hostname;
+    } catch {
+      domain = url;
+    }
+
+    // Write Netscape cookie file format
+    const lines = ["# Netscape HTTP Cookie File", "# https://curl.se/docs/http-cookies.html", ""];
+
+    for (const token of cookieTokens) {
+      // Format: domain  flag  path  secure  expiry  name  value
+      lines.push(`${domain}\tTRUE\t/\tFALSE\t0\t${token.name}\t${token.value}`);
+    }
+
+    cookieFilePath = path.join(
+      os.tmpdir(),
+      `norish-cookies-${Date.now()}-${Math.random().toString(36).substring(7)}.txt`
+    );
+    await fs.writeFile(cookieFilePath, lines.join("\n"), "utf-8");
+    args.push("--cookies", cookieFilePath);
+  }
+
+  const cleanup = async () => {
+    if (cookieFilePath) {
+      await fs.unlink(cookieFilePath).catch(() => {});
+    }
+  };
+
+  return { args, cleanup };
+}
+
+export async function getVideoMetadata(
+  url: string,
+  tokens?: SiteAuthTokenDecryptedDto[]
+): Promise<VideoMetadata> {
   await ensureYtDlpBinary();
   const ytDlpWrap = new YTDlpWrap(ytDlpPath);
 
+  const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
+
   try {
-    const rawInfo = await ytDlpWrap.getVideoInfo(url);
+    const rawInfo = auth
+      ? await ytDlpWrap.getVideoInfo([url, ...auth.args])
+      : await ytDlpWrap.getVideoInfo(url);
 
     // yt-dlp returns an array for Instagram carousel/image posts (one entry per image)
     // For single videos, it returns an object directly
@@ -173,10 +240,15 @@ export async function getVideoMetadata(url: string): Promise<VideoMetadata> {
     }
 
     throw new Error(`Failed to fetch video information: ${errorMessage}`);
+  } finally {
+    await auth?.cleanup();
   }
 }
 
-export async function downloadVideoAudio(url: string): Promise<string> {
+export async function downloadVideoAudio(
+  url: string,
+  tokens?: SiteAuthTokenDecryptedDto[]
+): Promise<string> {
   await ensureYtDlpBinary();
   await fs.mkdir(outputDir, { recursive: true });
 
@@ -184,6 +256,8 @@ export async function downloadVideoAudio(url: string): Promise<string> {
   const timestamp = Date.now();
   const randomId = Math.random().toString(36).substring(7);
   const outputFile = path.join(outputDir, `audio-${timestamp}-${randomId}.wav`);
+
+  const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
 
   try {
     // Download video and extract audio as WAV format
@@ -203,6 +277,7 @@ export async function downloadVideoAudio(url: string): Promise<string> {
       outputFile, // Output file
       "--extractor-args",
       "youtube:player_client=default", // Suppress JS runtime warning
+      ...(auth?.args ?? []),
     ];
 
     // Add ffmpeg location if available
@@ -241,11 +316,16 @@ export async function downloadVideoAudio(url: string): Promise<string> {
     const errorMessage = error.message || "Unknown error";
 
     throw new Error(`Failed to download video: ${errorMessage}`);
+  } finally {
+    await auth?.cleanup();
   }
 }
 
-export async function validateVideoLength(url: string): Promise<void> {
-  const metadata = await getVideoMetadata(url);
+export async function validateVideoLength(
+  url: string,
+  tokens?: SiteAuthTokenDecryptedDto[]
+): Promise<void> {
+  const metadata = await getVideoMetadata(url, tokens);
   const videoConfig = await getVideoConfig();
   const maxLength = videoConfig?.maxLengthSeconds ?? SERVER_CONFIG.VIDEO_MAX_LENGTH_SECONDS;
 
@@ -262,6 +342,132 @@ export async function validateVideoLength(url: string): Promise<void> {
   }
 }
 
+export interface CaptionResult {
+  /** Path to the downloaded caption file (VTT format) */
+  filePath: string | null;
+  /** Whether captions were found and downloaded */
+  found: boolean;
+}
+
+/**
+ * Download auto-generated captions/subtitles for a video.
+ * Returns the path to the VTT file if available, null otherwise.
+ */
+export async function downloadCaptions(
+  url: string,
+  tokens?: SiteAuthTokenDecryptedDto[]
+): Promise<CaptionResult> {
+  await ensureYtDlpBinary();
+  await fs.mkdir(outputDir, { recursive: true });
+
+  const ytDlpWrap = new YTDlpWrap(ytDlpPath);
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(7);
+  const outputTemplate = path.join(outputDir, `caption-${timestamp}-${randomId}`);
+
+  const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
+
+  try {
+    const args = [
+      url,
+      "--write-auto-sub", // Download auto-generated subtitles
+      "--skip-download", // Don't download the video itself
+      "--convert-subs",
+      "vtt", // Convert to VTT format
+      "-o",
+      outputTemplate,
+      "--extractor-args",
+      "youtube:player_client=default",
+      ...(auth?.args ?? []),
+    ];
+
+    await ytDlpWrap.execPromise(args);
+
+    // Find the downloaded VTT file (yt-dlp adds language suffix)
+    const files = await fs.readdir(outputDir);
+    const captionFile = files.find(
+      (f) => f.startsWith(`caption-${timestamp}-${randomId}`) && f.endsWith(".vtt")
+    );
+
+    if (captionFile) {
+      const filePath = path.join(outputDir, captionFile);
+
+      log.info({ filePath }, "Captions downloaded successfully");
+
+      return { filePath, found: true };
+    }
+
+    log.debug({ url }, "No captions found for video");
+
+    return { filePath: null, found: false };
+  } catch (error: unknown) {
+    // Captions not available is not an error - just means we'll use audio transcription
+    log.debug({ url, err: error }, "Could not download captions (may not be available)");
+
+    return { filePath: null, found: false };
+  } finally {
+    await auth?.cleanup();
+  }
+}
+
+/**
+ * Parse VTT caption file and extract plain text content.
+ * Removes timestamps, cue identifiers, and formatting tags.
+ */
+export async function parseVttFile(filePath: string): Promise<string> {
+  const content = await fs.readFile(filePath, "utf-8");
+
+  return parseVttContent(content);
+}
+
+/**
+ * Parse VTT content string and extract plain text.
+ */
+export function parseVttContent(content: string): string {
+  const lines = content.split("\n");
+  const textLines: string[] = [];
+  let inCue = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Skip WEBVTT header and empty lines
+    if (trimmed === "WEBVTT" || trimmed === "") {
+      inCue = false;
+      continue;
+    }
+
+    // Skip timestamp lines (e.g., "00:00:00.000 --> 00:00:05.000")
+    if (trimmed.includes("-->")) {
+      inCue = true;
+      continue;
+    }
+
+    // Skip cue identifiers (numeric or named)
+    if (/^\d+$/.test(trimmed) || /^[a-zA-Z0-9-_]+$/.test(trimmed)) {
+      continue;
+    }
+
+    // If we're in a cue, this is caption text
+    if (inCue) {
+      // Remove VTT formatting tags like <c>, </c>, <b>, etc.
+      const cleanText = trimmed
+        .replace(/<[^>]+>/g, "") // Remove HTML-like tags
+        .replace(/&nbsp;/g, " ") // Replace non-breaking spaces
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .trim();
+
+      if (cleanText && !textLines.includes(cleanText)) {
+        textLines.push(cleanText);
+      }
+    }
+  }
+
+  return textLines.join(" ");
+}
+
 export interface DownloadedVideo {
   /** Path to the downloaded video file */
   filePath: string;
@@ -274,7 +480,10 @@ export interface DownloadedVideo {
  * Returns the path to the downloaded file in a temp directory.
  * The caller is responsible for cleanup.
  */
-export async function downloadVideo(url: string): Promise<DownloadedVideo> {
+export async function downloadVideo(
+  url: string,
+  tokens?: SiteAuthTokenDecryptedDto[]
+): Promise<DownloadedVideo> {
   await ensureYtDlpBinary();
   await fs.mkdir(outputDir, { recursive: true });
 
@@ -283,6 +492,8 @@ export async function downloadVideo(url: string): Promise<DownloadedVideo> {
   const randomId = Math.random().toString(36).substring(7);
   // Use a template that yt-dlp will fill in with the actual extension
   const outputTemplate = path.join(outputDir, `video-${timestamp}-${randomId}.%(ext)s`);
+
+  const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
 
   try {
     const ffmpegBinary = getFfmpegPath();
@@ -294,11 +505,12 @@ export async function downloadVideo(url: string): Promise<DownloadedVideo> {
       url,
       "-o",
       outputTemplate,
-      // Keep original format to avoid re-encoding during download
+      // Prefer progressive MP4 first, then H.264 MP4 DASH, then generic MP4
       "-f",
-      "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+      DOWNLOAD_VIDEO_FORMAT_SELECTOR,
       "--extractor-args",
       "youtube:player_client=default",
+      ...(auth?.args ?? []),
     ];
 
     // Add ffmpeg location if available
@@ -347,6 +559,8 @@ export async function downloadVideo(url: string): Promise<DownloadedVideo> {
     const errorMessage = error.message || "Unknown error";
 
     throw new Error(`Failed to download video: ${errorMessage}`);
+  } finally {
+    await auth?.cleanup();
   }
 }
 

@@ -4,7 +4,11 @@ import type { HouseholdAdminSettingsDto } from "@/types/dto/household";
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button } from "@heroui/react";
-import { ClipboardDocumentIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicons/react/24/outline";
+import {
+  ClipboardDocumentIcon as ClipboardDocumentIconSolid,
+  ArrowPathIcon,
+} from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -89,7 +93,7 @@ export default function JoinCodeCard() {
     <Card>
       <CardHeader>
         <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <ClipboardDocumentIcon className="h-5 w-5" />
+          <ClipboardDocumentIconOutline className="h-5 w-5" />
           {t("title")}
         </h2>
       </CardHeader>
@@ -104,7 +108,7 @@ export default function JoinCodeCard() {
                 value={adminHousehold.joinCode || ""}
               />
               <Button isIconOnly onPress={handleCopyJoinCode}>
-                <ClipboardDocumentIcon className="h-4 w-4" />
+                <ClipboardDocumentIconSolid className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex items-center justify-between">

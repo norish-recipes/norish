@@ -5,7 +5,7 @@ import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 
 import { memo, useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { motion } from "motion/react";
-import { ChevronDownIcon, BookOpenIcon, TagIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, BookOpenIcon, TagIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 import {
   DndContext,

@@ -73,7 +73,7 @@ export function extractNutrition(json: unknown): ParsedNutrition {
   const protein = parseNutritionValue(nutritionObj.proteinContent ?? nutritionObj.protein);
 
   return {
-    calories,
+    calories: calories != null ? Math.round(calories) : null,
     fat: fat != null ? fat.toString() : null,
     carbs: carbs != null ? carbs.toString() : null,
     protein: protein != null ? protein.toString() : null,

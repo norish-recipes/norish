@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
-import { Input, Button } from "@heroui/react";
+import { Input, Button, Chip } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { FullRecipeDTO, MeasurementSystem } from "@/types";
+import { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@/types";
 import { createClientLogger } from "@/lib/logger";
 import TagInput from "@/components/shared/tag-input";
 import SmartTextInput from "@/components/shared/smart-text-input";
@@ -25,6 +25,8 @@ import { useUnitsQuery } from "@/hooks/config";
 import { useRecipeId } from "@/hooks/recipes";
 
 const log = createClientLogger("RecipeForm");
+
+const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
 export interface RecipeFormProps {
   mode: "create" | "edit";
@@ -60,6 +62,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     initialData?.totalMinutes ?? null
   );
   const [tags, setTags] = useState<string[]>(initialData?.tags?.map((t) => t.name) ?? []);
+  const [categories, setCategories] = useState<RecipeCategory[]>(initialData?.categories ?? []);
   const [ingredients, setIngredients] = useState<ParsedIngredient[]>([]);
   const [steps, setSteps] = useState<Step[]>([]);
   const [systemUsed, setSystemUsed] = useState<MeasurementSystem>(
@@ -182,6 +185,12 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     }
   }, [ingredients, manuallySetSystem, units]);
 
+  const toggleCategory = useCallback((category: RecipeCategory) => {
+    setCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+    );
+  }, []);
+
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -253,6 +262,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         protein: protein != null ? protein.toString() : null,
         systemUsed,
         tags: tags.map((t) => ({ name: t })),
+        categories,
         recipeIngredients: ingredients.map((ing, idx) => ({
           ingredientName: ing.ingredientName,
           ingredientId: null,
@@ -300,6 +310,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     totalMinutes,
     systemUsed,
     tags,
+    categories,
     ingredients,
     steps,
     mode,
@@ -455,17 +466,40 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           </div>
         </section>
 
-        {/* 5. Tags */}
+        {/* 5. Tags & Categories */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               5
             </span>
-            {t("tags")}
+            {t("tagsAndCategories")}
           </h2>
-          <div className="ml-0 md:ml-9">
-            <p className="text-default-500 mb-3 text-base">{t("tagsHelp")}</p>
-            <TagInput value={tags} onChange={setTags} />
+          <div className="ml-0 space-y-6 md:ml-9">
+            <div>
+              <p className="text-default-500 mb-3 text-base">{t("tagsHelp")}</p>
+              <TagInput value={tags} onChange={setTags} />
+            </div>
+            <div>
+              <p className="text-default-500 mb-3 text-base">{t("categoriesHelp")}</p>
+              <div className="flex flex-wrap gap-2">
+                {ALL_CATEGORIES.map((category) => {
+                  const active = categories.includes(category);
+
+                  return (
+                    <Chip
+                      key={category}
+                      className="h-8 cursor-pointer px-3 text-sm"
+                      color={active ? "primary" : "default"}
+                      radius="full"
+                      variant={active ? "solid" : "flat"}
+                      onClick={() => toggleCategory(category)}
+                    >
+                      {t(`category.${category.toLowerCase()}`)}
+                    </Chip>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </section>
 

@@ -63,9 +63,36 @@
       "title": "Rezeptarchiv importieren",
       "description": "Importiere Rezepte aus Mela (.melarecipes), Mealie, Tandoor oder Paprika (.zip)-Exporten"
     },
+    "siteAuthTokens": {
+      "title": "Website-Authentifizierungstoken",
+      "description": "Füge Header oder Cookies hinzu, die beim Importieren von Rezepten von bestimmten Websites gesendet werden. Nützlich für Websites, die eine Anmeldung erfordern (z.B. Instagram, Facebook).",
+      "domain": "Domain",
+      "domainPlaceholder": "z.B. instagram.com",
+      "name": "Name",
+      "namePlaceholder": "z.B. Cookie oder Authorization",
+      "value": "Wert",
+      "valuePlaceholder": "Token- oder Cookie-Wert",
+      "type": "Typ",
+      "typeHeader": "Header",
+      "typeCookie": "Cookie",
+      "addButton": "Token hinzufügen",
+      "noTokens": "Keine Website-Authentifizierungstoken konfiguriert.",
+      "tableHeaders": {
+        "domain": "DOMAIN",
+        "name": "NAME",
+        "type": "TYP",
+        "created": "ERSTELLT",
+        "actions": "AKTIONEN"
+      },
+      "deleteModal": {
+        "title": "Token löschen",
+        "message": "Bist du sicher, dass du dieses Authentifizierungstoken löschen möchtest? Importe von dieser Website funktionieren möglicherweise nicht mehr.",
+        "confirmButton": "Token löschen"
+      }
+    },
     "dangerZone": {
       "title": "Gefahrenzone",
-      "description": "Wenn du dein Konto löscht, gibt es kein Zurück. Bitte sei dir sicher.",
+      "description": "Sobald du dein Konto löschst, gibt es kein Zurück mehr. Bitte sei dir sicher.",
       "deleteButton": "Mein Konto löschen",
       "deleteModal": {
         "title": "Konto löschen",
@@ -353,7 +380,11 @@
       "contentIndicators": {
         "title": "Inhalts-Indikatoren",
         "subtitle": "Schlüsselwörter, die Rezept-Seiten identifizieren",
-        "description": "Schema-Indikatoren erkennen strukturierte Rezeptdaten (JSON-LD, Microdata). Inhalts-Indikatoren sind Schlüsselwörter, die darauf hindeuten, dass eine Seite ein Rezept enthält."
+        "description": "Schema-Indikatoren erkennen strukturierte Rezeptdaten (JSON-LD, Microdata). Inhalts-Indikatoren sind Schlüsselwörter, die darauf hindeuten, dass eine Seite ein Rezept enthält.",
+        "timersEnabled": {
+          "title": "Rezept-Timer aktivieren",
+          "description": "Interaktive Timer in Rezepten erkennen und anzeigen"
+        }
       },
       "units": {
         "title": "Maßeinheiten",
@@ -362,8 +393,24 @@
       },
       "recurrence": {
         "title": "Wiederholungsmuster",
-        "subtitle": "Natürlichsprachliche Muster für wiederkehrende Einträge",
-        "description": "Definiere Locale-spezifische Muster zum Analysieren von Wiederholungsregeln aus natürlicher Sprache (z.B. 'jede Woche', 'om de dag')."
+        "subtitle": "Natürlichsprachige Muster für wiederkehrende Einträge",
+        "description": "Definiere gebietsschemaspezifische Muster zum Parsen von Wiederholungsregeln aus natürlicher Sprache (z. B. 'jede Woche', 'jeden Tag')."
+      },
+      "timerKeywords": {
+        "title": "Timer-Schlüsselwörter",
+        "subtitle": "Zeiteinheit-Schlüsselwörter für Timer-Erkennung",
+        "description": "Konfiguriere Schlüsselwörter zur Timer-Erkennung in Rezeptanweisungen. Unterstützt mehrere Sprachen.",
+        "enableToggle": "Timer-Erkennung aktivieren",
+        "hoursLabel": "Stunden-Schlüsselwörter",
+        "hoursPlaceholder": "stunde, stunden, std, h",
+        "hoursHelp": "Schlüsselwörter für Stunden (z.B. stunde, hour, heure, uur)",
+        "minutesLabel": "Minuten-Schlüsselwörter",
+        "minutesPlaceholder": "minute, minuten, min",
+        "minutesHelp": "Schlüsselwörter für Minuten (z.B. minute, minuten, minuut)",
+        "secondsLabel": "Sekunden-Schlüsselwörter",
+        "secondsPlaceholder": "sekunde, sekunden, sek, s",
+        "secondsHelp": "Schlüsselwörter für Sekunden (z.B. sekunde, second, seconde)",
+        "unsavedChanges": "Nicht gespeicherte Änderungen"
       }
     },
     "aiProcessing": {
@@ -380,6 +427,15 @@
       "prompts": {
         "title": "Prompts",
         "subtitle": "Passe KI-Anweisungen für Rezept-Verarbeitung an"
+      },
+      "bulkCategorization": {
+        "title": "Massenkategorisierung",
+        "subtitle": "Nicht kategorisierte Rezepte mit KI kategorisieren",
+        "description": "Alle nicht kategorisierten Rezepte für KI-basierte Kategorieerkennung in die Warteschlange stellen. Kategorien sind Frühstück, Mittagessen, Abendessen und Snack.",
+        "button": "Alle Rezepte kategorisieren",
+        "queued": "{count, plural, =0 {Keine Rezepte zu kategorisieren} one {# Rezept in Warteschlange} other {# Rezepte in Warteschlange}}",
+        "success": "Kategorisierung gestartet",
+        "error": "Kategorisierung konnte nicht gestartet werden"
       }
     },
     "aiConfig": {
@@ -476,8 +532,8 @@
       "autoTaggingDescription": "Dieser Prompt wird verwendet, um Tags für importierte Rezepte zu generieren. Definiere Tagging-Regeln und vordefinierte Tags-Liste.",
       "autoTaggingPlaceholder": "Gib den Auto-Tagging-Prompt ein..."
     },
+    "unsavedChanges": "Ungespeicherte Änderungen",
     "jsonEditor": {
-      "unsavedChanges": "Ungespeicherte Änderungen",
       "placeholder": "Gib JSON-Konfiguration ein...",
       "invalidJson": "Ungültiges JSON-Format",
       "failedToSave": "Speichern fehlgeschlagen",

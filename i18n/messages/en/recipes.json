@@ -52,6 +52,7 @@
     "delete": "Delete",
     "autoTag": "Auto-tag",
     "autoTagging": "Generating tags...",
+    "autoCategorize": "Auto Categorize",
     "detectAllergies": "Detect Allergies",
     "detectingAllergies": "Detecting allergies...",
     "estimateNutrition": "Estimate Nutrition",
@@ -64,6 +65,11 @@
     "ariaLabel": "Convert measurement system",
     "toMetric": "Convert to Metric",
     "toUS": "Convert to US"
+  },
+  "deleteModal": {
+    "title": "Delete Recipe",
+    "confirmMessage": "Are you sure you want to delete \"{recipeName}\"?",
+    "warning": "This action cannot be undone."
   },
   "form": {
     "createTitle": "Create Recipe",
@@ -89,6 +95,14 @@
     "ingredientsHelp": "Type ingredients like \"2 cups flour\" - we'll automatically parse amounts and units.",
     "instructionsHelp": "Write clear step-by-step instructions. Press Enter to move to the next step.",
     "tagsHelp": "Type tags and click suggestions to add. Selected tags are blue, new tags have a dashed border.",
+    "tagsAndCategories": "Tags & Categories",
+    "categoriesHelp": "Select meal categories for this recipe.",
+    "category": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    },
     "calories": "Calories",
     "fat": "Fat (g)",
     "carbs": "Carbs (g)",
@@ -118,9 +132,12 @@
   },
   "carousel": {
     "noImageAvailable": "No image available",
+    "noMediaAvailable": "No media available",
     "videoPlayer": {
       "mute": "Mute",
-      "unmute": "Unmute"
+      "unmute": "Unmute",
+      "fullscreen": "Enter fullscreen",
+      "exitFullscreen": "Exit fullscreen"
     }
   },
   "validation": {

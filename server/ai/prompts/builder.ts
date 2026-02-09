@@ -213,6 +213,8 @@ export async function buildImageExtractionPrompt(allergies?: string[]): Promise<
 
   return `${imagePrompt}${allergyInstruction}${autoTaggingInstruction}
 
+Categorize the recipe as one or more of: Breakfast, Lunch, Dinner, Snack.
+
 Analyze the provided images and extract the complete recipe data. If multiple images are provided, they represent different pages/parts of the same recipe - combine them into a single complete recipe.`;
 }
 

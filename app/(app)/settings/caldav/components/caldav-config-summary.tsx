@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardBody, CardHeader, Chip, Switch, Button, useDisclosure } from "@heroui/react";
+import { ServerIcon } from "@heroicons/react/24/outline";
 import {
-  ServerIcon,
   PencilIcon,
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
   ArrowPathIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";

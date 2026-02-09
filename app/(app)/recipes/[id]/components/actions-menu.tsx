@@ -1,15 +1,22 @@
 "use client";
 import React, { useMemo } from "react";
-import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react";
 import {
+  Button,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  useDisclosure,
+} from "@heroui/react";
+import {
+  EllipsisHorizontalIcon,
   CalendarDaysIcon,
   ShoppingCartIcon,
   PencilSquareIcon,
   TrashIcon,
   DevicePhoneMobileIcon,
   SparklesIcon,
-} from "@heroicons/react/20/solid";
-import { EllipsisHorizontalIcon } from "@heroicons/react/16/solid";
+} from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -17,6 +24,7 @@ import { useRecipeContextRequired } from "../context";
 
 import { useWakeLockContext } from "./wake-lock-context";
 
+import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
 import { cssButtonPill, cssAIGradientText, cssAIIconColor } from "@/config/css-tokens";
 import { MiniGroceries, MiniCalendar } from "@/components/Panel/consumers";
 import { usePermissionsContext } from "@/context/permissions-context";
@@ -40,6 +48,11 @@ export default function ActionsMenu({ id }: Props) {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [openCalendar, setOpenCalendar] = React.useState(false);
   const [openGroceries, setOpenGroceries] = React.useState(false);
+  const {
+    isOpen: isDeleteModalOpen,
+    onOpen: onDeleteModalOpen,
+    onClose: onDeleteModalClose,
+  } = useDisclosure();
   const router = useRouter();
   const { canEditRecipe, canDeleteRecipe, isAutoTaggingEnabled, isAIEnabled } =
     usePermissionsContext();
@@ -48,6 +61,8 @@ export default function ActionsMenu({ id }: Props) {
     recipe,
     isAutoTagging,
     triggerAutoTag,
+    isCategorizing,
+    triggerAutoCategorize,
     isDetectingAllergies,
     triggerAllergyDetection,
     isEstimatingNutrition,
@@ -60,10 +75,15 @@ export default function ActionsMenu({ id }: Props) {
   const canEdit = recipe.userId ? canEditRecipe(recipe.userId) : true;
   const canDelete = recipe.userId ? canDeleteRecipe(recipe.userId) : true;
 
-  const handleDelete = React.useCallback(() => {
+  const handleDeleteClick = React.useCallback(() => {
+    onDeleteModalOpen();
+  }, [onDeleteModalOpen]);
+
+  const handleDeleteConfirm = React.useCallback(() => {
+    onDeleteModalClose();
     deleteRecipe(id);
     router.push("/");
-  }, [deleteRecipe, id, router]);
+  }, [deleteRecipe, id, router, onDeleteModalClose]);
 
   const menuItems = useMemo(() => {
     const items: MenuItem[] = [
@@ -113,6 +133,18 @@ export default function ActionsMenu({ id }: Props) {
       });
     }
 
+    if (isAIEnabled && canEdit) {
+      items.push({
+        key: "auto-categorize",
+        label: t("autoCategorize"),
+        icon: <SparklesIcon className="size-4" />,
+        onPress: () => triggerAutoCategorize(),
+        labelClassName: cssAIGradientText,
+        iconClassName: cssAIIconColor,
+        isDisabled: isCategorizing,
+      });
+    }
+
     // Show allergy detection when AI is enabled, user can edit, and allergies are configured
     const hasAllergies = allergies.length > 0;
 
@@ -146,7 +178,7 @@ export default function ActionsMenu({ id }: Props) {
         key: "delete",
         label: t("delete"),
         icon: <TrashIcon className="size-4" />,
-        onPress: handleDelete,
+        onPress: handleDeleteClick,
         labelClassName: "text-danger",
         iconClassName: "text-danger",
       });
@@ -156,7 +188,7 @@ export default function ActionsMenu({ id }: Props) {
   }, [
     canEdit,
     canDelete,
-    handleDelete,
+    handleDeleteClick,
     id,
     router,
     isSupported,
@@ -172,6 +204,8 @@ export default function ActionsMenu({ id }: Props) {
     triggerAllergyDetection,
     isEstimatingNutrition,
     estimateNutrition,
+    isCategorizing,
+    triggerAutoCategorize,
   ]);
 
   return (
@@ -225,6 +259,13 @@ export default function ActionsMenu({ id }: Props) {
       <MiniGroceries open={openGroceries} recipeId={id} onOpenChange={setOpenGroceries} />
 
       <MiniCalendar open={openCalendar} recipeId={id} onOpenChange={setOpenCalendar} />
+
+      <DeleteRecipeModal
+        isOpen={isDeleteModalOpen}
+        recipeName={recipe.name}
+        onClose={onDeleteModalClose}
+        onConfirm={handleDeleteConfirm}
+      />
     </>
   );
 }

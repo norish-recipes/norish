@@ -86,13 +86,34 @@ const NEUTRAL_UNITS = new Set([
   "slices",
   "portion",
   "portions",
-  // Dutch localized spoons if your parser doesn’t normalize them
+  // Dutch localized spoons if your parser doesn't normalize them
   "tl",
   "theelepel",
   "theelepels",
   "el",
   "eetlepel",
   "eetlepels",
+  // German localized spoons and portion units
+  "esslöffel",
+  "teelöffel",
+  "prise",
+  "prisen",
+  "messerspitze",
+  "messerspitzen",
+  "handvoll",
+  "schuss",
+  "spritzer",
+  "tropfen",
+  "dose",
+  "dosen",
+  "packung",
+  "packungen",
+  "stück",
+  "stücke",
+  "scheibe",
+  "scheiben",
+  "zehe",
+  "zehen",
 ]);
 
 /** Normalize a unit token for lookup. */

@@ -2,6 +2,17 @@
   "page": {
     "title": "Agenda"
   },
+  "mobile": {
+    "today": "Vandaag",
+    "scrollToToday": "Ga naar vandaag"
+  },
+  "editNote": {
+    "title": "Notitie bewerken",
+    "noteLabel": "Notitie",
+    "notePlaceholder": "Voer notitie in...",
+    "date": "Datum",
+    "slot": "Tijdstip"
+  },
   "navigation": {
     "previousMonth": "Vorige maand",
     "nextMonth": "Volgende maand",
@@ -18,15 +29,19 @@
     "sun": "Zo"
   },
   "timeline": {
-    "noItems": "Geen items",
-    "viewGroceries": "Bekijk boodschappen",
+    "noItems": "Geen items gepland",
     "goToRecipe": "Ga naar recept",
-    "deleteItem": "Verwijder item",
-    "itemActions": "Item acties",
-    "viewAllergenWarning": "Bekijk allergenenwaarschuwing",
-    "allergyWarning": "Waarschuwing:",
-    "contains": "Bevat: {allergens}",
-    "addItem": "Item toevoegen"
+    "addItem": "Item toevoegen",
+    "untitled": "Zonder titel",
+    "serving": "portie",
+    "servings": "porties",
+    "noImage": "Geen afbeelding",
+    "note": "Notitie"
+  },
+  "editPlannedRecipe": {
+    "title": "Gepland recept bewerken",
+    "date": "Datum",
+    "slot": "Tijdstip"
   },
   "panel": {
     "addToCalendar": "Toevoegen aan agenda",
@@ -34,6 +49,7 @@
     "noDaysAvailable": "Geen dagen beschikbaar.",
     "searchPlaceholder": "Zoek recepten of voeg notities toe...",
     "addNote": "Notitie toevoegen: {input}",
+    "randomRecipe": "Willekeurig recept",
     "noRecipesFound": "Geen recepten gevonden.",
     "failedToLoadRecipes": "Kan recepten niet laden."
   }

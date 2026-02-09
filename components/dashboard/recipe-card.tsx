@@ -1,13 +1,15 @@
 "use client";
 
 import { ShoppingBagIcon, CalendarDaysIcon, TrashIcon } from "@heroicons/react/20/solid";
-import { Card, CardBody, Image } from "@heroui/react";
+import { Card, CardBody, useDisclosure } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
 import DoubleTapContainer from "../shared/double-tap-container";
+import FallbackImage from "../shared/fallback-image";
+import { DeleteRecipeModal } from "../shared/delete-recipe-modal";
 
 import RecipeMetadata from "./recipe-metadata";
 import RecipeTags from "./recipe-tags";
@@ -18,6 +20,7 @@ import { RecipeDashboardDTO } from "@/types";
 import { formatMinutesHM } from "@/lib/helpers";
 import { useAppStore } from "@/store/useAppStore";
 import { usePermissionsContext } from "@/context/permissions-context";
+import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
 
 type RecipeCardProps = {
   recipe: RecipeDashboardDTO;
@@ -41,12 +44,22 @@ function RecipeCardComponent({
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [groceriesOpen, setGroceriesOpen] = useState(false);
+  const {
+    isOpen: isDeleteModalOpen,
+    onOpen: onDeleteModalOpen,
+    onClose: onDeleteModalClose,
+  } = useDisclosure();
   const t = useTranslations("recipes.card");
+
+  // Automatically prefetch recipe when card enters viewport
+  const cardRef = useRecipePrefetch(recipe.id);
 
   const averageRating = recipe.averageRating ?? null;
 
   const handleNavigate = useCallback(() => {
     if (recipe.id && !open && !mobileSearchOpen) {
+      // Navigate immediately - skeleton shows while data loads
+      // Prefetch is already happening via useRecipePrefetch hook
       router.push(`/recipes/${recipe.id}`);
     }
   }, [router, recipe.id, open, mobileSearchOpen]);
@@ -70,9 +83,19 @@ function RecipeCardComponent({
     onToggleFavorite(recipe.id);
   }, [onToggleFavorite, recipe.id]);
 
-  const deleteRecipeButton = useCallback(() => {
-    onDelete(recipe.id);
-  }, [onDelete, recipe.id]);
+  const handleDeleteClick = useCallback(() => {
+    onDeleteModalOpen();
+    // Keep the row open for the delete animation after confirmation
+    setTimeout(() => rowRef.current?.openRow(), 0);
+  }, [onDeleteModalOpen]);
+
+  const handleDeleteConfirm = useCallback(() => {
+    onDeleteModalClose();
+    // Trigger the delete animation, then delete the recipe
+    rowRef.current?.triggerDeleteAnimation(() => {
+      onDelete(recipe.id);
+    });
+  }, [onDelete, recipe.id, onDeleteModalClose]);
 
   // Check if user can delete this recipe
   // Recipes without owner don not have restrictions
@@ -101,14 +124,14 @@ function RecipeCardComponent({
         key: "delete",
         icon: TrashIcon,
         color: "danger",
-        onPress: deleteRecipeButton,
-        primary: true,
+        onPress: handleDeleteClick,
+        primary: false,
         label: t("deleteRecipe"),
       });
     }
 
     return baseActions;
-  }, [showDeleteAction, deleteRecipeButton, t]);
+  }, [showDeleteAction, handleDeleteClick, t]);
 
   return (
     <>
@@ -119,6 +142,7 @@ function RecipeCardComponent({
         onOpenChange={setOpen}
       >
         <div
+          ref={cardRef}
           data-recipe-card
           className={`relative w-full overflow-hidden transition-all duration-300 ${open ? "rounded-none opacity-70" : "rounded-xl"} `}
           role="button"
@@ -147,12 +171,15 @@ function RecipeCardComponent({
                 {/* Image */}
                 <div className="pointer-events-none absolute inset-0 z-0">
                   {thumbnailImage ? (
-                    <Image
+                    <FallbackImage
                       removeWrapper
                       alt={recipe.name}
                       className={`h-full w-full object-cover transition-transform duration-300 ease-in-out ${open ? "scale-100" : "group-hover/row:scale-110"} `}
+                      fallbackClassName={`transition-all duration-300 ease-in-out ${open ? "scale-100" : "group-hover/row:scale-105"}`}
+                      fallbackMessage={t("noImage")}
                       radius="none"
                       src={thumbnailImage}
+                      variant="hero"
                     />
                   ) : (
                     <div
@@ -220,6 +247,13 @@ function RecipeCardComponent({
         originalServings={recipe.servings || 1}
         recipeId={recipe.id}
         onOpenChange={setGroceriesOpen}
+      />
+
+      <DeleteRecipeModal
+        isOpen={isDeleteModalOpen}
+        recipeName={recipe.name}
+        onClose={onDeleteModalClose}
+        onConfirm={handleDeleteConfirm}
       />
     </>
   );

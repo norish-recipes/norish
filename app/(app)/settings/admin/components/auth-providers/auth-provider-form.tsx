@@ -2,7 +2,7 @@
 
 import type { ProviderKey, FieldDef, TestResult } from "./types";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Input, useDisclosure, addToast } from "@heroui/react";
 
 import { useAdminSettingsContext } from "../../context";
@@ -25,6 +25,7 @@ interface AuthProviderFormProps {
   providerName: string;
   config: Record<string, unknown> | undefined;
   fields: FieldDef[];
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function AuthProviderForm({
@@ -32,6 +33,7 @@ export function AuthProviderForm({
   providerName,
   config,
   fields,
+  onDirtyChange,
 }: AuthProviderFormProps) {
   const {
     updateAuthProviderGitHub,
@@ -56,6 +58,24 @@ export function AuthProviderForm({
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [saving, setSaving] = useState(false);
   const deleteModal = useDisclosure();
+
+  const hasChanges = useMemo(
+    () =>
+      fields.some((field) => {
+        const value = values[field.key] ?? "";
+
+        if (field.secret) {
+          return value.trim() !== "";
+        }
+
+        return value !== ((config?.[field.key] as string) ?? "");
+      }),
+    [fields, values, config]
+  );
+
+  useEffect(() => {
+    onDirtyChange?.(hasChanges);
+  }, [hasChanges, onDirtyChange]);
 
   const handleRevealSecret = useCallback(
     (field: string) => () => fetchConfigSecret(CONFIG_KEYS[providerKey], field),
@@ -148,6 +168,7 @@ export function AuthProviderForm({
       <TestResultDisplay result={testResult} />
 
       <ProviderActions
+        hasChanges={hasChanges}
         hasConfig={!!config}
         saving={saving}
         testing={testing}

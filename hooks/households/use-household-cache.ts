@@ -33,7 +33,6 @@ export function useHouseholdCacheHelpers(): HouseholdCacheHelpers {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const queryKey = trpc.households.get.queryKey();
-  const calendarQueryKey = trpc.calendar.listRecipes.queryKey;
 
   const setHouseholdData = useCallback(
     (updater: (prev: HouseholdData | undefined) => HouseholdData | undefined) => {
@@ -46,15 +45,9 @@ export function useHouseholdCacheHelpers(): HouseholdCacheHelpers {
     queryClient.invalidateQueries({ queryKey });
   }, [queryClient, queryKey]);
 
-  // Invalidate calendar to recompute allergy warnings when allergies change
-  // Uses partial key matching to invalidate all calendar.listRecipes queries
   const invalidateCalendar = useCallback(() => {
-    // Get the base key without params - this matches all listRecipes queries
-    const baseKey = calendarQueryKey({} as { startISO: string; endISO: string });
-
-    // Use just the procedure path for partial matching
-    queryClient.invalidateQueries({ queryKey: [baseKey[0]] });
-  }, [queryClient, calendarQueryKey]);
+    queryClient.invalidateQueries({ queryKey: ["calendar", "combined"] });
+  }, [queryClient]);
 
   return {
     setHouseholdData,

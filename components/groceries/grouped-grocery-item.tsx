@@ -6,22 +6,25 @@ import type { ReactNode } from "react";
 
 import { memo, useState, useCallback } from "react";
 import { Checkbox } from "@heroui/react";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { motion, AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { formatGroupedAmount, formatSourceAmount } from "@/lib/grocery-grouping";
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 
 /**
  * Format inline source breakdown showing recipe names and amounts.
  * e.g., "Recipe A (300g), Recipe B (200g)" or "Recipe A, Recipe B"
  */
-function formatInlineSourceBreakdown(sources: GroupedGrocerySource[]): string {
+function formatInlineSourceBreakdown(
+  sources: GroupedGrocerySource[],
+  formatFn: (amount: number | null | undefined, unit: string | null | undefined) => string
+): string {
   return sources
     .map((source) => {
       const name = source.recipeName ?? "Manual";
-      const amount = formatSourceAmount(source.grocery);
+      const amount = formatFn(source.grocery.amount, source.grocery.unit);
 
       return amount ? `${name} (${amount})` : name;
     })
@@ -57,6 +60,7 @@ function GroupedGroceryItemComponent({
 }: GroupedGroceryItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const t = useTranslations("groceries.item");
+  const { formatAmountUnit } = useUnitFormatter();
 
   const roundedClass =
     isFirst && isLast ? "rounded-lg" : isFirst ? "rounded-t-lg" : isLast ? "rounded-b-lg" : "";
@@ -90,8 +94,8 @@ function GroupedGroceryItemComponent({
     }
   }, [isSingleItem, group.sources, onEdit, isExpanded]);
 
-  // Format the aggregated display
-  const aggregatedDisplay = formatGroupedAmount(group.totalAmount, group.displayUnit);
+  // Format the aggregated display with locale-aware units
+  const aggregatedDisplay = formatAmountUnit(group.totalAmount, group.displayUnit);
 
   // Get recurring info for single item
   const singleSource = isSingleItem ? group.sources[0] : null;
@@ -160,7 +164,7 @@ function GroupedGroceryItemComponent({
           {/* Multiple items: show inline recipe breakdown */}
           {!isSingleItem && (
             <span className="text-default-400 mt-0.5 truncate text-xs">
-              {formatInlineSourceBreakdown(group.sources)}
+              {formatInlineSourceBreakdown(group.sources, formatAmountUnit)}
             </span>
           )}
         </button>
@@ -220,12 +224,13 @@ interface SourceItemProps {
 
 function SourceItem({ source, recurringGroceries, onToggle, onEdit }: SourceItemProps) {
   const { grocery, recipeName } = source;
+  const { formatAmountUnit } = useUnitFormatter();
 
   const recurringGrocery = grocery.recurringGroceryId
     ? (recurringGroceries.find((r) => r.id === grocery.recurringGroceryId) ?? null)
     : null;
 
-  const amountDisplay = formatSourceAmount(grocery);
+  const amountDisplay = formatAmountUnit(grocery.amount, grocery.unit);
   const hasSubtitle = Boolean(recurringGrocery || recipeName);
 
   return (

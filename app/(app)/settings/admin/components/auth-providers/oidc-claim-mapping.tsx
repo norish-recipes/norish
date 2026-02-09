@@ -5,6 +5,7 @@ import { UserGroupIcon, ExclamationTriangleIcon } from "@heroicons/react/16/soli
 import { useTranslations } from "next-intl";
 
 import { RestartRequiredChip } from "../restart-required-chip";
+import { UnsavedChangesChip } from "../unsaved-changes-chip";
 
 export interface ClaimMappingValues {
   enabled: boolean;
@@ -17,9 +18,10 @@ export interface ClaimMappingValues {
 interface OIDCClaimMappingProps {
   values: ClaimMappingValues;
   onChange: (values: ClaimMappingValues) => void;
+  isDirty?: boolean;
 }
 
-export function OIDCClaimMapping({ values, onChange }: OIDCClaimMappingProps) {
+export function OIDCClaimMapping({ values, onChange, isDirty = false }: OIDCClaimMappingProps) {
   const tClaimMapping = useTranslations("settings.admin.authProviders.oidc.claimMapping");
 
   const updateField = <K extends keyof ClaimMappingValues>(
@@ -36,6 +38,7 @@ export function OIDCClaimMapping({ values, onChange }: OIDCClaimMappingProps) {
         <div className="flex items-center gap-2">
           <UserGroupIcon className="text-default-500 h-4 w-4" />
           <span className="text-default-700 font-medium">{tClaimMapping("title")}</span>
+          {isDirty && <UnsavedChangesChip />}
           <RestartRequiredChip />
         </div>
         <Switch

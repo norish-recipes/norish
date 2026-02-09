@@ -63,6 +63,33 @@
       "title": "Importeer Receptarchief",
       "description": "Importeer recepten van Mela (.melarecipes), Mealie, Tandoor of Paprika (.zip) exports"
     },
+    "siteAuthTokens": {
+      "title": "Site-authenticatietokens",
+      "description": "Voeg headers of cookies toe die worden meegestuurd bij het importeren van recepten van specifieke sites. Handig voor sites die inloggen vereisen (bijv. Instagram, Facebook).",
+      "domain": "Domein",
+      "domainPlaceholder": "bijv. instagram.com",
+      "name": "Naam",
+      "namePlaceholder": "bijv. Cookie of Authorization",
+      "value": "Waarde",
+      "valuePlaceholder": "Token- of cookiewaarde",
+      "type": "Type",
+      "typeHeader": "Header",
+      "typeCookie": "Cookie",
+      "addButton": "Token toevoegen",
+      "noTokens": "Geen site-authenticatietokens geconfigureerd.",
+      "tableHeaders": {
+        "domain": "DOMEIN",
+        "name": "NAAM",
+        "type": "TYPE",
+        "created": "AANGEMAAKT",
+        "actions": "ACTIES"
+      },
+      "deleteModal": {
+        "title": "Token verwijderen",
+        "message": "Weet je zeker dat je dit authenticatietoken wilt verwijderen? Imports van deze site werken mogelijk niet meer.",
+        "confirmButton": "Token verwijderen"
+      }
+    },
     "dangerZone": {
       "title": "Gevaarlijke Zone",
       "description": "Zodra je je account verwijdert, is er geen weg meer terug. Wees zeker.",
@@ -197,7 +224,7 @@
       "confirmButton": "Verwijderen"
     },
     "syncStatus": {
-      "title": "Sync Status",
+      "title": "Synchronisatiestatus",
       "syncNow": "Nu synchroniseren",
       "clearFilter": "Filter wissen",
       "clickToFilter": "Klik op een badge om te filteren",
@@ -205,7 +232,7 @@
       "tableHeaders": {
         "item": "ITEM",
         "type": "TYPE",
-        "date": "DATE",
+        "date": "DATUM",
         "meal": "MAALTIJD",
         "status": "STATUS",
         "lastSync": "LAATSTE SYNC",
@@ -293,8 +320,8 @@
       },
       "oauthDescription": "Configureer OAuth-providers voor SSO-authenticatie.",
       "oidc": {
-        "title": "OIDC Provider",
-        "subtitle": "Generic OpenID Connect",
+        "title": "OIDC-aanbieder",
+        "subtitle": "Generiek OpenID Connect",
         "fields": {
           "name": "Providernaam",
           "namePlaceholder": "bijv. Authentik, Keycloak",
@@ -306,13 +333,13 @@
           "wellknownPlaceholder": "Automatisch afgeleid indien leeg"
         },
         "claimMapping": {
-          "title": "Claim Mapping",
+          "title": "Claim-toewijzing",
           "description": "Wijs automatisch rollen en huishoudens toe op basis van OIDC claims. Gebruikers met de admin-groep krijgen serverbeheerdersrechten. Gebruikers met een huishoudgroep worden automatisch aan dat huishouden toegevoegd.",
           "securityWarning": "Let op: Het inschakelen van claim mapping geeft je identity provider controle over adminrechten en huishoudens. Schakel dit alleen in als je je OIDC provider volledig vertrouwt en correct hebt geconfigureerd.",
           "scopes": "Extra Scopes",
           "scopesPlaceholder": "groups, roles",
           "scopesDescription": "Kommagescheiden lijst van extra OAuth scopes om aan te vragen (bijv. groups voor Keycloak)",
-          "groupsClaim": "Groups Claim",
+          "groupsClaim": "Groepen Claim",
           "groupsClaimDescription": "Naam van de claim die gebruikersgroepen/rollen bevat",
           "adminGroup": "Admin Groep",
           "adminGroupDescription": "Groepsnaam die serverbeheerderrol verleent (hoofdletterongevoelig)",
@@ -348,12 +375,16 @@
       }
     },
     "contentDetection": {
-      "title": "Content Detection",
-      "description": "Configure how recipes are detected and parsed from web pages.",
+      "title": "Inhoudsdetectie",
+      "description": "Configureer hoe recepten worden gedetecteerd en verwerkt van webpagina's.",
       "contentIndicators": {
         "title": "Content Indicatoren",
         "subtitle": "Trefwoorden die receptpagina's identificeren",
-        "description": "Schema-indicatoren detecteren gestructureerde receptgegevens (JSON-LD, microdata). Contentindicatoren zijn trefwoorden die suggereren dat een pagina een recept bevat."
+        "description": "Schema-indicatoren detecteren gestructureerde receptgegevens (JSON-LD, microdata). Contentindicatoren zijn trefwoorden die suggereren dat een pagina een recept bevat.",
+        "timersEnabled": {
+          "title": "Recepttimers inschakelen",
+          "description": "Detecteer en toon interactieve timers in recepten"
+        }
       },
       "units": {
         "title": "Meeteenheden",
@@ -362,12 +393,28 @@
       },
       "recurrence": {
         "title": "Herhalingspatronen",
-        "subtitle": "Natural language patterns voor herhalende boodschappen",
-        "description": "Definieer taalafhankelijk patronen voor het herkennen van herhalingsregels (bijv. 'elke week', 'om de dag')."
+        "subtitle": "Natuurlijke taalpatronen voor terugkerende items",
+        "description": "Definieer locale-specifieke patronen voor het parsen van herhalingsregels uit natuurlijke taal (bijv. 'elke week', 'om de dag')."
+      },
+      "timerKeywords": {
+        "title": "Timer trefwoorden",
+        "subtitle": "Tijdseenheid trefwoorden voor timer detectie",
+        "description": "Configureer trefwoorden voor het detecteren van timers in receptinstructies. Ondersteunt meerdere talen.",
+        "enableToggle": "Timer detectie inschakelen",
+        "hoursLabel": "Uur trefwoorden",
+        "hoursPlaceholder": "uur, uren, u",
+        "hoursHelp": "Trefwoorden voor uren (bijv. uur, hour, stunde, heure)",
+        "minutesLabel": "Minuut trefwoorden",
+        "minutesPlaceholder": "minuut, minuten, min",
+        "minutesHelp": "Trefwoorden voor minuten (bijv. minuut, minute, minuten)",
+        "secondsLabel": "Seconde trefwoorden",
+        "secondsPlaceholder": "seconde, seconden, sec",
+        "secondsHelp": "Trefwoorden voor seconden (bijv. seconde, second, sekunde)",
+        "unsavedChanges": "Niet opgeslagen wijzigingen"
       }
     },
     "aiProcessing": {
-      "title": "AI & Processing",
+      "title": "AI & Verwerking",
       "description": "Configureer AI-gestuurde functies voor receptextractie en videobewerking.",
       "aiConfig": {
         "title": "AI Configuratie",
@@ -380,13 +427,22 @@
       "prompts": {
         "title": "Prompts",
         "subtitle": "Pas AI-instructies aan voor receptverwerking"
+      },
+      "bulkCategorization": {
+        "title": "Bulkcategorisatie",
+        "subtitle": "Categoriseer niet-gecategoriseerde recepten met AI",
+        "description": "Zet alle niet-gecategoriseerde recepten in de wachtrij voor AI-gebaseerde categoriedetectie. Categorieën zijn Ontbijt, Lunch, Diner en Snack.",
+        "button": "Alle recepten categoriseren",
+        "queued": "{count, plural, =0 {Geen recepten om te categoriseren} one {# recept in wachtrij} other {# recepten in wachtrij}}",
+        "success": "Categorisatie gestart",
+        "error": "Categorisatie starten mislukt"
       }
     },
     "aiConfig": {
       "enableAI": "AI-functies inschakelen",
       "enableAIDescription": "Gebruik AI om recepten uit ongestructureerde inhoud te extraheren",
       "configureWarning": "Configureer de AI-providerinstellingen hieronder om AI-functies in te schakelen.",
-      "provider": "AI Provider",
+      "provider": "AI-aanbieder",
       "providers": {
         "openai": "OpenAI",
         "azure": "Azure OpenAI",
@@ -476,8 +532,8 @@
       "autoTaggingDescription": "Deze prompt wordt gebruikt om tags te genereren voor geïmporteerde recepten. Definieer taggingregels en een lijst met voorgedefinieerde tags.",
       "autoTaggingPlaceholder": "Voer de auto-tagging prompt in..."
     },
+    "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {
-      "unsavedChanges": "Niet-opgeslagen wijzigingen",
       "placeholder": "Voer JSON-configuratie in...",
       "invalidJson": "Ongeldig JSON-formaat",
       "failedToSave": "Opslaan mislukt",

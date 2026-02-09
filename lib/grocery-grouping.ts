@@ -184,32 +184,3 @@ export function hasGroupableItems(groceries: GroceryDto[], storeId: string | nul
 
   return uniqueNames.size < storeGroceries.length;
 }
-
-export function formatGroupedAmount(amount: number | null, unit: string | null): string {
-  if (amount === null) return "";
-
-  const formattedAmount = amount % 1 === 0 ? amount.toString() : amount.toFixed(1);
-
-  if (unit) {
-    const needsSpace = unit.length > 2;
-
-    return needsSpace ? `${formattedAmount} ${unit}` : `${formattedAmount}${unit}`;
-  }
-
-  return `${formattedAmount}×`;
-}
-
-export function formatSourceAmount(grocery: GroceryDto): string {
-  if (!grocery.amount && !grocery.unit) return "";
-
-  const amount = grocery.amount ?? 1;
-  const formattedAmount = amount % 1 === 0 ? amount.toString() : amount.toFixed(1);
-
-  if (grocery.unit) {
-    const needsSpace = grocery.unit.length > 2;
-
-    return needsSpace ? `${formattedAmount} ${grocery.unit}` : `${formattedAmount}${grocery.unit}`;
-  }
-
-  return `${formattedAmount}×`;
-}

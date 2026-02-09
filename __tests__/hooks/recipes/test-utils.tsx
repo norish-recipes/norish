@@ -183,6 +183,7 @@ export function createMockRecipe(overrides: Partial<RecipeDashboardDTO> = {}): R
     prepMinutes: 15,
     cookMinutes: 30,
     totalMinutes: 45,
+    calories: null,
     createdAt: now,
     updatedAt: now,
     tags: [],

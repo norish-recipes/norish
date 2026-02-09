@@ -13,6 +13,7 @@
 import defaultUnits from "./units.default.json";
 import defaultContentIndicators from "./content-indicators.default.json";
 import defaultRecurrenceConfig from "./recurrence-config.default.json";
+import defaultTimerKeywords from "./timer-keywords.default.json";
 
 import {
   ServerConfigKeys,
@@ -25,6 +26,7 @@ import {
   type PromptsConfig,
   type AutoTaggingMode,
   type I18nLocaleConfig,
+  type TimerKeywordsConfig,
   DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "@/server/db/zodSchemas/server-config";
 import { getConfig } from "@/server/db/repositories/server-config";
@@ -47,9 +49,11 @@ export async function isRegistrationEnabled(): Promise<boolean> {
  * Get units configuration
  */
 export async function getUnits(): Promise<UnitsMap> {
-  const value = await getConfig<UnitsMap>(ServerConfigKeys.UNITS);
+  const value = await getConfig<{ units: UnitsMap; isOverwritten: boolean }>(
+    ServerConfigKeys.UNITS
+  );
 
-  return value ?? (defaultUnits as UnitsMap);
+  return value?.units ?? (defaultUnits as UnitsMap);
 }
 
 /**
@@ -59,6 +63,33 @@ export async function getContentIndicators(): Promise<ContentIndicatorsConfig> {
   const value = await getConfig<ContentIndicatorsConfig>(ServerConfigKeys.CONTENT_INDICATORS);
 
   return value ?? defaultContentIndicators;
+}
+
+/**
+ * Check if recipe timers are enabled
+ */
+export async function isTimersEnabled(): Promise<boolean> {
+  const config = await getTimerKeywords();
+
+  return config.enabled ?? true;
+}
+
+/**
+ * Get timer keywords configuration
+ */
+export async function getTimerKeywords(): Promise<TimerKeywordsConfig> {
+  const value = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+
+  if (value && !value.isOverridden) {
+    // User hasn't overridden, merge with defaults to get latest keywords
+    return {
+      ...defaultTimerKeywords,
+      ...value,
+      isOverridden: false,
+    } as TimerKeywordsConfig;
+  }
+
+  return value ?? (defaultTimerKeywords as TimerKeywordsConfig);
 }
 
 /**
@@ -288,4 +319,5 @@ export type {
   RecipePermissionPolicy,
   PromptsConfig,
   I18nLocaleConfig,
+  TimerKeywordsConfig,
 };

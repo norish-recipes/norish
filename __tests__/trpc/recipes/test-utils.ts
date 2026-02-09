@@ -75,9 +75,11 @@ export function createMockRecipeDashboard(
     prepMinutes: 15,
     cookMinutes: 30,
     totalMinutes: 45,
+    calories: null,
     createdAt: now,
     updatedAt: now,
     tags: [{ name: "dinner" }, { name: "easy" }],
+    categories: ["Dinner"],
     author: { id: "test-user-id", name: "Test User", image: null },
     ...overrides,
   };
@@ -108,6 +110,7 @@ export function createMockFullRecipe(overrides: Partial<FullRecipeDTO> = {}): Fu
     createdAt: now,
     updatedAt: now,
     tags: [{ name: "dinner" }],
+    categories: ["Dinner"],
     recipeIngredients: [
       {
         id: "ri-1",

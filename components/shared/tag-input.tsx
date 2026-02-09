@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, useRef } from "react";
+import { useTranslations } from "next-intl";
 import {
   DndContext,
   DragOverlay,
@@ -71,17 +72,15 @@ export interface TagInputProps {
   className?: string;
 }
 
-export default function TagInput({
-  value,
-  onChange,
-  placeholder = "Type tags separated by spaces...",
-  className = "",
-}: TagInputProps) {
+export default function TagInput({ value, onChange, placeholder, className = "" }: TagInputProps) {
+  const t = useTranslations("common.tagInput");
   const [rawInput, setRawInput] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingTag, setEditingTag] = useState<string | null>(null);
   const { tags: allTags } = useTagsQuery();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const defaultPlaceholder = placeholder ?? t("placeholder");
 
   // Configure sensors for mouse, touch, and keyboard
   const sensors = useSensors(
@@ -288,7 +287,7 @@ export default function TagInput({
         <input
           ref={inputRef}
           className="text-small text-default-foreground placeholder:text-default-500 min-w-[120px] flex-1 border-none bg-transparent outline-none"
-          placeholder={value.length === 0 && typedWords.length === 0 ? placeholder : ""}
+          placeholder={value.length === 0 && typedWords.length === 0 ? defaultPlaceholder : ""}
           style={{ fontSize: "16px" }}
           type="text"
           value={rawInput}

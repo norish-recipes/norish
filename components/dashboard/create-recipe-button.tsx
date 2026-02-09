@@ -71,7 +71,7 @@ export default function CreateRecipeButton() {
             color="primary"
             radius="full"
             size="md"
-            startContent={<PlusIcon className="h-4 w-4" />}
+            startContent={<PlusIcon className="h-5 w-5" />}
           >
             {t("addRecipe")}
           </Button>

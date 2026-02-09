@@ -1,20 +1,26 @@
 "use client";
 
-import { PlusIcon } from "@heroicons/react/16/solid";
-import { Dropdown, DropdownTrigger, Button, DropdownMenu, DropdownItem } from "@heroui/react";
+import { ExclamationTriangleIcon, PlusIcon } from "@heroicons/react/16/solid";
+import {
+  Dropdown,
+  DropdownTrigger,
+  Button,
+  DropdownMenu,
+  DropdownItem,
+  Divider,
+  Image,
+} from "@heroui/react";
 import { useMemo, useRef, useCallback, memo, useEffect, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Slot } from "@/types";
-import DayTimelineSkeleton from "@/components/skeleton/day-timeline-skeleton";
 import { startOfMonth, addMonths, endOfMonth, eachDayOfInterval, dateKey } from "@/lib/helpers";
 import { useRecipeQuery } from "@/hooks/recipes";
-import { MealIcon } from "@/lib/meal-icon";
 import Panel from "@/components/Panel/Panel";
 import { useCalendarQuery, useCalendarMutations, useCalendarSubscription } from "@/hooks/calendar";
 
-const ESTIMATED_DAY_HEIGHT = 140; // Approximate height of a day row
+const ESTIMATED_DAY_HEIGHT = 180;
 
 type MiniCalendarProps = {
   open: boolean;
@@ -22,7 +28,15 @@ type MiniCalendarProps = {
   recipeId: string;
 };
 
-// Memoized day row to prevent re-renders when other days change
+type PlannedItemDisplay = {
+  slot: Slot;
+  itemType: string;
+  recipeName?: string | null;
+  recipeImage?: string | null;
+  title?: string | null;
+  allergyWarnings?: string[] | null;
+};
+
 const DayRow = memo(function DayRow({
   date,
   dateKeyStr,
@@ -38,7 +52,7 @@ const DayRow = memo(function DayRow({
   date: Date;
   dateKeyStr: string;
   isToday: boolean;
-  items: { slot: Slot; itemType: string; recipeName?: string | null; title?: string | null }[];
+  items: PlannedItemDisplay[];
   weekdayLong: Intl.DateTimeFormat;
   monthLong: Intl.DateTimeFormat;
   onPlan: (dayKey: string, slot: Slot) => void;
@@ -47,35 +61,21 @@ const DayRow = memo(function DayRow({
   addItemLabel: string;
 }) {
   return (
-    <div className="divide-default-200 divide-y">
-      <div className="bg-background flex flex-col gap-2 px-3 py-3">
-        <div className="flex items-center gap-2">
-          <div className="w-12 shrink-0 md:w-14">
-            <div
-              className={`${
-                isToday ? "text-primary" : "text-foreground"
-              } font-mono text-3xl leading-none font-semibold tabular-nums md:text-4xl`}
-            >
-              {String(date.getDate()).padStart(2, "0")}
-            </div>
+    <div className="border-default-100 border-b last:border-none">
+      <div className="bg-background hover:bg-default-50/50 flex flex-col gap-3 px-4 py-4 transition-colors">
+        <div className="flex items-center justify-between gap-3">
+          <div className={`text-sm font-semibold ${isToday ? "text-primary" : "text-foreground"}`}>
+            {weekdayLong.format(date)}, {monthLong.format(date)} {date.getDate()}
           </div>
-
-          <div className="-ml-1 flex flex-col leading-tight">
-            <div className="text-default-700 text-sm">{weekdayLong.format(date)}</div>
-            <div className="text-default-500 text-sm">{monthLong.format(date)}</div>
-          </div>
-
-          <div className="flex-1" />
 
           <Dropdown>
             <DropdownTrigger>
               <Button
                 isIconOnly
                 aria-label={addItemLabel}
-                className="min-w-0 bg-transparent p-1 shadow-none data-[hover=true]:bg-transparent"
-                radius="none"
+                className="bg-default-100 text-default-500 hover:text-primary h-8 min-w-8 rounded-full shadow-sm transition-transform active:scale-95"
                 size="sm"
-                variant="light"
+                variant="flat"
               >
                 <PlusIcon className="h-4 w-4" />
               </Button>
@@ -92,22 +92,40 @@ const DayRow = memo(function DayRow({
           </Dropdown>
         </div>
 
-        <div className="bg-default-200 h-px" />
+        <Divider className="my-2" />
 
-        <div className="flex w-full flex-col">
+        <div className="flex w-full flex-col gap-2">
           {items.length === 0 ? (
-            <span className="text-default-400 text-xs">{noItemsLabel}</span>
+            <span className="text-default-400 text-xs italic">{noItemsLabel}</span>
           ) : (
-            items.map((it, i) => (
-              <div key={i} className="flex w-full items-center justify-between px-2 py-1.5">
-                <div className="flex min-w-0 items-center gap-2">
-                  <MealIcon slot={it.slot} />
-                  <span
-                    className={`truncate text-xs md:text-sm ${it.itemType === "note" ? "text-default-500 italic" : "text-foreground"}`}
-                    title={it.itemType === "recipe" ? (it.recipeName ?? "") : (it.title ?? "")}
-                  >
-                    {it.itemType === "recipe" ? it.recipeName : it.title}
-                  </span>
+            items.map((it) => (
+              <div
+                key={`${dateKeyStr}-${it.slot}-${it.itemType}-${it.recipeName ?? it.title ?? ""}`}
+                className="flex w-full items-start gap-3 py-1"
+              >
+                {it.itemType === "recipe" && it.recipeImage && (
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md">
+                    <Image
+                      removeWrapper
+                      alt={it.recipeName ?? ""}
+                      className="h-full w-full object-cover"
+                      src={it.recipeImage}
+                    />
+                  </div>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`flex-1 truncate text-sm font-medium ${it.itemType === "note" ? "text-default-500 italic" : "text-foreground"}`}
+                      title={it.itemType === "recipe" ? (it.recipeName ?? "") : (it.title ?? "")}
+                    >
+                      {it.itemType === "recipe" ? it.recipeName : it.title}
+                    </span>
+                    {it.allergyWarnings && it.allergyWarnings.length > 0 && (
+                      <ExclamationTriangleIcon className="text-warning h-4 w-4 shrink-0" />
+                    )}
+                  </div>
+                  <span className="text-default-400 text-xs">{slotLabels[it.slot]}</span>
                 </div>
               </div>
             ))
@@ -138,9 +156,9 @@ function MiniCalendarContent({
 
   const { recipe } = useRecipeQuery(recipeId);
   const { calendarData, isLoading } = useCalendarQuery(startISO, endISO);
-  const { createPlannedRecipe } = useCalendarMutations(startISO, endISO);
+  const { createItem } = useCalendarMutations(startISO, endISO);
 
-  useCalendarSubscription();
+  useCalendarSubscription(startISO, endISO);
 
   const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);
 
@@ -200,14 +218,14 @@ function MiniCalendarContent({
     (dayKey: string, slot: Slot) => {
       if (!recipe) return;
 
-      createPlannedRecipe(dayKey, slot, recipe.id, recipe.name);
+      createItem(dayKey, slot, "recipe", recipe.id, undefined);
       onOpenChange(false);
     },
-    [recipe, onOpenChange, createPlannedRecipe]
+    [recipe, onOpenChange, createItem]
   );
 
   if (isLoading) {
-    return <DayTimelineSkeleton />;
+    return <>Loading...</>;
   }
 
   if (allDays.length === 0) {
@@ -231,9 +249,16 @@ function MiniCalendarContent({
           {virtualItems.map((virtualItem) => {
             const d = allDays[virtualItem.index];
             const key = dateKey(d);
-            const items = (calendarData[key] ?? []).sort(
-              (a, b) => slotOrder[a.slot] - slotOrder[b.slot]
-            );
+            const items = (calendarData[key] ?? [])
+              .sort((a, b) => slotOrder[a.slot] - slotOrder[b.slot])
+              .map((it) => ({
+                slot: it.slot,
+                itemType: it.itemType,
+                recipeName: (it as { recipeName?: string | null }).recipeName,
+                recipeImage: (it as { recipeImage?: string | null }).recipeImage,
+                title: it.title,
+                allergyWarnings: (it as { allergyWarnings?: string[] | null }).allergyWarnings,
+              }));
             const isToday = key === todayKey;
 
             return (

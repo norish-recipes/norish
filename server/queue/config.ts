@@ -18,6 +18,7 @@ export const QUEUE_NAMES = {
   SCHEDULED_TASKS: "scheduled-tasks",
   NUTRITION_ESTIMATION: "nutrition-estimation",
   AUTO_TAGGING: "auto-tagging",
+  AUTO_CATEGORIZATION: "auto-categorization",
   ALLERGY_DETECTION: "allergy-detection",
 } as const;
 
@@ -50,6 +51,7 @@ export const STALLED_INTERVAL = {
   [QUEUE_NAMES.SCHEDULED_TASKS]: 3_600_000, // 1 hour - daily cron jobs only
   [QUEUE_NAMES.NUTRITION_ESTIMATION]: 60_000, // 1 min - background enhancement
   [QUEUE_NAMES.AUTO_TAGGING]: 60_000, // 1 min - background enhancement
+  [QUEUE_NAMES.AUTO_CATEGORIZATION]: 60_000, // 1 min - background enhancement
   [QUEUE_NAMES.ALLERGY_DETECTION]: 60_000, // 1 min - background enhancement
 } as const;
 
@@ -64,12 +66,10 @@ export const WORKER_CONCURRENCY = {
   [QUEUE_NAMES.SCHEDULED_TASKS]: 1,
   [QUEUE_NAMES.NUTRITION_ESTIMATION]: 2,
   [QUEUE_NAMES.AUTO_TAGGING]: 2,
+  [QUEUE_NAMES.AUTO_CATEGORIZATION]: 2,
   [QUEUE_NAMES.ALLERGY_DETECTION]: 2,
 } as const;
 
-/**
- * Job options for recipe import jobs
- */
 export const recipeImportJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {
@@ -80,9 +80,6 @@ export const recipeImportJobOptions: DefaultJobOptions = {
   removeOnFail: true,
 };
 
-/**
- * Job options for image import jobs
- */
 export const imageImportJobOptions: DefaultJobOptions = {
   attempts: 2, // Fewer retries for expensive AI operations
   backoff: {
@@ -96,9 +93,6 @@ export const imageImportJobOptions: DefaultJobOptions = {
   removeOnFail: true,
 };
 
-/**
- * Job options for paste import jobs
- */
 export const pasteImportJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {
@@ -112,9 +106,6 @@ export const pasteImportJobOptions: DefaultJobOptions = {
   removeOnFail: true,
 };
 
-/**
- * Job options for CalDAV sync jobs
- */
 export const caldavSyncJobOptions: DefaultJobOptions = {
   attempts: 10,
   backoff: {
@@ -131,9 +122,6 @@ export const caldavSyncJobOptions: DefaultJobOptions = {
   },
 };
 
-/**
- * Job options for scheduled maintenance tasks
- */
 export const scheduledTasksJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {
@@ -150,9 +138,6 @@ export const scheduledTasksJobOptions: DefaultJobOptions = {
   },
 };
 
-/**
- * Job options for nutrition estimation jobs
- */
 export const nutritionEstimationJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {
@@ -166,9 +151,6 @@ export const nutritionEstimationJobOptions: DefaultJobOptions = {
   removeOnFail: true,
 };
 
-/**
- * Job options for auto-tagging jobs
- */
 export const autoTaggingJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {
@@ -182,9 +164,19 @@ export const autoTaggingJobOptions: DefaultJobOptions = {
   removeOnFail: true,
 };
 
-/**
- * Job options for allergy detection jobs
- */
+export const autoCategorizationJobOptions: DefaultJobOptions = {
+  attempts: 3,
+  backoff: {
+    type: "exponential",
+    delay: 2000, // 2s, 4s, 8s
+  },
+  removeOnComplete: {
+    age: 3600,
+    count: 500,
+  },
+  removeOnFail: true,
+};
+
 export const allergyDetectionJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {

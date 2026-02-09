@@ -2,12 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { Button } from "@heroui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { AnimatePresence, motion } from "motion/react";
 import NextImage from "next/image";
 import { useTranslations } from "next-intl";
 
 import ImageLightbox from "./image-lightbox";
+import { FallbackPlaceholder, useImageErrors } from "./fallback-image";
 
 export interface CarouselImage {
   image: string;
@@ -36,6 +37,7 @@ export default function ImageCarousel({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const { handleImageError, hasError } = useImageErrors();
 
   const t = useTranslations("recipes.carousel");
 
@@ -122,13 +124,18 @@ export default function ImageCarousel({
             }
           }}
         >
-          <NextImage
-            fill
-            unoptimized
-            alt={images[0].alt || recipeName}
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            src={images[0].image}
-          />
+          {hasError(images[0].image) ? (
+            <FallbackPlaceholder />
+          ) : (
+            <NextImage
+              fill
+              unoptimized
+              alt={images[0].alt || recipeName}
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              src={images[0].image}
+              onError={() => handleImageError(images[0].image)}
+            />
+          )}
         </div>
         {showLightbox && (
           <ImageLightbox
@@ -168,13 +175,18 @@ export default function ImageCarousel({
             variants={slideVariants}
             onClick={() => showLightbox && setLightboxOpen(true)}
           >
-            <NextImage
-              fill
-              unoptimized
-              alt={images[currentIndex].alt || recipeName}
-              className="object-cover"
-              src={images[currentIndex].image}
-            />
+            {hasError(images[currentIndex].image) ? (
+              <FallbackPlaceholder />
+            ) : (
+              <NextImage
+                fill
+                unoptimized
+                alt={images[currentIndex].alt || recipeName}
+                className="object-cover"
+                src={images[currentIndex].image}
+                onError={() => handleImageError(images[currentIndex].image)}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
 

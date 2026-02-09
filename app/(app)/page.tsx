@@ -17,7 +17,7 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">
-      <div className="mb-6 flex shrink-0 items-center justify-between">
+      <div className="mb-6 flex min-h-10 shrink-0 items-center justify-between">
         <h1 className="text-2xl font-bold">{t("title")}</h1>
         <CreateRecipeButton />
       </div>

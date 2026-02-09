@@ -1,219 +1,146 @@
 "use client";
 
-import type { CalendarItemViewDto, Slot } from "@/types";
+import type { PlannedItemFromQuery } from "@/types";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
-import { addToast } from "@heroui/react";
 
 import { useCalendarCacheHelpers } from "./use-calendar-cache";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 
-/**
- * Hook that subscribes to all calendar-related WebSocket events
- * and updates the query cache accordingly.
- *
- * Uses internal cache helpers - no props required.
- * Safe to call from context providers without causing recursion.
- */
-export function useCalendarSubscription() {
+export function useCalendarSubscription(startISO: string, endISO: string) {
   const trpc = useTRPC();
-  const {
-    setCalendarData,
-    removeRecipeFromCache,
-    updateRecipeInCache,
-    removeNoteFromCache,
-    updateNoteInCache,
-    invalidate,
-  } = useCalendarCacheHelpers();
+  const { setCalendarData, invalidate } = useCalendarCacheHelpers(startISO, endISO);
 
-  // onRecipePlanned
+  const setItems = (updater: (prev: PlannedItemFromQuery[]) => PlannedItemFromQuery[]) => {
+    setCalendarData((prev) => updater(prev ?? []));
+  };
+
   useSubscription(
-    trpc.calendar.onRecipePlanned.subscriptionOptions(undefined, {
+    trpc.calendar.onItemCreated.subscriptionOptions(undefined, {
       onData: (payload) => {
-        const { plannedRecipe } = payload;
-
-        setCalendarData((prev) => {
-          const arr = prev[plannedRecipe.date] ?? [];
-          const exists = arr.some((i) => i.id === plannedRecipe.id);
+        setItems((prev) => {
+          const exists = prev.some((item) => item.id === payload.item.id);
 
           if (exists) return prev;
 
-          const item: CalendarItemViewDto = {
-            itemType: "recipe",
-            id: plannedRecipe.id,
-            recipeId: plannedRecipe.recipeId,
-            recipeName: plannedRecipe.recipeName ?? "Unknown",
-            slot: plannedRecipe.slot as Slot,
-            date: plannedRecipe.date,
-            allergyWarnings: plannedRecipe.allergyWarnings,
+          const newItem: PlannedItemFromQuery = {
+            id: payload.item.id,
+            userId: payload.item.userId,
+            date: payload.item.date,
+            slot: payload.item.slot,
+            sortOrder: payload.item.sortOrder,
+            itemType: payload.item.itemType,
+            recipeId: payload.item.recipeId,
+            title: payload.item.title,
+            recipeName: payload.item.recipeName,
+            recipeImage: payload.item.recipeImage,
+            servings: payload.item.servings,
+            calories: payload.item.calories,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           };
 
-          return { ...prev, [plannedRecipe.date]: [...arr, item] };
+          return [...prev, newItem].sort((a, b) => {
+            if (a.date !== b.date) return a.date.localeCompare(b.date);
+            if (a.slot !== b.slot) return a.slot.localeCompare(b.slot);
+
+            return a.sortOrder - b.sortOrder;
+          });
         });
       },
     })
   );
 
-  // onRecipeDeleted
   useSubscription(
-    trpc.calendar.onRecipeDeleted.subscriptionOptions(undefined, {
+    trpc.calendar.onItemDeleted.subscriptionOptions(undefined, {
       onData: (payload) => {
-        const { plannedRecipeId, date } = payload;
-
-        // Remove from base query cache and optimistic data
-        removeRecipeFromCache(plannedRecipeId);
-        setCalendarData((prev) => {
-          const arr = prev[date] ?? [];
-
-          return { ...prev, [date]: arr.filter((i) => i.id !== plannedRecipeId) };
-        });
+        setItems((prev) => prev.filter((item) => item.id !== payload.itemId));
       },
     })
   );
 
-  // onRecipeUpdated
   useSubscription(
-    trpc.calendar.onRecipeUpdated.subscriptionOptions(undefined, {
+    trpc.calendar.onItemMoved.subscriptionOptions(undefined, {
       onData: (payload) => {
-        const { plannedRecipe, oldDate } = payload;
-        const newDate = plannedRecipe.date;
+        setItems((prev) => {
+          const targetSortMap = new Map(payload.targetSlotItems.map((i) => [i.id, i.sortOrder]));
+          const sourceSortMap = payload.sourceSlotItems
+            ? new Map(payload.sourceSlotItems.map((i) => [i.id, i.sortOrder]))
+            : null;
 
-        // Keep the base list query in sync so we don't show duplicates
-        // (base query still has the old date until refetch otherwise).
-        updateRecipeInCache(plannedRecipe.id, newDate);
+          const updated = prev.map((item) => {
+            if (item.id === payload.item.id) {
+              return {
+                ...item,
+                date: payload.item.date,
+                slot: payload.item.slot,
+                sortOrder: payload.item.sortOrder,
+                updatedAt: new Date(),
+              };
+            }
 
-        setCalendarData((prev) => {
-          // Remove from old date
-          const oldArr = (prev[oldDate] ?? []).filter((i) => i.id !== plannedRecipe.id);
+            if (targetSortMap.has(item.id)) {
+              return {
+                ...item,
+                sortOrder: targetSortMap.get(item.id)!,
+              };
+            }
 
-          // Add to new date
-          const newArr = prev[newDate] ?? [];
-          const existsInNew = newArr.some((i) => i.id === plannedRecipe.id);
+            if (sourceSortMap?.has(item.id)) {
+              return {
+                ...item,
+                sortOrder: sourceSortMap.get(item.id)!,
+              };
+            }
 
-          const existing =
-            (prev[oldDate] ?? []).find((i) => i.id === plannedRecipe.id) ??
-            (prev[newDate] ?? []).find((i) => i.id === plannedRecipe.id);
+            return item;
+          });
 
-          const item: CalendarItemViewDto = {
-            itemType: "recipe",
-            id: plannedRecipe.id,
-            recipeId: plannedRecipe.recipeId,
-            recipeName:
-              plannedRecipe.recipeName ??
-              (existing && existing.itemType === "recipe" ? existing.recipeName : "Unknown"),
-            slot: plannedRecipe.slot as Slot,
-            date: plannedRecipe.date,
-            allergyWarnings:
-              plannedRecipe.allergyWarnings ??
-              (existing && existing.itemType === "recipe" ? existing.allergyWarnings : undefined),
-          };
+          return updated.sort((a, b) => {
+            if (a.date !== b.date) return a.date.localeCompare(b.date);
+            if (a.slot !== b.slot) return a.slot.localeCompare(b.slot);
 
-          return {
-            ...prev,
-            [oldDate]: oldArr,
-            [newDate]: existsInNew
-              ? newArr.map((i) => (i.id === plannedRecipe.id ? item : i))
-              : [...newArr, item],
-          };
+            return a.sortOrder - b.sortOrder;
+          });
         });
       },
     })
   );
 
-  // onNotePlanned
   useSubscription(
-    trpc.calendar.onNotePlanned.subscriptionOptions(undefined, {
+    trpc.calendar.onItemUpdated.subscriptionOptions(undefined, {
       onData: (payload) => {
-        const { note } = payload;
+        setItems((prev) =>
+          prev.map((item) => {
+            if (item.id === payload.item.id) {
+              return {
+                ...item,
+                userId: payload.item.userId,
+                date: payload.item.date,
+                slot: payload.item.slot,
+                sortOrder: payload.item.sortOrder,
+                itemType: payload.item.itemType,
+                recipeId: payload.item.recipeId,
+                title: payload.item.title,
+                recipeName: payload.item.recipeName,
+                recipeImage: payload.item.recipeImage,
+                servings: payload.item.servings,
+                calories: payload.item.calories,
+                updatedAt: new Date(),
+              };
+            }
 
-        setCalendarData((prev) => {
-          const arr = prev[note.date] ?? [];
-          const exists = arr.some((i) => i.id === note.id);
-
-          if (exists) return prev;
-
-          const item: CalendarItemViewDto = {
-            itemType: "note",
-            id: note.id,
-            title: note.title,
-            recipeId: note.recipeId ?? null,
-            slot: note.slot as Slot,
-            date: note.date,
-          };
-
-          return { ...prev, [note.date]: [...arr, item] };
-        });
+            return item;
+          })
+        );
       },
     })
   );
 
-  // onNoteDeleted
-  useSubscription(
-    trpc.calendar.onNoteDeleted.subscriptionOptions(undefined, {
-      onData: (payload) => {
-        const { noteId, date } = payload;
-
-        // Remove from base query cache and optimistic data
-        removeNoteFromCache(noteId);
-        setCalendarData((prev) => {
-          const arr = prev[date] ?? [];
-
-          return { ...prev, [date]: arr.filter((i) => i.id !== noteId) };
-        });
-      },
-    })
-  );
-
-  // onNoteUpdated
-  useSubscription(
-    trpc.calendar.onNoteUpdated.subscriptionOptions(undefined, {
-      onData: (payload) => {
-        const { note, oldDate } = payload;
-        const newDate = note.date;
-
-        // Keep the base list query in sync so we don't show duplicates.
-        updateNoteInCache(note.id, newDate);
-
-        setCalendarData((prev) => {
-          // Remove from old date
-          const oldArr = (prev[oldDate] ?? []).filter((i) => i.id !== note.id);
-
-          // Add to new date
-          const newArr = prev[newDate] ?? [];
-          const existsInNew = newArr.some((i) => i.id === note.id);
-
-          const item: CalendarItemViewDto = {
-            itemType: "note",
-            id: note.id,
-            title: note.title,
-            recipeId: note.recipeId ?? null,
-            slot: note.slot as Slot,
-            date: note.date,
-          };
-
-          return {
-            ...prev,
-            [oldDate]: oldArr,
-            [newDate]: existsInNew
-              ? newArr.map((i) => (i.id === note.id ? item : i))
-              : [...newArr, item],
-          };
-        });
-      },
-    })
-  );
-
-  // onFailed
   useSubscription(
     trpc.calendar.onFailed.subscriptionOptions(undefined, {
-      onData: (payload) => {
-        addToast({
-          severity: "danger",
-          title: payload.reason,
-          shouldShowTimeoutProgress: true,
-          radius: "full",
-        });
+      onData: () => {
         invalidate();
       },
     })

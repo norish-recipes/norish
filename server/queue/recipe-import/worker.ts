@@ -19,12 +19,14 @@ import { getRecipePermissionPolicy, getAIConfig } from "@/config/server-config-l
 import { getQueues } from "@/server/queue/registry";
 import { addAutoTaggingJob } from "@/server/queue/auto-tagging/producer";
 import { addAllergyDetectionJob } from "@/server/queue/allergy-detection/producer";
+import { addAutoCategorizationJob } from "@/server/queue/auto-categorization/producer";
 import {
   createRecipeWithRefs,
   recipeExistsByUrlForPolicy,
   dashboardRecipe,
   getAllergiesForUsers,
 } from "@/server/db";
+import { getDecryptedTokensByUserId } from "@/server/db/repositories/site-auth-tokens";
 import { parseRecipeFromUrl } from "@/server/parser";
 import { deleteRecipeImagesDir } from "@/server/downloader";
 
@@ -90,7 +92,14 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   }
 
   // Parse and create recipe
-  const parseResult = await parseRecipeFromUrl(url, recipeId, allergyNames, job.data.forceAI);
+  const userTokens = await getDecryptedTokensByUserId(userId);
+  const parseResult = await parseRecipeFromUrl(
+    url,
+    recipeId,
+    allergyNames,
+    job.data.forceAI,
+    userTokens.length > 0 ? userTokens : undefined
+  );
 
   log.debug({ parseResult }, "Recipe parse result");
   if (!parseResult.recipe) {
@@ -137,6 +146,16 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
         userId,
         householdKey,
       });
+
+      // Trigger auto-categorization for structured imports without categories
+      // (AI extraction already includes categorization in the prompt)
+      if (!parseResult.recipe.categories?.length) {
+        await addAutoCategorizationJob(queues.autoCategorization, {
+          recipeId: createdId,
+          userId,
+          householdKey,
+        });
+      }
     }
   }
 }

@@ -69,8 +69,8 @@ export const MobileNav = () => {
           y: isVisible ? 0 : 100,
           opacity: isVisible ? 1 : 0,
         }}
-        className="fixed inset-x-0 z-50 px-5 md:hidden"
-        initial={{ y: 0, opacity: 1 }}
+        className="fixed inset-x-0 z-[60] px-5 md:hidden"
+        initial={false}
         style={{ bottom: "max(calc(env(safe-area-inset-bottom) - 0.2rem), 1rem)" }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >

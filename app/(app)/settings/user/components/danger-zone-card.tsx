@@ -12,7 +12,7 @@ import {
   ModalBody,
   ModalFooter,
 } from "@heroui/react";
-import { TrashIcon } from "@heroicons/react/24/outline";
+import { TrashIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";

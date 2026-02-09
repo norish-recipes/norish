@@ -27,7 +27,11 @@
     "test": "Test",
     "format": "Format",
     "restoreDefaults": "Restore Defaults",
-    "saveChanges": "Save Changes"
+    "saveChanges": "Save Changes",
+    "revealSecret": "Reveal secret",
+    "hideSecret": "Hide secret",
+    "enterNewValue": "Enter new value",
+    "cancelEditing": "Cancel editing"
   },
   "status": {
     "loading": "Loading...",
@@ -49,6 +53,18 @@
     "searchTags": "Search tags",
     "favoritesAndRating": "Favorites & Rating",
     "favorites": "Favorites",
+    "cookingTime": "Cooking time",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
+    "categories": "Categories",
+    "category": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    },
     "sortByTitle": "Title",
     "sortByDate": "Date",
     "clearFilters": "Clear filters"
@@ -126,6 +142,9 @@
     "recipeLink": "Type <strong>/recipe name</strong> to link to another recipe",
     "helpAriaLabel": "Formatting help"
   },
+  "tagInput": {
+    "placeholder": "Type tags separated by spaces..."
+  },
   "recurrence": {
     "title": "Repeat",
     "frequency": "Frequency",
@@ -164,5 +183,20 @@
       "5": "Friday",
       "6": "Saturday"
     }
+  },
+  "badges": {
+    "new": "New"
+  },
+  "timer": {
+    "done": "Done",
+    "done_action": "Done",
+    "one": "Timer",
+    "other": "Timers",
+    "label_one": "1 Timer",
+    "label_other": "{count} Timers",
+    "notification_title": "Timer Complete",
+    "notification_body": "{label} is done!",
+    "notifications_disabled": "Notifications are disabled",
+    "notifications_disabled_hint": "Enable notifications in your browser settings to get alerts when timers finish in the background."
   }
 }

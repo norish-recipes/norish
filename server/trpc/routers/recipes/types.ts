@@ -29,6 +29,9 @@ export type RecipeSubscriptionEvents = {
   autoTaggingStarted: { recipeId: string };
   autoTaggingCompleted: { recipeId: string };
 
+  autoCategorizationStarted: { recipeId: string };
+  autoCategorizationCompleted: { recipeId: string };
+
   // Allergy detection events
   allergyDetectionStarted: { recipeId: string };
   allergyDetectionCompleted: { recipeId: string };

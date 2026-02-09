@@ -1,0 +1,31 @@
+{
+  "enabled": true,
+  "hours": [
+    "hour",
+    "hours",
+    "hr",
+    "hrs",
+    "h",
+    "stunde",
+    "stunden",
+    "std",
+    "heure",
+    "heures",
+    "uur",
+    "uren",
+    "u"
+  ],
+  "minutes": ["minute", "minutes", "min", "mins", "m", "minuten", "minuut"],
+  "seconds": [
+    "second",
+    "seconds",
+    "sec",
+    "secs",
+    "s",
+    "sekunde",
+    "sekunden",
+    "sek",
+    "seconde",
+    "secondes"
+  ]
+}

@@ -63,6 +63,33 @@
       "title": "Import Recipe Archive",
       "description": "Import recipes from Mela (.melarecipes), Mealie, Tandoor, or Paprika (.zip) exports"
     },
+    "siteAuthTokens": {
+      "title": "Site Authentication Tokens",
+      "description": "Add headers or cookies that are sent when importing recipes from specific sites. Useful for sites that require login (e.g. Instagram, Facebook).",
+      "domain": "Domain",
+      "domainPlaceholder": "e.g. instagram.com",
+      "name": "Name",
+      "namePlaceholder": "e.g. Cookie or Authorization",
+      "value": "Value",
+      "valuePlaceholder": "Token or cookie value",
+      "type": "Type",
+      "typeHeader": "Header",
+      "typeCookie": "Cookie",
+      "addButton": "Add Token",
+      "noTokens": "No site authentication tokens configured.",
+      "tableHeaders": {
+        "domain": "DOMAIN",
+        "name": "NAME",
+        "type": "TYPE",
+        "created": "CREATED",
+        "actions": "ACTIONS"
+      },
+      "deleteModal": {
+        "title": "Delete Token",
+        "message": "Are you sure you want to delete this authentication token? Imports from this site may stop working.",
+        "confirmButton": "Delete Token"
+      }
+    },
     "dangerZone": {
       "title": "Danger Zone",
       "description": "Once you delete your account, there is no going back. Please be certain.",
@@ -353,7 +380,11 @@
       "contentIndicators": {
         "title": "Content Indicators",
         "subtitle": "Keywords that identify recipe pages",
-        "description": "Schema indicators detect structured recipe data (JSON-LD, microdata). Content indicators are keywords that suggest a page contains a recipe."
+        "description": "Schema indicators detect structured recipe data (JSON-LD, microdata). Content indicators are keywords that suggest a page contains a recipe.",
+        "timersEnabled": {
+          "title": "Enable Recipe Timers",
+          "description": "Detect and show interactive timers in recipes"
+        }
       },
       "units": {
         "title": "Units of Measure",
@@ -364,6 +395,22 @@
         "title": "Recurrence Patterns",
         "subtitle": "Natural language patterns for recurring items",
         "description": "Define locale-specific patterns for parsing recurrence rules from natural language (e.g., 'every week', 'om de dag')."
+      },
+      "timerKeywords": {
+        "title": "Timer Keywords",
+        "subtitle": "Time unit keywords for timer detection",
+        "description": "Configure keywords used to detect timers in recipe instructions. Supports multiple languages.",
+        "enableToggle": "Enable Timer Detection",
+        "hoursLabel": "Hour Keywords",
+        "hoursPlaceholder": "hour, hours, hr, hrs, h",
+        "hoursHelp": "Keywords for hours (e.g., hour, stunde, heure, uur)",
+        "minutesLabel": "Minute Keywords",
+        "minutesPlaceholder": "minute, minutes, min, mins, m",
+        "minutesHelp": "Keywords for minutes (e.g., minute, minuten, minuut)",
+        "secondsLabel": "Second Keywords",
+        "secondsPlaceholder": "second, seconds, sec, secs, s",
+        "secondsHelp": "Keywords for seconds (e.g., second, sekunde, seconde)",
+        "unsavedChanges": "Unsaved changes"
       }
     },
     "aiProcessing": {
@@ -380,6 +427,15 @@
       "prompts": {
         "title": "Prompts",
         "subtitle": "Customize AI instructions for recipe processing"
+      },
+      "bulkCategorization": {
+        "title": "Bulk Categorization",
+        "subtitle": "Categorize uncategorized recipes using AI",
+        "description": "Queue all uncategorized recipes for AI-based category detection. Categories include Breakfast, Lunch, Dinner, and Snack.",
+        "button": "Categorize All Recipes",
+        "queued": "{count, plural, =0 {No recipes to categorize} one {# recipe queued} other {# recipes queued}}",
+        "success": "Categorization started",
+        "error": "Failed to start categorization"
       }
     },
     "aiConfig": {
@@ -476,8 +532,8 @@
       "autoTaggingDescription": "This prompt is used to generate tags for imported recipes. Define tagging rules and predefined tags list.",
       "autoTaggingPlaceholder": "Enter the auto-tagging prompt..."
     },
+    "unsavedChanges": "Unsaved changes",
     "jsonEditor": {
-      "unsavedChanges": "Unsaved changes",
       "placeholder": "Enter JSON configuration...",
       "invalidJson": "Invalid JSON format",
       "failedToSave": "Failed to save",

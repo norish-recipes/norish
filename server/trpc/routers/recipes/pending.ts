@@ -4,6 +4,7 @@ import type {
   NutritionEstimationJobData,
   AutoTaggingJobData,
   AllergyDetectionJobData,
+  AutoCategorizationJobData,
 } from "@/types";
 import type { Job } from "bullmq";
 
@@ -38,6 +39,8 @@ const getPending = authedProcedure.query(async ({ ctx }) => {
         // User can only see their own jobs
         return data.userId === ctx.user.id;
     }
+
+    return false;
   });
 
   const pendingRecipes: PendingRecipeDTO[] = filteredJobs.map((job: Job<RecipeImportJobData>) => ({
@@ -116,6 +119,24 @@ const isAutoTagging = authedProcedure
     return isActive;
   });
 
+const isAutoCategorizing = authedProcedure
+  .input(z.object({ recipeId: z.uuid() }))
+  .query(async ({ ctx, input }) => {
+    const queues = getQueues();
+    const jobs = await queues.autoCategorization.getJobs(["waiting", "active", "delayed"]);
+
+    const isActive = jobs.some(
+      (job: Job<AutoCategorizationJobData>) => job.data.recipeId === input.recipeId
+    );
+
+    log.debug(
+      { userId: ctx.user.id, recipeId: input.recipeId, isActive },
+      "Checked auto-categorization status"
+    );
+
+    return isActive;
+  });
+
 /**
  * Get all recipe IDs that have pending allergy detection jobs.
  * Used to hydrate the allergy detection state on page load.
@@ -167,6 +188,7 @@ export const pendingProcedures = router({
   isNutritionEstimating,
   getPendingAutoTagging,
   isAutoTagging,
+  isAutoCategorizing,
   getPendingAllergyDetection,
   isAllergyDetecting,
 });

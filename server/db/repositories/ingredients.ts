@@ -18,6 +18,8 @@ import {
 import { MeasurementSystem } from "@/types";
 import { dbLogger } from "@/server/logger";
 import { stripHtmlTags } from "@/lib/helpers";
+import { normalizeUnit } from "@/lib/unit-localization";
+import { getUnits } from "@/config/server-config-loader";
 
 const IngredientArraySchema = z.array(IngredientSelectBaseSchema);
 
@@ -159,20 +161,37 @@ export async function attachIngredientsToRecipeByInputTx(
   }
   const items = parsedInput.data;
 
+  // Get units config for normalization
+  const units = await getUnits();
+
+  // Separate items with ingredientId (already exist) from those needing creation (ingredientName)
+  const itemsWithId = items.filter((ri) => ri.ingredientId);
+  const itemsNeedingCreation = items.filter((ri) => !ri.ingredientId && ri.ingredientName);
+
+  // Create/fetch ingredients for items that only have ingredientName
   const names = Array.from(
-    new Set(items.map((ri) => ri.ingredientName?.trim() ?? "").filter(Boolean))
+    new Set(itemsNeedingCreation.map((ri) => ri.ingredientName?.trim() ?? "").filter(Boolean))
   );
-  const ingredients = names.length > 0 ? await getOrCreateManyIngredientsTx(tx, names) : [];
+  const createdIngredients = names.length > 0 ? await getOrCreateManyIngredientsTx(tx, names) : [];
 
-  if (!ingredients.length) return [];
+  // Build rows for items that already have ingredientId
+  const rowsWithExistingIds = itemsWithId.map((ri) => ({
+    recipeId: ri.recipeId,
+    ingredientId: ri.ingredientId!,
+    amount: ri.amount != null ? Number(ri.amount) : null,
+    unit: normalizeUnit(ri.unit ?? "", units),
+    order: ri.order,
+    systemUsed: (ri.systemUsed as MeasurementSystem) || "metric",
+  }));
 
-  const rows = items
+  // Build rows for items that needed ingredient creation
+  const rowsWithNewIngredients = itemsNeedingCreation
     .map((ri) => {
       const ing =
-        ingredients.find(
+        createdIngredients.find(
           (i) => i.name.toLowerCase().trim() === ri.ingredientName?.toLowerCase().trim()
         ) ??
-        ingredients.find((i) =>
+        createdIngredients.find((i) =>
           i.name.toLowerCase().includes(ri.ingredientName?.toLowerCase().trim() ?? "")
         );
 
@@ -182,12 +201,15 @@ export async function attachIngredientsToRecipeByInputTx(
         recipeId: ri.recipeId,
         ingredientId: ing.id,
         amount: ri.amount != null ? Number(ri.amount) : null,
-        unit: ri.unit ?? "",
+        unit: normalizeUnit(ri.unit ?? "", units), // ← Normalize unit to canonical ID
         order: ri.order,
         systemUsed: (ri.systemUsed as MeasurementSystem) || "metric",
       };
     })
     .filter(Boolean);
+
+  // Combine both sets of rows
+  const rows = [...rowsWithExistingIds, ...rowsWithNewIngredients];
 
   if (!rows.length) return [];
 
@@ -207,10 +229,17 @@ export async function attachIngredientsToRecipeByInputTx(
 
   if (!inserted.length) return [];
 
+  // Fetch all ingredient names for the inserted items
+  const allIngredientIds = inserted.map((ri: any) => ri.ingredientId);
+  const allIngredients = await tx
+    .select()
+    .from(ingredients)
+    .where(inArray(ingredients.id, allIngredientIds));
+
   const insertedWithNames = inserted.map((ri: any) => ({
     ...ri,
     amount: ri.amount != null ? Number(ri.amount) : null,
-    ingredientName: ingredients.find((i) => i.id === ri.ingredientId)?.name ?? "",
+    ingredientName: allIngredients.find((i: any) => i.id === ri.ingredientId)?.name ?? "",
     order: ri.order,
   }));
 

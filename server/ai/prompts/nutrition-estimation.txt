@@ -1,29 +1,10 @@
 Recipe: {{recipeName}}
-Number of servings: {{servings}}
+Servings: {{servings}}
 
 Ingredients:
 {{ingredients}}
 
-Instruction:
-- Estimate the nutritional values PER SERVING for this recipe based on the listed ingredients.
-- Each value should represent what ONE serving contains.
-
-Output Requirements:
-- Provide the following values for ONE serving:
-  - Calories (kcal)
-  - Fats (grams)
-  - Carbohydrates (grams)
-  - Proteins (grams)
-
-Your estimates must be internally consistent using these standard conversions:
-- Fat: 9 kcal per gram
-- Carbohydrates: 4 kcal per gram
-- Protein: 4 kcal per gram
-
-Use the formula:
-Calories = (fat × 9) + (carbs × 4) + (protein × 4)
-
-Additional Guidelines:
-- Base estimates on typical nutritional values for each ingredient.
-- Round results to reasonable whole numbers.
-- Ensure that calorie totals closely match the calculated macronutrient values.
+Estimate nutritional values PER SERVING based on these ingredients.
+- Use typical nutritional values for each ingredient
+- Round to whole numbers
+- Ensure calories match: (fat × 9) + (carbs × 4) + (protein × 4)

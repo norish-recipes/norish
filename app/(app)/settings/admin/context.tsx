@@ -19,6 +19,8 @@ import {
   type RecipePermissionPolicy,
   type PromptsConfig,
   type PromptsConfigInput,
+  type TimerKeywordsConfig,
+  type TimerKeywordsInput,
   type ServerConfigKey,
   type I18nLocaleConfig,
 } from "@/server/db/zodSchemas/server-config";
@@ -39,6 +41,7 @@ interface AdminSettingsContextValue {
   schedulerCleanupMonths: number | undefined;
   recipePermissionPolicy: RecipePermissionPolicy | undefined;
   prompts: PromptsConfig | undefined;
+  timerKeywords: TimerKeywordsConfig | undefined;
 
   // Loading states
   isLoading: boolean;
@@ -68,6 +71,9 @@ interface AdminSettingsContextValue {
   updateAIConfig: (config: AIConfig) => Promise<{ success: boolean; error?: string }>;
   updateVideoConfig: (config: VideoConfig) => Promise<{ success: boolean; error?: string }>;
   updatePrompts: (config: PromptsConfigInput) => Promise<{ success: boolean; error?: string }>;
+  updateTimerKeywords: (
+    config: TimerKeywordsInput
+  ) => Promise<{ success: boolean; error?: string }>;
   updateSchedulerMonths: (months: number) => Promise<{ success: boolean; error?: string }>;
   updateRecipePermissionPolicy: (
     policy: RecipePermissionPolicy
@@ -114,7 +120,10 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const contentIndicators = configs[ServerConfigKeys.CONTENT_INDICATORS] as
     | ContentIndicatorsConfig
     | undefined;
-  const units = configs[ServerConfigKeys.UNITS] as UnitsMap | undefined;
+  const unitsConfig = configs[ServerConfigKeys.UNITS] as
+    | { units: UnitsMap; isOverwritten: boolean }
+    | undefined;
+  const units = unitsConfig?.units;
   const recurrenceConfig = configs[ServerConfigKeys.RECURRENCE_CONFIG] as
     | RecurrenceConfig
     | undefined;
@@ -127,6 +136,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     | RecipePermissionPolicy
     | undefined;
   const prompts = configs[ServerConfigKeys.PROMPTS] as PromptsConfig | undefined;
+  const timerKeywords = configs[ServerConfigKeys.TIMER_KEYWORDS] as TimerKeywordsConfig | undefined;
 
   // Actions - wrap mutations
   const updateRegistration = useCallback(
@@ -220,6 +230,13 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     [mutations]
   );
 
+  const updateTimerKeywordsConfig = useCallback(
+    async (config: TimerKeywordsInput) => {
+      return mutations.updateTimerKeywords(config);
+    },
+    [mutations]
+  );
+
   const updateScheduler = useCallback(
     async (months: number) => {
       return mutations.updateSchedulerMonths(months);
@@ -285,6 +302,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     schedulerCleanupMonths,
     recipePermissionPolicy,
     prompts,
+    timerKeywords,
     isLoading,
     updateRegistration,
     updatePasswordAuth,
@@ -299,6 +317,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     updateAIConfig: updateAI,
     updateVideoConfig: updateVideo,
     updatePrompts: updatePromptsConfig,
+    updateTimerKeywords: updateTimerKeywordsConfig,
     updateSchedulerMonths: updateScheduler,
     updateRecipePermissionPolicy: updatePermissionPolicy,
     restoreDefaultConfig: restoreDefault,

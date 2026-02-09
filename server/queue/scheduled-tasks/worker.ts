@@ -71,8 +71,7 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
 
       log.info(
         {
-          plannedRecipesDeleted: result.plannedRecipesDeleted,
-          notesDeleted: result.notesDeleted,
+          plannedItemsDeleted: result.plannedItemsDeleted,
         },
         "Calendar cleanup completed"
       );

@@ -1,219 +1,192 @@
 "use client";
 
-import type { Slot, CalendarItemViewDto } from "@/types";
+import type { PlannedItemFromQuery, Slot } from "@/types";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { useCalendarQuery } from "./use-calendar-query";
+import { useCalendarCacheHelpers } from "./use-calendar-cache";
 
-import { useHouseholdContext } from "@/context/household-context";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type CalendarMutationsResult = {
-  createPlannedRecipe: (
+  createItem: (
     date: string,
     slot: Slot,
-    recipeId: string,
-    recipeName: string,
-    recipeTags?: string[]
+    itemType: "recipe" | "note",
+    recipeId?: string,
+    title?: string
   ) => void;
-  deletePlannedRecipe: (id: string, date: string) => void;
-  updatePlannedRecipeDate: (id: string, newDate: string, oldDate: string) => void;
-  createNote: (date: string, slot: Slot, title: string) => void;
-  deleteNote: (id: string, date: string) => void;
-  updateNoteDate: (id: string, newDate: string, oldDate: string) => void;
+  deleteItem: (itemId: string) => void;
+  moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex: number) => void;
+  updateItem: (itemId: string, title: string) => void;
+  isCreating: boolean;
+  isDeleting: boolean;
+  isMoving: boolean;
+  isUpdating: boolean;
 };
 
 export function useCalendarMutations(startISO: string, endISO: string): CalendarMutationsResult {
   const trpc = useTRPC();
-  const {
-    setCalendarData,
-    removeRecipeFromCache,
-    updateRecipeInCache,
-    removeNoteFromCache,
-    updateNoteInCache,
-    invalidate,
-  } = useCalendarQuery(startISO, endISO);
-  const { household } = useHouseholdContext();
+  const queryClient = useQueryClient();
 
-  const createRecipeMutation = useMutation(trpc.calendar.createRecipe.mutationOptions());
-  const deleteRecipeMutation = useMutation(trpc.calendar.deleteRecipe.mutationOptions());
-  const updateRecipeDateMutation = useMutation(trpc.calendar.updateRecipeDate.mutationOptions());
-  const createNoteMutation = useMutation(trpc.calendar.createNote.mutationOptions());
-  const deleteNoteMutation = useMutation(trpc.calendar.deleteNote.mutationOptions());
-  const updateNoteDateMutation = useMutation(trpc.calendar.updateNoteDate.mutationOptions());
+  const queryKey = trpc.calendar.listItems.queryKey({ startISO, endISO });
+  const { setCalendarData, invalidate } = useCalendarCacheHelpers(startISO, endISO);
 
-  const createPlannedRecipe = (
+  const createMutation = useMutation(
+    trpc.calendar.createItem.mutationOptions({
+      onError: () => invalidate(),
+    })
+  );
+
+  const deleteMutation = useMutation(
+    trpc.calendar.deleteItem.mutationOptions({
+      onMutate: async ({ itemId }) => {
+        await queryClient.cancelQueries({ queryKey });
+
+        const previousItems = queryClient.getQueryData<PlannedItemFromQuery[]>(queryKey);
+
+        setCalendarData((prev) => {
+          if (!prev) return prev;
+
+          return prev.filter((item) => item.id !== itemId);
+        });
+
+        return { previousItems };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previousItems) {
+          setCalendarData(() => context.previousItems);
+        }
+      },
+    })
+  );
+
+  const moveMutation = useMutation(
+    trpc.calendar.moveItem.mutationOptions({
+      onMutate: async ({ itemId, targetDate, targetSlot, targetIndex }) => {
+        await queryClient.cancelQueries({ queryKey });
+
+        const previousItems = queryClient.getQueryData<PlannedItemFromQuery[]>(queryKey);
+
+        setCalendarData((prev) => {
+          if (!prev) return prev;
+
+          const itemToMove = prev.find((item) => item.id === itemId);
+
+          if (!itemToMove) return prev;
+
+          const sourceDate = itemToMove.date;
+          const sourceSlot = itemToMove.slot;
+          const isSameSlot = sourceDate === targetDate && sourceSlot === targetSlot;
+
+          const updated = prev.map((item) => {
+            if (item.id === itemId) {
+              return {
+                ...item,
+                date: targetDate,
+                slot: targetSlot,
+                sortOrder: targetIndex,
+                updatedAt: new Date(),
+              };
+            }
+
+            if (item.date === targetDate && item.slot === targetSlot) {
+              if (isSameSlot) {
+                if (item.sortOrder >= targetIndex && item.sortOrder < itemToMove.sortOrder) {
+                  return { ...item, sortOrder: item.sortOrder + 1 };
+                }
+                if (item.sortOrder <= targetIndex && item.sortOrder > itemToMove.sortOrder) {
+                  return { ...item, sortOrder: item.sortOrder - 1 };
+                }
+              } else {
+                if (item.sortOrder >= targetIndex) {
+                  return { ...item, sortOrder: item.sortOrder + 1 };
+                }
+              }
+            }
+
+            if (!isSameSlot && item.date === sourceDate && item.slot === sourceSlot) {
+              if (item.sortOrder > itemToMove.sortOrder) {
+                return { ...item, sortOrder: item.sortOrder - 1 };
+              }
+            }
+
+            return item;
+          });
+
+          return updated.sort((a, b) => {
+            if (a.date !== b.date) return a.date.localeCompare(b.date);
+            if (a.slot !== b.slot) return a.slot.localeCompare(b.slot);
+
+            return a.sortOrder - b.sortOrder;
+          });
+        });
+
+        return { previousItems };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previousItems) {
+          setCalendarData(() => context.previousItems);
+        }
+      },
+    })
+  );
+
+  const updateMutation = useMutation(
+    trpc.calendar.updateItem.mutationOptions({
+      onMutate: async ({ itemId, title }) => {
+        await queryClient.cancelQueries({ queryKey });
+
+        const previousItems = queryClient.getQueryData<PlannedItemFromQuery[]>(queryKey);
+
+        setCalendarData((prev) => {
+          if (!prev) return prev;
+
+          return prev.map((item) =>
+            item.id === itemId ? { ...item, title, updatedAt: new Date() } : item
+          );
+        });
+
+        return { previousItems };
+      },
+      onError: (_err, _vars, context) => {
+        if (context?.previousItems) {
+          setCalendarData(() => context.previousItems);
+        }
+      },
+    })
+  );
+
+  const createItem = (
     date: string,
     slot: Slot,
-    recipeId: string,
-    recipeName: string,
-    recipeTags?: string[]
-  ): void => {
-    const allergyWarnings = new Set<string>();
-
-    if (recipeTags && household?.allergies) {
-      const tagSet = new Set(recipeTags.map((t) => t.toLowerCase()));
-
-      household.allergies.forEach((allergy) => {
-        if (tagSet.has(allergy.toLowerCase())) {
-          allergyWarnings.add(allergy);
-        }
-      });
-    }
-    createRecipeMutation.mutate(
-      { date, slot, recipeId },
-      {
-        onSuccess: (id) => {
-          setCalendarData((prev) => {
-            const arr = prev[date] ?? [];
-
-            if (arr.some((i) => i.id === id)) return prev;
-
-            const item: CalendarItemViewDto = {
-              itemType: "recipe",
-              id,
-              recipeId,
-              recipeName,
-              slot,
-              date,
-              allergyWarnings: [...allergyWarnings],
-            };
-
-            return { ...prev, [date]: [...arr, item] };
-          });
-        },
-        onError: () => invalidate(),
-      }
-    );
+    itemType: "recipe" | "note",
+    recipeId?: string,
+    title?: string
+  ) => {
+    createMutation.mutate({ date, slot, itemType, recipeId, title });
   };
 
-  const deletePlannedRecipe = (id: string, date: string): void => {
-    // Optimistic update - remove from base query cache
-    removeRecipeFromCache(id);
-    setCalendarData((prev) => {
-      const arr = prev[date] ?? [];
-
-      return { ...prev, [date]: arr.filter((i) => i.id !== id) };
-    });
-
-    deleteRecipeMutation.mutate(
-      { id, date },
-      {
-        onError: () => invalidate(),
-      }
-    );
+  const deleteItem = (itemId: string) => {
+    deleteMutation.mutate({ itemId });
   };
 
-  const updatePlannedRecipeDate = (id: string, newDate: string, oldDate: string): void => {
-    // Optimistic update - update the base query cache
-    updateRecipeInCache(id, newDate);
-
-    // Also update the combined/optimistic data
-    setCalendarData((prev) => {
-      const oldArr = prev[oldDate] ?? [];
-      const item = oldArr.find((i) => i.id === id);
-
-      if (!item) return prev;
-
-      const newArr = prev[newDate] ?? [];
-      const updatedItem = { ...item, date: newDate };
-
-      return {
-        ...prev,
-        [oldDate]: oldArr.filter((i) => i.id !== id),
-        [newDate]: [...newArr, updatedItem],
-      };
-    });
-
-    updateRecipeDateMutation.mutate(
-      { id, newDate, oldDate },
-      {
-        onError: () => invalidate(),
-      }
-    );
+  const moveItem = (itemId: string, targetDate: string, targetSlot: Slot, targetIndex: number) => {
+    moveMutation.mutate({ itemId, targetDate, targetSlot, targetIndex });
   };
 
-  const createNote = (date: string, slot: Slot, title: string): void => {
-    createNoteMutation.mutate(
-      { date, slot, title },
-      {
-        onSuccess: (id) => {
-          setCalendarData((prev) => {
-            const arr = prev[date] ?? [];
-
-            // Check if already exists (from subscription)
-            if (arr.some((i) => i.id === id)) return prev;
-
-            const item: CalendarItemViewDto = {
-              itemType: "note",
-              id,
-              title,
-              recipeId: null,
-              slot,
-              date,
-            };
-
-            return { ...prev, [date]: [...arr, item] };
-          });
-        },
-        onError: () => invalidate(),
-      }
-    );
-  };
-
-  const deleteNote = (id: string, date: string): void => {
-    // Optimistic update - remove from base query cache
-    removeNoteFromCache(id);
-    setCalendarData((prev) => {
-      const arr = prev[date] ?? [];
-
-      return { ...prev, [date]: arr.filter((i) => i.id !== id) };
-    });
-
-    deleteNoteMutation.mutate(
-      { id, date },
-      {
-        onError: () => invalidate(),
-      }
-    );
-  };
-
-  const updateNoteDate = (id: string, newDate: string, oldDate: string): void => {
-    // Optimistic update - update the base query cache
-    updateNoteInCache(id, newDate);
-
-    // Also update the combined/optimistic data
-    setCalendarData((prev) => {
-      const oldArr = prev[oldDate] ?? [];
-      const item = oldArr.find((i) => i.id === id);
-
-      if (!item) return prev;
-
-      const newArr = prev[newDate] ?? [];
-      const updatedItem = { ...item, date: newDate };
-
-      return {
-        ...prev,
-        [oldDate]: oldArr.filter((i) => i.id !== id),
-        [newDate]: [...newArr, updatedItem],
-      };
-    });
-
-    updateNoteDateMutation.mutate(
-      { id, newDate, oldDate },
-      {
-        onError: () => invalidate(),
-      }
-    );
+  const updateItem = (itemId: string, title: string) => {
+    updateMutation.mutate({ itemId, title });
   };
 
   return {
-    createPlannedRecipe,
-    deletePlannedRecipe,
-    updatePlannedRecipeDate,
-    createNote,
-    deleteNote,
-    updateNoteDate,
+    createItem,
+    deleteItem,
+    moveItem,
+    updateItem,
+    isCreating: createMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isMoving: moveMutation.isPending,
+    isUpdating: updateMutation.isPending,
   };
 }

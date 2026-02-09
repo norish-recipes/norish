@@ -76,6 +76,9 @@ export function createMockPlannedRecipe(
     date: "2025-01-15",
     slot: "Breakfast" as Slot,
     recipeName: "Test Recipe",
+    recipeImage: null,
+    servings: 4,
+    calories: 500,
     ...overrides,
   };
 }

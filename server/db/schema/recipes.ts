@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { recipeCategoryEnum } from "./recipe-categories";
 
 export const measurementSystemEnum = pgEnum("measurement_system", ["metric", "us"]);
 
@@ -37,6 +38,7 @@ export const recipes = pgTable(
     protein: numeric("protein", { precision: 6, scale: 2 }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    categories: recipeCategoryEnum("categories").array().notNull().default([]),
   },
   (t) => [
     index("idx_recipes_user_id").on(t.userId),

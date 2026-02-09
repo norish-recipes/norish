@@ -12,7 +12,6 @@ import type {
 } from "@/components/groceries/dnd/types";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { arrayMove } from "@dnd-kit/sortable";
 
 import {
   buildGroupItemsState,
@@ -170,59 +169,24 @@ export function useGroupedGroceryDnd({
 
       setOverContainerId(overContainer);
 
-      // Cross-container move
+      // Only handle cross-container moves
       if (activeContainer !== overContainer) {
         setGroupItems((prevItems) => {
           const activeItems = prevItems[activeContainer];
           const overItems = prevItems[overContainer];
-          const overIndex = overItems.indexOf(overId as string);
           const activeIndex = activeItems.indexOf(active.id as string);
 
-          let newIndex: number;
-
-          // If dropping on container itself (not on an item)
-          if (overId in prevItems) {
-            newIndex = overItems.length;
-          } else {
-            // Determine if we're above or below the item we're hovering over
-            const isBelowOverItem =
-              over &&
-              active.rect.current.translated &&
-              active.rect.current.translated.top > over.rect.top + over.rect.height;
-
-            const modifier = isBelowOverItem ? 1 : 0;
-
-            newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length;
-          }
-
+          // Always append to end of target container (no position-based insertion)
           recentlyMovedToNewContainer.current = true;
 
           return {
             ...prevItems,
             [activeContainer]: prevItems[activeContainer].filter((key) => key !== active.id),
-            [overContainer]: [
-              ...prevItems[overContainer].slice(0, newIndex),
-              activeItems[activeIndex],
-              ...prevItems[overContainer].slice(newIndex),
-            ],
+            [overContainer]: [...overItems, activeItems[activeIndex]],
           };
         });
-      } else {
-        // Same container reorder during drag
-        setGroupItems((prevItems) => {
-          const activeIndex = prevItems[activeContainer].indexOf(active.id as string);
-          const overIndex = prevItems[overContainer].indexOf(overId as string);
-
-          if (activeIndex !== overIndex) {
-            return {
-              ...prevItems,
-              [overContainer]: arrayMove(prevItems[overContainer], activeIndex, overIndex),
-            };
-          }
-
-          return prevItems;
-        });
       }
+      // Same container: no visual reordering (would be confusing as backend doesn't support it)
     },
     [findContainer]
   );
@@ -254,58 +218,23 @@ export function useGroupedGroceryDnd({
         return;
       }
 
-      // Build updates for backend based on current groupItems state
-      // Each group contains multiple groceries - we need to update sortOrder for ALL of them
       if (originalGroupItems) {
         const originalContainer = findContainerForGroup(active.id as string, originalGroupItems);
         const wasCrossContainerMove = originalContainer !== currentContainer;
-        const newStoreId = wasCrossContainerMove
-          ? containerIdToStoreId(currentContainer)
-          : undefined;
 
-        const updates: { id: string; sortOrder: number; storeId?: string | null }[] = [];
+        if (wasCrossContainerMove) {
+          const newStoreId = containerIdToStoreId(currentContainer);
+          const movedGroup = groupMap.get(active.id as string);
 
-        // Calculate the base sortOrder for each group position
-        // Each group's items will be assigned sequential sortOrders starting from that base
-        let sortOrderBase = 0;
+          if (movedGroup) {
+            const updates = movedGroup.sources.map((source) => ({
+              id: source.grocery.id,
+              sortOrder: source.grocery.sortOrder,
+              storeId: newStoreId ?? null,
+            }));
 
-        // Process all containers that were affected
-        const containersToProcess = new Set<ContainerId>();
-
-        containersToProcess.add(currentContainer);
-        if (wasCrossContainerMove && originalContainer) {
-          containersToProcess.add(originalContainer);
-        }
-
-        for (const containerId of containersToProcess) {
-          const groupKeys = groupItems[containerId] ?? [];
-
-          sortOrderBase = 0;
-
-          for (const groupKey of groupKeys) {
-            const group = groupMap.get(groupKey);
-
-            if (!group) continue;
-
-            // Update all groceries in this group with sequential sortOrders
-            for (const source of group.sources) {
-              const update: { id: string; sortOrder: number; storeId?: string | null } = {
-                id: source.grocery.id,
-                sortOrder: sortOrderBase++,
-              };
-
-              // If this is the moved group and it was a cross-container move, update storeId
-              if (groupKey === active.id && wasCrossContainerMove) {
-                update.storeId = newStoreId ?? null;
-              }
-
-              updates.push(update);
-            }
+            onReorderGroups(updates);
           }
-        }
-
-        if (updates.length > 0) {
-          onReorderGroups(updates);
         }
       }
 
@@ -313,7 +242,7 @@ export function useGroupedGroceryDnd({
       setOverContainerId(null);
       clonedGroupItems.current = null;
     },
-    [findContainer, groupItems, groupMap, onReorderGroups]
+    [findContainer, groupMap, onReorderGroups]
   );
 
   const handleDragCancel = useCallback(() => {

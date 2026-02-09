@@ -11,6 +11,7 @@ import { startImageImportWorker } from "@/server/queue/image-import/worker";
 import { startPasteImportWorker } from "@/server/queue/paste-import/worker";
 import { startNutritionEstimationWorker } from "@/server/queue/nutrition-estimation/worker";
 import { startAutoTaggingWorker } from "@/server/queue/auto-tagging/worker";
+import { startAutoCategorizationWorker } from "@/server/queue/auto-categorization/worker";
 import { startAllergyDetectionWorker } from "@/server/queue/allergy-detection/worker";
 import { startCaldavSyncWorker } from "@/server/queue/caldav-sync/worker";
 import {
@@ -50,6 +51,7 @@ export async function startWorkers(): Promise<void> {
     startPasteImportWorker(),
     startNutritionEstimationWorker(),
     startAutoTaggingWorker(),
+    startAutoCategorizationWorker(),
     startAllergyDetectionWorker(),
     startCaldavSyncWorker(),
   ]);

@@ -8,6 +8,7 @@ import type {
   AuthProviderGoogleInput,
   RecipePermissionPolicy,
   PromptsConfigInput,
+  TimerKeywordsInput,
   ServerConfigKey,
 } from "@/server/db/zodSchemas/server-config";
 
@@ -51,6 +52,9 @@ export type AdminMutationsResult = {
   updateUnits: (json: string) => Promise<{ success: boolean; error?: string }>;
   updateRecurrenceConfig: (json: string) => Promise<{ success: boolean; error?: string }>;
   updatePrompts: (config: PromptsConfigInput) => Promise<{ success: boolean; error?: string }>;
+  updateTimerKeywords: (
+    config: TimerKeywordsInput
+  ) => Promise<{ success: boolean; error?: string }>;
 
   // AI & Video
   updateAIConfig: (config: AIConfig) => Promise<{ success: boolean; error?: string }>;
@@ -106,6 +110,9 @@ export function useAdminMutations(): AdminMutationsResult {
     trpc.admin.content.updateRecurrenceConfig.mutationOptions()
   );
   const updatePromptsMutation = useMutation(trpc.admin.content.updatePrompts.mutationOptions());
+  const updateTimerKeywordsMutation = useMutation(
+    trpc.admin.content.updateTimerKeywords.mutationOptions()
+  );
 
   // AI & Video
   const updateAIConfigMutation = useMutation(trpc.admin.updateAIConfig.mutationOptions());
@@ -171,7 +178,13 @@ export function useAdminMutations(): AdminMutationsResult {
 
     // Content config
     updateContentIndicators: async (json) => {
-      return withInvalidate(updateContentIndicatorsMutation.mutateAsync(json));
+      const result = await withInvalidate(updateContentIndicatorsMutation.mutateAsync(json));
+
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: trpc.config.timersEnabled.queryKey() });
+      }
+
+      return result;
     },
     updateUnits: async (json) => {
       return withInvalidate(updateUnitsMutation.mutateAsync(json));
@@ -181,6 +194,16 @@ export function useAdminMutations(): AdminMutationsResult {
     },
     updatePrompts: async (config) => {
       return withInvalidate(updatePromptsMutation.mutateAsync(config));
+    },
+    updateTimerKeywords: async (config) => {
+      const result = await withInvalidate(updateTimerKeywordsMutation.mutateAsync(config));
+
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: trpc.config.timerKeywords.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.config.timersEnabled.queryKey() });
+      }
+
+      return result;
     },
 
     // AI & Video

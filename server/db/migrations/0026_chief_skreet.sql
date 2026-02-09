@@ -1,0 +1,2 @@
+CREATE TYPE "public"."recipe_category" AS ENUM('Breakfast', 'Lunch', 'Dinner', 'Snack');--> statement-breakpoint
+ALTER TABLE "recipes" ADD COLUMN "categories" "recipe_category"[] DEFAULT '{}' NOT NULL;

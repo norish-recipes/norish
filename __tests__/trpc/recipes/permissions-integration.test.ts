@@ -416,7 +416,15 @@ describe("recipe permission enforcement", () => {
                 isServerAdmin: ctx.isServerAdmin,
               },
               input.limit,
-              input.cursor
+              input.cursor,
+              input.search,
+              input.searchFields,
+              input.tags,
+              input.filterMode,
+              input.sortMode,
+              input.minRating,
+              input.maxCookingTime,
+              input.categories
             );
 
             return result;
@@ -434,7 +442,15 @@ describe("recipe permission enforcement", () => {
           isServerAdmin: false,
         },
         50,
-        0
+        0,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined
       );
     });
   });

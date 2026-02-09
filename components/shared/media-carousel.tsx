@@ -2,12 +2,14 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Button } from "@heroui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { AnimatePresence, motion } from "motion/react";
 import NextImage from "next/image";
+import { useTranslations } from "next-intl";
 
 import VideoPlayer from "@/components/shared/video-player";
 import ImageLightbox from "@/components/shared/image-lightbox";
+import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
 
 export interface MediaItem {
   type: "image" | "video";
@@ -91,10 +93,12 @@ export default function MediaCarousel({
   const [direction, setDirection] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const { handleImageError, hasError } = useImageErrors();
 
   // Touch handling state
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const t = useTranslations("recipes.carousel");
 
   // Sort items: order ascending, then videos before images
   const sortedItems = useMemo(() => {
@@ -194,7 +198,7 @@ export default function MediaCarousel({
       <div
         className={`bg-default-200 relative w-full overflow-hidden ${roundedClass} ${aspectRatioClass} ${className} flex items-center justify-center`}
       >
-        <span className="text-default-500 font-medium">No media available</span>
+        <span className="text-default-500 font-medium">{t("noMediaAvailable")}</span>
       </div>
     );
   }
@@ -215,6 +219,8 @@ export default function MediaCarousel({
               poster={item.thumbnail || undefined}
               src={item.src}
             />
+          ) : hasError(item.src) ? (
+            <FallbackPlaceholder />
           ) : (
             <div
               className="group relative h-full w-full cursor-pointer"
@@ -234,6 +240,7 @@ export default function MediaCarousel({
                 alt="Recipe image"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 src={item.src}
+                onError={() => handleImageError(item.src)}
               />
             </div>
           )}
@@ -278,6 +285,8 @@ export default function MediaCarousel({
                 poster={sortedItems[currentIndex].thumbnail || undefined}
                 src={sortedItems[currentIndex].src}
               />
+            ) : hasError(sortedItems[currentIndex].src) ? (
+              <FallbackPlaceholder />
             ) : (
               <div
                 className="relative h-full w-full cursor-pointer"
@@ -297,6 +306,7 @@ export default function MediaCarousel({
                   alt={`Recipe media ${currentIndex + 1}`}
                   className="object-cover"
                   src={sortedItems[currentIndex].src}
+                  onError={() => handleImageError(sortedItems[currentIndex].src)}
                 />
               </div>
             )}

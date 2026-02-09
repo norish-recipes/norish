@@ -51,3 +51,9 @@ bun.lockb
 
 docker-compose.yml
 
+# archives
+*.tar.gz
+
+.sisyphus
+/.sisyphus
+/.sisyphus/

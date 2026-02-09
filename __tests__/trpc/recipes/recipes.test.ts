@@ -15,6 +15,8 @@ import {
   getRecipeFull,
   getRecipeOwnerId,
   createRecipeWithRefs,
+  updateRecipeCategories,
+  getRecipesWithoutCategories,
   deleteRecipeById,
   dashboardRecipe,
 } from "../../mocks/recipes-repository";
@@ -71,9 +73,13 @@ describe("recipes procedures", () => {
               input.limit,
               input.cursor,
               input.search,
+              input.searchFields,
               input.tags,
               input.filterMode,
-              input.sortMode
+              input.sortMode,
+              input.minRating,
+              input.maxCookingTime,
+              input.categories
             );
 
             return {
@@ -91,6 +97,8 @@ describe("recipes procedures", () => {
         limit: 50,
         filterMode: "OR",
         sortMode: "dateDesc",
+        categories: ["Breakfast", "Dinner"],
+        searchFields: ["title", "ingredients"],
       });
 
       expect(listRecipes).toHaveBeenCalledWith(
@@ -102,9 +110,13 @@ describe("recipes procedures", () => {
         50,
         0,
         undefined,
+        ["title", "ingredients"],
         undefined,
         "OR",
-        "dateDesc"
+        "dateDesc",
+        undefined,
+        undefined,
+        ["Breakfast", "Dinner"]
       );
       expect(result.recipes).toEqual(mockRecipes);
       expect(result.total).toBe(2);
@@ -132,7 +144,15 @@ describe("recipes procedures", () => {
                 isServerAdmin: ctx.isServerAdmin,
               },
               input.limit,
-              input.cursor
+              input.cursor,
+              input.search,
+              input.searchFields,
+              input.tags,
+              input.filterMode,
+              input.sortMode,
+              input.minRating,
+              input.maxCookingTime,
+              input.categories
             );
 
             return {
@@ -147,7 +167,89 @@ describe("recipes procedures", () => {
       const caller = t.createCallerFactory(testRouter)(ctx);
       const result = await caller.list({ cursor: 0, limit: 50 });
 
+      expect(listRecipes).toHaveBeenCalledWith(
+        {
+          userId: ctx.user.id,
+          householdUserIds: ctx.householdUserIds,
+          isServerAdmin: ctx.isServerAdmin,
+        },
+        50,
+        0,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined
+      );
       expect(result.nextCursor).toBe(50);
+    });
+
+    it("filters recipes by categories", async () => {
+      const mockRecipes = [
+        createMockRecipeDashboard({ id: "r1", categories: ["Breakfast"] }),
+        createMockRecipeDashboard({ id: "r2", categories: ["Dinner"] }),
+      ];
+
+      listRecipes.mockResolvedValue({
+        recipes: mockRecipes,
+        total: 2,
+      });
+
+      const testRouter = t.router({
+        list: t.procedure
+          .input((v: any) => v)
+          .query(async ({ input }) => {
+            const result = await listRecipes(
+              {
+                userId: ctx.user.id,
+                householdUserIds: ctx.householdUserIds,
+                isServerAdmin: ctx.isServerAdmin,
+              },
+              input.limit,
+              input.cursor,
+              input.search,
+              input.searchFields,
+              input.tags,
+              input.filterMode,
+              input.sortMode,
+              input.minRating,
+              input.maxCookingTime,
+              input.categories
+            );
+
+            return result;
+          }),
+      });
+
+      const caller = t.createCallerFactory(testRouter)(ctx);
+      const result = await caller.list({
+        cursor: 0,
+        limit: 50,
+        categories: ["Breakfast", "Dinner"],
+      });
+
+      expect(listRecipes).toHaveBeenCalledWith(
+        {
+          userId: ctx.user.id,
+          householdUserIds: ctx.householdUserIds,
+          isServerAdmin: ctx.isServerAdmin,
+        },
+        50,
+        0,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        ["Breakfast", "Dinner"]
+      );
+      expect(result.recipes).toEqual(mockRecipes);
+      expect(result.total).toBe(2);
     });
   });
 
@@ -310,6 +412,80 @@ describe("recipes procedures", () => {
       expect(recipeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "created", {
         recipe: mockDashboard,
       });
+    });
+  });
+
+  describe("categories", () => {
+    it("updates recipe categories and emits updated event", async () => {
+      updateRecipeCategories.mockResolvedValue(undefined);
+      getRecipeFull.mockResolvedValue(createMockFullRecipe({ id: "recipe-1" }));
+      getRecipeOwnerId.mockResolvedValue("test-user-id");
+      canAccessResource.mockResolvedValue(true);
+
+      const testRouter = t.router({
+        updateCategories: t.procedure
+          .input((v: any) => v)
+          .mutation(async ({ input }) => {
+            const ownerId = await getRecipeOwnerId(input.recipeId);
+
+            if (ownerId !== null) {
+              const canEdit = await canAccessResource(
+                "edit",
+                ctx.user.id,
+                ownerId,
+                ctx.householdUserIds,
+                ctx.isServerAdmin
+              );
+
+              if (!canEdit) {
+                throw new Error("FORBIDDEN");
+              }
+            }
+
+            await updateRecipeCategories(input.recipeId, input.categories);
+
+            const updated = await getRecipeFull(input.recipeId);
+
+            if (updated) {
+              recipeEmitter.emitToHousehold(ctx.householdKey, "updated", { recipe: updated });
+            }
+
+            return { success: true };
+          }),
+      });
+
+      const caller = t.createCallerFactory(testRouter)(ctx);
+      const result = await caller.updateCategories({
+        recipeId: "recipe-1",
+        categories: ["Dinner", "Snack"],
+      });
+
+      expect(updateRecipeCategories).toHaveBeenCalledWith("recipe-1", ["Dinner", "Snack"]);
+      expect(recipeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "updated", {
+        recipe: expect.objectContaining({ id: "recipe-1" }),
+      });
+      expect(result).toEqual({ success: true });
+    });
+
+    it("returns only recipes without categories", async () => {
+      const expected = [
+        { id: "recipe-1", name: "No Categories" },
+        { id: "recipe-2", name: "Still Empty" },
+      ];
+
+      getRecipesWithoutCategories.mockResolvedValue(expected);
+
+      const testRouter = t.router({
+        listWithoutCategories: t.procedure
+          .input((v: any) => v)
+          .query(async () => getRecipesWithoutCategories()),
+      });
+
+      const caller = t.createCallerFactory(testRouter)(ctx);
+      const result = await caller.listWithoutCategories(undefined);
+
+      expect(getRecipesWithoutCategories).toHaveBeenCalled();
+      expect(result).toEqual(expected);
     });
   });
 

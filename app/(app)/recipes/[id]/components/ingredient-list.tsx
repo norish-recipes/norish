@@ -8,11 +8,13 @@ import { useRecipeContextRequired } from "../context";
 import { formatAmount } from "@/lib/format-amount";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 
 export default function IngredientsList() {
   const { adjustedIngredients, recipe } = useRecipeContextRequired();
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
   const { mode } = useAmountDisplayPreference();
+  const { formatAmountUnit } = useUnitFormatter();
 
   // Use adjustedIngredients directly, fall back to recipe ingredients only if empty
   const display = adjustedIngredients?.length > 0 ? adjustedIngredients : recipe.recipeIngredients;
@@ -56,7 +58,8 @@ export default function IngredientsList() {
           }
 
           const amount = formatAmount(it.amount, mode);
-          const unit = it.unit || "";
+          // Format unit with locale-aware display
+          const unit = it.unit ? formatAmountUnit(null, it.unit) : "";
           const isChecked = checked.has(idx);
 
           return (
@@ -92,14 +95,14 @@ export default function IngredientsList() {
                 >
                   {amount !== "" && (
                     <span
-                      className={`text-base font-semibold tabular-nums ${isChecked ? "text-default-500 line-through" : "text-foreground"}`}
+                      className={`text-base font-bold tabular-nums ${isChecked ? "text-default-500 line-through" : "text-foreground"}`}
                     >
                       {amount}
                     </span>
                   )}
                   {unit && (
                     <span
-                      className={`text-base font-medium ${isChecked ? "text-default-400 line-through" : "text-primary-600 dark:text-primary-400"}`}
+                      className={`text-base font-bold ${isChecked ? "text-default-400 line-through" : "text-primary-600 dark:text-primary-400"}`}
                     >
                       {unit}
                     </span>

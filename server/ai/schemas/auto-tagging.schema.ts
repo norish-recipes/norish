@@ -8,9 +8,7 @@ export const autoTaggingSchema = z
   .object({
     tags: z
       .array(z.string())
-      .describe(
-        "Array of lowercase tag strings (max 10). Tags should be concise (1-3 words each)."
-      ),
+      .describe("Array of lowercase tag strings max 10. Tags should be concise 1-3 words each."),
   })
   .strict();
 

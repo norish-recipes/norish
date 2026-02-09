@@ -29,6 +29,16 @@ const onAutoTaggingCompleted = createPolicyAwareSubscription(
   "autoTaggingCompleted",
   "auto-tagging completed"
 );
+const onAutoCategorizationStarted = createPolicyAwareSubscription(
+  recipeEmitter,
+  "autoCategorizationStarted",
+  "auto-categorization started"
+);
+const onAutoCategorizationCompleted = createPolicyAwareSubscription(
+  recipeEmitter,
+  "autoCategorizationCompleted",
+  "auto-categorization completed"
+);
 const onAllergyDetectionStarted = createPolicyAwareSubscription(
   recipeEmitter,
   "allergyDetectionStarted",
@@ -61,6 +71,8 @@ export const recipesSubscriptions = router({
   onNutritionStarted,
   onAutoTaggingStarted,
   onAutoTaggingCompleted,
+  onAutoCategorizationStarted,
+  onAutoCategorizationCompleted,
   onAllergyDetectionStarted,
   onAllergyDetectionCompleted,
   onProcessingToast,

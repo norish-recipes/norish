@@ -2,6 +2,17 @@
   "page": {
     "title": "Calendar"
   },
+  "mobile": {
+    "today": "Today",
+    "scrollToToday": "Go to today"
+  },
+  "editNote": {
+    "title": "Edit Note",
+    "noteLabel": "Note",
+    "notePlaceholder": "Enter note...",
+    "date": "Date",
+    "slot": "Slot"
+  },
   "navigation": {
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
@@ -18,15 +29,19 @@
     "sun": "Sun"
   },
   "timeline": {
-    "noItems": "No items",
-    "viewGroceries": "View groceries",
+    "noItems": "No items planned",
     "goToRecipe": "Go to recipe",
-    "deleteItem": "Delete item",
-    "itemActions": "Item actions",
-    "viewAllergenWarning": "View allergen warning",
-    "allergyWarning": "Allergy warning:",
-    "contains": "Contains: {allergens}",
-    "addItem": "Add item"
+    "addItem": "Add item",
+    "untitled": "Untitled",
+    "serving": "serving",
+    "servings": "servings",
+    "noImage": "No image",
+    "note": "Note"
+  },
+  "editPlannedRecipe": {
+    "title": "Edit Planned Recipe",
+    "date": "Date",
+    "slot": "Slot"
   },
   "panel": {
     "addToCalendar": "Add to Calendar",
@@ -34,6 +49,7 @@
     "noDaysAvailable": "No days available.",
     "searchPlaceholder": "Search recipes or add notes...",
     "addNote": "Add Note: {input}",
+    "randomRecipe": "Random Recipe",
     "noRecipesFound": "No recipes found.",
     "failedToLoadRecipes": "Failed to load recipes."
   }

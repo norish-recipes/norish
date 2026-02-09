@@ -11,6 +11,7 @@
  */
 
 import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import type { RecipeCategory } from "@/types";
 
 import { randomUUID } from "crypto";
 
@@ -44,6 +45,50 @@ function parseTags(keywords: unknown): { name: string }[] {
   return keywords
     .filter((k): k is string => typeof k === "string")
     .map((k) => ({ name: k.toLowerCase() }));
+}
+
+function parseCategories(recipeCategory: unknown): RecipeCategory[] {
+  const validCategories: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
+  const categoryMap: Record<string, RecipeCategory> = {
+    breakfast: "Breakfast",
+    lunch: "Lunch",
+    dinner: "Dinner",
+    snack: "Snack",
+    brunch: "Breakfast",
+    "morning meal": "Breakfast",
+    supper: "Dinner",
+    "main course": "Dinner",
+    "main dish": "Dinner",
+    entree: "Dinner",
+    entrée: "Dinner",
+    appetizer: "Snack",
+    dessert: "Snack",
+    starter: "Snack",
+    side: "Snack",
+    "side dish": "Snack",
+  };
+
+  let rawValues: string[] = [];
+
+  if (typeof recipeCategory === "string") {
+    rawValues = recipeCategory.split(/[,;]/).map((s) => s.trim().toLowerCase());
+  } else if (Array.isArray(recipeCategory)) {
+    rawValues = recipeCategory
+      .filter((v): v is string => typeof v === "string")
+      .map((s) => s.trim().toLowerCase());
+  }
+
+  const mapped = new Set<RecipeCategory>();
+
+  for (const raw of rawValues) {
+    const category = categoryMap[raw];
+
+    if (category && validCategories.includes(category)) {
+      mapped.add(category);
+    }
+  }
+
+  return Array.from(mapped);
 }
 
 /**
@@ -103,6 +148,9 @@ export async function normalizeRecipeFromJson(
   // --- TAGS ---
   const tags = parseTags(jsonObj.keywords);
 
+  // --- CATEGORIES ---
+  const categories = parseCategories(jsonObj.recipeCategory);
+
   // --- FINAL STRUCTURE ---
   return {
     id: effectiveRecipeId,
@@ -123,6 +171,7 @@ export async function normalizeRecipeFromJson(
     steps,
     recipeIngredients,
     tags,
+    categories,
     images,
     videos,
   };

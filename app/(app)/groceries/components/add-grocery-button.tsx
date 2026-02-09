@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import { PlusIcon } from "@heroicons/react/20/solid";
+import { PlusIcon } from "@heroicons/react/16/solid";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
@@ -45,7 +45,7 @@ export default function AddGroceryButton() {
         whileTap={{ scale: 0.95 }}
       >
         <Button
-          className="shadow-lg"
+          className="font-medium shadow-lg"
           color="primary"
           radius="full"
           size="lg"

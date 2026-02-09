@@ -7,6 +7,7 @@ import { Bars3Icon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 
 interface GroceryDragOverlayProps {
   grocery: GroceryDto;
@@ -21,6 +22,7 @@ export function GroceryDragOverlay({
   recipeName,
 }: GroceryDragOverlayProps) {
   const t = useTranslations("groceries.item");
+  const { formatAmountUnit } = useUnitFormatter();
   const hasSubtitle = Boolean(recurringGrocery || recipeName);
   const containerClass =
     "bg-content1 ring-primary/20 flex items-center gap-3 rounded-lg px-4 py-3 shadow-xl ring-2";
@@ -44,7 +46,7 @@ export function GroceryDragOverlay({
                 grocery.isDone ? "text-default-400" : "text-primary"
               }`}
             >
-              {formatAmountUnit(grocery)}
+              {formatAmountUnit(grocery.amount, grocery.unit)}
             </span>
           )}
           <span
@@ -66,21 +68,4 @@ export function GroceryDragOverlay({
       </div>
     </div>
   );
-}
-
-function formatAmountUnit(grocery: GroceryDto): string {
-  const parts: string[] = [];
-
-  if (grocery.amount && grocery.amount > 0) {
-    const formattedAmount =
-      grocery.amount % 1 === 0 ? grocery.amount.toString() : grocery.amount.toFixed(1);
-
-    parts.push(formattedAmount);
-  }
-
-  if (grocery.unit) {
-    parts.push(grocery.unit);
-  }
-
-  return parts.join(" ");
 }

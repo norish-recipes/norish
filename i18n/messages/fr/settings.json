@@ -63,6 +63,33 @@
       "title": "Importer une archive de recettes",
       "description": "Importer des recettes depuis Mela (.melarecipes), Mealie, Tandoor ou des exports Paprika (.zip)"
     },
+    "siteAuthTokens": {
+      "title": "Jetons d'authentification de site",
+      "description": "Ajoutez des en-têtes ou cookies envoyés lors de l'importation de recettes depuis des sites spécifiques. Utile pour les sites nécessitant une connexion (ex. Instagram, Facebook).",
+      "domain": "Domaine",
+      "domainPlaceholder": "ex. instagram.com",
+      "name": "Nom",
+      "namePlaceholder": "ex. Cookie ou Authorization",
+      "value": "Valeur",
+      "valuePlaceholder": "Valeur du jeton ou cookie",
+      "type": "Type",
+      "typeHeader": "En-tête",
+      "typeCookie": "Cookie",
+      "addButton": "Ajouter un jeton",
+      "noTokens": "Aucun jeton d'authentification de site configuré.",
+      "tableHeaders": {
+        "domain": "DOMAINE",
+        "name": "NOM",
+        "type": "TYPE",
+        "created": "CRÉÉ",
+        "actions": "ACTIONS"
+      },
+      "deleteModal": {
+        "title": "Supprimer le jeton",
+        "message": "Êtes-vous sûr de vouloir supprimer ce jeton d'authentification ? Les importations depuis ce site pourraient ne plus fonctionner.",
+        "confirmButton": "Supprimer le jeton"
+      }
+    },
     "dangerZone": {
       "title": "Zone de danger",
       "description": "Une fois votre compte supprimé, il n’y a plus de retour. Soyez certain de votre choix.",
@@ -353,7 +380,11 @@
       "contentIndicators": {
         "title": "Indicateurs de contenu",
         "subtitle": "Mots-clés identifiant les pages de recettes",
-        "description": "Les indicateurs Schema détectent les données structurées (JSON-LD, microdata). Les indicateurs de contenu sont des mots-clés suggérant qu’une page contient une recette."
+        "description": "Les indicateurs Schema détectent les données structurées (JSON-LD, microdata). Les indicateurs de contenu sont des mots-clés suggérant qu’une page contient une recette.",
+        "timersEnabled": {
+          "title": "Activer les minuteurs de recette",
+          "description": "Détecter et afficher des minuteurs interactifs dans les recettes"
+        }
       },
       "units": {
         "title": "Unités de mesure",
@@ -361,9 +392,25 @@
         "description": "Définissez les unités avec leurs abréviations, pluriels et variantes orthographiques. Utilisé lors de l’analyse des ingrédients."
       },
       "recurrence": {
-        "title": "Récurrences",
-        "subtitle": "Motifs de langage naturel pour les répétitions",
-        "description": "Définissez les motifs de langage pour détecter les règles comme « chaque semaine », « tous les deux jours », etc."
+        "title": "Modèles de récurrence",
+        "subtitle": "Modèles en langage naturel pour les éléments récurrents",
+        "description": "Définissez des modèles spécifiques à la langue pour analyser les règles de récurrence à partir du langage naturel (par exemple, 'chaque semaine', 'tous les jours')."
+      },
+      "timerKeywords": {
+        "title": "Mots-clés de minuterie",
+        "subtitle": "Mots-clés d'unité de temps pour la détection de minuterie",
+        "description": "Configurez les mots-clés utilisés pour détecter les minuteries dans les instructions de recette. Supporte plusieurs langues.",
+        "enableToggle": "Activer la détection de minuterie",
+        "hoursLabel": "Mots-clés pour heures",
+        "hoursPlaceholder": "heure, heures, h",
+        "hoursHelp": "Mots-clés pour les heures (par ex. heure, hour, stunde, uur)",
+        "minutesLabel": "Mots-clés pour minutes",
+        "minutesPlaceholder": "minute, minutes, min",
+        "minutesHelp": "Mots-clés pour les minutes (par ex. minute, minuten, minuut)",
+        "secondsLabel": "Mots-clés pour secondes",
+        "secondsPlaceholder": "seconde, secondes, sec, s",
+        "secondsHelp": "Mots-clés pour les secondes (par ex. seconde, second, sekunde)",
+        "unsavedChanges": "Modifications non enregistrées"
       }
     },
     "aiProcessing": {
@@ -380,6 +427,15 @@
       "prompts": {
         "title": "Prompts",
         "subtitle": "Personnalisez les instructions IA pour le traitement des recettes"
+      },
+      "bulkCategorization": {
+        "title": "Catégorisation en masse",
+        "subtitle": "Catégoriser les recettes non catégorisées avec l'IA",
+        "description": "Mettre en file d'attente toutes les recettes non catégorisées pour la détection de catégorie par IA. Les catégories incluent Petit-déjeuner, Déjeuner, Dîner et Collation.",
+        "button": "Catégoriser toutes les recettes",
+        "queued": "{count, plural, =0 {Aucune recette à catégoriser} one {# recette en file d'attente} other {# recettes en file d'attente}}",
+        "success": "Catégorisation démarrée",
+        "error": "Échec du démarrage de la catégorisation"
       }
     },
     "aiConfig": {
@@ -476,8 +532,8 @@
       "autoTaggingDescription": "Utilisé pour générer les tags des recettes importées",
       "autoTaggingPlaceholder": "Entrez le prompt..."
     },
+    "unsavedChanges": "Modifications non enregistrées",
     "jsonEditor": {
-      "unsavedChanges": "Modifications non enregistrées",
       "placeholder": "Entrez la configuration JSON...",
       "invalidJson": "Format JSON invalide",
       "failedToSave": "Échec de l’enregistrement",

@@ -2,6 +2,17 @@
   "page": {
     "title": "Kalender"
   },
+  "mobile": {
+    "today": "Heute",
+    "scrollToToday": "Zu heute springen"
+  },
+  "editNote": {
+    "title": "Notiz bearbeiten",
+    "noteLabel": "Notiz",
+    "notePlaceholder": "Notiz eingeben...",
+    "date": "Datum",
+    "slot": "Zeitfenster"
+  },
   "navigation": {
     "previousMonth": "Vorheriger Monat",
     "nextMonth": "Nächster Monat",
@@ -18,15 +29,19 @@
     "sun": "So"
   },
   "timeline": {
-    "noItems": "Keine Einträge",
-    "viewGroceries": "Einkaufsliste anzeigen",
+    "noItems": "Keine Einträge geplant",
     "goToRecipe": "Zum Rezept",
-    "deleteItem": "Eintrag löschen",
-    "itemActions": "Eintrag-Aktionen",
-    "viewAllergenWarning": "Allergen-Warnung anzeigen",
-    "allergyWarning": "Allergie-Warnung:",
-    "contains": "Enthält: {allergens}",
-    "addItem": "Eintrag hinzufügen"
+    "addItem": "Eintrag hinzufügen",
+    "untitled": "Ohne Titel",
+    "serving": "Portion",
+    "servings": "Portionen",
+    "noImage": "Kein Bild",
+    "note": "Notiz"
+  },
+  "editPlannedRecipe": {
+    "title": "Geplantes Rezept bearbeiten",
+    "date": "Datum",
+    "slot": "Zeitfenster"
   },
   "panel": {
     "addToCalendar": "Zum Kalender hinzufügen",
@@ -34,6 +49,7 @@
     "noDaysAvailable": "Keine Tage verfügbar.",
     "searchPlaceholder": "Rezepte durchsuchen oder Notizen hinzufügen...",
     "addNote": "Notiz hinzufügen: {input}",
+    "randomRecipe": "Zufälliges Rezept",
     "noRecipesFound": "Keine Rezepte gefunden.",
     "failedToLoadRecipes": "Fehler beim Laden der Rezepte."
   }

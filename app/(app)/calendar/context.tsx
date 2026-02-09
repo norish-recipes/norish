@@ -1,6 +1,15 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useMemo, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 
 import {
   useCalendarQuery,
@@ -8,105 +17,199 @@ import {
   useCalendarSubscription,
   type CalendarData,
 } from "@/hooks/calendar";
-import { Slot, CaldavItemType } from "@/types";
-import { dateKey, startOfMonth, endOfMonth, addMonths } from "@/lib/helpers";
+import { Slot } from "@/types";
+import { dateKey, addWeeks, getWeekStart, getWeekEnd } from "@/lib/helpers";
+
+type PlannedItem = {
+  id: string;
+  userId: string;
+  date: string;
+  slot: Slot;
+  sortOrder: number;
+  itemType: "recipe" | "note";
+  recipeId: string | null;
+  title: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type DateRange = {
+  start: Date;
+  end: Date;
+};
 
 type Ctx = {
   plannedItemsByDate: CalendarData;
   isLoading: boolean;
-  planMeal: (
-    date: string,
-    slot: Slot,
-    recipeId: string,
-    recipeName: string,
-    recipeTags?: string[]
-  ) => void;
+  isLoadingMore: boolean;
+  dateRange: DateRange;
+  planMeal: (date: string, slot: Slot, recipeId: string) => void;
   planNote: (date: string, slot: Slot, title: string) => void;
-  deletePlanned: (id: string, date: string, itemType: CaldavItemType) => void;
-  updateItemDate: (id: string, oldDate: string, newDate: string, itemType: CaldavItemType) => void;
+  deletePlanned: (id: string) => void;
+  moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex: number) => void;
+  updateItem: (itemId: string, title: string) => void;
+  getItemsForSlot: (date: string, slot: Slot) => PlannedItem[];
+  expandRange: (direction: "past" | "future") => void;
+  isDateInRange: (date: Date) => boolean;
 };
 
 const CalendarContext = createContext<Ctx | null>(null);
 
-export function CalendarContextProvider({ children }: { children: ReactNode }) {
-  // Default range: previous month to next month
-  const [dateRange] = useState(() => {
-    const now = new Date();
+type CalendarContextProviderProps = {
+  children: ReactNode;
+  /** Initial range mode - desktop loads current week, mobile loads ±2 weeks */
+  mode?: "desktop" | "mobile";
+};
 
+function getInitialDateRange(mode: "desktop" | "mobile"): DateRange {
+  const now = new Date();
+
+  if (mode === "desktop") {
+    // Desktop: load current week only initially
     return {
-      start: startOfMonth(addMonths(now, -1)),
-      end: endOfMonth(addMonths(now, 1)),
+      start: getWeekStart(now),
+      end: getWeekEnd(now),
     };
-  });
+  }
+
+  // Mobile: load ±2 weeks from today
+  return {
+    start: getWeekStart(addWeeks(now, -2)),
+    end: getWeekEnd(addWeeks(now, 2)),
+  };
+}
+
+export function CalendarContextProvider({
+  children,
+  mode = "mobile",
+}: CalendarContextProviderProps) {
+  const [dateRange, setDateRange] = useState<DateRange>(() => getInitialDateRange(mode));
+  const [isExpandingRange, setIsExpandingRange] = useState(false);
 
   const startISO = dateKey(dateRange.start);
   const endISO = dateKey(dateRange.end);
 
-  const { calendarData, isLoading } = useCalendarQuery(startISO, endISO);
-  const {
-    createPlannedRecipe,
-    deletePlannedRecipe,
-    updatePlannedRecipeDate,
-    createNote,
-    deleteNote,
-    updateNoteDate,
-  } = useCalendarMutations(startISO, endISO);
+  const { calendarData, isLoading: isQueryLoading } = useCalendarQuery(startISO, endISO);
+  const { createItem, deleteItem, moveItem, updateItem } = useCalendarMutations(startISO, endISO);
 
-  // Subscribe to WebSocket events (updates query cache via internal cache helpers)
-  useCalendarSubscription();
+  // Track if initial load has completed (only show skeleton on first load)
+  const hasLoadedOnceRef = useRef(false);
+
+  useEffect(() => {
+    if (!isQueryLoading && !hasLoadedOnceRef.current) {
+      hasLoadedOnceRef.current = true;
+    }
+  }, [isQueryLoading]);
+
+  // isInitialLoading is true only for the very first load
+  const isInitialLoading = isQueryLoading && !hasLoadedOnceRef.current;
+
+  useCalendarSubscription(startISO, endISO);
+
+  const expandRange = useCallback(
+    (direction: "past" | "future") => {
+      if (isExpandingRange) return;
+
+      setIsExpandingRange(true);
+
+      setDateRange((prev) => {
+        // Expand by 12 days (divisible by both 2 and 3 columns) to prevent grid shifting
+        const daysToAdd = 12;
+
+        if (direction === "past") {
+          const newStart = new Date(prev.start);
+
+          newStart.setDate(newStart.getDate() - daysToAdd);
+
+          return {
+            start: newStart,
+            end: prev.end,
+          };
+        }
+        const newEnd = new Date(prev.end);
+
+        newEnd.setDate(newEnd.getDate() + daysToAdd);
+
+        return {
+          start: prev.start,
+          end: newEnd,
+        };
+      });
+
+      // Reset expanding state after a short delay to allow new query to start
+      setTimeout(() => setIsExpandingRange(false), 100);
+    },
+    [isExpandingRange]
+  );
+
+  const isDateInRange = useCallback(
+    (date: Date): boolean => {
+      const d = new Date(date);
+
+      return d >= dateRange.start && d <= dateRange.end;
+    },
+    [dateRange]
+  );
 
   const planMeal = useCallback(
-    (
-      date: string,
-      slot: Slot,
-      recipeId: string,
-      recipeName: string,
-      recipeTags?: string[]
-    ): void => {
-      createPlannedRecipe(date, slot, recipeId, recipeName, recipeTags);
+    (date: string, slot: Slot, recipeId: string): void => {
+      createItem(date, slot, "recipe", recipeId, undefined);
     },
-    [createPlannedRecipe]
+    [createItem]
   );
 
   const planNote = useCallback(
     (date: string, slot: Slot, title: string): void => {
-      createNote(date, slot, title);
+      createItem(date, slot, "note", undefined, title);
     },
-    [createNote]
+    [createItem]
   );
 
   const deletePlanned = useCallback(
-    (id: string, date: string, itemType: CaldavItemType): void => {
-      if (itemType === "recipe") {
-        deletePlannedRecipe(id, date);
-      } else {
-        deleteNote(id, date);
-      }
+    (id: string): void => {
+      deleteItem(id);
     },
-    [deletePlannedRecipe, deleteNote]
+    [deleteItem]
   );
 
-  const updateItemDate = useCallback(
-    (id: string, oldDate: string, newDate: string, itemType: CaldavItemType): void => {
-      if (itemType === "recipe") {
-        updatePlannedRecipeDate(id, newDate, oldDate);
-      } else {
-        updateNoteDate(id, newDate, oldDate);
-      }
+  const getItemsForSlot = useCallback(
+    (date: string, slot: Slot): PlannedItem[] => {
+      const items = calendarData[date] ?? [];
+
+      return items.filter((item) => item.slot === slot).sort((a, b) => a.sortOrder - b.sortOrder);
     },
-    [updatePlannedRecipeDate, updateNoteDate]
+    [calendarData]
   );
 
   const value = useMemo<Ctx>(
     () => ({
       plannedItemsByDate: calendarData,
-      isLoading,
+      isLoading: isInitialLoading,
+      isLoadingMore: isExpandingRange,
+      dateRange,
       planMeal,
       planNote,
       deletePlanned,
-      updateItemDate,
+      moveItem,
+      updateItem,
+      getItemsForSlot,
+      expandRange,
+      isDateInRange,
     }),
-    [calendarData, isLoading, planMeal, planNote, deletePlanned, updateItemDate]
+    [
+      calendarData,
+      isInitialLoading,
+      isExpandingRange,
+      dateRange,
+      planMeal,
+      planNote,
+      deletePlanned,
+      moveItem,
+      updateItem,
+      getItemsForSlot,
+      expandRange,
+      isDateInRange,
+    ]
   );
 
   return <CalendarContext.Provider value={value}>{children}</CalendarContext.Provider>;

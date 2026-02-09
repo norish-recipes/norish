@@ -33,6 +33,7 @@ export { createImageImportQueue } from "./image-import/queue";
 export { createPasteImportQueue } from "./paste-import/queue";
 export { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
 export { createAutoTaggingQueue } from "./auto-tagging/queue";
+export { createAutoCategorizationQueue } from "./auto-categorization/queue";
 export { createAllergyDetectionQueue } from "./allergy-detection/queue";
 export { createCaldavSyncQueue } from "./caldav-sync/queue";
 export { createScheduledTasksQueue } from "./scheduled-tasks/queue";
@@ -43,6 +44,10 @@ export { addImageImportJob } from "./image-import/producer";
 export { addPasteImportJob } from "./paste-import/producer";
 export { addNutritionEstimationJob } from "./nutrition-estimation/producer";
 export { addAutoTaggingJob, isAutoTaggingJobActive } from "./auto-tagging/producer";
+export {
+  addAutoCategorizationJob,
+  isAutoCategorizationJobActive,
+} from "./auto-categorization/producer";
 export { addAllergyDetectionJob, isAllergyDetectionJobActive } from "./allergy-detection/producer";
 export { addCaldavSyncJob } from "./caldav-sync/producer";
 export { initializeScheduledJobs } from "./scheduled-tasks/producer";
@@ -56,6 +61,10 @@ export {
   stopNutritionEstimationWorker,
 } from "./nutrition-estimation/worker";
 export { startAutoTaggingWorker, stopAutoTaggingWorker } from "./auto-tagging/worker";
+export {
+  startAutoCategorizationWorker,
+  stopAutoCategorizationWorker,
+} from "./auto-categorization/worker";
 export {
   startAllergyDetectionWorker,
   stopAllergyDetectionWorker,
@@ -75,6 +84,8 @@ export type {
   AddNutritionEstimationJobResult,
   AutoTaggingJobData,
   AddAutoTaggingJobResult,
+  AutoCategorizationJobData,
+  AddAutoCategorizationJobResult,
   AllergyDetectionJobData,
   AddAllergyDetectionJobResult,
   CaldavSyncJobData,

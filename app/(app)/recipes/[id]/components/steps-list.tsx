@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckIcon } from "@heroicons/react/20/solid";
+import { CheckIcon } from "@heroicons/react/16/solid";
 import Image from "next/image";
 
 import { useRecipeContext } from "../context";
 
 import ImageLightbox from "@/components/shared/image-lightbox";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import { SmartInstruction } from "@/components/recipe/smart-instruction";
 
 export default function StepsList() {
   const { recipe } = useRecipeContext();
@@ -110,7 +111,17 @@ export default function StepsList() {
                         isDone ? "text-default-400 line-through" : "text-foreground"
                       }`}
                     >
-                      <SmartMarkdownRenderer disableLinks={isDone} text={s.step} />
+                      {/* Use SmartInstruction to enable timers */}
+                      {isDone ? (
+                        <SmartMarkdownRenderer disableLinks={true} text={s.step} />
+                      ) : (
+                        <SmartInstruction
+                          recipeId={recipe?.id || ""}
+                          recipeName={recipe?.name}
+                          stepIndex={currentStepNumber - 1}
+                          text={s.step}
+                        />
+                      )}
                     </p>
 
                     {/* Step images */}

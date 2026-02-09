@@ -8,156 +8,6 @@ import { calendarEmitter } from "./emitter";
 
 import { trpcLogger as log } from "@/server/logger";
 
-const onRecipePlanned = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  const eventName = calendarEmitter.householdEvent(ctx.householdKey, "recipePlanned");
-
-  log.trace(
-    { userId: ctx.user.id, householdKey: ctx.householdKey },
-    "Subscribed to recipe planned events"
-  );
-
-  try {
-    for await (const data of createSubscriptionIterable(
-      calendarEmitter,
-      ctx.multiplexer,
-      eventName,
-      signal
-    )) {
-      yield data as CalendarSubscriptionEvents["recipePlanned"];
-    }
-  } finally {
-    log.trace(
-      { userId: ctx.user.id, householdKey: ctx.householdKey },
-      "Unsubscribed from recipe planned events"
-    );
-  }
-});
-
-const onRecipeDeleted = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  const eventName = calendarEmitter.householdEvent(ctx.householdKey, "recipeDeleted");
-
-  log.trace(
-    { userId: ctx.user.id, householdKey: ctx.householdKey },
-    "Subscribed to recipe deleted events"
-  );
-
-  try {
-    for await (const data of createSubscriptionIterable(
-      calendarEmitter,
-      ctx.multiplexer,
-      eventName,
-      signal
-    )) {
-      yield data as CalendarSubscriptionEvents["recipeDeleted"];
-    }
-  } finally {
-    log.trace(
-      { userId: ctx.user.id, householdKey: ctx.householdKey },
-      "Unsubscribed from recipe deleted events"
-    );
-  }
-});
-
-const onRecipeUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  const eventName = calendarEmitter.householdEvent(ctx.householdKey, "recipeUpdated");
-
-  log.trace(
-    { userId: ctx.user.id, householdKey: ctx.householdKey },
-    "Subscribed to recipe updated events"
-  );
-
-  try {
-    for await (const data of createSubscriptionIterable(
-      calendarEmitter,
-      ctx.multiplexer,
-      eventName,
-      signal
-    )) {
-      yield data as CalendarSubscriptionEvents["recipeUpdated"];
-    }
-  } finally {
-    log.trace(
-      { userId: ctx.user.id, householdKey: ctx.householdKey },
-      "Unsubscribed from recipe updated events"
-    );
-  }
-});
-
-const onNotePlanned = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  const eventName = calendarEmitter.householdEvent(ctx.householdKey, "notePlanned");
-
-  log.trace(
-    { userId: ctx.user.id, householdKey: ctx.householdKey },
-    "Subscribed to note planned events"
-  );
-
-  try {
-    for await (const data of createSubscriptionIterable(
-      calendarEmitter,
-      ctx.multiplexer,
-      eventName,
-      signal
-    )) {
-      yield data as CalendarSubscriptionEvents["notePlanned"];
-    }
-  } finally {
-    log.trace(
-      { userId: ctx.user.id, householdKey: ctx.householdKey },
-      "Unsubscribed from note planned events"
-    );
-  }
-});
-
-const onNoteDeleted = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  const eventName = calendarEmitter.householdEvent(ctx.householdKey, "noteDeleted");
-
-  log.trace(
-    { userId: ctx.user.id, householdKey: ctx.householdKey },
-    "Subscribed to note deleted events"
-  );
-
-  try {
-    for await (const data of createSubscriptionIterable(
-      calendarEmitter,
-      ctx.multiplexer,
-      eventName,
-      signal
-    )) {
-      yield data as CalendarSubscriptionEvents["noteDeleted"];
-    }
-  } finally {
-    log.trace(
-      { userId: ctx.user.id, householdKey: ctx.householdKey },
-      "Unsubscribed from note deleted events"
-    );
-  }
-});
-
-const onNoteUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
-  const eventName = calendarEmitter.householdEvent(ctx.householdKey, "noteUpdated");
-
-  log.trace(
-    { userId: ctx.user.id, householdKey: ctx.householdKey },
-    "Subscribed to note updated events"
-  );
-
-  try {
-    for await (const data of createSubscriptionIterable(
-      calendarEmitter,
-      ctx.multiplexer,
-      eventName,
-      signal
-    )) {
-      yield data as CalendarSubscriptionEvents["noteUpdated"];
-    }
-  } finally {
-    log.trace(
-      { userId: ctx.user.id, householdKey: ctx.householdKey },
-      "Unsubscribed from note updated events"
-    );
-  }
-});
-
 const onFailed = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const eventName = calendarEmitter.householdEvent(ctx.householdKey, "failed");
 
@@ -183,12 +33,110 @@ const onFailed = authedProcedure.subscription(async function* ({ ctx, signal }) 
   }
 });
 
+const onItemCreated = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  const eventName = calendarEmitter.householdEvent(ctx.householdKey, "itemCreated");
+
+  log.trace(
+    { userId: ctx.user.id, householdKey: ctx.householdKey },
+    "Subscribed to item created events"
+  );
+
+  try {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
+      yield data as CalendarSubscriptionEvents["itemCreated"];
+    }
+  } finally {
+    log.trace(
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "Unsubscribed from item created events"
+    );
+  }
+});
+
+const onItemDeleted = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  const eventName = calendarEmitter.householdEvent(ctx.householdKey, "itemDeleted");
+
+  log.trace(
+    { userId: ctx.user.id, householdKey: ctx.householdKey },
+    "Subscribed to item deleted events"
+  );
+
+  try {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
+      yield data as CalendarSubscriptionEvents["itemDeleted"];
+    }
+  } finally {
+    log.trace(
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "Unsubscribed from item deleted events"
+    );
+  }
+});
+
+const onItemMoved = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  const eventName = calendarEmitter.householdEvent(ctx.householdKey, "itemMoved");
+
+  log.trace(
+    { userId: ctx.user.id, householdKey: ctx.householdKey },
+    "Subscribed to item moved events"
+  );
+
+  try {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
+      yield data as CalendarSubscriptionEvents["itemMoved"];
+    }
+  } finally {
+    log.trace(
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "Unsubscribed from item moved events"
+    );
+  }
+});
+
+const onItemUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  const eventName = calendarEmitter.householdEvent(ctx.householdKey, "itemUpdated");
+
+  log.trace(
+    { userId: ctx.user.id, householdKey: ctx.householdKey },
+    "Subscribed to item updated events"
+  );
+
+  try {
+    for await (const data of createSubscriptionIterable(
+      calendarEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
+      yield data as CalendarSubscriptionEvents["itemUpdated"];
+    }
+  } finally {
+    log.trace(
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "Unsubscribed from item updated events"
+    );
+  }
+});
+
 export const calendarSubscriptions = router({
-  onRecipePlanned,
-  onRecipeDeleted,
-  onRecipeUpdated,
-  onNotePlanned,
-  onNoteDeleted,
-  onNoteUpdated,
   onFailed,
+  onItemCreated,
+  onItemDeleted,
+  onItemMoved,
+  onItemUpdated,
 });

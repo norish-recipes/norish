@@ -31,3 +31,16 @@ export const db = new Proxy({} as NodePgDatabase<typeof schema>, {
     return typeof value === "function" ? value.bind(instance) : value;
   },
 });
+
+/**
+ * Reset the database connection pool
+ * This is primarily for testing - allows switching databases at runtime
+ */
+export async function resetDbConnection() {
+  if (_pool) {
+    await _pool.end();
+    _pool = null;
+  }
+
+  _db = null;
+}

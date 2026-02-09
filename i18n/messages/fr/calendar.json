@@ -2,6 +2,17 @@
   "page": {
     "title": "Calendrier"
   },
+  "mobile": {
+    "today": "Aujourd'hui",
+    "scrollToToday": "Aller à aujourd'hui"
+  },
+  "editNote": {
+    "title": "Modifier la note",
+    "noteLabel": "Note",
+    "notePlaceholder": "Entrez une note...",
+    "date": "Date",
+    "slot": "Créneau"
+  },
   "navigation": {
     "previousMonth": "Mois précédent",
     "nextMonth": "Mois suivant",
@@ -18,15 +29,19 @@
     "sun": "Dim"
   },
   "timeline": {
-    "noItems": "Aucun article",
-    "viewGroceries": "Voir les épiceries",
+    "noItems": "Aucun article prévu",
     "goToRecipe": "Aller aux recettes",
-    "deleteItem": "Effacer l'article",
-    "itemActions": "Actions sur l'article",
-    "viewAllergenWarning": "Voir l'avertissement relatif aux allergènes",
-    "allergyWarning": "Avertissement concernant les allergies :",
-    "contains": "Contient: {allergens}",
-    "addItem": "Ajouter article"
+    "addItem": "Ajouter article",
+    "untitled": "Sans titre",
+    "serving": "portion",
+    "servings": "portions",
+    "noImage": "Pas d'image",
+    "note": "Note"
+  },
+  "editPlannedRecipe": {
+    "title": "Modifier la recette planifiée",
+    "date": "Date",
+    "slot": "Créneau"
   },
   "panel": {
     "addToCalendar": "Ajouter au calendrier",
@@ -34,6 +49,7 @@
     "noDaysAvailable": "Aucun jour disponible.",
     "searchPlaceholder": "Rechercher des recettes ou ajouter des notes...",
     "addNote": "Ajouter une note : {input}",
+    "randomRecipe": "Recette aléatoire",
     "noRecipesFound": "Pas de recette trouvée.",
     "failedToLoadRecipes": "Impossible de charger les recettes."
   }

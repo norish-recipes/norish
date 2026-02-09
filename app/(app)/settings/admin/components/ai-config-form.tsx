@@ -24,7 +24,11 @@ import {
 import { useAvailableModelsQuery } from "@/hooks/admin";
 import SecretInput from "@/components/shared/secret-input";
 
-export default function AIConfigForm() {
+interface AIConfigFormProps {
+  onDirtyChange?: (isDirty: boolean) => void;
+}
+
+export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const t = useTranslations("settings.admin.aiConfig");
   const tActions = useTranslations("common.actions");
   const { aiConfig, updateAIConfig, testAIEndpoint, fetchConfigSecret } = useAdminSettingsContext();
@@ -137,6 +141,40 @@ export default function AIConfigForm() {
 
   const canEnable = !enabled || hasValidConfig;
   const showValidationWarning = enabled && !hasValidConfig;
+  const hasChanges = useMemo(() => {
+    if (!aiConfig) return false;
+
+    return (
+      enabled !== aiConfig.enabled ||
+      provider !== aiConfig.provider ||
+      endpoint !== (aiConfig.endpoint ?? "") ||
+      model !== aiConfig.model ||
+      visionModel !== (aiConfig.visionModel ?? "") ||
+      temperature !== aiConfig.temperature ||
+      maxTokens !== aiConfig.maxTokens ||
+      autoTagAllergies !== (aiConfig.autoTagAllergies ?? true) ||
+      alwaysUseAI !== (aiConfig.alwaysUseAI ?? false) ||
+      autoTaggingMode !== (aiConfig.autoTaggingMode ?? "disabled") ||
+      apiKey.trim() !== ""
+    );
+  }, [
+    aiConfig,
+    enabled,
+    provider,
+    endpoint,
+    model,
+    visionModel,
+    temperature,
+    maxTokens,
+    autoTagAllergies,
+    alwaysUseAI,
+    autoTaggingMode,
+    apiKey,
+  ]);
+
+  useEffect(() => {
+    onDirtyChange?.(hasChanges);
+  }, [hasChanges, onDirtyChange]);
 
   const handleRevealApiKey = useCallback(async () => {
     return await fetchConfigSecret(ServerConfigKeys.AI_CONFIG, "apiKey");
@@ -416,7 +454,7 @@ export default function AIConfigForm() {
         </Button>
         <Button
           color="primary"
-          isDisabled={!canEnable}
+          isDisabled={!canEnable || !hasChanges}
           isLoading={saving}
           startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}

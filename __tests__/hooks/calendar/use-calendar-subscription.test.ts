@@ -1,96 +1,50 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import {
-  createTestQueryClient,
-  createTestWrapper,
-  createMockPlannedRecipe,
-  createMockNote,
-} from "./test-utils";
+import { createTestQueryClient, createTestWrapper } from "./test-utils";
 
-// Track subscription callbacks
-let subscriptionCallbacks: Record<string, (data: any) => void> = {};
-const mockSetCalendarData = vi.fn();
-const mockRemoveRecipeFromCache = vi.fn();
-const mockUpdateRecipeInCache = vi.fn();
-const mockRemoveNoteFromCache = vi.fn();
-const mockUpdateNoteInCache = vi.fn();
-const mockInvalidate = vi.fn();
+type SubscriptionCallback = (data: unknown) => void;
+let subscriptionCallbacks: Record<string, SubscriptionCallback> = {};
 
-// Mock useSubscription to capture callbacks
 vi.mock("@trpc/tanstack-react-query", () => ({
-  useSubscription: vi.fn((_options) => {
-    // The subscriptionOptions should return something we can identify
-    // We'll track the callback via the hook call order
-  }),
+  useSubscription: vi.fn(),
 }));
 
-// Mock addToast
-vi.mock("@heroui/react", () => ({
-  addToast: vi.fn(),
-}));
-
-// Mock the tRPC provider with subscription tracking
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     calendar: {
-      listRecipes: {
-        queryKey: () => ["calendar", "listRecipes"],
-        queryOptions: () => ({
-          queryKey: ["calendar", "listRecipes"],
-          queryFn: async () => [],
-        }),
+      listItems: {
+        queryKey: (input: { startISO: string; endISO: string }) => ["calendar", "listItems", input],
       },
-      listNotes: {
-        queryKey: () => ["calendar", "listNotes"],
-        queryOptions: () => ({
-          queryKey: ["calendar", "listNotes"],
-          queryFn: async () => [],
-        }),
-      },
-      onRecipePlanned: {
-        subscriptionOptions: (input: any, options: any) => {
-          subscriptionCallbacks["onRecipePlanned"] = options?.onData;
+      onItemCreated: {
+        subscriptionOptions: (_input: unknown, options: { onData: SubscriptionCallback }) => {
+          subscriptionCallbacks["onItemCreated"] = options?.onData;
 
           return { enabled: true };
         },
       },
-      onRecipeDeleted: {
-        subscriptionOptions: (input: any, options: any) => {
-          subscriptionCallbacks["onRecipeDeleted"] = options?.onData;
+      onItemDeleted: {
+        subscriptionOptions: (_input: unknown, options: { onData: SubscriptionCallback }) => {
+          subscriptionCallbacks["onItemDeleted"] = options?.onData;
 
           return { enabled: true };
         },
       },
-      onRecipeUpdated: {
-        subscriptionOptions: (input: any, options: any) => {
-          subscriptionCallbacks["onRecipeUpdated"] = options?.onData;
+      onItemMoved: {
+        subscriptionOptions: (_input: unknown, options: { onData: SubscriptionCallback }) => {
+          subscriptionCallbacks["onItemMoved"] = options?.onData;
 
           return { enabled: true };
         },
       },
-      onNotePlanned: {
-        subscriptionOptions: (input: any, options: any) => {
-          subscriptionCallbacks["onNotePlanned"] = options?.onData;
-
-          return { enabled: true };
-        },
-      },
-      onNoteDeleted: {
-        subscriptionOptions: (input: any, options: any) => {
-          subscriptionCallbacks["onNoteDeleted"] = options?.onData;
-
-          return { enabled: true };
-        },
-      },
-      onNoteUpdated: {
-        subscriptionOptions: (input: any, options: any) => {
-          subscriptionCallbacks["onNoteUpdated"] = options?.onData;
+      onItemUpdated: {
+        subscriptionOptions: (_input: unknown, options: { onData: SubscriptionCallback }) => {
+          subscriptionCallbacks["onItemUpdated"] = options?.onData;
 
           return { enabled: true };
         },
       },
       onFailed: {
-        subscriptionOptions: (input: any, options: any) => {
+        subscriptionOptions: (_input: unknown, options: { onData: SubscriptionCallback }) => {
           subscriptionCallbacks["onFailed"] = options?.onData;
 
           return { enabled: true };
@@ -100,26 +54,54 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   }),
 }));
 
-// Mock the cache helpers hook
-vi.mock("@/hooks/calendar/use-calendar-cache", () => ({
-  useCalendarCacheHelpers: () => ({
-    setCalendarData: mockSetCalendarData,
-    removeRecipeFromCache: mockRemoveRecipeFromCache,
-    updateRecipeInCache: mockUpdateRecipeInCache,
-    removeNoteFromCache: mockRemoveNoteFromCache,
-    updateNoteInCache: mockUpdateNoteInCache,
-    invalidate: mockInvalidate,
-  }),
-}));
-
-// Import after mocking
 // eslint-disable-next-line import/order
-import { addToast } from "@heroui/react";
+import { renderHook } from "@testing-library/react";
 
 import { useCalendarSubscription } from "@/hooks/calendar/use-calendar-subscription";
 
+type PlannedItemFromQuery = {
+  id: string;
+  userId: string;
+  date: string;
+  slot: "Breakfast" | "Lunch" | "Dinner" | "Snack";
+  sortOrder: number;
+  itemType: "recipe" | "note";
+  recipeId: string | null;
+  title: string | null;
+  recipeName: string | null;
+  recipeImage: string | null;
+  servings: number | null;
+  calories: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function createMockPlannedItem(
+  overrides: Partial<PlannedItemFromQuery> = {}
+): PlannedItemFromQuery {
+  return {
+    id: `item-${Math.random().toString(36).slice(2)}`,
+    userId: "user-1",
+    date: "2025-01-15",
+    slot: "Breakfast",
+    sortOrder: 0,
+    itemType: "recipe",
+    recipeId: "recipe-123",
+    title: null,
+    recipeName: "Test Recipe",
+    recipeImage: null,
+    servings: 4,
+    calories: 500,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
 describe("useCalendarSubscription", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
+  const startISO = "2025-01-01";
+  const endISO = "2025-01-31";
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -127,176 +109,352 @@ describe("useCalendarSubscription", () => {
     queryClient = createTestQueryClient();
   });
 
-  // Helper to render the hook and capture subscription callbacks
   function renderSubscriptionHook() {
-    const { renderHook } = require("@testing-library/react");
-    const { result } = renderHook(() => useCalendarSubscription(), {
+    return renderHook(() => useCalendarSubscription(startISO, endISO), {
       wrapper: createTestWrapper(queryClient),
     });
-
-    return result;
   }
 
-  describe("onRecipePlanned subscription", () => {
-    it("adds new recipe to calendar data", () => {
+  function getQueryKey() {
+    return ["calendar", "listItems", { startISO, endISO }];
+  }
+
+  describe("onItemCreated subscription", () => {
+    it("adds new item to cache with recipe fields", () => {
+      queryClient.setQueryData(getQueryKey(), []);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onRecipePlanned"];
+      const callback = subscriptionCallbacks["onItemCreated"];
 
       expect(callback).toBeDefined();
 
-      const newRecipe = createMockPlannedRecipe({
-        id: "pr-new",
-        date: "2025-01-15",
+      callback({
+        item: {
+          id: "new-item-1",
+          userId: "user-1",
+          date: "2025-01-15",
+          slot: "Breakfast",
+          sortOrder: 0,
+          itemType: "recipe",
+          recipeId: "recipe-456",
+          title: null,
+          recipeName: "New Recipe",
+          recipeImage: "/img/recipe.jpg",
+          servings: 2,
+          calories: 300,
+        },
+      });
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toHaveLength(1);
+      expect(data![0]).toMatchObject({
+        id: "new-item-1",
         recipeName: "New Recipe",
-        allergyWarnings: ["peanut"],
-      });
-
-      callback({ plannedRecipe: newRecipe });
-
-      expect(mockSetCalendarData).toHaveBeenCalled();
-
-      const updater = mockSetCalendarData.mock.calls[0][0];
-      const next = updater({});
-
-      expect(next["2025-01-15"]).toHaveLength(1);
-      expect(next["2025-01-15"][0]).toMatchObject({
-        id: "pr-new",
-        itemType: "recipe",
-        allergyWarnings: ["peanut"],
+        recipeImage: "/img/recipe.jpg",
+        servings: 2,
+        calories: 300,
       });
     });
-  });
 
-  describe("onRecipeDeleted subscription", () => {
-    it("removes recipe from calendar data", () => {
+    it("does not add duplicate items", () => {
+      const existingItem = createMockPlannedItem({ id: "existing-1" });
+
+      queryClient.setQueryData(getQueryKey(), [existingItem]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onRecipeDeleted"];
+      const callback = subscriptionCallbacks["onItemCreated"];
 
-      expect(callback).toBeDefined();
-
-      callback({ plannedRecipeId: "pr-123", date: "2025-01-15" });
-
-      expect(mockSetCalendarData).toHaveBeenCalled();
-    });
-  });
-
-  describe("onRecipeUpdated subscription", () => {
-    it("updates recipe in calendar data (moves between dates)", () => {
-      renderSubscriptionHook();
-
-      const callback = subscriptionCallbacks["onRecipeUpdated"];
-
-      expect(callback).toBeDefined();
-
-      const updatedRecipe = createMockPlannedRecipe({
-        id: "pr-123",
-        date: "2025-01-20",
+      callback({
+        item: {
+          id: "existing-1",
+          userId: "user-1",
+          date: "2025-01-15",
+          slot: "Breakfast",
+          sortOrder: 0,
+          itemType: "recipe",
+          recipeId: "recipe-123",
+          title: null,
+          recipeName: "Test Recipe",
+          recipeImage: null,
+          servings: 4,
+          calories: 500,
+        },
       });
 
-      callback({ plannedRecipe: updatedRecipe, oldDate: "2025-01-15" });
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
-      expect(mockSetCalendarData).toHaveBeenCalled();
-      expect(mockUpdateRecipeInCache).toHaveBeenCalledWith("pr-123", "2025-01-20");
+      expect(data).toHaveLength(1);
     });
 
-    it("removes old date and preserves allergyWarnings when payload omits them", () => {
-      renderSubscriptionHook();
-
-      const callback = subscriptionCallbacks["onRecipeUpdated"];
-
-      expect(callback).toBeDefined();
-
-      const updatedRecipe = createMockPlannedRecipe({
-        id: "pr-123",
-        date: "2025-01-20",
-        allergyWarnings: undefined,
-      });
-
-      callback({ plannedRecipe: updatedRecipe, oldDate: "2025-01-15" });
-
-      const updater = mockSetCalendarData.mock.calls.at(-1)?.[0];
-      const next = updater({
-        "2025-01-15": [
-          {
-            itemType: "recipe",
-            id: "pr-123",
-            recipeId: "recipe-1",
-            recipeName: "Test",
-            slot: "Breakfast",
-            date: "2025-01-15",
-            allergyWarnings: ["peanut"],
-          },
-        ],
-      });
-
-      expect(next["2025-01-15"]).toHaveLength(0);
-      expect(next["2025-01-20"]).toHaveLength(1);
-      expect(next["2025-01-20"][0]).toMatchObject({
-        id: "pr-123",
-        itemType: "recipe",
-        allergyWarnings: ["peanut"],
-      });
-    });
-  });
-
-  describe("onNotePlanned subscription", () => {
-    it("adds new note to calendar data", () => {
-      renderSubscriptionHook();
-
-      const callback = subscriptionCallbacks["onNotePlanned"];
-
-      expect(callback).toBeDefined();
-
-      const newNote = createMockNote({
-        id: "note-new",
+    it("maintains sort order after adding item", () => {
+      const item1 = createMockPlannedItem({
+        id: "item-1",
         date: "2025-01-15",
-        title: "New Note",
+        slot: "Breakfast",
+        sortOrder: 0,
+      });
+      const item2 = createMockPlannedItem({
+        id: "item-2",
+        date: "2025-01-15",
+        slot: "Lunch",
+        sortOrder: 0,
       });
 
-      callback({ note: newNote });
+      queryClient.setQueryData(getQueryKey(), [item2, item1]);
+      renderSubscriptionHook();
 
-      expect(mockSetCalendarData).toHaveBeenCalled();
+      const callback = subscriptionCallbacks["onItemCreated"];
+
+      callback({
+        item: {
+          id: "item-3",
+          userId: "user-1",
+          date: "2025-01-14",
+          slot: "Dinner",
+          sortOrder: 0,
+          itemType: "note",
+          recipeId: null,
+          title: "Earlier Note",
+          recipeName: null,
+          recipeImage: null,
+          servings: null,
+          calories: null,
+        },
+      });
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toHaveLength(3);
+      expect(data![0].date).toBe("2025-01-14");
+      expect(data![1].date).toBe("2025-01-15");
+      expect(data![1].slot).toBe("Breakfast");
+      expect(data![2].slot).toBe("Lunch");
     });
   });
 
-  describe("onNoteDeleted subscription", () => {
-    it("removes note from calendar data", () => {
+  describe("onItemDeleted subscription", () => {
+    it("removes item from cache", () => {
+      const item1 = createMockPlannedItem({ id: "item-1" });
+      const item2 = createMockPlannedItem({ id: "item-2" });
+
+      queryClient.setQueryData(getQueryKey(), [item1, item2]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onNoteDeleted"];
+      const callback = subscriptionCallbacks["onItemDeleted"];
 
       expect(callback).toBeDefined();
 
-      callback({ noteId: "note-123", date: "2025-01-15" });
+      callback({ itemId: "item-1", date: "2025-01-15", slot: "Breakfast" });
 
-      expect(mockSetCalendarData).toHaveBeenCalled();
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toHaveLength(1);
+      expect(data![0].id).toBe("item-2");
     });
   });
 
-  describe("onNoteUpdated subscription", () => {
-    it("updates note in calendar data (moves between dates)", () => {
+  describe("onItemMoved subscription", () => {
+    it("updates moved item position and date/slot", () => {
+      const item = createMockPlannedItem({
+        id: "moved-item",
+        date: "2025-01-15",
+        slot: "Breakfast",
+        sortOrder: 0,
+      });
+
+      queryClient.setQueryData(getQueryKey(), [item]);
       renderSubscriptionHook();
 
-      const callback = subscriptionCallbacks["onNoteUpdated"];
+      const callback = subscriptionCallbacks["onItemMoved"];
 
       expect(callback).toBeDefined();
 
-      const updatedNote = createMockNote({
-        id: "note-123",
-        date: "2025-01-20",
+      callback({
+        item: {
+          id: "moved-item",
+          userId: "user-1",
+          date: "2025-01-16",
+          slot: "Dinner",
+          sortOrder: 2,
+          itemType: "recipe",
+          recipeId: "recipe-123",
+          title: null,
+          recipeName: "Test Recipe",
+          recipeImage: null,
+          servings: 4,
+          calories: 500,
+        },
+        targetSlotItems: [{ id: "moved-item", sortOrder: 2 }],
+        sourceSlotItems: null,
+        oldDate: "2025-01-15",
+        oldSlot: "Breakfast",
+        oldSortOrder: 0,
       });
 
-      callback({ note: updatedNote, oldDate: "2025-01-15" });
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
 
-      expect(mockSetCalendarData).toHaveBeenCalled();
-      expect(mockUpdateNoteInCache).toHaveBeenCalledWith("note-123", "2025-01-20");
+      expect(data).toHaveLength(1);
+      expect(data![0]).toMatchObject({
+        id: "moved-item",
+        date: "2025-01-16",
+        slot: "Dinner",
+        sortOrder: 2,
+      });
+    });
+
+    it("updates sortOrder for all items in target slot", () => {
+      const item1 = createMockPlannedItem({ id: "item-1", sortOrder: 0 });
+      const item2 = createMockPlannedItem({ id: "item-2", sortOrder: 1 });
+      const item3 = createMockPlannedItem({ id: "item-3", sortOrder: 2 });
+
+      queryClient.setQueryData(getQueryKey(), [item1, item2, item3]);
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onItemMoved"];
+
+      callback({
+        item: {
+          id: "item-3",
+          userId: "user-1",
+          date: "2025-01-15",
+          slot: "Breakfast",
+          sortOrder: 0,
+          itemType: "recipe",
+          recipeId: "recipe-123",
+          title: null,
+          recipeName: "Test Recipe",
+          recipeImage: null,
+          servings: 4,
+          calories: 500,
+        },
+        targetSlotItems: [
+          { id: "item-3", sortOrder: 0 },
+          { id: "item-1", sortOrder: 1 },
+          { id: "item-2", sortOrder: 2 },
+        ],
+        sourceSlotItems: null,
+        oldDate: "2025-01-15",
+        oldSlot: "Breakfast",
+        oldSortOrder: 2,
+      });
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toHaveLength(3);
+
+      const sorted = [...data!].sort((a, b) => a.sortOrder - b.sortOrder);
+
+      expect(sorted[0].id).toBe("item-3");
+      expect(sorted[0].sortOrder).toBe(0);
+      expect(sorted[1].id).toBe("item-1");
+      expect(sorted[1].sortOrder).toBe(1);
+      expect(sorted[2].id).toBe("item-2");
+      expect(sorted[2].sortOrder).toBe(2);
+    });
+
+    it("updates sortOrder for items in both source and target slots on cross-slot move", () => {
+      const breakfast1 = createMockPlannedItem({ id: "b-1", slot: "Breakfast", sortOrder: 0 });
+      const breakfast2 = createMockPlannedItem({ id: "b-2", slot: "Breakfast", sortOrder: 1 });
+      const lunch1 = createMockPlannedItem({ id: "l-1", slot: "Lunch", sortOrder: 0 });
+
+      queryClient.setQueryData(getQueryKey(), [breakfast1, breakfast2, lunch1]);
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onItemMoved"];
+
+      callback({
+        item: {
+          id: "b-1",
+          userId: "user-1",
+          date: "2025-01-15",
+          slot: "Lunch",
+          sortOrder: 1,
+          itemType: "recipe",
+          recipeId: "recipe-123",
+          title: null,
+          recipeName: "Test Recipe",
+          recipeImage: null,
+          servings: 4,
+          calories: 500,
+        },
+        targetSlotItems: [
+          { id: "l-1", sortOrder: 0 },
+          { id: "b-1", sortOrder: 1 },
+        ],
+        sourceSlotItems: [{ id: "b-2", sortOrder: 0 }],
+        oldDate: "2025-01-15",
+        oldSlot: "Breakfast",
+        oldSortOrder: 0,
+      });
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toHaveLength(3);
+
+      const movedItem = data!.find((i) => i.id === "b-1");
+
+      expect(movedItem).toMatchObject({
+        slot: "Lunch",
+        sortOrder: 1,
+      });
+
+      const remainingBreakfast = data!.find((i) => i.id === "b-2");
+
+      expect(remainingBreakfast?.sortOrder).toBe(0);
+
+      const lunchItem = data!.find((i) => i.id === "l-1");
+
+      expect(lunchItem?.sortOrder).toBe(0);
+    });
+
+    it("handles same-slot reorder without sourceSlotItems", () => {
+      const item1 = createMockPlannedItem({ id: "item-1", sortOrder: 0 });
+      const item2 = createMockPlannedItem({ id: "item-2", sortOrder: 1 });
+
+      queryClient.setQueryData(getQueryKey(), [item1, item2]);
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onItemMoved"];
+
+      callback({
+        item: {
+          id: "item-2",
+          userId: "user-1",
+          date: "2025-01-15",
+          slot: "Breakfast",
+          sortOrder: 0,
+          itemType: "recipe",
+          recipeId: "recipe-123",
+          title: null,
+          recipeName: "Test Recipe",
+          recipeImage: null,
+          servings: 4,
+          calories: 500,
+        },
+        targetSlotItems: [
+          { id: "item-2", sortOrder: 0 },
+          { id: "item-1", sortOrder: 1 },
+        ],
+        sourceSlotItems: null,
+        oldDate: "2025-01-15",
+        oldSlot: "Breakfast",
+        oldSortOrder: 1,
+      });
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+      const sorted = [...data!].sort((a, b) => a.sortOrder - b.sortOrder);
+
+      expect(sorted[0].id).toBe("item-2");
+      expect(sorted[1].id).toBe("item-1");
     });
   });
 
   describe("onFailed subscription", () => {
-    it("shows toast and invalidates on failure", () => {
+    it("invalidates query on failure", () => {
+      queryClient.setQueryData(getQueryKey(), []);
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
       renderSubscriptionHook();
 
       const callback = subscriptionCallbacks["onFailed"];
@@ -305,13 +463,9 @@ describe("useCalendarSubscription", () => {
 
       callback({ reason: "Something went wrong" });
 
-      expect(addToast).toHaveBeenCalledWith(
-        expect.objectContaining({
-          severity: "danger",
-          title: "Something went wrong",
-        })
-      );
-      expect(mockInvalidate).toHaveBeenCalled();
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: getQueryKey(),
+      });
     });
   });
 });

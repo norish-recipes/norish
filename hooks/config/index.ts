@@ -1,5 +1,7 @@
 export { useTagsQuery } from "./use-tags-query";
 export { useUnitsQuery } from "./use-units-query";
+export { useTimersEnabledQuery } from "./use-timers-enabled-query";
+export { useTimerKeywordsQuery } from "./use-timer-keywords-query";
 export { useRecurrenceConfigQuery } from "./use-recurrence-config-query";
 export { useVersionQuery } from "./use-version-query";
 export { useLocaleConfigQuery } from "./use-locale-config-query";

@@ -13,7 +13,7 @@ interface AutoHideOptions {
 
 export function useAutoHide({
   scrollThreshold = 2,
-  idleDelay = 1500,
+  idleDelay = 4000,
   topOffset = 50,
   disabled = false,
 }: AutoHideOptions = {}) {
@@ -127,10 +127,13 @@ export function useAutoHide({
 
     lastScrollY.current = latest;
 
-    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-    scrollTimeout.current = setTimeout(() => {
-      if (latest > topOffset) hide();
-    }, idleDelay);
+    // Only set idle timeout if idleDelay is a valid finite number > 0
+    if (idleDelay > 0 && isFinite(idleDelay)) {
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      scrollTimeout.current = setTimeout(() => {
+        if (latest > topOffset) hide();
+      }, idleDelay);
+    }
   });
 
   // Clear timeout and stay visible when disabled
