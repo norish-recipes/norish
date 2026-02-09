@@ -103,6 +103,9 @@ function getFfmpegPath(): string | null {
 
 const ytDlpFilename = process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp";
 
+export const DOWNLOAD_VIDEO_FORMAT_SELECTOR =
+  "best[ext=mp4]/bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best";
+
 // In production (Docker), binary is pre-downloaded during build to /app/bin
 // In development, download to current directory on first use
 const ytDlpPath = path.resolve(SERVER_CONFIG.YT_DLP_BIN_DIR, ytDlpFilename);
@@ -493,9 +496,9 @@ export async function downloadVideo(
       url,
       "-o",
       outputTemplate,
-      // Keep original format to avoid re-encoding during download
+      // Prefer progressive MP4 first, then H.264 MP4 DASH, then generic MP4
       "-f",
-      "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+      DOWNLOAD_VIDEO_FORMAT_SELECTOR,
       "--extractor-args",
       "youtube:player_client=default",
       ...(auth?.args ?? []),

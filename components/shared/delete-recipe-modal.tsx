@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-} from "@heroui/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface DeleteRecipeModalProps {
@@ -28,15 +21,17 @@ export function DeleteRecipeModal({
   const tActions = useTranslations("common.actions");
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onClose}>
+    <Modal
+      classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+      isOpen={isOpen}
+      onOpenChange={onClose}
+    >
       <ModalContent>
         {(onCloseCallback) => (
           <>
             <ModalHeader className="text-danger">{t("title")}</ModalHeader>
             <ModalBody>
-              <p className="text-danger mb-2 font-semibold">
-                {t("warning")}
-              </p>
+              <p className="text-danger mb-2 font-semibold">{t("warning")}</p>
               <p>{t("confirmMessage", { recipeName })}</p>
             </ModalBody>
             <ModalFooter>

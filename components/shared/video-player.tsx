@@ -13,6 +13,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import VideoPlayerSkeleton from "@/components/skeleton/video-player-skeleton";
+import {
+  hasDocumentFullscreenApi,
+  hasNativeVideoFullscreen,
+  isFullscreenControlSupported,
+} from "@/lib/video-fullscreen";
 
 export interface VideoPlayerProps {
   src: string;
@@ -38,17 +43,18 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
 
   // Check if fullscreen is supported
   useEffect(() => {
-    setFullscreenSupported(
-      typeof document !== "undefined" &&
-        (document.fullscreenEnabled ||
-          (document as any).webkitFullscreenEnabled ||
-          (document as any).mozFullScreenEnabled ||
-          (document as any).msFullscreenEnabled)
-    );
+    if (typeof document === "undefined") {
+      setFullscreenSupported(false);
+      return;
+    }
+
+    setFullscreenSupported(isFullscreenControlSupported(document, videoRef.current));
   }, []);
 
   // Handle fullscreen change events (user exits via native controls or Escape)
   useEffect(() => {
+    const video = videoRef.current;
+
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!(
         document.fullscreenElement ||
@@ -59,16 +65,33 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
       setIsFullscreen(isCurrentlyFullscreen);
     };
 
+    const handleVideoFullscreenStart = () => {
+      setIsFullscreen(true);
+    };
+
+    const handleVideoFullscreenEnd = () => {
+      setIsFullscreen(false);
+    };
+
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
     document.addEventListener("mozfullscreenchange", handleFullscreenChange);
     document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+
+    video?.addEventListener("webkitbeginfullscreen", handleVideoFullscreenStart as EventListener);
+    video?.addEventListener("webkitendfullscreen", handleVideoFullscreenEnd as EventListener);
 
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
       document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
       document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
+
+      video?.removeEventListener(
+        "webkitbeginfullscreen",
+        handleVideoFullscreenStart as EventListener
+      );
+      video?.removeEventListener("webkitendfullscreen", handleVideoFullscreenEnd as EventListener);
     };
   }, []);
 
@@ -79,7 +102,9 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
       if (!container) return;
 
       try {
-        if (!isFullscreen) {
+        const hasDocumentApi = hasDocumentFullscreenApi(document);
+
+        if (!isFullscreen && hasDocumentApi) {
           if (container.requestFullscreen) {
             await container.requestFullscreen();
           } else if ((container as any).webkitRequestFullscreen) {
@@ -89,7 +114,10 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
           } else if ((container as any).msRequestFullscreen) {
             await (container as any).msRequestFullscreen();
           }
-        } else {
+          return;
+        }
+
+        if (isFullscreen && hasDocumentApi) {
           if (document.exitFullscreen) {
             await document.exitFullscreen();
           } else if ((document as any).webkitExitFullscreen) {
@@ -99,6 +127,18 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
           } else if ((document as any).msExitFullscreen) {
             await (document as any).msExitFullscreen();
           }
+
+          return;
+        }
+
+        const video = videoRef.current as
+          | (HTMLVideoElement & {
+              webkitEnterFullscreen?: () => Promise<void> | void;
+            })
+          | null;
+
+        if (!isFullscreen && hasNativeVideoFullscreen(videoRef.current)) {
+          video?.webkitEnterFullscreen?.();
         }
       } catch (_err) {
         // Fullscreen request failed, ignore
