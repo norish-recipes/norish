@@ -1009,3 +1009,23 @@ describe("normalizeRecipeFromJson - HowToStep Bold Name Extraction", () => {
     });
   });
 });
+
+describe("normalizeRecipeFromJson - Notes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("extracts recipeNotes into notes", async () => {
+    const json = {
+      name: "Notes Recipe",
+      recipeNotes: "Use ripe tomatoes and rest for 10 minutes.",
+      recipeIngredient: ["2 tomatoes"],
+      recipeInstructions: ["Slice and serve"],
+    };
+
+    const result = await normalizeRecipeFromJson(json);
+
+    expect(result).not.toBeNull();
+    expect(result?.notes).toBe("Use ripe tomatoes and rest for 10 minutes.");
+  });
+});

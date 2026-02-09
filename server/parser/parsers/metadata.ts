@@ -11,6 +11,7 @@ import { parseIsoDuration } from "@/lib/helpers";
 export interface ParsedMetadata {
   name: string;
   description: string | undefined;
+  notes: string | undefined;
   servings: number | undefined;
   prepMinutes: number | undefined;
   cookMinutes: number | undefined;
@@ -89,10 +90,12 @@ export function parseMetadata(json: Record<string, unknown>): ParsedMetadata {
   const prepTime = json.prepTime;
   const cookTime = json.cookTime;
   const totalTime = json.totalTime;
+  const notesSource = json.recipeNotes ?? json.notes;
 
   return {
     name: getName(json) ?? "Untitled recipe",
     description: typeof json.description === "string" ? json.description : undefined,
+    notes: typeof notesSource === "string" ? decode(notesSource) : undefined,
     servings: getServings(json.recipeYield),
     prepMinutes: typeof prepTime === "string" ? parseIsoDuration(prepTime) : undefined,
     cookMinutes: typeof cookTime === "string" ? parseIsoDuration(cookTime) : undefined,
