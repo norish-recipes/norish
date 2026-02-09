@@ -14,62 +14,85 @@
 
 ---
 
-# Vision
+# Norish
 
-The vision for Norish is a shared recipe app, to be shared with friends to make one big recipe catalogue.
+Norish is a real-time, household-first recipe app for planning meals, sharing groceries, and cooking together.
 
-The name is derived from our dog named: Nora, and dish. As a coincidence this can also be pronounced as Nourish. If you look hard enough you can find a picture of Nora.
+## Table of Contents
 
----
-
-# Why
-
-Norish was built solely because me and my girlfriend like to cook and keep track of our recipes. Sadly we could not get used to the aesthetic of Tandoor or Mealie. Both are great alternatives providing a more rich featureset than Norish. I have not tried tandoor or mealie enough to know their exact feature set but, I believe Norish is different in the sense that the instance is fully-realtime in theory.
-
-This was one of the only requirements my girlfriend had as we do groceries together and this way we can keep track of who picked what grocery items.
-
-Norish does not try to be Tandoor or Mealie it is minimalistic by nature, thus I am not sure yet if I will ever add complex cookbook structures, inventory tracking etc.
-
----
-
-# Future
-
-On my _todolist_ are still in order of current priority:
-
-- Mobile apps.
-- Public shareable recipe links.
-
----
-
-## Features
-
-- **Easy import** of recipes via URL, with a fallback to AI if configured.
-- **Video recipe import** from YouTube Shorts, Instagram Reels, TikTok, and more _(requires OpenAI provider)_
-- **Image recipe import** import a recipe from any set of images containing a recipe _(requires OpenAI provider)_
-- **Nutritional information** Calculate nutritional information for a recipe _(requires OpenAI provider)_
-- **Allergy warning** show allergy warnings for planned recipes. Can auto detect allergies based on ingredients. _(auto detection requires OpenAI provider)_
-- **Unit conversion** Convert units from metric to US or vice versa, note: AI has to be enabled and setup for this.
-- **Recurring groceries** Groceries can be marked as recurring this can be done using NLP or the interface
-  - Currently we support: daily, weekly on day, monthly, monthly on day. Every _x_ weeks on day.
-- **Real-time sync** of recipes, grocery lists and meal plans
-- **Households** Share grocery lists, and meal plan (calendar)
-- **CalDav sync** Sync your recipes with any caldav provider(only tested with radicale)
-- **Mobile-first design** for use in the kitchen
-- **Light & dark mode** support
-- **SSO (OIDC/OAuth2)** Norish supports login via OIDC/OAuth2. There are no plans to start supporting password login.
-  - If no auth provider is configured email and password authentication will be enabled by default.
-- **Admin Settings UI** for server owners to manage configuration without editing files
-- **Permission policies** for controlling who can view/edit/delete recipes (everyone, household, or owner only)
-  - Default view: Everyone
-  - Default Edit: household
-  - Default Remove: household
-- **Local AI** In theory Norish supports local AI providers - however I have not tested this. Although I am looking to buy a machine that is capable.
-
-_Note: All AI related features seem to be rather slow for me using the OpenAI API. I am not sure why this is; your results may vary._
+- [Norish](#norish)
+  - [Table of Contents](#table-of-contents)
+  - [Vision](#vision)
+  - [Why Norish](#why-norish)
+  - [Core Features](#core-features)
+  - [Deploying](#deploying)
+    - [Minimal Docker Compose](#minimal-docker-compose)
+    - [First-User Setup](#first-user-setup)
+  - [Admin Settings](#admin-settings)
+  - [Environment Variables](#environment-variables)
+    - [Required by schema](#required-by-schema)
+    - [Commonly set in production](#commonly-set-in-production)
+    - [Optional general Runtime](#optional-general-runtime)
+    - [Optional auth setup](#optional-auth-setup)
+    - [Optional OIDC Claim Mapping](#optional-oidc-claim-mapping)
+    - [Optional AI Provider](#optional-ai-provider)
+    - [Optional Video + Transcription](#optional-video--transcription)
+    - [Optional (Parsing + Content Detection)](#optional-parsing--content-detection)
+    - [Optional (Scheduler + Upload Limits)](#optional-scheduler--upload-limits)
+    - [Optional (Internationalization)](#optional-internationalization)
+  - [Local Development](#local-development)
+    - [Development Commands](#development-commands)
+  - [Tech Stack](#tech-stack)
+    - [Frontend](#frontend)
+    - [Backend](#backend)
+    - [Database](#database)
+    - [AI and Processing](#ai-and-processing)
+    - [Testing and Tooling](#testing-and-tooling)
+  - [License](#license)
+  - [Alternatives](#alternatives)
+- [Nora](#nora)
 
 ---
 
-# Deploying
+## Vision
+
+The vision for Norish is a shared recipe app built for friends, families, and households that want one collaborative recipe catalog.
+
+The name comes from Nora (our dog) + dish. Coincidentally, it also sounds like "nourish".
+
+---
+
+## Why Norish
+
+Norish started because we wanted a cooking app that felt lightweight, collaborative, and truly real-time while shopping and planning together.
+
+Norish is intentionally minimal. It focuses on practical day-to-day planning.
+
+---
+
+## Core Features
+
+- **Easy recipe import** from URL, with AI fallback if configured.
+- **Video recipe import** from YouTube Shorts, Instagram Reels, TikTok, and more (requires AI provider).
+- **Image recipe import** from screenshots/photos of recipes (requires AI provider).
+- **Nutritional information** generation (requires AI provider).
+- **Allergy detection and warnings** for recipe ingredients (detection requires AI provider).
+- **Unit conversion** metric <-> US (requires AI provider).
+- **Recurring groceries** via NLP or manual setup.
+- **Real-time sync** of recipes, groceries, and meal planning data.
+- **Households** with shared groceries and planning.
+- **CalDAV sync** for calendar integration.
+- **Mobile-first design** with light/dark mode support.
+- **Authentication options**: OIDC, OAuth providers, and first-time password auth fallback.
+- **Admin settings UI** for runtime configuration.
+- **Permission policies** for recipe visibility/edit/delete scopes.
+- **Internationalization (i18n)** currently supporting EN, NL and DE
+
+_Note: AI feature speed can vary by provider, model, and region._
+
+---
+
+## Deploying
 
 ### Minimal Docker Compose
 
@@ -78,66 +101,38 @@ services:
   norish:
     image: norishapp/norish:latest
     container_name: norish-app
-    # user: "1000:1000"  # Match your host user's UID:GID (run `id` to check), only needed with bind mounts
-    # The example uses named volume 'norish_data' which handles permissions automatically
-    restart: always # Required for server restart functionality
+    restart: always
     ports:
       - "3000:3000"
     user: "1000:1000"
     volumes:
       - norish_data:/app/uploads
     environment:
-      # Core settings (required)
       AUTH_URL: http://norish.example.com
       DATABASE_URL: postgres://postgres:norish@db:5432/norish
-      MASTER_KEY: <32-byte-base64-key> # Generate with: openssl rand -base64 32
+      MASTER_KEY: <32-byte-base64-key> # openssl rand -base64 32
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000
       REDIS_URL: redis://redis:6379
 
-      # OPTIONAL
-      # NEXT_PUBLIC_LOG_LEVEL: info       # trace, debug, info, warn, error, fatal (default: info in prod, debug in dev)
-      # TRUSTED_ORIGINS:http://192.168.1.100:3000,https://norish.example.com  # Additional trusted origins, comma separated. Useful when behind a proxy or using multiple domains.
-      # YT_DLP_BIN_DIR: # Custom folder path for `yt-dlp` (default: /app/bin)
+      # Optional
+      # NEXT_PUBLIC_LOG_LEVEL: info
+      # TRUSTED_ORIGINS: http://192.168.1.100:3000,https://norish.example.com
+      # YT_DLP_BIN_DIR: /app/bin
 
-      # ─────────────────────────────────────────────────────────────────────────
-      # FIRST USER SETUP
-      # ─────────────────────────────────────────────────────────────────────────
-      # On first startup, configure ONE auth provider below to create your admin account.
-      # After first login, use Settings => Admin to configure additional providers,
-      # AI settings, video parsing, and all other options.
-
-      # Option 1= Password auth - basic auth with email/password
-      # If not set defaults to disabled if OIDC or OAuth is configured.
-      # Defaults to true if no other auth providers are configured.
-      #PASSWORD_AUTH_ENABLED=false
-
-      # Option 2: OIDC (Authentik, Keycloak, PocketID, etc.)
+      # First-user auth setup (choose one)
+      # PASSWORD_AUTH_ENABLED=false
       # OIDC_NAME: NoraId
-      # OIDC_ISSUER: https://nora.example.com
+      # OIDC_ISSUER: https://auth.example.com
       # OIDC_CLIENT_ID: <client-id>
       # OIDC_CLIENT_SECRET: <client-secret>
       # OIDC_WELLKNOWN: https://auth.example.com/.well-known/openid-configuration
-      # Wellknown is optional: By default the wellknown URL is derived from the issuer by appending /.well-known/openid-configuration
-
-      # Option 3: GitHub OAuth (uncomment and remove OIDC above)
       # GITHUB_CLIENT_ID: <github-client-id>
       # GITHUB_CLIENT_SECRET: <github-client-secret>
-
-      # Option 4: Google OAuth (uncomment and remove OIDC above)
       # GOOGLE_CLIENT_ID: <google-client-id>
       # GOOGLE_CLIENT_SECRET: <google-client-secret>
     healthcheck:
       test:
-        [
-          "CMD",
-          "curl",
-          "--connect-timeout",
-          "15",
-          "--silent",
-          "--show-error",
-          "--fail",
-          "http://localhost:3000/api/health",
-        ]
+        ["CMD", "curl", "--silent", "--show-error", "--fail", "http://localhost:3000/api/health"]
       interval: 1m
       timeout: 15s
       retries: 3
@@ -157,7 +152,6 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  # Chrome headless
   chrome-headless:
     image: zenika/alpine-chrome:latest
     container_name: chrome-headless
@@ -170,7 +164,6 @@ services:
       - "--remote-debugging-port=3000"
       - "--headless"
 
-  # Redis for real-time events and job queues
   redis:
     image: redis:8.4.0
     container_name: norish-redis
@@ -186,119 +179,145 @@ volumes:
 
 ### First-User Setup
 
-The **first user** to sign in becomes the **Server Owner** and **Server Admin** automatically. After the first user signs in:
+The first user to sign in becomes server owner + server admin. After first sign-in:
 
-- User registration is automatically disabled
-- All server settings can be managed via **Settings => Admin** tab
+- User registration is disabled automatically.
+- Ongoing server settings are managed in `Settings -> Admin`.
 
 ---
 
-## Admin Settings (Server Owner/Admin Only)
+## Admin Settings
 
-Server owners and admins can configure the following via the **Settings => Admin** tab:
+Server owners/admins can manage:
 
-### Registration
-
-- Enable/disable new user registrations
-
-### Permission Policies
-
-- **View Recipes** - Who can see recipes (everyone, household members, or owner only)
-- **Edit Recipes** - Who can modify recipes (everyone, household members, or owner only)
-- **Delete Recipes** - Who can remove recipes (everyone, household members, or owner only)
-- Server admins always have full access regardless of policy settings
-- Groceries and calendar items follow household rules automatically (members can edit/delete each other's items)
-
-### Authentication Providers
-
-- **OIDC** (Authentik, Keycloak, PocketID, etc.)
-- **GitHub OAuth**
-- **Google OAuth**
-- Test providers before saving, reveal/hide secrets, delete providers
-- **Note:** Auth provider changes require a server restart to take effect (use the Restart Server button)
-
-### OIDC Claim Mapping
-
-Automatically assign server admin roles and household memberships based on OIDC claims/groups.
-
-**Security Warning**: This feature is disabled by default. Enabling claim mapping allows your identity provider to control admin privileges and household membership. Only enable this if you fully trust your OIDC provider and have properly configured the group claims.
-
-- **Admin Role Assignment**: Users with the configured admin group (default: `norish_admin`) are granted server admin privileges. This is synced on every login - removing the group revokes admin on next login.
-- **Household Auto-Join**: Users with a household group (default prefix: `norish_household_<your_household_name>`) are automatically joined to that household on first login. If the household doesn't exist, it's created with the user as admin.
-
-| Setting                       | Description                                          | Default                                  |
-| ----------------------------- | ---------------------------------------------------- | ---------------------------------------- |
-| `OIDC_CLAIM_MAPPING_ENABLED`  | Enable claim-based role/household assignment         | `false`                                  |
-| `OIDC_SCOPES`                 | Additional OAuth scopes to request (comma-separated) | (empty)                                  |
-| `OIDC_GROUPS_CLAIM`           | Claim name containing user groups                    | `groups`                                 |
-| `OIDC_ADMIN_GROUP`            | Group name that grants admin role                    | `norish_admin`                           |
-| `OIDC_HOUSEHOLD_GROUP_PREFIX` | Prefix for household group names                     | `norish_household_<your_household_name>` |
-
-**Example**: With claim mapping enabled and default settings, a user with groups `["norish_admin", "norish_household_smiths"]` would:
-
-1. Be granted server admin privileges
-2. Be automatically joined to (or create) a household named "smiths"
-
-Configure via environment variables or in **Settings => Admin => Authentication Providers => OIDC => Claim Mapping**.
-
-### Content Detection
-
-- **Units** - Custom unit definitions for ingredient parsing
-- **Content Indicators** - Schema and content indicators for recipe detection
-- **Recurrence Config** - Locale-based recurrence patterns, used for natural language processing when adding recurring groceries.
-
-### AI & Processing
-
-- **AI Configuration** - Provider, endpoint, model, API key, temperature, max tokens
-- **Video Processing** - Enable/disable, max video length, yt-dlp version
-- **Transcription** - Provider, API key, model for video transcription
-
-### System
-
-- **Scheduler** - Configure cleanup retention period (months)
-- **Restart Server** - Apply changes that require a server restart
+- Registration policy.
+- Permission policies for recipe view/edit/delete.
+- Auth providers (OIDC, GitHub, Google).
+- OIDC claim mapping for admin role assignment + household auto-join.
+- Content detection settings (units, content indicators, recurrence config).
+- AI + video processing settings.
+- System scheduler and server restart actions.
 
 ---
 
 ## Environment Variables
 
-Only a few environment variables are required. All other settings are managed via the **Admin UI**.
+`env-config-server.ts` is the source of truth for runtime env vars.
 
-### Required Variables
+### Required by schema
 
-| Variable             | Description                                    | Example                               |
-| -------------------- | ---------------------------------------------- | ------------------------------------- |
-| `AUTH_URL`           | Public URL of your Norish instance             | `https://norish.example.com`          |
-| `DATABASE_URL`       | PostgreSQL connection string                   | `postgres://user:pass@db:5432/norish` |
-| `MASTER_KEY`         | Master key for deriving encryption keys        | `openssl rand -base64 32`             |
-| `CHROME_WS_ENDPOINT` | Puppeteer WebSocket endpoint for web scraping  | `ws://chrome-headless:3000`           |
-| `REDIS_URL`          | Redis connection URL for events and job queues | `redis://redis:6379`                  |
+| Variable       | Description                                 | Example                               |
+| -------------- | ------------------------------------------- | ------------------------------------- |
+| `DATABASE_URL` | PostgreSQL connection string                | `postgres://user:pass@db:5432/norish` |
+| `MASTER_KEY`   | 32+ character key for encryption derivation | `openssl rand -base64 32`             |
 
-### Optional Variables
+### Commonly set in production
 
-| Variable                | Description                             | Default        |
-| ----------------------- | --------------------------------------- | -------------- |
-| `HOST`                  | Server bind address                     | `0.0.0.0`      |
-| `PORT`                  | Server port                             | `3000`         |
-| `RECIPES_DISK_DIR`      | Upload storage directory                | `/app/uploads` |
-| `NEXT_PUBLIC_LOG_LEVEL` | Log level                               | `info`         |
-| `TRUSTED_ORIGINS`       | Comma seperated list of trusted origins | `empty`        |
-| `YT_DLP_BIN_DIR`        | Custom folder path for `yt-dlp`         | `/app/bin`     |
-| `DEFAULT_LOCALE`        | Instance default locale                 | `en`           |
-| `ENABLED_LOCALES`       | Comma-separated list of enabled locales | (all enabled)  |
+| Variable             | Description                                    | Typical value                |
+| -------------------- | ---------------------------------------------- | ---------------------------- |
+| `AUTH_URL`           | Public URL used for callbacks and links        | `https://norish.example.com` |
+| `CHROME_WS_ENDPOINT` | Playwright CDP WebSocket endpoint for scraping | `ws://chrome-headless:3000`  |
+| `REDIS_URL`          | Redis connection URL for events and jobs       | `redis://redis:6379`         |
 
-### First-Time Auth Provider
+### Optional general Runtime
 
-Configure **one** auth provider via environment variables to create your first admin account:
+| Variable              | Description                                | Default                     |
+| --------------------- | ------------------------------------------ | --------------------------- |
+| `NODE_ENV`            | Runtime environment                        | `development`               |
+| `HOST`                | Server bind address                        | `0.0.0.0`                   |
+| `PORT`                | Server port                                | `3000`                      |
+| `AUTH_URL`            | Public URL for auth callbacks and links    | `http://localhost:3000`     |
+| `TRUSTED_ORIGINS`     | Comma-separated additional trusted origins | (empty)                     |
+| `UPLOADS_DIR`         | Upload storage directory                   | `./uploads`                 |
+| `CHROME_WS_ENDPOINT`  | Playwright CDP WebSocket endpoint          | `ws://chrome-headless:3000` |
+| `REDIS_URL`           | Redis connection URL                       | `redis://localhost:6379`    |
+| `ENABLE_REGISTRATION` | Allow new-user registration                | `false`                     |
+| `AI_ENABLED`          | Enable AI features globally                | `false`                     |
 
-| Provider     | Variables                                                                                       | Callback                                                 |
-| ------------ | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| **Password** | `PASSWORD_AUTH_ENABLED`                                                                         |                                                          |
-| **OIDC**     | `OIDC_NAME`, `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_WELLKNOWN` (optional) | https://example.norish.com/api/auth/oauth2/callback/oidc |
-| **GitHub**   | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`                                                      | https://example.norish.com/api/auth/callback/github      |
-| **Google**   | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                                      | https://example.norish.com/api/auth/callback/google      |
+### Optional auth setup
 
-After first login, manage all auth providers via **Settings => Admin**.
+Configure one provider for initial sign-in; after that, use `Settings -> Admin`.
+
+Provider callback URLs:
+
+| Provider | Callback URL                                                      |
+| -------- | ----------------------------------------------------------------- |
+| OIDC     | `https://example.norish-domain.com/api/auth/oauth2/callback/oidc` |
+| GitHub   | `https://example.norish-domain.com/api/auth/callback/github`      |
+| Google   | `https://example.norish-domain.com/api/auth/callback/google`      |
+
+| Variable                | Description                                          | Default |
+| ----------------------- | ---------------------------------------------------- | ------- |
+| `PASSWORD_AUTH_ENABLED` | Enable email/password auth bootstrap                 | Auto    |
+| `OIDC_NAME`             | Display name for OIDC provider                       | (empty) |
+| `OIDC_ISSUER`           | OIDC issuer URL                                      | (empty) |
+| `OIDC_CLIENT_ID`        | OIDC client id                                       | (empty) |
+| `OIDC_CLIENT_SECRET`    | OIDC client secret                                   | (empty) |
+| `OIDC_WELLKNOWN`        | OIDC well-known URL (derived from issuer if omitted) | Derived |
+| `GITHUB_CLIENT_ID`      | GitHub OAuth client id                               | (empty) |
+| `GITHUB_CLIENT_SECRET`  | GitHub OAuth client secret                           | (empty) |
+| `GOOGLE_CLIENT_ID`      | Google OAuth client id                               | (empty) |
+| `GOOGLE_CLIENT_SECRET`  | Google OAuth client secret                           | (empty) |
+
+### Optional OIDC Claim Mapping
+
+These are only used when claim mapping is enabled.
+
+| Variable                      | Description                                      | Default             |
+| ----------------------------- | ------------------------------------------------ | ------------------- |
+| `OIDC_CLAIM_MAPPING_ENABLED`  | Enable claim-based role and household assignment | `false`             |
+| `OIDC_SCOPES`                 | Additional OIDC scopes (comma-separated)         | (empty)             |
+| `OIDC_GROUPS_CLAIM`           | Claim name containing group memberships          | `groups`            |
+| `OIDC_ADMIN_GROUP`            | Group name that grants server admin role         | `norish_admin`      |
+| `OIDC_HOUSEHOLD_GROUP_PREFIX` | Prefix for household auto-join groups            | `norish_household_` |
+
+### Optional AI Provider
+
+| Variable         | Description                        | Default      |
+| ---------------- | ---------------------------------- | ------------ |
+| `AI_PROVIDER`    | AI provider                        | `openai`     |
+| `AI_ENDPOINT`    | Custom provider endpoint           | (empty)      |
+| `AI_MODEL`       | Default model                      | `gpt-5-mini` |
+| `AI_API_KEY`     | API key for provider               | (empty)      |
+| `AI_TEMPERATURE` | Generation temperature             | `1.0`        |
+| `AI_MAX_TOKENS`  | Maximum tokens for model responses | `10000`      |
+
+### Optional Video + Transcription
+
+| Variable                   | Description                                     | Default       |
+| -------------------------- | ----------------------------------------------- | ------------- |
+| `VIDEO_PARSING_ENABLED`    | Enable video parsing pipeline                   | `false`       |
+| `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length                   | `120`         |
+| `YT_DLP_VERSION`           | yt-dlp version used by downloader               | `2025.11.12`  |
+| `YT_DLP_BIN_DIR`           | Folder containing yt-dlp binary                 | env-dependent |
+| `TRANSCRIPTION_PROVIDER`   | Transcription provider                          | `disabled`    |
+| `TRANSCRIPTION_ENDPOINT`   | Transcription endpoint (local/custom providers) | (empty)       |
+| `TRANSCRIPTION_API_KEY`    | Transcription API key                           | (empty)       |
+| `TRANSCRIPTION_MODEL`      | Transcription model                             | `whisper-1`   |
+
+### Optional (Parsing + Content Detection)
+
+| Variable              | Description                                     | Default |
+| --------------------- | ----------------------------------------------- | ------- |
+| `UNITS_JSON`          | Override units dictionary                       | (empty) |
+| `CONTENT_INDICATORS`  | Override recipe-content indicator configuration | (empty) |
+| `CONTENT_INGREDIENTS` | Override ingredient-content configuration       | (empty) |
+
+### Optional (Scheduler + Upload Limits)
+
+| Variable                   | Description                        | Default     |
+| -------------------------- | ---------------------------------- | ----------- |
+| `SCHEDULER_CLEANUP_MONTHS` | Cleanup retention period in months | `3`         |
+| `MAX_AVATAR_FILE_SIZE`     | Max avatar upload size (bytes)     | `5242880`   |
+| `MAX_IMAGE_FILE_SIZE`      | Max image upload size (bytes)      | `10485760`  |
+| `MAX_VIDEO_FILE_SIZE`      | Max video upload size (bytes)      | `104857600` |
+
+### Optional (Internationalization)
+
+| Variable          | Description                             | Default       |
+| ----------------- | --------------------------------------- | ------------- |
+| `DEFAULT_LOCALE`  | Instance default locale                 | `en`          |
+| `ENABLED_LOCALES` | Comma-separated list of enabled locales | (all enabled) |
 
 ---
 
@@ -315,7 +334,7 @@ pnpm install
 # Create your environment file
 cp .env.example .env.local
 
-# Spin up a postgres and redis instance (e.g. via docker)
+# Start required services (for example via Docker)
 # docker run -d --name norish-db -e POSTGRES_PASSWORD=norish -e POSTGRES_DB=norish -p 5432:5432 postgres:17-alpine
 # docker run -d --name norish-redis -p 6379:6379 redis:7-alpine
 
@@ -334,26 +353,8 @@ pnpm run dev
 | `pnpm run test:coverage` | Run tests with coverage report                            |
 | `pnpm run lint`          | Lint TypeScript files                                     |
 | `pnpm run lint:fix`      | Lint and auto-fix issues                                  |
-| `pnpm run format`        | Format all files with Prettier                            |
-| `pnpm run format:check`  | Check formatting without making changes                   |
-
-### Tooling Structure
-
-All development tooling configuration is centralized in the `tooling/` folder:
-
-```
-tooling/
-├── eslint/
-│   └── eslint.config.mjs    # ESLint flat config with TypeScript, React, Prettier
-├── tailwind/
-│   ├── hero.ts              # HeroUI plugin export for Tailwind CSS v4
-│   └── theme.css            # Custom theme colors (light/dark) using CSS variables
-└── vitest/
-    ├── vitest.config.ts     # Vitest configuration with React, jsdom
-    └── setup.ts             # Test setup with jest-dom matchers
-```
-
-The root config files (`eslint.config.mjs`, `vitest.config.ts`) re-export from the tooling folder for tool compatibility.
+| `pnpm run format`        | Format files with Prettier                                |
+| `pnpm run format:check`  | Check formatting without changing files                   |
 
 ---
 
@@ -361,48 +362,37 @@ The root config files (`eslint.config.mjs`, `vitest.config.ts`) re-export from t
 
 ### Frontend
 
-- **Next.js 16**
-- **Tailwind CSS 4**
-- **HeroUI**
-- **Framer Motion**
-- **Zustand** – Not sure if I want to keep it, currently mostly unused in favor of the context API.
-- **TanStack Query**
+- Next.js 16
+- Tailwind CSS 4
+- HeroUI
+- Framer Motion
+- TanStack Query
 
 ### Backend
 
-- **Node.js** - Custom server that embeds the Next server for WS/Redis support.
-- **tRPC**
-- **Better Auth**
-- **Pino**
-- **Redis**
-- **BullMQ** - Job queue for background tasks (recipe import, AI processing, etc.)
+- Node.js custom server
+- tRPC
+- Better Auth
+- Pino
+- Redis
+- BullMQ
 
 ### Database
 
-- **PostgreSQL**
-- **Drizzle ORM**
-- **Redis** - Used for real-time pub/sub events and BullMQ job queues
+- PostgreSQL
+- Drizzle ORM
 
-### AI & Processing
+### AI and Processing
 
-- **OpenAI SDK**
-- **Puppeteer** – Headless browser for web scraping (required).
-- **yt-dlp** – Video downloading from YouTube, TikTok, etc.
-- **Sharp** – To process the images to a uniform format.
-- **FFmpeg**
+- OpenAI SDK
+- Playwright
+- yt-dlp
+- Sharp
+- FFmpeg
 
-### Testing
+### Testing and Tooling
 
-- **Vitest**
-- **Testing Library**
-- **jsdom**
-
-### Tooling
-
-- **TypeScript 5**
-- **pnpm**
-- **ESLint**
-- **Prettier**
+- Vitest
 
 ---
 
@@ -412,20 +402,13 @@ Norish is licensed under [AGPL-3.0](LICENSE).
 
 ## Alternatives
 
-Alternatives that I know of:
-[Mealie](https://mealie.io/)
-[Tandoor](https://tandoor.dev/)
-
----
-
-# Note
-
-_Current documentation is limited, I will start working on better documentation, a contribution guide etc._
+- [Mealie](https://mealie.io/)
+- [Tandoor](https://tandoor.dev/)
 
 ---
 
 # Nora
 
-Last but not least a picture of our lovely dog Nora:
+Last but not least, a picture of our lovely dog Nora:
 
-<img src="./public/nora.jpg" width="25%" alt="Grocery list" />
+<img src="./public/nora.jpg" width="25%" alt="Nora" />
