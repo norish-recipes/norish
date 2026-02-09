@@ -17,7 +17,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { Slot } from "@/types";
 import { startOfMonth, addMonths, endOfMonth, eachDayOfInterval, dateKey } from "@/lib/helpers";
 import { useRecipeQuery } from "@/hooks/recipes";
-
 import Panel from "@/components/Panel/Panel";
 import { useCalendarQuery, useCalendarMutations, useCalendarSubscription } from "@/hooks/calendar";
 

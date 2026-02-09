@@ -7,11 +7,12 @@
  * - flattenForLibrary: prepares config for parse-ingredient library
  */
 
+import type { UnitsMap } from "@/server/db/zodSchemas/server-config";
+
 import { describe, it, expect } from "vitest";
 
 import { flattenForLibrary, normalizeUnit, formatUnit } from "@/lib/unit-localization";
 import defaultUnits from "@/config/units.default.json";
-import type { UnitsMap } from "@/server/db/zodSchemas/server-config";
 
 const unitsConfig = defaultUnits as UnitsMap;
 

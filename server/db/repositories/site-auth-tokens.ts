@@ -60,6 +60,7 @@ export async function createSiteAuthToken(
     .returning();
 
   const parsed = SiteAuthTokenSelectSchema.parse(row);
+
   return toSafeToken(parsed);
 }
 
@@ -68,6 +69,7 @@ export async function getTokensByUserId(userId: string): Promise<SiteAuthTokenSa
 
   return rows.map((row) => {
     const parsed = SiteAuthTokenSelectSchema.parse(row);
+
     return toSafeToken(parsed);
   });
 }
@@ -83,6 +85,7 @@ export async function getTokensByUserAndDomain(
 
   return rows.map((row) => {
     const parsed = SiteAuthTokenSelectSchema.parse(row);
+
     return decryptToken(parsed);
   });
 }
@@ -94,6 +97,7 @@ export async function getDecryptedTokensByUserId(
 
   return rows.map((row) => {
     const parsed = SiteAuthTokenSelectSchema.parse(row);
+
     return decryptToken(parsed);
   });
 }
@@ -109,9 +113,11 @@ export async function getTokenById(
     .limit(1);
 
   const row = rows[0];
+
   if (!row) return null;
 
   const parsed = SiteAuthTokenSelectSchema.parse(row);
+
   return toSafeToken(parsed);
 }
 
@@ -122,6 +128,7 @@ export async function updateSiteAuthToken(
   const validated = UpdateSiteAuthTokenInputSchema.parse(input);
 
   const updateData: Record<string, unknown> = { updatedAt: new Date() };
+
   if (validated.domain !== undefined) updateData.domain = validated.domain;
   if (validated.name !== undefined) updateData.name = validated.name;
   if (validated.value !== undefined) updateData.valueEnc = encrypt(validated.value);
@@ -136,6 +143,7 @@ export async function updateSiteAuthToken(
   if (!row) throw new Error("Token not found or access denied");
 
   const parsed = SiteAuthTokenSelectSchema.parse(row);
+
   return toSafeToken(parsed);
 }
 

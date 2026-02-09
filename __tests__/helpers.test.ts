@@ -1,3 +1,5 @@
+import type { UnitsMap } from "@/server/db/zodSchemas/server-config";
+
 import { describe, it, expect } from "vitest";
 
 import {
@@ -10,7 +12,6 @@ import {
   getWeekDays,
   addWeeks,
 } from "@/lib/helpers";
-import type { UnitsMap } from "@/server/db/zodSchemas/server-config";
 
 describe("parseIsoDuration", () => {
   it("parses hours and minutes", () => {

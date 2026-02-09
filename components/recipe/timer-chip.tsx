@@ -54,12 +54,12 @@ export function TimerChip({
     return (
       <Chip
         as="button"
-        onClick={handleClick}
-        startContent={<ClockIcon className="h-4 w-4" />}
+        className="mx-1 translate-y-[1px] pr-1.5 pl-2.5 align-baseline text-base"
         color="default"
         radius="full"
+        startContent={<ClockIcon className="h-4 w-4" />}
         variant="bordered"
-        className="mx-1 translate-y-[1px] pr-1.5 pl-2.5 align-baseline text-base"
+        onClick={handleClick}
       >
         {originalText}
       </Chip>
@@ -81,13 +81,13 @@ export function TimerChip({
   return (
     <Chip
       as="button"
-      onClick={handleClick}
-      startContent={icon}
+      className="mx-1 translate-y-[1px] pr-1.5 pl-2.5 align-baseline text-base"
       color={isCompleted ? "danger" : isRunning ? "primary" : "warning"}
       radius="full"
       size="md"
+      startContent={icon}
       variant="bordered"
-      className="mx-1 translate-y-[1px] pr-1.5 pl-2.5 align-baseline text-base"
+      onClick={handleClick}
     >
       {formatTimerMs(timer.remainingMs)}
     </Chip>

@@ -1,7 +1,9 @@
 // @vitest-environment node
-import { describe, it, expect } from "vitest";
-import { getMatchingTokens } from "@/server/lib/domain-matcher";
 import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+
+import { describe, it, expect } from "vitest";
+
+import { getMatchingTokens } from "@/server/lib/domain-matcher";
 
 function makeToken(
   overrides: Partial<SiteAuthTokenDecryptedDto> & { domain: string }
@@ -23,6 +25,7 @@ describe("getMatchingTokens", () => {
     it("matches a token whose domain equals the URL hostname", () => {
       const tokens = [makeToken({ domain: "instagram.com" })];
       const result = getMatchingTokens(tokens, "https://instagram.com/p/123");
+
       expect(result).toHaveLength(1);
       expect(result[0].domain).toBe("instagram.com");
     });
@@ -32,6 +35,7 @@ describe("getMatchingTokens", () => {
     it("matches a token when the URL hostname is a subdomain of the token domain", () => {
       const tokens = [makeToken({ domain: "instagram.com" })];
       const result = getMatchingTokens(tokens, "https://www.instagram.com/p/123");
+
       expect(result).toHaveLength(1);
       expect(result[0].domain).toBe("instagram.com");
     });
@@ -39,6 +43,7 @@ describe("getMatchingTokens", () => {
     it("matches deeply nested subdomains", () => {
       const tokens = [makeToken({ domain: "example.com" })];
       const result = getMatchingTokens(tokens, "https://a.b.c.example.com/path");
+
       expect(result).toHaveLength(1);
     });
   });
@@ -47,12 +52,14 @@ describe("getMatchingTokens", () => {
     it("does not return tokens whose domain differs from the URL hostname", () => {
       const tokens = [makeToken({ domain: "facebook.com" })];
       const result = getMatchingTokens(tokens, "https://instagram.com");
+
       expect(result).toHaveLength(0);
     });
 
     it("does not match when the token domain is a suffix but not a parent domain", () => {
       const tokens = [makeToken({ domain: "gram.com" })];
       const result = getMatchingTokens(tokens, "https://instagram.com");
+
       expect(result).toHaveLength(0);
     });
   });
@@ -65,6 +72,7 @@ describe("getMatchingTokens", () => {
         makeToken({ id: "3", domain: "facebook.com" }),
       ];
       const result = getMatchingTokens(tokens, "https://www.instagram.com/p/123");
+
       expect(result).toHaveLength(2);
       expect(result.map((t) => t.id)).toEqual(["1", "2"]);
     });
@@ -73,6 +81,7 @@ describe("getMatchingTokens", () => {
   describe("empty tokens array", () => {
     it("returns an empty array when no tokens are provided", () => {
       const result = getMatchingTokens([], "https://instagram.com");
+
       expect(result).toEqual([]);
     });
   });
@@ -81,12 +90,14 @@ describe("getMatchingTokens", () => {
     it("returns an empty array for an empty string URL", () => {
       const tokens = [makeToken({ domain: "instagram.com" })];
       const result = getMatchingTokens(tokens, "");
+
       expect(result).toEqual([]);
     });
 
     it("returns an empty array for a whitespace-only URL", () => {
       const tokens = [makeToken({ domain: "instagram.com" })];
       const result = getMatchingTokens(tokens, "   ");
+
       expect(result).toEqual([]);
     });
   });
@@ -95,12 +106,14 @@ describe("getMatchingTokens", () => {
     it("matches when the token domain has mixed case", () => {
       const tokens = [makeToken({ domain: "Instagram.COM" })];
       const result = getMatchingTokens(tokens, "https://instagram.com/p/123");
+
       expect(result).toHaveLength(1);
     });
 
     it("matches when the URL has mixed case", () => {
       const tokens = [makeToken({ domain: "instagram.com" })];
       const result = getMatchingTokens(tokens, "https://INSTAGRAM.COM/p/123");
+
       expect(result).toHaveLength(1);
     });
   });
@@ -109,12 +122,14 @@ describe("getMatchingTokens", () => {
     it("matches a full URL when token domain is just a bare word like 'instagram'", () => {
       const tokens = [makeToken({ domain: "instagram" })];
       const result = getMatchingTokens(tokens, "https://www.instagram.com/p/123");
+
       expect(result).toHaveLength(1);
     });
 
     it("matches a URL without subdomain when token domain has no TLD", () => {
       const tokens = [makeToken({ domain: "instagram" })];
       const result = getMatchingTokens(tokens, "https://instagram.com/p/123");
+
       expect(result).toHaveLength(1);
     });
 
@@ -122,12 +137,14 @@ describe("getMatchingTokens", () => {
       // "notinstagram.com" starts with "notinstagram", not "instagram."
       const tokens = [makeToken({ domain: "instagram" })];
       const result = getMatchingTokens(tokens, "https://notinstagram.com");
+
       expect(result).toHaveLength(0);
     });
 
     it("matches when URL hostname is exactly the bare word", () => {
       const tokens = [makeToken({ domain: "instagram" })];
       const result = getMatchingTokens(tokens, "instagram");
+
       expect(result).toHaveLength(1);
     });
   });
@@ -136,12 +153,14 @@ describe("getMatchingTokens", () => {
     it("matches when the URL is a bare domain without a scheme", () => {
       const tokens = [makeToken({ domain: "instagram.com" })];
       const result = getMatchingTokens(tokens, "instagram.com");
+
       expect(result).toHaveLength(1);
     });
 
     it("matches a bare domain with a path", () => {
       const tokens = [makeToken({ domain: "instagram.com" })];
       const result = getMatchingTokens(tokens, "instagram.com/p/123");
+
       expect(result).toHaveLength(1);
     });
   });

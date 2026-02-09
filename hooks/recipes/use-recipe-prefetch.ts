@@ -2,12 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 /**
  * Automatically prefetch recipe data when element comes into view.
  * Uses IntersectionObserver for efficient viewport detection.
- * 
+ *
  * Can be used in recipe cards, calendar items, or any component that links to recipes.
  */
 export function useRecipePrefetch(recipeId: string, enabled = true) {
@@ -28,22 +29,16 @@ export function useRecipePrefetch(recipeId: string, enabled = true) {
           if (entry.isIntersecting && !hasTriggeredRef.current) {
             hasTriggeredRef.current = true;
             // Prefetch the recipe data with error handling
-            queryClient
-              .prefetchQuery(
-                trpc.recipes.get.queryOptions({ id: recipeId })
-              )
-              .catch(() => {
-                // Retry prefetch once on failure (network blip)
-                if (retryCountRef.current < MAX_RETRIES) {
-                  retryCountRef.current++;
-                  setTimeout(() => {
-                    queryClient.prefetchQuery(
-                      trpc.recipes.get.queryOptions({ id: recipeId })
-                    );
-                  }, 1000); // Retry after 1s
-                }
-                // If retry fails, it's ok - data will load normally when user clicks
-              });
+            queryClient.prefetchQuery(trpc.recipes.get.queryOptions({ id: recipeId })).catch(() => {
+              // Retry prefetch once on failure (network blip)
+              if (retryCountRef.current < MAX_RETRIES) {
+                retryCountRef.current++;
+                setTimeout(() => {
+                  queryClient.prefetchQuery(trpc.recipes.get.queryOptions({ id: recipeId }));
+                }, 1000); // Retry after 1s
+              }
+              // If retry fails, it's ok - data will load normally when user clicks
+            });
           }
         });
       },
@@ -55,6 +50,7 @@ export function useRecipePrefetch(recipeId: string, enabled = true) {
     );
 
     const element = elementRef.current;
+
     if (element) {
       observer.observe(element);
     }

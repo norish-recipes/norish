@@ -24,7 +24,13 @@
 
 import { resetDbConnection } from "@/server/db/drizzle";
 import { SERVER_CONFIG } from "@/config/env-config-server";
-import { initTestDb, closeTestDb, cleanDatabase, createTestUser, createTestRecipe } from "@/__tests__/helpers/db-test-helpers";
+import {
+  initTestDb,
+  closeTestDb,
+  cleanDatabase,
+  createTestUser,
+  createTestRecipe,
+} from "@/__tests__/helpers/db-test-helpers";
 import {
   setupTestDatabase,
   teardownTestDatabase,
@@ -76,12 +82,12 @@ export class RepositoryTestBase {
     await cleanDatabase();
 
     const user = await createTestUser();
-    
+
     const recipe = await createTestRecipe(user.id, {
       name: "Test Recipe",
     });
 
-    return [user, recipe]
+    return [user, recipe];
   }
 
   /**

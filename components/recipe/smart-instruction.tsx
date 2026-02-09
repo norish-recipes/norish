@@ -7,7 +7,6 @@ import ReactMarkdown from "react-markdown";
 import { parseTimerDurations } from "@/lib/timer-parser";
 import { useTimersEnabledQuery, useTimerKeywordsQuery } from "@/hooks/config";
 import { createClientLogger } from "@/lib/logger";
-
 import { TimerChip } from "@/components/recipe/timer-chip";
 
 const logger = createClientLogger("smart-instruction");
@@ -128,18 +127,21 @@ export function SmartInstruction({ text, recipeId, recipeName, stepIndex }: Smar
             if (timersEnabled && timerKeywords.enabled && segments.length > 0) {
               return <strong>{renderWithTimers(children, segments)}</strong>;
             }
+
             return <strong>{children}</strong>;
           },
           em: ({ children }) => {
             if (timersEnabled && timerKeywords.enabled && segments.length > 0) {
               return <em>{renderWithTimers(children, segments)}</em>;
             }
+
             return <em>{children}</em>;
           },
           p: ({ children }) => {
             if (timersEnabled && timerKeywords.enabled && segments.length > 0) {
               return <span>{renderWithTimers(children, segments)}</span>;
             }
+
             return <span>{children}</span>;
           },
         }}
@@ -158,8 +160,10 @@ function preprocessMarkdown(text: string): string {
     .map((line) => {
       if (line.startsWith("#") && !line.startsWith("##")) {
         const content = line.slice(1).trim();
+
         return `## ${content}`;
       }
+
       return line;
     })
     .join("\n");
@@ -184,6 +188,7 @@ function renderWithTimers(children: any, segments: Segment[]): React.ReactNode {
       if (typeof child === "string") {
         return <React.Fragment key={`seg-${idx}`}>{insertTimers(child, segments)}</React.Fragment>;
       }
+
       return <React.Fragment key={`child-${idx}`}>{child}</React.Fragment>;
     });
   }
@@ -214,6 +219,7 @@ function insertTimers(text: string, segments: Segment[]): React.ReactNode[] {
     // Add text before this segment
     if (currentIndex < segmentPosition) {
       const beforeText = text.substring(currentIndex, segmentPosition);
+
       if (beforeText) {
         result.push(beforeText);
       }
@@ -224,12 +230,12 @@ function insertTimers(text: string, segments: Segment[]): React.ReactNode[] {
       result.push(
         <TimerChip
           key={`timer-${segment.data.timerId}`}
+          durationMs={segment.data.durationMs}
           id={segment.data.timerId}
+          initialLabel={segment.data.label}
+          originalText={segment.data.originalText}
           recipeId={segment.data.recipeId}
           recipeName={segment.data.recipeName}
-          initialLabel={segment.data.label}
-          durationMs={segment.data.durationMs}
-          originalText={segment.data.originalText}
         />
       );
     }

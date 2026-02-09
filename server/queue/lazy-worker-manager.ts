@@ -198,6 +198,7 @@ async function ensureWorkerRunning<T>(state: LazyWorkerState<T>): Promise<void> 
   // Use mutex to prevent concurrent state modifications
   const previousLock = state.operationLock;
   let releaseLock: () => void;
+
   state.operationLock = new Promise<void>((resolve) => {
     releaseLock = resolve;
   });

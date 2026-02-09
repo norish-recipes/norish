@@ -2,6 +2,7 @@ import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import type { VideoProcessorContext } from "../types";
 
 import { InstagramProcessor } from "./instagram";
+
 import { videoLogger as log } from "@/server/logger";
 
 /**
@@ -13,6 +14,7 @@ export class FacebookProcessor extends InstagramProcessor {
 
   override async process(context: VideoProcessorContext): Promise<FullRecipeInsertDTO> {
     log.info({ url: context.url }, "Processing Facebook post (using Instagram logic)");
+
     return super.process(context);
   }
 }

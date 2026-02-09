@@ -1,6 +1,7 @@
 // @vitest-environment node
-import { describe, it, expect, vi } from "vitest";
 import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+
+import { describe, it, expect } from "vitest";
 
 describe("Recipe import auth tokens integration", () => {
   function makeToken(
@@ -23,6 +24,7 @@ describe("Recipe import auth tokens integration", () => {
     it("passes tokens to parseRecipeFromUrl when user has tokens", () => {
       const tokens = [makeToken(), makeToken({ name: "csrf", value: "abc" })];
       const result = tokens.length > 0 ? tokens : undefined;
+
       expect(result).toEqual(tokens);
       expect(result).toHaveLength(2);
     });
@@ -30,6 +32,7 @@ describe("Recipe import auth tokens integration", () => {
     it("passes undefined when user has no tokens", () => {
       const tokens: SiteAuthTokenDecryptedDto[] = [];
       const result = tokens.length > 0 ? tokens : undefined;
+
       expect(result).toBeUndefined();
     });
 
@@ -43,6 +46,7 @@ describe("Recipe import auth tokens integration", () => {
       });
       const tokens = [token];
       const result = tokens.length > 0 ? tokens : undefined;
+
       expect(result).toBeDefined();
       expect(result![0]).toEqual(
         expect.objectContaining({

@@ -7,6 +7,7 @@ import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import { PlannedItemContent } from "./planned-item-content";
+
 import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
 
 type TimelinePlannedItemProps = {
@@ -63,15 +64,16 @@ export const TimelinePlannedItem = memo(function TimelinePlannedItem({
   // Wrap in button for click handling
   if (onRecipeClick || onNoteClick) {
     return (
-      <button
-        ref={prefetchRef}
-        className="block w-full text-left focus:outline-none"
-        type="button"
-        onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
-      >
-        {content}
-      </button>
+      <div ref={prefetchRef}>
+        <button
+          className="block w-full text-left focus:outline-none"
+          type="button"
+          onClick={handleClick}
+          onDoubleClick={handleDoubleClick}
+        >
+          {content}
+        </button>
+      </div>
     );
   }
 

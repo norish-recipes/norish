@@ -1,8 +1,11 @@
 # video-playback Specification
 
 ## Purpose
+
 TBD - created by archiving change fix-mobile-bugs-and-import-reliability. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Fullscreen Video Playback
 
 The video player SHALL provide a fullscreen toggle button in the playback controls.
@@ -30,4 +33,3 @@ The video player SHALL provide a fullscreen toggle button in the playback contro
 - **WHEN** the browser does not support the Fullscreen API
 - **THEN** the fullscreen button SHALL be hidden
 - **AND** video playback SHALL continue to function normally without fullscreen capability
-

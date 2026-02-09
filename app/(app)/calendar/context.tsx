@@ -115,16 +115,21 @@ export function CalendarContextProvider({
       setDateRange((prev) => {
         // Expand by 12 days (divisible by both 2 and 3 columns) to prevent grid shifting
         const daysToAdd = 12;
+
         if (direction === "past") {
           const newStart = new Date(prev.start);
+
           newStart.setDate(newStart.getDate() - daysToAdd);
+
           return {
             start: newStart,
             end: prev.end,
           };
         }
         const newEnd = new Date(prev.end);
+
         newEnd.setDate(newEnd.getDate() + daysToAdd);
+
         return {
           start: prev.start,
           end: newEnd,
@@ -140,6 +145,7 @@ export function CalendarContextProvider({
   const isDateInRange = useCallback(
     (date: Date): boolean => {
       const d = new Date(date);
+
       return d >= dateRange.start && d <= dateRange.end;
     },
     [dateRange]

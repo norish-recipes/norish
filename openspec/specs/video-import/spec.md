@@ -1,8 +1,11 @@
 # video-import Specification
 
 ## Purpose
+
 TBD - created by archiving change fix-mobile-bugs-and-import-reliability. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: YouTube Caption Extraction
 
 The video import system SHALL use existing YouTube captions when available, combined with video description, before falling back to audio transcription.
@@ -103,4 +106,3 @@ The video import system SHALL implement a strategy pattern with a factory for pl
 - **WHEN** a new video platform needs to be supported
 - **THEN** a new processor class implementing the `VideoProcessor` interface SHALL be created
 - **AND** the factory SHALL be updated to recognize the new platform's URLs
-

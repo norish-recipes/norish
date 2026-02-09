@@ -6,8 +6,9 @@
  * Falls back to existing DATABASE_URL if Docker is not available
  */
 
-import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import type { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import pg from "pg";
 
 import { dbLogger } from "@/server/logger";
@@ -21,6 +22,7 @@ let _container: StartedPostgreSqlContainer | null = null;
  */
 function parseDatabaseUrl(url: string) {
   const match = url.match(/postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+
   if (!match) {
     throw new Error(`Invalid DATABASE_URL format: ${url}`);
   }
@@ -218,5 +220,6 @@ export async function stopPostgresContainer() {
 export function generateTestDbName(baseName: string = "test_norish") {
   const timestamp = Date.now();
   const random = Math.floor(Math.random() * 10000);
+
   return `${baseName}_${timestamp}_${random}`;
 }

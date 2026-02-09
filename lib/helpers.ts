@@ -91,6 +91,7 @@ export function formatTimerMs(ms: number): string {
   if (h > 0) {
     return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   }
+
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 

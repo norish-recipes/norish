@@ -67,11 +67,13 @@ describe("Units Configuration Coverage", () => {
   describe("English locale coverage", () => {
     it.each(unitKeys)("unit '%s' has English short form", (key) => {
       const hasEnglish = units[key].short.some((entry) => entry.locale === "en");
+
       expect(hasEnglish).toBe(true);
     });
 
     it.each(unitKeys)("unit '%s' has English plural form", (key) => {
       const hasEnglish = units[key].plural.some((entry) => entry.locale === "en");
+
       expect(hasEnglish).toBe(true);
     });
   });
@@ -79,11 +81,13 @@ describe("Units Configuration Coverage", () => {
   describe("German locale coverage", () => {
     it.each(unitKeys)("unit '%s' has German short form", (key) => {
       const hasGerman = units[key].short.some((entry) => entry.locale === "de");
+
       expect(hasGerman).toBe(true);
     });
 
     it.each(unitKeys)("unit '%s' has German plural form", (key) => {
       const hasGerman = units[key].plural.some((entry) => entry.locale === "de");
+
       expect(hasGerman).toBe(true);
     });
   });
@@ -97,6 +101,7 @@ describe("Units Configuration Coverage", () => {
     it("has no duplicate unit keys", () => {
       const keys = Object.keys(units);
       const uniqueKeys = new Set(keys);
+
       expect(uniqueKeys.size).toBe(keys.length);
     });
   });
@@ -109,6 +114,7 @@ describe("Units Configuration Coverage", () => {
 
     it("reports supported locales", () => {
       const locales = new Set<string>();
+
       for (const key of unitKeys) {
         for (const entry of units[key].short) {
           locales.add(entry.locale);
@@ -124,6 +130,7 @@ describe("Units Configuration Coverage", () => {
         units[key].short.some((entry) => entry.locale === "de")
       );
       const coverage = (germanUnits.length / totalUnits) * 100;
+
       console.log(
         `German locale coverage: ${coverage.toFixed(1)}% (${germanUnits.length}/${totalUnits} units)`
       );

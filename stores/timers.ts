@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
 import { createClientLogger } from "@/lib/logger";
 
 const logger = createClientLogger("timers");
@@ -80,6 +81,7 @@ export const useTimerStore = create<TimerState>()(
 
       addTimer: (id, recipeId, label, durationMs, recipeName) => {
         const existing = get().timers.find((t) => t.id === id);
+
         if (existing) return; // Don't duplicate
 
         set((state) => ({
@@ -170,6 +172,7 @@ export const useTimerStore = create<TimerState>()(
 
       tick: () => {
         const now = Date.now();
+
         set((state) => {
           let hasChanges = false;
           const newTimers = state.timers.map((t) => {
@@ -180,6 +183,7 @@ export const useTimerStore = create<TimerState>()(
                 `Timer ${t.id} is running but has null lastTickAt. Resetting to current time.`
               );
               hasChanges = true;
+
               return { ...t, lastTickAt: now };
             }
 
@@ -189,10 +193,12 @@ export const useTimerStore = create<TimerState>()(
             if (newRemaining === 0 && t.remainingMs > 0) {
               hasChanges = true;
               showTimerNotification(t);
+
               return { ...t, remainingMs: 0, status: "completed", lastTickAt: now };
             }
 
             hasChanges = true;
+
             return { ...t, remainingMs: newRemaining, lastTickAt: now } as Timer;
           });
 

@@ -20,6 +20,7 @@ import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
+
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function GeneralCard() {

@@ -2,6 +2,7 @@ import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import type { VideoProcessorContext } from "../types";
 
 import { BaseVideoProcessor } from "../base-processor";
+
 import { videoLogger as log } from "@/server/logger";
 import { transcribeAudio } from "@/server/ai/transcriber";
 import { extractRecipeFromVideo } from "@/server/video/normalizer";
@@ -25,6 +26,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
       log.info({ url }, "Processing YouTube video");
 
       const metadata = await this.getMetadata(url, tokens);
+
       await this.validateLength(url, tokens);
 
       // Download video file
@@ -32,6 +34,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
 
       // Try to get captions first (cheaper than audio transcription)
       let captionText: string | null = null;
+
       try {
         log.info({ url }, "Attempting to download captions");
         const captionResult = await downloadCaptions(url, tokens);
@@ -73,6 +76,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
           const savedVideo = videoPath
             ? await this.saveVideo(videoPath, recipeId, metadata.duration)
             : null;
+
           return this.addVideoToRecipe(result.data, savedVideo);
         }
 
@@ -84,11 +88,13 @@ export class YouTubeProcessor extends BaseVideoProcessor {
       log.info({ url }, "Starting audio transcription");
 
       const transcriptionResult = await transcribeAudio(audioPath);
+
       if (!transcriptionResult.success) {
         throw new Error(transcriptionResult.error);
       }
 
       const transcript = transcriptionResult.data;
+
       log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
       // Combine transcript with description

@@ -21,7 +21,6 @@ vi.mock("@/hooks/calendar", () => ({
   useCalendarSubscription: vi.fn(),
 }));
 
-// eslint-disable-next-line import/order
 import { CalendarContextProvider, useCalendarContext } from "@/app/(app)/calendar/context";
 
 function createTestQueryClient() {
@@ -147,6 +146,7 @@ describe("CalendarContext", () => {
 
       // A date far in the future should be out of range
       const farFuture = new Date();
+
       farFuture.setFullYear(farFuture.getFullYear() + 1);
 
       expect(result.current.isDateInRange(farFuture)).toBe(false);

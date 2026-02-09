@@ -1,8 +1,11 @@
 # timer-notifications Specification
 
 ## Purpose
+
 TBD - created by archiving change improve-timer-system. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Timer Completion Background Notification
 
 The system SHALL display an OS-level notification when a cooking timer completes and the app is not in the foreground.
@@ -82,4 +85,3 @@ The timer dock SHALL display a non-intrusive indicator when notification permiss
 - **AND** notification permission is `denied`
 - **THEN** a small text hint is shown (e.g., "Notifications blocked — enable in browser settings")
 - **AND** the indicator does not interfere with timer controls
-

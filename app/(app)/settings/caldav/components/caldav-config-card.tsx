@@ -14,13 +14,8 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
-import {
-  ServerIcon,
-} from "@heroicons/react/24/outline";
-import { InformationCircleIcon,
-  EyeIcon,
-  EyeSlashIcon,
-} from "@heroicons/react/16/solid";
+import { ServerIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";

@@ -76,6 +76,7 @@ describe("recipe-randomizer", () => {
       // Return values that keep original order: 0.9 -> j=2, 0.9 -> j=1 (no swaps)
       // Then final random for selection: 0.1 -> picks first item (a)
       const mockRandom = vi.spyOn(Math, "random");
+
       mockRandom
         .mockReturnValueOnce(0.99) // shuffle i=2: j=2 (no swap)
         .mockReturnValueOnce(0.99) // shuffle i=1: j=1 (no swap)

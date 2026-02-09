@@ -18,18 +18,20 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWindowSize } from "usehooks-ts";
 
-import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { dateKey, eachDayOfInterval } from "@/lib/helpers";
 import { DesktopScrollToToday } from "./desktop-scroll-to-today";
-import { SLOT_ORDER } from "@/components/calendar/mobile/types";
-
 import { DesktopDayCard } from "./desktop-day-card";
 import { DesktopDragOverlay } from "./desktop-drag-overlay";
 
+import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { dateKey, eachDayOfInterval } from "@/lib/helpers";
+import { SLOT_ORDER } from "@/components/calendar/mobile/types";
+
 function startOfDay(date: Date): Date {
   const d = new Date(date);
+
   d.setHours(0, 0, 0, 0);
+
   return d;
 }
 
@@ -64,24 +66,30 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     const days = eachDayOfInterval(dateRange.start, dateRange.end);
     // Pad to complete rows to prevent grid shifting
     const remainder = days.length % columnCount;
+
     if (remainder !== 0) {
       const lastDay = days[days.length - 1];
       const padding = columnCount - remainder;
+
       for (let i = 1; i <= padding; i++) {
         const nextDay = new Date(lastDay);
+
         nextDay.setDate(lastDay.getDate() + i);
         days.push(nextDay);
       }
     }
+
     return days;
   }, [dateRange.start, dateRange.end, columnCount]);
 
   // Group days into rows based on column count
   const rows = useMemo(() => {
     const result: Date[][] = [];
+
     for (let i = 0; i < allDays.length; i += columnCount) {
       result.push(allDays.slice(i, i + columnCount));
     }
+
     return result;
   }, [allDays, columnCount]);
 
@@ -100,6 +108,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   const todayKey = useMemo(() => dateKey(today), [today]);
   const todayRowIndex = useMemo(() => {
     const dayIndex = allDays.findIndex((d) => dateKey(d) === todayKey);
+
     return dayIndex >= 0 ? Math.floor(dayIndex / columnCount) : -1;
   }, [allDays, todayKey, columnCount]);
 
@@ -110,6 +119,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   const scrollMargin = useMemo(() => {
     if (typeof window === "undefined" || !containerRef.current) return 0;
     const rect = containerRef.current.getBoundingClientRect();
+
     return rect.top + window.scrollY;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_windowHeight]);
@@ -149,6 +159,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
       if (!hasScrolledRef.current) return;
 
       const items = virtualizer.getVirtualItems();
+
       if (items.length === 0) return;
 
       const firstIndex = items[0].index;
@@ -235,6 +246,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
       for (const dayItems of Object.values(calendarData)) {
         const item = dayItems.find((i) => i.id === itemId);
+
         if (item) {
           setActiveItem(item as PlannedItemDisplay);
           break;
@@ -281,8 +293,10 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
   const handleDragOver = useCallback(
     (event: DragOverEvent) => {
       const { over } = event;
+
       if (!over || !activeItem) {
         setDragOverDateKey(null);
+
         return;
       }
 
@@ -291,6 +305,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
       // Only highlight day containers
       if (!overId.endsWith("_drop")) {
         setDragOverDateKey(null);
+
         return;
       }
 
@@ -312,93 +327,95 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
   const collisionDetection = (args: Parameters<typeof pointerWithin>[0]) => {
     const pointerCollisions = pointerWithin(args);
+
     if (pointerCollisions.length > 0) {
       return pointerCollisions;
     }
+
     return rectIntersection(args);
   };
 
   return (
     <div className="fade-in">
-    <DndContext
-      collisionDetection={collisionDetection}
-      sensors={sensors}
-      onDragEnd={handleDragEnd}
-      onDragOver={handleDragOver}
-      onDragStart={handleDragStart}
-    >
-      <div
-        ref={containerRef}
-        className="relative overflow-visible"
-        style={{ containIntrinsicSize: "0 500px" }}
+      <DndContext
+        collisionDetection={collisionDetection}
+        sensors={sensors}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragStart={handleDragStart}
       >
         <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: "100%",
-            position: "relative",
-            overflow: "visible",
-          }}
+          ref={containerRef}
+          className="relative overflow-visible"
+          style={{ containIntrinsicSize: "0 500px" }}
         >
-          {virtualItems.map((virtualRow) => {
-            const rowDays = rows[virtualRow.index];
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+              overflow: "visible",
+            }}
+          >
+            {virtualItems.map((virtualRow) => {
+              const rowDays = rows[virtualRow.index];
 
-            return (
-              <div
-                key={virtualRow.key}
-                ref={virtualizer.measureElement}
-                data-index={virtualRow.index}
-                className="absolute top-0 left-0 w-full px-4 py-2"
-                style={{
-                  transform: `translateY(${virtualRow.start - scrollMargin}px)`,
-                }}
-              >
+              return (
                 <div
-                  className="grid gap-4"
+                  key={virtualRow.key}
+                  ref={virtualizer.measureElement}
+                  className="absolute top-0 left-0 w-full px-4 py-2"
+                  data-index={virtualRow.index}
                   style={{
-                    gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+                    transform: `translateY(${virtualRow.start - scrollMargin}px)`,
                   }}
                 >
-                  {rowDays.map((d) => {
-                    const key = dateKey(d);
-                    const items = (calendarData[key] ?? [])
-                      .sort((a, b) => SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot])
-                      .map((it) => it as PlannedItemDisplay);
-                    const isToday = key === todayKey;
+                  <div
+                    className="grid gap-4"
+                    style={{
+                      gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {rowDays.map((d) => {
+                      const key = dateKey(d);
+                      const items = (calendarData[key] ?? [])
+                        .sort((a, b) => SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot])
+                        .map((it) => it as PlannedItemDisplay);
+                      const isToday = key === todayKey;
 
-                    return (
-                      <DesktopDayCard
-                        key={key}
-                        date={d}
-                        dateKey={key}
-                        isDragOver={dragOverDateKey === key}
-                        isToday={isToday}
-                        items={items}
-                        monthFormatter={monthFormatter}
-                        weekdayFormatter={weekdayFormatter}
-                        onAddItem={onAddItem}
-                        onNoteClick={onNoteClick}
-                        onRecipeClick={onRecipeClick}
-                      />
-                    );
-                  })}
+                      return (
+                        <DesktopDayCard
+                          key={key}
+                          date={d}
+                          dateKey={key}
+                          isDragOver={dragOverDateKey === key}
+                          isToday={isToday}
+                          items={items}
+                          monthFormatter={monthFormatter}
+                          weekdayFormatter={weekdayFormatter}
+                          onAddItem={onAddItem}
+                          onNoteClick={onNoteClick}
+                          onRecipeClick={onRecipeClick}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      <DesktopScrollToToday
-        direction={scrollDirection}
-        isVisible={showScrollButton}
-        onClick={handleScrollToToday}
-      />
+        <DesktopScrollToToday
+          direction={scrollDirection}
+          isVisible={showScrollButton}
+          onClick={handleScrollToToday}
+        />
 
-      <DragOverlay dropAnimation={null}>
-        {activeItem ? <DesktopDragOverlay item={activeItem} /> : null}
-      </DragOverlay>
-    </DndContext>
+        <DragOverlay dropAnimation={null}>
+          {activeItem ? <DesktopDragOverlay item={activeItem} /> : null}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Button } from "@heroui/react";
-import { useTimerStore } from "@/stores/timers";
 import {
   ChevronUpIcon,
   ChevronDownIcon,
@@ -15,8 +14,10 @@ import {
 } from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
 import useSound from "use-sound";
-import { useTimersEnabledQuery } from "@/hooks/config";
 import { useTranslations } from "next-intl";
+
+import { useTimersEnabledQuery } from "@/hooks/config";
+import { useTimerStore } from "@/stores/timers";
 import { createClientLogger } from "@/lib/logger";
 import { formatTimerMs } from "@/lib/helpers";
 import { useAutoHide } from "@/hooks/auto-hide";
@@ -73,8 +74,10 @@ export function TimerDock() {
   useEffect(() => {
     setIsClient(true);
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
+
     checkMobile();
     window.addEventListener("resize", checkMobile);
+
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
@@ -123,6 +126,7 @@ export function TimerDock() {
   const sortedTimers = [...allActiveOrPaused].sort((a, b) => {
     if (a.status === "completed" && b.status !== "completed") return -1;
     if (b.status === "completed" && a.status !== "completed") return 1;
+
     return a.remainingMs - b.remainingMs;
   });
 
@@ -164,17 +168,17 @@ export function TimerDock() {
         >
           {isExpanded ? (
             <motion.div
-              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
             >
               {/* Header */}
               <button
-                type="button"
-                className="border-default-100 flex w-full cursor-pointer items-center justify-between border-b p-4"
-                onClick={() => setIsExpanded(false)}
                 aria-label="Close timer summary"
+                className="border-default-100 flex w-full cursor-pointer items-center justify-between border-b p-4"
+                type="button"
+                onClick={() => setIsExpanded(false)}
               >
                 <h3 className="text-foreground text-sm font-semibold">
                   {timerCount === 1
@@ -189,10 +193,10 @@ export function TimerDock() {
                 {sortedTimers.map((timer, index) => (
                   <TimerRow
                     key={timer.id}
-                    timer={timer}
-                    t={t}
-                    router={router}
                     isLast={index === sortedTimers.length - 1}
+                    router={router}
+                    t={t}
+                    timer={timer}
                   />
                 ))}
               </div>
@@ -206,13 +210,13 @@ export function TimerDock() {
             </motion.div>
           ) : (
             <motion.button
-              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              className={`group text-foreground flex items-center gap-3 px-4 py-3 transition-all hover:shadow-xl`}
               exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
               transition={{ duration: 0.15, delay: 0.2 }}
               type="button"
               onClick={() => setIsExpanded(true)}
-              className={`group text-foreground flex items-center gap-3 px-4 py-3 transition-all hover:shadow-xl`}
             >
               <div className="flex flex-col items-start">
                 <span className="mb-1 max-w-[120px] truncate text-xs leading-none font-medium opacity-75">
@@ -241,8 +245,10 @@ export function TimerDock() {
 // Helper for smart increment
 function getSmartIncrement(originalDurationMs: number): number {
   const minutes = originalDurationMs / 1000 / 60;
+
   if (minutes < 5) return 10 * 1000; // 10s
   if (minutes < 20) return 60 * 1000; // 1m
+
   return 5 * 60 * 1000; // 5m
 }
 
@@ -279,10 +285,10 @@ function TimerRow({
     >
       {/* Timer Info - Clickable */}
       <button
-        type="button"
-        className="min-w-0 flex-1 cursor-pointer text-left transition-opacity hover:opacity-80"
-        onClick={handleTimerClick}
         aria-label={`Go to recipe for ${timer.label}`}
+        className="min-w-0 flex-1 cursor-pointer text-left transition-opacity hover:opacity-80"
+        type="button"
+        onClick={handleTimerClick}
       >
         <h4
           className={`mb-1 truncate text-sm font-medium ${isCompleted ? "text-danger" : "text-foreground"}`}

@@ -168,8 +168,8 @@ export function AuthProviderForm({
       <TestResultDisplay result={testResult} />
 
       <ProviderActions
-        hasConfig={!!config}
         hasChanges={hasChanges}
+        hasConfig={!!config}
         saving={saving}
         testing={testing}
         onDeleteClick={deleteModal.onOpen}

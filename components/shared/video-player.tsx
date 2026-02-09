@@ -45,6 +45,7 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
   useEffect(() => {
     if (typeof document === "undefined") {
       setFullscreenSupported(false);
+
       return;
     }
 
@@ -62,6 +63,7 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
         (document as any).mozFullScreenElement ||
         (document as any).msFullscreenElement
       );
+
       setIsFullscreen(isCurrentlyFullscreen);
     };
 
@@ -99,6 +101,7 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
     async (e: React.MouseEvent | React.TouchEvent | any) => {
       e?.stopPropagation?.();
       const container = containerRef.current;
+
       if (!container) return;
 
       try {
@@ -114,6 +117,7 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
           } else if ((container as any).msRequestFullscreen) {
             await (container as any).msRequestFullscreen();
           }
+
           return;
         }
 
@@ -261,8 +265,6 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
         ref={videoRef}
         loop
         playsInline
-        webkit-playsinline="true"
-        x5-playsinline="true"
         className="h-full w-full object-cover"
         muted={isMuted}
         poster={poster}

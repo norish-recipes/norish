@@ -71,6 +71,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Verify we have 4 total ingredients (2 metric + 2 US)
       const beforeUpdate = await getRecipeIngredients(testRecipeId);
+
       expect(beforeUpdate).toHaveLength(4);
 
       // Act: Update only US ingredients
@@ -89,14 +90,17 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Assert: Metric ingredients should still exist
       const afterUpdate = await getRecipeIngredients(testRecipeId);
+
       expect(afterUpdate).toHaveLength(3); // 2 metric + 1 updated US
 
       const metricIngredients = afterUpdate.filter((ri) => ri.systemUsed === "metric");
+
       expect(metricIngredients).toHaveLength(2);
       expect(metricIngredients.map((ri) => ri.amount)).toContain("250.000");
       expect(metricIngredients.map((ri) => ri.amount)).toContain("100.000");
 
       const usIngredients = afterUpdate.filter((ri) => ri.systemUsed === "us");
+
       expect(usIngredients).toHaveLength(1);
       expect(usIngredients[0].amount).toBe("2.500");
     });
@@ -123,6 +127,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Verify we have 4 total steps (2 metric + 2 US)
       const beforeUpdate = await getRecipeSteps(testRecipeId);
+
       expect(beforeUpdate).toHaveLength(4);
 
       // Act: Update only metric steps
@@ -139,14 +144,17 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Assert: US steps should still exist
       const afterUpdate = await getRecipeSteps(testRecipeId);
+
       expect(afterUpdate).toHaveLength(3); // 1 updated metric + 2 US
 
       const usSteps = afterUpdate.filter((s) => s.systemUsed === "us");
+
       expect(usSteps).toHaveLength(2);
       expect(usSteps.map((s) => s.step)).toContain("Mix 2 cups flour with 0.5 cup sugar");
       expect(usSteps.map((s) => s.step)).toContain("Bake at 350°F for 30 minutes");
 
       const metricSteps = afterUpdate.filter((s) => s.systemUsed === "metric");
+
       expect(metricSteps).toHaveLength(1);
       expect(metricSteps[0].step).toBe("Mix 300g flour with 150g sugar");
     });
@@ -154,6 +162,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
     it("should preserve metric data when updating only recipe image", async () => {
       // Setup: Create metric ingredients
       const ingredient = await createTestIngredient({ name: "Test Ingredient" });
+
       await createTestRecipeIngredients(testRecipeId, ingredient.id, "metric", {
         amount: "250",
         unit: "g",
@@ -177,10 +186,12 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Assert: Metric data should still exist
       const ingredients = await getRecipeIngredients(testRecipeId);
+
       expect(ingredients).toHaveLength(1);
       expect(ingredients[0].amount).toBe("250.000");
 
       const steps = await getRecipeSteps(testRecipeId);
+
       expect(steps).toHaveLength(1);
       expect(steps[0].step).toBe("Test step in metric");
     });
@@ -202,6 +213,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Verify we have 2 ingredients (1 metric + 1 US)
       const beforeUpdate = await getRecipeIngredients(testRecipeId);
+
       expect(beforeUpdate).toHaveLength(2);
 
       // Act: Update ingredients without specifying systemUsed at the TOP LEVEL
@@ -222,6 +234,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Assert: US ingredients should be PRESERVED, only metric should be updated
       const afterUpdate = await getRecipeIngredients(testRecipeId);
+
       expect(afterUpdate).toHaveLength(2); // 1 metric + 1 US
 
       const metricIngredient = afterUpdate.find((i) => i.systemUsed === "metric");
@@ -238,6 +251,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
     it("should handle empty ingredient arrays correctly", async () => {
       // Setup: Create ingredients
       const ingredient = await createTestIngredient({ name: "Flour" });
+
       await createTestRecipeIngredients(testRecipeId, ingredient.id, "metric", {
         amount: "250",
         unit: "g",
@@ -252,6 +266,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Assert: Metric ingredients should still exist
       const afterUpdate = await getRecipeIngredients(testRecipeId);
+
       expect(afterUpdate).toHaveLength(1);
       expect(afterUpdate[0].systemUsed).toBe("metric");
     });
@@ -343,6 +358,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Verify initial state
       const beforeUpdate = await getRecipeIngredients(testRecipeId);
+
       expect(beforeUpdate).toHaveLength(1);
 
       // Act: Try to add the same ingredient again (should be prevented by onConflictDoNothing)
@@ -361,6 +377,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Assert: Should only have one ingredient (updated, not duplicated)
       const afterUpdate = await getRecipeIngredients(testRecipeId);
+
       expect(afterUpdate).toHaveLength(1);
       expect(afterUpdate[0].ingredientId).toBe(flour.id);
       expect(afterUpdate[0].amount).toBe("300.000");
@@ -453,6 +470,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       // Assert: Should have 2 recipe_ingredients entries (one per system), but both reference the same ingredient
       const ingredients = await getRecipeIngredients(testRecipeId);
+
       expect(ingredients).toHaveLength(2);
 
       const metricSugar = ingredients.find((i) => i.systemUsed === "metric");

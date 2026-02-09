@@ -1,8 +1,11 @@
 # desktop-mealplan Specification
 
 ## Purpose
+
 TBD - created by archiving change add-desktop-calendar-view. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Desktop Grid Layout
 
 The desktop meal plan SHALL display days in a responsive grid layout that adapts to screen size.
@@ -69,4 +72,3 @@ The desktop timeline SHALL support bidirectional infinite scrolling to load addi
 - **WHEN** the user scrolls near the edge of the loaded date range
 - **THEN** the system SHALL load additional days in that direction
 - **AND** existing content SHALL remain in place
-

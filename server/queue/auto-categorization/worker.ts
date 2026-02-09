@@ -36,12 +36,14 @@ async function processAutoCategorizationJob(job: Job<AutoCategorizationJobData>)
   if (recipe.categories.length > 0) {
     log.info({ recipeId }, "Recipe already has categories, skipping auto-categorization");
     emitByPolicy(recipeEmitter, policy.view, ctx, "autoCategorizationCompleted", { recipeId });
+
     return;
   }
 
   if (recipe.recipeIngredients.length === 0) {
     log.warn({ recipeId }, "Recipe has no ingredients, skipping auto-categorization");
     emitByPolicy(recipeEmitter, policy.view, ctx, "autoCategorizationCompleted", { recipeId });
+
     return;
   }
 
@@ -62,6 +64,7 @@ async function processAutoCategorizationJob(job: Job<AutoCategorizationJobData>)
   if (categories.length === 0) {
     log.info({ recipeId }, "AI returned no categories");
     emitByPolicy(recipeEmitter, policy.view, ctx, "autoCategorizationCompleted", { recipeId });
+
     return;
   }
 

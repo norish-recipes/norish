@@ -16,6 +16,7 @@ export function getMatchingTokens(
   url: string
 ): SiteAuthTokenDecryptedDto[] {
   const hostname = extractHostname(url);
+
   if (!hostname) return [];
 
   return tokens.filter((token) => {
@@ -43,11 +44,13 @@ export function getMatchingTokens(
  */
 function extractHostname(input: string): string | null {
   const trimmed = input.trim().toLowerCase();
+
   if (!trimmed) return null;
 
   // Try parsing as a full URL first
   try {
     const parsed = new URL(trimmed);
+
     if (parsed.hostname) return parsed.hostname;
   } catch {
     // Not a valid URL — fall through
@@ -56,6 +59,7 @@ function extractHostname(input: string): string | null {
   // Try adding a scheme to see if it parses as a domain
   try {
     const parsed = new URL(`https://${trimmed}`);
+
     if (parsed.hostname) return parsed.hostname;
   } catch {
     // Not a valid domain either

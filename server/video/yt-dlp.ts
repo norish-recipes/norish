@@ -155,13 +155,16 @@ export async function buildAuthArgs(
   let cookieFilePath: string | null = null;
 
   const headerTokens = tokens.filter((t) => t.type === "header");
+
   for (const token of headerTokens) {
     args.push("--add-header", `${token.name}: ${token.value}`);
   }
 
   const cookieTokens = tokens.filter((t) => t.type === "cookie");
+
   if (cookieTokens.length > 0) {
     let domain: string;
+
     try {
       domain = new URL(url).hostname;
     } catch {
@@ -170,6 +173,7 @@ export async function buildAuthArgs(
 
     // Write Netscape cookie file format
     const lines = ["# Netscape HTTP Cookie File", "# https://curl.se/docs/http-cookies.html", ""];
+
     for (const token of cookieTokens) {
       // Format: domain  flag  path  secure  expiry  name  value
       lines.push(`${domain}\tTRUE\t/\tFALSE\t0\t${token.name}\t${token.value}`);
@@ -387,15 +391,19 @@ export async function downloadCaptions(
 
     if (captionFile) {
       const filePath = path.join(outputDir, captionFile);
+
       log.info({ filePath }, "Captions downloaded successfully");
+
       return { filePath, found: true };
     }
 
     log.debug({ url }, "No captions found for video");
+
     return { filePath: null, found: false };
   } catch (error: unknown) {
     // Captions not available is not an error - just means we'll use audio transcription
     log.debug({ url, err: error }, "Could not download captions (may not be available)");
+
     return { filePath: null, found: false };
   } finally {
     await auth?.cleanup();
@@ -408,6 +416,7 @@ export async function downloadCaptions(
  */
 export async function parseVttFile(filePath: string): Promise<string> {
   const content = await fs.readFile(filePath, "utf-8");
+
   return parseVttContent(content);
 }
 

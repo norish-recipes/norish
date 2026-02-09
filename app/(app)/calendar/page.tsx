@@ -6,13 +6,13 @@ import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
 import { useState } from "react";
 import { useWindowSize } from "usehooks-ts";
 
+import { CalendarContextProvider } from "./context";
+
 import { MobileTimeline } from "@/components/calendar/mobile";
 import { DesktopTimeline } from "@/components/calendar/desktop";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
 import { EditNotePanel } from "@/components/Panel/consumers/edit-note-panel";
 import { EditPlannedRecipePanel } from "@/components/Panel/consumers/edit-planned-recipe-panel";
-
-import { CalendarContextProvider } from "./context";
 
 function CalendarPageContent() {
   const [miniRecipesOpen, setMiniRecipesOpen] = useState(false);
@@ -32,6 +32,7 @@ function CalendarPageContent() {
   const handleAddItem = (dateKey: string, slot: Slot) => {
     // Parse the dateKey (YYYY-MM-DD format) into a Date
     const [year, month, day] = dateKey.split("-").map(Number);
+
     setSelectedDate(new Date(year, month - 1, day));
     setSelectedSlot(slot);
     setMiniRecipesOpen(true);

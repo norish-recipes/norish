@@ -385,6 +385,7 @@ export async function listRecipes(
 
   if (categories?.length) {
     const categoryArray = `{${categories.join(",")}}`;
+
     whereConditions.push(sql`${recipes.categories} && ${categoryArray}::recipe_category[]`);
   }
 
@@ -953,9 +954,7 @@ export async function updateRecipeWithRefs(
           );
       } else {
         // If we still can't determine the system, this is an error
-        throw new Error(
-          "Cannot determine which measurement system to update."
-        );
+        throw new Error("Cannot determine which measurement system to update.");
       }
 
       // Add new ones
@@ -981,6 +980,7 @@ export async function updateRecipeWithRefs(
       // If systemUsed is not provided at top level, infer it from the steps themselves
       if (!systemToUpdate && payload.steps.length > 0) {
         const inferredSystems = new Set(payload.steps.map((s) => s.systemUsed).filter(Boolean));
+
         // If all steps use the same system, use that
         if (inferredSystems.size === 1) {
           systemToUpdate = Array.from(inferredSystems)[0] as any;
@@ -994,9 +994,7 @@ export async function updateRecipeWithRefs(
           .where(and(eq(stepsTable.recipeId, recipeId), eq(stepsTable.systemUsed, systemToUpdate)));
       } else {
         // If we still can't determine the system, this is an error
-        throw new Error(
-          "Cannot determine which measurement system to update."
-        );
+        throw new Error("Cannot determine which measurement system to update.");
       }
 
       // Add new ones

@@ -12,6 +12,7 @@ interface FallbackPlaceholderProps {
 
 function FallbackPlaceholder({ className = "", message }: FallbackPlaceholderProps) {
   const t = useTranslations("recipes.carousel");
+
   return (
     <div className={`bg-default-200 flex h-full w-full items-center justify-center ${className}`}>
       <span className="text-default-500 font-medium">{message || t("noImageAvailable")}</span>
@@ -46,11 +47,13 @@ export default function FallbackImage(props: FallbackImageProps) {
 
   if (props.variant === "hero") {
     const { variant, fallbackClassName, fallbackMessage, ...imageProps } = props;
+
     return <HeroImage {...imageProps} onError={() => setHasError(true)} />;
   }
 
   const { variant, fallbackClassName, fallbackMessage, ...imageProps } =
     props as NextFallbackImageProps;
+
   return <NextImage {...imageProps} onError={() => setHasError(true)} />;
 }
 

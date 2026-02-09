@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardBody, CardHeader, Chip, Switch, Button, useDisclosure } from "@heroui/react";
+import { ServerIcon } from "@heroicons/react/24/outline";
 import {
-  ServerIcon
-} from "@heroicons/react/24/outline";
-import { PencilIcon,
+  PencilIcon,
   TrashIcon,
   CheckCircleIcon,
   XCircleIcon,

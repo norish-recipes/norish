@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+
 import { useTimerStore } from "./timers";
 
 describe("useTimerStore", () => {
@@ -21,9 +22,11 @@ describe("useTimerStore", () => {
 
   it("adds a timer", () => {
     const { addTimer } = useTimerStore.getState();
+
     addTimer("test-1", "recipe-1", "Test Timer", 60000);
 
     const { timers } = useTimerStore.getState();
+
     expect(timers).toHaveLength(1);
     expect(timers[0]).toMatchObject({
       id: "test-1",
@@ -38,9 +41,11 @@ describe("useTimerStore", () => {
 
   it("adds a timer with recipe name", () => {
     const { addTimer } = useTimerStore.getState();
+
     addTimer("test-1", "recipe-1", "Test Timer", 60000, "My Recipe");
 
     const { timers } = useTimerStore.getState();
+
     expect(timers).toHaveLength(1);
     expect(timers[0]).toMatchObject({
       id: "test-1",
@@ -56,45 +61,54 @@ describe("useTimerStore", () => {
 
   it("does not duplicate timers with same id", () => {
     const { addTimer } = useTimerStore.getState();
+
     addTimer("test-1", "recipe-1", "Test Timer", 60000);
     addTimer("test-1", "recipe-1", "Test Timer", 60000);
 
     const { timers } = useTimerStore.getState();
+
     expect(timers).toHaveLength(1);
   });
 
   it("removes a timer", () => {
     const { addTimer, removeTimer } = useTimerStore.getState();
+
     addTimer("test-1", "recipe-1", "Test Timer", 60000);
     removeTimer("test-1");
 
     const { timers } = useTimerStore.getState();
+
     expect(timers).toHaveLength(0);
   });
 
   it("starts a timer", () => {
     const { addTimer, startTimer } = useTimerStore.getState();
+
     addTimer("test-1", "recipe-1", "Test Timer", 60000);
     startTimer("test-1");
 
     const { timers } = useTimerStore.getState();
+
     expect(timers[0].status).toBe("running");
     expect(timers[0].lastTickAt).not.toBeNull();
   });
 
   it("pauses a timer", () => {
     const { addTimer, startTimer, pauseTimer } = useTimerStore.getState();
+
     addTimer("test-1", "recipe-1", "Test Timer", 60000);
     startTimer("test-1");
     pauseTimer("test-1");
 
     const { timers } = useTimerStore.getState();
+
     expect(timers[0].status).toBe("paused");
     expect(timers[0].lastTickAt).toBeNull();
   });
 
   it("resets a timer", () => {
     const { addTimer, startTimer, resetTimer, tick } = useTimerStore.getState();
+
     addTimer("test-1", "recipe-1", "Test Timer", 60000);
     startTimer("test-1");
 
@@ -103,6 +117,7 @@ describe("useTimerStore", () => {
     tick();
 
     let { timers } = useTimerStore.getState();
+
     expect(timers[0].remainingMs).toBeLessThan(60000);
 
     resetTimer("test-1");
@@ -114,22 +129,26 @@ describe("useTimerStore", () => {
 
   it("ticks correctly", () => {
     const { addTimer, startTimer, tick } = useTimerStore.getState();
+
     addTimer("test-1", "recipe-1", "Test Timer", 60000);
     startTimer("test-1");
 
     // Advance time by 1 second
     const now = Date.now();
+
     vi.setSystemTime(now + 1000);
     tick();
 
     const { timers } = useTimerStore.getState();
     const expectedRemainingIds = 60000 - 1000;
+
     // Allow for slight execution delays
     expect(timers[0].remainingMs).toBeCloseTo(expectedRemainingIds, -2);
   });
 
   it("completes a timer", () => {
     const { addTimer, startTimer, tick } = useTimerStore.getState();
+
     addTimer("test-1", "recipe-1", "Test Timer", 1000);
     startTimer("test-1");
 
@@ -138,11 +157,13 @@ describe("useTimerStore", () => {
     tick();
 
     const { timers } = useTimerStore.getState();
+
     expect(timers[0].remainingMs).toBe(0);
     expect(timers[0].status).toBe("completed");
   });
   it("adjusts timer duration", () => {
     const { addTimer, adjustTimer } = useTimerStore.getState();
+
     addTimer("test-adj", "recipe-1", "Adjust Timer", 60000);
 
     // Add 1 minute
@@ -156,6 +177,7 @@ describe("useTimerStore", () => {
     // Subtract to zero -> verify completion
     adjustTimer("test-adj", -100000); // More than remaining
     let t = useTimerStore.getState().timers[0];
+
     expect(t.remainingMs).toBe(0);
     expect(t.status).toBe("completed");
 

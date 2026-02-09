@@ -44,7 +44,11 @@ function RecipeCardComponent({
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [groceriesOpen, setGroceriesOpen] = useState(false);
-  const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure();
+  const {
+    isOpen: isDeleteModalOpen,
+    onOpen: onDeleteModalOpen,
+    onClose: onDeleteModalClose,
+  } = useDisclosure();
   const t = useTranslations("recipes.card");
 
   // Automatically prefetch recipe when card enters viewport
@@ -168,14 +172,14 @@ function RecipeCardComponent({
                 <div className="pointer-events-none absolute inset-0 z-0">
                   {thumbnailImage ? (
                     <FallbackImage
-                      variant="hero"
                       removeWrapper
                       alt={recipe.name}
                       className={`h-full w-full object-cover transition-transform duration-300 ease-in-out ${open ? "scale-100" : "group-hover/row:scale-110"} `}
-                      radius="none"
-                      src={thumbnailImage}
                       fallbackClassName={`transition-all duration-300 ease-in-out ${open ? "scale-100" : "group-hover/row:scale-105"}`}
                       fallbackMessage={t("noImage")}
+                      radius="none"
+                      src={thumbnailImage}
+                      variant="hero"
                     />
                   ) : (
                     <div

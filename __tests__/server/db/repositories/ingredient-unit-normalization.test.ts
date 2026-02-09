@@ -23,6 +23,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
 
   beforeEach(async () => {
     const [user, recipe] = await testBase.beforeEachTest();
+
     testUserId = user.id;
     testRecipeId = recipe.id;
   });
@@ -53,6 +54,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
       });
 
       const ingredients = await getRecipeIngredients(newRecipeId);
+
       expect(ingredients).toHaveLength(1);
       expect(ingredients[0].unit).toBe("handful"); // Should be normalized to canonical ID
     });
@@ -78,6 +80,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
       });
 
       const ingredients = await getRecipeIngredients(newRecipeId);
+
       expect(ingredients[0].unit).toBe("splash");
     });
 
@@ -102,6 +105,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
       });
 
       const ingredients = await getRecipeIngredients(newRecipeId);
+
       expect(ingredients[0].unit).toBe("gram");
     });
 
@@ -126,6 +130,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
       });
 
       const ingredients = await getRecipeIngredients(newRecipeId);
+
       expect(ingredients[0].unit).toBe("teaspoon");
     });
 
@@ -150,6 +155,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
       });
 
       const ingredients = await getRecipeIngredients(newRecipeId);
+
       expect(ingredients[0].unit).toBe("gram");
     });
   });
@@ -173,6 +179,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
       });
 
       const ingredients = await getRecipeIngredients(testRecipeId);
+
       expect(ingredients).toHaveLength(1);
       expect(ingredients[0].unit).toBe("handful"); // Should be normalized
     });
@@ -192,6 +199,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
       });
 
       const ingredients = await getRecipeIngredients(testRecipeId);
+
       expect(ingredients[0].unit).toBe("splash");
     });
 
@@ -227,6 +235,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
       });
 
       const ingredients = await getRecipeIngredients(testRecipeId);
+
       expect(ingredients).toHaveLength(3);
       expect(ingredients.find((i) => i.order === "0")?.unit).toBe("gram");
       expect(ingredients.find((i) => i.order === "1")?.unit).toBe("splash");

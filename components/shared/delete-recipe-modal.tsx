@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

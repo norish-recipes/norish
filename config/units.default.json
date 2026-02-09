@@ -28,12 +28,7 @@
         "name": "centiliter"
       }
     ],
-    "alternates": [
-      "centiliter",
-      "centiliters",
-      "zentiliter",
-      "cl."
-    ]
+    "alternates": ["centiliter", "centiliters", "zentiliter", "cl."]
   },
   "deciliter": {
     "short": [
@@ -64,12 +59,7 @@
         "name": "deciliter"
       }
     ],
-    "alternates": [
-      "deciliter",
-      "deciliters",
-      "deziliter",
-      "dl."
-    ]
+    "alternates": ["deciliter", "deciliters", "deziliter", "dl."]
   },
   "gram": {
     "short": [
@@ -100,14 +90,7 @@
         "name": "gram"
       }
     ],
-    "alternates": [
-      "g",
-      "g.",
-      "gr",
-      "gr.",
-      "gramm",
-      "grammen"
-    ]
+    "alternates": ["g", "g.", "gr", "gr.", "gramm", "grammen"]
   },
   "teaspoon": {
     "short": [
@@ -138,15 +121,7 @@
         "name": "theelepels"
       }
     ],
-    "alternates": [
-      "teel",
-      "teel.",
-      "teelöffel",
-      "theelepel",
-      "theelepels",
-      "tl",
-      "tl."
-    ]
+    "alternates": ["teel", "teel.", "teelöffel", "theelepel", "theelepels", "tl", "tl."]
   },
   "tablespoon": {
     "short": [
@@ -177,15 +152,7 @@
         "name": "eetlepels"
       }
     ],
-    "alternates": [
-      "eetlepel",
-      "eetlepels",
-      "el",
-      "el.",      
-      "essl",
-      "essl.",
-      "esslöffel"
-    ]
+    "alternates": ["eetlepel", "eetlepels", "el", "el.", "essl", "essl.", "esslöffel"]
   },
   "knife_tip": {
     "short": [
@@ -344,14 +311,7 @@
         "name": "tenen"
       }
     ],
-    "alternates": [
-      "zehe(n)",
-      "zehe/n",
-      "teen",
-      "teentje",
-      "teentjes",
-      "tenen"
-    ]
+    "alternates": ["zehe(n)", "zehe/n", "teen", "teentje", "teentjes", "tenen"]
   },
   "leaf": {
     "short": [
@@ -382,15 +342,7 @@
         "name": "blaadjes"
       }
     ],
-    "alternates": [
-      "blaadje",
-      "blaadjes",
-      "blad",
-      "bladeren",
-      "blättchen",
-      "leaf",
-      "leaves"
-    ]
+    "alternates": ["blaadje", "blaadjes", "blad", "bladeren", "blättchen", "leaf", "leaves"]
   },
   "sprig": {
     "short": [
@@ -507,10 +459,7 @@
         "name": "stengels"
       }
     ],
-    "alternates": [
-      "stengel",
-      "stengels"
-    ]
+    "alternates": ["stengel", "stengels"]
   },
   "pack": {
     "short": [
@@ -770,15 +719,7 @@
         "name": "dozen"
       }
     ],
-    "alternates": [
-      "box",
-      "boxes",
-      "bx",
-      "bx.",
-      "doosje",
-      "doosjes",
-      "dozen"
-    ]
+    "alternates": ["box", "boxes", "bx", "bx.", "doosje", "doosjes", "dozen"]
   },
   "handful": {
     "short": [
@@ -1022,13 +963,7 @@
         "name": "reepjes"
       }
     ],
-    "alternates": [
-      "reepje",
-      "reepjes",
-      "repen",
-      "strip",
-      "strips"
-    ]
+    "alternates": ["reepje", "reepjes", "repen", "strip", "strips"]
   },
   "sheet": {
     "short": [
@@ -1059,12 +994,7 @@
         "name": "vellen"
       }
     ],
-    "alternates": [
-      "vel",
-      "vellen",
-      "velletje",
-      "velletjes"
-    ]
+    "alternates": ["vel", "vellen", "velletje", "velletjes"]
   },
   "serving": {
     "short": [
@@ -1135,11 +1065,7 @@
         "name": "schijven"
       }
     ],
-    "alternates": [
-      "schijfje",
-      "schijfjes",
-      "schijven"
-    ]
+    "alternates": ["schijfje", "schijfjes", "schijven"]
   },
   "ring": {
     "short": [
@@ -1170,11 +1096,7 @@
         "name": "ringen"
       }
     ],
-    "alternates": [
-      "ring",
-      "ringen",
-      "ringlein"
-    ]
+    "alternates": ["ring", "ringen", "ringlein"]
   },
   "ball": {
     "short": [
@@ -1205,13 +1127,7 @@
         "name": "bollen"
       }
     ],
-    "alternates": [
-      "bol",
-      "bollen",
-      "bolletje",
-      "bolletjes",
-      "kügelchen"
-    ]
+    "alternates": ["bol", "bollen", "bolletje", "bolletjes", "kügelchen"]
   },
   "dash": {
     "short": [
@@ -1242,11 +1158,7 @@
         "name": "scheutjes"
       }
     ],
-    "alternates": [
-      "a dash",
-      "dash",
-      "dashes"
-    ]
+    "alternates": ["a dash", "dash", "dashes"]
   },
   "drizzle": {
     "short": [
@@ -1277,12 +1189,7 @@
         "name": "scheutjes"
       }
     ],
-    "alternates": [
-      "a drizzle",
-      "drizzle",
-      "drizzles",
-      "spritzerchen"
-    ]
+    "alternates": ["a drizzle", "drizzle", "drizzles", "spritzerchen"]
   },
   "scoop": {
     "short": [
@@ -1313,10 +1220,7 @@
         "name": "bolletjes"
       }
     ],
-    "alternates": [
-      "scoop",
-      "scoops"
-    ]
+    "alternates": ["scoop", "scoops"]
   },
   "stick": {
     "short": [
@@ -1347,12 +1251,7 @@
         "name": "staven"
       }
     ],
-    "alternates": [
-      "stick",
-      "stick(s)",
-      "sticks",
-      "stänglein"
-    ]
+    "alternates": ["stick", "stick(s)", "sticks", "stänglein"]
   },
   "tub": {
     "short": [
@@ -1383,11 +1282,7 @@
         "name": "bakjes"
       }
     ],
-    "alternates": [
-      "container",
-      "tub",
-      "tubs"
-    ]
+    "alternates": ["container", "tub", "tubs"]
   },
   "capful": {
     "short": [
@@ -1418,11 +1313,7 @@
         "name": "doppen"
       }
     ],
-    "alternates": [
-      "cap full",
-      "capful",
-      "capfuls"
-    ]
+    "alternates": ["cap full", "capful", "capfuls"]
   },
   "pouch": {
     "short": [
@@ -1453,10 +1344,7 @@
         "name": "zakjes"
       }
     ],
-    "alternates": [
-      "pouch",
-      "pouches"
-    ]
+    "alternates": ["pouch", "pouches"]
   },
   "sleeve": {
     "short": [
@@ -1487,10 +1375,7 @@
         "name": "verpakkingen"
       }
     ],
-    "alternates": [
-      "sleeve",
-      "sleeves"
-    ]
+    "alternates": ["sleeve", "sleeves"]
   },
   "roll": {
     "short": [
@@ -1521,11 +1406,7 @@
         "name": "rollen"
       }
     ],
-    "alternates": [
-      "roll",
-      "rolls",
-      "röllchen"
-    ]
+    "alternates": ["roll", "rolls", "röllchen"]
   },
   "ear": {
     "short": [
@@ -1556,12 +1437,7 @@
         "name": "kolven"
       }
     ],
-    "alternates": [
-      "ear",
-      "ear of corn",
-      "ears",
-      "ears of corn"
-    ]
+    "alternates": ["ear", "ear of corn", "ears", "ears of corn"]
   },
   "wedge": {
     "short": [
@@ -1592,12 +1468,7 @@
         "name": "parten"
       }
     ],
-    "alternates": [
-      "ecke",
-      "keil",
-      "wedge",
-      "wedges"
-    ]
+    "alternates": ["ecke", "keil", "wedge", "wedges"]
   },
   "chunk": {
     "short": [
@@ -1628,10 +1499,7 @@
         "name": "stukken"
       }
     ],
-    "alternates": [
-      "chunk",
-      "chunks"
-    ]
+    "alternates": ["chunk", "chunks"]
   },
   "cube": {
     "short": [
@@ -1662,11 +1530,7 @@
         "name": "blokjes"
       }
     ],
-    "alternates": [
-      "cube",
-      "cubes",
-      "würfelchen"
-    ]
+    "alternates": ["cube", "cubes", "würfelchen"]
   },
   "fillet": {
     "short": [
@@ -1697,12 +1561,7 @@
         "name": "filets"
       }
     ],
-    "alternates": [
-      "filet",
-      "filets",
-      "fillet",
-      "fillets"
-    ]
+    "alternates": ["filet", "filets", "fillet", "fillets"]
   },
   "heaping_tablespoon": {
     "short": [
@@ -1893,11 +1752,7 @@
         "name": "dozijn"
       }
     ],
-    "alternates": [
-      "dutzende",
-      "dz",
-      "dz."
-    ]
+    "alternates": ["dutzende", "dz", "dz."]
   },
   "small_splash": {
     "short": [
@@ -1928,10 +1783,7 @@
         "name": "kleine scheutjes"
       }
     ],
-    "alternates": [
-      "kleiner schuß",
-      "winziger schuss"
-    ]
+    "alternates": ["kleiner schuß", "winziger schuss"]
   },
   "bulb": {
     "short": [
@@ -1962,9 +1814,7 @@
         "name": "bollen"
       }
     ],
-    "alternates": [
-      "knöllchen"
-    ]
+    "alternates": ["knöllchen"]
   },
   "head": {
     "short": [
@@ -1995,9 +1845,7 @@
         "name": "kroppen"
       }
     ],
-    "alternates": [
-      "köpfchen"
-    ]
+    "alternates": ["köpfchen"]
   },
   "to_taste": {
     "short": [
@@ -2028,11 +1876,7 @@
         "name": "naar smaak"
       }
     ],
-    "alternates": [
-      "nach bedarf",
-      "nach belieben",
-      "nach geschmack"
-    ]
+    "alternates": ["nach bedarf", "nach belieben", "nach geschmack"]
   },
   "pound": {
     "short": [
@@ -2063,10 +1907,7 @@
         "name": "pond"
       }
     ],
-    "alternates": [
-      "pfd",
-      "pfd."
-    ]
+    "alternates": ["pfd", "pfd."]
   },
   "bar": {
     "short": [
@@ -2097,10 +1938,7 @@
         "name": "repen"
       }
     ],
-    "alternates": [
-      "reihen",
-      "riegelchen"
-    ]
+    "alternates": ["reihen", "riegelchen"]
   },
   "bowl": {
     "short": [
@@ -2131,9 +1969,7 @@
         "name": "kommen"
       }
     ],
-    "alternates": [
-      "schälchen"
-    ]
+    "alternates": ["schälchen"]
   },
   "heaping_teaspoon": {
     "short": [
@@ -2275,13 +2111,7 @@
         "name": "druppels"
       }
     ],
-    "alternates": [
-      "tr",
-      "tr.",
-      "trpf",
-      "trpf.",
-      "tröpfchen"
-    ]
+    "alternates": ["tr", "tr.", "trpf", "trpf.", "tröpfchen"]
   },
   "ounce": {
     "short": [
@@ -2312,9 +2142,6 @@
         "name": "ons"
       }
     ],
-    "alternates": [
-      "oz",
-      "oz."
-    ]
+    "alternates": ["oz", "oz."]
   }
 }

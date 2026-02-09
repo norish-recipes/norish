@@ -10,13 +10,15 @@
  * 5. Enable/disable toggle
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import type { TimerKeywordsConfig } from "@/server/db/zodSchemas/server-config";
+
 import fs from "fs";
 import path from "path";
 
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+
 import { getConfig, setConfig, deleteConfig } from "@/server/db/repositories/server-config";
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
-import type { TimerKeywordsConfig } from "@/server/db/zodSchemas/server-config";
 import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
 
 // Import the actual seeding function
@@ -34,6 +36,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
   beforeAll(async () => {
     await testBase.setup();
     const [user] = await testBase.beforeEachTest();
+
     testUserId = user.id;
   });
 
@@ -45,6 +48,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
     it("should seed timer keywords from default config file on first run", async () => {
       // Verify no config exists
       let result = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+
       expect(result).toBeNull();
 
       // Run seeding
@@ -91,6 +95,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
       await seedDefaultTimerKeywords();
 
       let result = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+
       expect(result?.isOverridden).toBe(false);
       const originalMinutes = result?.minutes;
 
@@ -141,6 +146,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
 
       // Verify user config is saved
       let result = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+
       expect(result?.minutes).toEqual(["dakika"]);
       expect(result?.isOverridden).toBe(true);
 
@@ -172,6 +178,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
 
       // Verify still custom
       const result = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+
       expect(result?.hours).toEqual(["custom_h"]);
       expect(result?.minutes).toEqual(["custom_m"]);
       expect(result?.seconds).toEqual(["custom_s"]);
@@ -186,6 +193,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
       await seedDefaultTimerKeywords();
 
       let result = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+
       expect(result?.isOverridden).toBe(false);
 
       // Admin saves custom config via UI (simulating admin mutation)
@@ -223,6 +231,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
 
       // Verify deleted
       let result = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+
       expect(result).toBeNull();
 
       // Re-seed to restore defaults
@@ -261,6 +270,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
 
       // Verify reset
       const result = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+
       expect(result?.hours).toEqual(DEFAULT_KEYWORDS.hours);
       expect(result?.minutes).toEqual(DEFAULT_KEYWORDS.minutes);
       expect(result?.seconds).toEqual(DEFAULT_KEYWORDS.seconds);
@@ -285,6 +295,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
       await setConfig(ServerConfigKeys.TIMER_KEYWORDS, disabledConfig, testUserId, false);
 
       let result = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+
       expect(result?.enabled).toBe(false);
       expect(result?.hours).toEqual(DEFAULT_KEYWORDS.hours);
       expect(result?.minutes).toEqual(DEFAULT_KEYWORDS.minutes);
@@ -324,6 +335,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
       await setConfig(ServerConfigKeys.TIMER_KEYWORDS, customConfig, testUserId, false);
 
       let result = await getConfig<TimerKeywordsConfig>(ServerConfigKeys.TIMER_KEYWORDS);
+
       expect(result?.enabled).toBe(false);
       expect(result?.hours).toEqual(["custom_h"]);
       expect(result?.minutes).toEqual(["custom_m"]);

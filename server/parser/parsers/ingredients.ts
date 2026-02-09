@@ -12,7 +12,6 @@ import { decode } from "html-entities";
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
 import { normalizeUnit } from "@/lib/unit-localization";
-import { getUnits } from "@/config/server-config-loader";
 
 export interface ParsedIngredient {
   ingredientId: null;

@@ -19,18 +19,20 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWindowSize } from "usehooks-ts";
 
-import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { dateKey, eachDayOfInterval } from "@/lib/helpers";
-
 import { TimelineDaySection } from "./timeline-day-section";
 import { TimelineDragOverlay } from "./timeline-drag-overlay";
 import { TimelineScrollToToday } from "./timeline-scroll-to-today";
 import { SLOT_ORDER } from "./types";
 
+import { dateKey, eachDayOfInterval } from "@/lib/helpers";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
+
 function startOfDay(date: Date): Date {
   const d = new Date(date);
+
   d.setHours(0, 0, 0, 0);
+
   return d;
 }
 
@@ -90,6 +92,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   const scrollMargin = useMemo(() => {
     if (typeof window === "undefined" || !containerRef.current) return 0;
     const rect = containerRef.current.getBoundingClientRect();
+
     return rect.top + window.scrollY;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_windowHeight]);
@@ -130,6 +133,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
       if (!hasScrolledRef.current) return;
 
       const items = virtualizer.getVirtualItems();
+
       if (items.length === 0) return;
 
       const firstIndex = items[0].index;
@@ -235,6 +239,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
       for (const dayItems of Object.values(calendarData)) {
         const item = dayItems.find((i) => i.id === itemId);
+
         if (item) {
           setActiveItem(item as PlannedItemDisplay);
           break;
@@ -281,8 +286,10 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   const handleDragOver = useCallback(
     (event: DragOverEvent) => {
       const { over } = event;
+
       if (!over || !activeItem) {
         setDragOverDateKey(null);
+
         return;
       }
 
@@ -291,6 +298,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
       // Only highlight day containers
       if (!overId.endsWith("_drop")) {
         setDragOverDateKey(null);
+
         return;
       }
 
@@ -312,85 +320,87 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   const collisionDetection = (args: Parameters<typeof pointerWithin>[0]) => {
     const pointerCollisions = pointerWithin(args);
+
     if (pointerCollisions.length > 0) {
       return pointerCollisions;
     }
+
     return rectIntersection(args);
   };
 
   return (
     <div className="fade-in">
-    <DndContext
-      collisionDetection={collisionDetection}
-      sensors={sensors}
-      onDragEnd={handleDragEnd}
-      onDragOver={handleDragOver}
-      onDragStart={handleDragStart}
-    >
-      <div
-        ref={containerRef}
-        className="relative overflow-visible"
-        style={{ containIntrinsicSize: "0 500px" }}
+      <DndContext
+        collisionDetection={collisionDetection}
+        sensors={sensors}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragStart={handleDragStart}
       >
         <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: "100%",
-            position: "relative",
-            overflow: "visible",
-          }}
+          ref={containerRef}
+          className="relative overflow-visible"
+          style={{ containIntrinsicSize: "0 500px" }}
         >
-          {virtualItems.map((virtualItem) => {
-            const d = allDays[virtualItem.index];
-            const key = dateKey(d);
-            const items = (calendarData[key] ?? [])
-              .sort((a, b) => SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot])
-              .map((it) => it as PlannedItemDisplay);
-            const isToday = key === todayKey;
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+              overflow: "visible",
+            }}
+          >
+            {virtualItems.map((virtualItem) => {
+              const d = allDays[virtualItem.index];
+              const key = dateKey(d);
+              const items = (calendarData[key] ?? [])
+                .sort((a, b) => SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot])
+                .map((it) => it as PlannedItemDisplay);
+              const isToday = key === todayKey;
 
-            return (
-              <div
-                key={virtualItem.key}
-                ref={virtualizer.measureElement}
-                data-index={virtualItem.index}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  padding: "4px 8px",
-                  overflow: "visible",
-                  transform: `translateY(${virtualItem.start - scrollMargin}px)`,
-                }}
-              >
-                <TimelineDaySection
-                  date={d}
-                  dateKey={key}
-                  isDragOver={dragOverDateKey === key}
-                  isToday={isToday}
-                  items={items}
-                  monthFormatter={monthFormatter}
-                  weekdayFormatter={weekdayFormatter}
-                  onAddItem={onAddItem}
-                  onNoteClick={onNoteClick}
-                  onRecipeClick={onRecipeClick}
-                />
-              </div>
-            );
-          })}
+              return (
+                <div
+                  key={virtualItem.key}
+                  ref={virtualizer.measureElement}
+                  data-index={virtualItem.index}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    padding: "4px 8px",
+                    overflow: "visible",
+                    transform: `translateY(${virtualItem.start - scrollMargin}px)`,
+                  }}
+                >
+                  <TimelineDaySection
+                    date={d}
+                    dateKey={key}
+                    isDragOver={dragOverDateKey === key}
+                    isToday={isToday}
+                    items={items}
+                    monthFormatter={monthFormatter}
+                    weekdayFormatter={weekdayFormatter}
+                    onAddItem={onAddItem}
+                    onNoteClick={onNoteClick}
+                    onRecipeClick={onRecipeClick}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      <TimelineScrollToToday
-        direction={scrollDirection}
-        isVisible={showScrollButton}
-        onClick={handleScrollToToday}
-      />
+        <TimelineScrollToToday
+          direction={scrollDirection}
+          isVisible={showScrollButton}
+          onClick={handleScrollToToday}
+        />
 
-      <DragOverlay dropAnimation={null}>
-        {activeItem ? <TimelineDragOverlay item={activeItem} /> : null}
-      </DragOverlay>
-    </DndContext>
+        <DragOverlay dropAnimation={null}>
+          {activeItem ? <TimelineDragOverlay item={activeItem} /> : null}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 }

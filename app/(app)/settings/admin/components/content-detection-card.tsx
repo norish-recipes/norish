@@ -73,9 +73,9 @@ export default function ContentDetectionCard() {
                 hours={timerKeywords?.hours ?? []}
                 minutes={timerKeywords?.minutes ?? []}
                 seconds={timerKeywords?.seconds ?? []}
+                onDirtyChange={updateDirtySection("timerKeywords")}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.TIMER_KEYWORDS)}
                 onUpdate={updateTimerKeywords}
-                onDirtyChange={updateDirtySection("timerKeywords")}
               />
             </div>
           </AccordionItem>
@@ -93,9 +93,9 @@ export default function ContentDetectionCard() {
               <JsonEditor
                 description={t("contentIndicators.description")}
                 value={contentIndicators}
+                onDirtyChange={updateDirtySection("contentIndicators")}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.CONTENT_INDICATORS)}
                 onSave={updateContentIndicators}
-                onDirtyChange={updateDirtySection("contentIndicators")}
               />
             </div>
           </AccordionItem>
@@ -113,9 +113,9 @@ export default function ContentDetectionCard() {
               <JsonEditor
                 description={t("units.description")}
                 value={units}
+                onDirtyChange={updateDirtySection("units")}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.UNITS)}
                 onSave={updateUnits}
-                onDirtyChange={updateDirtySection("units")}
               />
             </div>
           </AccordionItem>
@@ -133,9 +133,9 @@ export default function ContentDetectionCard() {
               <JsonEditor
                 description={t("recurrence.description")}
                 value={recurrenceConfig}
+                onDirtyChange={updateDirtySection("recurrence")}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.RECURRENCE_CONFIG)}
                 onSave={updateRecurrenceConfig}
-                onDirtyChange={updateDirtySection("recurrence")}
               />
             </div>
           </AccordionItem>

@@ -179,9 +179,11 @@ export function useAdminMutations(): AdminMutationsResult {
     // Content config
     updateContentIndicators: async (json) => {
       const result = await withInvalidate(updateContentIndicatorsMutation.mutateAsync(json));
+
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: trpc.config.timersEnabled.queryKey() });
       }
+
       return result;
     },
     updateUnits: async (json) => {
@@ -195,10 +197,12 @@ export function useAdminMutations(): AdminMutationsResult {
     },
     updateTimerKeywords: async (config) => {
       const result = await withInvalidate(updateTimerKeywordsMutation.mutateAsync(config));
+
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: trpc.config.timerKeywords.queryKey() });
         queryClient.invalidateQueries({ queryKey: trpc.config.timersEnabled.queryKey() });
       }
+
       return result;
     },
 

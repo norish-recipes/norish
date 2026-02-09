@@ -1,8 +1,11 @@
 # mobile-ui Specification
 
 ## Purpose
+
 TBD - created by archiving change fix-mobile-bugs-and-import-reliability. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Safe-Area-Top Offset
 
 The app layout SHALL account for device safe areas to prevent content from overlapping with system UI elements like the iOS Dynamic Island or notch.
@@ -43,4 +46,3 @@ The Panel component SHALL NOT use the unreliable `useKeyboardOffset` hook and SH
 - **WHEN** the virtual keyboard is open on mobile
 - **THEN** the Panel SHALL automatically adjust its height using `dvh` units
 - **AND** the Panel SHALL NOT use JavaScript-based keyboard offset calculations
-

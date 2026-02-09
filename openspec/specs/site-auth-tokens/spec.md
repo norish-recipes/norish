@@ -1,8 +1,11 @@
 # site-auth-tokens Specification
 
 ## Purpose
+
 TBD - created by archiving change add-site-auth-tokens. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Site Auth Token Storage
 
 The system SHALL provide a dedicated `site_auth_tokens` database table for storing per-user, per-domain authentication credentials with encrypted values.
@@ -157,4 +160,3 @@ The system SHALL inject matching site auth tokens into yt-dlp commands when down
 
 - **WHEN** no tokens match the target URL domain
 - **THEN** the yt-dlp command SHALL proceed without additional header or cookie arguments (existing behavior unchanged)
-

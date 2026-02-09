@@ -70,6 +70,7 @@ export abstract class BaseVideoProcessor implements VideoProcessor {
       return convertResult.filePath;
     } catch (err) {
       log.warn({ err }, "Failed to download/convert video file");
+
       return null;
     }
   }
@@ -94,10 +95,13 @@ export abstract class BaseVideoProcessor implements VideoProcessor {
   ): Promise<SavedVideo | null> {
     try {
       const savedVideo = await saveVideoFile(videoPath, recipeId, duration);
+
       log.info({ video: savedVideo.video }, "Video saved to recipe directory");
+
       return savedVideo;
     } catch (err) {
       log.warn({ err }, "Failed to save video file");
+
       return null;
     }
   }
@@ -123,6 +127,7 @@ export abstract class BaseVideoProcessor implements VideoProcessor {
     if (savedVideo) {
       recipe.videos = [{ video: savedVideo.video, duration: savedVideo.duration ?? 0, order: 0 }];
     }
+
     return recipe;
   }
 }

@@ -1,8 +1,9 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { VideoProcessor, VideoProcessorContext } from "@/server/video/types";
+
+import { describe, it, expect, beforeEach } from "vitest";
 
 import { VideoProcessorFactory } from "@/server/video/processor-factory";
-import type { VideoProcessor, VideoProcessorContext } from "@/server/video/types";
 
 // Mock processor for testing
 class MockProcessor implements VideoProcessor {
@@ -29,9 +30,11 @@ describe("VideoProcessorFactory", () => {
   describe("registerProcessor", () => {
     it("registers a processor for a platform", () => {
       const processor = new MockProcessor();
+
       factory.registerProcessor("youtube", processor);
 
       const result = factory.getProcessor("https://www.youtube.com/watch?v=ABC123");
+
       expect(result).toBe(processor);
     });
   });
@@ -39,33 +42,41 @@ describe("VideoProcessorFactory", () => {
   describe("getProcessor", () => {
     it("returns registered processor for Instagram URLs", () => {
       const processor = new MockProcessor();
+
       factory.registerProcessor("instagram", processor);
 
       const result = factory.getProcessor("https://www.instagram.com/p/ABC123/");
+
       expect(result).toBe(processor);
     });
 
     it("returns registered processor for Facebook URLs", () => {
       const processor = new MockProcessor();
+
       factory.registerProcessor("facebook", processor);
 
       const result = factory.getProcessor("https://www.facebook.com/watch?v=123");
+
       expect(result).toBe(processor);
     });
 
     it("returns registered processor for YouTube URLs", () => {
       const processor = new MockProcessor();
+
       factory.registerProcessor("youtube", processor);
 
       const result = factory.getProcessor("https://www.youtube.com/watch?v=ABC123");
+
       expect(result).toBe(processor);
     });
 
     it("returns generic processor for unknown platforms", () => {
       const genericProcessor = new MockProcessor();
+
       factory.registerProcessor("generic", genericProcessor);
 
       const result = factory.getProcessor("https://www.tiktok.com/@user/video/123");
+
       expect(result).toBe(genericProcessor);
     });
 

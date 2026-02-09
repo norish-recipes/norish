@@ -4,11 +4,11 @@ import type { HouseholdAdminSettingsDto } from "@/types/dto/household";
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button } from "@heroui/react";
+import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicons/react/24/outline";
 import {
-  ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicons/react/24/outline";
-import { ClipboardDocumentIcon as ClipboardDocumentIconSolid,
+  ClipboardDocumentIcon as ClipboardDocumentIconSolid,
   ArrowPathIcon,
- } from "@heroicons/react/16/solid";
+} from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";

@@ -22,7 +22,7 @@ const navLabelKeys: Record<string, "home" | "calendar" | "groceries"> = {
 
 export const Navbar = () => {
   const t = useTranslations("navbar.nav");
-  const pathname = usePathname();  
+  const pathname = usePathname();
   const { isVisible, onHoverStart, onHoverEnd } = useAutoHide({
     idleDelay: Infinity, // Only hide on scroll, not on idle
   });

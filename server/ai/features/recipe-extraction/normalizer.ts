@@ -201,6 +201,6 @@ export function getExtractionLogContext(
       systemUsed: normalized.systemUsed,
       tags: normalized.tags,
     }),
-    categories: output.categories
+    categories: output.categories,
   };
 }

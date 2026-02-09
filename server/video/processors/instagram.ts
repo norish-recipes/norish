@@ -3,6 +3,7 @@ import type { VideoProcessorContext, VideoMetadata } from "../types";
 import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
 
 import { BaseVideoProcessor } from "../base-processor";
+
 import { videoLogger as log } from "@/server/logger";
 import { transcribeAudio } from "@/server/ai/transcriber";
 import { extractRecipeFromVideo } from "@/server/video/normalizer";
@@ -104,6 +105,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
       log.info({ url }, "Description too short, attempting Playwright scrape");
       try {
         const html = await fetchViaPlaywright(url, tokens);
+
         if (html) {
           description = extractCaptionFromHtml(html);
           log.info(
@@ -134,6 +136,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
     if (metadata.thumbnail) {
       try {
         const imagePath = await downloadImage(metadata.thumbnail, recipeId);
+
         recipe.image = imagePath;
         recipe.images = [{ image: imagePath, order: 0 }];
       } catch {
@@ -145,6 +148,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
       { url, recipeName: recipe.name },
       "Successfully extracted recipe from Instagram image post"
     );
+
     return recipe;
   }
 
@@ -192,6 +196,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
           const savedVideo = videoPath
             ? await this.saveVideo(videoPath, recipeId, metadata.duration)
             : null;
+
           return this.addVideoToRecipe(result.data, savedVideo);
         }
 
@@ -210,10 +215,12 @@ export class InstagramProcessor extends BaseVideoProcessor {
 
         if (descriptionText.length >= 50) {
           const result = await extractRecipeWithAI(descriptionText, recipeId, url, allergies);
+
           if (result.success) {
             const savedVideo = videoPath
               ? await this.saveVideo(videoPath, recipeId, metadata.duration)
               : null;
+
             return this.addVideoToRecipe(result.data, savedVideo);
           }
         }
@@ -229,6 +236,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
       }
 
       const transcript = transcriptionResult.data;
+
       log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
       // Combine transcript with description

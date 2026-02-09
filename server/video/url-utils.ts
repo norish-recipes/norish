@@ -1,6 +1,6 @@
-import { z } from "zod";
-
 import type { VideoPlatform } from "./types";
+
+import { z } from "zod";
 
 const urlSchema = z.url();
 
@@ -10,6 +10,7 @@ const urlSchema = z.url();
 export function isInstagramUrl(url: string): boolean {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
+
     return hostname.includes("instagram.com");
   } catch {
     return false;
@@ -22,6 +23,7 @@ export function isInstagramUrl(url: string): boolean {
 export function isFacebookUrl(url: string): boolean {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
+
     return hostname.includes("facebook.com") || hostname.includes("fb.watch");
   } catch {
     return false;
@@ -34,6 +36,7 @@ export function isFacebookUrl(url: string): boolean {
 export function isYouTubeUrl(url: string): boolean {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
+
     return hostname.includes("youtube.com") || hostname.includes("youtu.be");
   } catch {
     return false;
@@ -50,5 +53,6 @@ export function detectPlatform(url: string): VideoPlatform {
   if (isInstagramUrl(url)) return "instagram";
   if (isFacebookUrl(url)) return "facebook";
   if (isYouTubeUrl(url)) return "youtube";
+
   return "generic";
 }

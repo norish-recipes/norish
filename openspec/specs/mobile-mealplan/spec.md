@@ -1,8 +1,11 @@
 # mobile-mealplan Specification
 
 ## Purpose
+
 TBD - created by archiving change add-mobile-mealplan-timeline. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Mobile Timeline View
 
 The mobile meal plan SHALL display a vertically scrolling timeline of days with planned items grouped by meal slot.
@@ -140,4 +143,3 @@ All timeline UI text SHALL support the application's 5 configured locales.
 
 - **WHEN** the user views the timeline
 - **THEN** all UI labels including date formats, empty states, and button labels SHALL be localized
-

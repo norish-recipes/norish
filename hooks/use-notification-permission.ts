@@ -28,6 +28,7 @@ export function useNotificationPermission(): UseNotificationPermissionReturn {
   // Check browser support and current permission on mount
   useEffect(() => {
     const supported = "Notification" in window;
+
     setIsSupported(supported);
 
     if (supported) {
@@ -40,22 +41,27 @@ export function useNotificationPermission(): UseNotificationPermissionReturn {
   > => {
     if (!isSupported) {
       logger.warn("Notification API is not supported in this browser");
+
       return "unsupported";
     }
 
     // Already granted or denied — no need to prompt
     if (Notification.permission !== "default") {
       setPermission(Notification.permission);
+
       return Notification.permission;
     }
 
     try {
       const result = await Notification.requestPermission();
+
       setPermission(result);
       logger.info(`Notification permission: ${result}`);
+
       return result;
     } catch (err) {
       logger.error(err, "Failed to request notification permission");
+
       return Notification.permission;
     }
   }, [isSupported]);

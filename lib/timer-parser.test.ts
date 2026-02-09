@@ -1,10 +1,12 @@
-import { parseTimerDurations } from "./timer-parser";
 import { describe, it, expect } from "vitest";
+
+import { parseTimerDurations } from "./timer-parser";
 
 describe("parseTimerDurations", () => {
   describe("default keywords", () => {
     it("detects simple minutes", () => {
       const matches = parseTimerDurations("Bake for 20 minutes");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(20 * 60);
       expect(matches[0].originalText).toBe("20 minutes");
@@ -12,18 +14,21 @@ describe("parseTimerDurations", () => {
 
     it("detects simple hours", () => {
       const matches = parseTimerDurations("Cook for 2 hours");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(2 * 3600);
     });
 
     it("detects simple seconds", () => {
       const matches = parseTimerDurations("Wait for 30 seconds");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(30);
     });
 
     it("detects ranges like '5-10 minutes'", () => {
       const matches = parseTimerDurations("Simmer for 5-10 minutes");
+
       expect(matches).toHaveLength(1);
       // Strategy: Use maximum value from ranges for safer cooking times
       expect(matches[0].durationSeconds).toBe(10 * 60); // Uses upper bound
@@ -32,6 +37,7 @@ describe("parseTimerDurations", () => {
 
     it("detects ranges like '5 to 10 minutes'", () => {
       const matches = parseTimerDurations("Rest for 5 to 10 minutes");
+
       expect(matches).toHaveLength(1);
       // Strategy: Use maximum value from ranges for safer cooking times
       expect(matches[0].durationSeconds).toBe(10 * 60); // Uses upper bound
@@ -40,6 +46,7 @@ describe("parseTimerDurations", () => {
 
     it("detects multiple timers in one string", () => {
       const matches = parseTimerDurations("Bake for 20 minutes then let cool for 1 hour");
+
       expect(matches).toHaveLength(2);
       expect(matches[0].durationSeconds).toBe(20 * 60);
       expect(matches[1].durationSeconds).toBe(3600);
@@ -47,6 +54,7 @@ describe("parseTimerDurations", () => {
 
     it("handles abbreviations", () => {
       const matches = parseTimerDurations("10 mins, 5 hrs");
+
       expect(matches).toHaveLength(2);
       expect(matches[0].durationSeconds).toBe(600);
       expect(matches[1].durationSeconds).toBe(5 * 3600);
@@ -60,6 +68,7 @@ describe("parseTimerDurations", () => {
         minutes: ["minuut", "minuten"],
         seconds: ["seconde", "seconden"],
       });
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(2 * 3600);
     });
@@ -70,6 +79,7 @@ describe("parseTimerDurations", () => {
         minutes: ["minuten"],
         seconds: ["sekunde", "sekunden"],
       });
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(30 * 60);
     });
@@ -80,6 +90,7 @@ describe("parseTimerDurations", () => {
         minutes: ["minute", "minutes"],
         seconds: ["seconde", "secondes"],
       });
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(45);
     });
@@ -106,6 +117,7 @@ describe("parseTimerDurations", () => {
         minutes: ["minute", "minutes", "minuten"],
         seconds: ["second", "seconds"],
       });
+
       expect(matches).toHaveLength(2);
       expect(matches[0].durationSeconds).toBe(20 * 60);
       expect(matches[1].durationSeconds).toBe(3600);
@@ -117,6 +129,7 @@ describe("parseTimerDurations", () => {
         minutes: ["m"],
         seconds: ["s"],
       });
+
       // Should default to minutes (60 seconds) for unrecognized unit
       expect(matches).toHaveLength(0); // xyz is not in any category, so no match
     });
@@ -125,6 +138,7 @@ describe("parseTimerDurations", () => {
   describe("colon time formats", () => {
     it("detects HH:MM with hour keyword as hours:minutes", () => {
       const matches = parseTimerDurations("Bake for 1:30 hours");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(1 * 3600 + 30 * 60); // 90 min
       expect(matches[0].originalText).toMatch(/1:30 hours/i);
@@ -132,6 +146,7 @@ describe("parseTimerDurations", () => {
 
     it("detects M:SS with minute keyword as minutes:seconds", () => {
       const matches = parseTimerDurations("Simmer for 1:30 minutes");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(1 * 60 + 30); // 90 sec
       expect(matches[0].originalText).toMatch(/1:30 minutes/i);
@@ -139,24 +154,28 @@ describe("parseTimerDurations", () => {
 
     it("detects HH:MM without unit as hours:minutes (default)", () => {
       const matches = parseTimerDurations("Bake for 1:30");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(1 * 3600 + 30 * 60); // 90 min
     });
 
     it("detects large HH:MM without unit as hours:minutes", () => {
       const matches = parseTimerDurations("Roast for 10:30");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(10 * 3600 + 30 * 60); // 630 min
     });
 
     it("detects HH:MM:SS format as hours:minutes:seconds", () => {
       const matches = parseTimerDurations("Cook for 2:45:30");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(2 * 3600 + 45 * 60 + 30); // 9930 sec
     });
 
     it("uses minute keywords from config", () => {
       const matches = parseTimerDurations("Wait 5:30 mins");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(5 * 60 + 30); // 330 sec (minutes:seconds)
     });
@@ -165,12 +184,14 @@ describe("parseTimerDurations", () => {
   describe("edge cases", () => {
     it("handles decimal values", () => {
       const matches = parseTimerDurations("Simmer for 1.5 hours");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(1.5 * 3600);
     });
 
     it("handles case insensitivity", () => {
       const matches = parseTimerDurations("Bake for 20 MINUTES");
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(20 * 60);
     });
@@ -181,17 +202,20 @@ describe("parseTimerDurations", () => {
         minutes: ["m+n"],
         seconds: ["s+c"],
       });
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(5 * 60);
     });
 
     it("does not false-match double suffixes like 'minutess'", () => {
       const matches = parseTimerDurations("Wait 5 minutess");
+
       expect(matches).toHaveLength(0);
     });
 
     it("does not false-match 'minuteen' when keyword is 'minute'", () => {
       const matches = parseTimerDurations("Wait 5 minuteen");
+
       expect(matches).toHaveLength(0);
     });
 
@@ -201,6 +225,7 @@ describe("parseTimerDurations", () => {
         minutes: ["m"],
         seconds: ["s"],
       });
+
       // 'ms' should not match 'm' followed by an 's' suffix
       expect(matches).toHaveLength(0);
     });
@@ -211,6 +236,7 @@ describe("parseTimerDurations", () => {
         minutes: ["minuut", "minuten"],
         seconds: ["seconde", "seconden"],
       });
+
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(20 * 60);
     });

@@ -26,9 +26,7 @@ function RecipePageContent() {
 
   // Still loading — show skeleton while data fetches
   if (isLoading) {
-    return (
-      <RecipeSkeleton />
-    );
+    return <RecipeSkeleton />;
   }
 
   // Recipe not found or no access - show 404

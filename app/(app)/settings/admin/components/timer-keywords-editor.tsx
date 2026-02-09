@@ -106,6 +106,7 @@ export default function TimerKeywordsEditor({
       parsedSeconds.length === 0
     ) {
       setError("At least one keyword required in hours, minutes, or seconds");
+
       return;
     }
 
@@ -156,44 +157,44 @@ export default function TimerKeywordsEditor({
 
       {/* Hours Field */}
       <Textarea
-        label={t("hoursLabel")}
-        placeholder={t("hoursPlaceholder")}
-        description={t("hoursHelp")}
-        value={hoursText}
-        onChange={(e) => handleTextChange("hours", e.target.value)}
-        minRows={2}
-        isDisabled={!isEnabled || saving}
         classNames={{
           input: "font-mono text-sm",
         }}
+        description={t("hoursHelp")}
+        isDisabled={!isEnabled || saving}
+        label={t("hoursLabel")}
+        minRows={2}
+        placeholder={t("hoursPlaceholder")}
+        value={hoursText}
+        onChange={(e) => handleTextChange("hours", e.target.value)}
       />
 
       {/* Minutes Field */}
       <Textarea
-        label={t("minutesLabel")}
-        placeholder={t("minutesPlaceholder")}
-        description={t("minutesHelp")}
-        value={minutesText}
-        onChange={(e) => handleTextChange("minutes", e.target.value)}
-        minRows={2}
-        isDisabled={!isEnabled || saving}
         classNames={{
           input: "font-mono text-sm",
         }}
+        description={t("minutesHelp")}
+        isDisabled={!isEnabled || saving}
+        label={t("minutesLabel")}
+        minRows={2}
+        placeholder={t("minutesPlaceholder")}
+        value={minutesText}
+        onChange={(e) => handleTextChange("minutes", e.target.value)}
       />
 
       {/* Seconds Field */}
       <Textarea
-        label={t("secondsLabel")}
-        placeholder={t("secondsPlaceholder")}
-        description={t("secondsHelp")}
-        value={secondsText}
-        onChange={(e) => handleTextChange("seconds", e.target.value)}
-        minRows={2}
-        isDisabled={!isEnabled || saving}
         classNames={{
           input: "font-mono text-sm",
         }}
+        description={t("secondsHelp")}
+        isDisabled={!isEnabled || saving}
+        label={t("secondsLabel")}
+        minRows={2}
+        placeholder={t("secondsPlaceholder")}
+        value={secondsText}
+        onChange={(e) => handleTextChange("seconds", e.target.value)}
       />
 
       {error && (

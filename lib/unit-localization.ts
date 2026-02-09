@@ -100,6 +100,7 @@ export function normalizeUnit(unit: string, config: UnitsMap): string {
  */
 export function formatUnit(unitId: string, userLocale: string, config: UnitsMap): string {
   const unitDef = config[unitId];
+
   if (!unitDef) return unitId; // Unknown unit, return as-is
 
   // Always use short form for consistent abbreviated display
@@ -107,19 +108,23 @@ export function formatUnit(unitId: string, userLocale: string, config: UnitsMap)
 
   // Try exact match first (e.g., "de-formal")
   const exactMatch = forms.find((f) => f.locale === userLocale);
+
   if (exactMatch) return exactMatch.name;
 
   // Try base locale match (e.g., "de" for "de-formal" or "de-informal")
   const baseLocale = userLocale.split("-")[0];
+
   if (baseLocale !== userLocale) {
     const baseMatch = forms.find(
       (f) => f.locale === baseLocale || f.locale.startsWith(baseLocale + "-")
     );
+
     if (baseMatch) return baseMatch.name;
   }
 
   // Fallback to English
   const en = forms.find((f) => f.locale === "en");
+
   if (en) return en.name;
 
   // Last resort: first available

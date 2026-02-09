@@ -187,7 +187,8 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
         },
         isOpen: () => isOpen,
         triggerDeleteAnimation: (callback: () => void) => {
-          const dangerAction = actions.find(a => a.color === 'danger');
+          const dangerAction = actions.find((a) => a.color === "danger");
+
           if (dangerAction) {
             commitDelete({ ...dangerAction, onPress: callback });
           }

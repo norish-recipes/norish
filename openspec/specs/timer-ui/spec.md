@@ -1,8 +1,11 @@
 # timer-ui Specification
 
 ## Purpose
+
 TBD - created by archiving change improve-timer-system. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Timer Chip Valid Styling
 
 The timer chip component SHALL use only valid Tailwind CSS utility classes and avoid invalid or non-existent class names.
@@ -57,4 +60,3 @@ The timer parser regex SHALL NOT append hardcoded language-specific suffixes (li
 - **WHEN** the parser scans text containing "15 minuten"
 - **AND** "minuten" is in the configured minutes keyword list
 - **THEN** a timer match of 15 minutes (900 seconds) is produced
-

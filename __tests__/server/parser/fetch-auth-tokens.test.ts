@@ -1,7 +1,7 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
-
 import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Playwright mocks – declared via vi.hoisted() so they are available inside
@@ -105,6 +105,7 @@ function getExtraHTTPHeaders(): Record<string, string> | undefined {
   const arg = mockNewContext.mock.calls[0]?.[0] as
     | { extraHTTPHeaders?: Record<string, string> }
     | undefined;
+
   return arg?.extraHTTPHeaders;
 }
 
@@ -120,6 +121,7 @@ describe("fetchViaPlaywright – auth token injection", () => {
     await fetchViaPlaywright("https://example.com/recipe");
 
     const headers = getExtraHTTPHeaders()!;
+
     // Should still contain default browser headers but no custom auth ones
     expect(headers).toBeDefined();
     expect(headers).toHaveProperty("DNT");
@@ -132,6 +134,7 @@ describe("fetchViaPlaywright – auth token injection", () => {
     await fetchViaPlaywright("https://example.com/recipe", undefined);
 
     const headers = getExtraHTTPHeaders()!;
+
     expect(headers).toBeDefined();
     expect(headers).toHaveProperty("DNT");
 
@@ -147,6 +150,7 @@ describe("fetchViaPlaywright – auth token injection", () => {
     await fetchViaPlaywright("https://example.com/recipe", tokens);
 
     const headers = getExtraHTTPHeaders()!;
+
     expect(headers["Authorization"]).toBe("Bearer abc123");
     expect(headers["X-Custom"]).toBe("custom-val");
 
@@ -174,6 +178,7 @@ describe("fetchViaPlaywright – auth token injection", () => {
 
     // No extra auth headers beyond defaults
     const headers = getExtraHTTPHeaders()!;
+
     expect(headers).not.toHaveProperty("session_id");
   });
 
@@ -189,6 +194,7 @@ describe("fetchViaPlaywright – auth token injection", () => {
 
     // Verify header tokens merged
     const headers = getExtraHTTPHeaders()!;
+
     expect(headers["Authorization"]).toBe("Bearer xyz");
     expect(headers["X-Api-Key"]).toBe("key-456");
 
@@ -216,6 +222,7 @@ describe("fetchViaPlaywright – auth token injection", () => {
       domain: string;
       path: string;
     }>;
+
     expect(cookies).toHaveLength(3);
     expect(cookies).toEqual([
       { name: "token_a", value: "val-a", domain: "example.com", path: "/" },

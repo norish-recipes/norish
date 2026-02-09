@@ -1,8 +1,10 @@
 // @vitest-environment node
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
-import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 vi.mock("yt-dlp-wrap", () => ({
   default: class MockYTDlpWrap {
@@ -74,6 +76,7 @@ describe("buildAuthArgs", () => {
     expect(args.length).toBe(2);
     expect(args[0]).toBe("--cookies");
     const cookiePath = args[1];
+
     expect(fsSync.existsSync(cookiePath)).toBe(true);
 
     cookieFilePaths.push(cookiePath);
@@ -106,6 +109,7 @@ describe("buildAuthArgs", () => {
     const { args, cleanup } = await buildAuthArgs(tokens, "https://example.com/video");
 
     const cookiePath = args[1];
+
     expect(fsSync.existsSync(cookiePath)).toBe(true);
 
     await cleanup();

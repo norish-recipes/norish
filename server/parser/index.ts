@@ -1,5 +1,6 @@
-import { fetchViaPlaywright } from "./fetch";
 import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+
+import { fetchViaPlaywright } from "./fetch";
 
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { tryExtractRecipeFromJsonLd, extractRecipeNodesFromJsonLd } from "@/server/parser/jsonld";

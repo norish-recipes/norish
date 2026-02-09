@@ -118,16 +118,16 @@ export default function JsonEditor({
       {description && <p className="text-default-500 text-base">{description}</p>}
 
       <Textarea
-        value={text}
-        onChange={(e) => handleTextChange(e.target.value)}
-        placeholder={t("placeholder")}
-        minRows={10}
         classNames={{
           input: "font-mono text-sm",
         }}
-        isInvalid={!!error && text !== ""}
         errorMessage={error || undefined}
         isDisabled={disabled}
+        isInvalid={!!error && text !== ""}
+        minRows={10}
+        placeholder={t("placeholder")}
+        value={text}
+        onChange={(e) => handleTextChange(e.target.value)}
       />
 
       {error && (

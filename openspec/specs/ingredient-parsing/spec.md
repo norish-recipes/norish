@@ -1,8 +1,11 @@
 # ingredient-parsing Specification
 
 ## Purpose
+
 TBD - created by archiving change update-ingredient-parsing. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Parse-Ingredient v2 Integration
 
 The system SHALL use parse-ingredient version 2.0.1 or higher for all ingredient parsing operations.
@@ -164,4 +167,3 @@ The system SHALL flatten locale-aware unit configuration for the parse-ingredien
 
 - **WHEN** flattening configuration with multiple units
 - **THEN** all unit IDs (keys) MUST be preserved in the flattened output
-

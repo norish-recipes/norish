@@ -481,6 +481,7 @@ async function syncTimerKeywords(): Promise<void> {
   // If user has overridden, don't touch it
   if (existing?.isOverridden) {
     serverLogger.debug("Timer keywords are overridden by admin, skipping file sync");
+
     return;
   }
 
@@ -490,6 +491,7 @@ async function syncTimerKeywords(): Promise<void> {
   if (!existing) {
     await setConfig(ServerConfigKeys.TIMER_KEYWORDS, fileDefaults, null, false);
     serverLogger.info("Seeded timer keywords from default config file");
+
     return;
   }
 

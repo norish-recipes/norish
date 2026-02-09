@@ -9,7 +9,7 @@ export default function NewFeatureChip() {
   return (
     <Chip
       classNames={{
-        base: "bg-linear-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30"
+        base: "bg-linear-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
       }}
       size="sm"
       variant="shadow"

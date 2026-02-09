@@ -1,8 +1,11 @@
 # unit-configuration Specification
 
 ## Purpose
+
 TBD - created by archiving change update-ingredient-parsing. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: German Unit of Measurement Support
 
 The system SHALL include comprehensive German units of measurement in the default configuration.
@@ -208,4 +211,3 @@ The system SHALL document breaking changes to unit configuration format.
 
 - **WHEN** documenting the upgrade
 - **THEN** instructions MUST explain how to re-apply customizations in new format
-

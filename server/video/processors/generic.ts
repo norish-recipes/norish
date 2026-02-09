@@ -2,6 +2,7 @@ import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import type { VideoProcessorContext } from "../types";
 
 import { BaseVideoProcessor } from "../base-processor";
+
 import { videoLogger as log } from "@/server/logger";
 import { transcribeAudio } from "@/server/ai/transcriber";
 import { extractRecipeFromVideo } from "@/server/video/normalizer";
@@ -23,6 +24,7 @@ export class GenericVideoProcessor extends BaseVideoProcessor {
       log.info({ url }, "Processing generic video");
 
       const metadata = await this.getMetadata(url, tokens);
+
       await this.validateLength(url, tokens);
 
       // Download video file
@@ -33,11 +35,13 @@ export class GenericVideoProcessor extends BaseVideoProcessor {
       log.info({ url }, "Starting audio transcription");
 
       const transcriptionResult = await transcribeAudio(audioPath);
+
       if (!transcriptionResult.success) {
         throw new Error(transcriptionResult.error);
       }
 
       const transcript = transcriptionResult.data;
+
       log.info({ url, transcriptLength: transcript.length }, "Audio transcribed");
 
       // Combine transcript with description

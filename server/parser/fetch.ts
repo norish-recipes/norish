@@ -60,6 +60,7 @@ export async function fetchViaPlaywright(
     };
 
     const headerTokens = tokens?.filter((t) => t.type === "header") ?? [];
+
     for (const token of headerTokens) {
       extraHTTPHeaders[token.name] = token.value;
     }
@@ -73,8 +74,10 @@ export async function fetchViaPlaywright(
 
     // Inject cookie-type tokens into the browser context
     const cookieTokens = tokens?.filter((t) => t.type === "cookie") ?? [];
+
     if (cookieTokens.length > 0) {
       let domain: string;
+
       try {
         domain = new URL(targetUrl).hostname;
       } catch {

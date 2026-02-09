@@ -1,4 +1,5 @@
 import type { VideoProcessor, VideoPlatform } from "./types";
+
 import { detectPlatform } from "./url-utils";
 
 /**

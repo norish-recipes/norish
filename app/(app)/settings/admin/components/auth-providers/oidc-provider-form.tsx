@@ -230,8 +230,8 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
       <TestResultDisplay result={testResult} />
 
       <ProviderActions
-        hasConfig={!!config}
         hasChanges={hasChanges}
+        hasConfig={!!config}
         saving={saving}
         testing={testing}
         onDeleteClick={deleteModal.onOpen}

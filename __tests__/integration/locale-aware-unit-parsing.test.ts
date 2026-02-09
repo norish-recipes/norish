@@ -1,5 +1,7 @@
-import { describe, it, expect } from "vitest";
 import type { UnitsMap } from "@/server/db/zodSchemas/server-config";
+
+import { describe, it, expect } from "vitest";
+
 import { parseIngredientWithDefaults } from "@/lib/helpers";
 import { formatUnit } from "@/lib/unit-localization";
 
@@ -227,6 +229,7 @@ describe("Locale-Aware Unit Parsing Integration", () => {
       // This test documents the expected fallback behavior
       if (parsed[0].unitOfMeasureID) {
         const formatted = formatUnit(parsed[0].unitOfMeasureID, "en", mockUnitsConfig);
+
         expect(typeof formatted).toBe("string");
       }
     });

@@ -6,13 +6,14 @@
  * in a PostgreSQL database for integration tests.
  */
 
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import type { FullRecipeDTO, MeasurementSystem } from "@/types";
+
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
 import * as schema from "@/server/db/schema";
-import type { FullRecipeDTO, MeasurementSystem } from "@/types";
 import { getRecipeFull } from "@/server/db";
 import { encrypt } from "@/server/auth/crypto";
 
@@ -57,6 +58,7 @@ export function getTestDb(): TestDb {
   if (!_testDb) {
     throw new Error("Test database not initialized. Call initTestDb() first.");
   }
+
   return _testDb;
 }
 
@@ -156,7 +158,7 @@ export async function createTestIngredient(
 export async function createTestRecipe(
   userId: string,
   overrides: Partial<typeof schema.recipes.$inferInsert> = {}
-) : Promise<FullRecipeDTO> {
+): Promise<FullRecipeDTO> {
   const db = getTestDb();
 
   const [recipe] = await db
@@ -178,7 +180,7 @@ export async function createTestRecipe(
       updatedAt: overrides.updatedAt ?? new Date(),
     })
     .returning();
-  
+
   return (await getRecipeFull(recipe.id))!;
 }
 
@@ -267,6 +269,7 @@ export async function verifyDatabaseConnection() {
 
   try {
     await db.execute(sql`SELECT 1`);
+
     return true;
   } catch (error) {
     return false;

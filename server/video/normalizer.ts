@@ -83,6 +83,7 @@ export async function extractRecipeFromVideo(
     });
 
     const jsonLd = result.output;
+
     videoLogger.debug(jsonLd, "Response");
 
     // Validate extraction output

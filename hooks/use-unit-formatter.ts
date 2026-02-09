@@ -26,6 +26,7 @@ export function useUnitFormatter() {
     if (!unit) {
       if (!amount && amount !== 0) return "";
       const formattedAmount = amount % 1 === 0 ? amount.toString() : amount.toFixed(1);
+
       return `${formattedAmount}×`;
     }
 

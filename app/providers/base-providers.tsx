@@ -8,6 +8,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ToastProvider } from "@heroui/toast";
 
 import { TRPCProviderWrapper } from "./trpc-provider";
+
 import { TimerDock } from "@/components/timer-dock";
 
 export interface BaseProvidersProps {
