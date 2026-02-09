@@ -532,8 +532,8 @@
       "autoTaggingDescription": "Deze prompt wordt gebruikt om tags te genereren voor geïmporteerde recepten. Definieer taggingregels en een lijst met voorgedefinieerde tags.",
       "autoTaggingPlaceholder": "Voer de auto-tagging prompt in..."
     },
+    "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {
-      "unsavedChanges": "Niet-opgeslagen wijzigingen",
       "placeholder": "Voer JSON-configuratie in...",
       "invalidJson": "Ongeldig JSON-formaat",
       "failedToSave": "Opslaan mislukt",

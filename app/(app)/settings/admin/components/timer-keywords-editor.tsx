@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Textarea, Button, Switch, Chip } from "@heroui/react";
+import { Textarea, Button, Switch } from "@heroui/react";
 import { ArrowPathIcon, CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
@@ -17,6 +17,7 @@ interface TimerKeywordsEditorProps {
     seconds: string[];
   }) => Promise<{ success: boolean; error?: string }>;
   onRestoreDefaults: () => Promise<{ success: boolean; error?: string }>;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export default function TimerKeywordsEditor({
@@ -26,6 +27,7 @@ export default function TimerKeywordsEditor({
   seconds,
   onUpdate,
   onRestoreDefaults,
+  onDirtyChange,
 }: TimerKeywordsEditorProps) {
   const t = useTranslations("settings.admin.contentDetection.timerKeywords");
   const tActions = useTranslations("common.actions");
@@ -47,6 +49,10 @@ export default function TimerKeywordsEditor({
     setIsDirty(false);
     setError(null);
   }, [enabled, hours, minutes, seconds]);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const handleEnabledChange = useCallback((newEnabled: boolean) => {
     setIsEnabled(newEnabled);
@@ -142,14 +148,7 @@ export default function TimerKeywordsEditor({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{t("enableToggle")}</span>
-          {isDirty && (
-            <Chip color="warning" size="sm" variant="flat">
-              {t("unsavedChanges")}
-            </Chip>
-          )}
-        </div>
+        <span className="text-sm font-medium">{t("enableToggle")}</span>
         <Switch isSelected={isEnabled} onValueChange={handleEnabledChange} />
       </div>
 

@@ -532,8 +532,8 @@
       "autoTaggingDescription": "Utilisé pour générer les tags des recettes importées",
       "autoTaggingPlaceholder": "Entrez le prompt..."
     },
+    "unsavedChanges": "Modifications non enregistrées",
     "jsonEditor": {
-      "unsavedChanges": "Modifications non enregistrées",
       "placeholder": "Entrez la configuration JSON...",
       "invalidJson": "Format JSON invalide",
       "failedToSave": "Échec de l’enregistrement",

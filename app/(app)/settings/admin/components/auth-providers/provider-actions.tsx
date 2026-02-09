@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 interface ProviderActionsProps {
   hasConfig: boolean;
+  hasChanges: boolean;
   testing: boolean;
   saving: boolean;
   onTest: () => void;
@@ -15,6 +16,7 @@ interface ProviderActionsProps {
 
 export function ProviderActions({
   hasConfig,
+  hasChanges,
   testing,
   saving,
   onTest,
@@ -46,6 +48,7 @@ export function ProviderActions({
         </Button>
         <Button
           color="primary"
+          isDisabled={!hasChanges}
           isLoading={saving}
           startContent={<CheckIcon className="h-5 w-5" />}
           onPress={onSave}

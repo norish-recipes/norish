@@ -9,7 +9,11 @@ import { useAdminSettingsContext } from "../context";
 
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
 
-export default function PromptsForm() {
+interface PromptsFormProps {
+  onDirtyChange?: (isDirty: boolean) => void;
+}
+
+export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
   const t = useTranslations("settings.admin.promptsConfig");
   const tActions = useTranslations("common.actions");
   const { prompts, isLoading, updatePrompts, restoreDefaultConfig } = useAdminSettingsContext();
@@ -44,6 +48,10 @@ export default function PromptsForm() {
       setHasChanges(changed);
     }
   }, [recipeExtraction, unitConversion, nutritionEstimation, autoTagging, prompts]);
+
+  useEffect(() => {
+    onDirtyChange?.(hasChanges);
+  }, [hasChanges, onDirtyChange]);
 
   const handleSave = async () => {
     setSaving(true);

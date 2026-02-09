@@ -20,6 +20,7 @@ import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
+import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function GeneralCard() {
   const t = useTranslations("settings.admin.general");
@@ -173,7 +174,10 @@ export default function GeneralCard() {
         {/* Locale Configuration */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <span className="font-medium">{t("locales")}</span>
+            <span className="flex items-center gap-2 font-medium">
+              {t("locales")}
+              {hasLocaleChanges && <UnsavedChangesChip />}
+            </span>
             <span className="text-default-500 text-base">{t("localesDescription")}</span>
           </div>
 

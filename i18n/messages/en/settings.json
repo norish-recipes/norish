@@ -532,8 +532,8 @@
       "autoTaggingDescription": "This prompt is used to generate tags for imported recipes. Define tagging rules and predefined tags list.",
       "autoTaggingPlaceholder": "Enter the auto-tagging prompt..."
     },
+    "unsavedChanges": "Unsaved changes",
     "jsonEditor": {
-      "unsavedChanges": "Unsaved changes",
       "placeholder": "Enter JSON configuration...",
       "invalidJson": "Invalid JSON format",
       "failedToSave": "Failed to save",

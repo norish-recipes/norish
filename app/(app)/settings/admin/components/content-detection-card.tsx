@@ -3,12 +3,14 @@
 import { Card, CardBody, CardHeader, Accordion, AccordionItem } from "@heroui/react";
 import { DocumentMagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+import { useCallback, useState } from "react";
 
 import { useAdminSettingsContext } from "../context";
 import NewFeatureChip from "../../components/new-feature-chip";
 
 import JsonEditor from "./json-editor";
 import TimerKeywordsEditor from "./timer-keywords-editor";
+import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
 
@@ -25,6 +27,22 @@ export default function ContentDetectionCard() {
     updateTimerKeywords,
     restoreDefaultConfig,
   } = useAdminSettingsContext();
+
+  const [dirtySections, setDirtySections] = useState({
+    timerKeywords: false,
+    contentIndicators: false,
+    units: false,
+    recurrence: false,
+  });
+
+  const updateDirtySection = useCallback(
+    (section: keyof typeof dirtySections) => (isDirty: boolean) => {
+      setDirtySections((current) =>
+        current[section] === isDirty ? current : { ...current, [section]: isDirty }
+      );
+    },
+    []
+  );
 
   return (
     <Card>
@@ -44,6 +62,7 @@ export default function ContentDetectionCard() {
             title={
               <div className="flex items-center gap-2">
                 {t("timerKeywords.title")}
+                {dirtySections.timerKeywords && <UnsavedChangesChip />}
                 <NewFeatureChip />
               </div>
             }
@@ -56,13 +75,19 @@ export default function ContentDetectionCard() {
                 seconds={timerKeywords?.seconds ?? []}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.TIMER_KEYWORDS)}
                 onUpdate={updateTimerKeywords}
+                onDirtyChange={updateDirtySection("timerKeywords")}
               />
             </div>
           </AccordionItem>
           <AccordionItem
             key="content-indicators"
             subtitle={t("contentIndicators.subtitle")}
-            title={t("contentIndicators.title")}
+            title={
+              <div className="flex items-center gap-2">
+                {t("contentIndicators.title")}
+                {dirtySections.contentIndicators && <UnsavedChangesChip />}
+              </div>
+            }
           >
             <div className="p-2">
               <JsonEditor
@@ -70,23 +95,39 @@ export default function ContentDetectionCard() {
                 value={contentIndicators}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.CONTENT_INDICATORS)}
                 onSave={updateContentIndicators}
+                onDirtyChange={updateDirtySection("contentIndicators")}
               />
             </div>
           </AccordionItem>
-          <AccordionItem key="units" subtitle={t("units.subtitle")} title={t("units.title")}>
+          <AccordionItem
+            key="units"
+            subtitle={t("units.subtitle")}
+            title={
+              <div className="flex items-center gap-2">
+                {t("units.title")}
+                {dirtySections.units && <UnsavedChangesChip />}
+              </div>
+            }
+          >
             <div className="p-2">
               <JsonEditor
                 description={t("units.description")}
                 value={units}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.UNITS)}
                 onSave={updateUnits}
+                onDirtyChange={updateDirtySection("units")}
               />
             </div>
           </AccordionItem>
           <AccordionItem
             key="recurrence"
             subtitle={t("recurrence.subtitle")}
-            title={t("recurrence.title")}
+            title={
+              <div className="flex items-center gap-2">
+                {t("recurrence.title")}
+                {dirtySections.recurrence && <UnsavedChangesChip />}
+              </div>
+            }
           >
             <div className="p-2">
               <JsonEditor
@@ -94,6 +135,7 @@ export default function ContentDetectionCard() {
                 value={recurrenceConfig}
                 onRestoreDefaults={() => restoreDefaultConfig(ServerConfigKeys.RECURRENCE_CONFIG)}
                 onSave={updateRecurrenceConfig}
+                onDirtyChange={updateDirtySection("recurrence")}
               />
             </div>
           </AccordionItem>

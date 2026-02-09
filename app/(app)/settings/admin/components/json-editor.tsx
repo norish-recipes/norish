@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Textarea, Button, Chip } from "@heroui/react";
+import { Textarea, Button } from "@heroui/react";
 import { ArrowPathIcon, CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
@@ -12,6 +12,7 @@ interface JsonEditorProps {
   onSave: (jsonString: string) => Promise<{ success: boolean; error?: string }>;
   onRestoreDefaults?: () => Promise<{ success: boolean; error?: string }>;
   disabled?: boolean;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export default function JsonEditor({
@@ -21,6 +22,7 @@ export default function JsonEditor({
   label,
   description,
   disabled = false,
+  onDirtyChange,
 }: JsonEditorProps) {
   const t = useTranslations("settings.admin.jsonEditor");
   const tActions = useTranslations("common.actions");
@@ -37,6 +39,10 @@ export default function JsonEditor({
       setError(null);
     }
   }, [value]);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const handleTextChange = useCallback(
     (newText: string) => {
@@ -106,11 +112,6 @@ export default function JsonEditor({
       {label && (
         <div className="flex items-center gap-2">
           <span className="font-medium">{label}</span>
-          {isDirty && (
-            <Chip color="warning" size="sm" variant="flat">
-              {t("unsavedChanges")}
-            </Chip>
-          )}
         </div>
       )}
 

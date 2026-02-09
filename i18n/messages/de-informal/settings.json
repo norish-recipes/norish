@@ -532,8 +532,8 @@
       "autoTaggingDescription": "Dieser Prompt wird verwendet, um Tags für importierte Rezepte zu generieren. Definiere Tagging-Regeln und vordefinierte Tags-Liste.",
       "autoTaggingPlaceholder": "Gib den Auto-Tagging-Prompt ein..."
     },
+    "unsavedChanges": "Ungespeicherte Änderungen",
     "jsonEditor": {
-      "unsavedChanges": "Ungespeicherte Änderungen",
       "placeholder": "Gib JSON-Konfiguration ein...",
       "invalidJson": "Ungültiges JSON-Format",
       "failedToSave": "Speichern fehlgeschlagen",

@@ -26,7 +26,11 @@ import {
 import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
 import SecretInput from "@/components/shared/secret-input";
 
-export default function VideoProcessingForm() {
+interface VideoProcessingFormProps {
+  onDirtyChange?: (isDirty: boolean) => void;
+}
+
+export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFormProps) {
   const t = useTranslations("settings.admin.videoConfig");
   const tActions = useTranslations("common.actions");
   const { videoConfig, updateVideoConfig, aiConfig, fetchConfigSecret } = useAdminSettingsContext();
@@ -157,6 +161,34 @@ export default function VideoProcessingForm() {
   const showValidationWarning = enabled && !hasValidTranscription;
   const isVideoUiDisabled = !enabled || !isAIEnabled;
   const showAiDisabledWarning = !isAIEnabled;
+  const hasChanges = useMemo(() => {
+    if (!videoConfig) return false;
+
+    return (
+      enabled !== videoConfig.enabled ||
+      maxLengthSeconds !== videoConfig.maxLengthSeconds ||
+      maxVideoFileSizeMB !== Math.round(videoConfig.maxVideoFileSize / (1024 * 1024)) ||
+      ytDlpVersion !== videoConfig.ytDlpVersion ||
+      transcriptionProvider !== videoConfig.transcriptionProvider ||
+      transcriptionEndpoint !== (videoConfig.transcriptionEndpoint ?? "") ||
+      transcriptionModel !== videoConfig.transcriptionModel ||
+      transcriptionApiKey.trim() !== ""
+    );
+  }, [
+    videoConfig,
+    enabled,
+    maxLengthSeconds,
+    maxVideoFileSizeMB,
+    ytDlpVersion,
+    transcriptionProvider,
+    transcriptionEndpoint,
+    transcriptionModel,
+    transcriptionApiKey,
+  ]);
+
+  useEffect(() => {
+    onDirtyChange?.(hasChanges);
+  }, [hasChanges, onDirtyChange]);
 
   const handleRevealTranscriptionApiKey = useCallback(async () => {
     return await fetchConfigSecret(ServerConfigKeys.VIDEO_CONFIG, "transcriptionApiKey");
@@ -347,7 +379,7 @@ export default function VideoProcessingForm() {
       <div className="flex items-center justify-end pt-2">
         <Button
           color="primary"
-          isDisabled={!canEnable}
+          isDisabled={!canEnable || !hasChanges}
           isLoading={saving}
           startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}
