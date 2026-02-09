@@ -1,0 +1,82 @@
+import { describe, expect, it, vi } from "vitest";
+import { render } from "@testing-library/react";
+import "@testing-library/jest-dom";
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
+vi.mock("motion/react", () => ({
+  motion: {
+    span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+  },
+}));
+
+vi.mock("@/components/Panel/Panel", () => ({
+  default: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock("@/components/dashboard/search-field-toggles", () => ({
+  default: () => <div>search-field-toggles</div>,
+}));
+
+vi.mock("@/components/skeleton/chip-skeleton", () => ({
+  default: () => <div>loading</div>,
+}));
+
+vi.mock("@/components/shared/rating-stars", () => ({
+  default: () => <div>rating-stars</div>,
+}));
+
+vi.mock("@/context/recipes-filters-context", () => ({
+  useRecipesFiltersContext: () => ({
+    filters: {
+      searchTags: [],
+      categories: [],
+      filterMode: "AND",
+      sortMode: "dateDesc",
+      rawInput: "",
+      showFavoritesOnly: false,
+      minRating: null,
+      maxCookingTime: null,
+    },
+    setFilters: vi.fn(),
+    clearFilters: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/config", () => ({
+  useTagsQuery: () => ({
+    tags: ["Dinner", "Quick", "Vegetarian", "Soup", "Pasta", "Spicy"],
+    isLoading: false,
+  }),
+}));
+
+vi.mock("@heroui/react", () => ({
+  Button: ({ children, onPress, startContent, ...props }: any) => (
+    <button onClick={onPress} {...props}>
+      {children}
+    </button>
+  ),
+  Chip: ({ children, onClick, ...props }: any) => (
+    <button onClick={onClick} {...props}>
+      {children}
+    </button>
+  ),
+  Input: ({ value, onChange, isClearable, startContent, onClear, classNames, ...props }: any) => (
+    <input value={value} onChange={onChange} {...props} />
+  ),
+}));
+
+import FiltersPanel from "@/components/Panel/consumers/filters-panel";
+
+describe("FiltersPanel", () => {
+  it("limits tag container height and enables vertical scrolling", () => {
+    const { container } = render(<FiltersPanel open onOpenChange={vi.fn()} />);
+
+    const tagContainer = container.querySelector(".overflow-y-auto");
+
+    expect(tagContainer).toBeInTheDocument();
+    expect(tagContainer).toHaveClass("max-h-[220px]");
+  });
+});

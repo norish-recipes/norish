@@ -11,7 +11,12 @@ import { extractTandoorRecipes, parseTandoorRecipeToDTO } from "./tandoor-parser
 import { extractPaprikaRecipes, parsePaprikaRecipeToDTO } from "./paprika-parser";
 
 import { RecipeDashboardDTO, FullRecipeInsertDTO } from "@/types";
-import { createRecipeWithRefs, dashboardRecipe, findExistingRecipe } from "@/server/db";
+import {
+  createRecipeWithRefs,
+  dashboardRecipe,
+  findExistingRecipe,
+  updateRecipeWithRefs,
+} from "@/server/db";
 import { rateRecipe } from "@/server/db/repositories/ratings";
 
 export enum ArchiveFormat {
@@ -180,10 +185,30 @@ async function importRecipeItems(
       const existingId = await findExistingRecipe(userIds, dto.url, dto.name);
 
       if (existingId) {
-        const skippedItem = { file: fileName, reason: "Duplicate recipe" };
+        const overwriteUserId = userId ?? userIds[0];
 
-        skipped.push(skippedItem);
-        onProgress?.(current, undefined, undefined, skippedItem);
+        if (!overwriteUserId) {
+          throw new Error("Cannot overwrite existing recipe without user context");
+        }
+
+        await updateRecipeWithRefs(existingId, overwriteUserId, dto);
+
+        // Save imported rating if present and user is authenticated
+        if (importedRating && userId) {
+          try {
+            await rateRecipe(userId, existingId, importedRating);
+          } catch {
+            // Ignore rating errors - don't fail the import
+          }
+        }
+
+        const updatedRecipe = await dashboardRecipe(existingId);
+
+        if (updatedRecipe) {
+          imported.push(updatedRecipe);
+          onProgress?.(current, updatedRecipe, undefined, undefined);
+        }
+
         continue;
       }
 

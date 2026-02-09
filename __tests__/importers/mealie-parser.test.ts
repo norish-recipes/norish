@@ -285,6 +285,72 @@ describe("Mealie Parser", () => {
       expect(dto!.recipeIngredients![1].unit).toBe("tablespoon");
     });
 
+    it("uses parsed original_text description for parsed ingredients to avoid duplicated amount/unit text", async () => {
+      const parsedIngredients: MealieIngredient[] = [
+        {
+          id: 1,
+          recipe_id: "recipe-1",
+          food_id: "food-butter",
+          unit_id: "unit-tbsp",
+          quantity: 1,
+          original_text: "1 tablespoon butter",
+          note: "",
+          position: 0,
+        },
+      ];
+
+      const parsedLookups = createEmptyLookups();
+
+      parsedLookups.foods.set("food-butter", { id: "food-butter", name: "butter" });
+      parsedLookups.units.set("unit-tbsp", { id: "unit-tbsp", name: "tablespoon" });
+
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        parsedIngredients,
+        mockInstructions,
+        parsedLookups
+      );
+
+      expect(dto).not.toBeNull();
+      expect(dto!.recipeIngredients).toHaveLength(1);
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("butter");
+      expect(dto!.recipeIngredients![0].amount).toBe(1);
+      expect(dto!.recipeIngredients![0].unit).toBe("tablespoon");
+    });
+
+    it("falls back to Mealie quantity and unit when parsing original_text cannot extract them", async () => {
+      const parsedIngredients: MealieIngredient[] = [
+        {
+          id: 1,
+          recipe_id: "recipe-1",
+          food_id: "food-butter",
+          unit_id: "unit-tbsp",
+          quantity: 2,
+          original_text: "butter, softened",
+          note: "softened",
+          position: 0,
+        },
+      ];
+
+      const parsedLookups = createEmptyLookups();
+
+      parsedLookups.foods.set("food-butter", { id: "food-butter", name: "butter" });
+      parsedLookups.units.set("unit-tbsp", { id: "unit-tbsp", name: "tablespoon" });
+
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        parsedIngredients,
+        mockInstructions,
+        parsedLookups
+      );
+
+      expect(dto).not.toBeNull();
+      expect(dto!.recipeIngredients).toHaveLength(1);
+      expect(dto!.recipeIngredients![0].ingredientName).toBe("butter, softened");
+      expect(dto!.recipeIngredients![0].amount).toBe(2);
+      expect(dto!.recipeIngredients![0].unit).toBe("tablespoon");
+    });
+
     it("throws error for recipe with all empty ingredients (no food_id, no original_text, no note)", async () => {
       const emptyIngredients: MealieIngredient[] = [
         {

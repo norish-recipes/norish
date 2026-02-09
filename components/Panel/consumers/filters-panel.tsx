@@ -324,7 +324,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
         {isLoading ? (
           <ChipSkeleton />
         ) : (
-          <div className="flex flex-wrap gap-1 overflow-y-auto pr-1">
+          <div className="flex max-h-[220px] flex-wrap gap-1 overflow-y-auto pr-1">
             {allTags
               .filter((tag) => tag.toLowerCase().includes(tagFilter.toLowerCase()))
               .map((tag) => {
