@@ -176,6 +176,7 @@ export function createMockRecipe(overrides: Partial<RecipeDashboardDTO> = {}): R
     userId: "test-user-id",
     name: "Test Recipe",
     description: "A test recipe description",
+    notes: "Some test notes",
     url: "https://example.com/recipe",
     image: null,
     servings: 4,

@@ -217,6 +217,21 @@ export default function RecipePageMobile() {
 
           <Divider />
 
+          {/* Notes */}
+          {recipe.notes && (
+            <>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">{t("notes")}</h2>
+                </div>
+                <div>
+                  <SmartMarkdownRenderer text={recipe.notes} />
+                </div>
+              </div>
+              <Divider />
+            </>
+          )}
+
           {/* Steps Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">

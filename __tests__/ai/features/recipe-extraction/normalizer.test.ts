@@ -574,4 +574,54 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     expect(usIngredients?.[0].ingredientName).toBe("flour");
     expect(usIngredients?.[1].ingredientName).toContain("egg");
   });
+
+  it("maps and decodes notes from AI output", async () => {
+    const output: RecipeExtractionOutput = {
+      "@context": "https://schema.org",
+      "@type": "Recipe",
+      name: "Test Recipe",
+      description: "Test",
+      notes: "Let it rest for 10 minutes &#8211; don&#39;t skip this step.",
+      recipeIngredient: {
+        metric: ["100g flour"],
+        us: ["1 cup flour"],
+      },
+      recipeInstructions: {
+        metric: ["Mix well"],
+        us: ["Mix well"],
+      },
+      recipeYield: "4",
+      cookTime: null,
+      prepTime: null,
+      totalTime: null,
+      keywords: [],
+      nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
+    };
+
+    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+
+    vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
+      name: "Test Recipe",
+      description: "Test",
+      url: null,
+      image: undefined,
+      servings: undefined,
+      prepMinutes: undefined,
+      cookMinutes: undefined,
+      totalMinutes: undefined,
+      calories: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+      recipeIngredients: [],
+      steps: [],
+      systemUsed: "metric",
+      tags: [],
+      images: [],
+    } as any);
+
+    const result = await normalizeExtractionOutput(output);
+
+    expect(result?.notes).toBe("Let it rest for 10 minutes – don't skip this step.");
+  });
 });

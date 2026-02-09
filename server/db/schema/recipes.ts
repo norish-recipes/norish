@@ -30,6 +30,7 @@ export const recipes = pgTable(
     prepMinutes: integer("prep_minutes"),
     cookMinutes: integer("cook_minutes"),
     totalMinutes: integer("total_minutes"),
+    notes: text("notes"),
     systemUsed: measurementSystemEnum("system_used").notNull().default("metric"),
     calories: integer("calories"),
     fat: numeric("fat", { precision: 6, scale: 2 }),

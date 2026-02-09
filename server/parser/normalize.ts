@@ -156,6 +156,7 @@ export async function normalizeRecipeFromJson(
     id: effectiveRecipeId,
     name: metadata.name,
     description: metadata.description,
+    notes: metadata.notes,
     url: "",
     image: primaryImage,
     servings: metadata.servings,

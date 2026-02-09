@@ -53,6 +53,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   // Form state
   const [name, setName] = useState(initialData?.name ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
+  const [notes, setNotes] = useState(initialData?.notes ?? "");
   const [url, setUrl] = useState(initialData?.url ?? "");
   const [servings, setServings] = useState(initialData?.servings ?? 1);
   const [prepMinutes, setPrepMinutes] = useState<number | null>(initialData?.prepMinutes ?? null);
@@ -248,6 +249,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       const recipeData = {
         name: name.trim(),
         description: description.trim() || null,
+        notes: notes.trim() || null,
         url: url.trim() || null,
         image: primaryImage, // Legacy field - first image
         servings,
@@ -320,6 +322,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     fat,
     carbs,
     protein,
+    notes,
   ]);
 
   const handleTimeChange = useCallback(
@@ -605,6 +608,19 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             {t("additionalInfo")}
           </h2>
           <div className="ml-0 space-y-4 md:ml-9">
+            <div>
+              <div className="mb-1.5 flex items-center gap-1">
+                <span className="text-foreground text-sm font-medium">{t("notes")}</span>
+                <SmartInputHelp />
+              </div>
+              <SmartTextInput
+                minRows={2}
+                placeholder={t("notesPlaceholder")}
+                value={notes}
+                onValueChange={setNotes}
+              />
+            </div>
+
             <Input
               classNames={{
                 label: "font-medium text-base",

@@ -224,6 +224,18 @@ export default function RecipePageDesktop() {
             )}
           </div>
 
+          {/* Notes */}
+          {recipe.notes && (
+            <Card className="bg-content1 rounded-2xl shadow-md">
+              <CardHeader className="flex items-center justify-between px-6 pt-6">
+                <h2 className="text-lg font-semibold">{t("notes")}</h2>
+              </CardHeader>
+              <CardBody className="p-6 pt-0">
+                <SmartMarkdownRenderer text={recipe.notes} />
+              </CardBody>
+            </Card>
+          )}
+
           {/* Steps Card (below image in right column) */}
           <Card className="bg-content1 rounded-2xl shadow-md">
             <CardHeader className="flex items-center justify-between px-6 pt-6">

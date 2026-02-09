@@ -144,6 +144,7 @@ export async function normalizeExtractionOutput(
 
   // Set URL if provided
   normalized.url = url ?? null;
+  normalized.notes = typeof output.notes === "string" ? decode(output.notes) : null;
 
   // Combine both measurement systems
   normalized.recipeIngredients = [
