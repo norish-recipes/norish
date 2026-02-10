@@ -83,6 +83,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      dotenv:
+        specifier: 17.2.4
+        version: 17.2.4
       drizzle-orm:
         specifier: 0.45.1
         version: 0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.16.0)(kysely@0.28.9)(pg@8.18.0)
@@ -240,9 +243,6 @@ importers:
       cross-env:
         specifier: 10.1.0
         version: 10.1.0
-      dotenv:
-        specifier: 17.2.4
-        version: 17.2.4
       drizzle-kit:
         specifier: 0.31.8
         version: 0.31.8

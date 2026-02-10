@@ -70,6 +70,8 @@ export const WORKER_CONCURRENCY = {
   [QUEUE_NAMES.ALLERGY_DETECTION]: 2,
 } as const;
 
+export const RECIPE_IMPORT_PROCESSING_TIMEOUT_MS = 30 * 60 * 1000;
+
 export const recipeImportJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {

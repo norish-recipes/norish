@@ -8,8 +8,15 @@
 import type { RecipeImportJobData } from "@/types";
 import type { Job } from "bullmq";
 
-import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
+import {
+  QUEUE_NAMES,
+  RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
+  baseWorkerOptions,
+  WORKER_CONCURRENCY,
+  STALLED_INTERVAL,
+} from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
+import { withTimeout } from "../helpers";
 
 import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
@@ -93,12 +100,17 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
 
   // Parse and create recipe
   const userTokens = await getDecryptedTokensByUserId(userId);
-  const parseResult = await parseRecipeFromUrl(
-    url,
-    recipeId,
-    allergyNames,
-    job.data.forceAI,
-    userTokens.length > 0 ? userTokens : undefined
+  const parseResult = await withTimeout(
+    () =>
+      parseRecipeFromUrl(
+        url,
+        recipeId,
+        allergyNames,
+        job.data.forceAI,
+        userTokens.length > 0 ? userTokens : undefined
+      ),
+    RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
+    "Recipe import parsing"
   );
 
   log.debug({ parseResult }, "Recipe parse result");
@@ -209,7 +221,12 @@ async function handleJobFailed(
 export async function startRecipeImportWorker(): Promise<void> {
   await createLazyWorker<RecipeImportJobData>(
     QUEUE_NAMES.RECIPE_IMPORT,
-    processImportJob,
+    (job) =>
+      withTimeout(
+        () => processImportJob(job),
+        RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
+        "Recipe import job"
+      ),
     {
       connection: getBullClient(),
       ...baseWorkerOptions,

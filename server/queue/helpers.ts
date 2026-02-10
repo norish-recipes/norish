@@ -8,6 +8,7 @@ import type { Queue } from "bullmq";
 import type { PermissionLevel } from "@/server/db/zodSchemas/server-config";
 
 import { normalizeUrl } from "@/lib/helpers";
+import { OperationTimeoutError } from "@/lib/error-extensions";
 
 export function sanitizeUrlForJobId(url: string): string {
   const normalized = normalizeUrl(url);
@@ -55,4 +56,26 @@ export async function isJobInQueue<T>(queue: Queue<T>, jobId: string): Promise<b
   const state = await job.getState();
 
   return state === "waiting" || state === "active" || state === "delayed";
+}
+
+export async function withTimeout<T>(
+  operation: () => Promise<T>,
+  timeoutMs: number,
+  operationName: string
+): Promise<T> {
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new OperationTimeoutError(operationName, timeoutMs));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([operation(), timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
