@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { motion } from "motion/react";
+import React, { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@heroui/react";
 import {
   ChevronUpIcon,
@@ -64,6 +64,9 @@ export function TimerDock() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  // Track whether dock has been expanded before — distinguishes a collapse
+  // transition (needs crossfade) from a fresh appearance (outer container handles fade)
+  const hasExpandedRef = useRef(false);
   const { isDenied: notificationsDenied, isSupported: notificationsSupported } =
     useNotificationPermission();
 
@@ -119,8 +122,17 @@ export function TimerDock() {
     };
   }, [stop]);
 
+  const hasTimers = allActiveOrPaused.length > 0;
+
+  // Reset to collapsed when all timers are removed
+  useEffect(() => {
+    if (!hasTimers) {
+      setIsExpanded(false);
+      hasExpandedRef.current = false;
+    }
+  }, [hasTimers]);
+
   if (!isClient || !timersEnabled) return null;
-  if (allActiveOrPaused.length === 0) return null;
 
   // Sort: completed first (to alert), then active by remaining time
   const sortedTimers = [...allActiveOrPaused].sort((a, b) => {
@@ -141,103 +153,115 @@ export function TimerDock() {
   return (
     <>
       <TimerTicker />
-      <motion.div
-        animate={
-          isMobile
-            ? {
-                bottom: isVisible ? bottomWhenNavVisible : bottomWhenNavHidden,
-              }
-            : {}
-        }
-        className="fixed right-4 z-50 flex flex-col items-end space-y-2"
-        initial={false}
-        style={{
-          bottom: isMobile ? bottomWhenNavVisible : desktopBottom,
-        }}
-        transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-      >
-        {/* Morphing Container */}
-        <motion.div
-          layout
-          className={`overflow-hidden shadow-xl ring-1 ring-black/5 backdrop-blur-sm ${
-            isExpanded
-              ? "bg-content1 w-80 rounded-2xl dark:ring-white/10"
-              : "bg-content1/90 rounded-full dark:ring-white/10"
-          }`}
-          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-        >
-          {isExpanded ? (
+      <AnimatePresence>
+        {hasTimers && (
+          <motion.div
+            animate={
+              isMobile
+                ? {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    bottom: isVisible ? bottomWhenNavVisible : bottomWhenNavHidden,
+                  }
+                : { opacity: 1, y: 0, scale: 1 }
+            }
+            className="fixed right-4 z-50 flex flex-col items-end space-y-2"
+            exit={{ opacity: 0, y: 8, scale: 0.94 }}
+            initial={{ opacity: 0, y: 16 }}
+            style={{
+              bottom: isMobile ? bottomWhenNavVisible : desktopBottom,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            {/* Morphing Container */}
             <motion.div
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              initial={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              layout
+              className={`overflow-hidden shadow-xl ring-1 ring-black/5 backdrop-blur-sm ${
+                isExpanded
+                  ? "bg-content1 w-80 rounded-2xl dark:ring-white/10"
+                  : "bg-content1/90 rounded-full dark:ring-white/10"
+              }`}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             >
-              {/* Header */}
-              <button
-                aria-label="Close timer summary"
-                className="border-default-100 flex w-full cursor-pointer items-center justify-between border-b p-4"
-                type="button"
-                onClick={() => setIsExpanded(false)}
-              >
-                <h3 className="text-foreground text-sm font-semibold">
-                  {timerCount === 1
-                    ? t("timer.label_one")
-                    : t("timer.label_other", { count: timerCount })}
-                </h3>
-                <ChevronDownIcon className="text-default-500 h-4 w-4" />
-              </button>
+              {isExpanded ? (
+                <motion.div
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {/* Header */}
+                  <button
+                    aria-label="Close timer summary"
+                    className="border-default-100 flex w-full cursor-pointer items-center justify-between border-b p-4"
+                    type="button"
+                    onClick={() => setIsExpanded(false)}
+                  >
+                    <h3 className="text-foreground text-sm font-semibold">
+                      {timerCount === 1
+                        ? t("timer.label_one")
+                        : t("timer.label_other", { count: timerCount })}
+                    </h3>
+                    <ChevronDownIcon className="text-default-500 h-4 w-4" />
+                  </button>
 
-              {/* Timer List */}
-              <div className="max-h-96 overflow-y-auto">
-                {sortedTimers.map((timer, index) => (
-                  <TimerRow
-                    key={timer.id}
-                    isLast={index === sortedTimers.length - 1}
-                    router={router}
-                    t={t}
-                    timer={timer}
-                  />
-                ))}
-              </div>
+                  {/* Timer List */}
+                  <div className="max-h-96 overflow-y-auto">
+                    {sortedTimers.map((timer, index) => (
+                      <TimerRow
+                        key={timer.id}
+                        isLast={index === sortedTimers.length - 1}
+                        router={router}
+                        t={t}
+                        timer={timer}
+                      />
+                    ))}
+                  </div>
 
-              {/* Notifications disabled hint */}
-              {notificationsSupported && notificationsDenied && (
-                <div className="border-default-200 text-default-500 border-t px-4 py-2 text-xs">
-                  {t("timer.notifications_disabled_hint")}
-                </div>
+                  {/* Notifications disabled hint */}
+                  {notificationsSupported && notificationsDenied && (
+                    <div className="border-default-200 text-default-500 border-t px-4 py-2 text-xs">
+                      {t("timer.notifications_disabled_hint")}
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.button
+                  animate={{ opacity: 1 }}
+                  className={`group text-foreground flex items-center gap-3 px-4 py-3 transition-all hover:shadow-xl`}
+                  initial={hasExpandedRef.current ? { opacity: 0 } : false}
+                  transition={
+                    hasExpandedRef.current ? { duration: 0.1, delay: 0.12 } : { duration: 0 }
+                  }
+                  type="button"
+                  onClick={() => {
+                    hasExpandedRef.current = true;
+                    setIsExpanded(true);
+                  }}
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="mb-1 max-w-[120px] truncate text-xs leading-none font-medium opacity-75">
+                      {timerCount === 1
+                        ? topTimer.label
+                        : t("timer.label_other", { count: timerCount })}
+                    </span>
+                    <span
+                      className={`font-mono text-lg leading-none font-bold tabular-nums ${
+                        topTimer.status === "completed" ? "text-danger" : ""
+                      }`}
+                    >
+                      {formatTimerMs(topTimer.remainingMs)}
+                    </span>
+                  </div>
+
+                  <ChevronUpIcon className="h-4 w-4 opacity-50 transition-opacity group-hover:opacity-100" />
+                </motion.button>
               )}
             </motion.div>
-          ) : (
-            <motion.button
-              animate={{ opacity: 1 }}
-              className={`group text-foreground flex items-center gap-3 px-4 py-3 transition-all hover:shadow-xl`}
-              exit={{ opacity: 0 }}
-              initial={{ opacity: 0 }}
-              transition={{ duration: 0.15, delay: 0.2 }}
-              type="button"
-              onClick={() => setIsExpanded(true)}
-            >
-              <div className="flex flex-col items-start">
-                <span className="mb-1 max-w-[120px] truncate text-xs leading-none font-medium opacity-75">
-                  {timerCount === 1
-                    ? topTimer.label
-                    : t("timer.label_other", { count: timerCount })}
-                </span>
-                <span
-                  className={`font-mono text-lg leading-none font-bold tabular-nums ${
-                    topTimer.status === "completed" ? "text-danger" : ""
-                  }`}
-                >
-                  {formatTimerMs(topTimer.remainingMs)}
-                </span>
-              </div>
-
-              <ChevronUpIcon className="h-4 w-4 opacity-50 transition-opacity group-hover:opacity-100" />
-            </motion.button>
-          )}
-        </motion.div>
-      </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
