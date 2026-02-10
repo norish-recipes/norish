@@ -9,6 +9,7 @@ export default defineConfig({
   treeshake: true,
   minify: true,
   platform: "node",
+  skipNodeModulesBundle: true,
 
   // Externalize packages that cannot be bundled
   external: [
@@ -37,31 +38,5 @@ export default defineConfig({
     "playwright-core",
     "playwright-extra",
     "puppeteer-extra-plugin-stealth",
-  ],
-
-  // Bundle everything else
-  noExternal: [
-    // Auth
-    "better-auth",
-    "jose",
-
-    // Web scraping/parsing
-    "cheerio",
-    "@mozilla/readability",
-    "microdata-node",
-
-    // File handling
-    "jszip",
-
-    // AI
-    "openai",
-
-    // Utilities
-    "uuid",
-    "mime",
-    "array-flatten",
-    "parse-ingredient",
-    "jsonrepair",
-    "ws",
   ],
 });
