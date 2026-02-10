@@ -12,7 +12,10 @@ export const recipeExtractionSchema = z
     "@type": z.literal("Recipe").describe("Schema.org type"),
     name: z.string().describe("Recipe name/title"),
     description: z.string().nullable().describe("Brief recipe description"),
-    notes: z.string().nullable().describe("Additional recipe notes only when recipe content explicitly includes them"),
+    notes: z
+      .string()
+      .nullable()
+      .describe("Additional recipe notes only when recipe content explicitly includes them"),
     recipeYield: z
       .union([z.string(), z.number(), z.null()])
       .describe("Number of servings or yield description"),

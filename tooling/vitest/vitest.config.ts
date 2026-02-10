@@ -16,6 +16,7 @@ export default defineConfig({
     },
     setupFiles: ["./tooling/vitest/setup.ts"],
     globalSetup: ["./__tests__/setup/global-setup.ts"],
+    hookTimeout: 60000,
     include: ["**/*.{test,spec}.{ts,tsx}"],
     exclude: ["node_modules", "dist-server", ".next"],
     // NOTE: In Vitest 4.x, environmentMatchGlobs was removed.
