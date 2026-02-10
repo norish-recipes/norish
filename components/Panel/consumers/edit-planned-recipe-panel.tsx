@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, DatePicker, Select, SelectItem, Image } from "@heroui/react";
+import { Button, DatePicker, Select, SelectItem } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { Panel, PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
+import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { Slot } from "@/types";
 
@@ -75,20 +76,7 @@ export function EditPlannedRecipePanel({
           href={`/recipes/${recipeId}`}
           onClick={() => onOpenChange(false)}
         >
-          {recipeImage ? (
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg">
-              <Image
-                removeWrapper
-                alt={recipeName}
-                className="h-full w-full object-cover"
-                src={recipeImage}
-              />
-            </div>
-          ) : (
-            <div className="bg-default-100 text-default-400 flex h-14 w-14 shrink-0 items-center justify-center rounded-lg">
-              <span className="text-xs font-medium">{tTimeline("noImage")}</span>
-            </div>
-          )}
+          <PlannedItemThumbnail alt={recipeName} image={recipeImage} itemType="recipe" size="md" />
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="text-foreground truncate text-base font-medium">{recipeName}</span>
             <span className="text-primary flex items-center gap-1 text-sm">

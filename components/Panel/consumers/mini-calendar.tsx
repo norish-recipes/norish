@@ -8,7 +8,6 @@ import {
   DropdownMenu,
   DropdownItem,
   Divider,
-  Image,
 } from "@heroui/react";
 import { useMemo, useRef, useCallback, memo, useEffect, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -18,6 +17,7 @@ import { Slot } from "@/types";
 import { startOfMonth, addMonths, endOfMonth, eachDayOfInterval, dateKey } from "@/lib/helpers";
 import { useRecipeQuery } from "@/hooks/recipes";
 import Panel from "@/components/Panel/Panel";
+import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 import { useCalendarQuery, useCalendarMutations, useCalendarSubscription } from "@/hooks/calendar";
 
 const ESTIMATED_DAY_HEIGHT = 180;
@@ -103,16 +103,12 @@ const DayRow = memo(function DayRow({
                 key={`${dateKeyStr}-${it.slot}-${it.itemType}-${it.recipeName ?? it.title ?? ""}`}
                 className="flex w-full items-start gap-3 py-1"
               >
-                {it.itemType === "recipe" && it.recipeImage && (
-                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md">
-                    <Image
-                      removeWrapper
-                      alt={it.recipeName ?? ""}
-                      className="h-full w-full object-cover"
-                      src={it.recipeImage}
-                    />
-                  </div>
-                )}
+                <PlannedItemThumbnail
+                  alt={it.itemType === "recipe" ? (it.recipeName ?? "") : (it.title ?? "")}
+                  image={it.recipeImage}
+                  itemType={it.itemType as "recipe" | "note"}
+                  size="md"
+                />
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <div className="flex items-center gap-2">
                     <span
