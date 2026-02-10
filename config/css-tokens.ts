@@ -2,6 +2,8 @@
 
 export const cssGlassBackdrop = "dark:bg-black/70 bg-white/70 backdrop-blur-sm";
 
+export const APP_MAIN_HORIZONTAL_PADDING_CLASS = "px-4 md:px-6";
+
 export const cssGlassBackdropChip = "bg-black/45 backdrop-blur-sm";
 
 export const hoverInputIcon =

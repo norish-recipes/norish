@@ -28,6 +28,9 @@ import { dateKey, eachDayOfInterval } from "@/lib/helpers";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
 
+const mobileDragActivationDelayMs = 300;
+const mobileDragTolerancePx = 10;
+
 function startOfDay(date: Date): Date {
   const d = new Date(date);
 
@@ -85,17 +88,22 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   // Container ref for scroll margin calculation
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track window size to recalculate scrollMargin on resize (like recipe grid)
-  const { height: _windowHeight } = useWindowSize();
+  // Track viewport changes to recalculate scroll margin
+  const { height: windowHeight } = useWindowSize();
 
   // Calculate scroll margin from container position
-  const scrollMargin = useMemo(() => {
-    if (typeof window === "undefined" || !containerRef.current) return 0;
-    const rect = containerRef.current.getBoundingClientRect();
+  const [scrollMargin, setScrollMargin] = useState(0);
 
-    return rect.top + window.scrollY;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [_windowHeight]);
+  useEffect(() => {
+    if (windowHeight <= 0 || typeof window === "undefined" || !containerRef.current) {
+      setScrollMargin(0);
+
+      return;
+    }
+
+    const rect = containerRef.current.getBoundingClientRect();
+    setScrollMargin(rect.top + window.scrollY);
+  }, [windowHeight]);
 
   // Window virtualizer (like recipe grid)
   const virtualizer = useWindowVirtualizer({
@@ -209,14 +217,15 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 200,
-      tolerance: 8,
+      delay: mobileDragActivationDelayMs,
+      tolerance: mobileDragTolerancePx,
     },
   });
 
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: {
-      distance: 8,
+      delay: mobileDragActivationDelayMs,
+      tolerance: mobileDragTolerancePx,
     },
   });
 

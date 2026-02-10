@@ -61,7 +61,12 @@ RUN set -eux; cd node_modules/.pnpm; \
     find . -maxdepth 1 -type d -name "@img+sharp-libvips-*" \
       ! -name "*linuxmusl-x64*" \
       ! -name "*linuxmusl-arm64*" \
-      -exec rm -rf {} +;
+      -exec rm -rf {} +; \
+    # Remove tooling-only peer deps and vulnerable esbuild toolchain binaries
+    find . -maxdepth 1 -type d -name "drizzle-kit@*" -exec rm -rf {} +; \
+    find . -maxdepth 1 -type d -name "@esbuild-kit+*" -exec rm -rf {} +; \
+    find . -maxdepth 1 -type d -name "esbuild@*" -exec rm -rf {} +; \
+    find . -maxdepth 1 -type d -name "@esbuild+*" -exec rm -rf {} +;
 
 ##############################
 # Build stage
@@ -89,7 +94,7 @@ FROM base AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/norish-recipes/norish"
 
-ARG YT_DLP_VERSION=2025.11.12
+ARG YT_DLP_VERSION=2026.02.04
 
 # Security: upgrade all packages first, then install runtime deps
 RUN apk upgrade --no-cache && \
