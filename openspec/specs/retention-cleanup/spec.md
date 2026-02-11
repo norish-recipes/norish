@@ -1,8 +1,11 @@
 # retention-cleanup Specification
 
 ## Purpose
+
 TBD - created by archiving change update-cleanup-workflows. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Calendar Retention Window Cleanup
 
 The retention cleanup process SHALL delete old calendar planned items using the configured `SCHEDULER_CLEANUP_MONTHS` value.
@@ -46,4 +49,3 @@ Calendar and grocery retention cleanup runs SHALL provide verifiable execution o
 
 - **WHEN** cleanup completes
 - **THEN** each cleanup function SHALL report the number of rows deleted
-

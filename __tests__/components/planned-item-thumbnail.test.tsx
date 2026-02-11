@@ -7,7 +7,7 @@ vi.mock("next-intl", () => ({
 
 vi.mock("@heroui/react", () => ({
   Image: ({ alt, className, onError, src }: any) => (
-    <img alt={alt} className={className} onError={onError} src={src} />
+    <img alt={alt} className={className} src={src} onError={onError} />
   ),
 }));
 

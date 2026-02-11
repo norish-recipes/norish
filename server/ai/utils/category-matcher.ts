@@ -1,6 +1,7 @@
 import type { RecipeCategory } from "@/types";
 
 import Fuse, { type IFuseOptions } from "fuse.js";
+
 import enRecipes from "@/i18n/messages/en/recipes.json";
 import nlRecipes from "@/i18n/messages/nl/recipes.json";
 import frRecipes from "@/i18n/messages/fr/recipes.json";

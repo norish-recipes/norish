@@ -46,13 +46,22 @@ export default function FallbackImage(props: FallbackImageProps) {
   }
 
   if (props.variant === "hero") {
-    const { variant, fallbackClassName, fallbackMessage, ...imageProps } = props;
+    const {
+      variant: _variant,
+      fallbackClassName: _fallbackClassName,
+      fallbackMessage: _fallbackMessage,
+      ...imageProps
+    } = props;
 
     return <HeroImage {...imageProps} onError={() => setHasError(true)} />;
   }
 
-  const { variant, fallbackClassName, fallbackMessage, ...imageProps } =
-    props as NextFallbackImageProps;
+  const {
+    variant: _variant,
+    fallbackClassName: _fallbackClassName,
+    fallbackMessage: _fallbackMessage,
+    ...imageProps
+  } = props as NextFallbackImageProps;
 
   return <NextImage {...imageProps} onError={() => setHasError(true)} />;
 }

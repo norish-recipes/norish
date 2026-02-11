@@ -1,8 +1,11 @@
 # startup-maintenance Specification
 
 ## Purpose
+
 TBD - created by archiving change update-cleanup-workflows. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: One-Time Startup Cleanup Runner
 
 The server startup flow SHALL execute a one-time maintenance cleanup runner after startup prerequisites and before workers/server listening.
@@ -31,4 +34,3 @@ The system SHALL continue to register daily cleanup jobs in addition to the star
 
 - **WHEN** cleanup jobs and logs refer to recipe upload cleanup
 - **THEN** they SHALL use media-scoped naming rather than image-only naming
-

@@ -313,8 +313,8 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
             </div>
 
             {/* Bottom: Mute, Progress & Time */}
-            <div className="pointer-events-auto absolute right-0 bottom-0 left-0 space-y-2 p-4 pr-16">
-              <div className="flex items-center justify-between px-1 text-xs font-medium text-white/90">
+            <div className="pointer-events-auto absolute right-0 bottom-0 left-0 space-y-2 p-4">
+              <div className="flex items-center justify-between px-1 pr-16 text-xs font-medium text-white/90 sm:pr-1">
                 <div className="flex items-center gap-2">
                   <Button
                     isIconOnly

@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 
 import { createRecipeWithRefs, updateRecipeWithRefs } from "@/server/db/repositories/recipes";
-import { createTestIngredient, getRecipeIngredients } from "@/__tests__/helpers/db-test-helpers";
+import { getRecipeIngredients } from "@/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
 
 describe("Unit Normalization - Create/Edit Recipes", () => {
@@ -162,8 +162,6 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
 
   describe("updateRecipeWithRefs - unit normalization", () => {
     it("should normalize Dutch 'handvol' to canonical 'handful' when updating recipe", async () => {
-      const ingredient = await createTestIngredient({ name: "noten" });
-
       await updateRecipeWithRefs(testRecipeId, testUserId, {
         systemUsed: "metric",
         recipeIngredients: [

@@ -53,7 +53,7 @@ vi.mock("@/hooks/config", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  Button: ({ children, onPress, startContent, ...props }: any) => (
+  Button: ({ children, onPress, startContent: _startContent, ...props }: any) => (
     <button onClick={onPress} {...props}>
       {children}
     </button>
@@ -63,9 +63,15 @@ vi.mock("@heroui/react", () => ({
       {children}
     </button>
   ),
-  Input: ({ value, onChange, isClearable, startContent, onClear, classNames, ...props }: any) => (
-    <input value={value} onChange={onChange} {...props} />
-  ),
+  Input: ({
+    value,
+    onChange,
+    isClearable: _isClearable,
+    startContent: _startContent,
+    onClear: _onClear,
+    classNames: _classNames,
+    ...props
+  }: any) => <input value={value} onChange={onChange} {...props} />,
 }));
 
 import FiltersPanel from "@/components/Panel/consumers/filters-panel";

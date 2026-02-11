@@ -1,8 +1,11 @@
 # recipe-media-cleanup Specification
 
 ## Purpose
+
 TBD - created by archiving change update-cleanup-workflows. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Recipe Directory Ownership Cleanup
 
 The cleanup process SHALL treat each directory directly under `uploads/recipes/` as recipe-scoped storage and SHALL delete the directory when its name is not present in `recipes.id`.
@@ -55,4 +58,3 @@ The cleanup process SHALL reconcile step image files in `uploads/recipes/{recipe
 
 - **WHEN** a file in `uploads/recipes/{recipeId}/steps/` is referenced in `step_images.image`
 - **THEN** the system SHALL keep that file
-

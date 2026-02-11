@@ -106,7 +106,6 @@ describe("planned items repository", () => {
       const input = { userId: "user-1", date, slot, itemType: "note", title: "Note" };
       const returning = vi.fn().mockResolvedValue([{ id: "new-item" }]);
       const values = vi.fn().mockReturnValue({ returning });
-      const insert = vi.fn().mockReturnValue({ values });
 
       dbMock.select.mockReturnValue({
         from: vi.fn().mockReturnValue({
@@ -125,7 +124,6 @@ describe("planned items repository", () => {
       const input = { userId: "user-1", date, slot, itemType: "note", title: "Note" };
       const returning = vi.fn().mockResolvedValue([{ id: "new-item" }]);
       const values = vi.fn().mockReturnValue({ returning });
-      const insert = vi.fn().mockReturnValue({ values });
 
       dbMock.select.mockReturnValue({
         from: vi.fn().mockReturnValue({
@@ -172,10 +170,6 @@ describe("planned items repository", () => {
     it("removes item and reindexes remaining items", async () => {
       const deleteWhere = vi.fn().mockResolvedValue(undefined);
       const deleteFn = vi.fn().mockReturnValue({ where: deleteWhere });
-      const returning = vi.fn().mockResolvedValue([
-        { id: "a", sortOrder: 0 },
-        { id: "b", sortOrder: 1 },
-      ]);
       const updateWhere = vi
         .fn()
         .mockReturnValueOnce({ returning: vi.fn().mockResolvedValue([{ id: "a", sortOrder: 0 }]) })

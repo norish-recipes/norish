@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@heroui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { AnimatePresence, motion } from "motion/react";
@@ -94,6 +94,7 @@ export default function MediaCarousel({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const { handleImageError, hasError } = useImageErrors();
+  const lightboxOpenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Touch handling state
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -119,6 +120,19 @@ export default function MediaCarousel({
         alt: `Recipe media ${item.id || ""}`,
       }));
   }, [sortedItems]);
+
+  const clearPendingLightboxOpen = useCallback(() => {
+    if (lightboxOpenTimeoutRef.current) {
+      clearTimeout(lightboxOpenTimeoutRef.current);
+      lightboxOpenTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearPendingLightboxOpen();
+    };
+  }, [clearPendingLightboxOpen]);
 
   const handleNext = useCallback(() => {
     setDirection(1);
@@ -154,19 +168,35 @@ export default function MediaCarousel({
     }
   };
 
-  const handleItemClick = (item: MediaItem) => {
-    if (item.type === "image") {
-      // Find the index of this image in the lightboxImages array
-      // We need to match by src (or id if available, but src is reliable here)
+  const openLightboxForItem = useCallback(
+    (item: MediaItem, itemIndex: number) => {
       const imgIndex = lightboxImages.findIndex((img) => img.src === item.src);
 
       if (imgIndex !== -1) {
         setLightboxIndex(imgIndex);
         setLightboxOpen(true);
       }
-      onImageClick?.(currentIndex);
+      onImageClick?.(itemIndex);
+    },
+    [lightboxImages, onImageClick]
+  );
+
+  const handleItemClick = (item: MediaItem, itemIndex: number, clickDetail: number) => {
+    if (item.type !== "image") {
+      return;
     }
-    // Videos handle their own clicks/taps via VideoPlayer controls
+
+    if (clickDetail > 1 || lightboxOpenTimeoutRef.current) {
+      clearPendingLightboxOpen();
+
+      return;
+    }
+
+    clearPendingLightboxOpen();
+    lightboxOpenTimeoutRef.current = setTimeout(() => {
+      openLightboxForItem(item, itemIndex);
+      lightboxOpenTimeoutRef.current = null;
+    }, 250);
   };
 
   const aspectRatioClass = {
@@ -226,11 +256,11 @@ export default function MediaCarousel({
               className="group relative h-full w-full cursor-pointer"
               role="button"
               tabIndex={0}
-              onClick={() => handleItemClick(item)}
+              onClick={(e) => handleItemClick(item, 0, e.detail)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  handleItemClick(item);
+                  openLightboxForItem(item, 0);
                 }
               }}
             >
@@ -292,11 +322,11 @@ export default function MediaCarousel({
                 className="relative h-full w-full cursor-pointer"
                 role="button"
                 tabIndex={0}
-                onClick={() => handleItemClick(sortedItems[currentIndex])}
+                onClick={(e) => handleItemClick(sortedItems[currentIndex], currentIndex, e.detail)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    handleItemClick(sortedItems[currentIndex]);
+                    openLightboxForItem(sortedItems[currentIndex], currentIndex);
                   }
                 }}
               >

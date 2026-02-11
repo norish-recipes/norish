@@ -7,19 +7,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Playwright mocks – declared via vi.hoisted() so they are available inside
 // the hoisted vi.mock() factory functions.
 // ---------------------------------------------------------------------------
-const {
-  mockAddCookies,
-  mockNewPage,
-  mockGoto,
-  mockContent,
-  mockTitle,
-  mockLocator,
-  mockWaitForLoadState,
-  mockWaitForFunction,
-  mockClose,
-  mockNewContext,
-  mockGetBrowser,
-} = vi.hoisted(() => {
+const { mockAddCookies, mockNewContext, mockGetBrowser } = vi.hoisted(() => {
   const mockAddCookies = vi.fn();
   const mockGoto = vi.fn().mockResolvedValue(undefined);
   const mockContent = vi.fn().mockResolvedValue("<html>test</html>");
@@ -52,14 +40,6 @@ const {
 
   return {
     mockAddCookies,
-    mockNewPage,
-    mockGoto,
-    mockContent,
-    mockTitle,
-    mockLocator,
-    mockWaitForLoadState,
-    mockWaitForFunction,
-    mockClose,
     mockNewContext,
     mockGetBrowser,
   };

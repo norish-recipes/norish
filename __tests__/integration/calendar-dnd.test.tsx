@@ -22,8 +22,6 @@ type PlannedItemFromQuery = {
   updatedAt: Date;
 };
 
-type CalendarItemsState = Record<string, string[]>;
-
 const mockMoveItemMutate = vi.fn();
 
 vi.mock("@/app/providers/trpc-provider", () => ({

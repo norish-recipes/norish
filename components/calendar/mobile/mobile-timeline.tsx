@@ -15,7 +15,7 @@ import {
   rectIntersection,
 } from "@dnd-kit/core";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWindowSize } from "usehooks-ts";
 
@@ -49,7 +49,6 @@ type MobileTimelineProps = {
 
 export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: MobileTimelineProps) {
   const locale = useLocale();
-  const tSlots = useTranslations("common.slots");
 
   // Use calendar context (like recipe grid uses recipes context)
   const {
@@ -102,6 +101,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     }
 
     const rect = containerRef.current.getBoundingClientRect();
+
     setScrollMargin(rect.top + window.scrollY);
   }, [windowHeight]);
 
@@ -230,16 +230,6 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   });
 
   const sensors = useSensors(touchSensor, pointerSensor);
-
-  const slotLabels: Record<Slot, string> = useMemo(
-    () => ({
-      Breakfast: tSlots("breakfast"),
-      Lunch: tSlots("lunch"),
-      Dinner: tSlots("dinner"),
-      Snack: tSlots("snack"),
-    }),
-    [tSlots]
-  );
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {

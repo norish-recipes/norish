@@ -271,7 +271,7 @@ export async function verifyDatabaseConnection() {
     await db.execute(sql`SELECT 1`);
 
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

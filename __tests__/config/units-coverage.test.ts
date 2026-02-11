@@ -108,7 +108,6 @@ describe("Units Configuration Coverage", () => {
 
   describe("Coverage report", () => {
     it("reports total unit count", () => {
-      console.log(`Total units in configuration: ${unitKeys.length}`);
       expect(unitKeys.length).toBeGreaterThan(0);
     });
 
@@ -120,7 +119,6 @@ describe("Units Configuration Coverage", () => {
           locales.add(entry.locale);
         }
       }
-      console.log(`Supported locales: ${Array.from(locales).sort().join(", ")}`);
       expect(locales.size).toBeGreaterThan(0);
     });
 
@@ -131,9 +129,6 @@ describe("Units Configuration Coverage", () => {
       );
       const coverage = (germanUnits.length / totalUnits) * 100;
 
-      console.log(
-        `German locale coverage: ${coverage.toFixed(1)}% (${germanUnits.length}/${totalUnits} units)`
-      );
       expect(coverage).toBe(100);
     });
   });

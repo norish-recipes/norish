@@ -351,8 +351,8 @@ pnpm run dev
 | `pnpm run test`          | Run tests in watch mode                                   |
 | `pnpm run test:run`      | Run tests once                                            |
 | `pnpm run test:coverage` | Run tests with coverage report                            |
-| `pnpm run lint`          | Lint TypeScript files                                     |
-| `pnpm run lint:fix`      | Lint and auto-fix issues                                  |
+| `pnpm run lint`          | Lint and auto-fix issues                                  |
+| `pnpm run lint:check`    | Lint TypeScript files                                     |
 | `pnpm run format`        | Format files with Prettier                                |
 | `pnpm run format:check`  | Check formatting without changing files                   |
 

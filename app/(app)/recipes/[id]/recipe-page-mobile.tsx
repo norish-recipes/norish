@@ -30,6 +30,7 @@ import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carous
 import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import { NutritionSection } from "@/components/recipes/nutrition-card";
+import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/app/(app)/recipes/[id]/recipe-layout-constants";
 
 export default function RecipePageMobile() {
   const {
@@ -59,7 +60,7 @@ export default function RecipePageMobile() {
       {/* Hero Image/Video Carousel */}
       <div
         className="relative w-full overflow-hidden"
-        style={{ height: "calc(22rem + env(safe-area-inset-top))" }}
+        style={{ height: MOBILE_RECIPE_MEDIA_HEIGHT_STYLE }}
       >
         <DoubleTapContainer className="h-full w-full" onDoubleTap={handleToggleFavorite}>
           <MediaCarousel

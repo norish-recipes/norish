@@ -18,25 +18,6 @@ const { Client } = pg;
 let _container: StartedPostgreSqlContainer | null = null;
 
 /**
- * Parse DATABASE_URL and extract connection details
- */
-function parseDatabaseUrl(url: string) {
-  const match = url.match(/postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
-
-  if (!match) {
-    throw new Error(`Invalid DATABASE_URL format: ${url}`);
-  }
-
-  return {
-    user: match[1],
-    password: match[2],
-    host: match[3],
-    port: parseInt(match[4], 10),
-    database: match[5],
-  };
-}
-
-/**
  * Get or create PostgreSQL connection details
  * Always uses testcontainers to spin up PostgreSQL in Docker
  */

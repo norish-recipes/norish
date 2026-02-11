@@ -17,11 +17,9 @@ import path from "path";
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
+import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
 import { getConfig, setConfig, deleteConfig } from "@/server/db/repositories/server-config";
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
-import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
-
-// Import the actual seeding function
 import { seedDefaultTimerKeywords } from "@/server/startup/seed-config";
 
 describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
