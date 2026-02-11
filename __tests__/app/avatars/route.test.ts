@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const readFileMock = vi.hoisted(() => vi.fn());
