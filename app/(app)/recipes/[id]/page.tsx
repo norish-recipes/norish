@@ -42,7 +42,10 @@ function RecipePageContent() {
       </div>
 
       {/* Mobile layout - full width, smooth fade in */}
-      <div key={recipe?.id} className="fade-in -mx-6 -mt-10 flex w-screen flex-col md:hidden">
+      <div
+        key={recipe?.id}
+        className="fade-in -mx-4 -mt-10 flex w-[calc(100%+2rem)] flex-col md:hidden"
+      >
         <RecipePageMobile />
       </div>
     </>
