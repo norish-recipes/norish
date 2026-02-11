@@ -29,6 +29,9 @@ function showTimerNotification(timer: { label: string; recipeName?: string }) {
           body: "Timer complete!",
           icon: "/android-chrome-192x192.png",
           tag: "timer-complete",
+          renotify: true,
+          requireInteraction: true,
+          vibrate: [200, 100, 200],
         } as NotificationOptions);
       })
       .catch((err) => {

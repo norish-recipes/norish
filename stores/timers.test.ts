@@ -161,6 +161,49 @@ describe("useTimerStore", () => {
     expect(timers[0].remainingMs).toBe(0);
     expect(timers[0].status).toBe("completed");
   });
+
+  it("uses high-attention notification options when timer completes in background", async () => {
+    const showNotification = vi.fn();
+
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      get: () => true,
+    });
+
+    Object.defineProperty(globalThis, "Notification", {
+      configurable: true,
+      value: { permission: "granted" },
+    });
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        ready: Promise.resolve({ showNotification }),
+      },
+    });
+
+    const { addTimer, startTimer, tick } = useTimerStore.getState();
+
+    addTimer("test-1", "recipe-1", "Test Timer", 1000);
+    startTimer("test-1");
+
+    vi.setSystemTime(Date.now() + 2000);
+    tick();
+
+    await Promise.resolve();
+
+    expect(showNotification).toHaveBeenCalledWith(
+      "Test Timer",
+      expect.objectContaining({
+        body: "Timer complete!",
+        tag: "timer-complete",
+        renotify: true,
+        requireInteraction: true,
+        vibrate: [200, 100, 200],
+      })
+    );
+  });
+
   it("adjusts timer duration", () => {
     const { addTimer, adjustTimer } = useTimerStore.getState();
 
