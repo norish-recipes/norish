@@ -33,9 +33,9 @@ export async function initializeScheduledJobs(queue: Queue<ScheduledTaskJobData>
   );
 
   await queue.add(
-    "image-cleanup",
-    { taskType: "image-cleanup" },
-    { repeat: { pattern: cronMidnight }, jobId: "image-cleanup" }
+    "media-cleanup",
+    { taskType: "media-cleanup" },
+    { repeat: { pattern: cronMidnight }, jobId: "media-cleanup" }
   );
 
   await queue.add(

@@ -2,6 +2,7 @@ import { runMigrations } from "./server/startup/migrations";
 import { seedServerConfig } from "./server/startup/seed-config";
 import { migrateGalleryImages } from "./server/startup/migrate-gallery-images";
 import { initializeVideoProcessing } from "./server/startup/video-processing";
+import { runStartupMaintenanceCleanup } from "./server/startup/maintenance-cleanup";
 import { createServer } from "./server/startup/http-server";
 import { registerShutdownHandlers } from "./server/startup/shutdown";
 import { initCaldavSync } from "./server/caldav/event-listener";
@@ -31,6 +32,9 @@ async function main() {
   log.info("-".repeat(50));
 
   await initializeVideoProcessing();
+  log.info("-".repeat(50));
+
+  await runStartupMaintenanceCleanup();
   log.info("-".repeat(50));
 
   initCaldavSync();

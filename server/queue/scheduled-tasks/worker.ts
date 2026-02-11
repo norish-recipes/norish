@@ -11,7 +11,7 @@ import {
   cleanupOrphanedImages,
   cleanupOrphanedAvatars,
   cleanupOrphanedStepImages,
-} from "@/server/startup/image-cleanup";
+} from "@/server/startup/media-cleanup";
 import { cleanupOldCalendarData } from "@/server/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@/server/scheduler/old-groceries-cleanup";
 import { cleanupOldTempFiles } from "@/server/video/cleanup";
@@ -20,7 +20,7 @@ const log = createLogger("worker:scheduled-tasks");
 
 type ScheduledTaskType =
   | "recurring-grocery-check"
-  | "image-cleanup"
+  | "media-cleanup"
   | "calendar-cleanup"
   | "groceries-cleanup"
   | "video-temp-cleanup";
@@ -49,19 +49,19 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
       break;
     }
 
-    case "image-cleanup": {
+    case "media-cleanup": {
       const recipeResult = await cleanupOrphanedImages();
       const avatarResult = await cleanupOrphanedAvatars();
       const stepResult = await cleanupOrphanedStepImages();
 
       log.info(
         {
-          recipesDeleted: recipeResult.deleted,
+          mediaDeleted: recipeResult.deleted,
           avatarsDeleted: avatarResult.deleted,
-          stepDirsDeleted: stepResult.deleted,
+          stepImagesDeleted: stepResult.deleted,
           errors: recipeResult.errors + avatarResult.errors + stepResult.errors,
         },
-        "Image cleanup completed"
+        "Media cleanup completed"
       );
       break;
     }

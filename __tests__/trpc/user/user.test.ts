@@ -10,7 +10,7 @@ vi.mock("@/config/env-config-server", () => ({
     UPLOADS_DIR: "/tmp/uploads",
   },
 }));
-vi.mock("@/server/startup/image-cleanup", () => ({
+vi.mock("@/server/startup/media-cleanup", () => ({
   deleteAvatarByFilename: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("fs/promises", () => ({

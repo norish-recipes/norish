@@ -26,7 +26,7 @@ import {
 } from "@/server/db";
 import { householdEmitter } from "@/server/trpc/routers/households/emitter";
 import { SERVER_CONFIG } from "@/config/env-config-server";
-import { deleteAvatarByFilename } from "@/server/startup/image-cleanup";
+import { deleteAvatarByFilename } from "@/server/startup/media-cleanup";
 import { UpdateUserAllergiesSchema } from "@/server/db/zodSchemas/user-allergies";
 
 /**

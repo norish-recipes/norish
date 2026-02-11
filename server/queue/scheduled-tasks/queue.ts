@@ -13,7 +13,7 @@ import { getBullClient } from "@/server/redis/bullmq";
 
 export type ScheduledTaskType =
   | "recurring-grocery-check"
-  | "image-cleanup"
+  | "media-cleanup"
   | "calendar-cleanup"
   | "groceries-cleanup"
   | "video-temp-cleanup";
