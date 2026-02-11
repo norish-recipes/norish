@@ -4,10 +4,21 @@ import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button, Avatar } from "@heroui/react";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 import { TrashIcon } from "@heroicons/react/16/solid";
+import { PencilIcon } from "@heroicons/react/20/solid";
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
+
+function withQueryParams(url: string, params: Record<string, string | number>) {
+  const [path, hash = ""] = url.split("#");
+  const separator = path.includes("?") ? "&" : "?";
+  const query = Object.entries(params)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .join("&");
+
+  return `${path}${separator}${query}${hash ? `#${hash}` : ""}`;
+}
 
 export default function ProfileCard() {
   const t = useTranslations("settings.user.profile");
@@ -15,6 +26,8 @@ export default function ProfileCard() {
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(() => Date.now());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update name when user data loads
@@ -24,10 +37,32 @@ export default function ProfileCard() {
     }
   }, [user?.name]);
 
+  useEffect(() => {
+    if (user) {
+      setAvatarRefreshKey(Date.now());
+    }
+  }, [user]);
+
   const handleSaveProfile = async () => {
+    const hasNameChanges = name !== user?.name;
+    const hasImageChanges = pendingImageFile !== null;
+
+    if (!hasNameChanges && !hasImageChanges) {
+      return;
+    }
+
     setSaving(true);
+
     try {
-      await updateName(name);
+      if (hasNameChanges) {
+        await updateName(name);
+      }
+
+      if (pendingImageFile) {
+        await updateImage(pendingImageFile);
+        setImagePreview(null);
+        setPendingImageFile(null);
+      }
     } finally {
       setSaving(false);
     }
@@ -58,17 +93,16 @@ export default function ProfileCard() {
     };
     reader.readAsDataURL(file);
 
-    // Upload file
-    await updateImage(file).catch(() => {
-      setImagePreview(null);
-    });
+    setPendingImageFile(file);
   };
 
   const handleDeleteImage = async () => {
     setImagePreview(null);
+    setPendingImageFile(null);
     await deleteImage();
   };
 
+  const hasPendingChanges = name !== user?.name || pendingImageFile !== null;
   const hasImage = imagePreview || user?.image;
 
   return (
@@ -86,7 +120,11 @@ export default function ProfileCard() {
               isBordered
               className="h-24 w-24 cursor-pointer text-2xl transition-opacity hover:opacity-80"
               name={user?.name?.[0]?.toUpperCase() || "U"}
-              src={imagePreview || user?.image || undefined}
+              src={
+                imagePreview || !user?.image
+                  ? imagePreview || undefined
+                  : withQueryParams(user.image, { v: avatarRefreshKey })
+              }
               onClick={() => fileInputRef.current?.click()}
             />
             <input
@@ -100,17 +138,29 @@ export default function ProfileCard() {
               <Button
                 isIconOnly
                 aria-label={t("deleteAvatar")}
-                className="absolute -right-1 -bottom-1 h-7 w-7 min-w-0"
+                className="absolute -bottom-1 -left-1 h-7 w-7 min-w-0"
                 color="danger"
                 isLoading={isDeletingAvatar}
                 radius="full"
                 size="sm"
-                variant="flat"
+                variant="solid"
                 onPress={handleDeleteImage}
               >
                 <TrashIcon className="h-3.5 w-3.5" />
               </Button>
             )}
+            <Button
+              isIconOnly
+              aria-label={t("avatarHint")}
+              className="absolute -right-1 -bottom-1 h-7 w-7 min-w-0"
+              color="primary"
+              radius="full"
+              size="sm"
+              variant="solid"
+              onPress={() => fileInputRef.current?.click()}
+            >
+              <PencilIcon className="h-3.5 w-3.5" />
+            </Button>
           </div>
           <div className="flex flex-1 flex-col gap-2">
             <Input
@@ -126,7 +176,7 @@ export default function ProfileCard() {
         <div className="flex justify-end">
           <Button
             color="primary"
-            isDisabled={name === user?.name}
+            isDisabled={!hasPendingChanges}
             isLoading={saving}
             onPress={handleSaveProfile}
           >

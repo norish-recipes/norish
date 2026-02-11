@@ -17,7 +17,7 @@ type UserSettingsContextType = {
   isLoading: boolean;
 
   // Actions
-  updateName: (name: string) => void;
+  updateName: (name: string) => Promise<void>;
   updateImage: (file: File) => Promise<void>;
   deleteImage: () => Promise<void>;
   generateApiKey: (name?: string) => Promise<{ key: string; metadata: ApiKeyMetadataDto }>;
@@ -42,7 +42,7 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
   const { setUser } = useUserContext();
 
   const updateName = useCallback(
-    (name: string) => {
+    async (name: string) => {
       if (!name.trim()) {
         addToast({
           title: "Name cannot be empty",
@@ -54,30 +54,29 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      mutations
-        .updateName(name)
-        .then((result) => {
-          if (result.success && result.user) {
-            setUser(result.user);
-          } else if (result.error) {
-            addToast({
-              title: "Failed to update profile",
-              description: result.error,
-              color: "danger",
-              shouldShowTimeoutProgress: true,
-              radius: "full",
-            });
-          }
-        })
-        .catch((error) => {
+      try {
+        const result = await mutations.updateName(name);
+
+        if (result.success && result.user) {
+          setUser(result.user);
+        } else if (result.error) {
           addToast({
             title: "Failed to update profile",
-            description: (error as Error).message,
+            description: result.error,
             color: "danger",
             shouldShowTimeoutProgress: true,
             radius: "full",
           });
+        }
+      } catch (error) {
+        addToast({
+          title: "Failed to update profile",
+          description: (error as Error).message,
+          color: "danger",
+          shouldShowTimeoutProgress: true,
+          radius: "full",
         });
+      }
     },
     [mutations, setUser]
   );

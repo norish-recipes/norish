@@ -49,7 +49,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     return new Response(new Uint8Array(file), {
       headers: {
         "Content-Type": type,
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "no-store",
       },
     });
   } catch (_error) {
