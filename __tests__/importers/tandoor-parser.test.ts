@@ -73,6 +73,60 @@ describe("Tandoor Parser", () => {
       expect(result.steps).toEqual([]);
     });
 
+    it("accepts nullable fields from Tandoor exports", () => {
+      const recipe = {
+        name: "Nullable Recipe",
+        description: null,
+        keywords: null,
+        steps: [
+          {
+            name: null,
+            instruction: "Mix everything",
+            ingredients: [
+              {
+                food: {
+                  name: "milk",
+                  plural_name: null,
+                  ignore_shopping: null,
+                  supermarket_category: null,
+                },
+                unit: {
+                  name: "ml",
+                  plural_name: null,
+                  description: null,
+                },
+                amount: null,
+                note: null,
+                order: null,
+                is_header: null,
+                no_amount: null,
+                always_use_plural_unit: null,
+                always_use_plural_food: null,
+              },
+            ],
+            time: null,
+            order: null,
+            show_as_header: null,
+            show_ingredients_table: null,
+          },
+        ],
+        working_time: null,
+        waiting_time: null,
+        internal: null,
+        nutrition: null,
+        servings: null,
+        servings_text: null,
+        source_url: null,
+      } as any;
+
+      const result = TandoorRecipeSchema.parse(recipe);
+
+      expect(result.keywords).toEqual([]);
+      expect(result.steps).toHaveLength(1);
+      expect(result.steps[0].ingredients[0].note).toBeNull();
+      expect(result.servings_text).toBeNull();
+    });
+
     it("throws on missing name", () => {
       expect(() => TandoorRecipeSchema.parse({})).toThrow();
     });
@@ -102,7 +156,7 @@ describe("Tandoor Parser", () => {
 
       const parsed = TandoorRecipeSchema.parse(recipe);
 
-      expect(parsed.steps?.[0].ingredients?.[0].food.supermarket_category).toBe("Baking");
+      expect(parsed.steps?.[0].ingredients?.[0].food?.supermarket_category).toBe("Baking");
     });
   });
 
@@ -194,6 +248,22 @@ describe("Tandoor Parser", () => {
       expect(dto.steps![1].step).toContain("rode peper");
     });
 
+    it("prepends step name to instruction in bold", async () => {
+      mockRecipe.steps = [
+        {
+          name: "Step Note",
+          instruction: "Do the thing",
+          ingredients: [],
+          order: 0,
+        },
+      ];
+
+      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+
+      expect(dto.steps).toHaveLength(1);
+      expect(dto.steps![0].step).toBe("**Step Note** Do the thing");
+    });
+
     it("extracts tags from keywords", async () => {
       const dto = await parseTandoorRecipeToDTO(mockRecipe);
 
@@ -201,6 +271,36 @@ describe("Tandoor Parser", () => {
       expect(dto.tags![0].name).toBe("hoofdgerecht");
       expect(dto.tags![1].name).toBe("roerbakken/wokken");
       expect(dto.tags![2].name).toBe("snel");
+    });
+
+    it("derives categories from keyword tags", async () => {
+      mockRecipe.keywords = [
+        { name: "breakfast", description: "" },
+        { name: "diner", description: "" },
+        { name: "snack", description: "" },
+      ];
+
+      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+
+      expect(dto.categories).toContain("Breakfast");
+      expect(dto.categories).toContain("Dinner");
+      expect(dto.categories).toContain("Snack");
+    });
+
+    it("derives categories from localized keyword tags", async () => {
+      mockRecipe.keywords = [
+        { name: "Ontbijt", description: "" },
+        { name: "dejeuner", description: "" },
+        { name: "Abendessen", description: "" },
+        { name: "Collation", description: "" },
+      ];
+
+      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+
+      expect(dto.categories).toContain("Breakfast");
+      expect(dto.categories).toContain("Lunch");
+      expect(dto.categories).toContain("Dinner");
+      expect(dto.categories).toContain("Snack");
     });
 
     it("calculates total time from working_time + waiting_time", async () => {

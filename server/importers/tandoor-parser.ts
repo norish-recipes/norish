@@ -4,15 +4,19 @@ import JSZip from "jszip";
 import { z } from "zod";
 
 import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
+import { matchCategory } from "@/server/ai/utils/category-matcher";
 import { saveImageBytes } from "@/server/downloader";
 import { FullRecipeInsertDTO } from "@/types";
 import { FullRecipeInsertSchema } from "@/server/db";
 
 // Zod schemas for Tandoor recipe structure
 const TandoorFoodSchema = z.object({
-  name: z.string(),
+  name: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? ""),
   plural_name: z.string().nullable().optional(),
-  ignore_shopping: z.boolean().optional(),
+  ignore_shopping: z.boolean().nullish(),
   // Tandoor exports may use either a string or an object for supermarket_category
   supermarket_category: z
     .union([
@@ -35,51 +39,69 @@ const TandoorFoodSchema = z.object({
 });
 
 const TandoorUnitSchema = z.object({
-  name: z.string(),
+  name: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? ""),
   plural_name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
 });
 
 const TandoorIngredientSchema = z.object({
-  food: TandoorFoodSchema,
-  unit: TandoorUnitSchema.nullable(),
-  amount: z.number().nullable(),
-  note: z.string().optional(),
-  order: z.number().optional(),
-  is_header: z.boolean().optional(),
-  no_amount: z.boolean().optional(),
-  always_use_plural_unit: z.boolean().optional(),
-  always_use_plural_food: z.boolean().optional(),
+  food: TandoorFoodSchema.nullish(),
+  unit: TandoorUnitSchema.nullish(),
+  amount: z.number().nullish(),
+  note: z.string().nullish(),
+  order: z.number().nullish(),
+  is_header: z.boolean().nullish(),
+  no_amount: z.boolean().nullish(),
+  always_use_plural_unit: z.boolean().nullish(),
+  always_use_plural_food: z.boolean().nullish(),
 });
 
 const TandoorStepSchema = z.object({
-  name: z.string().optional(),
-  instruction: z.string(),
-  ingredients: z.array(TandoorIngredientSchema).optional().default([]),
-  time: z.number().optional(),
-  order: z.number().optional(),
-  show_as_header: z.boolean().optional(),
-  show_ingredients_table: z.boolean().optional(),
+  name: z.string().nullish(),
+  instruction: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? ""),
+  ingredients: z
+    .array(TandoorIngredientSchema)
+    .nullish()
+    .transform((value) => value ?? []),
+  time: z.number().nullish(),
+  order: z.number().nullish(),
+  show_as_header: z.boolean().nullish(),
+  show_ingredients_table: z.boolean().nullish(),
 });
 
 const TandoorKeywordSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
+  name: z
+    .string()
+    .nullish()
+    .transform((value) => value ?? ""),
+  description: z.string().nullish(),
+  created_at: z.string().nullish(),
+  updated_at: z.string().nullish(),
 });
 
 export const TandoorRecipeSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
-  keywords: z.array(TandoorKeywordSchema).optional().default([]),
-  steps: z.array(TandoorStepSchema).optional().default([]),
+  keywords: z
+    .array(TandoorKeywordSchema)
+    .nullish()
+    .transform((value) => value ?? []),
+  steps: z
+    .array(TandoorStepSchema)
+    .nullish()
+    .transform((value) => value ?? []),
   working_time: z.number().optional().nullable(),
   waiting_time: z.number().optional().nullable(),
-  internal: z.boolean().optional(),
+  internal: z.boolean().nullish(),
   nutrition: z.any().nullable().optional(),
   servings: z.number().optional().nullable(),
-  servings_text: z.string().optional(),
+  servings_text: z.string().nullish(),
   source_url: z.string().optional().nullable(),
 });
 
@@ -126,6 +148,10 @@ export async function parseTandoorRecipeToDTO(
       // Skip header ingredients (they're just visual separators)
       if (ingredient.is_header) continue;
 
+      const ingredientName = ingredient.food?.name?.trim();
+
+      if (!ingredientName) continue;
+
       allIngredients.push({
         ...ingredient,
         globalOrder: globalOrder++,
@@ -138,7 +164,7 @@ export async function parseTandoorRecipeToDTO(
     quantity2: null,
     unitOfMeasure: ing.unit?.name || "",
     unitOfMeasureID: ing.unit?.name || "",
-    description: ing.food.name,
+    description: ing.food?.name || "",
     isGroupHeader: false,
   })) as any;
 
@@ -147,18 +173,27 @@ export async function parseTandoorRecipeToDTO(
   // Map ingredients to our schema
   const recipeIngredients = allIngredients.map((ing) => ({
     ingredientId: null,
-    ingredientName: ing.food.name,
+    ingredientName: ing.food?.name?.trim() || "",
     amount: ing.amount,
     unit: ing.unit?.name || null,
     systemUsed: systemUsed,
     order: ing.globalOrder,
   }));
 
+  const formatStepText = (step: TandoorStep): string => {
+    const instruction = step.instruction.trim();
+    const stepNote = step.name?.trim();
+
+    if (!stepNote) return instruction;
+
+    return `**${stepNote}** ${instruction}`;
+  };
+
   const steps = (validated.steps || [])
     .filter((step) => step.instruction && step.instruction.trim())
     .sort((a, b) => (a.order || 0) - (b.order || 0))
     .map((step, index) => ({
-      step: step.instruction.trim(),
+      step: formatStepText(step),
       order: index,
       systemUsed: systemUsed,
     }));
@@ -167,6 +202,23 @@ export async function parseTandoorRecipeToDTO(
   const tags = (validated.keywords || [])
     .filter((kw) => kw.name && kw.name.trim())
     .map((kw) => ({ name: kw.name.trim() }));
+
+  const categoryCandidates = tags.flatMap((tag) =>
+    tag.name
+      .split(/[,&/;|]/g)
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0)
+  );
+
+  const categories = Array.from(
+    new Set(
+      categoryCandidates
+        .map((value) => matchCategory(value))
+        .filter((category): category is "Breakfast" | "Lunch" | "Dinner" | "Snack" =>
+          Boolean(category)
+        )
+    )
+  );
 
   // Calculate total time
   const parseTime = (val: number | null | undefined): number | undefined => {
@@ -197,6 +249,7 @@ export async function parseTandoorRecipeToDTO(
     recipeIngredients: recipeIngredients,
     steps: steps,
     tags: tags,
+    categories: categories,
   } as FullRecipeInsertDTO;
 
   // Validate against our schema
