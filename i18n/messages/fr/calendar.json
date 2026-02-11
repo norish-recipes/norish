@@ -36,6 +36,7 @@
     "serving": "portion",
     "servings": "portions",
     "noImage": "Pas d'image",
+    "recipe": "Recette",
     "note": "Note"
   },
   "editPlannedRecipe": {

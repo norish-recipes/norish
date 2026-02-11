@@ -77,7 +77,7 @@ docker ps -a --filter "ancestor=postgres:15-alpine" --filter "status=exited" | w
 
 - All functions use `short` field from units config (abbreviations)
 - No singular/plural logic - consistent abbreviated forms
-- Locale fallback: specific locale → base locale → English → first available
+- Locale fallback: specific locale => base locale => English => first available
 - Functions exclude English from non-English locale checks (as requested)
 
 ### 2.2 Fix Test File
@@ -109,24 +109,24 @@ docker ps -a --filter "ancestor=postgres:15-alpine" --filter "status=exited" | w
 
 **Units requiring German locale:**
 
-- [x] `tablespoon` → German: short="EL", plural="Esslöffel"
-- [x] `teaspoon` → German: short="TL", plural="Teelöffel"
-- [x] `cup` → German: short="Tasse", plural="Tassen" / "Becher"
-- [x] `bag` → German: short="Beutel", plural="Beutel"
-- [x] `bunch` → German: short="Bund", plural="Bünde"
-- [x] `can` → German: short="Dose", plural="Dosen"
-- [x] `dozen` → German: short="Dutzend", plural="Dutzend"
-- [x] `bottle` → German: short="Flasche", plural="Flaschen"
-- [x] `glass` → German: short="Glas", plural="Gläser"
-- [x] `handful` → German: short="Handvoll", plural="Handvoll"
-- [x] `bulb` → German: short="Knolle", plural="Knollen"
-- [x] `head` → German: short="Kopf", plural="Köpfe"
-- [x] `pack` → German: short="Packung", plural="Packungen"
-- [x] `slice` → German: short="Scheibe", plural="Scheiben"
-- [x] `dash` → German: short="Schuss", plural="Schüsse"
-- [x] `splash` → German: short="Spritzer", plural="Spritzer"
-- [x] `drop` → German: short="Tropfen", plural="Tropfen"
-- [x] `cube` → German: short="Würfel", plural="Würfel"
+- [x] `tablespoon` => German: short="EL", plural="Esslöffel"
+- [x] `teaspoon` => German: short="TL", plural="Teelöffel"
+- [x] `cup` => German: short="Tasse", plural="Tassen" / "Becher"
+- [x] `bag` => German: short="Beutel", plural="Beutel"
+- [x] `bunch` => German: short="Bund", plural="Bünde"
+- [x] `can` => German: short="Dose", plural="Dosen"
+- [x] `dozen` => German: short="Dutzend", plural="Dutzend"
+- [x] `bottle` => German: short="Flasche", plural="Flaschen"
+- [x] `glass` => German: short="Glas", plural="Gläser"
+- [x] `handful` => German: short="Handvoll", plural="Handvoll"
+- [x] `bulb` => German: short="Knolle", plural="Knollen"
+- [x] `head` => German: short="Kopf", plural="Köpfe"
+- [x] `pack` => German: short="Packung", plural="Packungen"
+- [x] `slice` => German: short="Scheibe", plural="Scheiben"
+- [x] `dash` => German: short="Schuss", plural="Schüsse"
+- [x] `splash` => German: short="Spritzer", plural="Spritzer"
+- [x] `drop` => German: short="Tropfen", plural="Tropfen"
+- [x] `cube` => German: short="Würfel", plural="Würfel"
 
 ### 3.2 Add German Locale Entries (45 min)
 
@@ -229,16 +229,16 @@ describe("Units Configuration Coverage", () => {
 **Tests expecting wrong values (lower bound instead of max):**
 
 - [x] Open `lib/timer-parser.test.ts`
-- [x] Line 28: Change `expect(matches[0].durationSeconds).toBe(5 * 60)` → `toBe(10 * 60)`
+- [x] Line 28: Change `expect(matches[0].durationSeconds).toBe(5 * 60)` => `toBe(10 * 60)`
 - [x] Line 29: Update `originalText` expectation if needed
-- [x] Line 35: Change `expect(matches[0].durationSeconds).toBe(5 * 60)` → `toBe(10 * 60)`
+- [x] Line 35: Change `expect(matches[0].durationSeconds).toBe(5 * 60)` => `toBe(10 * 60)`
 - [x] Line 36: Update `originalText` expectation if needed
 
 **Comment to add:**
 
 ```typescript
 // Strategy: Use maximum value from ranges for safer cooking times
-// "5-10 minutes" → 10 minutes (upper bound)
+// "5-10 minutes" => 10 minutes (upper bound)
 ```
 
 ### 4.2 Delete "more minutes" Test (2 min)
@@ -280,18 +280,18 @@ const priorNumberPattern = /(\d+(?:\.\d+)?)\s*[^\s,]*\s*$/;
 
 **Examples:**
 
-- `"1:30 hours"` → 1 hour 30 minutes (90 minutes)
-- `"1:30 minutes"` → 1 minute 30 seconds (90 seconds)
-- `"1:30"` (no unit) → 1 hour 30 minutes (90 minutes) **[DEFAULT]**
-- `"10:30"` (no unit) → 10 hours 30 minutes (630 minutes) **[DEFAULT]**
-- `"2:45:30"` → 2 hours 45 minutes 30 seconds (9930 seconds)
+- `"1:30 hours"` => 1 hour 30 minutes (90 minutes)
+- `"1:30 minutes"` => 1 minute 30 seconds (90 seconds)
+- `"1:30"` (no unit) => 1 hour 30 minutes (90 minutes) **[DEFAULT]**
+- `"10:30"` (no unit) => 10 hours 30 minutes (630 minutes) **[DEFAULT]**
+- `"2:45:30"` => 2 hours 45 minutes 30 seconds (9930 seconds)
 
 **Disambiguation Logic:**
 
 1. Check if a time unit keyword follows the colon pattern
-2. If hour keyword follows → interpret as hours:minutes
-3. If minute keyword follows → interpret as minutes:seconds
-4. If NO unit specified → **default to hours:minutes**
+2. If hour keyword follows => interpret as hours:minutes
+3. If minute keyword follows => interpret as minutes:seconds
+4. If NO unit specified => **default to hours:minutes**
 
 **Implementation Strategy:**
 Process HH:MM format **before** regular number+unit pattern, look ahead for unit keywords
@@ -325,11 +325,11 @@ while ((colonMatch = colonPattern.exec(text)) !== null) {
   } else {
     // HH:MM or M:SS - check following unit keyword
     if (unitAfter && minuteKeywords.some((k) => k.toLowerCase() === unitAfter)) {
-      // Unit is "minutes" or variant → interpret as minutes:seconds
+      // Unit is "minutes" or variant => interpret as minutes:seconds
       durationSeconds = first * 60 + second;
       interpretation = "minutes";
     } else {
-      // Unit is "hours", or NO unit, or unrecognized → default to hours:minutes
+      // Unit is "hours", or NO unit, or unrecognized => default to hours:minutes
       durationSeconds = first * 3600 + second * 60;
       interpretation = "hours";
     }
@@ -488,8 +488,8 @@ expect(context).toEqual({
 
 **Expected behavior:**
 
-- `expandRange("past")` → subtract exactly 14 days from `dateRange.start`
-- `expandRange("future")` → add exactly 14 days to `dateRange.end`
+- `expandRange("past")` => subtract exactly 14 days from `dateRange.start`
+- `expandRange("future")` => add exactly 14 days to `dateRange.end`
 
 **Likely fix:**
 
@@ -540,8 +540,8 @@ const expandRange = (direction: "past" | "future") => {
 - [x] Open `lib/helpers.ts`
 - [x] Find `stripHtmlTags` function
 - [x] Identify order of operations:
-  1. Current: Decode entities → Remove tags → Normalize whitespace
-  2. Correct: Remove tags → Decode entities → Normalize whitespace
+  1. Current: Decode entities => Remove tags => Normalize whitespace
+  2. Correct: Remove tags => Decode entities => Normalize whitespace
 
 ### 7.3 Fix Processing Order (10 min)
 
@@ -578,15 +578,15 @@ export function stripHtmlTags(html: string): string {
 
   // 3. FINALLY: Normalize whitespace
   text = text
-    .replace(/[\r\n\t]+/g, " ") // newlines/tabs → space
-    .replace(/\s+/g, " ") // multiple spaces → single space
+    .replace(/[\r\n\t]+/g, " ") // newlines/tabs => space
+    .replace(/\s+/g, " ") // multiple spaces => single space
     .trim(); // remove leading/trailing
 
   return text;
 }
 ```
 
-- [x] Reorder operations: tags → entities → whitespace
+- [x] Reorder operations: tags => entities => whitespace
 - [x] Ensure all entity replacements happen after tag removal
 - [x] Test with problematic input
 
@@ -738,16 +738,16 @@ export async function syncAllFutureItems(userId: string): Promise<{
 
 - [x] Start dev server: `pnpm dev`
 - [x] Configure CalDAV connection in settings
-- [x] Test Case 1: Create calendar event → verify recipe appears
-- [x] Test Case 2: Update recipe name → verify calendar event updates
-- [x] Test Case 3: Delete calendar event → verify recipe removed
-- [x] Test Case 4: Sync all future items → verify batch sync works
+- [x] Test Case 1: Create calendar event => verify recipe appears
+- [x] Test Case 2: Update recipe name => verify calendar event updates
+- [x] Test Case 3: Delete calendar event => verify recipe removed
+- [x] Test Case 4: Sync all future items => verify batch sync works
 - [x] Check logs for errors
 
 ### 8.5 Validation
 
-- [x] Run: `pnpm lint` → 0 errors
-- [x] Run: `pnpm build` → success
+- [x] Run: `pnpm lint` => 0 errors
+- [x] Run: `pnpm build` => success
 - [x] Verify no `console.log` or `console.warn` in codebase
 - [x] Manual CalDAV tests pass
 
@@ -826,10 +826,10 @@ pnpm format:check
 
 ### 9.4 Manual Feature Testing (5 min)
 
-- [x] Test German recipe: Parse `"2 EL Öl"` → returns `tablespoon`
-- [x] Test timer with unit: `"Bake for 1:30 hours"` → creates 90-minute timer
-- [x] Test timer default: `"Bake for 10:30"` → creates 10.5-hour timer
-- [x] Test CalDAV: Create/update/delete calendar events → syncs correctly
+- [x] Test German recipe: Parse `"2 EL Öl"` => returns `tablespoon`
+- [x] Test timer with unit: `"Bake for 1:30 hours"` => creates 90-minute timer
+- [x] Test timer default: `"Bake for 10:30"` => creates 10.5-hour timer
+- [x] Test CalDAV: Create/update/delete calendar events => syncs correctly
 - [x] Check browser console for errors
 
 ### 9.5 Documentation Update
@@ -845,7 +845,7 @@ pnpm format:check
 
 **Before marking as complete, verify:**
 
-### Test Fixes (87 → 0 failures)
+### Test Fixes (87 => 0 failures)
 
 - [x] ✅ unit-localization: 39 tests pass
 - [x] ✅ units-coverage: New test passes (replaces 38 german-units tests)

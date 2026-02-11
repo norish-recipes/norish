@@ -36,6 +36,7 @@
     "serving": "portie",
     "servings": "porties",
     "noImage": "Geen afbeelding",
+    "recipe": "Recept",
     "note": "Notitie"
   },
   "editPlannedRecipe": {

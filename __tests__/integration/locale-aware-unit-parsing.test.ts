@@ -186,10 +186,10 @@ describe("Locale-Aware Unit Parsing Integration", () => {
       const unitId = parsed[0].unitOfMeasureID!;
 
       // Test with various unknown locales - all should fall back to English
-      expect(formatUnit(unitId, "fr", mockUnitsConfig)).toBe("g"); // French not in config → en
-      expect(formatUnit(unitId, "es", mockUnitsConfig)).toBe("g"); // Spanish not in config → en
-      expect(formatUnit(unitId, "ja", mockUnitsConfig)).toBe("g"); // Japanese not in config → en
-      expect(formatUnit(unitId, "unknown", mockUnitsConfig)).toBe("g"); // Random locale → en
+      expect(formatUnit(unitId, "fr", mockUnitsConfig)).toBe("g"); // French not in config => en
+      expect(formatUnit(unitId, "es", mockUnitsConfig)).toBe("g"); // Spanish not in config => en
+      expect(formatUnit(unitId, "ja", mockUnitsConfig)).toBe("g"); // Japanese not in config => en
+      expect(formatUnit(unitId, "unknown", mockUnitsConfig)).toBe("g"); // Random locale => en
     });
 
     it("should fallback to English for partially matching locales", () => {
@@ -201,8 +201,8 @@ describe("Locale-Aware Unit Parsing Integration", () => {
 
       // Test with de-DE (base "de" exists in config, should match)
       // But if we test with a base that doesn't exist, should fall back to en
-      expect(formatUnit(unitId, "fr-FR", mockUnitsConfig)).toBe("tbsp"); // French base not in config → en
-      expect(formatUnit(unitId, "es-ES", mockUnitsConfig)).toBe("tbsp"); // Spanish base not in config → en
+      expect(formatUnit(unitId, "fr-FR", mockUnitsConfig)).toBe("tbsp"); // French base not in config => en
+      expect(formatUnit(unitId, "es-ES", mockUnitsConfig)).toBe("tbsp"); // Spanish base not in config => en
     });
 
     it("should use base locale if exact match not found", () => {

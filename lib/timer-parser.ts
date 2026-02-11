@@ -18,15 +18,15 @@ export type TimerKeywords = {
  * Strategy:
  * 1. Find all "number + unit" patterns (e.g., "15 minuten", "20 minutes")
  * 2. For each match, look backwards up to 2 words to find another number
- * 3. If found, it's a range - use the max value (e.g., "12 tot 15 minuten" → 15 minutes)
+ * 3. If found, it's a range - use the max value (e.g., "12 tot 15 minuten" => 15 minutes)
  * 4. This approach is language-agnostic and works with any range connector
  *
  * Examples handled:
- *   - "20 minutes" → 20 minutes
- *   - "12 to 15 minutes" → 15 minutes
- *   - "12 tot 15 minuten" → 15 minutes (Dutch)
- *   - "1-2 hours" → 2 hours
- *   - "bake for about 10 minutes" → 10 minutes
+ *   - "20 minutes" => 20 minutes
+ *   - "12 to 15 minutes" => 15 minutes
+ *   - "12 tot 15 minuten" => 15 minutes (Dutch)
+ *   - "1-2 hours" => 2 hours
+ *   - "bake for about 10 minutes" => 10 minutes
  *
  * @param text - The text to parse
  * @param keywords - Optional categorized time unit keywords
@@ -92,13 +92,13 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
     } else {
       // HH:MM or M:SS - check following unit keyword
       if (unitAfter && minuteKeywords.some((k) => k.toLowerCase() === unitAfter)) {
-        // Unit is "minutes" or variant → interpret as minutes:seconds
+        // Unit is "minutes" or variant => interpret as minutes:seconds
         durationSeconds = first * 60 + second;
       } else if (unitAfter && hourKeywords.some((k) => k.toLowerCase() === unitAfter)) {
-        // Unit is "hours" or variant → interpret as hours:minutes
+        // Unit is "hours" or variant => interpret as hours:minutes
         durationSeconds = first * 3600 + second * 60;
       } else {
-        // NO unit or unrecognized → default to hours:minutes
+        // NO unit or unrecognized => default to hours:minutes
         durationSeconds = first * 3600 + second * 60;
       }
     }

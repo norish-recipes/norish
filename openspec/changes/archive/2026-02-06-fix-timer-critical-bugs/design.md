@@ -228,7 +228,7 @@ Before timer feature:
 - All steps used `<SmartMarkdownRenderer disableLinks={isDone} text={s.step} />`
 - Ingredient quantities formatted: **quantity bold**, UOM in **primary color**
 - Uses `parseIngredientWithDefaults(text, units)` from `lib/helpers.ts`
-- Example: "Add 2 cups flour" → "Add **2** <span class="text-primary">cups</span> flour"
+- Example: "Add 2 cups flour" => "Add **2** <span class="text-primary">cups</span> flour"
 
 ### Architecture Options
 
@@ -261,8 +261,8 @@ const mergedSegments = mergeSegments(quantitySegments, timerSegments);
 
 **No conflicts by design** - they format different text:
 
-- Ingredient quantities: "2 cups" → "**2** <span>cups</span>"
-- Timer durations: "20 minutes" → `<TimerChip>20 minutes</TimerChip>`
+- Ingredient quantities: "2 cups" => "**2** <span>cups</span>"
+- Timer durations: "20 minutes" => `<TimerChip>20 minutes</TimerChip>`
 - Full example: "Simmer **2** <span>cups</span> tomatoes for <TimerChip>20 minutes</TimerChip>"
 
 **Rules**:
@@ -304,14 +304,14 @@ const mergedSegments = mergeSegments(quantitySegments, timerSegments);
 ### Integration Tests
 
 1. **End-to-End Config Flow**
-   - Admin updates keywords → Saves to DB → Recipe step detects timer
+   - Admin updates keywords => Saves to DB => Recipe step detects timer
 
 2. **Multi-language Detection**
-   - Recipe in German → German keywords detected
-   - German UOMs formatted correctly (e.g., "200 g" → "**200** g")
+   - Recipe in German => German keywords detected
+   - German UOMs formatted correctly (e.g., "200 g" => "**200** g")
 
 3. **Ingredient Quantity Formatting**
-   - Recipe with quantities → Steps format quantities bold, UOMs colored
+   - Recipe with quantities => Steps format quantities bold, UOMs colored
    - Locale-aware parsing (French "2 cuillères" works same as English "2 tablespoons")
 
 ## Performance Considerations

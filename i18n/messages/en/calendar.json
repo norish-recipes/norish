@@ -36,6 +36,7 @@
     "serving": "serving",
     "servings": "servings",
     "noImage": "No image",
+    "recipe": "Recipe",
     "note": "Note"
   },
   "editPlannedRecipe": {

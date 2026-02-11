@@ -2,8 +2,8 @@
  * Unit Localization Tests
  *
  * Tests for the ACTUAL production code used in the app:
- * - normalizeUnit: converts user input → canonical ID (used when saving ingredients)
- * - formatUnit: converts canonical ID → localized display (used in UI)
+ * - normalizeUnit: converts user input => canonical ID (used when saving ingredients)
+ * - formatUnit: converts canonical ID => localized display (used in UI)
  * - flattenForLibrary: prepares config for parse-ingredient library
  */
 
@@ -17,7 +17,7 @@ import defaultUnits from "@/config/units.default.json";
 const unitsConfig = defaultUnits as UnitsMap;
 
 describe("Unit Localization", () => {
-  describe("normalizeUnit - input → canonical ID", () => {
+  describe("normalizeUnit - input => canonical ID", () => {
     it("normalizes German 'EL' to canonical 'tablespoon'", () => {
       expect(normalizeUnit("EL", unitsConfig)).toBe("tablespoon");
     });
@@ -52,7 +52,7 @@ describe("Unit Localization", () => {
     });
   });
 
-  describe("formatUnit - canonical ID → localized display", () => {
+  describe("formatUnit - canonical ID => localized display", () => {
     describe("German locale (de)", () => {
       it("formats 'gram' as 'g'", () => {
         expect(formatUnit("gram", "de", unitsConfig)).toBe("g");

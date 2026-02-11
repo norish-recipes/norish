@@ -7,7 +7,7 @@ export const UNSORTED_CONTAINER = "unsorted" as const;
 /** Store ID or UNSORTED_CONTAINER */
 export type ContainerId = string;
 
-/** Container ID → grocery IDs mapping (visual order during drag) */
+/** Container ID => grocery IDs mapping (visual order during drag) */
 export type ItemsState = Record<ContainerId, string[]>;
 
 /** Context value provided by DndGroceryProvider */
@@ -29,7 +29,7 @@ export interface DndGroceryProviderProps {
   getRecipeNameForGrocery?: (grocery: GroceryDto) => string | null;
 }
 
-/** Container ID → group keys mapping (visual order during drag) */
+/** Container ID => group keys mapping (visual order during drag) */
 export type GroupItemsState = Record<ContainerId, string[]>;
 
 export type GroupDragHandle = (options: { dragHandle: React.ReactNode }) => React.ReactNode;

@@ -54,7 +54,7 @@ export function parseIngredientWithDefaults(
   for (const line of lines) {
     if (!line) continue;
 
-    // Normalize comma decimals to periods (European format → US format)
+    // Normalize comma decimals to periods (European format => US format)
     const normalizedLine = line.toString().replace(/(\d),(\d)/g, "$1.$2");
 
     // Parse with flattened units

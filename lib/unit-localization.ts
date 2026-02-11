@@ -40,10 +40,10 @@ export function flattenForLibrary(config: UnitsMap): FlatUnitsMap {
  * this abbreviation/alternate belongs to.
  *
  * Examples:
- *   "gr" → "gram" (found in gram.alternates)
- *   "grammen" → "gram" (found in gram.alternates)
- *   "scheutje" → "dash" (found in dash.alternates)
- *   "EL" → "tablespoon" (found in tablespoon.short or alternates)
+ *   "gr" => "gram" (found in gram.alternates)
+ *   "grammen" => "gram" (found in gram.alternates)
+ *   "scheutje" => "dash" (found in dash.alternates)
+ *   "EL" => "tablespoon" (found in tablespoon.short or alternates)
  */
 export function normalizeUnit(unit: string, config: UnitsMap): string {
   if (!unit || unit.trim() === "") return "";
@@ -95,8 +95,8 @@ export function normalizeUnit(unit: string, config: UnitsMap): string {
  * @returns The localized unit name
  *
  * @example
- * formatUnit("gram", "en", config) → "g"
- * formatUnit("gram", "de", config) → "g"
+ * formatUnit("gram", "en", config) => "g"
+ * formatUnit("gram", "de", config) => "g"
  */
 export function formatUnit(unitId: string, userLocale: string, config: UnitsMap): string {
   const unitDef = config[unitId];

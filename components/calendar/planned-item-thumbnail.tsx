@@ -2,7 +2,7 @@
 
 import { Image } from "@heroui/react";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
+import { memo, useState } from "react";
 
 type Size = "sm" | "md";
 
@@ -25,9 +25,9 @@ type PlannedItemThumbnailProps = {
 /**
  * Thumbnail for a planned calendar item.
  *
- * - Recipe with image  → shows the image
- * - Recipe without image → placeholder with "No image" text
- * - Note                → placeholder with "Note" text
+ * - Recipe with image  => shows the image
+ * - Recipe without image => placeholder with "Recipe" text
+ * - Note                => placeholder with "Note" text
  */
 export const PlannedItemThumbnail = memo(function PlannedItemThumbnail({
   itemType,
@@ -38,12 +38,19 @@ export const PlannedItemThumbnail = memo(function PlannedItemThumbnail({
   const t = useTranslations("calendar.timeline");
   const dim = sizeClasses[size];
   const isRecipe = itemType === "recipe";
-  const hasImage = isRecipe && image;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const imageSrc = isRecipe && image && image !== failedSrc ? image : null;
 
-  if (hasImage) {
+  if (imageSrc) {
     return (
       <div className={`relative ${dim} shrink-0 overflow-hidden rounded-lg`}>
-        <Image removeWrapper alt={alt} className="h-full w-full object-cover" src={image!} />
+        <Image
+          removeWrapper
+          alt={alt}
+          className="h-full w-full object-cover"
+          src={imageSrc}
+          onError={() => setFailedSrc(imageSrc)}
+        />
       </div>
     );
   }
@@ -52,7 +59,7 @@ export const PlannedItemThumbnail = memo(function PlannedItemThumbnail({
     <div
       className={`bg-default-100 text-default-400 flex ${dim} shrink-0 items-center justify-center rounded-lg`}
     >
-      <span className="text-xs font-medium">{isRecipe ? t("noImage") : t("note")}</span>
+      <span className="text-xs font-medium">{isRecipe ? t("recipe") : t("note")}</span>
     </div>
   );
 });

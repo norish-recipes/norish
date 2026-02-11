@@ -211,7 +211,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
             ingredientId: null,
             ingredientName: "suiker",
             amount: 500,
-            unit: "gr", // Dutch → gram
+            unit: "gr", // Dutch => gram
             systemUsed: "metric",
             order: 0,
           },
@@ -219,7 +219,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
             ingredientId: null,
             ingredientName: "olie",
             amount: 1,
-            unit: "scheut", // Dutch → splash
+            unit: "scheut", // Dutch => splash
             systemUsed: "metric",
             order: 1,
           },
@@ -227,7 +227,7 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
             ingredientId: null,
             ingredientName: "noten",
             amount: 1,
-            unit: "handvol", // Dutch → handful
+            unit: "handvol", // Dutch => handful
             systemUsed: "metric",
             order: 2,
           },

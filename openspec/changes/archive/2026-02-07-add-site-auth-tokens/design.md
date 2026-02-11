@@ -47,10 +47,10 @@ Users need to authenticate with external sites (Instagram, Facebook, etc.) to im
 
 ## Risks / Trade-offs
 
-- **Security risk:** Stored credentials could be leaked if the database is compromised → Mitigated by at-rest encryption.
-- **Stale tokens:** Users must manually update tokens when they expire → Acceptable for v1; token refresh is a non-goal.
-- **yt-dlp cookie file:** Writing a temporary Netscape cookie file to disk for yt-dlp → Mitigated by writing to a temp file, using it, and immediately deleting it in a `finally` block.
-- **Domain collision:** Multiple tokens for the same domain → Allowed; all matching tokens are injected (multiple cookies/headers per domain is valid).
+- **Security risk:** Stored credentials could be leaked if the database is compromised => Mitigated by at-rest encryption.
+- **Stale tokens:** Users must manually update tokens when they expire => Acceptable for v1; token refresh is a non-goal.
+- **yt-dlp cookie file:** Writing a temporary Netscape cookie file to disk for yt-dlp => Mitigated by writing to a temp file, using it, and immediately deleting it in a `finally` block.
+- **Domain collision:** Multiple tokens for the same domain => Allowed; all matching tokens are injected (multiple cookies/headers per domain is valid).
 
 ## Open Questions
 

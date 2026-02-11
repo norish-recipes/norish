@@ -158,9 +158,9 @@
 
 **Tests:**
 
-- Parse German input → display in English locale
-- Parse English input → display in German locale
-- Parse Dutch input → display in Dutch locale
+- Parse German input => display in English locale
+- Parse English input => display in German locale
+- Parse Dutch input => display in Dutch locale
 - Unknown unit falls back gracefully
 
 **Dependencies:** Tasks 6 and 7 (needs parsing and display working)

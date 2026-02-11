@@ -5,12 +5,12 @@ import type { ContainerId, ItemsState, GroupItemsState } from "./types";
 
 import { UNSORTED_CONTAINER } from "./types";
 
-/** Maps grocery.storeId to container ID (null → UNSORTED_CONTAINER) */
+/** Maps grocery.storeId to container ID (null => UNSORTED_CONTAINER) */
 export function getContainerIdForGrocery(grocery: GroceryDto): ContainerId {
   return grocery.storeId ?? UNSORTED_CONTAINER;
 }
 
-/** Converts container ID back to storeId (UNSORTED_CONTAINER → null) */
+/** Converts container ID back to storeId (UNSORTED_CONTAINER => null) */
 export function containerIdToStoreId(containerId: ContainerId): string | null {
   return containerId === UNSORTED_CONTAINER ? null : containerId;
 }

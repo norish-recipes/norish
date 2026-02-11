@@ -10,17 +10,17 @@
 ## 2. Styling Consistency
 
 - [x] 2.1 Replace all hardcoded color classes in `timer-dock.tsx` expanded panel with design tokens:
-  - `bg-white dark:bg-zinc-800` → `bg-content1`
-  - `bg-zinc-50/80 dark:bg-zinc-700/50` → `bg-content2`
-  - `text-zinc-900 dark:text-zinc-100` → `text-foreground`
-  - `text-zinc-500 dark:text-zinc-400` → `text-default-500`
-  - `border-zinc-200/50 dark:border-zinc-700/50` → `border-default-200`
-  - `bg-zinc-200 dark:bg-zinc-700` (divider) → `bg-default-200`
-  - `hover:bg-zinc-50 dark:hover:bg-zinc-800/50` → `hover:bg-content2`
-  - `bg-red-50/50 dark:bg-red-900/10` → `bg-danger-50`
-  - `bg-red-600` (collapsed completed pill) → `bg-danger`
-  - `text-red-600 dark:text-red-500` → `text-danger`
-  - `bg-white/90 dark:bg-zinc-800/90` → `bg-content1/90`
+  - `bg-white dark:bg-zinc-800` => `bg-content1`
+  - `bg-zinc-50/80 dark:bg-zinc-700/50` => `bg-content2`
+  - `text-zinc-900 dark:text-zinc-100` => `text-foreground`
+  - `text-zinc-500 dark:text-zinc-400` => `text-default-500`
+  - `border-zinc-200/50 dark:border-zinc-700/50` => `border-default-200`
+  - `bg-zinc-200 dark:bg-zinc-700` (divider) => `bg-default-200`
+  - `hover:bg-zinc-50 dark:hover:bg-zinc-800/50` => `hover:bg-content2`
+  - `bg-red-50/50 dark:bg-red-900/10` => `bg-danger-50`
+  - `bg-red-600` (collapsed completed pill) => `bg-danger`
+  - `text-red-600 dark:text-red-500` => `text-danger`
+  - `bg-white/90 dark:bg-zinc-800/90` => `bg-content1/90`
 - [x] 2.2 Update expanded panel border radius from `rounded-xl` to `rounded-2xl` to match card convention
 - [x] 2.3 Verify all changes render correctly in both light and dark modes
 
@@ -32,7 +32,7 @@
 - [x] 3.4 Add `notificationclick` event listener to `public/sw.js` — focus existing client window or open the app URL
 - [x] 3.5 Add a subtle "Notifications disabled" indicator in `TimerDock` when permission is `denied`, with guidance text
 - [x] 3.6 Add i18n strings for notification title/body and permission UI text (en, de-informal, de-formal, fr, nl)
-- [x] 3.7 Test notification flow: start timer → background tab → timer completes → OS notification appears → click notification → app focuses
+- [x] 3.7 Test notification flow: start timer => background tab => timer completes => OS notification appears => click notification => app focuses
 - [x] 3.8 Test graceful fallback when notifications are denied or unavailable (audio still works)
 
 ## Dependencies

@@ -56,7 +56,7 @@ Norish is a real-time recipe sharing application designed for household collabor
 - **Repository pattern:** All database access through `server/db/repositories/`, never direct queries in routers
 - **tRPC procedures:** Use `authedProcedure` for authenticated routes, `serverAdminProcedure` for admin
 - **Server-only code:** Import `server-only` package to prevent client bundling
-- **Real-time pattern:** Mutations trigger server events → WebSocket subscriptions update React Query cache → all household members sync automatically
+- **Real-time pattern:** Mutations trigger server events => WebSocket subscriptions update React Query cache => all household members sync automatically
 - **Optimistic updates:** Used alongside subscription-driven cache updates for responsive UX
 
 ### File Organization
@@ -80,7 +80,7 @@ Norish is a real-time recipe sharing application designed for household collabor
 ### Git Workflow
 
 - **CI Trigger:** PRs to main, pushes to any branch
-- **Pipeline:** install → build → (tests, lint, format:check) in parallel
+- **Pipeline:** install => build => (tests, lint, format:check) in parallel
 - **Quality gates:** All checks must pass before merge
 
 ## Domain Context
@@ -99,10 +99,10 @@ Norish is a real-time recipe sharing application designed for household collabor
 
 ### Recipe Import Pipeline
 
-1. URL submitted → BullMQ job created
+1. URL submitted => BullMQ job created
 2. Parser attempts structured extraction (JSON-LD, microdata)
 3. Falls back to AI parsing if structured fails
-4. Emits event on completion → subscription updates UI
+4. Emits event on completion => subscription updates UI
 
 ### CalDAV Integration
 

@@ -6,7 +6,7 @@ Norish parses ingredients from various sources (URL imports, manual entry, AI ex
 
 **Current architecture (verified)**:
 
-1. Parse time: `parseIngredientWithDefaults()` → stores `unitOfMeasure` field
+1. Parse time: `parseIngredientWithDefaults()` => stores `unitOfMeasure` field
 2. Display time: `ingredient-list.tsx:59` simply shows `it.unit` - NO re-parsing
 3. This is correct! We just need to store the right form at parse time.
 

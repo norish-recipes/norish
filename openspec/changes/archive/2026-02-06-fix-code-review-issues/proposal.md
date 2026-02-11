@@ -101,13 +101,13 @@ Fix all 87 test failures and infrastructure issues in 8 systematic phases:
 - Verify no containers left running after tests
 - **Why First**: Prevents resource exhaustion and ensures reliable test execution
 
-### Phase 2: Export Missing Function (39 failures → 0)
+### Phase 2: Export Missing Function (39 failures => 0)
 
 **Priority**: P1 - Quick win, single-line fix
 
 - Add export for `getLocalizedUnit` in `lib/unit-localization.ts`
 
-### Phase 3: Add German Locales (38 failures → 0, new test created)
+### Phase 3: Add German Locales (38 failures => 0, new test created)
 
 **Priority**: P1 - High user impact
 
@@ -116,32 +116,32 @@ Fix all 87 test failures and infrastructure issues in 8 systematic phases:
 - Delete incorrect `german-units.test.ts`
 - Create new comprehensive `units-coverage.test.ts`
 
-### Phase 4: Fix Timer Parser (4 failures → 0)
+### Phase 4: Fix Timer Parser (4 failures => 0)
 
 **Priority**: P2 - Algorithm fixes
 
 - Update 2 test expectations to use maximum (code is correct)
 - Delete 1 "more minutes" test (not supported by design)
 - Fix comma handling bug (exclude commas from range detection)
-- Add HH:MM format support: "10:30" → 10h 30m, "1:30" → 1m 30s
+- Add HH:MM format support: "10:30" => 10h 30m, "1:30" => 1m 30s
 
-### Phase 5: Update Test Expectations (3 failures → 0)
+### Phase 5: Update Test Expectations (3 failures => 0)
 
 **Priority**: P3 - Test maintenance
 
 - Add `categories: null` to normalizer test expectations
 
-### Phase 6: Fix Calendar Context (2 failures → 0)
+### Phase 6: Fix Calendar Context (2 failures => 0)
 
 **Priority**: P2 - Feature functionality
 
 - Fix `expandRange()` date calculation to add exactly 14 days
 
-### Phase 7: Fix stripHtmlTags Whitespace (1 failure → 0)
+### Phase 7: Fix stripHtmlTags Whitespace (1 failure => 0)
 
 **Priority**: P3 - Polish
 
-- Fix processing order: remove tags → decode entities → normalize whitespace → trim
+- Fix processing order: remove tags => decode entities => normalize whitespace => trim
 
 ### Phase 8: Fix Code Quality + Re-enable CalDAV
 
@@ -289,7 +289,7 @@ The PostgreSQL container leak is the most serious issue:
 
 **User Confirmed**: Use `Math.max()` (upper bound)
 
-- "5-10 minutes" → 10 minutes (safer, more cooking time)
+- "5-10 minutes" => 10 minutes (safer, more cooking time)
 - Code is correct, tests are wrong
 - Action: Update test expectations
 

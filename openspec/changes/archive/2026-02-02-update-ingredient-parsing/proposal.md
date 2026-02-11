@@ -34,7 +34,7 @@ The current ingredient parsing implementation uses `parse-ingredient` v1.3.3, wh
 ## Breaking Changes
 
 1. **Field name migration**: All code using `unitOfMeasureID` and `unitOfMeasure` must migrate to v2 field names
-2. **Package version**: `parse-ingredient` v1.3.3 → v2.0.1 may have API changes
+2. **Package version**: `parse-ingredient` v1.3.3 => v2.0.1 may have API changes
 3. **Display format**: New parses will show plural/singular correctly (existing stored data remains unchanged)
 
 ## Migration Strategy

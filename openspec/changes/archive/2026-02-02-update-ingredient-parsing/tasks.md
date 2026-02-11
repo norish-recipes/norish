@@ -7,7 +7,7 @@ This implementation follows Test-Driven Development: write tests first, then imp
 - [ ] 1.1 Update `package.json` to use `parse-ingredient` v2.0.1
 - [ ] 1.2 Run `pnpm install` and verify successful installation
 - [ ] 1.3 Create exploration test file to document v2 output format and field names
-- [ ] 1.4 Document v2 field name mapping (v1 → v2) in code comments
+- [ ] 1.4 Document v2 field name mapping (v1 => v2) in code comments
 - [ ] 1.5 Review v2 changelog for breaking changes
 - [ ] 1.6 Update TypeScript type imports for parse-ingredient
 
@@ -16,9 +16,9 @@ This implementation follows Test-Driven Development: write tests first, then imp
 Write tests BEFORE implementation. Target: 100% coverage of selection logic.
 
 - [ ] 2.1 Create `__tests__/lib/unit-form-selector.test.ts` with failing tests:
-  - [ ] Test: quantity > 1 returns plural form ("2 grams" → "grams")
-  - [ ] Test: quantity = 1 returns singular form ("1 gram" → "gram")
-  - [ ] Test: quantity < 1 returns singular form ("0.5 cup" → "cup")
+  - [ ] Test: quantity > 1 returns plural form ("2 grams" => "grams")
+  - [ ] Test: quantity = 1 returns singular form ("1 gram" => "gram")
+  - [ ] Test: quantity < 1 returns singular form ("0.5 cup" => "cup")
   - [ ] Test: quantity = 0 returns singular form
   - [ ] Test: quantity = null/undefined returns singular form
   - [ ] Test: quantity = 1.5 returns plural form (> 1)
@@ -60,7 +60,7 @@ Write tests BEFORE implementation. Target: 100% coverage of selection logic.
   - [ ] Test: All required fields present (short, plural, alternates)
   - [ ] Test: No duplicate keys with existing units
   - [ ] Test: Common German units recognized ("EL", "TL", "g", "kg", "ml", "l")
-  - [ ] Test: German alternates work ("esslöffel" → "EL")
+  - [ ] Test: German alternates work ("esslöffel" => "EL")
   - [ ] Test: Parsing "2 EL Öl" extracts correct unit
   - [ ] Test: Parsing "500 g Mehl" extracts correct unit
   - [ ] Test: Parsing "1 Prise Salz" extracts correct unit

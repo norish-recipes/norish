@@ -129,7 +129,7 @@ parseIngredientWithDefaults("500 gramm Mehl");
 ┌─────────────────────────────────────────────────────────────┐
 │ 2. Flatten for parse-ingredient library                     │
 ├─────────────────────────────────────────────────────────────┤
-│ flattenForLibrary(config) → {                               │
+│ flattenForLibrary(config) => {                               │
 │   "gram": {                                                  │
 │     "short": "g",        // Use first locale's short        │
 │     "plural": "grams",   // Use first locale's plural       │
@@ -146,9 +146,9 @@ parseIngredientWithDefaults("500 gramm Mehl");
 │   additionalUOMs: flattenedUnits                            │
 │ })                                                           │
 │                                                              │
-│ → Library finds "gramm" in alternates                       │
-│ → Returns: { unitOfMeasureID: "gram", quantity: 500 }       │
-│ → We store: unit = "gram" (English canonical ID)            │
+│ => Library finds "gramm" in alternates                       │
+│ => Returns: { unitOfMeasureID: "gram", quantity: 500 }       │
+│ => We store: unit = "gram" (English canonical ID)            │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -158,21 +158,21 @@ parseIngredientWithDefaults("500 gramm Mehl");
 │                                                              │
 │ German user (locale: "de"):                                 │
 │   formatUnit("gram", 500, "de", config)                     │
-│   → config.gram.plural.find(p => p.locale === "de")         │
-│   → { locale: "de", name: "g" }                             │
-│   → Display: "500 g"                                        │
+│   => config.gram.plural.find(p => p.locale === "de")         │
+│   => { locale: "de", name: "g" }                             │
+│   => Display: "500 g"                                        │
 │                                                              │
 │ English user (locale: "en"):                                │
 │   formatUnit("gram", 500, "en", config)                     │
-│   → config.gram.plural.find(p => p.locale === "en")         │
-│   → { locale: "en", name: "grams" }                         │
-│   → Display: "500 grams"                                    │
+│   => config.gram.plural.find(p => p.locale === "en")         │
+│   => { locale: "en", name: "grams" }                         │
+│   => Display: "500 grams"                                    │
 │                                                              │
 │ Dutch user (locale: "nl"):                                  │
 │   formatUnit("gram", 500, "nl", config)                     │
-│   → config.gram.plural.find(p => p.locale === "nl")         │
-│   → { locale: "nl", name: "gram" }                          │
-│   → Display: "500 gram"                                     │
+│   => config.gram.plural.find(p => p.locale === "nl")         │
+│   => { locale: "nl", name: "gram" }                          │
+│   => Display: "500 gram"                                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -497,8 +497,8 @@ const UnitsMapSchema = z.record(z.string(), UnitDefSchema);
    - If valid: Save to database with `isOverwritten = true`
    - If invalid: Throw validation error with specific message
 4. **Future patches:**
-   - If `isOverwritten = true` → Skip seeding (preserve custom config)
-   - If `isOverwritten = false` → Update to new default (user hasn't customized)
+   - If `isOverwritten = true` => Skip seeding (preserve custom config)
+   - If `isOverwritten = false` => Update to new default (user hasn't customized)
 
 ### Version Detection
 
@@ -561,7 +561,7 @@ This means:
 
 ## Success Criteria
 
-- ✅ Parse "500 gramm Mehl" → stores `unit: "gram"` (English canonical ID)
+- ✅ Parse "500 gramm Mehl" => stores `unit: "gram"` (English canonical ID)
 - ✅ German user sees "500 g", English sees "500 grams", Dutch sees "500 gram"
 - ✅ All alternates in one array (no locale separation needed)
 - ✅ parse-ingredient library does all parsing

@@ -25,7 +25,7 @@ Implementation tasks ordered by dependency and user-visible impact.
 
 - [x] **Fix admin context.tsx type usage**
   - Ensure `updateTimerKeywordsConfig` accepts `TimerKeywordsInput`
-  - Verify type flows correctly from editor → context → mutation
+  - Verify type flows correctly from editor => context => mutation
   - **Validation**: Types align end-to-end, no `any` casts needed
 
 - [x] **Fix SmartInstruction parser call**
@@ -51,7 +51,7 @@ Implementation tasks ordered by dependency and user-visible impact.
   - **Validation**: All tests pass, test actual schema properties
 
 - [x] **Add integration test for parser**
-  - Test categorized keywords flow: config → query → parser → detection
+  - Test categorized keywords flow: config => query => parser => detection
   - Test German, French, Dutch keyword detection
   - Test with empty arrays falls back to defaults
   - **Validation**: End-to-end timer detection works in all languages
@@ -73,7 +73,7 @@ Implementation tasks ordered by dependency and user-visible impact.
 - [x] **Format quantities and UOMs in rendered output**
   - Render quantity text with **bold** styling
   - Render UOM text with **primary color** class
-  - Example: "2 cups" → `<strong>2</strong> <span className="text-primary">cups</span>`
+  - Example: "2 cups" => `<strong>2</strong> <span className="text-primary">cups</span>`
   - **Validation**: Quantities bold, UOMs colored
 
 - [x] **Merge quantity formatting with timer detection**
