@@ -173,10 +173,8 @@ const testThemeCss = adminProcedure.input(z.string().url()).mutation(async ({ in
   }
 
   // Check if URL is localhost (skip SSRF checks for local development)
-  const isLocalhost = 
-    urlObj.hostname === "localhost" || 
-    urlObj.hostname === "127.0.0.1" ||
-    urlObj.hostname === "::1";
+  const isLocalhost =
+    urlObj.hostname === "localhost" || urlObj.hostname === "127.0.0.1" || urlObj.hostname === "::1";
 
   if (isLocalhost) {
     // Localhost URLs: only validate HTTPS or HTTP
@@ -235,7 +233,7 @@ const testThemeCss = adminProcedure.input(z.string().url()).mutation(async ({ in
 
     const contentType = response.headers.get("content-type");
     const isValidCss = contentType?.includes("text/css") || contentType?.includes("text/plain");
-    
+
     if (!isValidCss) {
       log.warn({ url, contentType }, "CSS URL returned invalid content type");
       return {
@@ -245,7 +243,7 @@ const testThemeCss = adminProcedure.input(z.string().url()).mutation(async ({ in
     }
 
     const cssText = await response.text();
-    
+
     // Basic CSS syntax validation - check if it looks like CSS
     if (cssText.trim().length === 0) {
       return {

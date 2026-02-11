@@ -139,9 +139,9 @@ export default function ThemeConfigCard() {
               }`}
             >
               {testResult.status === "success" ? (
-                <CheckIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-success-600 dark:text-success-400" />
+                <CheckIcon className="text-success-600 dark:text-success-400 mt-0.5 h-4 w-4 flex-shrink-0" />
               ) : (
-                <ExclamationCircleIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-danger-600 dark:text-danger-400" />
+                <ExclamationCircleIcon className="text-danger-600 dark:text-danger-400 mt-0.5 h-4 w-4 flex-shrink-0" />
               )}
               <p
                 className={`text-sm ${
@@ -189,16 +189,16 @@ export default function ThemeConfigCard() {
           </div>
 
           {themeConfig?.cssUrl && (
-            <div className="rounded-lg bg-content2 p-3">
+            <div className="bg-content2 rounded-lg p-3">
               <p className="text-sm font-medium">{t("currentTheme")}</p>
-              <p className="break-all text-default-500 text-xs">{themeConfig.cssUrl}</p>
+              <p className="text-default-500 text-xs break-all">{themeConfig.cssUrl}</p>
             </div>
           )}
         </div>
 
-        <div className="rounded-lg border border-default-200 bg-content1 p-4">
+        <div className="border-default-200 bg-content1 rounded-lg border p-4">
           <p className="mb-2 text-sm font-medium">{t("howItWorks")}</p>
-          <ul className="list-inside list-disc space-y-1 text-sm text-default-500">
+          <ul className="text-default-500 list-inside list-disc space-y-1 text-sm">
             <li>{t("howItWorks1")}</li>
             <li>{t("howItWorks2")}</li>
             <li>{t("howItWorks3")}</li>

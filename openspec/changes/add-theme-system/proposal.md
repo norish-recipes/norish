@@ -16,6 +16,7 @@ Enable community members to create and share custom themes without forking the c
 **Affected specs:** appearance (new)
 
 **Affected code:**
+
 - `server/db/zodSchemas/server-config.ts` - Add theme config schema
 - `app/(app)/settings/admin/` - New theme config card component
 - `app/layout.tsx` or `app/providers.tsx` - CSS injection logic
