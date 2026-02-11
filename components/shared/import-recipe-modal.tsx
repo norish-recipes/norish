@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -28,6 +28,39 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
   const { importRecipe, importRecipeWithAI } = useRecipesContext();
   const { isAIEnabled } = usePermissionsContext();
   const [importUrl, setImportUrl] = useState("");
+
+  useEffect(() => {
+    if (!isOpen || typeof navigator === "undefined" || !navigator.clipboard?.readText) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function fillUrlFromClipboard() {
+      try {
+        const clipboardText = (await navigator.clipboard.readText()).trim();
+
+        if (!clipboardText) {
+          return;
+        }
+
+        const parsedUrl = new URL(clipboardText);
+        const isHttpUrl = parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+
+        if (isHttpUrl && !isCancelled) {
+          setImportUrl((currentValue) =>
+            currentValue.trim() === "" ? clipboardText : currentValue
+          );
+        }
+      } catch {}
+    }
+
+    void fillUrlFromClipboard();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isOpen]);
 
   async function handleImportFromUrl() {
     if (importUrl.trim() === "") return;
@@ -70,7 +103,12 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
   }
 
   return (
-    <Modal isOpen={isOpen} size="md" onOpenChange={onOpenChange}>
+    <Modal
+      classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+      isOpen={isOpen}
+      size="md"
+      onOpenChange={onOpenChange}
+    >
       <ModalContent>
         {() => (
           <>

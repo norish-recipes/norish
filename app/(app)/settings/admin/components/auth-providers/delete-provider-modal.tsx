@@ -21,7 +21,11 @@ export function DeleteProviderModal({
   const tActions = useTranslations("common.actions");
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal
+      classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+      isOpen={isOpen}
+      onClose={onClose}
+    >
       <ModalContent>
         <ModalHeader className="flex items-center gap-2">
           <ExclamationTriangleIcon className="text-danger h-5 w-5" />

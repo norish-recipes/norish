@@ -195,7 +195,13 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
   const canSave = serverUrl && username && (password || config) && calendarUrl;
 
   return (
-    <Modal isOpen={isOpen} scrollBehavior="inside" size="2xl" onClose={onClose}>
+    <Modal
+      classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+      isOpen={isOpen}
+      scrollBehavior="inside"
+      size="2xl"
+      onClose={onClose}
+    >
       <ModalContent>
         <ModalHeader className="flex items-center gap-2">
           <ServerIcon className="h-5 w-5" />

@@ -236,7 +236,11 @@ export default function SiteAuthTokensCard() {
       </Card>
 
       {/* Delete Confirmation Modal */}
-      <Modal isOpen={showDeleteModal} onOpenChange={setShowDeleteModal}>
+      <Modal
+        classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+        isOpen={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+      >
         <ModalContent>
           {(onClose) => (
             <>

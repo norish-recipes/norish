@@ -53,7 +53,7 @@ export const TimelinePlannedItem = memo(function TimelinePlannedItem({
   const content = (
     <div
       ref={setNodeRef}
-      className={`touch-none py-1.5 ${isDragging ? "cursor-grabbing opacity-40" : "cursor-grab"}`}
+      className={`touch-pan-y py-1.5 ${isDragging ? "cursor-grabbing opacity-40" : "cursor-grab"}`}
       {...attributes}
       {...listeners}
     >

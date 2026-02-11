@@ -169,7 +169,11 @@ export default function MembersCard() {
       </Card>
 
       {/* Kick User Modal */}
-      <Modal isOpen={showKickModal} onOpenChange={setShowKickModal}>
+      <Modal
+        classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+        isOpen={showKickModal}
+        onOpenChange={setShowKickModal}
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -192,7 +196,11 @@ export default function MembersCard() {
       </Modal>
 
       {/* Transfer Admin Modal */}
-      <Modal isOpen={showTransferModal} onOpenChange={setShowTransferModal}>
+      <Modal
+        classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+        isOpen={showTransferModal}
+        onOpenChange={setShowTransferModal}
+      >
         <ModalContent>
           {(onClose) => (
             <>

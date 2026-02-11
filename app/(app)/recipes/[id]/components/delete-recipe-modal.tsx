@@ -20,7 +20,11 @@ export function DeleteRecipeModal({
   const tActions = useTranslations("common.actions");
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onClose}>
+    <Modal
+      classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+      isOpen={isOpen}
+      onOpenChange={onClose}
+    >
       <ModalContent>
         {(onCloseCallback) => (
           <>

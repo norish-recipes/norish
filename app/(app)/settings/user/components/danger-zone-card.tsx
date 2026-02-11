@@ -49,7 +49,11 @@ export default function DangerZoneCard() {
       </Card>
 
       {/* Delete Account Confirmation */}
-      <Modal isOpen={showAccountDeleteModal} onOpenChange={setShowAccountDeleteModal}>
+      <Modal
+        classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+        isOpen={showAccountDeleteModal}
+        onOpenChange={setShowAccountDeleteModal}
+      >
         <ModalContent>
           {(onClose) => (
             <>

@@ -36,7 +36,11 @@ export default function DeleteCalDavModal({ isOpen, onClose, onConfirm }: Delete
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal
+      classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+      isOpen={isOpen}
+      onClose={onClose}
+    >
       <ModalContent>
         <ModalHeader>{t("title")}</ModalHeader>
         <ModalBody>

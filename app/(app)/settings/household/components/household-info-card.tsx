@@ -75,7 +75,11 @@ export default function HouseholdInfoCard() {
       </Card>
 
       {/* Leave Household Modal */}
-      <Modal isOpen={showLeaveModal} onOpenChange={setShowLeaveModal}>
+      <Modal
+        classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+        isOpen={showLeaveModal}
+        onOpenChange={setShowLeaveModal}
+      >
         <ModalContent>
           {(onClose) => (
             <>

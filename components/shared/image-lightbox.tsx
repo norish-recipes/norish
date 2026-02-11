@@ -92,9 +92,9 @@ export default function ImageLightbox({
     <Modal
       hideCloseButton
       classNames={{
-        backdrop: "bg-black/90 backdrop-blur-md",
+        backdrop: "z-[1099] bg-black/90 backdrop-blur-md",
         base: "bg-transparent shadow-none max-w-full max-h-full",
-        wrapper: "items-center justify-center",
+        wrapper: "z-[1100] items-center justify-center",
       }}
       isOpen={isOpen}
       size="full"

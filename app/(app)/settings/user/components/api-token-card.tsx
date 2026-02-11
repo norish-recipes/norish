@@ -173,7 +173,12 @@ export default function ApiKeyCard() {
       </Card>
 
       {/* Key Generation Modal */}
-      <Modal isDismissable={false} isOpen={showTokenModal} onOpenChange={setShowTokenModal}>
+      <Modal
+        classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+        isDismissable={false}
+        isOpen={showTokenModal}
+        onOpenChange={setShowTokenModal}
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -213,7 +218,11 @@ export default function ApiKeyCard() {
       </Modal>
 
       {/* Delete Key Confirmation */}
-      <Modal isOpen={showDeleteModal} onOpenChange={setShowDeleteModal}>
+      <Modal
+        classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+        isOpen={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+      >
         <ModalContent>
           {(onClose) => (
             <>

@@ -176,7 +176,12 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
   }, [files, onOpenChange]);
 
   return (
-    <Modal isOpen={isOpen} size="lg" onOpenChange={onOpenChange}>
+    <Modal
+      classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+      isOpen={isOpen}
+      size="lg"
+      onOpenChange={onOpenChange}
+    >
       <ModalContent>
         {() => (
           <>
