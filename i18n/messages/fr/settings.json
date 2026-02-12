@@ -102,6 +102,19 @@
         "adminNote": "Si vous êtes l’admin d’un foyer avec d’autres membres, vous devez d’abord transférer les privilèges admin.",
         "confirmButton": "Supprimer mon compte"
       }
+    },
+    "preferences": {
+      "title": "Préférences",
+      "description": "Personnalisez votre expérience.",
+      "timers": {
+        "title": "Activer les minuteries de recette",
+        "description": "Afficher des minuteries interactives dans les instructions de la recette"
+      },
+       "conversion": {
+         "title": "Afficher le bouton de conversion",
+         "description": "Afficher un bouton sur les pages de recettes pour convertir entre les systèmes de mesure"
+       },
+      "applyError": "Échec de l'application du paramètre"
     }
   },
   "household": {

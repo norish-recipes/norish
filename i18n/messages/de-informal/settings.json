@@ -102,6 +102,19 @@
         "adminNote": "Wenn du Administrator eines Haushalts mit anderen Mitgliedern bist, musst du die Admin-Berechtigung zunächst übertragen.",
         "confirmButton": "Mein Konto löschen"
       }
+    },
+    "preferences": {
+      "title": "Einstellungen",
+      "description": "Passe deine Erfahrung an.",
+      "timers": {
+        "title": "Rezept-Timer aktivieren",
+        "description": "Interaktive Timer in Rezeptanweisungen anzeigen"
+      },
+      "conversion": {
+        "title": "Konvertier-Button anzeigen",
+        "description": "Zeige auf Rezeptseiten einen Button, um zwischen Maßsystemen umzurechnen"
+      },
+      "applyError": "Einstellung konnte nicht angewendet werden"
     }
   },
   "household": {

@@ -102,6 +102,19 @@
         "adminNote": "If you are the admin of a household with other members, you must transfer admin privileges first.",
         "confirmButton": "Delete My Account"
       }
+    },
+    "preferences": {
+      "title": "Preferences",
+      "description": "Customize your experience.",
+      "timers": {
+        "title": "Enable Recipe Timers",
+        "description": "Show interactive timers in recipe instructions"
+      },
+      "conversion": {
+        "title": "Show Ingredient Conversion Button",
+        "description": "Display a button on recipe pages to convert between measurement systems"
+      },
+      "applyError": "Failed to apply preference"
     }
   },
   "household": {
