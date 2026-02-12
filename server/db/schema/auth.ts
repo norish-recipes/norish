@@ -8,6 +8,7 @@ import {
   boolean,
   integer,
   index,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -36,6 +37,8 @@ export const users = pgTable(
 
     // User preferences
     locale: text("locale"), // User's preferred language (e.g., 'en', 'de')
+    // Extensible user preferences (JSONB)
+    preferences: jsonb("preferences").default(sql`'{}'::jsonb`),
 
     // BetterAuth timestamps
     createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),

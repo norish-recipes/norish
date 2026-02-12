@@ -1,4 +1,5 @@
 import z from "zod";
+import { UserPreferencesSchema } from "./user-preferences";
 
 // Not using createSelectSchema as we use encrypted fields and want to expose only decrypted ones
 // Placed in db zod schemas as this is related to the user table and for ease of finding.
@@ -9,4 +10,5 @@ export const UserDtoSchema = z.object({
   image: z.string().nullable().optional(),
   isServerAdmin: z.boolean().optional(),
   locale: z.string().nullable().optional(),
+  preferences: UserPreferencesSchema.optional(),
 });
