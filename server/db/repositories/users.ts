@@ -1,15 +1,15 @@
 import type { User } from "@/types";
 
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 
 import { db } from "../drizzle";
 import { users, accounts } from "../schema/auth";
+import { authLogger } from "@/server/logger";
 import { ServerConfigKeys } from "../zodSchemas/server-config";
 
 import { setConfig } from "./server-config";
 
 import { encrypt, hmacIndex, decrypt } from "@/server/auth/crypto";
-import { authLogger } from "@/server/logger";
 
 // BetterAuth-compatible user type for adapter operations
 // Note: emailVerified is now a boolean in BetterAuth, not a Date
@@ -401,4 +401,59 @@ export async function getUserLocale(userId: string): Promise<string | null> {
  */
 export async function updateUserLocale(userId: string, locale: string | null): Promise<void> {
   await db.update(users).set({ locale }).where(eq(users.id, userId));
+}
+
+/**
+ * Get user preferences (JSONB). If missing (pre-migration), return {} and warn.
+ */
+export async function getUserPreferences(userId: string): Promise<Record<string, unknown>> {
+  try {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: { preferences: true },
+    });
+
+    return (user?.preferences as Record<string, unknown>) ?? {};
+  } catch (error) {
+    // Migration/column may be missing: warn and return empty preferences
+    try {
+      authLogger.warn(
+        { userId, error },
+        "Failed to read user.preferences; returning empty preferences (migration may be missing)"
+      );
+    } catch {
+      // ignore logging errors
+    }
+
+    return {};
+  }
+}
+
+/** Update user preferences by atomically merging provided JSONB updates. */
+export async function updateUserPreferences(
+  userId: string,
+  updates: Record<string, unknown>
+): Promise<void> {
+  const updatesJson = JSON.stringify(updates ?? {});
+
+  try {
+    // Parameterized SQL: merge updates into preferences safely.
+    await db.execute(sql`
+      UPDATE "user"
+      SET preferences = coalesce(preferences, '{}'::jsonb) || ${updatesJson}::jsonb
+      WHERE id = ${userId}
+    `);
+  } catch (error) {
+    // Migration/column may be missing: warn and rethrow
+    try {
+      authLogger.warn(
+        { userId, updates, error },
+        "Failed to update user.preferences (migration may be missing)"
+      );
+    } catch {
+      // ignore logging errors
+    }
+
+    throw error;
+  }
 }
