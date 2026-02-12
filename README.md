@@ -132,7 +132,11 @@ services:
       # GOOGLE_CLIENT_SECRET: <google-client-secret>
     healthcheck:
       test:
-        ["CMD", "curl", "--silent", "--show-error", "--fail", "http://localhost:3000/api/health"]
+        test:
+          [
+            "CMD-SHELL",
+            'node -e "require(''http'').get(''http://localhost:3000/api/health'', r => process.exit(r.statusCode===200?0:1))"',
+          ]
       interval: 1m
       timeout: 15s
       retries: 3
