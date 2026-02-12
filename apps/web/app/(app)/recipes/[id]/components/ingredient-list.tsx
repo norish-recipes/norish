@@ -5,6 +5,7 @@ import { CheckIcon } from "@heroicons/react/20/solid";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 
 import { useRecipeContextRequired } from "../context";
+import { triggerHaptic } from "@/lib/haptics";
 
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
@@ -22,6 +23,14 @@ export default function IngredientsList() {
   const display = adjustedIngredients?.length > 0 ? adjustedIngredients : recipe.recipeIngredients;
 
   const toggle = (idx: number) => {
+    // Call haptics synchronously in the event handler's call stack so browsers treat it as a user gesture (required by Chrome).
+    try {
+      const adding = !checked.has(idx);
+      triggerHaptic(adding ? "success" : "selection");
+    } catch {
+      // ignore
+    }
+
     setChecked((prev) => {
       const next = new Set(prev);
 
