@@ -37,11 +37,19 @@ export default function ProfileCard() {
     }
   }, [user?.name]);
 
+  // Only refresh the avatar key when the image path changes.
+  const prevImageRef = useRef<string | null | undefined>(user?.image);
+
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+
+    const currentImage = user.image;
+
+    if (currentImage !== prevImageRef.current) {
       setAvatarRefreshKey(Date.now());
+      prevImageRef.current = currentImage;
     }
-  }, [user]);
+  }, [user?.image]);
 
   const handleSaveProfile = async () => {
     const hasNameChanges = name !== user?.name;

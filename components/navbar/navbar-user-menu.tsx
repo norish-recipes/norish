@@ -48,13 +48,21 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
   const [avatarRefreshKey, setAvatarRefreshKey] = useState(() => Date.now());
   const { currentVersion, latestVersion, updateAvailable, releaseUrl } = useVersionQuery();
 
+  // Only refresh the avatar key when the image path changes.
+  const prevImageRef = React.useRef<string | null | undefined>(user?.image);
+
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+
+    const currentImage = user.image;
+
+    if (currentImage !== prevImageRef.current) {
       setImageError(false);
       setRetryCount(0);
       setAvatarRefreshKey(Date.now());
+      prevImageRef.current = currentImage;
     }
-  }, [user]);
+  }, [user?.image]);
 
   const handleImageError = () => {
     if (retryCount < 2) {
