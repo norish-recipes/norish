@@ -31,6 +31,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       uploadAvatar: { mutationOptions: vi.fn() },
       deleteAvatar: { mutationOptions: vi.fn() },
       deleteAccount: { mutationOptions: vi.fn() },
+      updatePreferences: { mutationOptions: vi.fn() },
       apiKeys: {
         create: { mutationOptions: vi.fn() },
         delete: { mutationOptions: vi.fn() },
@@ -68,6 +69,7 @@ describe("useUserMutations", () => {
       expect(result.current).toHaveProperty("uploadAvatar");
       expect(result.current).toHaveProperty("deleteAvatar");
       expect(result.current).toHaveProperty("deleteAccount");
+      expect(result.current).toHaveProperty("updatePreferences");
 
       // API key mutation functions
       expect(result.current).toHaveProperty("createApiKey");
@@ -106,6 +108,7 @@ describe("useUserMutations", () => {
       expect(result.current).toHaveProperty("isDeletingApiKey");
       expect(result.current).toHaveProperty("isTogglingApiKey");
       expect(result.current).toHaveProperty("isUpdatingAllergies");
+      expect(result.current).toHaveProperty("isUpdatingPreferences");
 
       // All should be booleans initially false
       expect(typeof result.current.isUpdatingName).toBe("boolean");
@@ -138,6 +141,69 @@ describe("useUserMutations", () => {
       expect(result.current.deleteApiKey.constructor.name).toBe("AsyncFunction");
       expect(result.current.toggleApiKey.constructor.name).toBe("AsyncFunction");
       expect(result.current.setAllergies.constructor.name).toBe("AsyncFunction");
+    });
+
+    it("rolls back optimistic preferences update on failure", async () => {
+      // Reset modules so we can remock the trpc provider for this test
+      vi.resetModules();
+
+      // Provide a tRPC mock that returns a failing updatePreferences mutation
+      vi.doMock("@/app/providers/trpc-provider", () => ({
+        useTRPC: () => ({
+          user: {
+            get: {
+              queryKey: () => ["user", "get"],
+              queryOptions: () => ({
+                queryKey: ["user", "get"],
+                queryFn: async () => ({ user: {} as any, apiKeys: [] }),
+              }),
+            },
+            getAllergies: {
+              queryKey: () => ["user", "getAllergies"],
+              queryOptions: () => ({
+                queryKey: ["user", "getAllergies"],
+                queryFn: async () => ({ allergies: [] }),
+              }),
+            },
+            updatePreferences: {
+              mutationOptions: () => ({ mutationFn: async () => ({ success: false }) }),
+            },
+            // minimal stubs for other used keys
+            apiKeys: {
+              create: { mutationOptions: vi.fn() },
+              delete: { mutationOptions: vi.fn() },
+              toggle: { mutationOptions: vi.fn() },
+            },
+            updateName: { mutationOptions: vi.fn() },
+            uploadAvatar: { mutationOptions: vi.fn() },
+            deleteAvatar: { mutationOptions: vi.fn() },
+            deleteAccount: { mutationOptions: vi.fn() },
+            setAllergies: { mutationOptions: vi.fn() },
+          },
+        }),
+      }));
+
+      // Re-import the hook under test after remocking
+      const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
+
+      const initialData = createMockUserSettingsData(
+        createMockUser({ id: "user-1", name: "Test User", preferences: { timersEnabled: true } }),
+        []
+      );
+
+      queryClient.setQueryData(["user", "get"], initialData);
+
+      const { result } = renderHook(() => useUserMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const res = await result.current.updatePreferences({ timersEnabled: false });
+
+      expect(res.success).toBe(false);
+
+      // Ensure the cache was rolled back to the previous value
+      const after = queryClient.getQueryData(["user", "get"]);
+      expect(after).toEqual(initialData);
     });
   });
 });

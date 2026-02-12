@@ -28,6 +28,11 @@ export type UserMutationsResult = {
     allergies: string[]
   ) => Promise<{ success: boolean; allergies?: string[]; error?: string }>;
 
+  // Preferences
+  updatePreferences: (
+    preferences: Record<string, unknown>
+  ) => Promise<{ success: boolean; preferences?: Record<string, unknown>; error?: string }>;
+
   // Loading states
   isUpdatingName: boolean;
   isUploadingAvatar: boolean;
@@ -37,6 +42,7 @@ export type UserMutationsResult = {
   isDeletingApiKey: boolean;
   isTogglingApiKey: boolean;
   isUpdatingAllergies: boolean;
+  isUpdatingPreferences: boolean;
 };
 
 /**
@@ -61,6 +67,9 @@ export function useUserMutations(): UserMutationsResult {
 
   // Allergies mutation
   const setAllergiesMutation = useMutation(trpc.user.setAllergies.mutationOptions());
+
+  // Preferences mutation
+  const updatePreferencesMutation = useMutation(trpc.user.updatePreferences.mutationOptions());
 
   return {
     // Profile updates
@@ -202,6 +211,45 @@ export function useUserMutations(): UserMutationsResult {
       }
     },
 
+    // Preferences
+    updatePreferences: async (preferences) => {
+      const queryKey = ["user", "get"] as const;
+
+      // Save previous for rollback
+      const previous = queryClient.getQueryData(queryKey);
+
+      try {
+        // Optimistic update
+        setUserSettingsData((prev) => {
+          if (!prev) return prev;
+
+          return {
+            ...prev,
+            user: {
+              ...prev.user,
+              preferences: { ...((prev.user.preferences as any) ?? {}), ...(preferences as any) },
+            },
+          } as any;
+        });
+
+        const result = await updatePreferencesMutation.mutateAsync({ preferences });
+
+        if (!result.success) {
+          // Rollback immediately to previous cached value
+          queryClient.setQueryData(queryKey, previous);
+          invalidate();
+        }
+
+        return result;
+      } catch (error) {
+        // Rollback on error
+        queryClient.setQueryData(queryKey, previous);
+        invalidate();
+
+        return { success: false, error: String(error) };
+      }
+    },
+
     // Loading states
     isUpdatingName: updateNameMutation.isPending,
     isUploadingAvatar: uploadAvatarMutation.isPending,
@@ -211,5 +259,6 @@ export function useUserMutations(): UserMutationsResult {
     isDeletingApiKey: deleteApiKeyMutation.isPending,
     isTogglingApiKey: toggleApiKeyMutation.isPending,
     isUpdatingAllergies: setAllergiesMutation.isPending,
+    isUpdatingPreferences: updatePreferencesMutation.isPending,
   };
 }
