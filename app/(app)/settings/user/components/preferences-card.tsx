@@ -6,6 +6,7 @@ import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
+import NewFeatureChip from "@/app/(app)/settings/components/new-feature-chip";
 import { useTimersEnabledQuery } from "@/hooks/config";
 
 export default function PreferencesCard() {
@@ -44,6 +45,7 @@ export default function PreferencesCard() {
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <AdjustmentsHorizontalIcon className="h-5 w-5" />
           {t("title")}
+          <NewFeatureChip />
         </h2>
       </CardHeader>
       <CardBody className="gap-4">
