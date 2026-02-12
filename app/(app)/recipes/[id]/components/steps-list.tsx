@@ -53,7 +53,7 @@ export default function StepsList({ autoScrollOnCheck = false }: StepsListProps)
       return;
     }
 
-  target.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const toggle = (i: number) => {
