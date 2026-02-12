@@ -90,7 +90,7 @@ describe("ProfileCard", () => {
     expect(mockContext.updateName).not.toHaveBeenCalled();
   });
 
-  it("refreshes avatar src when user updates with same image path", async () => {
+  it("refreshes avatar src only when the path changes, not on just name change", async () => {
     mockUser = {
       name: "Alice",
       email: "alice@example.com",
@@ -105,6 +105,32 @@ describe("ProfileCard", () => {
       name: "Alice Updated",
       email: "alice@example.com",
       image: "/avatars/user-1.png",
+    };
+
+    rerender(<ProfileCard />);
+
+    await waitFor(() => {
+      const secondSrc = screen.getByAltText("profile avatar").getAttribute("src");
+
+      expect(secondSrc).toBe(firstSrc);
+    });
+  });
+
+  it("refreshes avatar src when image path changes", async () => {
+    mockUser = {
+      name: "Alice",
+      email: "alice@example.com",
+      image: "/avatars/user-1.png",
+    };
+
+    const { rerender } = render(<ProfileCard />);
+
+    const firstSrc = screen.getByAltText("profile avatar").getAttribute("src");
+
+    mockUser = {
+      name: "Alice",
+      email: "alice@example.com",
+      image: "/avatars/user-1-updated.png",
     };
 
     rerender(<ProfileCard />);

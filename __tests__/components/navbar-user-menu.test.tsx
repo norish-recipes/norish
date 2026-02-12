@@ -79,7 +79,7 @@ describe("NavbarUserMenu avatar src", () => {
     };
   });
 
-  it("changes avatar src when user object updates with same image path", async () => {
+  it("refreshes avatar src only when the path changes, not on just name change", async () => {
     const { rerender } = render(<NavbarUserMenu />);
 
     const firstSrc = screen.getByAltText("user avatar").getAttribute("src");
@@ -89,6 +89,27 @@ describe("NavbarUserMenu avatar src", () => {
       name: "User Updated",
       email: "user@example.com",
       image: "/avatars/user-1.png",
+    };
+
+    rerender(<NavbarUserMenu />);
+
+    await waitFor(() => {
+      const secondSrc = screen.getByAltText("user avatar").getAttribute("src");
+
+      expect(secondSrc).toBe(firstSrc);
+    });
+  });
+
+  it("changes avatar src when image path changes", async () => {
+    const { rerender } = render(<NavbarUserMenu />);
+
+    const firstSrc = screen.getByAltText("user avatar").getAttribute("src");
+
+    mockUser = {
+      id: "user-1",
+      name: "User",
+      email: "user@example.com",
+      image: "/avatars/user-1-updated.png",
     };
 
     rerender(<NavbarUserMenu />);

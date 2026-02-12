@@ -4,11 +4,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockDb = vi.hoisted(() => ({
   getApiKeysForUser: vi.fn(),
   getUserById: vi.fn(),
+  getUserPreferences: vi.fn(),
+  updateUserPreferences: vi.fn(),
 }));
 
 vi.mock("@/server/db", () => ({
   getApiKeysForUser: mockDb.getApiKeysForUser,
   getUserById: mockDb.getUserById,
+  getUserPreferences: mockDb.getUserPreferences,
+  updateUserPreferences: mockDb.updateUserPreferences,
   updateUserName: vi.fn(),
   updateUserAvatar: vi.fn(),
   deleteUser: vi.fn(),
