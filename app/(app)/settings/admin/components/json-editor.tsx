@@ -33,11 +33,17 @@ export default function JsonEditor({
 
   // Initialize text when value changes
   useEffect(() => {
-    if (value !== undefined) {
-      setText(JSON.stringify(value, null, 2));
+    if (value === undefined) {
+      setText("");
       setIsDirty(false);
       setError(null);
+
+      return;
     }
+
+    setText(JSON.stringify(value, null, 2));
+    setIsDirty(false);
+    setError(null);
   }, [value]);
 
   useEffect(() => {
@@ -150,7 +156,7 @@ export default function JsonEditor({
         {onRestoreDefaults && (
           <Button
             color="warning"
-            isDisabled={disabled || saving}
+            isDisabled={saving}
             startContent={<ArrowPathIcon className="h-5 w-5" />}
             variant="flat"
             onPress={handleRestoreDefaults}
