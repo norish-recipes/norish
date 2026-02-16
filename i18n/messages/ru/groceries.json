@@ -1,0 +1,78 @@
+{
+  "page": {
+    "title": "Список покупок",
+    "addItem": "Добавить позицию",
+    "addItems": "Добавить позиции",
+    "viewByStore": "По магазинам",
+    "viewByRecipe": "По рецептам",
+    "viewMode": "Режим отображения",
+    "manageStores": "Управление магазинами",
+    "storeViewOptions": "Настройки отображения магазинов",
+    "groupIngredients": "Группировать ингредиенты"
+  },
+  "empty": {
+    "title": "Ваш список покупок ждёт",
+    "description": "Добавьте позиции с помощью кнопки «Добавить позицию» выше, чтобы начать.",
+    "manual": "Добавленные вручную"
+  },
+  "item": {
+    "unnamedItem": "Без названия",
+    "fromRecipes": "{count, plural, one {Из # рецепта} few {Из # рецептов} many {Из # рецептов} other {Из # рецептов}}",
+    "items": "{count, plural, one {# позиция} few {# позиции} many {# позиций} other {# позиций}}"
+  },
+  "store": {
+    "unsorted": "Без категории",
+    "noItems": "В этом магазине нет позиций",
+    "storeActions": "Действия с магазином",
+    "markAllDone": "Отметить всё как выполненное",
+    "deleteDone": "Удалить выполненные",
+    "done": "{count, plural, one {# выполнено} few {# выполнено} many {# выполнено} other {# выполнено}}"
+  },
+  "storeManager": {
+    "title": "Управление магазинами",
+    "addStore": "Добавить магазин",
+    "editStore": "Редактировать магазин",
+    "deleteStore": "Удалить магазин",
+    "storeName": "Название магазина",
+    "storeNamePlaceholder": "например, Супермаркет",
+    "storeColor": "Цвет",
+    "storeIcon": "Иконка",
+    "confirmDelete": "Вы уверены, что хотите удалить {storeName}?",
+    "deleteWarning": "Позиции из этого магазина будут перемещены в «Без категории».",
+    "noStoresYet": "Пока нет магазинов",
+    "createStoreHint": "Создайте магазин, чтобы упорядочить покупки",
+    "hasItems": "{count, plural, one {В этом магазине # позиция.} few {В этом магазине # позиции.} many {В этом магазине # позиций.} other {В этом магазине # позиций.}}",
+    "hasItemsPlural": "{count, plural, one {В этом магазине # позиция.} few {В этом магазине # позиции.} many {В этом магазине # позиций.} other {В этом магазине # позиций.}}",
+    "whatToDo": "Что вы хотите с ними сделать?",
+    "keepItems": "Сохранить позиции",
+    "keepItemsDescription": "Переместить позиции в «Без категории»",
+    "deleteItems": "Удалить позиции",
+    "deleteItemsDescription": "Удалить все позиции из этого магазина",
+    "noItems": "В этом магазине нет позиций.",
+    "create": "Создать"
+  },
+  "panel": {
+    "addTitle": "Добавить позицию",
+    "editTitle": "Редактировать позицию",
+    "itemName": "Название позиции",
+    "itemNamePlaceholder": "например, Молоко, Яйца, Хлеб...",
+    "selectStore": "Выберите магазин",
+    "noStore": "Без магазина",
+    "recurrence": "Повтор",
+    "savePreference": "Запомнить магазин для этой позиции",
+    "addAnother": "Добавить ещё",
+    "addRepeat": "+ Добавить повтор",
+    "storeOptional": "Магазин (необязательно)",
+    "autoDetectFromHistory": "Определить автоматически по истории",
+    "autoDetectOrSelect": "Определить автоматически или выбрать",
+    "placeholder": "например, 2 кг куриной грудки",
+    "editPlaceholder": "например, молоко каждую неделю",
+    "servings": "Порции",
+    "loadingIngredients": "Загрузка ингредиентов...",
+    "noIngredients": "Нет ингредиентов.",
+    "addSelectedToGroceries": "Добавить в список покупок",
+    "ingredientsAdded": "Ингредиенты добавлены в список покупок.",
+    "ingredientsFailed": "Не удалось добавить ингредиенты в список покупок.",
+    "addToGroceries": "Добавить в список покупок"
+  }
+}

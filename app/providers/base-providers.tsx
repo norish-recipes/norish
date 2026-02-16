@@ -24,9 +24,9 @@ export function BaseProviders({ children, themeProps }: BaseProvidersProps) {
       <HeroUIProvider navigate={(path) => router.push(path)}>
         <TRPCProviderWrapper>
           <ToastProvider
+            disableAnimation
             placement="top-center"
             toastOffset={48}
-            disableAnimation
             toastProps={{ timeout: 5000 }}
           />
           {children}

@@ -236,6 +236,7 @@ export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
     "de-formal": { name: "Deutsch (Sie)", enabled: true },
     "de-informal": { name: "Deutsch (Du)", enabled: true },
     fr: { name: "Français", enabled: true },
+    ru: { name: "Русский", enabled: true },
   },
 };
 

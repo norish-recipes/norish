@@ -1,0 +1,50 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Новый рецепт",
+      "description": "Создать собственный рецепт"
+    },
+    "importUrl": {
+      "title": "Импорт по ссылке",
+      "description": "Вставьте ссылку на рецепт"
+    },
+    "settings": {
+      "title": "Настройки",
+      "description": "Управление аккаунтом"
+    },
+    "logout": "Выйти",
+    "version": {
+      "updateAvailable": "Доступна версия v{version}"
+    }
+  },
+  "theme": {
+    "title": "Тема",
+    "loading": "Загрузка…",
+    "light": "Светлая тема",
+    "dark": "Тёмная тема",
+    "system": "Системная"
+  },
+  "nav": {
+    "home": "Рецепты",
+    "calendar": "Календарь",
+    "groceries": "Список покупок"
+  },
+  "mobile": {
+    "searchPlaceholder": "Поиск рецептов...",
+    "toggleSearch": "Показать/скрыть поиск",
+    "goBack": "Назад"
+  },
+  "archiveImporter": {
+    "uploading": "Загрузка…",
+    "uploadFile": "Загрузить файл",
+    "dragDrop": "или перетащите файл",
+    "formats": ".melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "uploadingFile": "Загрузка файла…",
+    "processing": "Обработка: {details}",
+    "complete": "Завершено: {details}",
+    "imported": "{count} импортировано",
+    "skipped": "{count} пропущено",
+    "errors": "{count} ошибок",
+    "ofTotal": "{current} из {total}"
+  }
+}

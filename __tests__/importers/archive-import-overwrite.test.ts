@@ -137,6 +137,7 @@ describe("archive importer overwrite behavior", () => {
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
     const { importArchive } = await import("@/server/importers/archive-parser");
+
     await importArchive("user-1", ["user-1"], zipBytes);
 
     expect(mockRateRecipe).toHaveBeenCalledWith("user-1", "new-recipe-id", 5);
@@ -160,6 +161,7 @@ describe("archive importer overwrite behavior", () => {
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
     const { importArchive } = await import("@/server/importers/archive-parser");
+
     await importArchive("user-1", ["user-1"], zipBytes);
 
     expect(mockRateRecipe).not.toHaveBeenCalled();
