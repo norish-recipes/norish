@@ -70,6 +70,7 @@ describe("ImportRecipeModal", () => {
 
   it("fills the URL input from clipboard when modal opens", async () => {
     const readText = vi.fn().mockResolvedValue("https://example.com/recipe");
+
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: { readText },
@@ -84,6 +85,7 @@ describe("ImportRecipeModal", () => {
 
   it("does not fill the URL input when clipboard text is not a URL", async () => {
     const readText = vi.fn().mockResolvedValue("just some text");
+
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: { readText },
@@ -100,6 +102,7 @@ describe("ImportRecipeModal", () => {
 
   it("does not overwrite an existing URL on reopen", async () => {
     const readText = vi.fn().mockResolvedValue("https://example.com/recipe");
+
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: { readText },

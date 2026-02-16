@@ -1,0 +1,543 @@
+{
+  "page": {
+    "title": "Ajustes",
+    "loading": "Cargando...",
+    "ariaLabel": "Pestañas de ajustes"
+  },
+  "tabs": {
+    "user": "Usuario",
+    "household": "Hogar",
+    "caldav": "CalDAV",
+    "admin": "Admin"
+  },
+  "user": {
+    "profile": {
+      "title": "Perfil",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Tu nombre",
+      "emailLabel": "Correo",
+      "avatarHint": "Haz clic en tu avatar para cambiar la imagen",
+      "deleteAvatar": "Eliminar foto de perfil",
+      "saveChanges": "Guardar cambios"
+    },
+    "allergies": {
+      "title": "Alergias",
+      "description": "Añade tus alergias alimentarias para recibir avisos al planificar recetas que contengan alérgenos. Esta información se usa para avisarte cuando una receta planificada tiene ingredientes que coinciden con tus alergias.",
+      "placeholder": "Escribe alergias (p. ej., gluten, frutos secos, lácteos)...",
+      "saveButton": "Guardar alergias"
+    },
+    "apiKeys": {
+      "title": "Claves API",
+      "description": "Las claves API permiten acceso programático a la API de Norish. Úsalas para integraciones, atajos y automatizaciones.",
+      "keyNameLabel": "Nombre de la clave (opcional)",
+      "keyNamePlaceholder": "p. ej., Atajo iOS",
+      "createKey": "Crear clave",
+      "yourKeys": "Tus claves API",
+      "noKeys": "Aún no hay claves API. Crea una para empezar.",
+      "tableHeaders": {
+        "name": "NOMBRE",
+        "keyPrefix": "PREFIJO",
+        "created": "CREADA",
+        "status": "ESTADO",
+        "actions": "ACCIONES"
+      },
+      "unnamed": "Sin nombre",
+      "active": "Activa",
+      "disabled": "Desactivada",
+      "disableKey": "Desactivar clave",
+      "enableKey": "Activar clave",
+      "deleteKey": "Eliminar clave",
+      "generatedModal": {
+        "title": "Clave API generada",
+        "warning": "¡Guarda esta clave ahora! No podrás verla de nuevo. Solo almacenamos un hash y no podemos recuperar la clave.",
+        "hint": "Usa esta clave en la cabecera <code>x-api-key</code> al hacer peticiones a la API.",
+        "confirmButton": "La he guardado"
+      },
+      "deleteModal": {
+        "title": "Eliminar clave API",
+        "message": "¿Seguro que quieres eliminar esta clave API? Cualquier aplicación que la use perderá acceso inmediatamente. Esta acción no se puede deshacer.",
+        "confirmButton": "Eliminar clave"
+      }
+    },
+    "archiveImport": {
+      "title": "Importar archivo de recetas",
+      "description": "Importa recetas desde exportes de Mela (.melarecipes), Paprika (.paprikarecipes) o Mealie/Tandoor (.zip)"
+    },
+    "siteAuthTokens": {
+      "title": "Tokens de autenticación por sitio",
+      "description": "Añade cabeceras o cookies que se envían al importar recetas desde sitios específicos. Útil para webs que requieren inicio de sesión (p. ej., Instagram, Facebook).",
+      "domain": "Dominio",
+      "domainPlaceholder": "p. ej., instagram.com",
+      "name": "Nombre",
+      "namePlaceholder": "p. ej., Cookie o Authorization",
+      "value": "Valor",
+      "valuePlaceholder": "Valor del token o cookie",
+      "type": "Tipo",
+      "typeHeader": "Cabecera",
+      "typeCookie": "Cookie",
+      "addButton": "Añadir token",
+      "noTokens": "No hay tokens de autenticación configurados.",
+      "tableHeaders": {
+        "domain": "DOMINIO",
+        "name": "NOMBRE",
+        "type": "TIPO",
+        "created": "CREADO",
+        "actions": "ACCIONES"
+      },
+      "deleteModal": {
+        "title": "Eliminar token",
+        "message": "¿Seguro que quieres eliminar este token de autenticación? Las importaciones desde este sitio pueden dejar de funcionar.",
+        "confirmButton": "Eliminar token"
+      }
+    },
+    "dangerZone": {
+      "title": "Zona peligrosa",
+      "description": "Una vez que elimines tu cuenta, no hay vuelta atrás. Asegúrate antes de continuar.",
+      "deleteButton": "Eliminar mi cuenta",
+      "deleteModal": {
+        "title": "Eliminar cuenta",
+        "permanentWarning": "¡Esta acción es permanente y no se puede deshacer!",
+        "dataWarning": "Tus datos personales, incluidas la lista de la compra, entradas del calendario y notas, se eliminarán de forma permanente.",
+        "recipesNote": "Las recetas que hayas creado se conservarán, pero dejarán de estar vinculadas a tu cuenta.",
+        "adminNote": "Si eres admin de un hogar con otros miembros, debes transferir los privilegios de administrador primero.",
+        "confirmButton": "Eliminar mi cuenta"
+      }
+    }
+  },
+  "household": {
+    "pageTitle": "Ajustes del hogar",
+    "info": {
+      "yourRole": "Tu rol",
+      "admin": "Administrador",
+      "member": "Miembro",
+      "members": "Miembros",
+      "leaveButton": "Abandonar hogar",
+      "leaveModal": {
+        "title": "Abandonar hogar",
+        "confirmMessage": "¿Seguro que quieres abandonar {name}?",
+        "adminWarning": "Eres el administrador. Debes transferir los privilegios de admin antes de salir.",
+        "confirmButton": "Abandonar hogar"
+      }
+    },
+    "members": {
+      "title": "Miembros",
+      "tableHeaders": {
+        "name": "NOMBRE",
+        "role": "ROL",
+        "actions": "ACCIONES"
+      },
+      "you": "Tú",
+      "kickButton": "Expulsar",
+      "makeAdminButton": "Hacer admin",
+      "kickModal": {
+        "title": "Expulsar usuario",
+        "confirmMessage": "¿Seguro que quieres expulsar a {name} del hogar?",
+        "warning": "Perderá acceso a todas las recetas, listas de la compra y entradas de calendario compartidas.",
+        "confirmButton": "Expulsar usuario"
+      },
+      "transferModal": {
+        "title": "Transferir privilegios de admin",
+        "confirmMessage": "¿Seguro que quieres transferir los privilegios de administrador a {name}?",
+        "warning": "Pasarás a ser un miembro normal y ya no podrás expulsar usuarios ni gestionar códigos de unión.",
+        "confirmButton": "Transferir admin"
+      },
+      "toasts": {
+        "kickFailed": "No se pudo expulsar al usuario",
+        "transferSuccess": "Admin transferido a {name}",
+        "transferFailed": "No se pudo transferir el admin"
+      }
+    },
+    "joinCode": {
+      "title": "Código de unión",
+      "shareDescription": "Comparte este código para invitar a otras personas a tu hogar.",
+      "expiresIn": "Caduca en:",
+      "regenerateButton": "Regenerar",
+      "expired": "Caducado",
+      "noCodeDescription": "No hay código de unión activo. Genera uno para invitar nuevos miembros.",
+      "generateButton": "Generar código"
+    },
+    "create": {
+      "title": "Crear hogar",
+      "description": "Crea un hogar para compartir recetas y la lista de la compra con familia o amigos.",
+      "nameLabel": "Nombre del hogar",
+      "namePlaceholder": "p. ej., Familia Pérez",
+      "submitButton": "Crear hogar"
+    },
+    "join": {
+      "title": "Unirse a un hogar",
+      "description": "Introduce un código de unión para unirte a un hogar existente.",
+      "codeLabel": "Código de unión",
+      "codePlaceholder": "Código de 8 caracteres",
+      "submitButton": "Unirse al hogar"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "Configurar sincronización CalDAV",
+      "description": "Conecta tu calendario compatible con CalDAV para sincronizar automáticamente tus planes de comida",
+      "gettingStarted": "Primeros pasos con CalDAV",
+      "providerDescription": "Necesitarás un servicio de calendario compatible con CalDAV. Proveedores populares incluyen:",
+      "serverUrlLabel": "URL del servidor",
+      "serverUrlDescription": "URL base de tu servidor CalDAV (p. ej., https://dav.ejemplo.com)",
+      "serverUrlPlaceholder": "https://dav.ejemplo.com",
+      "usernameLabel": "Usuario",
+      "usernamePlaceholder": "usuario",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Introduce la contraseña",
+      "calendarLabel": "Calendario",
+      "calendarPlaceholder": "Selecciona un calendario",
+      "calendarPlaceholderDisabled": "Primero prueba la conexión",
+      "calendarDescription": "Selecciona con qué calendario sincronizar los planes de comida",
+      "calendarDescriptionDisabled": "Prueba la conexión para cargar los calendarios disponibles",
+      "timeFormat": "Formato: HH:MM-HH:MM",
+      "timeFormatError": "El formato debe ser HH:MM-HH:MM",
+      "breakfastTime": "Hora del desayuno",
+      "lunchTime": "Hora de la comida",
+      "dinnerTime": "Hora de la cena",
+      "snackTime": "Hora del tentempié",
+      "testConnection": "Probar conexión",
+      "saveConfiguration": "Guardar configuración"
+    },
+    "config": {
+      "title": "Configuración CalDAV",
+      "editTitle": "Editar configuración CalDAV",
+      "serverUrl": "URL del servidor",
+      "enabled": "Activado",
+      "disabled": "Desactivado",
+      "editButton": "Editar",
+      "deleteButton": "Eliminar",
+      "saveChanges": "Guardar cambios",
+      "advancedSettings": "Ajustes avanzados",
+      "timezone": "Zona horaria: {timezone}",
+      "connectionStatus": {
+        "connected": "Conectado",
+        "checking": "Comprobando...",
+        "disconnected": "Desconectado",
+        "unknown": "Desconocido"
+      }
+    },
+    "deleteModal": {
+      "title": "Eliminar configuración CalDAV",
+      "confirmMessage": "¿Seguro que quieres eliminar la configuración CalDAV?",
+      "deleteEventsLabel": "Eliminar eventos sincronizados",
+      "deleteEventsDescription": "Eliminar todos los eventos creados en tu calendario CalDAV",
+      "confirmButton": "Eliminar"
+    },
+    "syncStatus": {
+      "title": "Estado de sincronización",
+      "syncNow": "Sincronizar ahora",
+      "clearFilter": "Borrar filtro",
+      "clickToFilter": "Haz clic en una etiqueta para filtrar",
+      "showingItems": "Mostrando {start}-{end} de {total} elementos",
+      "tableHeaders": {
+        "item": "ELEMENTO",
+        "type": "TIPO",
+        "date": "FECHA",
+        "meal": "COMIDA",
+        "status": "ESTADO",
+        "lastSync": "ÚLTIMA SINCRONIZACIÓN",
+        "error": "ERROR"
+      },
+      "statuses": {
+        "synced": "Sincronizado",
+        "pending": "Pendiente",
+        "failed": "Error",
+        "removed": "Eliminado"
+      },
+      "emptyFiltered": "No se han encontrado elementos {status}",
+      "emptyDefault": "No hay registros de sincronización",
+      "errorDetails": "Detalles del error"
+    }
+  },
+  "admin": {
+    "general": {
+      "title": "General",
+      "allowRegistration": "Permitir registro de nuevos usuarios",
+      "registrationDescription": "Si está desactivado, solo los usuarios existentes pueden iniciar sesión",
+      "locales": "Idiomas habilitados",
+      "localesDescription": "Selecciona los idiomas que los usuarios pueden elegir",
+      "defaultLocale": "Idioma predeterminado",
+      "defaultLocaleDescription": "Idioma usado para nuevos usuarios y como fallback",
+      "saveLocales": "Guardar ajustes de idioma",
+      "localesSaved": "Ajustes de idioma guardados",
+      "localesError": "No se pudieron guardar los ajustes de idioma",
+      "atLeastOneLocale": "Debe habilitarse al menos un idioma"
+    },
+    "registration": {
+      "title": "Registro",
+      "allowRegistration": "Permitir registro de nuevos usuarios",
+      "description": "Si está desactivado, solo los usuarios existentes pueden iniciar sesión"
+    },
+    "permissions": {
+      "title": "Permisos de recetas",
+      "description": "Controla quién puede ver, editar y eliminar recetas. Los administradores del servidor siempre tienen acceso completo.",
+      "viewRecipes": "Ver recetas",
+      "viewDescription": "Quién puede ver las recetas en el panel",
+      "editRecipes": "Editar recetas",
+      "editDescription": "Quién puede modificar los detalles de las recetas",
+      "deleteRecipes": "Eliminar recetas",
+      "deleteDescription": "Quién puede eliminar recetas",
+      "levels": {
+        "everyone": "Todos",
+        "everyoneDescription": "Todos los usuarios autenticados",
+        "household": "Hogar",
+        "householdDescription": "El propietario de la receta y los miembros de su hogar",
+        "owner": "Solo el propietario",
+        "ownerDescription": "Solo el propietario de la receta"
+      },
+      "note": "Nota: Los artículos de la lista de la compra y del calendario siguen automáticamente las reglas del hogar; los miembros del hogar siempre pueden editar/eliminar artículos pertenecientes a cualquiera del mismo hogar."
+    },
+    "system": {
+      "title": "Ajustes del sistema",
+      "cleanup": {
+        "title": "Programador de limpieza",
+        "label": "Meses para limpiar",
+        "description": "Eliminar comidas planificadas con más de este número de meses"
+      },
+      "server": {
+        "title": "Gestión del servidor",
+        "restartLabel": "Reiniciar servidor",
+        "restartDescription": "Aplicar cambios de configuración que requieren reinicio",
+        "restartButton": "Reiniciar servidor"
+      }
+    },
+    "restart": {
+      "title": "Reiniciar servidor",
+      "confirmMessage": "¿Seguro que quieres reiniciar el servidor?",
+      "importantTitle": "Importante:",
+      "warning1": "Todas las conexiones activas se desconectarán",
+      "warning2": "El servidor no estará disponible durante unos segundos",
+      "warning3": "Asegúrate de que tu despliegue tenga configurado <code>restart: always</code>, o el servidor no volverá a arrancar automáticamente",
+      "confirmButton": "Reiniciar ahora"
+    },
+    "authProviders": {
+      "title": "Proveedores de autenticación",
+      "requiresRestart": "Requiere reinicio",
+      "description": "Configura los métodos de autenticación. Los cambios requieren reiniciar el servidor para aplicarse.",
+      "passwordAuth": {
+        "title": "Correo y contraseña",
+        "description": "Permitir que los usuarios inicien sesión con correo y contraseña"
+      },
+      "oauthDescription": "Configura proveedores OAuth para SSO.",
+      "oidc": {
+        "title": "Proveedor OIDC",
+        "subtitle": "OpenID Connect genérico",
+        "fields": {
+          "name": "Nombre del proveedor",
+          "namePlaceholder": "p. ej., Authentik, Keycloak",
+          "issuer": "URL del emisor",
+          "issuerPlaceholder": "https://tu-idp.com",
+          "clientId": "Client ID",
+          "clientSecret": "Client Secret",
+          "wellknown": "URL well-known (opcional)",
+          "wellknownPlaceholder": "Se deriva automáticamente del emisor si no se establece"
+        },
+        "claimMapping": {
+          "title": "Mapeo de claims",
+          "description": "Asigna roles y hogares automáticamente según claims de OIDC. Usuarios con el grupo de admin obtienen privilegios de administrador del servidor. Usuarios con un grupo de hogar se unen automáticamente a ese hogar.",
+          "securityWarning": "Aviso: habilitar el mapeo de claims permite que tu proveedor de identidad controle privilegios de admin y la pertenencia a hogares. Habilítalo solo si confías plenamente en tu proveedor OIDC y has configurado correctamente los claims de grupo.",
+          "scopes": "Scopes adicionales",
+          "scopesPlaceholder": "groups, roles",
+          "scopesDescription": "Lista separada por comas de scopes OAuth adicionales a solicitar (p. ej., groups para Keycloak)",
+          "groupsClaim": "Claim de grupos",
+          "groupsClaimDescription": "Nombre del claim que contiene los grupos/roles del usuario",
+          "adminGroup": "Grupo de admin",
+          "adminGroupDescription": "Nombre del grupo que otorga el rol de admin del servidor (no distingue mayúsculas/minúsculas)",
+          "householdPrefix": "Prefijo de hogar",
+          "householdPrefixDescription": "Prefijo para nombres de grupo de hogar (p. ej., norish_household_family => hogar 'family')"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "OAuth de GitHub",
+        "fields": {
+          "clientId": "Client ID",
+          "clientSecret": "Client Secret"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "OAuth de Google",
+        "fields": {
+          "clientId": "Client ID",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "Client Secret"
+        }
+      },
+      "form": {
+        "testSuccess": "Conexión correcta",
+        "removeTitle": "Eliminar {provider}",
+        "removeConfirm": "¿Seguro que quieres eliminar este proveedor?"
+      },
+      "envBadge": {
+        "db": "Gestionado por BD",
+        "env": "Gestionado por env"
+      }
+    },
+    "contentDetection": {
+      "title": "Detección de contenido",
+      "description": "Configura cómo se detectan y analizann las recetas desde páginas web.",
+      "contentIndicators": {
+        "title": "Indicadores de contenido",
+        "subtitle": "Palabras clave que identifican páginas de recetas",
+        "description": "Los indicadores de esquema detectan datos estructurados de receta (JSON-LD, microdata). Los indicadores de contenido son palabras clave que sugieren que una página contiene una receta.",
+        "timersEnabled": {
+          "title": "Activar temporizadores de receta",
+          "description": "Detectar y mostrar temporizadores interactivos en las recetas"
+        }
+      },
+      "units": {
+        "title": "Unidades de medida",
+        "subtitle": "Definiciones de unidades para el parsing",
+        "description": "Define unidades de medida con su forma corta, plural y variantes. Se usan al analizar cantidades de ingredientes."
+      },
+      "recurrence": {
+        "title": "Patrones de recurrencia",
+        "subtitle": "Patrones de lenguaje natural para elementos recurrentes",
+        "description": "Define patrones específicos de la localidad para analizar reglas de recurrencia desde lenguaje natural (p. ej., 'cada semana', 'om de dag')."
+      },
+      "timerKeywords": {
+        "title": "Palabras clave de temporizador",
+        "subtitle": "Palabras clave de unidad de tiempo para detectar temporizadores",
+        "description": "Configura palabras clave usadas para detectar temporizadores en las instrucciones de recetas. Soporta varios idiomas.",
+        "enableToggle": "Activar detección de temporizadores",
+        "hoursLabel": "Palabras clave para horas",
+        "hoursPlaceholder": "hour, hours, hr, hrs, h",
+        "hoursHelp": "Palabras clave para horas (p. ej., hour, stunde, heure, uur)",
+        "minutesLabel": "Palabras clave para minutos",
+        "minutesPlaceholder": "minute, minutes, min, mins, m",
+        "minutesHelp": "Palabras clave para minutos (p. ej., minute, minuten, minuut)",
+        "secondsLabel": "Palabras clave para segundos",
+        "secondsPlaceholder": "second, seconds, sec, secs, s",
+        "secondsHelp": "Palabras clave para segundos (p. ej., second, sekunde, seconde)",
+        "unsavedChanges": "Cambios sin guardar"
+      }
+    },
+    "aiProcessing": {
+      "title": "IA y procesamiento",
+      "description": "Configura funciones potentes con IA para extracción de recetas y procesamiento de vídeo.",
+      "aiConfig": {
+        "title": "Configuración de IA",
+        "subtitle": "Análisis y extracción de recetas"
+      },
+      "video": {
+        "title": "Procesamiento de vídeo",
+        "subtitle": "Extracción y transcripción de vídeos de redes sociales"
+      },
+      "prompts": {
+        "title": "Prompts",
+        "subtitle": "Personaliza las instrucciones de IA para el procesamiento de recetas"
+      },
+      "bulkCategorization": {
+        "title": "Categorización masiva",
+        "subtitle": "Categorizar recetas sin categoría usando IA",
+        "description": "Encola todas las recetas sin categoría para detección automática de categoría por IA. Las categorías incluyen Desayuno, Comida, Cena y Tentempié.",
+        "button": "Categorizar todas las recetas",
+        "queued": "{count, plural, =0 {No hay recetas para categorizar} one {# receta en cola} other {# recetas en cola}}",
+        "success": "Categorización iniciada",
+        "error": "No se pudo iniciar la categorización"
+      }
+    },
+    "aiConfig": {
+      "enableAI": "Activar funciones de IA",
+      "enableAIDescription": "Usa IA para extraer recetas de contenido no estructurado",
+      "configureWarning": "Configura los ajustes del proveedor de IA abajo para habilitar las funciones de IA.",
+      "provider": "Proveedor de IA",
+      "providers": {
+        "openai": "OpenAI",
+        "azure": "Azure OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google AI",
+        "mistral": "Mistral AI",
+        "deepseek": "DeepSeek",
+        "perplexity": "Perplexity",
+        "groq": "Groq",
+        "ollama": "Ollama (local)",
+        "lmStudio": "LM Studio (local)",
+        "genericOpenai": "Compatible con OpenAI genérico"
+      },
+      "endpointUrl": "URL del endpoint",
+      "azureEndpoint": "URL de recurso Azure (opcional)",
+      "azureEndpointDescription": "Endpoint personalizado de Azure OpenAI. Déjalo vacío para el por defecto.",
+      "model": "Modelo",
+      "visionModel": "Modelo de visión (opcional)",
+      "visionModelDescription": "Opcional: usa un modelo diferente para tareas de imagen/visión. Déjalo vacío para usar el modelo anterior.",
+      "apiKey": "Clave API",
+      "apiKeyPlaceholder": "Introduce la clave API",
+      "temperature": "Temperature: {value}",
+      "temperatureHint": "Más bajo = más centrado, Más alto = más creativo",
+      "maxTokens": "Máx. tokens",
+      "autoTagAllergies": "Detectar etiquetas de alergias automáticamente",
+      "autoTagAllergiesDescription": "Añadir etiquetas relacionadas con alergias automáticamente al importar recetas",
+      "alwaysUseAI": "Usar siempre IA para importar",
+      "alwaysUseAIDescription": "Omitir los analizadores estructurados y extraer recetas solo con IA",
+      "autoTaggingMode": "Modo de etiquetado automático",
+      "autoTaggingModeDescription": "Asignar etiquetas/palabras clave automáticamente a recetas importadas usando IA",
+      "autoTaggingModes": {
+        "disabled": "Desactivado",
+        "predefined": "Solo etiquetas predefinidas",
+        "predefinedDb": "Predefinidas + etiquetas existentes",
+        "freeform": "IA puede crear nuevas etiquetas"
+      },
+      "connectionSuccess": "Conexión correcta",
+      "testConnection": "Probar conexión",
+      "vision": "visión"
+    },
+    "videoConfig": {
+      "enableVideo": "Activar analizador de vídeo",
+      "enableVideoDescription": "Extraer recetas de TikTok, Instagram, YouTube Shorts o Facebook",
+      "configureWarning": "Configura un proveedor de transcripción abajo para habilitar el procesamiento de vídeo.",
+      "aiDisabledWarning": "Activa la configuración de IA antes de activar el procesamiento de vídeo.",
+      "maxLength": "Longitud máxima del vídeo (segundos)",
+      "maxLengthDescription": "Vídeos más largos requieren más tiempo y recursos para procesar",
+      "maxFileSize": "Tamaño máximo del archivo de vídeo",
+      "maxFileSizeDescription": "Tamaño máximo para archivos de vídeo descargados",
+      "ytDlpVersion": "Versión de yt-dlp",
+      "ytDlpVersionDescription": "Versión de yt-dlp a usar para descargas de vídeo",
+      "transcription": "Transcripción",
+      "transcriptionDescription": "Convertir el audio del vídeo a texto para extraer la receta",
+      "transcriptionProvider": "Proveedor de transcripción",
+      "transcriptionProviderDescription": "Solo OpenAI y endpoints compatibles con OpenAI soportan transcripción Whisper",
+      "transcriptionProviders": {
+        "disabled": "Desactivado",
+        "openai": "OpenAI Whisper",
+        "groq": "Groq Whisper",
+        "azure": "Azure OpenAI Whisper",
+        "ollama": "Ollama",
+        "genericOpenai": "Compatible con OpenAI genérico"
+      },
+      "transcriptionEndpoint": "URL del endpoint",
+      "transcriptionEndpointDescription": "Endpoint compatible con OpenAI con soporte Whisper, o endpoint de Ollama",
+      "transcriptionModel": "Modelo",
+      "transcriptionModelDescription": "Modelo Whisper a usar para la transcripción",
+      "transcriptionModelPlaceholder": "Selecciona o introduce el nombre del modelo",
+      "transcriptionApiKey": "Clave API",
+      "transcriptionApiKeyDescription": "Usa la clave de configuración de IA si no se ha establecido",
+      "transcriptionApiKeyPlaceholder": "Déjalo vacío para usar la clave de IA",
+      "transcriptionApiKeyOptional": "Clave API (opcional)",
+      "transcriptionApiKeyOptionalDescription": "La mayoría de servidores Whisper locales no requieren clave API",
+      "transcriptionApiKeyOptionalPlaceholder": "Déjalo vacío para servidores locales"
+    },
+    "promptsConfig": {
+      "recipeExtraction": "Prompt de extracción de recetas",
+      "recipeExtractionDescription": "Este prompt se usa al extraer datos de recetas desde páginas web o transcripciones de vídeo.",
+      "recipeExtractionPlaceholder": "Introduce el prompt de extracción de recetas...",
+      "unitConversion": "Prompt de conversión de unidades",
+      "unitConversionDescription": "Este prompt se usa al convertir medidas entre sistemas métrico y US. Variables disponibles: sourceSystem, targetSystem, units",
+      "unitConversionPlaceholder": "Introduce el prompt de conversión de unidades...",
+      "nutritionEstimation": "Prompt de estimación nutricional",
+      "nutritionEstimationDescription": "Este prompt se usa al estimar la información nutricional de una receta. Variables disponibles: recipeName, servings, ingredients",
+      "nutritionEstimationPlaceholder": "Introduce el prompt de estimación nutricional...",
+      "autoTagging": "Prompt de etiquetado automático",
+      "autoTaggingDescription": "Este prompt se usa para generar etiquetas al importar recetas. Define reglas de etiquetado y la lista de etiquetas predefinidas.",
+      "autoTaggingPlaceholder": "Introduce el prompt de etiquetado automático..."
+    },
+    "unsavedChanges": "Cambios sin guardar",
+    "jsonEditor": {
+      "placeholder": "Introduce la configuración JSON...",
+      "invalidJson": "Formato JSON inválido",
+      "failedToSave": "No se pudo guardar",
+      "failedToRestore": "No se pudo restaurar los valores predeterminados"
+    }
+  }
+}

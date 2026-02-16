@@ -22,6 +22,7 @@ vi.mock("@heroui/system", () => ({
 vi.mock("@heroui/toast", () => ({
   ToastProvider: (props: unknown) => {
     toastProviderMock(props);
+
     return null;
   },
 }));
