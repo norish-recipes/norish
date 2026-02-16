@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { Button, DatePicker, Select, SelectItem } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
+import { ArrowTopRightOnSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
-import { TrashIcon } from "@heroicons/react/16/solid";
 import Link from "next/link";
 
 import { Panel, PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
