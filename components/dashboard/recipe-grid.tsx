@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { Spinner } from "@heroui/react";
 import { useWindowSize } from "usehooks-ts";
@@ -171,7 +171,7 @@ export default function RecipeGrid() {
     <div
       ref={containerRef}
       className="relative flex h-full flex-col"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "0 500px" }}
+      style={{ containIntrinsicSize: "0 500px" }}
     >
       {showEmptyState ? (
         hasAppliedFilters ? (

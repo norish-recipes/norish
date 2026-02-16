@@ -22,6 +22,7 @@ vi.mock("@heroui/system", () => ({
 vi.mock("@heroui/toast", () => ({
   ToastProvider: (props: unknown) => {
     toastProviderMock(props);
+
     return null;
   },
 }));
@@ -35,7 +36,7 @@ vi.mock("@/components/timer-dock", () => ({
 }));
 
 describe("BaseProviders", () => {
-  it("disables toast animations to avoid hover position shifts", () => {
+  it("uses top-right placement so mobile can collapse to top-center", () => {
     render(
       <BaseProviders>
         <div>content</div>
@@ -44,6 +45,22 @@ describe("BaseProviders", () => {
 
     expect(toastProviderMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        placement: "top-right",
+        toastOffset: 48,
+        maxVisibleToasts: 1,
+      })
+    );
+  });
+
+  it("keeps toast animations enabled to avoid hover glitches", () => {
+    render(
+      <BaseProviders>
+        <div>content</div>
+      </BaseProviders>
+    );
+
+    expect(toastProviderMock).toHaveBeenCalledWith(
+      expect.not.objectContaining({
         disableAnimation: true,
       })
     );

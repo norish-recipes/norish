@@ -97,8 +97,24 @@ describe("buildAuthArgs", () => {
     expect(lines[0]).toBe("# Netscape HTTP Cookie File");
     expect(lines[1]).toBe("# https://curl.se/docs/http-cookies.html");
     expect(lines[2]).toBe("");
-    expect(lines[3]).toBe("www.example.com\tTRUE\t/\tFALSE\t0\tsession_id\tsess123");
-    expect(lines[4]).toBe("www.example.com\tTRUE\t/\tFALSE\t0\tauth_tok\tauthval");
+    expect(lines[3]).toBe(".example.com\tTRUE\t/\tTRUE\t0\tsession_id\tsess123");
+    expect(lines[4]).toBe(".example.com\tTRUE\t/\tTRUE\t0\tauth_tok\tauthval");
+
+    cookieFilePaths.push(cookiePath);
+    await cleanup();
+  });
+
+  it("should normalize instagram cookie domain with leading dot", async () => {
+    const tokens = [
+      makeToken({ domain: "instagram.com", name: "sessionid", value: "abc", type: "cookie" }),
+    ];
+    const { args, cleanup } = await buildAuthArgs(tokens, "https://www.instagram.com/p/abc123");
+
+    const cookiePath = args[1];
+    const content = await fs.readFile(cookiePath, "utf-8");
+    const lines = content.split("\n");
+
+    expect(lines[3]).toBe(".instagram.com\tTRUE\t/\tTRUE\t0\tsessionid\tabc");
 
     cookieFilePaths.push(cookiePath);
     await cleanup();

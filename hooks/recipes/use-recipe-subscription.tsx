@@ -2,11 +2,13 @@
 
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { addToast } from "@heroui/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 import { useRecipeQuery } from "./use-recipe-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 /**
  * Hook that subscribes to WebSocket events for a single recipe
@@ -14,6 +16,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
  */
 export function useRecipeSubscription(recipeId: string | null) {
   const trpc = useTRPC();
+  const tErrors = useTranslations("common.errors");
   const router = useRouter();
   const { setRecipeData, invalidate } = useRecipeQuery(recipeId);
 
@@ -79,12 +82,12 @@ export function useRecipeSubscription(recipeId: string | null) {
         // Invalidate to get correct state
         invalidate();
 
-        addToast({
-          severity: "danger",
-          title: "Recipe operation failed",
-          description: payload.reason,
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
+          error: payload.reason,
+          context: "recipe-subscription:onFailed",
+          metadata: { recipeId, payloadRecipeId: payload.recipeId },
         });
       },
     })

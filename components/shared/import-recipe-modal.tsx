@@ -9,13 +9,13 @@ import {
   ModalFooter,
   Input,
   Button,
-  addToast,
 } from "@heroui/react";
 import { SparklesIcon, ArrowDownTrayIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useRecipesContext } from "@/context/recipes-context";
 import { usePermissionsContext } from "@/context/permissions-context";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 interface ImportRecipeModalProps {
   isOpen: boolean;
@@ -24,6 +24,7 @@ interface ImportRecipeModalProps {
 
 export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipeModalProps) {
   const t = useTranslations("common.import.url");
+  const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
   const { importRecipe, importRecipeWithAI } = useRecipesContext();
   const { isAIEnabled } = usePermissionsContext();
@@ -72,12 +73,12 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
     } catch (e) {
       onOpenChange(false);
       setImportUrl("");
-      addToast({
+      showSafeErrorToast({
         title: t("failed"),
-        description: (e as Error).message,
+        description: tErrors("technicalDetails"),
         color: "danger",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        error: e,
+        context: "import-recipe-modal:import",
       });
     }
   }
@@ -92,12 +93,12 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
     } catch (e) {
       onOpenChange(false);
       setImportUrl("");
-      addToast({
+      showSafeErrorToast({
         title: t("failedWithAI"),
-        description: (e as Error).message,
+        description: tErrors("technicalDetails"),
         color: "danger",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        error: e,
+        context: "import-recipe-modal:import-ai",
       });
     }
   }

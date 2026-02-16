@@ -1,0 +1,543 @@
+{
+  "page": {
+    "title": "Настройки",
+    "loading": "Загрузка...",
+    "ariaLabel": "Вкладки настроек"
+  },
+  "tabs": {
+    "user": "Пользователь",
+    "household": "Семейная группа",
+    "caldav": "CalDAV",
+    "admin": "Администратор"
+  },
+  "user": {
+    "profile": {
+      "title": "Профиль",
+      "nameLabel": "Имя",
+      "namePlaceholder": "Ваше имя",
+      "emailLabel": "Электронная почта",
+      "avatarHint": "Нажмите на аватар, чтобы изменить изображение",
+      "deleteAvatar": "Удалить фото профиля",
+      "saveChanges": "Сохранить изменения"
+    },
+    "allergies": {
+      "title": "Аллергии",
+      "description": "Добавьте ваши пищевые аллергии, чтобы получать предупреждения при планировании рецептов, содержащих аллергены. Эта информация используется для предупреждений, когда запланированный рецепт содержит ингредиенты, совпадающие с вашими аллергиями.",
+      "placeholder": "Введите аллергии (например, глютен, орехи, молочные продукты)...",
+      "saveButton": "Сохранить аллергии"
+    },
+    "apiKeys": {
+      "title": "API-ключи",
+      "description": "API-ключи позволяют программно обращаться к Norish API. Используйте их для интеграций, быстрых команд и автоматизации.",
+      "keyNameLabel": "Название ключа (необязательно)",
+      "keyNamePlaceholder": "например, iOS Shortcut",
+      "createKey": "Создать ключ",
+      "yourKeys": "Ваши API-ключи",
+      "noKeys": "Пока нет API-ключей. Создайте первый, чтобы начать.",
+      "tableHeaders": {
+        "name": "НАЗВАНИЕ",
+        "keyPrefix": "ПРЕФИКС КЛЮЧА",
+        "created": "СОЗДАН",
+        "status": "СТАТУС",
+        "actions": "ДЕЙСТВИЯ"
+      },
+      "unnamed": "Без названия",
+      "active": "Активен",
+      "disabled": "Отключён",
+      "disableKey": "Отключить ключ",
+      "enableKey": "Включить ключ",
+      "deleteKey": "Удалить ключ",
+      "generatedModal": {
+        "title": "API-ключ создан",
+        "warning": "Сохраните этот ключ прямо сейчас! Вы больше не сможете его увидеть. Мы храним только хэш и не можем восстановить этот ключ.",
+        "hint": "Используйте этот ключ в заголовке <code>x-api-key</code> при выполнении API-запросов.",
+        "confirmButton": "Я сохранил(а) ключ"
+      },
+      "deleteModal": {
+        "title": "Удалить API-ключ",
+        "message": "Вы уверены, что хотите удалить этот API-ключ? Любые приложения, использующие его, сразу потеряют доступ. Это действие нельзя отменить.",
+        "confirmButton": "Удалить ключ"
+      }
+    },
+    "archiveImport": {
+      "title": "Импорт архива рецептов",
+      "description": "Импортируйте рецепты из экспортов Mela (.melarecipes), Paprika (.paprikarecipes) или Mealie/Tandoor (.zip)"
+    },
+    "siteAuthTokens": {
+      "title": "Токены аутентификации сайтов",
+      "description": "Добавляйте заголовки или cookies, которые отправляются при импорте рецептов с определённых сайтов. Полезно для сайтов, где требуется вход (например, Instagram, Facebook).",
+      "domain": "Домен",
+      "domainPlaceholder": "например, instagram.com",
+      "name": "Название",
+      "namePlaceholder": "например, Cookie или Authorization",
+      "value": "Значение",
+      "valuePlaceholder": "Значение токена или cookie",
+      "type": "Тип",
+      "typeHeader": "Заголовок",
+      "typeCookie": "Cookie",
+      "addButton": "Добавить токен",
+      "noTokens": "Токены аутентификации сайтов не настроены.",
+      "tableHeaders": {
+        "domain": "ДОМЕН",
+        "name": "НАЗВАНИЕ",
+        "type": "ТИП",
+        "created": "СОЗДАН",
+        "actions": "ДЕЙСТВИЯ"
+      },
+      "deleteModal": {
+        "title": "Удалить токен",
+        "message": "Вы уверены, что хотите удалить этот токен аутентификации? Импорт с этого сайта может перестать работать.",
+        "confirmButton": "Удалить токен"
+      }
+    },
+    "dangerZone": {
+      "title": "Опасная зона",
+      "description": "После удаления аккаунта пути назад не будет. Пожалуйста, убедитесь в своём решении.",
+      "deleteButton": "Удалить мой аккаунт",
+      "deleteModal": {
+        "title": "Удалить аккаунт",
+        "permanentWarning": "Это действие необратимо и не может быть отменено!",
+        "dataWarning": "Ваши личные данные, включая список покупок, записи календаря и заметки, будут удалены навсегда.",
+        "recipesNote": "Созданные вами рецепты будут сохранены, но больше не будут связаны с вашим аккаунтом.",
+        "adminNote": "Если вы администратор семейной группы с другими участниками, сначала передайте права администратора.",
+        "confirmButton": "Удалить мой аккаунт"
+      }
+    }
+  },
+  "household": {
+    "pageTitle": "Настройки семейной группы",
+    "info": {
+      "yourRole": "Ваша роль",
+      "admin": "Администратор",
+      "member": "Участник",
+      "members": "Участники",
+      "leaveButton": "Покинуть семейную группа",
+      "leaveModal": {
+        "title": "Покинуть семейную группа",
+        "confirmMessage": "Вы уверены, что хотите покинуть {name}?",
+        "adminWarning": "Вы администратор. Перед выходом необходимо передать права администратора.",
+        "confirmButton": "Покинуть семейную группа"
+      }
+    },
+    "members": {
+      "title": "Участники",
+      "tableHeaders": {
+        "name": "ИМЯ",
+        "role": "РОЛЬ",
+        "actions": "ДЕЙСТВИЯ"
+      },
+      "you": "Вы",
+      "kickButton": "Исключить",
+      "makeAdminButton": "Назначить администратором",
+      "kickModal": {
+        "title": "Исключить пользователя",
+        "confirmMessage": "Вы уверены, что хотите исключить {name} из семейной группы?",
+        "warning": "Пользователь потеряет доступ ко всем общим рецептам, покупкам и записям календаря.",
+        "confirmButton": "Исключить пользователя"
+      },
+      "transferModal": {
+        "title": "Передать права администратора",
+        "confirmMessage": "Вы уверены, что хотите передать права администратора пользователю {name}?",
+        "warning": "Вы станете обычным участником и больше не сможете исключать пользователей или управлять кодами приглашения.",
+        "confirmButton": "Передать права"
+      },
+      "toasts": {
+        "kickFailed": "Не удалось исключить пользователя",
+        "transferSuccess": "Права администратора переданы пользователю {name}",
+        "transferFailed": "Не удалось передать права администратора"
+      }
+    },
+    "joinCode": {
+      "title": "Код приглашения",
+      "shareDescription": "Поделитесь этим кодом с другими, чтобы пригласить их в семейную группа.",
+      "expiresIn": "Истекает через:",
+      "regenerateButton": "Сгенерировать заново",
+      "expired": "Истёк",
+      "noCodeDescription": "Нет активного кода приглашения. Сгенерируйте его, чтобы приглашать новых участников.",
+      "generateButton": "Сгенерировать код приглашения"
+    },
+    "create": {
+      "title": "Создать семейную группу",
+      "description": "Создайте новую семейную группу, чтобы делиться рецептами и списком покупок с семейной группой или друзьями.",
+      "nameLabel": "Название семейной группы",
+      "namePlaceholder": "например, Семейная группа Смит",
+      "submitButton": "Создать семейную группу"
+    },
+    "join": {
+      "title": "Присоединиться к семейной группе",
+      "description": "Введите код приглашения, чтобы присоединиться к существующему семейной группе.",
+      "codeLabel": "Код приглашения",
+      "codePlaceholder": "8-символьный код",
+      "submitButton": "Присоединиться"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "Настроить синхронизацию CalDAV",
+      "description": "Подключите календарь, совместимый с CalDAV, чтобы автоматически синхронизировать планы питания",
+      "gettingStarted": "Начало работы с CalDAV",
+      "providerDescription": "Вам понадобится сервис календаря, совместимый с CalDAV. Популярные провайдеры:",
+      "serverUrlLabel": "URL сервера",
+      "serverUrlDescription": "Базовый URL вашего CalDAV-сервера (например, https://dav.example.com)",
+      "serverUrlPlaceholder": "https://dav.example.com",
+      "usernameLabel": "Имя пользователя",
+      "usernamePlaceholder": "username",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "Введите пароль",
+      "calendarLabel": "Календарь",
+      "calendarPlaceholder": "Выберите календарь",
+      "calendarPlaceholderDisabled": "Сначала проверьте подключение",
+      "calendarDescription": "Выберите календарь для синхронизации планов питания",
+      "calendarDescriptionDisabled": "Проверьте подключение, чтобы загрузить доступные календари",
+      "timeFormat": "Формат: HH:MM-HH:MM",
+      "timeFormatError": "Формат должен быть HH:MM-HH:MM",
+      "breakfastTime": "Время завтрака",
+      "lunchTime": "Время обеда",
+      "dinnerTime": "Время ужина",
+      "snackTime": "Время перекуса",
+      "testConnection": "Проверить подключение",
+      "saveConfiguration": "Сохранить настройки"
+    },
+    "config": {
+      "title": "Настройки CalDAV",
+      "editTitle": "Редактировать настройки CalDAV",
+      "serverUrl": "URL сервера",
+      "enabled": "Включено",
+      "disabled": "Отключено",
+      "editButton": "Редактировать",
+      "deleteButton": "Удалить",
+      "saveChanges": "Сохранить изменения",
+      "advancedSettings": "Расширенные настройки",
+      "timezone": "Часовой пояс: {timezone}",
+      "connectionStatus": {
+        "connected": "Подключено",
+        "checking": "Проверка...",
+        "disconnected": "Отключено",
+        "unknown": "Неизвестно"
+      }
+    },
+    "deleteModal": {
+      "title": "Удалить настройки CalDAV",
+      "confirmMessage": "Вы уверены, что хотите удалить настройки CalDAV?",
+      "deleteEventsLabel": "Удалить синхронизированные события",
+      "deleteEventsDescription": "Удалить все события, созданные в вашем календаре CalDAV",
+      "confirmButton": "Удалить"
+    },
+    "syncStatus": {
+      "title": "Статус синхронизации",
+      "syncNow": "Синхронизировать сейчас",
+      "clearFilter": "Очистить фильтр",
+      "clickToFilter": "Нажмите на бейдж, чтобы отфильтровать",
+      "showingItems": "Показано {start}-{end} из {total}",
+      "tableHeaders": {
+        "item": "ЭЛЕМЕНТ",
+        "type": "ТИП",
+        "date": "ДАТА",
+        "meal": "ПРИЁМ ПИЩИ",
+        "status": "СТАТУС",
+        "lastSync": "ПОСЛЕДНЯЯ СИНХР.",
+        "error": "ОШИБКА"
+      },
+      "statuses": {
+        "synced": "Синхронизировано",
+        "pending": "В ожидании",
+        "failed": "Ошибка",
+        "removed": "Удалено"
+      },
+      "emptyFiltered": "Элементы со статусом «{status}» не найдены",
+      "emptyDefault": "Записи синхронизации не найдены",
+      "errorDetails": "Подробности ошибки"
+    }
+  },
+  "admin": {
+    "general": {
+      "title": "Общие",
+      "allowRegistration": "Разрешить регистрацию новых пользователей",
+      "registrationDescription": "Если отключено, войти смогут только существующие пользователи",
+      "locales": "Доступные языки",
+      "localesDescription": "Выберите, какие языки смогут выбирать пользователи",
+      "defaultLocale": "Язык по умолчанию",
+      "defaultLocaleDescription": "Язык для новых пользователей и язык-резерв",
+      "saveLocales": "Сохранить языковые настройки",
+      "localesSaved": "Языковые настройки сохранены",
+      "localesError": "Не удалось сохранить языковые настройки",
+      "atLeastOneLocale": "Должен быть включён хотя бы один язык"
+    },
+    "registration": {
+      "title": "Регистрация",
+      "allowRegistration": "Разрешить регистрацию новых пользователей",
+      "description": "Если отключено, войти смогут только существующие пользователи"
+    },
+    "permissions": {
+      "title": "Права доступа к рецептам",
+      "description": "Управляйте тем, кто может просматривать, редактировать и удалять рецепты. Администраторы сервера всегда имеют полный доступ.",
+      "viewRecipes": "Просмотр рецептов",
+      "viewDescription": "Кто может видеть рецепты на главной странице",
+      "editRecipes": "Редактирование рецептов",
+      "editDescription": "Кто может изменять данные рецепта",
+      "deleteRecipes": "Удаление рецептов",
+      "deleteDescription": "Кто может удалять рецепты",
+      "levels": {
+        "everyone": "Все",
+        "everyoneDescription": "Все аутентифицированные пользователи",
+        "household": "Семейная группа",
+        "householdDescription": "Владелец рецепта и участники его семейной группы",
+        "owner": "Только владелец",
+        "ownerDescription": "Только владелец рецепта"
+      },
+      "note": "Примечание: элементы списка покупок и календаря автоматически следуют правилам семейной группы; участники семейной группы всегда могут редактировать/удалять элементы, принадлежащие любому пользователю в том же семейной группе."
+    },
+    "system": {
+      "title": "Системные настройки",
+      "cleanup": {
+        "title": "Планировщик очистки",
+        "label": "Месяцев хранения",
+        "description": "Удалять запланированные приёмы пищи старше указанного количества месяцев"
+      },
+      "server": {
+        "title": "Управление сервером",
+        "restartLabel": "Перезапуск сервера",
+        "restartDescription": "Применить изменения конфигурации, которые требуют перезапуска",
+        "restartButton": "Перезапустить сервер"
+      }
+    },
+    "restart": {
+      "title": "Перезапуск сервера",
+      "confirmMessage": "Вы уверены, что хотите перезапустить сервер?",
+      "importantTitle": "Важно:",
+      "warning1": "Все активные подключения будут разорваны",
+      "warning2": "Сервер будет недоступен несколько секунд",
+      "warning3": "Убедитесь, что в вашем деплое настроено <code>restart: always</code>, иначе сервер не поднимется автоматически",
+      "confirmButton": "Перезапустить сейчас"
+    },
+    "authProviders": {
+      "title": "Провайдеры аутентификации",
+      "requiresRestart": "Требуется перезапуск",
+      "description": "Настройте методы аутентификации. Для применения изменений нужен перезапуск сервера.",
+      "passwordAuth": {
+        "title": "Электронная почта и пароль",
+        "description": "Разрешить вход по электронной почте и паролю"
+      },
+      "oauthDescription": "Настройте OAuth-провайдеров для SSO-аутентификации.",
+      "oidc": {
+        "title": "OIDC-провайдер",
+        "subtitle": "Стандартный OpenID Connect",
+        "fields": {
+          "name": "Название провайдера",
+          "namePlaceholder": "например, Authentik, Keycloak",
+          "issuer": "URL issuer",
+          "issuerPlaceholder": "https://your-idp.com",
+          "clientId": "Client ID",
+          "clientSecret": "Client Secret",
+          "wellknown": "Well-known URL (необязательно)",
+          "wellknownPlaceholder": "Автоматически из issuer, если не задан"
+        },
+        "claimMapping": {
+          "title": "Сопоставление claims",
+          "description": "Автоматически назначайте роли и семейной группы на основе OIDC-claims. Пользователи с группой админа получают права администратора сервера. Пользователи с группой семейной группы автоматически присоединяются к семейной группе.",
+          "securityWarning": "Внимание: включение сопоставления claims позволяет вашему провайдеру удостоверений управлять правами администратора и членством в семейной группе. Включайте это только если вы полностью доверяете OIDC-провайдеру и корректно настроили claims групп.",
+          "scopes": "Дополнительные scopes",
+          "scopesPlaceholder": "groups, roles",
+          "scopesDescription": "Список дополнительных OAuth scopes через запятую (например, groups для Keycloak)",
+          "groupsClaim": "Claim групп",
+          "groupsClaimDescription": "Название claim, содержащего группы/роли пользователя",
+          "adminGroup": "Группа админов",
+          "adminGroupDescription": "Название группы, дающей роль администратора сервера (без учёта регистра)",
+          "householdPrefix": "Префикс семейной группы",
+          "householdPrefixDescription": "Префикс имён групп семей (например, norish_household_family => семейная группа 'family')"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "GitHub OAuth",
+        "fields": {
+          "clientId": "Client ID",
+          "clientSecret": "Client Secret"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "Google OAuth",
+        "fields": {
+          "clientId": "Client ID",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "Client Secret"
+        }
+      },
+      "form": {
+        "testSuccess": "Подключение успешно",
+        "removeTitle": "Удалить {provider}",
+        "removeConfirm": "Вы уверены, что хотите удалить этого провайдера?"
+      },
+      "envBadge": {
+        "db": "Управляется БД",
+        "env": "Управляется окружением"
+      }
+    },
+    "contentDetection": {
+      "title": "Определение контента",
+      "description": "Настройте, как рецепты определяются и извлекаются со страниц.",
+      "contentIndicators": {
+        "title": "Индикаторы контента",
+        "subtitle": "Ключевые слова, определяющие страницы рецептов",
+        "description": "Schema-индикаторы обнаруживают структурированные данные рецепта (JSON-LD, microdata). Индикаторы контента — это ключевые слова, которые предполагают, что страница содержит рецепт.",
+        "timersEnabled": {
+          "title": "Включить таймеры рецептов",
+          "description": "Определять и показывать интерактивные таймеры в рецептах"
+        }
+      },
+      "units": {
+        "title": "Единицы измерения",
+        "subtitle": "Определения единиц для парсинга",
+        "description": "Задайте единицы измерения с краткой формой, формой множественного числа и альтернативными написаниями. Используется при распознавании количества ингредиентов."
+      },
+      "recurrence": {
+        "title": "Шаблоны повторов",
+        "subtitle": "Шаблоны естественного языка для повторяющихся элементов",
+        "description": "Задайте шаблоны для конкретной локали, чтобы распознавать правила повторов из естественного языка (например, «каждую неделю», «om de dag»)."
+      },
+      "timerKeywords": {
+        "title": "Ключевые слова таймера",
+        "subtitle": "Ключевые слова единиц времени для определения таймеров",
+        "description": "Настройте ключевые слова, используемые для обнаружения таймеров в инструкциях рецепта. Поддерживает несколько языков.",
+        "enableToggle": "Включить определение таймеров",
+        "hoursLabel": "Ключевые слова часов",
+        "hoursPlaceholder": "hour, hours, hr, hrs, h",
+        "hoursHelp": "Ключевые слова для часов (например, hour, stunde, heure, uur)",
+        "minutesLabel": "Ключевые слова минут",
+        "minutesPlaceholder": "minute, minutes, min, mins, m",
+        "minutesHelp": "Ключевые слова для минут (например, minute, minuten, minuut)",
+        "secondsLabel": "Ключевые слова секунд",
+        "secondsPlaceholder": "second, seconds, sec, secs, s",
+        "secondsHelp": "Ключевые слова для секунд (например, second, sekunde, seconde)",
+        "unsavedChanges": "Несохранённые изменения"
+      }
+    },
+    "aiProcessing": {
+      "title": "ИИ и обработка",
+      "description": "Настройте функции на базе ИИ для извлечения рецептов и обработки видео.",
+      "aiConfig": {
+        "title": "Настройки ИИ",
+        "subtitle": "Парсинг и извлечение рецептов"
+      },
+      "video": {
+        "title": "Обработка видео",
+        "subtitle": "Извлечение видео из соцсетей и транскрибация"
+      },
+      "prompts": {
+        "title": "Промпты",
+        "subtitle": "Настройка инструкций ИИ для обработки рецептов"
+      },
+      "bulkCategorization": {
+        "title": "Массовая категоризация",
+        "subtitle": "Категоризировать рецепты без категории с помощью ИИ",
+        "description": "Поставить в очередь все рецепты без категории для определения категории с помощью ИИ. Категории включают Завтрак, Обед, Ужин и Перекус.",
+        "button": "Категоризировать все рецепты",
+        "queued": "{count, plural, =0 {Нет рецептов для категоризации} one {В очередь добавлен # рецепт} few {В очередь добавлено # рецепта} many {В очередь добавлено # рецептов} other {В очередь добавлено # рецепта}}",
+        "success": "Категоризация запущена",
+        "error": "Не удалось запустить категоризацию"
+      }
+    },
+    "aiConfig": {
+      "enableAI": "Включить функции ИИ",
+      "enableAIDescription": "Использовать ИИ для извлечения рецептов из неструктурированного контента",
+      "configureWarning": "Настройте провайдера ИИ ниже, чтобы включить функции ИИ.",
+      "provider": "Провайдер ИИ",
+      "providers": {
+        "openai": "OpenAI",
+        "azure": "Azure OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google AI",
+        "mistral": "Mistral AI",
+        "deepseek": "DeepSeek",
+        "perplexity": "Perplexity",
+        "groq": "Groq",
+        "ollama": "Ollama (локально)",
+        "lmStudio": "LM Studio (локально)",
+        "genericOpenai": "Совместимый с OpenAI"
+      },
+      "endpointUrl": "URL эндпоинта",
+      "azureEndpoint": "URL ресурса Azure (необязательно)",
+      "azureEndpointDescription": "Пользовательский Azure OpenAI endpoint. Оставьте пустым для значения по умолчанию.",
+      "model": "Модель",
+      "visionModel": "Vision-модель (необязательно)",
+      "visionModelDescription": "Необязательно: используйте другую модель для задач изображения/зрения. Оставьте пустым, чтобы использовать модель выше.",
+      "apiKey": "API-ключ",
+      "apiKeyPlaceholder": "Введите API-ключ",
+      "temperature": "Температура: {value}",
+      "temperatureHint": "Ниже = более точные ответы, выше = более творческие",
+      "maxTokens": "Макс. токенов",
+      "autoTagAllergies": "Автоматически добавлять теги аллергии",
+      "autoTagAllergiesDescription": "Автоматически добавлять теги, связанные с аллергией, при импорте рецептов",
+      "alwaysUseAI": "Всегда использовать импорт с ИИ",
+      "alwaysUseAIDescription": "Пропускать структурированные парсеры и извлекать рецепт только с помощью ИИ",
+      "autoTaggingMode": "Режим автотегирования",
+      "autoTaggingModeDescription": "Автоматически назначать теги/ключевые слова импортированным рецептам с помощью ИИ",
+      "autoTaggingModes": {
+        "disabled": "Отключено",
+        "predefined": "Только предустановленные теги",
+        "predefinedDb": "Предустановленные + существующие теги",
+        "freeform": "ИИ может создавать новые теги"
+      },
+      "connectionSuccess": "Подключение успешно",
+      "testConnection": "Проверить подключение",
+      "vision": "vision"
+    },
+    "videoConfig": {
+      "enableVideo": "Включить парсинг видео",
+      "enableVideoDescription": "Извлекать рецепты из TikTok, Instagram, YouTube Shorts или Facebook",
+      "configureWarning": "Настройте провайдера транскрибации ниже, чтобы включить обработку видео.",
+      "aiDisabledWarning": "Перед включением обработки видео включите настройки ИИ.",
+      "maxLength": "Макс. длина видео (секунды)",
+      "maxLengthDescription": "Более длинные видео требуют больше времени и ресурсов",
+      "maxFileSize": "Макс. размер видеофайла",
+      "maxFileSizeDescription": "Максимальный размер загружаемых видеофайлов",
+      "ytDlpVersion": "Версия yt-dlp",
+      "ytDlpVersionDescription": "Версия yt-dlp для загрузки видео",
+      "transcription": "Транскрибация",
+      "transcriptionDescription": "Преобразование аудио в текст для извлечения рецептов",
+      "transcriptionProvider": "Провайдер транскрибации",
+      "transcriptionProviderDescription": "Только OpenAI и совместимые эндпоинты поддерживают транскрибацию Whisper",
+      "transcriptionProviders": {
+        "disabled": "Отключено",
+        "openai": "OpenAI Whisper",
+        "groq": "Groq Whisper",
+        "azure": "Azure OpenAI Whisper",
+        "ollama": "Ollama",
+        "genericOpenai": "Совместимый с OpenAI"
+      },
+      "transcriptionEndpoint": "URL эндпоинта",
+      "transcriptionEndpointDescription": "OpenAI-совместимый эндпоинт с поддержкой Whisper или эндпоинт Ollama",
+      "transcriptionModel": "Модель",
+      "transcriptionModelDescription": "Модель Whisper для транскрибации",
+      "transcriptionModelPlaceholder": "Выберите или введите название модели",
+      "transcriptionApiKey": "API-ключ",
+      "transcriptionApiKeyDescription": "Если не задан, используется API-ключ из настроек ИИ",
+      "transcriptionApiKeyPlaceholder": "Оставьте пустым, чтобы использовать ключ из настроек ИИ",
+      "transcriptionApiKeyOptional": "API-ключ (необязательно)",
+      "transcriptionApiKeyOptionalDescription": "Большинство локальных Whisper-серверов не требуют API-ключ",
+      "transcriptionApiKeyOptionalPlaceholder": "Оставьте пустым для локальных серверов"
+    },
+    "promptsConfig": {
+      "recipeExtraction": "Промпт извлечения рецепта",
+      "recipeExtractionDescription": "Этот промпт используется при извлечении данных рецепта с веб-страниц или из транскриптов видео.",
+      "recipeExtractionPlaceholder": "Введите промпт извлечения рецепта...",
+      "unitConversion": "Промпт конвертации единиц",
+      "unitConversionDescription": "Этот промпт используется при конвертации мер между метрической и US системами. Доступные переменные: sourceSystem, targetSystem, units",
+      "unitConversionPlaceholder": "Введите промпт конвертации единиц...",
+      "nutritionEstimation": "Промпт оценки пищевой ценности",
+      "nutritionEstimationDescription": "Этот промпт используется при оценке пищевой ценности рецепта. Доступные переменные: recipeName, servings, ingredients",
+      "nutritionEstimationPlaceholder": "Введите промпт оценки пищевой ценности...",
+      "autoTagging": "Промпт автотегирования",
+      "autoTaggingDescription": "Этот промпт используется для генерации тегов для импортируемых рецептов. Задайте правила тегирования и список предустановленных тегов.",
+      "autoTaggingPlaceholder": "Введите промпт автотегирования..."
+    },
+    "unsavedChanges": "Несохранённые изменения",
+    "jsonEditor": {
+      "placeholder": "Введите JSON-конфигурацию...",
+      "invalidJson": "Некорректный формат JSON",
+      "failedToSave": "Не удалось сохранить",
+      "failedToRestore": "Не удалось восстановить значения по умолчанию"
+    }
+  }
+}

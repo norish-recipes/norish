@@ -146,9 +146,19 @@ export async function normalizeExtractionOutput(
   normalized.url = url ?? null;
   normalized.notes = typeof output.notes === "string" ? decode(output.notes) : null;
 
+  const metricIngredients = (normalized.recipeIngredients ?? []).map((ing) => ({
+    ...ing,
+    systemUsed: "metric" as const,
+  }));
+
+  const metricSteps = (normalized.steps ?? []).map((step) => ({
+    ...step,
+    systemUsed: "metric" as const,
+  }));
+
   // Combine both measurement systems
   normalized.recipeIngredients = [
-    ...(normalized.recipeIngredients ?? []), // metric from normalizer
+    ...metricIngredients,
     ...usIngredients.map((ing, i) => ({
       ingredientId: null,
       ingredientName: ing.description,
@@ -159,10 +169,7 @@ export async function normalizeExtractionOutput(
     })),
   ];
 
-  normalized.steps = [
-    ...(normalized.steps ?? []), // metric from normalizer
-    ...usSteps,
-  ];
+  normalized.steps = [...metricSteps, ...usSteps];
 
   const normalizedCategories = (output.categories ?? [])
     .filter((category): category is string => typeof category === "string" && category.length > 0)

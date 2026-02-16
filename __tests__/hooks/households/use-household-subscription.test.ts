@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 
 import {
   createTestQueryClient,
@@ -111,6 +111,10 @@ vi.mock("@trpc/tanstack-react-query", () => ({
 // Mock HeroUI toast
 vi.mock("@heroui/react", () => ({
   addToast: vi.fn(),
+}));
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
 }));
 
 describe("useHouseholdSubscription", () => {
@@ -248,6 +252,37 @@ describe("useHouseholdSubscription", () => {
 
       // Verify initial state has household
       expect(result.current.household).not.toBeNull();
+    });
+  });
+
+  describe("onFailed handler", () => {
+    it("shows a generic error toast instead of raw backend errors", async () => {
+      const initialHousehold = createMockHouseholdSettings({ id: "h1" });
+      const initialData = createMockHouseholdData(initialHousehold, "current-user");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const { useHouseholdSubscription } =
+        await import("@/hooks/households/use-household-subscription");
+      const { addToast } = await import("@heroui/react");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onFailed?.({
+          reason: "Very long backend stack trace that should not be shown in toast",
+        });
+      });
+
+      expect(addToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "operationFailed",
+          description: "technicalDetails",
+          color: "danger",
+        })
+      );
     });
   });
 });

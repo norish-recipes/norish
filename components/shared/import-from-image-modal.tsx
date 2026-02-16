@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { useUploadLimitsQuery } from "@/hooks/config";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ALLOWED_OCR_MIME_SET, MAX_OCR_FILES } from "@/types";
 
 interface ImportFromImageModalProps {
@@ -33,6 +34,7 @@ interface FilePreview {
 
 export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFromImageModalProps) {
   const t = useTranslations("common.import.image");
+  const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
   const router = useRouter();
   const { importRecipeFromImages } = useRecipesMutations();
@@ -152,25 +154,29 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
       });
 
       // Clean up and close
-      files.forEach((f) => URL.revokeObjectURL(f.preview));
+      files.forEach((f) => {
+        URL.revokeObjectURL(f.preview);
+      });
       setFiles([]);
       onOpenChange(false);
       router.push("/");
     } catch (error) {
-      addToast({
+      showSafeErrorToast({
         title: t("failed"),
-        description: (error as Error).message,
+        description: tErrors("technicalDetails"),
         color: "danger",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        error,
+        context: "import-from-image-modal:import",
       });
     } finally {
       setIsSubmitting(false);
     }
-  }, [files, importRecipeFromImages, onOpenChange, router, t]);
+  }, [files, importRecipeFromImages, onOpenChange, router, t, tErrors]);
 
   const _handleClose = useCallback(() => {
-    files.forEach((f) => URL.revokeObjectURL(f.preview));
+    files.forEach((f) => {
+      URL.revokeObjectURL(f.preview);
+    });
     setFiles([]);
     onOpenChange(false);
   }, [files, onOpenChange]);
@@ -188,19 +194,12 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
             <ModalHeader className="flex flex-col gap-1">{t("title")}</ModalHeader>
             <ModalBody>
               {/* Dropzone */}
-              <div
+              <button
                 className="border-default-300 hover:border-primary flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-6 transition-colors"
-                role="button"
-                tabIndex={0}
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    fileInputRef.current?.click();
-                  }
-                }}
               >
                 <PhotoIcon className="text-default-400 h-12 w-12" />
                 <div className="text-center">
@@ -218,7 +217,7 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
                   type="file"
                   onChange={(e) => handleAddFiles(e.target.files)}
                 />
-              </div>
+              </button>
 
               {/* File previews */}
               {files.length > 0 && (

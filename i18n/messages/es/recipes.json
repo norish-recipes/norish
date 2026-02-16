@@ -1,0 +1,208 @@
+{
+  "dashboard": {
+    "title": "Todas las recetas",
+    "searchPlaceholder": "Buscar o añadir receta...",
+    "searchRecipesPlaceholder": "Buscar recetas...",
+    "recipeCount": "{count, plural, one {# receta} other {# recetas}}",
+    "addRecipe": "Añadir receta",
+    "importFromUrl": "URL",
+    "importFromPaste": "Pegar",
+    "importFromImage": "Imagen",
+    "searchFields": {
+      "title": "Título",
+      "description": "Descripción",
+      "ingredients": "Ingredientes",
+      "steps": "Pasos",
+      "tags": "Etiquetas"
+    }
+  },
+  "empty": {
+    "title": "Tu colección de recetas te espera",
+    "description": "Pega la URL de una receta en el campo de búsqueda de arriba y verás la magia.",
+    "noResults": "No se han encontrado recetas",
+    "noResultsHint": "Prueba ajustando o eliminando tus filtros."
+  },
+  "card": {
+    "noImage": "No hay imagen disponible",
+    "viewGroceries": "Ver lista de la compra",
+    "addToCalendar": "Añadir al calendario",
+    "deleteRecipe": "Eliminar receta"
+  },
+  "detail": {
+    "backToRecipes": "Volver a las recetas",
+    "viewOriginal": "Ver receta original",
+    "ingredients": "Ingredientes",
+    "steps": "Pasos",
+    "notes": "Notas",
+    "addToGroceries": "Añadir a la lista de la compra",
+    "ratingPrompt": "¿Qué te ha parecido esta receta?",
+    "notFound": "Receta no encontrada",
+    "notFoundMessage": "Esta receta no existe o no tienes permiso para verla.",
+    "prep": "preparación",
+    "total": "total",
+    "planMeal": "Planificar comida",
+    "recipeActions": "Acciones de la receta",
+    "switchToDecimal": "Mostrar decimales",
+    "switchToFraction": "Mostrar fracciones"
+  },
+  "actions": {
+    "plan": "Planificar",
+    "groceries": "Lista de la compra",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "autoTag": "Etiquetado automático",
+    "autoTagging": "Generando etiquetas...",
+    "autoCategorize": "Auto-categorizar",
+    "detectAllergies": "Detectar alergias",
+    "detectingAllergies": "Detectando alergias...",
+    "estimateNutrition": "Calcular nutrición",
+    "estimatingNutrition": "Calculando nutrición...",
+    "screenOn": "Pantalla encendida",
+    "keepScreenOn": "Mantener pantalla encendida",
+    "actionsLabel": "Acciones"
+  },
+  "convert": {
+    "ariaLabel": "Cambiar sistema de medidas",
+    "toMetric": "Convertir a sistema métrico",
+    "toUS": "Convertir a sistema imperial"
+  },
+  "deleteModal": {
+    "title": "Eliminar receta",
+    "confirmMessage": "¿Seguro que quieres eliminar \"{recipeName}\"?",
+    "warning": "Esta acción no se puede deshacer."
+  },
+  "form": {
+    "createTitle": "Crear receta",
+    "editTitle": "Editar receta",
+    "createDescription": "Añade una nueva receta a tu colección",
+    "editDescription": "Actualiza los detalles de tu receta",
+    "initializingForm": "Inicializando formulario...",
+    "photo": "Foto",
+    "basicInfo": "Información básica",
+    "ingredients": "Ingredientes",
+    "instructions": "Instrucciones",
+    "tags": "Etiquetas",
+    "nutrition": "Nutrición",
+    "nutritionPerServing": "(por ración, opcional)",
+    "details": "Detalles",
+    "additionalInfo": "Información adicional",
+    "recipeName": "Nombre de la receta",
+    "recipeNamePlaceholder": "p. ej., Galletas con pepitas de chocolate",
+    "description": "Descripción",
+    "descriptionPlaceholder": "Una breve descripción de lo que hace especial a esta receta...",
+    "notes": "Notas",
+    "notesPlaceholder": "Añade notas de preparación, ajustes o consejos para servir esta receta...",
+    "ingredientsHelp": "Escribe ingredientes como \"400 g harina\" — analizaremos automáticamente las cantidades y unidades.",
+    "instructionsHelp": "Escribe instrucciones claras paso a paso. Pulsa Intro para pasar al siguiente paso.",
+    "tagsHelp": "Escribe etiquetas y haz clic en las sugerencias para añadirlas. Las etiquetas seleccionadas son azules; las nuevas tienen un borde discontinuo.",
+    "tagsAndCategories": "Etiquetas y categorías",
+    "categoriesHelp": "Selecciona categorías de comida para esta receta.",
+    "category": {
+      "breakfast": "Desayuno",
+      "lunch": "Comida",
+      "dinner": "Cena",
+      "snack": "Tentempié"
+    },
+    "calories": "Calorías",
+    "fat": "Grasas (g)",
+    "carbs": "Carbohidratos (g)",
+    "protein": "Proteínas (g)",
+    "servings": "Raciones",
+    "cookingTimes": "Tiempos de cocción",
+    "optional": "(opcional)",
+    "sourceUrl": "URL de origen",
+    "sourceUrlPlaceholder": "https://ejemplo.com/receta",
+    "measurementSystemNote": "El sistema de medidas se determina automáticamente a partir de los ingredientes, pero puedes sobrescribirlo aquí.",
+    "measurementSystemEditNote": " Nota: esto actualiza la etiqueta del sistema pero no convierte las unidades. Usa la acción Convertir después de guardar.",
+    "createRecipe": "Crear receta",
+    "saveChanges": "Guardar cambios",
+    "uploading": "Subiendo...",
+    "clickToUpload": "Haz clic para subir o arrastra y suelta",
+    "pasteToUpload": "para pegar",
+    "imageFormats": "PNG, JPG, WEBP hasta 5MB"
+  },
+  "gallery": {
+    "addImage": "Añadir imagen",
+    "uploading": "Subiendo...",
+    "uploadFailed": "Error al subir",
+    "dragToReorder": "Arrastra para reordenar",
+    "maxImagesReached": "{max} imágenes permitidas como máximo",
+    "maxVideosReached": "{max} vídeos permitidos como máximo",
+    "invalidFileType": "Tipo de archivo no válido"
+  },
+  "carousel": {
+    "noImageAvailable": "No hay imagen disponible",
+    "noMediaAvailable": "No hay medios disponibles",
+    "videoPlayer": {
+      "mute": "Silenciar",
+      "unmute": "Activar sonido",
+      "fullscreen": "Pantalla completa",
+      "exitFullscreen": "Salir de pantalla completa"
+    }
+  },
+  "validation": {
+    "nameRequired": "El nombre de la receta es obligatorio",
+    "ingredientsRequired": "Se requiere al menos un ingrediente",
+    "stepsRequired": "Se requiere al menos un paso",
+    "servingsMin": "Las raciones deben ser al menos 1"
+  },
+  "nutrition": {
+    "title": "Valores nutricionales",
+    "calories": "Calorías",
+    "fat": "Grasas",
+    "carbs": "Carbohidratos",
+    "protein": "Proteínas",
+    "showingPortions": "Mostrando valores para {count} {count, plural, one {porción} other {porciones}}",
+    "noInfo": "No hay información nutricional disponible",
+    "estimateWithAI": "Estimar con IA"
+  },
+  "measurementSystem": {
+    "label": "Sistema de medidas",
+    "detected": "Detectado: {system}",
+    "metric": "Métrico",
+    "us": "Imperial"
+  },
+  "timeInputs": {
+    "prep": "Preparación",
+    "cook": "Cocción",
+    "total": "Total"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Paso {number}: Describe el paso...",
+    "stepPlaceholderShort": "Paso {number}"
+  },
+  "ingredientInput": {
+    "placeholder": "p. ej., 400 g harina"
+  },
+  "wakeLock": {
+    "keepScreenOn": "Mantener la pantalla encendida",
+    "notSupported": "Mantener la pantalla despierta no está soportado en este navegador",
+    "activeTooltip": "La pantalla se mantendrá encendida mientras cocinas",
+    "inactiveTooltip": "Mantén la pantalla encendida mientras sigues los pasos",
+    "ariaLabel": "Mantener la pantalla encendida"
+  },
+  "toasts": {
+    "processingBoth": "Procesando etiquetas y alergias",
+    "processingTags": "Generando etiquetas",
+    "processingAllergies": "Detectando alergias",
+    "bothComplete": "Etiquetas y alergias actualizadas",
+    "tagsComplete": "Etiquetas generadas",
+    "allergiesComplete": "Alergias detectadas",
+    "imported": "Receta importada",
+    "converted": "Medidas convertidas",
+    "convertedDescription": "Receta convertida a unidades {system}",
+    "failed": "Operación de receta fallida",
+    "failedDescription": "Algo ha salido mal al procesar tu receta. Comprueba la consola del navegador para obtener detalles técnicos.",
+    "batchImported": "Recetas importadas",
+    "batchImportedDescription": "{count} recetas importadas desde el archivo",
+    "view": "Ver",
+    "open": "Abrir"
+  },
+  "tags": {
+    "panel": {
+      "editTitle": "Editar etiqueta",
+      "editPlaceholder": "Introduce el nombre de la etiqueta...",
+      "duplicateTag": "Esta etiqueta ya existe"
+    }
+  }
+}

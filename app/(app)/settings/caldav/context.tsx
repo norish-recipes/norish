@@ -9,6 +9,7 @@ import type {
 
 import { createContext, useContext, ReactNode, useCallback, useState } from "react";
 import { addToast } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import {
   useCaldavConfigQuery,
@@ -19,6 +20,7 @@ import {
   useCaldavMutations,
   useCaldavSubscription,
 } from "@/hooks/caldav";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 type SaveCaldavConfigInput = {
   serverUrl: string;
@@ -79,6 +81,7 @@ type CalDavSettingsContextType = {
 const CalDavSettingsContext = createContext<CalDavSettingsContextType | null>(null);
 
 export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
+  const tErrors = useTranslations("common.errors");
   // Queries
   const { config, isLoading: isLoadingConfig, setConfig: _setConfig } = useCaldavConfigQuery();
   const { password: storedPassword, isLoading: _isLoadingPassword } = useCaldavPasswordQuery();
@@ -131,17 +134,17 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
           radius: "full",
         });
       } catch (error) {
-        addToast({
-          title: "Failed to save configuration",
-          description: (error as Error).message,
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
           color: "danger",
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+          error,
+          context: "caldav-settings:save-config",
         });
         throw error;
       }
     },
-    [saveConfigMutation]
+    [saveConfigMutation, tErrors]
   );
 
   const testConnection = useCallback(
@@ -171,18 +174,18 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
       try {
         return await fetchCalendarsMutation({ serverUrl, username, password });
       } catch (error) {
-        addToast({
-          title: "Failed to fetch calendars",
-          description: (error as Error).message,
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
           color: "danger",
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+          error,
+          context: "caldav-settings:fetch-calendars",
         });
 
         return [];
       }
     },
-    [fetchCalendarsMutation]
+    [fetchCalendarsMutation, tErrors]
   );
 
   const deleteConfig = useCallback(
@@ -197,17 +200,17 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
           radius: "full",
         });
       } catch (error) {
-        addToast({
-          title: "Failed to delete configuration",
-          description: (error as Error).message,
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
           color: "danger",
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+          error,
+          context: "caldav-settings:delete-config",
         });
         throw error;
       }
     },
-    [deleteConfigMutation]
+    [deleteConfigMutation, tErrors]
   );
 
   const triggerManualSync = useCallback(async () => {
@@ -221,16 +224,16 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
         radius: "full",
       });
     } catch (error) {
-      addToast({
-        title: "Failed to trigger sync",
-        description: (error as Error).message,
+      showSafeErrorToast({
+        title: tErrors("operationFailed"),
+        description: tErrors("technicalDetails"),
         color: "danger",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        error,
+        context: "caldav-settings:trigger-sync",
       });
       throw error;
     }
-  }, [triggerSync]);
+  }, [triggerSync, tErrors]);
 
   const syncAll = useCallback(async () => {
     try {
@@ -243,16 +246,16 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
         radius: "full",
       });
     } catch (error) {
-      addToast({
-        title: "Failed to start sync",
-        description: (error as Error).message,
+      showSafeErrorToast({
+        title: tErrors("operationFailed"),
+        description: tErrors("technicalDetails"),
         color: "danger",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        error,
+        context: "caldav-settings:sync-all",
       });
       throw error;
     }
-  }, [syncAllMutation]);
+  }, [syncAllMutation, tErrors]);
 
   const checkConnectionStatus = useCallback(async (): Promise<{
     success: boolean;

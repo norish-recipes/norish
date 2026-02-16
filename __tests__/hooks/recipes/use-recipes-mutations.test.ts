@@ -1,7 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 
 import { createTestQueryClient, createTestWrapper, createMockInfiniteData } from "./test-utils";
+
+const mockMutate = vi.fn();
+
+vi.mock("@tanstack/react-query", async () => {
+  const actual = await vi.importActual("@tanstack/react-query");
+
+  return {
+    ...actual,
+    useMutation: vi.fn(() => ({
+      mutate: mockMutate,
+    })),
+  };
+});
+
+vi.mock("@heroui/react", () => ({
+  addToast: vi.fn(),
+}));
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
 
 // Mock tRPC provider
 vi.mock("@/app/providers/trpc-provider", () => ({
@@ -62,6 +83,7 @@ describe("useRecipesMutations", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMutate.mockReset();
     queryClient = createTestQueryClient();
   });
 
@@ -183,6 +205,36 @@ describe("useRecipesMutations", () => {
       });
 
       expect(() => result.current.convertMeasurements).not.toThrow();
+    });
+  });
+
+  describe("error toasts", () => {
+    it("shows a generic message instead of raw backend errors", async () => {
+      queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
+      queryClient.setQueryData(["recipes", "pending"], []);
+
+      mockMutate.mockImplementation((_input, options) => {
+        options?.onError?.(
+          new Error("Very long backend stack trace that should not be shown to users")
+        );
+      });
+
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+      const { addToast } = await import("@heroui/react");
+      const { result } = renderHook(() => useRecipesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.importRecipe("https://example.com/recipe");
+      });
+
+      expect(addToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "operationFailed",
+          description: "technicalDetails",
+        })
+      );
     });
   });
 });

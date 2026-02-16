@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Calendario"
+  },
+  "mobile": {
+    "today": "Hoy",
+    "scrollToToday": "Ir a hoy"
+  },
+  "editNote": {
+    "title": "Editar nota",
+    "noteLabel": "Nota",
+    "notePlaceholder": "Escribe una nota...",
+    "date": "Fecha",
+    "slot": "Franja"
+  },
+  "navigation": {
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "prev": "Anterior",
+    "next": "Siguiente"
+  },
+  "weekdays": {
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mié",
+    "thu": "Jue",
+    "fri": "Vie",
+    "sat": "Sáb",
+    "sun": "Dom"
+  },
+  "timeline": {
+    "noItems": "No hay nada planificado",
+    "goToRecipe": "Ir a la receta",
+    "addItem": "Añadir elemento",
+    "untitled": "Sin título",
+    "serving": "ración",
+    "servings": "raciones",
+    "noImage": "Sin imagen",
+    "recipe": "Receta",
+    "note": "Nota"
+  },
+  "editPlannedRecipe": {
+    "title": "Editar receta planificada",
+    "date": "Fecha",
+    "slot": "Franja"
+  },
+  "panel": {
+    "addToCalendar": "Añadir al calendario",
+    "addRecipe": "Añadir receta",
+    "noDaysAvailable": "No hay días disponibles.",
+    "searchPlaceholder": "Busca recetas o añade notas...",
+    "addNote": "Añadir nota: {input}",
+    "randomRecipe": "Receta aleatoria",
+    "noRecipesFound": "No se han encontrado recetas.",
+    "failedToLoadRecipes": "Error al cargar las recetas."
+  }
+}

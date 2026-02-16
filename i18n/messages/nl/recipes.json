@@ -192,6 +192,7 @@
     "converted": "Maateenheden omgezet",
     "convertedDescription": "Recept omgezet naar {system} eenheden",
     "failed": "Receptbewerking mislukt",
+    "failedDescription": "Er ging iets mis tijdens het verwerken van je recept. Bekijk de browserconsole voor technische details.",
     "batchImported": "Recepten geïmporteerd",
     "batchImportedDescription": "{count} recepten geïmporteerd uit archief",
     "view": "Bekijk",

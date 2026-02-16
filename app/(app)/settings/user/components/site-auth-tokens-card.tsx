@@ -31,9 +31,11 @@ import { useQuery } from "@tanstack/react-query";
 import NewFeatureChip from "../../components/new-feature-chip";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");
+  const tErrors = useTranslations("common.errors");
   const tActions = useTranslations("common.actions");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -73,12 +75,12 @@ export default function SiteAuthTokensCard() {
       setValue("");
       setType("header");
     } catch (error) {
-      addToast({
-        title: "Failed to create token",
-        description: (error as Error).message,
+      showSafeErrorToast({
+        title: tErrors("operationFailed"),
+        description: tErrors("technicalDetails"),
         color: "danger",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        error,
+        context: "site-auth-tokens:create",
       });
     } finally {
       setIsCreating(false);
@@ -93,12 +95,12 @@ export default function SiteAuthTokensCard() {
         prev ? prev.filter((t) => t.id !== tokenId) : prev
       );
     } catch (error) {
-      addToast({
-        title: "Failed to delete token",
-        description: (error as Error).message,
+      showSafeErrorToast({
+        title: tErrors("operationFailed"),
+        description: tErrors("technicalDetails"),
         color: "danger",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        error,
+        context: "site-auth-tokens:delete",
       });
     } finally {
       setShowDeleteModal(false);

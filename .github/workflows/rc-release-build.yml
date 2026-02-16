@@ -1,4 +1,4 @@
-name: Release Build, Tag, and Publish Docker
+name: RC Release Build and Publish Docker
 
 env:
   NODE_ENV: production
@@ -9,15 +9,15 @@ env:
 on:
   push:
     branches:
-      - main
+      - "rc/**"
 
 permissions:
   contents: write
   packages: write
 
 jobs:
-  release:
-    name: Release Build
+  rc-release:
+    name: RC Beta Release Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,22 +41,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run tests
-        run: pnpm test
-
-      - name: Build production
-        run: pnpm run build:prod
-
       - name: Read version from package.json
         id: read_version
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Verify version contains beta suffix
+        run: |
+          VERSION="${{ steps.read_version.outputs.version }}"
+          if [[ "$VERSION" != *-beta* ]]; then
+            echo "::error::RC branch version '$VERSION' must contain '-beta' suffix"
+            exit 1
+          fi
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build production
+        run: pnpm run build:prod
+
       - name: Compute tag name
         id: compute_tag
         run: |
-          TAG="v${{ steps.read_version.outputs.version }}"
+          TAG="rc-v${{ steps.read_version.outputs.version }}"
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Fetch tags
@@ -89,14 +97,6 @@ jobs:
         run: |
           TAG="${{ steps.compute_tag.outputs.tag }}"
           git push origin "$TAG"
-
-      - name: Set image tags
-        id: image_tags
-        run: |
-          VERSION_TAG="${{ steps.compute_tag.outputs.tag }}"
-          LATEST_TAG="latest"
-          echo "version_tag=$VERSION_TAG" >> $GITHUB_OUTPUT
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
       - name: Free up disk space
         run: |
@@ -137,18 +137,5 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
-            ghcr.io/norish-recipes/norish:${{ steps.image_tags.outputs.version_tag }}
-            ghcr.io/norish-recipes/norish:${{ steps.image_tags.outputs.latest_tag }}
-            docker.io/norishapp/norish:${{ steps.image_tags.outputs.version_tag }}
-            docker.io/norishapp/norish:${{ steps.image_tags.outputs.latest_tag }}
-
-      - name: Create GitHub Release
-        if: steps.check_tag.outputs.exists == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${{ steps.compute_tag.outputs.tag }}"
-          gh release create "$TAG" \
-            --title "$TAG" \
-            --generate-notes \
-            --latest
+            ghcr.io/norish-recipes/norish:${{ steps.compute_tag.outputs.tag }}
+            docker.io/norishapp/norish:${{ steps.compute_tag.outputs.tag }}

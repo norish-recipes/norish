@@ -78,6 +78,11 @@
     "required": "Dieses Feld ist erforderlich",
     "invalidUrl": "Bitte gib eine gültige URL ein"
   },
+  "errors": {
+    "operationFailed": "Vorgang fehlgeschlagen",
+    "nameCannotBeEmpty": "Name darf nicht leer sein",
+    "technicalDetails": "Etwas ist schiefgelaufen. Schau in die Browser-Konsole für technische Details."
+  },
   "slots": {
     "breakfast": "Frühstück",
     "lunch": "Mittagessen",

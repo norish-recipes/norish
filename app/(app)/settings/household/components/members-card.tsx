@@ -25,9 +25,11 @@ import { UserMinusIcon, ShieldCheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export default function MembersCard() {
   const t = useTranslations("settings.household.members");
+  const tErrors = useTranslations("common.errors");
   const ti = useTranslations("settings.household.info");
   const tActions = useTranslations("common.actions");
   const { household, currentUserId, kickUser, transferAdmin } = useHouseholdSettingsContext();
@@ -50,12 +52,12 @@ export default function MembersCard() {
     try {
       await kickUser(household.id, userToKick.id);
     } catch (error) {
-      addToast({
+      showSafeErrorToast({
         title: t("toasts.kickFailed"),
-        description: (error as Error).message,
+        description: tErrors("technicalDetails"),
         color: "danger",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        error,
+        context: "household-members:kick",
       });
     } finally {
       setShowKickModal(false);
@@ -75,12 +77,12 @@ export default function MembersCard() {
         radius: "full",
       });
     } catch (error) {
-      addToast({
+      showSafeErrorToast({
         title: t("toasts.transferFailed"),
-        description: (error as Error).message,
+        description: tErrors("technicalDetails"),
         color: "danger",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        error,
+        context: "household-members:transfer-admin",
       });
     } finally {
       setShowTransferModal(false);

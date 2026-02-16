@@ -1,11 +1,12 @@
 "use client";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
-import { addToast } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { useGroceriesCacheHelpers } from "./use-groceries-cache";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 /**
  * Hook that subscribes to all grocery-related WebSocket events
@@ -16,6 +17,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
  */
 export function useGroceriesSubscription() {
   const trpc = useTRPC();
+  const tErrors = useTranslations("common.errors");
   const { setGroceriesData, invalidate } = useGroceriesCacheHelpers();
 
   // onCreated
@@ -143,11 +145,11 @@ export function useGroceriesSubscription() {
   useSubscription(
     trpc.groceries.onFailed.subscriptionOptions(undefined, {
       onData: (payload) => {
-        addToast({
-          severity: "danger",
-          title: payload.reason,
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
+          error: payload.reason,
+          context: "groceries-subscription:onFailed",
         });
         invalidate();
       },
