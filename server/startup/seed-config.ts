@@ -9,6 +9,8 @@ import {
   type AuthProviderOIDC,
   type PromptsConfig,
   type TimerKeywordsConfig,
+  UnitsConfigSchema,
+  UnitsMapSchema,
   DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "../db/zodSchemas/server-config";
 
@@ -66,7 +68,11 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
   },
   {
     key: ServerConfigKeys.UNITS,
+<<<<<<< HEAD
     getDefaultValue: () => ({ units: defaultUnits, isOverwritten: false }),
+=======
+    getDefaultValue: () => ({ units: defaultUnits, isOverridden: false }),
+>>>>>>> rc/v0.16.2
     sensitive: false,
     description: `Units (${Object.keys(defaultUnits).length} definitions)`,
   },
@@ -158,6 +164,7 @@ export async function seedServerConfig(): Promise<void> {
   const seededCount = await seedMissingConfigs();
 
   await importEnvAuthProvidersIfMissing();
+  await syncUnits();
   await syncPrompts();
   await syncLocales();
   await syncTimerKeywords();
@@ -516,6 +523,65 @@ async function syncTimerKeywords(): Promise<void> {
 }
 
 /**
+ * Migrate units config to wrapped schema format introduced in v0.16.0.
+ */
+async function syncUnits(): Promise<void> {
+  const existing = await getConfig<unknown>(ServerConfigKeys.UNITS);
+
+  if (!existing) {
+    return;
+  }
+
+  const wrapped = UnitsConfigSchema.safeParse(existing);
+
+  if (wrapped.success) {
+    return;
+  }
+
+  const legacyWrapped =
+    typeof existing === "object" &&
+    existing !== null &&
+    "units" in existing &&
+    "isOverwritten" in existing
+      ? UnitsMapSchema.safeParse((existing as { units: unknown }).units)
+      : null;
+
+  if (legacyWrapped?.success) {
+    await setConfig(
+      ServerConfigKeys.UNITS,
+      { units: legacyWrapped.data, isOverridden: false },
+      null,
+      false
+    );
+    serverLogger.info("Migrated units config flag from isOverwritten to isOverridden");
+
+    return;
+  }
+
+  const legacy = UnitsMapSchema.safeParse(existing);
+
+  if (legacy.success) {
+    await setConfig(
+      ServerConfigKeys.UNITS,
+      { units: legacy.data, isOverridden: false },
+      null,
+      false
+    );
+    serverLogger.info("Migrated units config to wrapped schema format");
+
+    return;
+  }
+
+  await setConfig(
+    ServerConfigKeys.UNITS,
+    { units: defaultUnits, isOverridden: false },
+    null,
+    false
+  );
+  serverLogger.warn("Units config had invalid structure; reset to defaults");
+}
+
+/**
  * Export for testing - seeds timer keywords if not present or if not overridden
  */
 export async function seedDefaultTimerKeywords(): Promise<void> {
@@ -565,7 +631,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
     case ServerConfigKeys.REGISTRATION_ENABLED:
       return true;
     case ServerConfigKeys.UNITS:
-      return defaultUnits;
+      return { units: defaultUnits, isOverridden: false };
     case ServerConfigKeys.CONTENT_INDICATORS:
       return defaultContentIndicators;
     case ServerConfigKeys.RECURRENCE_CONFIG:

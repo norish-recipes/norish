@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 const mockPush = vi.hoisted(() => vi.fn());
@@ -22,54 +22,13 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/hooks/config", () => ({
-  useVersionQuery: () => ({
-    currentVersion: "1.0.0",
-    latestVersion: null,
-    updateAvailable: false,
-    releaseUrl: null,
-  }),
-}));
+  it("uses plain avatar URL without cache-busting query params", () => {
+    render(<NavbarUserMenu />);
 
-vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({
-    user: mockUser,
-    userMenuOpen: false,
-    setUserMenuOpen: mockSetUserMenuOpen,
-    signOut: mockSignOut,
-  }),
-}));
+    const src = screen.getByAltText("user avatar").getAttribute("src");
 
-vi.mock("@heroui/avatar", () => ({
-  Avatar: ({ src }: { src?: string }) => <img alt="user avatar" src={src} />,
-}));
-
-vi.mock("@heroui/dropdown", () => ({
-  Dropdown: ({ children }: any) => <div>{children}</div>,
-  DropdownTrigger: ({ children }: any) => <div>{children}</div>,
-  DropdownMenu: ({ children }: any) => <div>{children}</div>,
-  DropdownItem: ({ children }: any) => <div>{children}</div>,
-}));
-
-vi.mock("@heroui/react", () => ({
-  Button: ({ children }: any) => <button type="button">{children}</button>,
-}));
-
-vi.mock("@/components/shared/import-recipe-modal", () => ({
-  default: () => null,
-}));
-
-vi.mock("@/components/shared/language-switch", () => ({
-  LanguageSwitch: () => null,
-}));
-
-vi.mock("@/components/navbar/theme-switch", () => ({
-  ThemeSwitch: () => null,
-}));
-
-import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
-
-describe("NavbarUserMenu avatar src", () => {
-  beforeEach(() => {
+    expect(src).toBe("/avatars/user-1.png");
+>>>>>>> rc/v0.16.2
     vi.clearAllMocks();
     mockUser = {
       id: "user-1",
@@ -79,11 +38,17 @@ describe("NavbarUserMenu avatar src", () => {
     };
   });
 
+<<<<<<< HEAD
   it("refreshes avatar src only when the path changes, not on just name change", async () => {
     const { rerender } = render(<NavbarUserMenu />);
+=======
+  it("uses plain avatar URL without cache-busting query params", () => {
+    render(<NavbarUserMenu />);
+>>>>>>> rc/v0.16.2
 
-    const firstSrc = screen.getByAltText("user avatar").getAttribute("src");
+    const src = screen.getByAltText("user avatar").getAttribute("src");
 
+<<<<<<< HEAD
     mockUser = {
       id: "user-1",
       name: "User Updated",
@@ -119,5 +84,8 @@ describe("NavbarUserMenu avatar src", () => {
 
       expect(secondSrc).not.toBe(firstSrc);
     });
+=======
+    expect(src).toBe("/avatars/user-1.png");
+>>>>>>> rc/v0.16.2
   });
 });

@@ -344,8 +344,12 @@ async function* generatePaprikaRecipes(
 
   for (const { recipe, image, fileName } of paprikaRecipes) {
     const dto = await parsePaprikaRecipeToDTO(recipe, image);
+    const importedRating =
+      recipe.rating && Number.isFinite(recipe.rating) && recipe.rating > 0
+        ? Math.round(recipe.rating)
+        : undefined;
 
-    yield { dto, fileName };
+    yield { dto, fileName, importedRating };
   }
 }
 
@@ -373,7 +377,7 @@ export async function importArchive(
 
   if (format === ArchiveFormat.UNKNOWN) {
     throw new Error(
-      "Unknown archive format. Expected .melarecipes, Mealie .zip, Paprika .zip, or Tandoor .zip export"
+      "Unknown archive format. Expected .melarecipes, .paprikarecipes, Mealie .zip, or Tandoor .zip export"
     );
   }
 

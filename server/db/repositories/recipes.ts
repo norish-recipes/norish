@@ -403,11 +403,16 @@ export async function listRecipes(
     titleDesc: desc(recipes.name),
     dateAsc: asc(recipes.createdAt),
     dateDesc: desc(recipes.createdAt),
+    none: undefined,
   };
   const baseOrderBy = sortMap[sortMode as keyof typeof sortMap] ?? desc(recipes.createdAt);
 
   // When searching, order by relevance rank first (descending), then by the selected sort
-  const orderBy = searchRank ? [desc(searchRank), baseOrderBy] : baseOrderBy;
+  const orderBy = searchRank
+    ? baseOrderBy
+      ? [desc(searchRank), baseOrderBy]
+      : desc(searchRank)
+    : baseOrderBy;
 
   const [rows, totalCount] = await Promise.all([
     db.query.recipes.findMany({
@@ -911,7 +916,7 @@ export async function updateRecipeWithRefs(
     if (payload.totalMinutes !== undefined) updateData.totalMinutes = payload.totalMinutes;
     if (payload.systemUsed !== undefined) updateData.systemUsed = payload.systemUsed;
     if (payload.calories !== undefined) updateData.calories = payload.calories;
-    if (payload.categories != undefined && payload.categories?.length > 0)
+    if (payload.categories !== undefined && payload.categories?.length > 0)
       updateData.categories = payload.categories;
     if (payload.fat !== undefined) updateData.fat = payload.fat;
     if (payload.carbs !== undefined) updateData.carbs = payload.carbs;

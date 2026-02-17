@@ -1,0 +1,78 @@
+{
+  "page": {
+    "title": "Lista de la compra",
+    "addItem": "Añadir producto",
+    "addItems": "Añadir productos",
+    "viewByStore": "Por tienda",
+    "viewByRecipe": "Por receta",
+    "viewMode": "Modo de vista",
+    "manageStores": "Gestionar tiendas",
+    "storeViewOptions": "Opciones de vista de tienda",
+    "groupIngredients": "Agrupar ingredientes"
+  },
+  "empty": {
+    "title": "Tu lista de la compra te espera",
+    "description": "Añade productos usando el botón «Añadir producto» arriba para empezar.",
+    "manual": "Productos manuales"
+  },
+  "item": {
+    "unnamedItem": "Producto sin nombre",
+    "fromRecipes": "De {count, plural, one {# receta} other {# recetas}}",
+    "items": "{count, plural, one {# producto} other {# productos}}"
+  },
+  "store": {
+    "unsorted": "Sin asignar",
+    "noItems": "No hay productos en esta tienda",
+    "storeActions": "Acciones de la tienda",
+    "markAllDone": "Marcar todo como comprado",
+    "deleteDone": "Eliminar productos comprados",
+    "done": "{count} comprados"
+  },
+  "storeManager": {
+    "title": "Gestionar tiendas",
+    "addStore": "Añadir tienda",
+    "editStore": "Editar tienda",
+    "deleteStore": "Eliminar tienda",
+    "storeName": "Nombre de la tienda",
+    "storeNamePlaceholder": "p. ej., Supermercado",
+    "storeColor": "Color",
+    "storeIcon": "Icono",
+    "confirmDelete": "¿Seguro que quieres eliminar {storeName}?",
+    "deleteWarning": "Los productos de esta tienda se moverán a «Sin asignar».",
+    "noStoresYet": "Aún no hay tiendas",
+    "createStoreHint": "Crea una tienda para organizar tu lista de la compra",
+    "hasItems": "Esta tienda tiene {count} producto.",
+    "hasItemsPlural": "Esta tienda tiene {count} productos.",
+    "whatToDo": "¿Qué quieres hacer con ellos?",
+    "keepItems": "Conservar productos",
+    "keepItemsDescription": "Mover productos a «Sin asignar»",
+    "deleteItems": "Eliminar productos",
+    "deleteItemsDescription": "Eliminar todos los productos de esta tienda",
+    "noItems": "Esta tienda no tiene productos.",
+    "create": "Crear"
+  },
+  "panel": {
+    "addTitle": "Añadir producto",
+    "editTitle": "Editar producto",
+    "itemName": "Nombre del producto",
+    "itemNamePlaceholder": "p. ej., Leche, huevos, pan...",
+    "selectStore": "Seleccionar tienda",
+    "noStore": "Sin tienda",
+    "recurrence": "Repetición",
+    "savePreference": "Recordar tienda para este producto",
+    "addAnother": "Añadir otro",
+    "addRepeat": "+ Añadir repetición",
+    "storeOptional": "Tienda (opcional)",
+    "autoDetectFromHistory": "Detectar automáticamente desde el historial",
+    "autoDetectOrSelect": "Detectar automáticamente o seleccionar",
+    "placeholder": "p. ej., 1 kg pechuga de pollo",
+    "editPlaceholder": "p. ej., leche cada semana",
+    "servings": "Raciones",
+    "loadingIngredients": "Cargando ingredientes...",
+    "noIngredients": "No hay ingredientes.",
+    "addSelectedToGroceries": "Añadir a la lista de la compra",
+    "ingredientsAdded": "Ingredientes añadidos a la lista de la compra.",
+    "ingredientsFailed": "No se han podido añadir los ingredientes a la lista de la compra.",
+    "addToGroceries": "Añadir a la lista de la compra"
+  }
+}

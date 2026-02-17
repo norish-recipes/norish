@@ -274,11 +274,83 @@ function createPartialOutput(overrides: Partial<RecipeExtractionOutput>): Recipe
 }
 
 describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
+  it("keeps metric and US systems separated even when base normalizer infers US", async () => {
+    const output: RecipeExtractionOutput = {
+      "@context": "https://schema.org",
+      "@type": "Recipe",
+      name: "Mapo Tofu Udon",
+      description: "Test",
+      notes: null,
+      recipeIngredient: {
+        metric: ["300g beef mince"],
+        us: ["10.6 oz beef mince"],
+      },
+      recipeInstructions: {
+        metric: ["Cook 300g beef mince"],
+        us: ["Cook 10.6 oz beef mince"],
+      },
+      recipeYield: "2",
+      cookTime: null,
+      prepTime: null,
+      totalTime: null,
+      keywords: [],
+      categories: [],
+      nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
+    };
+
+    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+
+    vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
+      name: "Mapo Tofu Udon",
+      description: "Test",
+      url: null,
+      image: undefined,
+      servings: 2,
+      prepMinutes: null,
+      cookMinutes: null,
+      totalMinutes: null,
+      calories: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+      recipeIngredients: [
+        {
+          ingredientId: null,
+          ingredientName: "beef mince",
+          amount: 300,
+          unit: "gram",
+          systemUsed: "us",
+          order: 0,
+        },
+      ],
+      steps: [{ step: "Cook 300g beef mince", order: 1, systemUsed: "us", images: [] }],
+      systemUsed: "us",
+      tags: [],
+      images: [],
+      categories: [],
+    } as any);
+
+    const result = await normalizeExtractionOutput(output);
+
+    const metricIngredients = result?.recipeIngredients?.filter(
+      (ing) => ing.systemUsed === "metric"
+    );
+    const usIngredients = result?.recipeIngredients?.filter((ing) => ing.systemUsed === "us");
+    const metricSteps = result?.steps?.filter((step) => step.systemUsed === "metric");
+    const usSteps = result?.steps?.filter((step) => step.systemUsed === "us");
+
+    expect(metricIngredients).toHaveLength(1);
+    expect(usIngredients).toHaveLength(1);
+    expect(metricSteps).toHaveLength(1);
+    expect(usSteps).toHaveLength(1);
+  });
+
   it("normalizes categories with matcher", async () => {
     const output: RecipeExtractionOutput = {
       "@context": "https://schema.org",
       "@type": "Recipe",
       name: "Test Recipe",
+      notes: null,
       description: "Test",
       recipeIngredient: {
         metric: ["100g flour"],
@@ -331,6 +403,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       "@type": "Recipe",
       name: "Test Recipe",
       description: "Test",
+      notes: null,
       recipeIngredient: {
         metric: ["100g flour"],
         us: ["1 cup flour &#8211; all-purpose", "2 eggs &#8211; beaten"],
@@ -344,7 +417,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       prepTime: null,
       totalTime: null,
       keywords: [],
-      categories: null,
+      categories: [],
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
@@ -416,7 +489,8 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       prepTime: null,
       totalTime: null,
       keywords: [],
-      categories: null,
+      categories: [],
+      notes: null,
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
@@ -476,7 +550,8 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       prepTime: null,
       totalTime: null,
       keywords: [],
-      categories: null,
+      categories: [],
+      notes: null,
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
@@ -539,7 +614,8 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       prepTime: null,
       totalTime: null,
       keywords: [],
-      categories: null,
+      categories: [],
+      notes: null,
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
@@ -595,6 +671,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       prepTime: null,
       totalTime: null,
       keywords: [],
+      categories: [],
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 

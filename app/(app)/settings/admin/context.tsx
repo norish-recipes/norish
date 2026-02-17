@@ -121,7 +121,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     | ContentIndicatorsConfig
     | undefined;
   const unitsConfig = configs[ServerConfigKeys.UNITS] as
-    | { units: UnitsMap; isOverwritten: boolean }
+    | { units: UnitsMap; isOverridden: boolean }
     | undefined;
   const units = unitsConfig?.units;
   const recurrenceConfig = configs[ServerConfigKeys.RECURRENCE_CONFIG] as

@@ -192,6 +192,7 @@
     "converted": "Mesures converties",
     "convertedDescription": "Recette convertie en unités {system}",
     "failed": "Échec de l'opération",
+    "failedDescription": "Une erreur s'est produite pendant le traitement de votre recette. Consultez la console du navigateur pour les détails techniques.",
     "batchImported": "Recettes importées",
     "batchImportedDescription": "{count} recettes importées depuis l'archive",
     "view": "Voir",

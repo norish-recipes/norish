@@ -3,6 +3,7 @@
     "save": "Opslaan",
     "cancel": "Annuleren",
     "delete": "Verwijder",
+    "duplicate": "Dupliceren",
     "edit": "Bewerken",
     "create": "Aanmaken",
     "add": "Toevoegen",
@@ -76,6 +77,11 @@
   "validation": {
     "required": "Dit veld is verplicht",
     "invalidUrl": "Voer een geldige URL in"
+  },
+  "errors": {
+    "operationFailed": "Bewerking mislukt",
+    "nameCannotBeEmpty": "Naam mag niet leeg zijn",
+    "technicalDetails": "Er ging iets mis. Bekijk de browserconsole voor technische details."
   },
   "slots": {
     "breakfast": "Ontbijt",

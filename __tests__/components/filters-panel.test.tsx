@@ -1,6 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
+
+const filtersState = {
+  searchTags: [] as string[],
+  categories: [] as string[],
+  filterMode: "AND" as const,
+  sortMode: "dateDesc" as "dateDesc" | undefined,
+  rawInput: "",
+  showFavoritesOnly: false,
+  minRating: null as number | null,
+  maxCookingTime: null as number | null,
+};
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -30,16 +41,7 @@ vi.mock("@/components/shared/rating-stars", () => ({
 
 vi.mock("@/context/recipes-filters-context", () => ({
   useRecipesFiltersContext: () => ({
-    filters: {
-      searchTags: [],
-      categories: [],
-      filterMode: "AND",
-      sortMode: "dateDesc",
-      rawInput: "",
-      showFavoritesOnly: false,
-      minRating: null,
-      maxCookingTime: null,
-    },
+    filters: filtersState,
     setFilters: vi.fn(),
     clearFilters: vi.fn(),
   }),
@@ -77,7 +79,20 @@ vi.mock("@heroui/react", () => ({
 import FiltersPanel from "@/components/Panel/consumers/filters-panel";
 
 describe("FiltersPanel", () => {
+  it("does not crash when sort mode is missing", () => {
+    filtersState.sortMode = undefined;
+
+    expect(() => render(<FiltersPanel open onOpenChange={vi.fn()} />)).not.toThrow();
+
+    expect(screen.getByText("sortByDate")).toHaveAttribute("color", "default");
+    expect(screen.getByText("sortByTitle")).toHaveAttribute("color", "default");
+
+    filtersState.sortMode = "dateDesc";
+  });
+
   it("limits tag container height and enables vertical scrolling", () => {
+    filtersState.sortMode = "dateDesc";
+
     const { container } = render(<FiltersPanel open onOpenChange={vi.fn()} />);
 
     const tagContainer = container.querySelector(".overflow-y-auto");

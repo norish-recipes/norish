@@ -3,6 +3,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
+    "duplicate": "Duplicate",
     "edit": "Edit",
     "create": "Create",
     "add": "Add",
@@ -76,6 +77,11 @@
   "validation": {
     "required": "This field is required",
     "invalidUrl": "Please enter a valid URL"
+  },
+  "errors": {
+    "operationFailed": "Operation failed",
+    "nameCannotBeEmpty": "Name cannot be empty",
+    "technicalDetails": "Something went wrong. Check the browser console for technical details."
   },
   "slots": {
     "breakfast": "Breakfast",

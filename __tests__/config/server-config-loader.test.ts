@@ -14,6 +14,7 @@ vi.mock("@/server/logger", () => ({
 }));
 
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
+import defaultUnits from "@/config/units.default.json";
 
 describe("isVideoParsingEnabled", () => {
   beforeEach(() => {
@@ -222,5 +223,90 @@ describe("isAIEnabled", () => {
 
     // Assert
     expect(result).toBe(false);
+  });
+});
+
+describe("getUnits", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+  });
+
+  it("returns wrapped units from config", async () => {
+    mockGetConfig.mockResolvedValue({
+      units: {
+        cup: {
+          short: [{ locale: "en", name: "cup" }],
+          plural: [{ locale: "en", name: "cups" }],
+          alternates: ["cups"],
+        },
+      },
+      isOverridden: true,
+    });
+
+    const { getUnits } = await import("@/config/server-config-loader");
+    const result = await getUnits();
+
+    expect(result).toEqual({
+      cup: {
+        short: [{ locale: "en", name: "cup" }],
+        plural: [{ locale: "en", name: "cups" }],
+        alternates: ["cups"],
+      },
+    });
+  });
+
+  it("returns legacy flat units map from config", async () => {
+    mockGetConfig.mockResolvedValue({
+      cup: {
+        short: [{ locale: "en", name: "cup" }],
+        plural: [{ locale: "en", name: "cups" }],
+        alternates: ["cups"],
+      },
+    });
+
+    const { getUnits } = await import("@/config/server-config-loader");
+    const result = await getUnits();
+
+    expect(result).toEqual({
+      cup: {
+        short: [{ locale: "en", name: "cup" }],
+        plural: [{ locale: "en", name: "cups" }],
+        alternates: ["cups"],
+      },
+    });
+  });
+
+  it("returns legacy wrapped units map from config", async () => {
+    mockGetConfig.mockResolvedValue({
+      units: {
+        cup: {
+          short: [{ locale: "en", name: "cup" }],
+          plural: [{ locale: "en", name: "cups" }],
+          alternates: ["cups"],
+        },
+      },
+      isOverwritten: true,
+    });
+
+    const { getUnits } = await import("@/config/server-config-loader");
+    const result = await getUnits();
+
+    expect(result).toEqual({
+      cup: {
+        short: [{ locale: "en", name: "cup" }],
+        plural: [{ locale: "en", name: "cups" }],
+        alternates: ["cups"],
+      },
+    });
+  });
+
+  it("falls back to default units when config is missing", async () => {
+    mockGetConfig.mockResolvedValue(null);
+
+    const { getUnits } = await import("@/config/server-config-loader");
+    const result = await getUnits();
+
+    expect(result).toEqual(defaultUnits);
   });
 });

@@ -223,6 +223,25 @@ describe("useRecipesQuery", () => {
         expect.any(Object)
       );
     });
+
+    it("passes none sortMode to query options", async () => {
+      mockInfiniteQueryOptions.mockReturnValue({
+        queryKey: ["recipes", "list", { sortMode: "none" }],
+        queryFn: async () => ({ recipes: [], total: 0, nextCursor: null }),
+        getNextPageParam: () => null,
+      });
+
+      const { renderHook } = require("@testing-library/react");
+
+      renderHook(() => useRecipesQuery({ sortMode: "none" }), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      expect(mockInfiniteQueryOptions).toHaveBeenCalledWith(
+        expect.objectContaining({ sortMode: "none" }),
+        expect.any(Object)
+      );
+    });
   });
 
   describe("pagination", () => {

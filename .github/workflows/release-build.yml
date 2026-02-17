@@ -141,3 +141,14 @@ jobs:
             ghcr.io/norish-recipes/norish:${{ steps.image_tags.outputs.latest_tag }}
             docker.io/norishapp/norish:${{ steps.image_tags.outputs.version_tag }}
             docker.io/norishapp/norish:${{ steps.image_tags.outputs.latest_tag }}
+
+      - name: Create GitHub Release
+        if: steps.check_tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.compute_tag.outputs.tag }}"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            --latest

@@ -18,6 +18,8 @@ import defaultTimerKeywords from "./timer-keywords.default.json";
 import {
   ServerConfigKeys,
   type UnitsMap,
+  UnitsConfigSchema,
+  UnitsMapSchema,
   type ContentIndicatorsConfig,
   type RecurrenceConfig,
   type AIConfig,
@@ -49,11 +51,30 @@ export async function isRegistrationEnabled(): Promise<boolean> {
  * Get units configuration
  */
 export async function getUnits(): Promise<UnitsMap> {
-  const value = await getConfig<{ units: UnitsMap; isOverwritten: boolean }>(
-    ServerConfigKeys.UNITS
-  );
+  const value = await getConfig<unknown>(ServerConfigKeys.UNITS);
 
-  return value?.units ?? (defaultUnits as UnitsMap);
+  const wrapped = UnitsConfigSchema.safeParse(value);
+
+  if (wrapped.success) {
+    return wrapped.data.units;
+  }
+
+  const legacyWrapped =
+    typeof value === "object" && value !== null && "units" in value && "isOverwritten" in value
+      ? UnitsMapSchema.safeParse((value as { units: unknown }).units)
+      : null;
+
+  if (legacyWrapped?.success) {
+    return legacyWrapped.data;
+  }
+
+  const legacy = UnitsMapSchema.safeParse(value);
+
+  if (legacy.success) {
+    return legacy.data;
+  }
+
+  return defaultUnits as UnitsMap;
 }
 
 /**
@@ -215,6 +236,8 @@ export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
     "de-formal": { name: "Deutsch (Sie)", enabled: true },
     "de-informal": { name: "Deutsch (Du)", enabled: true },
     fr: { name: "Français", enabled: true },
+    es: { name: "Español", enabled: true },
+    ru: { name: "Русский", enabled: true },
   },
 };
 

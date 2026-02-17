@@ -14,6 +14,7 @@ import {
 } from "./parser-helpers";
 
 import { FullRecipeInsertDTO } from "@/types";
+import { matchCategory } from "@/server/ai/utils/category-matcher";
 import { serverLogger as log } from "@/server/logger";
 
 const gunzipAsync = promisify(gunzip);
@@ -40,6 +41,7 @@ export const PaprikaRecipeSchema = z.object({
   source: z.string().optional().nullable(),
   source_url: z.string().optional().nullable(),
   photo_hash: z.string().optional().nullable(), // ignored
+  photo_data: z.string().optional().nullable(),
   photos: z.array(PaprikaPhotoSchema).optional().default([]),
   uid: z.string().optional().nullable(), // ignored
   created: z.string().optional().nullable(), // ignored
@@ -47,6 +49,24 @@ export const PaprikaRecipeSchema = z.object({
 });
 
 export type PaprikaRecipe = z.infer<typeof PaprikaRecipeSchema>;
+
+function parsePaprikaNutritionValue(
+  nutritionalInfo: string | null | undefined,
+  labels: string[]
+): number | null {
+  if (!nutritionalInfo) return null;
+
+  const escapedLabels = labels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const match = nutritionalInfo.match(
+    new RegExp(`(?:${escapedLabels.join("|")})\\s*:\\s*([\\d.,]+)`, "i")
+  );
+
+  if (!match || !match[1]) return null;
+
+  const parsed = parseFloat(match[1].replace(",", "."));
+
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
 /**
  * Parse a Paprika recipe JSON and map to FullRecipeInsertDTO
@@ -73,6 +93,22 @@ export async function parsePaprikaRecipeToDTO(
   // Get source URL
   const url = validated.source_url || validated.source || undefined;
 
+  const categories = Array.from(
+    new Set(
+      validated.categories
+        .map((value) => matchCategory(value))
+        .filter((value): value is "Breakfast" | "Lunch" | "Dinner" | "Snack" => Boolean(value))
+    )
+  );
+
+  const caloriesRaw = parsePaprikaNutritionValue(validated.nutritional_info, ["calories"]);
+  const carbsRaw = parsePaprikaNutritionValue(validated.nutritional_info, [
+    "carbohydrates",
+    "carbs",
+  ]);
+  const proteinRaw = parsePaprikaNutritionValue(validated.nutritional_info, ["protein"]);
+  const fatRaw = parsePaprikaNutritionValue(validated.nutritional_info, ["fat"]);
+
   const dto = await buildRecipeDTO({
     name,
     image,
@@ -88,7 +124,15 @@ export async function parsePaprikaRecipeToDTO(
   });
 
   // Add the pre-generated recipe ID to ensure the image path matches
-  return { ...dto, id: recipeId };
+  return {
+    ...dto,
+    id: recipeId,
+    categories,
+    calories: caloriesRaw != null ? Math.round(caloriesRaw) : null,
+    carbs: carbsRaw != null ? carbsRaw.toString() : null,
+    protein: proteinRaw != null ? proteinRaw.toString() : null,
+    fat: fatRaw != null ? fatRaw.toString() : null,
+  };
 }
 
 /**
@@ -119,12 +163,21 @@ export async function extractPaprikaRecipes(
       // Validate against schema
       const recipe = PaprikaRecipeSchema.parse(recipeData);
 
-      // Extract first photo if available (either from photos array or photo_data field)
+      // Extract first photo if available
       let imageBuffer: Buffer | undefined = undefined;
 
       if (recipe.photos && recipe.photos.length > 0 && recipe.photos[0].data) {
         try {
           imageBuffer = base64ToBuffer(recipe.photos[0].data);
+        } catch {
+          // Ignore image extraction failure
+        }
+      }
+
+      // Fallback: some Paprika exports store image in photo_data
+      if (!imageBuffer && recipe.photo_data) {
+        try {
+          imageBuffer = base64ToBuffer(recipe.photo_data);
         } catch {
           // Ignore image extraction failure
         }

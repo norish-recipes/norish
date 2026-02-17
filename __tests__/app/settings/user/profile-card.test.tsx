@@ -76,58 +76,19 @@ describe("ProfileCard", () => {
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     await waitFor(() => {
-      expect(saveButton).toBeEnabled();
-    });
+    it("uses plain avatar URL without cache-busting query params", () => {
+      mockUser = {
+        name: "Alice",
+        email: "alice@example.com",
+        image: "/avatars/user-1.png",
+      };
 
-    expect(mockContext.updateImage).not.toHaveBeenCalled();
+      render(<ProfileCard />);
 
-    fireEvent.click(saveButton);
+      const src = screen.getByAltText("profile avatar").getAttribute("src");
 
-    await waitFor(() => {
-      expect(mockContext.updateImage).toHaveBeenCalledTimes(1);
-    });
-    expect(mockContext.updateImage).toHaveBeenCalledWith(file);
-    expect(mockContext.updateName).not.toHaveBeenCalled();
-  });
-
-  it("refreshes avatar src only when the path changes, not on just name change", async () => {
-    mockUser = {
-      name: "Alice",
-      email: "alice@example.com",
-      image: "/avatars/user-1.png",
-    };
-
-    const { rerender } = render(<ProfileCard />);
-
-    const firstSrc = screen.getByAltText("profile avatar").getAttribute("src");
-
-    mockUser = {
-      name: "Alice Updated",
-      email: "alice@example.com",
-      image: "/avatars/user-1.png",
-    };
-
-    rerender(<ProfileCard />);
-
-    await waitFor(() => {
-      const secondSrc = screen.getByAltText("profile avatar").getAttribute("src");
-
-      expect(secondSrc).toBe(firstSrc);
-    });
-  });
-
-  it("refreshes avatar src when image path changes", async () => {
-    mockUser = {
-      name: "Alice",
-      email: "alice@example.com",
-      image: "/avatars/user-1.png",
-    };
-
-    const { rerender } = render(<ProfileCard />);
-
-    const firstSrc = screen.getByAltText("profile avatar").getAttribute("src");
-
-    mockUser = {
+      expect(src).toBe("/avatars/user-1.png");
+  >>>>>>> rc/v0.16.2
       name: "Alice",
       email: "alice@example.com",
       image: "/avatars/user-1-updated.png",
@@ -140,5 +101,8 @@ describe("ProfileCard", () => {
 
       expect(secondSrc).not.toBe(firstSrc);
     });
+=======
+    expect(src).toBe("/avatars/user-1.png");
+>>>>>>> rc/v0.16.2
   });
 });

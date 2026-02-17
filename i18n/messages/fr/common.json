@@ -3,6 +3,7 @@
     "save": "Sauver",
     "cancel": "Annuler",
     "delete": "Effacer",
+    "duplicate": "Dupliquer",
     "edit": "Editer",
     "create": "Créer",
     "add": "Ajouter",
@@ -76,6 +77,11 @@
   "validation": {
     "required": "Ce champ est requis",
     "invalidUrl": "Entrez une URL valide"
+  },
+  "errors": {
+    "operationFailed": "L'opération a échoué",
+    "nameCannotBeEmpty": "Le nom ne peut pas être vide",
+    "technicalDetails": "Une erreur s'est produite. Consultez la console du navigateur pour les détails techniques."
   },
   "slots": {
     "breakfast": "Petit déjeuner",

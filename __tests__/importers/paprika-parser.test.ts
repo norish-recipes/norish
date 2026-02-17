@@ -167,6 +167,26 @@ describe("Paprika Parser", () => {
       expect(dto.tags![2].name).toBe("Low Calorie");
     });
 
+    it("maps matched categories into recipe categories", async () => {
+      mockRecipe.categories = ["brunch", "quick weeknight dinner ideas", "random"];
+
+      const dto = await parsePaprikaRecipeToDTO(mockRecipe);
+
+      expect(dto.categories).toEqual(["Breakfast", "Dinner"]);
+    });
+
+    it("maps nutritional_info to nutrition fields", async () => {
+      mockRecipe.nutritional_info =
+        "Calories: 443kcal | Carbohydrates: 56g | Protein: 15g | Fat: 19g";
+
+      const dto = await parsePaprikaRecipeToDTO(mockRecipe);
+
+      expect(dto.calories).toBe(443);
+      expect(dto.carbs).toBe("56");
+      expect(dto.protein).toBe("15");
+      expect(dto.fat).toBe("19");
+    });
+
     it("parses various time formats", async () => {
       // Test "1 hr 30 min" format
       mockRecipe.prep_time = "1 hr 30 min";
@@ -265,6 +285,19 @@ describe("Paprika Parser", () => {
       expect(dto.steps).toHaveLength(2);
     });
 
+    it("handles section headers in ingredients without creating empty ingredient names", async () => {
+      mockRecipe.ingredients =
+        "1 cup quinoa\nMarinated Chickpeas\n1 can chickpeas\nOptional mix-ins\n1/2 cup vegan feta";
+
+      const dto = await parsePaprikaRecipeToDTO(mockRecipe);
+      const ingredientNames = (dto.recipeIngredients || []).map((ingredient) =>
+        (ingredient.ingredientName || "").trim()
+      );
+
+      expect(ingredientNames.length).toBeGreaterThan(0);
+      expect(ingredientNames.every((name) => name.length > 0)).toBe(true);
+    });
+
     it("filters empty categories", async () => {
       mockRecipe.categories = ["Breakfast", "", "Lunch", ""];
 
@@ -319,6 +352,27 @@ describe("Paprika Parser", () => {
 
       expect(results).toHaveLength(1);
       expect(results[0].recipe.name).toBe("Recipe with Photo");
+      expect(results[0].image).toBeInstanceOf(Buffer);
+    });
+
+    it("extracts recipe image from photo_data when photos array is empty", async () => {
+      const pngBase64 =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
+      const recipeBuffer = await createPaprikaRecipeBuffer({
+        name: "Recipe with photo_data",
+        photos: [],
+        photo_data: pngBase64,
+      });
+
+      const mainZip = new JSZip();
+
+      mainZip.file("recipe_with_photo_data.paprikarecipe", recipeBuffer);
+
+      const results = await extractPaprikaRecipes(mainZip);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].recipe.name).toBe("Recipe with photo_data");
       expect(results[0].image).toBeInstanceOf(Buffer);
     });
 

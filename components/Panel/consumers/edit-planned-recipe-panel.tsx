@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, DatePicker, Select, SelectItem } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
+import { ArrowTopRightOnSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -35,7 +35,7 @@ export function EditPlannedRecipePanel({
   date,
   slot,
 }: EditPlannedRecipePanelProps) {
-  const { deletePlanned, moveItem } = useCalendarContext();
+  const { deletePlanned, moveItem, planMeal } = useCalendarContext();
   const [selectedDate, setSelectedDate] = useState(parseDate(date));
   const [selectedSlot, setSelectedSlot] = useState<Slot>(slot);
 
@@ -65,6 +65,10 @@ export function EditPlannedRecipePanel({
   const handleDelete = () => {
     deletePlanned(itemId);
     onOpenChange(false);
+  };
+
+  const handleDuplicate = () => {
+    planMeal(selectedDate.toString(), selectedSlot, recipeId);
   };
 
   return (
@@ -107,14 +111,17 @@ export function EditPlannedRecipePanel({
         </div>
 
         <div className="mt-2 flex justify-end gap-2">
+          <Button isIconOnly color="danger" size="sm" variant="light" onPress={handleDelete}>
+            <TrashIcon className="h-4 w-4" />
+          </Button>
           <Button
             className="min-w-16"
-            color="danger"
+            color="default"
             size="sm"
             variant="flat"
-            onPress={handleDelete}
+            onPress={handleDuplicate}
           >
-            {tActions("delete")}
+            {tActions("duplicate")}
           </Button>
           <Button className="min-w-16" color="primary" size="sm" onPress={handleSave}>
             {tActions("save")}

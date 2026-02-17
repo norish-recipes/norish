@@ -281,3 +281,15 @@ export function addWeeks(date: Date, weeks: number): Date {
 
   return d;
 }
+
+export function buildAvatarFilename(
+  userId: string,
+  extension: string,
+  timestamp = Date.now()
+): string {
+  return `${userId}-${timestamp}.${extension}`;
+}
+
+export function isAvatarFilenameForUser(filename: string, userId: string): boolean {
+  return filename.startsWith(`${userId}.`) || filename.startsWith(`${userId}-`);
+}

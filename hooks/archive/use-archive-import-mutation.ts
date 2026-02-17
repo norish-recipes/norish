@@ -2,10 +2,12 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { addToast } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { useArchiveImportQuery } from "./use-archive-import-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export type ArchiveImportMutationResult = {
   startImport: (file: File) => void;
@@ -18,6 +20,7 @@ export type ArchiveImportMutationResult = {
  */
 export function useArchiveImportMutation(): ArchiveImportMutationResult {
   const trpc = useTRPC();
+  const tErrors = useTranslations("common.errors");
   const { setImportState } = useArchiveImportQuery();
 
   // Mutation for starting import
@@ -50,22 +53,20 @@ export function useArchiveImportMutation(): ArchiveImportMutationResult {
             radius: "full",
           });
         } else {
-          addToast({
-            severity: "danger",
-            title: "Import failed",
-            description: result.error || "Unknown error",
-            shouldShowTimeoutProgress: true,
-            radius: "full",
+          showSafeErrorToast({
+            title: tErrors("operationFailed"),
+            description: tErrors("technicalDetails"),
+            error: result.error || "Unknown error",
+            context: "archive-import:start",
           });
         }
       },
       onError: (error) => {
-        addToast({
-          severity: "danger",
-          title: "Import failed",
-          description: String(error),
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
+          error,
+          context: "archive-import:start",
         });
       },
     });

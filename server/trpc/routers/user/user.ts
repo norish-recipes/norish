@@ -31,6 +31,7 @@ import { householdEmitter } from "@/server/trpc/routers/households/emitter";
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { deleteAvatarByFilename } from "@/server/startup/media-cleanup";
 import { UpdateUserAllergiesSchema } from "@/server/db/zodSchemas/user-allergies";
+import { buildAvatarFilename, isAvatarFilenameForUser } from "@/lib/helpers";
 
 /**
  * Get current user settings (user profile + API keys)
@@ -142,7 +143,7 @@ const uploadAvatar = authedProcedure
     // Delete all previous avatars for this user (they might have different extensions)
     try {
       const existingFiles = await readdir(avatarDir);
-      const userAvatars = existingFiles.filter((f) => f.startsWith(`${ctx.user.id}.`));
+      const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
 
       for (const oldAvatar of userAvatars) {
         await deleteAvatarByFilename(oldAvatar);
@@ -152,7 +153,7 @@ const uploadAvatar = authedProcedure
     }
 
     // Use user ID as filename
-    const filename = `${ctx.user.id}.${ext}`;
+    const filename = buildAvatarFilename(ctx.user.id, ext);
     const filepath = path.join(avatarDir, filename);
 
     await writeFile(filepath, buffer);
@@ -185,7 +186,7 @@ const deleteAvatar = authedProcedure.mutation(async ({ ctx }) => {
   // Delete all avatars for this user
   try {
     const existingFiles = await readdir(avatarDir);
-    const userAvatars = existingFiles.filter((f) => f.startsWith(`${ctx.user.id}.`));
+    const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
 
     for (const avatar of userAvatars) {
       await deleteAvatarByFilename(avatar);
@@ -234,7 +235,7 @@ const deleteAccount = authedProcedure.mutation(async ({ ctx }) => {
 
   try {
     const existingFiles = await readdir(avatarDir);
-    const userAvatars = existingFiles.filter((f) => f.startsWith(`${ctx.user.id}.`));
+    const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
 
     for (const avatar of userAvatars) {
       await deleteAvatarByFilename(avatar);

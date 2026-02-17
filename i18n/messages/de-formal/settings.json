@@ -61,7 +61,7 @@
     },
     "archiveImport": {
       "title": "Rezeptarchiv importieren",
-      "description": "Importiere Rezepte aus Mela (.melarecipes), Mealie, Tandoor oder Paprika (.zip)-Exporten"
+      "description": "Importiere Rezepte aus Mela (.melarecipes), Paprika (.paprikarecipes) oder Mealie/Tandoor (.zip)-Exporten"
     },
     "siteAuthTokens": {
       "title": "Website-Authentifizierungstoken",

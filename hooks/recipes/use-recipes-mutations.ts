@@ -3,11 +3,12 @@
 import type { FullRecipeInsertDTO, FullRecipeUpdateDTO, MeasurementSystem } from "@/types";
 
 import { useMutation } from "@tanstack/react-query";
-import { addToast } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { useRecipesQuery } from "./use-recipes-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export type RecipesMutationsResult = {
   /** Import a recipe from URL. Fire-and-forget. */
@@ -32,6 +33,7 @@ export type RecipesMutationsResult = {
 
 export function useRecipesMutations(): RecipesMutationsResult {
   const trpc = useTRPC();
+  const tErrors = useTranslations("common.errors");
   const { addPendingRecipe, invalidate } = useRecipesQuery();
 
   const importMutation = useMutation(trpc.recipes.importFromUrl.mutationOptions());
@@ -42,6 +44,16 @@ export function useRecipesMutations(): RecipesMutationsResult {
   const deleteMutation = useMutation(trpc.recipes.delete.mutationOptions());
   const convertMutation = useMutation(trpc.recipes.convertMeasurements.mutationOptions());
 
+  const showMutationErrorToast = (error: unknown, operation: string): void => {
+    showSafeErrorToast({
+      title: tErrors("operationFailed"),
+      description: tErrors("technicalDetails"),
+      color: "default",
+      error,
+      context: `recipes-mutations:${operation}`,
+    });
+  };
+
   const importRecipe = (url: string): void => {
     importMutation.mutate(
       { url },
@@ -50,13 +62,7 @@ export function useRecipesMutations(): RecipesMutationsResult {
           addPendingRecipe(recipeId);
         },
         onError: (e) => {
-          addToast({
-            title: "Import Failed",
-            description: e.message,
-            color: "default",
-            shouldShowTimeoutProgress: true,
-            radius: "full",
-          });
+          showMutationErrorToast(e, "importFromUrl");
 
           invalidate();
         },
@@ -72,13 +78,7 @@ export function useRecipesMutations(): RecipesMutationsResult {
           addPendingRecipe(recipeId);
         },
         onError: (e) => {
-          addToast({
-            title: "Import Failed",
-            description: e.message,
-            color: "default",
-            shouldShowTimeoutProgress: true,
-            radius: "full",
-          });
+          showMutationErrorToast(e, "importFromUrlWithAI");
 
           invalidate();
         },
@@ -89,13 +89,7 @@ export function useRecipesMutations(): RecipesMutationsResult {
   const createRecipe = (input: FullRecipeInsertDTO): void => {
     createMutation.mutate(input, {
       onError: (e) => {
-        addToast({
-          title: "Create Failed",
-          description: e.message,
-          color: "default",
-          shouldShowTimeoutProgress: true,
-          radius: "full",
-        });
+        showMutationErrorToast(e, "create");
 
         invalidate();
       },
@@ -107,13 +101,7 @@ export function useRecipesMutations(): RecipesMutationsResult {
       { id, data: input },
       {
         onError: (e) => {
-          addToast({
-            title: "Update Failed",
-            description: e.message,
-            color: "default",
-            shouldShowTimeoutProgress: true,
-            radius: "full",
-          });
+          showMutationErrorToast(e, "update");
 
           invalidate();
         },
@@ -126,13 +114,7 @@ export function useRecipesMutations(): RecipesMutationsResult {
       { id },
       {
         onError: (e) => {
-          addToast({
-            title: "Delete Failed",
-            description: e.message,
-            color: "default",
-            shouldShowTimeoutProgress: true,
-            radius: "full",
-          });
+          showMutationErrorToast(e, "delete");
 
           invalidate();
         },
@@ -162,13 +144,7 @@ export function useRecipesMutations(): RecipesMutationsResult {
         addPendingRecipe(recipeId);
       },
       onError: (e) => {
-        addToast({
-          title: "Import Failed",
-          description: e.message,
-          color: "default",
-          shouldShowTimeoutProgress: true,
-          radius: "full",
-        });
+        showMutationErrorToast(e, "importFromImages");
 
         invalidate();
       },
@@ -183,13 +159,7 @@ export function useRecipesMutations(): RecipesMutationsResult {
           addPendingRecipe(recipeId);
         },
         onError: (e) => {
-          addToast({
-            title: "Import Failed",
-            description: e.message,
-            color: "default",
-            shouldShowTimeoutProgress: true,
-            radius: "full",
-          });
+          showMutationErrorToast(e, "importFromPaste");
 
           invalidate();
         },
@@ -205,13 +175,7 @@ export function useRecipesMutations(): RecipesMutationsResult {
           addPendingRecipe(recipeId);
         },
         onError: (e) => {
-          addToast({
-            title: "Import Failed",
-            description: e.message,
-            color: "default",
-            shouldShowTimeoutProgress: true,
-            radius: "full",
-          });
+          showMutationErrorToast(e, "importFromPasteWithAI");
 
           invalidate();
         },

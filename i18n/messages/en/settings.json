@@ -61,7 +61,7 @@
     },
     "archiveImport": {
       "title": "Import Recipe Archive",
-      "description": "Import recipes from Mela (.melarecipes), Mealie, Tandoor, or Paprika (.zip) exports"
+      "description": "Import recipes from Mela (.melarecipes), Paprika (.paprikarecipes), or Mealie/Tandoor (.zip) exports"
     },
     "siteAuthTokens": {
       "title": "Site Authentication Tokens",

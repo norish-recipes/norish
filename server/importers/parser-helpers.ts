@@ -160,6 +160,12 @@ export async function buildRecipeDTO(input: RecipeParseInput): Promise<FullRecip
   const ingredientLines = splitNonEmptyLines(input.ingredientsText);
   const ingredientArray = parseIngredientWithDefaults(ingredientLines, units);
   const systemUsed = inferSystemUsedFromParsed(ingredientArray);
+  const normalizedIngredients = ingredientArray
+    .map((line) => ({
+      ...line,
+      description: (line.description || "").trim(),
+    }))
+    .filter((line) => line.description.length > 0);
 
   // Parse steps
   const stepLines = splitNonEmptyLines(input.instructionsText);
@@ -180,7 +186,7 @@ export async function buildRecipeDTO(input: RecipeParseInput): Promise<FullRecip
     prepMinutes: prepMinutes,
     cookMinutes: cookMinutes,
     totalMinutes: totalMinutes,
-    recipeIngredients: ingredientArray.map((line, i) => ({
+    recipeIngredients: normalizedIngredients.map((line, i) => ({
       ingredientId: null,
       ingredientName: line.description,
       amount: line.quantity != null ? line.quantity : null,

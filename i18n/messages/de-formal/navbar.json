@@ -36,7 +36,7 @@
     "uploading": "Wird hochgeladen…",
     "uploadFile": "Datei hochladen",
     "dragDrop": "oder per Drag & Drop",
-    "formats": ".melarecipes (Mela), .zip (Mealie, Tandoor oder Paprika-Export)",
+    "formats": ".melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
     "uploadingFile": "Datei wird hochgeladen…",
     "processing": "Wird verarbeitet: {details}",
     "complete": "Fertig: {details}",

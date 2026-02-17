@@ -167,10 +167,10 @@ export const UnitsMapSchema = z.record(
 
 export type UnitsMap = z.infer<typeof UnitsMapSchema>;
 
-// Units configuration with isOverwritten flag (for database storage)
+// Units configuration with isOverridden flag (for database storage)
 export const UnitsConfigSchema = z.object({
   units: UnitsMapSchema,
-  isOverwritten: z.boolean().default(false),
+  isOverridden: z.boolean().default(false),
 });
 
 export type UnitsConfig = z.infer<typeof UnitsConfigSchema>;

@@ -61,7 +61,7 @@
     },
     "archiveImport": {
       "title": "Importeer Receptarchief",
-      "description": "Importeer recepten van Mela (.melarecipes), Mealie, Tandoor of Paprika (.zip) exports"
+      "description": "Importeer recepten van Mela (.melarecipes), Paprika (.paprikarecipes), of Mealie/Tandoor (.zip) exports"
     },
     "siteAuthTokens": {
       "title": "Site-authenticatietokens",

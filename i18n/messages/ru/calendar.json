@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Календарь"
+  },
+  "mobile": {
+    "today": "Сегодня",
+    "scrollToToday": "Перейти к сегодняшнему дню"
+  },
+  "editNote": {
+    "title": "Редактировать заметку",
+    "noteLabel": "Заметка",
+    "notePlaceholder": "Введите заметку...",
+    "date": "Дата",
+    "slot": "Слот"
+  },
+  "navigation": {
+    "previousMonth": "Предыдущий месяц",
+    "nextMonth": "Следующий месяц",
+    "prev": "Назад",
+    "next": "Вперёд"
+  },
+  "weekdays": {
+    "mon": "Пн",
+    "tue": "Вт",
+    "wed": "Ср",
+    "thu": "Чт",
+    "fri": "Пт",
+    "sat": "Сб",
+    "sun": "Вс"
+  },
+  "timeline": {
+    "noItems": "Нет запланированных событий",
+    "goToRecipe": "Перейти к рецепту",
+    "addItem": "Добавить",
+    "untitled": "Без названия",
+    "serving": "порция",
+    "servings": "порции",
+    "noImage": "Нет изображения",
+    "recipe": "Рецепт",
+    "note": "Заметка"
+  },
+  "editPlannedRecipe": {
+    "title": "Редактировать запланированный рецепт",
+    "date": "Дата",
+    "slot": "Слот"
+  },
+  "panel": {
+    "addToCalendar": "Добавить в календарь",
+    "addRecipe": "Добавить рецепт",
+    "noDaysAvailable": "Нет доступных дней.",
+    "searchPlaceholder": "Поиск рецептов или добавление заметки...",
+    "addNote": "Добавить заметку: {input}",
+    "randomRecipe": "Случайный рецепт",
+    "noRecipesFound": "Рецепты не найдены.",
+    "failedToLoadRecipes": "Не удалось загрузить рецепты."
+  }
+}

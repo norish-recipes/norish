@@ -5,10 +5,11 @@ import type { RecipeDashboardDTO } from "@/types";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { useQueryClient } from "@tanstack/react-query";
-import { addToast } from "@heroui/react";
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 type InfiniteRecipeData = InfiniteData<{
   recipes: RecipeDashboardDTO[];
@@ -18,6 +19,7 @@ type InfiniteRecipeData = InfiniteData<{
 
 export function useRatingsSubscription() {
   const trpc = useTRPC();
+  const tErrors = useTranslations("common.errors");
   const queryClient = useQueryClient();
 
   // Get base key for partial matching - use empty params
@@ -69,12 +71,12 @@ export function useRatingsSubscription() {
 
         queryClient.invalidateQueries({ queryKey: userRatingQueryKey });
 
-        addToast({
-          severity: "danger",
-          title: "Failed to rate recipe",
-          description: reason,
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
+          error: reason,
+          context: "ratings-subscription:onRatingFailed",
+          metadata: { recipeId },
         });
       },
     })

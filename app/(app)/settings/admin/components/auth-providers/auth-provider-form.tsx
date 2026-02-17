@@ -4,6 +4,7 @@ import type { ProviderKey, FieldDef, TestResult } from "./types";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Input, useDisclosure, addToast } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../../context";
 
@@ -13,6 +14,7 @@ import { TestResultDisplay } from "./test-result-display";
 
 import { ServerConfigKeys, type ServerConfigKey } from "@/server/db/zodSchemas/server-config";
 import SecretInput from "@/components/shared/secret-input";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 const CONFIG_KEYS: Record<ProviderKey, ServerConfigKey> = {
   oidc: ServerConfigKeys.AUTH_PROVIDER_OIDC,
@@ -35,6 +37,7 @@ export function AuthProviderForm({
   fields,
   onDirtyChange,
 }: AuthProviderFormProps) {
+  const tErrors = useTranslations("common.errors");
   const {
     updateAuthProviderGitHub,
     updateAuthProviderGoogle,
@@ -119,10 +122,11 @@ export function AuthProviderForm({
 
     if (!result.success) {
       deleteModal.onClose();
-      addToast({
-        severity: "danger",
-        title: "Cannot delete provider",
-        description: result.error,
+      showSafeErrorToast({
+        title: tErrors("operationFailed"),
+        description: tErrors("technicalDetails"),
+        error: result.error,
+        context: `admin-auth-provider:delete:${providerKey}`,
       });
 
       return;

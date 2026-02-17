@@ -30,14 +30,16 @@ const importArchive = authedProcedure
       return { success: false, error: "No file provided" };
     }
 
-    // Validate file name - accept both .melarecipes and .zip
-    const isMela = file.name.endsWith(".melarecipes");
-    const isZip = file.name.endsWith(".zip");
+    // Validate file name - accept .melarecipes, .paprikarecipes, and .zip
+    const fileName = file.name.toLowerCase();
+    const isMela = fileName.endsWith(".melarecipes");
+    const isPaprikaRecipes = fileName.endsWith(".paprikarecipes");
+    const isZip = fileName.endsWith(".zip");
 
-    if (!isMela && !isZip) {
+    if (!isMela && !isPaprikaRecipes && !isZip) {
       return {
         success: false,
-        error: "Invalid file type. Expected .melarecipes or .zip file.",
+        error: "Invalid file type. Expected .melarecipes, .paprikarecipes, or .zip file.",
       };
     }
 
@@ -58,7 +60,7 @@ const importArchive = authedProcedure
         return {
           success: false,
           error:
-            "Unknown archive format. Expected .melarecipes, Mealie .zip, Paprika .zip, or Tandoor .zip export",
+            "Unknown archive format. Expected .melarecipes, .paprikarecipes, Mealie .zip, or Tandoor .zip export",
         };
       }
 

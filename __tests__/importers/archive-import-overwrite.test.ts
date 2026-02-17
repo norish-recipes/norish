@@ -10,6 +10,8 @@ const mockDashboardRecipe = vi.fn();
 const mockRateRecipe = vi.fn();
 const mockParseMelaArchive = vi.fn();
 const mockParseMelaRecipeToDTO = vi.fn();
+const mockExtractPaprikaRecipes = vi.fn();
+const mockParsePaprikaRecipeToDTO = vi.fn();
 
 vi.mock("@/server/db", () => ({
   findExistingRecipe: mockFindExistingRecipe,
@@ -40,8 +42,8 @@ vi.mock("@/server/importers/tandoor-parser", () => ({
 }));
 
 vi.mock("@/server/importers/paprika-parser", () => ({
-  extractPaprikaRecipes: vi.fn(),
-  parsePaprikaRecipeToDTO: vi.fn(),
+  extractPaprikaRecipes: mockExtractPaprikaRecipes,
+  parsePaprikaRecipeToDTO: mockParsePaprikaRecipeToDTO,
 }));
 
 describe("archive importer overwrite behavior", () => {
@@ -53,6 +55,29 @@ describe("archive importer overwrite behavior", () => {
       name: "Updated Soup",
       description: "new description",
       url: "https://example.com/soup",
+      image: null,
+      servings: 2,
+      systemUsed: "metric",
+      prepMinutes: null,
+      cookMinutes: null,
+      totalMinutes: null,
+      calories: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+      categories: [],
+      tags: [],
+      recipeIngredients: [],
+      steps: [],
+      images: [],
+      videos: [],
+    });
+
+    mockExtractPaprikaRecipes.mockResolvedValue([]);
+    mockParsePaprikaRecipeToDTO.mockResolvedValue({
+      name: "Paprika Soup",
+      description: "paprika description",
+      url: "https://example.com/paprika-soup",
       image: null,
       servings: 2,
       systemUsed: "metric",
@@ -92,5 +117,53 @@ describe("archive importer overwrite behavior", () => {
     expect(mockCreateRecipeWithRefs).not.toHaveBeenCalled();
     expect(result.imported).toHaveLength(1);
     expect(result.skipped).toHaveLength(0);
+  });
+
+  it("imports Paprika rating when greater than zero", async () => {
+    mockFindExistingRecipe.mockResolvedValue(null);
+    mockCreateRecipeWithRefs.mockResolvedValue("new-recipe-id");
+    mockDashboardRecipe.mockResolvedValue({ id: "new-recipe-id", name: "Paprika Soup" });
+    mockExtractPaprikaRecipes.mockResolvedValue([
+      {
+        recipe: { name: "Paprika Soup", rating: 5 },
+        fileName: "recipe.paprikarecipe",
+        image: undefined,
+      },
+    ]);
+
+    const zip = new JSZip();
+
+    zip.file("recipe.paprikarecipe", "dummy");
+    const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
+
+    const { importArchive } = await import("@/server/importers/archive-parser");
+
+    await importArchive("user-1", ["user-1"], zipBytes);
+
+    expect(mockRateRecipe).toHaveBeenCalledWith("user-1", "new-recipe-id", 5);
+  });
+
+  it("does not import Paprika rating when it is zero", async () => {
+    mockFindExistingRecipe.mockResolvedValue(null);
+    mockCreateRecipeWithRefs.mockResolvedValue("new-recipe-id");
+    mockDashboardRecipe.mockResolvedValue({ id: "new-recipe-id", name: "Paprika Soup" });
+    mockExtractPaprikaRecipes.mockResolvedValue([
+      {
+        recipe: { name: "Paprika Soup", rating: 0 },
+        fileName: "recipe.paprikarecipe",
+        image: undefined,
+      },
+    ]);
+
+    const zip = new JSZip();
+
+    zip.file("recipe.paprikarecipe", "dummy");
+    const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
+
+    const { importArchive } = await import("@/server/importers/archive-parser");
+
+    await importArchive("user-1", ["user-1"], zipBytes);
+
+    expect(mockRateRecipe).not.toHaveBeenCalled();
   });
 });

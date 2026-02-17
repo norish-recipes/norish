@@ -86,7 +86,7 @@ Norish is intentionally minimal. It focuses on practical day-to-day planning.
 - **Authentication options**: OIDC, OAuth providers, and first-time password auth fallback.
 - **Admin settings UI** for runtime configuration.
 - **Permission policies** for recipe visibility/edit/delete scopes.
-- **Internationalization (i18n)** currently supporting EN, NL and DE
+- **Internationalization (i18n)** currently supporting EN, NL, DE, FR, ES and RU
 
 _Note: AI feature speed can vary by provider, model, and region._
 
@@ -132,7 +132,11 @@ services:
       # GOOGLE_CLIENT_SECRET: <google-client-secret>
     healthcheck:
       test:
-        ["CMD", "curl", "--silent", "--show-error", "--fail", "http://localhost:3000/api/health"]
+        test:
+          [
+            "CMD-SHELL",
+            'node -e "require(''http'').get(''http://localhost:3000/api/health'', r => process.exit(r.statusCode===200?0:1))"',
+          ]
       interval: 1m
       timeout: 15s
       retries: 3

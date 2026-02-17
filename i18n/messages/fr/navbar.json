@@ -38,7 +38,7 @@
     "uploading": "Téléversement…",
     "uploadFile": "Téléverser un fichier",
     "dragDrop": "ou glisser-déposer",
-    "formats": ".melarecipes (Mela), .zip (export Mealie, Tandoor ou Paprika)",
+    "formats": ".melarecipes (Mela), .paprikarecipes (Paprika), .zip (export Mealie/Tandoor)",
     "uploadingFile": "Téléversement du fichier…",
     "processing": "Traitement : {details}",
     "complete": "Terminé : {details}",

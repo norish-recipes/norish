@@ -69,7 +69,7 @@ const updateUnits = adminProcedure.input(z.string()).mutation(async ({ input, ct
   // Wrap units and mark as overridden
   await setConfig(
     ServerConfigKeys.UNITS,
-    { units: result.data, isOverwritten: true },
+    { units: result.data, isOverridden: true },
     ctx.user.id,
     false
   );

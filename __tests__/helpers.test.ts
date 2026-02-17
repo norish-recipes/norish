@@ -11,6 +11,8 @@ import {
   getWeekEnd,
   getWeekDays,
   addWeeks,
+  buildAvatarFilename,
+  isAvatarFilenameForUser,
 } from "@/lib/helpers";
 
 describe("parseIsoDuration", () => {
@@ -270,5 +272,21 @@ describe("addWeeks", () => {
 
     expect(result.getMonth()).toBe(1); // February
     expect(result.getDate()).toBe(5);
+  });
+});
+
+describe("avatar filename helpers", () => {
+  it("creates unique avatar filename using user id and timestamp", () => {
+    expect(buildAvatarFilename("user-1", "png", 1735689600000)).toBe("user-1-1735689600000.png");
+  });
+
+  it("matches both legacy and versioned avatar filenames for a user", () => {
+    expect(isAvatarFilenameForUser("user-1.png", "user-1")).toBe(true);
+    expect(isAvatarFilenameForUser("user-1-1735689600000.png", "user-1")).toBe(true);
+  });
+
+  it("does not match filenames for different users", () => {
+    expect(isAvatarFilenameForUser("user-10-1735689600000.png", "user-1")).toBe(false);
+    expect(isAvatarFilenameForUser("other-user.png", "user-1")).toBe(false);
   });
 });

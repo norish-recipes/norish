@@ -47,6 +47,7 @@ export default function RecipePageDesktop() {
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
   const t = useTranslations("recipes.detail");
+  const tForm = useTranslations("recipes.form");
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -120,7 +121,7 @@ export default function RecipePageDesktop() {
                     return (
                       <span key={category} className="flex items-center gap-1">
                         <IconComponent className="h-4 w-4" />
-                        {category}
+                        {tForm(`category.${category.toLowerCase()}`)}
                       </span>
                     );
                   })}
@@ -219,7 +220,11 @@ export default function RecipePageDesktop() {
             {/* Author badge */}
             {recipe.author && (
               <div className="absolute top-4 left-4 z-50">
-                <AuthorChip image={recipe.author.image} name={recipe.author.name} />
+                <AuthorChip
+                  image={recipe.author.image}
+                  name={recipe.author.name}
+                  userId={recipe.author.id}
+                />
               </div>
             )}
           </div>

@@ -19,7 +19,7 @@ export type RecipeFilters = {
   tags?: string[];
   categories?: RecipeCategory[];
   filterMode?: "AND" | "OR";
-  sortMode?: "titleAsc" | "titleDesc" | "dateAsc" | "dateDesc";
+  sortMode?: "titleAsc" | "titleDesc" | "dateAsc" | "dateDesc" | "none";
   minRating?: number;
   maxCookingTime?: number;
 };

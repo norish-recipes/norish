@@ -30,6 +30,20 @@ const COOKING_TIME_OPTIONS: Array<{ value: number; labelKey: string }> = [
   { value: 120, labelKey: "cookingTimeUnder120" },
 ];
 
+function normalizeSortMode(sortMode: SortOrder | null | undefined): SortOrder {
+  if (
+    sortMode === "titleAsc" ||
+    sortMode === "titleDesc" ||
+    sortMode === "dateAsc" ||
+    sortMode === "dateDesc" ||
+    sortMode === "none"
+  ) {
+    return sortMode;
+  }
+
+  return "none";
+}
+
 type FiltersPanelProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -45,7 +59,9 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
   const [workingTags, setWorkingTags] = useState<string[]>(filters.searchTags);
   const [workingCategories, setWorkingCategories] = useState<RecipeCategory[]>(filters.categories);
   const [localFilterMode, setLocalFilterMode] = useState<FilterMode>(filters.filterMode);
-  const [localSortMode, setLocalSortMode] = useState<SortOrder>(filters.sortMode);
+  const [localSortMode, setLocalSortMode] = useState<SortOrder>(
+    normalizeSortMode(filters.sortMode)
+  );
   const [localInput, setLocalInput] = useState(filters.rawInput);
   const [localFavoritesOnly, setLocalFavoritesOnly] = useState(filters.showFavoritesOnly);
   const [localMinRating, setLocalMinRating] = useState<number | null>(filters.minRating);
@@ -59,7 +75,7 @@ function FiltersPanelContent({ onOpenChange }: { onOpenChange: (open: boolean) =
     setWorkingTags(filters.searchTags);
     setWorkingCategories(filters.categories);
     setLocalFilterMode(filters.filterMode);
-    setLocalSortMode(filters.sortMode);
+    setLocalSortMode(normalizeSortMode(filters.sortMode));
     setLocalInput(filters.rawInput);
     setLocalFavoritesOnly(filters.showFavoritesOnly);
     setLocalMinRating(filters.minRating);

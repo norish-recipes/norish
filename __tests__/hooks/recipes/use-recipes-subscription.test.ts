@@ -310,5 +310,30 @@ describe("useRecipesSubscription", () => {
 
       expect(useSubscription).toHaveBeenCalled();
     });
+
+    it("shows a generic error toast instead of raw backend errors", async () => {
+      queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
+      queryClient.setQueryData(["recipes", "pending"], []);
+
+      const { useRecipesSubscription } = await import("@/hooks/recipes/use-recipes-subscription");
+
+      renderHook(() => useRecipesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      subscriptionCallbacks.onFailed?.({
+        reason:
+          "Error processing URL https://instagram.com/p/abc123... stacktrace: very long technical details",
+      });
+
+      const { addToast } = await import("@heroui/react");
+
+      expect(addToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "failed",
+          description: "failedDescription",
+        })
+      );
+    });
   });
 });

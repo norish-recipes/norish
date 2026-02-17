@@ -16,6 +16,7 @@ import { OIDCClaimMapping, type ClaimMappingValues } from "./oidc-claim-mapping"
 import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
 import SecretInput from "@/components/shared/secret-input";
 import { useDirtyState } from "@/hooks/use-dirty-state";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 interface OIDCProviderFormProps {
   config: Record<string, unknown> | undefined;
@@ -24,6 +25,7 @@ interface OIDCProviderFormProps {
 
 export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProps) {
   const tOidc = useTranslations("settings.admin.authProviders.oidc.fields");
+  const tErrors = useTranslations("common.errors");
   const { updateAuthProviderOIDC, deleteAuthProvider, testAuthProvider, fetchConfigSecret } =
     useAdminSettingsContext();
 
@@ -165,10 +167,11 @@ export function OIDCProviderForm({ config, onDirtyChange }: OIDCProviderFormProp
 
     if (!result.success) {
       deleteModal.onClose();
-      addToast({
-        severity: "danger",
-        title: "Cannot delete provider",
-        description: result.error,
+      showSafeErrorToast({
+        title: tErrors("operationFailed"),
+        description: tErrors("technicalDetails"),
+        error: result.error,
+        context: "admin-auth-provider:delete:oidc",
       });
 
       return;

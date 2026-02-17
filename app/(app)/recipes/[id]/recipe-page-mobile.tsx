@@ -44,6 +44,7 @@ export default function RecipePageMobile() {
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
   const t = useTranslations("recipes.detail");
+  const tForm = useTranslations("recipes.form");
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -77,7 +78,11 @@ export default function RecipePageMobile() {
             className="absolute left-4 z-50"
             style={{ top: `calc(3.5rem + env(safe-area-inset-top))` }}
           >
-            <AuthorChip image={recipe.author.image} name={recipe.author.name} />
+            <AuthorChip
+              image={recipe.author.image}
+              name={recipe.author.name}
+              userId={recipe.author.id}
+            />
           </div>
         )}
 
@@ -150,7 +155,7 @@ export default function RecipePageMobile() {
                 return (
                   <span key={category} className="flex items-center gap-1">
                     <IconComponent className="h-4 w-4" />
-                    {category}
+                    {tForm(`category.${category.toLowerCase()}`)}
                   </span>
                 );
               })}

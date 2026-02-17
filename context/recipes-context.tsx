@@ -60,7 +60,7 @@ export function RecipesContextProvider({ children }: { children: ReactNode }) {
       tags: filters.searchTags.length > 0 ? filters.searchTags : undefined,
       categories: filters.categories.length > 0 ? filters.categories : undefined,
       filterMode: filters.filterMode as "AND" | "OR",
-      sortMode: filters.sortMode as "titleAsc" | "titleDesc" | "dateAsc" | "dateDesc",
+      sortMode: filters.sortMode,
       minRating: filters.minRating ?? undefined,
       maxCookingTime: filters.maxCookingTime ?? undefined,
     }),

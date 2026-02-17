@@ -9,6 +9,7 @@ import { getAllUserAvatars } from "../db/repositories";
 
 import { SERVER_CONFIG } from "@/config/env-config-server";
 import { schedulerLogger } from "@/server/logger";
+import { isAvatarFilenameForUser } from "@/lib/helpers";
 
 function getRecipesDiskDir() {
   return path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes");
@@ -271,8 +272,9 @@ export async function cleanupOrphanedAvatars(): Promise<{ deleted: number; error
         continue;
       }
 
-      const userIdPattern = `${user.userId}.`;
-      const matchingFiles = avatarFiles.filter((file) => file.startsWith(userIdPattern));
+      const matchingFiles = avatarFiles.filter((file) =>
+        isAvatarFilenameForUser(file, user.userId)
+      );
 
       for (const file of matchingFiles) {
         usedAvatars.add(file);

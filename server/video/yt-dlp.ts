@@ -154,6 +154,27 @@ export async function buildAuthArgs(
   const args: string[] = [];
   let cookieFilePath: string | null = null;
 
+  const parseHostname = (value: string): string => {
+    try {
+      return new URL(value).hostname;
+    } catch {
+      return value;
+    }
+  };
+
+  const isIpAddress = (value: string): boolean =>
+    /^(?:\d{1,3}\.){3}\d{1,3}$/.test(value) || value.includes(":");
+
+  const toNetscapeDomain = (value: string): { domain: string; includeSubdomains: boolean } => {
+    const normalized = parseHostname(value).trim().replace(/^\.+/, "").toLowerCase();
+
+    if (!normalized || normalized === "localhost" || isIpAddress(normalized)) {
+      return { domain: normalized || value, includeSubdomains: false };
+    }
+
+    return { domain: `.${normalized}`, includeSubdomains: true };
+  };
+
   const headerTokens = tokens.filter((t) => t.type === "header");
 
   for (const token of headerTokens) {
@@ -163,20 +184,28 @@ export async function buildAuthArgs(
   const cookieTokens = tokens.filter((t) => t.type === "cookie");
 
   if (cookieTokens.length > 0) {
-    let domain: string;
+    let fallbackDomain: string;
+    let secureFlag = "FALSE";
 
     try {
-      domain = new URL(url).hostname;
+      const parsedUrl = new URL(url);
+
+      fallbackDomain = parsedUrl.hostname;
+      secureFlag = parsedUrl.protocol === "https:" ? "TRUE" : "FALSE";
     } catch {
-      domain = url;
+      fallbackDomain = url;
     }
 
     // Write Netscape cookie file format
     const lines = ["# Netscape HTTP Cookie File", "# https://curl.se/docs/http-cookies.html", ""];
 
     for (const token of cookieTokens) {
+      const { domain, includeSubdomains } = toNetscapeDomain(token.domain || fallbackDomain);
+
       // Format: domain  flag  path  secure  expiry  name  value
-      lines.push(`${domain}\tTRUE\t/\tFALSE\t0\t${token.name}\t${token.value}`);
+      lines.push(
+        `${domain}\t${includeSubdomains ? "TRUE" : "FALSE"}\t/\t${secureFlag}\t0\t${token.name}\t${token.value}`
+      );
     }
 
     cookieFilePath = path.join(

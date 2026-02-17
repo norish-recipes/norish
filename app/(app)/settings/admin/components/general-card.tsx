@@ -20,11 +20,13 @@ import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function GeneralCard() {
   const t = useTranslations("settings.admin.general");
+  const tErrors = useTranslations("common.errors");
   const { registrationEnabled, updateRegistration, localeConfig, updateLocaleConfig, isLoading } =
     useAdminSettingsContext();
 
@@ -107,10 +109,12 @@ export default function GeneralCard() {
           color: "success",
         });
       } else {
-        addToast({
+        showSafeErrorToast({
           title: t("localesError"),
-          description: result.error,
+          description: tErrors("technicalDetails"),
           color: "danger",
+          error: result.error,
+          context: "admin-general:save-locales",
         });
       }
     } finally {

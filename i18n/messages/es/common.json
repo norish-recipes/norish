@@ -1,0 +1,208 @@
+{
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "duplicate": "Duplicar",
+    "edit": "Editar",
+    "create": "Crear",
+    "add": "Añadir",
+    "remove": "Quitar",
+    "close": "Cerrar",
+    "apply": "Aplicar",
+    "reset": "Restablecer",
+    "clear": "Borrar",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "done": "Listo",
+    "retry": "Reintentar",
+    "submit": "Enviar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "import": "Importar",
+    "aiImport": "Importado con IA",
+    "importWithAI": "Importar con IA",
+    "goHome": "Ir Inicio",
+    "test": "Probar",
+    "format": "Formatear",
+    "restoreDefaults": "Restablecer valores predeterminados",
+    "saveChanges": "Guardar cambios",
+    "revealSecret": "Mostrar secreto",
+    "hideSecret": "Ocultar secreto",
+    "enterNewValue": "Introduce un nuevo valor",
+    "cancelEditing": "Cancelar edición"
+  },
+  "status": {
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "deleting": "Eliminando...",
+    "error": "Error",
+    "success": "Hecho",
+    "noResults": "No se han encontrado resultados",
+    "changing": "Cambiando…"
+  },
+  "filters": {
+    "title": "Filtros",
+    "search": "Buscar",
+    "sort": "Ordenar",
+    "mode": "Modo",
+    "modeAll": "Todo",
+    "modeAny": "Cualquiera",
+    "tags": "Etiquetas",
+    "searchTags": "Buscar etiquetas",
+    "favoritesAndRating": "Favoritos y valoración",
+    "favorites": "Favoritos",
+    "cookingTime": "Tiempo de cocinado",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
+    "categories": "Categorías",
+    "category": {
+      "breakfast": "Desayuno",
+      "lunch": "Comida",
+      "dinner": "Cena",
+      "snack": "Tentempié"
+    },
+    "sortByTitle": "Título",
+    "sortByDate": "Fecha",
+    "clearFilters": "Borrar filtros"
+  },
+  "time": {
+    "minutes": "min",
+    "hours": "h"
+  },
+  "validation": {
+    "required": "Este campo es obligatorio",
+    "invalidUrl": "Introduce una URL válida"
+  },
+  "slots": {
+    "breakfast": "Desayuno",
+    "lunch": "Comida",
+    "dinner": "Cena",
+    "snack": "Tentempié",
+    "chooseSlot": "Elige franja"
+  },
+  "connection": {
+    "connecting": "Conectando con Norish...",
+    "syncing": "Sincronizando, espera por favor...",
+    "checkInternet": "Por favor, comprueba tu conexión a Internet",
+    "gettingUpdates": "Un momento, obteniendo las últimas actualizaciones"
+  },
+  "language": {
+    "title": "Idioma"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Página no encontrada",
+    "message": "¡Vaya! Nora no ha encontrado lo que buscas.\nPuede que la página se haya movido o ya no exista."
+  },
+  "import": {
+    "url": {
+      "title": "Importar receta",
+      "label": "URL de la receta",
+      "placeholder": "https://ejemplo.com/tu-receta",
+      "failed": "No se ha podido importar la receta",
+      "failedWithAI": "No se ha podido importar la receta con IA"
+    },
+    "paste": {
+      "title": "Importar pegando el texto",
+      "label": "Texto de la receta o JSON-LD",
+      "placeholder": "Pega una receta (texto libre) o JSON-LD aquí...",
+      "characters": "{count} / {max} caracteres",
+      "tooLarge": "Texto demasiado largo",
+      "maxCharacters": "Máximo {max} caracteres permitidos",
+      "importing": "Importando receta...",
+      "importingWithAI": "Importando receta con IA...",
+      "inProgress": "Importando, espera por favor...",
+      "failed": "Error al importar"
+    },
+    "image": {
+      "title": "Importar desde imagen",
+      "dropzone": "Arrastra imágenes aquí o haz clic para buscar",
+      "paste": "para pegar",
+      "formats": "Compatibles: JPG, PNG, WebP. Máx. 10MB por archivo.",
+      "invalidType": "Tipo de archivo no válido",
+      "notSupported": "{name} no es un formato de imagen compatible",
+      "tooLarge": "Archivo demasiado grande",
+      "exceeds": "{name} supera el límite de 10MB",
+      "tooMany": "Demasiados archivos",
+      "maxFiles": "Máximo {max} archivos permitidos",
+      "importing": "Importando receta desde imágenes...",
+      "analyzing": "Analizando tus imágenes, espera por favor...",
+      "failed": "Error al importar",
+      "selectedCount": "{count} imágenes seleccionadas - se combinarán en una sola receta"
+    }
+  },
+  "formatting": {
+    "title": "Consejos de formato",
+    "heading": "Empieza una línea con <strong>#</strong> para dar formato de título",
+    "bold": "Usa <strong>**dobles asteriscos**</strong> para negrita",
+    "recipeLink": "Escribe <strong>/nombre de la receta</strong> para enlazar otra receta",
+    "helpAriaLabel": "Ayuda de formato"
+  },
+  "tagInput": {
+    "placeholder": "Escribe las etiquetas separadas por espacios..."
+  },
+  "recurrence": {
+    "title": "Repetir",
+    "frequency": "Frecuencia",
+    "interval": "Intervalo",
+    "onDay": "En el día",
+    "daily": "Diario",
+    "weekly": "Semanal",
+    "monthly": "Mensual",
+    "day": "día",
+    "days": "días",
+    "week": "semana",
+    "weeks": "semanas",
+    "month": "mes",
+    "months": "meses",
+    "next": "Siguiente:",
+    "every": "Cada",
+    "everyOther": "Cada dos",
+    "on": "en",
+    "today": "hoy",
+    "tomorrow": "mañana",
+    "weekdays": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mié",
+      "thu": "Jue",
+      "fri": "Vie",
+      "sat": "Sáb"
+    },
+    "weekdaysFull": {
+      "0": "Domingo",
+      "1": "Lunes",
+      "2": "Martes",
+      "3": "Miércoles",
+      "4": "Jueves",
+      "5": "Viernes",
+      "6": "Sábado"
+    }
+  },
+  "badges": {
+    "new": "Nuevo"
+  },
+  "errors": {
+    "operationFailed": "La operación ha fallado",
+    "nameCannotBeEmpty": "El nombre no puede estar vacío",
+    "technicalDetails": "Algo ha salido mal. Comprueba la consola del navegador para obtener detalles técnicos."
+  },
+  "timer": {
+    "done": "Listo",
+    "done_action": "Listo",
+    "one": "Temporizador",
+    "other": "Temporizadores",
+    "label_one": "1 temporizador",
+    "label_other": "{count} temporizadores",
+    "notification_title": "Temporizador finalizado",
+    "notification_body": "{label} ha terminado!",
+    "notifications_disabled": "Las notificaciones están desactivadas",
+    "notifications_disabled_hint": "Activa las notificaciones en la configuración de tu navegador para recibir alertas cuando los temporizadores terminen en segundo plano."
+  }
+}

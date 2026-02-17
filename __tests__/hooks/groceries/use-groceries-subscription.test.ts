@@ -34,6 +34,10 @@ vi.mock("@heroui/react", () => ({
   addToast: vi.fn(),
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 // Mock the query key
 const mockQueryKey = ["groceries", "list"];
 
@@ -412,7 +416,8 @@ describe("useGroceriesSubscription", () => {
       expect(addToast).toHaveBeenCalledWith(
         expect.objectContaining({
           severity: "danger",
-          title: "Failed to save grocery",
+          title: "operationFailed",
+          description: "technicalDetails",
         })
       );
     });

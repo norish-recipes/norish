@@ -4,10 +4,12 @@ import type { HouseholdAdminSettingsDto } from "@/types/dto/household";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { addToast } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import { useHouseholdCacheHelpers } from "./use-household-cache";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useUser } from "@/hooks/use-user";
 
 /**
@@ -18,6 +20,7 @@ import { useUser } from "@/hooks/use-user";
  */
 export function useHouseholdSubscription() {
   const trpc = useTRPC();
+  const tErrors = useTranslations("common.errors");
   const { user } = useUser();
   const currentUserId = user?.id;
   const { setHouseholdData, invalidate, invalidateCalendar } = useHouseholdCacheHelpers();
@@ -59,12 +62,12 @@ export function useHouseholdSubscription() {
   useSubscription(
     trpc.households.onFailed.subscriptionOptions(undefined, {
       onData: (payload) => {
-        addToast({
-          title: "Household Error",
-          description: payload.reason,
+        showSafeErrorToast({
+          title: tErrors("operationFailed"),
+          description: tErrors("technicalDetails"),
           color: "danger",
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+          error: payload.reason,
+          context: "household-subscription:onFailed",
         });
         invalidate();
       },
