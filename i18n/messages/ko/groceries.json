@@ -1,10 +1,10 @@
 {
   "page": {
-    "title": "Groceries",
+    "title": "장보기",
     "addItem": "Add Item",
     "addItems": "Add items",
     "viewByStore": "By Store",
-    "viewByRecipe": "By Recipe",
+    "viewByRecipe": "By 레시피",
     "viewMode": "View Mode",
     "manageStores": "Manage Stores",
     "storeViewOptions": "Store View Options",
@@ -25,14 +25,14 @@
     "noItems": "No items in this store",
     "storeActions": "Store actions",
     "markAllDone": "Mark all done",
-    "deleteDone": "Delete done",
+    "deleteDone": "삭제 done",
     "done": "{count} done"
   },
   "storeManager": {
     "title": "Manage Stores",
     "addStore": "Add Store",
-    "editStore": "Edit Store",
-    "deleteStore": "Delete Store",
+    "editStore": "수정 Store",
+    "deleteStore": "삭제 Store",
     "storeName": "Store name",
     "storeNamePlaceholder": "e.g., Supermarket",
     "storeColor": "Color",
@@ -40,20 +40,20 @@
     "confirmDelete": "Are you sure you want to delete {storeName}?",
     "deleteWarning": "Items in this store will be moved to Unsorted.",
     "noStoresYet": "No stores yet",
-    "createStoreHint": "Create a store to organize your groceries",
+    "createStoreHint": "생성 a store to organize your groceries",
     "hasItems": "This store has {count} grocery item.",
     "hasItemsPlural": "This store has {count} grocery items.",
     "whatToDo": "What would you like to do with them?",
     "keepItems": "Keep items",
     "keepItemsDescription": "Move items to Unsorted",
-    "deleteItems": "Delete items",
+    "deleteItems": "삭제 items",
     "deleteItemsDescription": "Remove all items in this store",
     "noItems": "This store has no items.",
-    "create": "Create"
+    "create": "생성"
   },
   "panel": {
-    "addTitle": "Add Grocery",
-    "editTitle": "Edit Grocery",
+    "addTitle": "Add 장보기",
+    "editTitle": "수정 장보기",
     "itemName": "Item name",
     "itemNamePlaceholder": "e.g., Milk, Eggs, Bread...",
     "selectStore": "Select store",
@@ -68,11 +68,11 @@
     "placeholder": "e.g., 2 lbs chicken breast",
     "editPlaceholder": "e.g., milk every week",
     "servings": "Servings",
-    "loadingIngredients": "Loading ingredients...",
+    "loadingIngredients": "불러오는 중 ingredients...",
     "noIngredients": "No ingredients.",
     "addSelectedToGroceries": "Add to groceries",
     "ingredientsAdded": "Ingredients added to grocery list.",
     "ingredientsFailed": "Failed to add ingredients to grocery list.",
-    "addToGroceries": "Add to Groceries"
+    "addToGroceries": "Add to 장보기"
   }
 }

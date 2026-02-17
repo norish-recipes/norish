@@ -1,8 +1,8 @@
 {
   "page": {
-    "title": "Settings",
-    "loading": "Loading...",
-    "ariaLabel": "Settings tabs"
+    "title": "설정",
+    "loading": "불러오는 중...",
+    "ariaLabel": "설정 tabs"
   },
   "tabs": {
     "user": "User",
@@ -13,27 +13,27 @@
   "user": {
     "profile": {
       "title": "Profile",
-      "nameLabel": "Name",
+      "nameLabel": "이름",
       "namePlaceholder": "Your name",
-      "emailLabel": "Email",
+      "emailLabel": "이메일",
       "avatarHint": "Click your avatar to change picture",
-      "deleteAvatar": "Delete profile picture",
-      "saveChanges": "Save Changes"
+      "deleteAvatar": "삭제 profile picture",
+      "saveChanges": "변경사항 저장"
     },
     "allergies": {
       "title": "Allergies",
       "description": "Add your food allergies to receive warnings when planning recipes that contain allergens. This information is used to warn you when a planned recipe contains ingredients that match your allergies.",
       "placeholder": "Type allergies (e.g., gluten, nuts, dairy)...",
-      "saveButton": "Save Allergies"
+      "saveButton": "저장 Allergies"
     },
     "apiKeys": {
       "title": "API Keys",
       "description": "API keys allow programmatic access to the Norish API. Use them for integrations, shortcuts, and automation.",
       "keyNameLabel": "Key Name (optional)",
       "keyNamePlaceholder": "e.g., iOS Shortcut",
-      "createKey": "Create Key",
+      "createKey": "생성 Key",
       "yourKeys": "Your API Keys",
-      "noKeys": "No API keys yet. Create one to get started.",
+      "noKeys": "No API keys yet. 생성 one to get started.",
       "tableHeaders": {
         "name": "NAME",
         "keyPrefix": "KEY PREFIX",
@@ -43,32 +43,32 @@
       },
       "unnamed": "Unnamed",
       "active": "Active",
-      "disabled": "Disabled",
+      "disabled": "사용 안 함",
       "disableKey": "Disable key",
       "enableKey": "Enable key",
-      "deleteKey": "Delete key",
+      "deleteKey": "삭제 key",
       "generatedModal": {
         "title": "API Key Generated",
-        "warning": "Save this key now! You won't be able to see it again. We store only a hash and cannot recover this key.",
+        "warning": "저장 this key now! You won't be able to see it again. We store only a hash and cannot recover this key.",
         "hint": "Use this key in the <code>x-api-key</code> header when making API requests.",
-        "confirmButton": "I've Saved It"
+        "confirmButton": "I've 저장d It"
       },
       "deleteModal": {
-        "title": "Delete API Key",
+        "title": "삭제 API Key",
         "message": "Are you sure you want to delete this API key? Any applications using it will immediately lose access. This cannot be undone.",
-        "confirmButton": "Delete Key"
+        "confirmButton": "삭제 Key"
       }
     },
     "archiveImport": {
-      "title": "Import Recipe Archive",
-      "description": "Import recipes from Mela (.melarecipes), Paprika (.paprikarecipes), or Mealie/Tandoor (.zip) exports"
+      "title": "가져오기 레시피 Archive",
+      "description": "가져오기 recipes from Mela (.melarecipes), Paprika (.paprikarecipes), or Mealie/Tandoor (.zip) exports"
     },
     "siteAuthTokens": {
       "title": "Site Authentication Tokens",
       "description": "Add headers or cookies that are sent when importing recipes from specific sites. Useful for sites that require login (e.g. Instagram, Facebook).",
       "domain": "Domain",
       "domainPlaceholder": "e.g. instagram.com",
-      "name": "Name",
+      "name": "이름",
       "namePlaceholder": "e.g. Cookie or Authorization",
       "value": "Value",
       "valuePlaceholder": "Token or cookie value",
@@ -85,27 +85,27 @@
         "actions": "ACTIONS"
       },
       "deleteModal": {
-        "title": "Delete Token",
-        "message": "Are you sure you want to delete this authentication token? Imports from this site may stop working.",
-        "confirmButton": "Delete Token"
+        "title": "삭제 Token",
+        "message": "Are you sure you want to delete this authentication token? 가져오기s from this site may stop working.",
+        "confirmButton": "삭제 Token"
       }
     },
     "dangerZone": {
       "title": "Danger Zone",
       "description": "Once you delete your account, there is no going back. Please be certain.",
-      "deleteButton": "Delete My Account",
+      "deleteButton": "삭제 My Account",
       "deleteModal": {
-        "title": "Delete Account",
+        "title": "삭제 Account",
         "permanentWarning": "This action is permanent and cannot be undone!",
         "dataWarning": "Your personal data including groceries, calendar entries, and notes will be permanently deleted.",
-        "recipesNote": "Recipes you created will be preserved but will no longer be linked to your account.",
+        "recipesNote": "레시피s you created will be preserved but will no longer be linked to your account.",
         "adminNote": "If you are the admin of a household with other members, you must transfer admin privileges first.",
-        "confirmButton": "Delete My Account"
+        "confirmButton": "삭제 My Account"
       }
     }
   },
   "household": {
-    "pageTitle": "Household Settings",
+    "pageTitle": "Household 설정",
     "info": {
       "yourRole": "Your Role",
       "admin": "Admin",
@@ -157,11 +157,11 @@
       "generateButton": "Generate Join Code"
     },
     "create": {
-      "title": "Create Household",
-      "description": "Create a new household to share recipes and groceries with family or friends.",
+      "title": "생성 Household",
+      "description": "생성 a new household to share recipes and groceries with family or friends.",
       "nameLabel": "Household Name",
       "namePlaceholder": "e.g., Smith Family",
-      "submitButton": "Create Household"
+      "submitButton": "생성 Household"
     },
     "join": {
       "title": "Join Household",
@@ -182,9 +182,9 @@
       "serverUrlPlaceholder": "https://dav.example.com",
       "usernameLabel": "Username",
       "usernamePlaceholder": "username",
-      "passwordLabel": "Password",
+      "passwordLabel": "비밀번호",
       "passwordPlaceholder": "Enter password",
-      "calendarLabel": "Calendar",
+      "calendarLabel": "캘린더",
       "calendarPlaceholder": "Select a calendar",
       "calendarPlaceholderDisabled": "Test connection first",
       "calendarDescription": "Select which calendar to sync meal plans with",
@@ -196,18 +196,18 @@
       "dinnerTime": "Dinner Time",
       "snackTime": "Snack Time",
       "testConnection": "Test Connection",
-      "saveConfiguration": "Save Configuration"
+      "saveConfiguration": "저장 Configuration"
     },
     "config": {
       "title": "CalDAV Configuration",
-      "editTitle": "Edit CalDAV Configuration",
+      "editTitle": "수정 CalDAV Configuration",
       "serverUrl": "Server URL",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "editButton": "Edit",
-      "deleteButton": "Delete",
-      "saveChanges": "Save Changes",
-      "advancedSettings": "Advanced Settings",
+      "enabled": "사용",
+      "disabled": "사용 안 함",
+      "editButton": "수정",
+      "deleteButton": "삭제",
+      "saveChanges": "변경사항 저장",
+      "advancedSettings": "Advanced 설정",
       "timezone": "Timezone: {timezone}",
       "connectionStatus": {
         "connected": "Connected",
@@ -217,11 +217,11 @@
       }
     },
     "deleteModal": {
-      "title": "Delete CalDAV Configuration",
+      "title": "삭제 CalDAV Configuration",
       "confirmMessage": "Are you sure you want to delete your CalDAV configuration?",
-      "deleteEventsLabel": "Delete synced events",
+      "deleteEventsLabel": "삭제 synced events",
       "deleteEventsDescription": "Remove all events that were created in your CalDAV calendar",
-      "confirmButton": "Delete"
+      "confirmButton": "삭제"
     },
     "syncStatus": {
       "title": "Sync Status",
@@ -251,14 +251,14 @@
   },
   "admin": {
     "general": {
-      "title": "General",
+      "title": "일반",
       "allowRegistration": "Allow new user registration",
       "registrationDescription": "When disabled, only existing users can sign in",
       "locales": "Enabled Languages",
       "localesDescription": "Select which languages users can choose from",
-      "defaultLocale": "Default Language",
+      "defaultLocale": "기본 Language",
       "defaultLocaleDescription": "Language used for new users and as fallback",
-      "saveLocales": "Save Language Settings",
+      "saveLocales": "저장 Language 설정",
       "localesSaved": "Language settings saved",
       "localesError": "Failed to save language settings",
       "atLeastOneLocale": "At least one language must be enabled"
@@ -269,30 +269,30 @@
       "description": "When disabled, only existing users can sign in"
     },
     "permissions": {
-      "title": "Recipe Permissions",
+      "title": "레시피 Permissions",
       "description": "Control who can view, edit, and delete recipes. Server admins always have full access.",
-      "viewRecipes": "View Recipes",
+      "viewRecipes": "View 레시피s",
       "viewDescription": "Who can see recipes in the dashboard",
-      "editRecipes": "Edit Recipes",
+      "editRecipes": "수정 레시피s",
       "editDescription": "Who can modify recipe details",
-      "deleteRecipes": "Delete Recipes",
+      "deleteRecipes": "삭제 레시피s",
       "deleteDescription": "Who can remove recipes",
       "levels": {
         "everyone": "Everyone",
         "everyoneDescription": "All authenticated users",
         "household": "Household",
-        "householdDescription": "Recipe owner and their household members",
+        "householdDescription": "레시피 owner and their household members",
         "owner": "Owner Only",
         "ownerDescription": "Only the recipe owner"
       },
-      "note": "Note: Groceries and Calendar items follow household rules automatically, household members can always edit/delete items belonging to anyone in the same household."
+      "note": "Note: 장보기 and 캘린더 items follow household rules automatically, household members can always edit/delete items belonging to anyone in the same household."
     },
     "system": {
-      "title": "System Settings",
+      "title": "System 설정",
       "cleanup": {
         "title": "Cleanup Scheduler",
         "label": "Cleanup Months",
-        "description": "Delete planned meals older than this many months"
+        "description": "삭제 planned meals older than this many months"
       },
       "server": {
         "title": "Server Management",
@@ -304,7 +304,7 @@
     "restart": {
       "title": "Restart Server",
       "confirmMessage": "Are you sure you want to restart the server?",
-      "importantTitle": "Important:",
+      "importantTitle": "가져오기ant:",
       "warning1": "All active connections will be disconnected",
       "warning2": "The server will be unavailable for a few seconds",
       "warning3": "Ensure your deployment has <code>restart: always</code> configured, or the server will not come back online automatically",
@@ -382,7 +382,7 @@
         "subtitle": "Keywords that identify recipe pages",
         "description": "Schema indicators detect structured recipe data (JSON-LD, microdata). Content indicators are keywords that suggest a page contains a recipe.",
         "timersEnabled": {
-          "title": "Enable Recipe Timers",
+          "title": "Enable 레시피 Timers",
           "description": "Detect and show interactive timers in recipes"
         }
       },
@@ -418,7 +418,7 @@
       "description": "Configure AI-powered features for recipe extraction and video processing.",
       "aiConfig": {
         "title": "AI Configuration",
-        "subtitle": "Recipe parsing and extraction"
+        "subtitle": "레시피 parsing and extraction"
       },
       "video": {
         "title": "Video Processing",
@@ -432,7 +432,7 @@
         "title": "Bulk Categorization",
         "subtitle": "Categorize uncategorized recipes using AI",
         "description": "Queue all uncategorized recipes for AI-based category detection. Categories include Breakfast, Lunch, Dinner, and Snack.",
-        "button": "Categorize All Recipes",
+        "button": "Categorize All 레시피s",
         "queued": "{count, plural, =0 {No recipes to categorize} one {# recipe queued} other {# recipes queued}}",
         "success": "Categorization started",
         "error": "Failed to start categorization"
@@ -469,15 +469,15 @@
       "maxTokens": "Max Tokens",
       "autoTagAllergies": "Auto-detect Allergy Tags",
       "autoTagAllergiesDescription": "Automatically add allergy-related tags when importing recipes",
-      "alwaysUseAI": "Always Use AI Importing",
+      "alwaysUseAI": "Always Use AI 가져오기ing",
       "alwaysUseAIDescription": "Skip structured parsers and extract recipes using AI only",
       "autoTaggingMode": "Auto-Tagging Mode",
       "autoTaggingModeDescription": "Automatically assign tags/keywords to imported recipes using AI",
       "autoTaggingModes": {
-        "disabled": "Disabled",
+        "disabled": "사용 안 함",
         "predefined": "Predefined Tags Only",
         "predefinedDb": "Predefined + Existing Tags",
-        "freeform": "AI Can Create New Tags"
+        "freeform": "AI Can 생성 New Tags"
       },
       "connectionSuccess": "Connection successful",
       "testConnection": "Test Connection",
@@ -499,7 +499,7 @@
       "transcriptionProvider": "Transcription Provider",
       "transcriptionProviderDescription": "Only OpenAI and OpenAI-compatible endpoints support Whisper transcription",
       "transcriptionProviders": {
-        "disabled": "Disabled",
+        "disabled": "사용 안 함",
         "openai": "OpenAI Whisper",
         "groq": "Groq Whisper",
         "azure": "Azure OpenAI Whisper",
@@ -519,7 +519,7 @@
       "transcriptionApiKeyOptionalPlaceholder": "Leave empty for local servers"
     },
     "promptsConfig": {
-      "recipeExtraction": "Recipe Extraction Prompt",
+      "recipeExtraction": "레시피 Extraction Prompt",
       "recipeExtractionDescription": "This prompt is used when extracting recipe data from web pages or video transcripts.",
       "recipeExtractionPlaceholder": "Enter the recipe extraction prompt...",
       "unitConversion": "Unit Conversion Prompt",

@@ -1,13 +1,13 @@
 {
   "page": {
-    "title": "Calendar"
+    "title": "캘린더"
   },
   "mobile": {
-    "today": "Today",
+    "today": "오늘",
     "scrollToToday": "Go to today"
   },
   "editNote": {
-    "title": "Edit Note",
+    "title": "수정 Note",
     "noteLabel": "Note",
     "notePlaceholder": "Enter note...",
     "date": "Date",
@@ -17,7 +17,7 @@
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
     "prev": "Prev",
-    "next": "Next"
+    "next": "다음"
   },
   "weekdays": {
     "mon": "Mon",
@@ -36,21 +36,21 @@
     "serving": "serving",
     "servings": "servings",
     "noImage": "No image",
-    "recipe": "Recipe",
+    "recipe": "레시피",
     "note": "Note"
   },
   "editPlannedRecipe": {
-    "title": "Edit Planned Recipe",
+    "title": "수정 Planned 레시피",
     "date": "Date",
     "slot": "Slot"
   },
   "panel": {
-    "addToCalendar": "Add to Calendar",
-    "addRecipe": "Add Recipe",
+    "addToCalendar": "Add to 캘린더",
+    "addRecipe": "Add 레시피",
     "noDaysAvailable": "No days available.",
-    "searchPlaceholder": "Search recipes or add notes...",
+    "searchPlaceholder": "검색 recipes or add notes...",
     "addNote": "Add Note: {input}",
-    "randomRecipe": "Random Recipe",
+    "randomRecipe": "Random 레시피",
     "noRecipesFound": "No recipes found.",
     "failedToLoadRecipes": "Failed to load recipes."
   }

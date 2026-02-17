@@ -1,10 +1,10 @@
 {
   "dashboard": {
     "title": "All recipes",
-    "searchPlaceholder": "Search or add recipe...",
-    "searchRecipesPlaceholder": "Search recipes...",
+    "searchPlaceholder": "검색 or add recipe...",
+    "searchRecipesPlaceholder": "레시피 검색...",
     "recipeCount": "{count, plural, one {# recipe} other {# recipes}}",
-    "addRecipe": "Add Recipe",
+    "addRecipe": "Add 레시피",
     "importFromUrl": "URL",
     "importFromPaste": "Paste",
     "importFromImage": "Image",
@@ -26,7 +26,7 @@
     "noImage": "No image available",
     "viewGroceries": "View groceries",
     "addToCalendar": "Add to calendar",
-    "deleteRecipe": "Delete recipe"
+    "deleteRecipe": "삭제 recipe"
   },
   "detail": {
     "backToRecipes": "Back to recipes",
@@ -36,20 +36,20 @@
     "notes": "Notes",
     "addToGroceries": "Add to groceries",
     "ratingPrompt": "What did you think of this recipe?",
-    "notFound": "Recipe Not Found",
+    "notFound": "레시피 Not Found",
     "notFoundMessage": "This recipe doesn't exist or you don't have permission to view it.",
     "prep": "prep",
     "total": "total",
     "planMeal": "Plan meal",
-    "recipeActions": "Recipe actions",
+    "recipeActions": "레시피 actions",
     "switchToDecimal": "Show decimals",
     "switchToFraction": "Show fractions"
   },
   "actions": {
     "plan": "Plan",
-    "groceries": "Groceries",
-    "edit": "Edit",
-    "delete": "Delete",
+    "groceries": "장보기",
+    "edit": "수정",
+    "delete": "삭제",
     "autoTag": "Auto-tag",
     "autoTagging": "Generating tags...",
     "autoCategorize": "Auto Categorize",
@@ -67,15 +67,15 @@
     "toUS": "Convert to US"
   },
   "deleteModal": {
-    "title": "Delete Recipe",
+    "title": "삭제 레시피",
     "confirmMessage": "Are you sure you want to delete \"{recipeName}\"?",
     "warning": "This action cannot be undone."
   },
   "form": {
-    "createTitle": "Create Recipe",
-    "editTitle": "Edit Recipe",
+    "createTitle": "생성 레시피",
+    "editTitle": "수정 레시피",
     "createDescription": "Add a new recipe to your collection",
-    "editDescription": "Update your recipe details",
+    "editDescription": "업데이트 your recipe details",
     "initializingForm": "Initializing form...",
     "photo": "Photo",
     "basicInfo": "Basic Information",
@@ -86,7 +86,7 @@
     "nutritionPerServing": "(per serving, optional)",
     "details": "Details",
     "additionalInfo": "Additional Information",
-    "recipeName": "Recipe Name",
+    "recipeName": "레시피 Name",
     "recipeNamePlaceholder": "e.g., Chocolate Chip Cookies",
     "description": "Description",
     "descriptionPlaceholder": "A brief description of what makes this recipe special...",
@@ -98,10 +98,10 @@
     "tagsAndCategories": "Tags & Categories",
     "categoriesHelp": "Select meal categories for this recipe.",
     "category": {
-      "breakfast": "Breakfast",
-      "lunch": "Lunch",
-      "dinner": "Dinner",
-      "snack": "Snack"
+      "breakfast": "아침",
+      "lunch": "점심",
+      "dinner": "저녁",
+      "snack": "간식"
     },
     "calories": "Calories",
     "fat": "Fat (g)",
@@ -114,8 +114,8 @@
     "sourceUrlPlaceholder": "https://example.com/recipe",
     "measurementSystemNote": "We auto-detect the measurement system from your ingredients, but you can override it here.",
     "measurementSystemEditNote": " Note: This updates the system label but does not convert units. Use the Convert action after saving.",
-    "createRecipe": "Create Recipe",
-    "saveChanges": "Save Changes",
+    "createRecipe": "생성 레시피",
+    "saveChanges": "변경사항 저장",
     "uploading": "Uploading...",
     "clickToUpload": "Click to upload or drag and drop",
     "pasteToUpload": "to paste",
@@ -141,7 +141,7 @@
     }
   },
   "validation": {
-    "nameRequired": "Recipe name is required",
+    "nameRequired": "레시피 name is required",
     "ingredientsRequired": "At least one ingredient is required",
     "stepsRequired": "At least one step is required",
     "servingsMin": "Servings must be at least 1"
@@ -188,18 +188,18 @@
     "bothComplete": "Tags & allergies updated",
     "tagsComplete": "Tags generated",
     "allergiesComplete": "Allergies detected",
-    "imported": "Recipe imported",
+    "imported": "레시피 imported",
     "converted": "Measurements converted",
-    "convertedDescription": "Recipe converted to {system} units",
-    "failed": "Recipe operation failed",
-    "batchImported": "Recipes imported",
+    "convertedDescription": "레시피 converted to {system} units",
+    "failed": "레시피 operation failed",
+    "batchImported": "레시피s imported",
     "batchImportedDescription": "{count} recipes imported from archive",
     "view": "View",
     "open": "Open"
   },
   "tags": {
     "panel": {
-      "editTitle": "Edit Tag",
+      "editTitle": "수정 Tag",
       "editPlaceholder": "Enter tag name...",
       "duplicateTag": "This tag already exists"
     }
