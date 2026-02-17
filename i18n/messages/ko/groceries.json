@@ -1,0 +1,78 @@
+{
+  "page": {
+    "title": "Groceries",
+    "addItem": "Add Item",
+    "addItems": "Add items",
+    "viewByStore": "By Store",
+    "viewByRecipe": "By Recipe",
+    "viewMode": "View Mode",
+    "manageStores": "Manage Stores",
+    "storeViewOptions": "Store View Options",
+    "groupIngredients": "Group ingredients"
+  },
+  "empty": {
+    "title": "Your grocery list awaits",
+    "description": "Add items using the \"Add Item\" button above to get started.",
+    "manual": "Manual Items"
+  },
+  "item": {
+    "unnamedItem": "Unnamed item",
+    "fromRecipes": "From {count, plural, one {# recipe} other {# recipes}}",
+    "items": "{count, plural, one {# item} other {# items}}"
+  },
+  "store": {
+    "unsorted": "Unsorted",
+    "noItems": "No items in this store",
+    "storeActions": "Store actions",
+    "markAllDone": "Mark all done",
+    "deleteDone": "Delete done",
+    "done": "{count} done"
+  },
+  "storeManager": {
+    "title": "Manage Stores",
+    "addStore": "Add Store",
+    "editStore": "Edit Store",
+    "deleteStore": "Delete Store",
+    "storeName": "Store name",
+    "storeNamePlaceholder": "e.g., Supermarket",
+    "storeColor": "Color",
+    "storeIcon": "Icon",
+    "confirmDelete": "Are you sure you want to delete {storeName}?",
+    "deleteWarning": "Items in this store will be moved to Unsorted.",
+    "noStoresYet": "No stores yet",
+    "createStoreHint": "Create a store to organize your groceries",
+    "hasItems": "This store has {count} grocery item.",
+    "hasItemsPlural": "This store has {count} grocery items.",
+    "whatToDo": "What would you like to do with them?",
+    "keepItems": "Keep items",
+    "keepItemsDescription": "Move items to Unsorted",
+    "deleteItems": "Delete items",
+    "deleteItemsDescription": "Remove all items in this store",
+    "noItems": "This store has no items.",
+    "create": "Create"
+  },
+  "panel": {
+    "addTitle": "Add Grocery",
+    "editTitle": "Edit Grocery",
+    "itemName": "Item name",
+    "itemNamePlaceholder": "e.g., Milk, Eggs, Bread...",
+    "selectStore": "Select store",
+    "noStore": "No store",
+    "recurrence": "Recurrence",
+    "savePreference": "Remember store for this item",
+    "addAnother": "Add another",
+    "addRepeat": "+ Add repeat",
+    "storeOptional": "Store (optional)",
+    "autoDetectFromHistory": "Auto-detect from history",
+    "autoDetectOrSelect": "Auto-detect or select",
+    "placeholder": "e.g., 2 lbs chicken breast",
+    "editPlaceholder": "e.g., milk every week",
+    "servings": "Servings",
+    "loadingIngredients": "Loading ingredients...",
+    "noIngredients": "No ingredients.",
+    "addSelectedToGroceries": "Add to groceries",
+    "ingredientsAdded": "Ingredients added to grocery list.",
+    "ingredientsFailed": "Failed to add ingredients to grocery list.",
+    "addToGroceries": "Add to Groceries"
+  }
+}

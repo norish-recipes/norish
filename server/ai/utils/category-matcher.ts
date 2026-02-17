@@ -7,6 +7,7 @@ import nlRecipes from "@/i18n/messages/nl/recipes.json";
 import frRecipes from "@/i18n/messages/fr/recipes.json";
 import deFormalRecipes from "@/i18n/messages/de-formal/recipes.json";
 import deInformalRecipes from "@/i18n/messages/de-informal/recipes.json";
+import koRecipes from "@/i18n/messages/ko/recipes.json";
 
 const FUZZY_THRESHOLD = 0.4;
 
@@ -29,6 +30,7 @@ const RECIPES_MESSAGE_BUNDLES: RecipesMessageSubset[] = [
   frRecipes as RecipesMessageSubset,
   deFormalRecipes as RecipesMessageSubset,
   deInformalRecipes as RecipesMessageSubset,
+  koRecipes as RecipesMessageSubset,
 ];
 
 const CATEGORY_MESSAGE_KEYS: Record<RecipeCategory, RecipeCategoryKey> = {
