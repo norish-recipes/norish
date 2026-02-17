@@ -24,7 +24,7 @@ export function useTimersEnabledQuery() {
   const globalEnabled = data ?? true;
   const userPrefEnabled = (user?.preferences as any)?.timersEnabled;
 
-  const effective =
+  const isTimersEnabled =
     globalEnabled && (typeof userPrefEnabled === "boolean" ? userPrefEnabled : true);
 
   return {
