@@ -113,7 +113,7 @@
       "applyError": "Instelling kon niet worden toegepast",
       "conversion": {
         "title": "Toon conversieknop",
-        "description": "Toon op receptpagina's een knop om tussen maatsystemen te converteren"
+        "description": "Toon de converteer knop op de recept pagina's"
       }
     }
   },
