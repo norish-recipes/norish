@@ -17,7 +17,7 @@
   },
   "item": {
     "unnamedItem": "이름이 없는 항목",
-    "fromRecipes": "{count, plural, one {#개 레시피에서} other {#개 레시피에서}}",
+    "fromRecipes": "총 {count, plural, one {#개 레시피} other {#개 레시피}} 기준",
     "items": "{count, plural, one {#개 항목} other {#개 항목}}"
   },
   "store": {

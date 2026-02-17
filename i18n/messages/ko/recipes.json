@@ -152,7 +152,7 @@
     "fat": "지방",
     "carbs": "탄수화물",
     "protein": "단백질",
-    "showingPortions": "{count, plural, one {#인분 기준 표시} other {#인분 기준 표시}}",
+    "showingPortions": "{count}인분 기준 값 표시 ({count, plural, one {portion} other {portions}})",
     "noInfo": "영양정보가 없습니다.",
     "estimateWithAI": "AI로 견적"
   },
