@@ -28,7 +28,7 @@ export function useTimersEnabledQuery() {
     globalEnabled && (typeof userPrefEnabled === "boolean" ? userPrefEnabled : true);
 
   return {
-    timersEnabled: effective, // effective result (global AND userPref)
+    timersEnabled: isTimersEnabled ,
     globalEnabled,
     isLoading,
     error,
