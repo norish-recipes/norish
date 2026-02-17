@@ -4,7 +4,6 @@ import type { User } from "@/types";
 import type { ApiKeyMetadataDto } from "@/server/trpc/routers/user/types";
 
 import { createContext, useContext, ReactNode, useCallback } from "react";
-import { useTranslations } from "next-intl";
 import { addToast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
