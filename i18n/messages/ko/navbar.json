@@ -1,8 +1,8 @@
 {
   "userMenu": {
     "newRecipe": {
-      "title": "새 레시피",
-      "description": "직접 레시피 작성"
+      "title": "새로운 레시피",
+      "description": "나만의 레시피를 작성해보세요"
     },
     "importUrl": {
       "title": "URL에서 가져오기",
@@ -14,37 +14,37 @@
     },
     "logout": "로그아웃",
     "version": {
-      "updateAvailable": "v{version} available"
+      "updateAvailable": "v{version} 사용 가능"
     }
   },
   "theme": {
-    "title": "테마",
-    "loading": "불러오는 중…",
+    "title": "주제",
+    "loading": "로드 중…",
     "light": "라이트 모드",
     "dark": "다크 모드",
     "system": "시스템 기본값"
   },
   "nav": {
-    "home": "레시피",
-    "calendar": "캘린더",
-    "groceries": "장보기"
+    "home": "조리법",
+    "calendar": "달력",
+    "groceries": "식료 잡화류"
   },
   "mobile": {
     "searchPlaceholder": "레시피 검색...",
-    "toggleSearch": "검색 열기/닫기",
-    "goBack": "뒤로 가기"
+    "toggleSearch": "검색 전환",
+    "goBack": "돌아가기"
   },
   "archiveImporter": {
     "uploading": "업로드 중…",
     "uploadFile": "파일 업로드",
     "dragDrop": "또는 드래그 앤 드롭",
-    "formats": ".melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "formats": ".melarecipes(멜라), .paprikarecipes(파프리카), .zip(Mealie/Tandoor)",
     "uploadingFile": "파일 업로드 중…",
     "processing": "처리 중: {details}",
     "complete": "완료: {details}",
-    "imported": "{count} imported",
-    "skipped": "{count} skipped",
-    "errors": "{count} errors",
-    "ofTotal": "{current} of {total}"
+    "imported": "{count} 가져옴",
+    "skipped": "{count} 건너뛰었습니다",
+    "errors": "{count} 오류",
+    "ofTotal": "{current}/{total}"
   }
 }

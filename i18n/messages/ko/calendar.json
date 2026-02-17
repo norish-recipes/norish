@@ -1,57 +1,57 @@
 {
   "page": {
-    "title": "캘린더"
+    "title": "달력"
   },
   "mobile": {
     "today": "오늘",
-    "scrollToToday": "Go to today"
+    "scrollToToday": "오늘로 이동"
   },
   "editNote": {
-    "title": "수정 Note",
-    "noteLabel": "Note",
-    "notePlaceholder": "Enter note...",
-    "date": "Date",
-    "slot": "Slot"
+    "title": "메모 편집",
+    "noteLabel": "메모",
+    "notePlaceholder": "메모 입력...",
+    "date": "날짜",
+    "slot": "슬롯"
   },
   "navigation": {
-    "previousMonth": "Previous month",
-    "nextMonth": "Next month",
-    "prev": "Prev",
+    "previousMonth": "지난달",
+    "nextMonth": "다음 달",
+    "prev": "이전",
     "next": "다음"
   },
   "weekdays": {
-    "mon": "Mon",
-    "tue": "Tue",
-    "wed": "Wed",
-    "thu": "Thu",
-    "fri": "Fri",
-    "sat": "Sat",
-    "sun": "Sun"
+    "mon": "월",
+    "tue": "화요일",
+    "wed": "수요일",
+    "thu": "목",
+    "fri": "금",
+    "sat": "앉았다",
+    "sun": "해"
   },
   "timeline": {
-    "noItems": "No items planned",
-    "goToRecipe": "Go to recipe",
-    "addItem": "Add item",
-    "untitled": "Untitled",
-    "serving": "serving",
-    "servings": "servings",
-    "noImage": "No image",
+    "noItems": "예정된 품목 없음",
+    "goToRecipe": "레시피로 이동",
+    "addItem": "항목 추가",
+    "untitled": "제목 없음",
+    "serving": "피복재",
+    "servings": "인분",
+    "noImage": "이미지 없음",
     "recipe": "레시피",
-    "note": "Note"
+    "note": "메모"
   },
   "editPlannedRecipe": {
-    "title": "수정 Planned 레시피",
-    "date": "Date",
-    "slot": "Slot"
+    "title": "계획된 레시피 편집",
+    "date": "날짜",
+    "slot": "슬롯"
   },
   "panel": {
-    "addToCalendar": "Add to 캘린더",
-    "addRecipe": "Add 레시피",
-    "noDaysAvailable": "No days available.",
-    "searchPlaceholder": "검색 recipes or add notes...",
-    "addNote": "Add Note: {input}",
-    "randomRecipe": "Random 레시피",
-    "noRecipesFound": "No recipes found.",
-    "failedToLoadRecipes": "Failed to load recipes."
+    "addToCalendar": "캘린더에 추가",
+    "addRecipe": "레시피 추가",
+    "noDaysAvailable": "이용 가능한 날짜가 없습니다.",
+    "searchPlaceholder": "레시피를 검색하거나 메모를 추가하세요...",
+    "addNote": "메모 추가: {input}",
+    "randomRecipe": "무작위 레시피",
+    "noRecipesFound": "레시피를 찾을 수 없습니다.",
+    "failedToLoadRecipes": "레시피를 로드하지 못했습니다."
   }
 }
