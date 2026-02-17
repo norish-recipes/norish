@@ -71,7 +71,4 @@ export function useUserContext() {
   return context;
 }
 
-// Optional variant that returns null when no provider is present.
-export function useOptionalUserContext() {
-  return useContext(UserContext);
-}
+
