@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { useOptionalUserContext } from "@/context/user-context";
+import { useUserContext } from "@/context/user-context";
 
 /**
  * Hook to check if recipe timers are enabled globally AND for the current user.
@@ -12,8 +12,7 @@ import { useOptionalUserContext } from "@/context/user-context";
 export function useTimersEnabledQuery() {
   const trpc = useTRPC();
 
-  // Optionally access user context if present (some render paths may not include provider)
-  const user = useOptionalUserContext()?.user;
+  const user = useUserContext().user;
 
   const { data, error, isLoading } = useQuery({
     ...trpc.config.timersEnabled.queryOptions(),
