@@ -68,11 +68,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
   },
   {
     key: ServerConfigKeys.UNITS,
-<<<<<<< HEAD
-    getDefaultValue: () => ({ units: defaultUnits, isOverwritten: false }),
-=======
     getDefaultValue: () => ({ units: defaultUnits, isOverridden: false }),
->>>>>>> rc/v0.16.2
     sensitive: false,
     description: `Units (${Object.keys(defaultUnits).length} definitions)`,
   },

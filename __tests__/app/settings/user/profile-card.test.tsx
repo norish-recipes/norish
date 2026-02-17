@@ -76,33 +76,31 @@ describe("ProfileCard", () => {
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     await waitFor(() => {
-    it("uses plain avatar URL without cache-busting query params", () => {
-      mockUser = {
-        name: "Alice",
-        email: "alice@example.com",
-        image: "/avatars/user-1.png",
-      };
+      expect(saveButton).toBeEnabled();
+    });
 
-      render(<ProfileCard />);
+    expect(mockContext.updateImage).not.toHaveBeenCalled();
 
-      const src = screen.getByAltText("profile avatar").getAttribute("src");
-
-      expect(src).toBe("/avatars/user-1.png");
-  >>>>>>> rc/v0.16.2
-      name: "Alice",
-      email: "alice@example.com",
-      image: "/avatars/user-1-updated.png",
-    };
-
-    rerender(<ProfileCard />);
+    fireEvent.click(saveButton);
 
     await waitFor(() => {
-      const secondSrc = screen.getByAltText("profile avatar").getAttribute("src");
-
-      expect(secondSrc).not.toBe(firstSrc);
+      expect(mockContext.updateImage).toHaveBeenCalledTimes(1);
     });
-=======
+    expect(mockContext.updateImage).toHaveBeenCalledWith(file);
+    expect(mockContext.updateName).not.toHaveBeenCalled();
+  });
+
+  it("uses plain avatar URL without cache-busting query params", () => {
+    mockUser = {
+      name: "Alice",
+      email: "alice@example.com",
+      image: "/avatars/user-1.png",
+    };
+
+    render(<ProfileCard />);
+
+    const src = screen.getByAltText("profile avatar").getAttribute("src");
+
     expect(src).toBe("/avatars/user-1.png");
->>>>>>> rc/v0.16.2
   });
 });

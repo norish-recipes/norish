@@ -41,13 +41,6 @@ export default function NavbarUserMenu({ trigger = "avatar" }: NavbarUserMenuPro
     fallbackSeed: user?.id || user?.email || user?.name || "U",
     disabled: imageError,
   });
->>>>>>> rc/v0.16.2
-  const { avatarSrc, fallbackStyle } = useUserAvatar({
-    image: user?.image,
-    fallbackSeed: user?.id || user?.email || user?.name || "U",
-    disabled: imageError,
-  });
->>>>>>> rc/v0.16.2
 
   const handleImageError = () => {
     setImageError(true);
