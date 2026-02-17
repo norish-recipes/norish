@@ -37,6 +37,7 @@ vi.mock("@heroui/react", () => ({
       toggle
     </button>
   ),
+  Chip: ({ children }: any) => <span>{children}</span>,
 }));
 
 describe("PreferencesCard", () => {
