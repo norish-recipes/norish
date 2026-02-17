@@ -19,7 +19,7 @@
   },
   "theme": {
     "title": "주제",
-    "loading": "로드 중…",
+    "loading": "불러오는 중…",
     "light": "라이트 모드",
     "dark": "다크 모드",
     "system": "시스템 기본값"
@@ -35,11 +35,11 @@
     "goBack": "돌아가기"
   },
   "archiveImporter": {
-    "uploading": "업로드 중…",
+    "uploading": "업불러오는 중…",
     "uploadFile": "파일 업로드",
     "dragDrop": "또는 드래그 앤 드롭",
     "formats": ".melarecipes(멜라), .paprikarecipes(파프리카), .zip(Mealie/Tandoor)",
-    "uploadingFile": "파일 업로드 중…",
+    "uploadingFile": "파일 업불러오는 중…",
     "processing": "처리 중: {details}",
     "complete": "완료: {details}",
     "imported": "{count} 가져옴",

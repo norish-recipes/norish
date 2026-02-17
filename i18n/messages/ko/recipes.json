@@ -3,7 +3,7 @@
     "title": "모든 레시피",
     "searchPlaceholder": "레시피 검색 또는 추가...",
     "searchRecipesPlaceholder": "레시피 검색...",
-    "recipeCount": "{개수, 복수형, 하나 {# recipe} 기타 {# recipes}}",
+    "recipeCount": "{count, plural, one {#개 레시피} other {#개 레시피}}",
     "addRecipe": "레시피 추가",
     "importFromUrl": "URL",
     "importFromPaste": "반죽",
@@ -17,14 +17,14 @@
     }
   },
   "empty": {
-    "title": "귀하의 레시피 컬렉션이 기다리고 있습니다",
+    "title": "내 레시피 컬렉션이 기다리고 있습니다",
     "description": "위의 검색 필드에 레시피 URL을 붙여넣고 마법이 일어나는 것을 지켜보세요.",
     "noResults": "레시피를 찾을 수 없습니다.",
     "noResultsHint": "필터를 조정하거나 지워보세요."
   },
   "card": {
-    "noImage": "사용 가능한 이미지가 없습니다.",
-    "viewGroceries": "식료품 보기",
+    "noImage": "이미지가 없습니다.",
+    "viewGroceries": "장보기 보기",
     "addToCalendar": "캘린더에 추가",
     "deleteRecipe": "레시피 삭제"
   },
@@ -34,7 +34,7 @@
     "ingredients": "재료",
     "steps": "단계",
     "notes": "메모",
-    "addToGroceries": "식료품에 추가",
+    "addToGroceries": "장보기에 추가",
     "ratingPrompt": "이 레시피에 대해 어떻게 생각하시나요?",
     "notFound": "레시피를 찾을 수 없음",
     "notFoundMessage": "이 레시피는 존재하지 않거나 볼 수 있는 권한이 없습니다.",
@@ -51,7 +51,7 @@
     "edit": "편집하다",
     "delete": "삭제",
     "autoTag": "자동 태그",
-    "autoTagging": "태그 생성 중...",
+    "autoTagging": "태그 만들기 중...",
     "autoCategorize": "자동 분류",
     "detectAllergies": "알레르기 감지",
     "detectingAllergies": "알레르기를 감지하는 중...",
@@ -59,7 +59,7 @@
     "estimatingNutrition": "영양 평가 중...",
     "screenOn": "화면 켜짐",
     "keepScreenOn": "화면 켜짐 유지",
-    "actionsLabel": "행위"
+    "actionsLabel": "작업"
   },
   "convert": {
     "ariaLabel": "측정 시스템 전환",
@@ -72,10 +72,10 @@
     "warning": "이 작업은 취소할 수 없습니다."
   },
   "form": {
-    "createTitle": "레시피 생성",
+    "createTitle": "레시피 만들기",
     "editTitle": "레시피 편집",
     "createDescription": "컬렉션에 새로운 레시피를 추가하세요",
-    "editDescription": "레시피 세부정보 업데이트",
+    "editDescription": "레시피 세부정보 수정",
     "initializingForm": "양식 초기화 중...",
     "photo": "사진",
     "basicInfo": "기본정보",
@@ -112,18 +112,18 @@
     "optional": "(선택 과목)",
     "sourceUrl": "소스 URL",
     "sourceUrlPlaceholder": "https://example.com/recipe",
-    "measurementSystemNote": "우리는 귀하의 재료로부터 측정 시스템을 자동으로 감지하지만 여기에서 이를 무시할 수 있습니다.",
-    "measurementSystemEditNote": "참고: 이렇게 하면 시스템 레이블이 업데이트되지만 단위는 변환되지 않습니다. 저장 후 변환 작업을 사용하세요.",
-    "createRecipe": "레시피 생성",
-    "saveChanges": "변경 사항 저장",
-    "uploading": "업로드 중...",
+    "measurementSystemNote": "내 재료로부터 측정 시스템을 자동으로 감지하지만 여기에서 이를 무시할 수 있습니다.",
+    "measurementSystemEditNote": "참고: 이렇게 하면 시스템 레이블이 수정되지만 단위는 변환되지 않습니다. 저장 후 변환 작업을 사용하세요.",
+    "createRecipe": "레시피 만들기",
+    "saveChanges": "변경사항 저장",
+    "uploading": "업불러오는 중...",
     "clickToUpload": "클릭하여 업로드하거나 드래그 앤 드롭하세요.",
     "pasteToUpload": "붙여넣기",
     "imageFormats": "PNG, JPG, WEBP 최대 5MB"
   },
   "gallery": {
     "addImage": "이미지 추가",
-    "uploading": "업로드 중...",
+    "uploading": "업불러오는 중...",
     "uploadFailed": "업로드 실패",
     "dragToReorder": "드래그하여 재정렬하세요.",
     "maxImagesReached": "최대 {max} 이미지가 허용됩니다.",
@@ -131,8 +131,8 @@
     "invalidFileType": "잘못된 파일 형식"
   },
   "carousel": {
-    "noImageAvailable": "사용 가능한 이미지가 없습니다.",
-    "noMediaAvailable": "사용 가능한 미디어가 없습니다.",
+    "noImageAvailable": "이미지가 없습니다.",
+    "noMediaAvailable": "미디어가 없습니다.",
     "videoPlayer": {
       "mute": "무음",
       "unmute": "음소거 해제",
@@ -152,7 +152,7 @@
     "fat": "지방",
     "carbs": "탄수화물",
     "protein": "단백질",
-    "showingPortions": "{count} {count, plural, one {portion} other {portions}}에 대한 값 표시",
+    "showingPortions": "{count, plural, one {#인분 기준 표시} other {#인분 기준 표시}}",
     "noInfo": "영양정보가 없습니다.",
     "estimateWithAI": "AI로 견적"
   },
@@ -183,10 +183,10 @@
   },
   "toasts": {
     "processingBoth": "태그 및 알레르기 처리",
-    "processingTags": "태그 생성 중",
+    "processingTags": "태그 만들기 중",
     "processingAllergies": "알레르기 감지",
-    "bothComplete": "태그 및 알레르기가 업데이트되었습니다.",
-    "tagsComplete": "생성된 태그",
+    "bothComplete": "태그 및 알레르기가 수정되었습니다.",
+    "tagsComplete": "만들기된 태그",
     "allergiesComplete": "알레르기가 감지됨",
     "imported": "가져온 레시피",
     "converted": "변환된 측정값",

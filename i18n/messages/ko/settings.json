@@ -1,61 +1,61 @@
 {
   "page": {
     "title": "설정",
-    "loading": "로드 중...",
+    "loading": "불러오는 중...",
     "ariaLabel": "설정 탭"
   },
   "tabs": {
     "user": "사용자",
-    "household": "가정",
+    "household": "가구",
     "caldav": "CalDAV",
     "admin": "관리자"
   },
   "user": {
     "profile": {
-      "title": "윤곽",
+      "title": "프로필",
       "nameLabel": "이름",
-      "namePlaceholder": "당신의 이름",
+      "namePlaceholder": "내 이름",
       "emailLabel": "이메일",
       "avatarHint": "사진을 변경하려면 아바타를 클릭하세요.",
-      "deleteAvatar": "프로필 사진 삭제",
-      "saveChanges": "변경 사항 저장"
+      "deleteAvatar": "아바타 삭제",
+      "saveChanges": "변경사항 저장"
     },
     "allergies": {
       "title": "알레르기",
-      "description": "알레르기 유발 물질이 포함된 요리법을 계획할 때 경고를 받으려면 음식 알레르기를 추가하세요. 이 정보는 계획된 레시피에 귀하의 알레르기와 일치하는 재료가 포함되어 있을 때 경고하는 데 사용됩니다.",
+      "description": "알레르기 유발 물질이 포함된 레시피을 계획할 때 경고를 받으려면 음식 알레르기를 추가하세요. 이 정보는 계획된 레시피에 내 알레르기와 일치하는 재료가 포함되어 있을 때 경고하는 데 사용됩니다.",
       "placeholder": "유형 알레르기(예: 글루텐, 견과류, 유제품)...",
       "saveButton": "알레르기 저장"
     },
     "apiKeys": {
       "title": "API 키",
-      "description": "API 키를 사용하면 Norish API에 프로그래밍 방식으로 액세스할 수 있습니다. 통합, 바로가기, 자동화에 사용하세요.",
+      "description": "API 키를 사용하면 Norish API에 프로그래밍 방식으로 접근할 수 있습니다. 통합, 바로가기, 자동화에 사용하세요.",
       "keyNameLabel": "키 이름(선택사항)",
       "keyNamePlaceholder": "예: iOS 단축키",
-      "createKey": "키 생성",
-      "yourKeys": "귀하의 API 키",
-      "noKeys": "아직 API 키가 없습니다. 시작하려면 계정을 만드세요.",
+      "createKey": "키 만들기",
+      "yourKeys": "내 API 키",
+      "noKeys": "아직 API 키가 없습니다. 시작하려면 API 키를 생성하세요.",
       "tableHeaders": {
         "name": "이름",
-        "keyPrefix": "주요 접두사",
-        "created": "생성됨",
+        "keyPrefix": "키 접두사",
+        "created": "만들기됨",
         "status": "상태",
-        "actions": "행위"
+        "actions": "작업"
       },
       "unnamed": "이름 없음",
-      "active": "활동적인",
-      "disabled": "장애가 있는",
+      "active": "활성",
+      "disabled": "비활성",
       "disableKey": "키 비활성화",
-      "enableKey": "활성화 키",
+      "enableKey": "키 활성화",
       "deleteKey": "키 삭제",
       "generatedModal": {
         "title": "API 키 생성됨",
-        "warning": "지금 이 키를 저장하세요! 다시는 볼 수 없습니다. 우리는 해시만 저장하며 이 키를 복구할 수 없습니다.",
+        "warning": "지금 이 키를 저장하세요! 다시는 볼 수 없습니다. 해시만 저장하며 이 키를 복구할 수 없습니다.",
         "hint": "API 요청 시 <code>x-api-key</code> 헤더에 이 키를 사용하세요.",
         "confirmButton": "저장했어요"
       },
       "deleteModal": {
         "title": "API 키 삭제",
-        "message": "이 API 키를 삭제하시겠습니까? 이를 사용하는 모든 애플리케이션은 즉시 액세스 권한을 잃게 됩니다. 이 작업은 취소할 수 없습니다.",
+        "message": "이 API 키를 삭제하시겠습니까? 이를 사용하는 모든 애플리케이션은 즉시 접근 권한을 잃게 됩니다. 이 작업은 취소할 수 없습니다.",
         "confirmButton": "키 삭제"
       }
     },
@@ -81,8 +81,8 @@
         "domain": "도메인",
         "name": "이름",
         "type": "유형",
-        "created": "생성됨",
-        "actions": "행위"
+        "created": "만들기됨",
+        "actions": "작업"
       },
       "deleteModal": {
         "title": "토큰 삭제",
@@ -97,8 +97,8 @@
       "deleteModal": {
         "title": "계정 삭제",
         "permanentWarning": "이 작업은 영구적이며 취소할 수 없습니다!",
-        "dataWarning": "식료품, 캘린더 항목, 메모를 포함한 개인 데이터가 영구적으로 삭제됩니다.",
-        "recipesNote": "귀하가 만든 레시피는 보존되지만 더 이상 귀하의 계정에 연결되지 않습니다.",
+        "dataWarning": "장보기, 캘린더 항목, 메모를 포함한 개인 데이터가 영구적으로 삭제됩니다.",
+        "recipesNote": "귀하가 만든 레시피는 보존되지만 더 이상 내 계정에 연결되지 않습니다.",
         "adminNote": "다른 구성원이 있는 가구의 관리자인 경우 먼저 관리자 권한을 이전해야 합니다.",
         "confirmButton": "내 계정 삭제"
       }
@@ -107,16 +107,16 @@
   "household": {
     "pageTitle": "가구 설정",
     "info": {
-      "yourRole": "귀하의 역할",
+      "yourRole": "내 역할",
       "admin": "관리자",
       "member": "회원",
       "members": "회원",
-      "leaveButton": "가족을 떠나다",
+      "leaveButton": "가구을 떠나다",
       "leaveModal": {
-        "title": "가족을 떠나다",
+        "title": "가구을 떠나다",
         "confirmMessage": "정말로 {name}에서 나가시겠습니까?",
         "adminWarning": "당신은 관리자입니다. 떠나기 전에 관리자 권한을 이전해야 합니다.",
-        "confirmButton": "가족을 떠나다"
+        "confirmButton": "가구을 떠나다"
       }
     },
     "members": {
@@ -124,49 +124,49 @@
       "tableHeaders": {
         "name": "이름",
         "role": "역할",
-        "actions": "행위"
+        "actions": "작업"
       },
       "you": "너",
       "kickButton": "차기",
       "makeAdminButton": "관리자로 만들기",
       "kickModal": {
-        "title": "사용자 추방",
+        "title": "사용자 삭제",
         "confirmMessage": "정말로 {name}을(를) 집에서 쫓아내시겠습니까?",
-        "warning": "모든 공유 레시피, 식료품, 캘린더 항목에 액세스할 수 없게 됩니다.",
-        "confirmButton": "사용자 추방"
+        "warning": "모든 공유 레시피, 장보기, 캘린더 항목에 접근할 수 없게 됩니다.",
+        "confirmButton": "사용자 삭제"
       },
       "transferModal": {
         "title": "관리자 권한 이전",
         "confirmMessage": "관리자 권한을 {name}에 이전하시겠습니까?",
-        "warning": "귀하는 정회원이 되며 더 이상 사용자를 추방하거나 가입 코드를 관리할 수 없습니다.",
+        "warning": "당신은 일반 회원이 되며 더 이상 사용자를 삭제하거나 회원가입 코드를 관리할 수 없습니다.",
         "confirmButton": "이전 관리자"
       },
       "toasts": {
-        "kickFailed": "사용자를 추방하지 못했습니다.",
+        "kickFailed": "사용자를 삭제하지 못했습니다.",
         "transferSuccess": "관리자를 {name}(으)로 이전했습니다.",
         "transferFailed": "관리자를 이전하지 못했습니다."
       }
     },
     "joinCode": {
-      "title": "가입 코드",
-      "shareDescription": "이 코드를 다른 사람과 공유하여 가족으로 초대하세요.",
+      "title": "회원가입 코드",
+      "shareDescription": "이 코드를 다른 사람과 공유하여 가구으로 초대하세요.",
       "expiresIn": "만료 날짜:",
-      "regenerateButton": "재생성",
+      "regenerateButton": "재만들기",
       "expired": "만료됨",
-      "noCodeDescription": "활성 가입 코드가 없습니다. 새 회원을 초대하려면 하나를 생성하세요.",
-      "generateButton": "가입 코드 생성"
+      "noCodeDescription": "활성 회원가입 코드가 없습니다. 새 회원을 초대하려면 하나를 만들기하세요.",
+      "generateButton": "회원가입 코드 만들기"
     },
     "create": {
       "title": "가구 만들기",
-      "description": "새로운 가족을 만들어 가족이나 친구와 요리법과 식료품을 공유하세요.",
+      "description": "새로운 가구을 만들어 가구이나 친구와 레시피과 장보기을 공유하세요.",
       "nameLabel": "세대 이름",
-      "namePlaceholder": "예: 스미스 가족",
+      "namePlaceholder": "예: 스미스 가구",
       "submitButton": "가구 만들기"
     },
     "join": {
       "title": "가구에 합류",
-      "description": "기존 가구에 가입하려면 가입 코드를 입력하세요.",
-      "codeLabel": "가입 코드",
+      "description": "기존 가구에 회원가입하려면 회원가입 코드를 입력하세요.",
+      "codeLabel": "회원가입 코드",
       "codePlaceholder": "8자리 코드",
       "submitButton": "가구에 합류"
     }
@@ -203,10 +203,10 @@
       "editTitle": "CalDAV 구성 편집",
       "serverUrl": "서버 URL",
       "enabled": "활성화됨",
-      "disabled": "장애가 있는",
+      "disabled": "비활성",
       "editButton": "편집하다",
       "deleteButton": "삭제",
-      "saveChanges": "변경 사항 저장",
+      "saveChanges": "변경사항 저장",
       "advancedSettings": "고급 설정",
       "timezone": "시간대: {timezone}",
       "connectionStatus": {
@@ -220,7 +220,7 @@
       "title": "CalDAV 구성 삭제",
       "confirmMessage": "CalDAV 구성을 삭제하시겠습니까?",
       "deleteEventsLabel": "동기화된 이벤트 삭제",
-      "deleteEventsDescription": "CalDAV 캘린더에 생성된 모든 이벤트 제거",
+      "deleteEventsDescription": "CalDAV 캘린더에 만들기된 모든 이벤트 제거",
       "confirmButton": "삭제"
     },
     "syncStatus": {
@@ -270,7 +270,7 @@
     },
     "permissions": {
       "title": "레시피 권한",
-      "description": "레시피를 보고, 편집하고, 삭제할 수 있는 사람을 제어합니다. 서버 관리자는 항상 전체 액세스 권한을 갖습니다.",
+      "description": "레시피를 보고, 편집하고, 삭제할 수 있는 사람을 제어합니다. 서버 관리자는 항상 전체 접근 권한을 갖습니다.",
       "viewRecipes": "레시피 보기",
       "viewDescription": "대시보드에서 레시피를 볼 수 있는 사람",
       "editRecipes": "레시피 편집",
@@ -280,12 +280,12 @@
       "levels": {
         "everyone": "모든 사람",
         "everyoneDescription": "인증된 모든 사용자",
-        "household": "가정",
-        "householdDescription": "레시피 소유자와 그 가족",
+        "household": "가구",
+        "householdDescription": "레시피 소유자와 그 가구",
         "owner": "소유자만",
         "ownerDescription": "레시피 소유자만"
       },
-      "note": "참고: 식료품 및 달력 항목은 자동으로 가구 규칙을 따르며, 가구 구성원은 언제든지 같은 가구에 속한 모든 사람의 항목을 편집/삭제할 수 있습니다."
+      "note": "참고: 장보기 및 달력 항목은 자동으로 가구 규칙을 따르며, 가구 구성원은 언제든지 같은 가구에 속한 모든 사람의 항목을 편집/삭제할 수 있습니다."
     },
     "system": {
       "title": "시스템 설정",
@@ -334,8 +334,8 @@
         },
         "claimMapping": {
           "title": "청구 매핑",
-          "description": "OIDC 클레임을 기반으로 역할과 가족을 자동으로 할당합니다. admin 그룹의 사용자는 서버 관리자 권한을 얻습니다. 가구 그룹이 있는 사용자는 해당 가구에 자동으로 가입됩니다.",
-          "securityWarning": "경고: 클레임 매핑을 활성화하면 ID 공급자가 관리자 권한과 가족 구성원을 제어할 수 있습니다. OIDC 공급자를 완전히 신뢰하고 그룹 클레임을 올바르게 구성한 경우에만 이 기능을 활성화하세요.",
+          "description": "OIDC 클레임을 기반으로 역할과 가구을 자동으로 할당합니다. admin 그룹의 사용자는 서버 관리자 권한을 얻습니다. 가구 그룹이 있는 사용자는 해당 가구에 자동으로 회원가입됩니다.",
+          "securityWarning": "경고: 클레임 매핑을 활성화하면 ID 공급자가 관리자 권한과 가구 구성원을 제어할 수 있습니다. OIDC 공급자를 완전히 신뢰하고 그룹 클레임을 올바르게 구성한 경우에만 이 기능을 활성화하세요.",
           "scopes": "추가 범위",
           "scopesPlaceholder": "그룹, 역할",
           "scopesDescription": "요청할 추가 OAuth 범위의 쉼표로 구분된 목록(예: Keycloak 그룹)",
@@ -344,7 +344,7 @@
           "adminGroup": "관리자 그룹",
           "adminGroupDescription": "서버 관리자 역할을 부여하는 그룹 이름(대소문자 구분)",
           "householdPrefix": "가구 식별번호",
-          "householdPrefixDescription": "가구 그룹 이름의 접두사(예: norish_household_family => 가구 '가족')"
+          "householdPrefixDescription": "가구 그룹 이름의 접두사(예: norish_household_family => 가구 '가구')"
         }
       },
       "github": {
@@ -474,7 +474,7 @@
       "autoTaggingMode": "자동 태그 추가 모드",
       "autoTaggingModeDescription": "AI를 사용하여 가져온 레시피에 자동으로 태그/키워드 할당",
       "autoTaggingModes": {
-        "disabled": "장애가 있는",
+        "disabled": "비활성",
         "predefined": "사전 정의된 태그만",
         "predefinedDb": "사전 정의된 태그 + 기존 태그",
         "freeform": "AI는 새로운 태그를 만들 수 있습니다"
@@ -499,7 +499,7 @@
       "transcriptionProvider": "전사 제공자",
       "transcriptionProviderDescription": "OpenAI 및 OpenAI 호환 엔드포인트만 속삭임 전사를 지원합니다.",
       "transcriptionProviders": {
-        "disabled": "장애가 있는",
+        "disabled": "비활성",
         "openai": "OpenAI 속삭임",
         "groq": "그로크 속삭임",
         "azure": "Azure OpenAI 속삭임",
@@ -529,7 +529,7 @@
       "nutritionEstimationDescription": "이 프롬프트는 레시피의 영양 정보를 추정할 때 사용됩니다. 사용 가능한 변수: recipeName, 인분, 재료",
       "nutritionEstimationPlaceholder": "영양 평가 프롬프트를 입력하세요...",
       "autoTagging": "자동 태그 추가 프롬프트",
-      "autoTaggingDescription": "이 프롬프트는 가져온 레시피에 대한 태그를 생성하는 데 사용됩니다. 태그 지정 규칙과 사전 정의된 태그 목록을 정의합니다.",
+      "autoTaggingDescription": "이 프롬프트는 가져온 레시피에 대한 태그를 만들기하는 데 사용됩니다. 태그 지정 규칙과 사전 정의된 태그 목록을 정의합니다.",
       "autoTaggingPlaceholder": "자동 태그 추가 프롬프트를 입력하세요..."
     },
     "unsavedChanges": "저장되지 않은 변경사항",

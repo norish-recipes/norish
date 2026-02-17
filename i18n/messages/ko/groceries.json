@@ -11,19 +11,19 @@
     "groupIngredients": "그룹 성분"
   },
   "empty": {
-    "title": "식료품 목록이 기다리고 있습니다",
+    "title": "장보기 목록이 기다리고 있습니다",
     "description": "시작하려면 위의 '항목 추가' 버튼을 사용하여 항목을 추가하세요.",
     "manual": "매뉴얼 항목"
   },
   "item": {
     "unnamedItem": "이름이 없는 항목",
-    "fromRecipes": "{개수, 복수형, 하나의 {# recipe} 기타 {# recipes}}에서",
-    "items": "{개수, 복수형, 하나 {# item} 기타 {# items}}"
+    "fromRecipes": "{count, plural, one {#개 레시피에서} other {#개 레시피에서}}",
+    "items": "{count, plural, one {#개 항목} other {#개 항목}}"
   },
   "store": {
     "unsorted": "정렬되지 않음",
     "noItems": "이 매장에는 상품이 없습니다.",
-    "storeActions": "매장 활동",
+    "storeActions": "매장 활성",
     "markAllDone": "모두 완료로 표시",
     "deleteDone": "삭제 완료",
     "done": "{count} 완료"
@@ -40,9 +40,9 @@
     "confirmDelete": "{storeName}을(를) 삭제하시겠습니까?",
     "deleteWarning": "이 상점의 품목은 정렬되지 않음으로 이동됩니다.",
     "noStoresYet": "아직 매장이 없습니다.",
-    "createStoreHint": "식료품을 정리할 상점을 만드세요",
-    "hasItems": "이 상점에는 {count} 식료품이 있습니다.",
-    "hasItemsPlural": "이 상점에는 {count} 식료품이 있습니다.",
+    "createStoreHint": "장보기을 정리할 상점을 만드세요",
+    "hasItems": "이 매장에는 {count}개의 항목이 있습니다.",
+    "hasItemsPlural": "이 매장에는 {count}개의 항목이 있습니다.",
     "whatToDo": "그들과 함께 무엇을 하시겠습니까?",
     "keepItems": "항목 유지",
     "keepItemsDescription": "항목을 정렬되지 않음으로 이동",
@@ -52,8 +52,8 @@
     "create": "만들다"
   },
   "panel": {
-    "addTitle": "식료품 추가",
-    "editTitle": "식료품 편집",
+    "addTitle": "장보기 추가",
+    "editTitle": "장보기 편집",
     "itemName": "품목 이름",
     "itemNamePlaceholder": "예: 우유, 계란, 빵...",
     "selectStore": "매장 선택",
@@ -68,11 +68,11 @@
     "placeholder": "예: 닭 가슴살 2파운드",
     "editPlaceholder": "예: 매주 우유",
     "servings": "인분",
-    "loadingIngredients": "재료 로드 중...",
+    "loadingIngredients": "재료 불러오는 중...",
     "noIngredients": "성분이 없습니다.",
-    "addSelectedToGroceries": "식료품에 추가",
-    "ingredientsAdded": "식료품 목록에 재료가 추가되었습니다.",
-    "ingredientsFailed": "식료품 목록에 재료를 추가하지 못했습니다.",
-    "addToGroceries": "식료품에 추가"
+    "addSelectedToGroceries": "장보기에 추가",
+    "ingredientsAdded": "장보기 목록에 재료가 추가되었습니다.",
+    "ingredientsFailed": "장보기 목록에 재료를 추가하지 못했습니다.",
+    "addToGroceries": "장보기에 추가"
   }
 }
