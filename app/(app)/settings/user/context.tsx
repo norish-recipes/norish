@@ -4,7 +4,7 @@ import type { User } from "@/types";
 import type { ApiKeyMetadataDto } from "@/server/trpc/routers/user/types";
 
 import { createContext, useContext, ReactNode, useCallback } from "react";
-import { addToast } from "@heroui/react";
+// Use centralized error toast helper instead of manual toasts
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
@@ -63,11 +63,11 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
   const updateName = useCallback(
     async (name: string) => {
       if (!name.trim()) {
-        addToast({
+        showSafeErrorToast({
           title: tErrors("nameCannotBeEmpty"),
+          description: "",
+          context: "user-settings:update-name",
           color: "danger",
-          shouldShowTimeoutProgress: true,
-          radius: "full",
         });
 
         return;
@@ -178,23 +178,23 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
             setUser((prev) => (prev ? { ...prev, preferences: result.preferences as any } : prev));
           }
         } else if (result.error) {
-          addToast({
+          showSafeErrorToast({
             title: t("applyError"),
             description: result.error,
+            error: result.error,
+            context: "user-settings:update-preferences",
             color: "danger",
-            shouldShowTimeoutProgress: true,
-            radius: "full",
           });
         }
 
         return;
       } catch (error) {
-        addToast({
+        showSafeErrorToast({
           title: t("applyError"),
           description: (error as Error).message,
+          error,
+          context: "user-settings:update-preferences",
           color: "danger",
-          shouldShowTimeoutProgress: true,
-          radius: "full",
         });
       }
     },
