@@ -118,6 +118,14 @@
         "title": "Afficher le bouton de conversion",
         "description": "Afficher un bouton sur les pages de recettes pour convertir entre les systèmes de mesure"
       },
+      "ratings": {
+        "title": "Afficher les notes",
+        "description": "Afficher les notes par étoiles sur les cartes de recettes et les pages de détail"
+      },
+      "favorites": {
+        "title": "Afficher les favoris",
+        "description": "Afficher les icônes de favoris/cœur sur les cartes de recettes et les pages de détail"
+      },
       "applyError": "Échec de l'application du paramètre"
     }
   },

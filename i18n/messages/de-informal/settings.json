@@ -118,6 +118,14 @@
         "title": "Konvertier-Button anzeigen",
         "description": "Zeige auf Rezeptseiten einen Button, um zwischen Maßsystemen umzurechnen"
       },
+      "ratings": {
+        "title": "Bewertungen anzeigen",
+        "description": "Sternebewertungen auf Rezeptkarten und Detailseiten anzeigen"
+      },
+      "favorites": {
+        "title": "Favoriten anzeigen",
+        "description": "Favoriten-/Herzsymbole auf Rezeptkarten und Detailseiten anzeigen"
+      },
       "applyError": "Einstellung konnte nicht angewendet werden"
     }
   },

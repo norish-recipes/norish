@@ -118,6 +118,14 @@
         "title": "Show Ingredient Conversion Button",
         "description": "Display a button on recipe pages to convert between measurement systems"
       },
+      "ratings": {
+        "title": "Show Ratings",
+        "description": "Display star ratings on recipe cards and detail pages"
+      },
+      "favorites": {
+        "title": "Show Favorites",
+        "description": "Display favorite/heart icons on recipe cards and detail pages"
+      },
       "applyError": "Failed to apply preference"
     }
   },

@@ -3,6 +3,8 @@ import z from "zod";
 export const UserPreferencesSchema = z.object({
   timersEnabled: z.boolean().optional(),
   showConversionButton: z.boolean().optional(),
+  showRatings: z.boolean().optional(),
+  showFavorites: z.boolean().optional(),
   locale: z.string().nullable().optional(),
 });
 

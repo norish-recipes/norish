@@ -156,6 +156,46 @@ describe("PreferencesCard", () => {
     });
   });
 
+  it("toggles showRatings preference", async () => {
+    mockContext.user = { preferences: { timersEnabled: true, showRatings: true } } as any;
+
+    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+
+    render(<PreferencesCard />);
+
+    const toggles = screen.getAllByRole("button", { name: /toggle/i });
+    const ratingsToggle = toggles[2];
+
+    expect(ratingsToggle).toHaveAttribute("aria-pressed", "true");
+    expect(ratingsToggle).not.toBeDisabled();
+
+    fireEvent.click(ratingsToggle);
+
+    await waitFor(() => {
+      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ showRatings: false });
+    });
+  });
+
+  it("toggles showFavorites preference", async () => {
+    mockContext.user = { preferences: { timersEnabled: true, showFavorites: true } } as any;
+
+    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+
+    render(<PreferencesCard />);
+
+    const toggles = screen.getAllByRole("button", { name: /toggle/i });
+    const favoritesToggle = toggles[3];
+
+    expect(favoritesToggle).toHaveAttribute("aria-pressed", "true");
+    expect(favoritesToggle).not.toBeDisabled();
+
+    fireEvent.click(favoritesToggle);
+
+    await waitFor(() => {
+      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ showFavorites: false });
+    });
+  });
+
   it("renders language dropdown with current locale", () => {
     mockContext.user = { preferences: { timersEnabled: true, locale: "en" } } as any;
 

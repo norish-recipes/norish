@@ -13,6 +13,8 @@ import { useTimersEnabledQuery } from "@/hooks/config";
 import { useLocaleConfigQuery } from "@/hooks/config";
 import {
   getShowConversionButtonPreference,
+  getShowRatingsPreference,
+  getShowFavoritesPreference,
   getTimersEnabledPreference,
   getLocalePreference,
 } from "@/lib/user-preferences";
@@ -41,10 +43,26 @@ export default function PreferencesCard() {
   );
 
   const conversionEffective = getShowConversionButtonPreference(user);
+  const ratingsEffective = getShowRatingsPreference(user);
+  const favoritesEffective = getShowFavoritesPreference(user);
 
   const handleConversionToggle = useCallback(
     async (value: boolean) => {
       await updatePreferences({ showConversionButton: value });
+    },
+    [updatePreferences]
+  );
+
+  const handleRatingsToggle = useCallback(
+    async (value: boolean) => {
+      await updatePreferences({ showRatings: value });
+    },
+    [updatePreferences]
+  );
+
+  const handleFavoritesToggle = useCallback(
+    async (value: boolean) => {
+      await updatePreferences({ showFavorites: value });
     },
     [updatePreferences]
   );
@@ -123,6 +141,34 @@ export default function PreferencesCard() {
               isDisabled={isUpdatingPreferences}
               isSelected={conversionEffective}
               onValueChange={(v) => handleConversionToggle(v)}
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-foreground font-medium">{t("ratings.title")}</div>
+            <div className="text-default-500 text-sm">{t("ratings.description")}</div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Switch
+              isDisabled={isUpdatingPreferences}
+              isSelected={ratingsEffective}
+              onValueChange={(v) => handleRatingsToggle(v)}
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-foreground font-medium">{t("favorites.title")}</div>
+            <div className="text-default-500 text-sm">{t("favorites.description")}</div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Switch
+              isDisabled={isUpdatingPreferences}
+              isSelected={favoritesEffective}
+              onValueChange={(v) => handleFavoritesToggle(v)}
             />
           </div>
         </div>

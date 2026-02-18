@@ -46,6 +46,8 @@ export const UpdatePreferencesInputSchema = z.object({
     .object({
       timersEnabled: z.boolean().optional(),
       showConversionButton: z.boolean().optional(),
+      showRatings: z.boolean().optional(),
+      showFavorites: z.boolean().optional(),
       locale: z.string().nullable().optional(),
     })
     .partial(),

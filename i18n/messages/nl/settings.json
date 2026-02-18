@@ -118,6 +118,14 @@
       "conversion": {
         "title": "Toon conversieknop",
         "description": "Toon de converteer knop op de recept pagina's"
+      },
+      "ratings": {
+        "title": "Beoordelingen tonen",
+        "description": "Sterbeoordelingen op receptkaarten en detailpagina's weergeven"
+      },
+      "favorites": {
+        "title": "Favorieten tonen",
+        "description": "Favoriet-/hartpictogrammen op receptkaarten en detailpagina's weergeven"
       }
     }
   },

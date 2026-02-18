@@ -8,6 +8,7 @@ type DoubleTapContainerProps = {
   children: React.ReactNode;
   onDoubleTap: () => void;
   onSingleTap?: () => void;
+  doubleTapEnabled?: boolean;
   disabled?: boolean;
   className?: string;
   debounceMs?: number;
@@ -17,6 +18,7 @@ export default function DoubleTapContainer({
   children,
   onDoubleTap,
   onSingleTap,
+  doubleTapEnabled = true,
   disabled = false,
   className = "",
   debounceMs = 250,
@@ -28,6 +30,12 @@ export default function DoubleTapContainer({
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       if (disabled) return;
+
+      if (!doubleTapEnabled) {
+        onSingleTap?.();
+
+        return;
+      }
 
       clickCountRef.current += 1;
 
@@ -60,7 +68,7 @@ export default function DoubleTapContainer({
         clickCountRef.current = 0;
       }
     },
-    [disabled, onDoubleTap, onSingleTap, debounceMs]
+    [disabled, onDoubleTap, onSingleTap, debounceMs, doubleTapEnabled]
   );
 
   return (
