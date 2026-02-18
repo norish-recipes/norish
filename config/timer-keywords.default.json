@@ -13,9 +13,20 @@
     "heures",
     "uur",
     "uren",
-    "u"
+    "u",
+    "시간",
+    "시"
   ],
-  "minutes": ["minute", "minutes", "min", "mins", "m", "minuten", "minuut"],
+  "minutes": [
+    "minute",
+    "minutes",
+    "min",
+    "mins",
+    "m",
+    "minuten",
+    "minuut",
+    "분"
+  ],
   "seconds": [
     "second",
     "seconds",
@@ -26,6 +37,7 @@
     "sekunden",
     "sek",
     "seconde",
-    "secondes"
+    "secondes",
+    "초"
   ]
 }

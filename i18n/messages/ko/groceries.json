@@ -11,7 +11,7 @@
     "groupIngredients": "재료 묶기"
   },
   "empty": {
-    "title": "장보기 목록이 기다리고 있습니다",
+    "title": "아직 장보기 목록이 비어 있어요",
     "description": "시작하려면 위의 '항목 추가' 버튼을 사용하여 항목을 추가하세요.",
     "manual": "직접 추가한 항목"
   },
@@ -60,7 +60,7 @@
     "noStore": "매장 없음",
     "recurrence": "반복",
     "savePreference": "이 항목의 매장 기억",
-    "addAnother": "다른 것을 추가하세요",
+    "addAnother": "하나 더 추가",
     "addRepeat": "+ 반복 추가",
     "storeOptional": "매장(선택사항)",
     "autoDetectFromHistory": "기록에서 자동 감지",

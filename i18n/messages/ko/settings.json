@@ -76,7 +76,7 @@
       "typeHeader": "헤더",
       "typeCookie": "쿠키",
       "addButton": "토큰 추가",
-      "noTokens": "구성된 사이트 인증 토큰이 없습니다.",
+      "noTokens": "설정된 사이트 인증 토큰이 없습니다.",
       "tableHeaders": {
         "domain": "도메인",
         "name": "이름",
@@ -352,7 +352,7 @@
         "subtitle": "GitHub OAuth",
         "fields": {
           "clientId": "클라이언트 ID",
-          "clientSecret": "클라이언트 Secret"
+          "clientSecret": "클라이언트 시크릿"
         }
       },
       "google": {
@@ -453,7 +453,7 @@
         "perplexity": "Perplexity",
         "groq": "Groq",
         "ollama": "Ollama(로컬)",
-        "lmStudio": "LM 스튜디오(로컬)",
+        "lmStudio": "LM Studio(로컬)",
         "genericOpenai": "일반 OpenAI 호환"
       },
       "endpointUrl": "엔드포인트 URL",
@@ -525,9 +525,9 @@
       "unitConversion": "단위 변환 프롬프트",
       "unitConversionDescription": "이 프롬프트는 미터법과 미국식 시스템 간에 레시피 측정값을 변환할 때 사용됩니다. 사용 가능한 변수: sourceSystem, targetSystem, units",
       "unitConversionPlaceholder": "단위 변환 프롬프트를 입력하세요...",
-      "nutritionEstimation": "영양 추정 프롬프트",
+      "nutritionEstimation": "영양소 추정 프롬프트",
       "nutritionEstimationDescription": "이 프롬프트는 레시피의 영양 정보를 추정할 때 사용됩니다. 사용 가능한 변수: recipeName, servings, ingredients",
-      "nutritionEstimationPlaceholder": "영양 평가 프롬프트를 입력하세요...",
+      "nutritionEstimationPlaceholder": "영양소 추정 프롬프트를 입력하세요...",
       "autoTagging": "자동 태그 추가 프롬프트",
       "autoTaggingDescription": "이 프롬프트는 가져온 레시피에 대한 태그를 생성하는 데 사용됩니다. 태그 지정 규칙과 사전 정의된 태그 목록을 정의합니다.",
       "autoTaggingPlaceholder": "자동 태그 추가 프롬프트를 입력하세요..."

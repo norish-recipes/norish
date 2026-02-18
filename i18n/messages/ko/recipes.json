@@ -17,8 +17,8 @@
     }
   },
   "empty": {
-    "title": "내 레시피 컬렉션이 기다리고 있습니다",
-    "description": "위의 검색 필드에 레시피 URL을 붙여넣고 마법이 일어나는 것을 지켜보세요.",
+    "title": "아직 레시피가 없어요",
+    "description": "위의 검색 필드에 레시피 URL을 붙여넣어 보세요.",
     "noResults": "레시피를 찾을 수 없습니다.",
     "noResultsHint": "필터를 조정하거나 지워보세요."
   },
@@ -126,8 +126,8 @@
     "uploading": "업로드 중...",
     "uploadFailed": "업로드 실패",
     "dragToReorder": "드래그하여 재정렬하세요.",
-    "maxImagesReached": "최대 {max}개 이미지가 허용됩니다.",
-    "maxVideosReached": "최대 {max}개의 동영상이 허용됩니다.",
+    "maxImagesReached": "이미지는 최대 {max}개까지 가능합니다.",
+    "maxVideosReached": "동영상은 최대 {max}개까지 가능합니다.",
     "invalidFileType": "잘못된 파일 형식"
   },
   "carousel": {
@@ -152,7 +152,7 @@
     "fat": "지방",
     "carbs": "탄수화물",
     "protein": "단백질",
-    "showingPortions": "{count}인분 기준 영양 정보",
+    "showingPortions": "{count, plural, one {#인분} other {#인분}} 기준 영양 정보",
     "noInfo": "영양정보가 없습니다.",
     "estimateWithAI": "AI로 추정"
   },
@@ -175,11 +175,11 @@
     "placeholder": "예: 밀가루 2컵"
   },
   "wakeLock": {
-    "keepScreenOn": "화면을 켜두세요",
+    "keepScreenOn": "화면 켜짐 유지",
     "notSupported": "이 브라우저에서는 화면 활성 유지가 지원되지 않습니다.",
     "activeTooltip": "요리하는 동안 화면이 계속 켜져 있습니다.",
-    "inactiveTooltip": "단계를 수행하는 동안 화면을 활성 상태로 유지",
-    "ariaLabel": "화면을 활성 상태로 유지"
+    "inactiveTooltip": "조리 중 화면 켜짐 유지",
+    "ariaLabel": "화면 켜짐 유지"
   },
   "toasts": {
     "processingBoth": "태그 및 알러지 처리",
