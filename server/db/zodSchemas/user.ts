@@ -3,6 +3,7 @@ import z from "zod";
 export const UserPreferencesSchema = z.object({
   timersEnabled: z.boolean().optional(),
   showConversionButton: z.boolean().optional(),
+  locale: z.string().nullable().optional(),
 });
 
 export type UserPreferencesDto = z.infer<typeof UserPreferencesSchema>;
@@ -15,6 +16,5 @@ export const UserDtoSchema = z.object({
   name: z.string(),
   image: z.string().nullable().optional(),
   isServerAdmin: z.boolean().optional(),
-  locale: z.string().nullable().optional(),
   preferences: UserPreferencesSchema.optional(),
 });

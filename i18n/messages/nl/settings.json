@@ -106,6 +106,10 @@
     "preferences": {
       "title": "Voorkeuren",
       "description": "Pas je ervaring aan.",
+      "language": {
+        "title": "Taal",
+        "description": "Kies je voorkeurstaal"
+      },
       "timers": {
         "title": "Recepttimers inschakelen",
         "description": "Interactieve timers in receptinstructies tonen"

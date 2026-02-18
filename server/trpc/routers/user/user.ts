@@ -24,8 +24,6 @@ import {
   getUserAllergies,
   updateUserAllergies,
   getAllergiesForUsers,
-  getUserLocale,
-  updateUserLocale,
 } from "@/server/db";
 import { householdEmitter } from "@/server/trpc/routers/households/emitter";
 import { SERVER_CONFIG } from "@/config/env-config-server";
@@ -294,32 +292,6 @@ const setAllergies = authedProcedure
     return { success: true, allergies: input.allergies };
   });
 
-/**
- * Get current user's locale preference
- */
-const getLocale = authedProcedure.query(async ({ ctx }) => {
-  log.debug({ userId: ctx.user.id }, "Getting user locale");
-
-  const locale = await getUserLocale(ctx.user.id);
-
-  return { locale };
-});
-
-/**
- * Update user's locale preference
- */
-const setLocale = authedProcedure
-  .input(z.object({ locale: z.string().nullable() }))
-  .mutation(async ({ ctx, input }) => {
-    log.debug({ userId: ctx.user.id, locale: input.locale }, "Updating user locale");
-
-    await updateUserLocale(ctx.user.id, input.locale);
-
-    log.info({ userId: ctx.user.id, locale: input.locale }, "User locale updated");
-
-    return { success: true, locale: input.locale };
-  });
-
 export const userProcedures = router({
   get,
   updateName,
@@ -328,7 +300,5 @@ export const userProcedures = router({
   deleteAccount,
   getAllergies,
   setAllergies,
-  getLocale,
-  setLocale,
   updatePreferences,
 });

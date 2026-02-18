@@ -106,6 +106,10 @@
     "preferences": {
       "title": "Einstellungen",
       "description": "Passe deine Erfahrung an.",
+      "language": {
+        "title": "Sprache",
+        "description": "Wähle deine bevorzugte Sprache"
+      },
       "timers": {
         "title": "Rezept-Timer aktivieren",
         "description": "Interaktive Timer in Rezeptanweisungen anzeigen"

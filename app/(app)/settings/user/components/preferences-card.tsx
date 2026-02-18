@@ -1,27 +1,34 @@
 "use client";
 
 import { useCallback } from "react";
-import { Card, CardBody, CardHeader, Switch } from "@heroui/react";
+import { Card, CardBody, CardHeader, Switch, Select, SelectItem } from "@heroui/react";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 
 import { useUserSettingsContext } from "../context";
 
 import NewFeatureChip from "@/app/(app)/settings/components/new-feature-chip";
 import { useTimersEnabledQuery } from "@/hooks/config";
+import { useLocaleConfigQuery } from "@/hooks/config";
 import {
   getShowConversionButtonPreference,
   getTimersEnabledPreference,
+  getLocalePreference,
 } from "@/lib/user-preferences";
 
 export default function PreferencesCard() {
   const t = useTranslations("settings.user.preferences");
   const { user, updatePreferences, isUpdatingPreferences } = useUserSettingsContext();
   const { globalEnabled } = useTimersEnabledQuery();
+  const { enabledLocales, defaultLocale } = useLocaleConfigQuery();
+  const router = useRouter();
 
   const effective = getTimersEnabledPreference(user);
 
   const disabled = !globalEnabled;
+
+  const currentLocale = getLocalePreference(user) ?? defaultLocale;
 
   const handleToggle = useCallback(
     async (value: boolean) => {
@@ -42,6 +49,16 @@ export default function PreferencesCard() {
     [updatePreferences]
   );
 
+  const handleLocaleChange = useCallback(
+    async (value: string) => {
+      if (!value || value === currentLocale) return;
+
+      await updatePreferences({ locale: value });
+      router.refresh();
+    },
+    [updatePreferences, currentLocale, router]
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -53,6 +70,31 @@ export default function PreferencesCard() {
       </CardHeader>
       <CardBody className="gap-4">
         <p className="text-default-500 text-base">{t("description")}</p>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-foreground font-medium">{t("language.title")}</div>
+            <div className="text-default-500 text-sm">{t("language.description")}</div>
+          </div>
+
+          <Select
+            aria-label={t("language.title")}
+            className="max-w-[200px]"
+            isDisabled={isUpdatingPreferences || enabledLocales.length === 0}
+            selectedKeys={currentLocale ? [currentLocale] : []}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0] as string;
+
+              if (selected) handleLocaleChange(selected);
+            }}
+          >
+            {enabledLocales.map((locale) => (
+              <SelectItem key={locale.code} id={locale.code}>
+                {locale.name}
+              </SelectItem>
+            ))}
+          </Select>
+        </div>
 
         {globalEnabled && (
           <div className="flex items-center justify-between">

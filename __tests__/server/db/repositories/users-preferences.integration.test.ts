@@ -69,4 +69,23 @@ describe("User preferences - DB integration", () => {
     expect(prefs).toBeDefined();
     expect((prefs as any).showConversionButton).toBe(true);
   });
+
+  it("stores and retrieves locale in JSONB preferences", async () => {
+    await updateUserPreferences(userId, { locale: "de-informal" });
+
+    const prefs = await getUserPreferences(userId);
+
+    expect(prefs).toBeDefined();
+    expect((prefs as any).locale).toBe("de-informal");
+  });
+
+  it("updates locale without affecting other preferences", async () => {
+    await updateUserPreferences(userId, { timersEnabled: true, locale: "en" });
+    await updateUserPreferences(userId, { locale: "fr" });
+
+    const prefs = await getUserPreferences(userId);
+
+    expect((prefs as any).timersEnabled).toBe(true);
+    expect((prefs as any).locale).toBe("fr");
+  });
 });

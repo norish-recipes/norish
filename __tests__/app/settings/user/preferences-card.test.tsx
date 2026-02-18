@@ -14,6 +14,12 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
+const mockRouterRefresh = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: mockRouterRefresh }),
+}));
+
 vi.mock("@/app/(app)/settings/user/context", () => ({
   useUserSettingsContext: () => ({ ...mockContext, user: mockContext.user }),
 }));
@@ -22,6 +28,13 @@ let timersMock = { timersEnabled: true, globalEnabled: true } as any;
 
 vi.mock("@/hooks/config", () => ({
   useTimersEnabledQuery: () => timersMock,
+  useLocaleConfigQuery: () => ({
+    enabledLocales: [
+      { code: "en", name: "English" },
+      { code: "de-informal", name: "Deutsch" },
+    ],
+    defaultLocale: "en",
+  }),
 }));
 
 vi.mock("@heroui/react", () => ({
@@ -30,6 +43,7 @@ vi.mock("@heroui/react", () => ({
   CardBody: ({ children }: any) => <div>{children}</div>,
   Switch: ({ isSelected, isDisabled, onValueChange }: any) => (
     <button
+      type="button"
       aria-pressed={isSelected}
       disabled={isDisabled}
       onClick={() => onValueChange?.(!isSelected)}
@@ -38,6 +52,27 @@ vi.mock("@heroui/react", () => ({
     </button>
   ),
   Chip: ({ children }: any) => <span>{children}</span>,
+  Select: ({
+    children,
+    "aria-label": ariaLabel,
+    selectedKeys,
+    onSelectionChange,
+    isDisabled,
+  }: any) => (
+    <select
+      aria-label={ariaLabel}
+      disabled={isDisabled}
+      value={selectedKeys?.[0] ?? ""}
+      onChange={(e) => onSelectionChange?.(new Set([e.target.value]))}
+    >
+      {children}
+    </select>
+  ),
+  SelectItem: ({ children, ...props }: any) => (
+    <option value={props.id ?? props["data-key"]} {...props}>
+      {children}
+    </option>
+  ),
 }));
 
 describe("PreferencesCard", () => {
@@ -118,6 +153,39 @@ describe("PreferencesCard", () => {
 
     await waitFor(() => {
       expect(mockContext.updatePreferences).toHaveBeenCalledWith({ showConversionButton: false });
+    });
+  });
+
+  it("renders language dropdown with current locale", () => {
+    mockContext.user = { preferences: { timersEnabled: true, locale: "en" } } as any;
+
+    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+
+    render(<PreferencesCard />);
+
+    // Language section should be visible
+    expect(screen.getByText("language.title")).toBeInTheDocument();
+    expect(screen.getByText("language.description")).toBeInTheDocument();
+
+    // Language select should be rendered
+    const select = screen.getByRole("combobox", { name: /language\.title/i });
+
+    expect(select).toBeInTheDocument();
+  });
+
+  it("calls updatePreferences with locale when language is changed", async () => {
+    mockContext.user = { preferences: { timersEnabled: true, locale: "en" } } as any;
+
+    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+
+    render(<PreferencesCard />);
+
+    const select = screen.getByRole("combobox", { name: /language\.title/i });
+
+    fireEvent.change(select, { target: { value: "de-informal" } });
+
+    await waitFor(() => {
+      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ locale: "de-informal" });
     });
   });
 });

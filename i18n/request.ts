@@ -6,7 +6,7 @@ import { cookies, headers } from "next/headers";
 import { isValidLocale, type Locale, DEFAULT_LOCALE } from "./config";
 
 import { auth } from "@/server/auth/auth";
-import { getUserLocale } from "@/server/db/repositories/users";
+import { getUserPreferences } from "@/server/db/repositories/users";
 import {
   getDefaultLocale as getConfigDefaultLocale,
   isValidEnabledLocale,
@@ -37,7 +37,8 @@ async function resolveLocale(): Promise<Locale> {
     });
 
     if (session?.user?.id) {
-      const userLocale = await getUserLocale(session.user.id);
+      const prefs = await getUserPreferences(session.user.id);
+      const userLocale = typeof prefs.locale === "string" ? prefs.locale : null;
 
       // User's locale must be valid AND enabled
       if (userLocale && isValidLocale(userLocale) && (await isValidEnabledLocale(userLocale))) {

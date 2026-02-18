@@ -35,8 +35,6 @@ export const users = pgTable(
     isServerOwner: boolean("isServerOwner").notNull().default(false),
     isServerAdmin: boolean("isServerAdmin").notNull().default(false),
 
-    // User preferences
-    locale: text("locale"), // User's preferred language (e.g., 'en', 'de')
     // Extensible user preferences (JSONB)
     preferences: jsonb("preferences").default(sql`'{}'::jsonb`),
 

@@ -204,6 +204,13 @@
       "when": 1770669631100,
       "tag": "0028_solid_mojo",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1771424928155,
+      "tag": "0029_bright_mach_iv",
+      "breakpoints": true
     }
   ]
 }

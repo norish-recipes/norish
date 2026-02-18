@@ -1,6 +1,7 @@
 import { AuthProviders } from "../providers/auth-providers";
 
 import { Navbar } from "@/components/navbar/navbar";
+import { TimerDock } from "@/components/timer-dock";
 import { UserProvider } from "@/context/user-context";
 import { HouseholdProvider } from "@/context/household-context";
 import { RecipesFiltersProvider } from "@/context/recipes-filters-context";
@@ -30,6 +31,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       {children}
                     </main>
                   </div>
+                  <TimerDock />
                 </RecipesContextProvider>
               </RecipesFiltersProvider>
             </PermissionsProvider>

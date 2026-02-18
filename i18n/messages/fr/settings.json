@@ -106,14 +106,18 @@
     "preferences": {
       "title": "Préférences",
       "description": "Personnalisez votre expérience.",
+      "language": {
+        "title": "Langue",
+        "description": "Choisissez votre langue préférée"
+      },
       "timers": {
         "title": "Activer les minuteries de recette",
         "description": "Afficher des minuteries interactives dans les instructions de la recette"
       },
-       "conversion": {
-         "title": "Afficher le bouton de conversion",
-         "description": "Afficher un bouton sur les pages de recettes pour convertir entre les systèmes de mesure"
-       },
+      "conversion": {
+        "title": "Afficher le bouton de conversion",
+        "description": "Afficher un bouton sur les pages de recettes pour convertir entre les systèmes de mesure"
+      },
       "applyError": "Échec de l'application du paramètre"
     }
   },

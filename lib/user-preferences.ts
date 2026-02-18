@@ -24,3 +24,11 @@ export function getShowConversionButtonPreference(
 
   return typeof value === "boolean" ? value : fallback;
 }
+
+export function getLocalePreference(
+  user: Pick<User, "preferences"> | null | undefined
+): string | null {
+  const value = getUserPreferences(user).locale;
+
+  return typeof value === "string" ? value : null;
+}
