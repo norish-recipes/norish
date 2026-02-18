@@ -1,21 +1,25 @@
 "use client";
 
 import { useCallback } from "react";
-import { Card, CardBody, CardHeader, Switch, Button } from "@heroui/react";
+import { Card, CardBody, CardHeader, Switch } from "@heroui/react";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
+
 import NewFeatureChip from "@/app/(app)/settings/components/new-feature-chip";
 import { useTimersEnabledQuery } from "@/hooks/config";
+import {
+  getShowConversionButtonPreference,
+  getTimersEnabledPreference,
+} from "@/lib/user-preferences";
 
 export default function PreferencesCard() {
   const t = useTranslations("settings.user.preferences");
   const { user, updatePreferences, isUpdatingPreferences } = useUserSettingsContext();
   const { globalEnabled } = useTimersEnabledQuery();
 
-  const timersEnabled = (user?.preferences as any)?.timersEnabled;
-  const effective = typeof timersEnabled === "boolean" ? timersEnabled : true;
+  const effective = getTimersEnabledPreference(user);
 
   const disabled = !globalEnabled;
 
@@ -29,8 +33,7 @@ export default function PreferencesCard() {
     [updatePreferences, disabled]
   );
 
-  const conversionEnabled = (user?.preferences as any)?.showConversionButton;
-  const conversionEffective = typeof conversionEnabled === "boolean" ? conversionEnabled : true;
+  const conversionEffective = getShowConversionButtonPreference(user);
 
   const handleConversionToggle = useCallback(
     async (value: boolean) => {
@@ -60,8 +63,8 @@ export default function PreferencesCard() {
 
             <div className="flex items-center gap-3">
               <Switch
-                isSelected={effective}
                 isDisabled={isUpdatingPreferences || disabled}
+                isSelected={effective}
                 onValueChange={(v) => handleToggle(v)}
               />
             </div>
@@ -75,8 +78,8 @@ export default function PreferencesCard() {
 
           <div className="flex items-center gap-3">
             <Switch
-              isSelected={conversionEffective}
               isDisabled={isUpdatingPreferences}
+              isSelected={conversionEffective}
               onValueChange={(v) => handleConversionToggle(v)}
             />
           </div>

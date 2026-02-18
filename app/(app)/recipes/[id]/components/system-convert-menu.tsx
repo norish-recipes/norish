@@ -17,7 +17,8 @@ import { useRecipeContextRequired } from "../context";
 import { MeasurementSystem } from "@/types";
 import { cssButtonPill, cssAIGradientText, cssAIIconColor } from "@/config/css-tokens";
 import { usePermissionsContext } from "@/context/permissions-context";
-import { useOptionalUserContext } from "@/context/user-context";
+import { useUserContext } from "@/context/user-context";
+import { getShowConversionButtonPreference } from "@/lib/user-preferences";
 
 type ConversionOption = {
   key: MeasurementSystem;
@@ -27,9 +28,8 @@ type ConversionOption = {
 
 export default function SystemConvertMenu() {
   const { recipe, convertingTo, startConversion } = useRecipeContextRequired();
-  const userContext = useOptionalUserContext();
-  const showConversionPref = (userContext?.user as any)?.preferences?.showConversionButton;
-  const showConversion = typeof showConversionPref === "boolean" ? showConversionPref : true;
+  const { user } = useUserContext();
+  const showConversion = getShowConversionButtonPreference(user);
   const { isAIEnabled } = usePermissionsContext();
   const t = useTranslations("recipes.convert");
 

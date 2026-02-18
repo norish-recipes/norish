@@ -100,6 +100,7 @@ describe("user procedures", () => {
       });
 
       const caller = t.createCallerFactory(testRouter)(ctx);
+
       getUserPreferences.mockResolvedValue({ timersEnabled: true });
 
       const result = await caller.get();

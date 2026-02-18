@@ -24,9 +24,9 @@ export function BaseProviders({ children, themeProps }: BaseProvidersProps) {
       <HeroUIProvider navigate={(path) => router.push(path)}>
         <TRPCProviderWrapper>
           <ToastProvider
+            maxVisibleToasts={1}
             placement="top-right"
             toastOffset={48}
-            maxVisibleToasts={1}
             toastProps={{ timeout: 5000 }}
           />
           {children}

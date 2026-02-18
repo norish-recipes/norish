@@ -20,9 +20,10 @@ import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
+
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export default function GeneralCard() {
   const t = useTranslations("settings.admin.general");

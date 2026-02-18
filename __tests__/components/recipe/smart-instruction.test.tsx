@@ -23,7 +23,7 @@ describe("SmartInstruction", () => {
 
   it("does not render timers when timers are disabled", () => {
     render(
-      <SmartInstruction text={"Bake for 10 minutes"} recipeId="r1" recipeName="R" stepIndex={0} />
+      <SmartInstruction recipeId="r1" recipeName="R" stepIndex={0} text={"Bake for 10 minutes"} />
     );
 
     expect(screen.queryByText("TIMER_CHIP")).toBeNull();

@@ -1,4 +1,5 @@
 export { useUserSettingsQuery, type UserSettingsData } from "./use-user-query";
+export { useUserCacheHelpers, type UserCacheHelpers } from "./use-user-cache";
 export { useUserMutations, type UserMutationsResult } from "./use-user-mutations";
 export { useLocale, type UseLocaleResult } from "./use-locale";
 export { useLocaleCookie, type UseLocaleCookieResult } from "./use-locale-cookie";

@@ -9,21 +9,24 @@ import {
   createMockUserSettingsData,
 } from "./test-utils";
 
+const mockUserQueryKey = [["user", "get"], { type: "query" }] as const;
+const mockAllergiesQueryKey = [["user", "getAllergies"], { type: "query" }] as const;
+
 // Mock tRPC provider
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     user: {
       get: {
-        queryKey: () => ["user", "get"],
+        queryKey: () => mockUserQueryKey,
         queryOptions: () => ({
-          queryKey: ["user", "get"],
+          queryKey: mockUserQueryKey,
           queryFn: async () => createMockUserSettingsData(),
         }),
       },
       getAllergies: {
-        queryKey: () => ["user", "getAllergies"],
+        queryKey: () => mockAllergiesQueryKey,
         queryOptions: () => ({
-          queryKey: ["user", "getAllergies"],
+          queryKey: mockAllergiesQueryKey,
           queryFn: async () => ({ allergies: [] }),
         }),
       },
@@ -57,7 +60,7 @@ describe("useUserMutations", () => {
         [createMockApiKey({ id: "key-1", name: "Test Key" })]
       );
 
-      queryClient.setQueryData(["user", "get"], initialData);
+      queryClient.setQueryData(mockUserQueryKey, initialData);
 
       const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
       const { result } = renderHook(() => useUserMutations(), {
@@ -92,7 +95,7 @@ describe("useUserMutations", () => {
         [createMockApiKey({ id: "key-1", name: "Test Key" })]
       );
 
-      queryClient.setQueryData(["user", "get"], initialData);
+      queryClient.setQueryData(mockUserQueryKey, initialData);
 
       const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
       const { result } = renderHook(() => useUserMutations(), {
@@ -125,7 +128,7 @@ describe("useUserMutations", () => {
         []
       );
 
-      queryClient.setQueryData(["user", "get"], initialData);
+      queryClient.setQueryData(mockUserQueryKey, initialData);
 
       const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
       const { result } = renderHook(() => useUserMutations(), {
@@ -147,26 +150,32 @@ describe("useUserMutations", () => {
       // Reset modules so we can remock the trpc provider for this test
       vi.resetModules();
 
+      // Track mutation calls so we can verify optimistic state before resolution
+      let capturedMutationFn: (() => void) | null = null;
+      const mutationPromise = new Promise<{ success: boolean }>((resolve) => {
+        capturedMutationFn = () => resolve({ success: false });
+      });
+
       // Provide a tRPC mock that returns a failing updatePreferences mutation
       vi.doMock("@/app/providers/trpc-provider", () => ({
         useTRPC: () => ({
           user: {
             get: {
-              queryKey: () => ["user", "get"],
+              queryKey: () => mockUserQueryKey,
               queryOptions: () => ({
-                queryKey: ["user", "get"],
+                queryKey: mockUserQueryKey,
                 queryFn: async () => ({ user: {} as any, apiKeys: [] }),
               }),
             },
             getAllergies: {
-              queryKey: () => ["user", "getAllergies"],
+              queryKey: () => mockAllergiesQueryKey,
               queryOptions: () => ({
-                queryKey: ["user", "getAllergies"],
+                queryKey: mockAllergiesQueryKey,
                 queryFn: async () => ({ allergies: [] }),
               }),
             },
             updatePreferences: {
-              mutationOptions: () => ({ mutationFn: async () => ({ success: false }) }),
+              mutationOptions: () => ({ mutationFn: () => mutationPromise }),
             },
             // minimal stubs for other used keys
             apiKeys: {
@@ -191,7 +200,90 @@ describe("useUserMutations", () => {
         []
       );
 
-      queryClient.setQueryData(["user", "get"], initialData);
+      queryClient.setQueryData(mockUserQueryKey, initialData);
+
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      const { result } = renderHook(() => useUserMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      // Start the mutation (don't await yet)
+      const resPromise = result.current.updatePreferences({ timersEnabled: false });
+
+      // Verify optimistic update was applied before mutation resolves
+      await vi.waitFor(() => {
+        const optimistic = queryClient.getQueryData(mockUserQueryKey) as any;
+
+        expect(optimistic.user.preferences.timersEnabled).toBe(false);
+      });
+
+      // Now resolve the mutation with failure
+      capturedMutationFn!();
+
+      const res = await resPromise;
+
+      expect(res.success).toBe(false);
+
+      // Ensure the cache was rolled back to the previous value
+      const after = queryClient.getQueryData(mockUserQueryKey);
+
+      expect(after).toEqual(initialData);
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: mockUserQueryKey });
+    });
+
+    it("merges server response into cache on successful preference update", async () => {
+      vi.resetModules();
+
+      const serverPreferences = { timersEnabled: false, showConversionButton: true };
+
+      vi.doMock("@/app/providers/trpc-provider", () => ({
+        useTRPC: () => ({
+          user: {
+            get: {
+              queryKey: () => mockUserQueryKey,
+              queryOptions: () => ({
+                queryKey: mockUserQueryKey,
+                queryFn: async () => ({ user: {} as any, apiKeys: [] }),
+              }),
+            },
+            getAllergies: {
+              queryKey: () => mockAllergiesQueryKey,
+              queryOptions: () => ({
+                queryKey: mockAllergiesQueryKey,
+                queryFn: async () => ({ allergies: [] }),
+              }),
+            },
+            updatePreferences: {
+              mutationOptions: () => ({
+                mutationFn: async () => ({
+                  success: true,
+                  preferences: serverPreferences,
+                }),
+              }),
+            },
+            apiKeys: {
+              create: { mutationOptions: vi.fn() },
+              delete: { mutationOptions: vi.fn() },
+              toggle: { mutationOptions: vi.fn() },
+            },
+            updateName: { mutationOptions: vi.fn() },
+            uploadAvatar: { mutationOptions: vi.fn() },
+            deleteAvatar: { mutationOptions: vi.fn() },
+            deleteAccount: { mutationOptions: vi.fn() },
+            setAllergies: { mutationOptions: vi.fn() },
+          },
+        }),
+      }));
+
+      const { useUserMutations } = await import("@/hooks/user/use-user-mutations");
+
+      const initialData = createMockUserSettingsData(
+        createMockUser({ id: "user-1", name: "Test User", preferences: { timersEnabled: true } }),
+        []
+      );
+
+      queryClient.setQueryData(mockUserQueryKey, initialData);
 
       const { result } = renderHook(() => useUserMutations(), {
         wrapper: createTestWrapper(queryClient),
@@ -199,11 +291,13 @@ describe("useUserMutations", () => {
 
       const res = await result.current.updatePreferences({ timersEnabled: false });
 
-      expect(res.success).toBe(false);
+      expect(res.success).toBe(true);
+      expect(res.preferences).toEqual(serverPreferences);
 
-      // Ensure the cache was rolled back to the previous value
-      const after = queryClient.getQueryData(["user", "get"]);
-      expect(after).toEqual(initialData);
+      // Cache should reflect server-returned preferences
+      const after = queryClient.getQueryData(mockUserQueryKey) as any;
+
+      expect(after.user.preferences).toEqual(serverPreferences);
     });
   });
 });

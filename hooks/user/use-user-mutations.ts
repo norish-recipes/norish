@@ -2,10 +2,12 @@
 
 import type { User } from "@/types";
 import type { ApiKeyMetadataDto } from "@/server/trpc/routers/user/types";
+import type { UserPreferencesDto } from "@/server/db/zodSchemas/user";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
-import { useUserSettingsQuery } from "./use-user-query";
+import { useUserCacheHelpers } from "./use-user-cache";
+import { getUserPreferences } from "@/lib/user-preferences";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 
@@ -30,8 +32,8 @@ export type UserMutationsResult = {
 
   // Preferences
   updatePreferences: (
-    preferences: Record<string, unknown>
-  ) => Promise<{ success: boolean; preferences?: Record<string, unknown>; error?: string }>;
+    preferences: Partial<UserPreferencesDto>
+  ) => Promise<{ success: boolean; preferences?: UserPreferencesDto; error?: string }>;
 
   // Loading states
   isUpdatingName: boolean;
@@ -51,8 +53,8 @@ export type UserMutationsResult = {
  */
 export function useUserMutations(): UserMutationsResult {
   const trpc = useTRPC();
-  const { setUserSettingsData, invalidate, allergiesQueryKey } = useUserSettingsQuery();
-  const queryClient = useQueryClient();
+  const { setUserSettingsData, setAllergiesData, getUserSettingsData, invalidate } =
+    useUserCacheHelpers();
 
   // Profile mutations
   const updateNameMutation = useMutation(trpc.user.updateName.mutationOptions());
@@ -201,7 +203,7 @@ export function useUserMutations(): UserMutationsResult {
         const result = await setAllergiesMutation.mutateAsync({ allergies });
 
         if (result.success) {
-          queryClient.setQueryData(allergiesQueryKey, { allergies: result.allergies });
+          setAllergiesData(() => ({ allergies: result.allergies ?? [] }));
           // Household and calendar updates are handled via WebSocket subscription (onAllergiesUpdated)
         }
 
@@ -213,10 +215,8 @@ export function useUserMutations(): UserMutationsResult {
 
     // Preferences
     updatePreferences: async (preferences) => {
-      const queryKey = ["user", "get"] as const;
-
       // Save previous for rollback
-      const previous = queryClient.getQueryData(queryKey);
+      const previous = getUserSettingsData();
 
       try {
         // Optimistic update
@@ -227,23 +227,35 @@ export function useUserMutations(): UserMutationsResult {
             ...prev,
             user: {
               ...prev.user,
-              preferences: { ...((prev.user.preferences as any) ?? {}), ...(preferences as any) },
+              preferences: { ...getUserPreferences(prev.user), ...preferences },
             },
-          } as any;
+          };
         });
 
         const result = await updatePreferencesMutation.mutateAsync({ preferences });
 
         if (!result.success) {
           // Rollback immediately to previous cached value
-          queryClient.setQueryData(queryKey, previous);
+          setUserSettingsData(() => previous);
           invalidate();
+        } else {
+          setUserSettingsData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  user: {
+                    ...prev.user,
+                    preferences: { ...getUserPreferences(prev.user), ...result.preferences },
+                  },
+                }
+              : prev
+          );
         }
 
         return result;
       } catch (error) {
         // Rollback on error
-        queryClient.setQueryData(queryKey, previous);
+        setUserSettingsData(() => previous);
         invalidate();
 
         return { success: false, error: String(error) };

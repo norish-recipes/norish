@@ -25,6 +25,7 @@ import { UserMinusIcon, ShieldCheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
+
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export default function MembersCard() {

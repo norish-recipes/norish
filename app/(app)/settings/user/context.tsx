@@ -2,6 +2,7 @@
 
 import type { User } from "@/types";
 import type { ApiKeyMetadataDto } from "@/server/trpc/routers/user/types";
+import type { UserPreferencesDto } from "@/server/db/zodSchemas/user";
 
 import { createContext, useContext, ReactNode, useCallback } from "react";
 // Use centralized error toast helper instead of manual toasts
@@ -9,7 +10,6 @@ import { useTranslations } from "next-intl";
 
 import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 import { useUserMutations } from "@/hooks/user/use-user-mutations";
-import { useUserContext } from "@/context/user-context";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 type UserSettingsContextType = {
@@ -27,7 +27,7 @@ type UserSettingsContextType = {
   toggleApiKey: (keyId: string, enabled: boolean) => void;
   deleteAccount: () => void;
   updateAllergies: (allergies: string[]) => Promise<void>;
-  updatePreferences: (preferences: Record<string, unknown>) => Promise<void>;
+  updatePreferences: (preferences: Partial<UserPreferencesDto>) => Promise<void>;
 
   // Loading states
   isUpdatingName: boolean;
@@ -44,8 +44,6 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
   const tErrors = useTranslations("common.errors");
   const { user, apiKeys, allergies, isLoading } = useUserSettingsQuery();
   const mutations = useUserMutations();
-  const { setUser } = useUserContext();
-  const t = useTranslations("settings.user.preferences");
 
   const showSettingsError = useCallback(
     (error: unknown, context: string) => {
@@ -76,16 +74,14 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
       try {
         const result = await mutations.updateName(name);
 
-        if (result.success && result.user) {
-          setUser(result.user);
-        } else if (result.error) {
+        if (!result.success && result.error) {
           showSettingsError(result.error, "user-settings:update-name");
         }
       } catch (error) {
         showSettingsError(error, "user-settings:update-name");
       }
     },
-    [mutations, setUser, showSettingsError, tErrors]
+    [mutations, showSettingsError, tErrors]
   );
 
   const updateImage = useCallback(
@@ -93,9 +89,7 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
       try {
         const result = await mutations.uploadAvatar(file);
 
-        if (result.success && result.user) {
-          setUser(result.user);
-        } else if (result.error) {
+        if (!result.success && result.error) {
           showSettingsError(result.error, "user-settings:upload-avatar");
           throw new Error(result.error);
         }
@@ -104,7 +98,7 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     },
-    [mutations, setUser, showSettingsError]
+    [mutations, showSettingsError]
   );
 
   const generateApiKey = useCallback(
@@ -168,46 +162,27 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
   );
 
   const updatePreferences = useCallback(
-    async (preferences: Record<string, unknown>) => {
+    async (preferences: Partial<UserPreferencesDto>) => {
       try {
-        const result = await mutations.updatePreferences(preferences as any);
+        const result = await mutations.updatePreferences(preferences);
 
-        if (result.success) {
-          // Apply to user in top-level user context
-          if (result.preferences && typeof result.preferences === "object") {
-            setUser((prev) => (prev ? { ...prev, preferences: result.preferences as any } : prev));
-          }
-        } else if (result.error) {
-          showSafeErrorToast({
-            title: t("applyError"),
-            description: result.error,
-            error: result.error,
-            context: "user-settings:update-preferences",
-            color: "danger",
-          });
+        if (!result.success && result.error) {
+          showSettingsError(result.error, "user-settings:update-preferences");
         }
 
         return;
       } catch (error) {
-        showSafeErrorToast({
-          title: t("applyError"),
-          description: (error as Error).message,
-          error,
-          context: "user-settings:update-preferences",
-          color: "danger",
-        });
+        showSettingsError(error, "user-settings:update-preferences");
       }
     },
-    [mutations, setUser]
+    [mutations, showSettingsError]
   );
 
   const deleteImage = useCallback(async () => {
     try {
       const result = await mutations.deleteAvatar();
 
-      if (result.success && result.user) {
-        setUser(result.user);
-      } else if (result.error) {
+      if (!result.success && result.error) {
         showSettingsError(result.error, "user-settings:delete-avatar");
         throw new Error(result.error);
       }
@@ -215,7 +190,7 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
       showSettingsError(error, "user-settings:delete-avatar");
       throw error;
     }
-  }, [mutations, setUser, showSettingsError]);
+  }, [mutations, showSettingsError]);
 
   return (
     <UserSettingsContext.Provider

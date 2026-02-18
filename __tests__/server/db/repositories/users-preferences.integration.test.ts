@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
+import { eq } from "drizzle-orm";
 
 import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
 import { getTestDb } from "@/__tests__/helpers/db-test-helpers";
 import { users } from "@/server/db/schema";
-import { eq } from "drizzle-orm";
 import { getUserPreferences, updateUserPreferences } from "@/server/db/repositories/users";
 
 describe("User preferences - DB integration", () => {
@@ -17,6 +17,7 @@ describe("User preferences - DB integration", () => {
 
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
+
     userId = user.id;
   });
 

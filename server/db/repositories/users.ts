@@ -4,11 +4,11 @@ import { eq, and, inArray, sql } from "drizzle-orm";
 
 import { db } from "../drizzle";
 import { users, accounts } from "../schema/auth";
-import { authLogger } from "@/server/logger";
 import { ServerConfigKeys } from "../zodSchemas/server-config";
 
 import { setConfig } from "./server-config";
 
+import { authLogger } from "@/server/logger";
 import { encrypt, hmacIndex, decrypt } from "@/server/auth/crypto";
 
 // BetterAuth-compatible user type for adapter operations

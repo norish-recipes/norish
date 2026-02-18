@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
+import { getTimersEnabledPreference } from "@/lib/user-preferences";
 
 /**
  * Hook to check if recipe timers are enabled globally AND for the current user.
@@ -21,13 +22,12 @@ export function useTimersEnabledQuery() {
   });
 
   const globalEnabled = data ?? true;
-  const userPrefEnabled = (user?.preferences as any)?.timersEnabled;
+  const userPrefEnabled = getTimersEnabledPreference(user);
 
-  const isTimersEnabled =
-    globalEnabled && (typeof userPrefEnabled === "boolean" ? userPrefEnabled : true);
+  const isTimersEnabled = globalEnabled && userPrefEnabled;
 
   return {
-    timersEnabled: isTimersEnabled ,
+    timersEnabled: isTimersEnabled,
     globalEnabled,
     isLoading,
     error,

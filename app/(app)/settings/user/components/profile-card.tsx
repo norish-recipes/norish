@@ -27,7 +27,7 @@ export default function ProfileCard() {
       setName(user.name);
     }
   }, [user?.name]);
-  
+
   const handleSaveProfile = async () => {
     const hasNameChanges = name !== user?.name;
     const hasImageChanges = pendingImageFile !== null;

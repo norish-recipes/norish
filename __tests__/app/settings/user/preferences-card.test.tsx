@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 import PreferencesCard from "@/app/(app)/settings/user/components/preferences-card";
@@ -96,6 +96,28 @@ describe("PreferencesCard", () => {
     // Timer toggle should not be rendered, but conversion toggle may still be present
     const titleDiv = screen.queryByText("timers.title");
     const timersToggle = titleDiv?.closest("div")?.parentElement?.querySelector("button") ?? null;
+
     expect(timersToggle).toBeNull();
+  });
+
+  it("toggles showConversionButton preference", async () => {
+    mockContext.user = { preferences: { timersEnabled: true, showConversionButton: true } } as any;
+
+    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+
+    render(<PreferencesCard />);
+
+    // The second toggle controls conversion button visibility
+    const toggles = screen.getAllByRole("button", { name: /toggle/i });
+    const conversionToggle = toggles[1];
+
+    expect(conversionToggle).toHaveAttribute("aria-pressed", "true");
+    expect(conversionToggle).not.toBeDisabled();
+
+    fireEvent.click(conversionToggle);
+
+    await waitFor(() => {
+      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ showConversionButton: false });
+    });
   });
 });

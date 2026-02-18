@@ -1,5 +1,11 @@
 import z from "zod";
-import { UserPreferencesSchema } from "./user-preferences";
+
+export const UserPreferencesSchema = z.object({
+  timersEnabled: z.boolean().optional(),
+  showConversionButton: z.boolean().optional(),
+});
+
+export type UserPreferencesDto = z.infer<typeof UserPreferencesSchema>;
 
 // Not using createSelectSchema as we use encrypted fields and want to expose only decrypted ones
 // Placed in db zod schemas as this is related to the user table and for ease of finding.
