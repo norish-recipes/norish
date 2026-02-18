@@ -503,7 +503,7 @@
         "openai": "OpenAI Whisper",
         "groq": "Groq Whisper",
         "azure": "Azure OpenAI Whisper",
-        "ollama": "올라마",
+        "ollama": "Ollama",
         "genericOpenai": "일반 OpenAI 호환"
       },
       "transcriptionEndpoint": "엔드포인트 URL",
