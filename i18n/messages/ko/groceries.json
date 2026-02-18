@@ -1,0 +1,78 @@
+{
+  "page": {
+    "title": "장보기",
+    "addItem": "항목 추가",
+    "addItems": "항목 추가",
+    "viewByStore": "매장별",
+    "viewByRecipe": "레시피별",
+    "viewMode": "보기 모드",
+    "manageStores": "매장 관리",
+    "storeViewOptions": "매장 보기 옵션",
+    "groupIngredients": "재료 묶기"
+  },
+  "empty": {
+    "title": "아직 장보기 목록이 비어 있어요",
+    "description": "시작하려면 위의 '항목 추가' 버튼을 사용하여 항목을 추가하세요.",
+    "manual": "직접 추가한 항목"
+  },
+  "item": {
+    "unnamedItem": "이름이 없는 항목",
+    "fromRecipes": "총 {count, plural, one {#개 레시피} other {#개 레시피}} 기준",
+    "items": "{count, plural, one {#개 항목} other {#개 항목}}"
+  },
+  "store": {
+    "unsorted": "정렬되지 않음",
+    "noItems": "이 매장에는 상품이 없습니다.",
+    "storeActions": "매장 작업",
+    "markAllDone": "모두 완료로 표시",
+    "deleteDone": "삭제 완료",
+    "done": "{count}개 완료"
+  },
+  "storeManager": {
+    "title": "매장 관리",
+    "addStore": "매장 추가",
+    "editStore": "매장 편집",
+    "deleteStore": "매장 삭제",
+    "storeName": "매장명",
+    "storeNamePlaceholder": "예: 슈퍼마켓",
+    "storeColor": "색상",
+    "storeIcon": "아이콘",
+    "confirmDelete": "{storeName}을(를) 삭제하시겠습니까?",
+    "deleteWarning": "이 매장의 항목은 미분류로 이동됩니다.",
+    "noStoresYet": "아직 매장이 없습니다.",
+    "createStoreHint": "장보기 목록을 정리할 매장을 만드세요",
+    "hasItems": "이 매장에는 {count}개의 항목이 있습니다.",
+    "hasItemsPlural": "이 매장에는 {count}개의 항목이 있습니다.",
+    "whatToDo": "해당 항목을 어떻게 처리하시겠습니까?",
+    "keepItems": "항목 유지",
+    "keepItemsDescription": "항목을 정렬되지 않음으로 이동",
+    "deleteItems": "항목 삭제",
+    "deleteItemsDescription": "이 매장의 모든 항목을 제거합니다",
+    "noItems": "이 매장에는 항목이 없습니다.",
+    "create": "만들기"
+  },
+  "panel": {
+    "addTitle": "장보기 추가",
+    "editTitle": "장보기 편집",
+    "itemName": "품목 이름",
+    "itemNamePlaceholder": "예: 우유, 계란, 빵...",
+    "selectStore": "매장 선택",
+    "noStore": "매장 없음",
+    "recurrence": "반복",
+    "savePreference": "이 항목의 매장 기억",
+    "addAnother": "하나 더 추가",
+    "addRepeat": "+ 반복 추가",
+    "storeOptional": "매장(선택사항)",
+    "autoDetectFromHistory": "기록에서 자동 감지",
+    "autoDetectOrSelect": "자동 감지 또는 선택",
+    "placeholder": "예: 닭 가슴살 2파운드",
+    "editPlaceholder": "예: 매주 우유",
+    "servings": "인분",
+    "loadingIngredients": "재료 불러오는 중...",
+    "noIngredients": "재료가 없습니다.",
+    "addSelectedToGroceries": "장보기에 추가",
+    "ingredientsAdded": "장보기 목록에 재료가 추가되었습니다.",
+    "ingredientsFailed": "장보기 목록에 재료를 추가하지 못했습니다.",
+    "addToGroceries": "장보기에 추가"
+  }
+}

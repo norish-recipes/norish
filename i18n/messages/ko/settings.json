@@ -1,0 +1,543 @@
+{
+  "page": {
+    "title": "설정",
+    "loading": "불러오는 중...",
+    "ariaLabel": "설정 탭"
+  },
+  "tabs": {
+    "user": "사용자",
+    "household": "가구",
+    "caldav": "CalDAV",
+    "admin": "관리자"
+  },
+  "user": {
+    "profile": {
+      "title": "프로필",
+      "nameLabel": "이름",
+      "namePlaceholder": "이름",
+      "emailLabel": "이메일",
+      "avatarHint": "사진을 변경하려면 아바타를 클릭하세요.",
+      "deleteAvatar": "프로필 사진 삭제",
+      "saveChanges": "변경사항 저장"
+    },
+    "allergies": {
+      "title": "알러지",
+      "description": "알러지 유발 물질이 포함된 레시피를 계획할 때 경고를 받으려면 음식 알러지를 추가하세요. 이 정보는 계획된 레시피에 내 알러지와 일치하는 재료가 포함되어 있을 때 경고하는 데 사용됩니다.",
+      "placeholder": "알러지를 입력하세요 (예: 글루텐, 견과류, 유제품)...",
+      "saveButton": "알러지 저장"
+    },
+    "apiKeys": {
+      "title": "API 키",
+      "description": "API 키를 사용하면 Norish API에 프로그래밍 방식으로 접근할 수 있습니다. 통합, 바로가기, 자동화에 사용하세요.",
+      "keyNameLabel": "키 이름(선택사항)",
+      "keyNamePlaceholder": "예: iOS 단축키",
+      "createKey": "키 만들기",
+      "yourKeys": "내 API 키",
+      "noKeys": "아직 API 키가 없습니다. 시작하려면 API 키를 생성하세요.",
+      "tableHeaders": {
+        "name": "이름",
+        "keyPrefix": "키 접두사",
+        "created": "생성일",
+        "status": "상태",
+        "actions": "작업"
+      },
+      "unnamed": "이름 없음",
+      "active": "활성",
+      "disabled": "비활성",
+      "disableKey": "키 비활성화",
+      "enableKey": "키 활성화",
+      "deleteKey": "키 삭제",
+      "generatedModal": {
+        "title": "API 키 생성됨",
+        "warning": "지금 이 키를 저장하세요! 다시는 볼 수 없습니다. 해시만 저장하며 이 키를 복구할 수 없습니다.",
+        "hint": "API 요청 시 <code>x-api-key</code> 헤더에 이 키를 사용하세요.",
+        "confirmButton": "저장했어요"
+      },
+      "deleteModal": {
+        "title": "API 키 삭제",
+        "message": "이 API 키를 삭제하시겠습니까? 이를 사용하는 모든 애플리케이션은 즉시 접근 권한을 잃게 됩니다. 이 작업은 취소할 수 없습니다.",
+        "confirmButton": "키 삭제"
+      }
+    },
+    "archiveImport": {
+      "title": "레시피 아카이브 가져오기",
+      "description": "Mela(.melarecipes), Paprika(.paprikarecipes) 또는 Mealie/Tandoor(.zip) 내보내기에서 레시피 가져오기"
+    },
+    "siteAuthTokens": {
+      "title": "사이트 인증 토큰",
+      "description": "특정 사이트에서 레시피를 가져올 때 전송되는 헤더나 쿠키를 추가하세요. 로그인이 필요한 사이트(예: Instagram, Facebook)에 유용합니다.",
+      "domain": "도메인",
+      "domainPlaceholder": "예: instagram.com",
+      "name": "이름",
+      "namePlaceholder": "예: Cookie 또는 Authorization",
+      "value": "값",
+      "valuePlaceholder": "토큰 또는 쿠키 값",
+      "type": "유형",
+      "typeHeader": "헤더",
+      "typeCookie": "쿠키",
+      "addButton": "토큰 추가",
+      "noTokens": "설정된 사이트 인증 토큰이 없습니다.",
+      "tableHeaders": {
+        "domain": "도메인",
+        "name": "이름",
+        "type": "유형",
+        "created": "생성일",
+        "actions": "작업"
+      },
+      "deleteModal": {
+        "title": "토큰 삭제",
+        "message": "이 인증 토큰을 삭제하시겠습니까? 이 사이트에서 가져오기가 작동하지 않을 수 있습니다.",
+        "confirmButton": "토큰 삭제"
+      }
+    },
+    "dangerZone": {
+      "title": "위험 구역",
+      "description": "계정을 삭제하면 되돌릴 수 없습니다. 신중하게 결정해 주세요.",
+      "deleteButton": "내 계정 삭제",
+      "deleteModal": {
+        "title": "계정 삭제",
+        "permanentWarning": "이 작업은 영구적이며 취소할 수 없습니다!",
+        "dataWarning": "장보기, 캘린더 항목, 메모를 포함한 개인 데이터가 영구적으로 삭제됩니다.",
+        "recipesNote": "내가 만든 레시피는 보존되지만 더 이상 계정에 연결되지 않습니다.",
+        "adminNote": "다른 구성원이 있는 가구의 관리자인 경우 먼저 관리자 권한을 이전해야 합니다.",
+        "confirmButton": "내 계정 삭제"
+      }
+    }
+  },
+  "household": {
+    "pageTitle": "가구 설정",
+    "info": {
+      "yourRole": "내 역할",
+      "admin": "관리자",
+      "member": "회원",
+      "members": "회원",
+      "leaveButton": "가구 나가기",
+      "leaveModal": {
+        "title": "가구 나가기",
+        "confirmMessage": "정말로 {name}에서 나가시겠습니까?",
+        "adminWarning": "관리자 권한을 보유하고 있습니다. 떠나기 전에 관리자 권한을 이전해야 합니다.",
+        "confirmButton": "가구 나가기"
+      }
+    },
+    "members": {
+      "title": "구성원",
+      "tableHeaders": {
+        "name": "이름",
+        "role": "역할",
+        "actions": "작업"
+      },
+      "you": "나",
+      "kickButton": "내보내기",
+      "makeAdminButton": "관리자로 만들기",
+      "kickModal": {
+        "title": "사용자 내보내기",
+        "confirmMessage": "정말로 {name}을(를) 가구에서 내보내시겠습니까?",
+        "warning": "모든 공유 레시피, 장보기, 캘린더 항목에 접근할 수 없게 됩니다.",
+        "confirmButton": "사용자 내보내기"
+      },
+      "transferModal": {
+        "title": "관리자 권한 이전",
+        "confirmMessage": "관리자 권한을 {name}에 이전하시겠습니까?",
+        "warning": "일반 구성원이 되며 더 이상 사용자를 내보내거나 참여 코드를 관리할 수 없습니다.",
+        "confirmButton": "관리자 이전"
+      },
+      "toasts": {
+        "kickFailed": "사용자를 내보내지 못했습니다.",
+        "transferSuccess": "관리자를 {name}(으)로 이전했습니다.",
+        "transferFailed": "관리자를 이전하지 못했습니다."
+      }
+    },
+    "joinCode": {
+      "title": "참여 코드",
+      "shareDescription": "이 코드를 다른 사람과 공유하여 가구에 초대하세요.",
+      "expiresIn": "만료까지:",
+      "regenerateButton": "재생성",
+      "expired": "만료됨",
+      "noCodeDescription": "활성 참여 코드가 없습니다. 새 구성원을 초대하려면 코드를 생성하세요.",
+      "generateButton": "참여 코드 만들기"
+    },
+    "create": {
+      "title": "가구 만들기",
+      "description": "새 가구를 만들어 가족이나 친구와 레시피와 장보기 목록을 공유하세요.",
+      "nameLabel": "가구 이름",
+      "namePlaceholder": "예: 스미스 가구",
+      "submitButton": "가구 만들기"
+    },
+    "join": {
+      "title": "가구 참여",
+      "description": "기존 가구에 참여하려면 참여 코드를 입력하세요.",
+      "codeLabel": "참여 코드",
+      "codePlaceholder": "8자리 코드",
+      "submitButton": "가구 참여"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "CalDAV 동기화 설정",
+      "description": "CalDAV 호환 캘린더를 연결하여 식사 계획을 자동으로 동기화하세요.",
+      "gettingStarted": "CalDAV 시작하기",
+      "providerDescription": "CalDAV 호환 캘린더 서비스가 필요합니다. 인기 있는 제공업체는 다음과 같습니다.",
+      "serverUrlLabel": "서버 URL",
+      "serverUrlDescription": "CalDAV 서버의 기본 URL(예: https://dav.example.com)",
+      "serverUrlPlaceholder": "https://dav.example.com",
+      "usernameLabel": "사용자 이름",
+      "usernamePlaceholder": "사용자 이름",
+      "passwordLabel": "비밀번호",
+      "passwordPlaceholder": "비밀번호를 입력하세요",
+      "calendarLabel": "달력",
+      "calendarPlaceholder": "달력을 선택하세요",
+      "calendarPlaceholderDisabled": "먼저 연결을 테스트하세요",
+      "calendarDescription": "식사 계획을 동기화할 캘린더를 선택하세요",
+      "calendarDescriptionDisabled": "사용 가능한 캘린더를 로드하기 위한 연결 테스트",
+      "timeFormat": "형식: HH:MM-HH:MM",
+      "timeFormatError": "형식은 HH:MM-HH:MM이어야 합니다.",
+      "breakfastTime": "아침 식사 시간",
+      "lunchTime": "점심시간",
+      "dinnerTime": "저녁 식사 시간",
+      "snackTime": "간식 시간",
+      "testConnection": "연결 테스트",
+      "saveConfiguration": "구성 저장"
+    },
+    "config": {
+      "title": "CalDAV 구성",
+      "editTitle": "CalDAV 구성 편집",
+      "serverUrl": "서버 URL",
+      "enabled": "활성화됨",
+      "disabled": "비활성",
+      "editButton": "편집",
+      "deleteButton": "삭제",
+      "saveChanges": "변경사항 저장",
+      "advancedSettings": "고급 설정",
+      "timezone": "시간대: {timezone}",
+      "connectionStatus": {
+        "connected": "연결됨",
+        "checking": "확인 중...",
+        "disconnected": "연결이 끊김",
+        "unknown": "알 수 없음"
+      }
+    },
+    "deleteModal": {
+      "title": "CalDAV 구성 삭제",
+      "confirmMessage": "CalDAV 구성을 삭제하시겠습니까?",
+      "deleteEventsLabel": "동기화된 이벤트 삭제",
+      "deleteEventsDescription": "CalDAV 캘린더에 생성된 모든 이벤트 제거",
+      "confirmButton": "삭제"
+    },
+    "syncStatus": {
+      "title": "동기화 상태",
+      "syncNow": "지금 동기화",
+      "clearFilter": "필터 지우기",
+      "clickToFilter": "필터링하려면 배지를 클릭하세요.",
+      "showingItems": "{total} 항목 중 {start}-{end} 표시 중",
+      "tableHeaders": {
+        "item": "항목",
+        "type": "유형",
+        "date": "날짜",
+        "meal": "식사",
+        "status": "상태",
+        "lastSync": "마지막 동기화",
+        "error": "오류"
+      },
+      "statuses": {
+        "synced": "동기화됨",
+        "pending": "보류 중",
+        "failed": "실패",
+        "removed": "제거됨"
+      },
+      "emptyFiltered": "{status} 항목을 찾을 수 없습니다.",
+      "emptyDefault": "동기화 기록을 찾을 수 없습니다.",
+      "errorDetails": "오류 세부정보"
+    }
+  },
+  "admin": {
+    "general": {
+      "title": "일반",
+      "allowRegistration": "신규 사용자 등록 허용",
+      "registrationDescription": "비활성화되면 기존 사용자만 로그인할 수 있습니다.",
+      "locales": "활성화된 언어",
+      "localesDescription": "사용자가 선택할 수 있는 언어 선택",
+      "defaultLocale": "기본 언어",
+      "defaultLocaleDescription": "신규 사용자 및 대체 언어로 사용되는 언어",
+      "saveLocales": "언어 설정 저장",
+      "localesSaved": "언어 설정이 저장되었습니다",
+      "localesError": "언어 설정을 저장하지 못했습니다.",
+      "atLeastOneLocale": "하나 이상의 언어를 활성화해야 합니다."
+    },
+    "registration": {
+      "title": "등록",
+      "allowRegistration": "신규 사용자 등록 허용",
+      "description": "비활성화되면 기존 사용자만 로그인할 수 있습니다."
+    },
+    "permissions": {
+      "title": "레시피 권한",
+      "description": "레시피를 보고, 편집하고, 삭제할 수 있는 사람을 제어합니다. 서버 관리자는 항상 전체 접근 권한을 갖습니다.",
+      "viewRecipes": "레시피 보기",
+      "viewDescription": "대시보드에서 레시피를 볼 수 있는 사람",
+      "editRecipes": "레시피 편집",
+      "editDescription": "레시피 세부정보를 수정할 수 있는 사람",
+      "deleteRecipes": "레시피 삭제",
+      "deleteDescription": "레시피를 삭제할 수 있는 사람",
+      "levels": {
+        "everyone": "모든 사람",
+        "everyoneDescription": "인증된 모든 사용자",
+        "household": "가구",
+        "householdDescription": "레시피 소유자와 가구 구성원",
+        "owner": "소유자만",
+        "ownerDescription": "레시피 소유자만"
+      },
+      "note": "참고: 장보기 및 달력 항목은 자동으로 가구 규칙을 따르며, 가구 구성원은 언제든지 같은 가구에 속한 모든 사람의 항목을 편집/삭제할 수 있습니다."
+    },
+    "system": {
+      "title": "시스템 설정",
+      "cleanup": {
+        "title": "정리 스케줄러",
+        "label": "정리 기간(월)",
+        "description": "이 개월보다 오래된 계획된 식사 삭제"
+      },
+      "server": {
+        "title": "서버 관리",
+        "restartLabel": "서버 다시 시작",
+        "restartDescription": "다시 시작해야 하는 구성 변경 사항 적용",
+        "restartButton": "서버 다시 시작"
+      }
+    },
+    "restart": {
+      "title": "서버 다시 시작",
+      "confirmMessage": "서버를 다시 시작하시겠습니까?",
+      "importantTitle": "중요:",
+      "warning1": "모든 활성 연결이 끊어집니다.",
+      "warning2": "몇 초 동안 서버를 사용할 수 없습니다.",
+      "warning3": "배포에 <code>restart: Always</code>가 구성되어 있는지 확인하세요. 그렇지 않으면 서버가 자동으로 온라인 상태로 돌아오지 않습니다.",
+      "confirmButton": "지금 다시 시작"
+    },
+    "authProviders": {
+      "title": "인증 제공자",
+      "requiresRestart": "다시 시작해야 함",
+      "description": "인증 방법을 구성합니다. 변경 사항을 적용하려면 서버를 다시 시작해야 합니다.",
+      "passwordAuth": {
+        "title": "이메일 및 비밀번호",
+        "description": "사용자가 이메일과 비밀번호로 로그인하도록 허용"
+      },
+      "oauthDescription": "SSO 인증을 위한 OAuth 제공업체를 구성합니다.",
+      "oidc": {
+        "title": "OIDC 제공업체",
+        "subtitle": "일반 OpenID Connect",
+        "fields": {
+          "name": "제공자 이름",
+          "namePlaceholder": "예: Authentik, Keycloak",
+          "issuer": "발급자 URL",
+          "issuerPlaceholder": "https://your-idp.com",
+          "clientId": "클라이언트 ID",
+          "clientSecret": "클라이언트 시크릿",
+          "wellknown": "Well-known URL(선택사항)",
+          "wellknownPlaceholder": "설정되지 않은 경우 발급자로부터 자동 파생됨"
+        },
+        "claimMapping": {
+          "title": "클레임 매핑",
+          "description": "OIDC 클레임을 기반으로 역할과 가구를 자동으로 할당합니다. admin 그룹의 사용자는 서버 관리자 권한을 얻습니다. 가구 그룹이 있는 사용자는 해당 가구에 자동으로 추가됩니다.",
+          "securityWarning": "경고: 클레임 매핑을 활성화하면 OIDC 제공업체가 관리자 권한과 가구 구성원을 제어할 수 있습니다. OIDC 제공업체를 완전히 신뢰하고 그룹 클레임을 올바르게 구성한 경우에만 이 기능을 활성화하세요.",
+          "scopes": "추가 범위",
+          "scopesPlaceholder": "그룹, 역할",
+          "scopesDescription": "요청할 추가 OAuth 범위의 쉼표로 구분된 목록(예: Keycloak 그룹)",
+          "groupsClaim": "그룹 클레임",
+          "groupsClaimDescription": "사용자 그룹/역할을 포함하는 클레임 ​​이름",
+          "adminGroup": "관리자 그룹",
+          "adminGroupDescription": "서버 관리자 역할을 부여하는 그룹 이름(대소문자 구분 없음)",
+          "householdPrefix": "가구 접두사",
+          "householdPrefixDescription": "가구 그룹명에 사용되는 접두사 (예: norish_household_family → 'family' 가구로 매핑)"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "GitHub OAuth",
+        "fields": {
+          "clientId": "클라이언트 ID",
+          "clientSecret": "클라이언트 시크릿"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "Google OAuth",
+        "fields": {
+          "clientId": "클라이언트 ID",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "클라이언트 시크릿"
+        }
+      },
+      "form": {
+        "testSuccess": "연결 성공",
+        "removeTitle": "{provider} 제거",
+        "removeConfirm": "이 제공업체를 제거하시겠습니까?"
+      },
+      "envBadge": {
+        "db": "DB에서 관리",
+        "env": "환경 변수로 관리"
+      }
+    },
+    "contentDetection": {
+      "title": "콘텐츠 감지",
+      "description": "웹 페이지에서 레시피를 감지하고 구문 분석하는 방법을 구성합니다.",
+      "contentIndicators": {
+        "title": "콘텐츠 표시기",
+        "subtitle": "레시피 페이지를 식별하는 키워드",
+        "description": "스키마 표시기는 구조화된 레시피 데이터(JSON-LD, 마이크로데이터)를 감지합니다. 콘텐츠 표시기는 페이지에 레시피가 포함되어 있음을 암시하는 키워드입니다.",
+        "timersEnabled": {
+          "title": "레시피 타이머 활성화",
+          "description": "레시피에서 대화형 타이머를 감지하고 표시합니다."
+        }
+      },
+      "units": {
+        "title": "측정 단위",
+        "subtitle": "구문 분석을 위한 측정 단위 정의",
+        "description": "짧은 형식, 복수형 및 대체 철자로 측정 단위를 정의합니다. 성분 수량을 분석할 때 사용됩니다."
+      },
+      "recurrence": {
+        "title": "반복 패턴",
+        "subtitle": "반복 항목에 대한 자연어 패턴",
+        "description": "자연어에서 반복 규칙을 구문 분석하기 위한 로케일별 패턴을 정의합니다(예: '매주', 'om de dag')."
+      },
+      "timerKeywords": {
+        "title": "타이머 키워드",
+        "subtitle": "타이머 감지를 위한 시간 단위 키워드",
+        "description": "레시피 지침에서 타이머를 감지하는 데 사용되는 키워드를 구성합니다. 여러 언어를 지원합니다.",
+        "enableToggle": "타이머 감지 활성화",
+        "hoursLabel": "시간 키워드",
+        "hoursPlaceholder": "시간, hour, hours, hr, hrs, h",
+        "hoursHelp": "시간에 대한 키워드(예: 시간, hour, stunde, heure, uur)",
+        "minutesLabel": "분 키워드",
+        "minutesPlaceholder": "분, minute, minutes, min, mins, m",
+        "minutesHelp": "분에 대한 키워드(예: 분, minute, minuten, minuut)",
+        "secondsLabel": "초 키워드",
+        "secondsPlaceholder": "초, second, seconds, sec, secs, s",
+        "secondsHelp": "초에 대한 키워드(예: 초, second, sekunde, seconde)",
+        "unsavedChanges": "저장되지 않은 변경사항"
+      }
+    },
+    "aiProcessing": {
+      "title": "AI 및 처리",
+      "description": "레시피 추출 및 비디오 처리를 위한 AI 기반 기능을 구성합니다.",
+      "aiConfig": {
+        "title": "AI 구성",
+        "subtitle": "레시피 분석 및 추출"
+      },
+      "video": {
+        "title": "비디오 처리",
+        "subtitle": "소셜 미디어 비디오 추출 및 음성 변환"
+      },
+      "prompts": {
+        "title": "프롬프트",
+        "subtitle": "레시피 처리를 위한 AI 지침 사용자 정의"
+      },
+      "bulkCategorization": {
+        "title": "대량 분류",
+        "subtitle": "분류되지 않은 레시피를 AI를 활용하여 분류",
+        "description": "AI 기반 카테고리 감지를 위해 분류되지 않은 모든 레시피를 대기열에 추가하세요. 카테고리에는 아침, 점심, 저녁, 간식이 포함됩니다.",
+        "button": "모든 레시피 분류",
+        "queued": "{count, plural, =0 {분류할 레시피 없음} one {#개 레시피 대기 중} other {#개 레시피 대기 중}}",
+        "success": "분류가 시작되었습니다",
+        "error": "분류를 시작하지 못했습니다."
+      }
+    },
+    "aiConfig": {
+      "enableAI": "AI 기능 활성화",
+      "enableAIDescription": "구조화되지 않은 콘텐츠의 레시피 추출을 위해 AI 사용",
+      "configureWarning": "AI 기능을 활성화하려면 아래 AI 제공업체 설정을 구성하세요.",
+      "provider": "AI 제공업체",
+      "providers": {
+        "openai": "OpenAI",
+        "azure": "Azure OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google AI",
+        "mistral": "Mistral AI",
+        "deepseek": "DeepSeek",
+        "perplexity": "Perplexity",
+        "groq": "Groq",
+        "ollama": "Ollama(로컬)",
+        "lmStudio": "LM Studio(로컬)",
+        "genericOpenai": "일반 OpenAI 호환"
+      },
+      "endpointUrl": "엔드포인트 URL",
+      "azureEndpoint": "Azure 리소스 URL(선택 사항)",
+      "azureEndpointDescription": "사용자 지정 Azure OpenAI 엔드포인트. 기본값을 유지하려면 비워두세요.",
+      "model": "모델",
+      "visionModel": "비전 모델(선택 사항)",
+      "visionModelDescription": "선택 사항: 이미지/비전 작업에 다른 모델을 사용합니다. 위 모델을 사용하려면 비워두세요.",
+      "apiKey": "API 키",
+      "apiKeyPlaceholder": "API 키를 입력하세요",
+      "temperature": "온도: {value}",
+      "temperatureHint": "낮음 = 더 집중적, 높음 = 더 창의적",
+      "maxTokens": "최대 토큰",
+      "autoTagAllergies": "알러지 태그 자동 감지",
+      "autoTagAllergiesDescription": "레시피를 가져올 때 알러지 관련 태그를 자동으로 추가합니다.",
+      "alwaysUseAI": "항상 AI 가져오기 사용",
+      "alwaysUseAIDescription": "구조화된 파서를 건너뛰고 AI만 사용하여 레시피 추출",
+      "autoTaggingMode": "자동 태그 추가 모드",
+      "autoTaggingModeDescription": "AI를 사용하여 가져온 레시피에 자동으로 태그/키워드 할당",
+      "autoTaggingModes": {
+        "disabled": "비활성",
+        "predefined": "사전 정의된 태그만",
+        "predefinedDb": "사전 정의된 태그 + 기존 태그",
+        "freeform": "AI는 새로운 태그를 만들 수 있습니다"
+      },
+      "connectionSuccess": "연결 성공",
+      "testConnection": "연결 테스트",
+      "vision": "비전"
+    },
+    "videoConfig": {
+      "enableVideo": "비디오 구문 분석 활성화",
+      "enableVideoDescription": "TikTok, Instagram, YouTube Shorts 또는 Facebook에서 레시피 추출",
+      "configureWarning": "비디오 처리를 활성화하려면 아래에서 음성 변환 제공업체를 구성하세요.",
+      "aiDisabledWarning": "비디오 처리를 켜기 전에 AI 구성을 활성화하세요.",
+      "maxLength": "최대 비디오 길이(초)",
+      "maxLengthDescription": "동영상이 길수록 처리하는 데 더 많은 시간과 리소스가 소요됩니다.",
+      "maxFileSize": "최대 비디오 파일 크기",
+      "maxFileSizeDescription": "다운로드한 비디오 파일의 최대 크기",
+      "ytDlpVersion": "yt-dlp 버전",
+      "ytDlpVersionDescription": "비디오 다운로드에 사용할 yt-dlp 버전",
+      "transcription": "전사",
+      "transcriptionDescription": "레시피 추출을 위해 동영상 오디오를 텍스트로 변환",
+      "transcriptionProvider": "음성 변환 제공업체",
+      "transcriptionProviderDescription": "OpenAI 및 OpenAI 호환 엔드포인트만 Whisper 음성 변환을 지원합니다.",
+      "transcriptionProviders": {
+        "disabled": "비활성",
+        "openai": "OpenAI Whisper",
+        "groq": "Groq Whisper",
+        "azure": "Azure OpenAI Whisper",
+        "ollama": "올라마",
+        "genericOpenai": "일반 OpenAI 호환"
+      },
+      "transcriptionEndpoint": "엔드포인트 URL",
+      "transcriptionEndpointDescription": "Whisper를 지원하는 OpenAI 호환 엔드포인트 또는 Ollama 엔드포인트",
+      "transcriptionModel": "모델",
+      "transcriptionModelDescription": "음성 변환에 사용할 Whisper 모델",
+      "transcriptionModelPlaceholder": "모델명을 선택하거나 입력하세요.",
+      "transcriptionApiKey": "API 키",
+      "transcriptionApiKeyDescription": "설정되지 않은 경우 AI 구성 API 키로 대체됩니다.",
+      "transcriptionApiKeyPlaceholder": "AI 구성 키를 사용하려면 비워 두세요.",
+      "transcriptionApiKeyOptional": "API 키(선택사항)",
+      "transcriptionApiKeyOptionalDescription": "대부분의 로컬 Whisper 서버에는 API 키가 필요하지 않습니다.",
+      "transcriptionApiKeyOptionalPlaceholder": "로컬 서버의 경우 비워 두세요."
+    },
+    "promptsConfig": {
+      "recipeExtraction": "레시피 추출 프롬프트",
+      "recipeExtractionDescription": "이 프롬프트는 웹페이지나 비디오 대본에서 레시피 데이터를 추출할 때 사용됩니다.",
+      "recipeExtractionPlaceholder": "레시피 추출 프롬프트를 입력하세요...",
+      "unitConversion": "단위 변환 프롬프트",
+      "unitConversionDescription": "이 프롬프트는 미터법과 미국식 시스템 간에 레시피 측정값을 변환할 때 사용됩니다. 사용 가능한 변수: sourceSystem, targetSystem, units",
+      "unitConversionPlaceholder": "단위 변환 프롬프트를 입력하세요...",
+      "nutritionEstimation": "영양소 추정 프롬프트",
+      "nutritionEstimationDescription": "이 프롬프트는 레시피의 영양 정보를 추정할 때 사용됩니다. 사용 가능한 변수: recipeName, servings, ingredients",
+      "nutritionEstimationPlaceholder": "영양소 추정 프롬프트를 입력하세요...",
+      "autoTagging": "자동 태그 추가 프롬프트",
+      "autoTaggingDescription": "이 프롬프트는 가져온 레시피에 대한 태그를 생성하는 데 사용됩니다. 태그 지정 규칙과 사전 정의된 태그 목록을 정의합니다.",
+      "autoTaggingPlaceholder": "자동 태그 추가 프롬프트를 입력하세요..."
+    },
+    "unsavedChanges": "저장되지 않은 변경사항",
+    "jsonEditor": {
+      "placeholder": "JSON 구성 입력...",
+      "invalidJson": "잘못된 JSON 형식",
+      "failedToSave": "저장하지 못했습니다.",
+      "failedToRestore": "기본값을 복원하지 못했습니다."
+    }
+  }
+}

@@ -1,9 +1,16 @@
 {
   "locales": {
     "en": {
-      "everyWords": ["every", "each"],
-      "otherWords": ["other"],
-      "onWords": ["on"],
+      "everyWords": [
+        "every",
+        "each"
+      ],
+      "otherWords": [
+        "other"
+      ],
+      "onWords": [
+        "on"
+      ],
       "numberWords": {
         "one": 1,
         "two": 2,
@@ -17,9 +24,21 @@
         "ten": 10
       },
       "unitWords": {
-        "day": ["day", "days", "daily"],
-        "week": ["week", "weeks", "weekly"],
-        "month": ["month", "months", "monthly"]
+        "day": [
+          "day",
+          "days",
+          "daily"
+        ],
+        "week": [
+          "week",
+          "weeks",
+          "weekly"
+        ],
+        "month": [
+          "month",
+          "months",
+          "monthly"
+        ]
       },
       "weekdayWords": {
         "sunday": 0,
@@ -40,9 +59,17 @@
       "intervalHints": []
     },
     "nl": {
-      "everyWords": ["elke", "ieder", "iedere"],
-      "otherWords": ["andere"],
-      "onWords": ["op"],
+      "everyWords": [
+        "elke",
+        "ieder",
+        "iedere"
+      ],
+      "otherWords": [
+        "andere"
+      ],
+      "onWords": [
+        "op"
+      ],
       "numberWords": {
         "een": 1,
         "twee": 2,
@@ -56,9 +83,22 @@
         "tien": 10
       },
       "unitWords": {
-        "day": ["dag", "dagen", "dagelijks"],
-        "week": ["week", "weken", "wekelijks", "weekelijks"],
-        "month": ["maand", "maanden", "maandelijks"]
+        "day": [
+          "dag",
+          "dagen",
+          "dagelijks"
+        ],
+        "week": [
+          "week",
+          "weken",
+          "wekelijks",
+          "weekelijks"
+        ],
+        "month": [
+          "maand",
+          "maanden",
+          "maandelijks"
+        ]
       },
       "weekdayWords": {
         "zondag": 0,
@@ -78,14 +118,120 @@
       },
       "intervalHints": [
         {
-          "phrases": ["om de dag", "om de dagen"],
+          "phrases": [
+            "om de dag",
+            "om de dagen"
+          ],
           "interval": 2,
           "rule": "day"
         },
         {
-          "phrases": ["om de week", "om de weken"],
+          "phrases": [
+            "om de week",
+            "om de weken"
+          ],
           "interval": 2,
           "rule": "week"
+        }
+      ]
+    },
+    "ko": {
+      "everyWords": [
+        "매",
+        "마다",
+        "각"
+      ],
+      "otherWords": [
+        "격"
+      ],
+      "onWords": [
+        "에",
+        "마다"
+      ],
+      "numberWords": {
+        "한": 1,
+        "하나": 1,
+        "두": 2,
+        "둘": 2,
+        "세": 3,
+        "셋": 3,
+        "네": 4,
+        "넷": 4,
+        "다섯": 5,
+        "여섯": 6,
+        "일곱": 7,
+        "여덟": 8,
+        "아홉": 9,
+        "열": 10,
+        "일": 1,
+        "이": 2,
+        "삼": 3,
+        "사": 4,
+        "오": 5,
+        "육": 6,
+        "칠": 7,
+        "팔": 8,
+        "구": 9,
+        "십": 10
+      },
+      "unitWords": {
+        "day": [
+          "일",
+          "하루",
+          "매일"
+        ],
+        "week": [
+          "주",
+          "매주",
+          "주일"
+        ],
+        "month": [
+          "월",
+          "개월",
+          "매월"
+        ]
+      },
+      "weekdayWords": {
+        "일요일": 0,
+        "일": 0,
+        "월요일": 1,
+        "월": 1,
+        "화요일": 2,
+        "화": 2,
+        "수요일": 3,
+        "수": 3,
+        "목요일": 4,
+        "목": 4,
+        "금요일": 5,
+        "금": 5,
+        "토요일": 6,
+        "토": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": [
+            "격일",
+            "하루 걸러",
+            "이틀마다"
+          ],
+          "interval": 2,
+          "rule": "day"
+        },
+        {
+          "phrases": [
+            "격주",
+            "2주마다"
+          ],
+          "interval": 2,
+          "rule": "week"
+        },
+        {
+          "phrases": [
+            "격월",
+            "2개월마다"
+          ],
+          "interval": 2,
+          "rule": "month"
         }
       ]
     }
