@@ -15,7 +15,7 @@ vi.mock("@/hooks/config", () => ({
 
 // Replace the TimerChip with a simple marker to detect it if rendered
 vi.mock("@/components/recipe/timer-chip", () => ({
-  TimerChip: ({ children }: any) => <span>TIMER_CHIP</span>,
+  TimerChip: ({ _children }: any) => <span>TIMER_CHIP</span>,
 }));
 
 describe("SmartInstruction", () => {

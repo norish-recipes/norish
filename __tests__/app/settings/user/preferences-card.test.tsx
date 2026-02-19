@@ -43,9 +43,9 @@ vi.mock("@heroui/react", () => ({
   CardBody: ({ children }: any) => <div>{children}</div>,
   Switch: ({ isSelected, isDisabled, onValueChange }: any) => (
     <button
-      type="button"
       aria-pressed={isSelected}
       disabled={isDisabled}
+      type="button"
       onClick={() => onValueChange?.(!isSelected)}
     >
       toggle

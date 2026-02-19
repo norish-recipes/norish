@@ -1,8 +1,11 @@
 # user-preferences Specification
 
 ## Purpose
+
 TBD - created by archiving change add-rating-like-visibility-preferences. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Rating visibility preference
 
 The system SHALL store a `showRatings` boolean in the user's `preferences` JSONB column that controls visibility of all rating-related UI. The preference SHALL default to `true` when unset.
@@ -89,4 +92,3 @@ The filters panel SHALL omit rating and favorites filter controls when the corre
 - **WHEN** `showFavorites` is `false` and `showRatings` is `true`
 - **THEN** the minimum rating filter (RatingStars) is rendered in the filters panel
 - **AND** the favorites-only toggle is not rendered
-

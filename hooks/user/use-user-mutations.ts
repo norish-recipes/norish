@@ -7,8 +7,8 @@ import type { UserPreferencesDto } from "@/server/db/zodSchemas/user";
 import { useMutation } from "@tanstack/react-query";
 
 import { useUserCacheHelpers } from "./use-user-cache";
-import { getUserPreferences } from "@/lib/user-preferences";
 
+import { getUserPreferences } from "@/lib/user-preferences";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type UserMutationsResult = {
