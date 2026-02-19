@@ -10,8 +10,8 @@ import {
 } from "./test-utils";
 
 // Mock the tRPC provider
-const mockQueryKey = ["user", "get"];
-const mockAllergiesQueryKey = ["user", "getAllergies"];
+const mockQueryKey = [["user", "get"], { type: "query" }] as const;
+const mockAllergiesQueryKey = [["user", "getAllergies"], { type: "query" }] as const;
 const mockQueryOptions = vi.fn();
 const mockAllergiesQueryOptions = vi.fn();
 
@@ -135,28 +135,8 @@ describe("useUserSettingsQuery", () => {
     });
   });
 
-  describe("cache management", () => {
-    it("provides setUserSettingsData function", async () => {
-      const mockData = createMockUserSettingsData(createMockUser(), [createMockApiKey()]);
-
-      mockQueryOptions.mockReturnValue({
-        queryKey: mockQueryKey,
-        queryFn: async () => mockData,
-      });
-
-      const { renderHook } = require("@testing-library/react");
-      const { result } = renderHook(() => useUserSettingsQuery(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(typeof result.current.setUserSettingsData).toBe("function");
-    });
-
-    it("provides invalidate function", async () => {
+  describe("query keys", () => {
+    it("exposes canonical tRPC query keys", async () => {
       mockQueryOptions.mockReturnValue({
         queryKey: mockQueryKey,
         queryFn: async () => createMockUserSettingsData(),
@@ -171,7 +151,8 @@ describe("useUserSettingsQuery", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(typeof result.current.invalidate).toBe("function");
+      expect(result.current.queryKey).toEqual(mockQueryKey);
+      expect(result.current.allergiesQueryKey).toEqual(mockAllergiesQueryKey);
     });
   });
 });

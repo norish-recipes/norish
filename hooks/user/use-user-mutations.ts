@@ -2,11 +2,13 @@
 
 import type { User } from "@/types";
 import type { ApiKeyMetadataDto } from "@/server/trpc/routers/user/types";
+import type { UserPreferencesDto } from "@/server/db/zodSchemas/user";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
-import { useUserSettingsQuery } from "./use-user-query";
+import { useUserCacheHelpers } from "./use-user-cache";
 
+import { getUserPreferences } from "@/lib/user-preferences";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type UserMutationsResult = {
@@ -28,6 +30,11 @@ export type UserMutationsResult = {
     allergies: string[]
   ) => Promise<{ success: boolean; allergies?: string[]; error?: string }>;
 
+  // Preferences
+  updatePreferences: (
+    preferences: Partial<UserPreferencesDto>
+  ) => Promise<{ success: boolean; preferences?: UserPreferencesDto; error?: string }>;
+
   // Loading states
   isUpdatingName: boolean;
   isUploadingAvatar: boolean;
@@ -37,6 +44,7 @@ export type UserMutationsResult = {
   isDeletingApiKey: boolean;
   isTogglingApiKey: boolean;
   isUpdatingAllergies: boolean;
+  isUpdatingPreferences: boolean;
 };
 
 /**
@@ -45,8 +53,8 @@ export type UserMutationsResult = {
  */
 export function useUserMutations(): UserMutationsResult {
   const trpc = useTRPC();
-  const { setUserSettingsData, invalidate, allergiesQueryKey } = useUserSettingsQuery();
-  const queryClient = useQueryClient();
+  const { setUserSettingsData, setAllergiesData, getUserSettingsData, invalidate } =
+    useUserCacheHelpers();
 
   // Profile mutations
   const updateNameMutation = useMutation(trpc.user.updateName.mutationOptions());
@@ -61,6 +69,9 @@ export function useUserMutations(): UserMutationsResult {
 
   // Allergies mutation
   const setAllergiesMutation = useMutation(trpc.user.setAllergies.mutationOptions());
+
+  // Preferences mutation
+  const updatePreferencesMutation = useMutation(trpc.user.updatePreferences.mutationOptions());
 
   return {
     // Profile updates
@@ -192,12 +203,61 @@ export function useUserMutations(): UserMutationsResult {
         const result = await setAllergiesMutation.mutateAsync({ allergies });
 
         if (result.success) {
-          queryClient.setQueryData(allergiesQueryKey, { allergies: result.allergies });
+          setAllergiesData(() => ({ allergies: result.allergies ?? [] }));
           // Household and calendar updates are handled via WebSocket subscription (onAllergiesUpdated)
         }
 
         return result;
       } catch (error) {
+        return { success: false, error: String(error) };
+      }
+    },
+
+    // Preferences
+    updatePreferences: async (preferences) => {
+      // Save previous for rollback
+      const previous = getUserSettingsData();
+
+      try {
+        // Optimistic update
+        setUserSettingsData((prev) => {
+          if (!prev) return prev;
+
+          return {
+            ...prev,
+            user: {
+              ...prev.user,
+              preferences: { ...getUserPreferences(prev.user), ...preferences },
+            },
+          };
+        });
+
+        const result = await updatePreferencesMutation.mutateAsync({ preferences });
+
+        if (!result.success) {
+          // Rollback immediately to previous cached value
+          setUserSettingsData(() => previous);
+          invalidate();
+        } else {
+          setUserSettingsData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  user: {
+                    ...prev.user,
+                    preferences: { ...getUserPreferences(prev.user), ...result.preferences },
+                  },
+                }
+              : prev
+          );
+        }
+
+        return result;
+      } catch (error) {
+        // Rollback on error
+        setUserSettingsData(() => previous);
+        invalidate();
+
         return { success: false, error: String(error) };
       }
     },
@@ -211,5 +271,6 @@ export function useUserMutations(): UserMutationsResult {
     isDeletingApiKey: deleteApiKeyMutation.isPending,
     isTogglingApiKey: toggleApiKeyMutation.isPending,
     isUpdatingAllergies: setAllergiesMutation.isPending,
+    isUpdatingPreferences: updatePreferencesMutation.isPending,
   };
 }

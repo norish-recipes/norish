@@ -31,6 +31,8 @@ import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import { NutritionSection } from "@/components/recipes/nutrition-card";
 import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/app/(app)/recipes/[id]/recipe-layout-constants";
+import { useUserContext } from "@/context/user-context";
+import { getShowFavoritesPreference, getShowRatingsPreference } from "@/lib/user-preferences";
 
 export default function RecipePageMobile() {
   const {
@@ -43,8 +45,11 @@ export default function RecipePageMobile() {
   const { toggleFavorite } = useFavoritesMutation();
   const { userRating, averageRating, isLoading: isRatingLoading } = useRatingQuery(recipe.id);
   const { rateRecipe, isRating } = useRatingsMutation();
+  const { user } = useUserContext();
   const t = useTranslations("recipes.detail");
   const tForm = useTranslations("recipes.form");
+  const showRatings = getShowRatingsPreference(user);
+  const showFavorites = getShowFavoritesPreference(user);
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -63,7 +68,13 @@ export default function RecipePageMobile() {
         className="relative w-full overflow-hidden"
         style={{ height: MOBILE_RECIPE_MEDIA_HEIGHT_STYLE }}
       >
-        <DoubleTapContainer className="h-full w-full" onDoubleTap={handleToggleFavorite}>
+        <DoubleTapContainer
+          className="h-full w-full"
+          doubleTapEnabled={showFavorites}
+          onDoubleTap={() => {
+            if (showFavorites) handleToggleFavorite();
+          }}
+        >
           <MediaCarousel
             aspectRatio="4/3"
             className="h-full w-full"
@@ -86,15 +97,17 @@ export default function RecipePageMobile() {
           </div>
         )}
 
-        {/* Heart button - bottom right (always visible) */}
-        <div className="absolute right-4 bottom-8 z-50">
-          <HeartButton
-            showBackground
-            isFavorite={isFavorite}
-            size="lg"
-            onToggle={handleToggleFavorite}
-          />
-        </div>
+        {/* Heart button - bottom right */}
+        {showFavorites && (
+          <div className="absolute right-4 bottom-8 z-50">
+            <HeartButton
+              showBackground
+              isFavorite={isFavorite}
+              size="lg"
+              onToggle={handleToggleFavorite}
+            />
+          </div>
+        )}
       </div>
 
       {/* Unified Content Card - contains all sections */}
@@ -250,14 +263,16 @@ export default function RecipePageMobile() {
             </div>
 
             {/* Rating Section */}
-            <div className="bg-default-100 -mx-1 flex flex-col items-center gap-4 rounded-xl py-6">
-              <p className="text-default-600 font-medium">{t("ratingPrompt")}</p>
-              <StarRating
-                isLoading={isRating || isRatingLoading}
-                value={userRating ?? averageRating}
-                onChange={handleRateRecipe}
-              />
-            </div>
+            {showRatings && (
+              <div className="bg-default-100 -mx-1 flex flex-col items-center gap-4 rounded-xl py-6">
+                <p className="text-default-600 font-medium">{t("ratingPrompt")}</p>
+                <StarRating
+                  isLoading={isRating || isRatingLoading}
+                  value={userRating ?? averageRating}
+                  onChange={handleRateRecipe}
+                />
+              </div>
+            )}
           </div>
 
           {/* Nutrition Section */}

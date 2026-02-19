@@ -20,7 +20,9 @@ import { RecipeDashboardDTO } from "@/types";
 import { formatMinutesHM } from "@/lib/helpers";
 import { useAppStore } from "@/store/useAppStore";
 import { usePermissionsContext } from "@/context/permissions-context";
+import { useUserContext } from "@/context/user-context";
 import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
+import { getShowFavoritesPreference, getShowRatingsPreference } from "@/lib/user-preferences";
 
 type RecipeCardProps = {
   recipe: RecipeDashboardDTO;
@@ -41,6 +43,7 @@ function RecipeCardComponent({
   const rowRef = useRef<SwipeableRowRef>(null);
   const mobileSearchOpen = useAppStore((s) => s.mobileSearchOpen);
   const { canDeleteRecipe } = usePermissionsContext();
+  const { user } = useUserContext();
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [groceriesOpen, setGroceriesOpen] = useState(false);
@@ -50,6 +53,8 @@ function RecipeCardComponent({
     onClose: onDeleteModalClose,
   } = useDisclosure();
   const t = useTranslations("recipes.card");
+  const showRatings = getShowRatingsPreference(user);
+  const showFavorites = getShowFavoritesPreference(user);
 
   // Automatically prefetch recipe when card enters viewport
   const cardRef = useRecipePrefetch(recipe.id);
@@ -165,7 +170,10 @@ function RecipeCardComponent({
               <DoubleTapContainer
                 className="relative aspect-[4/3] w-full cursor-pointer overflow-hidden"
                 disabled={open || mobileSearchOpen}
-                onDoubleTap={handleToggleFavorite}
+                doubleTapEnabled={showFavorites}
+                onDoubleTap={() => {
+                  if (showFavorites) handleToggleFavorite();
+                }}
                 onSingleTap={handleNavigate}
               >
                 {/* Image */}
@@ -192,7 +200,7 @@ function RecipeCardComponent({
 
                 {/* top meta data */}
                 <RecipeMetadata
-                  averageRating={averageRating}
+                  averageRating={showRatings ? averageRating : null}
                   isFavorite={recipeIsFavorite}
                   servings={servings}
                   timeLabel={timeLabel}
@@ -200,7 +208,7 @@ function RecipeCardComponent({
                     if (rowRef.current?.isOpen()) rowRef.current?.closeRow();
                     else rowRef.current?.openRow();
                   }}
-                  onToggleFavorite={handleToggleFavorite}
+                  onToggleFavorite={showFavorites ? handleToggleFavorite : undefined}
                 />
 
                 {/* bottom tags */}

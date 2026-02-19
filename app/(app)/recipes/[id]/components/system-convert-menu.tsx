@@ -17,6 +17,8 @@ import { useRecipeContextRequired } from "../context";
 import { MeasurementSystem } from "@/types";
 import { cssButtonPill, cssAIGradientText, cssAIIconColor } from "@/config/css-tokens";
 import { usePermissionsContext } from "@/context/permissions-context";
+import { useUserContext } from "@/context/user-context";
+import { getShowConversionButtonPreference } from "@/lib/user-preferences";
 
 type ConversionOption = {
   key: MeasurementSystem;
@@ -26,6 +28,8 @@ type ConversionOption = {
 
 export default function SystemConvertMenu() {
   const { recipe, convertingTo, startConversion } = useRecipeContextRequired();
+  const { user } = useUserContext();
+  const showConversion = getShowConversionButtonPreference(user);
   const { isAIEnabled } = usePermissionsContext();
   const t = useTranslations("recipes.convert");
 
@@ -55,7 +59,9 @@ export default function SystemConvertMenu() {
   }, [availableSystems, isAIEnabled, t]);
 
   // If no conversion options available, don't show the menu
-  if (conversionOptions.length === 0) {
+  // Hide when there is 0 or only 1 option => nothing to convert to
+  // Respect user preference
+  if (conversionOptions.length <= 1 || !showConversion) {
     return null;
   }
 

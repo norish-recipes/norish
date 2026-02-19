@@ -37,13 +37,13 @@ function RecipePageContent() {
   return (
     <>
       {/* Desktop layout - smooth fade in */}
-      <div key={recipe?.id} className="fade-in hidden md:block">
+      <div key={`${recipe?.id}-desktop`} className="fade-in hidden md:block">
         <RecipePageDesktop />
       </div>
 
       {/* Mobile layout - full width, smooth fade in */}
       <div
-        key={recipe?.id}
+        key={`${recipe?.id}-mobile`}
         className="fade-in -mx-4 -mt-10 flex w-[calc(100%+2rem)] flex-col md:hidden"
       >
         <RecipePageMobile />

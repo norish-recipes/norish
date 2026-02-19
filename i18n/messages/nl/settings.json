@@ -102,6 +102,31 @@
         "adminNote": "Als je de beheerder bent van een huishouden met andere leden, moet je eerst de admin overdragen.",
         "confirmButton": "Verwijder mijn account"
       }
+    },
+    "preferences": {
+      "title": "Voorkeuren",
+      "description": "Pas je ervaring aan.",
+      "language": {
+        "title": "Taal",
+        "description": "Kies je voorkeurstaal"
+      },
+      "timers": {
+        "title": "Recepttimers inschakelen",
+        "description": "Interactieve timers in receptinstructies tonen"
+      },
+      "applyError": "Instelling kon niet worden toegepast",
+      "conversion": {
+        "title": "Toon conversieknop",
+        "description": "Toon de converteer knop op de recept pagina's"
+      },
+      "ratings": {
+        "title": "Beoordelingen tonen",
+        "description": "Sterbeoordelingen op receptkaarten en detailpagina's weergeven"
+      },
+      "favorites": {
+        "title": "Favorieten tonen",
+        "description": "Favoriet-/hartpictogrammen op receptkaarten en detailpagina's weergeven"
+      }
     }
   },
   "household": {

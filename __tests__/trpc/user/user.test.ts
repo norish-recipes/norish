@@ -29,6 +29,8 @@ import {
   deleteApiKey,
   enableApiKey,
   disableApiKey,
+  getUserPreferences,
+  updateUserPreferences,
   resetUserMocks,
 } from "../../mocks/user-repository";
 
@@ -98,12 +100,69 @@ describe("user procedures", () => {
       });
 
       const caller = t.createCallerFactory(testRouter)(ctx);
+
+      getUserPreferences.mockResolvedValue({ timersEnabled: true });
+
       const result = await caller.get();
 
       expect(result.user.id).toBe(mockUser.id);
       expect(result.user.email).toBe(mockUser.email);
       expect(result.apiKeys).toHaveLength(2);
       expect(getApiKeysForUser).toHaveBeenCalledWith(mockUser.id);
+    });
+
+    it("includes preferences when present", async () => {
+      const ctx = createMockAuthedContext(mockUser);
+
+      getUserPreferences.mockResolvedValue({ timersEnabled: false });
+
+      const testRouter = t.router({
+        get: authedProcedure.query(async ({ ctx }) => {
+          const preferences = await getUserPreferences(ctx.user.id);
+
+          return {
+            user: {
+              id: ctx.user.id,
+              email: ctx.user.email,
+              name: ctx.user.name,
+              image: ctx.user.image,
+              preferences,
+            },
+          };
+        }),
+      });
+
+      const caller = t.createCallerFactory(testRouter)(ctx);
+      const result = await caller.get();
+
+      expect(result.user.preferences.timersEnabled).toBe(false);
+    });
+
+    it("allows updating preferences", async () => {
+      const ctx = createMockAuthedContext(mockUser);
+
+      getUserPreferences.mockResolvedValue({ timersEnabled: true });
+      updateUserPreferences.mockResolvedValue(undefined);
+
+      const testRouter = t.router({
+        updatePreferences: authedProcedure
+          .input((val: unknown) => val as any)
+          .mutation(async ({ ctx, input }) => {
+            const current = await getUserPreferences(ctx.user.id);
+            const merged = { ...(current ?? {}), ...(input.preferences ?? {}) };
+
+            await updateUserPreferences(ctx.user.id, merged);
+
+            return { success: true, preferences: merged };
+          }),
+      });
+
+      const caller = t.createCallerFactory(testRouter)(ctx);
+
+      const result = await caller.updatePreferences({ preferences: { timersEnabled: false } });
+
+      expect(result.success).toBe(true);
+      expect(updateUserPreferences).toHaveBeenCalledWith(mockUser.id, { timersEnabled: false });
     });
   });
 

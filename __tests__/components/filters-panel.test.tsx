@@ -13,6 +13,11 @@ const filtersState = {
   maxCookingTime: null as number | null,
 };
 
+const userPreferencesState = {
+  showRatings: true,
+  showFavorites: true,
+};
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -44,6 +49,12 @@ vi.mock("@/context/recipes-filters-context", () => ({
     filters: filtersState,
     setFilters: vi.fn(),
     clearFilters: vi.fn(),
+  }),
+}));
+
+vi.mock("@/context/user-context", () => ({
+  useUserContext: () => ({
+    user: { preferences: userPreferencesState },
   }),
 }));
 
@@ -99,5 +110,45 @@ describe("FiltersPanel", () => {
 
     expect(tagContainer).toBeInTheDocument();
     expect(tagContainer).toHaveClass("max-h-[220px]");
+  });
+
+  it("hides favorites and rating section when both preferences are disabled", () => {
+    userPreferencesState.showFavorites = false;
+    userPreferencesState.showRatings = false;
+
+    render(<FiltersPanel open onOpenChange={vi.fn()} />);
+
+    expect(screen.queryByText("favoritesAndRating")).not.toBeInTheDocument();
+    expect(screen.queryByText("favorites")).not.toBeInTheDocument();
+    expect(screen.queryByText("rating-stars")).not.toBeInTheDocument();
+
+    userPreferencesState.showFavorites = true;
+    userPreferencesState.showRatings = true;
+  });
+
+  it("shows only favorites filter when ratings are disabled", () => {
+    userPreferencesState.showFavorites = true;
+    userPreferencesState.showRatings = false;
+
+    render(<FiltersPanel open onOpenChange={vi.fn()} />);
+
+    expect(screen.getByText("favoritesAndRating")).toBeInTheDocument();
+    expect(screen.getByText("favorites")).toBeInTheDocument();
+    expect(screen.queryByText("rating-stars")).not.toBeInTheDocument();
+
+    userPreferencesState.showRatings = true;
+  });
+
+  it("shows only rating filter when favorites are disabled", () => {
+    userPreferencesState.showFavorites = false;
+    userPreferencesState.showRatings = true;
+
+    render(<FiltersPanel open onOpenChange={vi.fn()} />);
+
+    expect(screen.getByText("favoritesAndRating")).toBeInTheDocument();
+    expect(screen.queryByText("favorites")).not.toBeInTheDocument();
+    expect(screen.getByText("rating-stars")).toBeInTheDocument();
+
+    userPreferencesState.showFavorites = true;
   });
 });

@@ -3,7 +3,7 @@
 import type { ProviderKey, FieldDef, TestResult } from "./types";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { Input, useDisclosure, addToast } from "@heroui/react";
+import { Input, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../../context";

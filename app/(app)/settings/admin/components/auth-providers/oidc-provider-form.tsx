@@ -3,7 +3,7 @@
 import type { TestResult } from "./types";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Input, useDisclosure, addToast } from "@heroui/react";
+import { Input, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../../context";

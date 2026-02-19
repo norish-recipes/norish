@@ -39,3 +39,16 @@ export const ToggleApiKeyInputSchema = z.object({
   keyId: z.string().min(1),
   enabled: z.boolean(),
 });
+
+// Preferences
+export const UpdatePreferencesInputSchema = z.object({
+  preferences: z
+    .object({
+      timersEnabled: z.boolean().optional(),
+      showConversionButton: z.boolean().optional(),
+      showRatings: z.boolean().optional(),
+      showFavorites: z.boolean().optional(),
+      locale: z.string().nullable().optional(),
+    })
+    .partial(),
+});

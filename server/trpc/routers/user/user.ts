@@ -7,7 +7,7 @@ import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 import { emitConnectionInvalidation } from "../../connection-manager";
 
-import { UpdateNameInputSchema } from "./types";
+import { UpdateNameInputSchema, UpdatePreferencesInputSchema } from "./types";
 
 import { trpcLogger as log } from "@/server/logger";
 import { IMAGE_MIME_TO_EXTENSION } from "@/types";
@@ -19,11 +19,11 @@ import {
   getHouseholdForUser,
   getApiKeysForUser,
   getUserById,
+  getUserPreferences,
+  updateUserPreferences,
   getUserAllergies,
   updateUserAllergies,
   getAllergiesForUsers,
-  getUserLocale,
-  updateUserLocale,
 } from "@/server/db";
 import { householdEmitter } from "@/server/trpc/routers/households/emitter";
 import { SERVER_CONFIG } from "@/config/env-config-server";
@@ -39,6 +39,9 @@ const get = authedProcedure.query(async ({ ctx }) => {
 
   const freshUser = await getUserById(ctx.user.id);
   const apiKeys = await getApiKeysForUser(ctx.user.id);
+  const preferences = await getUserPreferences(ctx.user.id);
+
+  // completed DB reads
 
   return {
     user: {
@@ -46,6 +49,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
       email: freshUser?.email ?? ctx.user.email,
       name: freshUser?.name ?? ctx.user.name,
       image: freshUser?.image ?? ctx.user.image,
+      preferences: preferences as any,
     },
     apiKeys: apiKeys.map((k) => ({
       id: k.id,
@@ -57,6 +61,22 @@ const get = authedProcedure.query(async ({ ctx }) => {
     })),
   };
 });
+/**
+ * Update user preferences
+ */
+
+const updatePreferences = authedProcedure
+  .input(UpdatePreferencesInputSchema)
+  .mutation(async ({ ctx, input }) => {
+    log.debug({ userId: ctx.user.id, updates: input.preferences }, "Updating user preferences");
+
+    const current = await getUserPreferences(ctx.user.id);
+    const merged = { ...(current ?? {}), ...(input.preferences ?? {}) };
+
+    await updateUserPreferences(ctx.user.id, merged);
+
+    return { success: true, preferences: merged };
+  });
 
 /**
  * Update user name
@@ -272,32 +292,6 @@ const setAllergies = authedProcedure
     return { success: true, allergies: input.allergies };
   });
 
-/**
- * Get current user's locale preference
- */
-const getLocale = authedProcedure.query(async ({ ctx }) => {
-  log.debug({ userId: ctx.user.id }, "Getting user locale");
-
-  const locale = await getUserLocale(ctx.user.id);
-
-  return { locale };
-});
-
-/**
- * Update user's locale preference
- */
-const setLocale = authedProcedure
-  .input(z.object({ locale: z.string().nullable() }))
-  .mutation(async ({ ctx, input }) => {
-    log.debug({ userId: ctx.user.id, locale: input.locale }, "Updating user locale");
-
-    await updateUserLocale(ctx.user.id, input.locale);
-
-    log.info({ userId: ctx.user.id, locale: input.locale }, "User locale updated");
-
-    return { success: true, locale: input.locale };
-  });
-
 export const userProcedures = router({
   get,
   updateName,
@@ -306,6 +300,5 @@ export const userProcedures = router({
   deleteAccount,
   getAllergies,
   setAllergies,
-  getLocale,
-  setLocale,
+  updatePreferences,
 });

@@ -2,70 +2,55 @@
 
 import { useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { type Locale, isValidLocale } from "@/i18n/config";
+import { getLocalePreference } from "@/lib/user-preferences";
+import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
+import { useUserMutations } from "@/hooks/user/use-user-mutations";
 
 /**
  * Hook for managing user locale preference
  *
- * Saves preference to database for authenticated users.
+ * Reads locale from user preferences via useUserSettingsQuery.
+ * Writes locale via useUserMutations.updatePreferences (with optimistic update/rollback).
  * After changing locale, refreshes the page to apply the new locale.
  */
 export function useLocale() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const { user } = useUserSettingsQuery();
+  const { updatePreferences, isUpdatingPreferences } = useUserMutations();
 
-  // Get locale query (for authenticated users)
-  const { data: localeData } = useQuery({
-    ...trpc.user.getLocale.queryOptions(),
-    // Don't retry on error (user might not be authenticated)
-    retry: false,
-    // Stale time of 5 minutes
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Set locale mutation (for authenticated users)
-  const setLocaleMutation = useMutation({
-    ...trpc.user.setLocale.mutationOptions(),
-    onSuccess: () => {
-      // Invalidate locale query
-      queryClient.invalidateQueries({ queryKey: trpc.user.getLocale.queryKey() });
-    },
-  });
+  const locale = getLocalePreference(user);
 
   /**
    * Change the locale
    *
-   * Saves to database and refreshes the page to apply the new locale.
+   * Saves to database via updatePreferences and refreshes the page to apply the new locale.
    */
   const changeLocale = useCallback(
-    async (locale: Locale) => {
-      if (!isValidLocale(locale)) {
+    async (newLocale: Locale) => {
+      if (!isValidLocale(newLocale)) {
         return;
       }
 
-      // Save to database
-      await setLocaleMutation.mutateAsync({ locale });
+      await updatePreferences({ locale: newLocale });
 
       // Refresh the page to apply the new locale
       startTransition(() => {
         router.refresh();
       });
     },
-    [setLocaleMutation, router]
+    [updatePreferences, router]
   );
 
   return {
-    /** Current locale from database */
-    locale: localeData?.locale as Locale | null | undefined,
+    /** Current locale from user preferences */
+    locale: locale as Locale | null | undefined,
     /** Change the locale */
     changeLocale,
     /** Whether locale change is in progress */
-    isChanging: setLocaleMutation.isPending || isPending,
+    isChanging: isUpdatingPreferences || isPending,
   };
 }
 

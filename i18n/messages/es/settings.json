@@ -102,10 +102,35 @@
         "adminNote": "Si eres admin de un hogar con otros miembros, debes transferir los privilegios de administrador primero.",
         "confirmButton": "Eliminar mi cuenta"
       }
+    },
+    "preferences": {
+      "title": "Preferencias",
+      "description": "Personaliza tu experiencia.",
+      "language": {
+        "title": "Idioma",
+        "description": "Elige tu idioma preferido"
+      },
+      "timers": {
+        "title": "Activar temporizadores de receta",
+        "description": "Mostrar temporizadores interactivos en las instrucciones de las recetas"
+      },
+      "conversion": {
+        "title": "Mostrar botón de conversión",
+        "description": "Mostrar un botón en las páginas de recetas para convertir entre sistemas de medida"
+      },
+      "ratings": {
+        "title": "Mostrar valoraciones",
+        "description": "Mostrar valoraciones con estrellas en las tarjetas de recetas y páginas de detalle"
+      },
+      "favorites": {
+        "title": "Mostrar favoritos",
+        "description": "Mostrar iconos de favoritos/corazón en las tarjetas de recetas y páginas de detalle"
+      },
+      "applyError": "No se pudo aplicar la preferencia"
     }
   },
   "household": {
-    "pageTitle": "Ajustes del hogar",
+    "pageTitle": "Configuración del hogar",
     "info": {
       "yourRole": "Tu rol",
       "admin": "Administrador",

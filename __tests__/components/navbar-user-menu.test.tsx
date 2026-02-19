@@ -1,88 +1,105 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
-const mockPush = vi.hoisted(() => vi.fn());
-const mockSetUserMenuOpen = vi.hoisted(() => vi.fn());
-const mockSignOut = vi.hoisted(() => vi.fn());
+import ProfileCard from "@/app/(app)/settings/user/components/profile-card";
 
-let mockUser = {
-  id: "user-1",
-  name: "User",
-  email: "user@example.com",
-  image: "/avatars/user-1.png",
-};
+const mockContext = vi.hoisted(() => ({
+  user: { name: "Alice", email: "alice@example.com", image: null },
+  updateName: vi.fn().mockResolvedValue(undefined),
+  updateImage: vi.fn().mockResolvedValue(undefined),
+  deleteImage: vi.fn().mockResolvedValue(undefined),
+  isDeletingAvatar: false,
+}));
+
+let mockUser: { name: string; email: string; image: string | null } = mockContext.user;
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
-}));
-
-vi.mock("@/hooks/config", () => ({
-  useVersionQuery: () => ({
-    currentVersion: "1.0.0",
-    latestVersion: null,
-    updateAvailable: false,
-    releaseUrl: null,
-  }),
-}));
-
-vi.mock("@/context/user-context", () => ({
-  useUserContext: () => ({
-    user: mockUser,
-    userMenuOpen: false,
-    setUserMenuOpen: mockSetUserMenuOpen,
-    signOut: mockSignOut,
-  }),
-}));
-
-vi.mock("@heroui/avatar", () => ({
-  Avatar: ({ src }: { src?: string }) => <img alt="user avatar" src={src} />,
-}));
-
-vi.mock("@heroui/dropdown", () => ({
-  Dropdown: ({ children }: any) => <div>{children}</div>,
-  DropdownTrigger: ({ children }: any) => <div>{children}</div>,
-  DropdownMenu: ({ children }: any) => <div>{children}</div>,
-  DropdownItem: ({ children }: any) => <div>{children}</div>,
+vi.mock("@/app/(app)/settings/user/context", () => ({
+  useUserSettingsContext: () => ({ ...mockContext, user: mockUser }),
 }));
 
 vi.mock("@heroui/react", () => ({
-  Button: ({ children }: any) => <button type="button">{children}</button>,
+  Card: ({ children }: any) => <div>{children}</div>,
+  CardHeader: ({ children }: any) => <div>{children}</div>,
+  CardBody: ({ children }: any) => <div>{children}</div>,
+  Avatar: ({ onClick, src }: any) => (
+    <button aria-label="avatar-trigger" type="button" onClick={onClick}>
+      <img alt="profile avatar" src={src} />
+    </button>
+  ),
+  Input: ({ value, onValueChange, isReadOnly, isDisabled }: any) => (
+    <input
+      disabled={isDisabled}
+      readOnly={isReadOnly}
+      value={value}
+      onChange={(event) => onValueChange?.(event.target.value)}
+    />
+  ),
+  Button: ({ children, onPress, isDisabled, type = "button" }: any) => (
+    <button disabled={isDisabled} type={type} onClick={onPress}>
+      {children}
+    </button>
+  ),
 }));
 
-vi.mock("@/components/shared/import-recipe-modal", () => ({
-  default: () => null,
-}));
+class MockFileReader {
+  public onload: ((event: { target: { result: string } }) => void) | null = null;
 
-vi.mock("@/components/shared/language-switch", () => ({
-  LanguageSwitch: () => null,
-}));
+  readAsDataURL() {
+    this.onload?.({ target: { result: "data:image/png;base64,preview" } });
+  }
+}
 
-vi.mock("@/components/navbar/theme-switch", () => ({
-  ThemeSwitch: () => null,
-}));
-
-import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
-
-describe("NavbarUserMenu avatar src", () => {
+describe("ProfileCard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUser = {
-      id: "user-1",
-      name: "User",
-      email: "user@example.com",
-      image: "/avatars/user-1.png",
-    };
+    vi.stubGlobal("FileReader", MockFileReader);
+    mockUser = { name: "Alice", email: "alice@example.com", image: null };
+  });
+
+  it("enables save and uploads avatar only after save", async () => {
+    const { container } = render(<ProfileCard />);
+    const saveButton = screen.getByRole("button", { name: "saveChanges" });
+
+    expect(saveButton).toBeDisabled();
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    expect(fileInput).toBeTruthy();
+
+    const file = new File(["avatar"], "avatar.png", { type: "image/png" });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(saveButton).toBeEnabled();
+    });
+
+    expect(mockContext.updateImage).not.toHaveBeenCalled();
+
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(mockContext.updateImage).toHaveBeenCalledTimes(1);
+    });
+    expect(mockContext.updateImage).toHaveBeenCalledWith(file);
+    expect(mockContext.updateName).not.toHaveBeenCalled();
   });
 
   it("uses plain avatar URL without cache-busting query params", () => {
-    render(<NavbarUserMenu />);
+    mockUser = {
+      name: "Alice",
+      email: "alice@example.com",
+      image: "/avatars/user-1.png",
+    };
 
-    const src = screen.getByAltText("user avatar").getAttribute("src");
+    render(<ProfileCard />);
+
+    const src = screen.getByAltText("profile avatar").getAttribute("src");
 
     expect(src).toBe("/avatars/user-1.png");
   });
