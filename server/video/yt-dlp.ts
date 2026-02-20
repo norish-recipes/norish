@@ -251,6 +251,7 @@ export async function getVideoMetadata(
       thumbnail: info.thumbnail || "",
       uploader: info.uploader || info.channel || undefined,
       uploadDate: info.upload_date || undefined,
+      language: info.language || undefined,
     };
   } catch (error: unknown) {
     log.error({ err: error }, "Failed to get video metadata");
@@ -381,10 +382,15 @@ export interface CaptionResult {
 /**
  * Download auto-generated captions/subtitles for a video.
  * Returns the path to the VTT file if available, null otherwise.
+ *
+ * @param subLang - BCP-47 language code to download subtitles for (e.g. "en", "es").
+ *   Pass the `language` from the video's metadata to avoid an extra network call.
+ *   Defaults to "en" if omitted.
  */
 export async function downloadCaptions(
   url: string,
-  tokens?: SiteAuthTokenDecryptedDto[]
+  tokens?: SiteAuthTokenDecryptedDto[],
+  subLang?: string
 ): Promise<CaptionResult> {
   await ensureYtDlpBinary();
   await fs.mkdir(outputDir, { recursive: true });
@@ -396,11 +402,17 @@ export async function downloadCaptions(
 
   const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
 
+  const resolvedSubLang = subLang ?? "en";
+
+  log.debug({ subLang, resolvedSubLang, url }, "Using language for subtitle download");
+
   try {
     const args = [
       url,
       "--write-auto-sub", // Download auto-generated subtitles
       "--skip-download", // Don't download the video itself
+      "--sub-langs",
+      resolvedSubLang, // Use detected original language (fixes yt-dlp#13831)
       "--convert-subs",
       "vtt", // Convert to VTT format
       "-o",
