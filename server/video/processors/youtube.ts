@@ -37,7 +37,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
 
       try {
         log.info({ url }, "Attempting to download captions");
-        const captionResult = await downloadCaptions(url, tokens);
+        const captionResult = await downloadCaptions(url, tokens, metadata.language);
 
         if (captionResult.found && captionResult.filePath) {
           captionPath = captionResult.filePath;
@@ -113,7 +113,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
       if (!result.success) {
         throw new Error(
           result.error ||
-            "No recipe found in video. The video may not contain a recipe or the content was not clear enough to extract."
+          "No recipe found in video. The video may not contain a recipe or the content was not clear enough to extract."
         );
       }
 

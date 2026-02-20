@@ -8,6 +8,8 @@ export interface VideoMetadata {
   thumbnail: string;
   uploader?: string;
   uploadDate?: string;
+  /** BCP-47 language code of the video's original audio (e.g. "en", "es") */
+  language?: string;
 }
 
 /**
