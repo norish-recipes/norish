@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 
 import defaultContentIndicators from "@/config/content-indicators.default.json";
