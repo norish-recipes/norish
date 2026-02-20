@@ -11,6 +11,9 @@ export type ParseResult = {
   matchedLocale: string | null; // Which locale matched (e.g., "en", "nl")
 };
 
+const TOKEN_BOUNDARY_PREFIX = "(?:^|\\s|[.,!?;:()\\[\\]{}\"'])";
+const TOKEN_BOUNDARY_SUFFIX = "(?=$|\\s|[.,!?;:()\\[\\]{}\"'])";
+
 /**
  * Find weekday index by exact match or valid prefix match.
  * Returns the weekday index (0-6) if found, undefined otherwise.
@@ -75,11 +78,18 @@ function parseWithLocale(
   // 1. Check interval hints first (e.g., "om de dag")
   for (const hint of config.intervalHints) {
     for (const phrase of hint.phrases) {
-      const phraseRegex = new RegExp(`\\b${escapeRegex(phrase)}\\b`, "i");
+      const phraseRegex = new RegExp(
+        `${TOKEN_BOUNDARY_PREFIX}(${escapeRegex(phrase)})${TOKEN_BOUNDARY_SUFFIX}`,
+        "i"
+      );
       const match = lowerText.match(phraseRegex);
 
       if (match) {
-        const cleanText = text.replace(phraseRegex, "").trim().replace(/\s+/g, " ");
+        const matchedPhrase = match[1];
+        const cleanText = text
+          .replace(new RegExp(escapeRegex(matchedPhrase), "i"), "")
+          .trim()
+          .replace(/\s+/g, " ");
 
         return {
           recurrence: {
@@ -87,7 +97,7 @@ function parseWithLocale(
             interval: hint.interval,
           },
           cleanText,
-          matchedPhrase: match[0],
+          matchedPhrase,
           matchedLocale: localeKey,
         };
       }
@@ -95,17 +105,19 @@ function parseWithLocale(
   }
 
   // 2. Build dynamic pattern: "every [number] [unit] [on weekday]"
-  const everyPattern = config.everyWords.join("|");
-  const otherPattern = config.otherWords.join("|");
-  const onPattern = config.onWords.join("|");
+  const everyPattern = buildTokenPattern(config.everyWords);
+  const otherPattern = buildTokenPattern(config.otherWords);
+  const onPattern = buildTokenPattern(config.onWords);
 
   // Build weekday pattern - match any word that could be a prefix of a weekday
   // Get all unique prefixes (e.g., for "sunday"/"sun": s, su, sun, sund, sunda, sunday)
   const allWeekdayPrefixes = new Set<string>();
 
+  const minPrefixLength = localeKey === "ko" ? 1 : 3;
+
   for (const word of Object.keys(config.weekdayWords)) {
     // Add all prefixes of this word (minimum 3 chars to avoid false positives)
-    for (let i = 3; i <= word.length; i++) {
+    for (let i = minPrefixLength; i <= word.length; i++) {
       allWeekdayPrefixes.add(word.substring(0, i));
     }
   }
@@ -116,21 +128,23 @@ function parseWithLocale(
     .join("|");
 
   // Build unit patterns
-  const dayPattern = config.unitWords.day.join("|");
-  const weekPattern = config.unitWords.week.join("|");
-  const monthPattern = config.unitWords.month.join("|");
+  const dayPattern = buildTokenPattern(config.unitWords.day);
+  const weekPattern = buildTokenPattern(config.unitWords.week);
+  const monthPattern = buildTokenPattern(config.unitWords.month);
 
   // Build number pattern (digits or number words)
-  const numberWordsPattern = Object.keys(config.numberWords).join("|");
+  const numberWordsPattern = buildTokenPattern(Object.keys(config.numberWords));
 
   // Pattern: every [other] [number] [unit] [on weekday]
   // Examples: "every day", "every 2 weeks", "elke week op maandag", "every other day"
   const pattern = new RegExp(
-    `\\b(${everyPattern})\\s+` + // "every"
-      `(?:(${otherPattern})\\s+)?` + // optional "other"
-      `(?:(\\d+|${numberWordsPattern})\\s+)?` + // optional number
+    `${TOKEN_BOUNDARY_PREFIX}(${everyPattern})` + // "every"
+      `(?:\\s+(${otherPattern}))?` + // optional "other"
+      `\\s*` +
+      `(?:(\\d+|${numberWordsPattern})\\s*)?` + // optional number
       `(${dayPattern}|${weekPattern}|${monthPattern})` + // required unit
-      `(?:\\s+(?:${onPattern})\\s+(${weekdayPattern}))?`, // optional "on weekday"
+      `(?:\\s+(?:(?:${onPattern})\\s*)?(${weekdayPattern}))?` + // optional "on weekday"
+      `${TOKEN_BOUNDARY_SUFFIX}`,
     "i"
   );
 
@@ -138,7 +152,10 @@ function parseWithLocale(
 
   if (!match) {
     // 3. Check for "every [weekday]" shorthand (e.g., "every friday" -> "every week on friday")
-    const everyWeekdayPattern = new RegExp(`\\b(${everyPattern})\\s+(${weekdayPattern})\\b`, "i");
+    const everyWeekdayPattern = new RegExp(
+      `${TOKEN_BOUNDARY_PREFIX}(${everyPattern})\\s+(${weekdayPattern})${TOKEN_BOUNDARY_SUFFIX}`,
+      "i"
+    );
     const everyWeekdayMatch = lowerText.match(everyWeekdayPattern);
 
     if (everyWeekdayMatch) {
@@ -172,7 +189,7 @@ function parseWithLocale(
 
     if (standaloneWeeklyWords.length > 0) {
       const weeklyOnPattern = new RegExp(
-        `\\b(${standaloneWeeklyWords.join("|")})\\s+(?:${onPattern})\\s+(${weekdayPattern})\\b`,
+        `${TOKEN_BOUNDARY_PREFIX}(${standaloneWeeklyWords.join("|")})\\s+(?:(?:${onPattern})\\s+)?(${weekdayPattern})${TOKEN_BOUNDARY_SUFFIX}`,
         "i"
       );
       const weeklyOnMatch = lowerText.match(weeklyOnPattern);
@@ -201,7 +218,7 @@ function parseWithLocale(
 
     if (standaloneMonthlyWords.length > 0) {
       const monthlyOnPattern = new RegExp(
-        `\\b(${standaloneMonthlyWords.join("|")})\\s+(?:${onPattern})\\s+(?:the\\s+)?(${weekdayPattern})\\b`,
+        `${TOKEN_BOUNDARY_PREFIX}(${standaloneMonthlyWords.join("|")})\\s+(?:(?:${onPattern})\\s+)?(?:the\\s+)?(${weekdayPattern})${TOKEN_BOUNDARY_SUFFIX}`,
         "i"
       );
       const monthlyOnMatch = lowerText.match(monthlyOnPattern);
@@ -232,18 +249,27 @@ function parseWithLocale(
     // This is checked AFTER the main pattern and "every weekday" to avoid matching "weekly" when "every week on friday" is intended
     // Use negative lookahead to avoid matching when "on [weekday]" follows
     const standaloneDailyPattern = config.unitWords.day
-      .filter((w) => w.endsWith("ly") || w.endsWith("lijks"))
+      .filter(
+        (w) =>
+          w.endsWith("ly") || w.endsWith("lijks") || config.everyWords.some((e) => w.startsWith(e))
+      )
       .join("|");
     const standaloneWeeklyPattern = config.unitWords.week
-      .filter((w) => w.endsWith("ly") || w.endsWith("lijks"))
+      .filter(
+        (w) =>
+          w.endsWith("ly") || w.endsWith("lijks") || config.everyWords.some((e) => w.startsWith(e))
+      )
       .join("|");
     const standaloneMonthlyPattern = config.unitWords.month
-      .filter((w) => w.endsWith("ly") || w.endsWith("lijks"))
+      .filter(
+        (w) =>
+          w.endsWith("ly") || w.endsWith("lijks") || config.everyWords.some((e) => w.startsWith(e))
+      )
       .join("|");
 
     if (standaloneDailyPattern || standaloneWeeklyPattern || standaloneMonthlyPattern) {
       const standalonePattern = new RegExp(
-        `\\b(${[standaloneDailyPattern, standaloneWeeklyPattern, standaloneMonthlyPattern].filter(Boolean).join("|")})\\b` +
+        `${TOKEN_BOUNDARY_PREFIX}(${[standaloneDailyPattern, standaloneWeeklyPattern, standaloneMonthlyPattern].filter(Boolean).join("|")})${TOKEN_BOUNDARY_SUFFIX}` +
           `(?!\\s+(?:${onPattern})\\s+(?:${weekdayPattern}))`, // negative lookahead: don't match if "on weekday" follows
         "i"
       );
@@ -366,4 +392,11 @@ function parseWithLocale(
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildTokenPattern(words: string[]): string {
+  return words
+    .map((word) => escapeRegex(word))
+    .sort((a, b) => b.length - a.length)
+    .join("|");
 }

@@ -135,7 +135,10 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
 
   // Pattern to match "number + unit" (e.g., "15 minuten", "20 minutes")
   // Keywords should include all forms (singular, plural, abbreviations) directly
-  const TIME_PATTERN = new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(${timeUnits})\\b`, "gi");
+  const TIME_PATTERN = new RegExp(
+    `(\\d+(?:\\.\\d+)?)\\s*(${timeUnits})(?=$|\\s|[.,!?;:()\\[\\]{}\"'])`,
+    "gi"
+  );
 
   let match: RegExpExecArray | null = TIME_PATTERN.exec(text);
 
