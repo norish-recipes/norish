@@ -238,6 +238,7 @@ export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
     fr: { name: "Français", enabled: true },
     es: { name: "Español", enabled: true },
     ru: { name: "Русский", enabled: true },
+    ko: { name: "한국어", enabled: true },
   },
 };
 
