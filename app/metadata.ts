@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import { generateAppleWebAppSplashScreenConfigs } from "@/lib/pwa/ios-startup-images";
 import { siteConfig } from "@/config/site";
 
 export const appMetadata: Metadata = {
@@ -25,6 +26,10 @@ export const appMetadata: Metadata = {
     capable: true,
     title: siteConfig.name,
     statusBarStyle: "black-translucent",
+    startupImage: generateAppleWebAppSplashScreenConfigs(),
+  },
+  other: {
+    "apple-mobile-web-app-capable": "yes",
   },
   applicationName: siteConfig.name,
 };
