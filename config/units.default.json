@@ -36,13 +36,7 @@
         "name": "센티리터"
       }
     ],
-    "alternates": [
-      "centiliter",
-      "centiliters",
-      "zentiliter",
-      "cl.",
-      "센티리터"
-    ]
+    "alternates": ["centiliter", "centiliters", "zentiliter", "cl.", "센티리터"]
   },
   "deciliter": {
     "short": [
@@ -81,13 +75,7 @@
         "name": "데시리터"
       }
     ],
-    "alternates": [
-      "deciliter",
-      "deciliters",
-      "deziliter",
-      "dl.",
-      "데시리터"
-    ]
+    "alternates": ["deciliter", "deciliters", "deziliter", "dl.", "데시리터"]
   },
   "gram": {
     "short": [
@@ -126,16 +114,7 @@
         "name": "그램"
       }
     ],
-    "alternates": [
-      "g",
-      "g.",
-      "gr",
-      "gr.",
-      "gramm",
-      "grammen",
-      "그램",
-      "그람"
-    ]
+    "alternates": ["g", "g.", "gr", "gr.", "gramm", "grammen", "그램", "그람"]
   },
   "teaspoon": {
     "short": [
@@ -438,16 +417,7 @@
         "name": "쪽"
       }
     ],
-    "alternates": [
-      "zehe(n)",
-      "zehe/n",
-      "teen",
-      "teentje",
-      "teentjes",
-      "tenen",
-      "쪽",
-      "톨"
-    ]
+    "alternates": ["zehe(n)", "zehe/n", "teen", "teentje", "teentjes", "tenen", "쪽", "톨"]
   },
   "leaf": {
     "short": [
@@ -642,12 +612,7 @@
         "name": "대"
       }
     ],
-    "alternates": [
-      "stengel",
-      "stengels",
-      "대",
-      "줄기"
-    ]
+    "alternates": ["stengel", "stengels", "대", "줄기"]
   },
   "pack": {
     "short": [
@@ -966,17 +931,7 @@
         "name": "박스"
       }
     ],
-    "alternates": [
-      "box",
-      "boxes",
-      "bx",
-      "bx.",
-      "doosje",
-      "doosjes",
-      "dozen",
-      "박스",
-      "상자"
-    ]
+    "alternates": ["box", "boxes", "bx", "bx.", "doosje", "doosjes", "dozen", "박스", "상자"]
   },
   "handful": {
     "short": [
@@ -1278,15 +1233,7 @@
         "name": "채"
       }
     ],
-    "alternates": [
-      "reepje",
-      "reepjes",
-      "repen",
-      "strip",
-      "strips",
-      "채",
-      "가늘게썬조각"
-    ]
+    "alternates": ["reepje", "reepjes", "repen", "strip", "strips", "채", "가늘게썬조각"]
   },
   "sheet": {
     "short": [
@@ -1325,13 +1272,7 @@
         "name": "장"
       }
     ],
-    "alternates": [
-      "vel",
-      "vellen",
-      "velletje",
-      "velletjes",
-      "장"
-    ]
+    "alternates": ["vel", "vellen", "velletje", "velletjes", "장"]
   },
   "serving": {
     "short": [
@@ -1419,13 +1360,7 @@
         "name": "둥근 조각"
       }
     ],
-    "alternates": [
-      "schijfje",
-      "schijfjes",
-      "schijven",
-      "둥근 조각",
-      "동그랗게 썬 것"
-    ]
+    "alternates": ["schijfje", "schijfjes", "schijven", "둥근 조각", "동그랗게 썬 것"]
   },
   "ring": {
     "short": [
@@ -1464,13 +1399,7 @@
         "name": "링"
       }
     ],
-    "alternates": [
-      "ring",
-      "ringen",
-      "ringlein",
-      "링",
-      "고리 모양"
-    ]
+    "alternates": ["ring", "ringen", "ringlein", "링", "고리 모양"]
   },
   "ball": {
     "short": [
@@ -1509,16 +1438,7 @@
         "name": "알"
       }
     ],
-    "alternates": [
-      "bol",
-      "bollen",
-      "bolletje",
-      "bolletjes",
-      "kügelchen",
-      "알",
-      "경단",
-      "볼"
-    ]
+    "alternates": ["bol", "bollen", "bolletje", "bolletjes", "kügelchen", "알", "경단", "볼"]
   },
   "dash": {
     "short": [
@@ -1557,13 +1477,7 @@
         "name": "약간"
       }
     ],
-    "alternates": [
-      "a dash",
-      "dash",
-      "dashes",
-      "약간",
-      "소량"
-    ]
+    "alternates": ["a dash", "dash", "dashes", "약간", "소량"]
   },
   "drizzle": {
     "short": [
@@ -1602,14 +1516,7 @@
         "name": "살짝"
       }
     ],
-    "alternates": [
-      "a drizzle",
-      "drizzle",
-      "drizzles",
-      "spritzerchen",
-      "살짝",
-      "뿌림"
-    ]
+    "alternates": ["a drizzle", "drizzle", "drizzles", "spritzerchen", "살짝", "뿌림"]
   },
   "scoop": {
     "short": [
@@ -1648,12 +1555,7 @@
         "name": "스쿱"
       }
     ],
-    "alternates": [
-      "scoop",
-      "scoops",
-      "스쿱",
-      "국자"
-    ]
+    "alternates": ["scoop", "scoops", "스쿱", "국자"]
   },
   "stick": {
     "short": [
@@ -1692,14 +1594,7 @@
         "name": "막대"
       }
     ],
-    "alternates": [
-      "stick",
-      "stick(s)",
-      "sticks",
-      "stänglein",
-      "막대",
-      "스틱"
-    ]
+    "alternates": ["stick", "stick(s)", "sticks", "stänglein", "막대", "스틱"]
   },
   "tub": {
     "short": [
@@ -1738,13 +1633,7 @@
         "name": "통"
       }
     ],
-    "alternates": [
-      "container",
-      "tub",
-      "tubs",
-      "통",
-      "용기"
-    ]
+    "alternates": ["container", "tub", "tubs", "통", "용기"]
   },
   "capful": {
     "short": [
@@ -1783,13 +1672,7 @@
         "name": "뚜껑"
       }
     ],
-    "alternates": [
-      "cap full",
-      "capful",
-      "capfuls",
-      "뚜껑",
-      "캡"
-    ]
+    "alternates": ["cap full", "capful", "capfuls", "뚜껑", "캡"]
   },
   "pouch": {
     "short": [
@@ -1828,12 +1711,7 @@
         "name": "파우치"
       }
     ],
-    "alternates": [
-      "pouch",
-      "pouches",
-      "파우치",
-      "주머니"
-    ]
+    "alternates": ["pouch", "pouches", "파우치", "주머니"]
   },
   "sleeve": {
     "short": [
@@ -1872,12 +1750,7 @@
         "name": "봉지"
       }
     ],
-    "alternates": [
-      "sleeve",
-      "sleeves",
-      "봉지",
-      "묶음"
-    ]
+    "alternates": ["sleeve", "sleeves", "봉지", "묶음"]
   },
   "roll": {
     "short": [
@@ -1916,13 +1789,7 @@
         "name": "롤"
       }
     ],
-    "alternates": [
-      "roll",
-      "rolls",
-      "röllchen",
-      "롤",
-      "말이"
-    ]
+    "alternates": ["roll", "rolls", "röllchen", "롤", "말이"]
   },
   "ear": {
     "short": [
@@ -1961,14 +1828,7 @@
         "name": "개"
       }
     ],
-    "alternates": [
-      "ear",
-      "ear of corn",
-      "ears",
-      "ears of corn",
-      "개",
-      "이삭"
-    ]
+    "alternates": ["ear", "ear of corn", "ears", "ears of corn", "개", "이삭"]
   },
   "wedge": {
     "short": [
@@ -2007,13 +1867,7 @@
         "name": "쪽"
       }
     ],
-    "alternates": [
-      "ecke",
-      "keil",
-      "wedge",
-      "wedges",
-      "쪽"
-    ]
+    "alternates": ["ecke", "keil", "wedge", "wedges", "쪽"]
   },
   "chunk": {
     "short": [
@@ -2052,12 +1906,7 @@
         "name": "덩어리"
       }
     ],
-    "alternates": [
-      "chunk",
-      "chunks",
-      "덩어리",
-      "토막"
-    ]
+    "alternates": ["chunk", "chunks", "덩어리", "토막"]
   },
   "cube": {
     "short": [
@@ -2096,13 +1945,7 @@
         "name": "깍둑"
       }
     ],
-    "alternates": [
-      "cube",
-      "cubes",
-      "würfelchen",
-      "깍둑썰기",
-      "큐브"
-    ]
+    "alternates": ["cube", "cubes", "würfelchen", "깍둑썰기", "큐브"]
   },
   "fillet": {
     "short": [
@@ -2141,15 +1984,7 @@
         "name": "토막"
       }
     ],
-    "alternates": [
-      "filet",
-      "filets",
-      "fillet",
-      "fillets",
-      "토막",
-      "필렛",
-      "필레"
-    ]
+    "alternates": ["filet", "filets", "fillet", "fillets", "토막", "필렛", "필레"]
   },
   "heaping_tablespoon": {
     "short": [
@@ -2386,13 +2221,7 @@
         "name": "다스"
       }
     ],
-    "alternates": [
-      "dutzende",
-      "dz",
-      "dz.",
-      "다스",
-      "더즌"
-    ]
+    "alternates": ["dutzende", "dz", "dz.", "다스", "더즌"]
   },
   "small_splash": {
     "short": [
@@ -2431,12 +2260,7 @@
         "name": "조금"
       }
     ],
-    "alternates": [
-      "kleiner schuß",
-      "winziger schuss",
-      "조금",
-      "소량"
-    ]
+    "alternates": ["kleiner schuß", "winziger schuss", "조금", "소량"]
   },
   "bulb": {
     "short": [
@@ -2475,11 +2299,7 @@
         "name": "통"
       }
     ],
-    "alternates": [
-      "knöllchen",
-      "통",
-      "뿌리"
-    ]
+    "alternates": ["knöllchen", "통", "뿌리"]
   },
   "head": {
     "short": [
@@ -2518,11 +2338,7 @@
         "name": "통"
       }
     ],
-    "alternates": [
-      "köpfchen",
-      "통",
-      "포기"
-    ]
+    "alternates": ["köpfchen", "통", "포기"]
   },
   "to_taste": {
     "short": [
@@ -2561,13 +2377,7 @@
         "name": "기호에 맞게"
       }
     ],
-    "alternates": [
-      "nach bedarf",
-      "nach belieben",
-      "nach geschmack",
-      "기호에 맞게",
-      "취향껏"
-    ]
+    "alternates": ["nach bedarf", "nach belieben", "nach geschmack", "기호에 맞게", "취향껏"]
   },
   "pound": {
     "short": [
@@ -2606,12 +2416,7 @@
         "name": "파운드"
       }
     ],
-    "alternates": [
-      "pfd",
-      "pfd.",
-      "파운드",
-      "lb"
-    ]
+    "alternates": ["pfd", "pfd.", "파운드", "lb"]
   },
   "bar": {
     "short": [
@@ -2650,12 +2455,7 @@
         "name": "판"
       }
     ],
-    "alternates": [
-      "reihen",
-      "riegelchen",
-      "판",
-      "바"
-    ]
+    "alternates": ["reihen", "riegelchen", "판", "바"]
   },
   "bowl": {
     "short": [
@@ -2694,11 +2494,7 @@
         "name": "공기"
       }
     ],
-    "alternates": [
-      "schälchen",
-      "공기",
-      "그릇"
-    ]
+    "alternates": ["schälchen", "공기", "그릇"]
   },
   "heaping_teaspoon": {
     "short": [
@@ -2836,10 +2632,7 @@
         "name": "냄비"
       }
     ],
-    "alternates": [
-      "냄비",
-      "솥"
-    ]
+    "alternates": ["냄비", "솥"]
   },
   "drop": {
     "short": [
@@ -2878,15 +2671,7 @@
         "name": "방울"
       }
     ],
-    "alternates": [
-      "tr",
-      "tr.",
-      "trpf",
-      "trpf.",
-      "tröpfchen",
-      "방울",
-      "한방울"
-    ]
+    "alternates": ["tr", "tr.", "trpf", "trpf.", "tröpfchen", "방울", "한방울"]
   },
   "ounce": {
     "short": [
@@ -2925,11 +2710,7 @@
         "name": "온스"
       }
     ],
-    "alternates": [
-      "oz",
-      "oz.",
-      "온스"
-    ]
+    "alternates": ["oz", "oz.", "온스"]
   },
   "milliliter": {
     "short": [
@@ -3017,15 +2798,6 @@
         "name": "리터"
       }
     ],
-    "alternates": [
-      "liter",
-      "liters",
-      "litre",
-      "litres",
-      "l",
-      "l.",
-      "L",
-      "리터"
-    ]
+    "alternates": ["liter", "liters", "litre", "litres", "l", "l.", "L", "리터"]
   }
 }

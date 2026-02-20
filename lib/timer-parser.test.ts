@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 
-import defaultTimerKeywords from "@/config/timer-keywords.default.json";
-
 import { parseTimerDurations } from "./timer-parser";
+
+import defaultTimerKeywords from "@/config/timer-keywords.default.json";
 
 describe("parseTimerDurations", () => {
   describe("default keywords", () => {
