@@ -192,6 +192,7 @@
     "converted": "측정 단위 변환 완료",
     "convertedDescription": "레시피를 {system} 단위로 변환했습니다",
     "failed": "레시피 작업이 실패했습니다.",
+    "failedDescription": "레시피를 처리하는 중 문제가 발생했습니다. 기술적인 세부사항은 브라우저 콘솔을 확인하세요.",
     "batchImported": "레시피 가져오기 완료",
     "batchImportedDescription": "아카이브에서 {count}개 레시피를 가져왔습니다.",
     "view": "보기",

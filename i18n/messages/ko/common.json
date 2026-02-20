@@ -3,6 +3,7 @@
     "save": "저장",
     "cancel": "취소",
     "delete": "삭제",
+    "duplicate": "복제",
     "edit": "편집",
     "create": "만들기",
     "add": "추가",
@@ -76,6 +77,11 @@
   "validation": {
     "required": "이 필드는 필수입니다",
     "invalidUrl": "유효한 URL을 입력하세요."
+  },
+  "errors": {
+    "operationFailed": "작업에 실패했습니다",
+    "nameCannotBeEmpty": "이름은 비워 둘 수 없습니다",
+    "technicalDetails": "문제가 발생했습니다. 기술적인 세부사항은 브라우저 콘솔을 확인하세요."
   },
   "slots": {
     "breakfast": "아침",
