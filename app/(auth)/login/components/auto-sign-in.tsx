@@ -3,12 +3,11 @@
 import type { ProviderInfo } from "@/types";
 
 import { Card, CardBody, Spinner } from "@heroui/react";
-import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 import { ProviderIcon } from "./provider-icon";
 
-import logo from "@/public/norish-logo.png";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { signIn } from "@/lib/auth/client";
 
 interface AutoSignInProps {
@@ -47,14 +46,7 @@ export function AutoSignIn({ provider, callbackUrl }: AutoSignInProps) {
       <Card className="w-full max-w-sm overflow-hidden">
         <CardBody className="flex flex-col items-center gap-6 p-8">
           {/* Logo */}
-          <Image
-            priority
-            alt="Norish logo"
-            className="object-contain"
-            height={40}
-            src={logo}
-            width={140}
-          />
+          <BrandLogo priority height={40} width={140} />
 
           {/* Provider indicator */}
           <div className="flex flex-col items-center gap-4 py-4">

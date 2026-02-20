@@ -22,6 +22,11 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     icons: [
       {
+        src: "/favicon.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+      },
+      {
         src: "/android-chrome-192x192.png",
         sizes: "192x192",
         type: "image/png",
@@ -34,6 +39,11 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         src: "/apple-touch-icon.png",
         sizes: "180x180",
+        type: "image/png",
+      },
+      {
+        src: "/favicon-96x96.png",
+        sizes: "96x96",
         type: "image/png",
       },
       {

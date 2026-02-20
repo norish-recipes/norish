@@ -2,7 +2,6 @@
 
 import { Navbar as HeroUINavbar, NavbarContent, NavbarBrand, NavbarItem } from "@heroui/navbar";
 import NextLink from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -10,7 +9,7 @@ import { useTranslations } from "next-intl";
 import { siteConfig } from "@/config/site";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import MobileNav from "@/components/navbar/mobile-nav";
-import logo from "@/public/norish-logo.png";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { useAutoHide } from "@/hooks/auto-hide";
 
 // Map hrefs to translation keys
@@ -64,7 +63,7 @@ export const Navbar = () => {
                   }
                 }}
               >
-                <Image priority alt="Norish logo" height={30} src={logo} width={120} />
+                <BrandLogo priority height={30} width={120} />
               </NextLink>
             </NavbarBrand>
           </NavbarContent>

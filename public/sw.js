@@ -2,7 +2,9 @@ const CACHE_NAME = 'norish-cache-v0.3.0-beta';
 const STATIC_ASSETS = [
   '/',
   '/manifest.webmanifest',
+  '/favicon.svg',
   '/favicon.ico',
+  '/favicon-96x96.png',
   '/android-chrome-192x192.png',
   '/android-chrome-512x512.png',
   '/apple-touch-icon.png',
