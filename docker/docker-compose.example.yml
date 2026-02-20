@@ -2,7 +2,7 @@ services:
   norish:
     image: norishapp/norish:latest
     container_name: norish-app
-    restart: always  # Required for server restart functionality from Admin UI
+    restart: always # Required for server restart functionality from Admin UI
     ports:
       - "3000:3000"
     user: "1000:1000"
@@ -14,11 +14,11 @@ services:
       # Core settings (required)
       AUTH_URL: http://norish.example.com # The URL where Norish is reachable
       DATABASE_URL: postgres://postgres:norish@db:5432/norish
-      MASTER_KEY: <32-byte-base64-key>    # Generate with: openssl rand -base64 32
-      CHROME_WS_ENDPOINT: ws://chrome-headless:3000  # Puppeteer WebSocket endpoint for web scraping
-      
+      MASTER_KEY: <32-byte-base64-key> # Generate with: openssl rand -base64 32
+      CHROME_WS_ENDPOINT: ws://chrome-headless:3000 # Puppeteer WebSocket endpoint for web scraping
+
       # Optional
-      RECIPES_DISK_DIR: /app/uploads      # Defaults to /app/uploads
+      RECIPES_DISK_DIR: /app/uploads # Defaults to /app/uploads
       # NEXT_PUBLIC_LOG_LEVEL: info       # trace, debug, info, warn, error, fatal (default: info in prod, debug in dev)
       # TRUSTED_ORIGINS:http://192.168.1.100:3000,https://norish.example.com  # Additional trusted origins, comma separated. Useful when behind a proxy or using multiple domains.
 
@@ -28,7 +28,7 @@ services:
       # On first startup, configure ONE auth provider below to create your admin account.
       # After first login, use Settings => Admin to configure additional providers,
       # AI settings, video parsing, and all other options.
-      
+
       # Option 1: Password auth - basic auth with email/password
       # If not set defaults to disabled if OIDC or OAuth is configured.
       # Defaults to true if no other auth providers are configured.
@@ -53,7 +53,11 @@ services:
       # Redis for real-time events (required)
       REDIS_URL: redis://redis:6379
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode===200?0:1))\""]
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:3000/api/health'', r => process.exit(r.statusCode===200?0:1))"',
+        ]
       interval: 1m
       timeout: 15s
       retries: 3
@@ -93,7 +97,7 @@ services:
 
   # Redis for real-time events
   redis:
-    image: redis:8.4.0
+    image: redis:8.6.0
     container_name: norish-redis
     restart: unless-stopped
     volumes:
