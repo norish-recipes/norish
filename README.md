@@ -10,8 +10,6 @@
   <a href="https://buymeacoffee.com/mikevanes"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" /></a>
 </p>
 
-<p align="center"><a href="https://imgur.com/a/07VpBIc">Demo video</a></p>
-
 ---
 
 # Norish
@@ -49,14 +47,14 @@ Norish is a real-time, household-first recipe app for planning meals, sharing gr
     - [AI and Processing](#ai-and-processing)
     - [Testing and Tooling](#testing-and-tooling)
   - [License](#license)
-  - [Alternatives](#alternatives)
+  - [FOSS Alternatives](#foss-alternatives)
 - [Nora](#nora)
 
 ---
 
 ## Vision
 
-The vision for Norish is a shared recipe app built for friends, families, and households that want one collaborative recipe catalog.
+The vision for Norish is a shared recipe app built for friends, families, and households that want to share a recipe catalogue.
 
 The name comes from Nora (our dog) + dish. Coincidentally, it also sounds like "nourish".
 
@@ -64,9 +62,9 @@ The name comes from Nora (our dog) + dish. Coincidentally, it also sounds like "
 
 ## Why Norish
 
-Norish started because we wanted a cooking app that felt lightweight, collaborative, and truly real-time while shopping and planning together.
+Norish started because we wanted a cooking app that felt intuitive and easy to use. The existing apps we tested sadly did not meet our requirements in ease of use and aestethics. 
 
-Norish is intentionally minimal. It focuses on practical day-to-day planning.
+Norish is intentionally minimal. It focuses on practical day-to-day use.
 
 ---
 
@@ -404,7 +402,8 @@ pnpm run dev
 
 Norish is licensed under [AGPL-3.0](LICENSE).
 
-## Alternatives
+## FOSS Alternatives
+This list is not limited to the below but the ones I know: 
 
 - [Mealie](https://mealie.io/)
 - [Tandoor](https://tandoor.dev/)
