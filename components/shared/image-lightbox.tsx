@@ -100,7 +100,7 @@ export default function ImageLightbox({
       size="full"
       onClose={onClose}
     >
-      <ModalContent className="bg-transparent">
+      <ModalContent className="bg-transparent" onClick={(e) => e.stopPropagation()}>
         {() => (
           <div className="relative flex h-screen w-screen items-center justify-center">
             {/* Close button */}
@@ -191,7 +191,7 @@ export default function ImageLightbox({
               <div className="absolute bottom-6 left-1/2 z-50 flex -translate-x-1/2 gap-2">
                 {images.map((img, idx) => (
                   <button
-                    key={idx}
+                    key={`${img.src}-${idx}`}
                     className={`h-16 w-16 overflow-hidden rounded-lg border-2 transition-all ${
                       idx === currentIndex
                         ? "border-white opacity-100"
