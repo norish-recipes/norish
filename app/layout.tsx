@@ -18,7 +18,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html suppressHydrationWarning lang={locale}>
       <head>
-        <meta name="apple-mobile-web-app-capable" content="yes"></meta>
+        <meta content="yes" name="apple-mobile-web-app-capable" />
       </head>
       <body
         className={`bg-background text-foreground min-h-dvh font-sans antialiased ${fontSans.variable}`}

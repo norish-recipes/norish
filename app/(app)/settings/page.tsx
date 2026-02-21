@@ -48,7 +48,7 @@ function SettingsContent() {
   const { isServerAdmin, isLoading: isLoadingRole } = useUserRoleQuery();
 
   const handleTabChange = (key: React.Key) => {
-    router.push(`/settings?tab=${key}`);
+    router.push(`/settings?tab=${String(key)}`);
   };
 
   return (
