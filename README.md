@@ -62,7 +62,7 @@ The name comes from Nora (our dog) + dish. Coincidentally, it also sounds like "
 
 ## Why Norish
 
-Norish started because we wanted a cooking app that felt intuitive and easy to use. The existing apps we tested sadly did not meet our requirements in ease of use and aestethics. 
+Norish started because we wanted a cooking app that felt intuitive and easy to use. The existing apps we tested sadly did not meet our requirements in ease of use and aestethics.
 
 Norish is intentionally minimal. It focuses on practical day-to-day use.
 
@@ -403,7 +403,8 @@ pnpm run dev
 Norish is licensed under [AGPL-3.0](LICENSE).
 
 ## FOSS Alternatives
-This list is not limited to the below but the ones I know: 
+
+This list is not limited to the below but the ones I know:
 
 - [Mealie](https://mealie.io/)
 - [Tandoor](https://tandoor.dev/)
