@@ -176,8 +176,9 @@ pnpm build
 
 ### 4. Submit a Pull Request
 
-- Provide a clear description of the changes
-- Reference any related issues
+- Follow the PR template
+- Link the PR to an issue (`Fixes #...` in the PR body)
+- PRs without a linked issue will be closed, except translation-only PRs
 - Ensure CI checks pass
 
 ## Testing
