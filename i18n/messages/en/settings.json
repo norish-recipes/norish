@@ -179,7 +179,9 @@
       "regenerateButton": "Regenerate",
       "expired": "Expired",
       "noCodeDescription": "No active join code. Generate one to invite new members.",
-      "generateButton": "Generate Join Code"
+      "generateButton": "Generate Join Code",
+      "copySuccess": "Join code copied",
+      "copyFailed": "Failed to copy join code"
     },
     "create": {
       "title": "Create Household",

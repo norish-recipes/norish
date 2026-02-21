@@ -179,7 +179,9 @@
       "regenerateButton": "Régénérer",
       "expired": "Expiré",
       "noCodeDescription": "Aucun code actif. Générez-en un pour inviter de nouveaux membres.",
-      "generateButton": "Générer un code"
+      "generateButton": "Générer un code",
+      "copySuccess": "Code copié",
+      "copyFailed": "Impossible de copier le code"
     },
     "create": {
       "title": "Créer un foyer",

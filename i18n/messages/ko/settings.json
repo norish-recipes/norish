@@ -179,7 +179,9 @@
       "regenerateButton": "재생성",
       "expired": "만료됨",
       "noCodeDescription": "활성 참여 코드가 없습니다. 새 구성원을 초대하려면 코드를 생성하세요.",
-      "generateButton": "참여 코드 만들기"
+      "generateButton": "참여 코드 만들기",
+      "copySuccess": "참여 코드가 복사되었습니다",
+      "copyFailed": "참여 코드 복사에 실패했습니다"
     },
     "create": {
       "title": "가구 만들기",
