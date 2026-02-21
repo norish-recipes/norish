@@ -179,7 +179,9 @@
       "regenerateButton": "Regenerar",
       "expired": "Caducado",
       "noCodeDescription": "No hay código de unión activo. Genera uno para invitar nuevos miembros.",
-      "generateButton": "Generar código"
+      "generateButton": "Generar código",
+      "copySuccess": "Código copiado",
+      "copyFailed": "No se pudo copiar el código"
     },
     "create": {
       "title": "Crear hogar",

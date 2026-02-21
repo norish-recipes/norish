@@ -179,7 +179,9 @@
       "regenerateButton": "Opnieuw genereren",
       "expired": "Verlopen",
       "noCodeDescription": "Geen actieve join code. Genereer er een om nieuwe leden uit te nodigen.",
-      "generateButton": "Genereer join Code"
+      "generateButton": "Genereer join Code",
+      "copySuccess": "Join-code gekopieerd",
+      "copyFailed": "Join-code kopieren mislukt"
     },
     "create": {
       "title": "Huishouden aanmaken",

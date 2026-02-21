@@ -179,7 +179,9 @@
       "regenerateButton": "Neu generieren",
       "expired": "Abgelaufen",
       "noCodeDescription": "Kein aktiver Join-Code. Generieren Sie einen, um neue Mitglieder einzuladen.",
-      "generateButton": "Join-Code generieren"
+      "generateButton": "Join-Code generieren",
+      "copySuccess": "Join-Code kopiert",
+      "copyFailed": "Join-Code konnte nicht kopiert werden"
     },
     "create": {
       "title": "Haushalt erstellen",
