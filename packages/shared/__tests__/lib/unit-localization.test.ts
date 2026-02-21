@@ -106,6 +106,23 @@ describe("Unit Localization", () => {
         expect(formatUnit("unknownUnit", "de", unitsConfig)).toBe("unknownUnit");
       });
     });
+
+    describe("Quantity-based form selection", () => {
+      it("uses plural when quantity is greater than 1", () => {
+        expect(formatUnit("gram", "en", unitsConfig, 2)).toBe("grams");
+        expect(formatUnit("tablespoon", "en", unitsConfig, 2)).toBe("tablespoons");
+      });
+
+      it("uses short/singular when quantity is 1 or lower", () => {
+        expect(formatUnit("gram", "en", unitsConfig, 1)).toBe("g");
+        expect(formatUnit("gram", "en", unitsConfig, 0.5)).toBe("g");
+      });
+
+      it("uses short/singular when quantity is missing", () => {
+        expect(formatUnit("gram", "en", unitsConfig, null)).toBe("g");
+        expect(formatUnit("gram", "en", unitsConfig)).toBe("g");
+      });
+    });
   });
 
   describe("flattenForLibrary - prepare config for parser", () => {
