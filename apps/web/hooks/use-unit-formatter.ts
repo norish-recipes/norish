@@ -13,6 +13,15 @@ export function useUnitFormatter() {
   const locale = useLocale();
   const { units } = useUnitsQuery();
 
+  const formatUnitOnly = (
+    unit: string | null | undefined,
+    amount?: number | null | undefined
+  ): string => {
+    if (!unit) return "";
+
+    return formatUnit(unit, locale, units, amount);
+  };
+
   /**
    * Format amount and unit for display (e.g., "500 g" or "2 tbsp")
    * Handles spacing automatically (short units get no space: "500g", longer ones do: "2 tbsp")
@@ -31,7 +40,7 @@ export function useUnitFormatter() {
     }
 
     // Format the unit
-    const localizedUnit = formatUnit(unit, locale, units);
+    const localizedUnit = formatUnit(unit, locale, units, amount);
 
     // If no amount, return just the unit
     if (!amount && amount !== 0) {
@@ -49,6 +58,7 @@ export function useUnitFormatter() {
 
   return {
     formatAmountUnit,
+    formatUnitOnly,
     locale,
     units,
   };

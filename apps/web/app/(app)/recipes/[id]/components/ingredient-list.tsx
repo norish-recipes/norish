@@ -16,7 +16,7 @@ export default function IngredientsList() {
   const { adjustedIngredients, recipe } = useRecipeContextRequired();
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
   const { mode } = useAmountDisplayPreference();
-  const { formatAmountUnit } = useUnitFormatter();
+  const { formatUnitOnly } = useUnitFormatter();
 
   // Use adjustedIngredients directly, fall back to recipe ingredients only if empty
   const display = adjustedIngredients?.length > 0 ? adjustedIngredients : recipe.recipeIngredients;
@@ -61,7 +61,7 @@ export default function IngredientsList() {
 
           const amount = formatAmount(it.amount, mode);
           // Format unit with locale-aware display
-          const unit = it.unit ? formatAmountUnit(null, it.unit) : "";
+          const unit = it.unit ? formatUnitOnly(it.unit, it.amount) : "";
           const isChecked = checked.has(idx);
 
           return (
