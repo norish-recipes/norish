@@ -26,9 +26,9 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
 
           {/* Header */}
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="flex items-center justify-center gap-2 text-2xl font-bold">
+            <h1 className="flex items-baseline justify-center gap-2 text-2xl font-bold">
               <span>{title}</span>
-              <BrandLogo priority className="-mt-[2px]" height={34} width={120} />
+              <BrandLogo priority className="shrink-0" height={34} width={120} />
             </h1>
             <p className="text-small text-default-500">{subtitle}</p>
           </div>
