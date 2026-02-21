@@ -1,8 +1,16 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState, FormEvent } from "react";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Input,
+  InputOtp,
+  REGEXP_ONLY_DIGITS,
+} from "@heroui/react";
 import { HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
-import { Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -74,10 +82,12 @@ export default function NoHouseholdView() {
           <CardBody>
             <form className="flex flex-col gap-4" onSubmit={handleJoinHousehold}>
               <p className="text-default-600 text-base">{t("join.description")}</p>
-              <Input
+              <InputOtp
                 isRequired
+                allowedKeys={REGEXP_ONLY_DIGITS}
+                classNames={{ segmentWrapper: "justify-start" }}
                 label={t("join.codeLabel")}
-                maxLength={8}
+                length={6}
                 placeholder={t("join.codePlaceholder")}
                 value={joinCode}
                 onValueChange={setJoinCode}
