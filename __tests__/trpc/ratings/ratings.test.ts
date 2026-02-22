@@ -5,7 +5,7 @@ import superjson from "superjson";
 
 vi.mock("@/server/db/repositories/ratings", () => import("../../mocks/ratings-repository"));
 vi.mock("@/server/trpc/routers/ratings/emitter", () => import("../../mocks/ratings-emitter"));
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "household" }),
 }));
 vi.mock("@/server/logger", () => ({

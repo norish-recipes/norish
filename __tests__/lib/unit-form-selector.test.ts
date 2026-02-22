@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from "vitest";
 
-import { selectUnitForm, type UnitFormInfo } from "@/lib/unit-form-selector";
+import { selectUnitForm, type UnitFormInfo } from "@norish/shared/lib/unit-form-selector";
 
 describe("selectUnitForm", () => {
   const unitWithBothForms: UnitFormInfo = {

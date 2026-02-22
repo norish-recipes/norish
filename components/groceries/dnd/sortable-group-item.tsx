@@ -1,6 +1,6 @@
 "use client";
 
-import type { GroceryGroup } from "@/lib/grocery-grouping";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import type { GroupDragHandle } from "./types";
 
 import { useSortable } from "@dnd-kit/sortable";

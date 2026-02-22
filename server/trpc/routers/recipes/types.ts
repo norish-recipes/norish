@@ -3,7 +3,7 @@ import type {
   FullRecipeDTO,
   ArchiveProgressPayload,
   ArchiveCompletedPayload,
-} from "@/types";
+} from "@norish/shared/contracts";
 
 /**
  * Recipe subscription event payloads.

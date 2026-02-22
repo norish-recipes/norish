@@ -10,8 +10,8 @@ import {
   deleteStepImageByUrl,
   deleteImageByUrl,
 } from "@/server/downloader";
-import { ALLOWED_IMAGE_MIME_SET } from "@/types";
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { ALLOWED_IMAGE_MIME_SET } from "@norish/shared/contracts";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   addRecipeImages,
   deleteRecipeImageById,
@@ -19,7 +19,7 @@ import {
   countRecipeImages,
   getRecipeOwnerId,
 } from "@/server/db/repositories/recipes";
-import { MAX_RECIPE_IMAGES } from "@/server/db/zodSchemas";
+import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod";
 
 // --- Shared Helpers ---
 

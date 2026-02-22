@@ -4,7 +4,7 @@ import type {
   PlannedRecipeViewDto,
   NoteViewDto,
   Slot,
-} from "@/types";
+} from "@norish/shared/contracts";
 
 import { vi } from "vitest";
 

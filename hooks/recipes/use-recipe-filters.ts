@@ -10,7 +10,7 @@ import {
   RecipeCategory,
   DEFAULT_SEARCH_FIELDS,
   SEARCH_FIELDS,
-} from "@/types";
+} from "@norish/shared/contracts";
 
 const VALID_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 

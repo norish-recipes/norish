@@ -5,7 +5,7 @@ import { autoTaggingSchema, type AutoTaggingOutput } from "./schemas/auto-taggin
 import { buildAutoTaggingPrompt, type RecipeForTagging } from "./prompts/builder";
 import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } from "./core/types";
 
-import { isAIEnabled, getAutoTaggingMode } from "@/config/server-config-loader";
+import { isAIEnabled, getAutoTaggingMode } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@/server/db/repositories/tags";
 import { aiLogger } from "@/server/logger";
 

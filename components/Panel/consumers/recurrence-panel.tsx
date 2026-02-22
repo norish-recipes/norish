@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecurrencePattern } from "@/types/recurrence";
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 import { useState, useEffect } from "react";
 import { Button, ButtonGroup } from "@heroui/react";
@@ -13,8 +13,8 @@ import {
   formatNextOccurrence,
   formatRecurrenceSummary,
   type RecurrenceTranslations,
-} from "@/lib/recurrence/formatter";
-import { calculateNextOccurrence, getTodayString } from "@/lib/recurrence/calculator";
+} from "@norish/shared/lib/recurrence/formatter";
+import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
 type RecurrencePanelProps = {
   open: boolean;

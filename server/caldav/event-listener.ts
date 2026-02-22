@@ -1,6 +1,6 @@
 import type { CalendarSubscriptionEvents } from "@/server/trpc/routers/calendar/types";
 import type { RecipeSubscriptionEvents } from "@/server/trpc/routers/recipes/types";
-import type { Slot } from "@/types";
+import type { Slot } from "@norish/shared/contracts";
 import type Redis from "ioredis";
 
 import superjson from "superjson";

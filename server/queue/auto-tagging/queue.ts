@@ -5,7 +5,7 @@
  * Callers are responsible for lifecycle (close on shutdown).
  */
 
-import type { AutoTaggingJobData } from "@/types";
+import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
 
 import { Queue } from "bullmq";
 

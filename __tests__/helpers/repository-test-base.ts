@@ -23,7 +23,7 @@
  */
 
 import { resetDbConnection } from "@/server/db/drizzle";
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   initTestDb,
   closeTestDb,
@@ -36,7 +36,7 @@ import {
   teardownTestDatabase,
   generateTestDbName,
 } from "@/__tests__/helpers/db-setup";
-import { FullRecipeDTO, User } from "@/types";
+import { FullRecipeDTO, User } from "@norish/shared/contracts";
 
 export class RepositoryTestBase {
   protected testDbName: string;

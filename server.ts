@@ -8,7 +8,7 @@ import { registerShutdownHandlers } from "./server/startup/shutdown";
 import { initCaldavSync } from "./server/caldav/event-listener";
 import { startWorkers } from "./server/queue/start-workers";
 
-import { initializeServerConfig, SERVER_CONFIG } from "@/config/env-config-server";
+import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
 import { serverLogger as log } from "@/server/logger";
 
 async function main() {

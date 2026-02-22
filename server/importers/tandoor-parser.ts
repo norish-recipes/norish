@@ -3,10 +3,10 @@ import crypto from "crypto";
 import JSZip from "jszip";
 import { z } from "zod";
 
-import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
+import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { matchCategory } from "@/server/ai/utils/category-matcher";
 import { saveImageBytes } from "@/server/downloader";
-import { FullRecipeInsertDTO } from "@/types";
+import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { FullRecipeInsertSchema } from "@/server/db";
 
 // Zod schemas for Tandoor recipe structure

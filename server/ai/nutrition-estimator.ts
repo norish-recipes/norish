@@ -5,7 +5,7 @@ import { nutritionEstimationSchema, type NutritionEstimate } from "./schemas/nut
 import { loadPrompt, fillPrompt } from "./prompts/loader";
 import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } from "./types/result";
 
-import { isAIEnabled } from "@/config/server-config-loader";
+import { isAIEnabled } from "@norish/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
 
 // Re-export type for consumers

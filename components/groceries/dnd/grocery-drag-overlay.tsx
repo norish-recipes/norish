@@ -1,6 +1,6 @@
 "use client";
 
-import type { GroceryDto, RecurringGroceryDto } from "@/types";
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
 import { Checkbox } from "@heroui/react";
 import { Bars3Icon } from "@heroicons/react/16/solid";

@@ -19,7 +19,7 @@ vi.mock("@/server/downloader", () => ({
 }));
 
 // Mock getUnits to avoid database calls
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getUnits: vi.fn().mockResolvedValue({}),
 }));
 

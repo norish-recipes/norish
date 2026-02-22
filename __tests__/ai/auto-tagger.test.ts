@@ -8,7 +8,7 @@
 import { generateText } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { isAIEnabled, getAutoTaggingMode } from "@/config/server-config-loader";
+import { isAIEnabled, getAutoTaggingMode } from "@norish/config/server-config-loader";
 import { generateTagsForRecipe } from "@/server/ai/auto-tagger";
 import { listAllTagNames } from "@/server/db/repositories/tags";
 
@@ -20,7 +20,7 @@ vi.mock("ai", () => ({
   },
 }));
 
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   isAIEnabled: vi.fn(),
   getAutoTaggingMode: vi.fn(),
 }));

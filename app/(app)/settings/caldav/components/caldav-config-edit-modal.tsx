@@ -1,6 +1,6 @@
 "use client";
 
-import type { CalDavCalendarInfo } from "@/types";
+import type { CalDavCalendarInfo } from "@norish/shared/contracts";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {

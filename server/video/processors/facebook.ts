@@ -1,4 +1,4 @@
-import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { VideoProcessorContext } from "../types";
 
 import { InstagramProcessor } from "./instagram";

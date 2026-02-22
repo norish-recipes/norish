@@ -1,4 +1,4 @@
-import type { ServerConfigKey } from "@/server/db/zodSchemas/server-config";
+import type { ServerConfigKey } from "@norish/config/zod/server-config";
 
 export type ProviderKey = "oidc" | "github" | "google";
 

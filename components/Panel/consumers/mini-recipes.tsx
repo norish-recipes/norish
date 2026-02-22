@@ -8,10 +8,10 @@ import { PlusIcon, ArrowPathIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import Panel from "@/components/Panel/Panel";
-import { RecipeDashboardDTO, Slot, RecipeCategory } from "@/types";
+import { RecipeDashboardDTO, Slot, RecipeCategory } from "@norish/shared/contracts";
 import { useRecipesQuery, useRandomRecipe } from "@/hooks/recipes";
 import MiniRecipeSkeleton from "@/components/skeleton/mini-recipe-skeleton";
-import { dateKey } from "@/lib/helpers";
+import { dateKey } from "@norish/shared/lib/helpers";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
 

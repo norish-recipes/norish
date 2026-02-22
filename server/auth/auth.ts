@@ -23,12 +23,12 @@ import {
 
 import { getPublisherClient } from "@/server/redis/client";
 import { db } from "@/server/db/drizzle";
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { AUTH_SECRET, encrypt, hmacIndex, safeDecrypt } from "@/server/auth/crypto";
-import { isRegistrationEnabled } from "@/config/server-config-loader";
+import { isRegistrationEnabled } from "@norish/config/server-config-loader";
 import { setConfig } from "@/server/db/repositories/server-config";
 import { countUsers } from "@/server/db/repositories/users";
-import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import * as schema from "@/server/db/schema/auth";
 import { authLogger } from "@/server/logger";
 

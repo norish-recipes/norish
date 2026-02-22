@@ -1,6 +1,6 @@
 "use client";
 
-import type { StoreDto } from "@/types";
+import type { StoreDto } from "@norish/shared/contracts";
 import type { QueryKey } from "@tanstack/react-query";
 
 import { useQueryClient, useQuery } from "@tanstack/react-query";

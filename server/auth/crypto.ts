@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 export const AUTH_SECRET = deriveKey("auth").toString("base64url");
 export const ENCRYPTION_KEY = deriveKey("encryption");

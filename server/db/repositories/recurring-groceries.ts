@@ -8,8 +8,8 @@ import {
   RecurringGrocerySelectBaseSchema,
   RecurringGroceryUpdateBaseSchema,
   GrocerySelectBaseSchema,
-} from "@/server/db/zodSchemas";
-import { getTodayString, shouldBeActive } from "@/lib/recurrence/calculator";
+} from "@norish/shared/contracts/zod";
+import { getTodayString, shouldBeActive } from "@norish/shared/lib/recurrence/calculator";
 import { dbLogger } from "@/server/logger";
 
 export type RecurringGroceryDto = z.output<typeof RecurringGrocerySelectBaseSchema>;

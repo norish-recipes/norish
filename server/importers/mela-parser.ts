@@ -10,7 +10,7 @@ import {
 } from "./parser-helpers";
 
 import { serverLogger as log } from "@/server/logger";
-import { FullRecipeInsertDTO } from "@/types";
+import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 
 export type MelaRecipe = {
   categories?: string[];

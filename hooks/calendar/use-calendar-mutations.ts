@@ -1,6 +1,6 @@
 "use client";
 
-import type { PlannedItemFromQuery, Slot } from "@/types";
+import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

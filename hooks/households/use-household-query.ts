@@ -1,6 +1,6 @@
 "use client";
 
-import type { HouseholdSettingsDto, HouseholdAdminSettingsDto } from "@/types/dto/household";
+import type { HouseholdSettingsDto, HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 import type { QueryKey } from "@tanstack/react-query";
 
 import { useQueryClient, useQuery } from "@tanstack/react-query";

@@ -14,7 +14,7 @@ import {
   TimerKeywordsInputSchema,
   type PromptsConfig,
   type TimerKeywordsConfig,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 /**
  * Update content indicators config.

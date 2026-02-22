@@ -17,7 +17,7 @@ import {
   hasDocumentFullscreenApi,
   hasNativeVideoFullscreen,
   isFullscreenControlSupported,
-} from "@/lib/video-fullscreen";
+} from "@norish/shared/lib/video-fullscreen";
 
 export interface VideoPlayerProps {
   src: string;

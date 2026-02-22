@@ -15,7 +15,7 @@ vi.mock("@/server/logger", () => ({
 import { setConfig, configExists } from "../../mocks/server-config";
 import { isUserServerAdmin } from "../../mocks/users";
 
-import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 // Test utilities
 function createMockAdminUser() {

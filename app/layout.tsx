@@ -5,7 +5,7 @@ import { getLocale, getMessages } from "next-intl/server";
 
 import { appMetadata, appViewport } from "./metadata";
 
-import { fontSans } from "@/config/fonts";
+import { fontSans } from "@norish/web/config/fonts";
 import RegisterServiceWorker from "@/components/register-service-worker";
 
 export const metadata = appMetadata;

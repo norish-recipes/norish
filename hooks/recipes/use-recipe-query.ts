@@ -1,6 +1,6 @@
 "use client";
 
-import type { FullRecipeDTO } from "@/types";
+import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { QueryKey } from "@tanstack/react-query";
 
 import { useQueryClient, useQuery } from "@tanstack/react-query";

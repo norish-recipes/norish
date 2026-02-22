@@ -1,4 +1,4 @@
-import type { GroceryInsertDto } from "@/types";
+import type { GroceryInsertDto } from "@norish/shared/contracts";
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -16,7 +16,7 @@ import {
   getRecurringGroceryById,
   getRecurringGroceryOwnerId,
 } from "@/server/db/repositories/recurring-groceries";
-import { calculateNextOccurrence, getTodayString } from "@/lib/recurrence/calculator";
+import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 import { trpcLogger as log } from "@/server/logger";
 import { assertHouseholdAccess } from "@/server/auth/permissions";
 

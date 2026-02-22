@@ -7,7 +7,7 @@ import {
   FullRecipeSchema,
   RecipeDashboardSchema,
   recipeCategorySchema,
-} from "@/server/db/zodSchemas/recipe";
+} from "@norish/shared/contracts/zod/recipe";
 
 describe("recipeCategorySchema", () => {
   it("accepts valid category values", () => {

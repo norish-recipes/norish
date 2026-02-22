@@ -8,9 +8,9 @@ import {
   getLocaleConfig,
   isTimersEnabled,
   getTimerKeywords,
-} from "@/config/server-config-loader";
+} from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@/server/db/repositories/tags";
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 /**
  * Get locale configuration (enabled locales and default locale)

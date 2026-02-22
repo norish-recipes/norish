@@ -1,5 +1,5 @@
 /**
- * Mock for @/lib/helpers
+ * Mock for @norish/shared/lib/helpers
  */
 import { vi } from "vitest";
 

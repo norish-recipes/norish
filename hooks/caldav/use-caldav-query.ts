@@ -1,8 +1,8 @@
 "use client";
 
-import type { CaldavSyncStatusViewDto, CaldavSyncStatusSummaryDto } from "@/types";
+import type { CaldavSyncStatusViewDto, CaldavSyncStatusSummaryDto } from "@norish/shared/contracts";
 import type { QueryKey } from "@tanstack/react-query";
-import type { UserCaldavConfigWithoutPasswordDto } from "@/types";
+import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
 
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 

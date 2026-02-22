@@ -1,4 +1,4 @@
-import type { OIDCClaimConfig } from "@/server/db/zodSchemas/server-config";
+import type { OIDCClaimConfig } from "@norish/config/zod/server-config";
 import type { HouseholdUserInfo } from "@/server/trpc/routers/households/types";
 
 import { authLogger } from "@/server/logger";

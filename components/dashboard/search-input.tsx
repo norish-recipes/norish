@@ -12,7 +12,7 @@ import SearchFieldToggles from "./search-field-toggles";
 
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { isUrl } from "@/lib/helpers";
+import { isUrl } from "@norish/shared/lib/helpers";
 
 export default function SearchInput() {
   const t = useTranslations("recipes.dashboard");

@@ -4,7 +4,7 @@ import type {
   SiteAuthTokenSafeDto,
   CreateSiteAuthTokenInputDto,
   UpdateSiteAuthTokenInputDto,
-} from "@/types/dto/site-auth-tokens";
+} from "@norish/shared/contracts/dto/site-auth-tokens";
 
 import { eq, and } from "drizzle-orm";
 
@@ -15,7 +15,7 @@ import {
   SiteAuthTokenSelectSchema,
   CreateSiteAuthTokenInputSchema,
   UpdateSiteAuthTokenInputSchema,
-} from "@/server/db/zodSchemas/site-auth-tokens";
+} from "@norish/shared/contracts/zod/site-auth-tokens";
 
 function decryptToken(token: SiteAuthTokenDto): SiteAuthTokenDecryptedDto {
   return {

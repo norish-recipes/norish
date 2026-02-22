@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { siteConfig } from "@/config/site";
+import { siteConfig } from "@norish/web/config/site";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import MobileNav from "@/components/navbar/mobile-nav";
 import { BrandLogo } from "@/components/brand/brand-logo";

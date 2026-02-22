@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { swLogger as log } from "@/lib/logger";
+import { swLogger as log } from "@norish/shared/lib/logger";
 
 export default function RegisterServiceWorker() {
   useEffect(() => {

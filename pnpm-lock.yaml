@@ -50,6 +50,21 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.4)
+      '@norish/config':
+        specifier: workspace:*
+        version: link:packages/config
+      '@norish/i18n':
+        specifier: workspace:*
+        version: link:packages/i18n
+      '@norish/queue':
+        specifier: workspace:*
+        version: link:packages/queue
+      '@norish/shared':
+        specifier: workspace:*
+        version: link:packages/shared
+      '@norish/web':
+        specifier: workspace:*
+        version: link:apps/web
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.90.21(react@19.2.4)
@@ -331,15 +346,33 @@ importers:
 
   packages/auth: {}
 
-  packages/config: {}
+  packages/config:
+    dependencies:
+      dotenv:
+        specifier: 17.3.1
+        version: 17.3.1
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
 
   packages/db: {}
 
   packages/i18n: {}
 
-  packages/queue: {}
+  packages/queue:
+    dependencies:
+      bullmq:
+        specifier: ^5.69.3
+        version: 5.69.3
 
-  packages/shared: {}
+  packages/shared:
+    dependencies:
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
 
   packages/ui: {}
 

@@ -11,7 +11,7 @@ import {
 // @vitest-environment node
 
 // Mock the server config loader to avoid database calls
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getUnits: vi.fn().mockResolvedValue({
     volume: {},
     mass: {},

@@ -3,7 +3,7 @@
  */
 
 import type { AvailableModel, AIProvider } from "./types";
-import type { TranscriptionProvider } from "@/server/db/zodSchemas/server-config";
+import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 
 import { aiLogger } from "@/server/logger";
 

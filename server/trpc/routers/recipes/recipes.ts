@@ -36,7 +36,7 @@ import {
   isAIEnabled as checkAIEnabled,
   type PermissionAction,
 } from "@/server/auth/permissions";
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getQueues } from "@/server/queue/registry";
 import {
   addImportJob,
@@ -47,8 +47,8 @@ import {
   addAutoCategorizationJob,
   addAllergyDetectionJob,
 } from "@/server/queue";
-import { FilterMode, SortOrder, RecipeCategory } from "@/types";
-import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
+import { FilterMode, SortOrder, RecipeCategory } from "@norish/shared/contracts";
+import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
 interface UserContext {
   user: { id: string };

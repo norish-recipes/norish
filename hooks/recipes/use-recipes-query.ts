@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecipeCategory, RecipeDashboardDTO, SearchField } from "@/types";
+import type { RecipeCategory, RecipeDashboardDTO, SearchField } from "@norish/shared/contracts";
 import type { InfiniteData, QueryKey } from "@tanstack/react-query";
 
 import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query";

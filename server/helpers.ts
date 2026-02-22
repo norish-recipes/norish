@@ -1,4 +1,4 @@
-import { httpUrlSchema } from "@/lib/schema";
+import { httpUrlSchema } from "@norish/shared/lib/schema";
 
 /**
  * Check if a string is a valid HTTP(S) URL.

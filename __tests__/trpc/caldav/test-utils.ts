@@ -1,9 +1,9 @@
-import type { User, Slot } from "@/types";
+import type { User, Slot } from "@norish/shared/contracts";
 import type {
   CaldavSyncStatusDto,
   CaldavSyncStatusViewDto,
   CaldavSyncStatusSummaryDto,
-} from "@/types/dto/caldav-sync-status";
+} from "@norish/shared/contracts/dto/caldav-sync-status";
 
 /**
  * Create a mock user for testing

@@ -1,4 +1,4 @@
-import type { StoreDto } from "@/types";
+import type { StoreDto } from "@norish/shared/contracts";
 
 export type StoreSubscriptionEvents = {
   created: { store: StoreDto };

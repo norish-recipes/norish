@@ -5,7 +5,7 @@ import path from "node:path";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock dependencies
-vi.mock("@/config/env-config-server", () => ({
+vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     UPLOADS_DIR: "/test/uploads",
     MAX_AVATAR_FILE_SIZE: 5 * 1024 * 1024, // 5MB
@@ -14,7 +14,7 @@ vi.mock("@/config/env-config-server", () => ({
   },
 }));
 
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getMaxVideoFileSize: vi.fn().mockResolvedValue(100 * 1024 * 1024), // 100MB - matches SERVER_CONFIG.MAX_VIDEO_FILE_SIZE
 }));
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecipeIngredientsDto } from "@/types";
+import type { RecipeIngredientsDto } from "@norish/shared/contracts";
 
 import { useRecipeQuery } from "@/hooks/recipes/use-recipe-query";
 

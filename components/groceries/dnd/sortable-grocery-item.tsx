@@ -1,6 +1,6 @@
 "use client";
 
-import type { GroceryDto } from "@/types";
+import type { GroceryDto } from "@norish/shared/contracts";
 import type { ReactNode } from "react";
 
 import { useSortable } from "@dnd-kit/sortable";

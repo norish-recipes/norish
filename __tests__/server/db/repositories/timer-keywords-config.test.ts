@@ -10,7 +10,7 @@
  * 5. Enable/disable toggle
  */
 
-import type { TimerKeywordsConfig } from "@/server/db/zodSchemas/server-config";
+import type { TimerKeywordsConfig } from "@norish/config/zod/server-config";
 
 import fs from "fs";
 import path from "path";
@@ -19,7 +19,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
 import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
 import { getConfig, setConfig, deleteConfig } from "@/server/db/repositories/server-config";
-import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { seedDefaultTimerKeywords } from "@/server/startup/seed-config";
 
 describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
@@ -28,7 +28,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
 
   // Default config from file
   const DEFAULT_KEYWORDS = JSON.parse(
-    fs.readFileSync(path.join(process.cwd(), "config/timer-keywords.default.json"), "utf-8")
+    fs.readFileSync(path.join(process.cwd(), "packages/config/src/timer-keywords.default.json"), "utf-8")
   );
 
   beforeAll(async () => {

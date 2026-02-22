@@ -9,7 +9,7 @@ import {
   ServerConfigKeys,
   I18nLocaleConfigSchema,
   type I18nLocaleConfig,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 /**
  * Update registration enabled setting.

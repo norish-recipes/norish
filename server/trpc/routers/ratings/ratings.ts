@@ -6,8 +6,8 @@ import { ratingsEmitter } from "./emitter";
 
 import { trpcLogger as log } from "@/server/logger";
 import { rateRecipe, getUserRating, getAverageRating } from "@/server/db/repositories/ratings";
-import { RatingInputSchema, RatingGetInputSchema } from "@/server/db/zodSchemas";
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { RatingInputSchema, RatingGetInputSchema } from "@norish/shared/contracts/zod";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 
 interface UserContext {
   user: { id: string };

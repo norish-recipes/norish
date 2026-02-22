@@ -5,7 +5,7 @@ import {
   type RecipePermissionPolicy,
   DEFAULT_RECIPE_PERMISSION_POLICY,
   type AIConfig,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 export async function getRecipePermissionPolicy(): Promise<RecipePermissionPolicy> {
   const value = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);

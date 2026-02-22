@@ -12,7 +12,7 @@ import {
   CreateSiteAuthTokenInputSchema,
   UpdateSiteAuthTokenInputSchema,
   DeleteSiteAuthTokenInputSchema,
-} from "@/server/db/zodSchemas/site-auth-tokens";
+} from "@norish/shared/contracts/zod/site-auth-tokens";
 
 const create = authedProcedure
   .input(CreateSiteAuthTokenInputSchema)

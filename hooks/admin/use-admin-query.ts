@@ -1,7 +1,7 @@
 "use client";
 
-import type { ServerConfigKey } from "@/server/db/zodSchemas/server-config";
-import type { AIConfig, TranscriptionProvider } from "@/server/db/zodSchemas/server-config";
+import type { ServerConfigKey } from "@norish/config/zod/server-config";
+import type { AIConfig, TranscriptionProvider } from "@norish/config/zod/server-config";
 
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 

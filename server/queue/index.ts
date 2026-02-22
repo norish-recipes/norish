@@ -72,7 +72,7 @@ export {
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
 export { startScheduledTasksWorker, stopScheduledTasksWorker } from "./scheduled-tasks/worker";
 
-// Types from @/types
+// Types from @norish/shared/contracts
 export type {
   RecipeImportJobData,
   AddImportJobResult,
@@ -90,7 +90,7 @@ export type {
   AddAllergyDetectionJobResult,
   CaldavSyncJobData,
   CaldavSyncOperation,
-} from "@/types";
+} from "@norish/queue/contracts/job-types";
 
 // Types from scheduled-tasks
 export type { ScheduledTaskJobData, ScheduledTaskType } from "./scheduled-tasks/queue";

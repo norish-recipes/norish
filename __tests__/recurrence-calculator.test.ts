@@ -1,4 +1,4 @@
-import type { RecurrencePattern } from "@/types/recurrence";
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 
@@ -7,7 +7,7 @@ import {
   getTodayString,
   shouldBeActive,
   isOverdue,
-} from "@/lib/recurrence/calculator";
+} from "@norish/shared/lib/recurrence/calculator";
 
 // Mock the current date for consistent testing
 const MOCK_TODAY = new Date("2025-01-15T12:00:00Z");

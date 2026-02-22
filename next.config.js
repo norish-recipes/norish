@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 
 const packageJson = JSON.parse(readFileSync("./package.json", "utf-8"));
 
-const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+const withNextIntl = createNextIntlPlugin("./apps/web/i18n/request.ts");
 
 export default withNextIntl({
   output: "standalone",

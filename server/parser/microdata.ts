@@ -4,7 +4,7 @@
 import microdata from "microdata-node";
 
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
-import { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 
 /**
  * Extract microdata items and return a best-effort Recipe object array.

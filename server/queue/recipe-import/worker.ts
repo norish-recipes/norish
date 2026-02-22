@@ -5,7 +5,7 @@
  * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
-import type { RecipeImportJobData } from "@/types";
+import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import type { Job } from "bullmq";
 
 import {
@@ -22,7 +22,7 @@ import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
-import { getRecipePermissionPolicy, getAIConfig } from "@/config/server-config-loader";
+import { getRecipePermissionPolicy, getAIConfig } from "@norish/config/server-config-loader";
 import { getQueues } from "@/server/queue/registry";
 import { addAutoTaggingJob } from "@/server/queue/auto-tagging/producer";
 import { addAllergyDetectionJob } from "@/server/queue/allergy-detection/producer";

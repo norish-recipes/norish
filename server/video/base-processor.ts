@@ -1,6 +1,6 @@
-import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { VideoProcessor, VideoProcessorContext, VideoMetadata } from "./types";
-import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
 import { videoLogger as log } from "@/server/logger";
 import { cleanupFile } from "@/server/video/cleanup";

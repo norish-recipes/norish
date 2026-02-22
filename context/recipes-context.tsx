@@ -4,7 +4,7 @@ import { createContext, useContext, ReactNode, useMemo, useCallback } from "reac
 import { addToast } from "@heroui/react";
 import { useRouter } from "next/navigation";
 
-import { RecipeDashboardDTO, FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@/types";
+import { RecipeDashboardDTO, FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useRecipesQuery, useRecipesMutations, useRecipesSubscription } from "@/hooks/recipes";
 import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";

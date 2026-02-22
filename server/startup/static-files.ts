@@ -5,7 +5,7 @@ import { IncomingMessage, ServerResponse } from "http";
 
 import mime from "mime";
 
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { serverLogger } from "@/server/logger";
 
 const STATIC_EXCLUDED_PATHS = ["/", "/manifest.webmanifest", "/_next", "/api"];

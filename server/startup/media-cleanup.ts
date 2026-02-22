@@ -7,9 +7,9 @@ import { db } from "../db/drizzle";
 import { recipes, recipeImages, recipeVideos, stepImages } from "../db/schema";
 import { getAllUserAvatars } from "../db/repositories";
 
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { schedulerLogger } from "@/server/logger";
-import { isAvatarFilenameForUser } from "@/lib/helpers";
+import { isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
 
 function getRecipesDiskDir() {
   return path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes");

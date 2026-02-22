@@ -1,4 +1,4 @@
-import type { GroceryDto, RecurringGroceryDto } from "@/types";
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
 export type GrocerySubscriptionEvents = {
   created: { groceries: GroceryDto[] };

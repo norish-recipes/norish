@@ -1,5 +1,5 @@
 import type { BrowserContext } from "playwright-core";
-import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
 import { getBrowser } from "@/server/playwright";
 import { parserLogger as log } from "@/server/logger";

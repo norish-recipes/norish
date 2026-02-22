@@ -7,7 +7,7 @@ import { setConfig } from "@/server/db/repositories/server-config";
 import {
   ServerConfigKeys,
   RecipePermissionPolicySchema,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 /**
  * Update recipe permission policy.

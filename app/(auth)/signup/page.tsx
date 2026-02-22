@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { SignupClient } from "./components/signup-client";
 
 import { isPasswordAuthEnabled } from "@/server/auth/providers";
-import { isRegistrationEnabled } from "@/config/server-config-loader";
+import { isRegistrationEnabled } from "@norish/config/server-config-loader";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

@@ -1,4 +1,4 @@
-import type { StoreColor } from "@/types";
+import type { StoreColor } from "@norish/shared/contracts";
 
 // Store color configuration with Tailwind classes
 export const STORE_COLORS: Record<

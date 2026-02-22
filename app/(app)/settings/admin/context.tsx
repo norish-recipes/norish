@@ -23,7 +23,7 @@ import {
   type TimerKeywordsInput,
   type ServerConfigKey,
   type I18nLocaleConfig,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 interface AdminSettingsContextValue {
   // Data

@@ -104,7 +104,7 @@ vi.mock("@/hooks/config", () => ({
   }),
 }));
 
-vi.mock("@/lib/helpers", () => ({
+vi.mock("@norish/shared/lib/helpers", () => ({
   parseIngredientWithDefaults: vi.fn((raw: string) => [
     {
       description: raw.trim(),
@@ -114,7 +114,7 @@ vi.mock("@/lib/helpers", () => ({
   ]),
 }));
 
-vi.mock("@/lib/recurrence/calculator", () => ({
+vi.mock("@norish/shared/lib/recurrence/calculator", () => ({
   calculateNextOccurrence: vi.fn(() => "2025-01-22"),
   getTodayString: vi.fn(() => "2025-01-15"),
 }));

@@ -1,4 +1,4 @@
-import type { PlannedItemWithRecipePayload, SlotItemSortUpdate } from "@/server/db/zodSchemas";
+import type { PlannedItemWithRecipePayload, SlotItemSortUpdate } from "@norish/shared/contracts/zod";
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";

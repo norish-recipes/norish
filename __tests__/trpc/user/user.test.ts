@@ -5,7 +5,7 @@ import superjson from "superjson";
 
 // Setup mocks before any imports that use them
 vi.mock("@/server/db", () => import("../../mocks/user-repository"));
-vi.mock("@/config/env-config-server", () => ({
+vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     UPLOADS_DIR: "/tmp/uploads",
   },

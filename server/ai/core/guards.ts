@@ -7,7 +7,7 @@
 
 import { aiError, type AIResult } from "./types";
 
-import { getAIConfig } from "@/config/server-config-loader";
+import { getAIConfig } from "@norish/config/server-config-loader";
 
 /**
  * Check if AI features are enabled.

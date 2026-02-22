@@ -10,7 +10,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock dependencies before imports
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getAutoTaggingMode: vi.fn(),
 }));
 
@@ -23,7 +23,7 @@ vi.mock("@/server/ai/prompts/loader", () => ({
   fillPrompt: vi.fn((template, _vars) => template),
 }));
 
-import { getAutoTaggingMode } from "@/config/server-config-loader";
+import { getAutoTaggingMode } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@/server/db/repositories/tags";
 import { loadPrompt } from "@/server/ai/prompts/loader";
 import { buildAutoTaggingPrompt } from "@/server/ai/prompts/builder";

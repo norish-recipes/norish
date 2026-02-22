@@ -19,7 +19,7 @@ import { useRecipeContextRequired } from "./context";
 import ServingsControl from "./components/servings-control";
 import AmountDisplayToggle from "./components/amount-display-toggle";
 
-import { formatMinutesHM, sortTagsWithAllergyPriority, isAllergenTag } from "@/lib/helpers";
+import { formatMinutesHM, sortTagsWithAllergyPriority, isAllergenTag } from "@norish/shared/lib/helpers";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
@@ -35,7 +35,7 @@ import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import NutritionCard from "@/components/recipes/nutrition-card";
 import { useUserContext } from "@/context/user-context";
-import { getShowFavoritesPreference, getShowRatingsPreference } from "@/lib/user-preferences";
+import { getShowFavoritesPreference, getShowRatingsPreference } from "@norish/shared/lib/user-preferences";
 
 export default function RecipePageDesktop() {
   const {

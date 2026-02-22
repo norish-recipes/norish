@@ -1,4 +1,4 @@
-import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
 /**
  * Filters tokens whose domain matches the given URL's hostname via suffix match.

@@ -17,34 +17,37 @@
 
 ## 3. Phase 2 - Shared Boundary Extraction
 
-- [ ] 3.1 Move `types/**` shared contracts into `packages/shared`; also move DTO-defining Zod schemas from `server/db/zodSchemas/` (e.g., `UserDtoSchema`, `RecipeDashboardSchema`, `IngredientSelectBaseSchema`, `TagSelectBaseSchema`, CalDAV select/view schemas, and related const arrays like `measurementSystems`, `caldavItemTypes`, `caldavSyncStatuses`) so DTO types remain `z.output<>` derivations — not manually duplicated interfaces.
-- [ ] 3.2 Publish and apply a types ownership matrix during extraction: cross-runtime contracts -> `packages/shared`, backend-only runtime types (for example BullMQ `Job`-bound types from `types/dto/queue.ts`) -> owning backend package, app-only ambient types (`global.d.ts`) -> `apps/web`.
-- [ ] 3.3 Split `config/**` into `packages/config` (server/runtime config) and `apps/web/config` (web-only config).
-- [ ] 3.4 Move shared locale catalogs/helpers from `i18n/**` into `packages/i18n` and leave Next.js request/runtime adapter in app scope.
-- [ ] 3.5 Split `lib/**` into web-only vs shared-runtime-safe modules and relocate accordingly.
-- [ ] 3.6 Update imports away from root-wide `@/*` to package-scoped imports where boundaries are finalized.
-- [ ] 3.7 Re-run cycle gate (`pnpm run deps:cycles`) and fail on regressions.
-- [ ] 3.8 Mark phase-2 rollback checkpoint after shared-boundary extraction passes.
+- [x] 3.1 Move `types/**` shared contracts into `packages/shared`; also move DTO-defining Zod schemas from `server/db/zodSchemas/` (e.g., `UserDtoSchema`, `RecipeDashboardSchema`, `IngredientSelectBaseSchema`, `TagSelectBaseSchema`, CalDAV select/view schemas, and related const arrays like `measurementSystems`, `caldavItemTypes`, `caldavSyncStatuses`) so DTO types remain `z.output<>` derivations - not manually duplicated interfaces; delete migrated legacy files from root `types/**` as ownership transfers.
+- [x] 3.2 Publish and apply a types ownership matrix during extraction: cross-runtime contracts -> `packages/shared`, backend-only runtime types (for example BullMQ `Job`-bound types from `types/dto/queue.ts`) -> owning backend package, app-only ambient types (`global.d.ts`) -> `apps/web`.
+- [x] 3.3 Split `config/**` into `packages/config` (server/runtime config) and `apps/web/config` (web-only config), then remove migrated root `config/**` files.
+- [x] 3.4 Move shared locale catalogs/helpers from `i18n/**` into `packages/i18n` and leave Next.js request/runtime adapter in app scope, then remove migrated root `i18n/**` files.
+- [x] 3.5 Split `lib/**` into web-only vs shared-runtime-safe modules and relocate accordingly, then remove migrated root `lib/**` modules that now have package/app owners.
+- [x] 3.6 Update imports away from root-wide `@/*` to package-scoped imports where boundaries are finalized.
+- [x] 3.7 Run a phase-2 cleanup audit to confirm no duplicate authoritative modules remain in root `types`, `config`, `i18n`, or `lib`; record any intentional deferrals in phase evidence with owner and target phase.
+- [x] 3.8 Re-run cycle gate (`pnpm run deps:cycles`) and fail on regressions.
+- [x] 3.9 Mark phase-2 rollback checkpoint after shared-boundary extraction passes.
 
 ## 4. Phase 3 - Backend Package Extraction
 
-- [ ] 4.1 Move `server/db/**` to `packages/db` and preserve migrations/schema/repository behavior.
-- [ ] 4.2 Move `server/auth/**` to `packages/auth` and preserve auth provider/session behavior.
-- [ ] 4.3 Move `server/trpc/**` and domain services to `packages/api`.
-- [ ] 4.4 Move `server/queue/**`, `server/redis/**`, and scheduler modules to `packages/queue`.
-- [ ] 4.5 Keep startup composition in `apps/web/server/**` (single-process deploy), wiring package exports.
-- [ ] 4.6 Run backend-focused validation: repository tests, tRPC route tests, queue startup smoke.
-- [ ] 4.7 Mark phase-3 rollback checkpoint after backend extraction passes.
+- [ ] 4.1 Move `server/db/**` to `packages/db` and preserve migrations/schema/repository behavior, then remove migrated legacy root `server/db/**` files.
+- [ ] 4.2 Move `server/auth/**` to `packages/auth` and preserve auth provider/session behavior, then remove migrated legacy root `server/auth/**` files.
+- [ ] 4.3 Move `server/trpc/**` and domain services to `packages/api`, then remove migrated legacy root modules for that scope.
+- [ ] 4.4 Move `server/queue/**`, `server/redis/**`, and scheduler modules to `packages/queue`, then remove migrated legacy root modules for that scope.
+- [ ] 4.5 Keep startup composition in `apps/web/server/**` (single-process deploy), wiring package exports, then remove superseded root startup entrypoints once app composition is active.
+- [ ] 4.6 Run a phase-3 cleanup audit to confirm no duplicate authoritative backend modules remain under root `server/**`; record any intentional deferrals in phase evidence with owner and target phase.
+- [ ] 4.7 Run backend build-first validation (`pnpm test:run`, `pnpm run typecheck`, `pnpm build`, `pnpm run deps:cycles`) without requiring runtime startup in this phase.
+- [ ] 4.8 Mark phase-3 rollback checkpoint after backend extraction passes.
 
 ## 5. Phase 4 - Web App Relocation
 
-- [ ] 5.1 Move `app/**` to `apps/web/app/**`.
-- [ ] 5.2 Move `components/**`, `context/**`, `hooks/**`, and `stores/**` into `apps/web`.
-- [ ] 5.3 Move `styles/**` and `public/**` into `apps/web`, and keep `apps/web/i18n/request.ts` as adapter to `packages/i18n`.
+- [ ] 5.1 Move `app/**` to `apps/web/app/**`, then remove migrated legacy root `app/**` files.
+- [ ] 5.2 Move `components/**`, `context/**`, `hooks/**`, and `stores/**` into `apps/web`, then remove migrated legacy root files/directories for that scope.
+- [ ] 5.3 Move `styles/**` and `public/**` into `apps/web`, keep `apps/web/i18n/request.ts` as adapter to `packages/i18n`, then remove migrated legacy root `styles/**` and `public/**` files.
 - [ ] 5.4 Rewire API routes and middleware (`app/api/**`, `proxy.ts`) to package exports.
-- [ ] 5.5 Extract reusable UI primitives from `components/shared/**` into `packages/ui`.
-- [ ] 5.6 Run web validation: `pnpm dev` smoke + route/auth/trpc/ws checks.
-- [ ] 5.7 Mark phase-4 rollback checkpoint after web relocation passes.
+- [ ] 5.5 Extract reusable UI primitives from `components/shared/**` into `packages/ui`, then remove duplicate web-local primitive copies that become package-owned.
+- [ ] 5.6 Run a phase-4 cleanup audit to confirm no duplicate authoritative web modules remain in root `app`, `components`, `context`, `hooks`, `stores`, `styles`, or `public`; record any intentional deferrals in phase evidence with owner and target phase.
+- [ ] 5.7 Run web build-first validation (`pnpm test:run`, `pnpm run typecheck`, `pnpm build`, `pnpm run deps:cycles`); defer runtime startup smoke to phase 6.
+- [ ] 5.8 Mark phase-4 rollback checkpoint after web relocation passes.
 
 ## 6. Phase 5 - CI, Docker, and Runtime Ops Cutover
 
@@ -53,7 +56,7 @@
 - [ ] 6.3 Update `docker/Dockerfile` and compose files for `apps/web` build/runtime paths.
 - [ ] 6.4 Convert `uploads` handling to explicit runtime-volume semantics (not source migration scope).
 - [ ] 6.5 Remove committed `yt-dlp` binary from source migration path and enforce runtime/bootstrap provisioning.
-- [ ] 6.6 Run deployment validation: Docker build, container boot, `/api/health`, startup workers.
+- [ ] 6.6 Run deployment build validation: workspace build plus Docker image build for `apps/web`; defer container boot and runtime health checks to phase 6.
 - [ ] 6.7 Mark phase-5 rollback checkpoint after ops cutover passes.
 
 ## 7. Phase 6 - Hardening and Cleanup
@@ -61,8 +64,9 @@
 - [ ] 7.1 Remove temporary compatibility aliases/shims introduced during moves.
 - [ ] 7.2 Ensure no placeholder `turbo-norish` starter code remains in production paths.
 - [ ] 7.3 Run full quality gate: `pnpm lint:check`, `pnpm run typecheck`, `pnpm test:run`, `pnpm build`, `pnpm run deps:cycles`.
-- [ ] 7.4 Record final folder placement and phase completion evidence in migration docs.
-- [ ] 7.5 Mark final migration checkpoint (phase-6 complete) and archive rollback evidence links.
+- [ ] 7.4 Run final runtime smoke gate: app startup, auth flow, tRPC HTTP/WS, queue startup job flow, `/api/health`, static uploads serving, and container boot.
+- [ ] 7.5 Record final folder placement and phase completion evidence in migration docs.
+- [ ] 7.6 Mark final migration checkpoint (phase-6 complete) and archive rollback evidence links.
 
 ## Dependencies and Parallelism Notes
 

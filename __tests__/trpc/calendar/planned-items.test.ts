@@ -6,7 +6,7 @@ import superjson from "superjson";
 vi.mock("@/server/db/repositories/planned-items", () => import("../../mocks/planned-items"));
 vi.mock("@/server/auth/permissions", () => import("../../mocks/permissions"));
 vi.mock("@/server/trpc/routers/calendar/emitter", () => import("../../mocks/calendar-emitter"));
-vi.mock("@/config/server-config-loader", () => import("../../mocks/config"));
+vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
 
 import {
   moveItem,

@@ -4,6 +4,18 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./env-config-server": "./src/env-config-server.ts",
+    "./server-config-loader": "./src/server-config-loader.ts",
+    "./zod/server-config": "./src/zod/server-config.ts",
+    "./content-indicators.default.json": "./src/content-indicators.default.json",
+    "./recurrence-config.default.json": "./src/recurrence-config.default.json",
+    "./timer-keywords.default.json": "./src/timer-keywords.default.json",
+    "./units.default.json": "./src/units.default.json"
+  },
+  "dependencies": {
+    "dotenv": "17.3.1",
+    "server-only": "^0.0.1",
+    "zod": "4.3.6"
   }
 }

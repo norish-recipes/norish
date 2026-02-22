@@ -10,12 +10,12 @@
  * For reading data + cache manipulation, use useArchiveImportQuery instead.
  */
 
-import type { ArchiveImportError, ArchiveSkippedItem } from "@/types/uploads";
+import type { ArchiveImportError, ArchiveSkippedItem } from "@norish/shared/contracts/uploads";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import { createClientLogger } from "@/lib/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("ArchiveImportCache");
 

@@ -38,6 +38,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "../../"),
+      "@norish/config": path.resolve(__dirname, "../../packages/config/src"),
+      "@norish/i18n": path.resolve(__dirname, "../../packages/i18n/src"),
+      "@norish/queue": path.resolve(__dirname, "../../packages/queue/src"),
+      "@norish/shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "@norish/web": path.resolve(__dirname, "../../apps/web"),
     },
   },
 });

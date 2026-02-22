@@ -1,6 +1,6 @@
 import { startOfMonth, subMonths, format } from "date-fns";
 
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { deleteDoneGroceriesBefore } from "@/server/db/repositories/groceries";
 import { schedulerLogger } from "@/server/logger";
 

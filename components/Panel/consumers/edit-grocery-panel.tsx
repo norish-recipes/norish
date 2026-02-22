@@ -1,7 +1,7 @@
 "use client";
 
-import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@/types";
-import type { RecurrencePattern } from "@/types/recurrence";
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 import { useState, useEffect } from "react";
 import { Button, Input } from "@heroui/react";

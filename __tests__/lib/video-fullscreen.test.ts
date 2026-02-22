@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 
-import { isFullscreenControlSupported } from "@/lib/video-fullscreen";
+import { isFullscreenControlSupported } from "@norish/shared/lib/video-fullscreen";
 
 describe("isFullscreenControlSupported", () => {
   it("returns true when browser supports document fullscreen API", () => {

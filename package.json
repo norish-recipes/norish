@@ -34,6 +34,11 @@
     "i18n:check": "node scripts/check-locale-keys.js"
   },
   "dependencies": {
+    "@norish/config": "workspace:*",
+    "@norish/i18n": "workspace:*",
+    "@norish/queue": "workspace:*",
+    "@norish/shared": "workspace:*",
+    "@norish/web": "workspace:*",
     "@ai-sdk/anthropic": "^3.0.46",
     "@ai-sdk/azure": "^3.0.31",
     "@ai-sdk/deepseek": "^2.0.20",

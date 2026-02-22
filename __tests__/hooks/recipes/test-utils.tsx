@@ -1,4 +1,4 @@
-import type { RecipeDashboardDTO } from "@/types";
+import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { ReactNode } from "react";
 import type { InfiniteData } from "@tanstack/react-query";
 

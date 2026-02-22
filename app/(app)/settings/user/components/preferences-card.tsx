@@ -17,7 +17,7 @@ import {
   getShowFavoritesPreference,
   getTimersEnabledPreference,
   getLocalePreference,
-} from "@/lib/user-preferences";
+} from "@norish/shared/lib/user-preferences";
 
 export default function PreferencesCard() {
   const t = useTranslations("settings.user.preferences");

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CaldavSyncStatus, CaldavSyncStatusViewDto } from "@/types";
+import type { CaldavSyncStatus, CaldavSyncStatusViewDto } from "@norish/shared/contracts";
 import type { CaldavSubscriptionEvents } from "@/server/trpc/routers/caldav/types";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
@@ -8,7 +8,7 @@ import { addToast } from "@heroui/react";
 
 import { useCaldavCacheHelpers } from "./use-caldav-cache";
 
-import { createClientLogger } from "@/lib/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 const log = createClientLogger("CaldavSubscription");

@@ -10,7 +10,7 @@ import type {
   PromptsConfigInput,
   TimerKeywordsInput,
   ServerConfigKey,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

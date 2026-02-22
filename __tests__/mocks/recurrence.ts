@@ -1,5 +1,5 @@
 /**
- * Mock for @/lib/recurrence/calculator
+ * Mock for @norish/shared/lib/recurrence/calculator
  */
 import { vi } from "vitest";
 

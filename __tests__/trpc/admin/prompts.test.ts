@@ -33,7 +33,7 @@ import {
   PromptsConfigInputSchema,
   type PromptsConfig,
   type PromptsConfigInput,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

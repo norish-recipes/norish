@@ -6,7 +6,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { createTestQueryClient, createTestWrapper } from "./test-utils";
 
 // Mock logger
-vi.mock("@/lib/logger", () => ({
+vi.mock("@norish/shared/lib/logger", () => ({
   createClientLogger: () => ({
     debug: vi.fn(),
     error: vi.fn(),

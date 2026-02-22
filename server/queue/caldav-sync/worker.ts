@@ -1,6 +1,6 @@
-import type { CaldavSyncJobData } from "@/types";
-import type { CaldavSyncStatusInsertDto } from "@/types/dto/caldav-sync-status";
-import type { Slot } from "@/types";
+import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
+import type { CaldavSyncStatusInsertDto } from "@norish/shared/contracts/dto/caldav-sync-status";
+import type { Slot } from "@norish/shared/contracts";
 import type { Job } from "bullmq";
 
 import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";

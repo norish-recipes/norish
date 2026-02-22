@@ -22,7 +22,7 @@ import {
   isCloudTranscriptionProvider,
   transcriptionProviderNeedsEndpoint,
   transcriptionProviderSupportsModelListing,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
 import SecretInput from "@/components/shared/secret-input";
 

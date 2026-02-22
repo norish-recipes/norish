@@ -4,7 +4,7 @@ import type {
   UserCaldavConfigWithoutPasswordDto,
   ConnectionTestResult,
   CalDavCalendarInfo,
-} from "@/types";
+} from "@norish/shared/contracts";
 
 import { useMutation } from "@tanstack/react-query";
 

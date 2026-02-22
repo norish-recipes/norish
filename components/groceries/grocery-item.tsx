@@ -1,6 +1,6 @@
 "use client";
 
-import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@/types";
+import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
 import { memo } from "react";
 import { Checkbox } from "@heroui/react";

@@ -24,7 +24,7 @@ import {
   AuthProviderGitHubInputSchema,
   AuthProviderGoogleSchema,
   AuthProviderGoogleInputSchema,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 /**
  * Update OIDC auth provider config.

@@ -22,17 +22,17 @@ vi.mock("@/server/logger", () => ({
   serverLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock("@/config/env-config-server", () => ({
+vi.mock("@norish/config/env-config-server", () => ({
   get SERVER_CONFIG() {
     return mockServerConfig;
   },
 }));
 
-vi.mock("@/config/units.default.json", () => ({ default: {} }));
-vi.mock("@/config/content-indicators.default.json", () => ({
+vi.mock("@norish/config/units.default.json", () => ({ default: {} }));
+vi.mock("@norish/config/content-indicators.default.json", () => ({
   default: { schemaIndicators: [], contentIndicators: [] },
 }));
-vi.mock("@/config/recurrence-config.default.json", () => ({
+vi.mock("@norish/config/recurrence-config.default.json", () => ({
   default: { locales: {} },
 }));
 vi.mock("@/server/ai/prompts/loader", () => ({
@@ -42,7 +42,7 @@ vi.mock("@/server/ai/prompts/loader", () => ({
   }),
 }));
 
-import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 describe("Auth Provider Sync Logic", () => {
   beforeEach(() => {

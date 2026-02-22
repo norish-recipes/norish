@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProviderInfo } from "@/types";
+import type { ProviderInfo } from "@norish/shared/contracts";
 
 import { Divider } from "@heroui/react";
 import { useTranslations } from "next-intl";

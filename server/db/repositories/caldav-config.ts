@@ -3,7 +3,7 @@ import type {
   UserCaldavConfigInsertDto,
   UserCaldavConfigDecryptedDto,
   SaveCaldavConfigInputDto,
-} from "@/types/dto/caldav-config";
+} from "@norish/shared/contracts/dto/caldav-config";
 
 import { eq } from "drizzle-orm";
 
@@ -13,7 +13,7 @@ import { encrypt, decrypt } from "@/server/auth/crypto";
 import {
   UserCaldavConfigSelectSchema,
   SaveCaldavConfigInputSchema,
-} from "@/server/db/zodSchemas/caldav-config";
+} from "@norish/shared/contracts/zod/caldav-config";
 
 export async function getCaldavConfigByUserId(userId: string): Promise<UserCaldavConfigDto | null> {
   const rows = await db

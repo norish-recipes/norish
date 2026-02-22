@@ -1,4 +1,4 @@
-import type { GroceryDto, GroceryInsertDto, GroceryUpdateDto } from "@/types/dto/groceries";
+import type { GroceryDto, GroceryInsertDto, GroceryUpdateDto } from "@norish/shared/contracts/dto/groceries";
 
 import { and, asc, eq, inArray, isNull, lte, sql } from "drizzle-orm";
 import z from "zod";
@@ -9,7 +9,7 @@ import {
   GroceryInsertBaseSchema,
   GrocerySelectBaseSchema,
   GroceryUpdateBaseSchema,
-} from "@/server/db/zodSchemas";
+} from "@norish/shared/contracts/zod";
 
 export async function getGroceryById(id: string): Promise<GroceryDto | null> {
   const [row] = await db.select().from(groceries).where(eq(groceries.id, id)).limit(1);

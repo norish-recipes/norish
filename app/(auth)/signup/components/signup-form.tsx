@@ -6,7 +6,7 @@ import { EnvelopeIcon, LockClosedIcon, UserIcon } from "@heroicons/react/24/outl
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { signUp } from "@/lib/auth/client";
+import { signUp } from "@norish/shared/lib/auth/client";
 
 interface SignupFormProps {
   callbackUrl?: string;

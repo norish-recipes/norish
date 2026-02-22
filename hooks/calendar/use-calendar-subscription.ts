@@ -1,6 +1,6 @@
 "use client";
 
-import type { PlannedItemFromQuery } from "@/types";
+import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
 

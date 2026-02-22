@@ -1,4 +1,4 @@
-import type { UserCaldavConfigDecryptedDto } from "@/types/dto/caldav-config";
+import type { UserCaldavConfigDecryptedDto } from "@norish/shared/contracts/dto/caldav-config";
 
 import { getHouseholdMemberIds } from "@/server/db/repositories/households";
 import { getHouseholdCaldavConfigs } from "@/server/db/repositories/caldav-config";

@@ -7,7 +7,7 @@ import superjson from "superjson";
 vi.mock("@/server/db/repositories/recipes", () => import("../../mocks/recipes-repository"));
 vi.mock("@/server/auth/permissions", () => import("../../mocks/permissions"));
 vi.mock("@/server/trpc/routers/recipes/emitter", () => import("../../mocks/recipe-emitter"));
-vi.mock("@/config/server-config-loader", () => import("../../mocks/config"));
+vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
 
 // Import mocks for assertions
 import {

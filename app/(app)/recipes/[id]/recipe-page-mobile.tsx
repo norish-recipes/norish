@@ -21,7 +21,7 @@ import AmountDisplayToggle from "@/app/(app)/recipes/[id]/components/amount-disp
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
-import { formatMinutesHM, sortTagsWithAllergyPriority, isAllergenTag } from "@/lib/helpers";
+import { formatMinutesHM, sortTagsWithAllergyPriority, isAllergenTag } from "@norish/shared/lib/helpers";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import HeartButton from "@/components/shared/heart-button";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
@@ -32,7 +32,7 @@ import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import { NutritionSection } from "@/components/recipes/nutrition-card";
 import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/app/(app)/recipes/[id]/recipe-layout-constants";
 import { useUserContext } from "@/context/user-context";
-import { getShowFavoritesPreference, getShowRatingsPreference } from "@/lib/user-preferences";
+import { getShowFavoritesPreference, getShowRatingsPreference } from "@norish/shared/lib/user-preferences";
 
 export default function RecipePageMobile() {
   const {

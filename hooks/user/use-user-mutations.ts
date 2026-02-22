@@ -1,14 +1,14 @@
 "use client";
 
-import type { User } from "@/types";
+import type { User } from "@norish/shared/contracts";
 import type { ApiKeyMetadataDto } from "@/server/trpc/routers/user/types";
-import type { UserPreferencesDto } from "@/server/db/zodSchemas/user";
+import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 
 import { useMutation } from "@tanstack/react-query";
 
 import { useUserCacheHelpers } from "./use-user-cache";
 
-import { getUserPreferences } from "@/lib/user-preferences";
+import { getUserPreferences } from "@norish/shared/lib/user-preferences";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type UserMutationsResult = {

@@ -1,24 +1,24 @@
-import type { IngredientDto } from "@/types/dto/ingredient";
-import type { MeasurementSystem } from "@/types/dto/recipe";
+import type { IngredientDto } from "@norish/shared/contracts/dto/ingredient";
+import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
 import type {
   RecipeIngredientInsertDto,
   RecipeIngredientsDto,
-} from "@/types/dto/recipe-ingredient";
+} from "@norish/shared/contracts/dto/recipe-ingredient";
 
 import { eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
 
-import { getUnits } from "@/config/server-config-loader";
-import { stripHtmlTags } from "@/lib/helpers";
-import { normalizeUnit } from "@/lib/unit-localization";
+import { getUnits } from "@norish/config/server-config-loader";
+import { stripHtmlTags } from "@norish/shared/lib/helpers";
+import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 import { db } from "@/server/db/drizzle";
 import { ingredients, recipeIngredients } from "@/server/db/schema";
-import { IngredientSelectBaseSchema } from "@/server/db/zodSchemas";
+import { IngredientSelectBaseSchema } from "@norish/shared/contracts/zod";
 import {
   RecipeIngredientInputSchema,
   RecipeIngredientSelectWithNameSchema,
   RecipeIngredientsInsertBaseSchema,
-} from "@/server/db/zodSchemas/recipe-ingredients";
+} from "@norish/shared/contracts/zod/recipe-ingredients";
 import { dbLogger } from "@/server/logger";
 
 const IngredientArraySchema = z.array(IngredientSelectBaseSchema);

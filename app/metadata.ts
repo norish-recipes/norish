@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
-import { generateAppleWebAppSplashScreenConfigs } from "@/lib/pwa/ios-startup-images";
-import { siteConfig } from "@/config/site";
+import { generateAppleWebAppSplashScreenConfigs } from "@norish/shared/lib/pwa/ios-startup-images";
+import { siteConfig } from "@norish/web/config/site";
 
 export const appMetadata: Metadata = {
   title: {

@@ -26,7 +26,7 @@ import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
 
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 export default function MembersCard() {
   const t = useTranslations("settings.household.members");

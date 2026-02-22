@@ -10,7 +10,7 @@ import {
   type ServerConfigKey,
   SchedulerCleanupMonthsSchema,
   SENSITIVE_CONFIG_KEYS,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 import { getDefaultConfigValue } from "@/server/startup/seed-config";
 
 /**

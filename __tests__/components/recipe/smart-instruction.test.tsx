@@ -4,7 +4,7 @@ import "@testing-library/jest-dom";
 
 import { SmartInstruction } from "@/components/recipe/smart-instruction";
 
-vi.mock("@/lib/logger", () => ({ createClientLogger: () => () => ({ warn: () => {} }) }));
+vi.mock("@norish/shared/lib/logger", () => ({ createClientLogger: () => () => ({ warn: () => {} }) }));
 
 vi.mock("@/hooks/config", () => ({
   useTimersEnabledQuery: () => ({ timersEnabled: false }),

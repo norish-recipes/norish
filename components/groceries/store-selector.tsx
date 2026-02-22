@@ -1,6 +1,6 @@
 "use client";
 
-import type { StoreDto, StoreColor } from "@/types";
+import type { StoreDto, StoreColor } from "@norish/shared/contracts";
 
 import { Fragment, useMemo } from "react";
 import { Select, SelectItem } from "@heroui/react";

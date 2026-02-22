@@ -6,12 +6,12 @@
  */
 
 import type { Queue } from "bullmq";
-import type { AutoTaggingJobData, AddAutoTaggingJobResult } from "@/types";
+import type { AutoTaggingJobData, AddAutoTaggingJobResult } from "@norish/queue/contracts/job-types";
 
 import { isJobInQueue } from "../helpers";
 
 import { createLogger } from "@/server/logger";
-import { getAutoTaggingMode } from "@/config/server-config-loader";
+import { getAutoTaggingMode } from "@norish/config/server-config-loader";
 
 const log = createLogger("queue:auto-tagging");
 

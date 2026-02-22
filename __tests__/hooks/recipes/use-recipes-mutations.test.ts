@@ -69,7 +69,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
 }));
 
 // Mock client logger
-vi.mock("@/lib/logger", () => ({
+vi.mock("@norish/shared/lib/logger", () => ({
   createClientLogger: () => ({
     debug: vi.fn(),
     info: vi.fn(),

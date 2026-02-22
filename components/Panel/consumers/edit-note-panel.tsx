@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 
 import { Panel, PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { Slot } from "@/types";
+import { Slot } from "@norish/shared/contracts";
 
 const SLOTS: Slot[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 

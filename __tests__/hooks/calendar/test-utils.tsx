@@ -1,4 +1,4 @@
-import type { PlannedRecipeViewDto, NoteViewDto, CalendarItemViewDto, Slot } from "@/types";
+import type { PlannedRecipeViewDto, NoteViewDto, CalendarItemViewDto, Slot } from "@norish/shared/contracts";
 import type { ReactNode } from "react";
 import type { CalendarData } from "@/hooks/calendar/use-calendar-query";
 

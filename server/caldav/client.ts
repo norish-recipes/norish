@@ -4,7 +4,7 @@ import type {
   CalDavClientOptions,
   ConnectionTestResult,
   CalDavCalendarInfo,
-} from "@/types/dto/caldav";
+} from "@norish/shared/contracts/dto/caldav";
 
 import { DAVClient, DAVCalendar } from "tsdav";
 import { v4 as uuidv4 } from "uuid";

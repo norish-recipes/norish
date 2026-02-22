@@ -1,5 +1,5 @@
 import type { VideoMetadata } from "./types";
-import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 
 import { generateText, Output } from "ai";
 
@@ -20,7 +20,7 @@ import {
   type AIResult,
 } from "@/server/ai/types/result";
 import { downloadImage } from "@/server/downloader";
-import { isAIEnabled } from "@/config/server-config-loader";
+import { isAIEnabled } from "@norish/config/server-config-loader";
 
 /**
  * Extract recipe from video transcript using AI.

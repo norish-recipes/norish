@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecipeDashboardDTO, FullRecipeDTO } from "@/types";
+import type { RecipeDashboardDTO, FullRecipeDTO } from "@norish/shared/contracts";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 import { useRecipesCacheHelpers, type InfiniteRecipeData } from "./use-recipes-cache";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { createClientLogger } from "@/lib/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("recipes-subscription");
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { FilterMode, RecipeCategory, SortOrder } from "@/types";
+import type { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
 
 import {
   ArrowPathIcon,
@@ -21,7 +21,7 @@ import RatingStars from "@/components/shared/rating-stars";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useUserContext } from "@/context/user-context";
 import { useTagsQuery } from "@/hooks/config";
-import { getShowFavoritesPreference, getShowRatingsPreference } from "@/lib/user-preferences";
+import { getShowFavoritesPreference, getShowRatingsPreference } from "@norish/shared/lib/user-preferences";
 
 const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 

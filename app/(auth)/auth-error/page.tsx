@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useTranslations } from "next-intl";
 
-import { createClientLogger } from "@/lib/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("AuthError");
 

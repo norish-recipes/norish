@@ -8,8 +8,8 @@ import { HomeIcon, CalendarDaysIcon, ClipboardDocumentListIcon } from "@heroicon
 import { useTranslations } from "next-intl";
 
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
-import { cssGlassBackdrop } from "@/config/css-tokens";
-import { siteConfig } from "@/config/site";
+import { cssGlassBackdrop } from "@norish/web/config/css-tokens";
+import { siteConfig } from "@norish/web/config/site";
 import { useAutoHide } from "@/hooks/auto-hide";
 import { useUserContext } from "@/context/user-context";
 

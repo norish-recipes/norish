@@ -15,7 +15,7 @@ import NoRecipeResults from "./no-recipe-results";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { useContainerColumns } from "@/hooks/use-container-columns";
-import { RecipeDashboardDTO } from "@/types";
+import { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 // Estimated row height (card height + gap)
 const ESTIMATED_ROW_HEIGHT = 380;

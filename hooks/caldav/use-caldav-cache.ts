@@ -10,8 +10,8 @@
  * For reading data + cache manipulation, use the caldav query hooks instead.
  */
 
-import type { CaldavSyncStatusViewDto } from "@/types";
-import type { UserCaldavConfigWithoutPasswordDto } from "@/types";
+import type { CaldavSyncStatusViewDto } from "@norish/shared/contracts";
+import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";

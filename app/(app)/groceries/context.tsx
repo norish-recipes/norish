@@ -1,7 +1,7 @@
 "use client";
 
-import type { GroceryDto, RecurringGroceryDto } from "@/types";
-import type { RecurrencePattern } from "@/types/recurrence";
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 import { createContext, useContext, ReactNode, useMemo, useCallback, useState } from "react";
 

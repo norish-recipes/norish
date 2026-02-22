@@ -5,7 +5,7 @@
  * Callers are responsible for lifecycle (close on shutdown).
  */
 
-import type { RecipeImportJobData } from "@/types";
+import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 
 import { Queue } from "bullmq";
 

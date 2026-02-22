@@ -6,7 +6,7 @@
  */
 
 import type { Queue } from "bullmq";
-import type { PasteImportJobData, AddPasteImportJobResult } from "@/types";
+import type { PasteImportJobData, AddPasteImportJobResult } from "@norish/queue/contracts/job-types";
 
 import { isJobInQueue } from "../helpers";
 

@@ -5,7 +5,7 @@ import { eq, or, like } from "drizzle-orm";
 
 import { db } from "@/server/db/drizzle";
 import { recipes, recipeImages } from "@/server/db/schema";
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { dbLogger as log } from "@/server/logger";
 
 const RECIPES_DIR = path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes");

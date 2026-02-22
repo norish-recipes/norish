@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/server/auth/auth";
 import { getHouseholdForUser, dashboardRecipe } from "@/server/db";
 import { addImportJob, getQueues } from "@/server/queue";
-import { isUrl } from "@/lib/helpers";
+import { isUrl } from "@norish/shared/lib/helpers";
 import { parserLogger as log } from "@/server/logger";
-import { shouldAlwaysUseAI } from "@/config/server-config-loader";
+import { shouldAlwaysUseAI } from "@norish/config/server-config-loader";
 
 /**
  * POST /api/import/recipe

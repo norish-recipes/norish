@@ -13,7 +13,7 @@ import {
   buildRecipeDTO,
 } from "./parser-helpers";
 
-import { FullRecipeInsertDTO } from "@/types";
+import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { matchCategory } from "@/server/ai/utils/category-matcher";
 import { serverLogger as log } from "@/server/logger";
 

@@ -1,12 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 
-import defaultContentIndicators from "@/config/content-indicators.default.json";
+import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { isPageLikelyRecipe } from "@/server/parser";
 
-vi.mock("@/config/server-config-loader", async () => {
-  const actual = await vi.importActual<typeof import("@/config/server-config-loader")>(
-    "@/config/server-config-loader"
+vi.mock("@norish/config/server-config-loader", async () => {
+  const actual = await vi.importActual<typeof import("@norish/config/server-config-loader")>(
+    "@norish/config/server-config-loader"
   );
 
   return {

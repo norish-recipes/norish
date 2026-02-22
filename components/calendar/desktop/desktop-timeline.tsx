@@ -1,6 +1,6 @@
 "use client";
 
-import type { Slot } from "@/types";
+import type { Slot } from "@norish/shared/contracts";
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
 
@@ -24,7 +24,7 @@ import { DesktopDragOverlay } from "./desktop-drag-overlay";
 
 import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { dateKey, eachDayOfInterval } from "@/lib/helpers";
+import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 import { SLOT_ORDER } from "@/components/calendar/mobile/types";
 
 function startOfDay(date: Date): Date {

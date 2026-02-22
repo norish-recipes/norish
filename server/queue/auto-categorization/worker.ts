@@ -1,4 +1,4 @@
-import type { AutoCategorizationJobData } from "@/types";
+import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
 import type { Job } from "bullmq";
 
 import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
@@ -8,7 +8,7 @@ import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getRecipeFull, updateRecipeCategories } from "@/server/db";
 import { categorizeRecipe } from "@/server/ai/auto-categorizer";
 

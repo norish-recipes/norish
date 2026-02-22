@@ -9,7 +9,7 @@ import {
 import { Chip, Button } from "@heroui/react";
 
 import HeartButton from "@/components/shared/heart-button";
-import { cssGlassBackdropChip } from "@/config/css-tokens";
+import { cssGlassBackdropChip } from "@norish/web/config/css-tokens";
 
 interface RecipeMetadataProps {
   timeLabel?: string | null;

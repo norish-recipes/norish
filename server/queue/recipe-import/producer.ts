@@ -6,12 +6,12 @@
  */
 
 import type { Queue } from "bullmq";
-import type { RecipeImportJobData, AddImportJobResult } from "@/types";
+import type { RecipeImportJobData, AddImportJobResult } from "@norish/queue/contracts/job-types";
 
 import { generateJobId, isJobInQueue } from "../helpers";
 
 import { createLogger } from "@/server/logger";
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { recipeExistsByUrlForPolicy } from "@/server/db";
 
 const log = createLogger("queue:recipe-import");

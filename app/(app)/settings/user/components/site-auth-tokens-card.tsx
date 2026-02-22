@@ -30,7 +30,7 @@ import { useQuery } from "@tanstack/react-query";
 import NewFeatureChip from "../../components/new-feature-chip";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");

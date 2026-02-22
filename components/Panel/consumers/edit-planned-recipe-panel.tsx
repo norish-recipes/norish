@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Panel, PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
 import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { Slot } from "@/types";
+import { Slot } from "@norish/shared/contracts";
 
 const SLOTS: Slot[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 

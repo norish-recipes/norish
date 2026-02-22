@@ -1,12 +1,12 @@
 "use client";
 
-import type { ArchiveImportError, ArchiveSkippedItem } from "@/types/uploads";
+import type { ArchiveImportError, ArchiveSkippedItem } from "@norish/shared/contracts/uploads";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ARCHIVE_IMPORT_KEY } from "./use-archive-cache";
 
-import { createClientLogger } from "@/lib/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("ArchiveImport");
 

@@ -25,8 +25,8 @@ import { useTranslations } from "next-intl";
 
 import { useRecipeImages } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
-import { MAX_RECIPE_IMAGES } from "@/server/db/zodSchemas/recipe-images";
-import { createClientLogger } from "@/lib/logger";
+import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("ImageGalleryInput");
 

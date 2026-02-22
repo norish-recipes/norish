@@ -12,7 +12,7 @@ vi.mock(
   "@/server/trpc/routers/permissions/emitter",
   () => import("../../mocks/permissions-emitter")
 );
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({
     view: "everyone",
     edit: "household",
@@ -41,13 +41,13 @@ import {
   createMockAdminContext,
 } from "./test-utils";
 
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 // Import schemas for validation
 import {
   ServerConfigKeys,
   AIConfigSchema,
   RecipePermissionPolicySchema,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

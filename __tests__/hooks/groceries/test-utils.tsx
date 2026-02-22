@@ -1,4 +1,4 @@
-import type { GroceryDto, RecurringGroceryDto } from "@/types";
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { ReactNode } from "react";
 import type { GroceriesData } from "@/hooks/groceries/use-groceries-query";
 

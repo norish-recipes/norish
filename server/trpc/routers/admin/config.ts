@@ -6,7 +6,7 @@ import { adminProcedure, authedProcedure } from "../../middleware";
 import { trpcLogger as log } from "@/server/logger";
 import { getAllConfigs, getConfigSecret } from "@/server/db/repositories/server-config";
 import { getUserServerRole } from "@/server/db/repositories/users";
-import { type ServerConfigKey, ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
+import { type ServerConfigKey, ServerConfigKeys } from "@norish/config/zod/server-config";
 
 /**
  * Get all server configs (secrets masked).

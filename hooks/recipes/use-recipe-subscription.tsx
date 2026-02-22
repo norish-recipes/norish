@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useRecipeQuery } from "./use-recipe-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 /**
  * Hook that subscribes to WebSocket events for a single recipe

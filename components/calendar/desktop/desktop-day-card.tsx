@@ -1,6 +1,6 @@
 "use client";
 
-import type { Slot } from "@/types";
+import type { Slot } from "@norish/shared/contracts";
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
 
 import { PlusIcon } from "@heroicons/react/16/solid";

@@ -6,13 +6,13 @@
  */
 
 import type { RecipeExtractionOutput } from "@/server/ai/schemas/recipe.schema";
-import type { FullRecipeInsertDTO, RecipeCategory } from "@/types/dto/recipe";
+import type { FullRecipeInsertDTO, RecipeCategory } from "@norish/shared/contracts/dto/recipe";
 
 import { decode } from "html-entities";
 
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
-import { parseIngredientWithDefaults } from "@/lib/helpers";
-import { getUnits } from "@/config/server-config-loader";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { getUnits } from "@norish/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
 import { matchCategory } from "@/server/ai/utils/category-matcher";
 

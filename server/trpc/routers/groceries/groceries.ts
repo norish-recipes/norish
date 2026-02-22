@@ -1,4 +1,4 @@
-import type { GroceryUpdateDto } from "@/types";
+import type { GroceryUpdateDto } from "@norish/shared/contracts";
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -34,8 +34,8 @@ import {
   findBestIngredientStorePreference,
 } from "@/server/db/repositories/stores";
 import { assertHouseholdAccess } from "@/server/auth/permissions";
-import { parseIngredientWithDefaults } from "@/lib/helpers";
-import { getUnits } from "@/config/server-config-loader";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { getUnits } from "@norish/config/server-config-loader";
 import { trpcLogger as log } from "@/server/logger";
 
 /**

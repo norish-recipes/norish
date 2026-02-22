@@ -4,7 +4,7 @@ import type {
   CaldavSyncStatusUpdateDto,
   CaldavSyncStatusViewDto,
   CaldavSyncStatus,
-} from "@/types/dto/caldav-sync-status";
+} from "@norish/shared/contracts/dto/caldav-sync-status";
 
 import { eq, and, inArray, desc, sql } from "drizzle-orm";
 
@@ -13,7 +13,7 @@ import { caldavSyncStatus, plannedItems } from "@/server/db/schema";
 import {
   CaldavSyncStatusSelectSchema,
   CaldavSyncStatusInsertSchema,
-} from "@/server/db/zodSchemas/caldav-sync-status";
+} from "@norish/shared/contracts/zod/caldav-sync-status";
 
 export async function createCaldavSyncStatus(
   input: CaldavSyncStatusInsertDto

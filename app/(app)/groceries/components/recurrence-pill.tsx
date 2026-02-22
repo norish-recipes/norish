@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecurringGroceryDto } from "@/types";
+import type { RecurringGroceryDto } from "@norish/shared/contracts";
 
 import { motion } from "motion/react";
 import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/16/solid";
@@ -10,8 +10,8 @@ import {
   formatRecurrenceSummary,
   formatNextOccurrence,
   type RecurrenceTranslations,
-} from "@/lib/recurrence/formatter";
-import { isOverdue } from "@/lib/recurrence/calculator";
+} from "@norish/shared/lib/recurrence/formatter";
+import { isOverdue } from "@norish/shared/lib/recurrence/calculator";
 
 type RecurrencePillProps = {
   recurringGrocery: RecurringGroceryDto;

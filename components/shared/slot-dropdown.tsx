@@ -2,7 +2,7 @@ import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/r
 import { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
-import { Slot } from "@/types";
+import { Slot } from "@norish/shared/contracts";
 
 type SlotDropdownProps = {
   children: ReactNode;

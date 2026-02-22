@@ -1,7 +1,7 @@
 "use client";
 
 import type { InfiniteData } from "@tanstack/react-query";
-import type { RecipeDashboardDTO } from "@/types";
+import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,7 +9,7 @@ import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 type InfiniteRecipeData = InfiniteData<{
   recipes: RecipeDashboardDTO[];

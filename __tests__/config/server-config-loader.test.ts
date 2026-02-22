@@ -13,8 +13,8 @@ vi.mock("@/server/logger", () => ({
   serverLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
-import defaultUnits from "@/config/units.default.json";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import defaultUnits from "@norish/config/units.default.json";
 
 describe("isVideoParsingEnabled", () => {
   beforeEach(() => {
@@ -35,7 +35,7 @@ describe("isVideoParsingEnabled", () => {
       return Promise.resolve(null);
     });
 
-    const { isVideoParsingEnabled } = await import("@/config/server-config-loader");
+    const { isVideoParsingEnabled } = await import("@norish/config/server-config-loader");
 
     // Act
     const result = await isVideoParsingEnabled();
@@ -57,7 +57,7 @@ describe("isVideoParsingEnabled", () => {
       return Promise.resolve(null);
     });
 
-    const { isVideoParsingEnabled } = await import("@/config/server-config-loader");
+    const { isVideoParsingEnabled } = await import("@norish/config/server-config-loader");
 
     // Act
     const result = await isVideoParsingEnabled();
@@ -79,7 +79,7 @@ describe("isVideoParsingEnabled", () => {
       return Promise.resolve(null);
     });
 
-    const { isVideoParsingEnabled } = await import("@/config/server-config-loader");
+    const { isVideoParsingEnabled } = await import("@norish/config/server-config-loader");
 
     // Act
     const result = await isVideoParsingEnabled();
@@ -101,7 +101,7 @@ describe("isVideoParsingEnabled", () => {
       return Promise.resolve(null);
     });
 
-    const { isVideoParsingEnabled } = await import("@/config/server-config-loader");
+    const { isVideoParsingEnabled } = await import("@norish/config/server-config-loader");
 
     // Act
     const result = await isVideoParsingEnabled();
@@ -123,7 +123,7 @@ describe("isVideoParsingEnabled", () => {
       return Promise.resolve(null);
     });
 
-    const { isVideoParsingEnabled } = await import("@/config/server-config-loader");
+    const { isVideoParsingEnabled } = await import("@norish/config/server-config-loader");
 
     // Act
     const result = await isVideoParsingEnabled();
@@ -145,7 +145,7 @@ describe("isVideoParsingEnabled", () => {
       return Promise.resolve(null);
     });
 
-    const { isVideoParsingEnabled } = await import("@/config/server-config-loader");
+    const { isVideoParsingEnabled } = await import("@norish/config/server-config-loader");
 
     // Act
     const result = await isVideoParsingEnabled();
@@ -158,7 +158,7 @@ describe("isVideoParsingEnabled", () => {
     // Arrange
     mockGetConfig.mockResolvedValue(null);
 
-    const { isVideoParsingEnabled } = await import("@/config/server-config-loader");
+    const { isVideoParsingEnabled } = await import("@norish/config/server-config-loader");
 
     // Act
     const result = await isVideoParsingEnabled();
@@ -184,7 +184,7 @@ describe("isAIEnabled", () => {
       return Promise.resolve(null);
     });
 
-    const { isAIEnabled } = await import("@/config/server-config-loader");
+    const { isAIEnabled } = await import("@norish/config/server-config-loader");
 
     // Act
     const result = await isAIEnabled();
@@ -203,7 +203,7 @@ describe("isAIEnabled", () => {
       return Promise.resolve(null);
     });
 
-    const { isAIEnabled } = await import("@/config/server-config-loader");
+    const { isAIEnabled } = await import("@norish/config/server-config-loader");
 
     // Act
     const result = await isAIEnabled();
@@ -216,7 +216,7 @@ describe("isAIEnabled", () => {
     // Arrange
     mockGetConfig.mockResolvedValue(null);
 
-    const { isAIEnabled } = await import("@/config/server-config-loader");
+    const { isAIEnabled } = await import("@norish/config/server-config-loader");
 
     // Act
     const result = await isAIEnabled();
@@ -244,7 +244,7 @@ describe("getUnits", () => {
       isOverridden: true,
     });
 
-    const { getUnits } = await import("@/config/server-config-loader");
+    const { getUnits } = await import("@norish/config/server-config-loader");
     const result = await getUnits();
 
     expect(result).toEqual({
@@ -265,7 +265,7 @@ describe("getUnits", () => {
       },
     });
 
-    const { getUnits } = await import("@/config/server-config-loader");
+    const { getUnits } = await import("@norish/config/server-config-loader");
     const result = await getUnits();
 
     expect(result).toEqual({
@@ -289,7 +289,7 @@ describe("getUnits", () => {
       isOverwritten: true,
     });
 
-    const { getUnits } = await import("@/config/server-config-loader");
+    const { getUnits } = await import("@norish/config/server-config-loader");
     const result = await getUnits();
 
     expect(result).toEqual({
@@ -304,7 +304,7 @@ describe("getUnits", () => {
   it("falls back to default units when config is missing", async () => {
     mockGetConfig.mockResolvedValue(null);
 
-    const { getUnits } = await import("@/config/server-config-loader");
+    const { getUnits } = await import("@norish/config/server-config-loader");
     const result = await getUnits();
 
     expect(result).toEqual(defaultUnits);

@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contracts": "./src/contracts/index.ts",
+    "./contracts/*": "./src/contracts/*",
+    "./lib/*": "./src/lib/*"
+  },
+  "dependencies": {
+    "zod": "4.3.6"
   }
 }

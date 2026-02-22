@@ -1,4 +1,4 @@
-import type { HouseholdWithUsersNamesDto, User } from "@/types";
+import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
 
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";

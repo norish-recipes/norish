@@ -8,7 +8,7 @@
 // @vitest-environment node
 
 import type { Queue } from "bullmq";
-import type { AutoTaggingJobData } from "@/types";
+import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
@@ -33,12 +33,12 @@ vi.mock("bullmq", () => {
 });
 
 // Mock config loader
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getAutoTaggingMode: vi.fn(),
 }));
 
 // Mock server config
-vi.mock("@/config/env-config-server", () => ({
+vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
     REDIS_URL: "redis://localhost:6379",
@@ -86,7 +86,7 @@ vi.mock("@/server/queue/helpers", () => ({
   isJobInQueue: vi.fn(),
 }));
 
-import { getAutoTaggingMode } from "@/config/server-config-loader";
+import { getAutoTaggingMode } from "@norish/config/server-config-loader";
 
 describe("Auto-Tagging Queue", () => {
   let mockQueue: Queue<AutoTaggingJobData>;

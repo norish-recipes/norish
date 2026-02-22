@@ -1,6 +1,6 @@
 "use client";
 
-import type { HouseholdAdminSettingsDto } from "@/types/dto/household";
+import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Input, Button } from "@heroui/react";

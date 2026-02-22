@@ -1,4 +1,4 @@
-import type { CreateEventInput } from "@/types/dto/caldav";
+import type { CreateEventInput } from "@norish/shared/contracts/dto/caldav";
 
 /** Format date as UTC in basic format per RFC5545 (YYYYMMDDTHHMMSSZ) */
 export function formatDateUTC(d: Date): string {

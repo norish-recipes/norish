@@ -1,6 +1,6 @@
 "use client";
 
-import type { Slot } from "@/types";
+import type { Slot } from "@norish/shared/contracts";
 import type { PlannedItemDisplay } from "./types";
 
 import { memo } from "react";

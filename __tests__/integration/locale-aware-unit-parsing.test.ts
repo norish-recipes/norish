@@ -1,9 +1,9 @@
-import type { UnitsMap } from "@/server/db/zodSchemas/server-config";
+import type { UnitsMap } from "@norish/config/zod/server-config";
 
 import { describe, expect, it } from "vitest";
 
-import defaultUnits from "@/config/units.default.json";
-import { parseIngredientWithDefaults } from "@/lib/helpers";
+import defaultUnits from "@norish/config/units.default.json";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 describe("Locale-aware unit parsing integration", () => {
   const units = defaultUnits as UnitsMap;

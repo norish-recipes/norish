@@ -1,6 +1,6 @@
 "use client";
 
-import type { GroceryGroup } from "@/lib/grocery-grouping";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 import { Checkbox } from "@heroui/react";
 import { Bars3Icon, Square2StackIcon } from "@heroicons/react/16/solid";

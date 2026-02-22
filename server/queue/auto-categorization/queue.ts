@@ -1,4 +1,4 @@
-import type { AutoCategorizationJobData } from "@/types";
+import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
 
 import { Queue } from "bullmq";
 

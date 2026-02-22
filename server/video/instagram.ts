@@ -1,4 +1,4 @@
-import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { VideoMetadata } from "@/server/video/types";
 
 import { videoLogger as log } from "@/server/logger";

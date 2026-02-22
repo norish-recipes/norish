@@ -1,4 +1,4 @@
-import type { HouseholdSettingsDto, HouseholdAdminSettingsDto } from "@/types/dto/household";
+import type { HouseholdSettingsDto, HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 import type { HouseholdUserInfo } from "./types";
 
 import { TRPCError } from "@trpc/server";
@@ -27,13 +27,13 @@ import {
   invalidateHouseholdCache,
   invalidateHouseholdCacheForUsers,
 } from "@/server/db/cached-household";
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   HouseholdNameSchema,
   JoinCodeSchema,
   UUIDSchema,
   UserIdSchema,
-} from "@/lib/validation/schemas";
+} from "@norish/shared/lib/validation/schemas";
 import { trpcLogger as log } from "@/server/logger";
 import { permissionsEmitter } from "@/server/trpc/routers/permissions/emitter";
 

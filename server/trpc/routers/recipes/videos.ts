@@ -7,8 +7,8 @@ import { authedProcedure } from "../../middleware";
 
 import { trpcLogger as log } from "@/server/logger";
 import { saveVideoBytes, deleteVideoByUrl } from "@/server/downloader";
-import { ALLOWED_VIDEO_MIME_SET } from "@/types";
-import { getMaxVideoFileSize } from "@/config/server-config-loader";
+import { ALLOWED_VIDEO_MIME_SET } from "@norish/shared/contracts";
+import { getMaxVideoFileSize } from "@norish/config/server-config-loader";
 import {
   addRecipeVideos,
   deleteRecipeVideoById,
@@ -16,7 +16,7 @@ import {
   countRecipeVideos,
   getRecipeOwnerId,
 } from "@/server/db/repositories/recipes";
-import { MAX_RECIPE_VIDEOS } from "@/server/db/zodSchemas";
+import { MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
 
 // --- Shared Helpers ---
 

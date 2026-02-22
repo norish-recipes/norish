@@ -11,7 +11,7 @@ import { z } from "zod";
 import { getModels, getGenerationSettings } from "./providers";
 import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } from "./core/types";
 
-import { isAIEnabled, getAIConfig } from "@/config/server-config-loader";
+import { isAIEnabled, getAIConfig } from "@norish/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
 
 /**

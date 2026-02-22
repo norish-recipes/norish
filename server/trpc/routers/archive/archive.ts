@@ -1,4 +1,4 @@
-import type { RecipeDashboardDTO, ArchiveImportError, ArchiveSkippedItem } from "@/types";
+import type { RecipeDashboardDTO, ArchiveImportError, ArchiveSkippedItem } from "@norish/shared/contracts";
 
 import { z } from "zod";
 

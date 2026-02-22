@@ -1,6 +1,6 @@
 "use client";
 
-import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@/types";
+import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 
 import { memo, useState, useCallback, useRef, useEffect, useMemo } from "react";

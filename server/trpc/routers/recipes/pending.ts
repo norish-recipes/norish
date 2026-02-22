@@ -1,11 +1,11 @@
 import type {
   RecipeImportJobData,
-  PendingRecipeDTO,
   NutritionEstimationJobData,
   AutoTaggingJobData,
   AllergyDetectionJobData,
   AutoCategorizationJobData,
-} from "@/types";
+} from "@norish/queue/contracts/job-types";
+import type { PendingRecipeDTO } from "@norish/shared/contracts";
 import type { Job } from "bullmq";
 
 import { z } from "zod";
@@ -15,7 +15,7 @@ import { authedProcedure } from "../../middleware";
 
 import { trpcLogger as log } from "@/server/logger";
 import { getQueues } from "@/server/queue/registry";
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 
 const getPending = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Fetching pending recipe imports");

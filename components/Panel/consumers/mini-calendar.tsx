@@ -13,8 +13,8 @@ import { useMemo, useRef, useCallback, memo, useEffect, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Slot } from "@/types";
-import { startOfMonth, addMonths, endOfMonth, eachDayOfInterval, dateKey } from "@/lib/helpers";
+import { Slot } from "@norish/shared/contracts";
+import { startOfMonth, addMonths, endOfMonth, eachDayOfInterval, dateKey } from "@norish/shared/lib/helpers";
 import { useRecipeQuery } from "@/hooks/recipes";
 import Panel from "@/components/Panel/Panel";
 import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";

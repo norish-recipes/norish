@@ -1,4 +1,4 @@
-import type { UserCaldavConfigWithoutPasswordDto } from "@/types";
+import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
 
 import { z } from "zod";
 

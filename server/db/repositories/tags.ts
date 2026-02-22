@@ -1,12 +1,12 @@
-import type { TagDto } from "@/types/dto/tag";
+import type { TagDto } from "@norish/shared/contracts/dto/tag";
 
 import { asc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@/server/db/drizzle";
 import { recipeTags, tags } from "@/server/db/schema";
-import { TagSelectBaseSchema } from "@/server/db/zodSchemas";
-import { stripHtmlTags } from "@/lib/helpers";
+import { TagSelectBaseSchema } from "@norish/shared/contracts/zod";
+import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
 const TagArraySchema = z.array(TagSelectBaseSchema);
 

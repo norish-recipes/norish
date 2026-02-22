@@ -1,5 +1,5 @@
 // @vitest-environment node
-import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
@@ -15,7 +15,7 @@ vi.mock("@/server/logger", () => ({
   createLogger: () => ({ info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() }),
   videoLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getVideoConfig: vi.fn().mockReturnValue({ ytDlpVersion: "latest" }),
 }));
 

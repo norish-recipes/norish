@@ -1,6 +1,6 @@
 "use client";
 
-import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@/types";
+import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
 import { useMemo } from "react";
 import { motion } from "motion/react";
@@ -11,7 +11,7 @@ import { StoreSection } from "./store-section";
 import { GroupedStoreSection } from "./grouped-store-section";
 import { DndGroceryProvider, DndGroupedGroceryProvider } from "./dnd";
 
-import { groupGroceriesByIngredient } from "@/lib/grocery-grouping";
+import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 import { useUnitsQuery } from "@/hooks/config/use-units-query";
 
 interface GroceryListProps {

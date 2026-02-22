@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 
-import { MeasurementSystem } from "@/types/dto/recipe";
+import { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
 
 export function normalizeIngredient(i: any, system: MeasurementSystem) {
   return {

@@ -18,8 +18,8 @@ import { useTranslations } from "next-intl";
 
 import { useTimersEnabledQuery } from "@/hooks/config";
 import { useTimerStore } from "@/stores/timers";
-import { createClientLogger } from "@/lib/logger";
-import { formatTimerMs } from "@/lib/helpers";
+import { createClientLogger } from "@norish/shared/lib/logger";
+import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { useAutoHide } from "@/hooks/auto-hide";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
 

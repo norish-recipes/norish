@@ -1,4 +1,4 @@
-import type { User, HouseholdWithUsersNamesDto, GroceryDto, RecurringGroceryDto } from "@/types";
+import type { User, HouseholdWithUsersNamesDto, GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
 import { vi } from "vitest";
 

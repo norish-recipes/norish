@@ -3,8 +3,8 @@
 import { useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import { type Locale, isValidLocale } from "@/i18n/config";
-import { getLocalePreference } from "@/lib/user-preferences";
+import { type Locale, isValidLocale } from "@norish/i18n/config";
+import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 import { useUserMutations } from "@/hooks/user/use-user-mutations";
 

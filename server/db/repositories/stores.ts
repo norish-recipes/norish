@@ -3,7 +3,7 @@ import type {
   StoreInsertDto,
   StoreUpdateDto,
   IngredientStorePreferenceDto,
-} from "@/types/dto/stores";
+} from "@norish/shared/contracts/dto/stores";
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import Fuse, { type IFuseOptions } from "fuse.js";
@@ -32,7 +32,7 @@ import {
   StoreUpdateBaseSchema,
   IngredientStorePreferenceSelectSchema,
   IngredientStorePreferenceInsertSchema,
-} from "@/server/db/zodSchemas";
+} from "@norish/shared/contracts/zod";
 
 export async function getStoreById(id: string): Promise<StoreDto | null> {
   const [row] = await db.select().from(stores).where(eq(stores.id, id)).limit(1);

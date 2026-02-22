@@ -6,7 +6,7 @@ import {
   getRecipePermissionPolicy,
   isAIEnabled,
   getAutoTaggingMode,
-} from "@/config/server-config-loader";
+} from "@norish/config/server-config-loader";
 import { isUserServerAdmin } from "@/server/db";
 
 const get = authedProcedure.query(async ({ ctx }) => {

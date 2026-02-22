@@ -1,4 +1,4 @@
-import type { RecipePermissionPolicy } from "@/server/db/zodSchemas/server-config";
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 
 /**
  * Permissions subscription event payloads.

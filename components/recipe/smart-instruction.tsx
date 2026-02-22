@@ -4,9 +4,9 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 
-import { parseTimerDurations } from "@/lib/timer-parser";
+import { parseTimerDurations } from "@norish/shared/lib/timer-parser";
 import { useTimersEnabledQuery, useTimerKeywordsQuery } from "@/hooks/config";
-import { createClientLogger } from "@/lib/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 import { TimerChip } from "@/components/recipe/timer-chip";
 
 const logger = createClientLogger("smart-instruction");

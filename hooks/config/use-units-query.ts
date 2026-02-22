@@ -1,6 +1,6 @@
 "use client";
 
-import type { UnitsMap } from "@/server/db/zodSchemas/server-config";
+import type { UnitsMap } from "@norish/config/zod/server-config";
 
 import { useQuery } from "@tanstack/react-query";
 

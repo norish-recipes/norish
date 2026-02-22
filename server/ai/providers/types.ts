@@ -3,7 +3,7 @@
  */
 
 import type { LanguageModel } from "ai";
-import type { AIConfig } from "@/server/db/zodSchemas/server-config";
+import type { AIConfig } from "@norish/config/zod/server-config";
 
 /**
  * Model configuration returned by factory functions.

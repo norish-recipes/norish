@@ -14,11 +14,11 @@ import { useTranslations } from "next-intl";
 
 import { useRecipeContextRequired } from "../context";
 
-import { MeasurementSystem } from "@/types";
-import { cssButtonPill, cssAIGradientText, cssAIIconColor } from "@/config/css-tokens";
+import { MeasurementSystem } from "@norish/shared/contracts";
+import { cssButtonPill, cssAIGradientText, cssAIIconColor } from "@norish/web/config/css-tokens";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useUserContext } from "@/context/user-context";
-import { getShowConversionButtonPreference } from "@/lib/user-preferences";
+import { getShowConversionButtonPreference } from "@norish/shared/lib/user-preferences";
 
 type ConversionOption = {
   key: MeasurementSystem;

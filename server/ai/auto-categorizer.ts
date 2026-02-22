@@ -1,4 +1,4 @@
-import type { RecipeCategory } from "@/types";
+import type { RecipeCategory } from "@norish/shared/contracts";
 
 import { z } from "zod";
 import { generateText, Output } from "ai";
@@ -7,7 +7,7 @@ import { getModels, getGenerationSettings } from "./providers";
 import { matchCategory } from "./utils/category-matcher";
 import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } from "./types/result";
 
-import { isAIEnabled } from "@/config/server-config-loader";
+import { isAIEnabled } from "@norish/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
 
 const autoCategorizationSchema = z

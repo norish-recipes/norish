@@ -1,6 +1,6 @@
 "use client";
 
-import type { Slot } from "@/types";
+import type { Slot } from "@norish/shared/contracts";
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import type { PlannedItemDisplay } from "./types";
 
@@ -24,7 +24,7 @@ import { TimelineDragOverlay } from "./timeline-drag-overlay";
 import { TimelineScrollToToday } from "./timeline-scroll-to-today";
 import { SLOT_ORDER } from "./types";
 
-import { dateKey, eachDayOfInterval } from "@/lib/helpers";
+import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
 

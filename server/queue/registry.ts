@@ -9,14 +9,14 @@
  */
 
 import type { Queue } from "bullmq";
-import type { RecipeImportJobData } from "@/types";
-import type { ImageImportJobData } from "@/types";
-import type { PasteImportJobData } from "@/types";
-import type { NutritionEstimationJobData } from "@/types";
-import type { AutoTaggingJobData } from "@/types";
-import type { AutoCategorizationJobData } from "@/types";
-import type { AllergyDetectionJobData } from "@/types";
-import type { CaldavSyncJobData } from "@/types";
+import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
+import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
+import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
+import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
+import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
+import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
+import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
+import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 
 import { createRecipeImportQueue } from "./recipe-import/queue";
 import { createImageImportQueue } from "./image-import/queue";

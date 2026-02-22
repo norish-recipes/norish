@@ -1,6 +1,6 @@
 "use client";
 
-import type { AmountDisplayMode } from "@/lib/format-amount";
+import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
 
 import { useCallback } from "react";
 

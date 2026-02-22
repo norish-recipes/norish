@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { UserDtoSchema } from "@/server/db/zodSchemas/user";
+import { UserDtoSchema } from "@norish/shared/contracts/zod/user";
 
 // API Key metadata schema (matches ApiKeyMetadata type)
 export const ApiKeyMetadataSchema = z.object({

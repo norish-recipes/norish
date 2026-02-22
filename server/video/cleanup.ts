@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { videoLogger as log } from "@/server/logger";
 
 export async function cleanupFile(filePath: string): Promise<void> {

@@ -6,7 +6,7 @@
  */
 
 import type { Queue, Job } from "bullmq";
-import type { CaldavSyncJobData } from "@/types";
+import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 
 import { sanitizeUrlForJobId } from "../helpers";
 

@@ -17,8 +17,8 @@ import {
   useCalendarSubscription,
   type CalendarData,
 } from "@/hooks/calendar";
-import { Slot } from "@/types";
-import { dateKey, addWeeks, getWeekStart, getWeekEnd } from "@/lib/helpers";
+import { Slot } from "@norish/shared/contracts";
+import { dateKey, addWeeks, getWeekStart, getWeekEnd } from "@norish/shared/lib/helpers";
 
 type PlannedItem = {
   id: string;

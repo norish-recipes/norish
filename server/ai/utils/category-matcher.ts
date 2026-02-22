@@ -1,13 +1,13 @@
-import type { RecipeCategory } from "@/types";
+import type { RecipeCategory } from "@norish/shared/contracts";
 
 import Fuse, { type IFuseOptions } from "fuse.js";
 
-import enRecipes from "@/i18n/messages/en/recipes.json";
-import nlRecipes from "@/i18n/messages/nl/recipes.json";
-import frRecipes from "@/i18n/messages/fr/recipes.json";
-import deFormalRecipes from "@/i18n/messages/de-formal/recipes.json";
-import deInformalRecipes from "@/i18n/messages/de-informal/recipes.json";
-import koRecipes from "@/i18n/messages/ko/recipes.json";
+import enRecipes from "@norish/i18n/messages/en/recipes.json";
+import nlRecipes from "@norish/i18n/messages/nl/recipes.json";
+import frRecipes from "@norish/i18n/messages/fr/recipes.json";
+import deFormalRecipes from "@norish/i18n/messages/de-formal/recipes.json";
+import deInformalRecipes from "@norish/i18n/messages/de-informal/recipes.json";
+import koRecipes from "@norish/i18n/messages/ko/recipes.json";
 
 const FUZZY_THRESHOLD = 0.4;
 

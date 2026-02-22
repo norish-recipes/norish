@@ -10,7 +10,7 @@
  * For reading data + cache manipulation, use useCalendarQuery instead.
  */
 
-import type { PlannedItemFromQuery } from "@/types";
+import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";

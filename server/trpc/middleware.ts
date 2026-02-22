@@ -1,5 +1,5 @@
 import type { Context } from "./context";
-import type { HouseholdWithUsersNamesDto, User } from "@/types";
+import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
 import type { SubscriptionMultiplexer } from "@/server/redis/subscription-multiplexer";
 
 import { TRPCError } from "@trpc/server";

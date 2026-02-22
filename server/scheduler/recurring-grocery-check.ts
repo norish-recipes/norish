@@ -3,7 +3,7 @@ import {
   uncheckGrocery,
 } from "@/server/db/repositories/recurring-groceries";
 import { updateRecurringGrocery } from "@/server/db/repositories/recurring-groceries";
-import { calculateNextOccurrence } from "@/lib/recurrence/calculator";
+import { calculateNextOccurrence } from "@norish/shared/lib/recurrence/calculator";
 import { getHouseholdForUser } from "@/server/db";
 import { groceryEmitter } from "@/server/trpc/routers/groceries/emitter";
 import { schedulerLogger } from "@/server/logger";

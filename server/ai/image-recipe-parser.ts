@@ -1,5 +1,5 @@
-import type { ImageImportFile } from "@/types/dto/queue";
-import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import type { ImageImportFile } from "@norish/queue/contracts/job-types";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 
 import { randomUUID } from "crypto";
 
@@ -15,7 +15,7 @@ import {
   getExtractionLogContext,
 } from "./features/recipe-extraction/normalizer";
 
-import { isAIEnabled } from "@/config/server-config-loader";
+import { isAIEnabled } from "@norish/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
 
 // Re-export type for consumers

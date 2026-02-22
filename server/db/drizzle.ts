@@ -5,7 +5,7 @@ import pg from "pg";
 
 import * as schema from "./schema";
 
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 const { Pool } = pg;
 

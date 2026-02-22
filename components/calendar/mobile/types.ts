@@ -1,4 +1,4 @@
-import type { Slot } from "@/types";
+import type { Slot } from "@norish/shared/contracts";
 
 export type PlannedItemDisplay = {
   id: string;

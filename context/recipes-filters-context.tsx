@@ -1,6 +1,6 @@
 "use client";
 
-import type { SearchField } from "@/types";
+import type { SearchField } from "@norish/shared/contracts";
 
 import { createContext, useContext, ReactNode, useMemo } from "react";
 

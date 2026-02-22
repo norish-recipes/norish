@@ -12,7 +12,7 @@ import {
 import { useTranslations } from "next-intl";
 
 import { useLocaleCookie } from "@/hooks/user/use-locale-cookie";
-import { type Locale, isValidLocale } from "@/i18n/config";
+import { type Locale, isValidLocale } from "@norish/i18n/config";
 
 /**
  * Language selector for auth pages (login/signup)

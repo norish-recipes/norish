@@ -1,4 +1,4 @@
-import type { User, HouseholdWithUsersNamesDto, RecipeDashboardDTO, FullRecipeDTO } from "@/types";
+import type { User, HouseholdWithUsersNamesDto, RecipeDashboardDTO, FullRecipeDTO } from "@norish/shared/contracts";
 
 /**
  * Create a mock user for testing

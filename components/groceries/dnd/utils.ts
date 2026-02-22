@@ -1,5 +1,5 @@
-import type { GroceryDto, StoreDto } from "@/types";
-import type { GroceryGroup } from "@/lib/grocery-grouping";
+import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import type { UniqueIdentifier } from "@dnd-kit/core";
 import type { ContainerId, ItemsState, GroupItemsState } from "./types";
 

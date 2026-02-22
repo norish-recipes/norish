@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecurrenceConfig } from "@/types/recurrence";
+import type { RecurrenceConfig } from "@norish/shared/contracts/recurrence";
 
 import { useQuery } from "@tanstack/react-query";
 

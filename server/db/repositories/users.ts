@@ -1,4 +1,4 @@
-import type { User } from "@/types/dto/user";
+import type { User } from "@norish/shared/contracts/dto/user";
 
 import { eq, and, inArray, sql } from "drizzle-orm";
 

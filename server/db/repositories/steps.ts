@@ -1,12 +1,12 @@
-import type { StepDto, StepInsertDto } from "@/types/dto/steps";
+import type { StepDto, StepInsertDto } from "@norish/shared/contracts/dto/steps";
 
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
 import { steps, stepImages } from "@/server/db/schema";
-import { StepSelectBaseSchema } from "@/server/db/zodSchemas/steps";
+import { StepSelectBaseSchema } from "@norish/shared/contracts/zod/steps";
 import { dbLogger } from "@/server/logger";
-import { stripHtmlTags } from "@/lib/helpers";
+import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
 const StepArraySchema = z.array(StepSelectBaseSchema);
 

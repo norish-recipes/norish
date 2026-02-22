@@ -5,7 +5,7 @@ import { addToast } from "@heroui/react";
 
 import { useArchiveImportCacheHelpers } from "./use-archive-cache";
 
-import { createClientLogger } from "@/lib/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 const log = createClientLogger("ArchiveImportSubscription");

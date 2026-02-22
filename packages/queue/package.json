@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contracts/*": "./src/contracts/*"
+  },
+  "dependencies": {
+    "bullmq": "^5.69.3"
   }
 }

@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { useArchiveImportQuery } from "./use-archive-import-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 export type ArchiveImportMutationResult = {
   startImport: (file: File) => void;

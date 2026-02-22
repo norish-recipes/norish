@@ -1,6 +1,6 @@
 "use client";
 
-import type { HouseholdSettingsDto } from "@/types/dto/household";
+import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 
 import { useMutation } from "@tanstack/react-query";
 

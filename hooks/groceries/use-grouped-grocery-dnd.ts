@@ -1,4 +1,4 @@
-import type { GroceryGroup } from "@/lib/grocery-grouping";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import type {
   DragStartEvent,
   DragOverEvent,

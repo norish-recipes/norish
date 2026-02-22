@@ -7,7 +7,7 @@ import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import SmartTextInput from "@/components/shared/smart-text-input";
-import { MeasurementSystem } from "@/types";
+import { MeasurementSystem } from "@norish/shared/contracts";
 import { useRecipeImages } from "@/hooks/recipes";
 
 export interface StepImage {

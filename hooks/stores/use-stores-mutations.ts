@@ -1,6 +1,6 @@
 "use client";
 
-import type { StoreDto, StoreCreateDto, StoreUpdateInput } from "@/types";
+import type { StoreDto, StoreCreateDto, StoreUpdateInput } from "@norish/shared/contracts";
 
 import { useMutation } from "@tanstack/react-query";
 

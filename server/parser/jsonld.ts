@@ -1,9 +1,9 @@
 /** JSON-LD helpers: scan HTML, collect structured data, and return Recipe nodes. */
 import * as cheerio from "cheerio";
 
-import { parseJsonWithRepair } from "@/lib/helpers";
+import { parseJsonWithRepair } from "@norish/shared/lib/helpers";
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
-import { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { parserLogger as log } from "@/server/logger";
 
 function isRecipeNode(node: any): boolean {

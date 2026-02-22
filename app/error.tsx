@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { createClientLogger } from "@/lib/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("Error");
 

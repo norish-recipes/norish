@@ -1,5 +1,5 @@
 import type { VideoMetadata } from "./types";
-import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
@@ -13,8 +13,8 @@ import YTDlpWrapModule from "yt-dlp-wrap";
 const YTDlpWrap =
   (YTDlpWrapModule as unknown as { default?: typeof YTDlpWrapModule }).default ?? YTDlpWrapModule;
 
-import { SERVER_CONFIG } from "@/config/env-config-server";
-import { getVideoConfig } from "@/config/server-config-loader";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { getVideoConfig } from "@norish/config/server-config-loader";
 import { videoLogger as log } from "@/server/logger";
 
 // Resolve ffmpeg path at runtime

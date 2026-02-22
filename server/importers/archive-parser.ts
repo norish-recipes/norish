@@ -10,7 +10,7 @@ import {
 import { extractTandoorRecipes, parseTandoorRecipeToDTO } from "./tandoor-parser";
 import { extractPaprikaRecipes, parsePaprikaRecipeToDTO } from "./paprika-parser";
 
-import { RecipeDashboardDTO, FullRecipeInsertDTO } from "@/types";
+import { RecipeDashboardDTO, FullRecipeInsertDTO } from "@norish/shared/contracts";
 import {
   createRecipeWithRefs,
   dashboardRecipe,

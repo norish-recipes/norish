@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import type { RecipeExtractionOutput } from "@/server/ai/schemas/recipe.schema";
-import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 
 import { describe, it, expect, vi } from "vitest";
 
@@ -17,7 +17,7 @@ vi.mock("@/server/parser/normalize", () => ({
   normalizeRecipeFromJson: vi.fn(),
 }));
 
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getUnits: vi.fn().mockResolvedValue([]),
 }));
 

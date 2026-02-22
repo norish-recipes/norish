@@ -5,7 +5,7 @@
  */
 
 import { downloadAllImagesFromJsonLd } from "@/server/downloader";
-import { MAX_RECIPE_IMAGES } from "@/server/db/zodSchemas";
+import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod";
 
 export interface ParsedImage {
   image: string;

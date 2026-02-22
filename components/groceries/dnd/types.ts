@@ -1,5 +1,5 @@
-import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@/types";
-import type { GroceryGroup } from "@/lib/grocery-grouping";
+import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 /** Container ID for groceries without a store assignment */
 export const UNSORTED_CONTAINER = "unsorted" as const;

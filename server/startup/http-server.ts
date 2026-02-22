@@ -8,7 +8,7 @@ import { initTrpcWebSocket } from "../trpc";
 import { serveStaticFile } from "./static-files";
 
 import { serverLogger } from "@/server/logger";
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 export async function createServer() {
   const dev = SERVER_CONFIG.NODE_ENV === "development";

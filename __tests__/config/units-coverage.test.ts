@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from "vitest";
 
-import defaultUnits from "@/config/units.default.json";
+import defaultUnits from "@norish/config/units.default.json";
 
 describe("Units Configuration Coverage", () => {
   const units = defaultUnits as Record<

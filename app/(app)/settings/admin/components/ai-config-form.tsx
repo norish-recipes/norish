@@ -20,7 +20,7 @@ import {
   ServerConfigKeys,
   type AIConfig,
   type AutoTaggingMode,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 import { useAvailableModelsQuery } from "@/hooks/admin";
 import SecretInput from "@/components/shared/secret-input";
 

@@ -2,7 +2,7 @@ import type {
   UserCaldavConfigWithoutPasswordDto,
   ConnectionTestResult,
   CalDavCalendarInfo,
-} from "@/types";
+} from "@norish/shared/contracts";
 
 import { TRPCError } from "@trpc/server";
 

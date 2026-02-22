@@ -12,7 +12,7 @@ import JsonEditor from "./json-editor";
 import TimerKeywordsEditor from "./timer-keywords-editor";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
-import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 export default function ContentDetectionCard() {
   const t = useTranslations("settings.admin.contentDetection");

@@ -10,7 +10,7 @@
  * For reading data + cache manipulation, use useRecipesQuery instead.
  */
 
-import type { RecipeDashboardDTO, PendingRecipeDTO } from "@/types";
+import type { RecipeDashboardDTO, PendingRecipeDTO } from "@norish/shared/contracts";
 import type { InfiniteData } from "@tanstack/react-query";
 
 import { useQueryClient } from "@tanstack/react-query";

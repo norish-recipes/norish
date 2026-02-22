@@ -7,7 +7,7 @@
 // @vitest-environment node
 
 import type { Queue } from "bullmq";
-import type { RecipeImportJobData } from "@/types";
+import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -39,12 +39,12 @@ vi.mock("bullmq", () => {
 });
 
 // Mock config loader
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn(),
 }));
 
 // Mock server config
-vi.mock("@/config/env-config-server", () => ({
+vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
     REDIS_URL: "redis://localhost:6379",
@@ -142,9 +142,9 @@ vi.mock("@/server/db", () => ({
 }));
 
 // eslint-disable-next-line import/order -- Type imports must come after mocks are set up in test files
-import type { RecipePermissionPolicy } from "@/server/db/zodSchemas/server-config";
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 
 describe("Recipe Import Queue", () => {
   beforeEach(() => {

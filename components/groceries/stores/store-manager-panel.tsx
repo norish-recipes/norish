@@ -1,6 +1,6 @@
 "use client";
 
-import type { StoreDto, StoreColor } from "@/types";
+import type { StoreDto, StoreColor } from "@norish/shared/contracts";
 
 import { useState, useRef } from "react";
 import { Button, Input } from "@heroui/react";

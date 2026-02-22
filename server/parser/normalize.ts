@@ -10,8 +10,8 @@
  * - Videos
  */
 
-import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
-import type { RecipeCategory } from "@/types";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+import type { RecipeCategory } from "@norish/shared/contracts";
 
 import { randomUUID } from "crypto";
 
@@ -25,7 +25,7 @@ import {
   getServings,
 } from "./parsers";
 
-import { getUnits } from "@/config/server-config-loader";
+import { getUnits } from "@norish/config/server-config-loader";
 import { parserLogger } from "@/server/logger";
 
 // Re-export getServings for backward compatibility (used by mela-parser.ts)

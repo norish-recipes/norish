@@ -7,11 +7,11 @@ import { saveImageBytes } from "../downloader";
 import { parseHumanDurationToMinutes } from "./parser-helpers";
 
 import { serverLogger as log } from "@/server/logger";
-import { inferSystemUsedFromParsed } from "@/lib/determine-recipe-system";
-import { parseIngredientWithDefaults } from "@/lib/helpers";
-import { FullRecipeInsertDTO } from "@/types";
+import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { FullRecipeInsertSchema } from "@/server/db";
-import { getUnits } from "@/config/server-config-loader";
+import { getUnits } from "@norish/config/server-config-loader";
 
 export type MealieDatabase = {
   recipes: MealieRecipe[];

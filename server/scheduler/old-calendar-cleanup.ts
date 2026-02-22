@@ -1,7 +1,7 @@
 import { startOfMonth, subMonths, format } from "date-fns";
 import { lte } from "drizzle-orm";
 
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { db } from "@/server/db/drizzle";
 import { plannedItems } from "@/server/db/schema";
 import { schedulerLogger } from "@/server/logger";

@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import type { Queue } from "bullmq";
-import type { AutoCategorizationJobData } from "@/types";
+import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
@@ -27,7 +27,7 @@ vi.mock("@/server/queue/lazy-worker-manager", () => ({
   stopLazyWorker: mockStopLazyWorker,
 }));
 
-vi.mock("@/config/env-config-server", () => ({
+vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
     REDIS_URL: "redis://localhost:6379",
@@ -107,8 +107,8 @@ vi.mock("@/server/trpc/helpers", () => ({
   emitByPolicy: vi.fn(),
 }));
 
-vi.mock("@/config/server-config-loader", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/config/server-config-loader")>();
+vi.mock("@norish/config/server-config-loader", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@norish/config/server-config-loader")>();
 
   return {
     ...actual,
@@ -155,7 +155,7 @@ describe("Auto-Categorization Queue", () => {
     };
 
     it("skips job when AI is disabled", async () => {
-      const { isAIEnabled } = await import("@/config/server-config-loader");
+      const { isAIEnabled } = await import("@norish/config/server-config-loader");
 
       vi.mocked(isAIEnabled).mockResolvedValue(false);
 
@@ -172,7 +172,7 @@ describe("Auto-Categorization Queue", () => {
     });
 
     it("adds job successfully when AI is enabled", async () => {
-      const { isAIEnabled } = await import("@/config/server-config-loader");
+      const { isAIEnabled } = await import("@norish/config/server-config-loader");
       const { isJobInQueue } = await import("@/server/queue/helpers");
 
       vi.mocked(isAIEnabled).mockResolvedValue(true);
@@ -199,7 +199,7 @@ describe("Auto-Categorization Queue", () => {
     it("does not overwrite existing categories", async () => {
       const { getRecipeFull, updateRecipeCategories } = await import("@/server/db");
       const { categorizeRecipe } = await import("@/server/ai/auto-categorizer");
-      const { getRecipePermissionPolicy } = await import("@/config/server-config-loader");
+      const { getRecipePermissionPolicy } = await import("@norish/config/server-config-loader");
       const { startAutoCategorizationWorker } =
         await import("@/server/queue/auto-categorization/worker");
 

@@ -4,7 +4,7 @@ import type {
   HouseholdUserDto,
   HouseholdUserInsertDto,
   HouseholdWithUsersNamesDto,
-} from "@/types/dto/household";
+} from "@norish/shared/contracts/dto/household";
 
 import { and, eq, sql } from "drizzle-orm";
 
@@ -17,7 +17,7 @@ import {
   HouseholdSelectBaseSchema,
   HouseholdUserInsertBaseSchema,
   HouseholdWithUsersNamesSchema,
-} from "@/server/db/zodSchemas/household";
+} from "@norish/shared/contracts/zod/household";
 
 export async function getUsersByHouseholdId(householdId: string): Promise<HouseholdUserDto[]> {
   const rows = await db.query.householdUsers.findMany({

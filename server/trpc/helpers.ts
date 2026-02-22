@@ -1,5 +1,5 @@
 import type { TypedEmitter } from "./emitter";
-import type { PermissionLevel } from "@/server/db/zodSchemas/server-config";
+import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type { SubscriptionMultiplexer } from "@/server/redis/subscription-multiplexer";
 
 import { authedProcedure } from "./middleware";

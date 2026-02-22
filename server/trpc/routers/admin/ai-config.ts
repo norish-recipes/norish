@@ -8,7 +8,7 @@ import { trpcLogger as log } from "@/server/logger";
 import { setConfig, getConfig } from "@/server/db/repositories/server-config";
 import { getRecipesWithoutCategories } from "@/server/db/repositories/recipes";
 import { testAIEndpoint as testAIEndpointFn } from "@/server/auth/connection-tests";
-import { getRecipePermissionPolicy } from "@/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { listModels, listTranscriptionModels } from "@/server/ai/providers";
 import { getQueues } from "@/server/queue/registry";
 import { addAutoCategorizationJob } from "@/server/queue/auto-categorization/producer";
@@ -19,7 +19,7 @@ import {
   TranscriptionProviderSchema,
   type AIConfig,
   type VideoConfig,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 /**
  * Update AI config.

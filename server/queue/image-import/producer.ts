@@ -6,7 +6,7 @@
  */
 
 import type { Queue } from "bullmq";
-import type { ImageImportJobData, AddImageImportJobResult } from "@/types";
+import type { ImageImportJobData, AddImageImportJobResult } from "@norish/queue/contracts/job-types";
 
 import { isJobInQueue } from "../helpers";
 

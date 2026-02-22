@@ -1,7 +1,7 @@
 "use client";
 
-import type { GroceryDto, StoreDto, StoreColor, RecurringGroceryDto } from "@/types";
-import type { GroceryGroup } from "@/lib/grocery-grouping";
+import type { GroceryDto, StoreDto, StoreColor, RecurringGroceryDto } from "@norish/shared/contracts";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 import { memo, useState, useMemo } from "react";
 import { motion } from "motion/react";

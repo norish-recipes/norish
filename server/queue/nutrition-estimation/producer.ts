@@ -6,7 +6,7 @@
  */
 
 import type { Queue } from "bullmq";
-import type { NutritionEstimationJobData, AddNutritionEstimationJobResult } from "@/types";
+import type { NutritionEstimationJobData, AddNutritionEstimationJobResult } from "@norish/queue/contracts/job-types";
 
 import { isJobInQueue } from "../helpers";
 

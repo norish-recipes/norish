@@ -5,7 +5,7 @@ import { CheckIcon } from "@heroicons/react/20/solid";
 
 import { useRecipeContextRequired } from "../context";
 
-import { formatAmount } from "@/lib/format-amount";
+import { formatAmount } from "@norish/shared/lib/format-amount";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";

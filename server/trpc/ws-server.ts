@@ -16,7 +16,7 @@ import {
 
 import { auth } from "@/server/auth/auth";
 import { trpcLogger } from "@/server/logger";
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 // Extend IncomingMessage to include connectionId
 declare module "node:http" {

@@ -1,4 +1,4 @@
-import type { UnitsMap } from "@/server/db/zodSchemas/server-config";
+import type { UnitsMap } from "@norish/config/zod/server-config";
 
 import { describe, it, expect } from "vitest";
 
@@ -13,7 +13,7 @@ import {
   addWeeks,
   buildAvatarFilename,
   isAvatarFilenameForUser,
-} from "@/lib/helpers";
+} from "@norish/shared/lib/helpers";
 
 describe("parseIsoDuration", () => {
   it("parses hours and minutes", () => {

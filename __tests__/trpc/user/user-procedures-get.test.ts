@@ -45,7 +45,7 @@ vi.mock("@/server/startup/media-cleanup", () => ({
   deleteAvatarByFilename: vi.fn(),
 }));
 
-vi.mock("@/config/env-config-server", () => ({
+vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     UPLOADS_DIR: "/tmp/uploads",
     MAX_AVATAR_FILE_SIZE: 5 * 1024 * 1024,

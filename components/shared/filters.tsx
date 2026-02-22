@@ -5,7 +5,7 @@ import { Button } from "@heroui/react";
 import { useMemo, useState } from "react";
 
 import { FiltersPanel } from "@/components/Panel/consumers";
-import { cssGlassBackdrop } from "@/config/css-tokens";
+import { cssGlassBackdrop } from "@norish/web/config/css-tokens";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 
 type FiltersProps = {

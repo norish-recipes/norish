@@ -1,6 +1,6 @@
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import type { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
-import type { HouseholdWithUsersNamesDto, User } from "@/types";
+import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
 import type { SubscriptionMultiplexer } from "@/server/redis/subscription-multiplexer";
 
 import { auth } from "@/server/auth/auth";

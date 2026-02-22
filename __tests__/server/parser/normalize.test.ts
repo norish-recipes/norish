@@ -8,7 +8,7 @@ vi.mock("@/server/downloader", () => ({
   downloadAllImagesFromJsonLd: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("@/config/server-config-loader", () => ({
+vi.mock("@norish/config/server-config-loader", () => ({
   getUnits: vi.fn().mockResolvedValue({}),
 }));
 

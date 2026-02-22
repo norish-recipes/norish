@@ -22,7 +22,7 @@ import {
   StoreUpdateInputSchema,
   StoreDeleteSchema,
   StoreReorderSchema,
-} from "@/server/db/zodSchemas";
+} from "@norish/shared/contracts/zod";
 import { assertHouseholdAccess } from "@/server/auth/permissions";
 import { trpcLogger as log } from "@/server/logger";
 

@@ -1,4 +1,4 @@
-import type { RecurrencePattern } from "@/types/recurrence";
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 import { useState, useCallback } from "react";
 

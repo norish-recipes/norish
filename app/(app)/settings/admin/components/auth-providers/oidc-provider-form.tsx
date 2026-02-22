@@ -13,10 +13,10 @@ import { ProviderActions } from "./provider-actions";
 import { TestResultDisplay } from "./test-result-display";
 import { OIDCClaimMapping, type ClaimMappingValues } from "./oidc-claim-mapping";
 
-import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import SecretInput from "@/components/shared/secret-input";
 import { useDirtyState } from "@/hooks/use-dirty-state";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 interface OIDCProviderFormProps {
   config: Record<string, unknown> | undefined;

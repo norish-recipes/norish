@@ -1,4 +1,4 @@
-import type { I18nLocaleConfig } from "@/server/db/zodSchemas/server-config";
+import type { I18nLocaleConfig } from "@norish/config/zod/server-config";
 
 import { setConfig, configExists, getConfig, deleteConfig } from "../db/repositories/server-config";
 import {
@@ -14,14 +14,14 @@ import {
   DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "../db/zodSchemas/server-config";
 
-import { SERVER_CONFIG } from "@/config/env-config-server";
-import { DEFAULT_LOCALE_CONFIG, buildLocaleConfigFromEnv } from "@/config/server-config-loader";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { DEFAULT_LOCALE_CONFIG, buildLocaleConfigFromEnv } from "@norish/config/server-config-loader";
 import { setAuthProviderCache } from "@/server/auth/provider-cache";
 import { serverLogger } from "@/server/logger";
-import defaultUnits from "@/config/units.default.json";
-import defaultContentIndicators from "@/config/content-indicators.default.json";
-import defaultRecurrenceConfig from "@/config/recurrence-config.default.json";
-import defaultTimerKeywords from "@/config/timer-keywords.default.json";
+import defaultUnits from "@norish/config/units.default.json";
+import defaultContentIndicators from "@norish/config/content-indicators.default.json";
+import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
+import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import { loadDefaultPrompts } from "@/server/ai/prompts/loader";
 
 /**

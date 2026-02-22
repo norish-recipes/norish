@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { ProviderIcon } from "./provider-icon";
 
-import { signIn } from "@/lib/auth/client";
+import { signIn } from "@norish/shared/lib/auth/client";
 
 interface ProviderButtonProps {
   providerId: string;

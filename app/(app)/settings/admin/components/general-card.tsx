@@ -23,7 +23,7 @@ import { useAdminSettingsContext } from "../context";
 
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 export default function GeneralCard() {
   const t = useTranslations("settings.admin.general");

@@ -4,7 +4,7 @@ import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { SEARCH_FIELDS } from "@/types";
+import { SEARCH_FIELDS } from "@norish/shared/contracts";
 
 interface SearchFieldTogglesProps {
   className?: string;

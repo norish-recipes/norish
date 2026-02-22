@@ -4,7 +4,7 @@ import type {
   PermissionLevel,
   RecipePermissionPolicy,
   AutoTaggingMode,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 import React, { createContext, useContext, useCallback, useMemo } from "react";
 

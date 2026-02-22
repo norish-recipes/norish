@@ -16,9 +16,9 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { useRecipesMutations } from "@/hooks/recipes";
-import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
+import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { usePermissionsContext } from "@/context/permissions-context";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 interface ImportFromPasteModalProps {
   isOpen: boolean;

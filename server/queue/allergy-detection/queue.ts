@@ -5,7 +5,7 @@
  * Callers are responsible for lifecycle (close on shutdown).
  */
 
-import type { AllergyDetectionJobData } from "@/types";
+import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
 
 import { Queue } from "bullmq";
 

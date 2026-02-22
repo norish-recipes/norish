@@ -3,7 +3,7 @@ import type {
   AuthProviderGitHub,
   AuthProviderGoogle,
   OIDCClaimConfig,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 interface AuthProviderCache {
   github: AuthProviderGitHub | null;

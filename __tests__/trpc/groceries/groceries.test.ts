@@ -11,8 +11,8 @@ vi.mock(
 );
 vi.mock("@/server/auth/permissions", () => import("../../mocks/permissions"));
 vi.mock("@/server/trpc/routers/groceries/emitter", () => import("../../mocks/grocery-emitter"));
-vi.mock("@/config/server-config-loader", () => import("../../mocks/config"));
-vi.mock("@/lib/helpers", () => import("../../mocks/helpers"));
+vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
+vi.mock("@norish/shared/lib/helpers", () => import("../../mocks/helpers"));
 
 // Import mocks for assertions
 import {

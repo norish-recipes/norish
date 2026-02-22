@@ -10,7 +10,7 @@ import { emitConnectionInvalidation } from "../../connection-manager";
 import { UpdateNameInputSchema, UpdatePreferencesInputSchema } from "./types";
 
 import { trpcLogger as log } from "@/server/logger";
-import { IMAGE_MIME_TO_EXTENSION } from "@/types";
+import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
 import {
   updateUserName,
   updateUserAvatar,
@@ -26,10 +26,10 @@ import {
   getAllergiesForUsers,
 } from "@/server/db";
 import { householdEmitter } from "@/server/trpc/routers/households/emitter";
-import { SERVER_CONFIG } from "@/config/env-config-server";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { deleteAvatarByFilename } from "@/server/startup/media-cleanup";
-import { UpdateUserAllergiesSchema } from "@/server/db/zodSchemas/user-allergies";
-import { buildAvatarFilename, isAvatarFilenameForUser } from "@/lib/helpers";
+import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
+import { buildAvatarFilename, isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
 
 /**
  * Get current user settings (user profile + API keys)

@@ -1,5 +1,5 @@
-import type { FullRecipeInsertDTO } from "@/types/dto/recipe";
-import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
 export interface VideoMetadata {
   title: string;

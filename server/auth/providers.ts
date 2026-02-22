@@ -1,4 +1,4 @@
-import type { ProviderInfo } from "@/types";
+import type { ProviderInfo } from "@norish/shared/contracts";
 
 import { getConfig } from "@/server/db/repositories/server-config";
 import {
@@ -6,7 +6,7 @@ import {
   type AuthProviderOIDC,
   type AuthProviderGitHub,
   type AuthProviderGoogle,
-} from "@/server/db/zodSchemas/server-config";
+} from "@norish/config/zod/server-config";
 
 export async function getAvailableProviders(): Promise<ProviderInfo[]> {
   const providers: ProviderInfo[] = [];

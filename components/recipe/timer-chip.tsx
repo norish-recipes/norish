@@ -5,7 +5,7 @@ import { ArrowPathIcon, PauseIcon, PlayIcon, ClockIcon } from "@heroicons/react/
 import { Chip } from "@heroui/react";
 
 import { useTimerStore } from "@/stores/timers";
-import { formatTimerMs } from "@/lib/helpers";
+import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
 
 interface TimerChipProps {

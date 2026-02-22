@@ -3,7 +3,7 @@
 import { useLocale } from "next-intl";
 
 import { useUnitsQuery } from "@/hooks/config/use-units-query";
-import { formatUnit } from "@/lib/unit-localization";
+import { formatUnit } from "@norish/shared/lib/unit-localization";
 
 /**
  * Hook that provides locale-aware unit formatting functions.

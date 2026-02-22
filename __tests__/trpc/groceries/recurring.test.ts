@@ -8,7 +8,7 @@ vi.mock(
   () => import("../../mocks/recurring-groceries")
 );
 vi.mock("@/server/trpc/routers/groceries/emitter", () => import("../../mocks/grocery-emitter"));
-vi.mock("@/lib/recurrence/calculator", () => import("../../mocks/recurrence"));
+vi.mock("@norish/shared/lib/recurrence/calculator", () => import("../../mocks/recurrence"));
 
 // Import mocks for assertions
 import {

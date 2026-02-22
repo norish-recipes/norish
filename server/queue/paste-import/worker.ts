@@ -5,7 +5,8 @@
  * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
-import type { PasteImportJobData, FullRecipeInsertDTO } from "@/types";
+import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import type { Job } from "bullmq";
 
 import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
@@ -15,7 +16,7 @@ import { getBullClient } from "@/server/redis/bullmq";
 import { createLogger } from "@/server/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@/server/trpc/helpers";
 import { recipeEmitter } from "@/server/trpc/routers/recipes/emitter";
-import { getRecipePermissionPolicy, getAIConfig, isAIEnabled } from "@/config/server-config-loader";
+import { getRecipePermissionPolicy, getAIConfig, isAIEnabled } from "@norish/config/server-config-loader";
 import { getQueues } from "@/server/queue/registry";
 import { addAutoTaggingJob } from "@/server/queue/auto-tagging/producer";
 import { addAllergyDetectionJob } from "@/server/queue/allergy-detection/producer";
@@ -23,7 +24,7 @@ import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@/s
 import { extractRecipeNodesFromJsonLd } from "@/server/parser/jsonld";
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
 import { extractRecipeWithAI } from "@/server/ai/recipe-parser";
-import { MAX_RECIPE_PASTE_CHARS } from "@/types/uploads";
+import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { deleteRecipeImagesDir } from "@/server/downloader";
 
 const log = createLogger("worker:paste-import");

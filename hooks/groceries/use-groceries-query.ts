@@ -1,6 +1,6 @@
 "use client";
 
-import type { GroceryDto, RecurringGroceryDto } from "@/types";
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { QueryKey } from "@tanstack/react-query";
 
 import { useQueryClient, useQuery } from "@tanstack/react-query";

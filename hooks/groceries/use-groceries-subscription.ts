@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useGroceriesCacheHelpers } from "./use-groceries-cache";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 /**
  * Hook that subscribes to all grocery-related WebSocket events

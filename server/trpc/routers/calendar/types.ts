@@ -1,8 +1,8 @@
-import type { Slot } from "@/types";
+import type { Slot } from "@norish/shared/contracts";
 
 export type PlannedItemWithRecipePayload =
-  import("@/server/db/zodSchemas").PlannedItemWithRecipePayload;
-export type SlotItemSortUpdate = import("@/server/db/zodSchemas").SlotItemSortUpdate;
+  import("@norish/shared/contracts/zod").PlannedItemWithRecipePayload;
+export type SlotItemSortUpdate = import("@norish/shared/contracts/zod").SlotItemSortUpdate;
 
 export type PlannedItemType = "recipe" | "note";
 

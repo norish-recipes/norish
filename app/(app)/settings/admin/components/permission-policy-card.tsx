@@ -1,6 +1,6 @@
 "use client";
 
-import type { PermissionLevel } from "@/server/db/zodSchemas/server-config";
+import type { PermissionLevel } from "@norish/config/zod/server-config";
 
 import { Card, CardBody, CardHeader, Select, SelectItem } from "@heroui/react";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";

@@ -12,7 +12,7 @@
  * - ollama: Native Ollama API with input_audio for audio-capable models
  */
 
-import type { TranscriptionProvider } from "@/server/db/zodSchemas/server-config";
+import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import type { AIResult } from "./types/result";
 import type { Experimental_TranscriptionResult as TranscriptionResult } from "ai";
 
@@ -28,9 +28,9 @@ import OpenAI from "openai";
 
 import { aiSuccess, aiError, mapErrorToCode, getErrorMessage } from "./types/result";
 
-import { getVideoConfig, getAIConfig } from "@/config/server-config-loader";
+import { getVideoConfig, getAIConfig } from "@norish/config/server-config-loader";
 import { aiLogger } from "@/server/logger";
-import { isCloudTranscriptionProvider } from "@/server/db/zodSchemas/server-config";
+import { isCloudTranscriptionProvider } from "@norish/config/zod/server-config";
 
 // ============================================================================
 // Shared Helpers

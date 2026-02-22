@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecipeCategory } from "@/types";
+import type { RecipeCategory } from "@norish/shared/contracts";
 
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";

@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
 
-import { ServerConfigKeys } from "@/server/db/zodSchemas/server-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 interface PromptsFormProps {
   onDirtyChange?: (isDirty: boolean) => void;

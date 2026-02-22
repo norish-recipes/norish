@@ -1,6 +1,6 @@
 "use client";
 
-import { cssGlassBackdropChip } from "@/config/css-tokens";
+import { cssGlassBackdropChip } from "@norish/web/config/css-tokens";
 
 interface TagsSkeletonProps {
   /**

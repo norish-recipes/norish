@@ -12,7 +12,7 @@ import {
   FavoriteToggleInputSchema,
   FavoriteCheckInputSchema,
   FavoriteBatchCheckInputSchema,
-} from "@/server/db/zodSchemas";
+} from "@norish/shared/contracts/zod";
 
 const toggle = authedProcedure.input(FavoriteToggleInputSchema).mutation(async ({ ctx, input }) => {
   const { recipeId } = input;

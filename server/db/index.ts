@@ -5,7 +5,7 @@ export * from "@/server/db/repositories";
 export * from "@/server/db/schema";
 
 // Export all zod schemas
-export * from "@/server/db/zodSchemas";
+export * from "@norish/shared/contracts/zod";
 
 // export all drizzle orm
 export * from "./drizzle";

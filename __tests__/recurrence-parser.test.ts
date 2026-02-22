@@ -1,9 +1,9 @@
-import type { RecurrenceConfig } from "@/types/recurrence";
+import type { RecurrenceConfig } from "@norish/shared/contracts/recurrence";
 
 import { describe, it, expect } from "vitest";
 
-import defaultRecurrenceConfig from "@/config/recurrence-config.default.json";
-import { parseRecurrence } from "@/lib/recurrence/parser";
+import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
+import { parseRecurrence } from "@norish/shared/lib/recurrence/parser";
 
 describe("recurrence/parser Korean locale", () => {
   const config = defaultRecurrenceConfig as RecurrenceConfig;
