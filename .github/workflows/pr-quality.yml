@@ -69,6 +69,33 @@ jobs:
       - name: Run build
         run: pnpm run build
 
+  dependency-cycles:
+    name: Dependency Cycles
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.13.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.1
+          run_install: false
+      - name: Verify pnpm installation
+        run: pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run circular dependency gate
+        run: pnpm run deps:cycles
+
   tests:
     name: Tests
     runs-on: ubuntu-latest

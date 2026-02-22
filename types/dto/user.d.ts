@@ -1,5 +1,16 @@
-import type { z } from "zod";
+export interface UserPreferences {
+  timersEnabled?: boolean;
+  showConversionButton?: boolean;
+  showRatings?: boolean;
+  showFavorites?: boolean;
+  locale?: string | null;
+}
 
-import { UserDtoSchema } from "@/server/db";
-
-export type User = z.output<typeof UserDtoSchema>;
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  image?: string | null;
+  isServerAdmin?: boolean;
+  preferences?: UserPreferences;
+}

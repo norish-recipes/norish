@@ -29,6 +29,7 @@
     "lint:check": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "deps:cycles": "node scripts/check-circular-deps.mjs",
     "i18n:check": "node scripts/check-locale-keys.js"
   },
   "dependencies": {

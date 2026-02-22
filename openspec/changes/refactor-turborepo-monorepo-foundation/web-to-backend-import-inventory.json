@@ -1,0 +1,301 @@
+{
+  "total": 42,
+  "runtime": [
+    {
+      "file": "app/(app)/page.tsx",
+      "line": 8,
+      "import": "import { auth } from \"@/server/auth/auth\";",
+      "target": "@/server/auth/auth",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/(app)/recipes/edit/[id]/page.tsx",
+      "line": 5,
+      "import": "import { getRecipeFull } from \"@/server/db\";",
+      "target": "@/server/db",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/(app)/settings/admin/components/ai-config-form.tsx",
+      "line": 19,
+      "import": "import {\n  ServerConfigKeys,\n  type AIConfig,\n  type AutoTaggingMode,\n} from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/(app)/settings/admin/components/auth-providers/auth-provider-form.tsx",
+      "line": 15,
+      "import": "import { ServerConfigKeys, type ServerConfigKey } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/(app)/settings/admin/components/auth-providers/oidc-provider-form.tsx",
+      "line": 16,
+      "import": "import { ServerConfigKeys } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/(app)/settings/admin/components/content-detection-card.tsx",
+      "line": 15,
+      "import": "import { ServerConfigKeys } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/(app)/settings/admin/components/prompts-form.tsx",
+      "line": 10,
+      "import": "import { ServerConfigKeys } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/(app)/settings/admin/components/video-processing-form.tsx",
+      "line": 19,
+      "import": "import {\n  ServerConfigKeys,\n  type TranscriptionProvider,\n  isCloudTranscriptionProvider,\n  transcriptionProviderNeedsEndpoint,\n  transcriptionProviderSupportsModelListing,\n} from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/(app)/settings/admin/context.tsx",
+      "line": 6,
+      "import": "import {\n  ServerConfigKeys,\n  type ContentIndicatorsConfig,\n  type UnitsMap,\n  type RecurrenceConfig,\n  type AIConfig,\n  type VideoConfig,\n  type AuthProviderOIDC,\n  type AuthProviderOIDCInput,\n  type AuthProviderGitHub,\n  type AuthProviderGitHubInput,\n  type AuthProviderGoogle,\n  type AuthProviderGoogleInput,\n  type RecipePermissionPolicy,\n  type PromptsConfig,\n  type PromptsConfigInput,\n  type TimerKeywordsConfig,\n  type TimerKeywordsInput,\n  type ServerConfigKey,\n  type I18nLocaleConfig,\n} from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/(auth)/login/page.tsx",
+      "line": 3,
+      "import": "import { getAvailableProviders } from \"@/server/auth/providers\";",
+      "target": "@/server/auth/providers",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/(auth)/signup/page.tsx",
+      "line": 5,
+      "import": "import { isPasswordAuthEnabled } from \"@/server/auth/providers\";",
+      "target": "@/server/auth/providers",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/api/auth/[...all]/route.ts",
+      "line": 3,
+      "import": "import { auth } from \"@/server/auth/auth\";",
+      "target": "@/server/auth/auth",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/api/import/recipe/route.ts",
+      "line": 3,
+      "import": "import { auth } from \"@/server/auth/auth\";",
+      "target": "@/server/auth/auth",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/api/import/recipe/route.ts",
+      "line": 4,
+      "import": "import { getHouseholdForUser, dashboardRecipe } from \"@/server/db\";",
+      "target": "@/server/db",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/api/import/recipe/route.ts",
+      "line": 5,
+      "import": "import { addImportJob, getQueues } from \"@/server/queue\";",
+      "target": "@/server/queue",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/api/import/recipe/route.ts",
+      "line": 7,
+      "import": "import { parserLogger as log } from \"@/server/logger\";",
+      "target": "@/server/logger",
+      "kind": "runtime"
+    },
+    {
+      "file": "app/api/trpc/[trpc]/route.ts",
+      "line": 3,
+      "import": "import { appRouter, createContext } from \"@/server/trpc\";",
+      "target": "@/server/trpc",
+      "kind": "runtime"
+    },
+    {
+      "file": "components/recipes/image-gallery-input.tsx",
+      "line": 28,
+      "import": "import { MAX_RECIPE_IMAGES } from \"@/server/db/zodSchemas/recipe-images\";",
+      "target": "@/server/db/zodSchemas/recipe-images",
+      "kind": "runtime"
+    },
+    {
+      "file": "components/recipes/media-gallery-input.tsx",
+      "line": 35,
+      "import": "import { MAX_RECIPE_IMAGES } from \"@/server/db/zodSchemas/recipe-images\";",
+      "target": "@/server/db/zodSchemas/recipe-images",
+      "kind": "runtime"
+    },
+    {
+      "file": "components/recipes/media-gallery-input.tsx",
+      "line": 36,
+      "import": "import { MAX_RECIPE_VIDEOS } from \"@/server/db/zodSchemas/recipe-videos\";",
+      "target": "@/server/db/zodSchemas/recipe-videos",
+      "kind": "runtime"
+    },
+    {
+      "file": "i18n/request.ts",
+      "line": 8,
+      "import": "import { auth } from \"@/server/auth/auth\";",
+      "target": "@/server/auth/auth",
+      "kind": "runtime"
+    },
+    {
+      "file": "i18n/request.ts",
+      "line": 9,
+      "import": "import { getUserPreferences } from \"@/server/db/repositories/users\";",
+      "target": "@/server/db/repositories/users",
+      "kind": "runtime"
+    },
+    {
+      "file": "proxy.ts",
+      "line": 6,
+      "import": "import { auth } from \"@/server/auth/auth\";",
+      "target": "@/server/auth/auth",
+      "kind": "runtime"
+    }
+  ],
+  "typeOnly": [
+    {
+      "file": "app/(app)/settings/admin/components/auth-providers/types.ts",
+      "line": 1,
+      "import": "import type { ServerConfigKey } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "type-only"
+    },
+    {
+      "file": "app/(app)/settings/admin/components/permission-policy-card.tsx",
+      "line": 3,
+      "import": "import type { PermissionLevel } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "type-only"
+    },
+    {
+      "file": "app/(app)/settings/user/context.tsx",
+      "line": 4,
+      "import": "import type { ApiKeyMetadataDto } from \"@/server/trpc/routers/user/types\";",
+      "target": "@/server/trpc/routers/user/types",
+      "kind": "type-only"
+    },
+    {
+      "file": "app/(app)/settings/user/context.tsx",
+      "line": 5,
+      "import": "import type { UserPreferencesDto } from \"@/server/db/zodSchemas/user\";",
+      "target": "@/server/db/zodSchemas/user",
+      "kind": "type-only"
+    },
+    {
+      "file": "app/providers/trpc-provider.tsx",
+      "line": 3,
+      "import": "import type { AppRouter } from \"@/server/trpc\";",
+      "target": "@/server/trpc",
+      "kind": "type-only"
+    },
+    {
+      "file": "hooks/admin/use-admin-mutations.ts",
+      "line": 3,
+      "import": "import type {\n  AIConfig,\n  VideoConfig,\n  AuthProviderOIDCInput,\n  AuthProviderGitHubInput,\n  AuthProviderGoogleInput,\n  RecipePermissionPolicy,\n  PromptsConfigInput,\n  TimerKeywordsInput,\n  ServerConfigKey,\n} from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "type-only"
+    },
+    {
+      "file": "hooks/admin/use-admin-query.ts",
+      "line": 3,
+      "import": "import type { ServerConfigKey } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "type-only"
+    },
+    {
+      "file": "hooks/admin/use-admin-query.ts",
+      "line": 4,
+      "import": "import type { AIConfig, TranscriptionProvider } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "type-only"
+    },
+    {
+      "file": "hooks/caldav/use-caldav-subscription.ts",
+      "line": 4,
+      "import": "import type { CaldavSubscriptionEvents } from \"@/server/trpc/routers/caldav/types\";",
+      "target": "@/server/trpc/routers/caldav/types",
+      "kind": "type-only"
+    },
+    {
+      "file": "hooks/config/use-units-query.ts",
+      "line": 3,
+      "import": "import type { UnitsMap } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "type-only"
+    },
+    {
+      "file": "hooks/permissions/use-permissions-query.ts",
+      "line": 3,
+      "import": "import type { RecipePermissionPolicy, AutoTaggingMode } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "type-only"
+    },
+    {
+      "file": "hooks/user/use-user-cache.ts",
+      "line": 3,
+      "import": "import type { UserSettingsDto } from \"@/server/trpc/routers/user/types\";",
+      "target": "@/server/trpc/routers/user/types",
+      "kind": "type-only"
+    },
+    {
+      "file": "hooks/user/use-user-mutations.ts",
+      "line": 4,
+      "import": "import type { ApiKeyMetadataDto } from \"@/server/trpc/routers/user/types\";",
+      "target": "@/server/trpc/routers/user/types",
+      "kind": "type-only"
+    },
+    {
+      "file": "hooks/user/use-user-mutations.ts",
+      "line": 5,
+      "import": "import type { UserPreferencesDto } from \"@/server/db/zodSchemas/user\";",
+      "target": "@/server/db/zodSchemas/user",
+      "kind": "type-only"
+    },
+    {
+      "file": "hooks/user/use-user-query.ts",
+      "line": 4,
+      "import": "import type { ApiKeyMetadataDto } from \"@/server/trpc/routers/user/types\";",
+      "target": "@/server/trpc/routers/user/types",
+      "kind": "type-only"
+    },
+    {
+      "file": "lib/grocery-grouping.ts",
+      "line": 2,
+      "import": "import type { UnitsMap } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "type-only"
+    },
+    {
+      "file": "lib/helpers.ts",
+      "line": 1,
+      "import": "import type { UnitsMap } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "type-only"
+    },
+    {
+      "file": "lib/unit-localization.ts",
+      "line": 1,
+      "import": "import type { UnitsMap, FlatUnitsMap } from \"@/server/db/zodSchemas/server-config\";",
+      "target": "@/server/db/zodSchemas/server-config",
+      "kind": "type-only"
+    },
+    {
+      "file": "lib/user-preferences.ts",
+      "line": 2,
+      "import": "import type { UserPreferencesDto } from \"@/server/db/zodSchemas/user\";",
+      "target": "@/server/db/zodSchemas/user",
+      "kind": "type-only"
+    }
+  ]
+}

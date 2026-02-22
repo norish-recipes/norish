@@ -3,7 +3,7 @@ import type {
   StoreInsertDto,
   StoreUpdateDto,
   IngredientStorePreferenceDto,
-} from "@/types";
+} from "@/types/dto/stores";
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import Fuse, { type IFuseOptions } from "fuse.js";
