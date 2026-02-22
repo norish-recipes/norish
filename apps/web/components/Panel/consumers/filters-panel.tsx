@@ -17,7 +17,7 @@ import { useTranslations } from "next-intl";
 import Panel from "@/components/Panel/Panel";
 import SearchFieldToggles from "@/components/dashboard/search-field-toggles";
 import ChipSkeleton from "@/components/skeleton/chip-skeleton";
-import RatingStars from "@/components/shared/rating-stars";
+import RatingStars from "@norish/ui/rating-stars";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useUserContext } from "@/context/user-context";
 import { useTagsQuery } from "@/hooks/config";

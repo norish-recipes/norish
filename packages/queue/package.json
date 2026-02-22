@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contracts/*": "./src/contracts/*"
+    "./contracts/*": "./src/contracts/*",
+    "./server-queue": "./src/server-queue.ts"
   },
   "dependencies": {
     "bullmq": "^5.69.3"

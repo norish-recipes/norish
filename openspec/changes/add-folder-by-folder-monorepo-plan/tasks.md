@@ -40,14 +40,14 @@
 
 ## 5. Phase 4 - Web App Relocation
 
-- [ ] 5.1 Move `app/**` to `apps/web/app/**`, then remove migrated legacy root `app/**` files.
-- [ ] 5.2 Move `components/**`, `context/**`, `hooks/**`, and `stores/**` into `apps/web`, then remove migrated legacy root files/directories for that scope.
-- [ ] 5.3 Move `styles/**` and `public/**` into `apps/web`, keep `apps/web/i18n/request.ts` as adapter to `packages/i18n`, then remove migrated legacy root `styles/**` and `public/**` files.
-- [ ] 5.4 Rewire API routes and middleware (`app/api/**`, `proxy.ts`) to package exports.
-- [ ] 5.5 Extract reusable UI primitives from `components/shared/**` into `packages/ui`, then remove duplicate web-local primitive copies that become package-owned.
-- [ ] 5.6 Run a phase-4 cleanup audit to confirm no duplicate authoritative web modules remain in root `app`, `components`, `context`, `hooks`, `stores`, `styles`, or `public`; record any intentional deferrals in phase evidence with owner and target phase.
-- [ ] 5.7 Run web build-first validation (`pnpm test:run`, `pnpm run typecheck`, `pnpm build`, `pnpm run deps:cycles`); defer runtime startup smoke to phase 6.
-- [ ] 5.8 Mark phase-4 rollback checkpoint after web relocation passes.
+- [x] 5.1 Move `app/**` to `apps/web/app/**`, then remove migrated legacy root `app/**` files.
+- [x] 5.2 Move `components/**`, `context/**`, `hooks/**`, and `stores/**` into `apps/web`, then remove migrated legacy root files/directories for that scope.
+- [x] 5.3 Move `styles/**` and `public/**` into `apps/web`, keep `apps/web/i18n/request.ts` as adapter to `packages/i18n`, then remove migrated legacy root `styles/**` and `public/**` files.
+- [x] 5.4 Rewire API routes and middleware (`app/api/**`, `proxy.ts`) to package exports.
+- [x] 5.5 Extract reusable UI primitives from `components/shared/**` into `packages/ui`, then remove duplicate web-local primitive copies that become package-owned.
+- [x] 5.6 Run a phase-4 cleanup audit to confirm no duplicate authoritative web modules remain in root `app`, `components`, `context`, `hooks`, `stores`, `styles`, or `public`; record any intentional deferrals in phase evidence with owner and target phase.
+- [x] 5.7 Run web build-first validation (`pnpm test:run`, `pnpm run typecheck`, `pnpm build`, `pnpm run deps:cycles`); defer runtime startup smoke to phase 6.
+- [x] 5.8 Mark phase-4 rollback checkpoint after web relocation passes.
 
 ## 6. Phase 5 - CI, Docker, and Runtime Ops Cutover
 

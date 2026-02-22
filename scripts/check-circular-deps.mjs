@@ -4,17 +4,16 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const DEFAULT_TARGETS = [
-  "app",
-  "components",
-  "config",
-  "context",
-  "hooks",
-  "i18n",
-  "lib",
+  "apps/web",
+  "packages/api",
+  "packages/auth",
+  "packages/config",
+  "packages/db",
+  "packages/i18n",
+  "packages/queue",
+  "packages/shared",
+  "packages/ui",
   "server",
-  "store",
-  "stores",
-  "types",
 ];
 
 export function resolveExistingTargets(rootDir, candidates = DEFAULT_TARGETS) {

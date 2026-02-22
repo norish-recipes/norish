@@ -6,7 +6,7 @@
   "packageManager": "pnpm@10.30.1",
   "scripts": {
     "dev": "tsx watch server.ts",
-    "build": "next build && pnpm run build:server && pnpm run update-sw",
+    "build": "pnpm --dir apps/web exec next build && pnpm run build:server && pnpm run update-sw",
     "build:server": "tsdown",
     "update-sw": "node scripts/update-sw-version.js",
     "clean:install": "pnpm install --frozen-lockfile",
@@ -34,10 +34,14 @@
     "i18n:check": "node scripts/check-locale-keys.js"
   },
   "dependencies": {
+    "@norish/api": "workspace:*",
+    "@norish/auth": "workspace:*",
     "@norish/config": "workspace:*",
+    "@norish/db": "workspace:*",
     "@norish/i18n": "workspace:*",
     "@norish/queue": "workspace:*",
     "@norish/shared": "workspace:*",
+    "@norish/ui": "workspace:*",
     "@norish/web": "workspace:*",
     "@ai-sdk/anthropic": "^3.0.46",
     "@ai-sdk/azure": "^3.0.31",

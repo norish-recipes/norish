@@ -30,7 +30,7 @@ import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carous
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import HeartButton from "@/components/shared/heart-button";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
-import StarRating from "@/components/shared/star-rating";
+import StarRating from "@norish/ui/star-rating";
 import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import NutritionCard from "@/components/recipes/nutrition-card";

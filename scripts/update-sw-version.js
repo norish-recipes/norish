@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const swPath = path.join(__dirname, "../public/sw.js");
+const swPath = path.join(__dirname, "../apps/web/public/sw.js");
 
 if (!fs.existsSync(swPath)) {
   console.error("Service worker not found, skipping version update");

@@ -40,7 +40,7 @@ vi.mock("@/components/skeleton/chip-skeleton", () => ({
   default: () => <div>loading</div>,
 }));
 
-vi.mock("@/components/shared/rating-stars", () => ({
+vi.mock("@norish/ui/rating-stars", () => ({
   default: () => <div>rating-stars</div>,
 }));
 

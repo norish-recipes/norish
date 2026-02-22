@@ -1,2 +1,2 @@
-export const UI_PACKAGE_BOOTSTRAP =
-  "TODO: extract reusable UI primitives from apps/web components into packages/ui.";
+export { default as RatingStars } from "./rating-stars";
+export { default as StarRating } from "./star-rating";

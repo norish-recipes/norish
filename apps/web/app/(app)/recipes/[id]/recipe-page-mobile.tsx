@@ -25,7 +25,7 @@ import { formatMinutesHM, sortTagsWithAllergyPriority, isAllergenTag } from "@no
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import HeartButton from "@/components/shared/heart-button";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
-import StarRating from "@/components/shared/star-rating";
+import StarRating from "@norish/ui/star-rating";
 import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
 import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";

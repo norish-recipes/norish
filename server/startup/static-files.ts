@@ -22,7 +22,7 @@ export function serveStaticFile(req: IncomingMessage, res: ServerResponse): bool
       return false;
     }
 
-    const filePath = join(process.cwd(), "public", pathname);
+    const filePath = join(process.cwd(), "apps/web/public", pathname);
 
     if (!existsSync(filePath)) return false;
 

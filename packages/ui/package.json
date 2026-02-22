@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./rating-stars": "./src/rating-stars.tsx",
+    "./star-rating": "./src/star-rating.tsx"
+  },
+  "dependencies": {
+    "@heroicons/react": "2.2.0",
+    "react": "19.2.4"
   }
 }

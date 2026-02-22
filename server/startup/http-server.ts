@@ -15,7 +15,7 @@ export async function createServer() {
   const hostname = dev ? "0.0.0.0" : SERVER_CONFIG.HOST;
   const port = SERVER_CONFIG.PORT;
 
-  const app = next({ dev, hostname, port, turbopack: dev });
+  const app = next({ dev, dir: "apps/web", hostname, port, turbopack: dev });
   const handle = app.getRequestHandler();
 
   await app.prepare();

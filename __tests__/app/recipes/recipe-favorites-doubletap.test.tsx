@@ -70,7 +70,7 @@ vi.mock("@/components/shared/heart-button", () => ({
   default: () => <div data-testid="heart-button" />,
 }));
 
-vi.mock("@/components/shared/star-rating", () => ({
+vi.mock("@norish/ui/star-rating", () => ({
   default: () => <div>star-rating</div>,
 }));
 
