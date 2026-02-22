@@ -18,7 +18,7 @@ import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { RecipeDashboardDTO } from "@/types";
 import { formatMinutesHM } from "@/lib/helpers";
-import { useAppStore } from "@/store/useAppStore";
+import { useAppStore } from "@/stores/useAppStore";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useUserContext } from "@/context/user-context";
 import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
