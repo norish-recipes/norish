@@ -3,12 +3,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 
-vi.mock("@/server/db/repositories/ratings", () => import("../../mocks/ratings-repository"));
-vi.mock("@/server/trpc/routers/ratings/emitter", () => import("../../mocks/ratings-emitter"));
+vi.mock("@norish/db/repositories/ratings", () => import("../../mocks/ratings-repository"));
+vi.mock("@norish/api/trpc/routers/ratings/emitter", () => import("../../mocks/ratings-emitter"));
 vi.mock("@norish/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "household" }),
 }));
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 

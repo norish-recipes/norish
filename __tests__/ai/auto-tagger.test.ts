@@ -9,8 +9,8 @@ import { generateText } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { isAIEnabled, getAutoTaggingMode } from "@norish/config/server-config-loader";
-import { generateTagsForRecipe } from "@/server/ai/auto-tagger";
-import { listAllTagNames } from "@/server/db/repositories/tags";
+import { generateTagsForRecipe } from "@norish/api/ai/auto-tagger";
+import { listAllTagNames } from "@norish/db/repositories/tags";
 
 // Mock dependencies - vi.mock is hoisted by Vitest
 vi.mock("ai", () => ({
@@ -25,11 +25,11 @@ vi.mock("@norish/config/server-config-loader", () => ({
   getAutoTaggingMode: vi.fn(),
 }));
 
-vi.mock("@/server/db/repositories/tags", () => ({
+vi.mock("@norish/db/repositories/tags", () => ({
   listAllTagNames: vi.fn(),
 }));
 
-vi.mock("@/server/ai/providers", () => ({
+vi.mock("@norish/api/ai/providers", () => ({
   getModels: vi.fn().mockResolvedValue({
     model: {},
     providerName: "openai",
@@ -40,12 +40,12 @@ vi.mock("@/server/ai/providers", () => ({
   }),
 }));
 
-vi.mock("@/server/ai/prompts/loader", () => ({
+vi.mock("@norish/api/ai/prompts/loader", () => ({
   loadPrompt: vi.fn().mockResolvedValue("Mock auto-tagging prompt template"),
   fillPrompt: vi.fn((template, _vars) => template),
 }));
 
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   aiLogger: {
     info: vi.fn(),
     debug: vi.fn(),

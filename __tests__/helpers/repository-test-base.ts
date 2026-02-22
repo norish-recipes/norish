@@ -22,7 +22,7 @@
  * ```
  */
 
-import { resetDbConnection } from "@/server/db/drizzle";
+import { resetDbConnection } from "@norish/db/drizzle";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   initTestDb,

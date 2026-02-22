@@ -21,18 +21,34 @@ import path from "node:path";
 import { config } from "dotenv";
 import { z } from "zod";
 
-const envFile = process.env.NODE_ENV === "production" ? ".env.production" : ".env.local";
+const envFiles =
+  process.env.NODE_ENV === "production" ? [".env.production", ".env.local"] : [".env.local"];
 
-let envPath = path.resolve(process.cwd(), envFile);
+function findEnvPath(startDir: string): string | null {
+  let currentDir = startDir;
 
-if (!fs.existsSync(envPath)) {
-  // If not found, try looking in parent directories
-  const workspaceRoot = path.resolve(__dirname, "../../..");
+  while (true) {
+    for (const envFile of envFiles) {
+      const candidate = path.resolve(currentDir, envFile);
 
-  envPath = path.resolve(workspaceRoot, envFile);
+      if (fs.existsSync(candidate)) {
+        return candidate;
+      }
+    }
+
+    const parentDir = path.dirname(currentDir);
+
+    if (parentDir === currentDir) {
+      return null;
+    }
+
+    currentDir = parentDir;
+  }
 }
 
-if (fs.existsSync(envPath)) {
+const envPath = findEnvPath(process.cwd());
+
+if (envPath) {
   config({ path: envPath, quiet: true });
 }
 

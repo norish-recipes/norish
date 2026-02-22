@@ -47,7 +47,7 @@ vi.mock("@norish/config/env-config-server", () => ({
 }));
 
 // Mock queue config
-vi.mock("@/server/queue/config", () => ({
+vi.mock("@norish/queue/config", () => ({
   redisConnection: {
     host: "localhost",
     port: 6379,
@@ -65,14 +65,14 @@ vi.mock("@/server/queue/config", () => ({
 }));
 
 // Mock Redis client
-vi.mock("@/server/redis/bullmq", () => ({
+vi.mock("@norish/queue/redis/bullmq", () => ({
   getBullClient: vi.fn(() => ({
     duplicate: vi.fn(),
   })),
 }));
 
 // Mock logger
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   createLogger: vi.fn(() => ({
     info: vi.fn(),
     debug: vi.fn(),
@@ -82,7 +82,7 @@ vi.mock("@/server/logger", () => ({
 }));
 
 // Mock helpers
-vi.mock("@/server/queue/helpers", () => ({
+vi.mock("@norish/queue/helpers", () => ({
   isJobInQueue: vi.fn(),
 }));
 
@@ -107,7 +107,7 @@ describe("Auto-Tagging Queue", () => {
 
   describe("createAutoTaggingQueue", () => {
     it("creates a queue instance", async () => {
-      const { createAutoTaggingQueue } = await import("@/server/queue/auto-tagging/queue");
+      const { createAutoTaggingQueue } = await import("@norish/queue/auto-tagging/queue");
 
       const queue = createAutoTaggingQueue();
 
@@ -127,7 +127,7 @@ describe("Auto-Tagging Queue", () => {
     it("skips job when auto-tagging is disabled", async () => {
       vi.mocked(getAutoTaggingMode).mockResolvedValue("disabled");
 
-      const { addAutoTaggingJob } = await import("@/server/queue/auto-tagging/producer");
+      const { addAutoTaggingJob } = await import("@norish/queue/auto-tagging/producer");
 
       const result = await addAutoTaggingJob(mockQueue, mockJobData);
 
@@ -140,12 +140,12 @@ describe("Auto-Tagging Queue", () => {
 
     it("adds job successfully when auto-tagging is enabled (predefined mode)", async () => {
       vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(false);
       mockAdd.mockResolvedValue({ id: "auto-tag-recipe-123" });
 
-      const { addAutoTaggingJob } = await import("@/server/queue/auto-tagging/producer");
+      const { addAutoTaggingJob } = await import("@norish/queue/auto-tagging/producer");
 
       const result = await addAutoTaggingJob(mockQueue, mockJobData);
 
@@ -161,12 +161,12 @@ describe("Auto-Tagging Queue", () => {
 
     it("adds job successfully when auto-tagging is in predefined_db mode", async () => {
       vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined_db");
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(false);
       mockAdd.mockResolvedValue({ id: "auto-tag-recipe-123" });
 
-      const { addAutoTaggingJob } = await import("@/server/queue/auto-tagging/producer");
+      const { addAutoTaggingJob } = await import("@norish/queue/auto-tagging/producer");
 
       const result = await addAutoTaggingJob(mockQueue, mockJobData);
 
@@ -175,12 +175,12 @@ describe("Auto-Tagging Queue", () => {
 
     it("adds job successfully when auto-tagging is in freeform mode", async () => {
       vi.mocked(getAutoTaggingMode).mockResolvedValue("freeform");
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(false);
       mockAdd.mockResolvedValue({ id: "auto-tag-recipe-123" });
 
-      const { addAutoTaggingJob } = await import("@/server/queue/auto-tagging/producer");
+      const { addAutoTaggingJob } = await import("@norish/queue/auto-tagging/producer");
 
       const result = await addAutoTaggingJob(mockQueue, mockJobData);
 
@@ -189,11 +189,11 @@ describe("Auto-Tagging Queue", () => {
 
     it("returns duplicate when job already exists in queue", async () => {
       vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(true);
 
-      const { addAutoTaggingJob } = await import("@/server/queue/auto-tagging/producer");
+      const { addAutoTaggingJob } = await import("@norish/queue/auto-tagging/producer");
 
       const result = await addAutoTaggingJob(mockQueue, mockJobData);
 
@@ -206,12 +206,12 @@ describe("Auto-Tagging Queue", () => {
 
     it("uses recipe ID to generate unique job ID", async () => {
       vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(false);
       mockAdd.mockResolvedValue({ id: "auto-tag-unique-recipe-id" });
 
-      const { addAutoTaggingJob } = await import("@/server/queue/auto-tagging/producer");
+      const { addAutoTaggingJob } = await import("@norish/queue/auto-tagging/producer");
 
       await addAutoTaggingJob(mockQueue, {
         recipeId: "unique-recipe-id",
@@ -231,11 +231,11 @@ describe("Auto-Tagging Queue", () => {
 
   describe("isAutoTaggingJobActive", () => {
     it("returns true when job is in queue", async () => {
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(true);
 
-      const { isAutoTaggingJobActive } = await import("@/server/queue/auto-tagging/producer");
+      const { isAutoTaggingJobActive } = await import("@norish/queue/auto-tagging/producer");
 
       const result = await isAutoTaggingJobActive(mockQueue, "recipe-123");
 
@@ -244,11 +244,11 @@ describe("Auto-Tagging Queue", () => {
     });
 
     it("returns false when job is not in queue", async () => {
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(false);
 
-      const { isAutoTaggingJobActive } = await import("@/server/queue/auto-tagging/producer");
+      const { isAutoTaggingJobActive } = await import("@norish/queue/auto-tagging/producer");
 
       const result = await isAutoTaggingJobActive(mockQueue, "recipe-456");
 
@@ -258,7 +258,7 @@ describe("Auto-Tagging Queue", () => {
 
   describe("queue lifecycle (registry)", () => {
     it("queue can be closed via close method", async () => {
-      const { createAutoTaggingQueue } = await import("@/server/queue/auto-tagging/queue");
+      const { createAutoTaggingQueue } = await import("@norish/queue/auto-tagging/queue");
 
       const queue = createAutoTaggingQueue();
 

@@ -5,11 +5,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockGetConfig = vi.fn();
 
-vi.mock("@/server/db/repositories/server-config", () => ({
+vi.mock("@norish/db/repositories/server-config", () => ({
   getConfig: mockGetConfig,
 }));
 
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   serverLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 

@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { recipeCategoryEnum } from "@/server/db/schema";
+import { recipeCategoryEnum } from "@norish/db/schema";
 
 const expectedCategories = ["Breakfast", "Lunch", "Dinner", "Snack"] as const;
 

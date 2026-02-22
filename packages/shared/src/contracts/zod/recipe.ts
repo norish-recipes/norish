@@ -11,7 +11,7 @@ import { StepStepSchema } from "./steps";
 import { RecipeImageSchema, RecipeImagesArraySchema } from "./recipe-images";
 import { RecipeVideoSchema, RecipeVideosArraySchema } from "./recipe-videos";
 
-import { measurementSystemEnum, recipes } from "@/server/db/schema";
+import { measurementSystemEnum, recipes } from "@norish/db/schema";
 
 export const recipeCategorySchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
 

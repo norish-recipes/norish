@@ -1,5 +1,5 @@
 /**
- * Mock for @/server/db
+ * Mock for @norish/db
  */
 import { vi } from "vitest";
 

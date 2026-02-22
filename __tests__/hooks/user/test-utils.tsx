@@ -1,5 +1,5 @@
 import type { User } from "@norish/shared/contracts";
-import type { ApiKeyMetadataDto } from "@/server/trpc/routers/user/types";
+import type { ApiKeyMetadataDto } from "@norish/api/trpc/routers/user/types";
 import type { UserSettingsData } from "@/hooks/user/use-user-query";
 import type { ReactNode } from "react";
 

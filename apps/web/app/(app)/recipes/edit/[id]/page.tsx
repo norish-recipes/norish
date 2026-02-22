@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import RecipeForm from "../components/recipe-form";
 
-import { getRecipeFull } from "@/server/db";
+import { getRecipeFull } from "@norish/db";
 
 interface EditRecipePageProps {
   params: Promise<{ id: string }>;

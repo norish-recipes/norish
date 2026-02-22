@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { matchCategory } from "@/server/ai/utils/category-matcher";
+import { matchCategory } from "@norish/api/ai/utils/category-matcher";
 
 describe("matchCategory", () => {
   it("matches exact categories", () => {

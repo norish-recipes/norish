@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import { parseOIDCClaims, processClaimsForUser } from "@/server/auth/claim-processor";
+import { parseOIDCClaims, processClaimsForUser } from "@norish/auth/claim-processor";
 
 // Mock dependencies
 const mockSetUserAdminStatus = vi.fn();
@@ -13,34 +13,34 @@ const mockFindOrCreateHouseholdByName = vi.fn();
 const mockAddUserToHousehold = vi.fn();
 const mockGetUsersByHouseholdId = vi.fn();
 
-vi.mock("@/server/db/repositories/users", () => ({
+vi.mock("@norish/db/repositories/users", () => ({
   setUserAdminStatus: (...args: unknown[]) => mockSetUserAdminStatus(...args),
   getUserById: (...args: unknown[]) => mockGetUserById(...args),
 }));
 
-vi.mock("@/server/db/repositories/households", () => ({
+vi.mock("@norish/db/repositories/households", () => ({
   getHouseholdForUser: (...args: unknown[]) => mockGetHouseholdForUser(...args),
   findOrCreateHouseholdByName: (...args: unknown[]) => mockFindOrCreateHouseholdByName(...args),
   addUserToHousehold: (...args: unknown[]) => mockAddUserToHousehold(...args),
   getUsersByHouseholdId: (...args: unknown[]) => mockGetUsersByHouseholdId(...args),
 }));
 
-vi.mock("@/server/db/cached-household", () => ({
+vi.mock("@norish/db/cached-household", () => ({
   invalidateHouseholdCacheForUsers: vi.fn(),
 }));
 
-vi.mock("@/server/trpc/connection-manager", () => ({
+vi.mock("@norish/api/trpc/connection-manager", () => ({
   emitConnectionInvalidation: vi.fn(),
 }));
 
-vi.mock("@/server/trpc/routers/households/emitter", () => ({
+vi.mock("@norish/api/trpc/routers/households/emitter", () => ({
   householdEmitter: {
     emit: vi.fn(),
     emitToHousehold: vi.fn(),
   },
 }));
 
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   authLogger: {
     debug: vi.fn(),
     info: vi.fn(),

@@ -24,13 +24,13 @@ import {
 // @vitest-environment node
 
 // Setup mocks before any imports that use them
-vi.mock("@/server/db/repositories/caldav-config", () => import("../../mocks/caldav-config"));
+vi.mock("@norish/db/repositories/caldav-config", () => import("../../mocks/caldav-config"));
 vi.mock(
-  "@/server/db/repositories/caldav-sync-status",
+  "@norish/db/repositories/caldav-sync-status",
   () => import("../../mocks/caldav-sync-status")
 );
-vi.mock("@/server/trpc/routers/caldav/emitter", () => import("../../mocks/caldav-emitter"));
-vi.mock("@/server/caldav/event-listener", () => import("../../mocks/caldav-calendar-sync"));
+vi.mock("@norish/api/trpc/routers/caldav/emitter", () => import("../../mocks/caldav-emitter"));
+vi.mock("@norish/api/caldav/event-listener", () => import("../../mocks/caldav-calendar-sync"));
 vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
 
 // Mock global fetch for connection testing

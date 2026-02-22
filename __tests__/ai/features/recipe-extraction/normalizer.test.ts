@@ -1,7 +1,7 @@
 /**
  * @vitest-environment node
  */
-import type { RecipeExtractionOutput } from "@/server/ai/schemas/recipe.schema";
+import type { RecipeExtractionOutput } from "@norish/api/ai/schemas/recipe.schema";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 
 import { describe, it, expect, vi } from "vitest";
@@ -10,10 +10,10 @@ import {
   validateExtractionOutput,
   getExtractionLogContext,
   normalizeExtractionOutput,
-} from "@/server/ai/features/recipe-extraction/normalizer";
+} from "@norish/api/ai/features/recipe-extraction/normalizer";
 
 // Mock the normalizeExtractionOutput dependencies for isolation
-vi.mock("@/server/parser/normalize", () => ({
+vi.mock("@norish/api/parser/normalize", () => ({
   normalizeRecipeFromJson: vi.fn(),
 }));
 
@@ -298,7 +298,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
-    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
 
     vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
       name: "Mapo Tofu Udon",
@@ -369,7 +369,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
-    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
 
     vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
       name: "Test Recipe",
@@ -422,7 +422,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
     };
 
     // Mock normalizeRecipeFromJson to return metric version
-    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
 
     vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
       name: "Test Recipe",
@@ -494,7 +494,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
-    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
 
     vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
       name: "Test Recipe",
@@ -555,7 +555,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
-    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
 
     vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
       name: "Test Recipe",
@@ -619,7 +619,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
-    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
 
     vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
       name: "Test Recipe",
@@ -675,7 +675,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       nutrition: { calories: 0, fat: 0, carbs: 0, protein: 0 },
     };
 
-    const { normalizeRecipeFromJson } = await import("@/server/parser/normalize");
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
 
     vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
       name: "Test Recipe",

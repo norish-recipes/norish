@@ -3,9 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
-vi.mock("@/server/db/repositories/planned-items", () => import("../../mocks/planned-items"));
-vi.mock("@/server/auth/permissions", () => import("../../mocks/permissions"));
-vi.mock("@/server/trpc/routers/calendar/emitter", () => import("../../mocks/calendar-emitter"));
+vi.mock("@norish/db/repositories/planned-items", () => import("../../mocks/planned-items"));
+vi.mock("@norish/auth/permissions", () => import("../../mocks/permissions"));
+vi.mock("@norish/api/trpc/routers/calendar/emitter", () => import("../../mocks/calendar-emitter"));
 vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
 
 import {

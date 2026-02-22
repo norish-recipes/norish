@@ -15,10 +15,10 @@ const mockArchiveParser = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/server/importers/archive-parser", () => mockArchiveParser);
+vi.mock("@norish/api/importers/archive-parser", () => mockArchiveParser);
 
-vi.mock("@/server/logger", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/server/logger")>();
+vi.mock("@norish/api/logger", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@norish/api/logger")>();
 
   return {
     ...actual,
@@ -30,22 +30,22 @@ vi.mock("@/server/logger", async (importOriginal) => {
   };
 });
 
-vi.mock("@/server/db/cached-household", () => ({
+vi.mock("@norish/db/cached-household", () => ({
   getCachedHouseholdForUser: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock("@/server/redis/subscription-multiplexer", () => ({
+vi.mock("@norish/queue/redis/subscription-multiplexer", () => ({
   getOrCreateMultiplexer: vi.fn(),
 }));
 
-vi.mock("@/server/trpc/routers/recipes/emitter", () => ({
+vi.mock("@norish/api/trpc/routers/recipes/emitter", () => ({
   recipeEmitter: {
     emitToUser: vi.fn(),
     emitToHousehold: vi.fn(),
   },
 }));
 
-import { archiveRouter } from "@/server/trpc/routers/archive/archive";
+import { archiveRouter } from "@norish/api/trpc/routers/archive/archive";
 
 describe("archiveRouter.importArchive", () => {
   beforeEach(() => {

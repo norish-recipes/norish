@@ -1,7 +1,7 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { caldavSyncStatus } from "@/server/db/schema";
+import { caldavSyncStatus } from "@norish/db/schema";
 
 export const CaldavSyncStatusSelectSchema = createSelectSchema(caldavSyncStatus);
 

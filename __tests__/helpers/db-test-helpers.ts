@@ -13,9 +13,9 @@ import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
-import * as schema from "@/server/db/schema";
-import { getRecipeFull } from "@/server/db";
-import { encrypt } from "@/server/auth/crypto";
+import * as schema from "@norish/db/schema";
+import { getRecipeFull } from "@norish/db";
+import { encrypt } from "@norish/auth/crypto";
 
 const { Pool } = pg;
 

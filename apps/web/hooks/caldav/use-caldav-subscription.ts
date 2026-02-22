@@ -1,7 +1,7 @@
 "use client";
 
 import type { CaldavSyncStatus, CaldavSyncStatusViewDto } from "@norish/shared/contracts";
-import type { CaldavSubscriptionEvents } from "@/server/trpc/routers/caldav/types";
+import type { CaldavSubscriptionEvents } from "@norish/api/trpc/routers/caldav/types";
 
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { addToast } from "@heroui/react";

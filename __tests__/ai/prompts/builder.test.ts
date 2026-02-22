@@ -14,19 +14,19 @@ vi.mock("@norish/config/server-config-loader", () => ({
   getAutoTaggingMode: vi.fn(),
 }));
 
-vi.mock("@/server/db/repositories/tags", () => ({
+vi.mock("@norish/db/repositories/tags", () => ({
   listAllTagNames: vi.fn(),
 }));
 
-vi.mock("@/server/ai/prompts/loader", () => ({
+vi.mock("@norish/api/ai/prompts/loader", () => ({
   loadPrompt: vi.fn(),
   fillPrompt: vi.fn((template, _vars) => template),
 }));
 
 import { getAutoTaggingMode } from "@norish/config/server-config-loader";
-import { listAllTagNames } from "@/server/db/repositories/tags";
-import { loadPrompt } from "@/server/ai/prompts/loader";
-import { buildAutoTaggingPrompt } from "@/server/ai/prompts/builder";
+import { listAllTagNames } from "@norish/db/repositories/tags";
+import { loadPrompt } from "@norish/api/ai/prompts/loader";
+import { buildAutoTaggingPrompt } from "@norish/api/ai/prompts/builder";
 
 describe("buildAutoTaggingPrompt", () => {
   const mockRecipe = {

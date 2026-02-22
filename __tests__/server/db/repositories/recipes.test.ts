@@ -8,7 +8,7 @@
 
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 
-import { updateRecipeWithRefs } from "@/server/db/repositories/recipes";
+import { updateRecipeWithRefs } from "@norish/db/repositories/recipes";
 import {
   createTestRecipe,
   createTestIngredient,

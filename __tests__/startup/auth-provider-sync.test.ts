@@ -7,18 +7,18 @@ const mockDeleteConfig = vi.fn();
 const mockConfigExists = vi.fn();
 let mockServerConfig: Record<string, string | undefined> = {};
 
-vi.mock("@/server/db/repositories/server-config", () => ({
+vi.mock("@norish/db/repositories/server-config", () => ({
   getConfig: mockGetConfig,
   setConfig: mockSetConfig,
   deleteConfig: mockDeleteConfig,
   configExists: mockConfigExists,
 }));
 
-vi.mock("@/server/auth/provider-cache", () => ({
+vi.mock("@norish/auth/provider-cache", () => ({
   setAuthProviderCache: vi.fn(),
 }));
 
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   serverLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
@@ -35,7 +35,7 @@ vi.mock("@norish/config/content-indicators.default.json", () => ({
 vi.mock("@norish/config/recurrence-config.default.json", () => ({
   default: { locales: {} },
 }));
-vi.mock("@/server/ai/prompts/loader", () => ({
+vi.mock("@norish/api/ai/prompts/loader", () => ({
   loadDefaultPrompts: vi.fn().mockReturnValue({
     recipeExtraction: "mock recipe extraction prompt",
     unitConversion: "mock unit conversion prompt",
@@ -69,7 +69,7 @@ describe("Auth Provider Sync Logic", () => {
       mockServerConfig = oidcEnvConfig;
       mockGetConfig.mockResolvedValue(null);
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -108,7 +108,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -144,7 +144,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -183,7 +183,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -204,7 +204,7 @@ describe("Auth Provider Sync Logic", () => {
       mockServerConfig = { ...oidcEnvConfig, OIDC_WELLKNOWN: customWellknown };
       mockGetConfig.mockResolvedValue(null);
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -235,7 +235,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -261,7 +261,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -282,7 +282,7 @@ describe("Auth Provider Sync Logic", () => {
       mockServerConfig = githubEnvConfig;
       mockGetConfig.mockResolvedValue(null);
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -315,7 +315,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -343,7 +343,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -367,7 +367,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -388,7 +388,7 @@ describe("Auth Provider Sync Logic", () => {
       mockServerConfig = googleEnvConfig;
       mockGetConfig.mockResolvedValue(null);
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -421,7 +421,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -449,7 +449,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -473,7 +473,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockConfigExists.mockResolvedValue(true);
-      const { seedServerConfig } = await import("@/server/startup/seed-config");
+      const { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act
       await seedServerConfig();
@@ -494,7 +494,7 @@ describe("Auth Provider Sync Logic", () => {
       };
       mockGetConfig.mockResolvedValue(null);
       mockConfigExists.mockResolvedValue(true);
-      let { seedServerConfig } = await import("@/server/startup/seed-config");
+      let { seedServerConfig } = await import("@norish/api/startup/seed-config");
 
       // Act - First startup
       await seedServerConfig();
@@ -521,7 +521,7 @@ describe("Auth Provider Sync Logic", () => {
         return Promise.resolve(null);
       });
       mockSetConfig.mockClear();
-      ({ seedServerConfig } = await import("@/server/startup/seed-config"));
+      ({ seedServerConfig } = await import("@norish/api/startup/seed-config"));
 
       // Act - Second startup
       await seedServerConfig();

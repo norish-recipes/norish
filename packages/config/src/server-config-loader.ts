@@ -31,7 +31,7 @@ import {
   type TimerKeywordsConfig,
   DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "./zod/server-config";
-import { getConfig } from "@/server/db/repositories/server-config";
+import { getConfig } from "@norish/db/repositories/server-config";
 import { SERVER_CONFIG } from "./env-config-server";
 
 // ============================================================================

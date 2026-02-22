@@ -4,9 +4,9 @@ import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 
 // Setup mocks before any imports that use them
-vi.mock("@/server/db/repositories/recipes", () => import("../../mocks/recipes-repository"));
-vi.mock("@/server/auth/permissions", () => import("../../mocks/permissions"));
-vi.mock("@/server/trpc/routers/recipes/emitter", () => import("../../mocks/recipe-emitter"));
+vi.mock("@norish/db/repositories/recipes", () => import("../../mocks/recipes-repository"));
+vi.mock("@norish/auth/permissions", () => import("../../mocks/permissions"));
+vi.mock("@norish/api/trpc/routers/recipes/emitter", () => import("../../mocks/recipe-emitter"));
 vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
 
 // Import mocks for assertions

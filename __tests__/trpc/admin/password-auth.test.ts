@@ -5,9 +5,9 @@ import superjson from "superjson";
 import { z } from "zod";
 
 // Setup mocks
-vi.mock("@/server/db/repositories/server-config", () => import("../../mocks/server-config"));
-vi.mock("@/server/db/repositories/users", () => import("../../mocks/users"));
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/db/repositories/server-config", () => import("../../mocks/server-config"));
+vi.mock("@norish/db/repositories/users", () => import("../../mocks/users"));
+vi.mock("@norish/api/logger", () => ({
   trpcLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 

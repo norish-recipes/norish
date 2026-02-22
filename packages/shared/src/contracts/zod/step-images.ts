@@ -1,7 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { stepImages } from "@/server/db/schema";
+import { stepImages } from "@norish/db/schema";
 
 export const StepImageSelectSchema = createSelectSchema(stepImages);
 export const StepImageInsertSchema = createInsertSchema(stepImages).omit({

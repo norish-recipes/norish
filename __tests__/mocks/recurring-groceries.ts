@@ -1,5 +1,5 @@
 /**
- * Mock for @/server/db/repositories/recurring-groceries
+ * Mock for @norish/db/repositories/recurring-groceries
  */
 import { vi } from "vitest";
 

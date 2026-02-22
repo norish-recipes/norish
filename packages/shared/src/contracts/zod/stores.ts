@@ -1,7 +1,7 @@
 import { createSelectSchema } from "drizzle-zod";
 import z from "zod";
 
-import { stores, ingredientStorePreferences } from "@/server/db/schema";
+import { stores, ingredientStorePreferences } from "@norish/db/schema";
 
 // Store color options (HeroUI semantic colors + extras)
 export const StoreColorSchema = z.enum([

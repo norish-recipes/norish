@@ -9,7 +9,7 @@ const mockProviderCache = {
   passwordEnabled: false,
 };
 
-vi.mock("@/server/auth/provider-cache", () => ({
+vi.mock("@norish/auth/provider-cache", () => ({
   getCachedGitHubProvider: () => mockProviderCache.github,
   getCachedGoogleProvider: () => mockProviderCache.google,
   getCachedOIDCProvider: () => mockProviderCache.oidc,
@@ -32,7 +32,7 @@ describe("Provider Cache - Password Auth", () => {
 
   describe("getCachedPasswordAuthEnabled", () => {
     it("should return false by default", async () => {
-      const { getCachedPasswordAuthEnabled } = await import("@/server/auth/provider-cache");
+      const { getCachedPasswordAuthEnabled } = await import("@norish/auth/provider-cache");
 
       expect(getCachedPasswordAuthEnabled()).toBe(false);
     });
@@ -40,7 +40,7 @@ describe("Provider Cache - Password Auth", () => {
     it("should return true when password auth is enabled in cache", async () => {
       mockProviderCache.passwordEnabled = true;
 
-      const { getCachedPasswordAuthEnabled } = await import("@/server/auth/provider-cache");
+      const { getCachedPasswordAuthEnabled } = await import("@norish/auth/provider-cache");
 
       expect(getCachedPasswordAuthEnabled()).toBe(true);
     });
@@ -62,7 +62,7 @@ describe("Password Auth Seed Config", () => {
     vi.resetModules();
   });
 
-  vi.mock("@/server/db/repositories/server-config", () => ({
+  vi.mock("@norish/db/repositories/server-config", () => ({
     getConfig: () => mockGetConfig(),
     setConfig: (...args: unknown[]) => mockSetConfig(...args),
     configExists: () => mockConfigExists(),
@@ -74,7 +74,7 @@ describe("Password Auth Seed Config", () => {
     },
   }));
 
-  vi.mock("@/server/logger", () => ({
+  vi.mock("@norish/api/logger", () => ({
     serverLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
   }));
 

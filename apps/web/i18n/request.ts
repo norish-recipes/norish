@@ -5,8 +5,8 @@ import { cookies, headers } from "next/headers";
 
 import { DEFAULT_LOCALE, isValidLocale, loadLocaleMessages, type Locale } from "@norish/i18n";
 
-import { auth } from "@/server/auth/auth";
-import { getUserPreferences } from "@/server/db/repositories/users";
+import { auth } from "@norish/auth/auth";
+import { getUserPreferences } from "@norish/db/repositories/users";
 import {
   getDefaultLocale as getConfigDefaultLocale,
   isValidEnabledLocale,

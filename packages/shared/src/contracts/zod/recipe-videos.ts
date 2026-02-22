@@ -1,7 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { recipeVideos } from "@/server/db/schema";
+import { recipeVideos } from "@norish/db/schema";
 
 /** Maximum number of videos allowed per recipe */
 export const MAX_RECIPE_VIDEOS = 5;

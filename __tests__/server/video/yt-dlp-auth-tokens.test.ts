@@ -11,7 +11,7 @@ vi.mock("yt-dlp-wrap", () => ({
     constructor() {}
   },
 }));
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   createLogger: () => ({ info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() }),
   videoLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
@@ -19,7 +19,7 @@ vi.mock("@norish/config/server-config-loader", () => ({
   getVideoConfig: vi.fn().mockReturnValue({ ytDlpVersion: "latest" }),
 }));
 
-import { buildAuthArgs } from "@/server/video/yt-dlp";
+import { buildAuthArgs } from "@norish/api/video/yt-dlp";
 
 function makeToken(overrides: Partial<SiteAuthTokenDecryptedDto>): SiteAuthTokenDecryptedDto {
   return {

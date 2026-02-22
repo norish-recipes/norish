@@ -5,7 +5,7 @@ import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import RecipeGrid from "@/components/dashboard/recipe-grid";
 import SearchInput from "@/components/dashboard/search-input";
 import CreateRecipeButton from "@/components/dashboard/create-recipe-button";
-import { auth } from "@/server/auth/auth";
+import { auth } from "@norish/auth/auth";
 
 export default async function Home() {
   const session = await auth.api.getSession({

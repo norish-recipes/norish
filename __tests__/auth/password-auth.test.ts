@@ -8,13 +8,13 @@ const mockGetConfig = vi.fn();
 const mockSetConfig = vi.fn();
 const mockConfigExists = vi.fn();
 
-vi.mock("@/server/db/repositories/server-config", () => ({
+vi.mock("@norish/db/repositories/server-config", () => ({
   getConfig: mockGetConfig,
   setConfig: mockSetConfig,
   configExists: mockConfigExists,
 }));
 
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   serverLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
   authLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
   trpcLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -46,7 +46,7 @@ describe("Password Authentication Configuration", () => {
         return Promise.resolve(null);
       });
 
-      const { getAvailableProviders } = await import("@/server/auth/providers");
+      const { getAvailableProviders } = await import("@norish/auth/providers");
 
       // Act
       const providers = await getAvailableProviders();
@@ -69,7 +69,7 @@ describe("Password Authentication Configuration", () => {
         return Promise.resolve(null);
       });
 
-      const { getAvailableProviders } = await import("@/server/auth/providers");
+      const { getAvailableProviders } = await import("@norish/auth/providers");
 
       // Act
       const providers = await getAvailableProviders();
@@ -93,7 +93,7 @@ describe("Password Authentication Configuration", () => {
         return Promise.resolve(null);
       });
 
-      const { getAvailableProviders } = await import("@/server/auth/providers");
+      const { getAvailableProviders } = await import("@norish/auth/providers");
 
       // Act
       const providers = await getAvailableProviders();
@@ -110,7 +110,7 @@ describe("Password Authentication Configuration", () => {
       // Arrange
       mockGetConfig.mockResolvedValue(true);
 
-      const { isPasswordAuthEnabled } = await import("@/server/auth/providers");
+      const { isPasswordAuthEnabled } = await import("@norish/auth/providers");
 
       // Act
       const result = await isPasswordAuthEnabled();
@@ -123,7 +123,7 @@ describe("Password Authentication Configuration", () => {
       // Arrange
       mockGetConfig.mockResolvedValue(false);
 
-      const { isPasswordAuthEnabled } = await import("@/server/auth/providers");
+      const { isPasswordAuthEnabled } = await import("@norish/auth/providers");
 
       // Act
       const result = await isPasswordAuthEnabled();
@@ -136,7 +136,7 @@ describe("Password Authentication Configuration", () => {
       // Arrange
       mockGetConfig.mockResolvedValue(null);
 
-      const { isPasswordAuthEnabled } = await import("@/server/auth/providers");
+      const { isPasswordAuthEnabled } = await import("@norish/auth/providers");
 
       // Act
       const result = await isPasswordAuthEnabled();
@@ -157,7 +157,7 @@ describe("Password Authentication Configuration", () => {
         return Promise.resolve(null);
       });
 
-      const { getConfiguredProviders } = await import("@/server/auth/providers");
+      const { getConfiguredProviders } = await import("@norish/auth/providers");
 
       // Act
       const result = await getConfiguredProviders();
@@ -176,7 +176,7 @@ describe("Password Authentication Configuration", () => {
         return Promise.resolve(null);
       });
 
-      const { getConfiguredProviders } = await import("@/server/auth/providers");
+      const { getConfiguredProviders } = await import("@norish/auth/providers");
 
       // Act
       const result = await getConfiguredProviders();

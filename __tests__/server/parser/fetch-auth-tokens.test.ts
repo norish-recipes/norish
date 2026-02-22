@@ -45,11 +45,11 @@ const { mockAddCookies, mockNewContext, mockGetBrowser } = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/server/playwright", () => ({
+vi.mock("@norish/api/playwright", () => ({
   getBrowser: mockGetBrowser,
 }));
 
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   parserLogger: {
     debug: vi.fn(),
     warn: vi.fn(),
@@ -58,7 +58,7 @@ vi.mock("@/server/logger", () => ({
   },
 }));
 
-import { fetchViaPlaywright } from "@/server/parser/fetch";
+import { fetchViaPlaywright } from "@norish/api/parser/fetch";
 
 // ---------------------------------------------------------------------------
 // Helpers

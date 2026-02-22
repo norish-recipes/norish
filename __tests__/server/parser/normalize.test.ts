@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { normalizeRecipeFromJson } from "@/server/parser/normalize";
+import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
 
 // Mock dependencies
-vi.mock("@/server/downloader", () => ({
+vi.mock("@norish/api/downloader", () => ({
   downloadAllImagesFromJsonLd: vi.fn().mockResolvedValue([]),
 }));
 

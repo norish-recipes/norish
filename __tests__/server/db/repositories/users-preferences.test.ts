@@ -5,14 +5,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockFindFirst = vi.hoisted(() => vi.fn());
 const mockExecute = vi.hoisted(() => vi.fn());
 
-vi.mock("@/server/db/drizzle", () => ({
+vi.mock("@norish/db/drizzle", () => ({
   db: {
     query: { users: { findFirst: mockFindFirst } },
     execute: mockExecute,
   },
 }));
 
-import { getUserPreferences, updateUserPreferences } from "@/server/db/repositories/users";
+import { getUserPreferences, updateUserPreferences } from "@norish/db/repositories/users";
 
 describe("user preferences repository", () => {
   beforeEach(() => {

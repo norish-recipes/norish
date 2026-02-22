@@ -9,7 +9,7 @@ import {
   extractPaprikaRecipes,
   type PaprikaRecipe,
   PaprikaRecipeSchema,
-} from "@/server/importers/paprika-parser";
+} from "@norish/api/importers/paprika-parser";
 
 // @vitest-environment node
 
@@ -33,7 +33,7 @@ vi.mock("@norish/config/server-config-loader", () => ({
 }));
 
 // Mock the downloader to avoid actual image saving
-vi.mock("@/server/downloader", () => ({
+vi.mock("@norish/api/downloader", () => ({
   saveImageBytes: vi.fn().mockResolvedValue("mocked-image-guid"),
 }));
 

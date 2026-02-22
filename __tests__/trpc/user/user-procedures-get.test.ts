@@ -8,7 +8,7 @@ const mockDb = vi.hoisted(() => ({
   updateUserPreferences: vi.fn(),
 }));
 
-vi.mock("@/server/db", () => ({
+vi.mock("@norish/db", () => ({
   getApiKeysForUser: mockDb.getApiKeysForUser,
   getUserById: mockDb.getUserById,
   getUserPreferences: mockDb.getUserPreferences,
@@ -25,23 +25,23 @@ vi.mock("@/server/db", () => ({
   updateUserLocale: vi.fn(),
 }));
 
-vi.mock("@/server/trpc/routers/households/emitter", () => ({
+vi.mock("@norish/api/trpc/routers/households/emitter", () => ({
   householdEmitter: { emitToHousehold: vi.fn() },
 }));
 
-vi.mock("@/server/trpc/connection-manager", () => ({
+vi.mock("@norish/api/trpc/connection-manager", () => ({
   emitConnectionInvalidation: vi.fn(),
 }));
 
-vi.mock("@/server/db/cached-household", () => ({
+vi.mock("@norish/db/cached-household", () => ({
   getCachedHouseholdForUser: vi.fn(),
 }));
 
-vi.mock("@/server/redis/subscription-multiplexer", () => ({
+vi.mock("@norish/queue/redis/subscription-multiplexer", () => ({
   getOrCreateMultiplexer: vi.fn(),
 }));
 
-vi.mock("@/server/startup/media-cleanup", () => ({
+vi.mock("@norish/api/startup/media-cleanup", () => ({
   deleteAvatarByFilename: vi.fn(),
 }));
 
@@ -58,7 +58,7 @@ vi.mock("fs/promises", () => ({
   writeFile: vi.fn(),
 }));
 
-import { userProcedures } from "@/server/trpc/routers/user/user";
+import { userProcedures } from "@norish/api/trpc/routers/user/user";
 
 describe("userProcedures.get", () => {
   beforeEach(() => {

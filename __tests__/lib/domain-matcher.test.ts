@@ -3,7 +3,7 @@ import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/sit
 
 import { describe, it, expect } from "vitest";
 
-import { getMatchingTokens } from "@/server/lib/domain-matcher";
+import { getMatchingTokens } from "@norish/api/lib/domain-matcher";
 
 function makeToken(
   overrides: Partial<SiteAuthTokenDecryptedDto> & { domain: string }

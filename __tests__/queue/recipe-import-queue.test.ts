@@ -54,7 +54,7 @@ vi.mock("@norish/config/env-config-server", () => ({
 }));
 
 // Mock queue config to avoid URL parsing issues
-vi.mock("@/server/queue/config", () => ({
+vi.mock("@norish/queue/config", () => ({
   redisConnection: {
     host: "localhost",
     port: 6379,
@@ -129,7 +129,7 @@ const mockLogger = {
   child: vi.fn(() => mockLogger),
 };
 
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   createLogger: vi.fn(() => mockLogger),
   parserLogger: mockLogger,
 }));
@@ -137,7 +137,7 @@ vi.mock("@/server/logger", () => ({
 // Mock DB functions
 const mockRecipeExistsByUrlForPolicy = vi.fn();
 
-vi.mock("@/server/db", () => ({
+vi.mock("@norish/db", () => ({
   recipeExistsByUrlForPolicy: mockRecipeExistsByUrlForPolicy,
 }));
 
@@ -155,7 +155,7 @@ describe("Recipe Import Queue", () => {
 
   describe("generateJobId", () => {
     it("generates global job ID for 'everyone' policy", async () => {
-      const { generateJobId } = await import("@/server/queue/helpers");
+      const { generateJobId } = await import("@norish/queue/helpers");
 
       const jobId = generateJobId(
         "https://example.com/recipe",
@@ -170,7 +170,7 @@ describe("Recipe Import Queue", () => {
     }, 15_000);
 
     it("generates household-scoped job ID for 'household' policy", async () => {
-      const { generateJobId } = await import("@/server/queue/helpers");
+      const { generateJobId } = await import("@norish/queue/helpers");
 
       const jobId = generateJobId(
         "https://example.com/recipe",
@@ -185,7 +185,7 @@ describe("Recipe Import Queue", () => {
     });
 
     it("generates user-scoped job ID for 'owner' policy", async () => {
-      const { generateJobId } = await import("@/server/queue/helpers");
+      const { generateJobId } = await import("@norish/queue/helpers");
 
       const jobId = generateJobId(
         "https://example.com/recipe",
@@ -200,7 +200,7 @@ describe("Recipe Import Queue", () => {
     });
 
     it("normalizes URLs (lowercase, removes trailing slash)", async () => {
-      const { generateJobId } = await import("@/server/queue/helpers");
+      const { generateJobId } = await import("@norish/queue/helpers");
 
       const jobId1 = generateJobId(
         "https://Example.COM/Recipe/",
@@ -220,7 +220,7 @@ describe("Recipe Import Queue", () => {
     });
 
     it("removes tracking parameters from URLs", async () => {
-      const { generateJobId } = await import("@/server/queue/helpers");
+      const { generateJobId } = await import("@norish/queue/helpers");
 
       const jobId1 = generateJobId(
         "https://example.com/recipe?utm_source=test&utm_medium=email",
@@ -246,7 +246,7 @@ describe("Recipe Import Queue", () => {
         getState: vi.fn().mockResolvedValue("waiting"),
       });
 
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       const result = await isJobInQueue(mockQueue as any, "test-job-id");
 
@@ -258,7 +258,7 @@ describe("Recipe Import Queue", () => {
         getState: vi.fn().mockResolvedValue("active"),
       });
 
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       const result = await isJobInQueue(mockQueue as any, "test-job-id");
 
@@ -270,7 +270,7 @@ describe("Recipe Import Queue", () => {
         getState: vi.fn().mockResolvedValue("delayed"),
       });
 
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       const result = await isJobInQueue(mockQueue as any, "test-job-id");
 
@@ -282,7 +282,7 @@ describe("Recipe Import Queue", () => {
         getState: vi.fn().mockResolvedValue("completed"),
       });
 
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       const result = await isJobInQueue(mockQueue as any, "test-job-id");
 
@@ -294,7 +294,7 @@ describe("Recipe Import Queue", () => {
         getState: vi.fn().mockResolvedValue("failed"),
       });
 
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       const result = await isJobInQueue(mockQueue as any, "test-job-id");
 
@@ -304,7 +304,7 @@ describe("Recipe Import Queue", () => {
     it("returns false when job does not exist", async () => {
       mockGetJob.mockResolvedValue(null);
 
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       const result = await isJobInQueue(mockQueue as any, "nonexistent-job-id");
 
@@ -326,7 +326,7 @@ describe("Recipe Import Queue", () => {
     });
 
     it("adds job successfully when no duplicate exists", async () => {
-      const { addImportJob } = await import("@/server/queue/recipe-import/producer");
+      const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
       const result = await addImportJob(mockQueue as any, {
         url: "https://example.com/recipe",
@@ -354,7 +354,7 @@ describe("Recipe Import Queue", () => {
         getState: vi.fn().mockResolvedValue("waiting"),
       });
 
-      const { addImportJob } = await import("@/server/queue/recipe-import/producer");
+      const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
       const result = await addImportJob(mockQueue as any, {
         url: "https://example.com/recipe",
@@ -377,7 +377,7 @@ describe("Recipe Import Queue", () => {
       mockGetJob.mockResolvedValueOnce(null);
       mockAdd.mockResolvedValueOnce({ id: "job-1" });
 
-      const { addImportJob } = await import("@/server/queue/recipe-import/producer");
+      const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
       // First household
       const result1 = await addImportJob(mockQueue as any, {
@@ -416,7 +416,7 @@ describe("Recipe Import Queue", () => {
       mockGetJob.mockResolvedValueOnce(null);
       mockAdd.mockResolvedValueOnce({ id: "job-1" });
 
-      const { addImportJob } = await import("@/server/queue/recipe-import/producer");
+      const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
       // First user
       const result1 = await addImportJob(mockQueue as any, {
@@ -452,7 +452,7 @@ describe("Recipe Import Queue", () => {
       });
       mockAdd.mockResolvedValueOnce({ id: "new-job" });
 
-      const { addImportJob } = await import("@/server/queue/recipe-import/producer");
+      const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
       // Should succeed because completed jobs don't block new imports
       const result = await addImportJob(mockQueue as any, {
@@ -473,7 +473,7 @@ describe("Recipe Import Queue", () => {
       });
       mockAdd.mockResolvedValueOnce({ id: "new-job" });
 
-      const { addImportJob } = await import("@/server/queue/recipe-import/producer");
+      const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
       // Should succeed because failed jobs don't block new imports
       const result = await addImportJob(mockQueue as any, {
@@ -504,7 +504,7 @@ describe("Recipe Import Queue", () => {
           getState: vi.fn().mockResolvedValue("active"),
         });
 
-        const { addImportJob } = await import("@/server/queue/recipe-import/producer");
+        const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
         // Different user, different household, same URL
         const result = await addImportJob(mockQueue as any, {
@@ -533,7 +533,7 @@ describe("Recipe Import Queue", () => {
           getState: vi.fn().mockResolvedValue("active"),
         });
 
-        const { addImportJob } = await import("@/server/queue/recipe-import/producer");
+        const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
         // Same household, different user
         const result = await addImportJob(mockQueue as any, {
@@ -562,7 +562,7 @@ describe("Recipe Import Queue", () => {
           getState: vi.fn().mockResolvedValue("active"),
         });
 
-        const { addImportJob } = await import("@/server/queue/recipe-import/producer");
+        const { addImportJob } = await import("@norish/queue/recipe-import/producer");
 
         // Same user
         const result = await addImportJob(mockQueue as any, {

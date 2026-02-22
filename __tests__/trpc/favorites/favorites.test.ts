@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 
-vi.mock("@/server/db/repositories/favorites", () => import("../../mocks/favorites-repository"));
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/db/repositories/favorites", () => import("../../mocks/favorites-repository"));
+vi.mock("@norish/api/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 

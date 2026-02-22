@@ -1,7 +1,7 @@
 "use client";
 
 import type { User } from "@norish/shared/contracts";
-import type { ApiKeyMetadataDto } from "@/server/trpc/routers/user/types";
+import type { ApiKeyMetadataDto } from "@norish/api/trpc/routers/user/types";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 
 import { useMutation } from "@tanstack/react-query";

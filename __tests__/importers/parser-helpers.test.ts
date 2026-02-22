@@ -27,7 +27,7 @@ vi.mock("parse-ingredient", () => ({
   }),
 }));
 
-import { buildRecipeDTO } from "@/server/importers/parser-helpers";
+import { buildRecipeDTO } from "@norish/api/importers/parser-helpers";
 
 describe("buildRecipeDTO", () => {
   it("filters parsed ingredients with empty names", async () => {

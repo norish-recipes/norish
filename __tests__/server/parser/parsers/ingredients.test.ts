@@ -7,7 +7,7 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
 
-import { parseIngredients } from "@/server/parser/parsers/ingredients";
+import { parseIngredients } from "@norish/api/parser/parsers/ingredients";
 
 describe("parseIngredients", () => {
   const emptyUnits = {};

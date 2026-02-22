@@ -17,10 +17,10 @@ import {
   recipes,
   recurringGroceries,
   stepImages,
-} from "@/server/db/schema";
-import { cleanupOldCalendarData } from "@/server/scheduler/old-calendar-cleanup";
-import { cleanupOldGroceries } from "@/server/scheduler/old-groceries-cleanup";
-import { cleanupOrphanedImages, cleanupOrphanedStepImages } from "@/server/startup/media-cleanup";
+} from "@norish/db/schema";
+import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
+import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
+import { cleanupOrphanedImages, cleanupOrphanedStepImages } from "@norish/api/startup/media-cleanup";
 
 const testBase = new RepositoryTestBase("cleanup_workflows");
 

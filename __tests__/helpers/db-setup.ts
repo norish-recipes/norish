@@ -11,7 +11,7 @@ import type { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import pg from "pg";
 
-import { dbLogger } from "@/server/logger";
+import { dbLogger } from "@norish/api/logger";
 
 const { Client } = pg;
 
@@ -143,7 +143,7 @@ export async function runMigrations(testDbUrl: string) {
 
   try {
     // Run drizzle-kit push directly (skip db:ensure since testcontainers already created the DB)
-    execSync("pnpm exec drizzle-kit push --config ./server/db/drizzle.config.ts", {
+    execSync("pnpm exec drizzle-kit push --config ./packages/db/src/drizzle.config.ts", {
       env: {
         ...process.env,
         DATABASE_URL: testDbUrl,

@@ -8,21 +8,21 @@ const mockCleanupOldCalendarData = vi.fn();
 const mockCleanupOldGroceries = vi.fn();
 const mockInfo = vi.fn();
 
-vi.mock("@/server/startup/media-cleanup", () => ({
+vi.mock("@norish/api/startup/media-cleanup", () => ({
   cleanupOrphanedImages: mockCleanupOrphanedImages,
   cleanupOrphanedStepImages: mockCleanupOrphanedStepImages,
   cleanupOrphanedAvatars: mockCleanupOrphanedAvatars,
 }));
 
-vi.mock("@/server/scheduler/old-calendar-cleanup", () => ({
+vi.mock("@norish/queue/scheduler/old-calendar-cleanup", () => ({
   cleanupOldCalendarData: mockCleanupOldCalendarData,
 }));
 
-vi.mock("@/server/scheduler/old-groceries-cleanup", () => ({
+vi.mock("@norish/queue/scheduler/old-groceries-cleanup", () => ({
   cleanupOldGroceries: mockCleanupOldGroceries,
 }));
 
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   serverLogger: {
     info: mockInfo,
     debug: vi.fn(),
@@ -47,7 +47,7 @@ describe("runStartupMaintenanceCleanup", () => {
   });
 
   it("returns per-domain cleanup summary and logs the startup cleanup result", async () => {
-    const { runStartupMaintenanceCleanup } = await import("@/server/startup/maintenance-cleanup");
+    const { runStartupMaintenanceCleanup } = await import("@norish/api/startup/maintenance-cleanup");
 
     const result = await runStartupMaintenanceCleanup();
 

@@ -2,12 +2,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Setup mocks
-vi.mock("@/server/db", () => import("../../mocks/db"));
+vi.mock("@norish/db", () => import("../../mocks/db"));
 vi.mock(
-  "@/server/db/repositories/recurring-groceries",
+  "@norish/db/repositories/recurring-groceries",
   () => import("../../mocks/recurring-groceries")
 );
-vi.mock("@/server/trpc/routers/groceries/emitter", () => import("../../mocks/grocery-emitter"));
+vi.mock("@norish/api/trpc/routers/groceries/emitter", () => import("../../mocks/grocery-emitter"));
 vi.mock("@norish/shared/lib/recurrence/calculator", () => import("../../mocks/recurrence"));
 
 // Import mocks for assertions

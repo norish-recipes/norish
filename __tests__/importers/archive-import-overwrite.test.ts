@@ -13,35 +13,35 @@ const mockParseMelaRecipeToDTO = vi.fn();
 const mockExtractPaprikaRecipes = vi.fn();
 const mockParsePaprikaRecipeToDTO = vi.fn();
 
-vi.mock("@/server/db", () => ({
+vi.mock("@norish/db", () => ({
   findExistingRecipe: mockFindExistingRecipe,
   createRecipeWithRefs: mockCreateRecipeWithRefs,
   updateRecipeWithRefs: mockUpdateRecipeWithRefs,
   dashboardRecipe: mockDashboardRecipe,
 }));
 
-vi.mock("@/server/db/repositories/ratings", () => ({
+vi.mock("@norish/db/repositories/ratings", () => ({
   rateRecipe: mockRateRecipe,
 }));
 
-vi.mock("@/server/importers/mela-parser", () => ({
+vi.mock("@norish/api/importers/mela-parser", () => ({
   parseMelaArchive: mockParseMelaArchive,
   parseMelaRecipeToDTO: mockParseMelaRecipeToDTO,
 }));
 
-vi.mock("@/server/importers/mealie-parser", () => ({
+vi.mock("@norish/api/importers/mealie-parser", () => ({
   parseMealieArchive: vi.fn(),
   parseMealieRecipeToDTO: vi.fn(),
   extractMealieRecipeImage: vi.fn(),
   buildMealieLookups: vi.fn(),
 }));
 
-vi.mock("@/server/importers/tandoor-parser", () => ({
+vi.mock("@norish/api/importers/tandoor-parser", () => ({
   extractTandoorRecipes: vi.fn(),
   parseTandoorRecipeToDTO: vi.fn(),
 }));
 
-vi.mock("@/server/importers/paprika-parser", () => ({
+vi.mock("@norish/api/importers/paprika-parser", () => ({
   extractPaprikaRecipes: mockExtractPaprikaRecipes,
   parsePaprikaRecipeToDTO: mockParsePaprikaRecipeToDTO,
 }));
@@ -106,7 +106,7 @@ describe("archive importer overwrite behavior", () => {
     zip.file("recipe.melarecipe", JSON.stringify({ title: "Updated Soup" }));
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
-    const { importArchive } = await import("@/server/importers/archive-parser");
+    const { importArchive } = await import("@norish/api/importers/archive-parser");
     const result = await importArchive("user-1", ["user-1"], zipBytes);
 
     expect(mockUpdateRecipeWithRefs).toHaveBeenCalledWith(
@@ -136,7 +136,7 @@ describe("archive importer overwrite behavior", () => {
     zip.file("recipe.paprikarecipe", "dummy");
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
-    const { importArchive } = await import("@/server/importers/archive-parser");
+    const { importArchive } = await import("@norish/api/importers/archive-parser");
 
     await importArchive("user-1", ["user-1"], zipBytes);
 
@@ -160,7 +160,7 @@ describe("archive importer overwrite behavior", () => {
     zip.file("recipe.paprikarecipe", "dummy");
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
-    const { importArchive } = await import("@/server/importers/archive-parser");
+    const { importArchive } = await import("@norish/api/importers/archive-parser");
 
     await importArchive("user-1", ["user-1"], zipBytes);
 

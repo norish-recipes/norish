@@ -1,4 +1,4 @@
-import type { UserSettingsDto } from "@/server/trpc/routers/user/types";
+import type { UserSettingsDto } from "@norish/api/trpc/routers/user/types";
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";

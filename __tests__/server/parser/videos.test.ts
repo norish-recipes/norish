@@ -2,13 +2,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock the dependencies before importing the module
-vi.mock("@/server/video/yt-dlp", () => ({
+vi.mock("@norish/api/video/yt-dlp", () => ({
   downloadVideo: vi.fn(),
   getVideoMetadata: vi.fn(),
   getFfmpegPath: vi.fn().mockReturnValue("/usr/bin/ffmpeg"),
 }));
 
-vi.mock("@/server/downloader", () => ({
+vi.mock("@norish/api/downloader", () => ({
   convertToMp4: vi
     .fn()
     .mockResolvedValue({ filePath: "/tmp/video.mp4", converted: true, method: "remux" }),
@@ -17,7 +17,7 @@ vi.mock("@/server/downloader", () => ({
     .mockResolvedValue({ video: "/recipes/test-id/video-123.mp4", duration: 120 }),
 }));
 
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   parserLogger: {
     child: () => ({
       debug: vi.fn(),
@@ -29,8 +29,8 @@ vi.mock("@/server/logger", () => ({
 }));
 
 // Import after mocks are set up
-import { parseVideos } from "@/server/parser/parsers/videos";
-import { downloadVideo, getVideoMetadata } from "@/server/video/yt-dlp";
+import { parseVideos } from "@norish/api/parser/parsers/videos";
+import { downloadVideo, getVideoMetadata } from "@norish/api/video/yt-dlp";
 
 describe("parseVideos - VideoObject extraction", () => {
   beforeEach(() => {

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 
-import { canAccessResource, canAccessHouseholdResource } from "@/server/auth/permissions";
+import { canAccessResource, canAccessHouseholdResource } from "@norish/auth/permissions";
 
 // Mock getConfig to return test policies
-vi.mock("@/server/db/repositories/server-config", () => ({
+vi.mock("@norish/db/repositories/server-config", () => ({
   getConfig: vi.fn().mockResolvedValue({
     view: "household",
     edit: "household",
@@ -12,7 +12,7 @@ vi.mock("@/server/db/repositories/server-config", () => ({
 }));
 
 // Mock getHouseholdForUser
-vi.mock("@/server/db/repositories/households", () => ({
+vi.mock("@norish/db/repositories/households", () => ({
   getHouseholdForUser: vi.fn().mockImplementation((userId: string) => {
     // Simulate user1 and user2 being in the same household
     if (userId === "user1" || userId === "user2") {

@@ -22,7 +22,7 @@ vi.mock("bullmq", () => {
   };
 });
 
-vi.mock("@/server/queue/lazy-worker-manager", () => ({
+vi.mock("@norish/queue/lazy-worker-manager", () => ({
   createLazyWorker: mockCreateLazyWorker,
   stopLazyWorker: mockStopLazyWorker,
 }));
@@ -35,7 +35,7 @@ vi.mock("@norish/config/env-config-server", () => ({
   },
 }));
 
-vi.mock("@/server/queue/config", () => ({
+vi.mock("@norish/queue/config", () => ({
   redisConnection: {
     host: "localhost",
     port: 6379,
@@ -59,13 +59,13 @@ vi.mock("@/server/queue/config", () => ({
   },
 }));
 
-vi.mock("@/server/redis/bullmq", () => ({
+vi.mock("@norish/queue/redis/bullmq", () => ({
   getBullClient: vi.fn(() => ({
     duplicate: vi.fn(),
   })),
 }));
 
-vi.mock("@/server/logger", () => ({
+vi.mock("@norish/api/logger", () => ({
   createLogger: vi.fn(() => ({
     info: vi.fn(),
     debug: vi.fn(),
@@ -74,24 +74,24 @@ vi.mock("@/server/logger", () => ({
   })),
 }));
 
-vi.mock("@/server/queue/helpers", () => ({
+vi.mock("@norish/queue/helpers", () => ({
   isJobInQueue: vi.fn(),
 }));
 
-vi.mock("@/server/db", () => ({
+vi.mock("@norish/db", () => ({
   getRecipeFull: vi.fn(),
   updateRecipeCategories: vi.fn(),
 }));
 
-vi.mock("@/server/ai/auto-categorizer", () => ({
+vi.mock("@norish/api/ai/auto-categorizer", () => ({
   categorizeRecipe: vi.fn(),
 }));
 
-vi.mock("@/server/redis/subscription-multiplexer", () => ({
+vi.mock("@norish/queue/redis/subscription-multiplexer", () => ({
   SubscriptionMultiplexer: vi.fn(),
 }));
 
-vi.mock("@/server/trpc/routers/recipes/emitter", () => ({
+vi.mock("@norish/api/trpc/routers/recipes/emitter", () => ({
   recipeEmitter: {
     emitToHousehold: vi.fn(),
     emitToUser: vi.fn(),
@@ -99,11 +99,11 @@ vi.mock("@/server/trpc/routers/recipes/emitter", () => ({
   },
 }));
 
-vi.mock("@/server/redis/socket", () => ({
+vi.mock("@norish/queue/redis/socket", () => ({
   emitToHousehold: vi.fn(),
 }));
 
-vi.mock("@/server/trpc/helpers", () => ({
+vi.mock("@norish/api/trpc/helpers", () => ({
   emitByPolicy: vi.fn(),
 }));
 
@@ -137,7 +137,7 @@ describe("Auto-Categorization Queue", () => {
   describe("createAutoCategorizationQueue", () => {
     it("creates a queue instance", async () => {
       const { createAutoCategorizationQueue } =
-        await import("@/server/queue/auto-categorization/queue");
+        await import("@norish/queue/auto-categorization/queue");
 
       const queue = createAutoCategorizationQueue();
 
@@ -160,7 +160,7 @@ describe("Auto-Categorization Queue", () => {
       vi.mocked(isAIEnabled).mockResolvedValue(false);
 
       const { addAutoCategorizationJob } =
-        await import("@/server/queue/auto-categorization/producer");
+        await import("@norish/queue/auto-categorization/producer");
 
       const result = await addAutoCategorizationJob(mockQueue, mockJobData);
 
@@ -173,14 +173,14 @@ describe("Auto-Categorization Queue", () => {
 
     it("adds job successfully when AI is enabled", async () => {
       const { isAIEnabled } = await import("@norish/config/server-config-loader");
-      const { isJobInQueue } = await import("@/server/queue/helpers");
+      const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isAIEnabled).mockResolvedValue(true);
       vi.mocked(isJobInQueue).mockResolvedValue(false);
       mockAdd.mockResolvedValue({ id: "auto-categorize-recipe-123" });
 
       const { addAutoCategorizationJob } =
-        await import("@/server/queue/auto-categorization/producer");
+        await import("@norish/queue/auto-categorization/producer");
 
       const result = await addAutoCategorizationJob(mockQueue, mockJobData);
 
@@ -197,11 +197,11 @@ describe("Auto-Categorization Queue", () => {
 
   describe("processAutoCategorizationJob", () => {
     it("does not overwrite existing categories", async () => {
-      const { getRecipeFull, updateRecipeCategories } = await import("@/server/db");
-      const { categorizeRecipe } = await import("@/server/ai/auto-categorizer");
+      const { getRecipeFull, updateRecipeCategories } = await import("@norish/db");
+      const { categorizeRecipe } = await import("@norish/api/ai/auto-categorizer");
       const { getRecipePermissionPolicy } = await import("@norish/config/server-config-loader");
       const { startAutoCategorizationWorker } =
-        await import("@/server/queue/auto-categorization/worker");
+        await import("@norish/queue/auto-categorization/worker");
 
       vi.mocked(getRecipePermissionPolicy).mockResolvedValue({
         view: "household",

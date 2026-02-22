@@ -1,5 +1,5 @@
 /**
- * Mock for @/server/auth/permissions
+ * Mock for @norish/auth/permissions
  */
 import { vi } from "vitest";
 

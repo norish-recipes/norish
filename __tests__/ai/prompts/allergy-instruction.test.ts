@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
 
-import { buildAllergyInstruction } from "@/server/ai/prompts/fragments/allergies";
+import { buildAllergyInstruction } from "@norish/api/ai/prompts/fragments/allergies";
 
 describe("buildAllergyInstruction", () => {
   describe("when no allergies provided", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { calculateWeight, selectWeightedRandomRecipe } from "@/server/services/recipe-randomizer";
+import { calculateWeight, selectWeightedRandomRecipe } from "@norish/api/services/recipe-randomizer";
 
 const baseCandidate = {
   id: "recipe-1",

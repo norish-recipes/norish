@@ -4,13 +4,13 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
 // Setup mocks before any imports that use them
-vi.mock("@/server/db", () => import("../../mocks/user-repository"));
+vi.mock("@norish/db", () => import("../../mocks/user-repository"));
 vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     UPLOADS_DIR: "/tmp/uploads",
   },
 }));
-vi.mock("@/server/startup/media-cleanup", () => ({
+vi.mock("@norish/api/startup/media-cleanup", () => ({
   deleteAvatarByFilename: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("fs/promises", () => ({

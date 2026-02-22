@@ -3,7 +3,7 @@ import z from "zod";
 
 import { StepImageSchema } from "./step-images";
 
-import { steps } from "@/server/db/schema";
+import { steps } from "@norish/db/schema";
 
 export const StepSelectBaseSchema = createSelectSchema(steps);
 export const StepInsertBaseSchema = createInsertSchema(steps)

@@ -9,12 +9,12 @@ import {
   type MealieInstruction,
   type MealieDatabase,
   type MealieLookups,
-} from "@/server/importers/mealie-parser";
+} from "@norish/api/importers/mealie-parser";
 
 // @vitest-environment node
 
 // Mock the downloader to avoid actual image saving
-vi.mock("@/server/downloader", () => ({
+vi.mock("@norish/api/downloader", () => ({
   saveImageBytes: vi.fn().mockResolvedValue("mocked-image-guid"),
 }));
 

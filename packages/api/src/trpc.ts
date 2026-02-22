@@ -1,1 +1,1 @@
-export { appRouter, createContext } from "../../../server/trpc";
+export * from "./trpc/index";

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/server/db/drizzle", () => ({
+vi.mock("@norish/db/drizzle", () => ({
   db: {
     select: vi.fn(),
     insert: vi.fn(),
@@ -11,8 +11,8 @@ vi.mock("@/server/db/drizzle", () => ({
   },
 }));
 
-import { db } from "@/server/db/drizzle";
-import { plannedItems } from "@/server/db/schema/planned-items";
+import { db } from "@norish/db/drizzle";
+import { plannedItems } from "@norish/db/schema/planned-items";
 import {
   createPlannedItem,
   deletePlannedItem,
@@ -22,7 +22,7 @@ import {
   listPlannedItemsByUserAndDateRange,
   moveItem,
   updatePlannedItem,
-} from "@/server/db/repositories/planned-items";
+} from "@norish/db/repositories/planned-items";
 
 const dbMock = vi.mocked(db);
 

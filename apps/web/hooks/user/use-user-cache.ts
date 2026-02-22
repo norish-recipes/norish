@@ -1,6 +1,6 @@
 "use client";
 
-import type { UserSettingsDto } from "@/server/trpc/routers/user/types";
+import type { UserSettingsDto } from "@norish/api/trpc/routers/user/types";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";

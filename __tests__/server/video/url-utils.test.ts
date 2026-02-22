@@ -6,7 +6,7 @@ import {
   isFacebookUrl,
   isYouTubeUrl,
   detectPlatform,
-} from "@/server/video/url-utils";
+} from "@norish/api/video/url-utils";
 
 describe("URL detection utilities", () => {
   describe("isInstagramUrl", () => {

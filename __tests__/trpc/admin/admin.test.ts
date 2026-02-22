@@ -5,11 +5,11 @@ import superjson from "superjson";
 import { z } from "zod";
 
 // Setup mocks before any imports that use them
-vi.mock("@/server/db/repositories/server-config", () => import("../../mocks/server-config"));
-vi.mock("@/server/db/repositories/users", () => import("../../mocks/users"));
-vi.mock("@/server/auth/connection-tests", () => import("../../mocks/connection-tests"));
+vi.mock("@norish/db/repositories/server-config", () => import("../../mocks/server-config"));
+vi.mock("@norish/db/repositories/users", () => import("../../mocks/users"));
+vi.mock("@norish/auth/connection-tests", () => import("../../mocks/connection-tests"));
 vi.mock(
-  "@/server/trpc/routers/permissions/emitter",
+  "@norish/api/trpc/routers/permissions/emitter",
   () => import("../../mocks/permissions-emitter")
 );
 vi.mock("@norish/config/server-config-loader", () => ({

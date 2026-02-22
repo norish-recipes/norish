@@ -1,1 +1,1 @@
-export { addImportJob, getQueues } from "../../../server/queue";
+export { addImportJob, getQueues } from "./index";

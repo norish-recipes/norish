@@ -29,14 +29,14 @@
 
 ## 4. Phase 3 - Backend Package Extraction
 
-- [ ] 4.1 Move `server/db/**` to `packages/db` and preserve migrations/schema/repository behavior, then remove migrated legacy root `server/db/**` files.
-- [ ] 4.2 Move `server/auth/**` to `packages/auth` and preserve auth provider/session behavior, then remove migrated legacy root `server/auth/**` files.
-- [ ] 4.3 Move `server/trpc/**` and domain services to `packages/api`, then remove migrated legacy root modules for that scope.
-- [ ] 4.4 Move `server/queue/**`, `server/redis/**`, and scheduler modules to `packages/queue`, then remove migrated legacy root modules for that scope.
-- [ ] 4.5 Keep startup composition in `apps/web/server/**` (single-process deploy), wiring package exports, then remove superseded root startup entrypoints once app composition is active.
-- [ ] 4.6 Run a phase-3 cleanup audit to confirm no duplicate authoritative backend modules remain under root `server/**`; record any intentional deferrals in phase evidence with owner and target phase.
-- [ ] 4.7 Run backend build-first validation (`pnpm test:run`, `pnpm run typecheck`, `pnpm build`, `pnpm run deps:cycles`) without requiring runtime startup in this phase.
-- [ ] 4.8 Mark phase-3 rollback checkpoint after backend extraction passes.
+- [x] 4.1 Move `server/db/**` to `packages/db` and preserve migrations/schema/repository behavior, then remove migrated legacy root `server/db/**` files.
+- [x] 4.2 Move `server/auth/**` to `packages/auth` and preserve auth provider/session behavior, then remove migrated legacy root `server/auth/**` files.
+- [x] 4.3 Move `server/trpc/**` and domain services to `packages/api`, then remove migrated legacy root modules for that scope.
+- [x] 4.4 Move `server/queue/**`, `server/redis/**`, and scheduler modules to `packages/queue`, then remove migrated legacy root modules for that scope.
+- [x] 4.5 Keep startup composition in `apps/web/server/**` (single-process deploy), wiring package exports, then remove superseded root startup entrypoints once app composition is active.
+- [x] 4.6 Run a phase-3 cleanup audit to confirm no duplicate authoritative backend modules remain under root `server/**`; record any intentional deferrals in phase evidence with owner and target phase.
+- [x] 4.7 Run backend build-first validation (`pnpm test:run`, `pnpm run typecheck`, `pnpm build`, `pnpm run deps:cycles`) without requiring runtime startup in this phase.
+- [x] 4.8 Mark phase-3 rollback checkpoint after backend extraction passes.
 
 ## 5. Phase 4 - Web App Relocation
 

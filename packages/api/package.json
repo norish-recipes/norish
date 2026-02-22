@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./trpc": "./src/trpc.ts",
-    "./logger": "./src/logger.ts"
+    "./logger": "./src/logger.ts",
+    "./*": "./src/*"
   }
 }

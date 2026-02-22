@@ -4,9 +4,9 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
 // Setup mocks before any imports that use them
-vi.mock("@/server/db/repositories/server-config", () => import("../../mocks/server-config"));
-vi.mock("@/server/db/repositories/users", () => import("../../mocks/users"));
-vi.mock("@/server/ai/prompts/loader", () => ({
+vi.mock("@norish/db/repositories/server-config", () => import("../../mocks/server-config"));
+vi.mock("@norish/db/repositories/users", () => import("../../mocks/users"));
+vi.mock("@norish/api/ai/prompts/loader", () => ({
   loadDefaultPrompts: vi.fn().mockReturnValue({
     recipeExtraction: "Default recipe extraction prompt",
     unitConversion: "Default unit conversion prompt",
@@ -26,7 +26,7 @@ import {
   createMockAdminContext,
 } from "./test-utils";
 
-import { loadDefaultPrompts } from "@/server/ai/prompts/loader";
+import { loadDefaultPrompts } from "@norish/api/ai/prompts/loader";
 import {
   ServerConfigKeys,
   PromptsConfigSchema,

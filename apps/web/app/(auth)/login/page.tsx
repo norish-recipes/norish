@@ -1,6 +1,6 @@
 import { LoginClient } from "./components/login-client";
 
-import { getAvailableProviders } from "@/server/auth/providers";
+import { getAvailableProviders } from "@norish/auth/providers";
 import { isRegistrationEnabled } from "@norish/config/server-config-loader";
 
 export const dynamic = "force-dynamic";
