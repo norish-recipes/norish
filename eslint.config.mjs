@@ -1,6 +1,5 @@
-/**
- * ESLint Configuration - Re-exports from tooling folder
- *
- * The actual configuration lives in ./tooling/eslint/eslint.config.mjs
- */
-export { default } from "./tooling/eslint/eslint.config.mjs";
+import { baseConfig, restrictEnvAccess } from "./tooling/eslint/base.ts";
+import { nextjsConfig } from "./tooling/eslint/nextjs.ts";
+import { reactConfig } from "./tooling/eslint/react.ts";
+
+export default [...baseConfig, ...reactConfig, ...nextjsConfig, ...restrictEnvAccess];

@@ -3,7 +3,26 @@ packages:
   - packages/*
   - tooling/*
 
+catalog:
+  "@eslint/js": ^9.39.1
+  "@tailwindcss/postcss": ^4.2.0
+  "@types/react": 19.2.14
+  "@types/react-dom": 19.2.3
+  "@vitejs/plugin-react": ^5.1.4
+  eslint: 9.39.1
+  ioredis: ^5.9.3
+  postcss: ^8.5.6
+  prettier: ^3.8.1
+  react: 19.2.4
+  react-dom: 19.2.4
+  tailwindcss: ^4.2.0
+  typescript: 5.9.3
+  vite: ^7.1.12
+  vitest: ^4.0.18
+  zod: 4.3.6
+
 onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
   - '@heroui/shared-utils'
   - esbuild
   - ffmpeg-static

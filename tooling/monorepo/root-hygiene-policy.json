@@ -70,7 +70,8 @@
     "docker",
     "openspec",
     "packages",
-    "tooling"
+    "tooling",
+    "tooling/github"
   ],
   "forbiddenRootFiles": ["next.config.js", "postcss.config.js", "i18n/request.ts"],
   "disallowedNpmrcSettings": ["shamefully-hoist=true", "strict-peer-dependencies=false"],
