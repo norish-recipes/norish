@@ -5,7 +5,7 @@
  * - Missing keys in other locales
  * - Extra keys in other locales (not in source)
  *
- * Usage: node scripts/check-locale-keys.js
+ * Usage: pnpm --filter @norish/i18n run check:locale-keys
  * Exit code: 1 if missing keys found, 0 otherwise
  */
 import fs from "fs";
@@ -13,7 +13,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const messagesDir = path.join(__dirname, "../packages/i18n/src/messages");
+const messagesDir = path.join(__dirname, "../src/messages");
 
 const SOURCE_LOCALE = "en";
 

@@ -31,11 +31,11 @@
     "typecheck": "tsc --noEmit --project tsconfig.typecheck.json",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "deps:cycles": "node scripts/check-circular-deps.mjs",
-    "deps:workspace": "node scripts/check-workspace-dependencies.mjs",
-    "hygiene:root": "node scripts/check-root-hygiene.mjs",
+    "deps:cycles": "node tooling/monorepo/scripts/check-circular-deps.mjs",
+    "deps:workspace": "node tooling/monorepo/scripts/check-workspace-dependencies.mjs",
+    "hygiene:root": "node tooling/monorepo/scripts/check-root-hygiene.mjs",
     "monorepo:check": "pnpm run hygiene:root && pnpm run deps:workspace",
-    "i18n:check": "node scripts/check-locale-keys.js"
+    "i18n:check": "pnpm --filter @norish/i18n run check:locale-keys"
   },
   "dependencies": {
     "@norish/api": "workspace:*",

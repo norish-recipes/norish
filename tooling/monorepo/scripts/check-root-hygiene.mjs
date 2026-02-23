@@ -1,9 +1,10 @@
 import fs from "node:fs";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.resolve(scriptDir, "..");
+const rootDir = path.resolve(scriptDir, "../../..");
 const policyPath = path.join(rootDir, "tooling/monorepo/root-hygiene-policy.json");
 const packageJsonPath = path.join(rootDir, "package.json");
 const npmrcPath = path.join(rootDir, ".npmrc");
@@ -16,15 +17,27 @@ function hasMetadata(entry) {
   return Boolean(entry && entry.owner && entry.rationale && entry.removeBy);
 }
 
+function isGitIgnored(entryName) {
+  const result = spawnSync("git", ["check-ignore", "--quiet", entryName], {
+    cwd: rootDir,
+    stdio: "ignore",
+  });
+
+  return result.status === 0;
+}
+
 const policy = readJson(policyPath);
 const pkg = readJson(packageJsonPath);
 const errors = [];
 
 const rootDependencies = Object.keys(pkg.dependencies ?? {});
 const rootDevDependencies = Object.keys(pkg.devDependencies ?? {});
+const rootManifestDependencySet = new Set([...rootDependencies, ...rootDevDependencies]);
 
 const allowedRootDeps = new Set(policy.allowedRootDependencies ?? []);
 const allowedRootDevDeps = new Set(policy.allowedRootDevDependencies ?? []);
+const allowedRootFiles = new Set(policy.allowedRootFiles ?? []);
+const allowedRootDirectories = new Set(policy.allowedRootDirectories ?? []);
 
 for (const dependency of rootDependencies) {
   if (!allowedRootDeps.has(dependency)) {
@@ -38,15 +51,13 @@ for (const dependency of rootDevDependencies) {
   }
 }
 
-const exceptionMap = new Map((policy.dependencyExceptions ?? []).map((entry) => [entry.name, entry]));
-
-for (const dependency of rootDevDependencies) {
-  if (!exceptionMap.has(dependency)) {
-    continue;
+for (const entry of policy.dependencyExceptions ?? []) {
+  if (!hasMetadata(entry)) {
+    errors.push(`Dependency exception missing metadata: ${entry.name}`);
   }
 
-  if (!hasMetadata(exceptionMap.get(dependency))) {
-    errors.push(`Dependency exception missing metadata: ${dependency}`);
+  if (!rootManifestDependencySet.has(entry.name)) {
+    errors.push(`Dependency exception has no root manifest entry: ${entry.name}`);
   }
 }
 
@@ -69,40 +80,22 @@ for (const forbiddenPath of policy.forbiddenRootFiles ?? []) {
   }
 }
 
-const rootFiles = fs
-  .readdirSync(rootDir, { withFileTypes: true })
-  .filter((entry) => entry.isFile())
-  .map((entry) => entry.name);
-
-const isRootConfigFile = (fileName) => {
-  if (fileName === ".npmrc") {
-    return true;
-  }
-
-  if (fileName === "pnpm-workspace.yaml" || fileName === "package.json" || fileName === "turbo.json") {
-    return true;
-  }
-
-  if (fileName === "next-env.d.ts") {
-    return true;
-  }
-
-  if (fileName.startsWith("tsconfig") && fileName.endsWith(".json")) {
-    return true;
-  }
-
-  return fileName.endsWith(".config.js") || fileName.endsWith(".config.mjs") || fileName.endsWith(".config.ts");
-};
-
-const allowlistedConfigFiles = new Set(policy.rootConfigAllowlist ?? []);
-
-for (const fileName of rootFiles) {
-  if (!isRootConfigFile(fileName)) {
+for (const entry of fs.readdirSync(rootDir, { withFileTypes: true })) {
+  if (entry.name === ".git") {
     continue;
   }
 
-  if (!allowlistedConfigFiles.has(fileName)) {
-    errors.push(`Root config file not allowlisted: ${fileName}`);
+  if (isGitIgnored(entry.name)) {
+    continue;
+  }
+
+  if (entry.isFile() && !allowedRootFiles.has(entry.name)) {
+    errors.push(`Root file not allowlisted: ${entry.name}`);
+    continue;
+  }
+
+  if (entry.isDirectory() && !allowedRootDirectories.has(entry.name)) {
+    errors.push(`Root directory not allowlisted: ${entry.name}`);
   }
 }
 

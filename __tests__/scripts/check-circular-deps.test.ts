@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { resolveExistingTargets } from "../../scripts/check-circular-deps.mjs";
+import { resolveExistingTargets } from "../../tooling/monorepo/scripts/check-circular-deps.mjs";
 
 describe("resolveExistingTargets", () => {
   it("filters out missing directories", () => {

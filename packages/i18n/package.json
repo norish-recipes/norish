@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "check:locale-keys": "node scripts/check-locale-keys.js"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./config": "./src/config.ts",

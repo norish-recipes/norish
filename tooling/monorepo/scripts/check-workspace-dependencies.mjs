@@ -4,7 +4,7 @@ import { builtinModules } from "node:module";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.resolve(scriptDir, "..");
+const rootDir = path.resolve(scriptDir, "../../..");
 
 const builtins = new Set([...builtinModules, ...builtinModules.map((name) => name.replace(/^node:/u, ""))]);
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs"]);

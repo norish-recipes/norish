@@ -59,13 +59,21 @@
     "vitest",
     "zod"
   ],
-  "rootConfigAllowlist": [
+  "allowedRootFiles": [
+    ".dockerignore",
+    ".env.example",
+    ".gitignore",
     ".npmrc",
     ".prettierignore",
     ".prettierrc",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "README.md",
+    "docker-compose.local.yml",
     "eslint.config.mjs",
-    "next-env.d.ts",
     "package.json",
+    "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "tsconfig.json",
     "tsconfig.server.json",
@@ -73,6 +81,16 @@
     "tsdown.config.ts",
     "turbo.json",
     "vitest.config.ts"
+  ],
+  "allowedRootDirectories": [
+    ".github",
+    ".vscode",
+    "__tests__",
+    "apps",
+    "docker",
+    "openspec",
+    "packages",
+    "tooling"
   ],
   "forbiddenRootFiles": [
     "next.config.js",
