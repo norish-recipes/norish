@@ -71,24 +71,28 @@ pnpm dev
 
 ```
 norish/
-├── app/              # Next.js App Router pages
-│   ├── (app)/        # Authenticated pages
-│   ├── (auth)/       # Login/signup pages
-│   └── api/          # API routes
-├── components/       # React components (HeroUI + Tailwind)
-├── context/          # React contexts
-├── hooks/            # React hooks organized by domain
-├── server/           # Backend code
-│   ├── auth/         # Authentication (Better Auth)
-│   ├── db/           # Database (Drizzle ORM)
-│   ├── trpc/         # tRPC routers
-│   └── queue/        # Background jobs (BullMQ)
-├── i18n/             # Internationalization
-│   ├── config.ts     # Locale configuration
-│   └── messages/     # Translation files
-├── types/            # TypeScript types and DTOs
-└── tooling/          # ESLint, Vitest, Tailwind configs
+├── apps/             # App workspaces
+│   └── web/          # Next.js app (App Router + server entry)
+├── packages/         # Shared libraries
+│   ├── api/          # tRPC contracts
+│   ├── auth/         # Auth helpers
+│   ├── config/       # Shared config
+│   ├── db/           # Drizzle schema + repositories
+│   ├── i18n/         # Locale tooling and data
+│   ├── queue/        # Background jobs
+│   ├── shared/       # Shared utilities
+│   └── ui/           # UI component library
+├── tooling/          # Repo tooling
+│   └── monorepo/     # Root hygiene + dependency checks
+└── docker/           # Local runtime containers
 ```
+
+## Script Ownership
+
+- Root `package.json` scripts are orchestration only and delegate into owned workspaces.
+- Monorepo control scripts live in `tooling/monorepo/scripts/`.
+- App-owned scripts live in `apps/<app>/scripts/`.
+- Package-owned scripts live in `packages/<package>/scripts/`.
 
 ## Code Style Guidelines
 

@@ -5,7 +5,10 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { resolveExistingTargets } from "../../tooling/monorepo/scripts/check-circular-deps.mjs";
+import {
+  DEFAULT_TARGETS,
+  resolveExistingTargets,
+} from "../../tooling/monorepo/scripts/check-circular-deps.mjs";
 
 describe("resolveExistingTargets", () => {
   it("filters out missing directories", () => {
@@ -21,5 +24,9 @@ describe("resolveExistingTargets", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+
+  it("excludes legacy server roots from defaults", () => {
+    expect(DEFAULT_TARGETS).not.toContain("server");
   });
 });

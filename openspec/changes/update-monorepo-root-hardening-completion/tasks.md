@@ -21,15 +21,15 @@
 
 ## 4. Legacy Reference and Documentation Alignment
 
-- [ ] 4.1 Remove stale pre-monorepo path targets from dependency-cycle checks and related validation scripts.
-- [ ] 4.2 Update server typecheck include paths to current monorepo-owned locations only.
-- [ ] 4.3 Refresh `CONTRIBUTING.md` structure documentation to reflect current monorepo layout and script ownership model.
+- [x] 4.1 Remove stale pre-monorepo path targets from dependency-cycle checks and related validation scripts.
+- [x] 4.2 Update server typecheck include paths to current monorepo-owned locations only.
+- [x] 4.3 Refresh `CONTRIBUTING.md` structure documentation to reflect current monorepo layout and script ownership model.
 
 ## 5. Validation
 
-- [ ] 5.1 Run `pnpm run hygiene:root`, `pnpm run deps:workspace`, and `pnpm run deps:cycles`.
-- [ ] 5.2 Run `pnpm lint:check`, `pnpm run typecheck`, `pnpm test:run`, and `pnpm build`.
-- [ ] 5.3 Run `openspec validate update-monorepo-root-hardening-completion --strict --no-interactive`.
+- [x] 5.1 Run `pnpm run hygiene:root`, `pnpm run deps:workspace`, and `pnpm run deps:cycles`.
+- [x] 5.2 Run `pnpm lint:check`, `pnpm run typecheck`, `pnpm test:run`, and `pnpm build`.
+- [x] 5.3 Run `openspec validate update-monorepo-root-hardening-completion --strict --no-interactive`.
 
 ## Dependencies and Parallelism Notes
 

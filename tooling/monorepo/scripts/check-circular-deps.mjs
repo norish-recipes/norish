@@ -13,7 +13,6 @@ export const DEFAULT_TARGETS = [
   "packages/queue",
   "packages/shared",
   "packages/ui",
-  "server",
 ];
 
 export function resolveExistingTargets(rootDir, candidates = DEFAULT_TARGETS) {

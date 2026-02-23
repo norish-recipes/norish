@@ -20,7 +20,9 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
+    "@testcontainers/postgresql": "^11.12.0",
     "@types/pg": "8.16.0",
-    "drizzle-kit": "0.31.9"
+    "drizzle-kit": "0.31.9",
+    "vitest": "^4.0.18"
   }
 }

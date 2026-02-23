@@ -1,5 +1,5 @@
 {
-  "include": ["apps/web/server/index.ts", "apps/web/server/**/*", "db/**/*"],
+  "include": ["apps/web/server/index.ts", "apps/web/server/**/*", "packages/db/**/*"],
   "exclude": ["node_modules", ".next"],
   "compilerOptions": {
     "outDir": "dist-server",
