@@ -39,7 +39,7 @@ jobs:
         run: pnpm install
 
       - name: Build production
-        run: pnpm run build:prod
+        run: pnpm run build
 
       - name: Free up disk space
         run: |

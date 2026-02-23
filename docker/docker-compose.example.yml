@@ -18,7 +18,7 @@ services:
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000 # Puppeteer WebSocket endpoint for web scraping
 
       # Optional
-      RECIPES_DISK_DIR: /app/uploads # Defaults to /app/uploads
+      UPLOADS_DIR: /app/uploads # Runtime volume path
       # NEXT_PUBLIC_LOG_LEVEL: info       # trace, debug, info, warn, error, fatal (default: info in prod, debug in dev)
       # TRUSTED_ORIGINS:http://192.168.1.100:3000,https://norish.example.com  # Additional trusted origins, comma separated. Useful when behind a proxy or using multiple domains.
 

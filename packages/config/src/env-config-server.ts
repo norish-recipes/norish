@@ -48,6 +48,12 @@ function findEnvPath(startDir: string): string | null {
 
 const envPath = findEnvPath(process.cwd());
 
+const defaultRuntimeRoot = path.resolve("./.runtime");
+const defaultUploadsDir =
+  process.env.NODE_ENV === "production" ? "/app/uploads" : path.join(defaultRuntimeRoot, "uploads");
+const defaultYtDlpBinDir =
+  process.env.NODE_ENV === "production" ? "/app/bin" : path.join(defaultRuntimeRoot, "bin");
+
 if (envPath) {
   config({ path: envPath, quiet: true });
 }
@@ -75,7 +81,7 @@ const ServerConfigSchema = z.object({
         : []
     )
     .pipe(z.array(z.string())),
-  UPLOADS_DIR: z.string().default(path.resolve("./uploads/")),
+  UPLOADS_DIR: z.string().default(defaultUploadsDir),
 
   DATABASE_URL: z.url(),
 
@@ -144,9 +150,7 @@ const ServerConfigSchema = z.object({
     .default(false),
   VIDEO_MAX_LENGTH_SECONDS: z.coerce.number().default(120),
   YT_DLP_VERSION: z.string().default("2025.11.12"),
-  YT_DLP_BIN_DIR: z
-    .string()
-    .default(process.env.NODE_ENV === "production" ? "/app/bin" : process.cwd()),
+  YT_DLP_BIN_DIR: z.string().default(defaultYtDlpBinDir),
 
   // Transcription Configuration (separate from AI_PROVIDER)
   TRANSCRIPTION_PROVIDER: z

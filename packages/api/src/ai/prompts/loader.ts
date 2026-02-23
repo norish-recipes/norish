@@ -5,7 +5,7 @@ import { join } from "path";
 
 import { getPrompts } from "@norish/config/server-config-loader";
 
-const PROMPTS_DIR = join(process.cwd(), "server", "ai", "prompts");
+const PROMPTS_DIR = join(process.cwd(), "packages", "api", "src", "ai", "prompts");
 
 /**
  * Load default prompts from text files.

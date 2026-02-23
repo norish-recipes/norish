@@ -56,10 +56,10 @@ jobs:
           fi
 
       - name: Run tests
-        run: pnpm test
+        run: pnpm run test:run
 
       - name: Build production
-        run: pnpm run build:prod
+        run: pnpm run build
 
       - name: Compute tag name
         id: compute_tag

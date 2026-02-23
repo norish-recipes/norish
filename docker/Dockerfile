@@ -25,7 +25,16 @@ FROM builder-base AS deps
 
 RUN apk add --no-cache python3 make g++ pkgconfig libpq-dev
 
-COPY package.json pnpm-lock.yaml .npmrc ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json .npmrc ./
+COPY apps/web/package.json ./apps/web/package.json
+COPY packages/api/package.json ./packages/api/package.json
+COPY packages/auth/package.json ./packages/auth/package.json
+COPY packages/config/package.json ./packages/config/package.json
+COPY packages/db/package.json ./packages/db/package.json
+COPY packages/i18n/package.json ./packages/i18n/package.json
+COPY packages/queue/package.json ./packages/queue/package.json
+COPY packages/shared/package.json ./packages/shared/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
 
 RUN pnpm install --frozen-lockfile
 
@@ -37,7 +46,16 @@ FROM builder-base AS prod-deps
 # Need build tools for native modules (sharp, pg, heic-convert)
 RUN apk add --no-cache python3 make g++ pkgconfig libpq-dev vips-dev
 
-COPY package.json pnpm-lock.yaml .npmrc ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json .npmrc ./
+COPY apps/web/package.json ./apps/web/package.json
+COPY packages/api/package.json ./packages/api/package.json
+COPY packages/auth/package.json ./packages/auth/package.json
+COPY packages/config/package.json ./packages/config/package.json
+COPY packages/db/package.json ./packages/db/package.json
+COPY packages/i18n/package.json ./packages/i18n/package.json
+COPY packages/queue/package.json ./packages/queue/package.json
+COPY packages/shared/package.json ./packages/shared/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
 
 # Tell sharp to use system libvips
 ENV SHARP_IGNORE_GLOBAL_LIBVIPS=0
@@ -85,7 +103,7 @@ ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     SKIP_ENV_VALIDATION=1
 
 RUN pnpm run build && \
-    rm -rf .next/cache .next/trace
+    rm -rf apps/web/.next/cache apps/web/.next/trace
 
 ##############################
 # Runtime stage (minimal, no pnpm)
@@ -118,20 +136,12 @@ ARG GID=1000
 RUN addgroup -g ${GID} -S norishapp || true && \
     adduser  -u ${UID} -S norish -G norishapp || true
 
-# Copy Next.js standalone output (includes minimal node_modules for Next.js itself)
-COPY --from=build --chown=${UID}:${GID} /app/.next/standalone ./
-
-# Copy static assets
-COPY --from=build --chown=${UID}:${GID} /app/.next/static ./.next/static
-COPY --from=build --chown=${UID}:${GID} /app/public ./public
-
-# Copy compiled backend and configs
+# Copy built workspace artifacts and runtime sources
+COPY --from=build --chown=${UID}:${GID} /app/apps ./apps
+COPY --from=build --chown=${UID}:${GID} /app/packages ./packages
 COPY --from=build --chown=${UID}:${GID} /app/dist-server ./dist-server
-COPY --from=build --chown=${UID}:${GID} /app/config ./config
-COPY --from=build --chown=${UID}:${GID} /app/server/db ./server/db
-COPY --from=build --chown=${UID}:${GID} /app/server/ai/prompts ./server/ai/prompts
 
-# Copy pruned production node_modules (overwrites/merges with standalone's minimal deps)
+# Copy pruned production node_modules
 COPY --from=prod-deps --chown=${UID}:${GID} /app/node_modules ./node_modules
 
 # Create uploads, video temp, and binaries directories

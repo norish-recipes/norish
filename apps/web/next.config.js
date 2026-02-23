@@ -3,11 +3,13 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { getNextIntlRequestConfigPath } from "./config/next-intl-request-config-path.js";
+
 const configDirectory = dirname(fileURLToPath(import.meta.url));
 const rootPackageJsonPath = resolve(configDirectory, "../../package.json");
 const packageJson = JSON.parse(readFileSync(rootPackageJsonPath, "utf-8"));
 
-const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+const withNextIntl = createNextIntlPlugin(getNextIntlRequestConfigPath());
 
 export default withNextIntl({
   output: "standalone",

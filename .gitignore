@@ -4,6 +4,7 @@
 
 # dependencies
 /node_modules
+**/node_modules/
 /.pnp
 .pnp.js
 
@@ -11,7 +12,7 @@
 /coverage
 
 # next.js
-/.next/
+**/.next/
 /out/
 
 /public/recipes/
@@ -44,6 +45,9 @@ bun.lockb
 
 # uploads
 /uploads
+
+# runtime data
+/.runtime
 
 # yt-dlp binary (downloaded at runtime)
 /yt-dlp

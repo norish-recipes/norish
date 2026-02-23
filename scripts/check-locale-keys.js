@@ -13,7 +13,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const messagesDir = path.join(__dirname, "../i18n/messages");
+const messagesDir = path.join(__dirname, "../packages/i18n/src/messages");
 
 const SOURCE_LOCALE = "en";
 

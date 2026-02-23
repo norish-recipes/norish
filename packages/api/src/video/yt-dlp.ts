@@ -107,12 +107,14 @@ export const DOWNLOAD_VIDEO_FORMAT_SELECTOR =
   "best[ext=mp4]/bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best";
 
 // In production (Docker), binary is pre-downloaded during build to /app/bin
-// In development, download to current directory on first use
+// In development, download to the configured runtime bin directory on first use
 const ytDlpPath = path.resolve(SERVER_CONFIG.YT_DLP_BIN_DIR, ytDlpFilename);
 const outputDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "video-temp");
 
 export async function ensureYtDlpBinary(): Promise<void> {
   log.debug({ ytDlpPath }, "Checking for binary");
+  await fs.mkdir(path.dirname(ytDlpPath), { recursive: true });
+
   try {
     await fs.access(ytDlpPath);
     log.debug({ ytDlpPath }, "Binary found");

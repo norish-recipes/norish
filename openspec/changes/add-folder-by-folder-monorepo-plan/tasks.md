@@ -51,13 +51,13 @@
 
 ## 6. Phase 5 - CI, Docker, and Runtime Ops Cutover
 
-- [ ] 6.1 Update root scripts and docs to workspace-aware commands.
-- [ ] 6.2 Update `.github/workflows/**` to Turbo/workspace execution model.
-- [ ] 6.3 Update `docker/Dockerfile` and compose files for `apps/web` build/runtime paths.
-- [ ] 6.4 Convert `uploads` handling to explicit runtime-volume semantics (not source migration scope).
-- [ ] 6.5 Remove committed `yt-dlp` binary from source migration path and enforce runtime/bootstrap provisioning.
-- [ ] 6.6 Run deployment build validation: workspace build plus Docker image build for `apps/web`; defer container boot and runtime health checks to phase 6.
-- [ ] 6.7 Mark phase-5 rollback checkpoint after ops cutover passes.
+- [x] 6.1 Update root scripts and docs to workspace-aware commands.
+- [x] 6.2 Update `.github/workflows/**` to Turbo/workspace execution model.
+- [x] 6.3 Update `docker/Dockerfile` and compose files for `apps/web` build/runtime paths.
+- [x] 6.4 Convert `uploads` handling to explicit runtime-volume semantics (not source migration scope).
+- [x] 6.5 Remove committed `yt-dlp` binary from source migration path and enforce runtime/bootstrap provisioning.
+- [x] 6.6 Run deployment build validation: workspace build plus Docker image build for `apps/web`; defer container boot and runtime health checks to phase 6.
+- [x] 6.7 Mark phase-5 rollback checkpoint after ops cutover passes.
 
 ## 7. Phase 6 - Hardening and Cleanup
 

@@ -111,6 +111,7 @@ services:
       MASTER_KEY: <32-byte-base64-key> # openssl rand -base64 32
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000
       REDIS_URL: redis://redis:6379
+      UPLOADS_DIR: /app/uploads
 
       # Optional
       # NEXT_PUBLIC_LOG_LEVEL: info
@@ -230,7 +231,7 @@ Server owners/admins can manage:
 | `PORT`                | Server port                                | `3000`                      |
 | `AUTH_URL`            | Public URL for auth callbacks and links    | `http://localhost:3000`     |
 | `TRUSTED_ORIGINS`     | Comma-separated additional trusted origins | (empty)                     |
-| `UPLOADS_DIR`         | Upload storage directory                   | `./uploads`                 |
+| `UPLOADS_DIR`         | Upload storage directory                   | `./.runtime/uploads` (dev), `/app/uploads` (prod) |
 | `CHROME_WS_ENDPOINT`  | Playwright CDP WebSocket endpoint          | `ws://chrome-headless:3000` |
 | `REDIS_URL`           | Redis connection URL                       | `redis://localhost:6379`    |
 | `ENABLE_REGISTRATION` | Allow new-user registration                | `false`                     |
@@ -291,7 +292,7 @@ These are only used when claim mapping is enabled.
 | `VIDEO_PARSING_ENABLED`    | Enable video parsing pipeline                   | `false`       |
 | `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length                   | `120`         |
 | `YT_DLP_VERSION`           | yt-dlp version used by downloader               | `2025.11.12`  |
-| `YT_DLP_BIN_DIR`           | Folder containing yt-dlp binary                 | env-dependent |
+| `YT_DLP_BIN_DIR`           | Folder containing yt-dlp binary                 | `./.runtime/bin` (dev), `/app/bin` (prod) |
 | `TRANSCRIPTION_PROVIDER`   | Transcription provider                          | `disabled`    |
 | `TRANSCRIPTION_ENDPOINT`   | Transcription endpoint (local/custom providers) | (empty)       |
 | `TRANSCRIPTION_API_KEY`    | Transcription API key                           | (empty)       |
@@ -336,9 +337,8 @@ pnpm install
 # Create your environment file
 cp .env.example .env.local
 
-# Start required services (for example via Docker)
-# docker run -d --name norish-db -e POSTGRES_PASSWORD=norish -e POSTGRES_DB=norish -p 5432:5432 postgres:17-alpine
-# docker run -d --name norish-redis -p 6379:6379 redis:7-alpine
+# Start required services (Postgres, Redis, Chrome)
+pnpm run docker:up
 
 # Run the app
 pnpm run dev
@@ -349,6 +349,7 @@ pnpm run dev
 | Command                  | Description                                               |
 | ------------------------ | --------------------------------------------------------- |
 | `pnpm run dev`           | Start development server with hot reload                  |
+| `pnpm run build:web`     | Build Next.js app workspace (`apps/web`)                 |
 | `pnpm run build`         | Full production build (Next.js + server + service worker) |
 | `pnpm run test`          | Run tests in watch mode                                   |
 | `pnpm run test:run`      | Run tests once                                            |
@@ -357,6 +358,8 @@ pnpm run dev
 | `pnpm run lint:check`    | Lint TypeScript files                                     |
 | `pnpm run format`        | Format files with Prettier                                |
 | `pnpm run format:check`  | Check formatting without changing files                   |
+| `pnpm run docker:up`     | Start local dependency stack via Compose                  |
+| `pnpm run docker:down`   | Stop local dependency stack                               |
 
 ---
 
@@ -415,4 +418,4 @@ This list is not limited to the below but the ones I know:
 
 Last but not least, a picture of our lovely dog Nora:
 
-<img src="./public/nora.jpg" width="25%" alt="Nora" />
+<img src="./apps/web/public/nora.jpg" width="25%" alt="Nora" />
