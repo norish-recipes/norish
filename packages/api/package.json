@@ -55,6 +55,7 @@
   "devDependencies": {
     "@types/heic-convert": "^2.1.0",
     "@types/uuid": "^11.0.0",
-    "@types/ws": "8.18.1"
+    "@types/ws": "8.18.1",
+    "vitest": "^4.0.18"
   }
 }

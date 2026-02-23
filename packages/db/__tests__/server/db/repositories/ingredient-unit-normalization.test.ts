@@ -9,8 +9,8 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 
 import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
-import { getRecipeIngredients } from "@/__tests__/helpers/db-test-helpers";
-import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
+import { getRecipeIngredients } from "../../../helpers/db-test-helpers";
+import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("Unit Normalization - Create/Edit Recipes", () => {
   let testUserId: string;

@@ -14,23 +14,12 @@
     "@eslint/compat",
     "@eslint/eslintrc",
     "@eslint/js",
-    "@heroui/react",
     "@tailwindcss/postcss",
-    "@tanstack/react-query",
-    "@testcontainers/postgresql",
-    "@testing-library/dom",
-    "@testing-library/jest-dom",
-    "@testing-library/react",
-    "@trpc/server",
-    "@trpc/tanstack-react-query",
     "@typescript-eslint/eslint-plugin",
     "@typescript-eslint/parser",
     "@vitejs/plugin-react",
-    "ai",
-    "bullmq",
     "cross-env",
     "drizzle-kit",
-    "drizzle-orm",
     "eslint",
     "eslint-config-prettier",
     "eslint-plugin-import",
@@ -41,23 +30,15 @@
     "eslint-plugin-unused-imports",
     "globals",
     "jsdom",
-    "jszip",
-    "next",
-    "pg",
     "postcss",
     "prettier",
     "prettier-plugin-tailwindcss",
-    "react",
-    "react-dom",
-    "superjson",
     "tailwindcss",
-    "testcontainers",
     "tsdown",
-    "turbo",
     "tsx",
+    "turbo",
     "typescript",
-    "vitest",
-    "zod"
+    "vitest"
   ],
   "allowedRootFiles": [
     ".dockerignore",
@@ -85,7 +66,6 @@
   "allowedRootDirectories": [
     ".github",
     ".vscode",
-    "__tests__",
     "apps",
     "docker",
     "openspec",
@@ -111,7 +91,7 @@
     {
       "path": "vitest.config.ts",
       "owner": "platform-monorepo",
-      "rationale": "Root vitest entrypoint remains while root-level tests are migrated under workspace-owned paths.",
+      "rationale": "Root vitest entrypoint remains as a command delegator while workspace-owned tests run under apps/web and packages/api.",
       "removeBy": "2026-06-30"
     },
     {
@@ -121,90 +101,5 @@
       "removeBy": "2026-06-30"
     }
   ],
-  "dependencyExceptions": [
-    {
-      "name": "@heroui/react",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports UI primitives directly from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "@tanstack/react-query",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports React Query helpers from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "@trpc/server",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports tRPC server helpers directly from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "@trpc/tanstack-react-query",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports tRPC client adapters directly from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "ai",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports AI SDK contract utilities directly from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "bullmq",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports queue primitives directly from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "drizzle-orm",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports DB helpers directly from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "jszip",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports archive helpers directly from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "next",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness still references Next.js helpers from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "pg",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports PostgreSQL types and helpers directly from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "react",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness renders React components from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "react-dom",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness requires React DOM peer dependencies for renderer setup.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "superjson",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports serialization helpers directly from root-level test files.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "name": "zod",
-      "owner": "platform-monorepo",
-      "rationale": "Root test harness imports schema utilities directly from root-level test files.",
-      "removeBy": "2026-06-30"
-    }
-  ]
+  "dependencyExceptions": []
 }

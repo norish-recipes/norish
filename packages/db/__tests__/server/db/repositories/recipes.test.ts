@@ -16,8 +16,8 @@ import {
   createTestRecipeStep,
   getRecipeIngredients,
   getRecipeSteps,
-} from "@/__tests__/helpers/db-test-helpers";
-import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
+} from "../../../helpers/db-test-helpers";
+import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("Recipe Repository - updateRecipeWithRefs", () => {
   let testUserId: string;

@@ -13,11 +13,11 @@
 
 ## 3. Temporary Exception Burn-Down via Test Ownership Migration
 
-- [ ] 3.1 Produce a root `__tests__` ownership inventory mapped to destination workspaces.
-- [ ] 3.2 Execute migration waves until root `__tests__/**` folders/files are moved into owning app/package test locations.
-- [ ] 3.3 Delete migrated root test files in the same wave and remove empty legacy root `__tests__` directories.
-- [ ] 3.4 Move dependency ownership for migrated test files into workspace manifests and remove now-unused root exceptions/devDependencies.
-- [ ] 3.5 Update hardening evidence with before/current exception counts, migrated root test counts, and any explicitly deferred remainder.
+- [x] 3.1 Produce a root `__tests__` ownership inventory mapped to destination workspaces.
+- [x] 3.2 Execute migration waves until root `__tests__/**` folders/files are moved into owning app/package test locations.
+- [x] 3.3 Delete migrated root test files in the same wave and remove empty legacy root `__tests__` directories.
+- [x] 3.4 Move dependency ownership for migrated test files into workspace manifests and remove now-unused root exceptions/devDependencies.
+- [x] 3.5 Update hardening evidence with before/current exception counts, migrated root test counts, and any explicitly deferred remainder.
 
 ## 4. Legacy Reference and Documentation Alignment
 

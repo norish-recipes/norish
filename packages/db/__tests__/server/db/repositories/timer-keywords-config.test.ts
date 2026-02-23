@@ -17,7 +17,7 @@ import path from "path";
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
-import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
+import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 import { getConfig, setConfig, deleteConfig } from "@norish/db/repositories/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { seedDefaultTimerKeywords } from "@norish/api/startup/seed-config";

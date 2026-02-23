@@ -15,7 +15,7 @@ export default defineConfig({
       MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
     },
     setupFiles: ["./tooling/vitest/setup.ts"],
-    globalSetup: ["./__tests__/setup/global-setup.ts"],
+    globalSetup: ["./packages/db/__tests__/setup/global-setup.ts"],
     hookTimeout: 60000,
     include: ["**/*.{test,spec}.{ts,tsx}"],
     exclude: ["node_modules", "**/node_modules/**", "dist-server", ".next"],

@@ -2,8 +2,8 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import { eq } from "drizzle-orm";
 
-import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
-import { getTestDb } from "@/__tests__/helpers/db-test-helpers";
+import { RepositoryTestBase } from "../../../helpers/repository-test-base";
+import { getTestDb } from "../../../helpers/db-test-helpers";
 import { users } from "@norish/db/schema";
 import { getUserPreferences, updateUserPreferences } from "@norish/db/repositories/users";
 

@@ -7,8 +7,8 @@ import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { createTestRecipeStep, getTestDb, type TestDb } from "@/__tests__/helpers/db-test-helpers";
-import { RepositoryTestBase } from "@/__tests__/helpers/repository-test-base";
+import { createTestRecipeStep, getTestDb, type TestDb } from "../../../helpers/db-test-helpers";
+import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 import {
   groceries,
   plannedItems,

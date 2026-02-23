@@ -30,12 +30,12 @@ import {
   cleanDatabase,
   createTestUser,
   createTestRecipe,
-} from "@/__tests__/helpers/db-test-helpers";
+} from "./db-test-helpers";
 import {
   setupTestDatabase,
   teardownTestDatabase,
   generateTestDbName,
-} from "@/__tests__/helpers/db-setup";
+} from "./db-setup";
 import { FullRecipeDTO, User } from "@norish/shared/contracts";
 
 export class RepositoryTestBase {
