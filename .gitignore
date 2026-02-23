@@ -64,3 +64,6 @@ docker-compose.yml
 /.sisyphus/
 
 **/.runtime/**
+
+.cache
+

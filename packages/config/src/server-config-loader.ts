@@ -10,7 +10,7 @@
  */
 
 // Import defaults for fallback when DB has no value
-import { getConfig } from "@norish/db/repositories/server-config";
+import { getConfig } from "@norish/db/repositories";
 
 import defaultUnits from "./units.default.json";
 import defaultContentIndicators from "./content-indicators.default.json";
@@ -282,8 +282,14 @@ export function buildLocaleConfigFromEnv(): I18nLocaleConfig {
   // If ENABLED_LOCALES env is set, filter enabled status
   if (envEnabledLocales.length > 0) {
     for (const locale of Object.keys(config.locales)) {
+      const localeEntry = config.locales[locale];
+
+      if (!localeEntry) {
+        continue;
+      }
+
       config.locales[locale] = {
-        ...config.locales[locale],
+        ...localeEntry,
         enabled: envEnabledLocales.includes(locale),
       };
     }

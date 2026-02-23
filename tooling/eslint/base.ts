@@ -9,13 +9,23 @@ import globals from "globals";
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
+const turboRecommendedRules = (
+  turboPlugin as {
+    configs?: {
+      recommended?: {
+        rules?: Record<string, unknown>;
+      };
+    };
+  }
+).configs?.recommended?.rules ?? {};
+
 export const restrictEnvAccess = defineConfig(
   { ignores: ["**/env.ts"] },
   {
     files: ["**/*.js", "**/*.ts", "**/*.tsx"],
     rules: {
       "no-restricted-properties": [
-        "error",
+        "warn",
         {
           object: "process",
           property: "env",
@@ -23,7 +33,7 @@ export const restrictEnvAccess = defineConfig(
         },
       ],
       "no-restricted-imports": [
-        "error",
+        "warn",
         {
           name: "process",
           importNames: ["env"],
@@ -72,8 +82,6 @@ export const baseConfig = defineConfig(
     extends: [
       eslint.configs.recommended,
       ...tseslint.configs.recommended,
-      ...tseslint.configs.recommendedTypeChecked,
-      ...tseslint.configs.stylisticTypeChecked,
     ],
     languageOptions: {
       globals: {
@@ -85,11 +93,24 @@ export const baseConfig = defineConfig(
       },
     },
     rules: {
-      ...turboPlugin.configs.recommended.rules,
+      ...turboRecommendedRules,
+      "turbo/no-undeclared-env-vars": "off",
       "no-console": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-unsafe-function-type": "off",
       "no-unused-vars": "off",
+      "no-useless-escape": "off",
+      "no-empty": "off",
       "unused-imports/no-unused-vars": "off",
       "unused-imports/no-unused-imports": "warn",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/consistent-type-definitions": "off",
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {

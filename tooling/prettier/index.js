@@ -7,10 +7,7 @@ const config = {
   printWidth: 100,
   trailingComma: "es5",
   singleQuote: false,
-  plugins: [
-    "@ianvs/prettier-plugin-sort-imports",
-    "prettier-plugin-tailwindcss",
-  ],
+  plugins: ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
   tailwindFunctions: ["cn", "cva", "clsx"],
   importOrder: [
     "<TYPES>",

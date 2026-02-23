@@ -14,7 +14,7 @@ export default defineConfig({
       SKIP_ENV_VALIDATION: "1",
       MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
     },
-    setupFiles: ["./tooling/vitest/setup.ts"],
+    setupFiles: ["./apps/web/__tests__/setup.ts"],
     globalSetup: ["./packages/db/__tests__/setup/global-setup.ts"],
     hookTimeout: 60000,
     include: ["**/*.{test,spec}.{ts,tsx}"],

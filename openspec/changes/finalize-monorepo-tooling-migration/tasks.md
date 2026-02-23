@@ -49,40 +49,40 @@
 
 ### B1. Per-Workspace ESLint Adoption
 
-- [ ] B1.1 Create `eslint.config.ts` in `apps/web/` composing `baseConfig`, `reactConfig`, `nextjsConfig`, and `restrictEnvAccess` from `@norish/eslint-config`.
-- [ ] B1.2 Create `eslint.config.ts` in each library package (`packages/api`, `packages/auth`, `packages/config`, `packages/db`, `packages/i18n`, `packages/queue`, `packages/shared`, `packages/ui`) composing `baseConfig` (and `reactConfig` for UI package).
-- [ ] B1.3 Add `lint` script to each workspace `package.json`: `eslint` (with `--flag unstable_native_nodejs_ts_config` if needed for `.ts` config files).
-- [ ] B1.4 Add `@norish/eslint-config` as devDependency to each workspace.
+- [x] B1.1 Create `eslint.config.ts` in `apps/web/` composing `baseConfig`, `reactConfig`, `nextjsConfig`, and `restrictEnvAccess` from `@norish/eslint-config`.
+- [x] B1.2 Create `eslint.config.ts` in each library package (`packages/api`, `packages/auth`, `packages/config`, `packages/db`, `packages/i18n`, `packages/queue`, `packages/shared`, `packages/ui`) composing `baseConfig` (and `reactConfig` for UI package).
+- [x] B1.3 Add `lint` script to each workspace `package.json`: `eslint` (with `--flag unstable_native_nodejs_ts_config` if needed for `.ts` config files).
+- [x] B1.4 Add `@norish/eslint-config` as devDependency to each workspace.
 
 ### B2. Per-Workspace Prettier Adoption
 
-- [ ] B2.1 Add `"prettier": "@norish/prettier-config"` to each workspace `package.json`.
-- [ ] B2.2 Add `format` script to each workspace `package.json`: `prettier --check . --ignore-path ../../.gitignore`.
-- [ ] B2.3 Add `@norish/prettier-config` as devDependency to each workspace.
+- [x] B2.1 Add `"prettier": "@norish/prettier-config"` to each workspace `package.json`.
+- [x] B2.2 Add `format` script to each workspace `package.json`: `prettier --check . --ignore-path ../../.gitignore`.
+- [x] B2.3 Add `@norish/prettier-config` as devDependency to each workspace.
 
 ### B3. Per-Workspace TypeScript Adoption
 
-- [ ] B3.1 Update `apps/web/tsconfig.json` to extend `@norish/tsconfig/base.json`, adding only web-specific options (`dom` lib, JSX, `~/` path alias). Remove all `@norish/*` path aliases.
-- [ ] B3.2 Update each library package `tsconfig.json` to extend `@norish/tsconfig/compiled-package.json` (for packages that emit types) or `@norish/tsconfig/base.json` (for non-emitting packages like `ui`).
-- [ ] B3.3 Add `typecheck` script to each workspace `package.json`: `tsc --noEmit`.
-- [ ] B3.4 Add `@norish/tsconfig` as devDependency to each workspace.
+- [x] B3.1 Update `apps/web/tsconfig.json` to extend `@norish/tsconfig/base.json`, adding only web-specific options (`dom` lib, JSX, `~/` path alias). Remove all `@norish/*` path aliases.
+- [x] B3.2 Update each library package `tsconfig.json` to extend `@norish/tsconfig/compiled-package.json` (for packages that emit types) or `@norish/tsconfig/base.json` (for non-emitting packages like `ui`).
+- [x] B3.3 Add `typecheck` script to each workspace `package.json`: `tsc --noEmit`.
+- [x] B3.4 Add `@norish/tsconfig` as devDependency to each workspace.
 
 ### B4. Per-Workspace Tailwind Adoption
 
-- [ ] B4.1 Update `apps/web/postcss.config.js` to re-export from `@norish/tailwind-config/postcss-config` (or keep inline since it's one line).
-- [ ] B4.2 Update `apps/web` CSS imports to reference `@norish/tailwind-config/theme`.
-- [ ] B4.3 Add `@norish/tailwind-config` as devDependency to `apps/web`.
+- [x] B4.1 Update `apps/web/postcss.config.js` to re-export from `@norish/tailwind-config/postcss-config` (or keep inline since it's one line).
+- [x] B4.2 Update `apps/web` CSS imports to reference `@norish/tailwind-config/theme`.
+- [x] B4.3 Add `@norish/tailwind-config` as devDependency to `apps/web`.
 
 ### B5. Vitest Migration to Workspace-Local Configs
 
-- [ ] B5.1 Create `apps/web/vitest.config.ts` with jsdom environment, React plugin, workspace-local path aliases, and reference to `apps/web/__tests__/setup.ts`.
-- [ ] B5.2 Move `tooling/vitest/setup.ts` to `apps/web/__tests__/setup.ts` (or appropriate test setup location). Delete the original `tooling/vitest/setup.ts` in the same step (move-and-prune: D8).
-- [ ] B5.3 For any packages with tests (`packages/db`, `packages/api`, `packages/shared`), create per-package `vitest.config.ts` with appropriate environment (node for db/api, jsdom for shared if needed).
-- [ ] B5.4 Add `test` script to each workspace that has tests.
+- [x] B5.1 Create `apps/web/vitest.config.ts` with jsdom environment, React plugin, workspace-local path aliases, and reference to `apps/web/__tests__/setup.ts`.
+- [x] B5.2 Move `tooling/vitest/setup.ts` to `apps/web/__tests__/setup.ts` (or appropriate test setup location). Delete the original `tooling/vitest/setup.ts` in the same step (move-and-prune: D8).
+- [x] B5.3 For any packages with tests (`packages/db`, `packages/api`, `packages/shared`), create per-package `vitest.config.ts` with appropriate environment (node for db/api, jsdom for shared if needed).
+- [x] B5.4 Add `test` script to each workspace that has tests.
 
 ### B6. Per-Workspace Clean Script
 
-- [ ] B6.1 Add `clean` script to each workspace: `git clean -xdf .cache .turbo node_modules dist`.
+- [x] B6.1 Add `clean` script to each workspace: `git clean -xdf .cache .turbo node_modules dist`.
 
 ### B7. Phase B Validation
 

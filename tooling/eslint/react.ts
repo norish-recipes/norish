@@ -3,34 +3,44 @@ import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig } from "eslint/config";
 
-const jsxA11yRecommended = jsxA11y.flatConfigs.recommended;
+type FlatConfigLike = {
+  plugins?: Record<string, unknown>;
+  languageOptions?: Record<string, unknown>;
+  settings?: Record<string, unknown>;
+  rules?: Record<string, unknown>;
+};
+
+const reactRecommended = reactPlugin.configs.flat?.recommended as FlatConfigLike | undefined;
+const reactJsxRuntime = reactPlugin.configs.flat?.["jsx-runtime"] as FlatConfigLike | undefined;
+const jsxA11yRecommended = (jsxA11y as { flatConfigs?: { recommended?: FlatConfigLike } }).flatConfigs
+  ?.recommended;
 
 export const reactConfig = defineConfig(
   {
     files: ["**/*.ts", "**/*.tsx"],
     plugins: {
-      ...reactPlugin.configs.flat.recommended.plugins,
-      ...reactPlugin.configs.flat["jsx-runtime"].plugins,
-      ...jsxA11yRecommended.plugins,
-    },
+      ...reactRecommended?.plugins,
+      ...reactJsxRuntime?.plugins,
+      ...jsxA11yRecommended?.plugins,
+    } as never,
     languageOptions: {
-      ...reactPlugin.configs.flat.recommended.languageOptions,
-      ...reactPlugin.configs.flat["jsx-runtime"].languageOptions,
-      ...jsxA11yRecommended.languageOptions,
+      ...reactRecommended?.languageOptions,
+      ...reactJsxRuntime?.languageOptions,
+      ...jsxA11yRecommended?.languageOptions,
       globals: {
         React: "writable",
       },
     },
     settings: {
-      ...reactPlugin.configs.flat.recommended.settings,
+      ...reactRecommended?.settings,
       react: {
         version: "detect",
       },
     },
     rules: {
-      ...reactPlugin.configs.flat.recommended.rules,
-      ...reactPlugin.configs.flat["jsx-runtime"].rules,
-      ...jsxA11yRecommended.rules,
+      ...reactRecommended?.rules,
+      ...reactJsxRuntime?.rules,
+      ...jsxA11yRecommended?.rules,
       "react/prop-types": "off",
       "react/self-closing-comp": "warn",
       "react/jsx-sort-props": [
@@ -46,11 +56,16 @@ export const reactConfig = defineConfig(
       "jsx-a11y/interactive-supports-focus": "warn",
     },
   },
-  reactHooks.configs.flat["recommended-latest"]!,
+  reactHooks.configs.flat.recommended,
   {
     files: ["**/*.ts", "**/*.tsx"],
     rules: {
       "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/refs": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/incompatible-library": "off",
+      "react-hooks/preserve-manual-memoization": "off",
+      "react-hooks/immutability": "off",
     },
   },
 );

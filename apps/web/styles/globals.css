@@ -1,10 +1,10 @@
 @import "tailwindcss";
-@plugin "../../../tooling/tailwind/hero.ts";
+@plugin "@norish/tailwind-config/hero";
 @source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 @custom-variant dark (&:is(.dark *));
 
 /* Import our custom theme colors */
-@import "../../../tooling/tailwind/theme.css";
+@import "@norish/tailwind-config/theme";
 
 /* Custom fade-in animation */
 @keyframes fade-in {

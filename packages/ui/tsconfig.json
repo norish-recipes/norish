@@ -1,4 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "extends": "@norish/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "dom", "dom.iterable"],
+    "jsx": "preserve",
+    "rootDir": "."
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
 }

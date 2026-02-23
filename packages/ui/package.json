@@ -8,11 +8,21 @@
     "./rating-stars": "./src/rating-stars.tsx",
     "./star-rating": "./src/star-rating.tsx"
   },
+  "scripts": {
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo node_modules dist"
+  },
   "dependencies": {
     "@heroicons/react": "2.2.0",
     "react": "19.2.4"
   },
   "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
     "@types/react": "19.2.14"
-  }
+  },
+  "prettier": "@norish/prettier-config"
 }

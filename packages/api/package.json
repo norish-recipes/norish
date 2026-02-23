@@ -9,6 +9,13 @@
     "./logger": "./src/logger.ts",
     "./*": "./src/*"
   },
+  "scripts": {
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo node_modules dist",
+    "test": "vitest run --config ./vitest.config.ts"
+  },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.46",
     "@ai-sdk/azure": "^3.0.31",
@@ -53,9 +60,13 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
     "@types/heic-convert": "^2.1.0",
     "@types/uuid": "^11.0.0",
     "@types/ws": "8.18.1",
     "vitest": "^4.0.18"
-  }
+  },
+  "prettier": "@norish/prettier-config"
 }

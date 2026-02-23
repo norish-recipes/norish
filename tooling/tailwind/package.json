@@ -21,6 +21,7 @@
     "@heroui/react": "^2.8.9"
   },
   "devDependencies": {
+    "@heroui/react": "^2.8.9",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
     "@types/node": "^25.3.0",

@@ -1,4 +1,14 @@
 {
-  "extends": "../../tsconfig.json",
-  "include": ["./**/*.ts", "./**/*.tsx"]
+  "extends": "@norish/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "dom", "dom.iterable"],
+    "jsx": "preserve",
+    "paths": {
+      "@/*": ["./*"],
+      "~/*": ["./*"]
+    },
+    "plugins": [{ "name": "next" }]
+  },
+  "include": [".", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }
