@@ -21,16 +21,36 @@ const logLevel: LogLevel =
   (process.env.LOG_LEVEL as LogLevel) ||
   (isDev ? "debug" : "info");
 
+const isNextRuntime =
+  !!process.env.NEXT_RUNTIME || !!process.env.__NEXT_PRIVATE_ORIGINAL_ENV || !!process.env.NEXT_PHASE;
+
+const prettyTransport = { target: "pino-pretty", options: { colorize: true } };
+
+export function buildLoggerConfig() {
+  if (isDev && !isNextRuntime) {
+    return { level: logLevel, transport: prettyTransport };
+  }
+
+  return { level: logLevel, transport: undefined };
+}
+
+function createRootLogger() {
+  const config = buildLoggerConfig();
+
+  try {
+    return pino(config);
+  } catch {
+    return pino({ level: logLevel });
+  }
+}
+
 /**
  * Server-side pino logger
  *
- * Development: Pipe output through pino-pretty in dev script
+ * Development: Use pino-pretty transport when available
  * Production: Plain JSON to stdout for log aggregation
  */
-const logger = pino({
-  level: logLevel,
-  transport: isDev ? { target: "pino-pretty", options: { colorize: true } } : undefined,
-});
+const logger = createRootLogger();
 
 export { logger };
 

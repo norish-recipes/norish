@@ -1,21 +1,25 @@
 import http from "node:http";
+import { join } from "node:path";
 import { parse } from "node:url";
 
 import next from "next";
 
 import { initTrpcWebSocket } from "../trpc";
+import { resolveExistingWorkspacePath } from "@norish/api/lib/workspace-paths";
 
 import { serveStaticFile } from "./static-files";
 
 import { serverLogger } from "@norish/api/logger";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
+const WEB_APP_DIR = resolveExistingWorkspacePath(join("apps", "web"));
+
 export async function createServer() {
   const dev = SERVER_CONFIG.NODE_ENV === "development";
   const hostname = dev ? "0.0.0.0" : SERVER_CONFIG.HOST;
   const port = SERVER_CONFIG.PORT;
 
-  const app = next({ dev, dir: "apps/web", hostname, port, turbopack: dev });
+  const app = next({ dev, dir: WEB_APP_DIR, hostname, port, turbopack: dev });
   const handle = app.getRequestHandler();
 
   await app.prepare();

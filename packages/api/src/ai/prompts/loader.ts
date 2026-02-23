@@ -1,11 +1,12 @@
 import type { PromptsConfigInput } from "@norish/config/zod/server-config";
 
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
+import { resolveExistingWorkspacePath } from "@norish/api/lib/workspace-paths";
 import { getPrompts } from "@norish/config/server-config-loader";
 
-const PROMPTS_DIR = join(process.cwd(), "packages", "api", "src", "ai", "prompts");
+const PROMPTS_DIR = resolveExistingWorkspacePath(join("packages", "api", "src", "ai", "prompts"));
 
 /**
  * Load default prompts from text files.

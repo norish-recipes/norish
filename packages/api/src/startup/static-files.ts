@@ -5,12 +5,14 @@ import { IncomingMessage, ServerResponse } from "http";
 
 import mime from "mime";
 
+import { resolveExistingWorkspacePath } from "@norish/api/lib/workspace-paths";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { serverLogger } from "@norish/api/logger";
 
 const STATIC_EXCLUDED_PATHS = ["/", "/manifest.webmanifest", "/_next", "/api"];
 
 const GZIP_MIME_TYPES = ["text/", "application/javascript", "application/json", "image/svg"];
+const STATIC_PUBLIC_DIR = resolveExistingWorkspacePath(join("apps", "web", "public"));
 
 export function serveStaticFile(req: IncomingMessage, res: ServerResponse): boolean {
   try {
@@ -22,7 +24,7 @@ export function serveStaticFile(req: IncomingMessage, res: ServerResponse): bool
       return false;
     }
 
-    const filePath = join(process.cwd(), "apps/web/public", pathname);
+    const filePath = join(STATIC_PUBLIC_DIR, pathname);
 
     if (!existsSync(filePath)) return false;
 

@@ -23,6 +23,7 @@
     "@heroui/navbar": "^2.2.29",
     "@heroui/react": "^2.8.9",
     "@heroui/system": "^2.4.27",
+    "@heroui/theme": "^2.4.26",
     "@heroui/toast": "^2.0.21",
     "@iconify/react": "^6.0.2",
     "@internationalized/date": "^3.11.0",
