@@ -2,14 +2,14 @@ import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { VideoProcessorContext, VideoMetadata } from "../types";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
-import { BaseVideoProcessor } from "../base-processor";
-
 import { videoLogger as log } from "@norish/api/logger";
 import { transcribeAudio } from "@norish/api/ai/transcriber";
 import { extractRecipeFromVideo } from "@norish/api/video/normalizer";
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import { downloadImage } from "@norish/api/downloader";
 import { fetchViaPlaywright } from "@norish/api/parser/fetch";
+
+import { BaseVideoProcessor } from "../base-processor";
 
 /**
  * Check if metadata indicates an image post (no video content).

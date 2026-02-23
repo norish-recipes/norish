@@ -1,8 +1,4 @@
 import { z } from "zod";
-
-import { router } from "../../trpc";
-import { adminProcedure } from "../../middleware";
-
 import { trpcLogger as log } from "@norish/api/logger";
 import { setConfig, getConfig } from "@norish/db/repositories/server-config";
 import {
@@ -15,6 +11,9 @@ import {
   type PromptsConfig,
   type TimerKeywordsConfig,
 } from "@norish/config/zod/server-config";
+
+import { adminProcedure } from "../../middleware";
+import { router } from "../../trpc";
 
 /**
  * Update content indicators config.

@@ -19,13 +19,13 @@ import {
 } from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { cssButtonPill, cssAIGradientText, cssAIIconColor } from "@norish/web/config/css-tokens";
 
 import { useRecipeContextRequired } from "../context";
 
 import { useWakeLockContext } from "./wake-lock-context";
 
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
-import { cssButtonPill, cssAIGradientText, cssAIIconColor } from "@norish/web/config/css-tokens";
 import { MiniGroceries, MiniCalendar } from "@/components/Panel/consumers";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";

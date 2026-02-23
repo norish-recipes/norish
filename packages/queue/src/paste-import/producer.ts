@@ -6,11 +6,14 @@
  */
 
 import type { Queue } from "bullmq";
-import type { PasteImportJobData, AddPasteImportJobResult } from "@norish/queue/contracts/job-types";
-
-import { isJobInQueue } from "../helpers";
+import type {
+  PasteImportJobData,
+  AddPasteImportJobResult,
+} from "@norish/queue/contracts/job-types";
 
 import { createLogger } from "@norish/api/logger";
+
+import { isJobInQueue } from "../helpers";
 
 const log = createLogger("queue:paste-import");
 

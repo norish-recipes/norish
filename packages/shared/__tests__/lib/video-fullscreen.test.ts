@@ -1,6 +1,5 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-
 import { isFullscreenControlSupported } from "@norish/shared/lib/video-fullscreen";
 
 describe("isFullscreenControlSupported", () => {

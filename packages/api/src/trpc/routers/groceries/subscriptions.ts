@@ -1,12 +1,12 @@
 import type { GrocerySubscriptionEvents } from "./types";
 
+import { trpcLogger as log } from "@norish/api/logger";
+
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 import { createSubscriptionIterable } from "../../helpers";
 
 import { groceryEmitter } from "./emitter";
-
-import { trpcLogger as log } from "@norish/api/logger";
 
 const onCreated = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const eventName = groceryEmitter.householdEvent(ctx.householdKey, "created");

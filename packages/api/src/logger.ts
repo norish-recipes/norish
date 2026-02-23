@@ -22,7 +22,9 @@ const logLevel: LogLevel =
   (isDev ? "debug" : "info");
 
 const isNextRuntime =
-  !!process.env.NEXT_RUNTIME || !!process.env.__NEXT_PRIVATE_ORIGINAL_ENV || !!process.env.NEXT_PHASE;
+  !!process.env.NEXT_RUNTIME ||
+  !!process.env.__NEXT_PRIVATE_ORIGINAL_ENV ||
+  !!process.env.NEXT_PHASE;
 
 const prettyTransport = { target: "pino-pretty", options: { colorize: true } };
 

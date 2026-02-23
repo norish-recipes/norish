@@ -5,10 +5,10 @@ import type { ApiKeyMetadataDto } from "@norish/api/trpc/routers/user/types";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 
 import { useMutation } from "@tanstack/react-query";
+import { getUserPreferences } from "@norish/shared/lib/user-preferences";
 
 import { useUserCacheHelpers } from "./use-user-cache";
 
-import { getUserPreferences } from "@norish/shared/lib/user-preferences";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type UserMutationsResult = {

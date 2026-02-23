@@ -5,11 +5,11 @@ import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/hou
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { addToast } from "@heroui/react";
 import { useTranslations } from "next-intl";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import { useHouseholdCacheHelpers } from "./use-household-cache";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 import { useUser } from "@/hooks/use-user";
 
 /**

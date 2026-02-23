@@ -72,15 +72,8 @@
     "packages",
     "tooling"
   ],
-  "forbiddenRootFiles": [
-    "next.config.js",
-    "postcss.config.js",
-    "i18n/request.ts"
-  ],
-  "disallowedNpmrcSettings": [
-    "shamefully-hoist=true",
-    "strict-peer-dependencies=false"
-  ],
+  "forbiddenRootFiles": ["next.config.js", "postcss.config.js", "i18n/request.ts"],
+  "disallowedNpmrcSettings": ["shamefully-hoist=true", "strict-peer-dependencies=false"],
   "temporaryShims": [
     {
       "path": "eslint.config.mjs",

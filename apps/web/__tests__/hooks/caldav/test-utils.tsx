@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
-import type { UserCaldavConfigWithoutPasswordDto, CaldavSyncStatusSummaryDto } from "@norish/shared/contracts";
-import type { CaldavSyncStatusViewDto, CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
+import type {
+  UserCaldavConfigWithoutPasswordDto,
+  CaldavSyncStatusSummaryDto,
+} from "@norish/shared/contracts";
+import type {
+  CaldavSyncStatusViewDto,
+  CaldavSyncStatus,
+} from "@norish/shared/contracts/dto/caldav-sync-status";
 
 import { vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

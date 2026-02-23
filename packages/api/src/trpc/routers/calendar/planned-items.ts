@@ -1,13 +1,10 @@
-import type { PlannedItemWithRecipePayload, SlotItemSortUpdate } from "@norish/shared/contracts/zod";
+import type {
+  PlannedItemWithRecipePayload,
+  SlotItemSortUpdate,
+} from "@norish/shared/contracts/zod";
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-
-import { authedProcedure } from "../../middleware";
-import { router } from "../../trpc";
-
-import { calendarEmitter } from "./emitter";
-
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   createPlannedItem,
@@ -20,6 +17,11 @@ import {
   updatePlannedItem,
 } from "@norish/db/repositories/planned-items";
 import { trpcLogger as log } from "@norish/api/logger";
+
+import { authedProcedure } from "../../middleware";
+import { router } from "../../trpc";
+
+import { calendarEmitter } from "./emitter";
 
 const slotSchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
 const itemTypeSchema = z.enum(["recipe", "note"]);

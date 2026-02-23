@@ -1,8 +1,11 @@
 # dependency-boundaries Specification
 
 ## Purpose
+
 TBD - created by archiving change refactor-turborepo-monorepo-foundation. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Circular Dependency Baseline and Remediation
 
 The migration SHALL start from an explicit circular dependency baseline and remove all detected circular imports before finalizing workspace extraction.
@@ -69,4 +72,3 @@ Any root dependency exception used during migration hardening SHALL be treated a
 - **AND** each temporary exception SHALL link to tracked migration work that removes the cited root-owned usage
 - **AND** exceptions tied only to tests/helpers that have been migrated into owning workspaces SHALL be removed from root manifest/policy allowlists in that migration wave
 - **AND** exceptions without active root-owned usage SHALL be removed from root manifest/policy allowlists.
-

@@ -1,7 +1,6 @@
 // @vitest-environment node
 
 import { describe, it, expect } from "vitest";
-
 import { RECIPE_IMPORT_PROCESSING_TIMEOUT_MS } from "@norish/queue/config";
 
 describe("Queue config", () => {

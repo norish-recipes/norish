@@ -6,7 +6,6 @@ import type {
 } from "@norish/shared/contracts/dto/caldav-config";
 
 import { eq } from "drizzle-orm";
-
 import { db } from "@norish/db/drizzle";
 import { userCaldavConfig } from "@norish/db/schema";
 import { encrypt, decrypt } from "@norish/auth/crypto";

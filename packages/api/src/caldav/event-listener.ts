@@ -4,7 +4,6 @@ import type { Slot } from "@norish/shared/contracts";
 import type Redis from "ioredis";
 
 import superjson from "superjson";
-
 import { getQueues } from "@norish/queue/registry";
 import { addCaldavSyncJob } from "@norish/queue/caldav-sync/producer";
 import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";

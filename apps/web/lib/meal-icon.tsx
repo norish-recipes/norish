@@ -1,5 +1,4 @@
 import { SunIcon, FireIcon, MoonIcon, SparklesIcon } from "@heroicons/react/16/solid";
-
 import { Slot } from "@norish/shared/contracts";
 
 export function MealIcon({

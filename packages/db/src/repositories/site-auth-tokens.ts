@@ -7,7 +7,6 @@ import type {
 } from "@norish/shared/contracts/dto/site-auth-tokens";
 
 import { eq, and } from "drizzle-orm";
-
 import { db } from "@norish/db/drizzle";
 import { siteAuthTokens } from "@norish/db/schema";
 import { encrypt, decrypt } from "@norish/auth/crypto";

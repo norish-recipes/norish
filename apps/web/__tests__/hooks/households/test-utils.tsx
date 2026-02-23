@@ -1,4 +1,7 @@
-import type { HouseholdSettingsDto, HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
+import type {
+  HouseholdSettingsDto,
+  HouseholdAdminSettingsDto,
+} from "@norish/shared/contracts/dto/household";
 import type { ReactNode } from "react";
 import type { HouseholdData } from "@/hooks/households/use-household-query";
 

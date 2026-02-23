@@ -8,10 +8,9 @@
 import { on } from "node:events";
 
 import superjson from "superjson";
+import { redisLogger } from "@norish/api/logger";
 
 import { getPublisherClient, createSubscriberClient } from "./client";
-
-import { redisLogger } from "@norish/api/logger";
 
 const CHANNEL_PREFIX = "norish";
 

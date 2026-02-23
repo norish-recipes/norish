@@ -17,10 +17,9 @@ import type Redis from "ioredis";
 import { EventEmitter } from "node:events";
 
 import superjson from "superjson";
+import { redisLogger as log } from "@norish/api/logger";
 
 import { createSubscriberClient } from "./client";
-
-import { redisLogger as log } from "@norish/api/logger";
 
 const CHANNEL_PREFIX = "norish";
 

@@ -7,9 +7,9 @@ import {
   StarIcon,
 } from "@heroicons/react/20/solid";
 import { Chip, Button } from "@heroui/react";
+import { cssGlassBackdropChip } from "@norish/web/config/css-tokens";
 
 import HeartButton from "@/components/shared/heart-button";
-import { cssGlassBackdropChip } from "@norish/web/config/css-tokens";
 
 interface RecipeMetadataProps {
   timeLabel?: string | null;

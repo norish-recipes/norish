@@ -7,7 +7,6 @@ import type {
 } from "@norish/shared/contracts/dto/caldav-sync-status";
 
 import { eq, and, inArray, desc, sql } from "drizzle-orm";
-
 import { db } from "@norish/db/drizzle";
 import { caldavSyncStatus, plannedItems } from "@norish/db/schema";
 import {

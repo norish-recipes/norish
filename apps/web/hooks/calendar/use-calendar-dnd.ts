@@ -12,8 +12,8 @@ import {
 } from "@dnd-kit/core";
 import { useState, useCallback, useMemo, useRef } from "react";
 import { arrayMove } from "@dnd-kit/sortable";
-
 import { CalendarItemViewDto, Slot } from "@norish/shared/contracts";
+
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 
 export type CalendarContainerId = string;

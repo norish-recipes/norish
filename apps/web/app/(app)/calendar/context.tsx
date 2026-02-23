@@ -10,6 +10,8 @@ import {
   useRef,
   useEffect,
 } from "react";
+import { Slot } from "@norish/shared/contracts";
+import { dateKey, addWeeks, getWeekStart, getWeekEnd } from "@norish/shared/lib/helpers";
 
 import {
   useCalendarQuery,
@@ -17,8 +19,6 @@ import {
   useCalendarSubscription,
   type CalendarData,
 } from "@/hooks/calendar";
-import { Slot } from "@norish/shared/contracts";
-import { dateKey, addWeeks, getWeekStart, getWeekEnd } from "@norish/shared/lib/helpers";
 
 type PlannedItem = {
   id: string;

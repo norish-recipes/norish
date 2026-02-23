@@ -6,7 +6,10 @@ import { fileURLToPath } from "node:url";
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(scriptDir, "../../..");
 
-const builtins = new Set([...builtinModules, ...builtinModules.map((name) => name.replace(/^node:/u, ""))]);
+const builtins = new Set([
+  ...builtinModules,
+  ...builtinModules.map((name) => name.replace(/^node:/u, "")),
+]);
 const sourceExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs"]);
 
 const importPattern =
@@ -59,7 +62,12 @@ function normalizeDependencyName(specifier) {
     return null;
   }
 
-  if (specifier.startsWith("./") || specifier.startsWith("../") || specifier.startsWith("/") || specifier.startsWith("@/")) {
+  if (
+    specifier.startsWith("./") ||
+    specifier.startsWith("../") ||
+    specifier.startsWith("/") ||
+    specifier.startsWith("@/")
+  ) {
     return null;
   }
 
@@ -85,7 +93,11 @@ function normalizeDependencyName(specifier) {
 }
 
 function isDevFile(filePath) {
-  return /\.(test|spec)\.[jt]sx?$/u.test(filePath) || filePath.includes("__tests__") || filePath.includes("/tests/");
+  return (
+    /\.(test|spec)\.[jt]sx?$/u.test(filePath) ||
+    filePath.includes("__tests__") ||
+    filePath.includes("/tests/")
+  );
 }
 
 function getDeclaredDependencies(packageJson) {
@@ -158,8 +170,11 @@ for (const workspaceDir of workspaceDirs) {
 
   const missing = [];
 
-  for (const [dependencyName, usage] of [...missingDependencies.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-    const sampleFile = usage.prodFiles.values().next().value ?? usage.devFiles.values().next().value;
+  for (const [dependencyName, usage] of [...missingDependencies.entries()].sort(([a], [b]) =>
+    a.localeCompare(b)
+  )) {
+    const sampleFile =
+      usage.prodFiles.values().next().value ?? usage.devFiles.values().next().value;
     const targetSection = usage.prodFiles.size > 0 ? "dependencies" : "devDependencies";
     missing.push({
       dependencyName,
@@ -182,7 +197,9 @@ if (failures.length > 0) {
     console.error(`\n- ${failure.workspaceName} (${failure.workspaceDir})`);
 
     for (const item of failure.missing) {
-      console.error(`  - ${item.dependencyName} (used in ${item.sampleFile}; add to ${item.targetSection})`);
+      console.error(
+        `  - ${item.dependencyName} (used in ${item.sampleFile}; add to ${item.targetSection})`
+      );
     }
   }
 

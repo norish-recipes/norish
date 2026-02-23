@@ -1,7 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export function resolveExistingWorkspacePath(relativePath: string, startDir = process.cwd()): string {
+export function resolveExistingWorkspacePath(
+  relativePath: string,
+  startDir = process.cwd()
+): string {
   let currentDir = startDir;
 
   while (true) {

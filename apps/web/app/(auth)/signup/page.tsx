@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
-
-import { SignupClient } from "./components/signup-client";
-
 import { isPasswordAuthEnabled } from "@norish/auth/providers";
 import { isRegistrationEnabled } from "@norish/config/server-config-loader";
+
+import { SignupClient } from "./components/signup-client";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

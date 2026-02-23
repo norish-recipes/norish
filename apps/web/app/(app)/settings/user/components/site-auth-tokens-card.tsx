@@ -26,11 +26,11 @@ import { ShieldCheckIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outlin
 import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import NewFeatureChip from "../../components/new-feature-chip";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");

@@ -4,6 +4,9 @@ import { promisify } from "util";
 
 import JSZip from "jszip";
 import { z } from "zod";
+import { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { matchCategory } from "@norish/api/ai/utils/category-matcher";
+import { serverLogger as log } from "@norish/api/logger";
 
 import {
   parseHumanDurationToMinutes,
@@ -12,10 +15,6 @@ import {
   saveBufferImage,
   buildRecipeDTO,
 } from "./parser-helpers";
-
-import { FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { matchCategory } from "@norish/api/ai/utils/category-matcher";
-import { serverLogger as log } from "@norish/api/logger";
 
 const gunzipAsync = promisify(gunzip);
 

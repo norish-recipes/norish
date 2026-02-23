@@ -1,4 +1,6 @@
 import { eq } from "drizzle-orm";
+import { encrypt, decrypt } from "@norish/auth/crypto";
+import { dbLogger } from "@norish/api/logger";
 
 import { db } from "../drizzle";
 import { serverConfig } from "../schema/server-config";
@@ -8,9 +10,6 @@ import {
   SENSITIVE_CONFIG_KEYS,
   validateConfigValue,
 } from "../zodSchemas/server-config";
-
-import { encrypt, decrypt } from "@norish/auth/crypto";
-import { dbLogger } from "@norish/api/logger";
 
 export async function getConfig<T = unknown>(
   key: ServerConfigKey,

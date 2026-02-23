@@ -1,8 +1,11 @@
 # monorepo-architecture Specification
 
 ## Purpose
+
 TBD - created by archiving change refactor-turborepo-monorepo-foundation. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Tailored Turborepo Workspace Layout
 
 The repository SHALL adopt a Turborepo workspace layout tailored to Norish, with `apps/*` and `packages/*` boundaries and no unrelated template applications.
@@ -56,4 +59,3 @@ The repository root manifest SHALL function as a workspace control plane and SHA
 - **THEN** runtime libraries used by web/backend execution (for example framework, API/runtime SDKs, DB drivers, and queue runtimes) SHALL be declared in owning `apps/*` or `packages/*` manifests
 - **AND** root `dependencies` SHALL remain limited to approved workspace-link/root-control-plane entries
 - **AND** root `devDependencies` SHALL be limited to approved root tooling entries plus explicitly documented temporary exceptions tied to root-owned files.
-

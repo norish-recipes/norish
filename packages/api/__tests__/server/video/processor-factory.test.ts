@@ -2,7 +2,6 @@
 import type { VideoProcessor, VideoProcessorContext } from "@norish/api/video/types";
 
 import { describe, it, expect, beforeEach } from "vitest";
-
 import { VideoProcessorFactory } from "@norish/api/video/processor-factory";
 
 // Mock processor for testing

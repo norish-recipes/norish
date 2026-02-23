@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("useRecipeId");
 

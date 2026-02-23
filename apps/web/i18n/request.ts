@@ -2,9 +2,7 @@ import "server-only";
 
 import { getRequestConfig } from "next-intl/server";
 import { cookies, headers } from "next/headers";
-
 import { DEFAULT_LOCALE, isValidLocale, loadLocaleMessages, type Locale } from "@norish/i18n";
-
 import { auth } from "@norish/auth/auth";
 import { getUserPreferences } from "@norish/db/repositories/users";
 import {

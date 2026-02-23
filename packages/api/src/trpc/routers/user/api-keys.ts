@@ -1,10 +1,10 @@
+import { trpcLogger as log } from "@norish/api/logger";
+import { createApiKey, deleteApiKey, enableApiKey, disableApiKey } from "@norish/db";
+
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 
 import { CreateApiKeyInputSchema, DeleteApiKeyInputSchema, ToggleApiKeyInputSchema } from "./types";
-
-import { trpcLogger as log } from "@norish/api/logger";
-import { createApiKey, deleteApiKey, enableApiKey, disableApiKey } from "@norish/db";
 
 /**
  * Create a new API key

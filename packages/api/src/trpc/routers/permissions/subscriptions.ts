@@ -1,12 +1,12 @@
 import type { PermissionsSubscriptionEvents } from "./types";
 
+import { trpcLogger as log } from "@norish/api/logger";
+
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 import { mergeAsyncIterables, createSubscriptionIterable } from "../../helpers";
 
 import { permissionsEmitter } from "./emitter";
-
-import { trpcLogger as log } from "@norish/api/logger";
 
 const onPolicyUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {
   // Listen to both broadcast events (admin changes policy) AND user-specific events

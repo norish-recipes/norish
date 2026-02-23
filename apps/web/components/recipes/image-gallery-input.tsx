@@ -22,11 +22,11 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { XMarkIcon, PhotoIcon, StarIcon, Bars2Icon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 import { useRecipeImages } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
-import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
-import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("ImageGalleryInput");
 

@@ -7,7 +7,6 @@
  */
 import { generateText } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import { isAIEnabled, getAutoTaggingMode } from "@norish/config/server-config-loader";
 import { generateTagsForRecipe } from "@norish/api/ai/auto-tagger";
 import { listAllTagNames } from "@norish/db/repositories/tags";

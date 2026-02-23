@@ -1,7 +1,6 @@
 // @vitest-environment node
 
 import { describe, it, expect } from "vitest";
-
 import { withTimeout } from "@norish/queue/helpers";
 
 describe("withTimeout", () => {

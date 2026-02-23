@@ -9,6 +9,16 @@ import {
 } from "@heroicons/react/16/solid";
 import { Card, CardBody, Chip, Divider, Link } from "@heroui/react";
 import { useTranslations } from "next-intl";
+import {
+  formatMinutesHM,
+  sortTagsWithAllergyPriority,
+  isAllergenTag,
+} from "@norish/shared/lib/helpers";
+import StarRating from "@norish/ui/star-rating";
+import {
+  getShowFavoritesPreference,
+  getShowRatingsPreference,
+} from "@norish/shared/lib/user-preferences";
 
 import AuthorChip from "./components/author-chip";
 import { useRecipeContextRequired } from "./context";
@@ -21,18 +31,15 @@ import AmountDisplayToggle from "@/app/(app)/recipes/[id]/components/amount-disp
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
-import { formatMinutesHM, sortTagsWithAllergyPriority, isAllergenTag } from "@norish/shared/lib/helpers";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import HeartButton from "@/components/shared/heart-button";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
-import StarRating from "@norish/ui/star-rating";
 import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
 import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import { NutritionSection } from "@/components/recipes/nutrition-card";
 import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/app/(app)/recipes/[id]/recipe-layout-constants";
 import { useUserContext } from "@/context/user-context";
-import { getShowFavoritesPreference, getShowRatingsPreference } from "@norish/shared/lib/user-preferences";
 
 export default function RecipePageMobile() {
   const {

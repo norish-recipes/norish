@@ -23,10 +23,9 @@ import {
 import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { UserMinusIcon, ShieldCheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import { useHouseholdSettingsContext } from "../context";
-
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 export default function MembersCard() {
   const t = useTranslations("settings.household.members");

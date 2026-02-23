@@ -6,21 +6,6 @@ import { nextCookies } from "better-auth/next-js";
 import { apiKey, genericOAuth } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-
-import {
-  getCachedGitHubProvider,
-  getCachedGoogleProvider,
-  getCachedOIDCProvider,
-  getCachedOIDCClaimConfig,
-  getCachedPasswordAuthEnabled,
-} from "./provider-cache";
-import {
-  processClaimsForUser,
-  mergeOIDCTokenClaims,
-  storeOIDCProfile,
-  getPendingOIDCProfile,
-} from "./claim-processor";
-
 import { getPublisherClient } from "@norish/queue/redis/client";
 import { db } from "@norish/db/drizzle";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -31,6 +16,20 @@ import { countUsers } from "@norish/db/repositories/users";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import * as schema from "@norish/db/schema/auth";
 import { authLogger } from "@norish/api/logger";
+
+import {
+  processClaimsForUser,
+  mergeOIDCTokenClaims,
+  storeOIDCProfile,
+  getPendingOIDCProfile,
+} from "./claim-processor";
+import {
+  getCachedGitHubProvider,
+  getCachedGoogleProvider,
+  getCachedOIDCProvider,
+  getCachedOIDCClaimConfig,
+  getCachedPasswordAuthEnabled,
+} from "./provider-cache";
 
 /**
  * Creates a wrapped adapter factory that intercepts user email lookups

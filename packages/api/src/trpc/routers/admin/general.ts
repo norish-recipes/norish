@@ -1,8 +1,4 @@
 import { z } from "zod";
-
-import { router } from "../../trpc";
-import { adminProcedure } from "../../middleware";
-
 import { trpcLogger as log } from "@norish/api/logger";
 import { setConfig, configExists, getConfig } from "@norish/db/repositories/server-config";
 import {
@@ -10,6 +6,9 @@ import {
   I18nLocaleConfigSchema,
   type I18nLocaleConfig,
 } from "@norish/config/zod/server-config";
+
+import { adminProcedure } from "../../middleware";
+import { router } from "../../trpc";
 
 /**
  * Update registration enabled setting.

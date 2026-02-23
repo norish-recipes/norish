@@ -2,7 +2,6 @@ import type { VideoMetadata } from "./types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 
 import { generateText, Output } from "ai";
-
 import { videoLogger } from "@norish/api/logger";
 import { getModels, getGenerationSettings } from "@norish/api/ai/providers";
 import { recipeExtractionSchema } from "@norish/api/ai/schemas/recipe.schema";

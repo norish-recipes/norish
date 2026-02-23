@@ -17,6 +17,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWindowSize } from "usehooks-ts";
+import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 
 import { DesktopScrollToToday } from "./desktop-scroll-to-today";
 import { DesktopDayCard } from "./desktop-day-card";
@@ -24,7 +25,6 @@ import { DesktopDragOverlay } from "./desktop-drag-overlay";
 
 import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 import { SLOT_ORDER } from "@/components/calendar/mobile/types";
 
 function startOfDay(date: Date): Date {

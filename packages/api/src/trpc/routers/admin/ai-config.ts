@@ -1,9 +1,4 @@
 import { z } from "zod";
-
-import { router } from "../../trpc";
-import { adminProcedure } from "../../middleware";
-import { permissionsEmitter } from "../permissions/emitter";
-
 import { trpcLogger as log } from "@norish/api/logger";
 import { setConfig, getConfig } from "@norish/db/repositories/server-config";
 import { getRecipesWithoutCategories } from "@norish/db/repositories/recipes";
@@ -20,6 +15,10 @@ import {
   type AIConfig,
   type VideoConfig,
 } from "@norish/config/zod/server-config";
+
+import { permissionsEmitter } from "../permissions/emitter";
+import { adminProcedure } from "../../middleware";
+import { router } from "../../trpc";
 
 /**
  * Update AI config.

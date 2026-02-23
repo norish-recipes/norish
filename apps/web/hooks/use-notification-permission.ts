@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const logger = createClientLogger("notification-permission");

@@ -1,15 +1,11 @@
-import type { HouseholdSettingsDto, HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
+import type {
+  HouseholdSettingsDto,
+  HouseholdAdminSettingsDto,
+} from "@norish/shared/contracts/dto/household";
 import type { HouseholdUserInfo } from "./types";
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-
-import { router } from "../../trpc";
-import { authedProcedure } from "../../middleware";
-import { emitConnectionInvalidation } from "../../connection-manager";
-
-import { householdEmitter } from "./emitter";
-
 import {
   getHouseholdForUser,
   findHouseholdByJoinCode,
@@ -36,6 +32,12 @@ import {
 } from "@norish/shared/lib/validation/schemas";
 import { trpcLogger as log } from "@norish/api/logger";
 import { permissionsEmitter } from "@norish/api/trpc/routers/permissions/emitter";
+
+import { emitConnectionInvalidation } from "../../connection-manager";
+import { authedProcedure } from "../../middleware";
+import { router } from "../../trpc";
+
+import { householdEmitter } from "./emitter";
 
 /**
  * Transforms household data to DTO based on admin status

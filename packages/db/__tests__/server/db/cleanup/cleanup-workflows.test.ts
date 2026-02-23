@@ -5,10 +5,7 @@ import path from "node:path";
 
 import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { createTestRecipeStep, getTestDb, type TestDb } from "../../../helpers/db-test-helpers";
-import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 import {
   groceries,
   plannedItems,
@@ -20,7 +17,13 @@ import {
 } from "@norish/db/schema";
 import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
-import { cleanupOrphanedImages, cleanupOrphanedStepImages } from "@norish/api/startup/media-cleanup";
+import {
+  cleanupOrphanedImages,
+  cleanupOrphanedStepImages,
+} from "@norish/api/startup/media-cleanup";
+
+import { RepositoryTestBase } from "../../../helpers/repository-test-base";
+import { createTestRecipeStep, getTestDb, type TestDb } from "../../../helpers/db-test-helpers";
 
 const testBase = new RepositoryTestBase("cleanup_workflows");
 

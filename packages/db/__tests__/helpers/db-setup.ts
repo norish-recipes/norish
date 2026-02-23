@@ -10,7 +10,6 @@ import type { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import pg from "pg";
-
 import { dbLogger } from "@norish/api/logger";
 
 const { Client } = pg;

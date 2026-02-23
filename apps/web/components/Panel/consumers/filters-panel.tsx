@@ -13,15 +13,18 @@ import { Button, Chip, Input } from "@heroui/react";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import RatingStars from "@norish/ui/rating-stars";
+import {
+  getShowFavoritesPreference,
+  getShowRatingsPreference,
+} from "@norish/shared/lib/user-preferences";
 
 import Panel from "@/components/Panel/Panel";
 import SearchFieldToggles from "@/components/dashboard/search-field-toggles";
 import ChipSkeleton from "@/components/skeleton/chip-skeleton";
-import RatingStars from "@norish/ui/rating-stars";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useUserContext } from "@/context/user-context";
 import { useTagsQuery } from "@/hooks/config";
-import { getShowFavoritesPreference, getShowRatingsPreference } from "@norish/shared/lib/user-preferences";
 
 const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 

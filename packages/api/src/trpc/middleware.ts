@@ -3,12 +3,11 @@ import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts"
 import type { SubscriptionMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
 
 import { TRPCError } from "@trpc/server";
-
-import { middleware, publicProcedure } from "./trpc";
-
 import { isUserServerAdmin } from "@norish/db";
 import { getCachedHouseholdForUser } from "@norish/db/cached-household";
 import { getOrCreateMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
+
+import { middleware, publicProcedure } from "./trpc";
 
 /**
  * Middleware that enforces authentication and provides full context:

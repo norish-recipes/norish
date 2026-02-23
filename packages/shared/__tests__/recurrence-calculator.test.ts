@@ -1,7 +1,6 @@
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-
 import {
   calculateNextOccurrence,
   getTodayString,

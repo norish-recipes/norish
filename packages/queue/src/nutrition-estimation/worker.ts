@@ -8,9 +8,6 @@
 import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
 import type { Job } from "bullmq";
 
-import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
-
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { createLogger } from "@norish/api/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@norish/api/trpc/helpers";
@@ -18,6 +15,9 @@ import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getRecipeFull, updateRecipeWithRefs } from "@norish/db";
 import { estimateNutritionFromIngredients } from "@norish/api/ai/nutrition-estimator";
+
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
 const log = createLogger("worker:nutrition-estimation");
 

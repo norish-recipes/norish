@@ -1,7 +1,7 @@
-import { LoginClient } from "./components/login-client";
-
 import { getAvailableProviders } from "@norish/auth/providers";
 import { isRegistrationEnabled } from "@norish/config/server-config-loader";
+
+import { LoginClient } from "./components/login-client";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

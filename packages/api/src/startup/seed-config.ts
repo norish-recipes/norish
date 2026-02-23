@@ -1,6 +1,11 @@
 import type { I18nLocaleConfig } from "@norish/config/zod/server-config";
 
-import { setConfig, configExists, getConfig, deleteConfig } from "@norish/db/repositories/server-config";
+import {
+  setConfig,
+  configExists,
+  getConfig,
+  deleteConfig,
+} from "@norish/db/repositories/server-config";
 import {
   ServerConfigKeys,
   type ServerConfigKey,
@@ -13,9 +18,11 @@ import {
   UnitsMapSchema,
   DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "@norish/db/zodSchemas/server-config";
-
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { DEFAULT_LOCALE_CONFIG, buildLocaleConfigFromEnv } from "@norish/config/server-config-loader";
+import {
+  DEFAULT_LOCALE_CONFIG,
+  buildLocaleConfigFromEnv,
+} from "@norish/config/server-config-loader";
 import { setAuthProviderCache } from "@norish/auth/provider-cache";
 import { serverLogger } from "@norish/api/logger";
 import defaultUnits from "@norish/config/units.default.json";

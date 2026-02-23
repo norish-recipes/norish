@@ -1,6 +1,9 @@
 "use client";
 
-import type { HouseholdSettingsDto, HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
+import type {
+  HouseholdSettingsDto,
+  HouseholdAdminSettingsDto,
+} from "@norish/shared/contracts/dto/household";
 
 import { createContext, useContext, ReactNode } from "react";
 

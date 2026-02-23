@@ -18,13 +18,13 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useLocale } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWindowSize } from "usehooks-ts";
+import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 
 import { TimelineDaySection } from "./timeline-day-section";
 import { TimelineDragOverlay } from "./timeline-drag-overlay";
 import { TimelineScrollToToday } from "./timeline-scroll-to-today";
 import { SLOT_ORDER } from "./types";
 
-import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
 

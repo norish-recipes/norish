@@ -2,7 +2,6 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-
 import { parseOIDCClaims, processClaimsForUser } from "@norish/auth/claim-processor";
 
 // Mock dependencies

@@ -8,9 +8,9 @@
 import type { Queue, Job } from "bullmq";
 import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 
-import { sanitizeUrlForJobId } from "../helpers";
-
 import { createLogger } from "@norish/api/logger";
+
+import { sanitizeUrlForJobId } from "../helpers";
 
 const log = createLogger("queue:caldav-sync");
 

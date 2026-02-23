@@ -15,6 +15,9 @@ import type { RecipeCategory } from "@norish/shared/contracts";
 
 import { randomUUID } from "crypto";
 
+import { getUnits } from "@norish/config/server-config-loader";
+import { parserLogger } from "@norish/api/logger";
+
 import {
   extractNutrition,
   parseIngredients,
@@ -24,9 +27,6 @@ import {
   parseMetadata,
   getServings,
 } from "./parsers";
-
-import { getUnits } from "@norish/config/server-config-loader";
-import { parserLogger } from "@norish/api/logger";
 
 // Re-export getServings for backward compatibility (used by mela-parser.ts)
 export { getServings };

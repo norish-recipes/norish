@@ -4,11 +4,11 @@
  * Provides helpers for building AI prompts from templates and fragments.
  */
 
-import { loadPrompt, fillPrompt } from "./loader";
-import { buildAllergyInstruction } from "./fragments/allergies";
-
 import { getAutoTaggingMode } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@norish/db/repositories/tags";
+
+import { loadPrompt, fillPrompt } from "./loader";
+import { buildAllergyInstruction } from "./fragments/allergies";
 
 export interface RecipeExtractionPromptOptions {
   /**

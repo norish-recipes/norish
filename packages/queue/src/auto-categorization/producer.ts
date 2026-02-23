@@ -1,10 +1,13 @@
 import type { Queue } from "bullmq";
-import type { AutoCategorizationJobData, AddAutoCategorizationJobResult } from "@norish/queue/contracts/job-types";
-
-import { isJobInQueue } from "../helpers";
+import type {
+  AutoCategorizationJobData,
+  AddAutoCategorizationJobResult,
+} from "@norish/queue/contracts/job-types";
 
 import { createLogger } from "@norish/api/logger";
 import { isAIEnabled } from "@norish/config/server-config-loader";
+
+import { isJobInQueue } from "../helpers";
 
 const log = createLogger("queue:auto-categorization");
 

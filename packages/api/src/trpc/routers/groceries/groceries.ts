@@ -2,12 +2,6 @@ import type { GroceryUpdateDto } from "@norish/shared/contracts";
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-
-import { router } from "../../trpc";
-import { authedProcedure } from "../../middleware";
-
-import { groceryEmitter } from "./emitter";
-
 import {
   listGroceriesByUsers,
   createGroceries,
@@ -37,6 +31,11 @@ import { assertHouseholdAccess } from "@norish/auth/permissions";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { getUnits } from "@norish/config/server-config-loader";
 import { trpcLogger as log } from "@norish/api/logger";
+
+import { authedProcedure } from "../../middleware";
+import { router } from "../../trpc";
+
+import { groceryEmitter } from "./emitter";
 
 /**
  * Normalize a grocery name for duplicate checking.

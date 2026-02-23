@@ -3,9 +3,9 @@
 import React from "react";
 import { ArrowPathIcon, PauseIcon, PlayIcon, ClockIcon } from "@heroicons/react/16/solid";
 import { Chip } from "@heroui/react";
+import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 import { useTimerStore } from "@/stores/timers";
-import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
 
 interface TimerChipProps {

@@ -8,10 +8,9 @@
 import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
 
 import { Queue } from "bullmq";
+import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import { autoTaggingJobOptions, QUEUE_NAMES } from "../config";
-
-import { getBullClient } from "@norish/queue/redis/bullmq";
 
 /**
  * Create an auto-tagging queue instance.

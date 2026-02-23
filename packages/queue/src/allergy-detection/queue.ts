@@ -8,10 +8,9 @@
 import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
 
 import { Queue } from "bullmq";
+import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import { allergyDetectionJobOptions, QUEUE_NAMES } from "../config";
-
-import { getBullClient } from "@norish/queue/redis/bullmq";
 
 /**
  * Create an allergy detection queue instance.

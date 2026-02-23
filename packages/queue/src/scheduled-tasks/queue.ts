@@ -6,10 +6,9 @@
  */
 
 import { Queue } from "bullmq";
+import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import { scheduledTasksJobOptions, QUEUE_NAMES } from "../config";
-
-import { getBullClient } from "@norish/queue/redis/bullmq";
 
 export type ScheduledTaskType =
   | "recurring-grocery-check"

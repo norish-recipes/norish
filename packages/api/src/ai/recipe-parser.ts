@@ -1,6 +1,8 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 
 import { generateText, Output } from "ai";
+import { isAIEnabled } from "@norish/config/server-config-loader";
+import { aiLogger } from "@norish/api/logger";
 
 import { getModels, getGenerationSettings } from "./providers";
 import { recipeExtractionSchema, type RecipeExtractionOutput } from "./schemas/recipe.schema";
@@ -12,9 +14,6 @@ import {
   normalizeExtractionOutput,
   getExtractionLogContext,
 } from "./features/recipe-extraction/normalizer";
-
-import { isAIEnabled } from "@norish/config/server-config-loader";
-import { aiLogger } from "@norish/api/logger";
 
 // Re-export type for consumers
 export type { RecipeExtractionOutput };

@@ -16,7 +16,6 @@ import {
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import superjson from "superjson";
-
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("trpc");

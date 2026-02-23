@@ -8,10 +8,9 @@ import type {
 
 import { DAVClient, DAVCalendar } from "tsdav";
 import { v4 as uuidv4 } from "uuid";
+import { createLogger } from "@norish/api/logger";
 
 import { buildIcs } from "./ics-helpers";
-
-import { createLogger } from "@norish/api/logger";
 
 export type { CreateEventInput, CreatedEvent, CalDavClientOptions, ConnectionTestResult };
 

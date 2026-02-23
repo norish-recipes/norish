@@ -12,7 +12,6 @@ import {
   useTransform,
 } from "motion/react";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("SwipeableRow");

@@ -10,6 +10,7 @@ import type {
 import { createContext, useContext, ReactNode, useCallback, useState } from "react";
 import { addToast } from "@heroui/react";
 import { useTranslations } from "next-intl";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import {
   useCaldavConfigQuery,
@@ -20,7 +21,6 @@ import {
   useCaldavMutations,
   useCaldavSubscription,
 } from "@/hooks/caldav";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 type SaveCaldavConfigInput = {
   serverUrl: string;

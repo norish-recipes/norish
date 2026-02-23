@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader, Accordion, AccordionItem } from "@heroui/re
 import { DocumentMagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
 import NewFeatureChip from "../../components/new-feature-chip";
@@ -11,8 +12,6 @@ import NewFeatureChip from "../../components/new-feature-chip";
 import JsonEditor from "./json-editor";
 import TimerKeywordsEditor from "./timer-keywords-editor";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
-
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 export default function ContentDetectionCard() {
   const t = useTranslations("settings.admin.contentDetection");

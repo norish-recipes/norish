@@ -2,13 +2,12 @@ import type { RecipeCategory } from "@norish/shared/contracts";
 
 import { z } from "zod";
 import { generateText, Output } from "ai";
+import { isAIEnabled } from "@norish/config/server-config-loader";
+import { aiLogger } from "@norish/api/logger";
 
 import { getModels, getGenerationSettings } from "./providers";
 import { matchCategory } from "./utils/category-matcher";
 import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } from "./types/result";
-
-import { isAIEnabled } from "@norish/config/server-config-loader";
-import { aiLogger } from "@norish/api/logger";
 
 const autoCategorizationSchema = z
   .object({

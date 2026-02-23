@@ -1,8 +1,11 @@
 # monorepo-folder-placement Specification
 
 ## Purpose
+
 TBD - created by archiving change add-folder-by-folder-monorepo-plan. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Complete Root Folder Placement Coverage
 
 The monorepo migration plan SHALL define an explicit destination or disposition for every top-level Norish folder, including source, generated, runtime-data, and operations folders.
@@ -94,4 +97,3 @@ Root `__tests__/**` content SHALL be migrated into owning workspace test locatio
 - **THEN** migrated root test files SHALL be deleted from the root `__tests__/**` tree in the same wave
 - **AND** empty legacy directories under root `__tests__/` SHALL be removed
 - **AND** root hygiene policy and dependency exception tracking SHALL be updated to reflect the new ownership.
-

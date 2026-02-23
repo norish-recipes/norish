@@ -9,9 +9,6 @@
 import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
 import type { Job } from "bullmq";
 
-import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
-
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { createLogger } from "@norish/api/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@norish/api/trpc/helpers";
@@ -21,6 +18,9 @@ import { getRecipeFull, getAllergiesForUsers, getHouseholdMemberIds } from "@nor
 import { attachTagsToRecipeByInputTx, getRecipeTagNamesTx } from "@norish/db/repositories/tags";
 import { db } from "@norish/db/drizzle";
 import { detectAllergiesInRecipe } from "@norish/api/ai/allergy-detector";
+
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
 const log = createLogger("worker:allergy-detection");
 

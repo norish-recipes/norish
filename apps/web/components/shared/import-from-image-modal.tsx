@@ -14,12 +14,12 @@ import {
 import { PhotoIcon, XMarkIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { ALLOWED_OCR_MIME_SET, MAX_OCR_FILES } from "@norish/shared/contracts";
 
 import { useRecipesMutations } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { useUploadLimitsQuery } from "@/hooks/config";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
-import { ALLOWED_OCR_MIME_SET, MAX_OCR_FILES } from "@norish/shared/contracts";
 
 interface ImportFromImageModalProps {
   isOpen: boolean;

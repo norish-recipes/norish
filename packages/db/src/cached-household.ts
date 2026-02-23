@@ -1,8 +1,7 @@
 import superjson from "superjson";
+import { getPublisherClient } from "@norish/queue/redis/client";
 
 import { getHouseholdForUser as dbGetHouseholdForUser } from "./repositories/households";
-
-import { getPublisherClient } from "@norish/queue/redis/client";
 
 const CACHE_PREFIX = "norish:cache:household:user:";
 const CACHE_TTL_SECONDS = 30;

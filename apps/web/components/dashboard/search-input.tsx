@@ -5,6 +5,7 @@ import { useDebounceValue } from "usehooks-ts";
 import { Input } from "@heroui/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+import { isUrl } from "@norish/shared/lib/helpers";
 
 import Filters from "../shared/filters";
 
@@ -12,7 +13,6 @@ import SearchFieldToggles from "./search-field-toggles";
 
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { isUrl } from "@norish/shared/lib/helpers";
 
 export default function SearchInput() {
   const t = useTranslations("recipes.dashboard");

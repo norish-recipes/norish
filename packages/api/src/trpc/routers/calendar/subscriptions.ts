@@ -1,12 +1,12 @@
 import type { CalendarSubscriptionEvents } from "./types";
 
+import { trpcLogger as log } from "@norish/api/logger";
+
 import { router } from "../../trpc";
 import { authedProcedure } from "../../middleware";
 import { createSubscriptionIterable } from "../../helpers";
 
 import { calendarEmitter } from "./emitter";
-
-import { trpcLogger as log } from "@norish/api/logger";
 
 const onFailed = authedProcedure.subscription(async function* ({ ctx, signal }) {
   const eventName = calendarEmitter.householdEvent(ctx.householdKey, "failed");

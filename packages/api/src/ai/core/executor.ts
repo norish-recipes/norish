@@ -8,6 +8,7 @@
 import type { ZodSchema } from "zod";
 
 import { generateText, Output } from "ai";
+import { aiLogger } from "@norish/api/logger";
 
 import { getModels, getGenerationSettings } from "../providers";
 
@@ -22,8 +23,6 @@ import {
   type ImageContent,
   type MessageContent,
 } from "./types";
-
-import { aiLogger } from "@norish/api/logger";
 
 /**
  * Build message content parts for multimodal requests.

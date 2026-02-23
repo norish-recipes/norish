@@ -1,11 +1,11 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { VideoProcessorContext } from "../types";
 
-import { BaseVideoProcessor } from "../base-processor";
-
 import { videoLogger as log } from "@norish/api/logger";
 import { transcribeAudio } from "@norish/api/ai/transcriber";
 import { extractRecipeFromVideo } from "@norish/api/video/normalizer";
+
+import { BaseVideoProcessor } from "../base-processor";
 
 /**
  * Generic video processor for platforms without specific handling.

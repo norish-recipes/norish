@@ -7,7 +7,6 @@ import { createServer } from "@norish/api/startup/http-server";
 import { registerShutdownHandlers } from "@norish/api/startup/shutdown";
 import { initCaldavSync } from "@norish/api/caldav/event-listener";
 import { startWorkers } from "@norish/queue/start-workers";
-
 import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
 import { serverLogger as log } from "@norish/api/logger";
 

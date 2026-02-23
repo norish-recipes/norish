@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import {
   FilterMode,
   SortOrder,
@@ -11,6 +9,8 @@ import {
   DEFAULT_SEARCH_FIELDS,
   SEARCH_FIELDS,
 } from "@norish/shared/contracts";
+
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 const VALID_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 

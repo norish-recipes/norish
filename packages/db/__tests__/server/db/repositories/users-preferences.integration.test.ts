@@ -1,11 +1,11 @@
 // @vitest-environment node
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import { eq } from "drizzle-orm";
+import { users } from "@norish/db/schema";
+import { getUserPreferences, updateUserPreferences } from "@norish/db/repositories/users";
 
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 import { getTestDb } from "../../../helpers/db-test-helpers";
-import { users } from "@norish/db/schema";
-import { getUserPreferences, updateUserPreferences } from "@norish/db/repositories/users";
 
 describe("User preferences - DB integration", () => {
   const testBase = new RepositoryTestBase("user_preferences_integration");

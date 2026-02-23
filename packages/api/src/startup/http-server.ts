@@ -3,14 +3,13 @@ import { join } from "node:path";
 import { parse } from "node:url";
 
 import next from "next";
-
-import { initTrpcWebSocket } from "../trpc";
 import { resolveExistingWorkspacePath } from "@norish/api/lib/workspace-paths";
-
-import { serveStaticFile } from "./static-files";
-
 import { serverLogger } from "@norish/api/logger";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+
+import { initTrpcWebSocket } from "../trpc";
+
+import { serveStaticFile } from "./static-files";
 
 const WEB_APP_DIR = resolveExistingWorkspacePath(join("apps", "web"));
 

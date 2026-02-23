@@ -6,12 +6,12 @@ import { useMemo } from "react";
 import { motion } from "motion/react";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
+import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 
 import { StoreSection } from "./store-section";
 import { GroupedStoreSection } from "./grouped-store-section";
 import { DndGroceryProvider, DndGroupedGroceryProvider } from "./dnd";
 
-import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 import { useUnitsQuery } from "@/hooks/config/use-units-query";
 
 interface GroceryListProps {

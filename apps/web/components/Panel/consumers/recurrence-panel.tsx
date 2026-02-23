@@ -7,14 +7,14 @@ import { Button, ButtonGroup } from "@heroui/react";
 import { motion, AnimatePresence } from "motion/react";
 import { MinusIcon, PlusIcon, CalendarIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
-
-import Panel, { PANEL_HEIGHT_MEDIUM } from "@/components/Panel/Panel";
 import {
   formatNextOccurrence,
   formatRecurrenceSummary,
   type RecurrenceTranslations,
 } from "@norish/shared/lib/recurrence/formatter";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
+
+import Panel, { PANEL_HEIGHT_MEDIUM } from "@/components/Panel/Panel";
 
 type RecurrencePanelProps = {
   open: boolean;

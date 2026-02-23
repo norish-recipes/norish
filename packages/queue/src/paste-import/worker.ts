@@ -9,14 +9,15 @@ import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import type { Job } from "bullmq";
 
-import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
-
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { createLogger } from "@norish/api/logger";
 import { emitByPolicy, type PolicyEmitContext } from "@norish/api/trpc/helpers";
 import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";
-import { getRecipePermissionPolicy, getAIConfig, isAIEnabled } from "@norish/config/server-config-loader";
+import {
+  getRecipePermissionPolicy,
+  getAIConfig,
+  isAIEnabled,
+} from "@norish/config/server-config-loader";
 import { getQueues } from "@norish/queue/registry";
 import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
 import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
@@ -26,6 +27,9 @@ import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { deleteRecipeImagesDir } from "@norish/api/downloader";
+
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
 const log = createLogger("worker:paste-import");
 

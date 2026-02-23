@@ -3,9 +3,6 @@ import type { CaldavSyncStatusInsertDto } from "@norish/shared/contracts/dto/cal
 import type { Slot } from "@norish/shared/contracts";
 import type { Job } from "bullmq";
 
-import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
-
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { createLogger } from "@norish/api/logger";
 import {
@@ -19,6 +16,9 @@ import {
   getCaldavSyncStatusByItemId,
 } from "@norish/db/repositories/caldav-sync-status";
 import { caldavEmitter } from "@norish/api/trpc/routers/caldav/emitter";
+
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
+import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
 const log = createLogger("worker:caldav-sync");
 

@@ -2,7 +2,6 @@ import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts"
 
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-
 import { getHouseholdForUser, isUserServerAdmin } from "@norish/db";
 import { auth } from "@norish/auth/auth";
 

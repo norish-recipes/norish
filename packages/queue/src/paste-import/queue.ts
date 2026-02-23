@@ -8,10 +8,9 @@
 import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
 
 import { Queue } from "bullmq";
+import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import { QUEUE_NAMES, pasteImportJobOptions } from "../config";
-
-import { getBullClient } from "@norish/queue/redis/bullmq";
 
 /**
  * Create a paste import queue instance.

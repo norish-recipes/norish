@@ -47,7 +47,8 @@ describe("runStartupMaintenanceCleanup", () => {
   });
 
   it("returns per-domain cleanup summary and logs the startup cleanup result", async () => {
-    const { runStartupMaintenanceCleanup } = await import("@norish/api/startup/maintenance-cleanup");
+    const { runStartupMaintenanceCleanup } =
+      await import("@norish/api/startup/maintenance-cleanup");
 
     const result = await runStartupMaintenanceCleanup();
 

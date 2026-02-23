@@ -18,6 +18,8 @@ import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-type
 import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
 import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 
+import { createLogger } from "@norish/api/logger";
+
 import { createRecipeImportQueue } from "./recipe-import/queue";
 import { createImageImportQueue } from "./image-import/queue";
 import { createPasteImportQueue } from "./paste-import/queue";
@@ -27,8 +29,6 @@ import { createAutoCategorizationQueue } from "./auto-categorization/queue";
 import { createAllergyDetectionQueue } from "./allergy-detection/queue";
 import { createCaldavSyncQueue } from "./caldav-sync/queue";
 import { createScheduledTasksQueue, type ScheduledTaskJobData } from "./scheduled-tasks/queue";
-
-import { createLogger } from "@norish/api/logger";
 
 const log = createLogger("queue:registry");
 

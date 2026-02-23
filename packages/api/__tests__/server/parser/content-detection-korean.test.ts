@@ -1,6 +1,5 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
-
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { isPageLikelyRecipe } from "@norish/api/parser";
 

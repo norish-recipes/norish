@@ -2,8 +2,8 @@
 
 import { useCallback, useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
-
 import { type Locale, isValidLocale, DEFAULT_LOCALE } from "@norish/i18n/config";
+
 import { useLocaleConfigQuery } from "@/hooks/config";
 
 const LOCALE_COOKIE_NAME = "NEXT_LOCALE";

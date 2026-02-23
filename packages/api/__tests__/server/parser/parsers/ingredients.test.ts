@@ -6,7 +6,6 @@
 
 // @vitest-environment node
 import { describe, it, expect } from "vitest";
-
 import { parseIngredients } from "@norish/api/parser/parsers/ingredients";
 
 describe("parseIngredients", () => {

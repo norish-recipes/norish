@@ -1,6 +1,3 @@
-import { router } from "../../trpc";
-import { authedProcedure } from "../../middleware";
-
 import { trpcLogger as log } from "@norish/api/logger";
 import {
   toggleFavorite,
@@ -13,6 +10,9 @@ import {
   FavoriteCheckInputSchema,
   FavoriteBatchCheckInputSchema,
 } from "@norish/shared/contracts/zod";
+
+import { authedProcedure } from "../../middleware";
+import { router } from "../../trpc";
 
 const toggle = authedProcedure.input(FavoriteToggleInputSchema).mutation(async ({ ctx, input }) => {
   const { recipeId } = input;

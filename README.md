@@ -224,18 +224,18 @@ Server owners/admins can manage:
 
 ### Optional general Runtime
 
-| Variable              | Description                                | Default                     |
-| --------------------- | ------------------------------------------ | --------------------------- |
-| `NODE_ENV`            | Runtime environment                        | `development`               |
-| `HOST`                | Server bind address                        | `0.0.0.0`                   |
-| `PORT`                | Server port                                | `3000`                      |
-| `AUTH_URL`            | Public URL for auth callbacks and links    | `http://localhost:3000`     |
-| `TRUSTED_ORIGINS`     | Comma-separated additional trusted origins | (empty)                     |
+| Variable              | Description                                | Default                                           |
+| --------------------- | ------------------------------------------ | ------------------------------------------------- |
+| `NODE_ENV`            | Runtime environment                        | `development`                                     |
+| `HOST`                | Server bind address                        | `0.0.0.0`                                         |
+| `PORT`                | Server port                                | `3000`                                            |
+| `AUTH_URL`            | Public URL for auth callbacks and links    | `http://localhost:3000`                           |
+| `TRUSTED_ORIGINS`     | Comma-separated additional trusted origins | (empty)                                           |
 | `UPLOADS_DIR`         | Upload storage directory                   | `./.runtime/uploads` (dev), `/app/uploads` (prod) |
-| `CHROME_WS_ENDPOINT`  | Playwright CDP WebSocket endpoint          | `ws://chrome-headless:3000` |
-| `REDIS_URL`           | Redis connection URL                       | `redis://localhost:6379`    |
-| `ENABLE_REGISTRATION` | Allow new-user registration                | `false`                     |
-| `AI_ENABLED`          | Enable AI features globally                | `false`                     |
+| `CHROME_WS_ENDPOINT`  | Playwright CDP WebSocket endpoint          | `ws://chrome-headless:3000`                       |
+| `REDIS_URL`           | Redis connection URL                       | `redis://localhost:6379`                          |
+| `ENABLE_REGISTRATION` | Allow new-user registration                | `false`                                           |
+| `AI_ENABLED`          | Enable AI features globally                | `false`                                           |
 
 ### Optional auth setup
 
@@ -287,16 +287,16 @@ These are only used when claim mapping is enabled.
 
 ### Optional Video + Transcription
 
-| Variable                   | Description                                     | Default       |
-| -------------------------- | ----------------------------------------------- | ------------- |
-| `VIDEO_PARSING_ENABLED`    | Enable video parsing pipeline                   | `false`       |
-| `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length                   | `120`         |
-| `YT_DLP_VERSION`           | yt-dlp version used by downloader               | `2025.11.12`  |
+| Variable                   | Description                                     | Default                                   |
+| -------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| `VIDEO_PARSING_ENABLED`    | Enable video parsing pipeline                   | `false`                                   |
+| `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length                   | `120`                                     |
+| `YT_DLP_VERSION`           | yt-dlp version used by downloader               | `2025.11.12`                              |
 | `YT_DLP_BIN_DIR`           | Folder containing yt-dlp binary                 | `./.runtime/bin` (dev), `/app/bin` (prod) |
-| `TRANSCRIPTION_PROVIDER`   | Transcription provider                          | `disabled`    |
-| `TRANSCRIPTION_ENDPOINT`   | Transcription endpoint (local/custom providers) | (empty)       |
-| `TRANSCRIPTION_API_KEY`    | Transcription API key                           | (empty)       |
-| `TRANSCRIPTION_MODEL`      | Transcription model                             | `whisper-1`   |
+| `TRANSCRIPTION_PROVIDER`   | Transcription provider                          | `disabled`                                |
+| `TRANSCRIPTION_ENDPOINT`   | Transcription endpoint (local/custom providers) | (empty)                                   |
+| `TRANSCRIPTION_API_KEY`    | Transcription API key                           | (empty)                                   |
+| `TRANSCRIPTION_MODEL`      | Transcription model                             | `whisper-1`                               |
 
 ### Optional (Parsing + Content Detection)
 
@@ -349,7 +349,7 @@ pnpm run dev
 | Command                  | Description                                               |
 | ------------------------ | --------------------------------------------------------- |
 | `pnpm run dev`           | Start development server with hot reload                  |
-| `pnpm run build:web`     | Build Next.js app workspace (`apps/web`)                 |
+| `pnpm run build:web`     | Build Next.js app workspace (`apps/web`)                  |
 | `pnpm run build`         | Full production build (Next.js + server + service worker) |
 | `pnpm run test`          | Run tests in watch mode                                   |
 | `pnpm run test:run`      | Run tests once                                            |

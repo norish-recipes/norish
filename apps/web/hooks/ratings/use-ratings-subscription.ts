@@ -7,9 +7,9 @@ import { useSubscription } from "@trpc/tanstack-react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 type InfiniteRecipeData = InfiniteData<{
   recipes: RecipeDashboardDTO[];

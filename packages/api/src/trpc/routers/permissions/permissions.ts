@@ -1,6 +1,3 @@
-import { router } from "../../trpc";
-import { authedProcedure } from "../../middleware";
-
 import { trpcLogger as log } from "@norish/api/logger";
 import {
   getRecipePermissionPolicy,
@@ -8,6 +5,9 @@ import {
   getAutoTaggingMode,
 } from "@norish/config/server-config-loader";
 import { isUserServerAdmin } from "@norish/db";
+
+import { authedProcedure } from "../../middleware";
+import { router } from "../../trpc";
 
 const get = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting permissions");

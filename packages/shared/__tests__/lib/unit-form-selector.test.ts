@@ -8,7 +8,6 @@
  */
 
 import { describe, it, expect } from "vitest";
-
 import { selectUnitForm, type UnitFormInfo } from "@norish/shared/lib/unit-form-selector";
 
 describe("selectUnitForm", () => {

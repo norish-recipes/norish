@@ -1,8 +1,6 @@
 "use client";
 
 import { createContext, useContext, useCallback, type ReactNode } from "react";
-
-import { useAdminConfigsQuery, useAdminMutations } from "@/hooks/admin";
 import {
   ServerConfigKeys,
   type ContentIndicatorsConfig,
@@ -24,6 +22,8 @@ import {
   type ServerConfigKey,
   type I18nLocaleConfig,
 } from "@norish/config/zod/server-config";
+
+import { useAdminConfigsQuery, useAdminMutations } from "@/hooks/admin";
 
 interface AdminSettingsContextValue {
   // Data

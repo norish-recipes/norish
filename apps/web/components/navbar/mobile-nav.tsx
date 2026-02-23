@@ -6,10 +6,10 @@ import { useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { HomeIcon, CalendarDaysIcon, ClipboardDocumentListIcon } from "@heroicons/react/20/solid";
 import { useTranslations } from "next-intl";
-
-import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { cssGlassBackdrop } from "@norish/web/config/css-tokens";
 import { siteConfig } from "@norish/web/config/site";
+
+import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { useAutoHide } from "@/hooks/auto-hide";
 import { useUserContext } from "@/context/user-context";
 

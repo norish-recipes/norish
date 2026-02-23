@@ -1,6 +1,3 @@
-import { router, publicProcedure } from "../../trpc";
-import { authedProcedure } from "../../middleware";
-
 import { trpcLogger as log } from "@norish/api/logger";
 import {
   getUnits,
@@ -11,6 +8,9 @@ import {
 } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@norish/db/repositories/tags";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+
+import { authedProcedure } from "../../middleware";
+import { router, publicProcedure } from "../../trpc";
 
 /**
  * Get locale configuration (enabled locales and default locale)

@@ -16,7 +16,6 @@ import type { Job, Processor, WorkerOptions } from "bullmq";
 import type { ConnectionOptions } from "bullmq";
 
 import { Worker, QueueEvents, Queue } from "bullmq";
-
 import { createLogger } from "@norish/api/logger";
 
 const log = createLogger("lazy-worker");

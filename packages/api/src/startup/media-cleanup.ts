@@ -6,7 +6,6 @@ import path from "node:path";
 import { db } from "@norish/db/drizzle";
 import { recipes, recipeImages, recipeVideos, stepImages } from "@norish/db/schema";
 import { getAllUserAvatars } from "@norish/db/repositories";
-
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { schedulerLogger } from "@norish/api/logger";
 import { isAvatarFilenameForUser } from "@norish/shared/lib/helpers";

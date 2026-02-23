@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-
 import { swLogger as log } from "@norish/shared/lib/logger";
 
 export default function RegisterServiceWorker() {

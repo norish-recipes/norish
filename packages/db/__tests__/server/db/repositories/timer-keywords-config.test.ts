@@ -16,11 +16,11 @@ import fs from "fs";
 import path from "path";
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-
-import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 import { getConfig, setConfig, deleteConfig } from "@norish/db/repositories/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { seedDefaultTimerKeywords } from "@norish/api/startup/seed-config";
+
+import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
   let testUserId: string;
@@ -28,7 +28,10 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
 
   // Default config from file
   const DEFAULT_KEYWORDS = JSON.parse(
-    fs.readFileSync(path.join(process.cwd(), "packages/config/src/timer-keywords.default.json"), "utf-8")
+    fs.readFileSync(
+      path.join(process.cwd(), "packages/config/src/timer-keywords.default.json"),
+      "utf-8"
+    )
   );
 
   beforeAll(async () => {

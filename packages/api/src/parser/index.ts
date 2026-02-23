@@ -1,9 +1,10 @@
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
-import { fetchViaPlaywright } from "./fetch";
-
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-import { tryExtractRecipeFromJsonLd, extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
+import {
+  tryExtractRecipeFromJsonLd,
+  extractRecipeNodesFromJsonLd,
+} from "@norish/api/parser/jsonld";
 import { tryExtractRecipeFromMicrodata } from "@norish/api/parser/microdata";
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import {
@@ -14,6 +15,8 @@ import {
 } from "@norish/config/server-config-loader";
 import { isVideoUrl } from "@norish/api/helpers";
 import { parserLogger as log } from "@norish/api/logger";
+
+import { fetchViaPlaywright } from "./fetch";
 
 export interface ParseRecipeResult {
   recipe: FullRecipeInsertDTO;

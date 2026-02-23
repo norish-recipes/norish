@@ -10,11 +10,12 @@
  */
 
 // Import defaults for fallback when DB has no value
+import { getConfig } from "@norish/db/repositories/server-config";
+
 import defaultUnits from "./units.default.json";
 import defaultContentIndicators from "./content-indicators.default.json";
 import defaultRecurrenceConfig from "./recurrence-config.default.json";
 import defaultTimerKeywords from "./timer-keywords.default.json";
-
 import {
   ServerConfigKeys,
   type UnitsMap,
@@ -31,7 +32,6 @@ import {
   type TimerKeywordsConfig,
   DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "./zod/server-config";
-import { getConfig } from "@norish/db/repositories/server-config";
 import { SERVER_CONFIG } from "./env-config-server";
 
 // ============================================================================

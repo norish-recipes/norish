@@ -5,16 +5,6 @@ import type {
 } from "@norish/shared/contracts";
 
 import { TRPCError } from "@trpc/server";
-
-import { caldavEmitter } from "./emitter";
-import {
-  SaveCaldavConfigInputSchema,
-  TestCaldavConnectionInputSchema,
-  DeleteCaldavConfigInputSchema,
-  GetSyncStatusInputSchema,
-  FetchCalendarsInputSchema,
-} from "./types";
-
 import { router } from "@norish/api/trpc/trpc";
 import { authedProcedure } from "@norish/api/trpc/middleware";
 import { createLogger } from "@norish/api/logger";
@@ -30,6 +20,15 @@ import {
   getCaldavSyncStatusesByUser,
   getSyncStatusSummary,
 } from "@norish/db/repositories/caldav-sync-status";
+
+import {
+  SaveCaldavConfigInputSchema,
+  TestCaldavConnectionInputSchema,
+  DeleteCaldavConfigInputSchema,
+  GetSyncStatusInputSchema,
+  FetchCalendarsInputSchema,
+} from "./types";
+import { caldavEmitter } from "./emitter";
 
 const log = createLogger("caldav-procedures");
 

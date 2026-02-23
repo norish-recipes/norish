@@ -4,10 +4,9 @@ import { useState, useEffect } from "react";
 import { Textarea, Button, Spinner } from "@heroui/react";
 import { ArrowPathIcon, CheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
-
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 interface PromptsFormProps {
   onDirtyChange?: (isDirty: boolean) => void;

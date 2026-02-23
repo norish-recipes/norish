@@ -3,10 +3,9 @@
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 import { motion } from "motion/react";
+import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
 import { RecurrencePill } from "./recurrence-pill";
-
-import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
 type RecurrenceSuggestionProps = {
   pattern: RecurrencePattern;

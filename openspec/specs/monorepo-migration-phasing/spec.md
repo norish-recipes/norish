@@ -1,8 +1,11 @@
 # monorepo-migration-phasing Specification
 
 ## Purpose
+
 TBD - created by archiving change add-folder-by-folder-monorepo-plan. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Ordered Multi-Phase Migration Roadmap
 
 The monorepo migration SHALL be executed as an ordered phase roadmap with explicit objectives and prerequisite sequencing.
@@ -114,4 +117,3 @@ Hardening SHALL treat root `__tests__/**` as transitional and SHALL complete tes
 - **THEN** the corresponding root `__tests__/**` files SHALL be deleted in the same migration wave
 - **AND** empty legacy root test directories SHALL be removed
 - **AND** hardening evidence SHALL report remaining root test file count and linked follow-up work until migration is complete.
-

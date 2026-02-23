@@ -7,11 +7,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { addToast, Button } from "@heroui/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 import { useRecipesCacheHelpers, type InfiniteRecipeData } from "./use-recipes-cache";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("recipes-subscription");
 

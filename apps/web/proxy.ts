@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-
 import { auth } from "@norish/auth/auth";
 
 export async function proxy(request: NextRequest) {

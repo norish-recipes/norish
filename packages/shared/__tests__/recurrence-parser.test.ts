@@ -1,7 +1,6 @@
 import type { RecurrenceConfig } from "@norish/shared/contracts/recurrence";
 
 import { describe, it, expect } from "vitest";
-
 import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
 import { parseRecurrence } from "@norish/shared/lib/recurrence/parser";
 

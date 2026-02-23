@@ -9,13 +9,12 @@ import type { PendingRecipeDTO } from "@norish/shared/contracts";
 import type { Job } from "bullmq";
 
 import { z } from "zod";
-
-import { router } from "../../trpc";
-import { authedProcedure } from "../../middleware";
-
 import { trpcLogger as log } from "@norish/api/logger";
 import { getQueues } from "@norish/queue/registry";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
+
+import { authedProcedure } from "../../middleware";
+import { router } from "../../trpc";
 
 const getPending = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Fetching pending recipe imports");

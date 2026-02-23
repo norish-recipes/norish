@@ -2,10 +2,9 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 import * as schema from "./schema";
-
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 const { Pool } = pg;
 

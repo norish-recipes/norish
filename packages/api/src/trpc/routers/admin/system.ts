@@ -1,8 +1,4 @@
 import { z } from "zod";
-
-import { router } from "../../trpc";
-import { adminProcedure } from "../../middleware";
-
 import { trpcLogger as log } from "@norish/api/logger";
 import { setConfig } from "@norish/db/repositories/server-config";
 import {
@@ -12,6 +8,9 @@ import {
   SENSITIVE_CONFIG_KEYS,
 } from "@norish/config/zod/server-config";
 import { getDefaultConfigValue } from "@norish/api/startup/seed-config";
+
+import { adminProcedure } from "../../middleware";
+import { router } from "../../trpc";
 
 /**
  * Update scheduler cleanup months.

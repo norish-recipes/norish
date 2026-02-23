@@ -1,12 +1,5 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-
-import { router } from "../../trpc";
-import { authedProcedure } from "../../middleware";
-import { groceryEmitter } from "../groceries/emitter";
-
-import { storeEmitter } from "./emitter";
-
 import {
   listStoresByUserIds,
   createStore,
@@ -25,6 +18,12 @@ import {
 } from "@norish/shared/contracts/zod";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import { trpcLogger as log } from "@norish/api/logger";
+
+import { router } from "../../trpc";
+import { authedProcedure } from "../../middleware";
+import { groceryEmitter } from "../groceries/emitter";
+
+import { storeEmitter } from "./emitter";
 
 const list = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Listing stores");

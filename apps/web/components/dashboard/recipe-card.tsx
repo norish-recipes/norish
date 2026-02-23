@@ -5,6 +5,12 @@ import { Card, CardBody, useDisclosure } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { RecipeDashboardDTO } from "@norish/shared/contracts";
+import { formatMinutesHM } from "@norish/shared/lib/helpers";
+import {
+  getShowFavoritesPreference,
+  getShowRatingsPreference,
+} from "@norish/shared/lib/user-preferences";
 
 import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
 import DoubleTapContainer from "../shared/double-tap-container";
@@ -16,13 +22,10 @@ import RecipeTags from "./recipe-tags";
 
 import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { RecipeDashboardDTO } from "@norish/shared/contracts";
-import { formatMinutesHM } from "@norish/shared/lib/helpers";
 import { useAppStore } from "@/stores/useAppStore";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useUserContext } from "@/context/user-context";
 import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
-import { getShowFavoritesPreference, getShowRatingsPreference } from "@norish/shared/lib/user-preferences";
 
 type RecipeCardProps = {
   recipe: RecipeDashboardDTO;

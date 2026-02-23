@@ -13,32 +13,32 @@
 
 Snapshot source: repository root directory scan (current workspace).
 
-| Entry | Kind | In placement matrix |
-| --- | --- | --- |
-| `.github` | directory | yes |
-| `.next` | directory | yes |
-| `.vscode` | directory | yes |
-| `__tests__` | directory | yes |
-| `app` | directory | yes |
-| `components` | directory | yes |
-| `config` | directory | yes |
-| `context` | directory | yes |
-| `dist-server` | directory | yes |
-| `docker` | directory | yes |
-| `hooks` | directory | yes |
-| `i18n` | directory | yes |
-| `lib` | directory | yes |
-| `node_modules` | directory | yes |
-| `openspec` | directory | yes |
-| `public` | directory | yes |
-| `scripts` | directory | yes |
-| `server` | directory | yes |
-| `stores` | directory | yes |
-| `styles` | directory | yes |
-| `tooling` | directory | yes |
-| `types` | directory | yes |
-| `uploads` | directory | yes |
-| `yt-dlp` | file | yes |
+| Entry          | Kind      | In placement matrix |
+| -------------- | --------- | ------------------- |
+| `.github`      | directory | yes                 |
+| `.next`        | directory | yes                 |
+| `.vscode`      | directory | yes                 |
+| `__tests__`    | directory | yes                 |
+| `app`          | directory | yes                 |
+| `components`   | directory | yes                 |
+| `config`       | directory | yes                 |
+| `context`      | directory | yes                 |
+| `dist-server`  | directory | yes                 |
+| `docker`       | directory | yes                 |
+| `hooks`        | directory | yes                 |
+| `i18n`         | directory | yes                 |
+| `lib`          | directory | yes                 |
+| `node_modules` | directory | yes                 |
+| `openspec`     | directory | yes                 |
+| `public`       | directory | yes                 |
+| `scripts`      | directory | yes                 |
+| `server`       | directory | yes                 |
+| `stores`       | directory | yes                 |
+| `styles`       | directory | yes                 |
+| `tooling`      | directory | yes                 |
+| `types`        | directory | yes                 |
+| `uploads`      | directory | yes                 |
+| `yt-dlp`       | file      | yes                 |
 
 Verification result:
 

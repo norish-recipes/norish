@@ -12,10 +12,10 @@ vi.mock("@norish/api/logger", () => ({
 }));
 
 // Import mocks
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+
 import { setConfig, configExists } from "../../mocks/server-config";
 import { isUserServerAdmin } from "../../mocks/users";
-
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 // Test utilities
 function createMockAdminUser() {

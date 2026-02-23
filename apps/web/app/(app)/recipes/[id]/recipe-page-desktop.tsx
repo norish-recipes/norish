@@ -13,13 +13,22 @@ import {
 import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import {
+  formatMinutesHM,
+  sortTagsWithAllergyPriority,
+  isAllergenTag,
+} from "@norish/shared/lib/helpers";
+import StarRating from "@norish/ui/star-rating";
+import {
+  getShowFavoritesPreference,
+  getShowRatingsPreference,
+} from "@norish/shared/lib/user-preferences";
 
 import AuthorChip from "./components/author-chip";
 import { useRecipeContextRequired } from "./context";
 import ServingsControl from "./components/servings-control";
 import AmountDisplayToggle from "./components/amount-display-toggle";
 
-import { formatMinutesHM, sortTagsWithAllergyPriority, isAllergenTag } from "@norish/shared/lib/helpers";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
@@ -30,12 +39,10 @@ import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carous
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import HeartButton from "@/components/shared/heart-button";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
-import StarRating from "@norish/ui/star-rating";
 import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import NutritionCard from "@/components/recipes/nutrition-card";
 import { useUserContext } from "@/context/user-context";
-import { getShowFavoritesPreference, getShowRatingsPreference } from "@norish/shared/lib/user-preferences";
 
 export default function RecipePageDesktop() {
   const {

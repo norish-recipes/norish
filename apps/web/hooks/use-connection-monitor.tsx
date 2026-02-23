@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from "react";
-
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("ConnectionMonitor");

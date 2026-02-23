@@ -8,10 +8,9 @@
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 
 import { Queue } from "bullmq";
+import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import { QUEUE_NAMES, imageImportJobOptions } from "../config";
-
-import { getBullClient } from "@norish/queue/redis/bullmq";
 
 /**
  * Create an image import queue instance.

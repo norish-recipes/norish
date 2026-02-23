@@ -7,12 +7,11 @@
 
 import { generateText, Output } from "ai";
 import { z } from "zod";
+import { isAIEnabled, getAIConfig } from "@norish/config/server-config-loader";
+import { aiLogger } from "@norish/api/logger";
 
 import { getModels, getGenerationSettings } from "./providers";
 import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } from "./core/types";
-
-import { isAIEnabled, getAIConfig } from "@norish/config/server-config-loader";
-import { aiLogger } from "@norish/api/logger";
 
 /**
  * Schema for allergy detection response.

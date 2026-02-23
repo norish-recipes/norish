@@ -5,27 +5,21 @@ vi.mock("@norish/config/server-config-loader", () => ({
   getUnits: vi.fn().mockResolvedValue({}),
 }));
 
-vi.mock("parse-ingredient", () => ({
-  parseIngredient: vi.fn((line: string) => {
-    if (line.includes("Header")) {
-      return [
-        {
-          quantity: null,
-          unitOfMeasureID: null,
-          description: "",
-        },
-      ];
-    }
+vi.mock("@norish/shared/lib/helpers", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@norish/shared/lib/helpers")>();
 
-    return [
-      {
+  return {
+    ...original,
+    parseIngredientWithDefaults: vi.fn((lines: string[]) =>
+      lines.map((line) => ({
         quantity: null,
         unitOfMeasureID: null,
-        description: line,
-      },
-    ];
-  }),
-}));
+        description: line.includes("Header") ? "" : line,
+        isGroupHeader: false,
+      }))
+    ),
+  };
+});
 
 import { buildRecipeDTO } from "@norish/api/importers/parser-helpers";
 

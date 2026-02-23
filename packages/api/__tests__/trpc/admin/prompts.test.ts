@@ -16,6 +16,15 @@ vi.mock("@norish/api/ai/prompts/loader", () => ({
 }));
 
 // Import mocks for assertions
+import { loadDefaultPrompts } from "@norish/api/ai/prompts/loader";
+import {
+  ServerConfigKeys,
+  PromptsConfigSchema,
+  PromptsConfigInputSchema,
+  type PromptsConfig,
+  type PromptsConfigInput,
+} from "@norish/config/zod/server-config";
+
 import { getConfig, setConfig } from "../../mocks/server-config";
 import { isUserServerAdmin } from "../../mocks/users";
 
@@ -25,15 +34,6 @@ import {
   createMockAuthedContext,
   createMockAdminContext,
 } from "./test-utils";
-
-import { loadDefaultPrompts } from "@norish/api/ai/prompts/loader";
-import {
-  ServerConfigKeys,
-  PromptsConfigSchema,
-  PromptsConfigInputSchema,
-  type PromptsConfig,
-  type PromptsConfigInput,
-} from "@norish/config/zod/server-config";
 
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

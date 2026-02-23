@@ -1,5 +1,4 @@
 import { eq, and } from "drizzle-orm";
-
 import { db } from "@norish/db/drizzle";
 import { apiKeys } from "@norish/db/schema/auth";
 import { auth } from "@norish/auth/auth";

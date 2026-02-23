@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
-
-import { formatAmountAsDecimal, formatAmountAsFraction, formatAmount } from "@norish/shared/lib/format-amount";
+import {
+  formatAmountAsDecimal,
+  formatAmountAsFraction,
+  formatAmount,
+} from "@norish/shared/lib/format-amount";
 
 describe("formatAmountAsDecimal", () => {
   it("returns empty string for null", () => {

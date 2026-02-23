@@ -4,7 +4,6 @@ import type Redis from "ioredis";
 import { on } from "node:events";
 
 import superjson from "superjson";
-
 import { getPublisherClient, createSubscriberClient } from "@norish/queue/redis/client";
 import { closeMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
 import { trpcLogger as log } from "@norish/api/logger";

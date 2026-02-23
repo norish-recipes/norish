@@ -1,6 +1,3 @@
-import { router } from "../../trpc";
-import { authedProcedure } from "../../middleware";
-
 import { trpcLogger as log } from "@norish/api/logger";
 import {
   createSiteAuthToken,
@@ -13,6 +10,9 @@ import {
   UpdateSiteAuthTokenInputSchema,
   DeleteSiteAuthTokenInputSchema,
 } from "@norish/shared/contracts/zod/site-auth-tokens";
+
+import { authedProcedure } from "../../middleware";
+import { router } from "../../trpc";
 
 const create = authedProcedure
   .input(CreateSiteAuthTokenInputSchema)

@@ -5,7 +5,6 @@ import type { RecurringGroceryDto } from "@norish/shared/contracts";
 import { motion } from "motion/react";
 import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
-
 import {
   formatRecurrenceSummary,
   formatNextOccurrence,

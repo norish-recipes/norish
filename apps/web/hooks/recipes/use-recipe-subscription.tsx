@@ -4,11 +4,11 @@ import { useSubscription } from "@trpc/tanstack-react-query";
 import { addToast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import { useRecipeQuery } from "./use-recipe-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 /**
  * Hook that subscribes to WebSocket events for a single recipe

@@ -22,6 +22,13 @@ vi.mock("@norish/config/server-config-loader", () => ({
 }));
 
 // Import mocks for assertions
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
+import {
+  ServerConfigKeys,
+  AIConfigSchema,
+  RecipePermissionPolicySchema,
+} from "@norish/config/zod/server-config";
+
 import {
   getAllConfigs,
   getConfig,
@@ -41,13 +48,7 @@ import {
   createMockAdminContext,
 } from "./test-utils";
 
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 // Import schemas for validation
-import {
-  ServerConfigKeys,
-  AIConfigSchema,
-  RecipePermissionPolicySchema,
-} from "@norish/config/zod/server-config";
 
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

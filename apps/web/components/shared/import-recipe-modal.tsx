@@ -12,10 +12,10 @@ import {
 } from "@heroui/react";
 import { SparklesIcon, ArrowDownTrayIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import { useRecipesContext } from "@/context/recipes-context";
 import { usePermissionsContext } from "@/context/permissions-context";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 interface ImportRecipeModalProps {
   isOpen: boolean;

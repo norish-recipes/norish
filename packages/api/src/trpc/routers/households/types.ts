@@ -1,4 +1,7 @@
-import type { HouseholdSettingsDto, HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
+import type {
+  HouseholdSettingsDto,
+  HouseholdAdminSettingsDto,
+} from "@norish/shared/contracts/dto/household";
 
 // User info for events
 export type HouseholdUserInfo = {

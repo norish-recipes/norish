@@ -5,10 +5,10 @@ import { Button, Input, DatePicker, Select, SelectItem } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
 import { TrashIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+import { Slot } from "@norish/shared/contracts";
 
 import { Panel, PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { Slot } from "@norish/shared/contracts";
 
 const SLOTS: Slot[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 

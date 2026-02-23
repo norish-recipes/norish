@@ -3,7 +3,6 @@ import { promisify } from "util";
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import JSZip from "jszip";
-
 import {
   parsePaprikaRecipeToDTO,
   extractPaprikaRecipes,

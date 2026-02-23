@@ -2,7 +2,6 @@
 // microdata-node has no official types; import as any
 // @ts-expect-error microdata-node has no types
 import microdata from "microdata-node";
-
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 

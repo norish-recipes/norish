@@ -3,7 +3,6 @@
 import { motion, useMotionValue } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Chip } from "@heroui/react";
-
 import { cssGlassBackdropChip } from "@norish/web/config/css-tokens";
 import { sortTagsWithAllergyPriority, isAllergenTag } from "@norish/shared/lib/helpers";
 

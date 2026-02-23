@@ -6,12 +6,12 @@
 
 import type { CaldavSubscriptionEvents } from "./types";
 
-import { caldavEmitter } from "./emitter";
-
 import { router } from "@norish/api/trpc/trpc";
 import { authedProcedure } from "@norish/api/trpc/middleware";
 import { mergeAsyncIterables, createSubscriptionIterable } from "@norish/api/trpc/helpers";
 import { trpcLogger as log } from "@norish/api/logger";
+
+import { caldavEmitter } from "./emitter";
 
 /**
  * Subscribe to all CalDAV sync events for the current user.

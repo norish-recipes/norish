@@ -1,10 +1,10 @@
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 import { useState, useEffect, useTransition } from "react";
-
-import { useRecurrenceConfigQuery } from "@/hooks/config";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { parseRecurrence } from "@norish/shared/lib/recurrence/parser";
+
+import { useRecurrenceConfigQuery } from "@/hooks/config";
 
 const log = createClientLogger("RecurrenceDetection");
 

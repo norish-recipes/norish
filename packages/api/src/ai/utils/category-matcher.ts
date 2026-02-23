@@ -1,7 +1,6 @@
 import type { RecipeCategory } from "@norish/shared/contracts";
 
 import Fuse, { type IFuseOptions } from "fuse.js";
-
 import enRecipes from "@norish/i18n/messages/en/recipes.json";
 import nlRecipes from "@norish/i18n/messages/nl/recipes.json";
 import frRecipes from "@norish/i18n/messages/fr/recipes.json";

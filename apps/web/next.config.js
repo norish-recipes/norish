@@ -19,12 +19,7 @@ export default withNextIntl({
   env: {
     NEXT_PUBLIC_APP_VERSION: packageJson.version,
   },
-  serverExternalPackages: [
-    "pino",
-    "pino-pretty",
-    "thread-stream",
-    "playwright-core",
-  ],
+  serverExternalPackages: ["pino", "pino-pretty", "thread-stream", "playwright-core"],
   async headers() {
     return [
       {

@@ -13,9 +13,6 @@ import {
 } from "@heroui/react";
 import { CheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
-
-import { useAdminSettingsContext } from "../context";
-
 import {
   ServerConfigKeys,
   type TranscriptionProvider,
@@ -23,6 +20,9 @@ import {
   transcriptionProviderNeedsEndpoint,
   transcriptionProviderSupportsModelListing,
 } from "@norish/config/zod/server-config";
+
+import { useAdminSettingsContext } from "../context";
+
 import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
 import SecretInput from "@/components/shared/secret-input";
 

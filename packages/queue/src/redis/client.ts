@@ -6,7 +6,6 @@
  */
 
 import Redis from "ioredis";
-
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { createLogger } from "@norish/api/logger";
 
