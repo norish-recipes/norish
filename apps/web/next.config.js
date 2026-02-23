@@ -23,8 +23,7 @@ export default withNextIntl({
     "pino",
     "pino-pretty",
     "thread-stream",
-    "playwright-extra",
-    "puppeteer-extra-plugin-stealth",
+    "playwright-core",
   ],
   async headers() {
     return [

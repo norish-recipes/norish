@@ -36,7 +36,5 @@ export default defineConfig({
 
     // Playwright must be external to avoid esbuild __name transpilation issues with page.evaluate()
     "playwright-core",
-    "playwright-extra",
-    "puppeteer-extra-plugin-stealth",
   ],
 });

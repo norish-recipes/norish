@@ -2,13 +2,10 @@ import type { Browser } from "playwright-core";
 
 import dns from "dns/promises";
 
-import { chromium } from "playwright-extra";
-import stealth from "puppeteer-extra-plugin-stealth";
+import { chromium } from "playwright-core";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { serverLogger as log } from "@norish/api/logger";
-
-chromium.use(stealth());
 
 let browser: Browser | null = null;
 
