@@ -1,0 +1,192 @@
+{
+  "allowedRootDependencies": [
+    "@norish/api",
+    "@norish/auth",
+    "@norish/config",
+    "@norish/db",
+    "@norish/i18n",
+    "@norish/queue",
+    "@norish/shared",
+    "@norish/ui",
+    "@norish/web"
+  ],
+  "allowedRootDevDependencies": [
+    "@eslint/compat",
+    "@eslint/eslintrc",
+    "@eslint/js",
+    "@heroui/react",
+    "@tailwindcss/postcss",
+    "@tanstack/react-query",
+    "@testcontainers/postgresql",
+    "@testing-library/dom",
+    "@testing-library/jest-dom",
+    "@testing-library/react",
+    "@trpc/server",
+    "@trpc/tanstack-react-query",
+    "@typescript-eslint/eslint-plugin",
+    "@typescript-eslint/parser",
+    "@vitejs/plugin-react",
+    "ai",
+    "bullmq",
+    "cross-env",
+    "drizzle-kit",
+    "drizzle-orm",
+    "eslint",
+    "eslint-config-prettier",
+    "eslint-plugin-import",
+    "eslint-plugin-jsx-a11y",
+    "eslint-plugin-prettier",
+    "eslint-plugin-react",
+    "eslint-plugin-react-hooks",
+    "eslint-plugin-unused-imports",
+    "globals",
+    "jsdom",
+    "jszip",
+    "next",
+    "pg",
+    "postcss",
+    "prettier",
+    "prettier-plugin-tailwindcss",
+    "react",
+    "react-dom",
+    "superjson",
+    "tailwindcss",
+    "testcontainers",
+    "tsdown",
+    "turbo",
+    "tsx",
+    "typescript",
+    "vitest",
+    "zod"
+  ],
+  "rootConfigAllowlist": [
+    ".npmrc",
+    ".prettierignore",
+    ".prettierrc",
+    "eslint.config.mjs",
+    "next-env.d.ts",
+    "package.json",
+    "pnpm-workspace.yaml",
+    "tsconfig.json",
+    "tsconfig.server.json",
+    "tsconfig.typecheck.json",
+    "tsdown.config.ts",
+    "turbo.json",
+    "vitest.config.ts"
+  ],
+  "forbiddenRootFiles": [
+    "next.config.js",
+    "postcss.config.js",
+    "i18n/request.ts"
+  ],
+  "disallowedNpmrcSettings": [
+    "shamefully-hoist=true",
+    "strict-peer-dependencies=false"
+  ],
+  "temporaryShims": [
+    {
+      "path": "eslint.config.mjs",
+      "owner": "platform-monorepo",
+      "rationale": "Root lint entrypoint remains for editor tooling while workspace scripts are standardized.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "path": "vitest.config.ts",
+      "owner": "platform-monorepo",
+      "rationale": "Root vitest entrypoint remains while root-level tests are migrated under workspace-owned paths.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "path": "tsdown.config.ts",
+      "owner": "platform-monorepo",
+      "rationale": "Server bundle entrypoint remains at root until apps/web build scripts fully own tsdown configuration.",
+      "removeBy": "2026-06-30"
+    }
+  ],
+  "dependencyExceptions": [
+    {
+      "name": "@heroui/react",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports UI primitives directly from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "@tanstack/react-query",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports React Query helpers from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "@trpc/server",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports tRPC server helpers directly from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "@trpc/tanstack-react-query",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports tRPC client adapters directly from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "ai",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports AI SDK contract utilities directly from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "bullmq",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports queue primitives directly from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "drizzle-orm",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports DB helpers directly from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "jszip",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports archive helpers directly from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "next",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness still references Next.js helpers from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "pg",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports PostgreSQL types and helpers directly from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "react",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness renders React components from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "react-dom",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness requires React DOM peer dependencies for renderer setup.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "superjson",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports serialization helpers directly from root-level test files.",
+      "removeBy": "2026-06-30"
+    },
+    {
+      "name": "zod",
+      "owner": "platform-monorepo",
+      "rationale": "Root test harness imports schema utilities directly from root-level test files.",
+      "removeBy": "2026-06-30"
+    }
+  ]
+}

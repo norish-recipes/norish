@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { parserLogger as log } from "@norish/api/logger";
 import { auth } from "@norish/auth/auth";
 import { getHouseholdForUser, dashboardRecipe } from "@norish/db";
-import { addImportJob, getQueues } from "@norish/queue/server-queue";
+import { addImportJob, getQueues } from "@norish/queue";
 import { isUrl } from "@norish/shared/lib/helpers";
 import { shouldAlwaysUseAI } from "@norish/config/server-config-loader";
 

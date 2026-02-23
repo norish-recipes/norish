@@ -6,10 +6,17 @@
   "exports": {
     ".": "./src/index.ts",
     "./contracts/*": "./src/contracts/*",
-    "./server-queue": "./src/server-queue.ts",
     "./*": "./src/*"
   },
   "dependencies": {
-    "bullmq": "^5.69.3"
+    "@norish/api": "workspace:*",
+    "@norish/config": "workspace:*",
+    "@norish/db": "workspace:*",
+    "@norish/shared": "workspace:*",
+    "bullmq": "^5.69.3",
+    "date-fns": "^4.1.0",
+    "drizzle-orm": "0.45.1",
+    "ioredis": "^5.9.3",
+    "superjson": "^2.2.6"
   }
 }

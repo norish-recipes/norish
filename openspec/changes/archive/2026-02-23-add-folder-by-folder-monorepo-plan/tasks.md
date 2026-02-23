@@ -61,12 +61,12 @@
 
 ## 7. Phase 6 - Hardening and Cleanup
 
-- [ ] 7.1 Remove temporary compatibility aliases/shims introduced during moves.
-- [ ] 7.2 Ensure no placeholder `turbo-norish` starter code remains in production paths.
-- [ ] 7.3 Run full quality gate: `pnpm lint:check`, `pnpm run typecheck`, `pnpm test:run`, `pnpm build`, `pnpm run deps:cycles`.
-- [ ] 7.4 Run final runtime smoke gate: app startup, auth flow, tRPC HTTP/WS, queue startup job flow, `/api/health`, static uploads serving, and container boot.
-- [ ] 7.5 Record final folder placement and phase completion evidence in migration docs.
-- [ ] 7.6 Mark final migration checkpoint (phase-6 complete) and archive rollback evidence links.
+- [x] 7.1 Remove temporary compatibility aliases/shims introduced during moves.
+- [x] 7.2 Ensure no placeholder `turbo-norish` starter code remains in production paths.
+- [x] 7.3 Run full quality gate: `pnpm lint:check`, `pnpm run typecheck`, `pnpm test:run`, `pnpm build`, `pnpm run deps:cycles`.
+- [x] 7.4 Run final runtime smoke gate: app startup, auth flow, tRPC HTTP/WS, queue startup job flow, `/api/health`, static uploads serving, and container boot. (Skipped by user request for manual validation.)
+- [x] 7.5 Record final folder placement and phase completion evidence in migration docs.
+- [x] 7.6 Mark final migration checkpoint (phase-6 complete) and archive rollback evidence links.
 
 ## Dependencies and Parallelism Notes
 

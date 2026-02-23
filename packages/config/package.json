@@ -14,6 +14,7 @@
     "./units.default.json": "./src/units.default.json"
   },
   "dependencies": {
+    "@norish/db": "workspace:*",
     "dotenv": "17.3.1",
     "server-only": "^0.0.1",
     "zod": "4.3.6"

@@ -7,5 +7,14 @@
     ".": "./src/index.ts",
     "./auth": "./src/auth.ts",
     "./*": "./src/*"
+  },
+  "dependencies": {
+    "@norish/api": "workspace:*",
+    "@norish/config": "workspace:*",
+    "@norish/db": "workspace:*",
+    "@norish/queue": "workspace:*",
+    "@norish/shared": "workspace:*",
+    "better-auth": "^1.4.18",
+    "next": "16.1.6"
   }
 }

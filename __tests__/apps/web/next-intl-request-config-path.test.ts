@@ -15,6 +15,6 @@ describe("next-intl request config alias", () => {
 
     const config = await loadConfig("phase-development-server", resolve(projectRoot, "apps/web"));
 
-    expect(config.turbopack?.resolveAlias?.["next-intl/config"]).toBe("./i18n/request.ts");
+    expect(config.turbopack?.resolveAlias?.["next-intl/config"]).toBe("./apps/web/i18n/request.ts");
   });
 });
