@@ -154,30 +154,30 @@ Phase C tasks are blocked until B7.1-B7.6 are all green.
 
 ### D1. CI Workflow Updates
 
-- [ ] D1.1 Update `.github/workflows/pr-quality.yml` to use `tooling/github/setup` composite action for all jobs.
-- [ ] D1.2 Update CI lint job to use `turbo run lint` instead of direct `eslint` invocation.
-- [ ] D1.3 Update CI format job to use `turbo run format` instead of direct `prettier` invocation.
-- [ ] D1.4 Update CI typecheck job to use `turbo run typecheck` instead of direct `tsc` invocation.
-- [ ] D1.5 Update CI test job to use `turbo run test` with appropriate filtering.
-- [ ] D1.6 Update `.github/workflows/release-build.yml` and `rc-release-build.yml` to use composite action.
-- [ ] D1.7 Update `.github/workflows/docker-build-test.yml` to use composite action.
+- [x] D1.1 Update `.github/workflows/pr-quality.yml` to use `tooling/github/setup` composite action for all jobs.
+- [x] D1.2 Update CI lint job to use `turbo run lint` instead of direct `eslint` invocation.
+- [x] D1.3 Update CI format job to use `turbo run format` instead of direct `prettier` invocation.
+- [x] D1.4 Update CI typecheck job to use `turbo run typecheck` instead of direct `tsc` invocation.
+- [x] D1.5 Update CI test job to use `turbo run test` with appropriate filtering.
+- [x] D1.6 Update `.github/workflows/release-build.yml` and `rc-release-build.yml` to use composite action.
+- [x] D1.7 Update `.github/workflows/docker-build-test.yml` to use composite action.
 
 ### D2. Documentation Updates
 
-- [ ] D2.1 Update `CONTRIBUTING.md` to document the tooling package structure and how to add new configs.
-- [ ] D2.2 Update `AGENTS.md` if it references root config file locations.
+- [x] D2.1 Update `CONTRIBUTING.md` to document the tooling package structure and how to add new configs.
+- [x] D2.2 Update `AGENTS.md` if it references root config file locations.
 
 ### D3. Cleanup Stray Tooling Artifacts
 
-- [ ] D3.1 Remove `tooling/vitest/` directory entirely (setup.ts already moved in B5.2; config is per-workspace; delete any remaining files and the directory itself).
-- [ ] D3.2 Verify no workspace references old root config paths (`../../eslint.config.mjs`, `../../vitest.config.ts`, etc.).
+- [x] D3.1 Remove `tooling/vitest/` directory entirely (setup.ts already moved in B5.2; config is per-workspace; delete any remaining files and the directory itself).
+- [x] D3.2 Verify no workspace references old root config paths (`../../eslint.config.mjs`, `../../vitest.config.ts`, etc.).
 
 ### D4. Final Validation
 
-- [ ] D4.1 Run full quality gate: `pnpm run hygiene:root`, `pnpm run deps:workspace`, `pnpm run deps:cycles`, `turbo run lint`, `turbo run typecheck`, `turbo run format`, `pnpm test:run`, `pnpm build`.
-- [ ] D4.2 Verify root devDependencies count is 6 or fewer.
-- [ ] D4.3 Verify `temporaryShims` array in `root-hygiene-policy.json` is empty.
-- [ ] D4.4 Run `openspec validate finalize-monorepo-tooling-migration --strict --no-interactive`.
+- [x] D4.1 Run full quality gate: `pnpm run hygiene:root`, `pnpm run deps:workspace`, `pnpm run deps:cycles`, `turbo run lint`, `turbo run typecheck`, `turbo run format`, `pnpm test:run`, `pnpm build`.
+- [x] D4.2 Verify root devDependencies count is 6 or fewer.
+- [x] D4.3 Verify `temporaryShims` array in `root-hygiene-policy.json` is empty.
+- [x] D4.4 Run `openspec validate finalize-monorepo-tooling-migration --strict --no-interactive`.
 
 ## Dependencies and Parallelism Notes
 

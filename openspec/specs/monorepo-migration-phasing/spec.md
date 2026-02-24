@@ -83,27 +83,33 @@ The migration SHALL define rollback checkpoints so failed phase exits can revert
 
 ### Requirement: Root Hygiene Hardening Gate
 
-Final monorepo hardening SHALL include a root hygiene gate that validates root manifest scope, explicit root file/directory placement allowlists, ownership-safe script routing, and install behavior settings against ownership-safe standards.
+The root hygiene validation SHALL enforce that all tooling directories listed in `pnpm-workspace.yaml` under `tooling/*` are proper workspace packages (contain a `package.json` with a `name` field). The hygiene gate SHALL verify that root `devDependencies` count does not exceed the approved maximum (6 entries). The hygiene gate SHALL verify the `temporaryShims` array is empty after all shims have been removed.
 
-#### Scenario: Hardening completion requires clean root evidence
+#### Scenario: Tooling directories validated as workspace packages
 
-- **WHEN** the migration hardening phase is proposed as complete
-- **THEN** validation SHALL confirm root `.npmrc` does not enable broad hoisting defaults that mask workspace ownership gaps
-- **AND** validation SHALL confirm root manifest and root file/directory layout satisfy approved allowlists
-- **AND** validation SHALL fail when root script implementations bypass ownership-aligned locations defined by `monorepo-folder-placement`
-- **AND** any temporary exceptions SHALL be recorded with owner, expiry target, and linked follow-up migration work
-- **AND** hardening evidence SHALL report temporary exception counts (before/current), root `__tests__` migration progress, and the remaining removal plan for unresolved exceptions.
+- **WHEN** running `pnpm run hygiene:root`
+- **THEN** the checker verifies each `tooling/*/package.json` exists and contains a valid package name
+- **AND** the check fails if any tooling directory lacks a `package.json`
+
+#### Scenario: Root devDependency count enforcement
+
+- **WHEN** running `pnpm run hygiene:root`
+- **THEN** the checker reports the root devDependency count
+- **AND** the check fails if the count exceeds 6
 
 ### Requirement: Legacy Reference Retirement at Hardening Exit
 
-Hardening completion SHALL retire stale pre-monorepo path references from validation scripts, build/typecheck include settings, and contributor-facing repository layout documentation.
+After tooling migration completion, all references to legacy root config patterns SHALL be removed. This includes: root-relative path aliases in `tsconfig.json` for `@norish/*` packages (resolved via workspace linking instead), ESLint `FlatCompat` shims (replaced by native `typescript-eslint` flat config), root `.prettierrc`/`.prettierignore` files (replaced by `@norish/prettier-config` package), and root-level vitest config (replaced by workspace-local configs).
 
-#### Scenario: Legacy root paths are removed or explicitly tracked
+#### Scenario: No legacy ESLint compatibility shims remain
 
-- **WHEN** hardening exit evidence is assembled
-- **THEN** dependency-cycle and typecheck/build validation inputs SHALL target active monorepo-owned paths only
-- **AND** stale references to deprecated root source locations SHALL be removed or documented as temporary exceptions with owner and removal milestone
-- **AND** contributor documentation SHALL describe the current `apps/*`, `packages/*`, and tooling ownership model used by the repository.
+- **WHEN** searching for `FlatCompat` or `@eslint/compat` in any ESLint config
+- **THEN** zero results are found (all configs use native flat config patterns)
+
+#### Scenario: No root prettier config files remain
+
+- **WHEN** listing root directory files
+- **THEN** `.prettierrc` and `.prettierignore` are not present
 
 ### Requirement: Root Test Migration Uses Move-and-Prune
 

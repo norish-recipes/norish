@@ -3,18 +3,20 @@
 ## Purpose
 
 TBD - created by archiving change add-folder-by-folder-monorepo-plan. Update Purpose after archive.
-
 ## Requirements
-
 ### Requirement: Complete Root Folder Placement Coverage
 
-The monorepo migration plan SHALL define an explicit destination or disposition for every top-level Norish folder, including source, generated, runtime-data, and operations folders.
+Every top-level folder and file SHALL have a disposition: migrate, split, keep-root, generated, runtime-data, or remove. Tooling directories (`tooling/eslint/`, `tooling/prettier/`, `tooling/typescript/`, `tooling/vitest/`, `tooling/tailwind/`) SHALL be proper pnpm workspace packages with `package.json` and defined `exports`. The `tooling/github/` directory SHALL contain a composite GitHub Action for CI environment setup.
 
-#### Scenario: All root folders are accounted for in planning
+#### Scenario: Tooling directories are workspace packages
 
-- **WHEN** the folder placement plan is reviewed
-- **THEN** it SHALL include entries for `.github`, `.vscode`, `__tests__`, `app`, `components`, `config`, `context`, `dist-server`, `docker`, `hooks`, `i18n`, `lib`, `node_modules`, `openspec`, `public`, `scripts`, `server`, `stores`, `styles`, `tooling`, `types`, `uploads`, `yt-dlp`, and `.next`
-- **AND** each entry SHALL be labeled with one disposition category: `migrate`, `split`, `keep-root`, `generated`, `runtime-data`, or `remove`
+- **WHEN** running `pnpm ls --filter './tooling/*' --depth 0`
+- **THEN** `@norish/eslint-config`, `@norish/prettier-config`, `@norish/tsconfig`, `@norish/tailwind-config` are listed as workspace packages
+
+#### Scenario: Tooling github directory contains composite action
+
+- **WHEN** inspecting `tooling/github/setup/action.yml`
+- **THEN** the file defines a composite action that installs pnpm, sets up Node from `.nvmrc`, installs turbo, and runs `pnpm install`
 
 ### Requirement: Canonical Destination Rules for Product Source Folders
 
@@ -54,32 +56,39 @@ The migration plan SHALL define how `turbo-norish` placeholder source code is re
 
 ### Requirement: Root File Allowlist and Wrapper Pruning
 
-Post-migration cleanup SHALL maintain explicit root-level allowlists for both files and directories so root ownership remains intentional, while workspace-specific configuration lives with owning workspaces and legacy root wrappers are pruned or explicitly time-boxed.
+The root directory SHALL contain only files and directories that serve monorepo-wide orchestration. After tooling package migration, the root file allowlist SHALL NOT include `eslint.config.mjs`, `vitest.config.ts`, `.prettierrc`, `.prettierignore`, `tsconfig.server.json`, or `tsconfig.typecheck.json`. The `tsdown.config.ts` root shim SHALL be relocated to `apps/web/`. The `.nvmrc` file SHALL be added to the root allowlist for Node version pinning. Every file or dependency relocation SHALL atomically delete the source artifact in the same task step; no orphaned source files or stale root devDependencies SHALL remain after a phase validation gate.
 
-#### Scenario: Root wrappers are removed or tracked
+#### Scenario: Temporary shims are removed after migration
 
-- **WHEN** root placement is reviewed for migration hardening
-- **THEN** every root file and directory SHALL match an approved allowlist entry with defined ownership intent
-- **AND** duplicate/pass-through root wrapper files for workspace-owned configs SHALL be moved, removed, or converted into documented temporary shims
-- **AND** each temporary shim SHALL record an owner, rationale, and target removal milestone.
+- **WHEN** tooling packages are adopted by all workspaces
+- **THEN** `eslint.config.mjs`, `vitest.config.ts`, and `tsdown.config.ts` no longer exist at root
+- **AND** the `temporaryShims` array in `root-hygiene-policy.json` is empty
 
-#### Scenario: Non-config root clutter is rejected
+#### Scenario: Root allowlist reflects final state
 
-- **WHEN** root hygiene validation scans repository root entries
-- **THEN** unallowlisted root files or directories (including non-config artifacts) SHALL fail validation
-- **AND** remediation SHALL either move the entry into an owning workspace/tooling location or add an explicitly justified temporary exception.
+- **WHEN** inspecting `allowedRootFiles` in `root-hygiene-policy.json`
+- **THEN** it includes `.nvmrc`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `turbo.json`, `tsconfig.json`, `.gitignore`, `.npmrc`, `.dockerignore`, `.env.example`, `docker-compose.local.yml`, `AGENTS.md`, `CONTRIBUTING.md`, `LICENSE`, `README.md`
+- **AND** it does NOT include `eslint.config.mjs`, `vitest.config.ts`, `tsdown.config.ts`, `.prettierrc`, `.prettierignore`, `tsconfig.server.json`, `tsconfig.typecheck.json`
+
+#### Scenario: Move-and-prune enforcement at validation gates
+
+- **WHEN** a phase validation gate runs after file or dependency relocations
+- **THEN** no source artifact from any completed move exists at its original location
+- **AND** no root devDependency that was moved to a workspace package remains in root `package.json`
 
 ### Requirement: Ownership-Based Script Placement
 
-Script implementations SHALL be stored in ownership-aligned locations so root command wiring remains orchestration-only and script maintenance follows workspace ownership boundaries.
+Every workspace SHALL declare its own `lint`, `format`, `typecheck`, and `clean` scripts in its `package.json`. Root scripts SHALL delegate to Turbo (`turbo run lint`, `turbo run format`, etc.) rather than invoking tools directly. Per-workspace ESLint configs SHALL compose from `@norish/eslint-config` exports. Per-workspace Prettier configs SHALL reference `@norish/prettier-config`. Per-workspace TypeScript configs SHALL extend `@norish/tsconfig`.
 
-#### Scenario: Script implementations are placed by owner
+#### Scenario: Workspace scripts are self-contained
 
-- **WHEN** script placement is reviewed during hardening
-- **THEN** monorepo control scripts SHALL live under `tooling/monorepo/scripts/*`
-- **AND** app-specific scripts SHALL live under `apps/*/scripts/*`
-- **AND** package-specific scripts SHALL live under `packages/*/scripts/*`
-- **AND** root `package.json` scripts SHALL orchestrate or delegate to these owned script locations instead of hosting package-specific script implementations.
+- **WHEN** running `turbo run lint` from root
+- **THEN** each workspace runs its own `lint` script using its local `eslint.config.ts` that imports from `@norish/eslint-config`
+
+#### Scenario: Workspace prettier delegation
+
+- **WHEN** running `turbo run format` from root
+- **THEN** each workspace runs its own `format` script and resolves its Prettier config from `@norish/prettier-config` via `"prettier"` field in `package.json`
 
 ### Requirement: Root Test Ownership Migration and Pruning
 
@@ -97,3 +106,4 @@ Root `__tests__/**` content SHALL be migrated into owning workspace test locatio
 - **THEN** migrated root test files SHALL be deleted from the root `__tests__/**` tree in the same wave
 - **AND** empty legacy directories under root `__tests__/` SHALL be removed
 - **AND** root hygiene policy and dependency exception tracking SHALL be updated to reflect the new ownership.
+

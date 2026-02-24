@@ -49,27 +49,34 @@ The repository SHALL provide automated validation that fails when circular depen
 
 ### Requirement: Workspace Dependency Declarations Are Authoritative
 
-Each `apps/*` and `packages/*` workspace SHALL explicitly declare every direct dependency it imports or executes for runtime, build, test, and lint flows, and SHALL NOT rely on root-level fallback declarations.
+Every workspace SHALL declare all its direct dependencies in its own `package.json`. Tooling workspace packages (`@norish/eslint-config`, `@norish/prettier-config`, `@norish/tsconfig`, `@norish/tailwind-config`) SHALL own their plugin and tool dependencies. Consumer workspaces (apps and packages) SHALL reference tooling packages as `devDependencies` and SHALL NOT duplicate tooling package internals (e.g., ESLint plugins) in their own manifests.
 
-#### Scenario: Undeclared direct dependency fails validation
+#### Scenario: ESLint plugin ownership
 
-- **WHEN** workspace dependency validation runs
-- **THEN** any app/package importing a module not declared in its own manifest SHALL fail validation
-- **AND** remediation SHALL add the dependency to the owning workspace manifest instead of root `package.json`.
+- **WHEN** inspecting `tooling/eslint/package.json` dependencies
+- **THEN** all ESLint plugins (`typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks`, `eslint-plugin-import`, `eslint-plugin-jsx-a11y`, `eslint-plugin-turbo`, `@next/eslint-plugin-next`) are declared there
+- **AND** no other workspace `package.json` directly depends on these plugins
+
+#### Scenario: Consumer workspaces reference tooling packages
+
+- **WHEN** inspecting any app or library package `package.json`
+- **THEN** it lists `@norish/eslint-config`, `@norish/prettier-config`, and `@norish/tsconfig` as `devDependencies`
+- **AND** does NOT duplicate the plugins those tooling packages provide
 
 ### Requirement: Temporary Root Exceptions Are Traceable and Reducible
 
-Any root dependency exception used during migration hardening SHALL be treated as temporary policy debt, SHALL be traceable to active root-owned usage, and SHALL include concrete removal work needed to eliminate the exception.
+After tooling package migration, the `temporaryShims` array in `root-hygiene-policy.json` SHALL be empty. Any remaining root devDependencies beyond the approved control-plane set SHALL have an explicit exception entry with `owner`, `rationale`, and `removeBy` date. The dependency workspace validation script SHALL verify that no workspace duplicates a dependency already provided transitively by a tooling package it consumes.
 
-#### Scenario: Exception metadata proves active need and planned removal
+#### Scenario: Zero temporary shims after migration
 
-- **WHEN** root dependency exception policy is validated
-- **THEN** each temporary exception SHALL include owner, rationale, and target removal milestone
-- **AND** each temporary exception SHALL reference one or more active root-owned files that currently require it
-- **AND** exceptions justified by root `__tests__/**` usage SHALL include the mapped owning workspace destination for those tests
-- **AND** each temporary exception SHALL link to tracked migration work that removes the cited root-owned usage
-- **AND** exceptions tied only to tests/helpers that have been migrated into owning workspaces SHALL be removed from root manifest/policy allowlists in that migration wave
-- **AND** exceptions without active root-owned usage SHALL be removed from root manifest/policy allowlists.
+- **WHEN** inspecting `root-hygiene-policy.json` after tooling migration
+- **THEN** `temporaryShims` is an empty array
+
+#### Scenario: Dependency catalog prevents version drift
+
+- **WHEN** a shared dependency (TypeScript, ESLint, Prettier, Tailwind, Zod) is used across multiple workspaces
+- **THEN** all workspaces use `catalog:` references in `pnpm-workspace.yaml` for version resolution
+- **AND** no workspace hardcodes a version that conflicts with the catalog
 
 ### Requirement: Repository Modules Preserve One-Way Infrastructure Dependencies
 

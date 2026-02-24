@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Norish! This guide will help you 
 
 ## Prerequisites
 
-- **Node.js** 22.x or later
+- **Node.js** 24.13.1 (see `.nvmrc`)
 - **pnpm** 10.x or later
 - **Docker** (for PostgreSQL and Redis)
 - **Git**
@@ -83,7 +83,12 @@ norish/
 │   ├── shared/       # Shared utilities
 │   └── ui/           # UI component library
 ├── tooling/          # Repo tooling
-│   └── monorepo/     # Root hygiene + dependency checks
+│   ├── eslint/        # @norish/eslint-config
+│   ├── github/        # Shared GitHub Actions composite actions
+│   ├── monorepo/      # Root hygiene + dependency checks
+│   ├── prettier/      # @norish/prettier-config
+│   ├── tailwind/      # @norish/tailwind-config
+│   └── typescript/    # @norish/tsconfig
 └── docker/           # Local runtime containers
 ```
 
@@ -93,6 +98,23 @@ norish/
 - Monorepo control scripts live in `tooling/monorepo/scripts/`.
 - App-owned scripts live in `apps/<app>/scripts/`.
 - Package-owned scripts live in `packages/<package>/scripts/`.
+
+## Shared Tooling Packages
+
+- Shared lint, format, and TypeScript settings are published as workspace packages under `tooling/`.
+- Workspaces should compose from these packages instead of creating root-level config files.
+- Current shared packages:
+  - `@norish/eslint-config` (`tooling/eslint`) with `base`, `react`, and `nextjs` exports
+  - `@norish/prettier-config` (`tooling/prettier`)
+  - `@norish/tsconfig` (`tooling/typescript`) with `base.json` and `compiled-package.json`
+  - `@norish/tailwind-config` (`tooling/tailwind`) with `theme` and `postcss-config` exports
+
+### Adding a New Shared Config
+
+1. Create or update a workspace package under `tooling/` with a `package.json` and explicit `exports`.
+2. Add the package to `pnpm-workspace.yaml` and consume it via `workspace:*` from each owning workspace.
+3. Wire each workspace through local `package.json` scripts (for example `lint`, `format`, `typecheck`) and local config files that import shared config exports.
+4. Run `pnpm run hygiene:root`, `pnpm run deps:workspace`, and relevant `turbo run` checks before opening a PR.
 
 ## Code Style Guidelines
 

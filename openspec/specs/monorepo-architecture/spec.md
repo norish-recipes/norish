@@ -3,9 +3,7 @@
 ## Purpose
 
 TBD - created by archiving change refactor-turborepo-monorepo-foundation. Update Purpose after archive.
-
 ## Requirements
-
 ### Requirement: Tailored Turborepo Workspace Layout
 
 The repository SHALL adopt a Turborepo workspace layout tailored to Norish, with `apps/*` and `packages/*` boundaries and no unrelated template applications.
@@ -41,21 +39,30 @@ The phase-1 monorepo migration SHALL preserve the current single-deploy runtime 
 
 ### Requirement: Minimal Template Adoption
 
-The migration SHALL only adopt Turborepo and t3-turbo patterns that are needed for Norish's current architecture.
+The monorepo SHALL adopt only the structural patterns from `turbo-norish` that Norish needs: composable tooling packages (`@norish/eslint-config`, `@norish/prettier-config`, `@norish/tsconfig`, `@norish/tailwind-config`), per-workspace script delegation, dependency catalog in `pnpm-workspace.yaml`, and composite GitHub Action for CI setup. Template-specific starter code, Expo/mobile scaffolding, and shadcn-ui theme tokens SHALL NOT be adopted.
 
-#### Scenario: Non-required template parts are excluded
+#### Scenario: Tooling packages follow turbo-norish export conventions
 
-- **WHEN** workspace tooling and package layout are defined
-- **THEN** only required tooling and package patterns SHALL be introduced
-- **AND** template-specific technologies not currently used by Norish SHALL be excluded from the scope
+- **WHEN** a workspace needs ESLint, Prettier, TypeScript, or Tailwind configuration
+- **THEN** it imports from a `@norish/*` tooling package using the same export paths as `turbo-norish` (`@norish/eslint-config/base`, `@norish/prettier-config`, `@norish/tsconfig/base.json`, `@norish/tailwind-config/theme`)
+
+#### Scenario: Norish-specific config is preserved
+
+- **WHEN** adopting turbo-norish ESLint patterns
+- **THEN** norish-specific rules (HeroUI JSX-A11y overrides, `padding-line-between-statements`, `react/jsx-sort-props`) are preserved in the base or app-level config
 
 ### Requirement: Root Manifest Is Workspace Control Plane
 
-The repository root manifest SHALL function as a workspace control plane and SHALL remain orchestration-focused rather than owning application/backend runtime dependency surfaces.
+The root `package.json` SHALL contain only workspace orchestration concerns: Turbo, TypeScript, the shared Prettier config reference, and minimal CLI tools (`dotenv-cli`). All ESLint plugins, Prettier plugins, Vitest, jsdom, PostCSS, Tailwind, and other development dependencies SHALL be declared in the tooling workspace package that owns them. The root `devDependencies` list SHALL NOT exceed 6 entries after tooling package migration is complete.
 
-#### Scenario: Root manifest excludes workspace runtime libraries
+#### Scenario: Root devDependencies audit after tooling migration
 
-- **WHEN** root `package.json` is reviewed during monorepo hardening
-- **THEN** runtime libraries used by web/backend execution (for example framework, API/runtime SDKs, DB drivers, and queue runtimes) SHALL be declared in owning `apps/*` or `packages/*` manifests
-- **AND** root `dependencies` SHALL remain limited to approved workspace-link/root-control-plane entries
-- **AND** root `devDependencies` SHALL be limited to approved root tooling entries plus explicitly documented temporary exceptions tied to root-owned files.
+- **WHEN** `tooling/eslint/`, `tooling/prettier/`, `tooling/typescript/`, `tooling/tailwind/` are proper workspace packages
+- **THEN** root `devDependencies` contains only `turbo`, `typescript`, `@norish/prettier-config`, and at most 3 orchestration tools
+- **AND** all ESLint plugins, Prettier plugins, test frameworks, and CSS tooling are declared in their owning tooling package
+
+#### Scenario: Root dependencies remain workspace links only
+
+- **WHEN** inspecting root `package.json` `dependencies`
+- **THEN** only `workspace:*` links to `@norish/*` packages are present
+

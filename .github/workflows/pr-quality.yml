@@ -26,21 +26,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
   build:
     name: Build
@@ -50,21 +37,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Run build
         run: pnpm run build
@@ -77,21 +51,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Run circular dependency gate
         run: pnpm run deps:cycles
@@ -104,24 +65,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Run tests
-        run: pnpm run test:run
+        run: turbo run test
 
   lint:
     name: Lint
@@ -131,24 +79,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Run lint
-        run: pnpm run lint:check
+        run: turbo run lint
 
   typecheck:
     name: Typecheck
@@ -158,24 +93,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Run typecheck
-        run: pnpm run typecheck
+        run: turbo run typecheck
 
   format:
     name: Format Check
@@ -185,23 +107,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Run format check
-        run: pnpm run format:check
+        run: turbo run format
 
   i18n:
     name: Locale Keys Check
@@ -211,19 +121,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Check locale keys
         run: pnpm run i18n:check
