@@ -1,4 +1,4 @@
-import { isDirtyState, useDirtyState } from "@norish/shared/react/hooks";
+import { isDirtyState, useDirtyState } from "@norish/shared-react/hooks";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 

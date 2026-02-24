@@ -14,6 +14,7 @@
     "./react": "./src/react/index.ts",
     "./react/hooks": "./src/react/hooks/index.ts",
     "./react/contexts": "./src/react/contexts/index.ts",
+    "./react/providers": "./src/react/providers/index.ts",
     "./lib/meal-icon": "./src/lib/meal-icon.tsx",
     "./lib/*": "./src/lib/*.ts"
   },
@@ -29,6 +30,10 @@
     "@heroui/react": "^2.8.9",
     "@norish/config": "workspace:*",
     "@norish/db": "workspace:*",
+    "@tanstack/react-query": "^5.90.21",
+    "@trpc/client": "^11.10.0",
+    "@trpc/server": "^11.10.0",
+    "@trpc/tanstack-react-query": "^11.10.0",
     "better-auth": "^1.4.18",
     "date-fns": "^4.1.0",
     "drizzle-zod": "0.8.3",
@@ -37,6 +42,7 @@
     "jsonrepair": "3.13.2",
     "parse-ingredient": "2.1.0",
     "react": "19.2.4",
+    "superjson": "^2.2.6",
     "zod": "4.3.6"
   },
   "devDependencies": {

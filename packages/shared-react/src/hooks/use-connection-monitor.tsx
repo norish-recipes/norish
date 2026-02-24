@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 
-import { createClientLogger } from "../../lib/logger";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("ConnectionMonitor");
 

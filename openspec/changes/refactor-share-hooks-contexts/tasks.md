@@ -7,7 +7,40 @@
 
 - [x] 2.1 Create/expand shared React exports for extracted hooks/contexts in a package under `packages/*`.
 - [x] 2.2 Move `runtime-safe` modules into shared package paths and update imports in `apps/web`.
-- [ ] 2.3 Move `adapter-required` modules by extracting platform-specific effects behind injected adapters/interfaces.
+- [x] 2.3.0 Define shared adapter contracts as a prerequisite for cross-platform hooks:
+  - Data adapter surface for `query`/`mutation`/`subscription`/`cache` patterns.
+  - i18n adapter surface for locale access used by shared hooks.
+  - Web adapter implementations backed by current tRPC + `next-intl` wiring.
+  - Contract constraints to keep shared hooks free of `@/`, `next/*`, and app-local provider imports.
+- [ ] 2.3.1 Reclassify currently blocked `runtime-safe` candidates as adapter-required and migrate them by wave:
+  - Wave A (web data/context coupling):
+    - `apps/web/context/household-context.tsx`
+    - `apps/web/context/permissions-context.tsx`
+    - `apps/web/context/recipes-filters-context.tsx`
+    - `apps/web/hooks/recipes/use-recipe-ingredients.ts`
+    - `apps/web/hooks/use-recurrence-detection.ts`
+    - `apps/web/hooks/user/use-active-allergies.ts`
+  - Wave B (UI/container coupling):
+    - `apps/web/hooks/calendar/use-calendar-dnd.ts`
+    - `apps/web/hooks/groceries/use-grouped-grocery-dnd.ts`
+  - Wave C (barrel surfaces blocked by unresolved local exports):
+    - `apps/web/hooks/admin/index.ts`
+    - `apps/web/hooks/archive/index.ts`
+    - `apps/web/hooks/caldav/index.ts`
+    - `apps/web/hooks/calendar/index.ts`
+    - `apps/web/hooks/config/index.ts`
+    - `apps/web/hooks/favorites/index.ts`
+    - `apps/web/hooks/groceries/index.ts`
+    - `apps/web/hooks/households/index.ts`
+    - `apps/web/hooks/permissions/index.ts`
+    - `apps/web/hooks/ratings/index.ts`
+    - `apps/web/hooks/recipes/index.ts`
+    - `apps/web/hooks/stores/index.ts`
+  - Strategy constraints:
+    - Move one file at a time (move -> delete old path -> build -> fix build errors).
+    - Introduce adapter interfaces first for any `@/hooks`, `@/context`, `@/components`, or router/browser-coupled dependency.
+    - Only move barrel files after all referenced modules have shared-safe import paths.
+- [ ] 2.3.2 Move `adapter-required` modules by extracting platform-specific effects behind injected adapters/interfaces.
 - [ ] 2.4 Keep `web-only` modules in `apps/web` and replace direct cross-module imports with shared interfaces where needed.
 
 ## 3. Boundary enforcement

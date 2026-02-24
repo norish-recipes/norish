@@ -1,5 +1,5 @@
-import type { User } from "../../contracts";
-import { useSession } from "../../lib/auth/client";
+import type { User } from "@norish/shared/contracts";
+import { useSession } from "@norish/shared/lib/auth/client";
 
 export function useUser() {
   const { data: session, isPending, error } = useSession();

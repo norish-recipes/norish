@@ -9,6 +9,7 @@ import {
   useGroceryFormState,
   useScrollRestoration,
   useServingsScaler,
+  useUnitFormatter,
   useUserAvatar,
 } from "@norish/shared/react/hooks";
 
@@ -23,5 +24,6 @@ describe("shared react hooks exports", () => {
     expect(typeof useScrollRestoration).toBe("function");
     expect(typeof useConnectionMonitor).toBe("function");
     expect(typeof ConnectionMonitorProvider).toBe("function");
+    expect(typeof useUnitFormatter).toBe("function");
   });
 });
