@@ -2,9 +2,10 @@
 import * as cheerio from "cheerio";
 
 import { parseJsonWithRepair } from "@/lib/helpers";
-import { normalizeRecipeFromJson } from "@/server/parser/normalize";
+import { normalizeRecipeFromJson, normalizeRecipeFromRecipeScraperRecipeResponse } from "@/server/parser/normalize";
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { parserLogger as log } from "@/server/logger";
+import { components } from "@/types/recipe-scrapers-web-api";
 
 function isRecipeNode(node: any): boolean {
   if (!node || typeof node !== "object") return false;
@@ -108,4 +109,28 @@ export async function tryExtractRecipeFromJsonLd(
   parsed && (parsed.url = url);
 
   return parsed;
+}
+
+export async function tryExtractUsingRecipeScrapers(
+  url: string,
+  htmlContent: string,
+  recipeId: string
+): Promise<FullRecipeInsertDTO | null> {
+  // TODO: update URL
+  const result = await fetch("http://localhost:8000/scrape-html", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url, html: htmlContent }),
+  });
+
+  const payload = JSON.stringify({ url, html: htmlContent });
+
+  if(!result.ok) {
+    log.warn({ url, status: result.status }, "Recipe scraper service returned non-OK status");
+    return null;
+  }
+
+  const response = await result.json() as components["schemas"]["RecipeResponse"];
+
+  return await normalizeRecipeFromRecipeScraperRecipeResponse(response, recipeId);
 }

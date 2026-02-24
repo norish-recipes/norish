@@ -6,7 +6,7 @@
 
 import { decode } from "html-entities";
 
-import { parseIsoDuration } from "@/lib/helpers";
+import { parseTime } from "@/lib/helpers";
 
 export interface ParsedMetadata {
   name: string;
@@ -97,8 +97,8 @@ export function parseMetadata(json: Record<string, unknown>): ParsedMetadata {
     description: typeof json.description === "string" ? json.description : undefined,
     notes: typeof notesSource === "string" ? decode(notesSource) : undefined,
     servings: getServings(json.recipeYield),
-    prepMinutes: typeof prepTime === "string" ? parseIsoDuration(prepTime) : undefined,
-    cookMinutes: typeof cookTime === "string" ? parseIsoDuration(cookTime) : undefined,
-    totalMinutes: typeof totalTime === "string" ? parseIsoDuration(totalTime) : undefined,
+    prepMinutes: parseTime(prepTime),
+    cookMinutes: parseTime(cookTime),
+    totalMinutes: parseTime(totalTime),
   };
 }

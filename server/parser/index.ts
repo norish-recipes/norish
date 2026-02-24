@@ -3,7 +3,7 @@ import type { SiteAuthTokenDecryptedDto } from "@/types/dto/site-auth-tokens";
 import { fetchViaPlaywright } from "./fetch";
 
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
-import { tryExtractRecipeFromJsonLd, extractRecipeNodesFromJsonLd } from "@/server/parser/jsonld";
+import { tryExtractRecipeFromJsonLd, extractRecipeNodesFromJsonLd, tryExtractUsingRecipeScrapers } from "@/server/parser/jsonld";
 import { tryExtractRecipeFromMicrodata } from "@/server/parser/microdata";
 import { extractRecipeWithAI } from "@/server/ai/recipe-parser";
 import {
@@ -101,6 +101,10 @@ async function tryStructuredParsers(
   html: string,
   recipeId: string
 ): Promise<FullRecipeInsertDTO | null> {
+  const recipeScrapersParsed = await tryExtractUsingRecipeScrapers(url, html, recipeId);
+
+  if (hasValidRecipeData(recipeScrapersParsed)) return recipeScrapersParsed;
+
   const jsonLdParsed = await tryExtractRecipeFromJsonLd(url, html, recipeId);
 
   if (hasValidRecipeData(jsonLdParsed)) return jsonLdParsed;

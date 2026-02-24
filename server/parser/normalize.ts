@@ -27,6 +27,8 @@ import {
 
 import { getUnits } from "@/config/server-config-loader";
 import { parserLogger } from "@/server/logger";
+import { components } from "@/types/recipe-scrapers-web-api";
+import { parseTime } from "@/lib/helpers";
 
 // Re-export getServings for backward compatibility (used by mela-parser.ts)
 export { getServings };
@@ -174,5 +176,60 @@ export async function normalizeRecipeFromJson(
     categories,
     images,
     videos,
+  };
+}
+
+export async function normalizeRecipeFromRecipeScraperRecipeResponse(recipeResponse: components["schemas"]["RecipeResponse"],   recipeId?: string): Promise<FullRecipeInsertDTO> {
+  
+  // TODO: this function shares a lot of logic with normalizeRecipeFromJson - consider refactoring to extract common parsing logic for ingredients, steps, nutrition, images, etc. that can be reused by both JSON-LD normalization and scraper response normalization.
+  
+  // Generate a recipe ID if not provided, needed for image storage paths
+  const effectiveRecipeId = recipeId ?? randomUUID();
+
+  const units = await getUnits();
+
+  // --- INGREDIENTS ---
+  const { ingredients: recipeIngredients, systemUsed } = parseIngredients(recipeResponse, units);
+
+  // --- STEPS (with HowToSection heading support and bold step names) ---
+  const steps = parseSteps(recipeResponse.instructionsList, systemUsed);
+
+  // --- NUTRITION ---
+  const nutrition = extractNutrition(recipeResponse);
+
+  // --- IMAGES ---
+  const { images, primaryImage } = await parseImages(recipeResponse.image, effectiveRecipeId);
+
+  // --- TAGS ---
+  const tags = parseTags(recipeResponse.keywords);
+
+  // --- CATEGORIES ---
+  const categories = parseCategories(recipeResponse.category);
+
+  const { prepTime, cookTime, totalTime } = recipeResponse;
+
+  // --- FINAL STRUCTURE ---
+  return {
+    id: effectiveRecipeId,
+    name: recipeResponse.title ?? "Untitled recipe",
+    description: recipeResponse.description,
+    notes: null, // not extracted by scraper service
+    url: recipeResponse.canonicalUrl,
+    image: primaryImage,
+    servings: getServings(recipeResponse.yields),
+    prepMinutes: parseTime(prepTime),
+    cookMinutes: parseTime(cookTime),
+    totalMinutes: parseTime(totalTime),
+    calories: nutrition.calories,
+    fat: nutrition.fat,
+    carbs: nutrition.carbs,
+    protein: nutrition.protein,
+    systemUsed,
+    steps,
+    recipeIngredients,
+    tags,
+    categories,
+    images,
+    videos: [], // scraper service does not currently extract videos
   };
 }

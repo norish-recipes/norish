@@ -13,6 +13,7 @@ import {
   addWeeks,
   buildAvatarFilename,
   isAvatarFilenameForUser,
+  parseTime,
 } from "@/lib/helpers";
 
 describe("parseIsoDuration", () => {
@@ -34,6 +35,33 @@ describe("parseIsoDuration", () => {
 
   it("returns undefined for empty string", () => {
     expect(parseIsoDuration("")).toBeUndefined();
+  });
+});
+
+describe("parseTime", () => {
+  it("parses ISO duration string", () => {
+    expect(parseTime("PT2H15M")).toBe(135);
+  });
+
+  it("parses numeric minutes", () => {
+    expect(parseTime(45)).toBe(45);
+  });
+
+  it("returns undefined for invalid numbers", () => {
+    expect(parseTime(NaN)).toBeUndefined();
+    expect(parseTime(Infinity)).toBeUndefined();
+  });
+
+  it("returns undefined for invalid string", () => {
+    expect(parseTime("not a time")).toBeUndefined();
+    expect(parseTime("")).toBeUndefined();
+  });
+
+  it("returns undefined for invalid input", () => {
+    expect(parseTime(null)).toBeUndefined();
+    expect(parseTime(undefined)).toBeUndefined();
+    expect(parseTime({})).toBeUndefined();
+    expect(parseTime([])).toBeUndefined();
   });
 });
 

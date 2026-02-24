@@ -80,6 +80,23 @@ export const parseIsoDuration = (iso: string): number | undefined => {
 };
 
 /**
+ * Parse time to number of minutes. Handles ISO durations (e.g. "PT1H30M") and plain numbers (assumed to be minutes).
+ * @param time 
+ * @returns 
+ */
+export function parseTime(time: unknown): number | undefined {
+  if(typeof time === "string") {
+    return parseIsoDuration(time);
+  }
+
+  if(typeof time === "number" && Number.isFinite(time)) {
+    return time;
+  }
+
+  return undefined;
+}
+
+/**
  * Format milliseconds as a timer display string (e.g. "5:03" or "1:02:30").
  */
 export function formatTimerMs(ms: number): string {
