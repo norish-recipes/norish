@@ -1,12 +1,12 @@
 "use client";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { useUser } from "@/hooks/use-user";
 import { addToast } from "@heroui/react";
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { useTranslations } from "next-intl";
 
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
+import { useUser } from "@norish/shared/react/hooks";
 import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import { useHouseholdCacheHelpers } from "./use-household-cache";

@@ -2,10 +2,10 @@
 
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
-import { useUser } from "@/hooks/use-user";
 import { useQuery } from "@tanstack/react-query";
 
 import type { User } from "@norish/shared/contracts";
+import { useUser } from "@norish/shared/react/hooks";
 import { signOut as betterAuthSignOut } from "@norish/shared/lib/auth/client";
 
 type UserContextType = {

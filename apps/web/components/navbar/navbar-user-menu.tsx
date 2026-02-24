@@ -6,7 +6,7 @@ import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitch } from "@/components/shared/language-switch";
 import { useUserContext } from "@/context/user-context";
 import { useVersionQuery } from "@/hooks/config";
-import { useUserAvatar } from "@/hooks/use-user-avatar";
+import { useUserAvatar } from "@norish/shared/react/hooks";
 import {
   ArrowDownTrayIcon,
   ArrowLeftStartOnRectangleIcon,

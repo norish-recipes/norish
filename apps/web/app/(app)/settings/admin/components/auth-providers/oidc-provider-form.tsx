@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
-import { useDirtyState } from "@/hooks/use-dirty-state";
+import { useDirtyState } from "@norish/shared/react/hooks";
 import { Input, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
 

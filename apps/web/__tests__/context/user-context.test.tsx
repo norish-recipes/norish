@@ -7,7 +7,7 @@ const mockUseUser = vi.hoisted(() => vi.fn());
 const mockUseTRPC = vi.hoisted(() => vi.fn());
 const mockUseQuery = vi.hoisted(() => vi.fn());
 
-vi.mock("@/hooks/use-user", () => ({
+vi.mock("@norish/shared/react/hooks", () => ({
   useUser: mockUseUser,
 }));
 

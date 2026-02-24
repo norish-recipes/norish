@@ -1,4 +1,4 @@
-import { getAvatarFallbackStyle } from "@norish/shared/lib/avatar-color";
+import { getAvatarFallbackStyle } from "../../lib/avatar-color";
 
 type UseUserAvatarParams = {
   image?: string | null;

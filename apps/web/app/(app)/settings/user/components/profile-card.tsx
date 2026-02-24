@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useUserAvatar } from "@/hooks/use-user-avatar";
+import { useUserAvatar } from "@norish/shared/react/hooks";
 import { TrashIcon } from "@heroicons/react/16/solid";
 import { PencilIcon } from "@heroicons/react/20/solid";
 import { UserCircleIcon } from "@heroicons/react/24/outline";

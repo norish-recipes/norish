@@ -11,6 +11,9 @@
     "./contracts/dto/auth": "./src/contracts/dto/auth.ts",
     "./contracts/dto/*": "./src/contracts/dto/*.d.ts",
     "./contracts/*": "./src/contracts/*.ts",
+    "./react": "./src/react/index.ts",
+    "./react/hooks": "./src/react/hooks/index.ts",
+    "./react/contexts": "./src/react/contexts/index.ts",
     "./lib/meal-icon": "./src/lib/meal-icon.tsx",
     "./lib/*": "./src/lib/*.ts"
   },
@@ -33,6 +36,7 @@
     "html-entities": "^2.6.0",
     "jsonrepair": "3.13.2",
     "parse-ingredient": "2.1.0",
+    "react": "19.2.4",
     "zod": "4.3.6"
   },
   "devDependencies": {
