@@ -4,6 +4,10 @@
   "type": "module",
   "exports": {
     "./theme": "./theme.css",
+    "./native-theme": {
+      "node": "./native-theme.js",
+      "default": "./native-theme.css"
+    },
     "./postcss-config": "./postcss-config.js",
     "./hero": "./hero.ts"
   },

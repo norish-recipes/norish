@@ -6,6 +6,7 @@
   "packageManager": "pnpm@10.30.1",
   "scripts": {
     "dev": "turbo watch dev -F @norish/web... --continue",
+    "dev:mobile": "pnpm --filter @norish/mobile run dev",
     "build:web": "pnpm --filter @norish/web run build:web",
     "build": "turbo run build",
     "build:server": "turbo run build:server -F @norish/web...",
@@ -60,6 +61,19 @@
       "@types/react": "19.2.14",
       "@types/react-dom": "19.2.3",
       "ioredis": "^5.9.3"
+    },
+    "packageExtensions": {
+      "uniwind@*": {
+        "dependencies": {
+          "metro": "0.83.3",
+          "metro-cache": "0.83.3"
+        }
+      },
+      "@expo/cli@*": {
+        "dependencies": {
+          "metro-runtime": "npm:@expo/metro-runtime@^6.1.2"
+        }
+      }
     }
   }
 }

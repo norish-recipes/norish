@@ -1,0 +1,43 @@
+@import "./theme.css";
+
+:root,
+[data-theme="light"] {
+  --surface: var(--content1);
+  --surface-foreground: var(--content1-foreground);
+  --surface-secondary: var(--content2);
+  --surface-secondary-foreground: var(--content2-foreground);
+  --surface-tertiary: var(--content3);
+  --surface-tertiary-foreground: var(--content3-foreground);
+  --overlay-foreground: var(--foreground);
+  --muted: var(--default-500);
+  --segment: var(--content1);
+  --segment-foreground: var(--foreground);
+  --border: var(--default-200);
+  --separator: var(--default-300);
+  --link: var(--foreground);
+  --field-background: var(--content1);
+  --field-foreground: var(--foreground);
+  --field-placeholder: var(--default-500);
+  --field-border: transparent;
+}
+
+.dark,
+[data-theme="dark"] {
+  --surface: var(--content1);
+  --surface-foreground: var(--content1-foreground);
+  --surface-secondary: var(--content2);
+  --surface-secondary-foreground: var(--content2-foreground);
+  --surface-tertiary: var(--content3);
+  --surface-tertiary-foreground: var(--content3-foreground);
+  --overlay-foreground: var(--foreground);
+  --muted: var(--default-600);
+  --segment: var(--content2);
+  --segment-foreground: var(--foreground);
+  --border: var(--default-300);
+  --separator: var(--default-400);
+  --link: var(--foreground);
+  --field-background: var(--content2);
+  --field-foreground: var(--foreground);
+  --field-placeholder: var(--default-600);
+  --field-border: transparent;
+}

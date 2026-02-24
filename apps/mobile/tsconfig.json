@@ -1,0 +1,17 @@
+{
+  "extends": "@norish/tsconfig/base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2022"
+    ]
+  },
+  "include": [
+    ".",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ],
+  "exclude": [
+    "eslint.config.ts"
+  ]
+}
