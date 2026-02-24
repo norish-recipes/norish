@@ -39,6 +39,7 @@
     "@norish/i18n": "workspace:*",
     "@norish/queue": "workspace:*",
     "@norish/shared": "workspace:*",
+    "@norish/shared-react": "workspace:*",
     "@norish/ui": "workspace:*",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-virtual": "^3.13.18",

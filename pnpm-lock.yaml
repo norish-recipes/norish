@@ -153,6 +153,9 @@ importers:
       '@norish/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@norish/shared-react':
+        specifier: workspace:*
+        version: link:../../packages/shared-react
       '@norish/ui':
         specifier: workspace:*
         version: link:../../packages/ui
