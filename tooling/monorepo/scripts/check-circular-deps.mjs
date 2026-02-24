@@ -28,7 +28,7 @@ export function buildMadgeArgs(targets) {
     "--extensions",
     "ts,tsx",
     "--ts-config",
-    "tsconfig.json",
+    "tooling/typescript/base.json",
     ...targets,
   ];
 }
