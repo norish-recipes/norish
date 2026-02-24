@@ -2,12 +2,19 @@
 /** @typedef {import("prettier-plugin-tailwindcss").PluginOptions} TailwindConfig */
 /** @typedef {import("@ianvs/prettier-plugin-sort-imports").PluginConfig} SortImportsConfig */
 
+import { fileURLToPath } from "node:url";
+
+const sortImportsPluginPath = fileURLToPath(
+  import.meta.resolve("@ianvs/prettier-plugin-sort-imports")
+);
+const tailwindPluginPath = fileURLToPath(import.meta.resolve("prettier-plugin-tailwindcss"));
+
 /** @type {PrettierConfig & TailwindConfig & SortImportsConfig} */
 const config = {
   printWidth: 100,
   trailingComma: "es5",
   singleQuote: false,
-  plugins: ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
+  plugins: [sortImportsPluginPath, tailwindPluginPath],
   tailwindFunctions: ["cn", "cva", "clsx"],
   importOrder: [
     "<TYPES>",

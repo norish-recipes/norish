@@ -23,6 +23,12 @@ vi.mock("ai", () => ({
 vi.mock("@norish/config/server-config-loader", () => ({
   isAIEnabled: vi.fn(),
   getAutoTaggingMode: vi.fn(),
+  getAIConfig: vi.fn().mockResolvedValue({
+    enabled: true,
+    provider: "openai",
+    model: "gpt-4o-mini",
+    apiKey: "test-key",
+  }),
 }));
 
 vi.mock("@norish/db/repositories/tags", () => ({

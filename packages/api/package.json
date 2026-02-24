@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./trpc": "./src/trpc.ts",
     "./logger": "./src/logger.ts",
+    "./parser": "./src/parser/index.ts",
     "./*": "./src/*"
   },
   "scripts": {
@@ -63,6 +64,8 @@
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
     "@types/heic-convert": "^2.1.0",
     "@types/uuid": "^11.0.0",
     "@types/ws": "8.18.1",

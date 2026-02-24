@@ -86,12 +86,12 @@
 
 ### B7. Phase B Validation
 
-- [ ] B7.1 Run `pnpm run deps:cycles` and verify zero cycles.
-- [ ] B7.2 Run `turbo run lint` and verify all workspaces lint successfully.
-- [ ] B7.3 Run `turbo run typecheck` and verify all workspaces typecheck.
-- [ ] B7.4 Run `turbo run format` and verify formatting checks pass.
-- [ ] B7.5 Run `pnpm test:run` and verify all tests pass.
-- [ ] B7.6 Run `pnpm build` and verify build succeeds.
+- [x] B7.1 Run `pnpm run deps:cycles` and verify zero cycles.
+- [x] B7.2 Run `turbo run lint` and verify all workspaces lint successfully.
+- [x] B7.3 Run `turbo run typecheck` and verify all workspaces typecheck.
+- [x] B7.4 Run `turbo run format` and verify formatting checks pass.
+- [x] B7.5 Run `pnpm test:run` and verify all tests pass.
+- [x] B7.6 Run `pnpm build` and verify build succeeds.
 
 Phase C tasks are blocked until B7.1-B7.6 are all green.
 
@@ -99,56 +99,56 @@ Phase C tasks are blocked until B7.1-B7.6 are all green.
 
 ### C1. Root Shim Removal
 
-- [ ] C1.1 Delete `eslint.config.mjs` from root (no longer needed; Turbo delegates to per-workspace configs).
-- [ ] C1.2 Delete `vitest.config.ts` from root (replaced by workspace-local configs).
-- [ ] C1.3 Move `tsdown.config.ts` from root to `apps/web/tsdown.config.ts` and update `apps/web/package.json` `build:server` script. Delete the root `tsdown.config.ts` in the same step (move-and-prune: D8).
-- [ ] C1.4 Delete `tsconfig.server.json` from root (server build config moves into `apps/web/` scope).
-- [ ] C1.5 Delete `tsconfig.typecheck.json` from root (typecheck now runs per-workspace).
-- [ ] C1.6 Delete `.prettierrc` and `.prettierignore` from root (replaced by `@norish/prettier-config` package and per-workspace scripts).
+- [x] C1.1 Delete `eslint.config.mjs` from root (no longer needed; Turbo delegates to per-workspace configs).
+- [x] C1.2 Delete `vitest.config.ts` from root (replaced by workspace-local configs).
+- [x] C1.3 Move `tsdown.config.ts` from root to `apps/web/tsdown.config.ts` and update `apps/web/package.json` `build:server` script. Delete the root `tsdown.config.ts` in the same step (move-and-prune: D8).
+- [x] C1.4 Delete `tsconfig.server.json` from root (server build config moves into `apps/web/` scope).
+- [x] C1.5 Delete `tsconfig.typecheck.json` from root (typecheck now runs per-workspace).
+- [x] C1.6 Delete `.prettierrc` and `.prettierignore` from root (replaced by `@norish/prettier-config` package and per-workspace scripts).
 
 ### C2. Root `package.json` Slimming
 
-- [ ] C2.1 Remove all ESLint plugins, ESLint compat packages, and ESLint parser from root devDependencies.
-- [ ] C2.2 Remove `prettier`, `prettier-plugin-tailwindcss` from root devDependencies (now in `@norish/prettier-config`).
-- [ ] C2.3 Remove `vitest`, `@vitejs/plugin-react`, `jsdom` from root devDependencies (now in workspace-local configs).
-- [ ] C2.4 Remove `postcss`, `tailwindcss`, `@tailwindcss/postcss` from root devDependencies (now in `@norish/tailwind-config`).
-- [ ] C2.5 Remove `globals` from root devDependencies (now in `@norish/eslint-config`).
-- [ ] C2.6 Move `drizzle-kit` from root devDependencies to `packages/db` devDependencies. Remove `drizzle-kit` from root `package.json` devDependencies in the same step (move-and-prune: D8).
-- [ ] C2.7 Evaluate `tsx`, `cross-env`, and `tsdown` -- move to owning workspaces if not needed at root. For each dependency moved, remove it from root devDependencies in the same step (move-and-prune: D8).
-- [ ] C2.8 Add `@norish/prettier-config` as root devDependency for root-level `prettier` field.
-- [ ] C2.9 Update root scripts to use Turbo delegation: `"lint": "turbo run lint"`, `"format": "turbo run format"`, `"typecheck": "turbo run typecheck"`, etc.
-- [ ] C2.10 Convert shared dependency versions to `catalog:` references where applicable.
+- [x] C2.1 Remove all ESLint plugins, ESLint compat packages, and ESLint parser from root devDependencies.
+- [x] C2.2 Remove `prettier`, `prettier-plugin-tailwindcss` from root devDependencies (now in `@norish/prettier-config`).
+- [x] C2.3 Remove `vitest`, `@vitejs/plugin-react`, `jsdom` from root devDependencies (now in workspace-local configs).
+- [x] C2.4 Remove `postcss`, `tailwindcss`, `@tailwindcss/postcss` from root devDependencies (now in `@norish/tailwind-config`).
+- [x] C2.5 Remove `globals` from root devDependencies (now in `@norish/eslint-config`).
+- [x] C2.6 Move `drizzle-kit` from root devDependencies to `packages/db` devDependencies. Remove `drizzle-kit` from root `package.json` devDependencies in the same step (move-and-prune: D8).
+- [x] C2.7 Evaluate `tsx`, `cross-env`, and `tsdown` -- move to owning workspaces if not needed at root. For each dependency moved, remove it from root devDependencies in the same step (move-and-prune: D8).
+- [x] C2.8 Add `@norish/prettier-config` as root devDependency for root-level `prettier` field.
+- [x] C2.9 Update root scripts to use Turbo delegation: `"lint": "turbo run lint"`, `"format": "turbo run format"`, `"typecheck": "turbo run typecheck"`, etc.
+- [x] C2.10 Convert shared dependency versions to `catalog:` references where applicable.
 
 ### C3. Root TypeScript Config Simplification
 
-- [ ] C3.1 Simplify root `tsconfig.json` to extend `@norish/tsconfig/base.json` and add only root-level includes. Remove all `@norish/*` path aliases (resolved via workspace linking). Keep `next` plugin reference.
-- [ ] C3.2 Remove root `tsconfig.tsbuildinfo` and `tsconfig.typecheck.tsbuildinfo` from tracking (generated files).
+- [x] C3.1 Simplify root `tsconfig.json` to extend `@norish/tsconfig/base.json` and add only root-level includes. Remove all `@norish/*` path aliases (resolved via workspace linking). Keep `next` plugin reference.
+- [x] C3.2 Remove root `tsconfig.tsbuildinfo` and `tsconfig.typecheck.tsbuildinfo` from tracking (generated files).
 
 ### C4. Turbo Configuration Enhancement
 
-- [ ] C4.1 Update `turbo.json` to add `globalEnv` for norish-specific env vars (`DATABASE_URL`, `MASTER_KEY`, `AUTH_URL`, `CHROME_WS_ENDPOINT`, `REDIS_URL`).
-- [ ] C4.2 Add `globalPassThroughEnv` for `NODE_ENV`, `CI`, `npm_lifecycle_event`.
-- [ ] C4.3 Add `topo` task for dependency ordering.
-- [ ] C4.4 Add caching configuration: `outputs` for `.cache/` directories, `outputLogs: "new-only"` for format task.
-- [ ] C4.5 Add `apps/web/turbo.json` extending root with `.next/**` build outputs and `persistent: true` dev.
+- [x] C4.1 Update `turbo.json` to add `globalEnv` for norish-specific env vars (`DATABASE_URL`, `MASTER_KEY`, `AUTH_URL`, `CHROME_WS_ENDPOINT`, `REDIS_URL`).
+- [x] C4.2 Add `globalPassThroughEnv` for `NODE_ENV`, `CI`, `npm_lifecycle_event`.
+- [x] C4.3 Add `topo` task for dependency ordering.
+- [x] C4.4 Add caching configuration: `outputs` for `.cache/` directories, `outputLogs: "new-only"` for format task.
+- [x] C4.5 Add `apps/web/turbo.json` extending root with `.next/**` build outputs and `persistent: true` dev.
 
 ### C5. Hygiene Policy Update
 
-- [ ] C5.1 Remove `eslint.config.mjs`, `vitest.config.ts`, `tsdown.config.ts`, `.prettierrc`, `.prettierignore`, `tsconfig.server.json`, `tsconfig.typecheck.json` from `allowedRootFiles`.
-- [ ] C5.2 Add `.nvmrc` to `allowedRootFiles`.
-- [ ] C5.3 Clear the `temporaryShims` array.
-- [ ] C5.4 Remove all ESLint plugin/compat/parser entries from `allowedRootDevDependencies`.
-- [ ] C5.5 Remove `prettier`, `prettier-plugin-tailwindcss`, `vitest`, `@vitejs/plugin-react`, `jsdom`, `postcss`, `tailwindcss`, `@tailwindcss/postcss`, `globals`, `drizzle-kit` from `allowedRootDevDependencies`.
-- [ ] C5.6 Add `@norish/prettier-config` and `dotenv-cli` to `allowedRootDevDependencies` (if used at root).
-- [ ] C5.7 Add validation for tooling workspace package existence (each `tooling/*/package.json` must exist).
+- [x] C5.1 Remove `eslint.config.mjs`, `vitest.config.ts`, `tsdown.config.ts`, `.prettierrc`, `.prettierignore`, `tsconfig.server.json`, `tsconfig.typecheck.json` from `allowedRootFiles`.
+- [x] C5.2 Add `.nvmrc` to `allowedRootFiles`.
+- [x] C5.3 Clear the `temporaryShims` array.
+- [x] C5.4 Remove all ESLint plugin/compat/parser entries from `allowedRootDevDependencies`.
+- [x] C5.5 Remove `prettier`, `prettier-plugin-tailwindcss`, `vitest`, `@vitejs/plugin-react`, `jsdom`, `postcss`, `tailwindcss`, `@tailwindcss/postcss`, `globals`, `drizzle-kit` from `allowedRootDevDependencies`.
+- [x] C5.6 Add `@norish/prettier-config` and `dotenv-cli` to `allowedRootDevDependencies` (if used at root).
+- [x] C5.7 Add validation for tooling workspace package existence (each `tooling/*/package.json` must exist).
 
 ### C6. Phase C Validation
 
-- [ ] C6.1 Run `pnpm install` from clean state.
-- [ ] C6.2 Run `pnpm run hygiene:root` and verify pass.
-- [ ] C6.3 Run `pnpm run deps:workspace` and verify pass.
-- [ ] C6.4 Run `turbo run lint`, `turbo run typecheck`, `turbo run format`, `pnpm test:run`, `pnpm build`.
-- [ ] C6.5 Run `pnpm run deps:cycles` and verify zero cycles.
+- [x] C6.1 Run `pnpm install` from clean state.
+- [x] C6.2 Run `pnpm run hygiene:root` and verify pass.
+- [x] C6.3 Run `pnpm run deps:workspace` and verify pass.
+- [x] C6.4 Run `turbo run lint`, `turbo run typecheck`, `turbo run format`, `pnpm test:run`, `pnpm build`.
+- [x] C6.5 Run `pnpm run deps:cycles` and verify zero cycles.
 
 ## Phase D: CI and Documentation Alignment
 

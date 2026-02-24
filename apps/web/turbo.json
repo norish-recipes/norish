@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "outputs": [".next/**", "dist-server/**"]
+    },
+    "test": {
+      "env": ["DATABASE_URL", "MASTER_KEY", "AUTH_URL"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "env": ["DATABASE_URL", "MASTER_KEY", "AUTH_URL"]
+    }
+  }
+}

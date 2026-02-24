@@ -28,7 +28,7 @@ describe("Timer Keywords Configuration - Seeding & Override Behavior", () => {
   // Default config from file
   const DEFAULT_KEYWORDS = JSON.parse(
     fs.readFileSync(
-      path.join(process.cwd(), "packages/config/src/timer-keywords.default.json"),
+      path.resolve(import.meta.dirname, "../../../../../config/src/timer-keywords.default.json"),
       "utf-8"
     )
   );

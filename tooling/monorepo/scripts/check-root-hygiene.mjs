@@ -38,6 +38,7 @@ const allowedRootDeps = new Set(policy.allowedRootDependencies ?? []);
 const allowedRootDevDeps = new Set(policy.allowedRootDevDependencies ?? []);
 const allowedRootFiles = new Set(policy.allowedRootFiles ?? []);
 const allowedRootDirectories = new Set(policy.allowedRootDirectories ?? []);
+const requiredToolingWorkspacePackages = policy.requiredToolingWorkspacePackages ?? [];
 
 for (const dependency of rootDependencies) {
   if (!allowedRootDeps.has(dependency)) {
@@ -58,6 +59,13 @@ for (const entry of policy.dependencyExceptions ?? []) {
 
   if (!rootManifestDependencySet.has(entry.name)) {
     errors.push(`Dependency exception has no root manifest entry: ${entry.name}`);
+  }
+}
+
+for (const packagePath of requiredToolingWorkspacePackages) {
+  const fullPath = path.join(rootDir, packagePath);
+  if (!fs.existsSync(fullPath)) {
+    errors.push(`Required tooling workspace package is missing: ${packagePath}`);
   }
 }
 

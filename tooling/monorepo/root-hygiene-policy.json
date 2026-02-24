@@ -11,57 +11,26 @@
     "@norish/web"
   ],
   "allowedRootDevDependencies": [
-    "@eslint/compat",
-    "@eslint/eslintrc",
-    "@eslint/js",
-    "@tailwindcss/postcss",
-    "@typescript-eslint/eslint-plugin",
-    "@typescript-eslint/parser",
-    "@vitejs/plugin-react",
-    "cross-env",
-    "drizzle-kit",
-    "eslint",
-    "eslint-config-prettier",
-    "eslint-plugin-import",
-    "eslint-plugin-jsx-a11y",
-    "eslint-plugin-prettier",
-    "eslint-plugin-react",
-    "eslint-plugin-react-hooks",
-    "eslint-plugin-unused-imports",
-    "globals",
-    "jsdom",
-    "postcss",
-    "prettier",
-    "prettier-plugin-tailwindcss",
-    "tailwindcss",
-    "tsdown",
-    "tsx",
+    "@norish/prettier-config",
     "turbo",
-    "typescript",
-    "vitest"
+    "typescript"
   ],
   "allowedRootFiles": [
     ".dockerignore",
     ".env.example",
     ".gitignore",
     ".npmrc",
-    ".prettierignore",
-    ".prettierrc",
+    ".nvmrc",
     "AGENTS.md",
     "CONTRIBUTING.md",
     "LICENSE",
     "README.md",
     "docker-compose.local.yml",
-    "eslint.config.mjs",
     "package.json",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "tsconfig.json",
-    "tsconfig.server.json",
-    "tsconfig.typecheck.json",
-    "tsdown.config.ts",
-    "turbo.json",
-    "vitest.config.ts"
+    "turbo.json"
   ],
   "allowedRootDirectories": [
     ".github",
@@ -75,25 +44,12 @@
   ],
   "forbiddenRootFiles": ["next.config.js", "postcss.config.js", "i18n/request.ts"],
   "disallowedNpmrcSettings": ["shamefully-hoist=true", "strict-peer-dependencies=false"],
-  "temporaryShims": [
-    {
-      "path": "eslint.config.mjs",
-      "owner": "platform-monorepo",
-      "rationale": "Root lint entrypoint remains for editor tooling while workspace scripts are standardized.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "path": "vitest.config.ts",
-      "owner": "platform-monorepo",
-      "rationale": "Root vitest entrypoint remains as a command delegator while workspace-owned tests run under apps/web and packages/api.",
-      "removeBy": "2026-06-30"
-    },
-    {
-      "path": "tsdown.config.ts",
-      "owner": "platform-monorepo",
-      "rationale": "Server bundle entrypoint remains at root until apps/web build scripts fully own tsdown configuration.",
-      "removeBy": "2026-06-30"
-    }
+  "temporaryShims": [],
+  "requiredToolingWorkspacePackages": [
+    "tooling/eslint/package.json",
+    "tooling/prettier/package.json",
+    "tooling/typescript/package.json",
+    "tooling/tailwind/package.json"
   ],
   "dependencyExceptions": []
 }

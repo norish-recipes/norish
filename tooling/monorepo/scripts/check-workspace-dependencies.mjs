@@ -66,7 +66,8 @@ function normalizeDependencyName(specifier) {
     specifier.startsWith("./") ||
     specifier.startsWith("../") ||
     specifier.startsWith("/") ||
-    specifier.startsWith("@/")
+    specifier.startsWith("@/") ||
+    specifier.startsWith("~/")
   ) {
     return null;
   }

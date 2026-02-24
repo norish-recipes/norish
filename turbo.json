@@ -1,9 +1,14 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "globalPassThroughEnv": ["NODE_ENV", "CI", "npm_lifecycle_event"],
   "tasks": {
+    "topo": {
+      "dependsOn": ["^topo"],
+      "cache": false
+    },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "dist-server/**"]
+      "outputs": ["dist/**", "dist-server/**", ".cache/**"]
     },
     "build:server": {
       "dependsOn": ["^build:server"],
@@ -28,7 +33,7 @@
     },
     "typecheck": {
       "dependsOn": ["^typecheck"],
-      "outputs": ["**/*.tsbuildinfo"]
+      "outputs": ["**/*.tsbuildinfo", ".cache/**"]
     },
     "test": {
       "dependsOn": ["^test"],
@@ -36,7 +41,8 @@
     },
     "format": {
       "dependsOn": ["^format"],
-      "outputs": []
+      "outputs": [],
+      "outputLogs": "new-only"
     },
     "deps:cycles": {
       "cache": false

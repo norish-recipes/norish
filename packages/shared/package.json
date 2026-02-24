@@ -39,8 +39,11 @@
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
     "@types/node": "^25.3.0",
     "@types/react": "19.2.14",
+    "jsdom": "catalog:",
     "vitest": "^4.0.18"
   },
   "prettier": "@norish/prettier-config"
