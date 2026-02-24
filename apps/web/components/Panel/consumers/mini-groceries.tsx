@@ -1,15 +1,14 @@
 "use client";
 
-import { addToast, Button, Checkbox, Divider, Input } from "@heroui/react";
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { useTranslations } from "next-intl";
-
-import { useUnitsQuery } from "@/hooks/config";
-import { useRecipeIngredients } from "@/hooks/recipes/use-recipe-ingredients";
-import { useGroceriesMutations } from "@/hooks/groceries";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Panel from "@/components/Panel/Panel";
-import { useServingsScaler, formatServings } from "@/hooks/recipes/use-servings-scaler";
+import { useUnitsQuery } from "@/hooks/config";
+import { useGroceriesMutations } from "@/hooks/groceries";
+import { useRecipeIngredients } from "@/hooks/recipes/use-recipe-ingredients";
+import { formatServings, useServingsScaler } from "@/hooks/recipes/use-servings-scaler";
+import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { addToast, Button, Checkbox, Divider, Input } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 type MiniGroceriesProps = {
   open: boolean;

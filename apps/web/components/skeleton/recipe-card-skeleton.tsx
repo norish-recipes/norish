@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, Skeleton, CardBody } from "@heroui/react";
 import { memo } from "react";
+import { Card, CardBody, Skeleton } from "@heroui/react";
 
 function RecipeCardSkeletonComponent() {
   return (

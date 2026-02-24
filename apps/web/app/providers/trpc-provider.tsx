@@ -1,7 +1,7 @@
 "use client";
 
-import type { AppRouter } from "@norish/api/trpc";
-
+import type { ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createTRPCClient,
@@ -14,8 +14,9 @@ import {
   wsLink,
 } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
-import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import superjson from "superjson";
+
+import type { AppRouter } from "@norish/api/trpc";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("trpc");

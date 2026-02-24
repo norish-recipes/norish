@@ -1,8 +1,7 @@
-import type { PromptsConfigInput } from "@norish/config/zod/server-config";
-
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import type { PromptsConfigInput } from "@norish/config/zod/server-config";
 import { resolveExistingWorkspacePath } from "@norish/api/lib/workspace-paths";
 import { getPrompts } from "@norish/config/server-config-loader";
 

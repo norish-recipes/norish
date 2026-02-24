@@ -1,8 +1,8 @@
 "use client";
 
+import { memo, useState } from "react";
 import { Image } from "@heroui/react";
 import { useTranslations } from "next-intl";
-import { memo, useState } from "react";
 
 type Size = "sm" | "md";
 

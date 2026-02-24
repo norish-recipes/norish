@@ -1,3 +1,5 @@
+import { and, eq, sql } from "drizzle-orm";
+
 import type {
   HouseholdDto,
   HouseholdInsertDto,
@@ -5,8 +7,6 @@ import type {
   HouseholdUserInsertDto,
   HouseholdWithUsersNamesDto,
 } from "@norish/shared/contracts/dto/household";
-
-import { and, eq, sql } from "drizzle-orm";
 import { db } from "@norish/db/drizzle";
 import { households, householdUsers } from "@norish/db/schema";
 import {

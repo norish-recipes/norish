@@ -1,12 +1,11 @@
 "use client";
 
-import type { StoreDto, StoreCreateDto, StoreUpdateInput } from "@norish/shared/contracts";
-
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useMutation } from "@tanstack/react-query";
 
-import { useStoresQuery } from "./use-stores-query";
+import type { StoreCreateDto, StoreDto, StoreUpdateInput } from "@norish/shared/contracts";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
+import { useStoresQuery } from "./use-stores-query";
 
 export type StoresMutationsResult = {
   createStore: (data: StoreCreateDto) => Promise<string>;

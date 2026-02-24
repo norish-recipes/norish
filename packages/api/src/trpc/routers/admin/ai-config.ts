@@ -1,24 +1,24 @@
 import { z } from "zod";
+
+import type { AIConfig, VideoConfig } from "@norish/config/zod/server-config";
+import { listModels, listTranscriptionModels } from "@norish/api/ai/providers";
 import { trpcLogger as log } from "@norish/api/logger";
-import { setConfig, getConfig } from "@norish/db/repositories/server-config";
-import { getRecipesWithoutCategories } from "@norish/db/repositories/recipes";
 import { testAIEndpoint as testAIEndpointFn } from "@norish/auth/connection-tests";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
-import { listModels, listTranscriptionModels } from "@norish/api/ai/providers";
-import { getQueues } from "@norish/queue/registry";
-import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
 import {
-  ServerConfigKeys,
   AIConfigSchema,
-  VideoConfigSchema,
+  ServerConfigKeys,
   TranscriptionProviderSchema,
-  type AIConfig,
-  type VideoConfig,
+  VideoConfigSchema,
 } from "@norish/config/zod/server-config";
+import { getRecipesWithoutCategories } from "@norish/db/repositories/recipes";
+import { getConfig, setConfig } from "@norish/db/repositories/server-config";
+import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
+import { getQueues } from "@norish/queue/registry";
 
-import { permissionsEmitter } from "../permissions/emitter";
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { permissionsEmitter } from "../permissions/emitter";
 
 /**
  * Update AI config.

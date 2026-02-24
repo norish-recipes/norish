@@ -1,10 +1,10 @@
 "use client";
 
+import type { RecipeFilters } from "@/hooks/recipes/use-recipe-filters";
+import { createContext, ReactNode, useContext, useMemo } from "react";
+import { useRecipeFilters } from "@/hooks/recipes/use-recipe-filters";
+
 import type { SearchField } from "@norish/shared/contracts";
-
-import { createContext, useContext, ReactNode, useMemo } from "react";
-
-import { useRecipeFilters, type RecipeFilters } from "@/hooks/recipes/use-recipe-filters";
 
 type FiltersCtx = {
   filters: RecipeFilters;

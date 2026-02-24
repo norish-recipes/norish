@@ -1,8 +1,34 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+
+// Import mocks for assertions
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
+import {
+  AIConfigSchema,
+  RecipePermissionPolicySchema,
+  ServerConfigKeys,
+} from "@norish/config/zod/server-config";
+
+import { testAIEndpoint } from "../../mocks/connection-tests";
+import { permissionsEmitter } from "../../mocks/permissions-emitter";
+import {
+  configExists,
+  deleteConfig,
+  getAllConfigs,
+  getConfig,
+  getConfigSecret,
+  setConfig,
+} from "../../mocks/server-config";
+import { getUserServerRole, isUserServerAdmin } from "../../mocks/users";
+import {
+  createMockAdminContext,
+  createMockAdminUser,
+  createMockAuthedContext,
+  createMockUser,
+} from "./test-utils";
 
 // Setup mocks before any imports that use them
 vi.mock("@norish/db/repositories/server-config", () => import("../../mocks/server-config"));
@@ -20,33 +46,6 @@ vi.mock("@norish/config/server-config-loader", () => ({
   }),
   isAIEnabled: vi.fn().mockResolvedValue(false),
 }));
-
-// Import mocks for assertions
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
-import {
-  ServerConfigKeys,
-  AIConfigSchema,
-  RecipePermissionPolicySchema,
-} from "@norish/config/zod/server-config";
-
-import {
-  getAllConfigs,
-  getConfig,
-  setConfig,
-  deleteConfig,
-  configExists,
-  getConfigSecret,
-} from "../../mocks/server-config";
-import { isUserServerAdmin, getUserServerRole } from "../../mocks/users";
-import { testAIEndpoint } from "../../mocks/connection-tests";
-import { permissionsEmitter } from "../../mocks/permissions-emitter";
-
-import {
-  createMockUser,
-  createMockAdminUser,
-  createMockAuthedContext,
-  createMockAdminContext,
-} from "./test-utils";
 
 // Import schemas for validation
 

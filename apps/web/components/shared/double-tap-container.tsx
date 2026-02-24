@@ -1,8 +1,8 @@
 "use client";
 
-import { HeartIcon } from "@heroicons/react/16/solid";
-import { motion, AnimatePresence } from "motion/react";
 import { useCallback, useRef, useState } from "react";
+import { HeartIcon } from "@heroicons/react/16/solid";
+import { AnimatePresence, motion } from "motion/react";
 
 type DoubleTapContainerProps = {
   children: React.ReactNode;

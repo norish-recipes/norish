@@ -1,8 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
+  formatAmount,
   formatAmountAsDecimal,
   formatAmountAsFraction,
-  formatAmount,
 } from "@norish/shared/lib/format-amount";
 
 describe("formatAmountAsDecimal", () => {

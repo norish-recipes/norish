@@ -1,6 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import "@testing-library/jest-dom";
+
+import AuthorChip from "@/app/(app)/recipes/[id]/components/author-chip";
 
 let mockCurrentUser: { id: string } | null = { id: "user-1" };
 
@@ -13,8 +16,6 @@ vi.mock("@heroui/react", () => ({
     <img alt={name || "avatar"} src={src} />
   ),
 }));
-
-import AuthorChip from "@/app/(app)/recipes/[id]/components/author-chip";
 
 describe("AuthorChip avatar src", () => {
   beforeEach(() => {

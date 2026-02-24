@@ -1,17 +1,17 @@
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
+
 import type {
+  CaldavSyncStatus,
   CaldavSyncStatusDto,
   CaldavSyncStatusInsertDto,
   CaldavSyncStatusUpdateDto,
   CaldavSyncStatusViewDto,
-  CaldavSyncStatus,
 } from "@norish/shared/contracts/dto/caldav-sync-status";
-
-import { eq, and, inArray, desc, sql } from "drizzle-orm";
 import { db } from "@norish/db/drizzle";
 import { caldavSyncStatus, plannedItems } from "@norish/db/schema";
 import {
-  CaldavSyncStatusSelectSchema,
   CaldavSyncStatusInsertSchema,
+  CaldavSyncStatusSelectSchema,
 } from "@norish/shared/contracts/zod/caldav-sync-status";
 
 export async function createCaldavSyncStatus(
@@ -139,7 +139,8 @@ export async function getCaldavSyncStatusesByUser(
     );
   }
 
-  const [{ count }] = await countQuery;
+  const countRows = await countQuery;
+  const count = countRows[0]?.count ?? 0;
 
   const viewItems: CaldavSyncStatusViewDto[] = items.map((item) => ({
     id: item.id,

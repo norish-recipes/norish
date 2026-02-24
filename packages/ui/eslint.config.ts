@@ -8,5 +8,5 @@ export default defineConfig(
     ignores: ["dist/**"],
   },
   baseConfig,
-  reactConfig,
+  reactConfig
 );

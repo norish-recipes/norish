@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 
 import HouseholdInfoCard from "./household-info-card";
-import MembersCard from "./members-card";
 import JoinCodeCard from "./join-code-card";
+import MembersCard from "./members-card";
 
 export default function HouseholdView() {
   const t = useTranslations("settings.household");

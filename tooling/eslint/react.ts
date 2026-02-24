@@ -12,8 +12,8 @@ type FlatConfigLike = {
 
 const reactRecommended = reactPlugin.configs.flat?.recommended as FlatConfigLike | undefined;
 const reactJsxRuntime = reactPlugin.configs.flat?.["jsx-runtime"] as FlatConfigLike | undefined;
-const jsxA11yRecommended = (jsxA11y as { flatConfigs?: { recommended?: FlatConfigLike } }).flatConfigs
-  ?.recommended;
+const jsxA11yRecommended = (jsxA11y as { flatConfigs?: { recommended?: FlatConfigLike } })
+  .flatConfigs?.recommended;
 
 export const reactConfig = defineConfig(
   {
@@ -67,5 +67,5 @@ export const reactConfig = defineConfig(
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/immutability": "off",
     },
-  },
+  }
 );

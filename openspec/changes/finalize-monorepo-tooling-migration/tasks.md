@@ -86,11 +86,14 @@
 
 ### B7. Phase B Validation
 
-- [ ] B7.1 Run `turbo run lint` and verify all workspaces lint successfully.
-- [ ] B7.2 Run `turbo run typecheck` and verify all workspaces typecheck.
-- [ ] B7.3 Run `turbo run format` and verify formatting checks pass.
-- [ ] B7.4 Run `pnpm test:run` and verify all tests pass.
-- [ ] B7.5 Run `pnpm build` and verify build succeeds.
+- [ ] B7.1 Run `pnpm run deps:cycles` and verify zero cycles.
+- [ ] B7.2 Run `turbo run lint` and verify all workspaces lint successfully.
+- [ ] B7.3 Run `turbo run typecheck` and verify all workspaces typecheck.
+- [ ] B7.4 Run `turbo run format` and verify formatting checks pass.
+- [ ] B7.5 Run `pnpm test:run` and verify all tests pass.
+- [ ] B7.6 Run `pnpm build` and verify build succeeds.
+
+Phase C tasks are blocked until B7.1-B7.6 are all green.
 
 ## Phase C: Root Cleanup
 

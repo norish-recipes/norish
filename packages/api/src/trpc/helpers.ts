@@ -1,9 +1,8 @@
-import type { TypedEmitter } from "./emitter";
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type { SubscriptionMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
-
 import { trpcLogger as log } from "@norish/api/logger";
 
+import type { TypedEmitter } from "./emitter";
 import { authedProcedure } from "./middleware";
 
 /**
@@ -228,7 +227,7 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
 export function createPolicyAwareSubscription<
   TEvents extends Record<string, unknown>,
   K extends keyof TEvents & string,
->(emitter: TypedEmitter<TEvents>, eventName: K, logMessage: string) {
+>(emitter: TypedEmitter<TEvents>, eventName: K, logMessage: string): any {
   return authedProcedure.subscription(async function* ({ ctx, signal }) {
     const policyCtx: PolicySubscribeContext = {
       userId: ctx.user.id,

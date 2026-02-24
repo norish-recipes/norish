@@ -1,6 +1,5 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
@@ -26,7 +25,14 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      exclude: ["node_modules", "dist-server", ".next", "**/*.d.ts", "**/*.config.*", "**/types/**"],
+      exclude: [
+        "node_modules",
+        "dist-server",
+        ".next",
+        "**/*.d.ts",
+        "**/*.config.*",
+        "**/types/**",
+      ],
     },
   },
   resolve: {

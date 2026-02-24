@@ -1,4 +1,4 @@
-import type { UnitsMap, FlatUnitsMap } from "@norish/config/zod/server-config";
+import type { FlatUnitsMap, UnitsMap } from "@norish/config/zod/server-config";
 
 /**
  * Flatten locale-aware units config to flat format for parse-ingredient library.

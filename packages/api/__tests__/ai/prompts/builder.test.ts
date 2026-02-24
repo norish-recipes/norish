@@ -7,7 +7,12 @@
  * @vitest-environment node
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { buildAutoTaggingPrompt } from "@norish/api/ai/prompts/builder";
+import { loadPrompt } from "@norish/api/ai/prompts/loader";
+import { getAutoTaggingMode } from "@norish/config/server-config-loader";
+import { listAllTagNames } from "@norish/db/repositories/tags";
 
 // Mock dependencies before imports
 vi.mock("@norish/config/server-config-loader", () => ({
@@ -22,11 +27,6 @@ vi.mock("@norish/api/ai/prompts/loader", () => ({
   loadPrompt: vi.fn(),
   fillPrompt: vi.fn((template, _vars) => template),
 }));
-
-import { getAutoTaggingMode } from "@norish/config/server-config-loader";
-import { listAllTagNames } from "@norish/db/repositories/tags";
-import { loadPrompt } from "@norish/api/ai/prompts/loader";
-import { buildAutoTaggingPrompt } from "@norish/api/ai/prompts/builder";
 
 describe("buildAutoTaggingPrompt", () => {
   const mockRecipe = {

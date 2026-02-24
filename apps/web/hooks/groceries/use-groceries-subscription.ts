@@ -1,12 +1,12 @@
 "use client";
 
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { useTranslations } from "next-intl";
+
 import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import { useGroceriesCacheHelpers } from "./use-groceries-cache";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 /**
  * Hook that subscribes to all grocery-related WebSocket events
@@ -23,7 +23,7 @@ export function useGroceriesSubscription() {
   // onCreated
   useSubscription(
     trpc.groceries.onCreated.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         setGroceriesData((prev) => {
           if (!prev) return prev;
 
@@ -42,7 +42,7 @@ export function useGroceriesSubscription() {
   // onUpdated
   useSubscription(
     trpc.groceries.onUpdated.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         setGroceriesData((prev) => {
           if (!prev) return prev;
 
@@ -62,7 +62,7 @@ export function useGroceriesSubscription() {
   // onDeleted
   useSubscription(
     trpc.groceries.onDeleted.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         setGroceriesData((prev) => {
           if (!prev) return prev;
 
@@ -79,7 +79,7 @@ export function useGroceriesSubscription() {
   // onRecurringCreated
   useSubscription(
     trpc.groceries.onRecurringCreated.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         setGroceriesData((prev) => {
           if (!prev) return prev;
 
@@ -102,7 +102,7 @@ export function useGroceriesSubscription() {
   // onRecurringUpdated
   useSubscription(
     trpc.groceries.onRecurringUpdated.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         setGroceriesData((prev) => {
           if (!prev) return prev;
 
@@ -123,7 +123,7 @@ export function useGroceriesSubscription() {
   // onRecurringDeleted
   useSubscription(
     trpc.groceries.onRecurringDeleted.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         setGroceriesData((prev) => {
           if (!prev) return prev;
 
@@ -144,7 +144,7 @@ export function useGroceriesSubscription() {
   // onFailed
   useSubscription(
     trpc.groceries.onFailed.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         showSafeErrorToast({
           title: tErrors("operationFailed"),
           description: tErrors("technicalDetails"),

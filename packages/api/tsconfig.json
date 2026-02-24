@@ -1,7 +1,10 @@
 {
   "extends": "@norish/tsconfig/compiled-package.json",
   "compilerOptions": {
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false
   },
   "include": ["src"],
   "exclude": ["node_modules"]

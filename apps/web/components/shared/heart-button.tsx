@@ -1,7 +1,7 @@
 "use client";
 
-import { HeartIcon } from "@heroicons/react/16/solid";
 import { useCallback } from "react";
+import { HeartIcon } from "@heroicons/react/16/solid";
 
 type HeartButtonProps = {
   isFavorite: boolean;

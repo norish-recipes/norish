@@ -1,15 +1,14 @@
 "use client";
 
+import React, { createContext, useCallback, useContext, useMemo } from "react";
+import { useUserContext } from "@/context/user-context";
+import { usePermissionsQuery } from "@/hooks/permissions";
+
 import type {
+  AutoTaggingMode,
   PermissionLevel,
   RecipePermissionPolicy,
-  AutoTaggingMode,
 } from "@norish/config/zod/server-config";
-
-import React, { createContext, useContext, useCallback, useMemo } from "react";
-
-import { usePermissionsQuery } from "@/hooks/permissions";
-import { useUserContext } from "@/context/user-context";
 
 interface PermissionsContextValue {
   /** Recipe permission policy */

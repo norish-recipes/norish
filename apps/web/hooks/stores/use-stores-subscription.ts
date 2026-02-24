@@ -1,10 +1,9 @@
 "use client";
 
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
 import { useStoresCacheHelpers } from "./use-stores-cache";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 /**
  * Hook that subscribes to all store-related WebSocket events
@@ -20,7 +19,7 @@ export function useStoresSubscription() {
   // onCreated
   useSubscription(
     trpc.stores.onCreated.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         setStoresData((prev) => {
           if (!prev) return [payload.store];
           const exists = prev.some((s) => s.id === payload.store.id);
@@ -39,7 +38,7 @@ export function useStoresSubscription() {
   // onUpdated
   useSubscription(
     trpc.stores.onUpdated.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         setStoresData((prev) => {
           if (!prev) return prev;
 
@@ -52,7 +51,7 @@ export function useStoresSubscription() {
   // onDeleted
   useSubscription(
     trpc.stores.onDeleted.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         setStoresData((prev) => {
           if (!prev) return prev;
 
@@ -65,7 +64,7 @@ export function useStoresSubscription() {
   // onReordered
   useSubscription(
     trpc.stores.onReordered.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         setStoresData((prev) => {
           if (!prev) return payload.stores;
           // Merge with existing data, preferring incoming order

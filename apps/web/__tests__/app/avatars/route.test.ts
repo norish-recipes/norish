@@ -1,6 +1,7 @@
 // @vitest-environment node
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { GET } from "@/app/(app)/avatars/[id]/route";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const readFileMock = vi.hoisted(() => vi.fn());
 
@@ -9,8 +10,6 @@ vi.mock("node:fs/promises", () => ({
     readFile: readFileMock,
   },
 }));
-
-import { GET } from "@/app/(app)/avatars/[id]/route";
 
 describe("avatars route caching", () => {
   beforeEach(() => {

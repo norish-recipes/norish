@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { TrashIcon } from "@heroicons/react/16/solid";
 import {
+  Button,
   Card,
   CardBody,
   CardHeader,
-  Button,
   Modal,
-  ModalContent,
-  ModalHeader,
   ModalBody,
+  ModalContent,
   ModalFooter,
+  ModalHeader,
 } from "@heroui/react";
-import { TrashIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
@@ -55,7 +55,7 @@ export default function DangerZoneCard() {
         onOpenChange={setShowAccountDeleteModal}
       >
         <ModalContent>
-          {(onClose) => (
+          {(onClose: () => void) => (
             <>
               <ModalHeader className="text-danger">{t("deleteModal.title")}</ModalHeader>
               <ModalBody>

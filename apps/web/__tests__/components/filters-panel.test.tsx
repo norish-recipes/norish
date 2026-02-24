@@ -1,6 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import "@testing-library/jest-dom";
+
+import FiltersPanel from "@/components/Panel/consumers/filters-panel";
 
 const filtersState = {
   searchTags: [] as string[],
@@ -86,8 +89,6 @@ vi.mock("@heroui/react", () => ({
     ...props
   }: any) => <input value={value} onChange={onChange} {...props} />,
 }));
-
-import FiltersPanel from "@/components/Panel/consumers/filters-panel";
 
 describe("FiltersPanel", () => {
   it("does not crash when sort mode is missing", () => {

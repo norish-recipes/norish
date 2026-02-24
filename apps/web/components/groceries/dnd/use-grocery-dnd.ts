@@ -1,17 +1,17 @@
-import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type {
-  DragStartEvent,
-  DragOverEvent,
-  DragEndEvent,
   CollisionDetection,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
 } from "@dnd-kit/core";
-import type { ItemsState, ContainerId, DndGroceryProviderProps } from "./types";
-
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { arrayMove } from "@dnd-kit/sortable";
 
-import { buildItemsState, findContainerForItem, containerIdToStoreId } from "./utils";
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+
+import type { ContainerId, DndGroceryProviderProps, ItemsState } from "./types";
 import { createMultiContainerCollisionDetection } from "./collision-detection";
+import { buildItemsState, containerIdToStoreId, findContainerForItem } from "./utils";
 
 interface UseGroceryDndResult {
   // State
@@ -112,7 +112,7 @@ export function useGroceryDnd({
     (id: string): ContainerId | undefined => {
       if (id in items) return id;
 
-      return Object.keys(items).find((key) => items[key].includes(id));
+      return Object.keys(items).find((key) => (items[key] ?? []).includes(id));
     },
     [items]
   );
@@ -145,10 +145,15 @@ export function useGroceryDnd({
 
       if (activeContainer !== overContainer) {
         setItems((prevItems) => {
-          const activeItems = prevItems[activeContainer];
-          const overItems = prevItems[overContainer];
+          const activeItems = prevItems[activeContainer] ?? [];
+          const overItems = prevItems[overContainer] ?? [];
           const overIndex = overItems.indexOf(overId as string);
           const activeIndex = activeItems.indexOf(active.id as string);
+          const movingItem = activeItems[activeIndex];
+
+          if (!movingItem) {
+            return prevItems;
+          }
 
           let newIndex: number;
 
@@ -168,23 +173,26 @@ export function useGroceryDnd({
 
           return {
             ...prevItems,
-            [activeContainer]: prevItems[activeContainer].filter((item) => item !== active.id),
+            [activeContainer]: (prevItems[activeContainer] ?? []).filter(
+              (item) => item !== active.id
+            ),
             [overContainer]: [
-              ...prevItems[overContainer].slice(0, newIndex),
-              activeItems[activeIndex],
-              ...prevItems[overContainer].slice(newIndex),
+              ...(prevItems[overContainer] ?? []).slice(0, newIndex),
+              movingItem,
+              ...(prevItems[overContainer] ?? []).slice(newIndex),
             ],
           };
         });
       } else {
         setItems((prevItems) => {
-          const activeIndex = prevItems[activeContainer].indexOf(active.id as string);
-          const overIndex = prevItems[overContainer].indexOf(overId as string);
+          const containerItems = prevItems[activeContainer] ?? [];
+          const activeIndex = containerItems.indexOf(active.id as string);
+          const overIndex = containerItems.indexOf(overId as string);
 
           if (activeIndex !== overIndex) {
             return {
               ...prevItems,
-              [overContainer]: arrayMove(prevItems[overContainer], activeIndex, overIndex),
+              [overContainer]: arrayMove(containerItems, activeIndex, overIndex),
             };
           }
 
@@ -240,7 +248,7 @@ export function useGroceryDnd({
         }
 
         // Update destination container with current positions
-        const finalItems = items[currentContainer];
+        const finalItems = items[currentContainer] ?? [];
 
         finalItems.forEach((id, index) => {
           const update: { id: string; sortOrder: number; storeId?: string | null } = {

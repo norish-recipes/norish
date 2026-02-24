@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
-import { useState, useEffect } from "react";
 
 interface ProviderIconProps {
   icon: string;

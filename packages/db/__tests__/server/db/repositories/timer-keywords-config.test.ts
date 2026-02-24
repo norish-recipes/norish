@@ -10,15 +10,14 @@
  * 5. Enable/disable toggle
  */
 
-import type { TimerKeywordsConfig } from "@norish/config/zod/server-config";
-
 import fs from "fs";
 import path from "path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { getConfig, setConfig, deleteConfig } from "@norish/db/repositories/server-config";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import type { TimerKeywordsConfig } from "@norish/config/zod/server-config";
 import { seedDefaultTimerKeywords } from "@norish/api/startup/seed-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { deleteConfig, getConfig, setConfig } from "@norish/db/repositories/server-config";
 
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 

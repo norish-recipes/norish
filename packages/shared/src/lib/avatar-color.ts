@@ -23,11 +23,11 @@ function hashString(input: string): number {
 }
 
 export function getAvatarPastelColor(seed: string): string {
-  if (!seed) return PASTEL_COLORS[0];
+  if (!seed) return PASTEL_COLORS[0] ?? "#F2BFC6";
 
   const index = hashString(seed) % PASTEL_COLORS.length;
 
-  return PASTEL_COLORS[index];
+  return PASTEL_COLORS[index] ?? PASTEL_COLORS[0] ?? "#F2BFC6";
 }
 
 export function getAvatarFallbackStyle(seed: string): { backgroundColor: string; color: string } {

@@ -6,23 +6,23 @@
  * Only scheduled-tasks runs continuously for cron jobs.
  */
 
-import { startRecipeImportWorker } from "@norish/queue/recipe-import/worker";
-import { startImageImportWorker } from "@norish/queue/image-import/worker";
-import { startPasteImportWorker } from "@norish/queue/paste-import/worker";
-import { startNutritionEstimationWorker } from "@norish/queue/nutrition-estimation/worker";
-import { startAutoTaggingWorker } from "@norish/queue/auto-tagging/worker";
-import { startAutoCategorizationWorker } from "@norish/queue/auto-categorization/worker";
+import { createLogger } from "@norish/api/logger";
 import { startAllergyDetectionWorker } from "@norish/queue/allergy-detection/worker";
+import { startAutoCategorizationWorker } from "@norish/queue/auto-categorization/worker";
+import { startAutoTaggingWorker } from "@norish/queue/auto-tagging/worker";
 import { startCaldavSyncWorker } from "@norish/queue/caldav-sync/worker";
+import { startImageImportWorker } from "@norish/queue/image-import/worker";
+import { stopAllLazyWorkers } from "@norish/queue/lazy-worker-manager";
+import { startNutritionEstimationWorker } from "@norish/queue/nutrition-estimation/worker";
+import { startPasteImportWorker } from "@norish/queue/paste-import/worker";
+import { startRecipeImportWorker } from "@norish/queue/recipe-import/worker";
+import { closeBullConnection } from "@norish/queue/redis/bullmq";
+import { closeAllQueues, getQueues, initializeQueues } from "@norish/queue/registry";
+import { initializeScheduledJobs } from "@norish/queue/scheduled-tasks/producer";
 import {
   startScheduledTasksWorker,
   stopScheduledTasksWorker,
 } from "@norish/queue/scheduled-tasks/worker";
-import { stopAllLazyWorkers } from "@norish/queue/lazy-worker-manager";
-import { initializeQueues, getQueues, closeAllQueues } from "@norish/queue/registry";
-import { initializeScheduledJobs } from "@norish/queue/scheduled-tasks/producer";
-import { closeBullConnection } from "@norish/queue/redis/bullmq";
-import { createLogger } from "@norish/api/logger";
 
 const log = createLogger("bullmq");
 

@@ -6,11 +6,11 @@
  */
 
 import { on } from "node:events";
-
 import superjson from "superjson";
+
 import { redisLogger } from "@norish/api/logger";
 
-import { getPublisherClient, createSubscriberClient } from "./client";
+import { createSubscriberClient, getPublisherClient } from "./client";
 
 const CHANNEL_PREFIX = "norish";
 

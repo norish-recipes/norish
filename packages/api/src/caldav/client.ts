@@ -1,13 +1,13 @@
+import { DAVCalendar, DAVClient } from "tsdav";
+import { v4 as uuidv4 } from "uuid";
+
 import type {
-  CreateEventInput,
-  CreatedEvent,
+  CalDavCalendarInfo,
   CalDavClientOptions,
   ConnectionTestResult,
-  CalDavCalendarInfo,
+  CreatedEvent,
+  CreateEventInput,
 } from "@norish/shared/contracts/dto/caldav";
-
-import { DAVClient, DAVCalendar } from "tsdav";
-import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "@norish/api/logger";
 
 import { buildIcs } from "./ics-helpers";

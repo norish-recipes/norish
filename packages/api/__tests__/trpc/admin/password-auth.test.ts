@@ -1,8 +1,14 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+
+// Import mocks
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+
+import { configExists, setConfig } from "../../mocks/server-config";
+import { isUserServerAdmin } from "../../mocks/users";
 
 // Setup mocks
 vi.mock("@norish/db/repositories/server-config", () => import("../../mocks/server-config"));
@@ -10,12 +16,6 @@ vi.mock("@norish/db/repositories/users", () => import("../../mocks/users"));
 vi.mock("@norish/api/logger", () => ({
   trpcLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
-
-// Import mocks
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
-
-import { setConfig, configExists } from "../../mocks/server-config";
-import { isUserServerAdmin } from "../../mocks/users";
 
 // Test utilities
 function createMockAdminUser() {

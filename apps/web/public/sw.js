@@ -1,26 +1,24 @@
-const CACHE_NAME = 'norish-cache-v0.3.0-beta';
+const CACHE_NAME = "norish-cache-v0.3.0-beta";
 const STATIC_ASSETS = [
-  '/',
-  '/manifest.webmanifest',
-  '/favicon.svg',
-  '/favicon.ico',
-  '/favicon-96x96.png',
-  '/android-chrome-192x192.png',
-  '/android-chrome-512x512.png',
-  '/apple-touch-icon.png',
-  '/mockup-norish.png'
+  "/",
+  "/manifest.webmanifest",
+  "/favicon.svg",
+  "/favicon.ico",
+  "/favicon-96x96.png",
+  "/android-chrome-192x192.png",
+  "/android-chrome-512x512.png",
+  "/apple-touch-icon.png",
+  "/mockup-norish.png",
 ];
 
 // precache static assets
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)));
   self.skipWaiting();
 });
 
 // activate: clean up old caches
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
@@ -33,37 +31,36 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
   // Only handle same-origin or API requests
-  if (url.origin !== self.location.origin && !url.pathname.startsWith('/api/'))
-    return;
+  if (url.origin !== self.location.origin && !url.pathname.startsWith("/api/")) return;
 
   // Skip any non-GET request immediately
-  if (request.method !== 'GET') {
+  if (request.method !== "GET") {
     return;
   }
 
   // API: use network-first
-  if (url.pathname.startsWith('/api/')) {
+  if (url.pathname.startsWith("/api/")) {
     event.respondWith(networkFirst(request));
     return;
   }
 
   // Next.js build files (scripts/styles): use stale-while-revalidate
   if (
-    url.pathname.startsWith('/_next/') ||
-    request.destination === 'script' ||
-    request.destination === 'style'
+    url.pathname.startsWith("/_next/") ||
+    request.destination === "script" ||
+    request.destination === "style"
   ) {
     event.respondWith(staleWhileRevalidate(request));
     return;
   }
 
   // Images: use cache-first
-  if (request.destination === 'image') {
+  if (request.destination === "image") {
     event.respondWith(cacheFirst(request));
     return;
   }
@@ -72,7 +69,7 @@ self.addEventListener('fetch', (event) => {
 // === Strategies ===
 
 async function cacheFirst(req) {
-  if (req.method !== 'GET') return fetch(req);
+  if (req.method !== "GET") return fetch(req);
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(req);
   if (cached) return cached;
@@ -83,7 +80,7 @@ async function cacheFirst(req) {
 }
 
 async function networkFirst(req) {
-  if (req.method !== 'GET') return fetch(req);
+  if (req.method !== "GET") return fetch(req);
   const cache = await caches.open(CACHE_NAME);
   try {
     const fresh = await fetch(req);
@@ -91,12 +88,12 @@ async function networkFirst(req) {
     return fresh;
   } catch {
     const cached = await cache.match(req);
-    return cached || new Response('Offline', { status: 503 });
+    return cached || new Response("Offline", { status: 503 });
   }
 }
 
 async function staleWhileRevalidate(req) {
-  if (req.method !== 'GET') return fetch(req);
+  if (req.method !== "GET") return fetch(req);
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(req);
   const network = fetch(req).then((res) => {
@@ -107,19 +104,19 @@ async function staleWhileRevalidate(req) {
 }
 
 // Handle notification clicks — focus existing window or open the app
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       // Focus an existing window if one is open
       for (const client of clientList) {
-        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+        if (client.url.startsWith(self.location.origin) && "focus" in client) {
           return client.focus();
         }
       }
       // Otherwise open a new window
-      return self.clients.openWindow('/');
+      return self.clients.openWindow("/");
     })
   );
 });

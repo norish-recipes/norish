@@ -1,8 +1,8 @@
 import type {
-  User,
+  FullRecipeDTO,
   HouseholdWithUsersNamesDto,
   RecipeDashboardDTO,
-  FullRecipeDTO,
+  User,
 } from "@norish/shared/contracts";
 
 /**

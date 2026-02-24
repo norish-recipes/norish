@@ -1,34 +1,34 @@
-import type {
-  UserCaldavConfigWithoutPasswordDto,
-  ConnectionTestResult,
-  CalDavCalendarInfo,
-} from "@norish/shared/contracts";
-
 import { TRPCError } from "@trpc/server";
-import { router } from "@norish/api/trpc/trpc";
-import { authedProcedure } from "@norish/api/trpc/middleware";
-import { createLogger } from "@norish/api/logger";
-import { syncAllFutureItems, retryFailedSyncs } from "@norish/api/caldav/event-listener";
+
+import type {
+  CalDavCalendarInfo,
+  ConnectionTestResult,
+  UserCaldavConfigWithoutPasswordDto,
+} from "@norish/shared/contracts";
 import { CalDavClient, testCalDavConnection } from "@norish/api/caldav/client";
+import { retryFailedSyncs, syncAllFutureItems } from "@norish/api/caldav/event-listener";
+import { createLogger } from "@norish/api/logger";
+import { authedProcedure } from "@norish/api/trpc/middleware";
+import { router } from "@norish/api/trpc/trpc";
 import {
-  getCaldavConfigWithoutPassword,
-  getCaldavConfigDecrypted,
-  saveCaldavConfig,
   deleteCaldavConfig,
+  getCaldavConfigDecrypted,
+  getCaldavConfigWithoutPassword,
+  saveCaldavConfig,
 } from "@norish/db/repositories/caldav-config";
 import {
   getCaldavSyncStatusesByUser,
   getSyncStatusSummary,
 } from "@norish/db/repositories/caldav-sync-status";
 
+import { caldavEmitter } from "./emitter";
 import {
+  DeleteCaldavConfigInputSchema,
+  FetchCalendarsInputSchema,
+  GetSyncStatusInputSchema,
   SaveCaldavConfigInputSchema,
   TestCaldavConnectionInputSchema,
-  DeleteCaldavConfigInputSchema,
-  GetSyncStatusInputSchema,
-  FetchCalendarsInputSchema,
 } from "./types";
-import { caldavEmitter } from "./emitter";
 
 const log = createLogger("caldav-procedures");
 

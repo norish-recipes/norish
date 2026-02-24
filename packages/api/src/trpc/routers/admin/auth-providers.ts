@@ -1,26 +1,27 @@
 import { z } from "zod";
+
+import type { ServerConfigKey } from "@norish/config/zod/server-config";
 import { trpcLogger as log } from "@norish/api/logger";
 import {
-  setConfig,
-  deleteConfig,
-  configExists,
-  getConfig,
-} from "@norish/db/repositories/server-config";
-import {
-  testOIDCProvider,
   testGitHubProvider,
   testGoogleProvider,
+  testOIDCProvider,
 } from "@norish/auth/connection-tests";
 import {
-  ServerConfigKeys,
-  type ServerConfigKey,
-  AuthProviderOIDCSchema,
-  AuthProviderOIDCInputSchema,
-  AuthProviderGitHubSchema,
   AuthProviderGitHubInputSchema,
-  AuthProviderGoogleSchema,
+  AuthProviderGitHubSchema,
   AuthProviderGoogleInputSchema,
+  AuthProviderGoogleSchema,
+  AuthProviderOIDCInputSchema,
+  AuthProviderOIDCSchema,
+  ServerConfigKeys,
 } from "@norish/config/zod/server-config";
+import {
+  configExists,
+  deleteConfig,
+  getConfig,
+  setConfig,
+} from "@norish/db/repositories/server-config";
 
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";

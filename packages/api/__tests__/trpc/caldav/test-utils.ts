@@ -1,8 +1,8 @@
-import type { User, Slot } from "@norish/shared/contracts";
+import type { Slot, User } from "@norish/shared/contracts";
 import type {
   CaldavSyncStatusDto,
-  CaldavSyncStatusViewDto,
   CaldavSyncStatusSummaryDto,
+  CaldavSyncStatusViewDto,
 } from "@norish/shared/contracts/dto/caldav-sync-status";
 
 /**

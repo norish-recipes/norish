@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { NextRequest, NextResponse } from "next/server";
+
 import { auth } from "@norish/auth/auth";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 export async function proxy(request: NextRequest) {
   // WebSocket upgrade requests should not be redirected - they'll be handled at the app level

@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/16/solid";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 type TimelineScrollToTodayProps = {

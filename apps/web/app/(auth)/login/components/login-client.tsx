@@ -1,15 +1,14 @@
 "use client";
 
-import type { ProviderInfo } from "@norish/shared/contracts";
-
 import { Divider } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { AuthCard } from "../../components/auth-card";
+import type { ProviderInfo } from "@norish/shared/contracts";
 
-import { ProviderButton } from "./provider-button";
+import { AuthCard } from "../../components/auth-card";
 import { AutoSignIn } from "./auto-sign-in";
 import { EmailPasswordForm } from "./email-password-form";
+import { ProviderButton } from "./provider-button";
 
 interface LoginClientProps {
   providers: ProviderInfo[];
@@ -28,10 +27,11 @@ export function LoginClient({
   // Separate credential and OAuth providers
   const credentialProvider = providers.find((p) => p.type === "credential");
   const oauthProviders = providers.filter((p) => p.type !== "credential");
+  const singleOauthProvider = oauthProviders[0];
 
   // Auto-redirect for single OAuth provider setups (only if no credential provider)
-  if (autoRedirect && oauthProviders.length === 1 && !credentialProvider) {
-    return <AutoSignIn callbackUrl={callbackUrl} provider={oauthProviders[0]} />;
+  if (autoRedirect && oauthProviders.length === 1 && !credentialProvider && singleOauthProvider) {
+    return <AutoSignIn callbackUrl={callbackUrl} provider={singleOauthProvider} />;
   }
 
   const hasCredential = !!credentialProvider;

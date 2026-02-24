@@ -1,5 +1,4 @@
 import type { StoreSubscriptionEvents } from "./types";
-
 import { createTypedEmitter, TypedEmitter } from "../../emitter";
 
 // Use globalThis to persist across HMR in development

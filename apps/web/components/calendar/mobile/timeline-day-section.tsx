@@ -1,23 +1,23 @@
 "use client";
 
-import type { Slot } from "@norish/shared/contracts";
-import type { PlannedItemDisplay } from "./types";
-
+import { memo, useMemo } from "react";
+import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import {
-  Dropdown,
-  DropdownTrigger,
   Button,
-  DropdownMenu,
-  DropdownItem,
   Card,
   CardBody,
   Divider,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
 } from "@heroui/react";
-import { useDroppable } from "@dnd-kit/core";
 import { useTranslations } from "next-intl";
-import { memo, useMemo } from "react";
 
+import type { Slot } from "@norish/shared/contracts";
+
+import type { PlannedItemDisplay } from "./types";
 import { TimelineSlotContainer } from "./timeline-slot-container";
 import { SLOTS } from "./types";
 
@@ -79,12 +79,16 @@ export const TimelineDaySection = memo(function TimelineDaySection({
     };
 
     for (const item of items) {
-      grouped[item.slot].push(item);
+      const slotItems = grouped[item.slot as Slot];
+
+      if (slotItems) {
+        slotItems.push(item);
+      }
     }
 
     // Sort by sortOrder within each slot
     for (const slot of SLOTS) {
-      grouped[slot].sort((a, b) => a.sortOrder - b.sortOrder);
+      grouped[slot]?.sort((a, b) => a.sortOrder - b.sortOrder);
     }
 
     return grouped;
@@ -153,7 +157,7 @@ export const TimelineDaySection = memo(function TimelineDaySection({
             {SLOTS.map((slot) => {
               const slotItems = itemsBySlot[slot];
 
-              if (slotItems.length === 0) return null;
+              if (!slotItems || slotItems.length === 0) return null;
 
               return (
                 <TimelineSlotContainer
@@ -161,7 +165,7 @@ export const TimelineDaySection = memo(function TimelineDaySection({
                   dateKey={dateKey}
                   items={slotItems}
                   slot={slot}
-                  slotLabel={slotLabels[slot]}
+                  slotLabel={slotLabels[slot] ?? slot}
                   onNoteClick={onNoteClick}
                   onRecipeClick={onRecipeClick}
                 />

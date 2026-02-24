@@ -1,8 +1,8 @@
 "use client";
 
-import type { RecipeIngredientsDto } from "@norish/shared/contracts";
-
 import { useRecipeQuery } from "@/hooks/recipes/use-recipe-query";
+
+import type { RecipeIngredientsDto } from "@norish/shared/contracts";
 
 /**
  * Hook to fetch recipe ingredients using the tRPC recipes.get query.

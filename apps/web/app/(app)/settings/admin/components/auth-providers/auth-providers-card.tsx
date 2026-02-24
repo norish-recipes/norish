@@ -1,25 +1,24 @@
 "use client";
 
+import { useCallback, useState } from "react";
+import { KeyIcon } from "@heroicons/react/24/outline";
 import {
+  Accordion,
+  AccordionItem,
   Card,
   CardBody,
   CardHeader,
-  Accordion,
-  AccordionItem,
-  Switch,
   Divider,
+  Switch,
 } from "@heroui/react";
-import { KeyIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
 
 import { useAdminSettingsContext } from "../../context";
 import { RestartRequiredChip } from "../restart-required-chip";
 import { UnsavedChangesChip } from "../unsaved-changes-chip";
-
 import { AuthProviderForm } from "./auth-provider-form";
-import { OIDCProviderForm } from "./oidc-provider-form";
 import { EnvManagedBadge } from "./env-managed-badge";
+import { OIDCProviderForm } from "./oidc-provider-form";
 
 export function AuthProvidersCard() {
   const t = useTranslations("settings.admin.authProviders");

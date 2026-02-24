@@ -1,14 +1,12 @@
 "use client";
 
-import type { PlannedItemDisplay } from "./types";
-
-import { useDraggable } from "@dnd-kit/core";
 import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-
-import { PlannedItemContent } from "./planned-item-content";
-
 import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
+import { useDraggable } from "@dnd-kit/core";
+
+import type { PlannedItemDisplay } from "./types";
+import { PlannedItemContent } from "./planned-item-content";
 
 type TimelinePlannedItemProps = {
   item: PlannedItemDisplay;

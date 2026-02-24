@@ -1,21 +1,20 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef, useCallback } from "react";
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRecipesContext } from "@/context/recipes-context";
+import { useContainerColumns } from "@/hooks/use-container-columns";
+import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Spinner } from "@heroui/react";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
+
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import RecipeCardSkeleton from "../skeleton/recipe-card-skeleton";
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
-
-import RecipeCard from "./recipe-card";
-import NoRecipesText from "./no-recipes-text";
 import NoRecipeResults from "./no-recipe-results";
-
-import { useRecipesContext } from "@/context/recipes-context";
-import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
-import { useContainerColumns } from "@/hooks/use-container-columns";
+import NoRecipesText from "./no-recipes-text";
+import RecipeCard from "./recipe-card";
 
 // Estimated row height (card height + gap)
 const ESTIMATED_ROW_HEIGHT = 380;

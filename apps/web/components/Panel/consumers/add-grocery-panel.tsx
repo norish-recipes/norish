@@ -1,19 +1,18 @@
 "use client";
 
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-import type { StoreDto } from "@norish/shared/contracts";
-
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { RecurrenceSuggestion } from "@/app/(app)/groceries/components/recurrence-suggestion";
+import { StoreSelector } from "@/components/groceries/store-selector";
+import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";
+import Panel, { PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
+import { useGroceryFormState } from "@/hooks/use-grocery-form-state";
+import { useRecurrenceDetection } from "@/hooks/use-recurrence-detection";
 import { Button, Input } from "@heroui/react";
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { RecurrenceSuggestion } from "@/app/(app)/groceries/components/recurrence-suggestion";
-import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";
-import { StoreSelector } from "@/components/groceries/store-selector";
-import { useGroceryFormState } from "@/hooks/use-grocery-form-state";
-import { useRecurrenceDetection } from "@/hooks/use-recurrence-detection";
-import Panel, { PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
+import type { StoreDto } from "@norish/shared/contracts";
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 type AddGroceryPanelProps = {
   open: boolean;

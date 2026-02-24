@@ -449,9 +449,6 @@ importers:
 
   packages/auth:
     dependencies:
-      '@norish/api':
-        specifier: workspace:*
-        version: link:../api
       '@norish/config':
         specifier: workspace:*
         version: link:../config
@@ -517,21 +514,6 @@ importers:
 
   packages/db:
     dependencies:
-      '@norish/api':
-        specifier: workspace:*
-        version: link:../api
-      '@norish/auth':
-        specifier: workspace:*
-        version: link:../auth
-      '@norish/config':
-        specifier: workspace:*
-        version: link:../config
-      '@norish/queue':
-        specifier: workspace:*
-        version: link:../queue
-      '@norish/shared':
-        specifier: workspace:*
-        version: link:../shared
       drizzle-orm:
         specifier: 0.45.1
         version: 0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.16.0)(kysely@0.28.9)(pg@8.18.0)
@@ -584,9 +566,6 @@ importers:
 
   packages/queue:
     dependencies:
-      '@norish/api':
-        specifier: workspace:*
-        version: link:../api
       '@norish/config':
         specifier: workspace:*
         version: link:../config
@@ -673,6 +652,9 @@ importers:
       '@norish/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@types/node':
+        specifier: ^25.3.0
+        version: 25.3.0
       '@types/react':
         specifier: 19.2.14
         version: 19.2.14

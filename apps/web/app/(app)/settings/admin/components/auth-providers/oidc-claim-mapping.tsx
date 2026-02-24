@@ -1,7 +1,7 @@
 "use client";
 
-import { Input, Switch, Divider } from "@heroui/react";
-import { UserGroupIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { ExclamationTriangleIcon, UserGroupIcon } from "@heroicons/react/16/solid";
+import { Divider, Input, Switch } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { RestartRequiredChip } from "../restart-required-chip";

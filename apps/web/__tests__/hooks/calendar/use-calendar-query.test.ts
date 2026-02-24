@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { waitFor, renderHook } from "@testing-library/react";
+import { useCalendarQuery } from "@/hooks/calendar/use-calendar-query";
+import { renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "./test-utils";
 
@@ -32,8 +33,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
     },
   }),
 }));
-
-import { useCalendarQuery } from "@/hooks/calendar/use-calendar-query";
 
 function createMockItem(overrides: Partial<PlannedItemFromQuery> = {}): PlannedItemFromQuery {
   return {

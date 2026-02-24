@@ -1,10 +1,10 @@
 "use client";
-import React, { useCallback, useRef, useState, useEffect } from "react";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useArchiveImportContext } from "@/context/archive-import-context";
+import { useArchiveImportMutation } from "@/hooks/archive";
 import { Progress } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import { useArchiveImportMutation } from "@/hooks/archive";
-import { useArchiveImportContext } from "@/context/archive-import-context";
 
 export default function ArchiveImporter() {
   const t = useTranslations("navbar.archiveImporter");
@@ -99,7 +99,7 @@ export default function ArchiveImporter() {
     status = `Processing: ${parts.join(", ")}`;
   } else if (isComplete) {
     // Import complete - show appropriate message
-    const parts = [];
+    const parts: string[] = [];
 
     if (imported > 0) parts.push(`${imported} imported`);
     if (skipped > 0) parts.push(`${skipped} skipped`);

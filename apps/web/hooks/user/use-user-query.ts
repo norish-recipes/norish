@@ -1,11 +1,10 @@
 "use client";
 
-import type { User } from "@norish/shared/contracts";
-import type { ApiKeyMetadataDto } from "@norish/api/trpc/routers/user/types";
-
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
+import type { ApiKeyMetadataDto } from "@norish/api/trpc";
+import type { User } from "@norish/shared/contracts";
 
 export type UserSettingsData = {
   user: User;

@@ -1,7 +1,6 @@
 "use client";
 
 import type { PlannedItemDisplay } from "./types";
-
 import { PlannedItemContent } from "./planned-item-content";
 
 type TimelineDragOverlayProps = {

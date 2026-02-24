@@ -1,8 +1,8 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useScroll, useMotionValueEvent } from "motion/react";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useMotionValueEvent, useScroll } from "motion/react";
 
 interface AutoHideOptions {
   scrollThreshold?: number;

@@ -1,9 +1,9 @@
 "use client";
 
-import { useLocale } from "next-intl";
-import { formatUnit } from "@norish/shared/lib/unit-localization";
-
 import { useUnitsQuery } from "@/hooks/config/use-units-query";
+import { useLocale } from "next-intl";
+
+import { formatUnit } from "@norish/shared/lib/unit-localization";
 
 /**
  * Hook that provides locale-aware unit formatting functions.

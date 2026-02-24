@@ -1,15 +1,14 @@
 "use client";
 
 import type { InfiniteData } from "@tanstack/react-query";
-import type { RecipeDashboardDTO } from "@norish/shared/contracts";
-
-import { useSubscription } from "@trpc/tanstack-react-query";
-import { useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useTranslations } from "next-intl";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSubscription } from "@trpc/tanstack-react-query";
+import { useTranslations } from "next-intl";
+
+import type { RecipeDashboardDTO } from "@norish/shared/contracts";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 type InfiniteRecipeData = InfiniteData<{
   recipes: RecipeDashboardDTO[];
@@ -28,7 +27,7 @@ export function useRatingsSubscription() {
 
   useSubscription(
     trpc.ratings.onRatingUpdated.subscriptionOptions(undefined, {
-      onData: ({ recipeId, averageRating, ratingCount }) => {
+      onData: ({ recipeId, averageRating, ratingCount }: any) => {
         const averageQueryKey = trpc.ratings.getAverage.queryKey({ recipeId });
 
         queryClient.setQueryData(averageQueryKey, { recipeId, averageRating, ratingCount });
@@ -47,13 +46,22 @@ export function useRatingsSubscription() {
 
               if (idx === -1) return page;
 
+              const updatedRecipes = [...page.recipes];
+              const recipe = updatedRecipes[idx];
+
+              if (!recipe) {
+                return page;
+              }
+
+              updatedRecipes[idx] = {
+                ...recipe,
+                averageRating,
+                ratingCount,
+              };
+
               return {
                 ...page,
-                recipes: page.recipes.with(idx, {
-                  ...page.recipes[idx],
-                  averageRating,
-                  ratingCount,
-                }),
+                recipes: updatedRecipes,
               };
             }),
           };
@@ -66,7 +74,7 @@ export function useRatingsSubscription() {
 
   useSubscription(
     trpc.ratings.onRatingFailed.subscriptionOptions(undefined, {
-      onData: ({ recipeId, reason }) => {
+      onData: ({ recipeId, reason }: any) => {
         const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({ recipeId });
 
         queryClient.invalidateQueries({ queryKey: userRatingQueryKey });

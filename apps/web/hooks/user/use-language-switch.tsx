@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { GlobeAltIcon } from "@heroicons/react/16/solid";
-import { type Locale, isValidLocale } from "@norish/i18n/config";
-
-import { useLocale } from "@/hooks/user/use-locale";
+import { useEffect, useMemo, useState } from "react";
 import { useLocaleConfigQuery } from "@/hooks/config";
+import { useLocale } from "@/hooks/user/use-locale";
+import { GlobeAltIcon } from "@heroicons/react/16/solid";
+
+import type { Locale } from "@norish/i18n/config";
+import { isValidLocale } from "@norish/i18n/config";
 
 /**
  * Hook to get locale state and cycle function for language switching UI

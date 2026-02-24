@@ -7,11 +7,11 @@
  * - flattenForLibrary: prepares config for parse-ingredient library
  */
 
-import type { UnitsMap } from "@norish/config/zod/server-config";
+import { describe, expect, it } from "vitest";
 
-import { describe, it, expect } from "vitest";
-import { flattenForLibrary, normalizeUnit, formatUnit } from "@norish/shared/lib/unit-localization";
+import type { UnitsMap } from "@norish/config/zod/server-config";
 import defaultUnits from "@norish/config/units.default.json";
+import { flattenForLibrary, formatUnit, normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 const unitsConfig = defaultUnits as UnitsMap;
 

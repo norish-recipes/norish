@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckIcon } from "@heroicons/react/16/solid";
 import Image from "next/image";
-
-import { useRecipeContext } from "../context";
-
+import { SmartInstruction } from "@/components/recipe/smart-instruction";
 import ImageLightbox from "@/components/shared/image-lightbox";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { SmartInstruction } from "@/components/recipe/smart-instruction";
+import { CheckIcon } from "@heroicons/react/16/solid";
+
+import { useRecipeContext } from "../context";
 
 export default function StepsList() {
   const { recipe } = useRecipeContext();

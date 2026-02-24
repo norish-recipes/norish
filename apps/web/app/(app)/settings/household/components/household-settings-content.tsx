@@ -1,11 +1,10 @@
 "use client";
 
-import { HouseholdSettingsProvider, useHouseholdSettingsContext } from "../context";
-
-import NoHouseholdView from "./no-household-view";
-import HouseholdView from "./household-view";
-
 import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
+
+import { HouseholdSettingsProvider, useHouseholdSettingsContext } from "../context";
+import HouseholdView from "./household-view";
+import NoHouseholdView from "./no-household-view";
 
 function HouseholdSettingsContent() {
   const { household, isLoading } = useHouseholdSettingsContext();

@@ -1,11 +1,11 @@
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import {
   calculateNextOccurrence,
   getTodayString,
-  shouldBeActive,
   isOverdue,
+  shouldBeActive,
 } from "@norish/shared/lib/recurrence/calculator";
 
 // Mock the current date for consistent testing

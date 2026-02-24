@@ -9,13 +9,11 @@
  *
  * For reading data + cache manipulation, use useCalendarQuery instead.
  */
+import { useCallback } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
-
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type CalendarCacheHelpers = {
   setCalendarData: (

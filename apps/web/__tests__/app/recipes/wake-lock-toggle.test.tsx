@@ -1,7 +1,6 @@
+import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
 
 const toggle = vi.fn();
 let isSupported = false;

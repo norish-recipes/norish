@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { UserDtoSchema } from "@norish/shared/contracts/zod/user";
 
 // API Key metadata schema (matches ApiKeyMetadata type)

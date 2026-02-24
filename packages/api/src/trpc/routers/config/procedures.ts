@@ -1,16 +1,16 @@
 import { trpcLogger as log } from "@norish/api/logger";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
-  getUnits,
-  getRecurrenceConfig,
   getLocaleConfig,
-  isTimersEnabled,
+  getRecurrenceConfig,
   getTimerKeywords,
+  getUnits,
+  isTimersEnabled,
 } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@norish/db/repositories/tags";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 import { authedProcedure } from "../../middleware";
-import { router, publicProcedure } from "../../trpc";
+import { publicProcedure, router } from "../../trpc";
 
 /**
  * Get locale configuration (enabled locales and default locale)

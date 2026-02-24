@@ -1,5 +1,7 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { getUserPreferences, updateUserPreferences } from "@norish/db/repositories/users";
 
 // Use hoisted factories so the mocks are available to the hoisted vi.mock call.
 const mockFindFirst = vi.hoisted(() => vi.fn());
@@ -11,8 +13,6 @@ vi.mock("@norish/db/drizzle", () => ({
     execute: mockExecute,
   },
 }));
-
-import { getUserPreferences, updateUserPreferences } from "@norish/db/repositories/users";
 
 describe("user preferences repository", () => {
   beforeEach(() => {

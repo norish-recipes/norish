@@ -1,8 +1,8 @@
 import type { BrowserContext } from "playwright-core";
-import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
-import { getBrowser } from "@norish/api/playwright";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { parserLogger as log } from "@norish/api/logger";
+import { getBrowser } from "@norish/api/playwright";
 
 const BROWSER_HEADERS: Record<string, string> = {
   "User-Agent":

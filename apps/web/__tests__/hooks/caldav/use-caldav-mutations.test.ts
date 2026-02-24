@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { waitFor, renderHook, act } from "@testing-library/react";
+// Import after mocking
+import { useCaldavMutations } from "@/hooks/caldav/use-caldav-mutations";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper, createMockCaldavConfig } from "./test-utils";
+import { createMockCaldavConfig, createTestQueryClient, createTestWrapper } from "./test-utils";
 
 // Mock query keys
 const mockConfigQueryKey = ["caldav", "getConfig"];
@@ -76,9 +78,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
     },
   }),
 }));
-
-// Import after mocking
-import { useCaldavMutations } from "@/hooks/caldav/use-caldav-mutations";
 
 describe("CalDAV Mutation Hooks", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

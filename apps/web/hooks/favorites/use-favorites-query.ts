@@ -1,9 +1,8 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useFavoritesQuery() {
   const trpc = useTRPC();

@@ -1,15 +1,14 @@
 "use client";
 
-import { AdminSettingsProvider, useAdminSettingsContext } from "../context";
+import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
 
-import GeneralCard from "./general-card";
+import { AdminSettingsProvider, useAdminSettingsContext } from "../context";
+import AIProcessingCard from "./ai-processing-card";
 import { AuthProvidersCard } from "./auth-providers";
 import ContentDetectionCard from "./content-detection-card";
-import SystemCard from "./system-card";
-import AIProcessingCard from "./ai-processing-card";
+import GeneralCard from "./general-card";
 import PermissionPolicyCard from "./permission-policy-card";
-
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
+import SystemCard from "./system-card";
 
 function AdminSettingsContent() {
   const { isLoading } = useAdminSettingsContext();

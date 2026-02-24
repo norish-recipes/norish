@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 
+import { buildRecipeDTO } from "@norish/api/importers/parser-helpers";
+
 vi.mock("@norish/config/server-config-loader", () => ({
   getUnits: vi.fn().mockResolvedValue({}),
 }));
@@ -20,8 +22,6 @@ vi.mock("@norish/shared/lib/helpers", async (importOriginal) => {
     ),
   };
 });
-
-import { buildRecipeDTO } from "@norish/api/importers/parser-helpers";
 
 describe("buildRecipeDTO", () => {
   it("filters parsed ingredients with empty names", async () => {

@@ -1,27 +1,27 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { Button } from "@heroui/react";
+import { useRouter } from "next/navigation";
+import { useAutoHide } from "@/hooks/auto-hide";
+import { useTimersEnabledQuery } from "@/hooks/config";
+import { useNotificationPermission } from "@/hooks/use-notification-permission";
+import { useTimerStore } from "@/stores/timers";
 import {
-  ChevronUpIcon,
   ChevronDownIcon,
-  PlayIcon,
-  PauseIcon,
-  PlusIcon,
+  ChevronUpIcon,
   MinusIcon,
+  PauseIcon,
+  PlayIcon,
+  PlusIcon,
   XMarkIcon,
 } from "@heroicons/react/16/solid";
-import { useRouter } from "next/navigation";
-import useSound from "use-sound";
+import { Button } from "@heroui/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { createClientLogger } from "@norish/shared/lib/logger";
-import { formatTimerMs } from "@norish/shared/lib/helpers";
+import useSound from "use-sound";
 
-import { useTimersEnabledQuery } from "@/hooks/config";
-import { useTimerStore } from "@/stores/timers";
-import { useAutoHide } from "@/hooks/auto-hide";
-import { useNotificationPermission } from "@/hooks/use-notification-permission";
+import { formatTimerMs } from "@norish/shared/lib/helpers";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const logger = createClientLogger("timer-dock");
 

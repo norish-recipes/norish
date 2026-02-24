@@ -1,12 +1,11 @@
-import type { ProviderInfo } from "@norish/shared/contracts";
-
-import { getConfig } from "@norish/db/repositories/server-config";
-import {
-  ServerConfigKeys,
-  type AuthProviderOIDC,
-  type AuthProviderGitHub,
-  type AuthProviderGoogle,
+import type {
+  AuthProviderGitHub,
+  AuthProviderGoogle,
+  AuthProviderOIDC,
 } from "@norish/config/zod/server-config";
+import type { ProviderInfo } from "@norish/shared/contracts";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { getConfig } from "@norish/db/repositories/server-config";
 
 export async function getAvailableProviders(): Promise<ProviderInfo[]> {
   const providers: ProviderInfo[] = [];

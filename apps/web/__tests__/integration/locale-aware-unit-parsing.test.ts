@@ -1,6 +1,6 @@
-import type { UnitsMap } from "@norish/config/zod/server-config";
-
 import { describe, expect, it } from "vitest";
+
+import type { UnitsMap } from "@norish/config/zod/server-config";
 import defaultUnits from "@norish/config/units.default.json";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 

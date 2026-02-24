@@ -1,10 +1,10 @@
-import type { RecipeDashboardDTO } from "@norish/shared/contracts";
-import type { ReactNode } from "react";
 import type { InfiniteData } from "@tanstack/react-query";
-
-import { vi } from "vitest";
+import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
+import { vi } from "vitest";
+
+import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 export type InfiniteRecipeData = InfiniteData<{
   recipes: RecipeDashboardDTO[];

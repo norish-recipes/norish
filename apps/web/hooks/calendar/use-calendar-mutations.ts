@@ -1,12 +1,11 @@
 "use client";
 
-import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
-
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { useCalendarCacheHelpers } from "./use-calendar-cache";
+import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
+import { useCalendarCacheHelpers } from "./use-calendar-cache";
 
 export type CalendarMutationsResult = {
   createItem: (

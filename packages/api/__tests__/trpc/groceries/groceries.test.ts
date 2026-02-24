@@ -1,7 +1,27 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Import mocks for assertions
+import {
+  createGroceries,
+  deleteGroceryByIds,
+  getGroceriesByIds,
+  getGroceryOwnerIds,
+  listGroceriesByUsers,
+  updateGroceries,
+} from "../../mocks/db";
+import { groceryEmitter } from "../../mocks/grocery-emitter";
+import { assertHouseholdAccess } from "../../mocks/permissions";
+import { listRecurringGroceriesByUsers } from "../../mocks/recurring-groceries";
+// Import test utilities
+import {
+  createMockAuthedContext,
+  createMockGrocery,
+  createMockHousehold,
+  createMockUser,
+} from "./test-utils";
 
 // Setup mocks before any imports that use them
 vi.mock("@norish/db", () => import("../../mocks/db"));
@@ -13,27 +33,6 @@ vi.mock("@norish/auth/permissions", () => import("../../mocks/permissions"));
 vi.mock("@norish/api/trpc/routers/groceries/emitter", () => import("../../mocks/grocery-emitter"));
 vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
 vi.mock("@norish/shared/lib/helpers", () => import("../../mocks/helpers"));
-
-// Import mocks for assertions
-import {
-  listGroceriesByUsers,
-  createGroceries,
-  updateGroceries,
-  deleteGroceryByIds,
-  getGroceryOwnerIds,
-  getGroceriesByIds,
-} from "../../mocks/db";
-import { listRecurringGroceriesByUsers } from "../../mocks/recurring-groceries";
-import { assertHouseholdAccess } from "../../mocks/permissions";
-import { groceryEmitter } from "../../mocks/grocery-emitter";
-
-// Import test utilities
-import {
-  createMockUser,
-  createMockHousehold,
-  createMockAuthedContext,
-  createMockGrocery,
-} from "./test-utils";
 
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

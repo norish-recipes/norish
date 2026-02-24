@@ -33,7 +33,11 @@ function findWeekdayIndex(input: string, weekdayWords: Record<string, number>): 
     .sort((a, b) => a[0].length - b[0].length); // Sort by length, shortest first
 
   if (matches.length > 0) {
-    return matches[0][1]; // Return the index of the shortest matching word
+    const firstMatch = matches[0];
+
+    if (firstMatch?.[1] !== undefined) {
+      return firstMatch[1]; // Return the index of the shortest matching word
+    }
   }
 
   return undefined;
@@ -86,6 +90,11 @@ function parseWithLocale(
 
       if (match) {
         const matchedPhrase = match[1];
+
+        if (!matchedPhrase) {
+          continue;
+        }
+
         const cleanText = text
           .replace(new RegExp(escapeRegex(matchedPhrase), "i"), "")
           .trim()
@@ -160,6 +169,16 @@ function parseWithLocale(
 
     if (everyWeekdayMatch) {
       const weekdayStr = everyWeekdayMatch[2];
+
+      if (!weekdayStr) {
+        return {
+          recurrence: null,
+          cleanText: text,
+          matchedPhrase: null,
+          matchedLocale: null,
+        };
+      }
+
       const weekdayIndex = findWeekdayIndex(weekdayStr, config.weekdayWords);
 
       const cleanText = text
@@ -196,6 +215,16 @@ function parseWithLocale(
 
       if (weeklyOnMatch) {
         const weekdayStr = weeklyOnMatch[2];
+
+        if (!weekdayStr) {
+          return {
+            recurrence: null,
+            cleanText: text,
+            matchedPhrase: null,
+            matchedLocale: null,
+          };
+        }
+
         const weekdayIndex = findWeekdayIndex(weekdayStr, config.weekdayWords);
 
         const cleanText = text
@@ -225,6 +254,16 @@ function parseWithLocale(
 
       if (monthlyOnMatch) {
         const weekdayStr = monthlyOnMatch[2];
+
+        if (!weekdayStr) {
+          return {
+            recurrence: null,
+            cleanText: text,
+            matchedPhrase: null,
+            matchedLocale: null,
+          };
+        }
+
         const weekdayIndex = findWeekdayIndex(weekdayStr, config.weekdayWords);
 
         const cleanText = text
@@ -276,7 +315,7 @@ function parseWithLocale(
       const standaloneMatch = lowerText.match(standalonePattern);
 
       if (standaloneMatch) {
-        const matchedWord = standaloneMatch[1].toLowerCase();
+        const matchedWord = standaloneMatch[1]?.toLowerCase() ?? "";
         let rule: "day" | "week" | "month" = "day";
 
         if (
@@ -326,10 +365,10 @@ function parseWithLocale(
     };
   }
 
-  const matchedPhrase = match[0];
+  const matchedPhrase = match[0] ?? "";
   const hasOther = !!match[2];
   const numberStr = match[3];
-  const unitStr = match[4];
+  const unitStr = match[4] ?? "";
   const weekdayStr = match[5];
 
   // Determine interval

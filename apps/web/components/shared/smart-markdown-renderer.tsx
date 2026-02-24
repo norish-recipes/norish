@@ -1,7 +1,7 @@
 "use client";
 
-import ReactMarkdown from "react-markdown";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 
 export interface SmartMarkdownRendererProps {
   text: string;

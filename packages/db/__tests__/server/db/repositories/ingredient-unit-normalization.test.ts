@@ -6,7 +6,8 @@
  * are normalized to canonical IDs (e.g., "handful", "splash", "gram") when saving.
  */
 
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+
 import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
 
 import { getRecipeIngredients } from "../../../helpers/db-test-helpers";

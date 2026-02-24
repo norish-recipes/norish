@@ -7,7 +7,8 @@
 
 import { getAIConfig } from "@norish/config/server-config-loader";
 
-import { aiError, type AIResult } from "./types";
+import type { AIResult } from "./types";
+import { aiError } from "./types";
 
 /**
  * Check if AI features are enabled.

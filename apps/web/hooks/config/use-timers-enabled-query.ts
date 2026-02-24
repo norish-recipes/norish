@@ -1,10 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { getTimersEnabledPreference } from "@norish/shared/lib/user-preferences";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
+import { useQuery } from "@tanstack/react-query";
+
+import { getTimersEnabledPreference } from "@norish/shared/lib/user-preferences";
 
 /**
  * Hook to check if recipe timers are enabled globally AND for the current user.

@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 
 import { parseTimerDurations } from "./timer-parser";

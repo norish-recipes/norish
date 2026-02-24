@@ -10,29 +10,31 @@
  */
 
 // Import defaults for fallback when DB has no value
-import { getConfig } from "@norish/db/repositories";
+import { getConfig } from "@norish/db/repositories/server-config";
 
-import defaultUnits from "./units.default.json";
+import type {
+  AIConfig,
+  AutoTaggingMode,
+  ContentIndicatorsConfig,
+  I18nLocaleConfig,
+  PromptsConfig,
+  RecipePermissionPolicy,
+  RecurrenceConfig,
+  TimerKeywordsConfig,
+  UnitsMap,
+  VideoConfig,
+} from "./zod/server-config";
 import defaultContentIndicators from "./content-indicators.default.json";
+import { SERVER_CONFIG } from "./env-config-server";
 import defaultRecurrenceConfig from "./recurrence-config.default.json";
 import defaultTimerKeywords from "./timer-keywords.default.json";
+import defaultUnits from "./units.default.json";
 import {
+  DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
-  type UnitsMap,
   UnitsConfigSchema,
   UnitsMapSchema,
-  type ContentIndicatorsConfig,
-  type RecurrenceConfig,
-  type AIConfig,
-  type VideoConfig,
-  type RecipePermissionPolicy,
-  type PromptsConfig,
-  type AutoTaggingMode,
-  type I18nLocaleConfig,
-  type TimerKeywordsConfig,
-  DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "./zod/server-config";
-import { SERVER_CONFIG } from "./env-config-server";
 
 // ============================================================================
 // Configuration Getters - Each call queries the database

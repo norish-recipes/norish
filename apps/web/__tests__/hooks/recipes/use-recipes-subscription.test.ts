@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper, createMockInfiniteData } from "./test-utils";
+import { createMockInfiniteData, createTestQueryClient, createTestWrapper } from "./test-utils";
 
 // Track subscription callbacks
 const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefined> = {};

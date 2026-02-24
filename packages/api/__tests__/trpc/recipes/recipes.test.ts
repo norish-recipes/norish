@@ -1,36 +1,35 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { canAccessResource } from "../../mocks/permissions";
+import { recipeEmitter } from "../../mocks/recipe-emitter";
+// Import mocks for assertions
+import {
+  createRecipeWithRefs,
+  dashboardRecipe,
+  deleteRecipeById,
+  getRecipeFull,
+  getRecipeOwnerId,
+  getRecipesWithoutCategories,
+  listRecipes,
+  updateRecipeCategories,
+} from "../../mocks/recipes-repository";
+// Import test utilities
+import {
+  createMockAuthedContext,
+  createMockFullRecipe,
+  createMockHousehold,
+  createMockRecipeDashboard,
+  createMockUser,
+} from "./test-utils";
 
 // Setup mocks before any imports that use them
 vi.mock("@norish/db/repositories/recipes", () => import("../../mocks/recipes-repository"));
 vi.mock("@norish/auth/permissions", () => import("../../mocks/permissions"));
 vi.mock("@norish/api/trpc/routers/recipes/emitter", () => import("../../mocks/recipe-emitter"));
 vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
-
-// Import mocks for assertions
-import {
-  listRecipes,
-  getRecipeFull,
-  getRecipeOwnerId,
-  createRecipeWithRefs,
-  updateRecipeCategories,
-  getRecipesWithoutCategories,
-  deleteRecipeById,
-  dashboardRecipe,
-} from "../../mocks/recipes-repository";
-import { canAccessResource } from "../../mocks/permissions";
-import { recipeEmitter } from "../../mocks/recipe-emitter";
-
-// Import test utilities
-import {
-  createMockUser,
-  createMockHousehold,
-  createMockAuthedContext,
-  createMockRecipeDashboard,
-  createMockFullRecipe,
-} from "./test-utils";
 
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

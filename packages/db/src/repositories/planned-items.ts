@@ -1,4 +1,5 @@
 import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+
 import { db } from "@norish/db/drizzle";
 import { plannedItems, recipes } from "@norish/db/schema";
 
@@ -214,6 +215,8 @@ export async function deletePlannedItem(id: string): Promise<PlannedItem[]> {
 
     for (let i = 0; i < remaining.length; i += 1) {
       const item = remaining[i];
+
+      if (!item) continue;
       const [row] = await trx
         .update(plannedItems)
         .set({ sortOrder: i, updatedAt: new Date() })
@@ -279,6 +282,8 @@ export async function moveItem(
       for (let i = 0; i < sourceWithout.length; i += 1) {
         const item = sourceWithout[i];
 
+        if (!item) continue;
+
         await trx
           .update(plannedItems)
           .set({ sortOrder: i, updatedAt: new Date() })
@@ -291,6 +296,8 @@ export async function moveItem(
 
     for (let i = 0; i < nextTargetItems.length; i += 1) {
       const item = nextTargetItems[i];
+
+      if (!item) continue;
       const updateData: PlannedItemUpdate = { sortOrder: i, updatedAt: new Date() };
 
       if (item.id === itemId) {

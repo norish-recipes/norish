@@ -1,5 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import "@testing-library/jest-dom";
 
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";

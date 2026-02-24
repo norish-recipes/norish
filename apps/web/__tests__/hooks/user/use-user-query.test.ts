@@ -1,12 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// Import after mocking
+import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 import { waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  createMockApiKey,
+  createMockUser,
+  createMockUserSettingsData,
   createTestQueryClient,
   createTestWrapper,
-  createMockUser,
-  createMockApiKey,
-  createMockUserSettingsData,
 } from "./test-utils";
 
 // Mock the tRPC provider
@@ -29,9 +31,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
     },
   }),
 }));
-
-// Import after mocking
-import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 
 describe("useUserSettingsQuery", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

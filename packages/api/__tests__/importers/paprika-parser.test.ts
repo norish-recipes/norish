@@ -1,13 +1,13 @@
-import { gzip } from "zlib";
 import { promisify } from "util";
-
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { gzip } from "zlib";
 import JSZip from "jszip";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { PaprikaRecipe } from "@norish/api/importers/paprika-parser";
 import {
-  parsePaprikaRecipeToDTO,
   extractPaprikaRecipes,
-  type PaprikaRecipe,
   PaprikaRecipeSchema,
+  parsePaprikaRecipeToDTO,
 } from "@norish/api/importers/paprika-parser";
 
 // @vitest-environment node

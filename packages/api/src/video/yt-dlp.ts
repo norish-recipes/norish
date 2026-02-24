@@ -1,21 +1,20 @@
-import type { VideoMetadata } from "./types";
-import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-
-import fs from "node:fs/promises";
-import fsSync from "node:fs";
-import path from "node:path";
-import os from "node:os";
 import { execSync } from "node:child_process";
-
+import fsSync from "node:fs";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import YTDlpWrapModule from "yt-dlp-wrap";
+
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import { videoLogger as log } from "@norish/api/logger";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { getVideoConfig } from "@norish/config/server-config-loader";
+
+import type { VideoMetadata } from "./types";
 
 // Handle CJS/ESM interop - the module may be wrapped in a default property
 const YTDlpWrap =
   (YTDlpWrapModule as unknown as { default?: typeof YTDlpWrapModule }).default ?? YTDlpWrapModule;
-
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { getVideoConfig } from "@norish/config/server-config-loader";
-import { videoLogger as log } from "@norish/api/logger";
 
 // Resolve ffmpeg path at runtime
 // In production (Docker), uses system ffmpeg from Alpine packages

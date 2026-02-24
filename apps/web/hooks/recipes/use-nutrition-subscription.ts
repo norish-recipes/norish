@@ -1,8 +1,7 @@
 "use client";
 
-import { useSubscription } from "@trpc/tanstack-react-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 export function useNutritionSubscription(
   recipeId: string | null,
@@ -15,7 +14,7 @@ export function useNutritionSubscription(
   useSubscription(
     trpc.recipes.onNutritionStarted.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId === recipeId) {
           onStarted();
         }
@@ -27,7 +26,7 @@ export function useNutritionSubscription(
   useSubscription(
     trpc.recipes.onFailed.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId === recipeId) {
           onCompleted();
         }
@@ -39,7 +38,7 @@ export function useNutritionSubscription(
   useSubscription(
     trpc.recipes.onUpdated.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipe.id === recipeId) {
           onCompleted();
         }

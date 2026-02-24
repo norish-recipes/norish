@@ -1,14 +1,13 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-
-import { isVideoParsingEnabled } from "@norish/config/server-config-loader";
 import { videoLogger as log } from "@norish/api/logger";
+import { isVideoParsingEnabled } from "@norish/config/server-config-loader";
 
 import { VideoProcessorFactory } from "./processor-factory";
-import { YouTubeProcessor } from "./processors/youtube";
-import { InstagramProcessor } from "./processors/instagram";
 import { FacebookProcessor } from "./processors/facebook";
 import { GenericVideoProcessor } from "./processors/generic";
+import { InstagramProcessor } from "./processors/instagram";
+import { YouTubeProcessor } from "./processors/youtube";
 
 /**
  * Singleton factory instance with all processors registered.

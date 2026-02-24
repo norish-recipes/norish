@@ -6,11 +6,11 @@
  */
 
 import type { Queue } from "bullmq";
-import type {
-  NutritionEstimationJobData,
-  AddNutritionEstimationJobResult,
-} from "@norish/queue/contracts/job-types";
 
+import type {
+  AddNutritionEstimationJobResult,
+  NutritionEstimationJobData,
+} from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/api/logger";
 
 import { isJobInQueue } from "../helpers";

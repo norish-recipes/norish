@@ -1,32 +1,31 @@
 "use client";
 
-import type { Slot } from "@norish/shared/contracts";
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
-import type { PlannedItemDisplay } from "./types";
-
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
 import {
   DndContext,
   DragOverlay,
-  TouchSensor,
   PointerSensor,
-  useSensor,
-  useSensors,
   pointerWithin,
   rectIntersection,
+  TouchSensor,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useLocale } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWindowSize } from "usehooks-ts";
+
+import type { Slot } from "@norish/shared/contracts";
 import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 
+import type { PlannedItemDisplay } from "./types";
 import { TimelineDaySection } from "./timeline-day-section";
 import { TimelineDragOverlay } from "./timeline-drag-overlay";
 import { TimelineScrollToToday } from "./timeline-scroll-to-today";
 import { SLOT_ORDER } from "./types";
-
-import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
 
 const mobileDragActivationDelayMs = 300;
 const mobileDragTolerancePx = 10;
@@ -144,8 +143,13 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
       if (items.length === 0) return;
 
-      const firstIndex = items[0].index;
-      const lastIndex = items[items.length - 1].index;
+      const firstItem = items[0];
+      const lastItem = items[items.length - 1];
+
+      if (!firstItem || !lastItem) return;
+
+      const firstIndex = firstItem.index;
+      const lastIndex = lastItem.index;
 
       // Use asymmetric buffer: larger for future (scrolling down), smaller for past (scrolling up)
       const pastBuffer = 2;
@@ -351,9 +355,14 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
           >
             {virtualItems.map((virtualItem) => {
               const d = allDays[virtualItem.index];
+
+              if (!d) {
+                return null;
+              }
+
               const key = dateKey(d);
               const items = (calendarData[key] ?? [])
-                .sort((a, b) => SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot])
+                .sort((a, b) => (SLOT_ORDER[a.slot] ?? 0) - (SLOT_ORDER[b.slot] ?? 0))
                 .map((it) => it as PlannedItemDisplay);
               const isToday = key === todayKey;
 

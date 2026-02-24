@@ -1,13 +1,14 @@
 import { z } from "zod";
+
+import type { ServerConfigKey } from "@norish/config/zod/server-config";
 import { trpcLogger as log } from "@norish/api/logger";
-import { setConfig } from "@norish/db/repositories/server-config";
+import { getDefaultConfigValue } from "@norish/api/startup/seed-config";
 import {
-  ServerConfigKeys,
-  type ServerConfigKey,
   SchedulerCleanupMonthsSchema,
   SENSITIVE_CONFIG_KEYS,
+  ServerConfigKeys,
 } from "@norish/config/zod/server-config";
-import { getDefaultConfigValue } from "@norish/api/startup/seed-config";
+import { setConfig } from "@norish/db/repositories/server-config";
 
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";

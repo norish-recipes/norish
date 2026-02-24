@@ -1,32 +1,32 @@
 "use client";
 
-import type {
-  GroceryDto,
-  StoreDto,
-  StoreColor,
-  RecurringGroceryDto,
-} from "@norish/shared/contracts";
-
-import { memo, useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { motion } from "motion/react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  CheckIcon,
   ChevronDownIcon,
   EllipsisVerticalIcon,
-  CheckIcon,
   TrashIcon,
 } from "@heroicons/react/16/solid";
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@heroui/react";
+import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
+import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { GroceryItem } from "./grocery-item";
-import { DynamicHeroIcon } from "./dynamic-hero-icon";
-import { getStoreColorClasses } from "./store-colors";
+import type {
+  GroceryDto,
+  RecurringGroceryDto,
+  StoreColor,
+  StoreDto,
+} from "@norish/shared/contracts";
+
 import {
-  SortableStoreContainer,
   SortableGroceryItem,
-  useDndGroceryContext,
+  SortableStoreContainer,
   UNSORTED_CONTAINER,
+  useDndGroceryContext,
 } from "./dnd";
+import { DynamicHeroIcon } from "./dynamic-hero-icon";
+import { GroceryItem } from "./grocery-item";
+import { getStoreColorClasses } from "./store-colors";
 
 interface StoreSectionProps {
   store: StoreDto | null; // null = Unsorted

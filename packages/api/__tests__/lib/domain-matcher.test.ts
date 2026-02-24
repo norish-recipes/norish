@@ -1,7 +1,7 @@
 // @vitest-environment node
-import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import { describe, expect, it } from "vitest";
 
-import { describe, it, expect } from "vitest";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { getMatchingTokens } from "@norish/api/lib/domain-matcher";
 
 function makeToken(

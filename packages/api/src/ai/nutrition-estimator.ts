@@ -1,11 +1,14 @@
 import { generateText, Output } from "ai";
-import { isAIEnabled } from "@norish/config/server-config-loader";
-import { aiLogger } from "@norish/api/logger";
 
-import { getModels, getGenerationSettings } from "./providers";
-import { nutritionEstimationSchema, type NutritionEstimate } from "./schemas/nutrition.schema";
-import { loadPrompt, fillPrompt } from "./prompts/loader";
-import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } from "./types/result";
+import { aiLogger } from "@norish/api/logger";
+import { isAIEnabled } from "@norish/config/server-config-loader";
+
+import type { NutritionEstimate } from "./schemas/nutrition.schema";
+import type { AIResult } from "./types/result";
+import { fillPrompt, loadPrompt } from "./prompts/loader";
+import { getGenerationSettings, getModels } from "./providers";
+import { nutritionEstimationSchema } from "./schemas/nutrition.schema";
+import { aiError, aiSuccess, getErrorMessage, mapErrorToCode } from "./types/result";
 
 // Re-export type for consumers
 export type { NutritionEstimate };

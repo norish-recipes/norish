@@ -1,7 +1,10 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { getAverageRating, getUserRating, rateRecipe } from "../../mocks/ratings-repository";
+import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
 
 vi.mock("@norish/db/repositories/ratings", () => import("../../mocks/ratings-repository"));
 vi.mock("@norish/api/trpc/routers/ratings/emitter", () => import("../../mocks/ratings-emitter"));
@@ -11,10 +14,6 @@ vi.mock("@norish/config/server-config-loader", () => ({
 vi.mock("@norish/api/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
-
-import { rateRecipe, getUserRating, getAverageRating } from "../../mocks/ratings-repository";
-
-import { createMockUser, createMockHousehold, createMockAuthedContext } from "./test-utils";
 
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
   transformer: superjson,

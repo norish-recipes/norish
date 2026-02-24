@@ -1,22 +1,22 @@
 import { relations } from "drizzle-orm";
 
-import { ingredients } from "./ingredients";
-import { recipeIngredients } from "./recipe-ingredients";
-import { recipeTags } from "./recipe-tags";
-import { recipes } from "./recipes";
-import { tags } from "./tags";
-import { steps } from "./steps";
-import { stepImages } from "./step-images";
-import { recipeImages } from "./recipe-images";
-import { recipeVideos } from "./recipe-videos";
-import { households } from "./households";
-import { householdUsers } from "./household-users";
 import { users } from "./auth";
 import { groceries } from "./groceries";
-import { serverConfig } from "./server-config";
+import { householdUsers } from "./household-users";
+import { households } from "./households";
+import { ingredients } from "./ingredients";
+import { recipeImages } from "./recipe-images";
+import { recipeIngredients } from "./recipe-ingredients";
 import { recipeRatings } from "./recipe-ratings";
+import { recipeTags } from "./recipe-tags";
+import { recipeVideos } from "./recipe-videos";
+import { recipes } from "./recipes";
+import { serverConfig } from "./server-config";
+import { stepImages } from "./step-images";
+import { steps } from "./steps";
+import { ingredientStorePreferences, stores } from "./stores";
+import { tags } from "./tags";
 import { userAllergies } from "./user-allergies";
-import { stores, ingredientStorePreferences } from "./stores";
 
 export const recipesRelations = relations(recipes, ({ many }) => ({
   ingredients: many(recipeIngredients),

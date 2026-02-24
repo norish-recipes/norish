@@ -2,12 +2,12 @@ import {
   index,
   integer,
   numeric,
+  pgEnum,
   pgTable,
   text,
   timestamp,
-  uuid,
   unique,
-  pgEnum,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";

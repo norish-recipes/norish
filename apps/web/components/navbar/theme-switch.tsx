@@ -1,9 +1,9 @@
 "use client";
 
 import { FC, useEffect, useState } from "react";
-import { useTheme } from "next-themes";
-import { MoonIcon, SunIcon, ComputerDesktopIcon } from "@heroicons/react/16/solid";
+import { ComputerDesktopIcon, MoonIcon, SunIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
 
 // Hook to get theme state and toggle function
 export function useThemeSwitch() {

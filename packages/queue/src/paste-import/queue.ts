@@ -5,12 +5,12 @@
  * Callers are responsible for lifecycle (close on shutdown).
  */
 
-import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
-
 import { Queue } from "bullmq";
+
+import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
-import { QUEUE_NAMES, pasteImportJobOptions } from "../config";
+import { pasteImportJobOptions, QUEUE_NAMES } from "../config";
 
 /**
  * Create a paste import queue instance.

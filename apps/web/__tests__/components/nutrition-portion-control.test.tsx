@@ -1,6 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import "@testing-library/jest-dom";
+
+import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 
 // Mock HeroUI components
 vi.mock("@heroui/react", () => ({
@@ -16,8 +19,6 @@ vi.mock("@heroicons/react/16/solid", () => ({
   MinusIcon: () => <span data-testid="minus-icon">-</span>,
   PlusIcon: () => <span data-testid="plus-icon">+</span>,
 }));
-
-import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 
 describe("NutritionPortionControl", () => {
   let onChange: ReturnType<typeof vi.fn<(portions: number) => void>>;

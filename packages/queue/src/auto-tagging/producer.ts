@@ -6,11 +6,11 @@
  */
 
 import type { Queue } from "bullmq";
-import type {
-  AutoTaggingJobData,
-  AddAutoTaggingJobResult,
-} from "@norish/queue/contracts/job-types";
 
+import type {
+  AddAutoTaggingJobResult,
+  AutoTaggingJobData,
+} from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/api/logger";
 import { getAutoTaggingMode } from "@norish/config/server-config-loader";
 

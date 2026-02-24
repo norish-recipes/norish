@@ -1,14 +1,14 @@
 "use client";
 
-import { useSubscription } from "@trpc/tanstack-react-query";
-import { addToast } from "@heroui/react";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { addToast } from "@heroui/react";
+import { useSubscription } from "@trpc/tanstack-react-query";
+import { useTranslations } from "next-intl";
+
 import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import { useRecipeQuery } from "./use-recipe-query";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 /**
  * Hook that subscribes to WebSocket events for a single recipe
@@ -24,7 +24,7 @@ export function useRecipeSubscription(recipeId: string | null) {
   useSubscription(
     trpc.recipes.onUpdated.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipe.id !== recipeId) return;
 
         setRecipeData(() => payload.recipe);
@@ -36,7 +36,7 @@ export function useRecipeSubscription(recipeId: string | null) {
   useSubscription(
     trpc.recipes.onConverted.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipe.id !== recipeId) return;
 
         setRecipeData(() => payload.recipe);
@@ -56,7 +56,7 @@ export function useRecipeSubscription(recipeId: string | null) {
   useSubscription(
     trpc.recipes.onDeleted.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.id !== recipeId) return;
 
         addToast({
@@ -76,7 +76,7 @@ export function useRecipeSubscription(recipeId: string | null) {
   useSubscription(
     trpc.recipes.onFailed.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId !== recipeId) return;
 
         // Invalidate to get correct state

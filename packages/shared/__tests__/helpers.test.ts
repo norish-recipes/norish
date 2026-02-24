@@ -1,17 +1,17 @@
-import type { UnitsMap } from "@norish/config/zod/server-config";
+import { describe, expect, it } from "vitest";
 
-import { describe, it, expect } from "vitest";
+import type { UnitsMap } from "@norish/config/zod/server-config";
 import {
-  parseIsoDuration,
-  formatMinutesHM,
-  parseIngredientWithDefaults,
-  stripHtmlTags,
-  getWeekStart,
-  getWeekEnd,
-  getWeekDays,
   addWeeks,
   buildAvatarFilename,
+  formatMinutesHM,
+  getWeekDays,
+  getWeekEnd,
+  getWeekStart,
   isAvatarFilenameForUser,
+  parseIngredientWithDefaults,
+  parseIsoDuration,
+  stripHtmlTags,
 } from "@norish/shared/lib/helpers";
 
 describe("parseIsoDuration", () => {

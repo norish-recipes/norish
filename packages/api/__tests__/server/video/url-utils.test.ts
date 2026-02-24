@@ -1,10 +1,11 @@
 // @vitest-environment node
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
-  isInstagramUrl,
-  isFacebookUrl,
-  isYouTubeUrl,
   detectPlatform,
+  isFacebookUrl,
+  isInstagramUrl,
+  isYouTubeUrl,
 } from "@norish/api/video/url-utils";
 
 describe("URL detection utilities", () => {

@@ -1,8 +1,7 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useMutation } from "@tanstack/react-query";
 
 export function useNutritionMutation(recipeId: string) {
   const trpc = useTRPC();

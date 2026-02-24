@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
 import { ReactNode } from "react";
+import { UserProvider, useUserContext } from "@/context/user-context";
+import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockUseUser = vi.hoisted(() => vi.fn());
 const mockUseTRPC = vi.hoisted(() => vi.fn());
@@ -17,8 +18,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
 vi.mock("@tanstack/react-query", () => ({
   useQuery: mockUseQuery,
 }));
-
-import { UserProvider, useUserContext } from "@/context/user-context";
 
 function Wrapper({ children }: { children: ReactNode }) {
   return <UserProvider>{children}</UserProvider>;

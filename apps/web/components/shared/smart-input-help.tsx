@@ -1,7 +1,7 @@
 "use client";
 
-import { Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
 import { QuestionMarkCircleIcon } from "@heroicons/react/16/solid";
+import { Popover, PopoverContent, PopoverTrigger } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 export default function SmartInputHelp() {

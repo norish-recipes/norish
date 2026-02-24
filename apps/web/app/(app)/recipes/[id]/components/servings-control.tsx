@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useCallback } from "react";
-import { Button } from "@heroui/react";
+import React, { useCallback, useEffect } from "react";
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { Button } from "@heroui/react";
 
 import { useRecipeContextRequired } from "../context";
 

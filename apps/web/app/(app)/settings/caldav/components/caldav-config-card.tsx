@@ -1,27 +1,26 @@
 "use client";
 
-import type { CalDavCalendarInfo } from "@norish/shared/contracts";
-
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { EyeIcon, EyeSlashIcon, InformationCircleIcon } from "@heroicons/react/16/solid";
+import { ServerIcon } from "@heroicons/react/24/outline";
 import {
+  Button,
   Card,
   CardBody,
   CardHeader,
   Input,
-  Button,
-  useDisclosure,
   Link,
   Select,
   SelectItem,
+  useDisclosure,
 } from "@heroui/react";
-import { ServerIcon } from "@heroicons/react/24/outline";
-import { InformationCircleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
-import { useCalDavSettingsContext } from "../context";
+import type { CalDavCalendarInfo } from "@norish/shared/contracts";
 
-import CalDavConfigSummary from "./caldav-config-summary";
+import { useCalDavSettingsContext } from "../context";
 import CalDavConfigEditModal from "./caldav-config-edit-modal";
+import CalDavConfigSummary from "./caldav-config-summary";
 
 export default function CalDavConfigCard() {
   const t = useTranslations("settings.caldav.setup");
@@ -65,7 +64,11 @@ export default function CalDavConfigCard() {
         setCalendars(result.calendars);
         // Auto-select first calendar
         if (!calendarUrl) {
-          setCalendarUrl(result.calendars[0].url);
+          const firstCalendar = result.calendars[0];
+
+          if (firstCalendar) {
+            setCalendarUrl(firstCalendar.url);
+          }
         }
       }
     } finally {
@@ -95,7 +98,11 @@ export default function CalDavConfigCard() {
             setCalendars(result.calendars);
             // Auto-select first calendar
             if (!calendarUrl) {
-              setCalendarUrl(result.calendars[0].url);
+              const firstCalendar = result.calendars[0];
+
+              if (firstCalendar) {
+                setCalendarUrl(firstCalendar.url);
+              }
             }
           }
         } finally {

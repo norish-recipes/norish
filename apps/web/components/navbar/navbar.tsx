@@ -1,16 +1,16 @@
 "use client";
 
-import { Navbar as HeroUINavbar, NavbarContent, NavbarBrand, NavbarItem } from "@heroui/navbar";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandLogo } from "@/components/brand/brand-logo";
+import MobileNav from "@/components/navbar/mobile-nav";
+import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
+import { useAutoHide } from "@/hooks/auto-hide";
+import { Navbar as HeroUINavbar, NavbarBrand, NavbarContent, NavbarItem } from "@heroui/navbar";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { siteConfig } from "@norish/web/config/site";
 
-import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
-import MobileNav from "@/components/navbar/mobile-nav";
-import { BrandLogo } from "@/components/brand/brand-logo";
-import { useAutoHide } from "@/hooks/auto-hide";
+import { siteConfig } from "@norish/web/config/site";
 
 // Map hrefs to translation keys
 const navLabelKeys: Record<string, "home" | "calendar" | "groceries"> = {

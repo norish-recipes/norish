@@ -1,28 +1,27 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
-import { Input, Button, Chip } from "@heroui/react";
+import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
-import { createClientLogger } from "@norish/shared/lib/logger";
-import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
-import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
-
-import TagInput from "@/components/shared/tag-input";
-import SmartTextInput from "@/components/shared/smart-text-input";
-import SmartInputHelp from "@/components/shared/smart-input-help";
 import IngredientInput, { ParsedIngredient } from "@/components/recipes/ingredient-input";
+import MeasurementSystemSelector from "@/components/recipes/measurement-system-selector";
+import MediaGalleryInput from "@/components/recipes/media-gallery-input";
 import StepInput, { Step } from "@/components/recipes/step-input";
 import TimeInputs from "@/components/recipes/time-inputs";
-import MeasurementSystemSelector from "@/components/recipes/measurement-system-selector";
-import MediaGalleryInput, {
-  type RecipeGalleryMedia,
-} from "@/components/recipes/media-gallery-input";
+import SmartInputHelp from "@/components/shared/smart-input-help";
+import SmartTextInput from "@/components/shared/smart-text-input";
+import TagInput from "@/components/shared/tag-input";
 import EditRecipeSkeleton from "@/components/skeleton/edit-recipe-skeleton";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useUnitsQuery } from "@/hooks/config";
 import { useRecipeId } from "@/hooks/recipes";
+import { Button, Chip, Input } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
+import { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
+import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("RecipeForm");
 
@@ -165,16 +164,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   // Detect measurement system from ingredients and auto-select
   useEffect(() => {
     if (ingredients.length > 0 && !manuallySetSystem) {
-      const parsed = ingredients
-        .map((ing) => {
-          const result = parseIngredientWithDefaults(
-            `${ing.amount ?? ""} ${ing.unit ?? ""} ${ing.ingredientName}`.trim(),
-            units
-          );
-
-          return result[0];
-        })
-        .filter(Boolean);
+      const ingredientLines = ingredients.map((ing) =>
+        `${ing.amount ?? ""} ${ing.unit ?? ""} ${ing.ingredientName}`.trim()
+      );
+      const parsed = parseIngredientWithDefaults(ingredientLines, units);
 
       if (parsed.length > 0) {
         const detected = inferSystemUsedFromParsed(parsed);

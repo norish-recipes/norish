@@ -1,15 +1,16 @@
 import type { z } from "zod";
+
 import type {
-  StoreSelectBaseSchema,
-  StoreInsertBaseSchema,
-  StoreUpdateBaseSchema,
-  StoreCreateSchema,
-  StoreUpdateInputSchema,
-  StoreDeleteSchema,
-  StoreReorderSchema,
   IngredientStorePreferenceSelectSchema,
   IngredientStorePreferenceUpsertSchema,
   StoreColorSchema,
+  StoreCreateSchema,
+  StoreDeleteSchema,
+  StoreInsertBaseSchema,
+  StoreReorderSchema,
+  StoreSelectBaseSchema,
+  StoreUpdateBaseSchema,
+  StoreUpdateInputSchema,
 } from "@norish/shared/contracts/zod";
 
 export type StoreDto = z.output<typeof StoreSelectBaseSchema>;

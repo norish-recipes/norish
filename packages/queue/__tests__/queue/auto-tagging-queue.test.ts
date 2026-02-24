@@ -8,9 +8,10 @@
 // @vitest-environment node
 
 import type { Queue } from "bullmq";
-import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
+import { getAutoTaggingMode } from "@norish/config/server-config-loader";
 
 // Mock BullMQ
 const mockAdd = vi.fn();
@@ -85,8 +86,6 @@ vi.mock("@norish/api/logger", () => ({
 vi.mock("@norish/queue/helpers", () => ({
   isJobInQueue: vi.fn(),
 }));
-
-import { getAutoTaggingMode } from "@norish/config/server-config-loader";
 
 describe("Auto-Tagging Queue", () => {
   let mockQueue: Queue<AutoTaggingJobData>;

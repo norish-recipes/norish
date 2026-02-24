@@ -1,11 +1,12 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "vitest";
+
 import {
   FullRecipeInsertSchema,
   FullRecipeSchema,
-  RecipeDashboardSchema,
   recipeCategorySchema,
+  RecipeDashboardSchema,
 } from "@norish/shared/contracts/zod/recipe";
 
 describe("recipeCategorySchema", () => {

@@ -1,14 +1,14 @@
 /**
  * @vitest-environment node
  */
+import { describe, expect, it, vi } from "vitest";
+
 import type { RecipeExtractionOutput } from "@norish/api/ai/schemas/recipe.schema";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-
-import { describe, it, expect, vi } from "vitest";
 import {
-  validateExtractionOutput,
   getExtractionLogContext,
   normalizeExtractionOutput,
+  validateExtractionOutput,
 } from "@norish/api/ai/features/recipe-extraction/normalizer";
 
 // Mock the normalizeExtractionOutput dependencies for isolation

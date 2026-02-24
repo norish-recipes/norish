@@ -1,33 +1,35 @@
 import type { BetterAuthOptions, Where } from "better-auth";
 import type { DBAdapter } from "better-auth/adapters";
-
 import { betterAuth } from "better-auth";
-import { nextCookies } from "better-auth/next-js";
-import { apiKey, genericOAuth } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-import { getPublisherClient } from "@norish/queue/redis/client";
-import { db } from "@norish/db/drizzle";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { nextCookies } from "better-auth/next-js";
+import { apiKey, genericOAuth } from "better-auth/plugins";
+
+import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
+import { authLogger } from "@norish/api/logger";
 import { AUTH_SECRET, encrypt, hmacIndex, safeDecrypt } from "@norish/auth/crypto";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { isRegistrationEnabled } from "@norish/config/server-config-loader";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { db } from "@norish/db/drizzle";
+import { setApiKeyAuthService } from "@norish/db/repositories/api-keys";
 import { setConfig } from "@norish/db/repositories/server-config";
 import { countUsers } from "@norish/db/repositories/users";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import * as schema from "@norish/db/schema/auth";
-import { authLogger } from "@norish/api/logger";
+import { getPublisherClient } from "@norish/queue/redis/client";
 
 import {
-  processClaimsForUser,
-  mergeOIDCTokenClaims,
-  storeOIDCProfile,
   getPendingOIDCProfile,
+  mergeOIDCTokenClaims,
+  processClaimsForUser,
+  storeOIDCProfile,
 } from "./claim-processor";
 import {
   getCachedGitHubProvider,
   getCachedGoogleProvider,
-  getCachedOIDCProvider,
   getCachedOIDCClaimConfig,
+  getCachedOIDCProvider,
   getCachedPasswordAuthEnabled,
 } from "./provider-cache";
 
@@ -469,6 +471,17 @@ export const auth = new Proxy({} as AuthInstance, {
     return (_auth as any)[prop];
   },
 });
+
+const apiKeyAuthService: ApiKeyAuthService = {
+  createApiKey(input) {
+    return auth.api.createApiKey(input);
+  },
+  verifyApiKey(input) {
+    return auth.api.verifyApiKey(input);
+  },
+};
+
+setApiKeyAuthService(apiKeyAuthService);
 
 // Export type for client inference
 export type Auth = AuthInstance;

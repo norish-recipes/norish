@@ -1,9 +1,10 @@
-import { describe, it, expect } from "vitest";
 import JSZip from "jszip";
+import { describe, expect, it } from "vitest";
+
 import {
-  getArchiveInfo,
-  calculateBatchSize,
   ArchiveFormat,
+  calculateBatchSize,
+  getArchiveInfo,
 } from "@norish/api/importers/archive-parser";
 
 // @vitest-environment node

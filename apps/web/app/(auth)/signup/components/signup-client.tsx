@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 
 import { AuthCard } from "../../components/auth-card";
-
 import { SignupForm } from "./signup-form";
 
 interface SignupClientProps {

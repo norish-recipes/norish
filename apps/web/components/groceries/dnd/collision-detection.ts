@@ -1,8 +1,8 @@
 import type { CollisionDetection, UniqueIdentifier } from "@dnd-kit/core";
 import type { RefObject } from "react";
-import type { ItemsState } from "./types";
+import { closestCenter, getFirstCollision, pointerWithin, rectIntersection } from "@dnd-kit/core";
 
-import { closestCenter, pointerWithin, rectIntersection, getFirstCollision } from "@dnd-kit/core";
+import type { ItemsState } from "./types";
 
 /**
  * Custom collision detection for multiple containers (based on dnd-kit example).
@@ -28,7 +28,7 @@ export function createMultiContainerCollisionDetection(
     if (overId != null) {
       // If we're over a container (not an item)
       if (overId in items) {
-        const containerItems = items[overId];
+        const containerItems = items[overId] ?? [];
 
         // If the container has items, find the closest item within it
         if (containerItems.length > 0) {

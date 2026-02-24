@@ -47,8 +47,10 @@ bun.lockb
 /uploads
 
 # runtime data
+.runtime/
 /.runtime
 /.turbo
+.turbo/
 
 # yt-dlp binary (downloaded at runtime)
 /yt-dlp

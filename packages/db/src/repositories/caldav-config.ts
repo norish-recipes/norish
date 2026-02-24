@@ -1,17 +1,17 @@
+import { eq } from "drizzle-orm";
+
 import type {
+  SaveCaldavConfigInputDto,
+  UserCaldavConfigDecryptedDto,
   UserCaldavConfigDto,
   UserCaldavConfigInsertDto,
-  UserCaldavConfigDecryptedDto,
-  SaveCaldavConfigInputDto,
 } from "@norish/shared/contracts/dto/caldav-config";
-
-import { eq } from "drizzle-orm";
+import { decrypt, encrypt } from "@norish/auth/crypto";
 import { db } from "@norish/db/drizzle";
 import { userCaldavConfig } from "@norish/db/schema";
-import { encrypt, decrypt } from "@norish/auth/crypto";
 import {
-  UserCaldavConfigSelectSchema,
   SaveCaldavConfigInputSchema,
+  UserCaldavConfigSelectSchema,
 } from "@norish/shared/contracts/zod/caldav-config";
 
 export async function getCaldavConfigByUserId(userId: string): Promise<UserCaldavConfigDto | null> {

@@ -1,9 +1,8 @@
-import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { VideoMetadata } from "@norish/api/video/types";
-
-import { videoLogger as log } from "@norish/api/logger";
-import { downloadImage } from "@norish/api/downloader";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
+import { downloadImage } from "@norish/api/downloader";
+import { videoLogger as log } from "@norish/api/logger";
 import { fetchViaPlaywright } from "@norish/api/parser/fetch";
 
 /**

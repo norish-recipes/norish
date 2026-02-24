@@ -1,32 +1,39 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import SecretInput from "@/components/shared/secret-input";
+import { useAvailableModelsQuery } from "@/hooks/admin";
+import { BeakerIcon, CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import {
-  Input,
+  Autocomplete,
+  AutocompleteItem,
   Button,
-  Switch,
+  Input,
   Select,
   SelectItem,
   Slider,
-  Autocomplete,
-  AutocompleteItem,
+  Switch,
 } from "@heroui/react";
-import { CheckIcon, BeakerIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
-import {
-  ServerConfigKeys,
-  type AIConfig,
-  type AutoTaggingMode,
-} from "@norish/config/zod/server-config";
+
+import type { AIConfig, AutoTaggingMode } from "@norish/config/zod/server-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
-
-import { useAvailableModelsQuery } from "@/hooks/admin";
-import SecretInput from "@/components/shared/secret-input";
 
 interface AIConfigFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
 }
+
+type AvailableModel = {
+  id: string;
+  supportsVision?: boolean;
+};
+
+type ModelOption = {
+  value: string;
+  supportsVision?: boolean;
+};
 
 export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const t = useTranslations("settings.admin.aiConfig");
@@ -90,13 +97,13 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
 
   // Create model options for autocomplete (includes current value even if not in list)
   const modelOptions = useMemo(() => {
-    const options = availableModels.map((m) => ({
+    const options = (availableModels as AvailableModel[]).map((m) => ({
       value: m.id,
       supportsVision: m.supportsVision,
     }));
 
     // Add current model if not in list (allows keeping custom/typed values)
-    if (model && !options.some((o) => o.value === model)) {
+    if (model && !options.some((o: ModelOption) => o.value === model)) {
       options.unshift({ value: model, supportsVision: undefined });
     }
 
@@ -105,13 +112,13 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
 
   // Vision model options (filter to vision-capable models if available)
   const visionModelOptions = useMemo(() => {
-    const options = availableModels.map((m) => ({
+    const options = (availableModels as AvailableModel[]).map((m) => ({
       value: m.id,
       supportsVision: m.supportsVision,
     }));
 
     // Add current vision model if not in list
-    if (visionModel && !options.some((o) => o.value === visionModel)) {
+    if (visionModel && !options.some((o: ModelOption) => o.value === visionModel)) {
       options.unshift({ value: visionModel, supportsVision: undefined });
     }
 
@@ -325,7 +332,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         onInputChange={setModel}
         onSelectionChange={(key) => key && setModel(key as string)}
       >
-        {(item) => (
+        {(item: ModelOption) => (
           <AutocompleteItem key={item.value} textValue={item.value}>
             <div className="flex items-center justify-between gap-2">
               <span>{item.value}</span>
@@ -348,7 +355,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         onInputChange={setVisionModel}
         onSelectionChange={(key) => key && setVisionModel(key as string)}
       >
-        {(item) => (
+        {(item: ModelOption) => (
           <AutocompleteItem key={item.value} textValue={item.value}>
             <div className="flex items-center justify-between gap-2">
               <span>{item.value}</span>

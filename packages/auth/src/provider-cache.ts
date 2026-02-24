@@ -1,7 +1,7 @@
 import type {
-  AuthProviderOIDC,
   AuthProviderGitHub,
   AuthProviderGoogle,
+  AuthProviderOIDC,
   OIDCClaimConfig,
 } from "@norish/config/zod/server-config";
 

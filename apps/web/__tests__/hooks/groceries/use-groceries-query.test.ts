@@ -1,12 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// Import after mocking
+import { useGroceriesQuery } from "@/hooks/groceries/use-groceries-query";
 import { waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  createTestQueryClient,
-  createTestWrapper,
+  createMockGroceriesData,
   createMockGrocery,
   createMockRecurringGrocery,
-  createMockGroceriesData,
+  createTestQueryClient,
+  createTestWrapper,
 } from "./test-utils";
 
 // Mock the tRPC provider
@@ -23,9 +25,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
     },
   }),
 }));
-
-// Import after mocking
-import { useGroceriesQuery } from "@/hooks/groceries/use-groceries-query";
 
 describe("useGroceriesQuery", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

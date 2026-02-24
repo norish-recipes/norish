@@ -1,27 +1,27 @@
 "use client";
 
 import React, { useState } from "react";
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
-import { Avatar } from "@heroui/avatar";
-import { Button } from "@heroui/react";
-import {
-  ArrowDownTrayIcon,
-  ArrowLeftStartOnRectangleIcon,
-  PlusIcon,
-  EllipsisVerticalIcon,
-  Cog6ToothIcon,
-} from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
-
-import { ThemeSwitch } from "./theme-switch";
-
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitch } from "@/components/shared/language-switch";
 import { useUserContext } from "@/context/user-context";
 import { useVersionQuery } from "@/hooks/config";
 import { useUserAvatar } from "@/hooks/use-user-avatar";
+import {
+  ArrowDownTrayIcon,
+  ArrowLeftStartOnRectangleIcon,
+  Cog6ToothIcon,
+  EllipsisVerticalIcon,
+  PlusIcon,
+} from "@heroicons/react/16/solid";
+import { Avatar } from "@heroui/avatar";
+import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/dropdown";
+import { Button } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
+import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
+
+import { ThemeSwitch } from "./theme-switch";
 
 type TriggerVariant = "avatar" | "ellipsis";
 

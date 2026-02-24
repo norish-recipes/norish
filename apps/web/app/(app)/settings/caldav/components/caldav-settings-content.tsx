@@ -1,11 +1,10 @@
 "use client";
 
-import { CalDavSettingsProvider, useCalDavSettingsContext } from "../context";
+import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
 
+import { CalDavSettingsProvider, useCalDavSettingsContext } from "../context";
 import CalDavConfigCard from "./caldav-config-card";
 import CalDavSyncStatusCard from "./caldav-sync-status-card";
-
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
 
 function CalDavSettingsContent() {
   const { config, isLoading } = useCalDavSettingsContext();

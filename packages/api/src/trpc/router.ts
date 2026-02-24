@@ -1,18 +1,18 @@
-import { router } from "./trpc";
-import { groceriesRouter } from "./routers/groceries";
-import { calendarRouter } from "./routers/calendar";
-import { recipesRouter } from "./routers/recipes";
-import { permissionsRouter } from "./routers/permissions";
 import { adminRouter } from "./routers/admin";
-import { householdsAppRouter } from "./routers/households";
-import { userRouter } from "./routers/user";
-import { caldavRouter, caldavSubscriptions } from "./routers/caldav";
-import { configRouter } from "./routers/config";
 import { archive } from "./routers/archive";
+import { caldavRouter, caldavSubscriptions } from "./routers/caldav";
+import { calendarRouter } from "./routers/calendar";
+import { configRouter } from "./routers/config";
 import { favoritesRouter } from "./routers/favorites";
+import { groceriesRouter } from "./routers/groceries";
+import { householdsAppRouter } from "./routers/households";
+import { permissionsRouter } from "./routers/permissions";
 import { ratingsRouter } from "./routers/ratings";
-import { storesRouter } from "./routers/stores";
+import { recipesRouter } from "./routers/recipes";
 import { siteAuthTokensRouter } from "./routers/site-auth-tokens";
+import { storesRouter } from "./routers/stores";
+import { userRouter } from "./routers/user";
+import { router } from "./trpc";
 
 export const appRouter = router({
   groceries: groceriesRouter,

@@ -1,25 +1,24 @@
 "use client";
 
-import { Tabs, Tab } from "@heroui/react";
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
+import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
+import { useUserRoleQuery } from "@/hooks/admin";
 import {
-  UserCircleIcon as UserCircleIconSolid,
   HomeIcon as HomeIconSolid,
   ServerIcon as ServerIconSolid,
   ShieldCheckIcon as ShieldCheckIconSolid,
+  UserCircleIcon as UserCircleIconSolid,
 } from "@heroicons/react/20/solid";
 import {
-  UserCircleIcon as UserCircleIconOutline,
   HomeIcon as HomeIconOutline,
   ServerIcon as ServerIconOutline,
   ShieldCheckIcon as ShieldCheckIconOutline,
+  UserCircleIcon as UserCircleIconOutline,
 } from "@heroicons/react/24/outline";
-import { Suspense } from "react";
-import dynamic from "next/dynamic";
+import { Tab, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
-import { useUserRoleQuery } from "@/hooks/admin";
 
 const UserSettingsTab = dynamic(() => import("./user/components/user-settings-content"), {
   loading: () => <SettingsSkeleton />,

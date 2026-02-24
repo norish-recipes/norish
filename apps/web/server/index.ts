@@ -1,14 +1,14 @@
+import { initCaldavSync } from "@norish/api/caldav/event-listener";
+import { serverLogger as log } from "@norish/api/logger";
+import { createServer } from "@norish/api/startup/http-server";
+import { runStartupMaintenanceCleanup } from "@norish/api/startup/maintenance-cleanup";
+import { migrateGalleryImages } from "@norish/api/startup/migrate-gallery-images";
 import { runMigrations } from "@norish/api/startup/migrations";
 import { seedServerConfig } from "@norish/api/startup/seed-config";
-import { migrateGalleryImages } from "@norish/api/startup/migrate-gallery-images";
-import { initializeVideoProcessing } from "@norish/api/startup/video-processing";
-import { runStartupMaintenanceCleanup } from "@norish/api/startup/maintenance-cleanup";
-import { createServer } from "@norish/api/startup/http-server";
 import { registerShutdownHandlers } from "@norish/api/startup/shutdown";
-import { initCaldavSync } from "@norish/api/caldav/event-listener";
-import { startWorkers } from "@norish/queue/start-workers";
+import { initializeVideoProcessing } from "@norish/api/startup/video-processing";
 import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
-import { serverLogger as log } from "@norish/api/logger";
+import { startWorkers } from "@norish/queue/start-workers";
 
 async function main() {
   const config = initializeServerConfig();

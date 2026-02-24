@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useRatingsMutation } from "@/hooks/ratings/use-ratings-mutation";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper, createMockUserRatingData } from "./test-utils";
+import { createMockUserRatingData, createTestQueryClient, createTestWrapper } from "./test-utils";
 
 const mockMutationOptions = vi.fn();
 const mockQueryKey = vi.fn();
@@ -27,8 +28,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
     },
   }),
 }));
-
-import { useRatingsMutation } from "@/hooks/ratings/use-ratings-mutation";
 
 describe("useRatingsMutation", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

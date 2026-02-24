@@ -1,7 +1,7 @@
 // @vitest-environment node
-import type { VideoProcessor, VideoProcessorContext } from "@norish/api/video/types";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { describe, it, expect, beforeEach } from "vitest";
+import type { VideoProcessor, VideoProcessorContext } from "@norish/api/video/types";
 import { VideoProcessorFactory } from "@norish/api/video/processor-factory";
 
 // Mock processor for testing

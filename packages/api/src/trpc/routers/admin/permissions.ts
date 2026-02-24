@@ -1,9 +1,9 @@
 import { trpcLogger as log } from "@norish/api/logger";
+import { RecipePermissionPolicySchema, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { setConfig } from "@norish/db/repositories/server-config";
-import { ServerConfigKeys, RecipePermissionPolicySchema } from "@norish/config/zod/server-config";
 
-import { router } from "../../trpc";
 import { adminProcedure } from "../../middleware";
+import { router } from "../../trpc";
 import { permissionsEmitter } from "../permissions/emitter";
 
 /**

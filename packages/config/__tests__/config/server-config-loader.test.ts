@@ -1,7 +1,10 @@
 /**
  * @vitest-environment node
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import defaultUnits from "@norish/config/units.default.json";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 const mockGetConfig = vi.fn();
 
@@ -12,9 +15,6 @@ vi.mock("@norish/db/repositories/server-config", () => ({
 vi.mock("@norish/api/logger", () => ({
   serverLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
-
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import defaultUnits from "@norish/config/units.default.json";
 
 describe("isVideoParsingEnabled", () => {
   beforeEach(() => {

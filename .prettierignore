@@ -25,6 +25,7 @@ public/
 
 # Uploads
 uploads/
+.runtime/
 
 # Cache
 .cache/

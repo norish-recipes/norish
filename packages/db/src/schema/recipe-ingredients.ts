@@ -1,7 +1,7 @@
 import { index, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { ingredients } from "./ingredients";
-import { recipes, measurementSystemEnum } from "./recipes";
+import { measurementSystemEnum, recipes } from "./recipes";
 
 export const recipeIngredients = pgTable(
   "recipe_ingredients",

@@ -1,20 +1,19 @@
 "use client";
 
-import type { ProviderKey, FieldDef, TestResult } from "./types";
-
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import SecretInput from "@/components/shared/secret-input";
 import { Input, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
-import { ServerConfigKeys, type ServerConfigKey } from "@norish/config/zod/server-config";
+
+import type { ServerConfigKey } from "@norish/config/zod/server-config";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
+import type { FieldDef, ProviderKey, TestResult } from "./types";
 import { useAdminSettingsContext } from "../../context";
-
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { ProviderActions } from "./provider-actions";
 import { TestResultDisplay } from "./test-result-display";
-
-import SecretInput from "@/components/shared/secret-input";
 
 const CONFIG_KEYS: Record<ProviderKey, ServerConfigKey> = {
   oidc: ServerConfigKeys.AUTH_PROVIDER_OIDC,
@@ -154,7 +153,7 @@ export function AuthProviderForm({
             isConfigured={!!config?.[field.key]}
             label={field.label}
             placeholder={field.placeholder}
-            value={values[field.key]}
+            value={values[field.key] ?? ""}
             onReveal={handleRevealSecret(field.key)}
             onValueChange={(v) => setValues((prev) => ({ ...prev, [field.key]: v }))}
           />
@@ -163,7 +162,7 @@ export function AuthProviderForm({
             key={field.key}
             label={field.label}
             placeholder={field.placeholder}
-            value={values[field.key]}
+            value={values[field.key] ?? ""}
             onValueChange={(v) => setValues((prev) => ({ ...prev, [field.key]: v }))}
           />
         )

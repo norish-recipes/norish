@@ -9,13 +9,11 @@
  *
  * For reading data + cache manipulation, use useGroceriesQuery instead.
  */
+import { useCallback } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQueryClient } from "@tanstack/react-query";
 
 import type { GroceriesData } from "./use-groceries-query";
-
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type GroceriesCacheHelpers = {
   setGroceriesData: (

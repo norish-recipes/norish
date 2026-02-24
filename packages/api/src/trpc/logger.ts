@@ -1,6 +1,7 @@
-import { db } from "@norish/db/drizzle";
-import { apiLogs, type NewApiLog } from "@norish/db/schema/api-logs";
+import type { NewApiLog } from "@norish/db/schema/api-logs";
 import { trpcLogger as log } from "@norish/api/logger";
+import { db } from "@norish/db/drizzle";
+import { apiLogs } from "@norish/db/schema/api-logs";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 

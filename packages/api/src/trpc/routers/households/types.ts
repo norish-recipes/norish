@@ -1,6 +1,6 @@
 import type {
-  HouseholdSettingsDto,
   HouseholdAdminSettingsDto,
+  HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
 
 // User info for events

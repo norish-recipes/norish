@@ -1,52 +1,50 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+
+import type { PermissionAction } from "@norish/auth/permissions";
+import type { RecipeListContext } from "@norish/db";
+import { deleteRecipeImagesDir } from "@norish/api/downloader";
 import { trpcLogger as log } from "@norish/api/logger";
+import { selectWeightedRandomRecipe } from "@norish/api/services/recipe-randomizer";
+import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
-  listRecipes,
+  addStepsAndIngredientsToRecipeByInput,
+  createRecipeWithRefs,
+  dashboardRecipe,
+  deleteRecipeById,
+  FullRecipeInsertSchema,
+  getRandomRecipeCandidates,
   getRecipeFull,
   getRecipeOwnerId,
-  createRecipeWithRefs,
-  updateRecipeWithRefs,
-  deleteRecipeById,
-  dashboardRecipe,
-  updateRecipeCategories,
-  getRandomRecipeCandidates,
-  setActiveSystemForRecipe,
-  addStepsAndIngredientsToRecipeByInput,
-  searchRecipesByName,
-  FullRecipeInsertSchema,
-  RecipeListInputSchema,
-  RecipeGetInputSchema,
-  RecipeDeleteInputSchema,
-  RecipeImportInputSchema,
+  listRecipes,
   RecipeConvertInputSchema,
+  RecipeDeleteInputSchema,
+  RecipeGetInputSchema,
+  RecipeImportInputSchema,
+  RecipeListInputSchema,
   RecipeUpdateInputSchema,
-  type RecipeListContext,
+  searchRecipesByName,
+  setActiveSystemForRecipe,
+  updateRecipeCategories,
+  updateRecipeWithRefs,
 } from "@norish/db";
-import { selectWeightedRandomRecipe } from "@norish/api/services/recipe-randomizer";
 import {
-  canAccessResource,
-  isAIEnabled as checkAIEnabled,
-  type PermissionAction,
-} from "@norish/auth/permissions";
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
-import { getQueues } from "@norish/queue/registry";
-import {
-  addImportJob,
-  addImageImportJob,
-  addPasteImportJob,
-  addNutritionEstimationJob,
-  addAutoTaggingJob,
-  addAutoCategorizationJob,
   addAllergyDetectionJob,
+  addAutoCategorizationJob,
+  addAutoTaggingJob,
+  addImageImportJob,
+  addImportJob,
+  addNutritionEstimationJob,
+  addPasteImportJob,
 } from "@norish/queue";
-import { FilterMode, SortOrder, RecipeCategory } from "@norish/shared/contracts";
+import { getQueues } from "@norish/queue/registry";
+import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
 import { emitByPolicy } from "../../helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { recipeEmitter } from "./emitter";
 
 interface UserContext {
@@ -310,6 +308,7 @@ const deleteProcedure = authedProcedure
 
     assertRecipeAccess(ctx, id, "delete")
       .then(async () => {
+        await deleteRecipeImagesDir(id);
         await deleteRecipeById(id);
 
         log.info({ userId: ctx.user.id, recipeId: id }, "Recipe deleted");

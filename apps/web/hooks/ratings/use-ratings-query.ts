@@ -1,8 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery } from "@tanstack/react-query";
 
 export function useRatingQuery(recipeId: string) {
   const trpc = useTRPC();

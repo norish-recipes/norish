@@ -1,3 +1,7 @@
+import { and, asc, desc, eq, ilike, inArray, lte, or, sql } from "drizzle-orm";
+import z from "zod";
+
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import type {
   FullRecipeDTO,
   FullRecipeInsertDTO,
@@ -12,35 +16,42 @@ import type {
 } from "@norish/shared/contracts/dto/recipe-ingredient";
 import type { StepDto, StepInsertDto } from "@norish/shared/contracts/dto/steps";
 import type { FilterMode, SearchField, SortOrder } from "@norish/shared/contracts/store-types";
-
-import { eq, ilike, inArray, and, asc, desc, lte, sql, or } from "drizzle-orm";
-import z from "zod";
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
-import { stripHtmlTags } from "@norish/shared/lib/helpers";
-import { deleteRecipeImagesDir } from "@norish/api/downloader";
 import { dbLogger } from "@norish/api/logger";
+import {
+  DEFAULT_RECIPE_PERMISSION_POLICY,
+  ServerConfigKeys,
+} from "@norish/config/zod/server-config";
+import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
 import { db } from "../drizzle";
 import {
-  recipes,
-  recipeIngredients,
-  steps as stepsTable,
   ingredients,
-  recipeTags,
-  tags,
   recipeImages,
+  recipeIngredients,
+  recipes,
+  recipeTags,
   recipeVideos,
+  steps as stepsTable,
+  tags,
 } from "../schema";
 import {
-  RecipeDashboardSchema,
   FullRecipeInsertSchema,
   FullRecipeSchema,
   FullRecipeUpdateSchema,
+  RecipeDashboardSchema,
 } from "../zodSchemas";
-
 import { attachIngredientsToRecipeByInputTx } from "./ingredients";
+import { getConfig } from "./server-config";
 import { createManyRecipeStepsTx } from "./steps";
 import { attachTagsToRecipeByInputTx } from "./tags";
+
+type RecipeViewPolicy = RecipePermissionPolicy["view"];
+
+async function getRecipeViewPolicy(): Promise<RecipeViewPolicy> {
+  const policy = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
+
+  return policy?.view ?? DEFAULT_RECIPE_PERMISSION_POLICY.view;
+}
 
 function nonEmpty(s: string | null | undefined): s is string {
   return typeof s === "string" && s.trim().length > 0;
@@ -53,7 +64,6 @@ export async function GetTotalRecipeCount(): Promise<number> {
 }
 
 export async function deleteRecipeById(id: string): Promise<void> {
-  await deleteRecipeImagesDir(id);
   await db.delete(recipes).where(eq(recipes.id, id));
 }
 
@@ -199,8 +209,7 @@ export interface RecipeListContext {
  * Recipes with null userId (orphaned recipes) are always visible to everyone.
  */
 async function buildViewPolicyCondition(ctx: RecipeListContext) {
-  const policy = await getRecipePermissionPolicy();
-  const viewLevel = policy.view;
+  const viewLevel = await getRecipeViewPolicy();
 
   // Server admin sees all
   if (ctx.isServerAdmin) {
@@ -541,6 +550,8 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
 
   if (rows.length === 0) return null;
   const r = rows[0];
+
+  if (!r) return null;
 
   // Compute average rating
   const ratingValues = (r.ratings ?? []).map((rating) => rating.rating);

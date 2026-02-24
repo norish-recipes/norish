@@ -5,19 +5,20 @@
  * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
-import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
 import type { Job } from "bullmq";
 
-import { getBullClient } from "@norish/queue/redis/bullmq";
+import type { PolicyEmitContext } from "@norish/api/trpc/helpers";
+import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
+import { estimateNutritionFromIngredients } from "@norish/api/ai/nutrition-estimator";
 import { createLogger } from "@norish/api/logger";
-import { emitByPolicy, type PolicyEmitContext } from "@norish/api/trpc/helpers";
+import { emitByPolicy } from "@norish/api/trpc/helpers";
 import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getRecipeFull, updateRecipeWithRefs } from "@norish/db";
-import { estimateNutritionFromIngredients } from "@norish/api/ai/nutrition-estimator";
+import { getBullClient } from "@norish/queue/redis/bullmq";
 
+import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
-import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
 const log = createLogger("worker:nutrition-estimation");
 

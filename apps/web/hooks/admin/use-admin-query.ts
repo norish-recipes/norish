@@ -1,11 +1,13 @@
 "use client";
 
-import type { ServerConfigKey } from "@norish/config/zod/server-config";
-import type { AIConfig, TranscriptionProvider } from "@norish/config/zod/server-config";
-
-import { useQueryClient, useQuery } from "@tanstack/react-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import type {
+  AIConfig,
+  ServerConfigKey,
+  TranscriptionProvider,
+} from "@norish/config/zod/server-config";
 
 export type AdminConfigsData = Record<ServerConfigKey, unknown>;
 

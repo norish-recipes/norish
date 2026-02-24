@@ -1,10 +1,9 @@
 "use client";
 
-import type { UnitsMap } from "@norish/config/zod/server-config";
-
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
+import type { UnitsMap } from "@norish/config/zod/server-config";
 
 /**
  * Hook to fetch units configuration for ingredient parsing.

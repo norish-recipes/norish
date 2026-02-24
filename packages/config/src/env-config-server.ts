@@ -1,3 +1,8 @@
+import fs from "node:fs";
+import path from "node:path";
+import { config } from "dotenv";
+import { z } from "zod";
+
 // Import server-only to ensure this file is only used on the server
 // Using dynamic import wrapped in IIFE for compatibility
 (async () => {
@@ -14,12 +19,6 @@
     // Silently ignore - this runs before logger is initialized
   }
 })();
-
-import fs from "node:fs";
-import path from "node:path";
-
-import { config } from "dotenv";
-import { z } from "zod";
 
 const envFiles =
   process.env.NODE_ENV === "production" ? [".env.production", ".env.local"] : [".env.local"];

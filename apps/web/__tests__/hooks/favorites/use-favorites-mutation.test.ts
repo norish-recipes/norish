@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useFavoritesMutation } from "@/hooks/favorites/use-favorites-mutation";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper, createMockFavoritesData } from "./test-utils";
+import { createMockFavoritesData, createTestQueryClient, createTestWrapper } from "./test-utils";
 
 const mockQueryKey = [["favorites", "list"], { type: "query" }];
 const mockMutationOptions = vi.fn();
@@ -21,8 +22,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
     },
   }),
 }));
-
-import { useFavoritesMutation } from "@/hooks/favorites/use-favorites-mutation";
 
 describe("useFavoritesMutation", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

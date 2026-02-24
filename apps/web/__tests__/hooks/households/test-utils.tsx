@@ -1,13 +1,13 @@
-import type {
-  HouseholdSettingsDto,
-  HouseholdAdminSettingsDto,
-} from "@norish/shared/contracts/dto/household";
-import type { ReactNode } from "react";
 import type { HouseholdData } from "@/hooks/households/use-household-query";
-
-import { vi } from "vitest";
+import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
+import { vi } from "vitest";
+
+import type {
+  HouseholdAdminSettingsDto,
+  HouseholdSettingsDto,
+} from "@norish/shared/contracts/dto/household";
 
 /**
  * Create a test QueryClient with optimized settings for tests

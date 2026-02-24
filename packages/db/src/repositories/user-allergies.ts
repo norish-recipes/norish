@@ -1,6 +1,7 @@
 import { eq, inArray, sql } from "drizzle-orm";
+
 import { db } from "@norish/db/drizzle";
-import { userAllergies, tags } from "@norish/db/schema";
+import { tags, userAllergies } from "@norish/db/schema";
 
 import { getOrCreateManyTags } from "./tags";
 

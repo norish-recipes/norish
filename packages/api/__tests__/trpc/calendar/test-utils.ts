@@ -1,12 +1,12 @@
-import type {
-  User,
-  HouseholdWithUsersNamesDto,
-  PlannedRecipeViewDto,
-  NoteViewDto,
-  Slot,
-} from "@norish/shared/contracts";
-
 import { vi } from "vitest";
+
+import type {
+  HouseholdWithUsersNamesDto,
+  NoteViewDto,
+  PlannedRecipeViewDto,
+  Slot,
+  User,
+} from "@norish/shared/contracts";
 
 /**
  * Create a mock user for testing

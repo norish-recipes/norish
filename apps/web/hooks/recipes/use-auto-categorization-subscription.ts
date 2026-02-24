@@ -1,9 +1,8 @@
 "use client";
 
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useMutation } from "@tanstack/react-query";
 import { useSubscription } from "@trpc/tanstack-react-query";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export function useAutoCategorization(
   recipeId: string | null,
@@ -15,7 +14,7 @@ export function useAutoCategorization(
   useSubscription(
     trpc.recipes.onAutoCategorizationStarted.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId === recipeId) {
           onStarted();
         }
@@ -26,7 +25,7 @@ export function useAutoCategorization(
   useSubscription(
     trpc.recipes.onAutoCategorizationCompleted.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId === recipeId) {
           onCompleted();
         }
@@ -37,7 +36,7 @@ export function useAutoCategorization(
   useSubscription(
     trpc.recipes.onUpdated.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipe.id === recipeId) {
           onCompleted();
         }
@@ -48,7 +47,7 @@ export function useAutoCategorization(
   useSubscription(
     trpc.recipes.onFailed.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId === recipeId) {
           onCompleted();
         }
@@ -59,7 +58,7 @@ export function useAutoCategorization(
   useSubscription(
     trpc.recipes.onUpdated.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipe.id === recipeId) {
           onCompleted();
         }

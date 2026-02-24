@@ -1,10 +1,11 @@
-import type {
-  StepSelectBaseSchema,
-  StepInsertBaseSchema,
-  StepUpdateBaseSchema,
-  StepSelectWithoutId,
-} from "@norish/shared/contracts/zod/steps";
 import type { z } from "zod";
+
+import type {
+  StepInsertBaseSchema,
+  StepSelectBaseSchema,
+  StepSelectWithoutId,
+  StepUpdateBaseSchema,
+} from "@norish/shared/contracts/zod/steps";
 
 export type StepDto = z.output<typeof StepSelectBaseSchema>;
 export type StepInsertDto = z.input<typeof StepInsertBaseSchema>;

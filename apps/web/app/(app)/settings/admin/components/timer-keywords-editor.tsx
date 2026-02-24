@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Textarea, Button, Switch } from "@heroui/react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowPathIcon, CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { Button, Switch, Textarea } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface TimerKeywordsEditorProps {

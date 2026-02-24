@@ -1,4 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// Import after mocking
+import { useCaldavSubscription } from "@/hooks/caldav/use-caldav-subscription";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  createMockSyncStatusData,
+  createMockSyncStatusView,
+  createMockSyncSummary,
+} from "./test-utils";
 
 class SimpleEmitter {
   private listeners: Record<string, Function[]> = {};
@@ -21,12 +29,6 @@ class SimpleEmitter {
     this.listeners = {};
   }
 }
-
-import {
-  createMockSyncStatusView,
-  createMockSyncSummary,
-  createMockSyncStatusData,
-} from "./test-utils";
 
 // Mock query keys
 const mockSyncStatusQueryKey = ["caldav", "getSyncStatus"];
@@ -74,9 +76,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
     },
   }),
 }));
-
-// Import after mocking
-import { useCaldavSubscription } from "@/hooks/caldav/use-caldav-subscription";
 
 describe("CalDAV Subscription Hook", () => {
   beforeEach(() => {

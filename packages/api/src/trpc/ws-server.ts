@@ -1,21 +1,20 @@
-import type { Server } from "node:http";
-
 import { randomUUID } from "node:crypto";
-
-import { WebSocketServer } from "ws";
+import type { Server } from "node:http";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
-import { auth } from "@norish/auth/auth";
+import { WebSocketServer } from "ws";
+
 import { trpcLogger } from "@norish/api/logger";
+import { auth } from "@norish/auth/auth";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
-import { appRouter } from "./router";
-import { createWsContext } from "./context";
 import {
   registerConnection,
-  unregisterConnection,
   startInvalidationListener,
   stopInvalidationListener,
+  unregisterConnection,
 } from "./connection-manager";
+import { createWsContext } from "./context";
+import { appRouter } from "./router";
 
 // Extend IncomingMessage to include connectionId
 declare module "node:http" {

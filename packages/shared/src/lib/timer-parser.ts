@@ -74,15 +74,23 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
   let colonMatch: RegExpExecArray | null = colonPattern.exec(text);
 
   while (colonMatch !== null) {
-    const first = parseInt(colonMatch[1], 10);
-    const second = parseInt(colonMatch[2], 10);
+    const firstPart = colonMatch[1];
+    const secondPart = colonMatch[2];
+
+    if (!firstPart || !secondPart) {
+      colonMatch = colonPattern.exec(text);
+      continue;
+    }
+
+    const first = parseInt(firstPart, 10);
+    const second = parseInt(secondPart, 10);
     const third = colonMatch[3] ? parseInt(colonMatch[3], 10) : 0;
     const colonEnd = colonMatch.index + colonMatch[0].length;
 
     // Look ahead for time unit keyword after the colon pattern
     const afterText = text.substring(colonEnd, colonEnd + 20);
     const unitMatch = afterText.match(/^\s*([a-z]+)/i);
-    const unitAfter = unitMatch ? unitMatch[1].toLowerCase() : null;
+    const unitAfter = unitMatch?.[1]?.toLowerCase() ?? null;
 
     let durationSeconds: number;
 
@@ -114,8 +122,10 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
         minuteKeywords.some((k) => k.toLowerCase() === unitAfter) ||
         secondKeywords.some((k) => k.toLowerCase() === unitAfter));
 
-    if (isValidTimeUnit && unitMatch) {
-      fullMatch += ` ${unitMatch[1]}`;
+    const unitWord = unitMatch?.[1];
+
+    if (isValidTimeUnit && unitMatch && unitWord) {
+      fullMatch += ` ${unitWord}`;
       matchEndIndex = colonEnd + unitMatch[0].length;
     }
 
@@ -143,8 +153,16 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
   let match: RegExpExecArray | null = TIME_PATTERN.exec(text);
 
   while (match !== null) {
-    const primaryNumber = parseFloat(match[1]);
-    const unit = match[2].toLowerCase();
+    const primaryNumberRaw = match[1];
+    const unitRaw = match[2];
+
+    if (!primaryNumberRaw || !unitRaw) {
+      match = TIME_PATTERN.exec(text);
+      continue;
+    }
+
+    const primaryNumber = parseFloat(primaryNumberRaw);
+    const unit = unitRaw.toLowerCase();
     const matchStart = match.index;
     const matchEnd = match.index + match[0].length;
 
@@ -163,9 +181,14 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
       let fullMatchStart = matchStart;
 
       if (priorMatch) {
-        rangeStart = parseFloat(priorMatch[1]);
-        // Adjust the full match start to include the range start
-        fullMatchStart = matchStart - (beforeText.length - priorMatch.index!);
+        const priorValue = priorMatch[1];
+        const priorIndex = priorMatch.index;
+
+        if (priorValue && priorIndex !== undefined) {
+          rangeStart = parseFloat(priorValue);
+          // Adjust the full match start to include the range start
+          fullMatchStart = matchStart - (beforeText.length - priorIndex);
+        }
       }
 
       // Look up the multiplier for this keyword

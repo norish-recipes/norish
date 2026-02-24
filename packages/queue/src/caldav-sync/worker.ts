@@ -1,24 +1,24 @@
-import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
-import type { CaldavSyncStatusInsertDto } from "@norish/shared/contracts/dto/caldav-sync-status";
-import type { Slot } from "@norish/shared/contracts";
 import type { Job } from "bullmq";
 
-import { getBullClient } from "@norish/queue/redis/bullmq";
-import { createLogger } from "@norish/api/logger";
+import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
+import type { Slot } from "@norish/shared/contracts";
+import type { CaldavSyncStatusInsertDto } from "@norish/shared/contracts/dto/caldav-sync-status";
 import {
-  syncPlannedItem,
   deletePlannedItem,
+  syncPlannedItem,
   truncateErrorMessage,
 } from "@norish/api/caldav/sync-manager";
+import { createLogger } from "@norish/api/logger";
+import { caldavEmitter } from "@norish/api/trpc/routers/caldav/emitter";
 import {
   createCaldavSyncStatus,
-  updateCaldavSyncStatus,
   getCaldavSyncStatusByItemId,
+  updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
-import { caldavEmitter } from "@norish/api/trpc/routers/caldav/emitter";
+import { getBullClient } from "@norish/queue/redis/bullmq";
 
+import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
-import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
 const log = createLogger("worker:caldav-sync");
 

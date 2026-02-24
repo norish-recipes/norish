@@ -1,9 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery } from "@tanstack/react-query";
 
 /**
  * Hook that returns pending recipe IDs.

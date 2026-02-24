@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// Import after mocking
+import { useRecipesQuery } from "@/hooks/recipes/use-recipes-query";
 import { waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper, createMockRecipe } from "./test-utils";
+import { createMockRecipe, createTestQueryClient, createTestWrapper } from "./test-utils";
 
 // Mock the tRPC provider
 const mockInfiniteQueryOptions = vi.fn();
@@ -48,9 +50,6 @@ vi.mock("@norish/shared/lib/logger", () => ({
     error: vi.fn(),
   }),
 }));
-
-// Import after mocking
-import { useRecipesQuery } from "@/hooks/recipes/use-recipes-query";
 
 describe("useRecipesQuery", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

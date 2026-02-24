@@ -1,12 +1,11 @@
 "use client";
 
-import type { Slot } from "@norish/shared/contracts";
 import type { QueryKey } from "@tanstack/react-query";
-
-import { useQueryClient, useQuery } from "@tanstack/react-query";
-import { useMemo, useCallback } from "react";
-
+import { useCallback, useMemo } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import type { Slot } from "@norish/shared/contracts";
 
 type PlannedItemFromQuery = {
   id: string;

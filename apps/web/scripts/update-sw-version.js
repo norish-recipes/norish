@@ -1,7 +1,7 @@
 import fs from "fs";
+import { createRequire } from "module";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../../../package.json");

@@ -9,13 +9,11 @@
  *
  * For reading data + cache manipulation, use useHouseholdQuery instead.
  */
+import { useCallback } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQueryClient } from "@tanstack/react-query";
 
 import type { HouseholdData } from "./use-household-query";
-
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type HouseholdCacheHelpers = {
   setHouseholdData: (

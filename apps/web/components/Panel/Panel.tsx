@@ -1,19 +1,20 @@
 "use client";
 
+import type { PanInfo } from "motion/react";
 import React, {
+  createContext,
+  ReactElement,
+  ReactNode,
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState,
-  ReactNode,
-  ReactElement,
-  createContext,
-  useContext,
 } from "react";
+import { XMarkIcon } from "@heroicons/react/16/solid";
+import { Button } from "@heroui/react";
 import { AnimatePresence, motion, useDragControls } from "motion/react";
 import { createPortal } from "react-dom";
-import { Button } from "@heroui/react";
-import { XMarkIcon } from "@heroicons/react/16/solid";
 
 export const PANEL_HEIGHT_COMPACT = 40;
 export const PANEL_HEIGHT_MEDIUM = 60;
@@ -134,8 +135,8 @@ export const Panel: React.FC<PanelProps> = ({
                     style={{
                       height: `${height}dvh`,
                     }}
-                    onClick={(e) => e.stopPropagation()}
-                    onDragEnd={(_, info) => {
+                    onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
+                    onDragEnd={(_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
                       if (info.offset.y > 60) close();
                     }}
                   >

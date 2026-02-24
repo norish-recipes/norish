@@ -1,11 +1,11 @@
-import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
-import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
+import { serverLogger } from "@norish/api/logger";
 import {
   cleanupOrphanedAvatars,
   cleanupOrphanedImages,
   cleanupOrphanedStepImages,
 } from "@norish/api/startup/media-cleanup";
-import { serverLogger } from "@norish/api/logger";
+import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
+import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
 
 export interface StartupMaintenanceCleanupSummary {
   media: {

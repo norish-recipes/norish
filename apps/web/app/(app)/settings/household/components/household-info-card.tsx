@@ -1,21 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowLeftStartOnRectangleIcon } from "@heroicons/react/16/solid";
+import { HomeIcon } from "@heroicons/react/24/outline";
 import {
+  Button,
   Card,
   CardBody,
   CardHeader,
-  Button,
   Chip,
   Divider,
   Modal,
-  ModalContent,
-  ModalHeader,
   ModalBody,
+  ModalContent,
   ModalFooter,
+  ModalHeader,
 } from "@heroui/react";
-import { HomeIcon } from "@heroicons/react/24/outline";
-import { ArrowLeftStartOnRectangleIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -81,7 +81,7 @@ export default function HouseholdInfoCard() {
         onOpenChange={setShowLeaveModal}
       >
         <ModalContent>
-          {(onClose) => (
+          {(onClose: () => void) => (
             <>
               <ModalHeader>{t("leaveModal.title")}</ModalHeader>
               <ModalBody>

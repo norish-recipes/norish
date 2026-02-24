@@ -1,10 +1,17 @@
 "use client";
 
-import { ShoppingBagIcon, CalendarDaysIcon, TrashIcon } from "@heroicons/react/20/solid";
-import { Card, CardBody, useDisclosure } from "@heroui/react";
-import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { useUserContext } from "@/context/user-context";
+import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
+import { useAppStore } from "@/stores/useAppStore";
+import { CalendarDaysIcon, ShoppingBagIcon, TrashIcon } from "@heroicons/react/20/solid";
+import { Card, CardBody, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { formatMinutesHM } from "@norish/shared/lib/helpers";
 import {
@@ -12,20 +19,12 @@ import {
   getShowRatingsPreference,
 } from "@norish/shared/lib/user-preferences";
 
-import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
+import { DeleteRecipeModal } from "../shared/delete-recipe-modal";
 import DoubleTapContainer from "../shared/double-tap-container";
 import FallbackImage from "../shared/fallback-image";
-import { DeleteRecipeModal } from "../shared/delete-recipe-modal";
-
+import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
 import RecipeMetadata from "./recipe-metadata";
 import RecipeTags from "./recipe-tags";
-
-import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
-import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { useAppStore } from "@/stores/useAppStore";
-import { usePermissionsContext } from "@/context/permissions-context";
-import { useUserContext } from "@/context/user-context";
-import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
 
 type RecipeCardProps = {
   recipe: RecipeDashboardDTO;

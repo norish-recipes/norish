@@ -1,7 +1,7 @@
 "use client";
 
-import { StarIcon } from "@heroicons/react/16/solid";
 import { useState } from "react";
+import { StarIcon } from "@heroicons/react/16/solid";
 
 type RatingStarsProps = {
   value: number | null;

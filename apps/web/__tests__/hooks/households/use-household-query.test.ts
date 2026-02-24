@@ -1,13 +1,14 @@
 import type { HouseholdData } from "@/hooks/households/use-household-query";
-
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// Import after mocking
+import { useHouseholdQuery } from "@/hooks/households/use-household-query";
 import { waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  createMockHouseholdData,
+  createMockHouseholdSettings,
   createTestQueryClient,
   createTestWrapper,
-  createMockHouseholdSettings,
-  createMockHouseholdData,
 } from "./test-utils";
 
 // Mock the tRPC provider
@@ -24,9 +25,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
     },
   }),
 }));
-
-// Import after mocking
-import { useHouseholdQuery } from "@/hooks/households/use-household-query";
 
 describe("useHouseholdQuery", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

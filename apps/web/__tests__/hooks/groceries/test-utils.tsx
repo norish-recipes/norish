@@ -1,10 +1,10 @@
-import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
-import type { ReactNode } from "react";
 import type { GroceriesData } from "@/hooks/groceries/use-groceries-query";
-
-import { vi } from "vitest";
+import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
+import { vi } from "vitest";
+
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
 /**
  * Create a test QueryClient with optimized settings for tests

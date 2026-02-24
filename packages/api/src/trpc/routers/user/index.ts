@@ -1,7 +1,6 @@
 import { router } from "../../trpc";
-
-import { userProcedures } from "./user";
 import { apiKeysProcedures } from "./api-keys";
+import { userProcedures } from "./user";
 
 export const userRouter = router({
   ...userProcedures._def.procedures,

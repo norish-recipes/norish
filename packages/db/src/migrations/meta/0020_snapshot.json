@@ -138,12 +138,8 @@
           "name": "api_logs_user_id_user_id_fk",
           "tableFrom": "api_logs",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -282,12 +278,8 @@
           "name": "account_userId_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -473,12 +465,8 @@
           "name": "apikey_userId_user_id_fk",
           "tableFrom": "apikey",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -566,12 +554,8 @@
           "name": "session_userId_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -581,9 +565,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -857,12 +839,8 @@
           "name": "user_caldav_config_user_id_user_id_fk",
           "tableFrom": "user_caldav_config",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1018,12 +996,8 @@
           "name": "caldav_sync_status_user_id_user_id_fk",
           "tableFrom": "caldav_sync_status",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1033,10 +1007,7 @@
         "uq_caldav_sync_user_item": {
           "name": "uq_caldav_sync_user_item",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "item_id"
-          ]
+          "columns": ["user_id", "item_id"]
         }
       },
       "policies": {},
@@ -1222,12 +1193,8 @@
           "name": "groceries_user_id_user_id_fk",
           "tableFrom": "groceries",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1235,12 +1202,8 @@
           "name": "groceries_recipe_ingredient_id_recipe_ingredients_id_fk",
           "tableFrom": "groceries",
           "tableTo": "recipe_ingredients",
-          "columnsFrom": [
-            "recipe_ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipe_ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1248,12 +1211,8 @@
           "name": "groceries_recurring_grocery_id_recurring_groceries_id_fk",
           "tableFrom": "groceries",
           "tableTo": "recurring_groceries",
-          "columnsFrom": [
-            "recurring_grocery_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recurring_grocery_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1261,12 +1220,8 @@
           "name": "groceries_store_id_stores_id_fk",
           "tableFrom": "groceries",
           "tableTo": "stores",
-          "columnsFrom": [
-            "store_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["store_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1338,12 +1293,8 @@
           "name": "household_users_household_id_households_id_fk",
           "tableFrom": "household_users",
           "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["household_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1351,12 +1302,8 @@
           "name": "household_users_user_id_user_id_fk",
           "tableFrom": "household_users",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1364,10 +1311,7 @@
       "compositePrimaryKeys": {
         "pk_household_users": {
           "name": "pk_household_users",
-          "columns": [
-            "household_id",
-            "user_id"
-          ]
+          "columns": ["household_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1477,12 +1421,8 @@
           "name": "households_admin_user_id_user_id_fk",
           "tableFrom": "households",
           "tableTo": "user",
-          "columnsFrom": [
-            "admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1492,9 +1432,7 @@
         "uq_households_join_code": {
           "name": "uq_households_join_code",
           "nullsNotDistinct": false,
-          "columns": [
-            "join_code"
-          ]
+          "columns": ["join_code"]
         }
       },
       "policies": {},
@@ -1711,12 +1649,8 @@
           "name": "recipes_user_id_user_id_fk",
           "tableFrom": "recipes",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1726,10 +1660,7 @@
         "uq_recipes_url_user": {
           "name": "uq_recipes_url_user",
           "nullsNotDistinct": false,
-          "columns": [
-            "url",
-            "user_id"
-          ]
+          "columns": ["url", "user_id"]
         }
       },
       "policies": {},
@@ -1925,12 +1856,8 @@
           "name": "recipe_tags_recipe_id_recipes_id_fk",
           "tableFrom": "recipe_tags",
           "tableTo": "recipes",
-          "columnsFrom": [
-            "recipe_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipe_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1938,12 +1865,8 @@
           "name": "recipe_tags_tag_id_tags_id_fk",
           "tableFrom": "recipe_tags",
           "tableTo": "tags",
-          "columnsFrom": [
-            "tag_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tag_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1951,10 +1874,7 @@
       "compositePrimaryKeys": {
         "pk_recipe_tags": {
           "name": "pk_recipe_tags",
-          "columns": [
-            "recipe_id",
-            "tag_id"
-          ]
+          "columns": ["recipe_id", "tag_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2063,12 +1983,8 @@
           "name": "recipe_ingredients_recipe_id_recipes_id_fk",
           "tableFrom": "recipe_ingredients",
           "tableTo": "recipes",
-          "columnsFrom": [
-            "recipe_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipe_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2076,12 +1992,8 @@
           "name": "recipe_ingredients_ingredient_id_ingredients_id_fk",
           "tableFrom": "recipe_ingredients",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2193,12 +2105,8 @@
           "name": "steps_recipe_id_recipes_id_fk",
           "tableFrom": "steps",
           "tableTo": "recipes",
-          "columnsFrom": [
-            "recipe_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipe_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2269,12 +2177,8 @@
           "name": "step_images_step_id_steps_id_fk",
           "tableFrom": "step_images",
           "tableTo": "steps",
-          "columnsFrom": [
-            "step_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["step_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2394,12 +2298,8 @@
           "name": "planned_recipes_user_id_user_id_fk",
           "tableFrom": "planned_recipes",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2407,12 +2307,8 @@
           "name": "planned_recipes_recipe_id_recipes_id_fk",
           "tableFrom": "planned_recipes",
           "tableTo": "recipes",
-          "columnsFrom": [
-            "recipe_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipe_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2523,12 +2419,8 @@
           "name": "notes_user_id_user_id_fk",
           "tableFrom": "notes",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2536,12 +2428,8 @@
           "name": "notes_recipe_id_recipes_id_fk",
           "tableFrom": "notes",
           "tableTo": "recipes",
-          "columnsFrom": [
-            "recipe_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipe_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2670,12 +2558,8 @@
           "name": "recurring_groceries_user_id_user_id_fk",
           "tableFrom": "recurring_groceries",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2767,12 +2651,8 @@
           "name": "ingredient_store_preferences_user_id_user_id_fk",
           "tableFrom": "ingredient_store_preferences",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2780,12 +2660,8 @@
           "name": "ingredient_store_preferences_store_id_stores_id_fk",
           "tableFrom": "ingredient_store_preferences",
           "tableTo": "stores",
-          "columnsFrom": [
-            "store_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["store_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2795,10 +2671,7 @@
         "uq_ingredient_store_prefs_user_name": {
           "name": "uq_ingredient_store_prefs_user_name",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "normalized_name"
-          ]
+          "columns": ["user_id", "normalized_name"]
         }
       },
       "policies": {},
@@ -2901,12 +2774,8 @@
           "name": "stores_user_id_user_id_fk",
           "tableFrom": "stores",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2995,12 +2864,8 @@
           "name": "server_config_updated_by_user_id_fk",
           "tableFrom": "server_config",
           "tableTo": "user",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -3079,12 +2944,8 @@
           "name": "recipe_favorites_user_id_user_id_fk",
           "tableFrom": "recipe_favorites",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3092,12 +2953,8 @@
           "name": "recipe_favorites_recipe_id_recipes_id_fk",
           "tableFrom": "recipe_favorites",
           "tableTo": "recipes",
-          "columnsFrom": [
-            "recipe_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipe_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3107,10 +2964,7 @@
         "uq_recipe_favorites_user_recipe": {
           "name": "uq_recipe_favorites_user_recipe",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "recipe_id"
-          ]
+          "columns": ["user_id", "recipe_id"]
         }
       },
       "policies": {},
@@ -3198,12 +3052,8 @@
           "name": "recipe_ratings_user_id_user_id_fk",
           "tableFrom": "recipe_ratings",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3211,12 +3061,8 @@
           "name": "recipe_ratings_recipe_id_recipes_id_fk",
           "tableFrom": "recipe_ratings",
           "tableTo": "recipes",
-          "columnsFrom": [
-            "recipe_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipe_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3226,10 +3072,7 @@
         "uq_recipe_ratings_user_recipe": {
           "name": "uq_recipe_ratings_user_recipe",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "recipe_id"
-          ]
+          "columns": ["user_id", "recipe_id"]
         }
       },
       "policies": {},
@@ -3297,12 +3140,8 @@
           "name": "user_allergies_user_id_user_id_fk",
           "tableFrom": "user_allergies",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3310,12 +3149,8 @@
           "name": "user_allergies_tag_id_tags_id_fk",
           "tableFrom": "user_allergies",
           "tableTo": "tags",
-          "columnsFrom": [
-            "tag_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tag_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3323,10 +3158,7 @@
       "compositePrimaryKeys": {
         "pk_user_allergies": {
           "name": "pk_user_allergies",
-          "columns": [
-            "user_id",
-            "tag_id"
-          ]
+          "columns": ["user_id", "tag_id"]
         }
       },
       "uniqueConstraints": {},
@@ -3339,38 +3171,22 @@
     "public.caldav_item_type": {
       "name": "caldav_item_type",
       "schema": "public",
-      "values": [
-        "recipe",
-        "note"
-      ]
+      "values": ["recipe", "note"]
     },
     "public.caldav_sync_status_enum": {
       "name": "caldav_sync_status_enum",
       "schema": "public",
-      "values": [
-        "pending",
-        "synced",
-        "failed",
-        "removed"
-      ]
+      "values": ["pending", "synced", "failed", "removed"]
     },
     "public.measurement_system": {
       "name": "measurement_system",
       "schema": "public",
-      "values": [
-        "metric",
-        "us"
-      ]
+      "values": ["metric", "us"]
     },
     "public.slot_type": {
       "name": "slot_type",
       "schema": "public",
-      "values": [
-        "Breakfast",
-        "Lunch",
-        "Dinner",
-        "Snack"
-      ]
+      "values": ["Breakfast", "Lunch", "Dinner", "Snack"]
     }
   },
   "schemas": {},

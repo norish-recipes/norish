@@ -9,14 +9,12 @@
  *
  * For reading data + cache manipulation, use useRecipesQuery instead.
  */
-
-import type { RecipeDashboardDTO, PendingRecipeDTO } from "@norish/shared/contracts";
 import type { InfiniteData } from "@tanstack/react-query";
-
-import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQueryClient } from "@tanstack/react-query";
+
+import type { PendingRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 
 export type InfiniteRecipeData = InfiniteData<{
   recipes: RecipeDashboardDTO[];

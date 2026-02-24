@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { canAccessResource, canAccessHouseholdResource } from "@norish/auth/permissions";
+import { describe, expect, it, vi } from "vitest";
+
+import { canAccessHouseholdResource, canAccessResource } from "@norish/auth/permissions";
 
 // Mock getConfig to return test policies
 vi.mock("@norish/db/repositories/server-config", () => ({

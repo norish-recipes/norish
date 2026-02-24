@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
+import { CalendarContextProvider, useCalendarContext } from "@/app/(app)/calendar/context";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the calendar hooks
 const mockCalendarData = {};
@@ -20,8 +21,6 @@ vi.mock("@/hooks/calendar", () => ({
   })),
   useCalendarSubscription: vi.fn(),
 }));
-
-import { CalendarContextProvider, useCalendarContext } from "@/app/(app)/calendar/context";
 
 function createTestQueryClient() {
   return new QueryClient({

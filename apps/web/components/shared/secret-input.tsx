@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { Input, Button, Chip } from "@heroui/react";
+import { useCallback, useEffect, useState } from "react";
 import { EyeIcon, EyeSlashIcon, PencilIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { Button, Chip, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface SecretInputProps {

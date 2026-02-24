@@ -1,9 +1,9 @@
-import type { UserSettingsDto } from "@norish/api/trpc/routers/user/types";
-
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper, createMockUserSettingsData } from "./test-utils";
+import type { UserSettingsDto } from "@norish/api/trpc";
+
+import { createMockUserSettingsData, createTestQueryClient, createTestWrapper } from "./test-utils";
 
 const mockUserQueryKey = [["user", "get"], { type: "query" }] as const;
 const mockAllergiesQueryKey = [["user", "getAllergies"], { type: "query" }] as const;

@@ -1,13 +1,23 @@
+import type { IFuseOptions } from "fuse.js";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import Fuse from "fuse.js";
+import z from "zod";
+
 import type {
+  IngredientStorePreferenceDto,
   StoreDto,
   StoreInsertDto,
   StoreUpdateDto,
-  IngredientStorePreferenceDto,
 } from "@norish/shared/contracts/dto/stores";
-
-import { and, eq, inArray, sql } from "drizzle-orm";
-import Fuse, { type IFuseOptions } from "fuse.js";
-import z from "zod";
+import { db } from "@norish/db/drizzle";
+import { groceries, ingredientStorePreferences, stores } from "@norish/db/schema";
+import {
+  IngredientStorePreferenceInsertSchema,
+  IngredientStorePreferenceSelectSchema,
+  StoreInsertBaseSchema,
+  StoreSelectBaseSchema,
+  StoreUpdateBaseSchema,
+} from "@norish/shared/contracts/zod";
 
 // Fuse.js configuration for ingredient name fuzzy matching
 // threshold: 0 = exact match, 1 = match anything
@@ -23,16 +33,6 @@ const FUSE_OPTIONS: IFuseOptions<IngredientStorePreferenceDto> = {
   includeScore: true,
   shouldSort: true,
 };
-
-import { db } from "@norish/db/drizzle";
-import { stores, ingredientStorePreferences, groceries } from "@norish/db/schema";
-import {
-  StoreSelectBaseSchema,
-  StoreInsertBaseSchema,
-  StoreUpdateBaseSchema,
-  IngredientStorePreferenceSelectSchema,
-  IngredientStorePreferenceInsertSchema,
-} from "@norish/shared/contracts/zod";
 
 export async function getStoreById(id: string): Promise<StoreDto | null> {
   const [row] = await db.select().from(stores).where(eq(stores.id, id)).limit(1);
@@ -138,17 +138,20 @@ export async function reorderStores(storeIds: string[]): Promise<StoreDto[]> {
     const updatedStores: StoreDto[] = [];
 
     for (let i = 0; i < storeIds.length; i++) {
+      const storeId = storeIds[i];
+
+      if (!storeId) continue;
+
       const [row] = await trx
         .update(stores)
         .set({ sortOrder: i, updatedAt: new Date() })
-        .where(eq(stores.id, storeIds[i]))
+        .where(eq(stores.id, storeId))
         .returning();
 
       if (row) {
         const validated = StoreSelectBaseSchema.safeParse(row);
 
-        if (!validated.success)
-          throw new Error(`Failed to parse reordered store (id=${storeIds[i]})`);
+        if (!validated.success) throw new Error(`Failed to parse reordered store (id=${storeId})`);
         updatedStores.push(validated.data);
       }
     }
@@ -399,6 +402,8 @@ export async function findBestIngredientStorePreference(
   if (currentUserMatches.length > 0) {
     const best = currentUserMatches[0];
 
+    if (!best) return null;
+
     return {
       preference: best.item,
       score: best.score ?? 1,
@@ -410,6 +415,8 @@ export async function findBestIngredientStorePreference(
   // Fall back to best household member match
   if (otherUserMatches.length > 0) {
     const best = otherUserMatches[0];
+
+    if (!best) return null;
 
     return {
       preference: best.item,

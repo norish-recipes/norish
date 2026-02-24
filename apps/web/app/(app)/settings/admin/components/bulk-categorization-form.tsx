@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@heroui/react";
-import { useTranslations } from "next-intl";
-import { useMutation } from "@tanstack/react-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { Button } from "@heroui/react";
+import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 export default function BulkCategorizationForm() {
   const t = useTranslations("settings.admin.aiProcessing.bulkCategorization");

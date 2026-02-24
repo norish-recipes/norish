@@ -1,7 +1,22 @@
-import { eq, and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+
+import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
 import { db } from "@norish/db/drizzle";
 import { apiKeys } from "@norish/db/schema/auth";
-import { auth } from "@norish/auth/auth";
+
+let apiKeyAuthService: ApiKeyAuthService | null = null;
+
+export function setApiKeyAuthService(service: ApiKeyAuthService): void {
+  apiKeyAuthService = service;
+}
+
+function requireApiKeyAuthService(): ApiKeyAuthService {
+  if (!apiKeyAuthService) {
+    throw new Error("API key auth service not configured");
+  }
+
+  return apiKeyAuthService;
+}
 
 export type ApiKeyMetadata = {
   id: string;
@@ -19,8 +34,10 @@ export async function createApiKey(
   userId: string,
   name?: string
 ): Promise<{ key: string; metadata: ApiKeyMetadata }> {
+  const authService = requireApiKeyAuthService();
+
   // Use BetterAuth's API to create the key
-  const result = await auth.api.createApiKey({
+  const result = await authService.createApiKey({
     body: {
       name: name || "Default API Key",
       expiresIn: null, // No expiration by default
@@ -46,7 +63,8 @@ export async function createApiKey(
  */
 export async function verifyApiKey(key: string): Promise<string | null> {
   try {
-    const result = await auth.api.verifyApiKey({
+    const authService = requireApiKeyAuthService();
+    const result = await authService.verifyApiKey({
       body: { key },
     });
 

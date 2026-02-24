@@ -1,11 +1,9 @@
-import type { PermissionsSubscriptionEvents } from "./types";
-
 import { trpcLogger as log } from "@norish/api/logger";
 
-import { router } from "../../trpc";
+import type { PermissionsSubscriptionEvents } from "./types";
+import { createSubscriptionIterable, mergeAsyncIterables } from "../../helpers";
 import { authedProcedure } from "../../middleware";
-import { mergeAsyncIterables, createSubscriptionIterable } from "../../helpers";
-
+import { router } from "../../trpc";
 import { permissionsEmitter } from "./emitter";
 
 const onPolicyUpdated = authedProcedure.subscription(async function* ({ ctx, signal }) {

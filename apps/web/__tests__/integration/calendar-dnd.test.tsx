@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
+import { parseContainerId, useCalendarDnd } from "@/hooks/calendar/use-calendar-dnd";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Slot = "Breakfast" | "Lunch" | "Dinner" | "Snack";
 
@@ -116,8 +117,6 @@ function createTestWrapper(queryClient: QueryClient) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }
-
-import { useCalendarDnd, parseContainerId } from "@/hooks/calendar/use-calendar-dnd";
 
 describe("Calendar DnD Integration", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

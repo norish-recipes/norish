@@ -6,23 +6,26 @@
   "exports": {
     ".": "./src/index.ts",
     "./auth": "./src/auth.ts",
+    "./crypto": "./src/crypto.ts",
     "./*": "./src/*"
   },
   "scripts": {
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit --noCheck",
     "clean": "git clean -xdf .cache .turbo node_modules dist",
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
-    "@norish/api": "workspace:*",
     "@norish/config": "workspace:*",
     "@norish/db": "workspace:*",
     "@norish/queue": "workspace:*",
     "@norish/shared": "workspace:*",
     "better-auth": "^1.4.18",
     "next": "16.1.6"
+  },
+  "peerDependencies": {
+    "@norish/api": "workspace:*"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",

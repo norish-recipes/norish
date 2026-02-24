@@ -1,48 +1,48 @@
 "use client";
 
+import Link from "next/link";
+import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
+import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
+import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
+import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
+import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
+import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
+import NutritionCard from "@/components/recipes/nutrition-card";
+import DoubleTapContainer from "@/components/shared/double-tap-container";
+import HeartButton from "@/components/shared/heart-button";
+import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import { useUserContext } from "@/context/user-context";
+import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
+import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import {
-  WrenchScrewdriverIcon,
-  FireIcon,
-  ClockIcon,
-  ArrowTopRightOnSquareIcon,
   ArrowLeftIcon,
-  SunIcon,
-  MoonIcon,
+  ArrowTopRightOnSquareIcon,
   CakeIcon,
+  ClockIcon,
+  FireIcon,
+  MoonIcon,
+  SunIcon,
+  WrenchScrewdriverIcon,
 } from "@heroicons/react/16/solid";
 import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
+
 import {
   formatMinutesHM,
-  sortTagsWithAllergyPriority,
   isAllergenTag,
+  sortTagsWithAllergyPriority,
 } from "@norish/shared/lib/helpers";
-import StarRating from "@norish/ui/star-rating";
 import {
   getShowFavoritesPreference,
   getShowRatingsPreference,
 } from "@norish/shared/lib/user-preferences";
+import StarRating from "@norish/ui/star-rating";
 
-import AuthorChip from "./components/author-chip";
-import { useRecipeContextRequired } from "./context";
-import ServingsControl from "./components/servings-control";
 import AmountDisplayToggle from "./components/amount-display-toggle";
-
-import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
-import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
-import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
-import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
-import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
-import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
-import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
-import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import HeartButton from "@/components/shared/heart-button";
-import DoubleTapContainer from "@/components/shared/double-tap-container";
-import { useFavoritesQuery, useFavoritesMutation } from "@/hooks/favorites";
-import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
-import NutritionCard from "@/components/recipes/nutrition-card";
-import { useUserContext } from "@/context/user-context";
+import AuthorChip from "./components/author-chip";
+import ServingsControl from "./components/servings-control";
+import { useRecipeContextRequired } from "./context";
 
 export default function RecipePageDesktop() {
   const {

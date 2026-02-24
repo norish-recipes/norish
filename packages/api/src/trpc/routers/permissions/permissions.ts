@@ -1,8 +1,8 @@
 import { trpcLogger as log } from "@norish/api/logger";
 import {
+  getAutoTaggingMode,
   getRecipePermissionPolicy,
   isAIEnabled,
-  getAutoTaggingMode,
 } from "@norish/config/server-config-loader";
 import { isUserServerAdmin } from "@norish/db";
 

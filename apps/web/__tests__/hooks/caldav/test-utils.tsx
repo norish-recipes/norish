@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { vi } from "vitest";
+
 import type {
-  UserCaldavConfigWithoutPasswordDto,
   CaldavSyncStatusSummaryDto,
+  UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
 import type {
-  CaldavSyncStatusViewDto,
   CaldavSyncStatus,
+  CaldavSyncStatusViewDto,
 } from "@norish/shared/contracts/dto/caldav-sync-status";
-
-import { vi } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 /**
  * Create a test QueryClient with optimized settings for tests

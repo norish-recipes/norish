@@ -5,9 +5,9 @@
  * Callers are responsible for lifecycle (close on shutdown).
  */
 
-import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
-
 import { Queue } from "bullmq";
+
+import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import { caldavSyncJobOptions, QUEUE_NAMES } from "../config";

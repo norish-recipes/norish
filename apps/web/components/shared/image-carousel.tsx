@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Button } from "@heroui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
-import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useState } from "react";
 import NextImage from "next/image";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
+import { Button } from "@heroui/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import ImageLightbox from "./image-lightbox";
 import { FallbackPlaceholder, useImageErrors } from "./fallback-image";
+import ImageLightbox from "./image-lightbox";
 
 export interface CarouselImage {
   image: string;

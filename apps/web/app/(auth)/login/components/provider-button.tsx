@@ -2,6 +2,7 @@
 
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import { signIn } from "@norish/shared/lib/auth/client";
 
 import { ProviderIcon } from "./provider-icon";

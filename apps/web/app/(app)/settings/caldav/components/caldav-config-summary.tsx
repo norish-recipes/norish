@@ -1,19 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Card, CardBody, CardHeader, Chip, Switch, Button, useDisclosure } from "@heroui/react";
-import { ServerIcon } from "@heroicons/react/24/outline";
+import { useCallback, useEffect, useState } from "react";
 import {
+  ArrowPathIcon,
+  CheckCircleIcon,
   PencilIcon,
   TrashIcon,
-  CheckCircleIcon,
   XCircleIcon,
-  ArrowPathIcon,
 } from "@heroicons/react/16/solid";
+import { ServerIcon } from "@heroicons/react/24/outline";
+import { Button, Card, CardBody, CardHeader, Chip, Switch, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";
-
 import DeleteCalDavModal from "./delete-caldav-modal";
 
 interface CalDavConfigSummaryProps {

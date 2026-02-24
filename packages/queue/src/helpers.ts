@@ -5,10 +5,10 @@
  */
 
 import type { Queue } from "bullmq";
-import type { PermissionLevel } from "@norish/config/zod/server-config";
 
-import { normalizeUrl } from "@norish/shared/lib/helpers";
+import type { PermissionLevel } from "@norish/config/zod/server-config";
 import { OperationTimeoutError } from "@norish/shared/lib/error-extensions";
+import { normalizeUrl } from "@norish/shared/lib/helpers";
 
 export function sanitizeUrlForJobId(url: string): string {
   const normalized = normalizeUrl(url);

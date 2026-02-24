@@ -1,16 +1,15 @@
 "use client";
 
-import type { User } from "@norish/shared/contracts";
-import type { ApiKeyMetadataDto } from "@norish/api/trpc/routers/user/types";
-import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
-
-import { createContext, useContext, ReactNode, useCallback } from "react";
+import { createContext, ReactNode, useCallback, useContext } from "react";
+import { useUserMutations } from "@/hooks/user/use-user-mutations";
+import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 // Use centralized error toast helper instead of manual toasts
 import { useTranslations } from "next-intl";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
-import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
-import { useUserMutations } from "@/hooks/user/use-user-mutations";
+import type { ApiKeyMetadataDto } from "@norish/api/trpc";
+import type { User } from "@norish/shared/contracts";
+import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 type UserSettingsContextType = {
   user: User | null;

@@ -1,5 +1,7 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 const mockGetConfig = vi.fn();
 const mockSetConfig = vi.fn();
@@ -41,8 +43,6 @@ vi.mock("@norish/api/ai/prompts/loader", () => ({
     unitConversion: "mock unit conversion prompt",
   }),
 }));
-
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 describe("Auth Provider Sync Logic", () => {
   beforeEach(() => {

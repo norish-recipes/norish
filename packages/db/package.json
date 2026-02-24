@@ -5,6 +5,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./schema/*": "./src/schema/*.ts",
+    "./drizzle": "./src/drizzle.ts",
+    "./zodSchemas": "./src/zodSchemas/index.ts",
+    "./zodSchemas/*": "./src/zodSchemas/*.ts",
     "./repositories": "./src/repositories/index.ts",
     "./repositories/*": "./src/repositories/*.ts",
     "./*": "./src/*"
@@ -17,16 +22,18 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
-    "@norish/api": "workspace:*",
-    "@norish/auth": "workspace:*",
-    "@norish/config": "workspace:*",
-    "@norish/queue": "workspace:*",
-    "@norish/shared": "workspace:*",
     "drizzle-orm": "0.45.1",
     "fuse.js": "^7.1.0",
     "pg": "8.18.0",
     "superjson": "^2.2.6",
     "zod": "4.3.6"
+  },
+  "peerDependencies": {
+    "@norish/api": "workspace:*",
+    "@norish/auth": "workspace:*",
+    "@norish/config": "workspace:*",
+    "@norish/queue": "workspace:*",
+    "@norish/shared": "workspace:*"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",

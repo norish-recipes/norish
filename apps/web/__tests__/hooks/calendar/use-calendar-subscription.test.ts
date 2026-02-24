@@ -1,4 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useCalendarSubscription } from "@/hooks/calendar/use-calendar-subscription";
+// eslint-disable-next-line import/order
+import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestQueryClient, createTestWrapper } from "./test-utils";
 
@@ -53,11 +56,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
     },
   }),
 }));
-
-// eslint-disable-next-line import/order
-import { renderHook } from "@testing-library/react";
-
-import { useCalendarSubscription } from "@/hooks/calendar/use-calendar-subscription";
 
 type PlannedItemFromQuery = {
   id: string;

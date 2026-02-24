@@ -1,10 +1,9 @@
 "use client";
 
-import type { RecurrenceConfig } from "@norish/shared/contracts/recurrence";
-
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
+import type { RecurrenceConfig } from "@norish/shared/contracts/recurrence";
 
 /**
  * Hook to fetch recurrence configuration for natural language parsing.

@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useTransition, useCallback, ChangeEvent, memo, useRef, useEffect } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { Image, Input, Button } from "@heroui/react";
-import { motion, AnimatePresence } from "motion/react";
-import { PlusIcon, ArrowPathIcon } from "@heroicons/react/16/solid";
-import { useTranslations } from "next-intl";
-import { RecipeDashboardDTO, Slot, RecipeCategory } from "@norish/shared/contracts";
-import { dateKey } from "@norish/shared/lib/helpers";
-
-import Panel from "@/components/Panel/Panel";
-import { useRecipesQuery, useRandomRecipe } from "@/hooks/recipes";
-import MiniRecipeSkeleton from "@/components/skeleton/mini-recipe-skeleton";
+import { ChangeEvent, memo, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
+import Panel from "@/components/Panel/Panel";
 import { SlotDropdown } from "@/components/shared/slot-dropdown";
+import MiniRecipeSkeleton from "@/components/skeleton/mini-recipe-skeleton";
+import { useRandomRecipe, useRecipesQuery } from "@/hooks/recipes";
+import { ArrowPathIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { Button, Image, Input } from "@heroui/react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { AnimatePresence, motion } from "motion/react";
+import { useTranslations } from "next-intl";
+
+import { RecipeCategory, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
+import { dateKey } from "@norish/shared/lib/helpers";
 
 const ESTIMATED_ITEM_HEIGHT = 88; // ~80px image + 8px padding
 
@@ -112,7 +112,7 @@ const VirtualizedRecipeList = memo(function VirtualizedRecipeList({
     getScrollElement: () => parentRef.current,
     estimateSize: () => ESTIMATED_ITEM_HEIGHT,
     overscan: 5,
-    getItemKey: (index) => recipes[index].id,
+    getItemKey: (index) => recipes[index]?.id ?? `missing-${index}`,
   });
 
   const virtualItems = virtualizer.getVirtualItems();
@@ -161,6 +161,10 @@ const VirtualizedRecipeList = memo(function VirtualizedRecipeList({
       >
         {virtualItems.map((virtualItem) => {
           const recipe = recipes[virtualItem.index];
+
+          if (!recipe) {
+            return null;
+          }
 
           return (
             <div

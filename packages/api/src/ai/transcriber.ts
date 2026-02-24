@@ -12,24 +12,23 @@
  * - ollama: Native Ollama API with input_audio for audio-capable models
  */
 
-import type { TranscriptionProvider } from "@norish/config/zod/server-config";
-import type { AIResult } from "./types/result";
-import type { Experimental_TranscriptionResult as TranscriptionResult } from "ai";
-
-import { readFile } from "node:fs/promises";
 import { createReadStream } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
-
-import { experimental_transcribe as transcribe } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createGroq } from "@ai-sdk/groq";
+import type { Experimental_TranscriptionResult as TranscriptionResult } from "ai";
 import { createAzure } from "@ai-sdk/azure";
+import { createGroq } from "@ai-sdk/groq";
+import { createOpenAI } from "@ai-sdk/openai";
+import { experimental_transcribe as transcribe } from "ai";
 import OpenAI from "openai";
-import { getVideoConfig, getAIConfig } from "@norish/config/server-config-loader";
+
+import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import { aiLogger } from "@norish/api/logger";
+import { getAIConfig, getVideoConfig } from "@norish/config/server-config-loader";
 import { isCloudTranscriptionProvider } from "@norish/config/zod/server-config";
 
-import { aiSuccess, aiError, mapErrorToCode, getErrorMessage } from "./types/result";
+import type { AIResult } from "./types/result";
+import { aiError, aiSuccess, getErrorMessage, mapErrorToCode } from "./types/result";
 
 // ============================================================================
 // Shared Helpers

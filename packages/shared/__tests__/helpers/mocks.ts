@@ -1,4 +1,4 @@
-import type { User, HouseholdWithUsersNamesDto } from "@norish/shared/contracts";
+import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
 
 /**
  * Shared test mock factories

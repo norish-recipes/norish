@@ -1,11 +1,10 @@
 "use client";
 
-import type { RecipeCategory } from "@norish/shared/contracts";
-
 import { useCallback } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
+import type { RecipeCategory } from "@norish/shared/contracts";
 
 export type RandomRecipeResult = {
   id: string;

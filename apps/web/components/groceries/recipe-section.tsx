@@ -1,31 +1,31 @@
 "use client";
 
-import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-
-import { memo, useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { motion } from "motion/react";
-import { ChevronDownIcon, BookOpenIcon, TagIcon } from "@heroicons/react/16/solid";
-import { useTranslations } from "next-intl";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  closestCenter,
   DndContext,
   DragOverlay,
+  KeyboardSensor,
   PointerSensor,
   TouchSensor,
-  KeyboardSensor,
   useSensor,
   useSensors,
-  closestCenter,
 } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
+import { BookOpenIcon, ChevronDownIcon, TagIcon } from "@heroicons/react/16/solid";
+import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+
+import { GroceryDragOverlay, SortableGroceryItem } from "./dnd";
 import { GroceryItem } from "./grocery-item";
-import { SortableGroceryItem, GroceryDragOverlay } from "./dnd";
 
 function sortGroceries(groceries: GroceryDto[], transitioningIds: Set<string>): GroceryDto[] {
   return [...groceries].sort((a, b) => {

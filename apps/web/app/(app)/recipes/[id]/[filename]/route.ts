@@ -1,8 +1,8 @@
-import fs from "node:fs/promises";
 import fsSync from "node:fs";
+import fs from "node:fs/promises";
 import path from "node:path";
-
 import { NextResponse } from "next/server";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 export const runtime = "nodejs";

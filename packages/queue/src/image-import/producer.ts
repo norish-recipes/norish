@@ -6,11 +6,11 @@
  */
 
 import type { Queue } from "bullmq";
-import type {
-  ImageImportJobData,
-  AddImageImportJobResult,
-} from "@norish/queue/contracts/job-types";
 
+import type {
+  AddImageImportJobResult,
+  ImageImportJobData,
+} from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/api/logger";
 
 import { isJobInQueue } from "../helpers";

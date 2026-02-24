@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
-import { Textarea, Listbox, ListboxItem, User, Spinner } from "@heroui/react";
-import { useTranslations } from "next-intl";
-
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRecipeAutocomplete } from "@/hooks/recipes";
+import { Listbox, ListboxItem, Spinner, Textarea, User } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 interface SmartTextInputProps {
   value: string;

@@ -1,9 +1,9 @@
-import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
-
-import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { getHouseholdForUser, isUserServerAdmin } from "@norish/db";
+import { NextResponse } from "next/server";
+
+import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
 import { auth } from "@norish/auth/auth";
+import { getHouseholdForUser, isUserServerAdmin } from "@norish/db";
 
 export async function requireUser(): Promise<User> {
   // Use BetterAuth's getSession API which handles both session cookies and API keys

@@ -1,9 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery } from "@tanstack/react-query";
 
 /**
  * Hook that returns auto-tagging recipe IDs.
@@ -22,7 +21,9 @@ export function useAutoTaggingQuery() {
   });
 
   const autoTaggingRecipeIds = useMemo(() => {
-    return new Set(data ?? []);
+    const ids = Array.isArray(data) ? data : [];
+
+    return new Set<string>(ids as string[]);
   }, [data]);
 
   return {

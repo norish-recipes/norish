@@ -2,32 +2,32 @@
 
 import { useState } from "react";
 import {
+  ClipboardDocumentIcon,
+  KeyIcon,
+  PauseIcon,
+  PlayIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import {
+  Button,
   Card,
   CardBody,
   CardHeader,
-  Input,
-  Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Chip,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
 } from "@heroui/react";
-import {
-  ClipboardDocumentIcon,
-  KeyIcon,
-  TrashIcon,
-  PlusIcon,
-  PauseIcon,
-  PlayIcon,
-} from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
@@ -180,7 +180,7 @@ export default function ApiKeyCard() {
         onOpenChange={setShowTokenModal}
       >
         <ModalContent>
-          {(onClose) => (
+          {(onClose: () => void) => (
             <>
               <ModalHeader>{t("generatedModal.title")}</ModalHeader>
               <ModalBody>
@@ -224,7 +224,7 @@ export default function ApiKeyCard() {
         onOpenChange={setShowDeleteModal}
       >
         <ModalContent>
-          {(onClose) => (
+          {(onClose: () => void) => (
             <>
               <ModalHeader>{t("deleteModal.title")}</ModalHeader>
               <ModalBody>

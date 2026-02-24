@@ -1,13 +1,12 @@
 "use client";
 
-import type {
-  HouseholdSettingsDto,
-  HouseholdAdminSettingsDto,
-} from "@norish/shared/contracts/dto/household";
-
-import { createContext, useContext, ReactNode } from "react";
-
+import { createContext, ReactNode, useContext } from "react";
 import { useHouseholdQuery, useHouseholdSubscription } from "@/hooks/households";
+
+import type {
+  HouseholdAdminSettingsDto,
+  HouseholdSettingsDto,
+} from "@norish/shared/contracts/dto/household";
 
 type HouseholdContextType = {
   household: HouseholdSettingsDto | HouseholdAdminSettingsDto | null;

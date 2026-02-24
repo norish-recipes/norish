@@ -1,9 +1,9 @@
 // @vitest-environment node
 
 import type { Queue } from "bullmq";
-import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
 
 const mockAdd = vi.fn();
 const mockGetJob = vi.fn();

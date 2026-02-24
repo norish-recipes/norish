@@ -1,17 +1,17 @@
 "use client";
 
-import type { RecipeDashboardDTO, FullRecipeDTO } from "@norish/shared/contracts";
-
-import { useSubscription } from "@trpc/tanstack-react-query";
-import { useQueryClient } from "@tanstack/react-query";
-import { addToast, Button } from "@heroui/react";
 import Link from "next/link";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { addToast, Button } from "@heroui/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSubscription } from "@trpc/tanstack-react-query";
 import { useTranslations } from "next-intl";
+
+import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
-import { useRecipesCacheHelpers, type InfiniteRecipeData } from "./use-recipes-cache";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
+import type { InfiniteRecipeData } from "./use-recipes-cache";
+import { useRecipesCacheHelpers } from "./use-recipes-cache";
 
 const log = createClientLogger("recipes-subscription");
 
@@ -115,7 +115,7 @@ export function useRecipesSubscription() {
   // onCreated - Manual recipe creation
   useSubscription(
     trpc.recipes.onCreated.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ recipeId: payload.recipe.id }, "[onCreated] Received");
         removePendingRecipe(payload.recipe.id);
         addRecipeToList(payload.recipe);
@@ -127,7 +127,7 @@ export function useRecipesSubscription() {
   // onImportStarted - Show skeleton for pending import (cross-device sync)
   useSubscription(
     trpc.recipes.onImportStarted.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ recipeId: payload.recipeId, url: payload.url }, "[onImportStarted] Received");
         addPendingRecipe(payload.recipeId);
       },
@@ -138,7 +138,7 @@ export function useRecipesSubscription() {
   // onImported - Recipe imported from URL
   useSubscription(
     trpc.recipes.onImported.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info(
           { recipeId: payload.recipe.id, pendingRecipeId: payload.pendingRecipeId },
           "[onImported] Received"
@@ -174,7 +174,7 @@ export function useRecipesSubscription() {
   // onUpdated - Recipe updated
   useSubscription(
     trpc.recipes.onUpdated.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ recipeId: payload.recipe.id }, "[onUpdated] Received");
         updateRecipeInList(payload.recipe);
         queryClient.invalidateQueries({
@@ -189,7 +189,7 @@ export function useRecipesSubscription() {
   // onDeleted - Recipe deleted
   useSubscription(
     trpc.recipes.onDeleted.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ recipeId: payload.id }, "[onDeleted] Received");
         removeRecipeFromList(payload.id);
         queryClient.invalidateQueries({
@@ -203,7 +203,7 @@ export function useRecipesSubscription() {
   // onConverted - Recipe measurements converted
   useSubscription(
     trpc.recipes.onConverted.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ recipeId: payload.recipe.id }, "[onConverted] Received");
         updateRecipeInList(payload.recipe);
         queryClient.invalidateQueries({
@@ -225,7 +225,7 @@ export function useRecipesSubscription() {
   // onFailed - Operation failed
   useSubscription(
     trpc.recipes.onFailed.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ reason: payload.reason, recipeId: payload.recipeId }, "[onFailed] Received");
         log.error(
           { reason: payload.reason, recipeId: payload.recipeId, url: payload.url },
@@ -257,7 +257,7 @@ export function useRecipesSubscription() {
   // onAutoTaggingStarted
   useSubscription(
     trpc.recipes.onAutoTaggingStarted.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ recipeId: payload.recipeId }, "[onAutoTaggingStarted] Received");
         addAutoTaggingRecipe(payload.recipeId);
       },
@@ -268,7 +268,7 @@ export function useRecipesSubscription() {
   // onAllergyDetectionStarted
   useSubscription(
     trpc.recipes.onAllergyDetectionStarted.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ recipeId: payload.recipeId }, "[onAllergyDetectionStarted] Received");
         addAllergyDetectionRecipe(payload.recipeId);
       },
@@ -279,7 +279,7 @@ export function useRecipesSubscription() {
   // onAutoTaggingCompleted
   useSubscription(
     trpc.recipes.onAutoTaggingCompleted.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ recipeId: payload.recipeId }, "[onAutoTaggingCompleted] Received");
         removeAutoTaggingRecipe(payload.recipeId);
       },
@@ -290,7 +290,7 @@ export function useRecipesSubscription() {
   // onAllergyDetectionCompleted
   useSubscription(
     trpc.recipes.onAllergyDetectionCompleted.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ recipeId: payload.recipeId }, "[onAllergyDetectionCompleted] Received");
         removeAllergyDetectionRecipe(payload.recipeId);
       },
@@ -301,7 +301,7 @@ export function useRecipesSubscription() {
   // onProcessingToast
   useSubscription(
     trpc.recipes.onProcessingToast.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info(
           { recipeId: payload.recipeId, titleKey: payload.titleKey },
           "[onProcessingToast] Received"
@@ -331,7 +331,7 @@ export function useRecipesSubscription() {
   // onRecipeBatchCreated
   useSubscription(
     trpc.recipes.onRecipeBatchCreated.subscriptionOptions(undefined, {
-      onData: (payload) => {
+      onData: (payload: any) => {
         log.info({ count: payload.recipes.length }, "[onRecipeBatchCreated] Received");
 
         setAllRecipesData(

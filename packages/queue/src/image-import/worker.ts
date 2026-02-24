@@ -6,25 +6,26 @@
  * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
-import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import type { Job } from "bullmq";
 
-import { getBullClient } from "@norish/queue/redis/bullmq";
+import type { PolicyEmitContext } from "@norish/api/trpc/helpers";
+import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
+import { extractRecipeFromImages } from "@norish/api/ai/image-recipe-parser";
+import { deleteRecipeImagesDir, saveImageBytes } from "@norish/api/downloader";
 import { createLogger } from "@norish/api/logger";
-import { emitByPolicy, type PolicyEmitContext } from "@norish/api/trpc/helpers";
+import { emitByPolicy } from "@norish/api/trpc/helpers";
 import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";
-import { getRecipePermissionPolicy, getAIConfig } from "@norish/config/server-config-loader";
+import { getAIConfig, getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
+  addRecipeImages,
   createRecipeWithRefs,
   dashboardRecipe,
   getAllergiesForUsers,
-  addRecipeImages,
 } from "@norish/db";
-import { extractRecipeFromImages } from "@norish/api/ai/image-recipe-parser";
-import { saveImageBytes, deleteRecipeImagesDir } from "@norish/api/downloader";
+import { getBullClient } from "@norish/queue/redis/bullmq";
 
+import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
-import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
 const log = createLogger("worker:image-import");
 

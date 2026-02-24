@@ -1,12 +1,12 @@
-import { join, extname } from "path";
 import { createReadStream, existsSync, statSync } from "fs";
-import { createGzip } from "zlib";
 import { IncomingMessage, ServerResponse } from "http";
-
+import { extname, join } from "path";
+import { createGzip } from "zlib";
 import mime from "mime";
+
 import { resolveExistingWorkspacePath } from "@norish/api/lib/workspace-paths";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { serverLogger } from "@norish/api/logger";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 const STATIC_EXCLUDED_PATHS = ["/", "/manifest.webmanifest", "/_next", "/api"];
 

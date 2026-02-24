@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-
+import { useEffect, useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery } from "@tanstack/react-query";
 
 export function useNutritionQuery(recipeId: string) {
   const trpc = useTRPC();
@@ -17,7 +16,9 @@ export function useNutritionQuery(recipeId: string) {
 
   // Hydrate state from queue
   useEffect(() => {
-    if (isEstimatingFromQueue === true) {
+    const queueEstimate = isEstimatingFromQueue as boolean | undefined;
+
+    if (queueEstimate === true) {
       setIsEstimating(true);
     }
   }, [isEstimatingFromQueue]);

@@ -7,8 +7,10 @@
  * - quantity <= 1 (including 0, 0.5, 1, null, undefined): use singular form
  */
 
-import { describe, it, expect } from "vitest";
-import { selectUnitForm, type UnitFormInfo } from "@norish/shared/lib/unit-form-selector";
+import { describe, expect, it } from "vitest";
+
+import type { UnitFormInfo } from "@norish/shared/lib/unit-form-selector";
+import { selectUnitForm } from "@norish/shared/lib/unit-form-selector";
 
 describe("selectUnitForm", () => {
   const unitWithBothForms: UnitFormInfo = {

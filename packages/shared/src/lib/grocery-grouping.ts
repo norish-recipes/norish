@@ -1,5 +1,5 @@
-import type { GroceryDto } from "@norish/shared/contracts";
 import type { UnitsMap } from "@norish/config/zod/server-config";
+import type { GroceryDto } from "@norish/shared/contracts";
 
 import { parseIngredientWithDefaults } from "./helpers";
 
@@ -78,7 +78,7 @@ export function groupGroceriesByIngredient(
   const storeGroceries = new Map<string | null, GroceryDto[]>();
 
   for (const grocery of groceries) {
-    const storeId = grocery.storeId;
+    const storeId = grocery.storeId ?? null;
 
     if (!storeGroceries.has(storeId)) {
       storeGroceries.set(storeId, []);
@@ -116,7 +116,9 @@ export function groupGroceriesByIngredient(
       let displayUnit: string | null = null;
 
       if (canAggregate && uniqueUnits.size === 1) {
-        displayUnit = [...uniqueUnits][0];
+        const firstUnit = [...uniqueUnits][0];
+
+        displayUnit = firstUnit ?? null;
         totalAmount = sortedItems.reduce((sum, g) => sum + (g.amount ?? 1), 0);
       } else if (canAggregate && uniqueUnits.size === 0) {
         totalAmount = sortedItems.reduce((sum, g) => sum + (g.amount ?? 1), 0);
@@ -129,6 +131,11 @@ export function groupGroceriesByIngredient(
       }));
 
       const firstItem = sortedItems[0];
+
+      if (!firstItem) {
+        continue;
+      }
+
       const displayName = getDisplayName(firstItem.name);
 
       const allDone = sortedItems.every((g) => g.isDone);

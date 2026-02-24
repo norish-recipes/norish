@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { userProcedures } from "@norish/api/trpc/routers/user/user";
+
 const mockDb = vi.hoisted(() => ({
   getApiKeysForUser: vi.fn(),
   getUserById: vi.fn(),
@@ -57,8 +59,6 @@ vi.mock("fs/promises", () => ({
   readdir: vi.fn(),
   writeFile: vi.fn(),
 }));
-
-import { userProcedures } from "@norish/api/trpc/routers/user/user";
 
 describe("userProcedures.get", () => {
   beforeEach(() => {

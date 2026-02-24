@@ -5,12 +5,12 @@
  * Callers are responsible for lifecycle (close on shutdown).
  */
 
-import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
-
 import { Queue } from "bullmq";
+
+import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
-import { recipeImportJobOptions, QUEUE_NAMES } from "../config";
+import { QUEUE_NAMES, recipeImportJobOptions } from "../config";
 
 /**
  * Create a recipe import queue instance.

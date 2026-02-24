@@ -1,7 +1,7 @@
 "use client";
 
+import { BeakerIcon, CheckIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
-import { TrashIcon, BeakerIcon, CheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
 interface ProviderActionsProps {

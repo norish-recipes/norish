@@ -9,13 +9,11 @@
  *
  * For reading data + cache manipulation, use useStoresQuery instead.
  */
+import { useCallback } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQueryClient } from "@tanstack/react-query";
 
 import type { StoresData } from "./use-stores-query";
-
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type StoresCacheHelpers = {
   setStoresData: (updater: (prev: StoresData | undefined) => StoresData | undefined) => void;

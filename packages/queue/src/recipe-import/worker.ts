@@ -5,37 +5,38 @@
  * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
-import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import type { Job } from "bullmq";
 
-import { getBullClient } from "@norish/queue/redis/bullmq";
+import type { PolicyEmitContext } from "@norish/api/trpc/helpers";
+import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
+import { deleteRecipeImagesDir } from "@norish/api/downloader";
 import { createLogger } from "@norish/api/logger";
-import { emitByPolicy, type PolicyEmitContext } from "@norish/api/trpc/helpers";
+import { parseRecipeFromUrl } from "@norish/api/parser";
+import { emitByPolicy } from "@norish/api/trpc/helpers";
 import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";
-import { getRecipePermissionPolicy, getAIConfig } from "@norish/config/server-config-loader";
-import { getQueues } from "@norish/queue/registry";
-import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
-import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
-import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
+import { getAIConfig, getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   createRecipeWithRefs,
-  recipeExistsByUrlForPolicy,
   dashboardRecipe,
   getAllergiesForUsers,
+  recipeExistsByUrlForPolicy,
 } from "@norish/db";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
-import { parseRecipeFromUrl } from "@norish/api/parser";
-import { deleteRecipeImagesDir } from "@norish/api/downloader";
+import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
+import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
+import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
+import { getBullClient } from "@norish/queue/redis/bullmq";
+import { getQueues } from "@norish/queue/registry";
 
-import { withTimeout } from "../helpers";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 import {
+  baseWorkerOptions,
   QUEUE_NAMES,
   RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
-  baseWorkerOptions,
-  WORKER_CONCURRENCY,
   STALLED_INTERVAL,
+  WORKER_CONCURRENCY,
 } from "../config";
+import { withTimeout } from "../helpers";
+import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:recipe-import");
 

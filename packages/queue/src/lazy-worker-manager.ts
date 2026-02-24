@@ -12,10 +12,9 @@
  * Do NOT use for scheduled/cron jobs (use regular workers instead).
  */
 
-import type { Job, Processor, WorkerOptions } from "bullmq";
-import type { ConnectionOptions } from "bullmq";
+import type { ConnectionOptions, Job, Processor, WorkerOptions } from "bullmq";
+import { Queue, QueueEvents, Worker } from "bullmq";
 
-import { Worker, QueueEvents, Queue } from "bullmq";
 import { createLogger } from "@norish/api/logger";
 
 const log = createLogger("lazy-worker");

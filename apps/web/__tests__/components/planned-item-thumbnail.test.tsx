@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -10,8 +11,6 @@ vi.mock("@heroui/react", () => ({
     <img alt={alt} className={className} src={src} onError={onError} />
   ),
 }));
-
-import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 
 describe("PlannedItemThumbnail", () => {
   it("renders note placeholder for note items", () => {

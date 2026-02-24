@@ -1,26 +1,25 @@
 "use client";
 
-import type { StoreDto, StoreColor } from "@norish/shared/contracts";
-
-import { useState, useRef } from "react";
-import { Button, Input } from "@heroui/react";
-import { Reorder, useDragControls } from "motion/react";
+import { useRef, useState } from "react";
+import { DynamicHeroIcon, STORE_ICON_NAMES } from "@/components/groceries/dynamic-hero-icon";
+import { getStoreColorClasses, STORE_COLOR_OPTIONS } from "@/components/groceries/store-colors";
+import Panel, { PANEL_HEIGHT_LARGE } from "@/components/Panel/Panel";
+import { useStoresMutations } from "@/hooks/stores";
 import {
   Bars3Icon,
-  PencilIcon,
-  TrashIcon,
-  PlusIcon,
   CheckIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
+import { Button, Input } from "@heroui/react";
+import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { DeleteStoreModal } from "./delete-store-modal";
+import type { StoreColor, StoreDto } from "@norish/shared/contracts";
 
-import Panel, { PANEL_HEIGHT_LARGE } from "@/components/Panel/Panel";
-import { DynamicHeroIcon, STORE_ICON_NAMES } from "@/components/groceries/dynamic-hero-icon";
-import { STORE_COLOR_OPTIONS, getStoreColorClasses } from "@/components/groceries/store-colors";
-import { useStoresMutations } from "@/hooks/stores";
+import { DeleteStoreModal } from "./delete-store-modal";
 
 interface StoreManagerPanelProps {
   open: boolean;

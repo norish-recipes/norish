@@ -1,27 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { ChevronDownIcon } from "@heroicons/react/16/solid";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import {
+  addToast,
+  Button,
   Card,
   CardBody,
   CardHeader,
-  Switch,
-  Select,
-  SelectItem,
-  Button,
-  addToast,
   Divider,
   Popover,
-  PopoverTrigger,
   PopoverContent,
+  PopoverTrigger,
+  Select,
+  SelectItem,
+  Switch,
 } from "@heroui/react";
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+
 import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import { useAdminSettingsContext } from "../context";
-
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 
 export default function GeneralCard() {
@@ -65,7 +65,11 @@ export default function GeneralCard() {
 
     // If default locale is no longer enabled, switch to first enabled
     if (!values.includes(defaultLocale)) {
-      setDefaultLocale(values[0]);
+      const firstEnabled = values[0];
+
+      if (firstEnabled) {
+        setDefaultLocale(firstEnabled);
+      }
     }
   };
 

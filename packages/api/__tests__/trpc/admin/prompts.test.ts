@@ -1,7 +1,25 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { PromptsConfig, PromptsConfigInput } from "@norish/config/zod/server-config";
+// Import mocks for assertions
+import { loadDefaultPrompts } from "@norish/api/ai/prompts/loader";
+import {
+  PromptsConfigInputSchema,
+  PromptsConfigSchema,
+  ServerConfigKeys,
+} from "@norish/config/zod/server-config";
+
+import { getConfig, setConfig } from "../../mocks/server-config";
+import { isUserServerAdmin } from "../../mocks/users";
+import {
+  createMockAdminContext,
+  createMockAdminUser,
+  createMockAuthedContext,
+  createMockUser,
+} from "./test-utils";
 
 // Setup mocks before any imports that use them
 vi.mock("@norish/db/repositories/server-config", () => import("../../mocks/server-config"));
@@ -14,26 +32,6 @@ vi.mock("@norish/api/ai/prompts/loader", () => ({
     autoTagging: "Default auto tagging prompt",
   }),
 }));
-
-// Import mocks for assertions
-import { loadDefaultPrompts } from "@norish/api/ai/prompts/loader";
-import {
-  ServerConfigKeys,
-  PromptsConfigSchema,
-  PromptsConfigInputSchema,
-  type PromptsConfig,
-  type PromptsConfigInput,
-} from "@norish/config/zod/server-config";
-
-import { getConfig, setConfig } from "../../mocks/server-config";
-import { isUserServerAdmin } from "../../mocks/users";
-
-import {
-  createMockAdminUser,
-  createMockUser,
-  createMockAuthedContext,
-  createMockAdminContext,
-} from "./test-utils";
 
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

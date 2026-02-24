@@ -1,18 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@norish/db/drizzle", () => ({
-  db: {
-    select: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    transaction: vi.fn(),
-  },
-}));
-
 import { db } from "@norish/db/drizzle";
-import { plannedItems } from "@norish/db/schema/planned-items";
 import {
   createPlannedItem,
   deletePlannedItem,
@@ -23,6 +12,17 @@ import {
   moveItem,
   updatePlannedItem,
 } from "@norish/db/repositories/planned-items";
+import { plannedItems } from "@norish/db/schema/planned-items";
+
+vi.mock("@norish/db/drizzle", () => ({
+  db: {
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    transaction: vi.fn(),
+  },
+}));
 
 const dbMock = vi.mocked(db);
 

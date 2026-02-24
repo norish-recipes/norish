@@ -1,9 +1,8 @@
 "use client";
 
-import { useSubscription } from "@trpc/tanstack-react-query";
-import { useMutation } from "@tanstack/react-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useMutation } from "@tanstack/react-query";
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 /**
  * Hook for auto-tagging functionality.
@@ -20,7 +19,7 @@ export function useAutoTagging(
   useSubscription(
     trpc.recipes.onAutoTaggingStarted.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId === recipeId) {
           onStarted();
         }
@@ -32,7 +31,7 @@ export function useAutoTagging(
   useSubscription(
     trpc.recipes.onFailed.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId === recipeId) {
           onCompleted();
         }
@@ -44,7 +43,7 @@ export function useAutoTagging(
   useSubscription(
     trpc.recipes.onUpdated.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipe.id === recipeId) {
           onCompleted();
         }

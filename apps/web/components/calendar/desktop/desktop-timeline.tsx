@@ -1,31 +1,30 @@
 "use client";
 
-import type { Slot } from "@norish/shared/contracts";
-import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
-
+import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { SLOT_ORDER } from "@/components/calendar/mobile/types";
+import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  useSensor,
-  useSensors,
   pointerWithin,
   rectIntersection,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWindowSize } from "usehooks-ts";
+
+import type { Slot } from "@norish/shared/contracts";
 import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 
-import { DesktopScrollToToday } from "./desktop-scroll-to-today";
 import { DesktopDayCard } from "./desktop-day-card";
 import { DesktopDragOverlay } from "./desktop-drag-overlay";
-
-import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { SLOT_ORDER } from "@/components/calendar/mobile/types";
+import { DesktopScrollToToday } from "./desktop-scroll-to-today";
 
 function startOfDay(date: Date): Date {
   const d = new Date(date);
@@ -70,6 +69,10 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
     if (remainder !== 0) {
       const lastDay = days[days.length - 1];
       const padding = columnCount - remainder;
+
+      if (!lastDay) {
+        return days;
+      }
 
       for (let i = 1; i <= padding; i++) {
         const nextDay = new Date(lastDay);
@@ -162,8 +165,13 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
 
       if (items.length === 0) return;
 
-      const firstIndex = items[0].index;
-      const lastIndex = items[items.length - 1].index;
+      const firstItem = items[0];
+      const lastItem = items[items.length - 1];
+
+      if (!firstItem || !lastItem) return;
+
+      const firstIndex = firstItem.index;
+      const lastIndex = lastItem.index;
 
       // Use tighter bounds - show FAB sooner when scrolling away from today
       const buffer = 1;
@@ -360,6 +368,10 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
             {virtualItems.map((virtualRow) => {
               const rowDays = rows[virtualRow.index];
 
+              if (!rowDays) {
+                return null;
+              }
+
               return (
                 <div
                   key={virtualRow.key}
@@ -379,7 +391,7 @@ export function DesktopTimeline({ onAddItem, onNoteClick, onRecipeClick }: Deskt
                     {rowDays.map((d) => {
                       const key = dateKey(d);
                       const items = (calendarData[key] ?? [])
-                        .sort((a, b) => SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot])
+                        .sort((a, b) => (SLOT_ORDER[a.slot] ?? 0) - (SLOT_ORDER[b.slot] ?? 0))
                         .map((it) => it as PlannedItemDisplay);
                       const isToday = key === todayKey;
 

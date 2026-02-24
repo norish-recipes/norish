@@ -1,31 +1,29 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useRef } from "react";
-import { useTranslations } from "next-intl";
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import EditTagPanel from "@/components/Panel/consumers/edit-tag-panel";
+import { useTagsQuery } from "@/hooks/config";
 import {
+  closestCenter,
   DndContext,
   DragOverlay,
-  closestCenter,
   KeyboardSensor,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
+  horizontalListSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
-  horizontalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { motion, AnimatePresence } from "motion/react";
-
-import { useTagsQuery } from "@/hooks/config";
-import EditTagPanel from "@/components/Panel/consumers/edit-tag-panel";
+import { AnimatePresence, motion } from "motion/react";
+import { useTranslations } from "next-intl";
 
 interface SortableTagItemProps {
   tag: string;

@@ -1,10 +1,9 @@
 import { router } from "../../trpc";
-
-import { adminConfigProcedures } from "./config";
-import { generalProcedures } from "./general";
-import { authProvidersProcedures } from "./auth-providers";
-import { contentConfigProcedures } from "./content-config";
 import { aiConfigProcedures } from "./ai-config";
+import { authProvidersProcedures } from "./auth-providers";
+import { adminConfigProcedures } from "./config";
+import { contentConfigProcedures } from "./content-config";
+import { generalProcedures } from "./general";
 import { permissionsProcedures } from "./permissions";
 import { systemProcedures } from "./system";
 

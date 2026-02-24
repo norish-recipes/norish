@@ -1,28 +1,29 @@
 "use client";
 
 import { useState } from "react";
+import { ShieldCheckIcon, UserMinusIcon } from "@heroicons/react/16/solid";
+import { UserGroupIcon } from "@heroicons/react/24/outline";
 import {
+  addToast,
+  Button,
   Card,
   CardBody,
   CardHeader,
-  Button,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Chip,
   Modal,
-  ModalContent,
-  ModalHeader,
   ModalBody,
+  ModalContent,
   ModalFooter,
-  addToast,
+  ModalHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
 } from "@heroui/react";
-import { UserGroupIcon } from "@heroicons/react/24/outline";
-import { UserMinusIcon, ShieldCheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+
 import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import { useHouseholdSettingsContext } from "../context";
@@ -177,7 +178,7 @@ export default function MembersCard() {
         onOpenChange={setShowKickModal}
       >
         <ModalContent>
-          {(onClose) => (
+          {(onClose: () => void) => (
             <>
               <ModalHeader>{t("kickModal.title")}</ModalHeader>
               <ModalBody>
@@ -204,7 +205,7 @@ export default function MembersCard() {
         onOpenChange={setShowTransferModal}
       >
         <ModalContent>
-          {(onClose) => (
+          {(onClose: () => void) => (
             <>
               <ModalHeader>{t("transferModal.title")}</ModalHeader>
               <ModalBody>

@@ -1,6 +1,8 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import JSZip from "jszip";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { archiveRouter } from "@norish/api/trpc/routers/archive/archive";
 
 const mockArchiveParser = vi.hoisted(() => ({
   importArchive: vi.fn().mockResolvedValue({ imported: [], skipped: [], errors: [] }),
@@ -44,8 +46,6 @@ vi.mock("@norish/api/trpc/routers/recipes/emitter", () => ({
     emitToHousehold: vi.fn(),
   },
 }));
-
-import { archiveRouter } from "@norish/api/trpc/routers/archive/archive";
 
 describe("archiveRouter.importArchive", () => {
   beforeEach(() => {

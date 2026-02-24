@@ -1,7 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
-
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
+import { render } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 const modalMock = vi.fn(({ children }: any) => <div>{children}</div>);
 

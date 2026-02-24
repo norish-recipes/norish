@@ -1,12 +1,12 @@
 import type { Slot } from "@norish/shared/contracts";
-
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import {
-  updateCaldavSyncStatus,
   getCaldavSyncStatusByItemId,
+  updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
 
-import { CalDavClient, type CreateEventInput } from "./client";
+import type { CreateEventInput } from "./client";
+import { CalDavClient } from "./client";
 
 export function truncateErrorMessage(error: string): string {
   return error.length <= 500 ? error : error.substring(0, 497) + "...";

@@ -1,35 +1,35 @@
 "use client";
+
 import React, { useMemo } from "react";
-import {
-  Button,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  useDisclosure,
-} from "@heroui/react";
-import {
-  EllipsisHorizontalIcon,
-  CalendarDaysIcon,
-  ShoppingCartIcon,
-  PencilSquareIcon,
-  TrashIcon,
-  DevicePhoneMobileIcon,
-  SparklesIcon,
-} from "@heroicons/react/16/solid";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { cssButtonPill, cssAIGradientText, cssAIIconColor } from "@norish/web/config/css-tokens";
-
-import { useRecipeContextRequired } from "../context";
-
-import { useWakeLockContext } from "./wake-lock-context";
-
+import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
 import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
-import { MiniGroceries, MiniCalendar } from "@/components/Panel/consumers";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useActiveAllergies } from "@/hooks/user";
+import {
+  CalendarDaysIcon,
+  DevicePhoneMobileIcon,
+  EllipsisHorizontalIcon,
+  PencilSquareIcon,
+  ShoppingCartIcon,
+  SparklesIcon,
+  TrashIcon,
+} from "@heroicons/react/16/solid";
+import {
+  Button,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  useDisclosure,
+} from "@heroui/react";
+import { useTranslations } from "next-intl";
+
+import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
+
+import { useRecipeContextRequired } from "../context";
+import { useWakeLockContext } from "./wake-lock-context";
 
 type Props = { id: string };
 
@@ -228,7 +228,7 @@ export default function ActionsMenu({ id }: Props) {
         </DropdownTrigger>
 
         <DropdownMenu aria-label={t("actionsLabel")} items={menuItems}>
-          {(item) => (
+          {(item: MenuItem) => (
             <DropdownItem
               key={item.key}
               className="py-1 data-[focus=true]:bg-transparent data-[hover=true]:bg-transparent"

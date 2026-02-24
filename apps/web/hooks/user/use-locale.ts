@@ -2,11 +2,12 @@
 
 import { useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { type Locale, isValidLocale } from "@norish/i18n/config";
-import { getLocalePreference } from "@norish/shared/lib/user-preferences";
-
-import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 import { useUserMutations } from "@/hooks/user/use-user-mutations";
+import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
+
+import type { Locale } from "@norish/i18n/config";
+import { isValidLocale } from "@norish/i18n/config";
+import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 
 /**
  * Hook for managing user locale preference

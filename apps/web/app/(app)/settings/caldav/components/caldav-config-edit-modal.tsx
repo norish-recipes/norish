@@ -1,28 +1,27 @@
 "use client";
 
-import type { CalDavCalendarInfo } from "@norish/shared/contracts";
-
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import SecretInput from "@/components/shared/secret-input";
+import { ServerIcon } from "@heroicons/react/24/outline";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Input,
-  Chip,
   Accordion,
   AccordionItem,
+  Button,
+  Chip,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Select,
   SelectItem,
 } from "@heroui/react";
-import { ServerIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
-import { useCalDavSettingsContext } from "../context";
+import type { CalDavCalendarInfo } from "@norish/shared/contracts";
 
-import SecretInput from "@/components/shared/secret-input";
+import { useCalDavSettingsContext } from "../context";
 
 interface CalDavConfigEditModalProps {
   isOpen: boolean;
@@ -101,7 +100,11 @@ export default function CalDavConfigEditModal({ isOpen, onClose }: CalDavConfigE
           setCalendars(result.calendars);
           // Auto-select first calendar if none selected, or keep existing selection if valid
           if (!currentCalendarUrl || !result.calendars.some((c) => c.url === currentCalendarUrl)) {
-            setCalendarUrl(result.calendars[0].url);
+            const firstCalendar = result.calendars[0];
+
+            if (firstCalendar) {
+              setCalendarUrl(firstCalendar.url);
+            }
           }
         }
       } finally {

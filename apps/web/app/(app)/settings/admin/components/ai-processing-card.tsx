@@ -1,15 +1,15 @@
 "use client";
 
-import { Card, CardBody, CardHeader, Accordion, AccordionItem } from "@heroui/react";
-import { SparklesIcon } from "@heroicons/react/24/outline";
-import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
+import { SparklesIcon } from "@heroicons/react/24/outline";
+import { Accordion, AccordionItem, Card, CardBody, CardHeader } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 import AIConfigForm from "./ai-config-form";
-import VideoProcessingForm from "./video-processing-form";
-import PromptsForm from "./prompts-form";
 import BulkCategorizationForm from "./bulk-categorization-form";
+import PromptsForm from "./prompts-form";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
+import VideoProcessingForm from "./video-processing-form";
 
 export default function AIProcessingCard() {
   const t = useTranslations("settings.admin.aiProcessing");

@@ -1,32 +1,32 @@
 "use client";
 
+import { memo, useMemo, useState } from "react";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  EllipsisVerticalIcon,
+  TrashIcon,
+} from "@heroicons/react/16/solid";
+import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
+import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
+
 import type {
   GroceryDto,
-  StoreDto,
-  StoreColor,
   RecurringGroceryDto,
+  StoreColor,
+  StoreDto,
 } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
-import { memo, useState, useMemo } from "react";
-import { motion } from "motion/react";
-import {
-  ChevronDownIcon,
-  EllipsisVerticalIcon,
-  CheckIcon,
-  TrashIcon,
-} from "@heroicons/react/16/solid";
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@heroui/react";
-import { useTranslations } from "next-intl";
-
-import { GroupedGroceryItem } from "./grouped-grocery-item";
-import { DynamicHeroIcon } from "./dynamic-hero-icon";
-import { getStoreColorClasses } from "./store-colors";
 import {
   SortableGroupedStoreContainer,
   SortableGroupItem,
   useDndGroupedGroceryContext,
 } from "./dnd";
+import { DynamicHeroIcon } from "./dynamic-hero-icon";
+import { GroupedGroceryItem } from "./grouped-grocery-item";
+import { getStoreColorClasses } from "./store-colors";
 
 interface GroupedStoreSectionProps {
   store: StoreDto | null; // null = Unsorted

@@ -1,7 +1,7 @@
 "use client";
 
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface DeleteProviderModalProps {

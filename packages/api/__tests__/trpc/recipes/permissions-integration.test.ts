@@ -1,24 +1,23 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { canAccessResource } from "../../mocks/permissions";
+// Import mocks
+import { getRecipeFull, getRecipeOwnerId, listRecipes } from "../../mocks/recipes-repository";
+// Import test utilities
+import {
+  createMockAuthedContext,
+  createMockFullRecipe,
+  createMockHousehold,
+  createMockUser,
+} from "./test-utils";
 
 // Setup mocks
 vi.mock("@norish/db/repositories/recipes", () => import("../../mocks/recipes-repository"));
 vi.mock("@norish/auth/permissions", () => import("../../mocks/permissions"));
 vi.mock("@norish/api/trpc/routers/recipes/emitter", () => import("../../mocks/recipe-emitter"));
-
-// Import mocks
-import { listRecipes, getRecipeFull, getRecipeOwnerId } from "../../mocks/recipes-repository";
-import { canAccessResource } from "../../mocks/permissions";
-
-// Import test utilities
-import {
-  createMockUser,
-  createMockHousehold,
-  createMockAuthedContext,
-  createMockFullRecipe,
-} from "./test-utils";
 
 // Create test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

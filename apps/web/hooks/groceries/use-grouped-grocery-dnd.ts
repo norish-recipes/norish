@@ -1,24 +1,23 @@
-import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import type {
-  DragStartEvent,
-  DragOverEvent,
-  DragEndEvent,
-  CollisionDetection,
-} from "@dnd-kit/core";
-import type {
-  GroupItemsState,
   ContainerId,
   DndGroupedGroceryProviderProps,
+  GroupItemsState,
 } from "@/components/groceries/dnd/types";
-
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-
+import type {
+  CollisionDetection,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+} from "@dnd-kit/core";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createMultiContainerCollisionDetection } from "@/components/groceries/dnd/collision-detection";
 import {
   buildGroupItemsState,
-  findContainerForGroup,
   containerIdToStoreId,
+  findContainerForGroup,
 } from "@/components/groceries/dnd/utils";
-import { createMultiContainerCollisionDetection } from "@/components/groceries/dnd/collision-detection";
+
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 interface UseGroupedGroceryDndResult {
   // State

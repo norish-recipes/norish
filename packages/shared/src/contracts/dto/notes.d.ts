@@ -1,13 +1,14 @@
 import type { z } from "zod";
+
 import type {
-  NoteSelectBaseSchema,
-  NoteInsertBaseSchema,
-  NoteUpdateBaseSchema,
-  noteViewSchema,
-  NoteListSchema,
   NoteCreateSchema,
   NoteDeleteSchema,
+  NoteInsertBaseSchema,
+  NoteListSchema,
+  NoteSelectBaseSchema,
+  NoteUpdateBaseSchema,
   NoteUpdateDateSchema,
+  noteViewSchema,
 } from "@norish/shared/contracts/zod";
 
 export type NoteDto = z.output<typeof NoteSelectBaseSchema>;

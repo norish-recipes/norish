@@ -1,4 +1,5 @@
 "use client";
+
 import RecipeCardSkeleton from "./recipe-card-skeleton";
 
 export default function RecipeGridSkeleton() {

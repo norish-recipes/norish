@@ -1,13 +1,16 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import type {
+  MealieDatabase,
+  MealieIngredient,
+  MealieInstruction,
+  MealieLookups,
+  MealieRecipe,
+} from "@norish/api/importers/mealie-parser";
 import {
+  buildMealieLookups,
   parseMealieDatabase,
   parseMealieRecipeToDTO,
-  buildMealieLookups,
-  type MealieRecipe,
-  type MealieIngredient,
-  type MealieInstruction,
-  type MealieDatabase,
-  type MealieLookups,
 } from "@norish/api/importers/mealie-parser";
 
 // @vitest-environment node

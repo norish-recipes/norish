@@ -6,12 +6,13 @@
  * for Issue #255: Editing Recipe Discards AI Import Unit Conversion
  */
 
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+
 import { updateRecipeWithRefs } from "@norish/db/repositories/recipes";
 
 import {
-  createTestRecipe,
   createTestIngredient,
+  createTestRecipe,
   createTestRecipeIngredients,
   createTestRecipeStep,
   getRecipeIngredients,

@@ -1,7 +1,7 @@
 import { index, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-import { households } from "./households";
 import { users } from "./auth";
+import { households } from "./households";
 
 export const householdUsers = pgTable(
   "household_users",

@@ -1,14 +1,13 @@
 "use client";
 
 import { UserSettingsProvider } from "../context";
-
-import ProfileCard from "./profile-card";
-import PreferencesCard from "./preferences-card";
 import AllergiesCard from "./allergies-card";
 import ApiTokenCard from "./api-token-card";
-import SiteAuthTokensCard from "./site-auth-tokens-card";
 import ArchiveImportCard from "./archive-import-card";
 import DangerZoneCard from "./danger-zone-card";
+import PreferencesCard from "./preferences-card";
+import ProfileCard from "./profile-card";
+import SiteAuthTokensCard from "./site-auth-tokens-card";
 
 function UserSettingsContent() {
   return (

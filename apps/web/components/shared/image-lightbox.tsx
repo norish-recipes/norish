@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Modal, ModalContent, Button } from "@heroui/react";
-import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/16/solid";
-import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
+import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { Button, Modal, ModalContent } from "@heroui/react";
+import { AnimatePresence, motion } from "motion/react";
 
 import { FallbackPlaceholder, useImageErrors } from "./fallback-image";
 

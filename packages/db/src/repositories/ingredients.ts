@@ -1,16 +1,22 @@
+import { eq, inArray, sql } from "drizzle-orm";
+import z from "zod";
+
+import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { IngredientDto } from "@norish/shared/contracts/dto/ingredient";
 import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
 import type {
   RecipeIngredientInsertDto,
   RecipeIngredientsDto,
 } from "@norish/shared/contracts/dto/recipe-ingredient";
-
-import { eq, inArray, sql } from "drizzle-orm";
-import z from "zod";
-import { getUnits } from "@norish/config/server-config-loader";
-import { stripHtmlTags } from "@norish/shared/lib/helpers";
-import { normalizeUnit } from "@norish/shared/lib/unit-localization";
+import { dbLogger } from "@norish/api/logger";
+import defaultUnits from "@norish/config/units.default.json";
+import {
+  ServerConfigKeys,
+  UnitsConfigSchema,
+  UnitsMapSchema,
+} from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
+import { getConfig } from "@norish/db/repositories/server-config";
 import { ingredients, recipeIngredients } from "@norish/db/schema";
 import { IngredientSelectBaseSchema } from "@norish/shared/contracts/zod";
 import {
@@ -18,9 +24,37 @@ import {
   RecipeIngredientSelectWithNameSchema,
   RecipeIngredientsInsertBaseSchema,
 } from "@norish/shared/contracts/zod/recipe-ingredients";
-import { dbLogger } from "@norish/api/logger";
+import { stripHtmlTags } from "@norish/shared/lib/helpers";
+import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 const IngredientArraySchema = z.array(IngredientSelectBaseSchema);
+
+async function getUnitsForNormalization(): Promise<UnitsMap> {
+  const value = await getConfig<unknown>(ServerConfigKeys.UNITS);
+
+  const wrapped = UnitsConfigSchema.safeParse(value);
+
+  if (wrapped.success) {
+    return wrapped.data.units;
+  }
+
+  const legacyWrapped =
+    typeof value === "object" && value !== null && "units" in value && "isOverwritten" in value
+      ? UnitsMapSchema.safeParse((value as { units: unknown }).units)
+      : null;
+
+  if (legacyWrapped?.success) {
+    return legacyWrapped.data;
+  }
+
+  const legacy = UnitsMapSchema.safeParse(value);
+
+  if (legacy.success) {
+    return legacy.data;
+  }
+
+  return defaultUnits as UnitsMap;
+}
 
 function ensureNonEmptyName(name?: string): string {
   if (name === undefined || name === null) throw new Error("Ingredient name cannot be empty");
@@ -161,7 +195,7 @@ export async function attachIngredientsToRecipeByInputTx(
   const items = parsedInput.data;
 
   // Get units config for normalization
-  const units = await getUnits();
+  const units = await getUnitsForNormalization();
 
   // Separate items with ingredientId (already exist) from those needing creation (ingredientName)
   const itemsWithId = items.filter((ri) => ri.ingredientId);

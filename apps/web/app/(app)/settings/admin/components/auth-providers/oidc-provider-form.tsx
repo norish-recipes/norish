@@ -1,22 +1,21 @@
 "use client";
 
-import type { TestResult } from "./types";
-
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import SecretInput from "@/components/shared/secret-input";
+import { useDirtyState } from "@/hooks/use-dirty-state";
 import { Input, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
+import type { ClaimMappingValues } from "./oidc-claim-mapping";
+import type { TestResult } from "./types";
 import { useAdminSettingsContext } from "../../context";
-
 import { DeleteProviderModal } from "./delete-provider-modal";
+import { OIDCClaimMapping } from "./oidc-claim-mapping";
 import { ProviderActions } from "./provider-actions";
 import { TestResultDisplay } from "./test-result-display";
-import { OIDCClaimMapping, type ClaimMappingValues } from "./oidc-claim-mapping";
-
-import SecretInput from "@/components/shared/secret-input";
-import { useDirtyState } from "@/hooks/use-dirty-state";
 
 interface OIDCProviderFormProps {
   config: Record<string, unknown> | undefined;

@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
-import defaultContentIndicators from "@norish/config/content-indicators.default.json";
+
 import { isPageLikelyRecipe } from "@norish/api/parser";
+import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 
 vi.mock("@norish/config/server-config-loader", async () => {
   const actual = await vi.importActual<typeof import("@norish/config/server-config-loader")>(

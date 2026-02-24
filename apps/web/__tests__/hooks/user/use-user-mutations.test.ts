@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  createMockApiKey,
+  createMockUser,
+  createMockUserSettingsData,
   createTestQueryClient,
   createTestWrapper,
-  createMockUser,
-  createMockApiKey,
-  createMockUserSettingsData,
 } from "./test-utils";
 
 const mockUserQueryKey = [["user", "get"], { type: "query" }] as const;

@@ -1,16 +1,15 @@
 import crypto from "crypto";
-
+import { relations, sql } from "drizzle-orm";
 import {
-  timestamp,
+  boolean,
+  index,
+  integer,
+  jsonb,
   pgTable,
   text,
+  timestamp,
   uniqueIndex,
-  boolean,
-  integer,
-  index,
-  jsonb,
 } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
 
 // User table with encrypted PII fields
 export const users = pgTable(

@@ -1,11 +1,10 @@
-import { getConfig } from "@norish/db/repositories/server-config";
-import { getHouseholdForUser } from "@norish/db/repositories/households";
+import type { AIConfig, RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import {
-  ServerConfigKeys,
-  type RecipePermissionPolicy,
   DEFAULT_RECIPE_PERMISSION_POLICY,
-  type AIConfig,
+  ServerConfigKeys,
 } from "@norish/config/zod/server-config";
+import { getHouseholdForUser } from "@norish/db/repositories/households";
+import { getConfig } from "@norish/db/repositories/server-config";
 
 export async function getRecipePermissionPolicy(): Promise<RecipePermissionPolicy> {
   const value = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);

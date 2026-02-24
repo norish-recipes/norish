@@ -1,10 +1,11 @@
 import type { z } from "zod";
+
 import type {
-  UserCaldavConfigSelectSchema,
-  UserCaldavConfigInsertSchema,
-  UserCaldavConfigUpdateSchema,
-  UserCaldavConfigDecryptedSchema,
   SaveCaldavConfigInputSchema,
+  UserCaldavConfigDecryptedSchema,
+  UserCaldavConfigInsertSchema,
+  UserCaldavConfigSelectSchema,
+  UserCaldavConfigUpdateSchema,
 } from "@norish/shared/contracts/zod/caldav-config";
 
 export type UserCaldavConfigDto = z.output<typeof UserCaldavConfigSelectSchema>;

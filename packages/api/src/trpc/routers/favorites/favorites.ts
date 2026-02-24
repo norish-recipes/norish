@@ -1,14 +1,14 @@
 import { trpcLogger as log } from "@norish/api/logger";
 import {
-  toggleFavorite,
-  isFavorite,
   getFavoriteRecipeIds,
   getFavoritesByRecipeIds,
+  isFavorite,
+  toggleFavorite,
 } from "@norish/db/repositories/favorites";
 import {
-  FavoriteToggleInputSchema,
-  FavoriteCheckInputSchema,
   FavoriteBatchCheckInputSchema,
+  FavoriteCheckInputSchema,
+  FavoriteToggleInputSchema,
 } from "@norish/shared/contracts/zod";
 
 import { authedProcedure } from "../../middleware";

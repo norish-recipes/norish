@@ -4,7 +4,7 @@
  * Tests weighted random selection logic with household favorites and ratings.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("Random Recipe Selection", () => {
   beforeEach(() => {

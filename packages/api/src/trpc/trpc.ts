@@ -1,8 +1,7 @@
-import type { Context } from "./context";
-
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 
+import type { Context } from "./context";
 import { trpcLogger } from "./logger";
 
 const t = initTRPC.context<Context>().create({

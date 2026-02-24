@@ -1,9 +1,8 @@
 "use client";
 
+import ArchiveImporter from "@/components/navbar/archive-importer";
 import { Card, CardBody, CardHeader } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import ArchiveImporter from "@/components/navbar/archive-importer";
 
 export default function ArchiveImportCard() {
   const t = useTranslations("settings.user.archiveImport");

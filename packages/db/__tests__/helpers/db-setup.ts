@@ -6,10 +6,13 @@
  * Falls back to existing DATABASE_URL if Docker is not available
  */
 
+import { readdir, readFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import pg from "pg";
+
 import { dbLogger } from "@norish/api/logger";
 
 const { Client } = pg;
@@ -138,23 +141,28 @@ export async function dropTestDatabase(testDbName: string) {
  * Run database migrations on a test database
  */
 export async function runMigrations(testDbUrl: string) {
-  const { execSync } = await import("child_process");
+  const migrationsDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../src/migrations");
+  const client = new Client({ connectionString: testDbUrl });
 
   try {
-    // Run drizzle-kit push directly (skip db:ensure since testcontainers already created the DB)
-    execSync("pnpm exec drizzle-kit push --config ./packages/db/src/drizzle.config.ts", {
-      env: {
-        ...process.env,
-        DATABASE_URL: testDbUrl,
-        SKIP_ENV_VALIDATION: "1",
-      },
-      stdio: "pipe",
-    });
+    await client.connect();
+
+    const files = (await readdir(migrationsDir))
+      .filter((name) => name.endsWith(".sql"))
+      .sort((a, b) => a.localeCompare(b));
+
+    for (const file of files) {
+      const sql = await readFile(resolve(migrationsDir, file), "utf8");
+
+      await client.query(sql);
+    }
 
     dbLogger.info("Database migrations applied");
   } catch (error) {
     dbLogger.error({ error }, "Failed to run migrations");
     throw error;
+  } finally {
+    await client.end();
   }
 }
 

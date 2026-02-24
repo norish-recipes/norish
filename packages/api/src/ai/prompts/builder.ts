@@ -7,8 +7,8 @@
 import { getAutoTaggingMode } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@norish/db/repositories/tags";
 
-import { loadPrompt, fillPrompt } from "./loader";
 import { buildAllergyInstruction } from "./fragments/allergies";
+import { fillPrompt, loadPrompt } from "./loader";
 
 export interface RecipeExtractionPromptOptions {
   /**

@@ -1,35 +1,33 @@
 "use client";
 
-import type { GroceryDto } from "@norish/shared/contracts";
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-
+import { GroceryList, GroceryListByRecipe, StoreManagerPanel } from "@/components/groceries";
+import { AddGroceryPanel } from "@/components/Panel/consumers";
+import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
+import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
+import {
+  BookOpenIcon,
+  BuildingStorefrontIcon,
+  CheckIcon,
+  Cog6ToothIcon,
+  PlusIcon,
+} from "@heroicons/react/16/solid";
 import {
   Button,
   Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
   DropdownItem,
+  DropdownMenu,
   DropdownSection,
+  DropdownTrigger,
   Switch,
 } from "@heroui/react";
-import {
-  PlusIcon,
-  Cog6ToothIcon,
-  BuildingStorefrontIcon,
-  BookOpenIcon,
-  CheckIcon,
-} from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+
+import type { GroceryDto } from "@norish/shared/contracts";
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 import { useGroceriesContext, useGroceriesUIContext } from "../context";
 import { useStoresContext } from "../stores-context";
-
 import AddGroceryButton from "./add-grocery-button";
-
-import { GroceryList, GroceryListByRecipe, StoreManagerPanel } from "@/components/groceries";
-import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
-import { AddGroceryPanel } from "@/components/Panel/consumers";
-import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
 
 export function GroceriesPage() {
   const {

@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardBody, CardHeader, Input, Button, Avatar } from "@heroui/react";
-import { UserCircleIcon } from "@heroicons/react/24/outline";
+import { useEffect, useRef, useState } from "react";
+import { useUserAvatar } from "@/hooks/use-user-avatar";
 import { TrashIcon } from "@heroicons/react/16/solid";
 import { PencilIcon } from "@heroicons/react/20/solid";
-import { useRef } from "react";
+import { UserCircleIcon } from "@heroicons/react/24/outline";
+import { Avatar, Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
-
-import { useUserAvatar } from "@/hooks/use-user-avatar";
 
 export default function ProfileCard() {
   const t = useTranslations("settings.user.profile");

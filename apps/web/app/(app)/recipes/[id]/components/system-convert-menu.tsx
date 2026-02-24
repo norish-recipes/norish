@@ -1,24 +1,24 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { useUserContext } from "@/context/user-context";
+import { ArrowsRightLeftIcon, SparklesIcon } from "@heroicons/react/20/solid";
 import {
   Button,
   Dropdown,
-  DropdownMenu,
   DropdownItem,
+  DropdownMenu,
   DropdownTrigger,
   Spinner,
 } from "@heroui/react";
-import { ArrowsRightLeftIcon, SparklesIcon } from "@heroicons/react/20/solid";
 import { useTranslations } from "next-intl";
+
 import { MeasurementSystem } from "@norish/shared/contracts";
-import { cssButtonPill, cssAIGradientText, cssAIIconColor } from "@norish/web/config/css-tokens";
 import { getShowConversionButtonPreference } from "@norish/shared/lib/user-preferences";
+import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 import { useRecipeContextRequired } from "../context";
-
-import { usePermissionsContext } from "@/context/permissions-context";
-import { useUserContext } from "@/context/user-context";
 
 type ConversionOption = {
   key: MeasurementSystem;
@@ -99,7 +99,7 @@ export default function SystemConvertMenu() {
         selectedKeys={[currentSystem]}
         selectionMode="single"
       >
-        {(item) => (
+        {(item: ConversionOption) => (
           <DropdownItem
             key={item.key}
             className="!bg-transparent py-1 data-[focus=true]:!bg-transparent data-[hover=true]:!bg-transparent data-[selected=true]:!bg-transparent"

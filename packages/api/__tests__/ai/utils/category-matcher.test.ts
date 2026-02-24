@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { matchCategory } from "@norish/api/ai/utils/category-matcher";
 
 describe("matchCategory", () => {

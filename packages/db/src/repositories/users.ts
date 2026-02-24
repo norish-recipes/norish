@@ -1,13 +1,12 @@
-import type { User } from "@norish/shared/contracts/dto/user";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
-import { eq, and, inArray, sql } from "drizzle-orm";
+import type { User } from "@norish/shared/contracts/dto/user";
 import { authLogger } from "@norish/api/logger";
-import { encrypt, hmacIndex, decrypt } from "@norish/auth/crypto";
+import { decrypt, encrypt, hmacIndex } from "@norish/auth/crypto";
 
 import { db } from "../drizzle";
-import { users, accounts } from "../schema/auth";
+import { accounts, users } from "../schema/auth";
 import { ServerConfigKeys } from "../zodSchemas/server-config";
-
 import { setConfig } from "./server-config";
 
 // BetterAuth-compatible user type for adapter operations

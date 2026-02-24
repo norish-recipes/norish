@@ -1,7 +1,7 @@
-import type { TagDto } from "@norish/shared/contracts/dto/tag";
-
 import { asc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
+
+import type { TagDto } from "@norish/shared/contracts/dto/tag";
 import { db } from "@norish/db/drizzle";
 import { recipeTags, tags } from "@norish/db/schema";
 import { TagSelectBaseSchema } from "@norish/shared/contracts/zod";

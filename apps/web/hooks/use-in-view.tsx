@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function useInView(ref: React.RefObject<HTMLElement | null>, rootMargin = "0px") {
   const [isInView, setIsInView] = useState(false);

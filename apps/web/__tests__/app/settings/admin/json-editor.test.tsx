@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import "@testing-library/jest-dom";
 
 import JsonEditor from "@/app/(app)/settings/admin/components/json-editor";

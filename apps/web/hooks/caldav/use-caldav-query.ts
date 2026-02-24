@@ -1,12 +1,14 @@
 "use client";
 
-import type { CaldavSyncStatusViewDto, CaldavSyncStatusSummaryDto } from "@norish/shared/contracts";
 import type { QueryKey } from "@tanstack/react-query";
-import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
-
-import { useQueryClient, useQuery } from "@tanstack/react-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import type {
+  CaldavSyncStatusSummaryDto,
+  CaldavSyncStatusViewDto,
+  UserCaldavConfigWithoutPasswordDto,
+} from "@norish/shared/contracts";
 
 export type CaldavConfigQueryResult = {
   config: UserCaldavConfigWithoutPasswordDto | null;

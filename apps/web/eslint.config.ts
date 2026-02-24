@@ -11,5 +11,5 @@ export default defineConfig(
   baseConfig,
   reactConfig,
   nextjsConfig,
-  restrictEnvAccess,
+  restrictEnvAccess
 );

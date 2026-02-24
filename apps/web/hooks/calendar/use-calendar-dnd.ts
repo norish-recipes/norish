@@ -1,20 +1,20 @@
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
 import {
-  DragStartEvent,
-  DragOverEvent,
-  DragEndEvent,
   CollisionDetection,
-  rectIntersection,
-  pointerWithin,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
   PointerSensor,
+  pointerWithin,
+  rectIntersection,
   TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useState, useCallback, useMemo, useRef } from "react";
 import { arrayMove } from "@dnd-kit/sortable";
-import { CalendarItemViewDto, Slot } from "@norish/shared/contracts";
 
-import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { CalendarItemViewDto, Slot } from "@norish/shared/contracts";
 
 export type CalendarContainerId = string;
 export type CalendarItemsState = Record<CalendarContainerId, string[]>;

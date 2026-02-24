@@ -1,16 +1,17 @@
-import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
 import type { Job } from "bullmq";
 
-import { getBullClient } from "@norish/queue/redis/bullmq";
+import type { PolicyEmitContext } from "@norish/api/trpc/helpers";
+import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
+import { categorizeRecipe } from "@norish/api/ai/auto-categorizer";
 import { createLogger } from "@norish/api/logger";
-import { emitByPolicy, type PolicyEmitContext } from "@norish/api/trpc/helpers";
+import { emitByPolicy } from "@norish/api/trpc/helpers";
 import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getRecipeFull, updateRecipeCategories } from "@norish/db";
-import { categorizeRecipe } from "@norish/api/ai/auto-categorizer";
+import { getBullClient } from "@norish/queue/redis/bullmq";
 
+import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
-import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
 const log = createLogger("worker:auto-categorization");
 

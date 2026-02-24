@@ -1,10 +1,10 @@
 // @vitest-environment node
-import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-
-import fs from "node:fs/promises";
 import fsSync from "node:fs";
+import fs from "node:fs/promises";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { describe, it, expect, afterEach, vi } from "vitest";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import { buildAuthArgs } from "@norish/api/video/yt-dlp";
 
 vi.mock("yt-dlp-wrap", () => ({
   default: class MockYTDlpWrap {
@@ -18,8 +18,6 @@ vi.mock("@norish/api/logger", () => ({
 vi.mock("@norish/config/server-config-loader", () => ({
   getVideoConfig: vi.fn().mockReturnValue({ ytDlpVersion: "latest" }),
 }));
-
-import { buildAuthArgs } from "@norish/api/video/yt-dlp";
 
 function makeToken(overrides: Partial<SiteAuthTokenDecryptedDto>): SiteAuthTokenDecryptedDto {
   return {

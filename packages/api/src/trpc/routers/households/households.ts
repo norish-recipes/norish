@@ -1,42 +1,41 @@
-import type {
-  HouseholdSettingsDto,
-  HouseholdAdminSettingsDto,
-} from "@norish/shared/contracts/dto/household";
-import type { HouseholdUserInfo } from "./types";
-
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+
+import type {
+  HouseholdAdminSettingsDto,
+  HouseholdSettingsDto,
+} from "@norish/shared/contracts/dto/household";
+import { trpcLogger as log } from "@norish/api/logger";
+import { permissionsEmitter } from "@norish/api/trpc/routers/permissions/emitter";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
-  getHouseholdForUser,
-  findHouseholdByJoinCode,
-  createHousehold,
   addUserToHousehold,
-  removeUserFromHousehold,
+  createHousehold,
+  findHouseholdByJoinCode,
+  getAllergiesForUsers,
+  getHouseholdForUser,
+  getUsersByHouseholdId,
+  isUserHouseholdAdmin,
   kickUserFromHousehold,
   regenerateJoinCode,
+  removeUserFromHousehold,
   transferHouseholdAdmin,
-  isUserHouseholdAdmin,
-  getAllergiesForUsers,
-  getUsersByHouseholdId,
 } from "@norish/db";
 import {
   invalidateHouseholdCache,
   invalidateHouseholdCacheForUsers,
 } from "@norish/db/cached-household";
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   HouseholdNameSchema,
   JoinCodeSchema,
-  UUIDSchema,
   UserIdSchema,
+  UUIDSchema,
 } from "@norish/shared/lib/validation/schemas";
-import { trpcLogger as log } from "@norish/api/logger";
-import { permissionsEmitter } from "@norish/api/trpc/routers/permissions/emitter";
 
+import type { HouseholdUserInfo } from "./types";
 import { emitConnectionInvalidation } from "../../connection-manager";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { householdEmitter } from "./emitter";
 
 /**

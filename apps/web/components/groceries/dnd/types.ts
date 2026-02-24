@@ -1,4 +1,4 @@
-import type { GroceryDto, StoreDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 /** Container ID for groceries without a store assignment */

@@ -1,5 +1,7 @@
 "use client";
+
 // FULLY AI GENERATED - DO NOT EDIT - I HAVE NO IDEA HOW THIS WORKS :D
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
   animate,
   motion,
@@ -11,7 +13,7 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("SwipeableRow");

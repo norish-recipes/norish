@@ -1,24 +1,23 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { retryFailedSyncs, syncAllFutureItems } from "../../mocks/caldav-calendar-sync";
 import {
-  getCaldavConfigWithoutPassword,
-  getCaldavConfigDecrypted,
-  saveCaldavConfig,
   deleteCaldavConfig,
+  getCaldavConfigDecrypted,
+  getCaldavConfigWithoutPassword,
+  saveCaldavConfig,
 } from "../../mocks/caldav-config";
-import { getCaldavSyncStatusesByUser, getSyncStatusSummary } from "../../mocks/caldav-sync-status";
 import { caldavEmitter } from "../../mocks/caldav-emitter";
-import { syncAllFutureItems, retryFailedSyncs } from "../../mocks/caldav-calendar-sync";
-
+import { getCaldavSyncStatusesByUser, getSyncStatusSummary } from "../../mocks/caldav-sync-status";
 import {
-  createMockUser,
   createMockAuthedContext,
   createMockCaldavConfig,
   createMockCaldavConfigWithoutPassword,
   createMockSyncStatusView,
   createMockSyncSummary,
+  createMockUser,
 } from "./test-utils";
 
 // @vitest-environment node

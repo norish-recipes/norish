@@ -1,34 +1,44 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import SecretInput from "@/components/shared/secret-input";
+import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
+import { CheckIcon } from "@heroicons/react/16/solid";
 import {
-  Input,
-  Button,
-  Switch,
-  Select,
-  SelectItem,
-  Divider,
   Autocomplete,
   AutocompleteItem,
+  Button,
+  Divider,
+  Input,
+  Select,
+  SelectItem,
+  Switch,
 } from "@heroui/react";
-import { CheckIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+
+import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import {
-  ServerConfigKeys,
-  type TranscriptionProvider,
   isCloudTranscriptionProvider,
+  ServerConfigKeys,
   transcriptionProviderNeedsEndpoint,
   transcriptionProviderSupportsModelListing,
 } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
 
-import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
-import SecretInput from "@/components/shared/secret-input";
-
 interface VideoProcessingFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
 }
+
+type TranscriptionModel = {
+  id: string;
+  name: string;
+};
+
+type TranscriptionModelOption = {
+  value: string;
+  label: string;
+};
 
 export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFormProps) {
   const t = useTranslations("settings.admin.videoConfig");
@@ -108,13 +118,16 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
 
   // Create transcription model options for autocomplete
   const transcriptionModelOptions = useMemo(() => {
-    const options = availableTranscriptionModels.map((m) => ({
+    const options = (availableTranscriptionModels as TranscriptionModel[]).map((m) => ({
       value: m.id,
       label: m.name,
     }));
 
     // Add current model if not in list (allows keeping custom/typed values)
-    if (transcriptionModel && !options.some((o) => o.value === transcriptionModel)) {
+    if (
+      transcriptionModel &&
+      !options.some((o: TranscriptionModelOption) => o.value === transcriptionModel)
+    ) {
       options.unshift({ value: transcriptionModel, label: transcriptionModel });
     }
 
@@ -128,7 +141,11 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       availableTranscriptionModels.length > 0 &&
       !isLoadingTranscriptionModels
     ) {
-      setTranscriptionModel(availableTranscriptionModels[0].id);
+      const firstModel = (availableTranscriptionModels as TranscriptionModel[])[0];
+
+      if (firstModel) {
+        setTranscriptionModel(firstModel.id);
+      }
     }
   }, [availableTranscriptionModels, transcriptionModel, isLoadingTranscriptionModels]);
 
@@ -355,7 +372,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
               onInputChange={setTranscriptionModel}
               onSelectionChange={(key) => key && setTranscriptionModel(key as string)}
             >
-              {(item) => (
+              {(item: TranscriptionModelOption) => (
                 <AutocompleteItem key={item.value} textValue={item.label}>
                   {item.label}
                 </AutocompleteItem>

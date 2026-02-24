@@ -7,9 +7,12 @@
 // @vitest-environment node
 
 import type { Queue } from "bullmq";
-import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// eslint-disable-next-line import/order -- Type imports must come after mocks are set up in test files
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
+import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
+import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 
 // Mock BullMQ
 const mockAdd = vi.fn();
@@ -140,11 +143,6 @@ const mockRecipeExistsByUrlForPolicy = vi.fn();
 vi.mock("@norish/db", () => ({
   recipeExistsByUrlForPolicy: mockRecipeExistsByUrlForPolicy,
 }));
-
-// eslint-disable-next-line import/order -- Type imports must come after mocks are set up in test files
-import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
-
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 
 describe("Recipe Import Queue", () => {
   beforeEach(() => {

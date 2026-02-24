@@ -1,10 +1,9 @@
 "use client";
 
-import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
-
 import { useCallback } from "react";
-
 import { useLocalStorage } from "@/hooks/use-local-storage";
+
+import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
 
 const STORAGE_KEY = "norish:amount-display-mode";
 const DEFAULT_MODE: AmountDisplayMode = "fraction";

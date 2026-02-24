@@ -1,7 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
-
 import { BaseProviders } from "@/app/providers/base-providers";
+import { render } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 const toastProviderMock = vi.hoisted(() => vi.fn());
 

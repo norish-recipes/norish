@@ -1,32 +1,32 @@
 "use client";
 
+import type { DragEndEvent } from "@dnd-kit/core";
 import React, { useRef, useState } from "react";
 import NextImage from "next/image";
+import { useRecipeImages } from "@/hooks/recipes";
+import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import {
-  DndContext,
   closestCenter,
+  DndContext,
   KeyboardSensor,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
+  horizontalListSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
-  horizontalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { XMarkIcon, PhotoIcon, StarIcon, Bars2Icon } from "@heroicons/react/16/solid";
+import { Bars2Icon, PhotoIcon, StarIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { createClientLogger } from "@norish/shared/lib/logger";
-
-import { useRecipeImages } from "@/hooks/recipes";
-import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 
 const log = createClientLogger("ImageGalleryInput");
 

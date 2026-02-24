@@ -1,36 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { PlusIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/24/outline";
 import {
+  Button,
   Card,
   CardBody,
   CardHeader,
-  Input,
-  Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Chip,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Select,
   SelectItem,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
 } from "@heroui/react";
-import { ShieldCheckIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
+
 import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 import NewFeatureChip from "../../components/new-feature-chip";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");
@@ -243,7 +242,7 @@ export default function SiteAuthTokensCard() {
         onOpenChange={setShowDeleteModal}
       >
         <ModalContent>
-          {(onClose) => (
+          {(onClose: () => void) => (
             <>
               <ModalHeader>{t("deleteModal.title")}</ModalHeader>
               <ModalBody>

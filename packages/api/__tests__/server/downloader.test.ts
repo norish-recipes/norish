@@ -1,8 +1,7 @@
 // @vitest-environment node
 import fs from "fs/promises";
 import path from "node:path";
-
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock dependencies
 vi.mock("@norish/config/env-config-server", () => ({

@@ -5,31 +5,32 @@
  * Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
-import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
-import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import type { Job } from "bullmq";
 
-import { getBullClient } from "@norish/queue/redis/bullmq";
+import type { PolicyEmitContext } from "@norish/api/trpc/helpers";
+import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
+import { deleteRecipeImagesDir } from "@norish/api/downloader";
 import { createLogger } from "@norish/api/logger";
-import { emitByPolicy, type PolicyEmitContext } from "@norish/api/trpc/helpers";
-import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";
-import {
-  getRecipePermissionPolicy,
-  getAIConfig,
-  isAIEnabled,
-} from "@norish/config/server-config-loader";
-import { getQueues } from "@norish/queue/registry";
-import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
-import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
-import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@norish/db";
 import { extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
-import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
+import { emitByPolicy } from "@norish/api/trpc/helpers";
+import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";
+import {
+  getAIConfig,
+  getRecipePermissionPolicy,
+  isAIEnabled,
+} from "@norish/config/server-config-loader";
+import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@norish/db";
+import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
+import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
+import { getBullClient } from "@norish/queue/redis/bullmq";
+import { getQueues } from "@norish/queue/registry";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
-import { deleteRecipeImagesDir } from "@norish/api/downloader";
 
+import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
-import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } from "../config";
 
 const log = createLogger("worker:paste-import");
 

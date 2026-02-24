@@ -1,11 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useRatingQuery } from "@/hooks/ratings/use-ratings-query";
 import { waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  createTestQueryClient,
-  createTestWrapper,
   createMockAverageRatingData,
   createMockUserRatingData,
+  createTestQueryClient,
+  createTestWrapper,
 } from "./test-utils";
 
 const mockAverageQueryOptions = vi.fn();
@@ -23,8 +24,6 @@ vi.mock("@/app/providers/trpc-provider", () => ({
     },
   }),
 }));
-
-import { useRatingQuery } from "@/hooks/ratings/use-ratings-query";
 
 describe("useRatingQuery", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

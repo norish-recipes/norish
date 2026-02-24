@@ -1,11 +1,10 @@
 "use client";
 
-import type { UserSettingsDto } from "@norish/api/trpc/routers/user/types";
-
-import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQueryClient } from "@tanstack/react-query";
+
+import type { UserSettingsDto } from "@norish/api/trpc";
 
 export type UserAllergiesData = {
   allergies: string[];

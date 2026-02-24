@@ -1,6 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import "@testing-library/jest-dom";
+
+import RecipePageDesktop from "@/app/(app)/recipes/[id]/recipe-page-desktop";
+import RecipePageMobile from "@/app/(app)/recipes/[id]/recipe-page-mobile";
 
 const userPreferencesState = {
   showFavorites: false,
@@ -111,9 +115,6 @@ vi.mock("@/app/(app)/recipes/[id]/components/wake-lock-toggle", () => ({
 vi.mock("@/app/(app)/recipes/[id]/components/author-chip", () => ({
   default: () => <div>author-chip</div>,
 }));
-
-import RecipePageDesktop from "@/app/(app)/recipes/[id]/recipe-page-desktop";
-import RecipePageMobile from "@/app/(app)/recipes/[id]/recipe-page-mobile";
 
 describe("recipe pages favorite visibility", () => {
   it("keeps tap interactions enabled on desktop when favorites are hidden", () => {

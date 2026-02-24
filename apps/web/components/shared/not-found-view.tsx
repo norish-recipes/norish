@@ -1,12 +1,11 @@
 "use client";
 
-import { Button, Card, CardBody } from "@heroui/react";
-import { HomeIcon } from "@heroicons/react/16/solid";
-import Link from "next/link";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
-
+import Link from "next/link";
 import notjoundjpg from "@/public/404.jpg";
+import { HomeIcon } from "@heroicons/react/16/solid";
+import { Button, Card, CardBody } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 type Props = {
   title?: string;

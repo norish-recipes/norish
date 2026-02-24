@@ -5,12 +5,12 @@
  * Callers are responsible for lifecycle (close on shutdown).
  */
 
-import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
-
 import { Queue } from "bullmq";
+
+import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
-import { QUEUE_NAMES, imageImportJobOptions } from "../config";
+import { imageImportJobOptions, QUEUE_NAMES } from "../config";
 
 /**
  * Create an image import queue instance.

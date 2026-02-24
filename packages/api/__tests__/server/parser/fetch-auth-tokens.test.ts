@@ -1,7 +1,8 @@
 // @vitest-environment node
-import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import { fetchViaPlaywright } from "@norish/api/parser/fetch";
 
 // ---------------------------------------------------------------------------
 // Playwright mocks – declared via vi.hoisted() so they are available inside
@@ -57,8 +58,6 @@ vi.mock("@norish/api/logger", () => ({
     error: vi.fn(),
   },
 }));
-
-import { fetchViaPlaywright } from "@norish/api/parser/fetch";
 
 // ---------------------------------------------------------------------------
 // Helpers

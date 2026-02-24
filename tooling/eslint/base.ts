@@ -1,23 +1,23 @@
 import * as path from "node:path";
-
 import { includeIgnoreFile } from "@eslint/compat";
 import eslint from "@eslint/js";
 import importPlugin from "eslint-plugin-import";
 import turboPlugin from "eslint-plugin-turbo";
 import unusedImports from "eslint-plugin-unused-imports";
-import globals from "globals";
 import { defineConfig } from "eslint/config";
+import globals from "globals";
 import tseslint from "typescript-eslint";
 
-const turboRecommendedRules = (
-  turboPlugin as {
-    configs?: {
-      recommended?: {
-        rules?: Record<string, unknown>;
+const turboRecommendedRules =
+  (
+    turboPlugin as {
+      configs?: {
+        recommended?: {
+          rules?: Record<string, unknown>;
+        };
       };
-    };
-  }
-).configs?.recommended?.rules ?? {};
+    }
+  ).configs?.recommended?.rules ?? {};
 
 export const restrictEnvAccess = defineConfig(
   { ignores: ["**/env.ts"] },
@@ -41,7 +41,7 @@ export const restrictEnvAccess = defineConfig(
         },
       ],
     },
-  },
+  }
 );
 
 export const baseConfig = defineConfig(
@@ -79,10 +79,7 @@ export const baseConfig = defineConfig(
       turbo: turboPlugin,
       "unused-imports": unusedImports,
     },
-    extends: [
-      eslint.configs.recommended,
-      ...tseslint.configs.recommended,
-    ],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -124,7 +121,16 @@ export const baseConfig = defineConfig(
       "import/order": [
         "warn",
         {
-          groups: ["type", "builtin", "object", "external", "internal", "parent", "sibling", "index"],
+          groups: [
+            "type",
+            "builtin",
+            "object",
+            "external",
+            "internal",
+            "parent",
+            "sibling",
+            "index",
+          ],
           pathGroups: [
             {
               pattern: "~/**",
@@ -159,5 +165,5 @@ export const baseConfig = defineConfig(
     linterOptions: {
       reportUnusedDisableDirectives: true,
     },
-  },
+  }
 );

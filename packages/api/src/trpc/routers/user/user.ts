@@ -1,33 +1,32 @@
-import { writeFile, mkdir, readdir } from "fs/promises";
+import { mkdir, readdir, writeFile } from "fs/promises";
 import path from "path";
-
 import { z } from "zod";
+
 import { trpcLogger as log } from "@norish/api/logger";
-import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
-import {
-  updateUserName,
-  updateUserAvatar,
-  deleteUser,
-  clearUserAvatar,
-  getHouseholdForUser,
-  getApiKeysForUser,
-  getUserById,
-  getUserPreferences,
-  updateUserPreferences,
-  getUserAllergies,
-  updateUserAllergies,
-  getAllergiesForUsers,
-} from "@norish/db";
+import { deleteAvatarByFilename } from "@norish/api/startup/media-cleanup";
 import { householdEmitter } from "@norish/api/trpc/routers/households/emitter";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { deleteAvatarByFilename } from "@norish/api/startup/media-cleanup";
+import {
+  clearUserAvatar,
+  deleteUser,
+  getAllergiesForUsers,
+  getApiKeysForUser,
+  getHouseholdForUser,
+  getUserAllergies,
+  getUserById,
+  getUserPreferences,
+  updateUserAllergies,
+  updateUserAvatar,
+  updateUserName,
+  updateUserPreferences,
+} from "@norish/db";
+import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
 import { buildAvatarFilename, isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
 
 import { emitConnectionInvalidation } from "../../connection-manager";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { UpdateNameInputSchema, UpdatePreferencesInputSchema } from "./types";
 
 /**

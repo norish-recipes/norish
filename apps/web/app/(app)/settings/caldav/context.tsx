@@ -1,26 +1,25 @@
 "use client";
 
-import type { CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
-import type {
-  UserCaldavConfigWithoutPasswordDto,
-  ConnectionTestResult,
-  CalDavCalendarInfo,
-} from "@norish/shared/contracts";
-
-import { createContext, useContext, ReactNode, useCallback, useState } from "react";
-import { addToast } from "@heroui/react";
-import { useTranslations } from "next-intl";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
-
+import { createContext, ReactNode, useCallback, useContext, useState } from "react";
 import {
   useCaldavConfigQuery,
-  useCaldavPasswordQuery,
-  useCaldavSyncStatusQuery,
-  useCaldavSummaryQuery,
   useCaldavConnectionQuery,
   useCaldavMutations,
+  useCaldavPasswordQuery,
   useCaldavSubscription,
+  useCaldavSummaryQuery,
+  useCaldavSyncStatusQuery,
 } from "@/hooks/caldav";
+import { addToast } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
+import type {
+  CalDavCalendarInfo,
+  ConnectionTestResult,
+  UserCaldavConfigWithoutPasswordDto,
+} from "@norish/shared/contracts";
+import type { CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
+import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
 
 type SaveCaldavConfigInput = {
   serverUrl: string;

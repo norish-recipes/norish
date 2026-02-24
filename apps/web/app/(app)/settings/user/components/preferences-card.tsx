@@ -1,23 +1,22 @@
 "use client";
 
 import { useCallback } from "react";
-import { Card, CardBody, CardHeader, Switch, Select, SelectItem } from "@heroui/react";
-import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import NewFeatureChip from "@/app/(app)/settings/components/new-feature-chip";
+import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
+import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
+import { Card, CardBody, CardHeader, Select, SelectItem, Switch } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
 import {
-  getShowConversionButtonPreference,
-  getShowRatingsPreference,
-  getShowFavoritesPreference,
-  getTimersEnabledPreference,
   getLocalePreference,
+  getShowConversionButtonPreference,
+  getShowFavoritesPreference,
+  getShowRatingsPreference,
+  getTimersEnabledPreference,
 } from "@norish/shared/lib/user-preferences";
 
 import { useUserSettingsContext } from "../context";
-
-import NewFeatureChip from "@/app/(app)/settings/components/new-feature-chip";
-import { useTimersEnabledQuery } from "@/hooks/config";
-import { useLocaleConfigQuery } from "@/hooks/config";
 
 export default function PreferencesCard() {
   const t = useTranslations("settings.user.preferences");

@@ -1,31 +1,30 @@
 "use client";
 
 import type { ComponentType, SVGProps } from "react";
-
 import { useMemo } from "react";
 import {
-  ShoppingBagIcon,
-  BuildingStorefrontIcon,
-  HomeIcon,
-  ShoppingCartIcon,
-  TruckIcon,
-  CubeIcon,
-  BeakerIcon,
-  FireIcon,
-  HeartIcon,
-  StarIcon,
-  SparklesIcon,
-  TagIcon,
-  GlobeAltIcon,
-  BuildingOffice2Icon,
-  MapPinIcon,
   ArchiveBoxIcon,
+  BeakerIcon,
   BoltIcon,
+  BuildingOffice2Icon,
+  BuildingStorefrontIcon,
   CakeIcon,
+  CubeIcon,
+  FireIcon,
   GiftIcon,
-  WrenchIcon,
-  ScissorsIcon,
+  GlobeAltIcon,
+  HeartIcon,
+  HomeIcon,
+  MapPinIcon,
   PaintBrushIcon,
+  ScissorsIcon,
+  ShoppingBagIcon,
+  ShoppingCartIcon,
+  SparklesIcon,
+  StarIcon,
+  TagIcon,
+  TruckIcon,
+  WrenchIcon,
 } from "@heroicons/react/24/outline";
 
 // Map of available icons

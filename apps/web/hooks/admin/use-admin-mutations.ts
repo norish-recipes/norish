@@ -1,22 +1,21 @@
 "use client";
 
-import type {
-  AIConfig,
-  VideoConfig,
-  AuthProviderOIDCInput,
-  AuthProviderGitHubInput,
-  AuthProviderGoogleInput,
-  RecipePermissionPolicy,
-  PromptsConfigInput,
-  TimerKeywordsInput,
-  ServerConfigKey,
-} from "@norish/config/zod/server-config";
-
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { useAdminConfigsQuery } from "./use-admin-query";
+import type {
+  AIConfig,
+  AuthProviderGitHubInput,
+  AuthProviderGoogleInput,
+  AuthProviderOIDCInput,
+  PromptsConfigInput,
+  RecipePermissionPolicy,
+  ServerConfigKey,
+  TimerKeywordsInput,
+  VideoConfig,
+} from "@norish/config/zod/server-config";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
+import { useAdminConfigsQuery } from "./use-admin-query";
 
 export type AdminMutationsResult = {
   // Registration

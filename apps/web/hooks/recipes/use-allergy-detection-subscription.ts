@@ -1,9 +1,8 @@
 "use client";
 
-import { useSubscription } from "@trpc/tanstack-react-query";
-import { useMutation } from "@tanstack/react-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useMutation } from "@tanstack/react-query";
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 /**
  * Hook for allergy detection functionality.
@@ -20,7 +19,7 @@ export function useAllergyDetection(
   useSubscription(
     trpc.recipes.onAllergyDetectionStarted.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId === recipeId) {
           onStarted();
         }
@@ -32,7 +31,7 @@ export function useAllergyDetection(
   useSubscription(
     trpc.recipes.onFailed.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId === recipeId) {
           onCompleted();
         }
@@ -44,7 +43,7 @@ export function useAllergyDetection(
   useSubscription(
     trpc.recipes.onAllergyDetectionCompleted.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (payload) => {
+      onData: (payload: any) => {
         if (payload.recipeId === recipeId) {
           onCompleted();
         }

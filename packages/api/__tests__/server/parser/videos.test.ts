@@ -1,5 +1,9 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Import after mocks are set up
+import { parseVideos } from "@norish/api/parser/parsers/videos";
+import { downloadVideo, getVideoMetadata } from "@norish/api/video/yt-dlp";
 
 // Mock the dependencies before importing the module
 vi.mock("@norish/api/video/yt-dlp", () => ({
@@ -27,10 +31,6 @@ vi.mock("@norish/api/logger", () => ({
     }),
   },
 }));
-
-// Import after mocks are set up
-import { parseVideos } from "@norish/api/parser/parsers/videos";
-import { downloadVideo, getVideoMetadata } from "@norish/api/video/yt-dlp";
 
 describe("parseVideos - VideoObject extraction", () => {
   beforeEach(() => {

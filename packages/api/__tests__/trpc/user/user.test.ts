@@ -1,7 +1,29 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Import mocks for assertions
+import {
+  createApiKey,
+  deleteApiKey,
+  deleteUser,
+  disableApiKey,
+  enableApiKey,
+  getApiKeysForUser,
+  getHouseholdForUser,
+  getUserPreferences,
+  resetUserMocks,
+  updateUserName,
+  updateUserPreferences,
+} from "../../mocks/user-repository";
+// Import test utilities
+import {
+  createMockApiKey,
+  createMockAuthedContext,
+  createMockHousehold,
+  createMockUser,
+} from "./test-utils";
 
 // Setup mocks before any imports that use them
 vi.mock("@norish/db", () => import("../../mocks/user-repository"));
@@ -18,29 +40,6 @@ vi.mock("fs/promises", () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   readdir: vi.fn().mockResolvedValue([]),
 }));
-
-// Import mocks for assertions
-import {
-  updateUserName,
-  deleteUser,
-  getHouseholdForUser,
-  getApiKeysForUser,
-  createApiKey,
-  deleteApiKey,
-  enableApiKey,
-  disableApiKey,
-  getUserPreferences,
-  updateUserPreferences,
-  resetUserMocks,
-} from "../../mocks/user-repository";
-
-// Import test utilities
-import {
-  createMockUser,
-  createMockAuthedContext,
-  createMockApiKey,
-  createMockHousehold,
-} from "./test-utils";
 
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({

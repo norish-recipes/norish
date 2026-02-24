@@ -6,11 +6,11 @@
  */
 
 import fs from "fs/promises";
-
 import { decode } from "html-entities";
-import { downloadVideo, getVideoMetadata, getFfmpegPath } from "@norish/api/video/yt-dlp";
+
 import { convertToMp4, saveVideoFile } from "@norish/api/downloader";
 import { parserLogger } from "@norish/api/logger";
+import { downloadVideo, getFfmpegPath, getVideoMetadata } from "@norish/api/video/yt-dlp";
 
 const log = parserLogger.child({ module: "videos" });
 

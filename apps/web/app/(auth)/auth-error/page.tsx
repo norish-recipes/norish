@@ -1,11 +1,12 @@
 "use client";
 
-import { Button, Card, CardBody } from "@heroui/react";
-import { ShieldExclamationIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { ExclamationTriangleIcon, ShieldExclamationIcon } from "@heroicons/react/16/solid";
+import { Button, Card, CardBody } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("AuthError");

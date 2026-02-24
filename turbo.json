@@ -5,6 +5,14 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "dist-server/**"]
     },
+    "build:server": {
+      "dependsOn": ["^build:server"],
+      "outputs": []
+    },
+    "update-sw": {
+      "dependsOn": ["^update-sw"],
+      "outputs": ["public/sw.js"]
+    },
     "dev": {
       "dependsOn": ["^dev"],
       "cache": false,
@@ -12,6 +20,10 @@
     },
     "lint:check": {
       "dependsOn": ["^lint:check"],
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
       "outputs": []
     },
     "typecheck": {

@@ -1,8 +1,7 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useFavoritesMutation() {
   const trpc = useTRPC();

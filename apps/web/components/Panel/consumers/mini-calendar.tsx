@@ -1,30 +1,30 @@
 "use client";
 
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
+import Panel from "@/components/Panel/Panel";
+import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
+import { useRecipeQuery } from "@/hooks/recipes";
 import { ExclamationTriangleIcon, PlusIcon } from "@heroicons/react/16/solid";
 import {
-  Dropdown,
-  DropdownTrigger,
   Button,
-  DropdownMenu,
-  DropdownItem,
   Divider,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
 } from "@heroui/react";
-import { useMemo, useRef, useCallback, memo, useEffect, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
+
 import { Slot } from "@norish/shared/contracts";
 import {
-  startOfMonth,
   addMonths,
-  endOfMonth,
-  eachDayOfInterval,
   dateKey,
+  eachDayOfInterval,
+  endOfMonth,
+  startOfMonth,
 } from "@norish/shared/lib/helpers";
-
-import { useRecipeQuery } from "@/hooks/recipes";
-import Panel from "@/components/Panel/Panel";
-import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
-import { useCalendarQuery, useCalendarMutations, useCalendarSubscription } from "@/hooks/calendar";
 
 const ESTIMATED_DAY_HEIGHT = 180;
 
@@ -183,7 +183,11 @@ function MiniCalendarContent({
     getScrollElement: () => parentRef.current,
     estimateSize: () => ESTIMATED_DAY_HEIGHT,
     overscan: 3,
-    getItemKey: (index) => dateKey(allDays[index]),
+    getItemKey: (index) => {
+      const day = allDays[index];
+
+      return day ? dateKey(day) : `missing-${index}`;
+    },
     initialOffset,
   });
 
@@ -250,9 +254,14 @@ function MiniCalendarContent({
         >
           {virtualItems.map((virtualItem) => {
             const d = allDays[virtualItem.index];
+
+            if (!d) {
+              return null;
+            }
+
             const key = dateKey(d);
             const items = (calendarData[key] ?? [])
-              .sort((a, b) => slotOrder[a.slot] - slotOrder[b.slot])
+              .sort((a, b) => (slotOrder[a.slot] ?? 0) - (slotOrder[b.slot] ?? 0))
               .map((it) => ({
                 slot: it.slot,
                 itemType: it.itemType,

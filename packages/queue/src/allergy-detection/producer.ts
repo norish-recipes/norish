@@ -6,13 +6,13 @@
  */
 
 import type { Queue } from "bullmq";
-import type {
-  AllergyDetectionJobData,
-  AddAllergyDetectionJobResult,
-} from "@norish/queue/contracts/job-types";
 
+import type {
+  AddAllergyDetectionJobResult,
+  AllergyDetectionJobData,
+} from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/api/logger";
-import { isAIEnabled, getAIConfig } from "@norish/config/server-config-loader";
+import { getAIConfig, isAIEnabled } from "@norish/config/server-config-loader";
 import { getAllergiesForUsers, getHouseholdMemberIds } from "@norish/db";
 
 import { isJobInQueue } from "../helpers";

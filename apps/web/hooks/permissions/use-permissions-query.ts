@@ -1,13 +1,12 @@
 "use client";
 
-import type { RecipePermissionPolicy, AutoTaggingMode } from "@norish/config/zod/server-config";
-
-import { useQueryClient, useQuery } from "@tanstack/react-query";
-import { useSubscription } from "@trpc/tanstack-react-query";
 import { useCallback } from "react";
-import { createClientLogger } from "@norish/shared/lib/logger";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSubscription } from "@trpc/tanstack-react-query";
+
+import type { AutoTaggingMode, RecipePermissionPolicy } from "@norish/config/zod/server-config";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("PermissionsQuery");
 

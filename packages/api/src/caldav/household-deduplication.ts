@@ -1,7 +1,6 @@
 import type { UserCaldavConfigDecryptedDto } from "@norish/shared/contracts/dto/caldav-config";
-
-import { getHouseholdMemberIds } from "@norish/db/repositories/households";
 import { getHouseholdCaldavConfigs } from "@norish/db/repositories/caldav-config";
+import { getHouseholdMemberIds } from "@norish/db/repositories/households";
 
 /**
  * Get unique CalDAV servers for all household members

@@ -1,35 +1,36 @@
 import type { I18nLocaleConfig } from "@norish/config/zod/server-config";
-
+import type {
+  AuthProviderGitHub,
+  AuthProviderGoogle,
+  AuthProviderOIDC,
+  PromptsConfig,
+  ServerConfigKey,
+  TimerKeywordsConfig,
+} from "@norish/db/zodSchemas/server-config";
+import { loadDefaultPrompts } from "@norish/api/ai/prompts/loader";
+import { serverLogger } from "@norish/api/logger";
+import { setAuthProviderCache } from "@norish/auth/provider-cache";
+import defaultContentIndicators from "@norish/config/content-indicators.default.json";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
 import {
-  setConfig,
+  buildLocaleConfigFromEnv,
+  DEFAULT_LOCALE_CONFIG,
+} from "@norish/config/server-config-loader";
+import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
+import defaultUnits from "@norish/config/units.default.json";
+import {
   configExists,
-  getConfig,
   deleteConfig,
+  getConfig,
+  setConfig,
 } from "@norish/db/repositories/server-config";
 import {
+  DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
-  type ServerConfigKey,
-  type AuthProviderGitHub,
-  type AuthProviderGoogle,
-  type AuthProviderOIDC,
-  type PromptsConfig,
-  type TimerKeywordsConfig,
   UnitsConfigSchema,
   UnitsMapSchema,
-  DEFAULT_RECIPE_PERMISSION_POLICY,
 } from "@norish/db/zodSchemas/server-config";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import {
-  DEFAULT_LOCALE_CONFIG,
-  buildLocaleConfigFromEnv,
-} from "@norish/config/server-config-loader";
-import { setAuthProviderCache } from "@norish/auth/provider-cache";
-import { serverLogger } from "@norish/api/logger";
-import defaultUnits from "@norish/config/units.default.json";
-import defaultContentIndicators from "@norish/config/content-indicators.default.json";
-import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
-import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
-import { loadDefaultPrompts } from "@norish/api/ai/prompts/loader";
 
 /**
  * Configuration definition for seeding

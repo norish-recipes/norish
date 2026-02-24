@@ -9,26 +9,29 @@
  */
 
 import type { Queue } from "bullmq";
-import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
-import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
-import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
-import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
-import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
-import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
-import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
-import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 
+import type {
+  AllergyDetectionJobData,
+  AutoCategorizationJobData,
+  AutoTaggingJobData,
+  CaldavSyncJobData,
+  ImageImportJobData,
+  NutritionEstimationJobData,
+  PasteImportJobData,
+  RecipeImportJobData,
+} from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/api/logger";
 
-import { createRecipeImportQueue } from "./recipe-import/queue";
-import { createImageImportQueue } from "./image-import/queue";
-import { createPasteImportQueue } from "./paste-import/queue";
-import { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
-import { createAutoTaggingQueue } from "./auto-tagging/queue";
-import { createAutoCategorizationQueue } from "./auto-categorization/queue";
+import type { ScheduledTaskJobData } from "./scheduled-tasks/queue";
 import { createAllergyDetectionQueue } from "./allergy-detection/queue";
+import { createAutoCategorizationQueue } from "./auto-categorization/queue";
+import { createAutoTaggingQueue } from "./auto-tagging/queue";
 import { createCaldavSyncQueue } from "./caldav-sync/queue";
-import { createScheduledTasksQueue, type ScheduledTaskJobData } from "./scheduled-tasks/queue";
+import { createImageImportQueue } from "./image-import/queue";
+import { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
+import { createPasteImportQueue } from "./paste-import/queue";
+import { createRecipeImportQueue } from "./recipe-import/queue";
+import { createScheduledTasksQueue } from "./scheduled-tasks/queue";
 
 const log = createLogger("queue:registry");
 

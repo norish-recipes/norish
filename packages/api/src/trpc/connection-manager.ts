@@ -1,12 +1,11 @@
-import type { WebSocket } from "ws";
-import type Redis from "ioredis";
-
 import { on } from "node:events";
-
+import type Redis from "ioredis";
+import type { WebSocket } from "ws";
 import superjson from "superjson";
-import { getPublisherClient, createSubscriberClient } from "@norish/queue/redis/client";
-import { closeMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
+
 import { trpcLogger as log } from "@norish/api/logger";
+import { createSubscriberClient, getPublisherClient } from "@norish/queue/redis/client";
+import { closeMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
 
 // Use globalThis to survive HMR in development
 const globalForConnectionManager = globalThis as unknown as {
