@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 
-import { createClientLogger } from "@norish/shared/lib/logger";
+import { createClientLogger } from "../../lib/logger";
 
 const log = createClientLogger("ConnectionMonitor");
 
@@ -13,9 +13,7 @@ type ConnectionMonitorContextValue = {
   status: ConnectionStatus;
   isConnected: boolean;
   isReconnecting: boolean;
-  /** Register a callback to be invoked on reconnection (for cache invalidation) */
   onReconnect: (callback: () => void) => () => void;
-  /** Internal: called by tRPC provider when connection state changes */
   setStatus: (status: ConnectionStatus) => void;
 };
 

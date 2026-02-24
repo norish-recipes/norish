@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ConnectionMonitorProvider,
+  formatServings,
   isDirtyState,
+  useConnectionMonitor,
   useDirtyState,
   useGroceryFormState,
+  useScrollRestoration,
+  useServingsScaler,
   useUserAvatar,
 } from "@norish/shared/react/hooks";
 
@@ -13,5 +18,10 @@ describe("shared react hooks exports", () => {
     expect(typeof useDirtyState).toBe("function");
     expect(typeof useGroceryFormState).toBe("function");
     expect(typeof useUserAvatar).toBe("function");
+    expect(typeof useServingsScaler).toBe("function");
+    expect(typeof formatServings).toBe("function");
+    expect(typeof useScrollRestoration).toBe("function");
+    expect(typeof useConnectionMonitor).toBe("function");
+    expect(typeof ConnectionMonitorProvider).toBe("function");
   });
 });

@@ -6,7 +6,7 @@
 ## 2. Shared package extraction
 
 - [x] 2.1 Create/expand shared React exports for extracted hooks/contexts in a package under `packages/*`.
-- [ ] 2.2 Move `runtime-safe` modules into shared package paths and update imports in `apps/web`.
+- [x] 2.2 Move `runtime-safe` modules into shared package paths and update imports in `apps/web`.
 - [ ] 2.3 Move `adapter-required` modules by extracting platform-specific effects behind injected adapters/interfaces.
 - [ ] 2.4 Keep `web-only` modules in `apps/web` and replace direct cross-module imports with shared interfaces where needed.
 

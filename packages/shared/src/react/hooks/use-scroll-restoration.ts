@@ -1,17 +1,24 @@
-import type { VirtualItem } from "@tanstack/react-virtual";
 import { useCallback } from "react";
 
-// Store scroll state outside component lifecycle
+export type ScrollMeasurement = {
+  index: number;
+  key: string | number;
+  start: number;
+  end: number;
+  size: number;
+  lane: number;
+};
+
 interface ScrollState {
   scrollOffset: number;
-  measurementsCache: VirtualItem[];
+  measurementsCache: ScrollMeasurement[];
 }
 
 const scrollStateStore = new Map<string, ScrollState>();
 
 export function useScrollRestoration(filterKey: string) {
   const saveScrollState = useCallback(
-    (scrollOffset: number, measurementsCache: VirtualItem[]) => {
+    (scrollOffset: number, measurementsCache: ScrollMeasurement[]) => {
       scrollStateStore.set(filterKey, { scrollOffset, measurementsCache });
     },
     [filterKey]

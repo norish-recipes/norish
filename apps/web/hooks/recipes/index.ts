@@ -43,6 +43,6 @@ export {
   formatServings,
   type ServingsScalerResult,
   type ScaledIngredient,
-} from "./use-servings-scaler";
+} from "@norish/shared/react/hooks";
 
 export { useRandomRecipe, type RandomRecipeResult } from "./use-random-recipe";
