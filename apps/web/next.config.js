@@ -13,6 +13,9 @@ const withNextIntl = createNextIntlPlugin(getNextIntlRequestConfigPath());
 
 export default withNextIntl({
   output: "standalone",
+  turbopack: {
+    root: resolve(configDirectory, "../.."),
+  },
   productionBrowserSourceMaps: false,
   allowedDevOrigins: ["localhost", "192.168.2.13"],
   devIndicators: false,
