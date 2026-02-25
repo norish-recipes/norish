@@ -11,10 +11,6 @@
     "./contracts/dto/auth": "./src/contracts/dto/auth.ts",
     "./contracts/dto/*": "./src/contracts/dto/*.d.ts",
     "./contracts/*": "./src/contracts/*.ts",
-    "./react": "./src/react/index.ts",
-    "./react/hooks": "./src/react/hooks/index.ts",
-    "./react/contexts": "./src/react/contexts/index.ts",
-    "./react/providers": "./src/react/providers/index.ts",
     "./lib/meal-icon": "./src/lib/meal-icon.tsx",
     "./lib/*": "./src/lib/*.ts"
   },
