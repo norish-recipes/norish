@@ -57,7 +57,10 @@ if (envPath) {
   config({ path: envPath, quiet: true });
 }
 
-const isBuild = process.env.SKIP_ENV_VALIDATION === "1";
+const isBuild =
+  process.env.SKIP_ENV_VALIDATION === "1" ||
+  process.env.NEXT_PHASE === "phase-production-build" ||
+  process.env.NEXT_PHASE === "phase-export";
 
 const ServerConfigSchema = z.object({
   NODE_ENV: z.enum(["development", "production"]),
@@ -82,7 +85,11 @@ const ServerConfigSchema = z.object({
     .pipe(z.array(z.string())),
   UPLOADS_DIR: z.string().default(defaultUploadsDir),
 
-  DATABASE_URL: z.url(),
+  // During build, allow placeholder DB URL so server-only modules can be imported
+  // without requiring runtime secrets. Runtime still enforces a real URL.
+  DATABASE_URL: isBuild
+    ? z.url().default("postgresql://build:build@localhost:5432/build")
+    : z.url(),
 
   ENABLE_REGISTRATION: z
     .string()
