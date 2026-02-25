@@ -56,7 +56,6 @@
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
     "server-only": "catalog:",
-    "superjson": "catalog:",
     "use-sound": "^5.0.0",
     "usehooks-ts": "^3.1.1",
     "zustand": "5.0.11"
@@ -78,17 +77,9 @@
     "tsdown": "^0.20.0",
     "tsx": "4.21.0",
     "vitest": "catalog:",
-    "@testcontainers/postgresql": "catalog:",
-    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "bullmq": "catalog:",
-    "drizzle-orm": "catalog:",
-    "jsdom": "catalog:",
-    "jszip": "catalog:",
-    "pg": "catalog:",
-    "testcontainers": "^11.12.0",
-    "zod": "catalog:"
+    "jsdom": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }
