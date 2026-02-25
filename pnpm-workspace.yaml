@@ -5,17 +5,36 @@ packages:
 
 catalog:
   "@eslint/js": ^9.39.1
+  "@heroicons/react": 2.2.0
+  "@heroui/react": ^2.8.9
+  "@tanstack/react-query": ^5.90.21
+  "@trpc/client": ^11.10.0
+  "@trpc/server": ^11.10.0
+  "@trpc/tanstack-react-query": ^11.10.0
+  "@types/node": ^25.3.0
   "@tailwindcss/postcss": ^4.2.0
+  "@testcontainers/postgresql": ^11.12.0
   "@types/react": 19.2.14
   "@types/react-dom": 19.2.3
   "@vitejs/plugin-react": ^5.1.4
+  better-auth: ^1.4.18
+  bullmq: ^5.69.3
+  date-fns: ^4.1.0
+  drizzle-orm: 0.45.1
   eslint: 9.39.1
+  fuse.js: ^7.1.0
+  html-entities: ^2.6.0
   ioredis: ^5.9.3
   jsdom: ^28.1.0
+  jszip: 3.10.1
+  next: 16.1.6
+  pg: 8.18.0
   postcss: ^8.5.6
   prettier: ^3.8.1
   react: 19.2.4
   react-dom: 19.2.4
+  server-only: ^0.0.1
+  superjson: ^2.2.6
   tailwindcss: ^4.2.0
   turbo: ^2.5.8
   typescript: 5.9.3

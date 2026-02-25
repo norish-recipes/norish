@@ -69,3 +69,5 @@ docker-compose.yml
 
 .cache
 
+.expo-export-ios-test
+.expo-export-test

@@ -54,26 +54,5 @@
     "turbo": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@norish/prettier-config",
-  "pnpm": {
-    "overrides": {
-      "zod": "4.3.6",
-      "@types/react": "19.2.14",
-      "@types/react-dom": "19.2.3",
-      "ioredis": "^5.9.3"
-    },
-    "packageExtensions": {
-      "uniwind@*": {
-        "dependencies": {
-          "metro": "0.83.3",
-          "metro-cache": "0.83.3"
-        }
-      },
-      "@expo/cli@*": {
-        "dependencies": {
-          "metro-runtime": "npm:@expo/metro-runtime@^6.1.2"
-        }
-      }
-    }
-  }
+  "prettier": "@norish/prettier-config"
 }

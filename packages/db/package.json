@@ -22,11 +22,11 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
-    "drizzle-orm": "0.45.1",
-    "fuse.js": "^7.1.0",
-    "pg": "8.18.0",
-    "superjson": "^2.2.6",
-    "zod": "4.3.6"
+    "drizzle-orm": "catalog:",
+    "fuse.js": "catalog:",
+    "pg": "catalog:",
+    "superjson": "catalog:",
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "@norish/api": "workspace:*",
@@ -41,10 +41,10 @@
     "@norish/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "@testcontainers/postgresql": "^11.12.0",
+    "@testcontainers/postgresql": "catalog:",
     "@types/pg": "8.16.0",
     "drizzle-kit": "0.31.9",
-    "vitest": "^4.0.18"
+    "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }

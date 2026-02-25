@@ -19,18 +19,18 @@
   "dependencies": {
     "@norish/config": "workspace:*",
     "@norish/shared": "workspace:*",
-    "@tanstack/react-query": "^5.90.21",
-    "@trpc/client": "^11.10.0",
-    "@trpc/server": "^11.10.0",
-    "@trpc/tanstack-react-query": "^11.10.0",
+    "@tanstack/react-query": "catalog:",
+    "@trpc/client": "catalog:",
+    "@trpc/server": "catalog:",
+    "@trpc/tanstack-react-query": "catalog:",
     "react": "catalog:",
-    "superjson": "^2.2.6"
+    "superjson": "catalog:"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
-    "@types/node": "^25.3.0",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "eslint": "catalog:",
     "jsdom": "catalog:",

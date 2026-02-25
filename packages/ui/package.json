@@ -15,8 +15,8 @@
     "clean": "git clean -xdf .cache .turbo node_modules dist"
   },
   "dependencies": {
-    "@heroicons/react": "2.2.0",
-    "react": "19.2.4"
+    "@heroicons/react": "catalog:",
+    "react": "catalog:"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",
@@ -24,7 +24,7 @@
     "@norish/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "@types/react": "19.2.14"
+    "@types/react": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }

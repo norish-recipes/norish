@@ -23,8 +23,8 @@
   "dependencies": {
     "@norish/db": "workspace:*",
     "dotenv": "17.3.1",
-    "server-only": "^0.0.1",
-    "zod": "4.3.6"
+    "server-only": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",
@@ -32,8 +32,8 @@
     "@norish/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "@types/node": "^25.3.0",
-    "vitest": "^4.0.18"
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }

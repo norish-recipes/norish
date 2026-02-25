@@ -21,11 +21,11 @@
     "@norish/config": "workspace:*",
     "@norish/db": "workspace:*",
     "@norish/shared": "workspace:*",
-    "bullmq": "^5.69.3",
-    "date-fns": "^4.1.0",
-    "drizzle-orm": "0.45.1",
-    "ioredis": "^5.9.3",
-    "superjson": "^2.2.6"
+    "bullmq": "catalog:",
+    "date-fns": "catalog:",
+    "drizzle-orm": "catalog:",
+    "ioredis": "catalog:",
+    "superjson": "catalog:"
   },
   "peerDependencies": {
     "@norish/api": "workspace:*"
@@ -36,7 +36,7 @@
     "@norish/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "vitest": "^4.0.18"
+    "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }

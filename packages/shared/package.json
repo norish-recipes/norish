@@ -26,24 +26,24 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
-    "@heroicons/react": "2.2.0",
-    "@heroui/react": "^2.8.9",
+    "@heroicons/react": "catalog:",
+    "@heroui/react": "catalog:",
     "@norish/config": "workspace:*",
     "@norish/db": "workspace:*",
-    "@tanstack/react-query": "^5.90.21",
-    "@trpc/client": "^11.10.0",
-    "@trpc/server": "^11.10.0",
-    "@trpc/tanstack-react-query": "^11.10.0",
-    "better-auth": "^1.4.18",
-    "date-fns": "^4.1.0",
+    "@tanstack/react-query": "catalog:",
+    "@trpc/client": "catalog:",
+    "@trpc/server": "catalog:",
+    "@trpc/tanstack-react-query": "catalog:",
+    "better-auth": "catalog:",
+    "date-fns": "catalog:",
     "drizzle-zod": "0.8.3",
     "fraction.js": "^5.3.4",
-    "html-entities": "^2.6.0",
+    "html-entities": "catalog:",
     "jsonrepair": "3.13.2",
     "parse-ingredient": "2.1.0",
-    "react": "19.2.4",
-    "superjson": "^2.2.6",
-    "zod": "4.3.6"
+    "react": "catalog:",
+    "superjson": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",
@@ -51,10 +51,10 @@
     "@norish/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "@types/node": "^25.3.0",
-    "@types/react": "19.2.14",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
     "jsdom": "catalog:",
-    "vitest": "^4.0.18"
+    "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }

@@ -21,8 +21,8 @@
     "@norish/db": "workspace:*",
     "@norish/queue": "workspace:*",
     "@norish/shared": "workspace:*",
-    "better-auth": "^1.4.18",
-    "next": "16.1.6"
+    "better-auth": "catalog:",
+    "next": "catalog:"
   },
   "peerDependencies": {
     "@norish/api": "workspace:*"
@@ -33,7 +33,7 @@
     "@norish/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "vitest": "^4.0.18"
+    "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"
 }

@@ -22,13 +22,13 @@
     "tailwindcss": "catalog:"
   },
   "peerDependencies": {
-    "@heroui/react": "^2.8.9"
+    "@heroui/react": "catalog:"
   },
   "devDependencies": {
-    "@heroui/react": "^2.8.9",
+    "@heroui/react": "catalog:",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
-    "@types/node": "^25.3.0",
+    "@types/node": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
