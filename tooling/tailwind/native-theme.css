@@ -1,57 +1,61 @@
 @import "./theme.css";
 
-:root,
-[data-theme="light"] {
-  --radius: 0.75rem;
-  --border-width: 1px;
-  --surface: var(--content1);
-  --surface-foreground: var(--content1-foreground);
-  --surface-secondary: var(--content2);
-  --surface-secondary-foreground: var(--content2-foreground);
-  --surface-tertiary: var(--content3);
-  --surface-tertiary-foreground: var(--content3-foreground);
-  --overlay-foreground: var(--foreground);
-  --muted: var(--default-500);
-  --segment: var(--content1);
-  --segment-foreground: var(--foreground);
-  --border: var(--default-200);
-  --separator: var(--default-300);
-  --link: var(--foreground);
-  --field-background: var(--content1);
-  --field-foreground: var(--foreground);
-  --field-placeholder: var(--default-500);
-  --field-border: transparent;
-  --field-radius: var(--radius);
-  --field-border-width: var(--border-width);
-  --surface-shadow: 0 8px 24px color-mix(in oklab, var(--default-900) 14%, transparent);
-  --overlay-shadow: 0 18px 42px color-mix(in oklab, var(--default-900) 20%, transparent);
-  --field-shadow: 0 0 0 0 transparent;
-}
+@layer theme {
+  @variant light {
+    --radius: 0.75rem;
+    --border-width: 1px;
+    --surface: var(--content1);
+    --surface-foreground: var(--content1-foreground);
+    --surface-secondary: var(--content2);
+    --surface-secondary-foreground: var(--content2-foreground);
+    --surface-tertiary: var(--content3);
+    --surface-tertiary-foreground: var(--content3-foreground);
+    --overlay-foreground: var(--foreground);
+    --muted: var(--default-500);
+    --segment: var(--content1);
+    --segment-foreground: var(--foreground);
+    --border: var(--default-200);
+    --separator: var(--default-300);
+    --link: var(--foreground);
+    --accent-hover: color-mix(in oklab, var(--accent) 90%, var(--accent-foreground) 10%);
+    --color-accent-hover: var(--accent-hover);
+    --field-background: var(--content1);
+    --field-foreground: var(--foreground);
+    --field-placeholder: var(--default-500);
+    --field-border: transparent;
+    --field-radius: var(--radius);
+    --field-border-width: var(--border-width);
+    --surface-shadow: 0 8px 24px color-mix(in oklab, var(--default-900) 14%, transparent);
+    --overlay-shadow: 0 18px 42px color-mix(in oklab, var(--default-900) 20%, transparent);
+    --field-shadow: 0 0 0 0 transparent;
+  }
 
-.dark,
-[data-theme="dark"] {
-  --radius: 0.75rem;
-  --border-width: 1px;
-  --surface: var(--content1);
-  --surface-foreground: var(--content1-foreground);
-  --surface-secondary: var(--content2);
-  --surface-secondary-foreground: var(--content2-foreground);
-  --surface-tertiary: var(--content3);
-  --surface-tertiary-foreground: var(--content3-foreground);
-  --overlay-foreground: var(--foreground);
-  --muted: var(--default-600);
-  --segment: var(--content2);
-  --segment-foreground: var(--foreground);
-  --border: var(--default-300);
-  --separator: var(--default-400);
-  --link: var(--foreground);
-  --field-background: var(--content2);
-  --field-foreground: var(--foreground);
-  --field-placeholder: var(--default-600);
-  --field-border: transparent;
-  --field-radius: var(--radius);
-  --field-border-width: var(--border-width);
-  --surface-shadow: 0 8px 24px color-mix(in oklab, var(--default-900) 32%, transparent);
-  --overlay-shadow: 0 18px 42px color-mix(in oklab, var(--default-900) 40%, transparent);
-  --field-shadow: 0 0 0 0 transparent;
+  @variant dark {
+    --radius: 0.75rem;
+    --border-width: 1px;
+    --surface: var(--content1);
+    --surface-foreground: var(--content1-foreground);
+    --surface-secondary: var(--content2);
+    --surface-secondary-foreground: var(--content2-foreground);
+    --surface-tertiary: var(--content3);
+    --surface-tertiary-foreground: var(--content3-foreground);
+    --overlay-foreground: var(--foreground);
+    --muted: var(--default-600);
+    --segment: var(--content2);
+    --segment-foreground: var(--foreground);
+    --border: var(--default-300);
+    --separator: var(--default-400);
+    --link: var(--foreground);
+    --accent-hover: color-mix(in oklab, var(--accent) 90%, var(--accent-foreground) 10%);
+    --color-accent-hover: var(--accent-hover);
+    --field-background: var(--content2);
+    --field-foreground: var(--foreground);
+    --field-placeholder: var(--default-600);
+    --field-border: transparent;
+    --field-radius: var(--radius);
+    --field-border-width: var(--border-width);
+    --surface-shadow: 0 8px 24px color-mix(in oklab, var(--default-900) 32%, transparent);
+    --overlay-shadow: 0 18px 42px color-mix(in oklab, var(--default-900) 40%, transparent);
+    --field-shadow: 0 0 0 0 transparent;
+  }
 }
