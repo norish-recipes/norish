@@ -4,19 +4,19 @@ packages:
   - tooling/*
 
 catalog:
-  "@eslint/js": ^9.39.1
-  "@heroicons/react": 2.2.0
-  "@heroui/react": ^2.8.9
-  "@tanstack/react-query": ^5.90.21
-  "@trpc/client": ^11.10.0
-  "@trpc/server": ^11.10.0
-  "@trpc/tanstack-react-query": ^11.10.0
-  "@types/node": ^25.3.0
-  "@tailwindcss/postcss": ^4.2.0
-  "@testcontainers/postgresql": ^11.12.0
-  "@types/react": 19.2.14
-  "@types/react-dom": 19.2.3
-  "@vitejs/plugin-react": ^5.1.4
+  '@eslint/js': ^9.39.1
+  '@heroicons/react': 2.2.0
+  '@heroui/react': ^2.8.9
+  '@tailwindcss/postcss': ^4.2.0
+  '@tanstack/react-query': ^5.90.21
+  '@testcontainers/postgresql': ^11.12.0
+  '@trpc/client': ^11.10.0
+  '@trpc/server': ^11.10.0
+  '@trpc/tanstack-react-query': ^11.10.0
+  '@types/node': ^25.3.0
+  '@types/react': 19.2.14
+  '@types/react-dom': 19.2.3
+  '@vitejs/plugin-react': ^5.1.4
   better-auth: ^1.4.18
   bullmq: ^5.69.3
   date-fns: ^4.1.0
@@ -41,6 +41,8 @@ catalog:
   vite: ^7.1.12
   vitest: ^4.0.18
   zod: 4.3.6
+
+nodeLinker: hoisted
 
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'

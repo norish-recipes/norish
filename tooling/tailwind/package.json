@@ -24,6 +24,11 @@
   "peerDependencies": {
     "@heroui/react": "catalog:"
   },
+  "peerDependenciesMeta": {
+    "@heroui/react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@heroui/react": "catalog:",
     "@norish/prettier-config": "workspace:*",

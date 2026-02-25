@@ -55,6 +55,7 @@ pnpm dev
 | Command              | Description                              |
 | -------------------- | ---------------------------------------- |
 | `pnpm dev`           | Start development server with hot reload |
+| `pnpm dev:mobile`    | Start Expo mobile workspace              |
 | `pnpm build`         | Create production build                  |
 | `pnpm start`         | Run production server                    |
 | `pnpm test`          | Run tests in watch mode                  |
@@ -72,7 +73,8 @@ pnpm dev
 ```
 norish/
 ├── apps/             # App workspaces
-│   └── web/          # Next.js app (App Router + server entry)
+│   ├── web/          # Next.js app (App Router + server entry)
+│   └── mobile/       # Expo app workspace (@norish/mobile)
 ├── packages/         # Shared libraries
 │   ├── api/          # tRPC contracts
 │   ├── auth/         # Auth helpers
@@ -284,3 +286,5 @@ New locales are **enabled by default** when added to `DEFAULT_LOCALE_CONFIG`. Yo
 ## License
 
 By contributing to Norish, you agree that your contributions will be licensed under the [AGPL-3.0 License](LICENSE).
+
+

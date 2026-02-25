@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 export const DEFAULT_TARGETS = [
   "apps/web",
+  "apps/mobile",
   "packages/api",
   "packages/auth",
   "packages/config",

@@ -340,8 +340,11 @@ cp .env.example .env.local
 # Start required services (Postgres, Redis, Chrome)
 pnpm run docker:up
 
-# Run the app
+# Run the web app
 pnpm run dev
+
+# Run the mobile app (Expo)
+pnpm run dev:mobile
 ```
 
 ### Development Commands
@@ -349,6 +352,7 @@ pnpm run dev
 | Command                  | Description                                               |
 | ------------------------ | --------------------------------------------------------- |
 | `pnpm run dev`           | Start development server with hot reload                  |
+| `pnpm run dev:mobile`    | Start Expo mobile workspace (`apps/mobile`)               |
 | `pnpm run build:web`     | Build Next.js app workspace (`apps/web`)                  |
 | `pnpm run build`         | Full production build (Next.js + server + service worker) |
 | `pnpm run test`          | Run tests in watch mode                                   |
@@ -419,3 +423,5 @@ This list is not limited to the below but the ones I know:
 Last but not least, a picture of our lovely dog Nora:
 
 <img src="./apps/web/public/nora.jpg" width="25%" alt="Nora" />
+
+
