@@ -24,15 +24,24 @@ The mobile app SHALL provide a recipe dashboard shell using Expo Router native t
 - **AND** the tab bar SHALL remain discoverable through platform-native restore behavior
 - **AND** the behavior SHALL follow Expo tab-bar minimize guidance (`https://docs.expo.dev/router/advanced/native-tabs/#tab-bar-minimize-behavior`)
 
+### Requirement: Dashboard Shell Removes Parallel React Navigation Dependencies
+
+The mobile dashboard shell SHALL avoid parallel React Navigation package dependencies and rely on Expo Router native navigation primitives for this capability.
+
+#### Scenario: Mobile dependency baseline excludes React Navigation packages for dashboard shell
+
+- **WHEN** dependency requirements for `apps/mobile` are reviewed for this capability
+- **THEN** `@react-navigation/bottom-tabs`, `@react-navigation/elements`, and `@react-navigation/native` SHALL NOT be required for the dashboard shell behavior
+
 ### Requirement: Native Top Navigation Controls for Dashboard Routes
 
 The dashboard route stack SHALL provide native top navigation controls with a settings action on the right and a back action on the left for non-root screens.
 
-#### Scenario: Settings action opens bottom sheet
+#### Scenario: Settings action opens iOS Expo UI SwiftUI bottom sheet
 
-- **WHEN** the user taps the settings action in the top-right header area
+- **WHEN** the app runs on iOS and the user taps the settings action in the top-right header area
 - **THEN** the app SHALL open a bottom sheet for settings actions
-- **AND** the bottom sheet SHALL be presented using HeroUI-based mobile UI primitives
+- **AND** the bottom sheet SHALL be presented using Expo UI SwiftUI `BottomSheet` primitives (`https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/bottomsheet/`)
 
 #### Scenario: Back action appears on pushed routes
 
