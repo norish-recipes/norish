@@ -1,61 +1,84 @@
-@import "./theme.css";
-
 @layer theme {
   @variant light {
-    --radius: 0.75rem;
-    --border-width: 1px;
-    --surface: var(--content1);
-    --surface-foreground: var(--content1-foreground);
-    --surface-secondary: var(--content2);
-    --surface-secondary-foreground: var(--content2-foreground);
-    --surface-tertiary: var(--content3);
-    --surface-tertiary-foreground: var(--content3-foreground);
-    --overlay-foreground: var(--foreground);
-    --muted: var(--default-500);
-    --segment: var(--content1);
-    --segment-foreground: var(--foreground);
-    --border: var(--default-200);
-    --separator: var(--default-300);
-    --link: var(--foreground);
-    --accent-hover: color-mix(in oklab, var(--accent) 90%, var(--accent-foreground) 10%);
-    --color-accent-hover: var(--accent-hover);
-    --field-background: var(--content1);
-    --field-foreground: var(--foreground);
-    --field-placeholder: var(--default-500);
-    --field-border: transparent;
-    --field-radius: var(--radius);
-    --field-border-width: var(--border-width);
-    --surface-shadow: 0 8px 24px color-mix(in oklab, var(--default-900) 14%, transparent);
-    --overlay-shadow: 0 18px 42px color-mix(in oklab, var(--default-900) 20%, transparent);
-    --field-shadow: 0 0 0 0 transparent;
+    --accent: oklch(46.37% 0.0828 150.36);
+    --accent-foreground: oklch(99.11% 0 0);
+    --background: oklch(97.02% 0.0015 150.36);
+    --border: oklch(90.00% 0.0015 150.36);
+    --danger: oklch(65.32% 0.2335 13.32);
+    --danger-foreground: oklch(99.11% 0 0);
+    --default: oklch(94.00% 0.0015 150.36);
+    --default-foreground: oklch(21.03% 0.0059 150.36);
+    --field-background: oklch(100.00% 0.0008 150.36);
+    --field-foreground: oklch(21.03% 0.0015 150.36);
+    --field-placeholder: oklch(55.17% 0.0030 150.36);
+    --focus: oklch(46.37% 0.0828 150.36);
+    --foreground: oklch(21.03% 0.0015 150.36);
+    --muted: oklch(55.17% 0.0030 150.36);
+    --overlay: oklch(100.00% 0.0004 150.36);
+    --overlay-foreground: oklch(21.03% 0.0015 150.36);
+    --scrollbar: oklch(87.10% 0.0015 150.36);
+    --segment: oklch(100.00% 0.0015 150.36);
+    --segment-foreground: oklch(21.03% 0.0015 150.36);
+    --separator: oklch(92.00% 0.0015 150.36);
+    --success: oklch(73.29% 0.1941 138.39);
+    --success-foreground: oklch(21.03% 0.0059 138.39);
+    --surface: oklch(100.00% 0.0008 150.36);
+    --surface-foreground: oklch(21.03% 0.0015 150.36);
+    --surface-secondary: oklch(95.24% 0.0012 150.36);
+    --surface-secondary-foreground: oklch(21.03% 0.0015 150.36);
+    --surface-tertiary: oklch(93.73% 0.0012 150.36);
+    --surface-tertiary-foreground: oklch(21.03% 0.0015 150.36);
+    --warning: oklch(78.19% 0.1590 59.91);
+    --warning-foreground: oklch(21.03% 0.0059 59.91);
+
+    /* Border Radius */
+    --radius: 0.5rem;
+    --field-radius: 0.75rem;
+
+    /* Font Family */
+    /* Make sure to load Inter font in your app */
+    --font-sans: var(--font-inter);
   }
 
   @variant dark {
-    --radius: 0.75rem;
-    --border-width: 1px;
-    --surface: var(--content1);
-    --surface-foreground: var(--content1-foreground);
-    --surface-secondary: var(--content2);
-    --surface-secondary-foreground: var(--content2-foreground);
-    --surface-tertiary: var(--content3);
-    --surface-tertiary-foreground: var(--content3-foreground);
-    --overlay-foreground: var(--foreground);
-    --muted: var(--default-600);
-    --segment: var(--content2);
-    --segment-foreground: var(--foreground);
-    --border: var(--default-300);
-    --separator: var(--default-400);
-    --link: var(--foreground);
-    --accent-hover: color-mix(in oklab, var(--accent) 90%, var(--accent-foreground) 10%);
-    --color-accent-hover: var(--accent-hover);
-    --field-background: var(--content2);
-    --field-foreground: var(--foreground);
-    --field-placeholder: var(--default-600);
-    --field-border: transparent;
-    --field-radius: var(--radius);
-    --field-border-width: var(--border-width);
-    --surface-shadow: 0 8px 24px color-mix(in oklab, var(--default-900) 32%, transparent);
-    --overlay-shadow: 0 18px 42px color-mix(in oklab, var(--default-900) 40%, transparent);
-    --field-shadow: 0 0 0 0 transparent;
+    /* Theme Colors (Dark Mode) */
+    --accent: oklch(46.37% 0.0828 150.36);
+    --accent-foreground: oklch(99.11% 0 0);
+    --background: oklch(12.00% 0.0015 150.36);
+    --border: oklch(28.00% 0.0015 150.36);
+    --danger: oklch(59.40% 0.1973 12.21);
+    --danger-foreground: oklch(99.11% 0 0);
+    --default: oklch(27.40% 0.0015 150.36);
+    --default-foreground: oklch(99.11% 0 0);
+    --field-background: oklch(21.03% 0.0030 150.36);
+    --field-foreground: oklch(99.11% 0.0015 150.36);
+    --field-placeholder: oklch(70.50% 0.0030 150.36);
+    --focus: oklch(46.37% 0.0828 150.36);
+    --foreground: oklch(99.11% 0.0015 150.36);
+    --muted: oklch(70.50% 0.0030 150.36);
+    --overlay: oklch(21.03% 0.0030 150.36);
+    --overlay-foreground: oklch(99.11% 0.0015 150.36);
+    --scrollbar: oklch(70.50% 0.0015 150.36);
+    --segment: oklch(39.64% 0.0015 150.36);
+    --segment-foreground: oklch(99.11% 0.0015 150.36);
+    --separator: oklch(25.00% 0.0015 150.36);
+    --success: oklch(73.29% 0.1941 138.39);
+    --success-foreground: oklch(21.03% 0.0059 138.39);
+    --surface: oklch(21.03% 0.0030 150.36);
+    --surface-foreground: oklch(99.11% 0.0015 150.36);
+    --surface-secondary: oklch(25.70% 0.0023 150.36);
+    --surface-secondary-foreground: oklch(99.11% 0.0015 150.36);
+    --surface-tertiary: oklch(27.21% 0.0023 150.36);
+    --surface-tertiary-foreground: oklch(99.11% 0.0015 150.36);
+    --warning: oklch(82.03% 0.1392 63.92);
+    --warning-foreground: oklch(21.03% 0.0059 63.92);
+
+    /* Border Radius */
+    --radius: 0.5rem;
+    --field-radius: 0.75rem;
+
+    /* Font Family */
+    /* Make sure to load Inter font in your app */
+    --font-sans: var(--font-inter);
   }
 }
