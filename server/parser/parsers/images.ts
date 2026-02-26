@@ -137,7 +137,7 @@ export function extractImageCandidates(html: string, baseUrl?: string): string[]
       urls.add(cand.src);
       seen.add(cand.src);
     }
-    if (urls.size >= 10) break;
+    if (urls.size >= MAX_RECIPE_IMAGES) break;
   }
 
   return [...urls];
