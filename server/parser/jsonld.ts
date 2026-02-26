@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 
 import { parseJsonWithRepair } from "@/lib/helpers";
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
+import { extractImageCandidates } from "@/server/parser/parsers/images";
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 import { parserLogger as log } from "@/server/logger";
 
@@ -103,7 +104,14 @@ export async function tryExtractRecipeFromJsonLd(
 
   if (!nodes || nodes.length === 0) return null;
 
-  const parsed = await normalizeRecipeFromJson(nodes[0], recipeId);
+  const node = nodes[0];
+
+  // If node has no image, try to extract from HTML
+  if (!node.image || (Array.isArray(node.image) && node.image.length === 0)) {
+    node.image = extractImageCandidates(htmlContent, url);
+  }
+
+  const parsed = await normalizeRecipeFromJson(node, recipeId);
 
   parsed && (parsed.url = url);
 

@@ -43,7 +43,8 @@ async function tryExtractWithAI(
   recipeId: string,
   url: string,
   allergies: string[] | undefined,
-  requireAI: boolean
+  requireAI: boolean,
+  originalHtml?: string
 ): Promise<FullRecipeInsertDTO | null> {
   const enabled = await isAIEnabled();
 
@@ -56,7 +57,7 @@ async function tryExtractWithAI(
   }
 
   log.info({ url }, "Attempting AI extraction");
-  const result = await extractRecipeWithAI(input, recipeId, url, allergies);
+  const result = await extractRecipeWithAI(input, recipeId, url, allergies, originalHtml);
 
   if (result.success) return result.data;
 
@@ -82,7 +83,14 @@ async function extractWithAIPreference(
     log.info({ url }, "AI: using extracted JSON-LD as input (fewer tokens)");
     const jsonLdInput = JSON.stringify(jsonLdNodes, null, 2);
 
-    const fromJsonLd = await tryExtractWithAI(jsonLdInput, recipeId, url, allergies, requireAI);
+    const fromJsonLd = await tryExtractWithAI(
+      jsonLdInput,
+      recipeId,
+      url,
+      allergies,
+      requireAI,
+      html
+    );
 
     if (fromJsonLd) return fromJsonLd;
   }

@@ -31,7 +31,8 @@ export async function extractRecipeWithAI(
   html: string,
   recipeId: string,
   url?: string,
-  allergies?: string[]
+  allergies?: string[],
+  originalHtml?: string
 ): Promise<AIResult<FullRecipeInsertDTO>> {
   // Guard: AI must be enabled
   const aiEnabled = await isAIEnabled();
@@ -87,7 +88,8 @@ export async function extractRecipeWithAI(
     aiLogger.debug({ url, ...getExtractionLogContext(jsonLd!, null) }, "AI response received");
 
     // Extract image candidates from HTML
-    const imageCandidates = extractImageCandidates(html);
+    // Use originalHtml if provided (e.g. when html parameter is just JSON-LD)
+    const imageCandidates = extractImageCandidates(originalHtml || html, url);
 
     // Normalize using shared normalizer
     const normalized = await normalizeExtractionOutput(jsonLd!, {

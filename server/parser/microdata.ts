@@ -4,6 +4,7 @@
 import microdata from "microdata-node";
 
 import { normalizeRecipeFromJson } from "@/server/parser/normalize";
+import { extractImageCandidates } from "@/server/parser/parsers/images";
 import { FullRecipeInsertDTO } from "@/types/dto/recipe";
 
 /**
@@ -40,7 +41,14 @@ export async function tryExtractRecipeFromMicrodata(
 
   if (!nodes || nodes.length === 0) return null;
 
-  const parsed = await normalizeRecipeFromJson(nodes[0], recipeId);
+  const node = nodes[0];
+
+  // If node has no image, try to extract from HTML
+  if (!node.image || (Array.isArray(node.image) && node.image.length === 0)) {
+    node.image = extractImageCandidates(htmlContent, url);
+  }
+
+  const parsed = await normalizeRecipeFromJson(node, recipeId);
 
   parsed && (parsed.url = url);
 
