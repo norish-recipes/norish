@@ -47,21 +47,15 @@ The Panel component SHALL NOT use the unreliable `useKeyboardOffset` hook and SH
 - **THEN** the Panel SHALL automatically adjust its height using `dvh` units
 - **AND** the Panel SHALL NOT use JavaScript-based keyboard offset calculations
 
-### Requirement: Start screen uses HeroUI Card
+### Requirement: Mobile shell navigation is product-focused
 
-The mobile start screen SHALL render its primary starter panel using a HeroUI Native `Card` component instead of ad hoc custom card primitives.
+The mobile UI capability SHALL present navigation that prioritizes product destinations and excludes starter-template walkthrough content.
 
-#### Scenario: Starter content renders inside HeroUI card
+#### Scenario: Tab/navigation model excludes starter walkthrough surfaces
 
-- **WHEN** the start screen loads
-- **THEN** the starter panel SHALL be implemented with HeroUI `Card` composition
-- **AND** the existing starter content and information hierarchy SHALL remain visible to the user
-
-#### Scenario: Starter card preserves existing behavior
-
-- **WHEN** a user interacts with actions or links contained in the starter panel
-- **THEN** the behavior SHALL match the previous start screen behavior
-- **AND** replacing the card container SHALL NOT change navigation outcomes
+- **WHEN** the root mobile shell is rendered
+- **THEN** navigation controls SHALL reference only active product routes
+- **AND** starter-template labels, doc links, and walkthrough entries SHALL NOT be shown
 
 ### Requirement: Home recipe cards follow native mobile presentation
 
