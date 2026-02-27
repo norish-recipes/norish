@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Norish",
+    "slug": "norish-m",
     "version": "0.0.1-beta",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

@@ -54,3 +54,15 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## HeroUI Native setup notes
+
+- Import global styles once in `src/app/_layout.tsx` with `import '@/global.css';`.
+- In `src/global.css`, keep these directives:
+  - `@import 'tailwindcss';`
+  - `@import 'uniwind';`
+  - `@import 'heroui-native/styles';`
+  - `@source './node_modules/heroui-native/lib';`
+  - `@import '@norish/tailwind-config/native-theme';`
+- Wrap the app tree in `GestureHandlerRootView` + `HeroUINativeProvider` in `src/app/_layout.tsx`.
+- Prefer HeroUI component imports from `heroui-native` (for example `Card`) for this app's baseline migration.
