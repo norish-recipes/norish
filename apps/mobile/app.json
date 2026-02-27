@@ -1,15 +1,14 @@
 {
   "expo": {
-    "name": "Norish Mobile",
-    "slug": "nor-m",
-    "version": "1.0.0",
+    "name": "mobile",
+    "slug": "mobile",
+    "version": "0.0.1-beta",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mobile",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "app.norish.norishmobile"
+      "icon": "./assets/expo.icon"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,8 +17,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "package": "app.norish.norishmobile"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
@@ -27,31 +25,20 @@
     },
     "plugins": [
       "expo-router",
-      "expo-dev-client",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
+          "backgroundColor": "#208AEF",
+          "android": {
+            "image": "./assets/images/splash-icon.png",
+            "imageWidth": 76
           }
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true,
-      "autolinkingModuleResolution": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "c58dff14-8702-4815-9ce7-db75e6846a3b"
-      }
-    },
-    "owner": "norish-app"
+      "reactCompiler": true
+    }
   }
 }
