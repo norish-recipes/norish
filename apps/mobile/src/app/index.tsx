@@ -1,122 +1,86 @@
-import { Card } from 'heroui-native';
-import { Platform, StyleSheet } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { Card, useThemeColor } from 'heroui-native';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { styles } from '@/app/index.styles';
+import { MobileRecipeCard } from '@/features/home/components/mobile-recipe-card';
+import {
+  SwipeableRecipeRow,
+  type SwipeableRecipeRowRef,
+} from '@/features/home/components/swipeable-recipe-row';
+import type { MobileRecipeCardItem } from '@/features/home/recipe-card.types';
+import { MOBILE_HOME_RECIPE_CARDS } from '@/features/home/recipe-mock-data';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+function RecipeListItem({
+  item,
+  onDelete,
+}: {
+  item: MobileRecipeCardItem;
+  onDelete: (id: string) => void;
+}) {
+  const rowRef = useRef<SwipeableRecipeRowRef>(null);
+
+  const handleDelete = useCallback(() => {
+    onDelete(item.id);
+  }, [item.id, onDelete]);
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <SwipeableRecipeRow ref={rowRef} recipeName={item.title} onDelete={handleDelete}>
+      <MobileRecipeCard recipe={item} />
+    </SwipeableRecipeRow>
   );
 }
 
 export default function HomeScreen() {
+  const recipes = useMemo(() => MOBILE_HOME_RECIPE_CARDS, []);
+  const [backgroundColor, textColor] = useThemeColor(['background', 'foreground']);
+
+  // In a real app this would dispatch to a store; for now just log.
+  const handleDelete = useCallback((id: string) => {
+    console.log('[HomeScreen] delete recipe', id);
+  }, []);
+
+  const renderRecipe = useCallback(
+    ({ item }: { item: MobileRecipeCardItem }) => (
+      <RecipeListItem item={item} onDelete={handleDelete} />
+    ),
+    [handleDelete],
+  );
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <Card
-          style={styles.stepContainer}
-          className="border border-separator bg-surface shadow-surface"
-        >
-          <Card.Header className="px-0 pb-3 pt-0">
-            <Card.Title className="text-accent">Starter panel</Card.Title>
-            <Card.Description>Using HeroUI card with Norish theme tokens.</Card.Description>
-            <ThemedView style={styles.themeProbeRow}>
-              <ThemedView style={styles.themeProbeSwatch} className="bg-accent">
-                <ThemedText type="smallBold" style={styles.themeProbeText} className="text-accent-foreground">
-                  Primary
-                </ThemedText>
-              </ThemedView>
-            </ThemedView>
-          </Card.Header>
-          <Card.Body style={styles.stepBody} className="px-0 pb-0 pt-0">
-            <HintRow
-              title="Try editing"
-              hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-            />
-            <HintRow title="Dev tools" hint={getDevMenuHint()} />
-            <HintRow
-              title="Fresh start"
-              hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-            />
-          </Card.Body>
-        </Card>
-
-        {Platform.OS === 'web' && <WebBadge />}
+    <View style={[styles.screen, { backgroundColor }]}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <FlashList
+          data={recipes}
+          renderItem={renderRecipe}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View style={styles.header}>
+              <Text style={[styles.heading, { color: textColor }]}>
+                Your recipes
+              </Text>
+              <Text style={[styles.subheading, { color: textColor }]}>
+                Pick up where you left off, or find something new to cook.
+              </Text>
+            </View>
+          }
+          ListEmptyComponent={
+            <Card variant="secondary" className="rounded-2xl border border-dashed border-separator">
+              <Card.Body style={styles.emptyBody}>
+                <Card.Title style={styles.emptyTitle}>No recipes yet</Card.Title>
+                <Card.Description style={styles.emptyDescription}>
+                  Add your first recipe to start building your home feed.
+                </Card.Description>
+              </Card.Body>
+            </Card>
+          }
+        />
       </SafeAreaView>
-    </ThemedView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-  stepBody: {
-    gap: Spacing.three,
-    padding: 0,
-  },
-  themeProbeRow: {
-    paddingTop: Spacing.two,
-    alignSelf: 'flex-start',
-  },
-  themeProbeSwatch: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
-  },
-  themeProbeText: {
-    textTransform: 'uppercase',
-  },
-});
