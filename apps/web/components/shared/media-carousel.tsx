@@ -77,6 +77,8 @@ export function buildMediaItems(recipe: RecipeMedia): MediaItem[] {
 export interface MediaCarouselProps {
   items: MediaItem[];
   onImageClick?: (index: number) => void;
+  onActiveItemChange?: (item: MediaItem, index: number) => void;
+  onActiveVideoControlsVisibilityChange?: (visible: boolean) => void;
   className?: string;
   aspectRatio?: "video" | "square" | "4/3";
   rounded?: boolean;
@@ -85,6 +87,8 @@ export interface MediaCarouselProps {
 export default function MediaCarousel({
   items,
   onImageClick,
+  onActiveItemChange,
+  onActiveVideoControlsVisibilityChange,
   className = "",
   aspectRatio = "video",
   rounded = true,
@@ -133,6 +137,21 @@ export default function MediaCarousel({
       clearPendingLightboxOpen();
     };
   }, [clearPendingLightboxOpen]);
+
+  useEffect(() => {
+    if (!sortedItems.length) return;
+    const safeIndex = Math.min(currentIndex, sortedItems.length - 1);
+    const activeItem = sortedItems[safeIndex];
+
+    if (!activeItem) return;
+    onActiveItemChange?.(activeItem, safeIndex);
+  }, [currentIndex, onActiveItemChange, sortedItems]);
+
+  useEffect(() => {
+    if (!sortedItems.length) return;
+    if (currentIndex <= sortedItems.length - 1) return;
+    setCurrentIndex(sortedItems.length - 1);
+  }, [currentIndex, sortedItems.length]);
 
   const handleNext = useCallback(() => {
     setDirection(1);
@@ -246,6 +265,7 @@ export default function MediaCarousel({
             <VideoPlayer
               className="h-full w-full"
               duration={item.duration}
+              onControlsVisibilityChange={onActiveVideoControlsVisibilityChange}
               poster={item.thumbnail || undefined}
               src={item.src}
             />
@@ -312,6 +332,7 @@ export default function MediaCarousel({
               <VideoPlayer
                 className="h-full w-full"
                 duration={sortedItems[currentIndex].duration}
+                onControlsVisibilityChange={onActiveVideoControlsVisibilityChange}
                 poster={sortedItems[currentIndex].thumbnail || undefined}
                 src={sortedItems[currentIndex].src}
               />

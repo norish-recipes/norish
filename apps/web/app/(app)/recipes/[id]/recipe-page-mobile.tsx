@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/16/solid";
 import { Card, CardBody, Chip, Divider, Link } from "@heroui/react";
 import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
 import {
   formatMinutesHM,
   isAllergenTag,
@@ -65,6 +66,23 @@ export default function RecipePageMobile() {
 
   // Build media items for MediaCarousel (videos + images)
   const mediaItems = buildMediaItems(recipe);
+  const initialActiveMediaType = useMemo(() => {
+    if (!mediaItems.length) return "image";
+    const sortedItems = [...mediaItems].sort((a, b) => {
+      if (a.order !== b.order) return a.order - b.order;
+      if (a.type !== b.type) return a.type === "video" ? -1 : 1;
+
+      return 0;
+    });
+
+    return sortedItems[0]?.type ?? "image";
+  }, [mediaItems]);
+  const [activeMediaType, setActiveMediaType] = useState<"image" | "video">(initialActiveMediaType);
+  const [isVideoControlsVisible, setIsVideoControlsVisible] = useState(false);
+
+  useEffect(() => {
+    setActiveMediaType(initialActiveMediaType);
+  }, [initialActiveMediaType]);
 
   return (
     <div
@@ -87,6 +105,13 @@ export default function RecipePageMobile() {
             aspectRatio="4/3"
             className="h-full w-full"
             items={mediaItems}
+            onActiveItemChange={(item) => {
+              setActiveMediaType(item.type);
+              if (item.type !== "video") {
+                setIsVideoControlsVisible(false);
+              }
+            }}
+            onActiveVideoControlsVisibilityChange={setIsVideoControlsVisible}
             rounded={false}
           />
         </DoubleTapContainer>
@@ -107,7 +132,9 @@ export default function RecipePageMobile() {
 
         {/* Heart button - bottom right */}
         {showFavorites && (
-          <div className="absolute right-4 bottom-8 z-50">
+          <div
+            className={`absolute right-4 z-50 transition-[bottom] duration-200 ${activeMediaType === "video" && isVideoControlsVisible ? "bottom-18" : "bottom-8"}`}
+          >
             <HeartButton
               showBackground
               isFavorite={isFavorite}

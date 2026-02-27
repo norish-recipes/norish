@@ -24,11 +24,19 @@ export interface VideoPlayerProps {
   duration?: number | null;
   poster?: string;
   className?: string;
+  onControlsVisibilityChange?: (visible: boolean) => void;
 }
 
-export default function VideoPlayer({ src, duration, poster, className = "" }: VideoPlayerProps) {
+export default function VideoPlayer({
+  src,
+  duration,
+  poster,
+  className = "",
+  onControlsVisibilityChange,
+}: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const touchControlsHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const t = useTranslations("recipes.carousel.videoPlayer");
 
@@ -231,18 +239,39 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
     setIsLoading(false);
   };
 
+  const clearTouchControlsHideTimer = useCallback(() => {
+    if (touchControlsHideTimerRef.current) {
+      clearTimeout(touchControlsHideTimerRef.current);
+      touchControlsHideTimerRef.current = null;
+    }
+  }, []);
+
   const handleTouchStart = () => {
+    clearTouchControlsHideTimer();
     setShowControls(true);
     // Hide controls after 2.5 seconds of no interaction
-    const timer = setTimeout(() => setShowControls(false), 2500);
-
-    return () => clearTimeout(timer);
+    touchControlsHideTimerRef.current = setTimeout(() => {
+      setShowControls(false);
+      touchControlsHideTimerRef.current = null;
+    }, 2500);
   };
 
   // Tap to play/pause
   const handleTap = (_e: React.MouseEvent | React.TouchEvent) => {
     togglePlay();
   };
+
+  const areControlsVisible = showControls || !isPlaying;
+
+  useEffect(() => {
+    onControlsVisibilityChange?.(areControlsVisible);
+  }, [areControlsVisible, onControlsVisibilityChange]);
+
+  useEffect(() => {
+    return () => {
+      clearTouchControlsHideTimer();
+    };
+  }, [clearTouchControlsHideTimer]);
 
   return (
     <div
@@ -291,7 +320,7 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
 
       {/* Controls Overlay */}
       <AnimatePresence>
-        {(showControls || !isPlaying) && (
+        {areControlsVisible && (
           <motion.div
             animate={{ opacity: 1 }}
             className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"
@@ -314,7 +343,7 @@ export default function VideoPlayer({ src, duration, poster, className = "" }: V
 
             {/* Bottom: Mute, Progress & Time */}
             <div className="pointer-events-auto absolute right-0 bottom-0 left-0 space-y-2 p-4">
-              <div className="flex items-center justify-between px-1 pr-16 text-xs font-medium text-white/90 sm:pr-1">
+              <div className="flex items-center justify-between px-1 text-xs font-medium text-white/90">
                 <div className="flex items-center gap-2">
                   <Button
                     isIconOnly
