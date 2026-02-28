@@ -1,3 +1,4 @@
+import { PressableFeedback } from 'heroui-native';
 import React from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -20,7 +21,15 @@ export function DiscoverSection({ recipes }: DiscoverSectionProps) {
         contentContainerStyle={styles.scrollContent}
       >
         {recipes.map((recipe) => (
-          <CompactRecipeCard key={recipe.id} recipe={recipe} secondaryLabel="course" />
+          <PressableFeedback
+            key={recipe.id}
+            animation={false}
+            onPress={() => console.log('[DiscoverSection] pressed recipe', recipe.id)}
+            style={{ borderRadius: 12, overflow: 'hidden' }}
+          >
+            <PressableFeedback.Ripple />
+            <CompactRecipeCard recipe={recipe} secondaryLabel="course" />
+          </PressableFeedback>
         ))}
       </ScrollView>
     </View>

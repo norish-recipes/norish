@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { PressableFeedback, useThemeColor } from 'heroui-native';
+import { useThemeColor } from 'heroui-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -10,7 +10,6 @@ import { styles } from './compact-recipe-card.styles';
 type CompactRecipeCardProps = {
   recipe: MobileRecipeCardItem;
   secondaryLabel?: 'duration' | 'course';
-  onPress?: () => void;
 };
 
 function formatDuration(totalDurationMinutes: number): string {
@@ -22,7 +21,7 @@ function formatDuration(totalDurationMinutes: number): string {
   return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
 }
 
-export function CompactRecipeCard({ recipe, secondaryLabel = 'duration', onPress }: CompactRecipeCardProps) {
+export function CompactRecipeCard({ recipe, secondaryLabel = 'duration' }: CompactRecipeCardProps) {
   const [backgroundColor, textColor, mutedColor] = useThemeColor([
     'surface',
     'foreground',
@@ -35,8 +34,7 @@ export function CompactRecipeCard({ recipe, secondaryLabel = 'duration', onPress
       : formatDuration(recipe.totalDurationMinutes);
 
   return (
-    <PressableFeedback onPress={onPress} animation={false} style={[styles.card, { backgroundColor }]}>
-      <PressableFeedback.Ripple />
+    <View style={[styles.card, { backgroundColor }]}>
       <View style={styles.imageContainer}>
         <Image
           source={{ uri: recipe.imageUrl }}
@@ -55,6 +53,6 @@ export function CompactRecipeCard({ recipe, secondaryLabel = 'duration', onPress
           </Text>
         ) : null}
       </View>
-    </PressableFeedback>
+    </View>
   );
 }
