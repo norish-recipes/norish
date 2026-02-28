@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
-import { useThemeColor } from 'heroui-native';
+import { PressableFeedback, useThemeColor } from 'heroui-native';
 import React from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import type { PlannedMeal } from '@/lib/meals/planned-meal.types';
 
@@ -14,17 +14,18 @@ type MealSlotCardProps = {
 
 function MealSlotCard({ meal, onPress }: MealSlotCardProps) {
   const [backgroundColor, textColor, mutedColor] = useThemeColor([
-    'surface',
+    'surface-secondary',
     'foreground',
     'muted',
   ] as const);
 
   if (meal.recipeId !== null) {
     return (
-      <Pressable
+      <PressableFeedback
         onPress={onPress}
-        style={({ pressed }) => [styles.slotCard, { backgroundColor, opacity: pressed ? 0.8 : 1 }]}
+        style={[styles.slotCard, { backgroundColor }]}
       >
+        <PressableFeedback.Ripple />
         <View style={styles.slotImageContainer}>
           <Image
             source={{ uri: meal.imageUrl ?? undefined }}
@@ -39,20 +40,21 @@ function MealSlotCard({ meal, onPress }: MealSlotCardProps) {
             {meal.recipeTitle}
           </Text>
         </View>
-      </Pressable>
+      </PressableFeedback>
     );
   }
 
   return (
-    <Pressable
+    <PressableFeedback
       onPress={onPress}
-      style={({ pressed }) => [styles.slotCard, { backgroundColor, opacity: pressed ? 0.8 : 1 }]}
+      style={[styles.slotCard, { backgroundColor }]}
     >
+      <PressableFeedback.Ripple />
       <View style={styles.emptyBody}>
         <Text style={[styles.addIcon, { color: mutedColor }]}>+</Text>
         <Text style={[styles.emptyLabel, { color: mutedColor }]}>{meal.slot}</Text>
       </View>
-    </Pressable>
+    </PressableFeedback>
   );
 }
 

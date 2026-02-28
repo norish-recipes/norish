@@ -11,7 +11,7 @@ export const styles = StyleSheet.create({
     height: 130,
   },
   imageFill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   body: {
     paddingHorizontal: 10,

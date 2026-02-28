@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
-import { Card, Chip, useThemeColor } from 'heroui-native';
+import { Card, Chip, PressableFeedback, useThemeColor } from 'heroui-native';
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
@@ -17,6 +17,7 @@ function ratingColor(rating: number, accent: string, warning: string, danger: st
 
 type MobileRecipeCardProps = {
   recipe: MobileRecipeCardItem;
+  onPress?: () => void;
 };
 
 function formatDuration(totalDurationMinutes: number) {
@@ -70,7 +71,7 @@ function RatingHighlight({
   );
 }
 
-function MobileRecipeCardComponent({ recipe }: MobileRecipeCardProps) {
+function MobileRecipeCardComponent({ recipe, onPress }: MobileRecipeCardProps) {
   const [accent, warning, danger, divider] = useThemeColor([
     'accent',
     'warning',
@@ -81,7 +82,9 @@ function MobileRecipeCardComponent({ recipe }: MobileRecipeCardProps) {
   const tags = recipe.tags ?? [];
 
   return (
-    <Card variant="secondary" className="overflow-hidden rounded-2xl p-0">
+    <PressableFeedback onPress={onPress} animation={false} className="overflow-hidden rounded-2xl">
+      <PressableFeedback.Ripple />
+      <Card variant="secondary" className="overflow-hidden rounded-2xl p-0">
       <View className="relative w-full overflow-hidden bg-black" style={styles.imageContainer}>
         <Image
           source={{ uri: recipe.imageUrl }}
@@ -162,6 +165,7 @@ function MobileRecipeCardComponent({ recipe }: MobileRecipeCardProps) {
         </View>
       </Card.Body>
     </Card>
+    </PressableFeedback>
   );
 }
 
