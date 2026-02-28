@@ -1,8 +1,6 @@
 import { Card, useThemeColor } from 'heroui-native';
 import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
-
-import { ShellHeader } from '@/components/shell/shell-header';
+import { ScrollView, Text } from 'react-native';
 
 export function SimpleTabScreen({
   title,
@@ -13,41 +11,39 @@ export function SimpleTabScreen({
   subtitle: string;
   body: string;
 }) {
-  const [backgroundColor, textColor, mutedColor] = useThemeColor([
-    'background',
+  const [textColor, mutedColor] = useThemeColor([
     'foreground',
     'muted',
   ]);
 
   return (
-    <View collapsable={false} style={{ flex: 1, backgroundColor }}>
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120, paddingTop: 16, gap: 16 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <ShellHeader title={title} subtitle={subtitle} />
-        <Card variant="secondary">
+    <ScrollView
+      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120, gap: 16 }}
+      contentInsetAdjustmentBehavior="automatic"
+      automaticallyAdjustsScrollIndicatorInsets
+      showsVerticalScrollIndicator={false}
+    >
+      <Card variant="secondary">
+        <Card.Body style={{ padding: 16 }}>
+          <Card.Title style={{ color: textColor }}>{title}</Card.Title>
+          <Card.Description style={{ marginTop: 6, color: mutedColor }}>
+            {body}
+          </Card.Description>
+        </Card.Body>
+      </Card>
+      <Text style={{ color: mutedColor, fontSize: 13, lineHeight: 19 }}>
+        Scroll this page to validate native tab minimize-on-scroll behavior.
+      </Text>
+      {Array.from({ length: 8 }).map((_, index) => (
+        <Card key={index} variant="secondary">
           <Card.Body style={{ padding: 16 }}>
-            <Card.Title style={{ color: textColor }}>{title}</Card.Title>
-            <Card.Description style={{ marginTop: 6, color: mutedColor }}>
-              {body}
-            </Card.Description>
+            <Text style={{ color: textColor, fontWeight: '600' }}>{title} item {index + 1}</Text>
+            <Text style={{ marginTop: 4, color: mutedColor }}>
+              Placeholder content for destination validation.
+            </Text>
           </Card.Body>
         </Card>
-        <Text style={{ color: mutedColor, fontSize: 13, lineHeight: 19 }}>
-          Scroll this page to validate native tab minimize-on-scroll behavior.
-        </Text>
-        {Array.from({ length: 8 }).map((_, index) => (
-          <Card key={index} variant="secondary">
-            <Card.Body style={{ padding: 16 }}>
-              <Text style={{ color: textColor, fontWeight: '600' }}>{title} item {index + 1}</Text>
-              <Text style={{ marginTop: 4, color: mutedColor }}>
-                Placeholder content for destination validation.
-              </Text>
-            </Card.Body>
-          </Card>
-        ))}
-      </ScrollView>
-    </View>
+      ))}
+    </ScrollView>
   );
 }

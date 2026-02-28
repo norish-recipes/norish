@@ -68,7 +68,7 @@ export function AppearanceSettingsSheet({
     <BottomSheet isOpen={isOpen} onOpenChange={onOpenChange}>
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
-        <BottomSheet.Content snapPoints={['42%']}>
+        <BottomSheet.Content>
           <AppearanceSection />
           <View style={{ marginTop: 16 }}>
             <Button variant="secondary" onPress={onClose}>
