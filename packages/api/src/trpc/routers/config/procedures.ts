@@ -1,4 +1,5 @@
 import { trpcLogger as log } from "@norish/api/logger";
+import { getAvailableProviders } from "@norish/auth/providers";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   getLocaleConfig,
@@ -96,6 +97,19 @@ const timerKeywords = publicProcedure.query(async () => {
   return config;
 });
 
+/**
+ * Get available authentication providers for the login UI.
+ *
+ * Public (unauthenticated) procedure so mobile and other unauthenticated
+ * clients can discover which providers are configured before a session exists.
+ * Reuses the same `getAvailableProviders` logic used by the web login page.
+ */
+const authProviders = publicProcedure.query(async () => {
+  log.debug("Getting available auth providers");
+
+  return await getAvailableProviders();
+});
+
 export const configProcedures = router({
   localeConfig,
   tags,
@@ -104,4 +118,5 @@ export const configProcedures = router({
   uploadLimits,
   timersEnabled,
   timerKeywords,
+  authProviders,
 });
