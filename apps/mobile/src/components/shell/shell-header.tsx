@@ -41,7 +41,7 @@ export function ShellHeader({ title, subtitle }: { title: string; subtitle: stri
       </View>
 
       {Platform.OS === 'ios' ? (
-        <View style={styles.glassWrap}>
+        <View style={[styles.glassWrap, { borderColor: separatorColor }]}>
           <BlurView
             intensity={45}
             tint={theme === 'dark' ? 'systemChromeMaterialDark' : 'systemChromeMaterialLight'}

@@ -35,7 +35,7 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(127,127,127,0.12)',
   },
   settingsButtonIos: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(127,127,127,0.18)',
   },
   settingsButtonPressed: {
     opacity: 0.7,
@@ -46,7 +46,6 @@ export const styles = StyleSheet.create({
     borderRadius: 17,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.35)',
     shadowColor: '#000',
     shadowOpacity: 0.12,
     shadowRadius: 8,

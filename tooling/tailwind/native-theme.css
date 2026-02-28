@@ -44,7 +44,7 @@
     /* Theme Colors (Dark Mode) */
     --accent: oklch(46.37% 0.0828 150.36);
     --accent-foreground: oklch(99.11% 0 0);
-    --background: oklch(12.00% 0.0015 150.36);
+    --background: oklch(18.00% 0.0015 150.36);
     --border: oklch(28.00% 0.0015 150.36);
     --danger: oklch(59.40% 0.1973 12.21);
     --danger-foreground: oklch(99.11% 0 0);

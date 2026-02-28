@@ -1,15 +1,19 @@
 import { Card, useThemeColor } from 'heroui-native';
 import React, { useCallback, useMemo, useRef } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { styles } from '@/app/index.styles';
 import { MobileRecipeCard } from '@/components/home/mobile-recipe-card';
+import { SectionHeader } from '@/components/home/section-header';
+import { TodaysMealsSection } from '@/components/home/todays-meals-section';
 import {
   SwipeableRecipeRow,
   type SwipeableRecipeRowRef,
 } from '@/components/home/swipeable-recipe-row';
 import { ShellHeader } from '@/components/shell/shell-header';
 import type { MobileRecipeCardItem } from '@/lib/recipes/recipe-card.types';
+import { TODAYS_MEALS_MOCK } from '@/lib/meals/planned-meal-mock-data';
 import { MOBILE_HOME_RECIPE_CARDS } from '@/lib/recipes/recipe-mock-data';
 
 function RecipeListItem({
@@ -34,8 +38,9 @@ function RecipeListItem({
 
 export default function RecipesScreen() {
   const recipes = useMemo(() => MOBILE_HOME_RECIPE_CARDS, []);
+  const router = useRouter();
 
-  const [backgroundColor, textColor] = useThemeColor(['background', 'foreground']);
+  const [backgroundColor] = useThemeColor(['background'] as const);
 
   const handleDelete = useCallback((id: string) => {
     console.log('[RecipesScreen] delete recipe', id);
@@ -56,8 +61,6 @@ export default function RecipesScreen() {
           styles.listContent,
           {
             paddingTop: 16,
-            paddingLeft: 16,
-            paddingRight: 16,
             paddingBottom: 120,
           },
         ]}
@@ -65,30 +68,40 @@ export default function RecipesScreen() {
         automaticallyAdjustsScrollIndicatorInsets
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingHorizontal: 16 }]}>
           <ShellHeader
             title="Recipes"
-            subtitle="Pick up where you left off, or find something new to cook."
+            subtitle="Good morning"
           />
-          <Text style={[styles.subheading, { color: textColor }]}>Your collection</Text>
         </View>
 
-        {recipes.length === 0 ? (
-          <Card variant="secondary" className="rounded-2xl border border-dashed border-separator">
-            <Card.Body style={styles.emptyBody}>
-              <Card.Title style={styles.emptyTitle}>No recipes yet</Card.Title>
-              <Card.Description style={styles.emptyDescription}>
-                Add your first recipe to start building your home feed.
-              </Card.Description>
-            </Card.Body>
-          </Card>
-        ) : (
-          recipes.map((item, index) => (
-            <View key={item.id} style={index > 0 ? { marginTop: 8 } : undefined}>
-              {renderRecipe({ item })}
-            </View>
-          ))
-        )}
+        <SectionHeader
+          title="Today"
+          actionLabel="Calendar"
+          onAction={() => router.push('/(tabs)/calendar')}
+        />
+        <TodaysMealsSection meals={TODAYS_MEALS_MOCK} />
+
+        <SectionHeader title="Your Collection" />
+
+        <View style={{ paddingHorizontal: 16 }}>
+          {recipes.length === 0 ? (
+            <Card variant="secondary" className="rounded-2xl border border-dashed border-separator">
+              <Card.Body style={styles.emptyBody}>
+                <Card.Title style={styles.emptyTitle}>No recipes yet</Card.Title>
+                <Card.Description style={styles.emptyDescription}>
+                  Add your first recipe to start building your home feed.
+                </Card.Description>
+              </Card.Body>
+            </Card>
+          ) : (
+            recipes.map((item, index) => (
+              <View key={item.id} style={index > 0 ? { marginTop: 8 } : undefined}>
+                {renderRecipe({ item })}
+              </View>
+            ))
+          )}
+        </View>
       </ScrollView>
     </View>
   );
