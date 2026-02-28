@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { BlurView } from 'expo-blur';
+import { Image } from 'expo-image';
 import { Card, Chip, useThemeColor } from 'heroui-native';
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
-import type { MobileRecipeCardItem } from '@/features/home/recipe-card.types';
-import { styles } from '@/features/home/components/mobile-recipe-card.styles';
+import type { MobileRecipeCardItem } from '@/lib/recipes/recipe-card.types';
+
+import { styles } from './mobile-recipe-card.styles';
 
 function ratingColor(rating: number, accent: string, warning: string, danger: string): string {
   if (rating <= 1) return danger;
@@ -27,7 +28,6 @@ function formatDuration(totalDurationMinutes: number) {
   return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
 }
 
-/** Single highlight stat: label on top, value below — cooking-onboarding style */
 function HighlightItem({
   label,
   value,
@@ -47,7 +47,6 @@ function HighlightItem({
   );
 }
 
-/** Rating highlight: star icon colored by tier, number in normal text color */
 function RatingHighlight({
   rating,
   starColor,
@@ -83,7 +82,6 @@ function MobileRecipeCardComponent({ recipe }: MobileRecipeCardProps) {
 
   return (
     <Card variant="secondary" className="overflow-hidden rounded-2xl p-0">
-      {/* ── Image with overlaid metadata ── */}
       <View className="relative w-full overflow-hidden bg-black" style={styles.imageContainer}>
         <Image
           source={{ uri: recipe.imageUrl }}
@@ -92,7 +90,6 @@ function MobileRecipeCardComponent({ recipe }: MobileRecipeCardProps) {
           style={styles.imageFill}
         />
 
-        {/* Top-left: heart (only shown when liked) */}
         {recipe.liked ? (
           <View className="absolute left-2.5 top-2.5">
             <BlurView intensity={60} tint="dark" style={styles.heartPill}>
@@ -101,7 +98,6 @@ function MobileRecipeCardComponent({ recipe }: MobileRecipeCardProps) {
           </View>
         ) : null}
 
-        {/* Bottom: tag strip */}
         {tags.length > 0 ? (
           <View className="absolute inset-x-0 bottom-0 pb-2.5" pointerEvents="box-none">
             <ScrollView
@@ -126,9 +122,7 @@ function MobileRecipeCardComponent({ recipe }: MobileRecipeCardProps) {
         ) : null}
       </View>
 
-      {/* ── Body ── */}
       <Card.Body className="gap-1.5 px-3.5 pb-3.5 pt-3">
-        {/* Title + course badge row */}
         <View className="flex-row items-center gap-2">
           <Text style={styles.title} className="flex-1 text-foreground" numberOfLines={1}>
             {recipe.title}
@@ -146,14 +140,12 @@ function MobileRecipeCardComponent({ recipe }: MobileRecipeCardProps) {
           ) : null}
         </View>
 
-        {/* Description */}
         {recipe.description ? (
           <Text style={styles.description} className="text-foreground/70" numberOfLines={2}>
             {recipe.description}
           </Text>
         ) : null}
 
-        {/* Highlights row: rating · servings · duration */}
         <View className="mt-1 flex-row items-center gap-3">
           {recipe.rating > 0 && (
             <>

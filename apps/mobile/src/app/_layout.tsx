@@ -6,11 +6,28 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import {
+  AppearancePreferenceProvider,
+  useAppearancePreference,
+} from '@/context/appearance-preference-context';
+
+function RootLayoutContent() {
+  const { hydrated } = useAppearancePreference();
+
+  if (!hydrated) {
+    return null;
+  }
+
+  return <Slot />;
+}
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <HeroUINativeProvider>
-        <Slot />
+        <AppearancePreferenceProvider>
+          <RootLayoutContent />
+        </AppearancePreferenceProvider>
       </HeroUINativeProvider>
     </GestureHandlerRootView>
   );

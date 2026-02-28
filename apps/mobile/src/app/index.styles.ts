@@ -1,4 +1,4 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 const SPACING = {
   two: 8,
@@ -7,8 +7,6 @@ const SPACING = {
 } as const;
 
 const LIST_MAX_WIDTH = 800;
-const BOTTOM_INSET = Platform.select({ ios: 50, android: 80 }) ?? 0;
-
 export const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -21,8 +19,6 @@ export const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     maxWidth: LIST_MAX_WIDTH,
-    paddingBottom: BOTTOM_INSET + SPACING.four,
-    paddingTop: SPACING.three,
   },
   header: {
     gap: 4,

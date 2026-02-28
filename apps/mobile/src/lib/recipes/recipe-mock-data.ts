@@ -1,4 +1,4 @@
-import type { MobileRecipeCardItem } from '@/features/home/recipe-card.types';
+import type { MobileRecipeCardItem } from '@/lib/recipes/recipe-card.types';
 
 type MockRecipeRecord = Omit<MobileRecipeCardItem, 'rating'> & {
   rating: number;
@@ -6,7 +6,6 @@ type MockRecipeRecord = Omit<MobileRecipeCardItem, 'rating'> & {
 
 const MOCK_HOME_RECIPES: MockRecipeRecord[] = [
   {
-    // Rating 5 → accent (blue/primary)
     id: 'mobile-recipe-1',
     imageUrl: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=1200&q=80',
     title: 'One-Pan Lemon Herb Chicken',
@@ -20,7 +19,6 @@ const MOCK_HOME_RECIPES: MockRecipeRecord[] = [
     totalDurationMinutes: 45,
   },
   {
-    // Rating 4 → accent (blue/primary)
     id: 'mobile-recipe-2',
     imageUrl: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80',
     title: 'Mediterranean Quinoa Bowl',
@@ -34,7 +32,6 @@ const MOCK_HOME_RECIPES: MockRecipeRecord[] = [
     totalDurationMinutes: 25,
   },
   {
-    // Rating 3 → warning (orange)
     id: 'mobile-recipe-3',
     imageUrl: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=1200&q=80',
     title: 'Blueberry Almond Overnight Oats',
@@ -48,7 +45,6 @@ const MOCK_HOME_RECIPES: MockRecipeRecord[] = [
     totalDurationMinutes: 10,
   },
   {
-    // Rating 2 → warning (orange)
     id: 'mobile-recipe-4',
     imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80',
     title: 'Roasted Veggie Pasta Primavera',
@@ -62,12 +58,11 @@ const MOCK_HOME_RECIPES: MockRecipeRecord[] = [
     totalDurationMinutes: 35,
   },
   {
-    // Rating 1 → danger (red)
     id: 'mobile-recipe-5',
     imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80',
     title: 'Spiced Lentil Soup',
     description:
-      'Warming red lentil soup with cumin, smoked paprika, and a squeeze of lemon — simple, filling, and freezer-friendly.',
+      'Warming red lentil soup with cumin, smoked paprika, and a squeeze of lemon - simple, filling, and freezer-friendly.',
     servings: 4,
     rating: 1,
     tags: ['vegan', 'freezer-friendly', 'budget'],
@@ -93,5 +88,5 @@ export function mapRecipeToMobileCardItem(recipe: MockRecipeRecord): MobileRecip
 }
 
 export const MOBILE_HOME_RECIPE_CARDS: MobileRecipeCardItem[] = MOCK_HOME_RECIPES.map(
-  mapRecipeToMobileCardItem
+  mapRecipeToMobileCardItem,
 );
