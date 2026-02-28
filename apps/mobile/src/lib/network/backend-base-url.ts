@@ -3,6 +3,21 @@ import * as SecureStore from 'expo-secure-store';
 import { httpUrlSchema } from '@norish/shared/lib/schema';
 
 const BACKEND_BASE_URL_KEY = 'norish.backend-base-url';
+const listeners = new Set<() => void>();
+
+function emitBackendBaseUrlChange() {
+  for (const listener of listeners) {
+    listener();
+  }
+}
+
+export function subscribeBackendBaseUrlChange(listener: () => void): () => void {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
+}
 
 export function normalizeBackendBaseUrl(input: string): string | null {
   const trimmed = input.trim();
@@ -23,6 +38,7 @@ export function normalizeBackendBaseUrl(input: string): string | null {
     parsed.hash = '';
     parsed.search = '';
 
+    console.log(`Normalized backend URL: ${parsed.toString()}`);
     return parsed.toString().replace(/\/+$/, '');
   } catch {
     return null;
@@ -54,11 +70,14 @@ export async function saveBackendBaseUrl(input: string): Promise<string> {
   }
 
   await SecureStore.setItemAsync(BACKEND_BASE_URL_KEY, normalized);
+  emitBackendBaseUrlChange();
+
   return normalized;
 }
 
-export function clearBackendBaseUrl(): Promise<void> {
-  return SecureStore.deleteItemAsync(BACKEND_BASE_URL_KEY);
+export async function clearBackendBaseUrl(): Promise<void> {
+  await SecureStore.deleteItemAsync(BACKEND_BASE_URL_KEY);
+  emitBackendBaseUrlChange();
 }
 
 export function getBackendHealthUrl(baseUrl: string): string {

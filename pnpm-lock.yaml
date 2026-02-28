@@ -165,6 +165,9 @@ importers:
       '@norish/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@norish/shared-react':
+        specifier: workspace:*
+        version: link:../../packages/shared-react
       '@norish/tailwind-config':
         specifier: workspace:*
         version: link:../../tooling/tailwind
@@ -180,9 +183,6 @@ importers:
       '@shopify/flash-list':
         specifier: 2.0.2
         version: 2.0.2(@babel/runtime@7.28.6)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
-      '@trpc/client':
-        specifier: 'catalog:'
-        version: 11.10.0(@trpc/server@11.10.0(typescript@5.9.3))(typescript@5.9.3)
       expo:
         specifier: ~55.0.3
         version: 55.0.3(@babel/core@7.29.0)(@expo/dom-webview@55.0.3)(@expo/metro-runtime@55.0.6)(expo-router@55.0.3)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
@@ -264,9 +264,6 @@ importers:
       react-native-worklets:
         specifier: 0.7.2
         version: 0.7.2(@babel/core@7.29.0)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
-      superjson:
-        specifier: 'catalog:'
-        version: 2.2.6
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0

@@ -88,11 +88,11 @@ export default function ConnectScreen() {
       router.replace('/recipes');
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        setErrorMessage('Health check timed out. Verify URL and network access.');
+        setErrorMessage('Connection timed out. Verify URL and network access.');
       } else if (error instanceof Error) {
-        setErrorMessage(`Could not connect: ${error.message}`);
+        setErrorMessage(`Could not connect to API or tRPC: ${error.message}`);
       } else {
-        setErrorMessage('Could not connect to that backend URL.');
+        setErrorMessage('Could not connect to API or tRPC on that backend URL.');
       }
     } finally {
       clearTimeout(timeout);
@@ -121,7 +121,7 @@ export default function ConnectScreen() {
         <View style={styles.heroCopy}>
           <Text style={[styles.eyebrow, { color: accentColor }]}>Mobile API Setup</Text>
           <Text style={[styles.title, { color: foregroundColor }]}>Connect your Norish backend</Text>
-          <Text style={[styles.subtitle, { color: mutedColor }]}>Enter your backend base URL. We will test `/api/health` before saving it for `/api/trpc`.</Text>
+          <Text style={[styles.subtitle, { color: mutedColor }]}>Enter your backend base URL. We verify `/api/health` before saving and then connect app tRPC using that base URL.</Text>
         </View>
 
         <Card variant="secondary" className="rounded-3xl border border-separator">
@@ -135,7 +135,7 @@ export default function ConnectScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               placeholder="https://your-norish-server.com"
-              returnKeyType="done"              
+              returnKeyType="done"
               onSubmitEditing={() => {
                 void handleConnect();
               }}
