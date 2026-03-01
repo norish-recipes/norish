@@ -1,0 +1,568 @@
+{
+  "page": {
+    "title": "Indstillinger",
+    "loading": "Indlæser...",
+    "ariaLabel": "Indstillingsfaner"
+  },
+  "tabs": {
+    "user": "Bruger",
+    "household": "Husstand",
+    "caldav": "CalDAV",
+    "admin": "Admin"
+  },
+  "user": {
+    "profile": {
+      "title": "Profil",
+      "nameLabel": "Navn",
+      "namePlaceholder": "Dit navn",
+      "emailLabel": "E-mail",
+      "avatarHint": "Klik på dit avatar for at skifte billede",
+      "deleteAvatar": "Slet profilbillede",
+      "saveChanges": "Gem ændringer"
+    },
+    "allergies": {
+      "title": "Allergier",
+      "description": "Tilføj dine fødevareallergier for at modtage advarsler, når du planlægger opskrifter, der indeholder allergener. Disse oplysninger bruges til at advare dig, når en planlagt opskrift indeholder ingredienser, der matcher dine allergier.",
+      "placeholder": "Skriv allergier (f.eks. gluten, nødder, mejeriprodukter)...",
+      "saveButton": "Gem allergier"
+    },
+    "apiKeys": {
+      "title": "API-nøgler",
+      "description": "API-nøgler giver programmatisk adgang til Norish API. Brug dem til integrationer, genveje og automatisering.",
+      "keyNameLabel": "Nøglenavn (valgfrit)",
+      "keyNamePlaceholder": "f.eks. iOS-genvej",
+      "createKey": "Opret nøgle",
+      "yourKeys": "Dine API-nøgler",
+      "noKeys": "Ingen API-nøgler endnu. Opret en for at komme i gang.",
+      "tableHeaders": {
+        "name": "NAVN",
+        "keyPrefix": "NØGLEPRÆFIKS",
+        "created": "OPRETTET",
+        "status": "STATUS",
+        "actions": "HANDLINGER"
+      },
+      "unnamed": "Unavngivet",
+      "active": "Aktiv",
+      "disabled": "Deaktiveret",
+      "disableKey": "Deaktivér nøgle",
+      "enableKey": "Aktivér nøgle",
+      "deleteKey": "Slet nøgle",
+      "generatedModal": {
+        "title": "API-nøgle genereret",
+        "warning": "Gem denne nøgle nu! Du vil ikke kunne se den igen. Vi gemmer kun en hash og kan ikke gendanne denne nøgle.",
+        "hint": "Brug denne nøgle i <code>x-api-key</code>-headeren, når du laver API-anmodninger.",
+        "confirmButton": "Jeg har gemt den"
+      },
+      "deleteModal": {
+        "title": "Slet API-nøgle",
+        "message": "Er du sikker på, at du vil slette denne API-nøgle? Alle applikationer, der bruger den, mister straks adgang. Dette kan ikke fortrydes.",
+        "confirmButton": "Slet nøgle"
+      }
+    },
+    "archiveImport": {
+      "title": "Importer opskriftarkiv",
+      "description": "Importer opskrifter fra Mela (.melarecipes), Paprika (.paprikarecipes) eller Mealie/Tandoor (.zip)-eksporter"
+    },
+    "siteAuthTokens": {
+      "title": "Websteds-godkendelsestokens",
+      "description": "Tilføj headere eller cookies, der sendes ved import af opskrifter fra specifikke websteder. Nyttigt for websteder, der kræver login (f.eks. Instagram, Facebook).",
+      "domain": "Domæne",
+      "domainPlaceholder": "f.eks. instagram.com",
+      "name": "Navn",
+      "namePlaceholder": "f.eks. Cookie eller Authorization",
+      "value": "Værdi",
+      "valuePlaceholder": "Token- eller cookieværdi",
+      "type": "Type",
+      "typeHeader": "Header",
+      "typeCookie": "Cookie",
+      "addButton": "Tilføj token",
+      "noTokens": "Ingen websteds-godkendelsestokens konfigureret.",
+      "tableHeaders": {
+        "domain": "DOMÆNE",
+        "name": "NAVN",
+        "type": "TYPE",
+        "created": "OPRETTET",
+        "actions": "HANDLINGER"
+      },
+      "deleteModal": {
+        "title": "Slet token",
+        "message": "Er du sikker på, at du vil slette dette godkendelsestoken? Import fra dette websted kan stoppe med at fungere.",
+        "confirmButton": "Slet token"
+      }
+    },
+    "dangerZone": {
+      "title": "Farezone",
+      "description": "Når du sletter din konto, er der ingen vej tilbage. Vær venligst sikker.",
+      "deleteButton": "Slet min konto",
+      "deleteModal": {
+        "title": "Slet konto",
+        "permanentWarning": "Denne handling er permanent og kan ikke fortrydes!",
+        "dataWarning": "Dine personlige data inklusiv indkøbslister, kalenderbegivenheder og noter slettes permanent.",
+        "recipesNote": "Opskrifter, du har oprettet, bevares, men vil ikke længere være knyttet til din konto.",
+        "adminNote": "Hvis du er administrator for en husstand med andre medlemmer, skal du overføre administratorrettigheder først.",
+        "confirmButton": "Slet min konto"
+      }
+    },
+    "preferences": {
+      "title": "Præferencer",
+      "description": "Tilpas din oplevelse.",
+      "language": {
+        "title": "Sprog",
+        "description": "Vælg dit foretrukne sprog"
+      },
+      "timers": {
+        "title": "Aktivér opskrifttimere",
+        "description": "Vis interaktive timere i opskriftinstruktioner"
+      },
+      "conversion": {
+        "title": "Vis knap til ingredienskonvertering",
+        "description": "Vis en knap på opskriftsider til at konvertere mellem målesystemer"
+      },
+      "ratings": {
+        "title": "Vis bedømmelser",
+        "description": "Vis stjernebedømmelser på opskriftskort og detaljesider"
+      },
+      "favorites": {
+        "title": "Vis favoritter",
+        "description": "Vis favorit/hjerte-ikoner på opskriftskort og detaljesider"
+      },
+      "applyError": "Kunne ikke anvende præference"
+    }
+  },
+  "household": {
+    "pageTitle": "Husstandsindstillinger",
+    "info": {
+      "yourRole": "Din rolle",
+      "admin": "Administrator",
+      "member": "Medlem",
+      "members": "Medlemmer",
+      "leaveButton": "Forlad husstand",
+      "leaveModal": {
+        "title": "Forlad husstand",
+        "confirmMessage": "Er du sikker på, at du vil forlade {name}?",
+        "adminWarning": "Du er administrator. Du skal overføre administratorrettigheder, inden du forlader.",
+        "confirmButton": "Forlad husstand"
+      }
+    },
+    "members": {
+      "title": "Medlemmer",
+      "tableHeaders": {
+        "name": "NAVN",
+        "role": "ROLLE",
+        "actions": "HANDLINGER"
+      },
+      "you": "Dig",
+      "kickButton": "Fjern",
+      "makeAdminButton": "Gør til administrator",
+      "kickModal": {
+        "title": "Fjern bruger",
+        "confirmMessage": "Er du sikker på, at du vil fjerne {name} fra husstanden?",
+        "warning": "De mister adgang til alle delte opskrifter, indkøbslister og kalenderbegivenheder.",
+        "confirmButton": "Fjern bruger"
+      },
+      "transferModal": {
+        "title": "Overfør administratorrettigheder",
+        "confirmMessage": "Er du sikker på, at du vil overføre administratorrettigheder til {name}?",
+        "warning": "Du bliver et almindeligt medlem og vil ikke længere kunne smide brugere ud eller administrere tilmeldingskoder.",
+        "confirmButton": "Overfør administrator"
+      },
+      "toasts": {
+        "kickFailed": "Kunne ikke fjerne brugeren",
+        "transferSuccess": "Overførte administrator til {name}",
+        "transferFailed": "Kunne ikke overføre administrator"
+      }
+    },
+    "joinCode": {
+      "title": "Tilmeldingskode",
+      "shareDescription": "Del denne kode med andre for at invitere dem til din husstand.",
+      "expiresIn": "Udløber om:",
+      "regenerateButton": "Generer ny",
+      "expired": "Udløbet",
+      "noCodeDescription": "Ingen aktiv tilmeldingskode. Generer én for at invitere nye medlemmer.",
+      "generateButton": "Generer tilmeldingskode"
+    },
+    "create": {
+      "title": "Opret husstand",
+      "description": "Opret en ny husstand for at dele opskrifter og indkøbslister med familie eller venner.",
+      "nameLabel": "Husstandsnavn",
+      "namePlaceholder": "f.eks. Familien Hansen",
+      "submitButton": "Opret husstand"
+    },
+    "join": {
+      "title": "Tilmeld husstand",
+      "description": "Indtast en tilmeldingskode for at tilmelde dig en eksisterende husstand.",
+      "codeLabel": "Tilmeldingskode",
+      "codePlaceholder": "8-tegn kode",
+      "submitButton": "Tilmeld husstand"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "Opsæt CalDAV-synkronisering",
+      "description": "Forbind din CalDAV-kompatible kalender for automatisk at synkronisere dine måltidsplaner",
+      "gettingStarted": "Kom i gang med CalDAV",
+      "providerDescription": "Du skal bruge en CalDAV-kompatibel kalendertjeneste. Populære udbydere inkluderer:",
+      "serverUrlLabel": "Server-URL",
+      "serverUrlDescription": "Basis-URL for din CalDAV-server (f.eks. https://dav.eksempel.dk)",
+      "serverUrlPlaceholder": "https://dav.eksempel.dk",
+      "usernameLabel": "Brugernavn",
+      "usernamePlaceholder": "brugernavn",
+      "passwordLabel": "Adgangskode",
+      "passwordPlaceholder": "Indtast adgangskode",
+      "calendarLabel": "Kalender",
+      "calendarPlaceholder": "Vælg en kalender",
+      "calendarPlaceholderDisabled": "Test forbindelsen først",
+      "calendarDescription": "Vælg hvilken kalender der skal synkroniseres med måltidsplaner",
+      "calendarDescriptionDisabled": "Test forbindelsen for at indlæse tilgængelige kalendere",
+      "timeFormat": "Format: TT:MM-TT:MM",
+      "timeFormatError": "Format skal være TT:MM-TT:MM",
+      "breakfastTime": "Morgenmadstidspunkt",
+      "lunchTime": "Frokoststidspunkt",
+      "dinnerTime": "Aftensmadstidspunkt",
+      "snackTime": "Snacktidspunkt",
+      "testConnection": "Test forbindelse",
+      "saveConfiguration": "Gem konfiguration"
+    },
+    "config": {
+      "title": "CalDAV-konfiguration",
+      "editTitle": "Rediger CalDAV-konfiguration",
+      "serverUrl": "Server-URL",
+      "enabled": "Aktiveret",
+      "disabled": "Deaktiveret",
+      "editButton": "Rediger",
+      "deleteButton": "Slet",
+      "saveChanges": "Gem ændringer",
+      "advancedSettings": "Avancerede indstillinger",
+      "timezone": "Tidszone: {timezone}",
+      "connectionStatus": {
+        "connected": "Forbundet",
+        "checking": "Tjekker...",
+        "disconnected": "Ikke forbundet",
+        "unknown": "Ukendt"
+      }
+    },
+    "deleteModal": {
+      "title": "Slet CalDAV-konfiguration",
+      "confirmMessage": "Er du sikker på, at du vil slette din CalDAV-konfiguration?",
+      "deleteEventsLabel": "Slet synkroniserede begivenheder",
+      "deleteEventsDescription": "Fjern alle begivenheder, der blev oprettet i din CalDAV-kalender",
+      "confirmButton": "Slet"
+    },
+    "syncStatus": {
+      "title": "Synkroniseringsstatus",
+      "syncNow": "Synkroniser nu",
+      "clearFilter": "Ryd filter",
+      "clickToFilter": "Klik på et mærke for at filtrere",
+      "showingItems": "Viser {start}-{end} af {total} elementer",
+      "tableHeaders": {
+        "item": "ELEMENT",
+        "type": "TYPE",
+        "date": "DATO",
+        "meal": "MÅLTID",
+        "status": "STATUS",
+        "lastSync": "SENESTE SYNK.",
+        "error": "FEJL"
+      },
+      "statuses": {
+        "synced": "Synkroniseret",
+        "pending": "Afventer",
+        "failed": "Mislykkedes",
+        "removed": "Fjernet"
+      },
+      "emptyFiltered": "Ingen {status}-elementer fundet",
+      "emptyDefault": "Ingen synkroniseringsposter fundet",
+      "errorDetails": "Fejldetaljer"
+    }
+  },
+  "admin": {
+    "general": {
+      "title": "Generelt",
+      "allowRegistration": "Tillad ny brugerregistrering",
+      "registrationDescription": "Når deaktiveret, kan kun eksisterende brugere logge ind",
+      "locales": "Aktiverede sprog",
+      "localesDescription": "Vælg hvilke sprog brugere kan vælge imellem",
+      "defaultLocale": "Standardsprog",
+      "defaultLocaleDescription": "Sprog anvendt for nye brugere og som backup",
+      "saveLocales": "Gem sprogindstillinger",
+      "localesSaved": "Sprogindstillinger gemt",
+      "localesError": "Kunne ikke gemme sprogindstillinger",
+      "atLeastOneLocale": "Mindst ét sprog skal være aktiveret"
+    },
+    "registration": {
+      "title": "Registrering",
+      "allowRegistration": "Tillad ny brugerregistrering",
+      "description": "Når deaktiveret, kan kun eksisterende brugere logge ind"
+    },
+    "permissions": {
+      "title": "Opskrifttilladelser",
+      "description": "Kontrollér, hvem der kan se, redigere og slette opskrifter. Serveradministratorer har altid fuld adgang.",
+      "viewRecipes": "Se opskrifter",
+      "viewDescription": "Hvem kan se opskrifter i oversigten",
+      "editRecipes": "Rediger opskrifter",
+      "editDescription": "Hvem kan ændre opskriftoplysninger",
+      "deleteRecipes": "Slet opskrifter",
+      "deleteDescription": "Hvem kan fjerne opskrifter",
+      "levels": {
+        "everyone": "Alle",
+        "everyoneDescription": "Alle godkendte brugere",
+        "household": "Husstand",
+        "householdDescription": "Opskriftens ejer og deres husstandsmedlemmer",
+        "owner": "Kun ejeren",
+        "ownerDescription": "Kun opskriftens ejer"
+      },
+      "note": "Bemærk: Indkøbslister og kalenderbegivenheder følger husstandsregler automatisk; husstandsmedlemmer kan altid redigere/slette elementer, der tilhører enhver i samme husstand."
+    },
+    "system": {
+      "title": "Systemindstillinger",
+      "cleanup": {
+        "title": "Oprydningsplanlægger",
+        "label": "Oprydningsmåneder",
+        "description": "Slet planlagte måltider, der er ældre end dette antal måneder"
+      },
+      "server": {
+        "title": "Serveradministration",
+        "restartLabel": "Genstart server",
+        "restartDescription": "Anvend konfigurationsændringer, der kræver en genstart",
+        "restartButton": "Genstart server"
+      }
+    },
+    "restart": {
+      "title": "Genstart server",
+      "confirmMessage": "Er du sikker på, at du vil genstarte serveren?",
+      "importantTitle": "Vigtigt:",
+      "warning1": "Alle aktive forbindelser vil blive afbrudt",
+      "warning2": "Serveren vil være utilgængelig i et par sekunder",
+      "warning3": "Sørg for, at din opsætning har <code>restart: always</code> konfigureret, ellers vil serveren ikke komme online igen automatisk",
+      "confirmButton": "Genstart nu"
+    },
+    "authProviders": {
+      "title": "Godkendelsesudbydere",
+      "requiresRestart": "Kræver genstart",
+      "description": "Konfigurer godkendelsesmetoder. Ændringer kræver en servergenstart for at træde i kraft.",
+      "passwordAuth": {
+        "title": "E-mail og adgangskode",
+        "description": "Tillad brugere at logge ind med e-mail og adgangskode"
+      },
+      "oauthDescription": "Konfigurer OAuth-udbydere til SSO-godkendelse.",
+      "oidc": {
+        "title": "OIDC-udbyder",
+        "subtitle": "Generisk OpenID Connect",
+        "fields": {
+          "name": "Udbydernavn",
+          "namePlaceholder": "f.eks. Authentik, Keycloak",
+          "issuer": "Udsteder-URL",
+          "issuerPlaceholder": "https://din-idp.dk",
+          "clientId": "Klient-ID",
+          "clientSecret": "Klienthemmelighed",
+          "wellknown": "Well-known URL (valgfrit)",
+          "wellknownPlaceholder": "Udledes automatisk fra udsteder, hvis ikke angivet"
+        },
+        "claimMapping": {
+          "title": "Krav-mapping",
+          "description": "Tildel automatisk roller og husstande baseret på OIDC-krav. Brugere med administratorgruppen får serveradministratorrettigheder. Brugere med en husstandsgruppe tilmeldes automatisk den husstand.",
+          "securityWarning": "Advarsel: Aktivering af krav-mapping giver din identitetsudbyder kontrol over administratorrettigheder og husstandsmedlemskab. Aktivér kun dette, hvis du fuldt ud stoler på din OIDC-udbyder og har konfigureret gruppekravene korrekt.",
+          "scopes": "Yderligere scopes",
+          "scopesPlaceholder": "groups, roles",
+          "scopesDescription": "Kommasepareret liste over yderligere OAuth-scopes at anmode om (f.eks. groups for Keycloak)",
+          "groupsClaim": "Gruppekrav",
+          "groupsClaimDescription": "Navn på kravet, der indeholder brugergrupper/roller",
+          "adminGroup": "Administratorgruppe",
+          "adminGroupDescription": "Gruppenavn, der tildeler serveradministratorrollen (ikke skriftstørrelsesafhængig)",
+          "householdPrefix": "Husstandspræfiks",
+          "householdPrefixDescription": "Præfiks for husstandsgruppenavne (f.eks. norish_household_family => husstand 'family')"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "GitHub OAuth",
+        "fields": {
+          "clientId": "Klient-ID",
+          "clientSecret": "Klienthemmelighed"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "Google OAuth",
+        "fields": {
+          "clientId": "Klient-ID",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "Klienthemmelighed"
+        }
+      },
+      "form": {
+        "testSuccess": "Forbindelse lykkedes",
+        "removeTitle": "Fjern {provider}",
+        "removeConfirm": "Er du sikker på, at du vil fjerne denne udbyder?"
+      },
+      "envBadge": {
+        "db": "Administreret af DB",
+        "env": "Administreret af env"
+      }
+    },
+    "contentDetection": {
+      "title": "Indholdsregistrering",
+      "description": "Konfigurer, hvordan opskrifter registreres og analyseres fra websider.",
+      "contentIndicators": {
+        "title": "Indholdsindikatorer",
+        "subtitle": "Nøgleord, der identificerer opskriftsider",
+        "description": "Skema-indikatorer registrerer strukturerede opskriftdata (JSON-LD, mikrodata). Indholdsindikatorer er nøgleord, der tyder på, at en side indeholder en opskrift.",
+        "timersEnabled": {
+          "title": "Aktivér opskrifttimere",
+          "description": "Registrér og vis interaktive timere i opskrifter"
+        }
+      },
+      "units": {
+        "title": "Måleenheder",
+        "subtitle": "Definitioner af måleenheder til analyse",
+        "description": "Definer måleenheder med deres kortform, flertal og alternative stavninger. Bruges ved analyse af ingrediensmængder."
+      },
+      "recurrence": {
+        "title": "Gentagelsesmønstre",
+        "subtitle": "Mønstre i naturligt sprog for tilbagevendende elementer",
+        "description": "Definer sprogspecifikke mønstre til analyse af gentagelsesregler fra naturligt sprog (f.eks. 'hver uge', 'hver dag')."
+      },
+      "timerKeywords": {
+        "title": "Timer-nøgleord",
+        "subtitle": "Tidsenhedsnøgleord til timerregistrering",
+        "description": "Konfigurer nøgleord, der bruges til at registrere timere i opskriftinstruktioner. Understøtter flere sprog.",
+        "enableToggle": "Aktivér timerregistrering",
+        "hoursLabel": "Time-nøgleord",
+        "hoursPlaceholder": "time, timer, t",
+        "hoursHelp": "Nøgleord for timer (f.eks. time, stunde, heure, uur)",
+        "minutesLabel": "Minut-nøgleord",
+        "minutesPlaceholder": "minut, minutter, min",
+        "minutesHelp": "Nøgleord for minutter (f.eks. minute, minuten, minuut)",
+        "secondsLabel": "Sekund-nøgleord",
+        "secondsPlaceholder": "sekund, sekunder, sek",
+        "secondsHelp": "Nøgleord for sekunder (f.eks. second, sekunde, seconde)",
+        "unsavedChanges": "Ugemte ændringer"
+      }
+    },
+    "aiProcessing": {
+      "title": "AI og behandling",
+      "description": "Konfigurer AI-drevne funktioner til opskriftudtrækning og videobehandling.",
+      "aiConfig": {
+        "title": "AI-konfiguration",
+        "subtitle": "Opskriftanalyse og -udtrækning"
+      },
+      "video": {
+        "title": "Videobehandling",
+        "subtitle": "Udtrækning og transskription fra sociale medier"
+      },
+      "prompts": {
+        "title": "Prompt-tekster",
+        "subtitle": "Tilpas AI-instruktioner til opskriftbehandling"
+      },
+      "bulkCategorization": {
+        "title": "Massekategorisering",
+        "subtitle": "Kategoriser ukategoriserede opskrifter med AI",
+        "description": "Sæt alle ukategoriserede opskrifter i kø til AI-baseret kategoriregistrering. Kategorier inkluderer Morgenmad, Frokost, Aftensmad og Snack.",
+        "button": "Kategoriser alle opskrifter",
+        "queued": "{count, plural, =0 {Ingen opskrifter at kategorisere} one {# opskrift i kø} other {# opskrifter i kø}}",
+        "success": "Kategorisering startet",
+        "error": "Kunne ikke starte kategorisering"
+      }
+    },
+    "aiConfig": {
+      "enableAI": "Aktivér AI-funktioner",
+      "enableAIDescription": "Brug AI til at udtrække opskrifter fra ustruktureret indhold",
+      "configureWarning": "Konfigurer AI-udbyderindstillingerne nedenfor for at aktivere AI-funktioner.",
+      "provider": "AI-udbyder",
+      "providers": {
+        "openai": "OpenAI",
+        "azure": "Azure OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google AI",
+        "mistral": "Mistral AI",
+        "deepseek": "DeepSeek",
+        "perplexity": "Perplexity",
+        "groq": "Groq",
+        "ollama": "Ollama (Lokal)",
+        "lmStudio": "LM Studio (Lokal)",
+        "genericOpenai": "Generisk OpenAI-kompatibel"
+      },
+      "endpointUrl": "Endpoint-URL",
+      "azureEndpoint": "Azure-ressource-URL (valgfrit)",
+      "azureEndpointDescription": "Brugerdefineret Azure OpenAI-endpoint. Lad stå tomt for standard.",
+      "model": "Model",
+      "visionModel": "Vision-sprogmodel (valgfrit)",
+      "visionModelDescription": "Valgfrit: Brug en anden model til billed-/visionsopgaver. Lad stå tomt for at bruge modellen ovenfor.",
+      "apiKey": "API-nøgle",
+      "apiKeyPlaceholder": "Indtast API-nøgle",
+      "temperature": "Temperatur: {value}",
+      "temperatureHint": "Lavere = mere fokuseret, Højere = mere kreativ",
+      "maxTokens": "Maks. tokens",
+      "autoTagAllergies": "Registrér allergentags automatisk",
+      "autoTagAllergiesDescription": "Tilføj automatisk allergenrelaterede tags ved import af opskrifter",
+      "alwaysUseAI": "Brug altid AI-import",
+      "alwaysUseAIDescription": "Spring strukturerede analysatorer over og udtræk opskrifter med AI alene",
+      "autoTaggingMode": "Auto-tagtilstand",
+      "autoTaggingModeDescription": "Tildel automatisk tags/nøgleord til importerede opskrifter med AI",
+      "autoTaggingModes": {
+        "disabled": "Deaktiveret",
+        "predefined": "Kun foruddefinerede tags",
+        "predefinedDb": "Foruddefinerede + eksisterende tags",
+        "freeform": "AI kan oprette nye tags"
+      },
+      "connectionSuccess": "Forbindelse lykkedes",
+      "testConnection": "Test forbindelse",
+      "vision": "vision"
+    },
+    "videoConfig": {
+      "enableVideo": "Aktivér videoanalyse",
+      "enableVideoDescription": "Udtræk opskrifter fra TikTok, Instagram, YouTube Shorts eller Facebook",
+      "configureWarning": "Konfigurer en transskriptionsudbyder nedenfor for at aktivere videobehandling.",
+      "aiDisabledWarning": "Aktivér AI-konfiguration, inden du slår videobehandling til.",
+      "maxLength": "Maks. videolængde (sekunder)",
+      "maxLengthDescription": "Længere videoer tager mere tid og ressourcer at behandle",
+      "maxFileSize": "Maks. videofilstørrelse",
+      "maxFileSizeDescription": "Maksimal størrelse for downloadede videofiler",
+      "ytDlpVersion": "yt-dlp-version",
+      "ytDlpVersionDescription": "Version af yt-dlp til brug ved videodownloads",
+      "transcription": "Transskription",
+      "transcriptionDescription": "Konverter videoens lyd til tekst til opskriftudtrækning",
+      "transcriptionProvider": "Transskriptionsudbyder",
+      "transcriptionProviderDescription": "Kun OpenAI og OpenAI-kompatible endpoints understøtter Whisper-transskription",
+      "transcriptionProviders": {
+        "disabled": "Deaktiveret",
+        "openai": "OpenAI Whisper",
+        "groq": "Groq Whisper",
+        "azure": "Azure OpenAI Whisper",
+        "ollama": "Ollama",
+        "genericOpenai": "Generisk OpenAI-kompatibel"
+      },
+      "transcriptionEndpoint": "Endpoint-URL",
+      "transcriptionEndpointDescription": "OpenAI-kompatibelt endpoint med Whisper-understøttelse, eller Ollama-endpoint",
+      "transcriptionModel": "Model",
+      "transcriptionModelDescription": "Whisper-model til brug ved transskription",
+      "transcriptionModelPlaceholder": "Vælg eller indtast modelnavn",
+      "transcriptionApiKey": "API-nøgle",
+      "transcriptionApiKeyDescription": "Falder tilbage på AI-konfigurationens API-nøgle, hvis ikke angivet",
+      "transcriptionApiKeyPlaceholder": "Lad stå tomt for at bruge AI-konfigurationsnøgle",
+      "transcriptionApiKeyOptional": "API-nøgle (valgfrit)",
+      "transcriptionApiKeyOptionalDescription": "De fleste lokale Whisper-servere kræver ikke en API-nøgle",
+      "transcriptionApiKeyOptionalPlaceholder": "Lad stå tomt for lokale servere"
+    },
+    "promptsConfig": {
+      "recipeExtraction": "Prompt til opskriftudtrækning",
+      "recipeExtractionDescription": "Denne prompt bruges ved udtrækning af opskriftdata fra websider eller videotransskriptioner.",
+      "recipeExtractionPlaceholder": "Indtast prompt til opskriftudtrækning...",
+      "unitConversion": "Prompt til enhedskonvertering",
+      "unitConversionDescription": "Denne prompt bruges ved konvertering af opskriftmål mellem metriske og amerikanske systemer. Tilgængelige variabler: sourceSystem, targetSystem, units",
+      "unitConversionPlaceholder": "Indtast prompt til enhedskonvertering...",
+      "nutritionEstimation": "Prompt til næringsestimering",
+      "nutritionEstimationDescription": "Denne prompt bruges ved estimering af næringsoplysninger for en opskrift. Tilgængelige variabler: recipeName, servings, ingredients",
+      "nutritionEstimationPlaceholder": "Indtast prompt til næringsestimering...",
+      "autoTagging": "Prompt til auto-tagging",
+      "autoTaggingDescription": "Denne prompt bruges til at generere tags for importerede opskrifter. Definer tagningregler og liste over foruddefinerede tags.",
+      "autoTaggingPlaceholder": "Indtast prompt til auto-tagging..."
+    },
+    "unsavedChanges": "Ugemte ændringer",
+    "jsonEditor": {
+      "placeholder": "Indtast JSON-konfiguration...",
+      "invalidJson": "Ugyldigt JSON-format",
+      "failedToSave": "Kunne ikke gemme",
+      "failedToRestore": "Kunne ikke gendanne standardindstillinger"
+    }
+  }
+}

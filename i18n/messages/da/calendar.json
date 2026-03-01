@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Kalender"
+  },
+  "mobile": {
+    "today": "I dag",
+    "scrollToToday": "Gå til i dag"
+  },
+  "editNote": {
+    "title": "Rediger note",
+    "noteLabel": "Note",
+    "notePlaceholder": "Skriv note...",
+    "date": "Dato",
+    "slot": "Tidslot"
+  },
+  "navigation": {
+    "previousMonth": "Forrige måned",
+    "nextMonth": "Næste måned",
+    "prev": "Forrige",
+    "next": "Næste"
+  },
+  "weekdays": {
+    "mon": "Man",
+    "tue": "Tir",
+    "wed": "Ons",
+    "thu": "Tor",
+    "fri": "Fre",
+    "sat": "Lør",
+    "sun": "Søn"
+  },
+  "timeline": {
+    "noItems": "Ingen elementer planlagt",
+    "goToRecipe": "Gå til opskrift",
+    "addItem": "Tilføj element",
+    "untitled": "Uden titel",
+    "serving": "portion",
+    "servings": "portioner",
+    "noImage": "Intet billede",
+    "recipe": "Opskrift",
+    "note": "Note"
+  },
+  "editPlannedRecipe": {
+    "title": "Rediger planlagt opskrift",
+    "date": "Dato",
+    "slot": "Tidslot"
+  },
+  "panel": {
+    "addToCalendar": "Tilføj til kalender",
+    "addRecipe": "Tilføj opskrift",
+    "noDaysAvailable": "Ingen tilgængelige dage.",
+    "searchPlaceholder": "Søg opskrifter eller tilføj noter...",
+    "addNote": "Tilføj note: {input}",
+    "randomRecipe": "Tilfældig opskrift",
+    "noRecipesFound": "Ingen opskrifter fundet.",
+    "failedToLoadRecipes": "Kunne ikke indlæse opskrifter."
+  }
+}

@@ -1,0 +1,208 @@
+{
+  "actions": {
+    "save": "Gem",
+    "cancel": "Annuller",
+    "delete": "Slet",
+    "duplicate": "Dupliker",
+    "edit": "Rediger",
+    "create": "Opret",
+    "add": "Tilføj",
+    "remove": "Fjern",
+    "close": "Luk",
+    "apply": "Anvend",
+    "reset": "Nulstil",
+    "clear": "Ryd",
+    "confirm": "Bekræft",
+    "back": "Tilbage",
+    "next": "Næste",
+    "done": "Færdig",
+    "retry": "Prøv igen",
+    "submit": "Send",
+    "search": "Søg",
+    "filter": "Filtrer",
+    "sort": "Sorter",
+    "import": "Importer",
+    "aiImport": "AI-import",
+    "importWithAI": "Importer med AI",
+    "goHome": "Gå til forsiden",
+    "test": "Test",
+    "format": "Formater",
+    "restoreDefaults": "Gendan standardindstillinger",
+    "saveChanges": "Gem ændringer",
+    "revealSecret": "Vis hemmelighed",
+    "hideSecret": "Skjul hemmelighed",
+    "enterNewValue": "Indtast ny værdi",
+    "cancelEditing": "Annuller redigering"
+  },
+  "status": {
+    "loading": "Indlæser...",
+    "saving": "Gemmer...",
+    "deleting": "Sletter...",
+    "error": "Fejl",
+    "success": "Succes",
+    "noResults": "Ingen resultater fundet",
+    "changing": "Ændrer…"
+  },
+  "filters": {
+    "title": "Filtre",
+    "search": "Søg",
+    "sort": "Sorter",
+    "mode": "Tilstand",
+    "modeAll": "Alle",
+    "modeAny": "Enhver",
+    "tags": "Tags",
+    "searchTags": "Søg tags",
+    "favoritesAndRating": "Favoritter og bedømmelse",
+    "favorites": "Favoritter",
+    "cookingTime": "Tilberedningstid",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
+    "categories": "Kategorier",
+    "category": {
+      "breakfast": "Morgenmad",
+      "lunch": "Frokost",
+      "dinner": "Aftensmad",
+      "snack": "Snack"
+    },
+    "sortByTitle": "Titel",
+    "sortByDate": "Dato",
+    "clearFilters": "Ryd filtre"
+  },
+  "time": {
+    "minutes": "min",
+    "hours": "t"
+  },
+  "validation": {
+    "required": "Dette felt er påkrævet",
+    "invalidUrl": "Indtast venligst en gyldig URL"
+  },
+  "errors": {
+    "operationFailed": "Handlingen mislykkedes",
+    "nameCannotBeEmpty": "Navn kan ikke være tomt",
+    "technicalDetails": "Noget gik galt. Tjek browserkonsollen for tekniske detaljer."
+  },
+  "slots": {
+    "breakfast": "Morgenmad",
+    "lunch": "Frokost",
+    "dinner": "Aftensmad",
+    "snack": "Snack",
+    "chooseSlot": "Vælg tidsrum"
+  },
+  "connection": {
+    "connecting": "Opretter forbindelse til Norish...",
+    "syncing": "Synkroniserer, vent venligst...",
+    "checkInternet": "Tjek venligst din internetforbindelse",
+    "gettingUpdates": "Et øjeblik mens vi henter de seneste opdateringer"
+  },
+  "language": {
+    "title": "Sprog"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Side ikke fundet",
+    "message": "Ups! Nora kunne ikke finde det, du leder efter.\nSiden kan være blevet flyttet eller eksisterer ikke."
+  },
+  "import": {
+    "url": {
+      "title": "Importer opskrift",
+      "label": "Opskrift-URL",
+      "placeholder": "https://eksempel.dk/din-opskrift",
+      "failed": "Kunne ikke importere opskrift",
+      "failedWithAI": "Kunne ikke importere opskrift med AI"
+    },
+    "paste": {
+      "title": "Importer fra indsætning",
+      "label": "Opskrifttekst eller JSON-LD",
+      "placeholder": "Indsæt en opskrift (fritekst) eller JSON-LD her...",
+      "characters": "{count} / {max} tegn",
+      "tooLarge": "Indsætningen er for stor",
+      "maxCharacters": "Maksimalt {max} tegn er tilladt",
+      "importing": "Importerer opskrift...",
+      "importingWithAI": "Importerer opskrift med AI...",
+      "inProgress": "Importering i gang, vent venligst...",
+      "failed": "Importering mislykkedes"
+    },
+    "image": {
+      "title": "Importer fra billede",
+      "dropzone": "Slip billeder her eller klik for at gennemse",
+      "paste": "for at indsætte",
+      "formats": "Understøtter JPG, PNG, WebP. Maks. 10 MB pr. fil.",
+      "invalidType": "Ugyldig filtype",
+      "notSupported": "{name} er ikke et understøttet billedformat",
+      "tooLarge": "Filen er for stor",
+      "exceeds": "{name} overstiger grænsen på 10 MB",
+      "tooMany": "For mange filer",
+      "maxFiles": "Maksimalt {max} filer er tilladt",
+      "importing": "Importerer opskrift fra billeder...",
+      "analyzing": "Analyserer dine billeder, vent venligst...",
+      "failed": "Importering mislykkedes",
+      "selectedCount": "{count} billeder valgt – de kombineres til én opskrift"
+    }
+  },
+  "formatting": {
+    "title": "Formateringstips",
+    "heading": "Start en linje med <strong>#</strong> for en overskrift",
+    "bold": "Omslut med <strong>**dobbelte stjerner**</strong> for fed skrift",
+    "recipeLink": "Skriv <strong>/opskriftsnavn</strong> for at linke til en anden opskrift",
+    "helpAriaLabel": "Hjælp til formatering"
+  },
+  "tagInput": {
+    "placeholder": "Skriv tags adskilt af mellemrum..."
+  },
+  "recurrence": {
+    "title": "Gentag",
+    "frequency": "Hyppighed",
+    "interval": "Interval",
+    "onDay": "På dag",
+    "daily": "Dagligt",
+    "weekly": "Ugentligt",
+    "monthly": "Månedligt",
+    "day": "dag",
+    "days": "dage",
+    "week": "uge",
+    "weeks": "uger",
+    "month": "måned",
+    "months": "måneder",
+    "next": "Næste:",
+    "every": "Hver",
+    "everyOther": "Hver anden",
+    "on": "på",
+    "today": "i dag",
+    "tomorrow": "i morgen",
+    "weekdays": {
+      "sun": "Søn",
+      "mon": "Man",
+      "tue": "Tir",
+      "wed": "Ons",
+      "thu": "Tor",
+      "fri": "Fre",
+      "sat": "Lør"
+    },
+    "weekdaysFull": {
+      "0": "Mandag",
+      "1": "Tirsdag",
+      "2": "Onsdag",
+      "3": "Torsdag",
+      "4": "Fredag",
+      "5": "Lørdag",
+      "6": "Søndag"
+    }
+  },
+  "badges": {
+    "new": "Ny"
+  },
+  "timer": {
+    "done": "Færdig",
+    "done_action": "Færdig",
+    "one": "Timer",
+    "other": "Timere",
+    "label_one": "1 timer",
+    "label_other": "{count} timere",
+    "notification_title": "Timer færdig",
+    "notification_body": "{label} er færdig!",
+    "notifications_disabled": "Notifikationer er deaktiveret",
+    "notifications_disabled_hint": "Aktiver notifikationer i dine browserindstillinger for at modtage alarmer, når timere afsluttes i baggrunden."
+  }
+}

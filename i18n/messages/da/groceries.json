@@ -1,0 +1,78 @@
+{
+  "page": {
+    "title": "Indkøbsliste",
+    "addItem": "Tilføj vare",
+    "addItems": "Tilføj varer",
+    "viewByStore": "Pr. butik",
+    "viewByRecipe": "Pr. opskrift",
+    "viewMode": "Visningstilstand",
+    "manageStores": "Administrer butikker",
+    "storeViewOptions": "Butikvisningsindstillinger",
+    "groupIngredients": "Gruppér ingredienser"
+  },
+  "empty": {
+    "title": "Din indkøbsliste venter",
+    "description": "Tilføj varer ved at bruge knappen \"Tilføj vare\" ovenfor for at komme i gang.",
+    "manual": "Manuelle varer"
+  },
+  "item": {
+    "unnamedItem": "Unavngivet vare",
+    "fromRecipes": "Fra {count, plural, one {# opskrift} other {# opskrifter}}",
+    "items": "{count, plural, one {# vare} other {# varer}}"
+  },
+  "store": {
+    "unsorted": "Usorteret",
+    "noItems": "Ingen varer i denne butik",
+    "storeActions": "Butikshandlinger",
+    "markAllDone": "Markér alle som færdige",
+    "deleteDone": "Slet færdige",
+    "done": "{count} færdige"
+  },
+  "storeManager": {
+    "title": "Administrer butikker",
+    "addStore": "Tilføj butik",
+    "editStore": "Rediger butik",
+    "deleteStore": "Slet butik",
+    "storeName": "Butiksnavn",
+    "storeNamePlaceholder": "f.eks. Supermarked",
+    "storeColor": "Farve",
+    "storeIcon": "Ikon",
+    "confirmDelete": "Er du sikker på, at du vil slette {storeName}?",
+    "deleteWarning": "Varer i denne butik flyttes til Usorteret.",
+    "noStoresYet": "Ingen butikker endnu",
+    "createStoreHint": "Opret en butik for at organisere dine indkøb",
+    "hasItems": "Denne butik har {count} indkøbsvare.",
+    "hasItemsPlural": "Denne butik har {count} indkøbsvarer.",
+    "whatToDo": "Hvad vil du gøre med dem?",
+    "keepItems": "Behold varer",
+    "keepItemsDescription": "Flyt varer til Usorteret",
+    "deleteItems": "Slet varer",
+    "deleteItemsDescription": "Fjern alle varer i denne butik",
+    "noItems": "Denne butik har ingen varer.",
+    "create": "Opret"
+  },
+  "panel": {
+    "addTitle": "Tilføj indkøbsvare",
+    "editTitle": "Rediger indkøbsvare",
+    "itemName": "Varenavn",
+    "itemNamePlaceholder": "f.eks. Mælk, Æg, Brød...",
+    "selectStore": "Vælg butik",
+    "noStore": "Ingen butik",
+    "recurrence": "Gentagelse",
+    "savePreference": "Husk butik for denne vare",
+    "addAnother": "Tilføj endnu en",
+    "addRepeat": "+ Tilføj gentagelse",
+    "storeOptional": "Butik (valgfrit)",
+    "autoDetectFromHistory": "Registrér automatisk fra historik",
+    "autoDetectOrSelect": "Registrér automatisk eller vælg",
+    "placeholder": "f.eks. 1 kg kyllingebryst",
+    "editPlaceholder": "f.eks. mælk hver uge",
+    "servings": "Portioner",
+    "loadingIngredients": "Indlæser ingredienser...",
+    "noIngredients": "Ingen ingredienser.",
+    "addSelectedToGroceries": "Tilføj til indkøbsliste",
+    "ingredientsAdded": "Ingredienser tilføjet til indkøbslisten.",
+    "ingredientsFailed": "Kunne ikke tilføje ingredienser til indkøbslisten.",
+    "addToGroceries": "Tilføj til indkøbsliste"
+  }
+}

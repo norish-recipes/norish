@@ -1,0 +1,208 @@
+{
+  "dashboard": {
+    "title": "Alle opskrifter",
+    "searchPlaceholder": "Søg eller tilføj opskrift...",
+    "searchRecipesPlaceholder": "Søg opskrifter...",
+    "recipeCount": "{count, plural, one {# opskrift} other {# opskrifter}}",
+    "addRecipe": "Tilføj opskrift",
+    "importFromUrl": "URL",
+    "importFromPaste": "Indsæt",
+    "importFromImage": "Billede",
+    "searchFields": {
+      "title": "Titel",
+      "description": "Beskrivelse",
+      "ingredients": "Ingredienser",
+      "steps": "Trin",
+      "tags": "Tags"
+    }
+  },
+  "empty": {
+    "title": "Din opskriftsamling venter",
+    "description": "Indsæt en opskrift-URL i søgefeltet ovenfor, og lad magien ske.",
+    "noResults": "Ingen opskrifter fundet",
+    "noResultsHint": "Prøv at justere eller rydde dine filtre."
+  },
+  "card": {
+    "noImage": "Intet billede tilgængeligt",
+    "viewGroceries": "Se indkøbsliste",
+    "addToCalendar": "Tilføj til kalender",
+    "deleteRecipe": "Slet opskrift"
+  },
+  "detail": {
+    "backToRecipes": "Tilbage til opskrifter",
+    "viewOriginal": "Se original opskrift",
+    "ingredients": "Ingredienser",
+    "steps": "Fremgangsmåde",
+    "notes": "Noter",
+    "addToGroceries": "Tilføj til indkøbsliste",
+    "ratingPrompt": "Hvad syntes du om denne opskrift?",
+    "notFound": "Opskrift ikke fundet",
+    "notFoundMessage": "Denne opskrift eksisterer ikke, eller du har ikke adgang til at se den.",
+    "prep": "forberedelse",
+    "total": "total",
+    "planMeal": "Planlæg måltid",
+    "recipeActions": "Opskrifthandlinger",
+    "switchToDecimal": "Vis decimaler",
+    "switchToFraction": "Vis brøker"
+  },
+  "actions": {
+    "plan": "Planlæg",
+    "groceries": "Indkøbsliste",
+    "edit": "Rediger",
+    "delete": "Slet",
+    "autoTag": "Auto-tag",
+    "autoTagging": "Genererer tags...",
+    "autoCategorize": "Kategoriser automatisk",
+    "detectAllergies": "Registrér allergener",
+    "detectingAllergies": "Registrerer allergener...",
+    "estimateNutrition": "Estimér næring",
+    "estimatingNutrition": "Estimerer næring...",
+    "screenOn": "Skærm tændt",
+    "keepScreenOn": "Hold skærm tændt",
+    "actionsLabel": "Handlinger"
+  },
+  "convert": {
+    "ariaLabel": "Konverter målesystem",
+    "toMetric": "Konverter til metrisk",
+    "toUS": "Konverter til amerikansk"
+  },
+  "deleteModal": {
+    "title": "Slet opskrift",
+    "confirmMessage": "Er du sikker på, at du vil slette \"{recipeName}\"?",
+    "warning": "Denne handling kan ikke fortrydes."
+  },
+  "form": {
+    "createTitle": "Opret opskrift",
+    "editTitle": "Rediger opskrift",
+    "createDescription": "Tilføj en ny opskrift til din samling",
+    "editDescription": "Opdater dine opskriftoplysninger",
+    "initializingForm": "Initialiserer formular...",
+    "photo": "Billede",
+    "basicInfo": "Grundoplysninger",
+    "ingredients": "Ingredienser",
+    "instructions": "Fremgangsmåde",
+    "tags": "Tags",
+    "nutrition": "Næring",
+    "nutritionPerServing": "(pr. portion, valgfrit)",
+    "details": "Detaljer",
+    "additionalInfo": "Yderligere oplysninger",
+    "recipeName": "Opskriftsnavn",
+    "recipeNamePlaceholder": "f.eks. Chokoladekage",
+    "description": "Beskrivelse",
+    "descriptionPlaceholder": "En kort beskrivelse af, hvad der gør denne opskrift særlig...",
+    "notes": "Noter",
+    "notesPlaceholder": "Tilføj forberedelsesnoter, justeringer eller serveringstips til denne opskrift...",
+    "ingredientsHelp": "Skriv ingredienser som \"2 dl mel\" – vi analyserer automatisk mængder og enheder.",
+    "instructionsHelp": "Skriv klare trin-for-trin instruktioner. Tryk Enter for at gå til næste trin.",
+    "tagsHelp": "Skriv tags og klik på forslag for at tilføje. Valgte tags er blå, nye tags har stiplet kant.",
+    "tagsAndCategories": "Tags og kategorier",
+    "categoriesHelp": "Vælg måltidskategorier for denne opskrift.",
+    "category": {
+      "breakfast": "Morgenmad",
+      "lunch": "Frokost",
+      "dinner": "Aftensmad",
+      "snack": "Snack"
+    },
+    "calories": "Kalorier",
+    "fat": "Fedt (g)",
+    "carbs": "Kulhydrater (g)",
+    "protein": "Protein (g)",
+    "servings": "Portioner",
+    "cookingTimes": "Tilberedningstider",
+    "optional": "(valgfrit)",
+    "sourceUrl": "Kilde-URL",
+    "sourceUrlPlaceholder": "https://eksempel.dk/opskrift",
+    "measurementSystemNote": "Vi registrerer automatisk målesystemet fra dine ingredienser, men du kan tilsidesætte det her.",
+    "measurementSystemEditNote": " Bemærk: Dette opdaterer systemlabelen, men konverterer ikke enheder. Brug handlingen Konverter efter at gemme.",
+    "createRecipe": "Opret opskrift",
+    "saveChanges": "Gem ændringer",
+    "uploading": "Uploader...",
+    "clickToUpload": "Klik for at uploade eller træk og slip",
+    "pasteToUpload": "for at indsætte",
+    "imageFormats": "PNG, JPG, WEBP op til 5 MB"
+  },
+  "gallery": {
+    "addImage": "Tilføj billede",
+    "uploading": "Uploader...",
+    "uploadFailed": "Upload mislykkedes",
+    "dragToReorder": "Træk for at omarrangere",
+    "maxImagesReached": "Maksimalt {max} billeder er tilladt",
+    "maxVideosReached": "Maksimalt {max} videoer er tilladt",
+    "invalidFileType": "Ugyldig filtype"
+  },
+  "carousel": {
+    "noImageAvailable": "Intet billede tilgængeligt",
+    "noMediaAvailable": "Intet medie tilgængeligt",
+    "videoPlayer": {
+      "mute": "Slå lyd fra",
+      "unmute": "Slå lyd til",
+      "fullscreen": "Gå til fuld skærm",
+      "exitFullscreen": "Forlad fuld skærm"
+    }
+  },
+  "validation": {
+    "nameRequired": "Opskriftsnavn er påkrævet",
+    "ingredientsRequired": "Mindst én ingrediens er påkrævet",
+    "stepsRequired": "Mindst ét trin er påkrævet",
+    "servingsMin": "Portioner skal være mindst 1"
+  },
+  "nutrition": {
+    "title": "Næring",
+    "calories": "Kalorier",
+    "fat": "Fedt",
+    "carbs": "Kulhydrater",
+    "protein": "Protein",
+    "showingPortions": "Viser værdier for {count} {count, plural, one {portion} other {portioner}}",
+    "noInfo": "Ingen næringsoplysninger tilgængelige",
+    "estimateWithAI": "Estimér med AI"
+  },
+  "measurementSystem": {
+    "label": "Målesystem",
+    "detected": "Registreret: {system}",
+    "metric": "Metrisk",
+    "us": "Amerikansk"
+  },
+  "timeInputs": {
+    "prep": "Forberedelse",
+    "cook": "Tilberedning",
+    "total": "Total"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Trin {number}: Beskriv trinnet...",
+    "stepPlaceholderShort": "Trin {number}"
+  },
+  "ingredientInput": {
+    "placeholder": "f.eks. 2 dl mel"
+  },
+  "wakeLock": {
+    "keepScreenOn": "Hold skærm tændt",
+    "notSupported": "Hold skærm tændt understøttes ikke i denne browser",
+    "activeTooltip": "Skærmen forbliver tændt under madlavning",
+    "inactiveTooltip": "Hold skærm tændt mens du følger trinnene",
+    "ariaLabel": "Hold skærm tændt"
+  },
+  "toasts": {
+    "processingBoth": "Behandler tags og allergener",
+    "processingTags": "Genererer tags",
+    "processingAllergies": "Registrerer allergener",
+    "bothComplete": "Tags og allergener opdateret",
+    "tagsComplete": "Tags genereret",
+    "allergiesComplete": "Allergener registreret",
+    "imported": "Opskrift importeret",
+    "converted": "Mål konverteret",
+    "convertedDescription": "Opskrift konverteret til {system}-enheder",
+    "failed": "Opskrifthandling mislykkedes",
+    "failedDescription": "Noget gik galt under behandling af din opskrift. Tjek browserkonsollen for tekniske detaljer.",
+    "batchImported": "Opskrifter importeret",
+    "batchImportedDescription": "{count} opskrifter importeret fra arkiv",
+    "view": "Se",
+    "open": "Åbn"
+  },
+  "tags": {
+    "panel": {
+      "editTitle": "Rediger tag",
+      "editPlaceholder": "Indtast tagnavn...",
+      "duplicateTag": "Dette tag eksisterer allerede"
+    }
+  }
+}
