@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@better-auth/api-key':
+      specifier: 1.5.0
+      version: 1.5.0
     '@better-auth/expo':
       specifier: 1.5.0
       version: 1.5.0
@@ -624,6 +627,9 @@ importers:
 
   packages/auth:
     dependencies:
+      '@better-auth/api-key':
+        specifier: 'catalog:'
+        version: 1.5.0(@better-auth/core@1.5.0(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.1))(@better-auth/utils@0.3.1)(better-auth@1.5.0(ad83431fc3c8eed2a70f84cd5711bd9c))
       '@better-auth/expo':
         specifier: 'catalog:'
         version: 1.5.0(@better-auth/core@1.5.0(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.1))(better-auth@1.5.0(ad83431fc3c8eed2a70f84cd5711bd9c))(expo-constants@55.0.7)(expo-linking@55.0.7)(expo-web-browser@55.0.9(expo@55.0.3)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)))
@@ -1752,6 +1758,13 @@ packages:
 
   '@balena/dockerignore@1.0.2':
     resolution: {integrity: sha512-wMue2Sy4GAVTk6Ic4tJVcnfdau+gx2EnG7S+uAEe+TWJFqE4YoWN4/H8MSLj4eYJKxGg26lZwboEniNiNwZQ6Q==}
+
+  '@better-auth/api-key@1.5.0':
+    resolution: {integrity: sha512-abxpnVrlZK6eUdyVpYTleLXqD5xjADA2VZ52/2QZ3XkG1azylQz6nOBLoiB9eU8jGkj+DpyvKCDjF5p9Huzfpw==}
+    peerDependencies:
+      '@better-auth/core': 1.5.0
+      '@better-auth/utils': 0.3.1
+      better-auth: 1.5.0
 
   '@better-auth/core@1.5.0':
     resolution: {integrity: sha512-nDPmW7I9VGRACEei31fHaZxGwD/yICraDllZ/f25jbWXYaxDaW88RuH1ZhbOUKmGJlZtDxcjN1+YmcVIc1ioNw==}
@@ -11519,6 +11532,13 @@ snapshots:
       '@babel/helper-validator-identifier': 8.0.0-rc.1
 
   '@balena/dockerignore@1.0.2': {}
+
+  '@better-auth/api-key@1.5.0(@better-auth/core@1.5.0(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.1))(@better-auth/utils@0.3.1)(better-auth@1.5.0(ad83431fc3c8eed2a70f84cd5711bd9c))':
+    dependencies:
+      '@better-auth/core': 1.5.0(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.1)
+      '@better-auth/utils': 0.3.1
+      better-auth: 1.5.0(ad83431fc3c8eed2a70f84cd5711bd9c)
+      zod: 4.3.6
 
   '@better-auth/core@1.5.0(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.1)':
     dependencies:
