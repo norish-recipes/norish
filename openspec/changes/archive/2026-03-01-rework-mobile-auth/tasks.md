@@ -85,3 +85,15 @@
 - [x] 13.1 Run TypeScript type-check across the mobile app and server packages
 - [x] 13.2 Verify Metro bundler resolves all BetterAuth imports with `unstable_enablePackageExports`
 - [x] 13.3 Verify no references remain to `/api/mobile-auth`, `bearer()`, `mobile-auth-service`, `mobile-auth-guard`, or `mobile-handoff-store`
+
+## 14. Add Registration Support
+
+- [x] 14.1 Add `AuthProvidersResponse` type to `packages/shared/src/contracts/dto/auth.ts` with `providers: ProviderInfo[]`, `registrationEnabled: boolean`, `passwordAuthEnabled: boolean`
+- [x] 14.2 Update `config.authProviders` tRPC procedure in `packages/api/src/trpc/routers/config/procedures.ts` to return `AuthProvidersResponse` (call `isRegistrationEnabled()` and `isPasswordAuthEnabled()` alongside `getAvailableProviders()`)
+- [x] 14.3 Update mobile login screen (`apps/mobile/src/app/(auth)/login.tsx`) to destructure `providers`, `registrationEnabled`, `passwordAuthEnabled` from the new response shape
+- [x] 14.4 Add "Don't have an account? Sign up" link on mobile login screen, visible only when `registrationEnabled && passwordAuthEnabled`; navigates to `/register`
+- [x] 14.5 Create registration screen at `apps/mobile/src/app/(auth)/register.tsx` with name, email, password, confirm password fields; calls `authClient.signUp.email()`; uses same unified auth screen styling
+- [x] 14.6 Add "Already have an account? Sign in" link on registration screen, navigating to `/login`
+- [x] 14.7 Handle registration-disabled state on register screen (if user navigates directly) -- show message and link back to login
+- [x] 14.8 Update any web callers of `config.authProviders` to handle the new response shape (object with `providers` key instead of bare array) -- N/A: web login page calls `getAvailableProviders()` directly server-side, not via tRPC
+- [x] 14.9 Run TypeScript type-check across affected packages

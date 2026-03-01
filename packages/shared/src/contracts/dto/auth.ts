@@ -5,6 +5,12 @@ export interface ProviderInfo {
   type?: "oauth" | "credential";
 }
 
+export interface AuthProvidersResponse {
+  providers: ProviderInfo[];
+  registrationEnabled: boolean;
+  passwordAuthEnabled: boolean;
+}
+
 export type ApiKeyCreateInput = {
   body: {
     name: string;

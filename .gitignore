@@ -71,3 +71,8 @@ docker-compose.yml
 
 .expo-export-ios-test
 .expo-export-test
+
+**/ios
+**/android
+
+**/.expo

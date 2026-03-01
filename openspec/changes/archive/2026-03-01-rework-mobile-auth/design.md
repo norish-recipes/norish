@@ -251,7 +251,80 @@ const config = getDefaultConfig(__dirname);
 config.resolver.unstable_enablePackageExports = true;
 ```
 
-### 12. Dependencies
+### 12. Registration Screen
+
+The mobile app needs a registration screen for when the server has registration enabled and the credential (email/password) provider is configured.
+
+**Backend: Expose registration status**
+
+The `config.authProviders` tRPC endpoint currently returns `ProviderInfo[]`. It needs to return an enriched response that also includes `registrationEnabled` and `passwordAuthEnabled` booleans. This is a **breaking change** to the return type -- changing from a bare array to an object:
+
+```ts
+// packages/api/src/trpc/routers/config/procedures.ts
+const authProviders = publicProcedure.query(async () => {
+  const [providers, registrationEnabled, passwordAuthEnabled] = await Promise.all([
+    getAvailableProviders(),
+    isRegistrationEnabled(),
+    isPasswordAuthEnabled(),
+  ]);
+  return { providers, registrationEnabled, passwordAuthEnabled };
+});
+```
+
+Both the mobile login screen and web login page consume this endpoint. The web login page (`apps/web/app/(auth)/login/page.tsx`) currently calls `isRegistrationEnabled()` server-side, so it doesn't strictly need the tRPC change -- but for consistency, both can use it. The web callers need updating to handle the new shape (`data.providers` instead of `data` directly).
+
+**Shared DTO update**
+
+Add an `AuthProvidersResponse` type to `packages/shared/src/contracts/dto/auth.ts`:
+
+```ts
+export interface AuthProvidersResponse {
+  providers: ProviderInfo[];
+  registrationEnabled: boolean;
+  passwordAuthEnabled: boolean;
+}
+```
+
+**Mobile: Registration screen**
+
+Add `apps/mobile/src/app/(auth)/register.tsx` with the same layout as the login/connect screens (eyebrow, title, subtitle, card). The form collects:
+- Name (text input)
+- Email (email input)
+- Password (secure text)
+- Confirm password (secure text)
+
+Validation matches the web: password 8-128 chars, passwords must match.
+
+On submit, calls `authClient.signUp.email({ name, email, password })`. Since BetterAuth's `emailAndPassword` config has `autoSignIn: true`, a successful signup automatically establishes a session, and `Stack.Protected` handles the redirect to `(tabs)`.
+
+**Mobile: Conditional navigation links**
+
+The login screen shows "Don't have an account? Sign up" below the credential form when `registrationEnabled && passwordAuthEnabled` (from the providers response). This links to `/register`.
+
+The register screen shows "Already have an account? Sign in" below the form, linking back to `/login`.
+
+Both links are only shown when appropriate -- registration link only when registration is enabled, and only when the credential provider is available (OAuth users don't need a separate registration form).
+
+### 13. Route Structure (Updated)
+
+With the registration screen, the `(auth)` route group becomes:
+
+```
+app/
+  _layout.tsx        ← Stack with Stack.Protected guards
+  (auth)/
+    _layout.tsx      ← Stack with animations
+    connect.tsx
+    login.tsx
+    register.tsx     ← NEW: registration form
+    auth/callback.tsx
+    auth/error.tsx
+  (tabs)/
+    _layout.tsx
+    ...
+```
+
+### 14. Dependencies
 
 **Add to server (`packages/auth` or root):**
 - `@better-auth/expo` (server plugin)

@@ -1,4 +1,4 @@
-## ADDED Requirements
+# Spec: Mobile Auth
 
 ### Requirement: BetterAuth Expo Integration
 
@@ -132,6 +132,46 @@ All mobile auth files and exports SHALL omit the `mobile-` prefix since they res
 - **WHEN** referencing auth-related files in `apps/mobile/`
 - **THEN** files SHALL be named without the `mobile-` prefix (e.g., `auth-context.tsx` not `mobile-auth-context.tsx`)
 - **AND** exported symbols SHALL use unprefixed names (e.g., `useAuth` not `useMobileAuth`, `TrpcProvider` not `MobileTrpcProvider`)
+
+### Requirement: Registration Screen
+
+The mobile app SHALL support user registration when registration is enabled on the server, matching the web app's registration capabilities.
+
+#### Scenario: Registration enabled with credential provider
+
+- **WHEN** registration is enabled on the server AND the credential (email/password) provider is configured
+- **THEN** the login screen SHALL display a "Sign up" link
+- **AND** tapping it SHALL navigate to a registration screen within the `(auth)` route group
+
+#### Scenario: Registration form
+
+- **WHEN** the registration screen is displayed
+- **THEN** the form SHALL collect: name, email, password, and confirm password
+- **AND** the form SHALL validate password length (8-128 characters) and password match
+- **AND** on submission it SHALL call `authClient.signUp.email({ name, email, password })`
+- **AND** on success the session SHALL be established automatically (BetterAuth `autoSignIn: true`)
+
+#### Scenario: Registration disabled
+
+- **WHEN** registration is disabled on the server
+- **THEN** the login screen SHALL NOT display a "Sign up" link
+- **AND** navigating directly to the registration route SHALL show a message indicating registration is disabled
+
+#### Scenario: Registration not applicable
+
+- **WHEN** only OAuth providers are configured (no credential provider)
+- **THEN** no "Sign up" link SHALL be shown (OAuth providers auto-create accounts on first sign-in, subject to the server's registration gate)
+
+### Requirement: Auth Info Endpoint
+
+The `config.authProviders` tRPC endpoint SHALL expose registration availability alongside the provider list.
+
+#### Scenario: Registration status exposed
+
+- **WHEN** a client calls the `config.authProviders` endpoint
+- **THEN** the response SHALL include a `registrationEnabled` boolean field
+- **AND** this value SHALL reflect the current `REGISTRATION_ENABLED` server config setting
+- **AND** a `passwordAuthEnabled` boolean field SHALL also be included
 
 ### Requirement: Metro Bundler Configuration
 

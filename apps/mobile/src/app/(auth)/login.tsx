@@ -1,9 +1,9 @@
 import { Button, Card, Input, useThemeColor } from 'heroui-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import type { ProviderInfo } from '@norish/shared/contracts';
+import type { AuthProvidersResponse, ProviderInfo } from '@norish/shared/contracts';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '@/context/auth-context';
 import { useTRPC } from '@/providers/trpc-provider';
@@ -49,11 +49,13 @@ function LoginForm({
   justLoggedOut: boolean;
   justLoggedOutFromQuery: boolean;
 }) {
+  const router = useRouter();
   const { authClient, consumeLogoutFlag } = useAuth();
-  const [foregroundColor, mutedColor, dangerColor] = useThemeColor([
+  const [foregroundColor, mutedColor, dangerColor, accentColor] = useThemeColor([
     'foreground',
     'muted',
     'danger',
+    'accent',
   ] as const);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -69,7 +71,10 @@ function LoginForm({
     }),
   );
 
-  const providers = (providersQuery.data as ProviderInfo[] | undefined) ?? [];
+  const authProvidersData = providersQuery.data as AuthProvidersResponse | undefined;
+  const providers = authProvidersData?.providers ?? [];
+  const registrationEnabled = authProvidersData?.registrationEnabled ?? false;
+  const passwordAuthEnabled = authProvidersData?.passwordAuthEnabled ?? false;
   const credentialProvider = providers.find((p) => toProviderType(p) === 'credential');
   const oauthProviders = providers.filter((p) => toProviderType(p) === 'oauth');
 
@@ -239,6 +244,15 @@ function LoginForm({
       )}
 
       {errorMessage && <Text style={[styles.errorText, { color: dangerColor }]}>{errorMessage}</Text>}
+
+      {registrationEnabled && passwordAuthEnabled && (
+        <Pressable onPress={() => router.push('/register' as any)} style={styles.linkRow}>
+          <Text style={[styles.linkText, { color: mutedColor }]}>
+            Don't have an account?{' '}
+            <Text style={{ color: accentColor, fontWeight: '600' }}>Sign up</Text>
+          </Text>
+        </Pressable>
+      )}
     </>
   );
 }
@@ -354,5 +368,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500',
+  },
+  linkRow: {
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  linkText: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });

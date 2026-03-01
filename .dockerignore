@@ -22,3 +22,5 @@ Dockerfile*
 .github
 uploads/
 .sisyphus
+**/ios
+**/android

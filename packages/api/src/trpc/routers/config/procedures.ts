@@ -1,11 +1,12 @@
 import { trpcLogger as log } from "@norish/api/logger";
-import { getAvailableProviders } from "@norish/auth/providers";
+import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   getLocaleConfig,
   getRecurrenceConfig,
   getTimerKeywords,
   getUnits,
+  isRegistrationEnabled,
   isTimersEnabled,
 } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@norish/db/repositories/tags";
@@ -98,7 +99,7 @@ const timerKeywords = publicProcedure.query(async () => {
 });
 
 /**
- * Get available authentication providers for the login UI.
+ * Get available authentication providers and registration status for the login UI.
  *
  * Public (unauthenticated) procedure so mobile and other unauthenticated
  * clients can discover which providers are configured before a session exists.
@@ -107,7 +108,14 @@ const timerKeywords = publicProcedure.query(async () => {
 const authProviders = publicProcedure.query(async () => {
   log.debug("Getting available auth providers");
 
-  return await getAvailableProviders();
+  const [providers, registrationEnabled, passwordAuthEnabled] =
+    await Promise.all([
+      getAvailableProviders(),
+      isRegistrationEnabled(),
+      isPasswordAuthEnabled(),
+    ]);
+
+  return { providers, registrationEnabled, passwordAuthEnabled };
 });
 
 export const configProcedures = router({
