@@ -17,6 +17,7 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.4.20",
     "@norish/config": "workspace:*",
     "@norish/db": "workspace:*",
     "@norish/queue": "workspace:*",

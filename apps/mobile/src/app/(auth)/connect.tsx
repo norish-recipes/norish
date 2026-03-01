@@ -46,7 +46,9 @@ export default function ConnectScreen() {
       }
 
       if (existingBaseUrl) {
-        router.replace('/recipes');
+        // If a URL is already configured, go straight to login.
+        // Stack.Protected guard handles final redirect once authenticated.
+        router.replace('/login');
         return;
       }
 
@@ -85,7 +87,7 @@ export default function ConnectScreen() {
       }
 
       await saveBackendBaseUrl(normalizedBaseUrl);
-      router.replace('/recipes');
+      router.replace('/login');
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         setErrorMessage('Connection timed out. Verify URL and network access.');

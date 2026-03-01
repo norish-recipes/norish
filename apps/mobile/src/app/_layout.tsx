@@ -1,21 +1,45 @@
 import '@/global.css';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Slot } from 'expo-router';
+import { Stack } from 'expo-router';
 import { HeroUINativeProvider } from 'heroui-native';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { ActivityIndicator, StyleSheet, useColorScheme, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import {
   AppearancePreferenceProvider,
   useAppearancePreference,
 } from '@/context/appearance-preference-context';
+import { AuthProvider, useAuth } from '@/context/auth-context';
 import {
   loadBackendBaseUrl,
   subscribeBackendBaseUrlChange,
 } from '@/lib/network/backend-base-url';
-import { MobileTrpcProvider } from '@/providers/mobile-trpc-provider';
+import { TrpcProvider } from '@/providers/trpc-provider';
+
+function RootStack() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingState}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 function RootLayoutContent() {
   const { hydrated, mode } = useAppearancePreference();
@@ -50,24 +74,33 @@ function RootLayoutContent() {
   }, []);
 
   if (!hydrated || !backendHydrated) {
-    return null;
+    return (
+      <View style={styles.loadingState}>
+        <ActivityIndicator />
+      </View>
+    );
   }
 
-  // Resolve the effective color scheme: prefer explicit mode, fall back to system
   const effectiveScheme =
     mode === 'system' ? (systemColorScheme ?? 'light') : mode;
 
   const content = (
     <ThemeProvider value={effectiveScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Slot />
+      <AuthProvider backendBaseUrl={backendBaseUrl}>
+        <RootStack />
+      </AuthProvider>
     </ThemeProvider>
   );
 
-  if (!backendBaseUrl) {
-    return content;
+  if (backendBaseUrl) {
+    return (
+      <TrpcProvider baseUrl={backendBaseUrl}>
+        {content}
+      </TrpcProvider>
+    );
   }
 
-  return <MobileTrpcProvider baseUrl={backendBaseUrl}>{content}</MobileTrpcProvider>;
+  return content;
 }
 
 export default function RootLayout() {
@@ -85,5 +118,10 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  loadingState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

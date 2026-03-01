@@ -11,6 +11,7 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.4.20",
     "@expo/vector-icons": "^15.0.2",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@norish/shared": "workspace:*",
@@ -20,6 +21,8 @@
     "@react-navigation/elements": "^2.8.1",
     "@react-navigation/native": "^7.1.28",
     "@shopify/flash-list": "2.0.2",
+    "@tanstack/react-query": "catalog:",
+    "better-auth": "catalog:",
     "expo": "~55.0.3",
     "expo-blur": "~55.0.8",
     "expo-constants": "~55.0.7",
@@ -29,6 +32,7 @@
     "expo-glass-effect": "~55.0.7",
     "expo-image": "~55.0.5",
     "expo-linking": "~55.0.7",
+    "expo-network": "^55.0.8",
     "expo-router": "~55.0.3",
     "expo-secure-store": "~55.0.8",
     "expo-splash-screen": "~55.0.10",
