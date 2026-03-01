@@ -3,7 +3,7 @@ import { Card, useThemeColor } from 'heroui-native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useNavigation } from 'expo-router';
-import { styles } from '@/app/index.styles';
+import { styles } from '@/styles/index.styles';
 import { MobileRecipeCard } from '@/components/home/mobile-recipe-card';
 import { FilterChipRow } from '@/components/search/filter-chip-row';
 import { FilterSheet } from '@/components/search/filter-sheet';

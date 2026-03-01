@@ -3,7 +3,7 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { styles } from '@/app/index.styles';
+import { styles } from '@/styles/index.styles';
 import { MobileRecipeCard } from '@/components/home/mobile-recipe-card';
 import { SectionHeader } from '@/components/home/section-header';
 import { TodaysMealsSection } from '@/components/home/todays-meals-section';

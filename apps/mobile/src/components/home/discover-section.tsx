@@ -3,9 +3,9 @@ import React from 'react';
 import { ScrollView, View } from 'react-native';
 
 import type { MobileRecipeCardItem } from '@/lib/recipes/recipe-card.types';
+import { styles } from '@/styles/discover-section.styles';
 
 import { CompactRecipeCard } from './compact-recipe-card';
-import { styles } from './discover-section.styles';
 
 type DiscoverSectionProps = {
   recipes: MobileRecipeCardItem[];

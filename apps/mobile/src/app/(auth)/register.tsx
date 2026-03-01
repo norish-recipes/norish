@@ -1,12 +1,12 @@
 import { Button, Card, Input, useThemeColor } from 'heroui-native';
 import { useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
-import type { AuthProvidersResponse } from '@norish/shared/contracts';
 import React, { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
+import { AuthShell } from '@/components/shell/auth-shell';
 import { useAuth } from '@/context/auth-context';
-import { useTRPC } from '@/providers/trpc-provider';
+import { useAuthProvidersQuery } from '@/hooks/trpc/login/use-auth-providers-query';
+import { styles } from '@/styles/register.styles';
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
@@ -24,29 +24,20 @@ export default function RegisterScreen() {
 
   if (backendBaseUrl === null) {
     return (
-      <ScrollView
-        contentContainerStyle={styles.content}
-        contentInsetAdjustmentBehavior="always"
+      <AuthShell
+        headingPrefix="Create account on"
+        subtitle="Backend URL is not configured. Connect to your backend first."
       >
-        <View style={styles.heroCopy}>
-          <Text style={[styles.eyebrow, { color: accentColor }]}>Norish</Text>
-          <Text style={[styles.title, { color: foregroundColor }]}>Create account</Text>
-          <Text style={[styles.subtitle, { color: mutedColor }]}>
-            Backend URL is not configured. Connect to your backend first.
-          </Text>
+        <View style={styles.centered}>
+          <Button
+            onPress={() => {
+              router.replace('/(auth)');
+            }}
+          >
+            <Button.Label>Open Connect</Button.Label>
+          </Button>
         </View>
-        <Card variant="secondary" className="rounded-3xl border border-separator">
-          <Card.Body style={[styles.cardBody, styles.centered]}>
-            <Button
-              onPress={() => {
-                router.replace('/connect' as any);
-              }}
-            >
-              <Button.Label>Open Connect</Button.Label>
-            </Button>
-          </Card.Body>
-        </Card>
-      </ScrollView>
+      </AuthShell>
     );
   }
 
@@ -85,15 +76,7 @@ function RegisterForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const trpc = useTRPC();
-  const providersQuery = useQuery(
-    (trpc as any).config.authProviders.queryOptions(undefined, {
-      staleTime: 30_000,
-    }),
-  );
-
-  const authProvidersData = providersQuery.data as AuthProvidersResponse | undefined;
-  const registrationEnabled = authProvidersData?.registrationEnabled ?? false;
+  const { registrationEnabled, hasData } = useAuthProvidersQuery();
 
   const handleSignUp = useCallback(async () => {
     if (!authClient) return;
@@ -155,28 +138,30 @@ function RegisterForm({
     }
   }, [authClient, confirmPassword, email, name, password]);
 
+  const signInLink = (
+    <Pressable onPress={() => router.replace('/login' as any)} style={styles.linkRow}>
+      <Text style={[styles.linkText, { color: mutedColor }]}>
+        Already have an account?{' '}
+        <Text style={{ color: accentColor }} className="font-semibold">
+          Sign in
+        </Text>
+      </Text>
+    </Pressable>
+  );
+
   // If we've loaded the providers and registration is not enabled, show a message
-  if (providersQuery.data && !registrationEnabled) {
+  if (hasData && !registrationEnabled) {
     return (
-      <ScrollView
-        contentContainerStyle={styles.content}
-        contentInsetAdjustmentBehavior="always"
+      <AuthShell
+        headingPrefix="Registration disabled on"
+        subtitle="Registration is currently disabled on this server. Contact your server administrator for access."
+        footer={signInLink}
       >
-        <View style={styles.heroCopy}>
-          <Text style={[styles.eyebrow, { color: accentColor }]}>Norish</Text>
-          <Text style={[styles.title, { color: foregroundColor }]}>Registration disabled</Text>
-          <Text style={[styles.subtitle, { color: mutedColor }]}>
-            Registration is currently disabled on this server. Contact your server administrator for
-            access.
-          </Text>
-        </View>
-        <Pressable onPress={() => router.replace('/login' as any)} style={styles.linkRow}>
-          <Text style={[styles.linkText, { color: mutedColor }]}>
-            Already have an account?{' '}
-            <Text style={{ color: accentColor, fontWeight: '600' }}>Sign in</Text>
-          </Text>
-        </Pressable>
-      </ScrollView>
+        <Card.Title style={{ color: foregroundColor }}>Registration unavailable</Card.Title>
+        <Card.Description style={{ color: mutedColor }}>
+          Ask your server administrator to enable registration.
+        </Card.Description>
+      </AuthShell>
     );
   }
 
@@ -185,146 +170,72 @@ function RegisterForm({
     name.trim() && email.trim() && password && confirmPassword && passwordsMatch;
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.content}
-      contentInsetAdjustmentBehavior="always"
-      keyboardShouldPersistTaps="handled"
+    <AuthShell
+      headingPrefix="Create account on"
+      subtitle="Sign up with your email and password to get started."
+      footer={
+        <>
+          {errorMessage && (
+            <Text style={[styles.errorText, { color: dangerColor }]}>{errorMessage}</Text>
+          )}
+          {signInLink}
+        </>
+      }
     >
-      <View style={styles.heroCopy}>
-        <Text style={[styles.eyebrow, { color: accentColor }]}>Norish</Text>
-        <Text style={[styles.title, { color: foregroundColor }]}>Create account</Text>
-        <Text style={[styles.subtitle, { color: mutedColor }]}>
-          Sign up with your email and password to get started.
+      <View style={styles.formSection}>
+        <Input
+          value={name}
+          onChangeText={(text) => {
+            setName(text);
+            setErrorMessage(null);
+          }}
+          autoCapitalize="words"
+          autoCorrect={false}
+          placeholder="Name"
+        />
+        <Input
+          value={email}
+          onChangeText={(text) => {
+            setEmail(text);
+            setErrorMessage(null);
+          }}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          placeholder="Email"
+        />
+        <Input
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            setErrorMessage(null);
+          }}
+          secureTextEntry
+          placeholder="Password"
+        />
+        <Input
+          value={confirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            setErrorMessage(null);
+          }}
+          secureTextEntry
+          placeholder="Confirm password"
+        />
+        <Text style={[styles.hint, { color: mutedColor }]}>
+          Password must be {MIN_PASSWORD_LENGTH}-{MAX_PASSWORD_LENGTH} characters.
         </Text>
+        <Button
+          isDisabled={!isFormValid || isSubmitting}
+          onPress={() => {
+            void handleSignUp();
+          }}
+        >
+          <Button.Label>
+            {isSubmitting ? 'Creating account...' : 'Create account'}
+          </Button.Label>
+        </Button>
       </View>
-
-      <Card variant="secondary" className="rounded-3xl border border-separator">
-        <Card.Body style={styles.cardBody}>
-          <View style={styles.formSection}>
-            <Input
-              value={name}
-              onChangeText={(text) => {
-                setName(text);
-                setErrorMessage(null);
-              }}
-              autoCapitalize="words"
-              autoCorrect={false}
-              placeholder="Name"
-            />
-            <Input
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                setErrorMessage(null);
-              }}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              placeholder="Email"
-            />
-            <Input
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                setErrorMessage(null);
-              }}
-              secureTextEntry
-              placeholder="Password"
-            />
-            <Input
-              value={confirmPassword}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-                setErrorMessage(null);
-              }}
-              secureTextEntry
-              placeholder="Confirm password"
-            />
-            <Text style={[styles.hint, { color: mutedColor }]}>
-              Password must be {MIN_PASSWORD_LENGTH}-{MAX_PASSWORD_LENGTH} characters.
-            </Text>
-            <Button
-              isDisabled={!isFormValid || isSubmitting}
-              onPress={() => {
-                void handleSignUp();
-              }}
-            >
-              <Button.Label>
-                {isSubmitting ? 'Creating account...' : 'Create account'}
-              </Button.Label>
-            </Button>
-          </View>
-        </Card.Body>
-      </Card>
-
-      {errorMessage && (
-        <Text style={[styles.errorText, { color: dangerColor }]}>{errorMessage}</Text>
-      )}
-
-      <Pressable onPress={() => router.replace('/login' as any)} style={styles.linkRow}>
-        <Text style={[styles.linkText, { color: mutedColor }]}>
-          Already have an account?{' '}
-          <Text style={{ color: accentColor, fontWeight: '600' }}>Sign in</Text>
-        </Text>
-      </Pressable>
-    </ScrollView>
+    </AuthShell>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 32,
-    gap: 20,
-  },
-  heroCopy: {
-    gap: 8,
-    paddingHorizontal: 4,
-  },
-  eyebrow: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  title: {
-    fontSize: 32,
-    lineHeight: 38,
-    fontWeight: '700',
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  cardBody: {
-    gap: 12,
-    padding: 16,
-  },
-  centered: {
-    alignItems: 'center',
-  },
-  formSection: {
-    gap: 10,
-  },
-  hint: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  errorText: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '500',
-  },
-  linkRow: {
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  linkText: {
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-});

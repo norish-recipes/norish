@@ -4,8 +4,7 @@ import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import type { PlannedMeal } from '@/lib/meals/planned-meal.types';
-
-import { styles } from './todays-meals-section.styles';
+import { styles } from '@/styles/todays-meals-section.styles';
 
 type MealSlotCardProps = {
   meal: PlannedMeal;

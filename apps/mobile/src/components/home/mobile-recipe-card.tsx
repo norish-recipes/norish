@@ -7,7 +7,7 @@ import { ScrollView, Text, View } from 'react-native';
 
 import type { MobileRecipeCardItem } from '@/lib/recipes/recipe-card.types';
 
-import { styles } from './mobile-recipe-card.styles';
+import { styles } from '@/styles/mobile-recipe-card.styles';
 
 function ratingColor(rating: number, accent: string, warning: string, danger: string): string {
   if (rating <= 1) return danger;

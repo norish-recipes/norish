@@ -5,7 +5,7 @@ import { Text, View } from 'react-native';
 
 import type { MobileRecipeCardItem } from '@/lib/recipes/recipe-card.types';
 
-import { styles } from './compact-recipe-card.styles';
+import { styles } from '@/styles/compact-recipe-card.styles';
 
 type CompactRecipeCardProps = {
   recipe: MobileRecipeCardItem;

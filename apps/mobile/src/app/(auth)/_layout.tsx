@@ -6,7 +6,11 @@ export default function AuthLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: 'fade_from_bottom',
+        // Use 'none' so the shared auth shell (logo + card border) appears to
+        // stay in place when navigating between connect/login/register. The
+        // visual transition is handled by Reanimated layout animations inside
+        // each pane's content, not by the navigator.
+        animation: 'default',
       }}
     />
   );

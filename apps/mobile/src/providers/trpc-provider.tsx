@@ -1,3 +1,4 @@
+import type { AppRouter } from '@norish/api/trpc';
 import { createTRPCProviderBundle } from '@norish/shared-react/providers';
 import { createClientLogger } from '@norish/shared/lib/logger';
 import React, { useMemo } from 'react';
@@ -19,7 +20,7 @@ function toWsUrl(baseUrl: string): string {
 
 let currentBaseUrl = '';
 
-const trpcBundle = createTRPCProviderBundle<any>({
+const trpcBundle = createTRPCProviderBundle<AppRouter>({
   logger: log,
   getBaseUrl: () => currentBaseUrl,
   getWsUrl: () => toWsUrl(currentBaseUrl),

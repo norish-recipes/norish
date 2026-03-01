@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-const DEFAULT_PROTECTED_ROUTE = '/recipes';
+const DEFAULT_PROTECTED_ROUTE = '/(tabs)';
 
 function firstRouteParam(param: string | string[] | undefined): string | undefined {
   return Array.isArray(param) ? param[0] : param;
@@ -75,7 +75,7 @@ export default function AuthErrorScreen() {
           <Button
             variant="secondary"
             onPress={() => {
-              router.replace('/connect' as never);
+              router.replace('/(auth)' as never);
             }}
           >
             <Button.Label>Back to Connect</Button.Label>

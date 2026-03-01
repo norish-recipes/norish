@@ -97,7 +97,7 @@ export default function TabsLayout() {
         }}
       >
         <NativeBottomTabs.Screen
-          name="recipes"
+          name="index"
           options={{
             title: 'Recipes',
             headerRight: () => <SettingsButton />,

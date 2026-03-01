@@ -10,7 +10,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { createSwipeableRecipeRowStyles } from '@/components/home/swipeable-recipe-row.styles';
+import { createSwipeableRecipeRowStyles } from '@/styles/swipeable-recipe-row.styles';
 
 const ACTION_WIDTH = 72;
 const LEFT_ACTIONS_WIDTH = ACTION_WIDTH * 3;

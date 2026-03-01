@@ -4,7 +4,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { HeroUINativeProvider } from 'heroui-native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, useColorScheme, View } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import {
@@ -19,23 +19,15 @@ import {
 import { TrpcProvider } from '@/providers/trpc-provider';
 
 function RootStack() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingState}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  const { isAuthenticated } = useAuth();
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!isAuthenticated}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen name="(auth)" />
       </Stack.Protected>
     </Stack>
   );
@@ -74,11 +66,7 @@ function RootLayoutContent() {
   }, []);
 
   if (!hydrated || !backendHydrated) {
-    return (
-      <View style={styles.loadingState}>
-        <ActivityIndicator />
-      </View>
-    );
+    return null;
   }
 
   const effectiveScheme =
@@ -118,10 +106,5 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-  },
-  loadingState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
