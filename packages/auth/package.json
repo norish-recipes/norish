@@ -17,14 +17,12 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
-    "@better-auth/expo": "^1.4.20",
+    "@better-auth/expo": "catalog:",
     "@norish/config": "workspace:*",
     "@norish/db": "workspace:*",
     "@norish/queue": "workspace:*",
     "@norish/shared": "workspace:*",
     "better-auth": "catalog:",
-    "@better-auth/expo": "catalog:",
-    "@better-auth/api-key": "catalog:",
     "next": "catalog:"
   },
   "peerDependencies": {
