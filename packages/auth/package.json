@@ -22,6 +22,7 @@
     "@norish/queue": "workspace:*",
     "@norish/shared": "workspace:*",
     "better-auth": "catalog:",
+    "@better-auth/expo": "catalog:",
     "next": "catalog:"
   },
   "peerDependencies": {
