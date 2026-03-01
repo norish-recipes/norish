@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createTRPCClient,
   createWSClient,
+  type HTTPHeaders,
   httpBatchLink,
   httpLink,
   isNonJsonSerializable,
@@ -34,6 +35,7 @@ type CreateTRPCProviderBundleOptions = {
   logger: TrpcLogger;
   getBaseUrl?: () => string;
   getWsUrl?: () => string;
+  getHeaders?: () => HTTPHeaders;
   maxRetries?: number;
 };
 
@@ -55,10 +57,13 @@ const defaultGetWsUrl = () => {
   return `ws://localhost:${process.env.PORT ?? 3000}/trpc`;
 };
 
+const defaultGetHeaders = (): HTTPHeaders => ({});
+
 export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   logger,
   getBaseUrl = defaultGetBaseUrl,
   getWsUrl = defaultGetWsUrl,
+  getHeaders = defaultGetHeaders,
   maxRetries = 10,
 }: CreateTRPCProviderBundleOptions) {
   const { TRPCProvider, useTRPC } = createTRPCContext<TRouter>();
@@ -134,6 +139,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
               condition: (op) => isNonJsonSerializable(op.input),
               true: httpLink({
                 url: `${getBaseUrl()}/api/trpc`,
+                headers: getHeaders,
                 transformer: {
                   serialize: (data: unknown) => data,
                   deserialize: superjson.deserialize,
@@ -141,6 +147,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
               }),
               false: httpBatchLink({
                 url: `${getBaseUrl()}/api/trpc`,
+                headers: getHeaders,
                 transformer: superjson as any,
               }),
             }),

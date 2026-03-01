@@ -5,6 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { apiKey, genericOAuth } from "better-auth/plugins";
+import { expo } from "@better-auth/expo";
 
 import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
 import { authLogger } from "@norish/api/logger";
@@ -214,6 +215,7 @@ function createAuth() {
     trustedOrigins: [
       SERVER_CONFIG.AUTH_URL,
       ...SERVER_CONFIG.TRUSTED_ORIGINS,
+      "mobile://",
       ...(process.env.NODE_ENV === "development"
         ? [
             "http://*/*",
@@ -221,6 +223,9 @@ function createAuth() {
             "http://192.168.*.*:*/*",
             "http://172.*.*.*:*/*",
             "http://localhost:*/*",
+            "exp://",                      // Trust all Expo URLs (prefix matching)
+            "exp://**",                    // Trust all Expo URLs (wildcard matching)
+            "exp://192.168.*.*:*/**",      // Trust 192.168.x.x IP range with any port and path
           ]
         : []),
     ],
@@ -428,6 +433,8 @@ function createAuth() {
         },
         apiKeyHeaders: ["x-api-key", "bearer"],
       }),
+
+      expo(),
 
       nextCookies(),
     ],
