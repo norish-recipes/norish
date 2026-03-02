@@ -1,7 +1,7 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { UserSettingsDto } from "@norish/api/trpc";
+import type { UserSettingsDto } from "@norish/trpc";
 
 import { createMockUserSettingsData, createTestQueryClient, createTestWrapper } from "./test-utils";
 

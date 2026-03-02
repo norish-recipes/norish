@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./trpc": "./src/trpc.ts",
     "./logger": "./src/logger.ts",
     "./parser": "./src/parser/index.ts",
     "./*": "./src/*"
@@ -33,6 +32,7 @@
     "@norish/i18n": "workspace:*",
     "@norish/queue": "workspace:*",
     "@norish/shared": "workspace:*",
+    "@norish/trpc": "workspace:*",
     "@trpc/server": "catalog:",
     "ai": "^6.0.95",
     "bullmq": "catalog:",

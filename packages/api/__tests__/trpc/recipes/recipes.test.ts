@@ -28,7 +28,7 @@ import {
 // Setup mocks before any imports that use them
 vi.mock("@norish/db/repositories/recipes", () => import("../../mocks/recipes-repository"));
 vi.mock("@norish/auth/permissions", () => import("../../mocks/permissions"));
-vi.mock("@norish/api/trpc/routers/recipes/emitter", () => import("../../mocks/recipe-emitter"));
+vi.mock("@norish/trpc/routers/recipes/emitter", () => import("../../mocks/recipe-emitter"));
 vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
 
 // Create a test tRPC instance

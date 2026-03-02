@@ -8,7 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",
@@ -16,6 +17,7 @@
     "@gorhom/bottom-sheet": "^5.2.8",
     "@norish/shared": "workspace:*",
     "@norish/shared-react": "workspace:*",
+    "@norish/trpc": "workspace:*",
     "@norish/tailwind-config": "workspace:*",
     "@react-navigation/bottom-tabs": "^7.7.3",
     "@react-navigation/elements": "^2.8.1",

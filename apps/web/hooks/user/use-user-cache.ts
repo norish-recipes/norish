@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { UserSettingsDto } from "@norish/api/trpc";
+import type { UserSettingsDto } from "@norish/trpc";
 
 export type UserAllergiesData = {
   allergies: string[];

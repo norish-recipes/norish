@@ -1,6 +1,6 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
-import { appRouter, createContext } from "@norish/api/trpc";
+import { appRouter, createContext } from "@norish/trpc/server";
 
 export const maxDuration = 300;
 

@@ -7,7 +7,7 @@
 
 import type { Job } from "bullmq";
 
-import type { PolicyEmitContext } from "@norish/api/trpc/helpers";
+import type { PolicyEmitContext } from "@norish/trpc/helpers";
 import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
@@ -15,8 +15,8 @@ import { deleteRecipeImagesDir } from "@norish/api/downloader";
 import { createLogger } from "@norish/api/logger";
 import { extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
-import { emitByPolicy } from "@norish/api/trpc/helpers";
-import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";
+import { emitByPolicy } from "@norish/trpc/helpers";
+import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 import {
   getAIConfig,
   getRecipePermissionPolicy,

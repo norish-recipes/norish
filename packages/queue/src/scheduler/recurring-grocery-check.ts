@@ -1,5 +1,5 @@
 import { schedulerLogger } from "@norish/api/logger";
-import { groceryEmitter } from "@norish/api/trpc/routers/groceries/emitter";
+import { groceryEmitter } from "@norish/trpc/routers/groceries/emitter";
 import { getHouseholdForUser } from "@norish/db";
 import {
   getDueRecurringGroceries,

@@ -3,7 +3,7 @@
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
 
-import type { ApiKeyMetadataDto } from "@norish/api/trpc";
+import type { ApiKeyMetadataDto } from "@norish/trpc";
 import type { User } from "@norish/shared/contracts";
 
 export type UserSettingsData = {

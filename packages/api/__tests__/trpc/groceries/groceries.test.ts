@@ -30,7 +30,7 @@ vi.mock(
   () => import("../../mocks/recurring-groceries")
 );
 vi.mock("@norish/auth/permissions", () => import("../../mocks/permissions"));
-vi.mock("@norish/api/trpc/routers/groceries/emitter", () => import("../../mocks/grocery-emitter"));
+vi.mock("@norish/trpc/routers/groceries/emitter", () => import("../../mocks/grocery-emitter"));
 vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
 vi.mock("@norish/shared/lib/helpers", () => import("../../mocks/helpers"));
 

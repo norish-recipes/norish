@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { trpcLogger as log } from "@norish/api/logger";
 import { deleteAvatarByFilename } from "@norish/api/startup/media-cleanup";
-import { householdEmitter } from "@norish/api/trpc/routers/households/emitter";
+import { householdEmitter } from "../households/emitter";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,

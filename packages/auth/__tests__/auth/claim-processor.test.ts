@@ -29,11 +29,11 @@ vi.mock("@norish/db/cached-household", () => ({
   invalidateHouseholdCacheForUsers: vi.fn(),
 }));
 
-vi.mock("@norish/api/trpc/connection-manager", () => ({
+vi.mock("@norish/trpc/connection-manager", () => ({
   emitConnectionInvalidation: vi.fn(),
 }));
 
-vi.mock("@norish/api/trpc/routers/households/emitter", () => ({
+vi.mock("@norish/trpc/routers/households/emitter", () => ({
   householdEmitter: {
     emit: vi.fn(),
     emitToHousehold: vi.fn(),

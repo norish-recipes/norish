@@ -30,6 +30,8 @@
     "lint": "turbo run lint",
     "lint:check": "turbo run lint && pnpm run monorepo:check",
     "typecheck": "turbo run typecheck",
+    "typecheck:mobile": "pnpm --filter @norish/trpc run typecheck && pnpm --filter @norish/mobile exec tsc --noEmit",
+    "typecheck:web": "pnpm --filter @norish/web run typecheck",
     "format": "turbo run format",
     "format:check": "turbo run format",
     "deps:cycles": "node tooling/monorepo/scripts/check-circular-deps.mjs",

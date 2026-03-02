@@ -33,7 +33,7 @@
     },
     "typecheck": {
       "dependsOn": ["^typecheck"],
-      "outputs": ["**/*.tsbuildinfo", ".cache/**"]
+      "outputs": ["dist/**", "**/*.tsbuildinfo", ".cache/**"]
     },
     "test": {
       "dependsOn": ["^test"],

@@ -13,6 +13,7 @@ export const DEFAULT_TARGETS = [
   "packages/i18n",
   "packages/queue",
   "packages/shared",
+  "packages/trpc",
   "packages/ui",
 ];
 

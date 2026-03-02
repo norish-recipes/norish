@@ -2,7 +2,7 @@
 import JSZip from "jszip";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { archiveRouter } from "@norish/api/trpc/routers/archive/archive";
+import { archiveRouter } from "@norish/trpc/routers/archive/archive";
 
 const mockArchiveParser = vi.hoisted(() => ({
   importArchive: vi.fn().mockResolvedValue({ imported: [], skipped: [], errors: [] }),
@@ -40,7 +40,7 @@ vi.mock("@norish/queue/redis/subscription-multiplexer", () => ({
   getOrCreateMultiplexer: vi.fn(),
 }));
 
-vi.mock("@norish/api/trpc/routers/recipes/emitter", () => ({
+vi.mock("@norish/trpc/routers/recipes/emitter", () => ({
   recipeEmitter: {
     emitToUser: vi.fn(),
     emitToHousehold: vi.fn(),

@@ -35,7 +35,7 @@ vi.mock("@norish/db/repositories/server-config", () => import("../../mocks/serve
 vi.mock("@norish/db/repositories/users", () => import("../../mocks/users"));
 vi.mock("@norish/auth/connection-tests", () => import("../../mocks/connection-tests"));
 vi.mock(
-  "@norish/api/trpc/routers/permissions/emitter",
+  "@norish/trpc/routers/permissions/emitter",
   () => import("../../mocks/permissions-emitter")
 );
 vi.mock("@norish/config/server-config-loader", () => ({

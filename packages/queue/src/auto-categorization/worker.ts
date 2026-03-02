@@ -1,11 +1,11 @@
 import type { Job } from "bullmq";
 
-import type { PolicyEmitContext } from "@norish/api/trpc/helpers";
+import type { PolicyEmitContext } from "@norish/trpc/helpers";
 import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
 import { categorizeRecipe } from "@norish/api/ai/auto-categorizer";
 import { createLogger } from "@norish/api/logger";
-import { emitByPolicy } from "@norish/api/trpc/helpers";
-import { recipeEmitter } from "@norish/api/trpc/routers/recipes/emitter";
+import { emitByPolicy } from "@norish/trpc/helpers";
+import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getRecipeFull, updateRecipeCategories } from "@norish/db";
 import { getBullClient } from "@norish/queue/redis/bullmq";

@@ -1,5 +1,5 @@
 /**
- * Mock for @norish/api/trpc/routers/groceries/emitter
+ * Mock for @norish/trpc/routers/groceries/emitter
  */
 import { vi } from "vitest";
 

@@ -9,7 +9,7 @@ import {
   truncateErrorMessage,
 } from "@norish/api/caldav/sync-manager";
 import { createLogger } from "@norish/api/logger";
-import { caldavEmitter } from "@norish/api/trpc/routers/caldav/emitter";
+import { caldavEmitter } from "@norish/trpc/routers/caldav/emitter";
 import {
   createCaldavSyncStatus,
   getCaldavSyncStatusByItemId,

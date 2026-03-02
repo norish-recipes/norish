@@ -76,3 +76,4 @@ docker-compose.yml
 **/android
 
 **/.expo
+**/dist

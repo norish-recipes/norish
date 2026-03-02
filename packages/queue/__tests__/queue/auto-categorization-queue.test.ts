@@ -91,7 +91,7 @@ vi.mock("@norish/queue/redis/subscription-multiplexer", () => ({
   SubscriptionMultiplexer: vi.fn(),
 }));
 
-vi.mock("@norish/api/trpc/routers/recipes/emitter", () => ({
+vi.mock("@norish/trpc/routers/recipes/emitter", () => ({
   recipeEmitter: {
     emitToHousehold: vi.fn(),
     emitToUser: vi.fn(),
@@ -103,7 +103,7 @@ vi.mock("@norish/queue/redis/socket", () => ({
   emitToHousehold: vi.fn(),
 }));
 
-vi.mock("@norish/api/trpc/helpers", () => ({
+vi.mock("@norish/trpc/helpers", () => ({
   emitByPolicy: vi.fn(),
 }));
 

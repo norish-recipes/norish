@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { userProcedures } from "@norish/api/trpc/routers/user/user";
+import { userProcedures } from "@norish/trpc/routers/user/user";
 
 const mockDb = vi.hoisted(() => ({
   getApiKeysForUser: vi.fn(),
@@ -27,11 +27,11 @@ vi.mock("@norish/db", () => ({
   updateUserLocale: vi.fn(),
 }));
 
-vi.mock("@norish/api/trpc/routers/households/emitter", () => ({
+vi.mock("@norish/trpc/routers/households/emitter", () => ({
   householdEmitter: { emitToHousehold: vi.fn() },
 }));
 
-vi.mock("@norish/api/trpc/connection-manager", () => ({
+vi.mock("@norish/trpc/connection-manager", () => ({
   emitConnectionInvalidation: vi.fn(),
 }));
 

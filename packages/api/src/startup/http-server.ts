@@ -6,8 +6,8 @@ import next from "next";
 import { resolveExistingWorkspacePath } from "@norish/api/lib/workspace-paths";
 import { serverLogger } from "@norish/api/logger";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { initTrpcWebSocket } from "@norish/trpc/server";
 
-import { initTrpcWebSocket } from "../trpc";
 import { serveStaticFile } from "./static-files";
 
 const WEB_APP_DIR = resolveExistingWorkspacePath(join("apps", "web"));

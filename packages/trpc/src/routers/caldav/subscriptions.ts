@@ -5,9 +5,9 @@
  */
 
 import { trpcLogger as log } from "@norish/api/logger";
-import { createSubscriptionIterable, mergeAsyncIterables } from "@norish/api/trpc/helpers";
-import { authedProcedure } from "@norish/api/trpc/middleware";
-import { router } from "@norish/api/trpc/trpc";
+import { createSubscriptionIterable, mergeAsyncIterables } from "../../helpers";
+import { authedProcedure } from "../../middleware";
+import { router } from "../../trpc";
 
 import type { CaldavSubscriptionEvents } from "./types";
 import { caldavEmitter } from "./emitter";

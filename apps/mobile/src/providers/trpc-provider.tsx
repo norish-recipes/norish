@@ -1,4 +1,4 @@
-import type { AppRouter } from '@norish/api/trpc';
+import type { AppRouter } from '@norish/trpc';
 import { createTRPCProviderBundle } from '@norish/shared-react/providers';
 import { createClientLogger } from '@norish/shared/lib/logger';
 import React, { useMemo } from 'react';

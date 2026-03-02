@@ -4,7 +4,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 import { addToast } from "@heroui/react";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
-import type { CaldavSubscriptionEvents } from "@norish/api/trpc";
+import type { CaldavSubscriptionEvents } from "@norish/trpc";
 import type { CaldavSyncStatus, CaldavSyncStatusViewDto } from "@norish/shared/contracts";
 import { createClientLogger } from "@norish/shared/lib/logger";
 

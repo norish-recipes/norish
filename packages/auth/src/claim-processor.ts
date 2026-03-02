@@ -1,8 +1,8 @@
-import type { HouseholdUserInfo } from "@norish/api/trpc/routers/households/types";
+import type { HouseholdUserInfo } from "@norish/trpc/routers/households/types";
 import type { OIDCClaimConfig } from "@norish/config/zod/server-config";
 import { authLogger } from "@norish/api/logger";
-import { emitConnectionInvalidation } from "@norish/api/trpc/connection-manager";
-import { householdEmitter } from "@norish/api/trpc/routers/households/emitter";
+import { emitConnectionInvalidation } from "@norish/trpc/connection-manager";
+import { householdEmitter } from "@norish/trpc/routers/households/emitter";
 import { invalidateHouseholdCacheForUsers } from "@norish/db/cached-household";
 import {
   addUserToHousehold,

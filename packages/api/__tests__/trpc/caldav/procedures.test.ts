@@ -28,7 +28,7 @@ vi.mock(
   "@norish/db/repositories/caldav-sync-status",
   () => import("../../mocks/caldav-sync-status")
 );
-vi.mock("@norish/api/trpc/routers/caldav/emitter", () => import("../../mocks/caldav-emitter"));
+vi.mock("@norish/trpc/routers/caldav/emitter", () => import("../../mocks/caldav-emitter"));
 vi.mock("@norish/api/caldav/event-listener", () => import("../../mocks/caldav-calendar-sync"));
 vi.mock("@norish/config/server-config-loader", () => import("../../mocks/config"));
 

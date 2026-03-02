@@ -1,5 +1,5 @@
 /**
- * Mock for @norish/api/trpc/routers/caldav/emitter
+ * Mock for @norish/trpc/routers/caldav/emitter
  */
 import { vi } from "vitest";
 

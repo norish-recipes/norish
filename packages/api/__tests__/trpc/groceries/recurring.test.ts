@@ -25,7 +25,7 @@ vi.mock(
   "@norish/db/repositories/recurring-groceries",
   () => import("../../mocks/recurring-groceries")
 );
-vi.mock("@norish/api/trpc/routers/groceries/emitter", () => import("../../mocks/grocery-emitter"));
+vi.mock("@norish/trpc/routers/groceries/emitter", () => import("../../mocks/grocery-emitter"));
 vi.mock("@norish/shared/lib/recurrence/calculator", () => import("../../mocks/recurrence"));
 
 describe("recurring groceries procedures", () => {

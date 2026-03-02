@@ -99,6 +99,12 @@ jobs:
       - name: Run typecheck
         run: turbo run typecheck
 
+      - name: Run mobile-focused typecheck
+        run: pnpm run typecheck:mobile
+
+      - name: Run web integration typecheck/build
+        run: pnpm --filter @norish/web run typecheck && pnpm --filter @norish/web run build:web
+
   format:
     name: Format Check
     runs-on: ubuntu-latest

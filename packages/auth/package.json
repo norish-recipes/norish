@@ -26,7 +26,8 @@
     "next": "catalog:"
   },
   "peerDependencies": {
-    "@norish/api": "workspace:*"
+    "@norish/api": "workspace:*",
+    "@norish/trpc": "workspace:*"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",

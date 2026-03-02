@@ -3,7 +3,7 @@
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useMutation } from "@tanstack/react-query";
 
-import type { ApiKeyMetadataDto } from "@norish/api/trpc";
+import type { ApiKeyMetadataDto } from "@norish/trpc";
 import type { User } from "@norish/shared/contracts";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import { getUserPreferences } from "@norish/shared/lib/user-preferences";

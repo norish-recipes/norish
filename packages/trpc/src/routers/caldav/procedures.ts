@@ -8,8 +8,8 @@ import type {
 import { CalDavClient, testCalDavConnection } from "@norish/api/caldav/client";
 import { retryFailedSyncs, syncAllFutureItems } from "@norish/api/caldav/event-listener";
 import { createLogger } from "@norish/api/logger";
-import { authedProcedure } from "@norish/api/trpc/middleware";
-import { router } from "@norish/api/trpc/trpc";
+import { authedProcedure } from "../../middleware";
+import { router } from "../../trpc";
 import {
   deleteCaldavConfig,
   getCaldavConfigDecrypted,
