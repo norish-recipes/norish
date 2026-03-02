@@ -84,7 +84,7 @@ Norish is intentionally minimal. It focuses on practical day-to-day use.
 - **Authentication options**: OIDC, OAuth providers, and first-time password auth fallback.
 - **Admin settings UI** for runtime configuration.
 - **Permission policies** for recipe visibility/edit/delete scopes.
-- **Internationalization (i18n)** currently supporting EN, NL, DE, FR, ES and RU
+- **Internationalization (i18n)** currently supporting EN, NL, DE, FR, ES, RU, KO and DA
 
 _Note: AI feature speed can vary by provider, model, and region._
 
