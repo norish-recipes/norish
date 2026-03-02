@@ -207,6 +207,62 @@
         }
       ]
     },
+    "da": {
+      "everyWords": ["hver", "hvert"],
+      "otherWords": ["anden", "andet"],
+      "onWords": ["på", "om"],
+      "numberWords": {
+        "en": 1,
+        "et": 1,
+        "to": 2,
+        "tre": 3,
+        "fire": 4,
+        "fem": 5,
+        "seks": 6,
+        "syv": 7,
+        "otte": 8,
+        "ni": 9,
+        "ti": 10
+      },
+      "unitWords": {
+        "day": ["dag", "dage", "dagligt", "daglig"],
+        "week": ["uge", "uger", "ugentligt", "ugentlig"],
+        "month": ["måned", "måneder", "månedligt", "månedlig"]
+      },
+      "weekdayWords": {
+        "søndag": 0,
+        "søn": 0,
+        "mandag": 1,
+        "man": 1,
+        "tirsdag": 2,
+        "tir": 2,
+        "onsdag": 3,
+        "ons": 3,
+        "torsdag": 4,
+        "tor": 4,
+        "fredag": 5,
+        "fre": 5,
+        "lørdag": 6,
+        "lør": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["hver anden dag"],
+          "interval": 2,
+          "rule": "day"
+        },
+        {
+          "phrases": ["hver anden uge"],
+          "interval": 2,
+          "rule": "week"
+        },
+        {
+          "phrases": ["hver anden måned"],
+          "interval": 2,
+          "rule": "month"
+        }
+      ]
+    },
     "fr": {
       "everyWords": ["chaque"],
       "otherWords": ["autre"],
