@@ -3,9 +3,9 @@ import { z } from "zod";
 
 import type { PermissionAction } from "@norish/auth/permissions";
 import type { RecipeListContext } from "@norish/db";
-import { deleteRecipeImagesDir } from "@norish/api/downloader";
-import { trpcLogger as log } from "@norish/api/logger";
-import { selectWeightedRandomRecipe } from "@norish/api/services/recipe-randomizer";
+import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
+import { trpcLogger as log } from "@norish/shared-server/logger";
+import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
@@ -441,7 +441,7 @@ const convertMeasurements = authedProcedure
         if (recipe === null) return null;
 
         // Convert with AI
-        return import("@norish/api/ai/unit-converter")
+        return import("@norish/shared-server/ai/unit-converter")
           .then(({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(recipe, targetSystem))
           .then((result) => {
             if (!result.success) {

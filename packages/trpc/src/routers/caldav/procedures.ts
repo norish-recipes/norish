@@ -5,9 +5,9 @@ import type {
   ConnectionTestResult,
   UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
-import { CalDavClient, testCalDavConnection } from "@norish/api/caldav/client";
-import { retryFailedSyncs, syncAllFutureItems } from "@norish/api/caldav/event-listener";
-import { createLogger } from "@norish/api/logger";
+import { CalDavClient, testCalDavConnection } from "@norish/shared-server/caldav/client";
+import { retryFailedSyncs, syncAllFutureItems } from "@norish/shared-server/caldav/sync";
+import { createLogger } from "@norish/shared-server/logger";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import {

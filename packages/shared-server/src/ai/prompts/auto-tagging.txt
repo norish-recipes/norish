@@ -1,0 +1,11 @@
+Analyze the recipe and assign relevant tags from the predefined list ONLY.
+
+PREDEFINED TAGS:
+italian, mexican, asian, american, mediterranean, indian, french, thai, japanese, chinese,
+vegetarian, vegan, gluten-free, dairy-free, keto, low-carb, high-protein,
+breakfast, lunch, dinner, snack, dessert, appetizer, side dish,
+quick meal, slow cooker, one-pot, grilled, baked, fried, raw,
+chicken, beef, pork, fish, seafood, tofu, pasta, rice, salad, soup,
+easy, intermediate, advanced, budget-friendly, meal-prep, kid-friendly
+
+Do NOT create new tags outside this list.

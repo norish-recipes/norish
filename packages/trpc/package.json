@@ -9,6 +9,10 @@
       "types": "./dist/public.d.ts",
       "default": "./src/public.ts"
     },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./src/client.ts"
+    },
     "./server": {
       "types": "./dist/server.d.ts",
       "default": "./src/server.ts"
@@ -47,6 +51,7 @@
     "@norish/db": "workspace:*",
     "@norish/queue": "workspace:*",
     "@norish/shared": "workspace:*",
+    "@norish/shared-server": "workspace:*",
     "@trpc/server": "catalog:",
     "bullmq": "catalog:",
     "ioredis": "catalog:",
@@ -54,14 +59,6 @@
     "superjson": "catalog:",
     "ws": "8.19.0",
     "zod": "catalog:"
-  },
-  "peerDependencies": {
-    "@norish/api": "workspace:*"
-  },
-  "peerDependenciesMeta": {
-    "@norish/api": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",

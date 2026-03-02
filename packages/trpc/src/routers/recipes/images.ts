@@ -5,8 +5,8 @@ import {
   deleteStepImageByUrl,
   saveImageBytes,
   saveStepImageBytes,
-} from "@norish/api/downloader";
-import { trpcLogger as log } from "@norish/api/logger";
+} from "@norish/shared-server/media/storage";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   addRecipeImages,

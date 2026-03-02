@@ -9,7 +9,7 @@ import type {
   RecipeImportJobData,
 } from "@norish/queue/contracts/job-types";
 import type { PendingRecipeDTO } from "@norish/shared/contracts";
-import { trpcLogger as log } from "@norish/api/logger";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getQueues } from "@norish/queue/registry";
 

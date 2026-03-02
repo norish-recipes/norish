@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { trpcLogger as log } from "@norish/api/logger";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   checkStoreNameExistsInHousehold,

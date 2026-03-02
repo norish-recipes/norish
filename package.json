@@ -27,6 +27,7 @@
     "test": "NODE_ENV=development turbo run test",
     "test:run": "NODE_ENV=development turbo run test",
     "test:coverage": "NODE_ENV=development turbo run test:coverage",
+    "test:prod": "NODE_ENV=PRODUCTION turbo run test",
     "lint": "turbo run lint",
     "lint:check": "turbo run lint && pnpm run monorepo:check",
     "typecheck": "turbo run typecheck",

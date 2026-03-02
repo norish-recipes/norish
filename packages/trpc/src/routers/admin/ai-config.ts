@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 import type { AIConfig, VideoConfig } from "@norish/config/zod/server-config";
-import { listModels, listTranscriptionModels } from "@norish/api/ai/providers";
-import { trpcLogger as log } from "@norish/api/logger";
+import { listModels, listTranscriptionModels } from "@norish/shared-server/ai/providers";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import { testAIEndpoint as testAIEndpointFn } from "@norish/auth/connection-tests";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
@@ -19,6 +19,12 @@ import { getQueues } from "@norish/queue/registry";
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { permissionsEmitter } from "../permissions/emitter";
+
+type ListedModel = {
+  id: string;
+  name: string;
+  supportsVision?: boolean;
+};
 
 /**
  * Update AI config.
@@ -112,10 +118,16 @@ const listAvailableModels = adminProcedure
       }
     }
 
-    const models = await listModels(input.provider, {
+    const listedModels = await listModels(input.provider, {
       endpoint: input.endpoint,
       apiKey,
     });
+
+    const models: ListedModel[] = listedModels.map((model) => ({
+      id: model.id,
+      name: model.name,
+      supportsVision: model.supportsVision,
+    }));
 
     return { models };
   });
@@ -154,10 +166,16 @@ const listAvailableTranscriptionModels = adminProcedure
       }
     }
 
-    const models = await listTranscriptionModels(input.provider, {
+    const listedModels = await listTranscriptionModels(input.provider, {
       endpoint: input.endpoint,
       apiKey,
     });
+
+    const models: ListedModel[] = listedModels.map((model) => ({
+      id: model.id,
+      name: model.name,
+      supportsVision: model.supportsVision,
+    }));
 
     return { models };
   });

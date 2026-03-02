@@ -3,7 +3,7 @@ import type { Server } from "node:http";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { WebSocketServer } from "ws";
 
-import { trpcLogger } from "@norish/api/logger";
+import { trpcLogger } from "@norish/shared-server/logger";
 import { auth } from "@norish/auth/auth";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 

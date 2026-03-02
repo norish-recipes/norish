@@ -63,6 +63,7 @@
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
+    "@norish/shared-server": "workspace:*",
     "@norish/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",

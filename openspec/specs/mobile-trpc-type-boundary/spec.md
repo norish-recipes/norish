@@ -1,5 +1,6 @@
+## Purpose
+Define a client-safe TRPC typing boundary for mobile and web consumers so contract usage does not require traversing server-only implementation modules.
 ## Requirements
-
 ### Requirement: Extracted standalone tRPC package provides client-safe boundary
 The workspace SHALL provide a standalone tRPC package that is consumed by API server and clients, and that exports `AppRouter` plus explicitly approved client-facing types without exposing server-only internals.
 
@@ -13,7 +14,10 @@ The workspace SHALL provide a standalone tRPC package that is consumed by API se
 - **THEN** only approved public tRPC typing contracts SHALL be exposed
 - **AND** server-only implementation modules SHALL NOT be exported through that boundary
 
----
+#### Scenario: Client boundary does not require API package imports
+- **WHEN** server-only integrations are required for procedure execution
+- **THEN** client typing consumption SHALL remain type-only through TRPC boundary exports
+- **AND** clients SHALL NOT require importing `@norish/api/*` to use TRPC contracts
 
 ### Requirement: API server and clients share the same extracted router source of truth
 The extracted standalone tRPC package SHALL be the source of truth for router composition/types used by API runtime and client typing, so clients do not import API package internals.
@@ -42,3 +46,4 @@ After extraction and import migration, workspace build/typecheck validation SHAL
 - **WHEN** CI executes workspace build/typecheck targets after migration
 - **THEN** `apps/mobile`, `apps/web`, and migrated dependent packages SHALL compile/typecheck successfully
 - **AND** no migrated consumer SHALL require `@norish/api/trpc` imports for tRPC contracts/runtime wiring
+

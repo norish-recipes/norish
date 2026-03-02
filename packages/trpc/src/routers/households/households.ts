@@ -5,7 +5,7 @@ import type {
   HouseholdAdminSettingsDto,
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
-import { trpcLogger as log } from "@norish/api/logger";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import { permissionsEmitter } from "../permissions/emitter";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {

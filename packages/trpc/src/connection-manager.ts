@@ -3,7 +3,7 @@ import type Redis from "ioredis";
 import type { WebSocket } from "ws";
 import superjson from "superjson";
 
-import { trpcLogger as log } from "@norish/api/logger";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import { createSubscriberClient, getPublisherClient } from "@norish/queue/redis/client";
 import { closeMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
 

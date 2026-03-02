@@ -2,8 +2,6 @@
 import JSZip from "jszip";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { archiveRouter } from "@norish/trpc/routers/archive/archive";
-
 const mockArchiveParser = vi.hoisted(() => ({
   importArchive: vi.fn().mockResolvedValue({ imported: [], skipped: [], errors: [] }),
   calculateBatchSize: vi.fn(() => 10),
@@ -17,10 +15,10 @@ const mockArchiveParser = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@norish/api/importers/archive-parser", () => mockArchiveParser);
+vi.mock("@norish/shared-server/archive/parser", () => mockArchiveParser);
 
-vi.mock("@norish/api/logger", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@norish/api/logger")>();
+vi.mock("@norish/shared-server/logger", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@norish/shared-server/logger")>();
 
   return {
     ...actual,
@@ -53,6 +51,8 @@ describe("archiveRouter.importArchive", () => {
   });
 
   it("accepts .paprikarecipes files", async () => {
+    const { archiveRouter } = await import("@norish/trpc/routers/archive/archive");
+
     const caller = archiveRouter.createCaller({
       user: {
         id: "user-1",

@@ -10,8 +10,8 @@ import {
   calculateBatchSize,
   getArchiveInfo,
   importArchive as runArchiveImport,
-} from "@norish/api/importers/archive-parser";
-import { trpcLogger as log } from "@norish/api/logger";
+} from "@norish/shared-server/archive/parser";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";

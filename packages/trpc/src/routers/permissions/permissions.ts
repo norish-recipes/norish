@@ -1,4 +1,5 @@
-import { trpcLogger as log } from "@norish/api/logger";
+import { trpcLogger as log } from "@norish/shared-server/logger";
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import {
   getAutoTaggingMode,
   getRecipePermissionPolicy,
@@ -13,7 +14,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting permissions");
 
   const [recipePolicy, aiEnabled, serverAdmin, autoTaggingMode] = await Promise.all([
-    getRecipePermissionPolicy(),
+    getRecipePermissionPolicy() as Promise<RecipePermissionPolicy>,
     isAIEnabled(),
     isUserServerAdmin(ctx.user.id),
     getAutoTaggingMode(),

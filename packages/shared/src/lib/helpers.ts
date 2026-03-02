@@ -4,8 +4,8 @@ import { parseIngredient } from "parse-ingredient";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
 
-import { httpUrlSchema } from "./schema";
-import { flattenForLibrary } from "./unit-localization";
+import { httpUrlSchema } from "@norish/shared/lib/schema";
+import { flattenForLibrary } from "@norish/shared/lib/unit-localization";
 
 export function stripHtmlTags(input: string): string {
   // 1. Remove HTML tags first (replace with space to preserve word boundaries)

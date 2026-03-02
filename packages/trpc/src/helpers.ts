@@ -1,6 +1,6 @@
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type { SubscriptionMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
-import { trpcLogger as log } from "@norish/api/logger";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import type { TypedEmitter } from "./emitter";
 import { authedProcedure } from "./middleware";

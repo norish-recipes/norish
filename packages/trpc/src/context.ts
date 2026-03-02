@@ -1,18 +1,34 @@
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import type { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
 
-import type { SubscriptionMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
-import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
 import { auth } from "@norish/auth/auth";
 import { getHouseholdForUser } from "@norish/db";
 
+type ContextUser = {
+  id: string;
+  email: string;
+  name: string;
+  image: string | null;
+  isServerAdmin: boolean;
+};
+
+type ContextHousehold = {
+  id: string;
+  name: string;
+  users: Array<{ id: string; name: string }>;
+};
+
+type ContextMultiplexer = {
+  close(): Promise<void>;
+};
+
 export type Context = {
-  user: User | null;
-  household: HouseholdWithUsersNamesDto | null;
+  user: ContextUser | null;
+  household: ContextHousehold | null;
   /** Unique ID for this WebSocket connection (WS only) */
   connectionId: string | null;
   /** Subscription multiplexer for this connection (WS only, set lazily in middleware) */
-  multiplexer: SubscriptionMultiplexer | null;
+  multiplexer: ContextMultiplexer | null;
 };
 
 /**
@@ -32,7 +48,7 @@ export async function createContext(opts: FetchCreateContextFnOptions): Promise<
     }
 
     const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
-    const user: User = {
+    const user: ContextUser = {
       id: session.user.id,
       email: session.user.email,
       name: session.user.name || "",
@@ -71,7 +87,7 @@ export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<
     }
 
     const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
-    const user: User = {
+    const user: ContextUser = {
       id: session.user.id,
       email: session.user.email,
       name: session.user.name || "",

@@ -1,4 +1,4 @@
-import { trpcLogger as log } from "@norish/api/logger";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import type { GrocerySubscriptionEvents } from "./types";
 import { createSubscriptionIterable } from "../../helpers";

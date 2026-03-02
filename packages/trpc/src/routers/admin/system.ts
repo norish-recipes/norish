@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 import type { ServerConfigKey } from "@norish/config/zod/server-config";
-import { trpcLogger as log } from "@norish/api/logger";
-import { getDefaultConfigValue } from "@norish/api/startup/seed-config";
+import { trpcLogger as log } from "@norish/shared-server/logger";
+import { getDefaultConfigValue } from "@norish/shared-server/config/defaults";
 import {
   SchedulerCleanupMonthsSchema,
   SENSITIVE_CONFIG_KEYS,
