@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getQueryOptions, type CreateConfigHooksOptions, type TrpcHookBinding, type UploadLimits } from './types';
+import type { CreateConfigHooksOptions } from './types';
 
-const DEFAULT_UPLOAD_LIMITS: UploadLimits = {
+const DEFAULT_UPLOAD_LIMITS = {
   maxAvatarSize: 5 * 1024 * 1024,
   maxImageSize: 10 * 1024 * 1024,
   maxVideoSize: 100 * 1024 * 1024,
@@ -10,16 +10,16 @@ const DEFAULT_UPLOAD_LIMITS: UploadLimits = {
 
 export function createUseUploadLimitsQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useUploadLimitsQuery() {
-    const trpc = useTRPC() as TrpcHookBinding;
+    const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({
-      ...getQueryOptions(trpc.config.uploadLimits.queryOptions),
+      ...trpc.config.uploadLimits.queryOptions(),
       staleTime: 60 * 60 * 1000,
       gcTime: 60 * 60 * 1000,
     });
 
     return {
-      limits: (data as UploadLimits | undefined) ?? DEFAULT_UPLOAD_LIMITS,
+      limits: data ?? DEFAULT_UPLOAD_LIMITS,
       isLoading,
       error,
     };

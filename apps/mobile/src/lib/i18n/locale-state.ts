@@ -57,7 +57,9 @@ export function resolveLocaleSelection(
   return enabledLocales[0]?.code ?? DEFAULT_LOCALE;
 }
 
-export function buildLocaleDisplayMap(locales: EnabledLocale[]): LocaleDisplayMap {
+export function buildLocaleDisplayMap(
+  locales: EnabledLocale[]
+): LocaleDisplayMap {
   const displayMap: LocaleDisplayMap = {};
 
   for (const locale of locales) {

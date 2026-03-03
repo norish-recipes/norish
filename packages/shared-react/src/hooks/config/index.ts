@@ -1,3 +1,5 @@
+import type { CreateConfigHooksOptions } from './types';
+
 export type {
   CreateConfigHooksOptions,
   EnabledLocale,
@@ -15,7 +17,6 @@ export { createUseTimerKeywordsQuery } from './use-timer-keywords-query';
 export { createUseUploadLimitsQuery } from './use-upload-limits-query';
 export { createUseTimersEnabledBaseQuery } from './use-timers-enabled-base-query';
 
-import type { CreateConfigHooksOptions } from './types';
 import { createUseLocaleConfigQuery } from './use-locale-config-query';
 import { createUseTagsQuery } from './use-tags-query';
 import { createUseUnitsQuery } from './use-units-query';

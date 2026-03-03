@@ -1,20 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import type { RecurrenceConfig } from '@norish/shared/contracts/recurrence';
 
-import { getQueryOptions, type CreateConfigHooksOptions, type TrpcHookBinding } from './types';
+import type { CreateConfigHooksOptions } from './types';
 
 export function createUseRecurrenceConfigQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useRecurrenceConfigQuery() {
-    const trpc = useTRPC() as TrpcHookBinding;
+    const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({
-      ...getQueryOptions(trpc.config.recurrenceConfig.queryOptions),
+      ...trpc.config.recurrenceConfig.queryOptions(),
       staleTime: 60 * 60 * 1000,
       gcTime: 60 * 60 * 1000,
     });
 
     return {
-      recurrenceConfig: data as RecurrenceConfig | undefined,
+      recurrenceConfig: data,
       isLoading,
       error,
     };

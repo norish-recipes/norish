@@ -8,6 +8,9 @@
       ],
       "@/assets/*": [
         "./assets/*"
+      ],
+      "@norish/trpc/*": [
+        "../../packages/trpc/src/*"
       ]
     }
   },

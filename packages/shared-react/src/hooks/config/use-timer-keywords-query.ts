@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getQueryOptions, type CreateConfigHooksOptions, type TimerKeywordsConfig, type TrpcHookBinding } from './types';
+import type { CreateConfigHooksOptions } from './types';
 
-const DEFAULT_TIMER_KEYWORDS: TimerKeywordsConfig = {
+const DEFAULT_TIMER_KEYWORDS = {
   enabled: true,
   hours: [],
   minutes: [],
@@ -12,16 +12,16 @@ const DEFAULT_TIMER_KEYWORDS: TimerKeywordsConfig = {
 
 export function createUseTimerKeywordsQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useTimerKeywordsQuery() {
-    const trpc = useTRPC() as TrpcHookBinding;
+    const trpc = useTRPC();
 
     const { data, error, isLoading } = useQuery({
-      ...getQueryOptions(trpc.config.timerKeywords.queryOptions),
+      ...trpc.config.timerKeywords.queryOptions(),
       staleTime: 5 * 60 * 1000,
       gcTime: 60 * 60 * 1000,
     });
 
     return {
-      timerKeywords: (data as TimerKeywordsConfig | undefined) ?? DEFAULT_TIMER_KEYWORDS,
+      timerKeywords: data ?? DEFAULT_TIMER_KEYWORDS,
       isLoading,
       error,
     };

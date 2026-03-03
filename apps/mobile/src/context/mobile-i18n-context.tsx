@@ -8,7 +8,7 @@ import { IntlProvider } from 'react-intl';
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAuth } from '@/context/auth-context';
-import { useLocaleConfigQuery } from '@/hooks/config';
+import { useLocaleConfigQuery } from '@/hooks/config/use-locale-config-query';
 import {
   buildLocaleDisplayMap,
   normalizeEnabledLocales,

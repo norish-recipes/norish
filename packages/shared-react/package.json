@@ -20,6 +20,7 @@
     "@norish/config": "workspace:*",
     "@norish/i18n": "workspace:*",
     "@norish/shared": "workspace:*",
+    "@norish/trpc": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",

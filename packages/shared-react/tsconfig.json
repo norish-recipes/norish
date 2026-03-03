@@ -4,7 +4,10 @@
     "rootDir": "./src",
     "lib": ["ES2022", "DOM"],
     "types": ["node"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@norish/trpc/*": ["../trpc/dist/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "src/**/*.test.ts", "src/**/*.test.tsx"]
