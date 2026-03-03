@@ -1,6 +1,6 @@
-import type { MobileRecipeCardItem } from '@/lib/recipes/recipe-card.types';
+import type { RecipeCardItem } from '@/lib/recipes/recipe-card.types';
 
-type MockRecipeRecord = Omit<MobileRecipeCardItem, 'rating'> & {
+type MockRecipeRecord = Omit<RecipeCardItem, 'rating'> & {
   rating: number;
 };
 
@@ -80,13 +80,13 @@ export function normalizeStarRating(value: number): number {
   return Math.min(5, Math.max(1, Math.round(value)));
 }
 
-export function mapRecipeToMobileCardItem(recipe: MockRecipeRecord): MobileRecipeCardItem {
+export function mapRecipeToCardItem(recipe: MockRecipeRecord): RecipeCardItem {
   return {
     ...recipe,
     rating: normalizeStarRating(recipe.rating),
   };
 }
 
-export const MOBILE_HOME_RECIPE_CARDS: MobileRecipeCardItem[] = MOCK_HOME_RECIPES.map(
-  mapRecipeToMobileCardItem,
+export const MOBILE_HOME_RECIPE_CARDS: RecipeCardItem[] = MOCK_HOME_RECIPES.map(
+  mapRecipeToCardItem,
 );

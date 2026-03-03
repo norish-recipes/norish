@@ -1,4 +1,4 @@
-export type MobileRecipeCardItem = {
+export type RecipeCardItem = {
   id: string;
   imageUrl: string;
   title: string;

@@ -84,7 +84,6 @@ export default function ConnectScreen() {
   return (
     <AuthShell
       headingPrefix="Connect to"
-      subtitle="Enter your backend base URL. We verify `/api/health` before saving and then connect app tRPC using that base URL."
     >
       <Text style={[styles.label, { color: foregroundColor }]}>Backend URL</Text>
 

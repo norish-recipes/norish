@@ -1,0 +1,79 @@
+import { Button as UIButton, Picker, Text as UIText } from '@expo/ui/swift-ui';
+import { pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
+import { useThemeColor } from 'heroui-native';
+import React, { useSyncExternalStore } from 'react';
+import { Pressable } from 'react-native';
+
+import { type AppearanceMode, useAppearancePreference } from '@/context/appearance-preference-context';
+import { useMobileLocaleSettings } from '@/context/mobile-i18n-context';
+import { getLocaleSnapshot, subscribeLocaleStore } from '@/lib/i18n/locale-store';
+import { ShellMenu } from '@/components/shell/menu';
+
+/**
+ * Native iOS settings menu for the Recipes tab header.
+ */
+export function SettingsMenu() {
+  const router = useRouter();
+  const [mutedColor] = useThemeColor(['muted'] as const);
+  const { mode, setMode } = useAppearancePreference();
+  const { enabledLocales, localeNames, isLoading, setLocale } = useMobileLocaleSettings();
+
+  // Read locale from the synchronous store so this component re-renders on
+  // the same tick that setLocale() is called, not after the async React state
+  // chain settles.
+  const { locale } = useSyncExternalStore(subscribeLocaleStore, getLocaleSnapshot, getLocaleSnapshot);
+
+  return (
+    <ShellMenu
+      label={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open settings"
+          style={{ paddingHorizontal: 4 }}
+        >
+          <Ionicons name="settings-outline" size={22} color={mutedColor} />
+        </Pressable>
+      }
+    >
+      {/* Each Picker with pickerStyle('menu') renders as its own sub-menu row
+          with a chevron, opening a secondary flyout of options. */}
+      <Picker
+        key={mode}
+        label="Theme"
+        systemImage="circle.lefthalf.filled"
+        selection={mode}
+        onSelectionChange={(value) => setMode(value as AppearanceMode)}
+        modifiers={[pickerStyle('menu')]}
+      >
+        <UIText modifiers={[tag('system')]}>System</UIText>
+        <UIText modifiers={[tag('light')]}>Light</UIText>
+        <UIText modifiers={[tag('dark')]}>Dark</UIText>
+      </Picker>
+
+      {!isLoading && enabledLocales.length > 1 && (
+        <Picker
+          key={locale}
+          label={localeNames[locale] ?? locale}
+          systemImage="globe"
+          selection={locale}
+          onSelectionChange={(value) => setLocale(value as string)}
+          modifiers={[pickerStyle('menu')]}
+        >
+          {enabledLocales.map((l) => (
+            <UIText key={l.code} modifiers={[tag(l.code)]}>
+              {localeNames[l.code] ?? l.code}
+            </UIText>
+          ))}
+        </Picker>
+      )}
+
+      <UIButton
+        label="Profile"
+        systemImage="person.crop.circle"
+        onPress={() => router.push('/(tabs)/profile')}
+      />
+    </ShellMenu>
+  );
+}

@@ -1,7 +1,6 @@
 import '@/global.css';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Host } from '@expo/ui/swift-ui';
 import { Stack } from 'expo-router';
 import { HeroUINativeProvider } from 'heroui-native';
 import { PortalHost } from 'heroui-native/portal';
@@ -81,10 +80,8 @@ function RootLayoutContent() {
         <TrpcProvider baseUrl={backendBaseUrl}>
           <AuthProvider backendBaseUrl={backendBaseUrl}>
             <MobileIntlProvider>
-              <Host style={styles.root}>
-                <RootStack />
-                <PortalHost name="app" />
-              </Host>
+              <RootStack />
+              <PortalHost name="app" />
             </MobileIntlProvider>
           </AuthProvider>
         </TrpcProvider>
@@ -96,10 +93,8 @@ function RootLayoutContent() {
     <ThemeProvider value={effectiveScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider backendBaseUrl={null}>
         <MobileIntlFallbackProvider>
-          <Host style={styles.root}>
-            <RootStack />
-            <PortalHost name="app" />
-          </Host>
+          <RootStack />
+          <PortalHost name="app" />
         </MobileIntlFallbackProvider>
       </AuthProvider>
     </ThemeProvider>

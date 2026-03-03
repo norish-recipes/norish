@@ -1,7 +1,8 @@
-import { BottomSheet, Button, useThemeColor } from 'heroui-native';
+import { useThemeColor } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { ShellSheet } from '@/components/shell/sheet';
 import type { SearchFilters } from '@/lib/recipes/search-filters';
 import {
   ALL_TAGS,
@@ -215,7 +216,13 @@ interface FilterSheetProps {
 export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSheetProps) {
   // Staged draft state — changes only commit on "Apply"
   const [draft, setDraft] = useState<SearchFilters>(filters);
-  const [titleColor, mutedColor] = useThemeColor(['foreground', 'muted'] as const);
+  const [titleColor, mutedColor, accentColor, surfaceColor, separatorColor] = useThemeColor([
+    'foreground',
+    'muted',
+    'accent',
+    'surface',
+    'separator',
+  ] as const);
 
   // Sync draft from outside when the sheet opens
   React.useEffect(() => {
@@ -234,59 +241,72 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
   }, []);
 
   return (
-    <BottomSheet isOpen={isOpen} onOpenChange={onOpenChange}>
-      <BottomSheet.Portal hostName="app">
-        <BottomSheet.Overlay />
-        <BottomSheet.Content >
-          {/* Sheet header */}
-          <View style={sheetStyles.titleRow}>
-            <BottomSheet.Title style={{ color: titleColor }}>Filters</BottomSheet.Title>
-            <BottomSheet.Description style={{ color: mutedColor }}>
-              Narrow your recipe search
-            </BottomSheet.Description>
-          </View>
+    <ShellSheet
+      isPresented={isOpen}
+      onIsPresentedChange={onOpenChange}
+    >
+      <View style={sheetStyles.container}>
+        {/* Sheet header */}
+        <View style={sheetStyles.titleRow}>
+          <Text style={[sheetStyles.title, { color: titleColor }]}>Filters</Text>
+          <Text style={[sheetStyles.subtitle, { color: mutedColor }]}>
+            Narrow your recipe search
+          </Text>
+        </View>
 
-          {/* Scrollable filter sections — flex:1 on the wrapper lets the scroll area fill remaining space */}
-          <View style={sheetStyles.scrollWrapper}>
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={sheetStyles.scrollContent}
-            >
-              <CookingTimeSection
-                value={draft.maxCookingTime}
-                onChange={(v) => setDraft((d) => ({ ...d, maxCookingTime: v }))}
-              />
-              <CourseSection
-                value={draft.course}
-                onChange={(v) => setDraft((d) => ({ ...d, course: v }))}
-              />
-              <FavoritesSection
-                value={draft.liked}
-                onChange={(v) => setDraft((d) => ({ ...d, liked: v }))}
-              />
-              <MinRatingSection
-                value={draft.minRating}
-                onChange={(v) => setDraft((d) => ({ ...d, minRating: v }))}
-              />
-              <TagsSection
-                value={draft.tags}
-                onChange={(v) => setDraft((d) => ({ ...d, tags: v }))}
-              />
-            </ScrollView>
-          </View>
+        {/* Scrollable filter sections */}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={sheetStyles.scrollContent}
+          style={sheetStyles.scrollWrapper}
+        >
+          <CookingTimeSection
+            value={draft.maxCookingTime}
+            onChange={(v) => setDraft((d) => ({ ...d, maxCookingTime: v }))}
+          />
+          <CourseSection
+            value={draft.course}
+            onChange={(v) => setDraft((d) => ({ ...d, course: v }))}
+          />
+          <FavoritesSection
+            value={draft.liked}
+            onChange={(v) => setDraft((d) => ({ ...d, liked: v }))}
+          />
+          <MinRatingSection
+            value={draft.minRating}
+            onChange={(v) => setDraft((d) => ({ ...d, minRating: v }))}
+          />
+          <TagsSection
+            value={draft.tags}
+            onChange={(v) => setDraft((d) => ({ ...d, tags: v }))}
+          />
+        </ScrollView>
 
-          {/* Footer */}
-          <View style={sheetStyles.footer}>
-            <Button variant="secondary" onPress={handleReset} style={sheetStyles.resetButton}>
-              <Button.Label>Reset</Button.Label>
-            </Button>
-            <Button onPress={handleApply} style={sheetStyles.applyButton}>
-              <Button.Label>Apply</Button.Label>
-            </Button>
-          </View>
-        </BottomSheet.Content>
-      </BottomSheet.Portal>
-    </BottomSheet>
+        {/* Footer */}
+        <View style={sheetStyles.footer}>
+          <Pressable
+            onPress={handleReset}
+            style={({ pressed }) => [
+              sheetStyles.footerButton,
+              sheetStyles.resetButton,
+              { backgroundColor: surfaceColor, borderColor: separatorColor, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Text style={[sheetStyles.footerButtonLabel, { color: titleColor }]}>Reset</Text>
+          </Pressable>
+          <Pressable
+            onPress={handleApply}
+            style={({ pressed }) => [
+              sheetStyles.footerButton,
+              sheetStyles.applyButton,
+              { backgroundColor: accentColor, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Text style={[sheetStyles.footerButtonLabel, { color: '#ffffff' }]}>Apply</Text>
+          </Pressable>
+        </View>
+      </View>
+    </ShellSheet>
   );
 }
 
@@ -326,9 +346,22 @@ const chipStyles = StyleSheet.create({
 });
 
 const sheetStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 24,
+  },
   titleRow: {
     gap: 3,
     marginBottom: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  subtitle: {
+    fontSize: 14,
   },
   scrollWrapper: {
     flex: 1,
@@ -342,10 +375,21 @@ const sheetStyles = StyleSheet.create({
     gap: 10,
     marginTop: 16,
   },
-  resetButton: {
+  footerButton: {
     flex: 1,
+    paddingVertical: 13,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resetButton: {
+    borderWidth: 1,
   },
   applyButton: {
     flex: 2,
+  },
+  footerButtonLabel: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

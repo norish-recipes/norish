@@ -2,13 +2,13 @@ import { PressableFeedback } from 'heroui-native';
 import React from 'react';
 import { ScrollView, View } from 'react-native';
 
-import type { MobileRecipeCardItem } from '@/lib/recipes/recipe-card.types';
+import type { RecipeCardItem } from '@/lib/recipes/recipe-card.types';
 import { styles } from '@/styles/discover-section.styles';
 
 import { CompactRecipeCard } from './compact-recipe-card';
 
 type DiscoverSectionProps = {
-  recipes: MobileRecipeCardItem[];
+  recipes: RecipeCardItem[];
 };
 
 export function DiscoverSection({ recipes }: DiscoverSectionProps) {

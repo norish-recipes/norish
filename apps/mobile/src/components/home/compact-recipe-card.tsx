@@ -3,12 +3,12 @@ import { useThemeColor } from 'heroui-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import type { MobileRecipeCardItem } from '@/lib/recipes/recipe-card.types';
+import type { RecipeCardItem } from '@/lib/recipes/recipe-card.types';
 
 import { styles } from '@/styles/compact-recipe-card.styles';
 
 type CompactRecipeCardProps = {
-  recipe: MobileRecipeCardItem;
+  recipe: RecipeCardItem;
   secondaryLabel?: 'duration' | 'course';
 };
 
