@@ -1,11 +1,12 @@
 import '@/global.css';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Host } from '@expo/ui/swift-ui';
 import { Stack } from 'expo-router';
 import { HeroUINativeProvider } from 'heroui-native';
 import { PortalHost } from 'heroui-native/portal';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { Platform, StyleSheet, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import {
@@ -80,8 +81,10 @@ function RootLayoutContent() {
         <TrpcProvider baseUrl={backendBaseUrl}>
           <AuthProvider backendBaseUrl={backendBaseUrl}>
             <MobileIntlProvider>
-              <RootStack />
-              <PortalHost name="app" />
+              <Host style={styles.root}>
+                <RootStack />
+                <PortalHost name="app" />
+              </Host>
             </MobileIntlProvider>
           </AuthProvider>
         </TrpcProvider>
@@ -93,8 +96,10 @@ function RootLayoutContent() {
     <ThemeProvider value={effectiveScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider backendBaseUrl={null}>
         <MobileIntlFallbackProvider>
-          <RootStack />
-          <PortalHost name="app" />
+          <Host style={styles.root}>
+            <RootStack />
+            <PortalHost name="app" />
+          </Host>
         </MobileIntlFallbackProvider>
       </AuthProvider>
     </ThemeProvider>
