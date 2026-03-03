@@ -1,37 +1,47 @@
-## 1. Extract query/cache hooks to shared-react
+## 1. Phase 1 - Shared Foundation and Boundaries
 
-- [ ] 1.1 Move `use-recipe-id`, `use-recipes-query`, `use-recipes-cache`, `use-recipe-query`, and `use-pending-recipes-query` from `apps/web/hooks/recipes` into `packages/shared-react` with unchanged behavior.
-- [ ] 1.2 Move `use-auto-tagging-query`, `use-allergy-detection-query`, `use-nutrition-query`, `use-recipe-autocomplete`, `use-recipe-ingredients`, and `use-random-recipe` into `packages/shared-react`.
-- [ ] 1.3 Move subscription/mutation hooks that are already platform-agnostic (`use-auto-tagging-subscription`, `use-auto-categorization-subscription`, `use-allergy-detection-subscription`, `use-nutrition-subscription`, `use-nutrition-mutation`) into `packages/shared-react`.
-- [ ] 1.4 Export all moved hooks from a shared recipes barrel and ensure type safety stays sourced from existing tRPC boundary contracts.
+- [ ] 1.1 Create recipe shared hook factory/binding utilities in `packages/shared-react` using the same app-owned `useTRPC` injection pattern as shared config hooks.
+- [ ] 1.2 Create explicit shared module boundaries and barrels for `dashboard` and `recipe` families.
+- [ ] 1.3 Move `use-recipe-id` into the shared `recipe` family and keep its id normalization behavior unchanged.
+- [ ] 1.4 Move `use-recipes-query` into the shared `dashboard` family as the base dashboard list query.
+- [ ] 1.5 Move `use-recipes-cache` into the shared `dashboard` family for cache key and update behavior.
+- [ ] 1.6 Move `use-recipe-query` into the shared `recipe` family as the base single-recipe query.
+- [ ] 1.7 Move `use-pending-recipes-query` into the shared `dashboard` family for list-level pending data handling.
 
-## 2. Introduce adapter boundaries for web-coupled hooks
+## 2. Phase 2 - Query and Enrichment Hook Migration
 
-- [ ] 2.1 Create storage adapter interface for recipe filters and implement web localStorage + mobile storage variants.
-- [ ] 2.2 Split `use-recipes-mutations` into core mutation logic plus UI adapter callbacks (toast, i18n, navigation side-effects).
-- [ ] 2.3 Split `use-recipes-subscription` and `use-recipe-subscription` into shared core cache/subscription engines plus app-specific UI/navigation wrappers.
-- [ ] 2.4 Create media upload adapter for image/video hooks so web `File/FormData` and mobile asset payloads share one hook contract.
+- [ ] 2.1 Move `use-auto-tagging-query` into shared `recipe` and preserve typed contract behavior.
+- [ ] 2.2 Move `use-allergy-detection-query` into shared `recipe` and preserve typed contract behavior.
+- [ ] 2.3 Move `use-nutrition-query` into shared `recipe` and preserve typed contract behavior.
+- [ ] 2.4 Move `use-recipe-autocomplete` into shared `dashboard` for list/search surfaces.
+- [ ] 2.5 Move `use-recipe-ingredients` into shared `recipe` for single-recipe enrichment data.
+- [ ] 2.6 Move `use-random-recipe` into shared `dashboard` for recommendation/discovery surfaces.
 
-## 3. Migrate web to shared hooks first
+## 3. Phase 3 - Subscription and Mutation Core Split
 
-- [ ] 3.1 Switch web imports to shared-react for all extracted recipe hooks while preserving behavior.
-- [ ] 3.2 Keep `use-recipe-prefetch` web-only and confirm it continues to work with shared query keys.
-- [ ] 3.3 Verify web recipe list/detail/dashboard flows and subscription-driven updates still behave identically.
+- [ ] 3.1 Move `use-auto-tagging-subscription` core cache/subscription logic into shared `recipe`; keep app-side effects in wrappers.
+- [ ] 3.2 Move `use-auto-categorization-subscription` core cache/subscription logic into shared `recipe`; keep app-side effects in wrappers.
+- [ ] 3.3 Move `use-allergy-detection-subscription` core cache/subscription logic into shared `recipe`; keep app-side effects in wrappers.
+- [ ] 3.4 Move `use-nutrition-subscription` core cache/subscription logic into shared `recipe`; keep app-side effects in wrappers.
+- [ ] 3.5 Move `use-nutrition-mutation` mutation core into shared `recipe`; keep notifications/navigation side effects in wrappers.
+- [ ] 3.6 Split `use-recipes-mutations` into shared mutation core plus app-owned wrapper callbacks.
+- [ ] 3.7 Split `use-recipes-subscription` into shared cache/subscription core plus app-owned wrapper callbacks.
+- [ ] 3.8 Split `use-recipe-subscription` into shared cache/subscription core plus app-owned wrapper callbacks.
 
-## 4. Wire mobile full recipe dashboard to backend
+## 4. Phase 4 - Adapter Wrappers and App Migration
 
-- [ ] 4.1 Replace mobile home "Your Collection" mock list with shared backend-backed recipe list hooks.
-- [ ] 4.2 Wire "Continue Cooking" and "Discover" dashboard sections to shared backend-backed hooks and handle empty/loading/error states.
-- [ ] 4.3 Keep Today meal slots on a single isolated fixture adapter for now, and remove all other runtime recipe mocks.
-- [ ] 4.4 Integrate shared subscription hooks on mobile so dashboard sections and recipe cards stay in sync with backend events.
+- [ ] 4.1 Keep `use-recipe-filters` app-owned and add storage adapter contracts for web localStorage and mobile storage implementations.
+- [ ] 4.2 Move `use-recipe-images` shared query/mutation contract into `recipe`; keep media payload adaptation app-owned.
+- [ ] 4.3 Move `use-recipe-videos` shared query/mutation contract into `recipe`; keep media payload adaptation app-owned.
+- [ ] 4.4 Keep `use-recipe-prefetch` web-only and validate compatibility with shared query keys.
+- [ ] 4.5 Refactor `apps/web/hooks/recipes` exports/imports to thin wrappers over shared `dashboard` and `recipe` families.
 
-## 5. Validation and cleanup
+## 5. Phase 5 - Mobile Dashboard Cutover and Validation
 
-- [ ] 5.1 Remove obsolete mobile mock recipe paths from normal runtime, except the temporary Today fixture adapter.
-- [ ] 5.2 Run typecheck/tests for `packages/shared-react`, `apps/web`, and `apps/mobile` to validate cross-platform hook contracts.
-- [ ] 5.3 Perform manual mobile verification against a real backend for list, detail sync, dashboard sections, and failure states.
-
-## 6. Follow-up change for Today backend hooks
-
-- [ ] 6.1 Create a follow-up OpenSpec change for shared planned-meals hooks: `use-todays-planned-recipes-query` and `use-todays-planned-recipes-subscription` (names TBD).
-- [ ] 6.2 In that follow-up, replace the temporary Today fixture adapter with backend-backed meal-plan data and real-time updates.
+- [ ] 5.1 Wire mobile `Continue Cooking`, `Discover`, and `Your Collection` sections to shared `dashboard` hooks.
+- [ ] 5.2 Verify mobile home loading, empty, error, and success states are driven by shared `dashboard` hooks.
+- [ ] 5.3 Remove all non-Today runtime recipe mocks from mobile dashboard code paths.
+- [ ] 5.4 Keep Today meal slots isolated behind one fixture adapter until planned-meals follow-up hooks are delivered.
+- [ ] 5.5 Run typecheck/tests for `packages/shared-react`, `apps/web`, and `apps/mobile` to verify hook typing and import boundaries.
+- [ ] 5.6 Manually verify web and mobile flows to confirm `dashboard` hooks are only used for dashboard surfaces and `recipe` hooks are only used for single-recipe surfaces.
+- [ ] 5.7 Create or link the follow-up OpenSpec change for planned-meals shared hooks (`query + subscription`) to replace the temporary Today fixture.

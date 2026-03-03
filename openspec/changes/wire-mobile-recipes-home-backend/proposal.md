@@ -1,27 +1,28 @@
 ## Why
 
-The mobile home recipe surface currently relies on deterministic mock data, so it does not reflect real backend content or match web behavior. We should wire mobile to the backend using the same recipe-query setup as web to reduce duplicate logic and keep recipe data behavior consistent across clients.
+The mobile recipe-home work is underway, but the shared recipe hook extraction is still too mixed: dashboard hooks and recipe hooks are not clearly separated, so it is unclear which hooks should be used in each screen. We should refine this change to mirror the proven shared config-hook pattern and make hook intent explicit before implementation starts.
 
 ## What Changes
 
-- Replace mobile home recipe mock data usage with backend-backed data retrieval.
-- Extract reusable recipe query/client hooks from `apps/web/hooks/recipes` into `packages/shared-react` so both web and mobile consume the same domain logic.
-- Add mobile-specific adapter wiring (provider/context/environment pieces) to use shared recipe hooks with the existing mobile tRPC/base URL setup.
-- Define mobile home loading, empty, error, and success behavior when data is fetched from the backend.
-- Wire dashboard sections (Continue Cooking, Discover, Your Collection) to backend-backed shared hooks so recipes dashboard content runs on live data.
-- Keep only the Today meal slots on temporary mock data in this change and queue a follow-up shared hook (`query + subscription`) for planned recipes of today.
+- Keep the backend wiring scope, but refine hook architecture to match how shared config hooks were created (shared core + app-owned bindings + thin app wrappers).
+- Split shared recipe hooks into two explicit families: dashboard hooks (home sections and collection surfaces) and recipe hooks (single-recipe query, mutation, and subscription flows).
+- Define naming/export boundaries so dashboard screens cannot accidentally consume singular hooks (and vice versa) without obvious intent.
+- Continue wiring mobile home dashboard sections (Continue Cooking, Discover, Your Collection) to backend-backed shared dashboard hooks.
+- Keep Today meal slots on temporary fixture data in this change and preserve the follow-up plan for planned-meals shared hooks (`query + subscription`).
+- Define mobile loading, empty, error, and success states against backend-backed dashboard hooks.
 
 ## Capabilities
 
 ### New Capabilities
-- `shared-recipe-hooks`: Shared React recipe data hooks and query helpers consumable by both web and mobile apps.
+- `shared-recipe-hooks`: Shared React recipe hooks with clear dashboard-vs-singular boundaries and app-owned tRPC binding support for web and mobile.
 
 ### Modified Capabilities
-- `mobile-home-recipe-cards`: Home recipe list requirements shift from mock-only bootstrap behavior to backend-backed data behavior and states.
-- `home-dashboard`: Dashboard sections shift from mock fixtures/subsets to backend-backed data, except Today meal slots which remain temporary mock data pending follow-up meal-plan hook extraction.
+- `mobile-home-recipe-cards`: Home recipe list requirements shift from mock-only bootstrap behavior to backend-backed dashboard-hook behavior and explicit loading/error/empty states.
+- `home-dashboard`: Dashboard sections shift from mixed fixture/subset wiring to backend-backed dashboard hooks, except Today meal slots which remain temporary fixture data pending follow-up meal-plan hook extraction.
 
 ## Impact
 
-- Affected code: `apps/mobile` home data wiring, `apps/web/hooks/recipes` extraction points, and `packages/shared-react` new/updated recipe modules.
-- Affected APIs: mobile calls existing backend recipe procedures via existing tRPC endpoint derivation; no new backend endpoint required.
-- Dependencies/systems: TanStack Query and typed tRPC client usage shared across web/mobile; mobile depends on configured backend URL and authenticated session; Today meal slots remain on a temporary local fixture until follow-up planned-meals hooks land.
+- Affected code: `apps/mobile` home/dashboard wiring, `apps/web/hooks/recipes` wrapper/extraction points, and `packages/shared-react` recipe hook module structure/exports.
+- Affected APIs: existing recipe backend procedures only; no new backend endpoint required.
+- Dependencies/systems: TanStack Query with typed tRPC bindings in both apps, following the same app-owned binding pattern used by shared config hooks.
+- Behavioral impact: clearer hook ownership and usage intent (dashboard vs recipe) reduces ambiguous imports and migration mistakes.
