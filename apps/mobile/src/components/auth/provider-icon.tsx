@@ -15,17 +15,8 @@ const ICONIFY_TO_IONICONS: Record<string, React.ComponentProps<typeof Ionicons>[
   'mdi:google': 'logo-google',
   'mdi:apple': 'logo-apple',
   'simple-icons:apple': 'logo-apple',
-  'mdi:microsoft': 'logo-microsoft',
-  'simple-icons:microsoft': 'logo-microsoft',
-  'mdi:facebook': 'logo-facebook',
-  'simple-icons:facebook': 'logo-facebook',
   'mdi:discord': 'logo-discord',
-  'simple-icons:discord': 'logo-discord',
-  'mdi:gitlab': 'logo-gitlab',
-  'simple-icons:gitlab': 'logo-gitlab',
-  'mdi:twitter': 'logo-twitter',
-  'simple-icons:twitter': 'logo-twitter',
-  'simple-icons:x': 'logo-twitter',
+  'simple-icons:discord': 'logo-discord'
 };
 
 interface ProviderIconProps {

@@ -1,29 +1,10 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-import { useQuery } from "@tanstack/react-query";
+import { sharedConfigHooks } from "./shared-config-hooks";
 
 /**
  * Hook to get timer keywords configuration.
  */
 export function useTimerKeywordsQuery() {
-  const trpc = useTRPC();
-
-  const { data, error, isLoading } = useQuery({
-    ...trpc.config.timerKeywords.queryOptions(),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
-  });
-
-  return {
-    timerKeywords: data ?? {
-      enabled: true,
-      hours: [],
-      minutes: [],
-      seconds: [],
-      isOverridden: false,
-    },
-    isLoading,
-    error,
-  };
+  return sharedConfigHooks.useTimerKeywordsQuery();
 }

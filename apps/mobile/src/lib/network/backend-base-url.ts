@@ -37,8 +37,7 @@ export function normalizeBackendBaseUrl(input: string): string | null {
 
     parsed.hash = '';
     parsed.search = '';
-
-    console.log(`Normalized backend URL: ${parsed.toString()}`);
+    
     return parsed.toString().replace(/\/+$/, '');
   } catch {
     return null;

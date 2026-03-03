@@ -26,7 +26,6 @@ export default function RegisterScreen() {
     return (
       <AuthShell
         headingPrefix="Create account on"
-        subtitle="Backend URL is not configured. Connect to your backend first."
       >
         <View style={styles.centered}>
           <Button
@@ -154,7 +153,6 @@ function RegisterForm({
     return (
       <AuthShell
         headingPrefix="Registration disabled on"
-        subtitle="Registration is currently disabled on this server. Contact your server administrator for access."
         footer={signInLink}
       >
         <Card.Title style={{ color: foregroundColor }}>Registration unavailable</Card.Title>
@@ -172,7 +170,6 @@ function RegisterForm({
   return (
     <AuthShell
       headingPrefix="Create account on"
-      subtitle="Sign up with your email and password to get started."
       footer={
         <>
           {errorMessage && (

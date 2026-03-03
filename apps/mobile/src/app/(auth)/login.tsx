@@ -187,10 +187,6 @@ export default function LoginScreen() {
 
   const footer = (
     <>
-      {(justLoggedOut || justLoggedOutFromQuery) && (
-        <Text style={[styles.inlineInfo, { color: mutedColor }]}>You have signed out.</Text>
-      )}
-
       {backendBaseUrl !== null && (
         <Pressable
           onPress={() => {
@@ -212,7 +208,6 @@ export default function LoginScreen() {
   return (
     <AuthShell
       headingPrefix="Sign in to"
-      subtitle="Use your configured auth providers to access your Norish account."
       footer={footer}
     >
       {backendBaseUrl === null ? (

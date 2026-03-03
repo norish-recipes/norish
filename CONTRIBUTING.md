@@ -261,6 +261,13 @@ Create a new folder `i18n/messages/{your-locale}/` with the following files:
 
 Copy the structure from `i18n/messages/en/` as a starting point.
 
+### 2.1 Register Message Loaders (Required for Mobile/Expo)
+
+Expo Metro does not support fully dynamic JSON imports for locale bundles.
+After adding a new locale folder, update `packages/i18n/src/messages.ts` and add static loader entries for every section (`common`, `recipes`, `groceries`, `calendar`, `settings`, `navbar`, `auth`) under `MESSAGE_LOADERS`.
+
+If you skip this, iOS/Android bundling can fail with an "Invalid call" error from dynamic `import(...)`.
+
 ### 3. Verify Translations
 
 Run the locale check to ensure all keys are present:
@@ -286,5 +293,3 @@ New locales are **enabled by default** when added to `DEFAULT_LOCALE_CONFIG`. Yo
 ## License
 
 By contributing to Norish, you agree that your contributions will be licensed under the [AGPL-3.0 License](LICENSE).
-
-

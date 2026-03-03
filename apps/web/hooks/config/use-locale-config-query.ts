@@ -1,17 +1,10 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-import { useQuery } from "@tanstack/react-query";
+import type { EnabledLocale, LocaleConfigResult } from "@norish/shared-react/hooks";
 
-export interface EnabledLocale {
-  code: string;
-  name: string;
-}
+import { sharedConfigHooks } from "./shared-config-hooks";
 
-export interface LocaleConfigResult {
-  defaultLocale: string;
-  enabledLocales: EnabledLocale[];
-}
+export type { EnabledLocale, LocaleConfigResult };
 
 /**
  * Hook to fetch public locale configuration.
@@ -20,19 +13,5 @@ export interface LocaleConfigResult {
  * Used by language switchers to know which locales are enabled.
  */
 export function useLocaleConfigQuery() {
-  const trpc = useTRPC();
-
-  const { data, error, isLoading } = useQuery({
-    ...trpc.config.localeConfig.queryOptions(),
-    staleTime: 60 * 60 * 1000, // Locale config rarely changes, cache for 1 hour
-    gcTime: 60 * 60 * 1000,
-  });
-
-  return {
-    localeConfig: data as LocaleConfigResult | undefined,
-    enabledLocales: data?.enabledLocales ?? [],
-    defaultLocale: data?.defaultLocale ?? "en",
-    isLoading,
-    error,
-  };
+  return sharedConfigHooks.useLocaleConfigQuery();
 }

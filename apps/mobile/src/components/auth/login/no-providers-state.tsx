@@ -11,7 +11,7 @@ export function NoProvidersState() {
     <>
       <Card.Title style={{ color: foregroundColor }}>No sign-in methods available</Card.Title>
       <Card.Description style={{ color: mutedColor }}>
-        Authentication providers are not configured on the backend.
+        Authentication providers are not configured.
       </Card.Description>
     </>
   );

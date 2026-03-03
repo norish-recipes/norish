@@ -235,7 +235,7 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
 
   return (
     <BottomSheet isOpen={isOpen} onOpenChange={onOpenChange}>
-      <BottomSheet.Portal>
+      <BottomSheet.Portal hostName="app">
         <BottomSheet.Overlay />
         <BottomSheet.Content >
           {/* Sheet header */}

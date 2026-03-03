@@ -3,6 +3,7 @@ import '@/global.css';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { HeroUINativeProvider } from 'heroui-native';
+import { PortalHost } from 'heroui-native/portal';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,6 +13,7 @@ import {
   useAppearancePreference,
 } from '@/context/appearance-preference-context';
 import { AuthProvider, useAuth } from '@/context/auth-context';
+import { MobileIntlFallbackProvider, MobileIntlProvider } from '@/context/mobile-i18n-context';
 import {
   loadBackendBaseUrl,
   subscribeBackendBaseUrlChange,
@@ -72,23 +74,31 @@ function RootLayoutContent() {
   const effectiveScheme =
     mode === 'system' ? (systemColorScheme ?? 'light') : mode;
 
-  const content = (
-    <ThemeProvider value={effectiveScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AuthProvider backendBaseUrl={backendBaseUrl}>
-        <RootStack />
-      </AuthProvider>
-    </ThemeProvider>
-  );
-
   if (backendBaseUrl) {
     return (
-      <TrpcProvider baseUrl={backendBaseUrl}>
-        {content}
-      </TrpcProvider>
+      <ThemeProvider value={effectiveScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <TrpcProvider baseUrl={backendBaseUrl}>
+          <AuthProvider backendBaseUrl={backendBaseUrl}>
+            <MobileIntlProvider>
+              <RootStack />
+              <PortalHost name="app" />
+            </MobileIntlProvider>
+          </AuthProvider>
+        </TrpcProvider>
+      </ThemeProvider>
     );
   }
 
-  return content;
+  return (
+    <ThemeProvider value={effectiveScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <AuthProvider backendBaseUrl={null}>
+        <MobileIntlFallbackProvider>
+          <RootStack />
+          <PortalHost name="app" />
+        </MobileIntlFallbackProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
 }
 
 export default function RootLayout() {

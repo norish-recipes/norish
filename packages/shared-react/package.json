@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@norish/config": "workspace:*",
+    "@norish/i18n": "workspace:*",
     "@norish/shared": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",

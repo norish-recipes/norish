@@ -14,8 +14,6 @@ import { AuthLogo } from '../auth/auth-logo';
 interface AuthShellProps {
   /** Text before the logo in the heading row, e.g. "Sign in to" */
   headingPrefix: string;
-  /** Subtitle text below the heading */
-  subtitle: string;
   /** Content rendered inside the card. */
   children: ReactNode;
   /** Optional content rendered below the card (links, error messages, etc.) */
@@ -28,7 +26,7 @@ interface AuthShellProps {
  * Renders the heading row (text + inline logo), a subtitle, and a Card
  * wrapper. Each screen provides its own card content and optional footer.
  */
-export function AuthShell({ headingPrefix, subtitle, children, footer }: AuthShellProps) {
+export function AuthShell({ headingPrefix, children, footer }: AuthShellProps) {
   const [foregroundColor, mutedColor] = useThemeColor([
     'foreground',
     'muted',
@@ -45,7 +43,6 @@ export function AuthShell({ headingPrefix, subtitle, children, footer }: AuthShe
             <Text style={[styles.title, { color: foregroundColor }]}>{headingPrefix} </Text>
             <AuthLogo inline width={110} />
           </View>
-          <Text style={[styles.subtitle, { color: mutedColor }]}>{subtitle}</Text>
         </View>
 
         <Card variant="secondary" className="rounded-3xl border border-separator">
