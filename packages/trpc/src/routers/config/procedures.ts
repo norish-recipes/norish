@@ -72,7 +72,7 @@ const recurrenceConfig = authedProcedure.query(async ({ ctx }) => {
  * Get upload size limits from server configuration.
  * These are configurable via environment variables.
  */
-const uploadLimits = publicProcedure.query(() => {
+const uploadLimits = authedProcedure.query(() => {
   return {
     maxAvatarSize: SERVER_CONFIG.MAX_AVATAR_FILE_SIZE,
     maxImageSize: SERVER_CONFIG.MAX_IMAGE_FILE_SIZE,
@@ -83,16 +83,14 @@ const uploadLimits = publicProcedure.query(() => {
 /**
  * Check if recipe timers are enabled globally
  */
-const timersEnabled = publicProcedure.query(async () => {
+const timersEnabled = authedProcedure.query(async () => {
   return await isTimersEnabled();
 });
 
 /**
  * Get timer keywords configuration
  */
-const timerKeywords = publicProcedure.query(async () => {
-  log.debug("Getting timer keywords config");
-
+const timerKeywords = authedProcedure.query(async () => {
   const config = await getTimerKeywords();
 
   return config;
