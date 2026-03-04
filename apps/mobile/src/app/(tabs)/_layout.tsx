@@ -4,7 +4,7 @@ import { useThemeColor } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
 
-import { AddRecipeSheet } from '@/components/shell/add-recipe-sheet';
+import { AddRecipeSheet } from '@/components/shell/sheet/add-recipe-sheet';
 import { TabAccessoryContent } from '@/components/shell/tab-bottom-accessory';
 
 /**

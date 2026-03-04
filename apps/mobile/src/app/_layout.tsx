@@ -14,6 +14,7 @@ import {
 } from '@/context/appearance-preference-context';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { MobileIntlFallbackProvider, MobileIntlProvider } from '@/context/mobile-i18n-context';
+import { PermissionsProvider } from '@/context/permissions-context';
 import { RecipeFiltersProvider } from '@/context/recipe-filters-context';
 import { RecipesProvider } from '@/context/recipes-context';
 import {
@@ -82,12 +83,14 @@ function RootLayoutContent() {
         <TrpcProvider baseUrl={backendBaseUrl}>
           <AuthProvider backendBaseUrl={backendBaseUrl}>
             <RecipeFiltersProvider>
-              <RecipesProvider>
-                <MobileIntlProvider>
-                  <RootStack />
-                  <PortalHost name="app" />
-                </MobileIntlProvider>
-              </RecipesProvider>
+              <PermissionsProvider>
+                <RecipesProvider>
+                  <MobileIntlProvider>
+                    <RootStack />
+                    <PortalHost name="app" />
+                  </MobileIntlProvider>
+                </RecipesProvider>
+              </PermissionsProvider>
             </RecipeFiltersProvider>
           </AuthProvider>
         </TrpcProvider>

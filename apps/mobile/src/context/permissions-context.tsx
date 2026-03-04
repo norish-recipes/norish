@@ -1,48 +1,34 @@
-"use client";
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
 
-import React, { createContext, useCallback, useContext, useMemo } from "react";
-import { useUserContext } from "@/context/user-context";
-import { usePermissionsQuery } from "@/hooks/permissions";
+import { useAuth } from '@/context/auth-context';
+import { usePermissionsQuery } from '@/hooks/permissions';
 
-import type {
-  AutoTaggingMode,
-  RecipePermissionPolicy,
-} from "@norish/config/zod/server-config";
+import type { AutoTaggingMode, RecipePermissionPolicy } from '@norish/config/zod/server-config';
 import {
   normalizePermissionsData,
   selectCanDeleteRecipe,
   selectCanEditRecipe,
   selectCanViewRecipe,
   selectIsAutoTaggingEnabled,
-} from "@norish/shared-react/hooks";
+} from '@norish/shared-react/hooks';
 
 interface PermissionsContextValue {
-  /** Recipe permission policy */
   recipePolicy: RecipePermissionPolicy | null;
-  /** Whether AI features are enabled */
   isAIEnabled: boolean;
-  /** Household member user IDs (null if not in a household) */
   householdUserIds: string[] | null;
-  /** Whether the current user is a server admin */
   isServerAdmin: boolean;
-  /** Auto-tagging mode setting */
   autoTaggingMode: AutoTaggingMode;
-  /** Whether auto-tagging is enabled (not disabled) */
   isAutoTaggingEnabled: boolean;
-  /** Loading state */
   isLoading: boolean;
-  /** Check if current user can view a recipe */
   canViewRecipe: (ownerId: string) => boolean;
-  /** Check if current user can edit a recipe */
   canEditRecipe: (ownerId: string) => boolean;
-  /** Check if current user can delete a recipe */
   canDeleteRecipe: (ownerId: string) => boolean;
 }
 
 const PermissionsContext = createContext<PermissionsContextValue | null>(null);
 
 export function PermissionsProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useUserContext();
+  const { user } = useAuth();
   const { data, isLoading: isLoadingPermissions } = usePermissionsQuery();
   const userId = user?.id;
   const normalized = useMemo(() => normalizePermissionsData(data), [data]);
@@ -53,7 +39,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
       return selectCanViewRecipe(normalized, userId, ownerId);
     },
-    [userId, data, normalized]
+    [data, normalized, userId],
   );
 
   const canEditRecipe = useCallback(
@@ -62,7 +48,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
       return selectCanEditRecipe(normalized, userId, ownerId);
     },
-    [userId, data, normalized]
+    [data, normalized, userId],
   );
 
   const canDeleteRecipe = useCallback(
@@ -71,7 +57,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
       return selectCanDeleteRecipe(normalized, userId, ownerId);
     },
-    [userId, data, normalized]
+    [data, normalized, userId],
   );
 
   const value = useMemo<PermissionsContextValue>(
@@ -80,14 +66,14 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       isAIEnabled: data?.isAIEnabled ?? false,
       householdUserIds: data?.householdUserIds ?? null,
       isServerAdmin: data?.isServerAdmin ?? false,
-      autoTaggingMode: data?.autoTaggingMode ?? "disabled",
+      autoTaggingMode: data?.autoTaggingMode ?? 'disabled',
       isAutoTaggingEnabled: selectIsAutoTaggingEnabled(normalized),
       isLoading: isLoadingPermissions,
       canViewRecipe,
       canEditRecipe,
       canDeleteRecipe,
     }),
-    [data, normalized, isLoadingPermissions, canViewRecipe, canEditRecipe, canDeleteRecipe]
+    [canDeleteRecipe, canEditRecipe, canViewRecipe, data, isLoadingPermissions, normalized],
   );
 
   return <PermissionsContext.Provider value={value}>{children}</PermissionsContext.Provider>;
@@ -97,7 +83,7 @@ export function usePermissionsContext(): PermissionsContextValue {
   const context = useContext(PermissionsContext);
 
   if (!context) {
-    throw new Error("usePermissionsContext must be used within PermissionsProvider");
+    throw new Error('usePermissionsContext must be used within PermissionsProvider');
   }
 
   return context;

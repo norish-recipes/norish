@@ -18,6 +18,7 @@ type SwipeableRecipeListItemProps = {
   onDelete: (id: string) => void;
   onPress: (id: string) => void;
   isDeleting: boolean;
+  canDelete: boolean;
 };
 
 export function SwipeableRecipeListItem({
@@ -25,6 +26,7 @@ export function SwipeableRecipeListItem({
   onDelete,
   onPress,
   isDeleting,
+  canDelete,
 }: SwipeableRecipeListItemProps) {
   const rowRef = useRef<SwipeableRecipeRowRef>(null);
   const opacity = useSharedValue(1);
@@ -67,7 +69,11 @@ export function SwipeableRecipeListItem({
 
   return (
     <Animated.View style={animatedStyle} onLayout={handleLayout}>
-      <SwipeableRecipeRow ref={rowRef} recipeName={item.title} onDelete={handleDelete}>
+      <SwipeableRecipeRow
+        ref={rowRef}
+        recipeName={item.title}
+        onDelete={canDelete ? handleDelete : undefined}
+      >
         <Pressable onPress={handlePress}>
           <RecipeCard recipe={item} />
         </Pressable>

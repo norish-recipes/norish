@@ -13,10 +13,9 @@ import Animated, {
 import { createSwipeableRecipeRowStyles } from '@/styles/swipeable-recipe-row.styles';
 
 const ACTION_WIDTH = 72;
-const LEFT_ACTIONS_WIDTH = ACTION_WIDTH * 3;
 const SPRING = { damping: 22, stiffness: 300, mass: 0.8 } as const;
 const OVERSHOOT_FACTOR = 0.15;
-const styles = createSwipeableRecipeRowStyles(ACTION_WIDTH, LEFT_ACTIONS_WIDTH);
+const styles = createSwipeableRecipeRowStyles(ACTION_WIDTH, ACTION_WIDTH * 3);
 
 export type SwipeableRecipeRowRef = {
   close: () => void;
@@ -68,6 +67,8 @@ function SwipeableRecipeRowComponent(
   const translateX = useSharedValue(0);
   const startX = useSharedValue(0);
   const isOpen = useSharedValue(false);
+  const actionCount = onDelete ? 3 : 2;
+  const leftActionsWidth = ACTION_WIDTH * actionCount;
 
   const close = useCallback(() => {
     translateX.value = withSpring(0, SPRING);
@@ -104,8 +105,8 @@ function SwipeableRecipeRowComponent(
       const next = startX.value + e.translationX;
       if (next > 0) {
         translateX.value = next * OVERSHOOT_FACTOR;
-      } else if (next < -LEFT_ACTIONS_WIDTH) {
-        translateX.value = -LEFT_ACTIONS_WIDTH + (next + LEFT_ACTIONS_WIDTH) * OVERSHOOT_FACTOR;
+      } else if (next < -leftActionsWidth) {
+        translateX.value = -leftActionsWidth + (next + leftActionsWidth) * OVERSHOOT_FACTOR;
       } else {
         translateX.value = next;
       }
@@ -120,8 +121,8 @@ function SwipeableRecipeRowComponent(
         return;
       }
 
-      if (vx < -400 || x < -LEFT_ACTIONS_WIDTH * 0.4) {
-        translateX.value = withSpring(-LEFT_ACTIONS_WIDTH, SPRING);
+      if (vx < -400 || x < -leftActionsWidth * 0.4) {
+        translateX.value = withSpring(-leftActionsWidth, SPRING);
         isOpen.value = true;
         return;
       }
@@ -146,10 +147,12 @@ function SwipeableRecipeRowComponent(
   const leftProgress = useSharedValue(0);
 
   const leftActionsStyle = useAnimatedStyle(() => {
-    const p = interpolate(translateX.value, [-LEFT_ACTIONS_WIDTH, 0], [1, 0], 'clamp');
+    const p = interpolate(translateX.value, [-leftActionsWidth, 0], [1, 0], 'clamp');
     leftProgress.value = p;
     return { opacity: p > 0 ? 1 : 0 };
   });
+
+  const actionTotal = onDelete ? 3 : 2;
 
   return (
     <View style={styles.container}>
@@ -159,7 +162,7 @@ function SwipeableRecipeRowComponent(
           color="#3b82f6"
           progress={leftProgress}
           index={0}
-          total={3}
+          total={actionTotal}
           onPress={handleGroceries}
         />
         <ActionButton
@@ -167,17 +170,19 @@ function SwipeableRecipeRowComponent(
           color="#f59e0b"
           progress={leftProgress}
           index={1}
-          total={3}
+          total={actionTotal}
           onPress={handleCalendar}
         />
-        <ActionButton
-          icon="trash-outline"
-          color="#ef4444"
-          progress={leftProgress}
-          index={2}
-          total={3}
-          onPress={handleDelete}
-        />
+        {onDelete ? (
+          <ActionButton
+            icon="trash-outline"
+            color="#ef4444"
+            progress={leftProgress}
+            index={2}
+            total={actionTotal}
+            onPress={handleDelete}
+          />
+        ) : null}
       </Animated.View>
 
       <GestureDetector gesture={combinedGesture}>

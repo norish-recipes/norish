@@ -8,4 +8,5 @@ export * from "./use-user-avatar";
 export * from "./use-user";
 export * from "./user/index";
 export * from "./config/index";
+export * from "./permissions/index";
 export * from "./recipes/index";

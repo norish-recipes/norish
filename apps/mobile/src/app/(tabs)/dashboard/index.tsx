@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { SectionHeader } from '@/components/home/section-header';
@@ -7,8 +7,11 @@ import { RecipeEmptyStateCard } from '@/components/recipes/recipe-empty-state-ca
 import { RecipeListRowContent } from '@/components/recipes/recipe-list-row-content';
 import { recipeListScreenStyles } from '@/components/recipes/recipe-list-screen.styles';
 import { TodaysMealsSection } from '@/components/home/todays-meals-section';
+import { usePermissionsContext } from '@/context/permissions-context';
 import { useRecipesContext } from '@/context/recipes-context';
 import { TODAYS_MEALS_MOCK } from '@/lib/meals/planned-meal-mock-data';
+import { canShowDeleteAction } from '@/lib/permissions/mobile-action-visibility';
+import { createRefreshRequestHandler } from '@/lib/refresh/create-refresh-request-handler';
 import { createNextDeletingIds } from '@/lib/recipes/create-next-deleting-ids';
 import { buildRecipeListRows, type RecipeListRow } from '@/lib/recipes/build-recipe-list-rows';
 import { styles } from '@/styles/index.styles';
@@ -25,9 +28,12 @@ export default function RecipesScreen() {
     pendingRecipeIds,
     openRecipe,
     deleteRecipe,
+    invalidate,
   } = useRecipesContext();
+  const { canDeleteRecipe, isLoading: isLoadingPermissions } = usePermissionsContext();
 
   const [deletingIds, setDeletingIds] = useState<ReadonlySet<string>>(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const listRows = useMemo<RecipeListRow[]>(() => {
     return buildRecipeListRows({
@@ -49,6 +55,32 @@ export default function RecipesScreen() {
     [deleteRecipe],
   );
 
+  const canDeleteOwnerRecipe = useCallback(
+    (ownerId: string | null) => {
+      return canShowDeleteAction({
+        ownerId,
+        isLoadingPermissions,
+        canDeleteRecipe,
+      });
+    },
+    [canDeleteRecipe, isLoadingPermissions],
+  );
+
+  const runRefresh = useMemo(
+    () => createRefreshRequestHandler(async () => invalidate()),
+    [invalidate],
+  );
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+
+    void runRefresh()
+      .catch(() => {})
+      .finally(() => {
+        setIsRefreshing(false);
+      });
+  }, [runRefresh]);
+
   const renderRow = useCallback(
     ({ item }: { item: RecipeListRow }) => (
       <View style={recipeListScreenStyles.rowContainer}>
@@ -57,10 +89,11 @@ export default function RecipesScreen() {
           onDelete={handleDelete}
           onPress={openRecipe}
           deletingIds={deletingIds}
+          canDeleteRecipe={canDeleteOwnerRecipe}
         />
       </View>
     ),
-    [handleDelete, openRecipe, deletingIds],
+    [canDeleteOwnerRecipe, handleDelete, openRecipe, deletingIds],
   );
 
   const handleLoadMore = useCallback(() => {
@@ -133,6 +166,7 @@ export default function RecipesScreen() {
       contentInsetAdjustmentBehavior="automatic"
       automaticallyAdjustsScrollIndicatorInsets
       showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
     />
   );
 }

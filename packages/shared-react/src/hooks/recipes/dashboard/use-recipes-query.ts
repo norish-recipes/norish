@@ -49,7 +49,7 @@ export type RecipesQueryResult = {
   setAllRecipesData: (
     updater: (prev: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined
   ) => void;
-  invalidate: () => void;
+  invalidate: () => Promise<void>;
 };
 
 export interface RecipesQueryDependencies {
@@ -159,7 +159,7 @@ export function createUseRecipesQuery(
     );
 
     const invalidate = useCallback(() => {
-      queryClient.invalidateQueries({ queryKey: recipesPath });
+      return queryClient.invalidateQueries({ queryKey: recipesPath });
     }, [queryClient, recipesPath]);
 
     return {

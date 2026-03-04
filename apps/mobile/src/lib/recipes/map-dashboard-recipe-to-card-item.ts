@@ -23,6 +23,7 @@ export function mapDashboardRecipeToCardItem(
 ): RecipeCardItem {
   return {
     id: recipe.id,
+    ownerId: recipe.userId,
     imageUrl: resolveRecipeImageUrl(recipe.image, backendBaseUrl),
     imageHeaders: authCookie ? { Cookie: authCookie } : undefined,
     title: recipe.name,

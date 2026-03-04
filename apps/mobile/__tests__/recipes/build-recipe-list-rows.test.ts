@@ -18,11 +18,12 @@ describe('buildRecipeListRows', () => {
     expect(rows.every((row) => row.type === 'initial-skeleton')).toBe(true);
   });
 
-  it('appends pending import placeholders after recipe rows', () => {
+  it('prepends pending import placeholders before recipe rows', () => {
     const rows = buildRecipeListRows({
       recipes: [
         {
           id: 'recipe-1',
+          ownerId: 'owner-1',
           imageUrl: '',
           title: 'Recipe',
           description: '',
@@ -44,9 +45,9 @@ describe('buildRecipeListRows', () => {
     });
 
     expect(rows).toHaveLength(3);
-    expect(rows[0]?.type).toBe('recipe');
+    expect(rows[0]?.type).toBe('pending-import');
     expect(rows[1]?.type).toBe('pending-import');
-    expect(rows[2]?.type).toBe('pending-import');
+    expect(rows[2]?.type).toBe('recipe');
   });
 
   it('shows initial skeleton rows when validating with empty recipes', () => {

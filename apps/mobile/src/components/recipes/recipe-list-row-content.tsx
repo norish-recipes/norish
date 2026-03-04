@@ -12,6 +12,7 @@ type RecipeListRowContentProps = {
   onDelete: (id: string) => void;
   onPress: (id: string) => void;
   deletingIds: ReadonlySet<string>;
+  canDeleteRecipe: (ownerId: string | null) => boolean;
   compactPlaceholder?: boolean;
 };
 
@@ -20,6 +21,7 @@ export function RecipeListRowContent({
   onDelete,
   onPress,
   deletingIds,
+  canDeleteRecipe,
   compactPlaceholder = false,
 }: RecipeListRowContentProps) {
   if (row.type === 'initial-skeleton') {
@@ -36,6 +38,7 @@ export function RecipeListRowContent({
       onDelete={onDelete}
       onPress={onPress}
       isDeleting={deletingIds.has(row.recipe.id)}
+      canDelete={canDeleteRecipe(row.recipe.ownerId)}
     />
   );
 }

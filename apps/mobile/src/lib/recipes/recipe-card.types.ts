@@ -1,5 +1,6 @@
 export type RecipeCardItem = {
   id: string;
+  ownerId: string | null;
   imageUrl: string;
   imageHeaders?: Record<string, string>;
   title: string;

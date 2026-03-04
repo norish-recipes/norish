@@ -7,6 +7,7 @@ type MockRecipeRecord = Omit<RecipeCardItem, 'rating'> & {
 const MOCK_HOME_RECIPES: MockRecipeRecord[] = [
   {
     id: 'mobile-recipe-1',
+    ownerId: 'user-1',
     imageUrl: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=1200&q=80',
     title: 'One-Pan Lemon Herb Chicken',
     description:
@@ -21,6 +22,7 @@ const MOCK_HOME_RECIPES: MockRecipeRecord[] = [
   },
   {
     id: 'mobile-recipe-2',
+    ownerId: 'user-2',
     imageUrl: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80',
     title: 'Mediterranean Quinoa Bowl',
     description:
@@ -35,6 +37,7 @@ const MOCK_HOME_RECIPES: MockRecipeRecord[] = [
   },
   {
     id: 'mobile-recipe-3',
+    ownerId: 'user-1',
     imageUrl: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=1200&q=80',
     title: 'Blueberry Almond Overnight Oats',
     description:
@@ -49,6 +52,7 @@ const MOCK_HOME_RECIPES: MockRecipeRecord[] = [
   },
   {
     id: 'mobile-recipe-4',
+    ownerId: 'user-3',
     imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80',
     title: 'Roasted Veggie Pasta Primavera',
     description:
@@ -63,6 +67,7 @@ const MOCK_HOME_RECIPES: MockRecipeRecord[] = [
   },
   {
     id: 'mobile-recipe-5',
+    ownerId: 'user-2',
     imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80',
     title: 'Spiced Lentil Soup',
     description:
