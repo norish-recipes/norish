@@ -13,6 +13,7 @@ import {
 
 import { RecipeEmptyStateCard } from '@/components/recipes/recipe-empty-state-card';
 import { RecipeListRowContent } from '@/components/recipes/recipe-list-row-content';
+import { recipeListScreenStyles } from '@/components/recipes/recipe-list-screen.styles';
 import { FilterChipRow } from '@/components/search/filter-chip-row';
 import { FilterSheet } from '@/components/search/filter-sheet';
 import { useRecipeFiltersContext } from '@/context/recipe-filters-context';
@@ -66,7 +67,7 @@ export default function SearchScreen() {
 
   const renderRow = useCallback(
     ({ item }: { item: RecipeListRow }) => (
-      <View style={{ paddingHorizontal: 16 }}>
+      <View style={recipeListScreenStyles.rowContainer}>
         <RecipeListRowContent
           row={item}
           onDelete={handleDelete}
@@ -85,7 +86,7 @@ export default function SearchScreen() {
     }
 
     return (
-      <View style={{ paddingTop: 16 }}>
+      <View style={recipeListScreenStyles.searchEmptyTopSpacing}>
         <RecipeEmptyStateCard
           title={error ? 'Could not load recipes' : 'No recipes found'}
           description={
@@ -112,15 +113,10 @@ export default function SearchScreen() {
               onPress={handleOpenFilterSheet}
               accessibilityRole="button"
               accessibilityLabel="Open filters"
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 5,
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                opacity: pressed ? 0.75 : 1,
-                marginRight: 4,
-              })}
+              style={({ pressed }) => [
+                recipeListScreenStyles.searchHeaderButton,
+                pressed ? recipeListScreenStyles.searchHeaderButtonPressed : null,
+              ]}
             >
               <Ionicons
                 name="options-outline"
@@ -129,9 +125,8 @@ export default function SearchScreen() {
               />
               <Text
                 style={{
+                  ...recipeListScreenStyles.searchHeaderButtonLabel,
                   color: hasActiveFilters ? accentColor : foregroundColor,
-                  fontSize: 13,
-                  fontWeight: '600',
                 }}
               >
                 Filters
@@ -142,14 +137,14 @@ export default function SearchScreen() {
       />
 
       <FlatList
-        style={{ flex: 1 }}
+        style={recipeListScreenStyles.list}
         data={listRows}
         keyExtractor={(item) => item.id}
         renderItem={renderRow}
-        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+        ItemSeparatorComponent={() => <View style={recipeListScreenStyles.rowSeparator} />}
         ListHeaderComponent={<FilterChipRow filters={filters} onFiltersChange={setFilters} />}
         ListEmptyComponent={renderEmpty}
-        contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
+        contentContainerStyle={[styles.listContent, recipeListScreenStyles.searchListInset]}
         contentInsetAdjustmentBehavior="automatic"
         automaticallyAdjustsScrollIndicatorInsets
         showsVerticalScrollIndicator={false}

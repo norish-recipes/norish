@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { SectionHeader } from '@/components/home/section-header';
 import { RecipeEmptyStateCard } from '@/components/recipes/recipe-empty-state-card';
 import { RecipeListRowContent } from '@/components/recipes/recipe-list-row-content';
+import { recipeListScreenStyles } from '@/components/recipes/recipe-list-screen.styles';
 import { TodaysMealsSection } from '@/components/home/todays-meals-section';
 import { useRecipesContext } from '@/context/recipes-context';
 import { TODAYS_MEALS_MOCK } from '@/lib/meals/planned-meal-mock-data';
@@ -50,7 +51,7 @@ export default function RecipesScreen() {
 
   const renderRow = useCallback(
     ({ item }: { item: RecipeListRow }) => (
-      <View style={{ paddingHorizontal: 16 }}>
+      <View style={recipeListScreenStyles.rowContainer}>
         <RecipeListRowContent
           row={item}
           onDelete={handleDelete}
@@ -110,7 +111,7 @@ export default function RecipesScreen() {
     if (!isValidating || !recipeCards.length) return null;
 
     return (
-      <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+      <View style={recipeListScreenStyles.loadingFooter}>
         <ActivityIndicator />
       </View>
     );
@@ -118,17 +119,17 @@ export default function RecipesScreen() {
 
   return (
     <FlatList
-      style={{ flex: 1 }}
+      style={recipeListScreenStyles.list}
       data={listRows}
       keyExtractor={(item) => item.id}
       renderItem={renderRow}
-      ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+      ItemSeparatorComponent={() => <View style={recipeListScreenStyles.rowSeparator} />}
       ListHeaderComponent={renderHeader}
       ListEmptyComponent={renderEmpty}
       ListFooterComponent={renderFooter}
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.6}
-      contentContainerStyle={[styles.listContent, { paddingBottom: 60 }]}
+      contentContainerStyle={[styles.listContent, recipeListScreenStyles.dashboardListInset]}
       contentInsetAdjustmentBehavior="automatic"
       automaticallyAdjustsScrollIndicatorInsets
       showsVerticalScrollIndicator={false}
