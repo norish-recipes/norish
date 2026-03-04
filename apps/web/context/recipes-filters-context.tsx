@@ -1,38 +1,18 @@
 "use client";
 
-import type { RecipeFilters } from "@/hooks/recipes/use-recipe-filters";
-import { createContext, ReactNode, useContext, useMemo } from "react";
-import { useRecipeFilters } from "@/hooks/recipes/use-recipe-filters";
+import { createRecipeFiltersContext } from "@norish/shared-react/contexts";
 
-import type { SearchField } from "@norish/shared/contracts";
+import {
+  RECIPE_FILTERS_STORAGE_KEY,
+  webRecipeFiltersStorageAdapter,
+} from "@/hooks/recipes/recipe-filters-storage-adapter";
 
-type FiltersCtx = {
-  filters: RecipeFilters;
-  setFilters: (filters: Partial<RecipeFilters>) => void;
-  clearFilters: () => void;
-  toggleSearchField: (field: SearchField) => void;
-};
+const sharedRecipeFiltersContext = createRecipeFiltersContext({
+  storageAdapter: webRecipeFiltersStorageAdapter,
+  storageKey: RECIPE_FILTERS_STORAGE_KEY,
+});
 
-const RecipesFiltersContext = createContext<FiltersCtx | null>(null);
+export const RecipesFiltersProvider = sharedRecipeFiltersContext.RecipeFiltersProvider;
+export const useRecipesFiltersContext = sharedRecipeFiltersContext.useRecipeFiltersContext;
 
-export function RecipesFiltersProvider({ children }: { children: ReactNode }) {
-  const { filters, setFilters, clearFilters, toggleSearchField } = useRecipeFilters();
-
-  const value = useMemo<FiltersCtx>(
-    () => ({ filters, setFilters, clearFilters, toggleSearchField }),
-    [filters, setFilters, clearFilters, toggleSearchField]
-  );
-
-  return <RecipesFiltersContext.Provider value={value}>{children}</RecipesFiltersContext.Provider>;
-}
-
-export function useRecipesFiltersContext() {
-  const ctx = useContext(RecipesFiltersContext);
-
-  if (!ctx) throw new Error("useRecipesFiltersContext must be used within RecipesFiltersProvider");
-
-  return ctx;
-}
-
-// Re-export types for convenience
-export type { RecipeFilters };
+export type { CanonicalRecipeFilters as RecipeFilters } from "@norish/shared-react/contexts";

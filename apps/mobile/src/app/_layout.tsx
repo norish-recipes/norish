@@ -14,6 +14,8 @@ import {
 } from '@/context/appearance-preference-context';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { MobileIntlFallbackProvider, MobileIntlProvider } from '@/context/mobile-i18n-context';
+import { RecipeFiltersProvider } from '@/context/recipe-filters-context';
+import { RecipesProvider } from '@/context/recipes-context';
 import {
   loadBackendBaseUrl,
   subscribeBackendBaseUrlChange,
@@ -79,10 +81,14 @@ function RootLayoutContent() {
       <ThemeProvider value={effectiveScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <TrpcProvider baseUrl={backendBaseUrl}>
           <AuthProvider backendBaseUrl={backendBaseUrl}>
-            <MobileIntlProvider>
-              <RootStack />
-              <PortalHost name="app" />
-            </MobileIntlProvider>
+            <RecipeFiltersProvider>
+              <RecipesProvider>
+                <MobileIntlProvider>
+                  <RootStack />
+                  <PortalHost name="app" />
+                </MobileIntlProvider>
+              </RecipesProvider>
+            </RecipeFiltersProvider>
           </AuthProvider>
         </TrpcProvider>
       </ThemeProvider>

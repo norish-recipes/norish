@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useHouseholdContext } from "@/context/household-context";
 
-import { useUserSettingsQuery } from "./use-user-query";
+import { useUserAllergiesQuery } from "./use-user-allergies-query";
 
 /**
  * Returns the active allergies for the current user.
@@ -14,7 +14,7 @@ import { useUserSettingsQuery } from "./use-user-query";
  */
 export function useActiveAllergies() {
   const { household } = useHouseholdContext();
-  const { allergies: userAllergies } = useUserSettingsQuery();
+  const { allergies: userAllergies } = useUserAllergiesQuery();
 
   const allergies = useMemo(() => {
     if (household?.allergies && household.allergies.length > 0) {

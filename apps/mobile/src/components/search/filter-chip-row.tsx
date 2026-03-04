@@ -1,12 +1,14 @@
 import { useThemeColor } from 'heroui-native';
 import React, { useCallback } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import type { SearchFilters } from '@/lib/recipes/search-filters';
-import { FILTER_PRESETS } from '@/lib/recipes/search-filters';
+
+import { RECIPE_FILTER_PRESETS } from '@norish/shared-react/contexts';
+
+import type { CanonicalRecipeFilters } from '@norish/shared-react/contexts';
 
 interface FilterChipRowProps {
-  filters: SearchFilters;
-  onFiltersChange: (filters: SearchFilters) => void;
+  filters: CanonicalRecipeFilters;
+  onFiltersChange: (filters: Partial<CanonicalRecipeFilters>) => void;
 }
 
 export function FilterChipRow({ filters, onFiltersChange }: FilterChipRowProps) {
@@ -19,7 +21,7 @@ export function FilterChipRow({ filters, onFiltersChange }: FilterChipRowProps) 
 
   const handlePresetPress = useCallback(
     (presetId: string) => {
-      const preset = FILTER_PRESETS.find((p) => p.id === presetId);
+      const preset = RECIPE_FILTER_PRESETS.find((p) => p.id === presetId);
       if (!preset) return;
       onFiltersChange(preset.apply(filters));
     },
@@ -33,7 +35,7 @@ export function FilterChipRow({ filters, onFiltersChange }: FilterChipRowProps) 
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {FILTER_PRESETS.map((preset) => {
+        {RECIPE_FILTER_PRESETS.map((preset) => {
           const active = preset.isActive(filters);
           return (
             <Pressable

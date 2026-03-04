@@ -1,5 +1,8 @@
 import { createUseRecipeAutocomplete } from "./use-recipe-autocomplete";
+import { createUseFavoritesMutation } from "./use-favorites-mutation";
+import { createUseFavoritesQuery } from "./use-favorites-query";
 import { createUsePendingRecipesQuery } from "./use-pending-recipes-query";
+import { createUseRatingsSubscription } from "./use-ratings-subscription";
 import { createUseRandomRecipe } from "./use-random-recipe";
 import { createUseRecipesCacheHelpers } from "./use-recipes-cache";
 import { createUseRecipesMutations } from "./use-recipes-mutations";
@@ -16,6 +19,9 @@ export type { RecipeFilters, RecipesQueryResult, RecipesQueryDependencies } from
 export type { RandomRecipeResult } from "./use-random-recipe";
 export type { RecipesMutationsResult, RecipesMutationErrorHandler } from "./use-recipes-mutations";
 export type { RecipesSubscriptionCallbacks } from "./use-recipes-subscription";
+export type { FavoritesQueryResult } from "./use-favorites-query";
+export type { FavoritesMutationResult } from "./use-favorites-mutation";
+export type { RatingsSubscriptionCallbacks } from "./use-ratings-subscription";
 export type { RecipeFiltersStorageAdapter } from "./recipe-filters-storage-adapter";
 
 export {
@@ -25,6 +31,9 @@ export {
   createUseRecipesMutations,
   createUseRecipesSubscription,
   createUseRecipeAutocomplete,
+  createUseFavoritesQuery,
+  createUseFavoritesMutation,
+  createUseRatingsSubscription,
   createUseRandomRecipe,
 };
 
@@ -56,6 +65,9 @@ export function createDashboardRecipeHooks(
     useRecipesQuery,
     useRecipesMutations,
     useRecipesSubscription,
+    useFavoritesQuery: createUseFavoritesQuery(options),
+    useFavoritesMutation: createUseFavoritesMutation(options),
+    useRatingsSubscription: createUseRatingsSubscription(options),
     useRecipeAutocomplete: createUseRecipeAutocomplete(options),
     useRandomRecipe: createUseRandomRecipe(options),
   };

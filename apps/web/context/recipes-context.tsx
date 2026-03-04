@@ -1,22 +1,24 @@
 "use client";
 
-import { createContext, ReactNode, useCallback, useContext, useMemo } from "react";
+import { addToast } from "@heroui/react";
 import { useRouter } from "next/navigation";
+import { createContext, useContext, useMemo } from "react";
+
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingsSubscription } from "@/hooks/ratings";
-import { useRecipesMutations, useRecipesQuery, useRecipesSubscription } from "@/hooks/recipes";
-import { useActiveAllergies } from "@/hooks/user";
-import { addToast } from "@heroui/react";
+import { useRecipesMutations, useRecipesQuery } from "@/hooks/recipes";
+import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
+import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
 
-import {
+import type {
   FullRecipeInsertDTO,
   FullRecipeUpdateDTO,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
+import { createRecipesContext } from "@norish/shared-react/contexts";
 
 type Ctx = {
-  // Data
   recipes: RecipeDashboardDTO[];
   total: number;
   isLoading: boolean;
@@ -24,202 +26,94 @@ type Ctx = {
   hasMore: boolean;
   pendingRecipeIds: Set<string>;
   autoTaggingRecipeIds: Set<string>;
-
-  // Favorites (lifted from useFavoritesQuery to avoid per-card observers)
   favoriteIds: string[];
   isFavorite: (recipeId: string) => boolean;
   toggleFavorite: (recipeId: string) => void;
-
-  // Allergies (lifted from useActiveAllergies to avoid per-card observers)
   allergies: string[];
-
-  // Filters (lifted to avoid RecipeGrid subscribing to filters context directly)
   hasAppliedFilters: boolean;
   clearFilters: () => void;
-  filterKey: string; // Stable key for scroll restoration
-
-  // Actions (all void - fire and forget)
+  filterKey: string;
   loadMore: () => void;
   importRecipe: (url: string) => void;
   importRecipeWithAI: (url: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
   deleteRecipe: (id: string) => void;
-
-  // Query state
   invalidate: () => void;
+  openRecipe: (id: string) => void;
 };
+
+const sharedRecipesContext = createRecipesContext({
+  useRecipesFiltersContext,
+  useRecipesQuery,
+  useRecipesMutations,
+  useFavoritesQuery,
+  useFavoritesMutation,
+  useUserAllergiesQuery,
+  useRecipesSubscription: sharedDashboardRecipeHooks.useRecipesSubscription,
+  useToastAdapter: () => ({
+    show: ({ severity, title, description, actionLabel, onActionPress }) =>
+      addToast({
+        severity,
+        title,
+        description,
+        shouldShowTimeoutProgress: true,
+        radius: "full",
+        actionLabel,
+        onActionPress,
+      }),
+  }),
+  useNavigationAdapter: () => {
+    const router = useRouter();
+
+    return {
+      toHome: () => router.push("/"),
+      toRecipe: (id: string) => router.push(`/recipes/${id}`),
+    };
+  },
+});
 
 const RecipesContext = createContext<Ctx | null>(null);
 
-export function RecipesContextProvider({ children }: { children: ReactNode }) {
-  const router = useRouter();
-  const { filters, clearFilters } = useRecipesFiltersContext();
-
-  // Map filters from context to query format
-  const queryFilters = useMemo(
-    () => ({
-      search: filters.rawInput || undefined,
-      searchFields: filters.searchFields,
-      tags: filters.searchTags.length > 0 ? filters.searchTags : undefined,
-      categories: filters.categories.length > 0 ? filters.categories : undefined,
-      filterMode: filters.filterMode as "AND" | "OR",
-      sortMode: filters.sortMode,
-      minRating: filters.minRating ?? undefined,
-      maxCookingTime: filters.maxCookingTime ?? undefined,
-    }),
-    [filters]
+export function RecipesContextProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <sharedRecipesContext.RecipesProvider>
+      <RecipesContextAdapter>{children}</RecipesContextAdapter>
+    </sharedRecipesContext.RecipesProvider>
   );
+}
 
-  // Stable key for scroll restoration - changes when filters change
-  const filterKey = useMemo(() => JSON.stringify(queryFilters), [queryFilters]);
+function RecipesContextAdapter({ children }: { children: React.ReactNode }) {
+  const base = sharedRecipesContext.useRecipesContext();
+  const { filters } = useRecipesFiltersContext();
 
-  const {
-    recipes: allRecipes,
-    total: serverTotal,
-    isLoading,
-    isValidating,
-    hasMore,
-    loadMore,
-    pendingRecipeIds,
-    autoTaggingRecipeIds,
-    invalidate,
-  } = useRecipesQuery(queryFilters);
-
-  // Favorites - single query at context level, exposed to all children
-  const { favoriteIds, isFavorite, isLoading: isFavoritesLoading } = useFavoritesQuery();
-  const { toggleFavorite } = useFavoritesMutation();
-
-  // Allergies - single query at context level, exposed to all children
   const { allergies } = useActiveAllergies();
+
+  useRatingsSubscription();
 
   const { recipes, total } = useMemo(() => {
     if (!filters.showFavoritesOnly) {
-      return { recipes: allRecipes, total: serverTotal };
+      return { recipes: base.recipes, total: base.total };
     }
-    const favoriteSet = new Set(favoriteIds);
-    const filtered = allRecipes.filter((r) => favoriteSet.has(r.id));
+
+    const favoriteSet = new Set(base.favoriteIds);
+    const filtered = base.recipes.filter((recipe) => favoriteSet.has(recipe.id));
 
     return { recipes: filtered, total: filtered.length };
-  }, [allRecipes, serverTotal, filters.showFavoritesOnly, favoriteIds]);
-
-  const {
-    importRecipe: importRecipeMutation,
-    importRecipeWithAI: importRecipeWithAIMutation,
-    createRecipe: createRecipeMutation,
-    updateRecipe: updateRecipeMutation,
-    deleteRecipe,
-  } = useRecipesMutations();
-
-  // Subscribe to recipe and rating events (uses internal cache helpers)
-  useRecipesSubscription();
-  useRatingsSubscription();
-
-  const importRecipe = useCallback(
-    (url: string): void => {
-      addToast({
-        severity: "default",
-        title: "Importing recipe...",
-        description: "Import in progress, please wait...",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
-      });
-
-      importRecipeMutation(url);
-      router.push("/");
-    },
-    [importRecipeMutation, router]
-  );
-
-  const importRecipeWithAI = useCallback(
-    (url: string): void => {
-      addToast({
-        severity: "default",
-        title: "Importing recipe with AI...",
-        description: "Import in progress, please wait...",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
-      });
-
-      importRecipeWithAIMutation(url);
-      router.push("/");
-    },
-    [importRecipeWithAIMutation, router]
-  );
-
-  const createRecipe = useCallback(
-    (input: FullRecipeInsertDTO): void => {
-      createRecipeMutation(input);
-      router.push("/");
-    },
-    [createRecipeMutation, router]
-  );
-
-  const updateRecipe = useCallback(
-    (id: string, input: FullRecipeUpdateDTO): void => {
-      updateRecipeMutation(id, input);
-      router.push(`/recipes/${id}`);
-    },
-    [updateRecipeMutation, router]
-  );
-
-  // Derived state for empty state check
-  const hasAppliedFilters = useMemo(() => {
-    const hasSearch = filters.rawInput.trim().length > 0;
-    const hasTags = filters.searchTags.length > 0;
-    const hasCategories = filters.categories.length > 0;
-    const hasCookingTime = filters.maxCookingTime !== null;
-
-    return hasSearch || hasTags || hasCategories || hasCookingTime;
-  }, [filters.rawInput, filters.searchTags, filters.categories, filters.maxCookingTime]);
+  }, [base.recipes, base.total, base.favoriteIds, filters.showFavoritesOnly]);
 
   const value = useMemo<Ctx>(
     () => ({
+      ...base,
       recipes,
       total,
-      isLoading: isLoading || isFavoritesLoading,
-      isFetchingMore: isValidating && !isLoading,
-      hasMore,
-      pendingRecipeIds,
-      autoTaggingRecipeIds,
-      favoriteIds,
-      isFavorite,
-      toggleFavorite,
       allergies,
-      hasAppliedFilters,
-      clearFilters,
-      filterKey,
-      loadMore,
-      importRecipe,
-      importRecipeWithAI,
-      createRecipe,
-      updateRecipe,
-      deleteRecipe,
-      invalidate,
     }),
     [
+      base,
       recipes,
       total,
-      isLoading,
-      isValidating,
-      isFavoritesLoading,
-      hasMore,
-      pendingRecipeIds,
-      autoTaggingRecipeIds,
-      favoriteIds,
-      isFavorite,
-      toggleFavorite,
       allergies,
-      hasAppliedFilters,
-      clearFilters,
-      filterKey,
-      loadMore,
-      importRecipe,
-      importRecipeWithAI,
-      createRecipe,
-      updateRecipe,
-      deleteRecipe,
-      invalidate,
     ]
   );
 

@@ -36,6 +36,7 @@ type CreateTRPCProviderBundleOptions = {
   getBaseUrl?: () => string;
   getWsUrl?: () => string;
   getHeaders?: () => HTTPHeaders;
+  getWebSocketImpl?: () => typeof WebSocket | undefined;
   maxRetries?: number;
 };
 
@@ -64,6 +65,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   getBaseUrl = defaultGetBaseUrl,
   getWsUrl = defaultGetWsUrl,
   getHeaders = defaultGetHeaders,
+  getWebSocketImpl,
   maxRetries = 10,
 }: CreateTRPCProviderBundleOptions) {
   const { TRPCProvider, useTRPC } = createTRPCContext<TRouter>();
@@ -98,6 +100,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
 
       const wsClient = createWSClient({
         url: getWsUrl,
+        WebSocket: getWebSocketImpl?.(),
         lazy: {
           enabled: true,
           closeMs: 0,

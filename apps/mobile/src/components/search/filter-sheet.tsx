@@ -1,30 +1,24 @@
-import { useThemeColor } from 'heroui-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Button, useThemeColor } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
 
 import { ShellSheet } from '@/components/shell/sheet';
-import type { SearchFilters } from '@/lib/recipes/search-filters';
-import {
-  ALL_TAGS,
-  COOKING_TIME_OPTIONS,
-  COURSE_OPTIONS,
-  DEFAULT_FILTERS,
-} from '@/lib/recipes/search-filters';
+import { PanelButton } from '@/components/shell/panel-button';
+import { useTagsQuery } from '@/hooks/config';
 
-// ---------------------------------------------------------------------------
-// Section header
-// ---------------------------------------------------------------------------
+import {
+  DEFAULT_RECIPE_FILTERS,
+  RECIPE_CATEGORY_OPTIONS,
+  RECIPE_COOKING_TIME_OPTIONS,
+  type CanonicalRecipeFilters,
+} from '@norish/shared-react/contexts';
+import type { RecipeCategory } from '@norish/shared/contracts';
 
 function SectionHeader({ title }: { title: string }) {
   const [foregroundColor] = useThemeColor(['foreground'] as const);
-  return (
-    <Text style={[sectionStyles.header, { color: foregroundColor }]}>{title}</Text>
-  );
+  return <Text style={[sectionStyles.header, { color: foregroundColor }]}>{title}</Text>;
 }
-
-// ---------------------------------------------------------------------------
-// Chip toggle (generic)
-// ---------------------------------------------------------------------------
 
 function ChipToggle({
   label,
@@ -54,180 +48,35 @@ function ChipToggle({
         },
       ]}
     >
-      <Text style={[chipStyles.label, { color: active ? '#ffffff' : foregroundColor }]}>
-        {label}
-      </Text>
+      <Text style={[chipStyles.label, { color: active ? '#ffffff' : foregroundColor }]}>{label}</Text>
     </Pressable>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Cooking time section
-// ---------------------------------------------------------------------------
-
-function CookingTimeSection({
-  value,
-  onChange,
-}: {
-  value: number | null;
-  onChange: (value: number | null) => void;
-}) {
-  return (
-    <View style={sectionStyles.section}>
-      <SectionHeader title="Cooking time" />
-      <View style={sectionStyles.chipRow}>
-        {COOKING_TIME_OPTIONS.map((opt) => (
-          <ChipToggle
-            key={opt.value}
-            label={opt.label}
-            active={value === opt.value}
-            onPress={() => onChange(value === opt.value ? null : opt.value)}
-          />
-        ))}
-      </View>
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Course (categories) section
-// ---------------------------------------------------------------------------
-
-function CourseSection({
-  value,
-  onChange,
-}: {
-  value: string | null;
-  onChange: (value: string | null) => void;
-}) {
-  return (
-    <View style={sectionStyles.section}>
-      <SectionHeader title="Category" />
-      <View style={sectionStyles.chipRow}>
-        {COURSE_OPTIONS.map((course) => (
-          <ChipToggle
-            key={course}
-            label={course}
-            active={value === course}
-            onPress={() => onChange(value === course ? null : course)}
-          />
-        ))}
-      </View>
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tags section
-// ---------------------------------------------------------------------------
-
-function TagsSection({
-  value,
-  onChange,
-}: {
-  value: Set<string>;
-  onChange: (value: Set<string>) => void;
-}) {
-  const handleToggle = useCallback(
-    (tag: string) => {
-      const next = new Set(value);
-      if (next.has(tag)) {
-        next.delete(tag);
-      } else {
-        next.add(tag);
-      }
-      onChange(next);
-    },
-    [value, onChange],
-  );
-
-  return (
-    <View style={sectionStyles.section}>
-      <SectionHeader title="Tags" />
-      <View style={sectionStyles.chipRow}>
-        {ALL_TAGS.map((tag) => (
-          <ChipToggle
-            key={tag}
-            label={tag}
-            active={value.has(tag)}
-            onPress={() => handleToggle(tag)}
-          />
-        ))}
-      </View>
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Favorites section
-// ---------------------------------------------------------------------------
-
-function FavoritesSection({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <View style={sectionStyles.section}>
-      <SectionHeader title="Favorites" />
-      <View style={sectionStyles.chipRow}>
-        <ChipToggle label="Favorites only" active={value} onPress={() => onChange(!value)} />
-      </View>
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Min rating section
-// ---------------------------------------------------------------------------
-
-function MinRatingSection({
-  value,
-  onChange,
-}: {
-  value: number | null;
-  onChange: (v: number | null) => void;
-}) {
-  const STARS = [1, 2, 3, 4, 5];
-  return (
-    <View style={sectionStyles.section}>
-      <SectionHeader title="Min rating" />
-      <View style={sectionStyles.chipRow}>
-        {STARS.map((star) => (
-          <ChipToggle
-            key={star}
-            label={'★'.repeat(star)}
-            active={value === star}
-            onPress={() => onChange(value === star ? null : star)}
-          />
-        ))}
-      </View>
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Main FilterSheet
-// ---------------------------------------------------------------------------
-
 interface FilterSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  filters: SearchFilters;
-  onApply: (filters: SearchFilters) => void;
+  filters: CanonicalRecipeFilters;
+  onApply: (filters: Partial<CanonicalRecipeFilters>) => void;
 }
 
 export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSheetProps) {
-  // Staged draft state — changes only commit on "Apply"
-  const [draft, setDraft] = useState<SearchFilters>(filters);
-  const [titleColor, mutedColor, accentColor, surfaceColor, separatorColor] = useThemeColor([
+  const [draft, setDraft] = useState<CanonicalRecipeFilters>(filters);
+  const [tagFilter, setTagFilter] = useState('');
+  const [titleColor, mutedColor, accentForegroundColor, surfaceColor, separatorColor] = useThemeColor([
     'foreground',
     'muted',
-    'accent',
+    'accent-foreground',
     'surface',
     'separator',
   ] as const);
+  const { tags, isLoading: isTagsLoading } = useTagsQuery();
+  const tagOptions: string[] = isTagsLoading ? draft.searchTags : tags;
 
-  // Sync draft from outside when the sheet opens
   React.useEffect(() => {
     if (isOpen) {
       setDraft(filters);
+      setTagFilter('');
     }
   }, [isOpen, filters]);
 
@@ -237,82 +86,156 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
   }, [draft, onApply, onOpenChange]);
 
   const handleReset = useCallback(() => {
-    setDraft(DEFAULT_FILTERS);
+    setDraft(DEFAULT_RECIPE_FILTERS);
+  }, []);
+
+  const toggleCategory = useCallback((category: RecipeCategory) => {
+    setDraft((previous) => {
+      const hasCategory = previous.categories.includes(category);
+      return {
+        ...previous,
+        categories: hasCategory
+          ? previous.categories.filter((item) => item !== category)
+          : [...previous.categories, category],
+      };
+    });
+  }, []);
+
+  const toggleTag = useCallback((tag: string) => {
+    setDraft((previous) => {
+      const hasTag = previous.searchTags.includes(tag);
+      return {
+        ...previous,
+        searchTags: hasTag
+          ? previous.searchTags.filter((item) => item !== tag)
+          : [...previous.searchTags, tag],
+      };
+    });
   }, []);
 
   return (
-    <ShellSheet
-      isPresented={isOpen}
-      onIsPresentedChange={onOpenChange}
-    >
+    <ShellSheet isPresented={isOpen} onIsPresentedChange={onOpenChange}>
       <View style={sheetStyles.container}>
-        {/* Sheet header */}
         <View style={sheetStyles.titleRow}>
           <Text style={[sheetStyles.title, { color: titleColor }]}>Filters</Text>
-          <Text style={[sheetStyles.subtitle, { color: mutedColor }]}>
-            Narrow your recipe search
-          </Text>
+          <Text style={[sheetStyles.subtitle, { color: mutedColor }]}>Narrow your recipe search</Text>
         </View>
 
-        {/* Scrollable filter sections */}
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={sheetStyles.scrollContent}
           style={sheetStyles.scrollWrapper}
         >
-          <CookingTimeSection
-            value={draft.maxCookingTime}
-            onChange={(v) => setDraft((d) => ({ ...d, maxCookingTime: v }))}
-          />
-          <CourseSection
-            value={draft.course}
-            onChange={(v) => setDraft((d) => ({ ...d, course: v }))}
-          />
-          <FavoritesSection
-            value={draft.liked}
-            onChange={(v) => setDraft((d) => ({ ...d, liked: v }))}
-          />
-          <MinRatingSection
-            value={draft.minRating}
-            onChange={(v) => setDraft((d) => ({ ...d, minRating: v }))}
-          />
-          <TagsSection
-            value={draft.tags}
-            onChange={(v) => setDraft((d) => ({ ...d, tags: v }))}
-          />
+          <View style={sectionStyles.section}>
+            <SectionHeader title="Cooking time" />
+            <View style={sectionStyles.chipRow}>
+              {RECIPE_COOKING_TIME_OPTIONS.map((option) => (
+                <ChipToggle
+                  key={option.value}
+                  label={option.label}
+                  active={draft.maxCookingTime === option.value}
+                  onPress={() =>
+                    setDraft((previous) => ({
+                      ...previous,
+                      maxCookingTime:
+                        previous.maxCookingTime === option.value ? null : option.value,
+                    }))
+                  }
+                />
+              ))}
+            </View>
+          </View>
+
+          <View style={sectionStyles.section}>
+            <SectionHeader title="Category" />
+            <View style={sectionStyles.chipRow}>
+              {RECIPE_CATEGORY_OPTIONS.map((category) => (
+                <ChipToggle
+                  key={category}
+                  label={category}
+                  active={draft.categories.includes(category)}
+                  onPress={() => toggleCategory(category)}
+                />
+              ))}
+            </View>
+          </View>
+
+          <View style={sectionStyles.section}>
+            <SectionHeader title="Favorites" />
+            <View style={sectionStyles.chipRow}>
+              <ChipToggle
+                label="Favorites only"
+                active={draft.showFavoritesOnly}
+                onPress={() =>
+                  setDraft((previous) => ({
+                    ...previous,
+                    showFavoritesOnly: !previous.showFavoritesOnly,
+                  }))
+                }
+              />
+            </View>
+          </View>
+
+          <View style={sectionStyles.section}>
+            <SectionHeader title="Min rating" />
+            <View style={sectionStyles.chipRow}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <ChipToggle
+                  key={star}
+                  label={'★'.repeat(star)}
+                  active={draft.minRating === star}
+                  onPress={() =>
+                    setDraft((previous) => ({
+                      ...previous,
+                      minRating: previous.minRating === star ? null : star,
+                    }))
+                  }
+                />
+              ))}
+            </View>
+          </View>
+
+          <View style={sectionStyles.section}>
+            <SectionHeader title="Tags" />
+            <TextInput
+              value={tagFilter}
+              onChangeText={setTagFilter}
+              placeholder="Search tags"
+              placeholderTextColor={mutedColor}
+              style={[
+                sectionStyles.tagInput,
+                { color: titleColor, borderColor: separatorColor, backgroundColor: surfaceColor },
+              ]}
+            />
+            <View style={sectionStyles.chipRow}>
+              {tagOptions
+                .filter((tag) => tag.toLowerCase().includes(tagFilter.toLowerCase()))
+                .map((tag) => (
+                  <ChipToggle
+                    key={tag}
+                    label={tag}
+                    active={draft.searchTags.includes(tag)}
+                    onPress={() => toggleTag(tag)}
+                  />
+                ))}
+            </View>
+          </View>
         </ScrollView>
 
-        {/* Footer */}
         <View style={sheetStyles.footer}>
-          <Pressable
-            onPress={handleReset}
-            style={({ pressed }) => [
-              sheetStyles.footerButton,
-              sheetStyles.resetButton,
-              { backgroundColor: surfaceColor, borderColor: separatorColor, opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Text style={[sheetStyles.footerButtonLabel, { color: titleColor }]}>Reset</Text>
-          </Pressable>
-          <Pressable
-            onPress={handleApply}
-            style={({ pressed }) => [
-              sheetStyles.footerButton,
-              sheetStyles.applyButton,
-              { backgroundColor: accentColor, opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Text style={[sheetStyles.footerButtonLabel, { color: '#ffffff' }]}>Apply</Text>
-          </Pressable>
+          <PanelButton variant="secondary" onPress={handleReset}>
+            <Ionicons name="refresh-outline" size={18} color={titleColor} />
+            <Button.Label style={{ color: titleColor }}>Reset</Button.Label>
+          </PanelButton>
+          <PanelButton variant="primary" onPress={handleApply}>
+            <Ionicons name="checkmark-outline" size={18} color={accentForegroundColor} />
+            <Button.Label>Apply</Button.Label>
+          </PanelButton>
         </View>
       </View>
     </ShellSheet>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 
 const sectionStyles = StyleSheet.create({
   section: {
@@ -328,6 +251,13 @@ const sectionStyles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  tagInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
   },
 });
 
@@ -374,22 +304,5 @@ const sheetStyles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     marginTop: 16,
-  },
-  footerButton: {
-    flex: 1,
-    paddingVertical: 13,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  resetButton: {
-    borderWidth: 1,
-  },
-  applyButton: {
-    flex: 2,
-  },
-  footerButtonLabel: {
-    fontSize: 15,
-    fontWeight: '600',
   },
 });

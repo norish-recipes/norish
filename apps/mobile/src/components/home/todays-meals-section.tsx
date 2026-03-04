@@ -75,7 +75,7 @@ export function TodaysMealsSection({ meals }: TodaysMealsSectionProps) {
             key={meal.slot}
             meal={meal}
             onPress={() => {
-              console.log('[TodaysMealsSection] pressed slot', meal.slot);
+              // TODO: navigate to meal slot detail / recipe
             }}
           />
         ))}

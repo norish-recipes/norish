@@ -20,25 +20,43 @@ function toWsUrl(baseUrl: string): string {
 
 let currentBaseUrl = '';
 
+function createMobileWebSocket(): typeof WebSocket | undefined {
+  const NativeWebSocket = globalThis.WebSocket as any;
+
+  if (!NativeWebSocket) {
+    return undefined;
+  }
+
+  return class MobileWebSocketWithHeaders extends NativeWebSocket {
+    constructor(url: string | URL, protocols?: string | string[]) {
+      const headers = trpcBundleGetHeaders();
+
+      super(url, protocols, { headers });
+    }
+  } as unknown as typeof WebSocket;
+}
+
+function trpcBundleGetHeaders() {
+  if (!currentBaseUrl) {
+    return {};
+  }
+
+  const client = getAuthClient(currentBaseUrl);
+  const cookies = (client as any).getCookie?.() as string | undefined;
+
+  if (!cookies) {
+    return {};
+  }
+
+  return { Cookie: cookies };
+}
+
 const trpcBundle = createTRPCProviderBundle<AppRouter>({
   logger: log,
   getBaseUrl: () => currentBaseUrl,
   getWsUrl: () => toWsUrl(currentBaseUrl),
-  getHeaders: () => {
-    if (!currentBaseUrl) {
-      return {};
-    }
-
-    const client = getAuthClient(currentBaseUrl);
-    // getCookie() is provided by the expoClient plugin
-    const cookies = (client as any).getCookie?.() as string | undefined;
-
-    if (!cookies) {
-      return {};
-    }
-
-    return { Cookie: cookies };
-  },
+  getHeaders: trpcBundleGetHeaders,
+  getWebSocketImpl: createMobileWebSocket,
 });
 
 export const useTRPC = trpcBundle.useTRPC;

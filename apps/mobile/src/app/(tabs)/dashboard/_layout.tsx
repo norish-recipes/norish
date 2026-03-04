@@ -22,6 +22,13 @@ export default function RecipesLayout() {
           headerRight: () => <SettingsMenu />,
         }}
       />
+      <Stack.Screen
+        name="[id]"
+        options={{
+          title: 'Recipe',
+          headerLargeTitle: false,
+        }}
+      />
     </Stack>
   );
 }

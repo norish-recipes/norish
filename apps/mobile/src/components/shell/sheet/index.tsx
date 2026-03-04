@@ -4,6 +4,8 @@ import {
   presentationDragIndicator,
   type PresentationDetent,
 } from '@expo/ui/swift-ui/modifiers';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Button } from 'heroui-native';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -25,6 +27,8 @@ export interface ShellSheetProps {
  * Uses iOS medium + large detents instead of fit-to-contents sizing.
  * This is more stable for RN-driven content and avoids occasional near-zero
  * measured heights when Yoga and SwiftUI layout timing disagree.
+ *
+ * A primary close button is rendered in the top-right corner of every sheet.
  */
 export function ShellSheet({
   isPresented,
@@ -58,6 +62,17 @@ export function ShellSheet({
         >
           <RNHostView>
             <View collapsable={false} style={styles.contentRoot}>
+              <View style={styles.closeRow}>
+                <Button
+                  isIconOnly
+                  variant="primary"
+                  size="md"
+                  onPress={() => onIsPresentedChange(false)}
+                  className="rounded-full"
+                >
+                  <Ionicons name="close" size={18} color="#ffffff" />
+                </Button>
+              </View>
               {children}
             </View>
           </RNHostView>
@@ -71,5 +86,10 @@ const styles = StyleSheet.create({
   contentRoot: {
     flex: 1,
     alignSelf: 'stretch',
+  },
+  closeRow: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    alignItems: 'flex-end',
   },
 });

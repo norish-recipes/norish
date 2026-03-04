@@ -10,5 +10,6 @@ export type RecipeCardItem = {
   categories?: string[];
   course: string;
   liked: boolean;
+  allergies?: string[];
   totalDurationMinutes: number;
 };

@@ -34,6 +34,10 @@ type SubscriptionProceduresContract = {
   permissions: {
     onPolicyUpdated: { subscriptionOptions: SubscriptionOptionsFactory };
   };
+  ratings: {
+    onRatingUpdated: { subscriptionOptions: SubscriptionOptionsFactory };
+    onRatingFailed: { subscriptionOptions: SubscriptionOptionsFactory };
+  };
 };
 
 export type TrpcHookBinding = ReturnType<TrpcContext["useTRPC"]> & SubscriptionProceduresContract;

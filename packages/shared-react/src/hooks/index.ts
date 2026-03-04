@@ -6,5 +6,6 @@ export * from "./use-servings-scaler";
 export * from "./use-unit-formatter";
 export * from "./use-user-avatar";
 export * from "./use-user";
+export * from "./user/index";
 export * from "./config/index";
 export * from "./recipes/index";
