@@ -1,0 +1,50 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Nowy przepis",
+      "description": "Stwórz własny przepis"
+    },
+    "importUrl": {
+      "title": "Importuj z URL",
+      "description": "Wklej link do przepisu"
+    },
+    "settings": {
+      "title": "Ustawienia",
+      "description": "Zarządzaj swoim kontem"
+    },
+    "logout": "Wyloguj się",
+    "version": {
+      "updateAvailable": "wersja{version} dostępna"
+    }
+  },
+  "theme": {
+    "title": "Motyw",
+    "loading": "Ładowanie…",
+    "light": "Jasny motyw",
+    "dark": "Ciemny motyw",
+    "system": "Systemowy"
+  },
+  "nav": {
+    "home": "Przepisy",
+    "calendar": "Kalendarz",
+    "groceries": "Zakupy"
+  },
+  "mobile": {
+    "searchPlaceholder": "Szukaj przepisów...",
+    "toggleSearch": "Przełącz wyszukiwanie",
+    "goBack": "Wróć"
+  },
+  "archiveImporter": {
+    "uploading": "Przesyłanie…",
+    "uploadFile": "Prześlij plik",
+    "dragDrop": "przeciągnij i upuść",
+    "formats": ".melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "uploadingFile": "Przesyłanie pliku…",
+    "processing": "Przetwarzanie: {details}",
+    "complete": "Ukończono: {details}",
+    "imported": "{count} zaimportowano",
+    "skipped": "{count} pominięto",
+    "errors": "{count} błędów",
+    "ofTotal": "{current} z {total}"
+  }
+}
