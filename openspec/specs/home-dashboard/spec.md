@@ -1,7 +1,13 @@
-## ADDED Requirements
+# home-dashboard Specification
+
+## Purpose
+
+Defines the mobile recipes home dashboard structure and data-source behavior for Today, Continue Cooking, Discover, and Your Collection sections, including the temporary fixture-only exception for Today meal slots.
+
+## Requirements
 
 ### Requirement: Dashboard sections replace flat list as primary screen layout
-The recipes tab screen SHALL render a vertically scrollable dashboard composed of named sections above the existing flat recipe list. The sections SHALL appear in order: Today's Meals, Continue Cooking, Discover. The flat recipe list SHALL remain accessible below these sections under a "Your Collection" section header.
+The recipes tab screen SHALL render a vertically scrollable dashboard composed of named sections above the existing flat recipe list. The sections SHALL appear in order: Today's Meals, Continue Cooking, Discover. The flat recipe list SHALL remain accessible below these sections under a "Your Collection" section header and SHALL be populated from backend-backed dashboard/home data.
 
 #### Scenario: Dashboard sections are visible on home screen load
 - **WHEN** the user navigates to the recipes tab
@@ -14,15 +20,15 @@ The recipes tab screen SHALL render a vertically scrollable dashboard composed o
 ---
 
 ### Requirement: Today's Meals section shows planned meals for the day
-The home screen SHALL display a "Today" section at the top of the dashboard containing a horizontal row of meal slot cards — one each for Breakfast, Lunch, and Dinner. Each slot card SHALL show the recipe name and a thumbnail image when a meal is planned. When no meal is planned for a slot, the card SHALL display a "+" placeholder indicating the slot is empty. All data SHALL be static mock data for this phase.
+The home screen SHALL display a "Today" section at the top of the dashboard containing meal slot cards for Breakfast, Lunch, and Dinner using a temporary fixture data source in this change.
 
-#### Scenario: Filled meal slot displays recipe info
-- **WHEN** a meal is planned for a slot (mock data contains a recipe for that slot)
-- **THEN** the slot card SHALL display the slot label (e.g., "Breakfast"), the recipe title, and the recipe thumbnail image
+#### Scenario: Filled meal slot displays fixture recipe info
+- **WHEN** fixture data includes a planned meal for a slot
+- **THEN** the slot card SHALL display the slot label, recipe title, and recipe thumbnail image from fixture data
 
-#### Scenario: Empty meal slot shows add prompt
-- **WHEN** no meal is planned for a slot (mock data has null recipeId for that slot)
-- **THEN** the slot card SHALL display the slot label and a "+" visual affordance to indicate an empty slot
+#### Scenario: Empty meal slot shows unplanned state from fixture data
+- **WHEN** fixture data indicates no planned meal for a slot
+- **THEN** the slot card SHALL display the slot label and an empty-slot affordance
 
 #### Scenario: Tapping a filled meal slot navigates to recipe
 - **WHEN** the user taps a filled meal slot card
@@ -30,29 +36,31 @@ The home screen SHALL display a "Today" section at the top of the dashboard cont
 
 ---
 
-### Requirement: Continue Cooking section shows horizontally scrollable compact recipe cards
-The home screen SHALL display a "Continue Cooking" section below Today's Meals, containing a horizontally scrollable row of compact recipe cards. The section SHALL use a subset of mock recipes to simulate recently interacted items. Each compact card SHALL show the recipe image, title, and estimated duration.
+### Requirement: Continue Cooking section shows backend-driven compact recipe cards
+The home screen SHALL display a "Continue Cooking" section that renders a horizontally scrollable row of compact recipe cards derived from backend-backed recipe activity data.
 
-#### Scenario: Continue Cooking row renders multiple cards horizontally
-- **WHEN** the home screen is loaded
-- **THEN** the Continue Cooking section SHALL render at least two compact recipe cards in a horizontal scroll row
+#### Scenario: Continue Cooking row renders from backend data
+- **WHEN** the home dashboard data query succeeds with continue-cooking items
+- **THEN** the section SHALL render compact cards horizontally
+- **AND** each card SHALL display thumbnail, title, and duration from backend fields
 
-#### Scenario: Compact card displays key recipe info
-- **WHEN** a compact card is rendered
-- **THEN** it SHALL display the recipe thumbnail, title (truncated to one line), and total duration in minutes
+#### Scenario: Continue Cooking section empty state
+- **WHEN** the backend returns no continue-cooking items
+- **THEN** the section SHALL render an empty state or omit the row without causing screen errors
 
 ---
 
-### Requirement: Discover section shows horizontally scrollable variety cards
-The home screen SHALL display a "Discover" section below Continue Cooking, containing a horizontally scrollable row of compact recipe cards drawn from a different subset of mock data to simulate variety suggestions. Each card SHALL show the recipe image, title, and course type.
+### Requirement: Discover section shows backend-driven recommendation cards
+The home screen SHALL display a "Discover" section that renders a horizontally scrollable row of compact recipe cards derived from backend-backed recommendation data.
 
-#### Scenario: Discover row renders with variety of course types
-- **WHEN** the home screen is loaded
-- **THEN** the Discover section SHALL render compact cards representing different course types (e.g., Breakfast, Lunch, Dinner)
+#### Scenario: Discover row renders from backend data
+- **WHEN** the dashboard query returns discover items
+- **THEN** the section SHALL render cards representing available recipe variety
+- **AND** each card SHALL display thumbnail, title, and course/category metadata when provided
 
-#### Scenario: Discover cards display course type
-- **WHEN** a Discover compact card is rendered
-- **THEN** it SHALL display the recipe thumbnail, title, and course label
+#### Scenario: Discover section handles empty result
+- **WHEN** backend returns zero discover items
+- **THEN** the home screen SHALL remain responsive and display a graceful empty state or hidden section behavior
 
 ---
 
@@ -70,12 +78,9 @@ A `CompactRecipeCard` component SHALL exist in `apps/mobile/src/components/home/
 ---
 
 ### Requirement: Today's Meals mock data type and fixture exist
-A `PlannedMeal` type and a `TODAYS_MEALS_MOCK` fixture SHALL exist in `apps/mobile/src/lib/` to supply the Today's Meals section with data. The type SHALL include slot, recipeId (nullable), recipeTitle (nullable), imageUrl (nullable), and totalDurationMinutes (nullable) fields.
+The recipes dashboard runtime SHALL allow `TODAYS_MEALS_MOCK` as a temporary data source only for the Today section until planned-meals shared hooks are implemented.
 
-#### Scenario: Mock data covers all three meal slots
-- **WHEN** the TODAYS_MEALS_MOCK fixture is imported
-- **THEN** it SHALL contain exactly three entries — one for each of Breakfast, Lunch, and Dinner
-
-#### Scenario: At least one mock slot has a recipe assigned
-- **WHEN** the TODAYS_MEALS_MOCK fixture is loaded
-- **THEN** at least one slot SHALL have a non-null recipeId linking to an entry in recipe-mock-data
+#### Scenario: Only Today depends on temporary fixture
+- **WHEN** the recipes dashboard loads in normal runtime mode
+- **THEN** Continue Cooking, Discover, and Your Collection SHALL resolve from backend-backed data hooks
+- **AND** only Today meal slots MAY resolve from `TODAYS_MEALS_MOCK`

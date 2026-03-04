@@ -49,5 +49,5 @@
 - [x] 5.3 Remove all non-Today runtime recipe mocks from mobile dashboard code paths.
 - [x] 5.4 Keep Today meal slots isolated behind one fixture adapter until planned-meals follow-up hooks are delivered.
 - [x] 5.5 Run typecheck/tests for `packages/shared-react`, `apps/web`, and `apps/mobile` to verify hook typing and import boundaries.
-- [ ] 5.6 Manually verify web and mobile flows to confirm `dashboard` hooks are only used for dashboard surfaces and `recipe` hooks are only used for single-recipe surfaces.
+- [x] 5.6 Manually verify web and mobile flows to confirm `dashboard` hooks are only used for dashboard surfaces and `recipe` hooks are only used for single-recipe surfaces.
 - [x] 5.7 Create or link the follow-up OpenSpec change for planned-meals shared hooks (`query + subscription`) to replace the temporary Today fixture (`add-planned-meals-shared-hooks`).
