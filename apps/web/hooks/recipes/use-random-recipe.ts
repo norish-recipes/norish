@@ -1,31 +1,9 @@
 "use client";
 
-import { useCallback } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
-import { useQueryClient } from "@tanstack/react-query";
+import type { RandomRecipeResult } from "@norish/shared-react/hooks";
 
-import type { RecipeCategory } from "@norish/shared/contracts";
+import { sharedDashboardRecipeHooks } from "./shared-recipe-hooks";
 
-export type RandomRecipeResult = {
-  id: string;
-  name: string;
-  image: string | null;
-} | null;
+export type { RandomRecipeResult };
 
-export function useRandomRecipe() {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
-  const getRandomRecipe = useCallback(
-    async (category?: RecipeCategory): Promise<RandomRecipeResult> => {
-      return queryClient.fetchQuery({
-        ...trpc.recipes.getRandomRecipe.queryOptions({ category }),
-        staleTime: 0,
-        gcTime: 0,
-      });
-    },
-    [queryClient, trpc.recipes.getRandomRecipe]
-  );
-
-  return { getRandomRecipe };
-}
+export const useRandomRecipe = sharedDashboardRecipeHooks.useRandomRecipe;

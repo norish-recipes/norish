@@ -1,11 +1,13 @@
 export type RecipeCardItem = {
   id: string;
   imageUrl: string;
+  imageHeaders?: Record<string, string>;
   title: string;
   description: string;
   servings: number;
   rating: number;
   tags: string[];
+  categories?: string[];
   course: string;
   liked: boolean;
   totalDurationMinutes: number;

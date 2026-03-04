@@ -30,14 +30,18 @@ export function CompactRecipeCard({ recipe, secondaryLabel = 'duration' }: Compa
 
   const subtitle =
     secondaryLabel === 'course'
-      ? recipe.course
+      ? (recipe.categories ?? []).slice(0, 4).join(' • ')
       : formatDuration(recipe.totalDurationMinutes);
 
   return (
     <View style={[styles.card, { backgroundColor }]}>
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: recipe.imageUrl }}
+          source={
+            recipe.imageHeaders
+              ? { uri: recipe.imageUrl, headers: recipe.imageHeaders }
+              : { uri: recipe.imageUrl }
+          }
           contentFit="cover"
           transition={300}
           style={styles.imageFill}

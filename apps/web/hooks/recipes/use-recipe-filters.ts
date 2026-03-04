@@ -3,6 +3,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
+import { RECIPE_FILTERS_STORAGE_KEY } from "./recipe-filters-storage-adapter";
+
 import {
   DEFAULT_SEARCH_FIELDS,
   FilterMode,
@@ -108,7 +110,7 @@ export type UseRecipeFiltersResult = {
  */
 export function useRecipeFilters(): UseRecipeFiltersResult {
   const [persisted, setPersisted, clearPersisted] = useLocalStorage<PersistedFilters>(
-    "norish:recipe-filters",
+    RECIPE_FILTERS_STORAGE_KEY,
     DEFAULT_PERSISTED,
     validateFilters
   );

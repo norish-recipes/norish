@@ -1,9 +1,16 @@
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type { SubscriptionMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
+import type { TRPCSubscriptionProcedure } from "@trpc/server";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import type { TypedEmitter } from "./emitter";
 import { authedProcedure } from "./middleware";
+
+type AuthedSubscriptionProcedure = TRPCSubscriptionProcedure<{
+  input: void;
+  output: AsyncIterable<unknown, void, any>;
+  meta: object;
+}>;
 
 /**
  * Wait for the abort signal to fire.
@@ -227,7 +234,11 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
 export function createPolicyAwareSubscription<
   TEvents extends Record<string, unknown>,
   K extends keyof TEvents & string,
->(emitter: TypedEmitter<TEvents>, eventName: K, logMessage: string): any {
+>(
+  emitter: TypedEmitter<TEvents>,
+  eventName: K,
+  logMessage: string
+): AuthedSubscriptionProcedure {
   return authedProcedure.subscription(async function* ({ ctx, signal }) {
     const policyCtx: PolicySubscribeContext = {
       userId: ctx.user.id,

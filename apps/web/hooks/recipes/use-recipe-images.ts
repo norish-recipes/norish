@@ -1,7 +1,6 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-import { useMutation } from "@tanstack/react-query";
+import { sharedRecipeFamilyHooks } from "./shared-recipe-hooks";
 
 export type RecipeImagesResult = {
   uploadImage: (file: File) => Promise<{ success: boolean; url?: string; error?: string }>;
@@ -26,25 +25,27 @@ export type RecipeImagesResult = {
 };
 
 export function useRecipeImages(): RecipeImagesResult {
-  const trpc = useTRPC();
-
-  const uploadImageMutation = useMutation(trpc.recipes.uploadImage.mutationOptions());
-  const deleteImageMutation = useMutation(trpc.recipes.deleteImage.mutationOptions());
-  const uploadStepImageMutation = useMutation(trpc.recipes.uploadStepImage.mutationOptions());
-  const deleteStepImageMutation = useMutation(trpc.recipes.deleteStepImage.mutationOptions());
-  const uploadGalleryImageMutation = useMutation(trpc.recipes.uploadGalleryImage.mutationOptions());
-  const deleteGalleryImageMutation = useMutation(trpc.recipes.deleteGalleryImage.mutationOptions());
+  const {
+    uploadImageData,
+    deleteImage,
+    uploadStepImageData,
+    deleteStepImage,
+    uploadGalleryImageData,
+    deleteGalleryImage,
+    isUploadingImage,
+    isDeletingImage,
+    isUploadingStepImage,
+    isDeletingStepImage,
+    isUploadingGalleryImage,
+    isDeletingGalleryImage,
+  } = sharedRecipeFamilyHooks.useRecipeImages();
 
   const uploadImage = async (file: File) => {
     const formData = new FormData();
 
     formData.append("image", file);
 
-    return await uploadImageMutation.mutateAsync(formData);
-  };
-
-  const deleteImage = async (url: string) => {
-    return await deleteImageMutation.mutateAsync({ url });
+    return await uploadImageData(formData as Parameters<typeof uploadImageData>[0]);
   };
 
   const uploadStepImage = async (file: File, recipeId: string) => {
@@ -53,11 +54,7 @@ export function useRecipeImages(): RecipeImagesResult {
     formData.append("image", file);
     formData.append("recipeId", recipeId);
 
-    return await uploadStepImageMutation.mutateAsync(formData);
-  };
-
-  const deleteStepImage = async (url: string) => {
-    return await deleteStepImageMutation.mutateAsync({ url });
+    return await uploadStepImageData(formData as Parameters<typeof uploadStepImageData>[0]);
   };
 
   const uploadGalleryImage = async (file: File, recipeId: string, order?: number) => {
@@ -69,11 +66,7 @@ export function useRecipeImages(): RecipeImagesResult {
       formData.append("order", String(order));
     }
 
-    return await uploadGalleryImageMutation.mutateAsync(formData);
-  };
-
-  const deleteGalleryImage = async (imageId: string) => {
-    return await deleteGalleryImageMutation.mutateAsync({ imageId });
+    return await uploadGalleryImageData(formData as Parameters<typeof uploadGalleryImageData>[0]);
   };
 
   return {
@@ -83,11 +76,11 @@ export function useRecipeImages(): RecipeImagesResult {
     deleteStepImage,
     uploadGalleryImage,
     deleteGalleryImage,
-    isUploadingImage: uploadImageMutation.isPending,
-    isDeletingImage: deleteImageMutation.isPending,
-    isUploadingStepImage: uploadStepImageMutation.isPending,
-    isDeletingStepImage: deleteStepImageMutation.isPending,
-    isUploadingGalleryImage: uploadGalleryImageMutation.isPending,
-    isDeletingGalleryImage: deleteGalleryImageMutation.isPending,
+    isUploadingImage,
+    isDeletingImage,
+    isUploadingStepImage,
+    isDeletingStepImage,
+    isUploadingGalleryImage,
+    isDeletingGalleryImage,
   };
 }

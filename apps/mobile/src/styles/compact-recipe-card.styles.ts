@@ -2,13 +2,13 @@ import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   card: {
-    width: 150,
+    width: 144,
     borderRadius: 12,
     overflow: 'hidden',
   },
   imageContainer: {
-    width: 150,
-    height: 130,
+    width: 144,
+    height: 104,
   },
   imageFill: {
     ...StyleSheet.absoluteFill,

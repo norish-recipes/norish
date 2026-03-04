@@ -1,7 +1,6 @@
 "use client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-import { useMutation } from "@tanstack/react-query";
+import { sharedRecipeFamilyHooks } from "./shared-recipe-hooks";
 
 export type RecipeVideosResult = {
   uploadGalleryVideo: (
@@ -24,10 +23,12 @@ export type RecipeVideosResult = {
 };
 
 export function useRecipeVideos(): RecipeVideosResult {
-  const trpc = useTRPC();
-
-  const uploadGalleryVideoMutation = useMutation(trpc.recipes.uploadGalleryVideo.mutationOptions());
-  const deleteGalleryVideoMutation = useMutation(trpc.recipes.deleteGalleryVideo.mutationOptions());
+  const {
+    uploadGalleryVideoData,
+    deleteGalleryVideo,
+    isUploadingGalleryVideo,
+    isDeletingGalleryVideo,
+  } = sharedRecipeFamilyHooks.useRecipeVideos();
 
   const uploadGalleryVideo = async (
     file: File,
@@ -46,17 +47,13 @@ export function useRecipeVideos(): RecipeVideosResult {
       formData.append("duration", String(duration));
     }
 
-    return await uploadGalleryVideoMutation.mutateAsync(formData);
-  };
-
-  const deleteGalleryVideo = async (videoId: string) => {
-    return await deleteGalleryVideoMutation.mutateAsync({ videoId });
+    return await uploadGalleryVideoData(formData as Parameters<typeof uploadGalleryVideoData>[0]);
   };
 
   return {
     uploadGalleryVideo,
     deleteGalleryVideo,
-    isUploadingGalleryVideo: uploadGalleryVideoMutation.isPending,
-    isDeletingGalleryVideo: deleteGalleryVideoMutation.isPending,
+    isUploadingGalleryVideo,
+    isDeletingGalleryVideo,
   };
 }

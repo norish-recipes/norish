@@ -72,6 +72,11 @@
 - `use-recipe-ingredients`: move to shared `recipe` family.
 - `use-random-recipe`: move to shared `dashboard` family.
 
+### Phase 2b: Subscription type pipeline hardening
+- Type `createPolicyAwareSubscription` without `any` return so subscription procedures remain explicit in router declaration output.
+- Verify emitted `@norish/trpc` declarations preserve subscription procedure types for recipe events.
+- Confirm shared recipe factories can access `subscriptionOptions` from app-owned typed `useTRPC` bindings before Phase 3 migration.
+
 ### Phase 3: Subscription and mutation core split
 - `use-auto-tagging-subscription`: move core subscription logic to shared `recipe` family; keep UI side effects in app wrappers.
 - `use-auto-categorization-subscription`: move core subscription logic to shared `recipe` family; keep UI side effects in app wrappers.
@@ -104,9 +109,10 @@
 
 1. Build shared recipe factory/binding foundation in `packages/shared-react` (config-pattern parity).
 2. Create `dashboard` and `recipe` family module boundaries and exports.
-3. Migrate hooks phase-by-phase per hook plan above, with web wrappers first.
-4. Wire mobile dashboard sections to shared `dashboard` hooks and remove non-Today mocks.
-5. Run cross-app validation and leave Today fixture isolated until follow-up planned-meals change.
+3. Harden subscription typing pipeline so router declarations preserve subscription procedure types.
+4. Migrate hooks phase-by-phase per hook plan above, with web wrappers first.
+5. Wire mobile dashboard sections to shared `dashboard` hooks and remove non-Today mocks.
+6. Run cross-app validation and leave Today fixture isolated until follow-up planned-meals change.
 
 ## Open Questions
 

@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
-    aspectRatio: 4 / 3,
+    aspectRatio: 16 / 11,
   },
   imageFill: {
     ...StyleSheet.absoluteFillObject,
@@ -30,6 +30,16 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  categories: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '500',
+  },
+  categoriesRow: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingVertical: 2,
+  },
   highlightItem: {
     gap: 1,
   },
@@ -53,5 +63,10 @@ export const styles = StyleSheet.create({
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
+  },
+  metricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
 });
