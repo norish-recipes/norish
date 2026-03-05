@@ -133,7 +133,14 @@
       "importing": "Importando receta desde imágenes...",
       "analyzing": "Analizando tus imágenes, espera por favor...",
       "failed": "Error al importar",
-      "selectedCount": "{count} imágenes seleccionadas - se combinarán en una sola receta"
+      "selectedCount": "{count} imágenes seleccionadas - se combinarán en una sola receta",
+      "library": "Biblioteca",
+      "takePhoto": "Tomar foto",
+      "counter": "{count} / {max} fotos",
+      "importFromCount": "Importar desde {count, plural, one {# foto} other {# fotos}}"
+    },
+    "menu": {
+      "description": "Importa desde una URL, escanea una foto o empieza desde cero."
     }
   },
   "formatting": {

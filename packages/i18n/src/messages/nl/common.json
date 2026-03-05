@@ -138,7 +138,14 @@
       "importing": "Recept importeren vanuit afbeeldingen...",
       "analyzing": "Afbeeldingen analyseren, even geduld...",
       "failed": "Importeren mislukt",
-      "selectedCount": "{count} afbeeldingen geselecteerd - ze worden gecombineerd als één recept"
+      "selectedCount": "{count} afbeeldingen geselecteerd - ze worden gecombineerd als één recept",
+      "library": "Bibliotheek",
+      "takePhoto": "Foto maken",
+      "counter": "{count} / {max} foto's",
+      "importFromCount": "Importeren van {count, plural, one {# foto} other {# foto's}}"
+    },
+    "menu": {
+      "description": "Importeer via een URL, scan een foto of begin vanaf nul."
     }
   },
   "formatting": {

@@ -2,15 +2,24 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { ListGroup, PressableFeedback, Separator, useThemeColor } from 'heroui-native';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { colorStyles, menuStyles } from '@/components/shell/sheet/add-recipe-sheet.styles';
+import { usePermissionsContext } from '@/context/permissions-context';
+import { canShowAIAction } from '@/lib/permissions/mobile-action-visibility';
 
 interface AddRecipeMenuSheetProps {
   onSelect: (sub: 'url' | 'photo' | 'scratch') => void;
 }
 
 export function AddRecipeMenuSheet({ onSelect }: AddRecipeMenuSheetProps) {
+  const intl = useIntl();
+  const { isAIEnabled, isLoading: isLoadingPermissions } = usePermissionsContext();
   const [foregroundColor, mutedColor] = useThemeColor(['foreground', 'muted'] as const);
+  const showPhotoOption = canShowAIAction({
+    isAIEnabled,
+    isLoadingPermissions,
+  });
 
   return (
     <View style={menuStyles.container}>
@@ -18,9 +27,11 @@ export function AddRecipeMenuSheet({ onSelect }: AddRecipeMenuSheetProps) {
         <Ionicons name="restaurant-outline" size={40} color={mutedColor} />
       </View>
 
-      <Text style={[menuStyles.title, colorStyles.text(foregroundColor)]}>Add Recipe</Text>
+      <Text style={[menuStyles.title, colorStyles.text(foregroundColor)]}>
+        {intl.formatMessage({ id: 'recipes.dashboard.addRecipe' })}
+      </Text>
       <Text style={[menuStyles.subtitle, colorStyles.text(mutedColor)]}>
-        Import from a URL, scan a photo, or start from scratch.
+        {intl.formatMessage({ id: 'common.import.menu.description' })}
       </Text>
 
       <ListGroup>
@@ -31,8 +42,8 @@ export function AddRecipeMenuSheet({ onSelect }: AddRecipeMenuSheetProps) {
                 <Ionicons name="link-outline" size={22} color={mutedColor} />
               </ListGroup.ItemPrefix>
               <ListGroup.ItemContent>
-                <ListGroup.ItemTitle>Import from URL</ListGroup.ItemTitle>
-                <ListGroup.ItemDescription>Paste a link to any recipe website</ListGroup.ItemDescription>
+                 <ListGroup.ItemTitle>{intl.formatMessage({ id: 'common.import.url.title' })}</ListGroup.ItemTitle>
+                 <ListGroup.ItemDescription>{intl.formatMessage({ id: 'common.import.url.label' })}</ListGroup.ItemDescription>
               </ListGroup.ItemContent>
               <ListGroup.ItemSuffix iconProps={{ size: 16, color: mutedColor }} />
             </ListGroup.Item>
@@ -42,23 +53,27 @@ export function AddRecipeMenuSheet({ onSelect }: AddRecipeMenuSheetProps) {
 
         <Separator className="mx-4" />
 
-        <PressableFeedback animation={false} onPress={() => onSelect('photo')}>
-          <PressableFeedback.Scale>
-            <ListGroup.Item disabled>
-              <ListGroup.ItemPrefix>
-                <Ionicons name="camera-outline" size={22} color={mutedColor} />
-              </ListGroup.ItemPrefix>
-              <ListGroup.ItemContent>
-                <ListGroup.ItemTitle>Scan a photo</ListGroup.ItemTitle>
-                <ListGroup.ItemDescription>Extract a recipe from an image</ListGroup.ItemDescription>
-              </ListGroup.ItemContent>
-              <ListGroup.ItemSuffix iconProps={{ size: 16, color: mutedColor }} />
-            </ListGroup.Item>
-          </PressableFeedback.Scale>
-          <PressableFeedback.Ripple />
-        </PressableFeedback>
+        {showPhotoOption ? (
+          <>
+            <PressableFeedback animation={false} onPress={() => onSelect('photo')}>
+              <PressableFeedback.Scale>
+                <ListGroup.Item disabled>
+                  <ListGroup.ItemPrefix>
+                    <Ionicons name="camera-outline" size={22} color={mutedColor} />
+                  </ListGroup.ItemPrefix>
+                  <ListGroup.ItemContent>
+                    <ListGroup.ItemTitle>{intl.formatMessage({ id: 'common.import.image.title' })}</ListGroup.ItemTitle>
+                    <ListGroup.ItemDescription>{intl.formatMessage({ id: 'common.import.image.formats' })}</ListGroup.ItemDescription>
+                  </ListGroup.ItemContent>
+                  <ListGroup.ItemSuffix iconProps={{ size: 16, color: mutedColor }} />
+                </ListGroup.Item>
+              </PressableFeedback.Scale>
+              <PressableFeedback.Ripple />
+            </PressableFeedback>
 
-        <Separator className="mx-4" />
+            <Separator className="mx-4" />
+          </>
+        ) : null}
 
         <PressableFeedback animation={false} onPress={() => onSelect('scratch')}>
           <PressableFeedback.Scale>
@@ -67,8 +82,8 @@ export function AddRecipeMenuSheet({ onSelect }: AddRecipeMenuSheetProps) {
                 <Ionicons name="create-outline" size={22} color={mutedColor} />
               </ListGroup.ItemPrefix>
               <ListGroup.ItemContent>
-                <ListGroup.ItemTitle>Start from scratch</ListGroup.ItemTitle>
-                <ListGroup.ItemDescription>Paste or type a recipe to import</ListGroup.ItemDescription>
+                 <ListGroup.ItemTitle>{intl.formatMessage({ id: 'common.import.paste.title' })}</ListGroup.ItemTitle>
+                 <ListGroup.ItemDescription>{intl.formatMessage({ id: 'common.import.paste.label' })}</ListGroup.ItemDescription>
               </ListGroup.ItemContent>
               <ListGroup.ItemSuffix iconProps={{ size: 16, color: mutedColor }} />
             </ListGroup.Item>

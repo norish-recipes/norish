@@ -138,7 +138,14 @@
       "importing": "Importing recipe from images...",
       "analyzing": "Analyzing your images, please wait...",
       "failed": "Import failed",
-      "selectedCount": "{count} images selected - they will be combined as one recipe"
+      "selectedCount": "{count} images selected - they will be combined as one recipe",
+      "library": "Library",
+      "takePhoto": "Take Photo",
+      "counter": "{count} / {max} photos",
+      "importFromCount": "Import from {count, plural, one {# Photo} other {# Photos}}"
+    },
+    "menu": {
+      "description": "Import from a URL, scan a photo, or start from scratch."
     }
   },
   "formatting": {

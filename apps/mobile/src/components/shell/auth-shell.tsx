@@ -27,10 +27,7 @@ interface AuthShellProps {
  * wrapper. Each screen provides its own card content and optional footer.
  */
 export function AuthShell({ headingPrefix, children, footer }: AuthShellProps) {
-  const [foregroundColor, mutedColor] = useThemeColor([
-    'foreground',
-    'muted',
-  ] as const);
+  const [foregroundColor] = useThemeColor(['foreground'] as const);
 
   return (
     <KeyboardAvoidingView

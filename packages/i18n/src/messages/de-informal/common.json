@@ -138,7 +138,14 @@
       "importing": "Rezept wird aus Bildern importiert...",
       "analyzing": "Bilder werden analysiert, bitte warten...",
       "failed": "Import fehlgeschlagen",
-      "selectedCount": "{count} Bilder ausgewählt - werden als ein Rezept kombiniert"
+      "selectedCount": "{count} Bilder ausgewählt - werden als ein Rezept kombiniert",
+      "library": "Mediathek",
+      "takePhoto": "Foto aufnehmen",
+      "counter": "{count} / {max} Fotos",
+      "importFromCount": "Importieren von {count, plural, one {# Foto} other {# Fotos}}"
+    },
+    "menu": {
+      "description": "Importiere per URL, scanne ein Foto oder starte von Grund auf."
     }
   },
   "formatting": {

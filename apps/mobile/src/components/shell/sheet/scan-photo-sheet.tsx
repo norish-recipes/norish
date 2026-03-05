@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Button, useThemeColor } from 'heroui-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Image, ScrollView, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import {
   colorStyles,
@@ -21,6 +22,7 @@ interface ScanPhotoSheetProps {
 }
 
 export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSheetProps) {
+  const intl = useIntl();
   const [photos, setPhotos] = useState<string[]>([]);
   const { isAIEnabled, isLoading: isLoadingPermissions } = usePermissionsContext();
   const [foregroundColor, mutedColor, accentForegroundColor, dangerColor] = useThemeColor([
@@ -83,9 +85,11 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
       initialDetent="medium"
     >
       <View style={subSheetStyles.container}>
-        <Text style={[subSheetStyles.title, colorStyles.text(foregroundColor)]}>Scan a Photo</Text>
+        <Text style={[subSheetStyles.title, colorStyles.text(foregroundColor)]}>
+          {intl.formatMessage({ id: 'common.import.image.title' })}
+        </Text>
         <Text style={[subSheetStyles.subtitle, colorStyles.text(mutedColor)]}>
-          Upload or take up to {MAX_PHOTOS} photos of a recipe.
+          {intl.formatMessage({ id: 'common.import.image.maxFiles' }, { max: MAX_PHOTOS })}
         </Text>
 
         {photos.length > 0 && (
@@ -117,19 +121,19 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
         )}
 
         <Text style={[photoStyles.counter, colorStyles.text(mutedColor)]}>
-          {photos.length} / {MAX_PHOTOS} photos
+          {intl.formatMessage({ id: 'common.import.image.counter' }, { count: photos.length, max: MAX_PHOTOS })}
         </Text>
 
         <View className="flex-row gap-2.5">
           <Button
-            variant="secondary"
+            variant="primary"
             size="lg"
             className="flex-1"
             isDisabled={atMax}
             onPress={pickFromLibrary}
           >
-            <Ionicons name="images-outline" size={20} color={foregroundColor} />
-            <Button.Label>Library</Button.Label>
+            <Ionicons name="images-outline" size={18} color={accentForegroundColor} />
+            <Button.Label>{intl.formatMessage({ id: 'common.import.image.library' })}</Button.Label>
           </Button>
           <Button
             variant="primary"
@@ -138,16 +142,16 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
             isDisabled={atMax}
             onPress={takePhoto}
           >
-            <Ionicons name="camera-outline" size={20} color={accentForegroundColor} />
-            <Button.Label>Take Photo</Button.Label>
+            <Ionicons name="camera-outline" size={18} color={accentForegroundColor} />
+            <Button.Label>{intl.formatMessage({ id: 'common.import.image.takePhoto' })}</Button.Label>
           </Button>
         </View>
 
         {photos.length > 0 && showAIActions && (
           <Button variant="primary" size="lg" className="w-full">
-            <Ionicons name="flash-outline" size={20} color={accentForegroundColor} />
+            <Ionicons name="flash-outline" size={18} color={accentForegroundColor} />
             <Button.Label>
-              Import from {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
+              {intl.formatMessage({ id: 'common.import.image.importFromCount' }, { count: photos.length })}
             </Button.Label>
           </Button>
         )}

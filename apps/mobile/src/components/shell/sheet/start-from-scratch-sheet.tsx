@@ -3,11 +3,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Button, useThemeColor } from 'heroui-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { colorStyles, subSheetStyles } from '@/components/shell/sheet/add-recipe-sheet.styles';
 import { ShellSheet } from '@/components/shell/sheet';
 import { usePermissionsContext } from '@/context/permissions-context';
-import { useRecipesContext } from '@/context/recipes-context';
+import { useRecipesMutations } from '@/hooks/recipes';
 import { canShowAIAction } from '@/lib/permissions/mobile-action-visibility';
 
 interface StartFromScratchSheetProps {
@@ -21,8 +22,9 @@ export function StartFromScratchSheet({
   onIsPresentedChange,
   onDone,
 }: StartFromScratchSheetProps) {
+  const intl = useIntl();
   const [text, setText] = useState('');
-  const { importRecipeWithAI } = useRecipesContext();
+  const { importRecipeFromPaste, importRecipeFromPasteWithAI } = useRecipesMutations();
   const { isAIEnabled, isLoading: isLoadingPermissions } = usePermissionsContext();
   const [foregroundColor, mutedColor, accentForegroundColor, surfaceColor, separatorColor] = useThemeColor([
     'foreground',
@@ -45,10 +47,16 @@ export function StartFromScratchSheet({
   });
 
   const handleImport = useCallback(() => {
-    if (!hasText || !showAIActions) return;
-    importRecipeWithAI(text.trim());
+    if (!hasText) return;
+    importRecipeFromPaste(text.trim());
     onDone();
-  }, [importRecipeWithAI, onDone, showAIActions, text, hasText]);
+  }, [hasText, importRecipeFromPaste, onDone, text]);
+
+  const handleAIImport = useCallback(() => {
+    if (!hasText || !showAIActions) return;
+    importRecipeFromPasteWithAI(text.trim());
+    onDone();
+  }, [hasText, importRecipeFromPasteWithAI, onDone, showAIActions, text]);
 
   return (
     <ShellSheet
@@ -59,16 +67,16 @@ export function StartFromScratchSheet({
     >
       <View style={subSheetStyles.container}>
         <Text style={[subSheetStyles.title, colorStyles.text(foregroundColor)]}>
-          Start from Scratch
+          {intl.formatMessage({ id: 'common.import.paste.title' })}
         </Text>
         <Text style={[subSheetStyles.subtitle, colorStyles.text(mutedColor)]}>
-          Paste or type a recipe. We'll structure it for you.
+          {intl.formatMessage({ id: 'common.import.paste.label' })}
         </Text>
 
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder="Paste your recipe here..."
+          placeholder={intl.formatMessage({ id: 'common.import.paste.placeholder' })}
           placeholderTextColor={mutedColor}
           multiline
           textAlignVertical="top"
@@ -78,36 +86,43 @@ export function StartFromScratchSheet({
           ]}
         />
 
-        {showAIActions ? (
-          <View className="flex-row gap-2.5">
+        <View style={showAIActions ? subSheetStyles.actionRow : undefined}>
+          {showAIActions ? (
+            <View style={subSheetStyles.actionButtonSlot}>
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full overflow-hidden"
+                isDisabled={!hasText}
+                onPress={handleAIImport}
+              >
+                <LinearGradient
+                  colors={['#fb7185', '#d946ef', '#6366f1']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={subSheetStyles.gradientFill}
+                />
+                <Ionicons name="flash-outline" size={18} color="#fff" />
+                <Button.Label style={subSheetStyles.whiteLabel}>
+                  {intl.formatMessage({ id: 'common.actions.aiImport' })}
+                </Button.Label>
+              </Button>
+            </View>
+          ) : null}
+
+          <View style={showAIActions ? subSheetStyles.actionButtonSlot : undefined}>
             <Button
               variant="primary"
               size="lg"
-              className="flex-1 overflow-hidden"
+              className="w-full"
               isDisabled={!hasText}
               onPress={handleImport}
             >
-              <LinearGradient
-                colors={['#fb7185', '#d946ef', '#6366f1']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={subSheetStyles.gradientFill}
-              />
-              <Ionicons name="flash-outline" size={20} color="#fff" />
-              <Button.Label style={subSheetStyles.whiteLabel}>AI Import</Button.Label>
-            </Button>
-            <Button
-              variant="primary"
-              size="lg"
-              className="flex-1"
-              isDisabled={!hasText}
-              onPress={handleImport}
-            >
-              <Ionicons name="arrow-down-circle-outline" size={20} color={accentForegroundColor} />
-              <Button.Label>Import</Button.Label>
+              <Ionicons name="arrow-down-circle-outline" size={18} color={accentForegroundColor} />
+              <Button.Label>{intl.formatMessage({ id: 'common.actions.import' })}</Button.Label>
             </Button>
           </View>
-        ) : null}
+        </View>
       </View>
     </ShellSheet>
   );

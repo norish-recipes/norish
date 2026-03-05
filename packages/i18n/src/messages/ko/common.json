@@ -138,7 +138,14 @@
       "importing": "이미지에서 레시피를 가져오는 중...",
       "analyzing": "이미지를 분석하는 중입니다. 잠시 기다려 주세요...",
       "failed": "가져오기 실패",
-      "selectedCount": "{count}개의 이미지가 선택되었습니다. 하나의 레시피로 결합됩니다."
+      "selectedCount": "{count}개의 이미지가 선택되었습니다. 하나의 레시피로 결합됩니다.",
+      "library": "라이브러리",
+      "takePhoto": "사진 촬영",
+      "counter": "{count} / {max} 사진",
+      "importFromCount": "{count, plural, one {#장 사진에서 가져오기} other {#장 사진에서 가져오기}}"
+    },
+    "menu": {
+      "description": "URL에서 가져오거나 사진을 스캔하거나 처음부터 시작하세요."
     }
   },
   "formatting": {

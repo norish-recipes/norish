@@ -138,7 +138,14 @@
       "importing": "Importation recette depuis une image...",
       "analyzing": "Analyse de vos images, veuillez patienter...",
       "failed": "Importation échouée",
-      "selectedCount": "{count} images sélectionnées - elles seront combinées en une seule recette"
+      "selectedCount": "{count} images sélectionnées - elles seront combinées en une seule recette",
+      "library": "Bibliotheque",
+      "takePhoto": "Prendre une photo",
+      "counter": "{count} / {max} photos",
+      "importFromCount": "Importer depuis {count, plural, one {# photo} other {# photos}}"
+    },
+    "menu": {
+      "description": "Importer depuis une URL, scanner une photo ou partir de zero."
     }
   },
   "formatting": {
@@ -194,15 +201,15 @@
     "new": "Nouveau"
   },
   "timer": {
-    "done": "Termin\u00e9",
-    "done_action": "Termin\u00e9",
+    "done": "Terminé",
+    "done_action": "Terminé",
     "one": "Minuteur",
     "other": "Minuteurs",
     "label_one": "1 minuteur",
     "label_other": "{count} minuteurs",
-    "notification_title": "Minuteur termin\u00e9",
-    "notification_body": "{label} est pr\u00eat\u00a0!",
-    "notifications_disabled": "Les notifications sont d\u00e9sactiv\u00e9es",
-    "notifications_disabled_hint": "Activez les notifications dans les param\u00e8tres de votre navigateur pour recevoir des alertes lorsque les minuteurs se terminent en arri\u00e8re-plan."
+    "notification_title": "Minuteur terminé",
+    "notification_body": "{label} est prêt !",
+    "notifications_disabled": "Les notifications sont désactivées",
+    "notifications_disabled_hint": "Activez les notifications dans les paramètres de votre navigateur pour recevoir des alertes lorsque les minuteurs se terminent en arrière-plan."
   }
 }

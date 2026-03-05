@@ -119,3 +119,22 @@ Legend:
 - This file is the canonical checklist for Task 1 and will drive Task Group 2 replacements.
 - Reuse-first policy has been applied; every row is marked with `reuse` vs `new`.
 - Next execution step (Task Group 2): replace hardcoded strings in code with key references from this mapping.
+
+## Task 3 Verification: Locale Completeness and Duplicate-Key Check
+
+### 3.1 Mobile-used keys completeness across locales
+
+- Collected all `formatMessage({ id: ... })` IDs from `apps/mobile/src` after Task 2 updates.
+- Verified each mobile-used ID exists in every locale folder under `packages/i18n/src/messages/*`.
+- Result: **0 missing mobile-used keys** across `en`, `fr`, `es`, `de-formal`, `de-informal`, `ko`, `nl`, and `ru`.
+
+### 3.2 Newly introduced key coverage
+
+- Task 2 intentionally reused canonical keys and did not require adding new i18n keys.
+- Result: no new key IDs were introduced in `packages/i18n`, therefore no additional locale backfills were required.
+
+### 3.3 Duplicate near-equivalent key guard
+
+- Ran package-level key consistency validation: `pnpm --filter @norish/i18n check:locale-keys`.
+- Validation passed for all locales.
+- Because no new keys were added in this pass, no duplicate near-equivalent keys were introduced.

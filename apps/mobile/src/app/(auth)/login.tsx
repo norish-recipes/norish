@@ -198,9 +198,9 @@ export default function LoginScreen() {
           style={styles.linkRow}
         >
           <Text style={[styles.linkText, { color: mutedColor }]}>
-            Wrong server?{' '}
+            {intl.formatMessage({ id: 'auth.login.wrongServer' })}{' '}
             <Text style={{ color: accentColor }} className="font-semibold">
-              Change server
+              {intl.formatMessage({ id: 'auth.login.changeServer' })}
             </Text>
           </Text>
         </Pressable>

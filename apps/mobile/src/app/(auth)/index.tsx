@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { AuthShell } from '@/components/shell/auth-shell';
 import { useBackendUrl } from '@/hooks/use-backend-url';
@@ -20,6 +21,7 @@ const HEALTH_CHECK_TIMEOUT_MS = 7000;
 
 export default function ConnectScreen() {
   const router = useRouter();
+  const intl = useIntl();
   const [foregroundColor, mutedColor, separatorColor, dangerColor, dangerSoftColor] = useThemeColor([
     'foreground',
     'muted',
@@ -35,7 +37,7 @@ export default function ConnectScreen() {
     const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl);
 
     if (!normalizedBaseUrl) {
-      setErrorMessage('Enter a valid URL like https://your-server.com');
+      setErrorMessage(intl.formatMessage({ id: 'auth.connect.errors.invalidUrl' }));
       return;
     }
 
@@ -61,17 +63,19 @@ export default function ConnectScreen() {
       router.replace('/login');
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        setErrorMessage('Connection timed out. Verify URL and network access.');
+        setErrorMessage(intl.formatMessage({ id: 'auth.connect.errors.timeout' }));
       } else if (error instanceof Error) {
-        setErrorMessage(`Could not connect to API or tRPC: ${error.message}`);
+        setErrorMessage(
+          intl.formatMessage({ id: 'auth.connect.errors.unreachableWithReason' }, { reason: error.message }),
+        );
       } else {
-        setErrorMessage('Could not connect to API or tRPC on that backend URL.');
+        setErrorMessage(intl.formatMessage({ id: 'auth.connect.errors.unreachable' }));
       }
     } finally {
       clearTimeout(timeout);
       setIsConnecting(false);
     }
-  }, [baseUrl, router]);
+  }, [baseUrl, intl, router]);
 
   if (!isHydrated) {
     return (
@@ -83,9 +87,11 @@ export default function ConnectScreen() {
 
   return (
     <AuthShell
-      headingPrefix="Connect to"
+      headingPrefix={intl.formatMessage({ id: 'auth.connect.title' })}
     >
-      <Text style={[styles.label, { color: foregroundColor }]}>Backend URL</Text>
+      <Text style={[styles.label, { color: foregroundColor }]}>
+        {intl.formatMessage({ id: 'auth.connect.backendUrlLabel' })}
+      </Text>
 
       <Input
         value={baseUrl}
@@ -93,7 +99,7 @@ export default function ConnectScreen() {
         keyboardType="url"
         autoCapitalize="none"
         autoCorrect={false}
-        placeholder="https://your-norish-server.com"
+        placeholder={intl.formatMessage({ id: 'auth.connect.backendUrlPlaceholder' })}
         returnKeyType="done"
         onSubmitEditing={() => {
           void handleConnect();
@@ -107,7 +113,11 @@ export default function ConnectScreen() {
         isDisabled={isConnecting}
         style={styles.connectButton}
       >
-        <Button.Label>{isConnecting ? 'Connecting...' : 'Connect'}</Button.Label>
+        <Button.Label>
+          {isConnecting
+            ? intl.formatMessage({ id: 'auth.connect.connecting' })
+            : intl.formatMessage({ id: 'auth.connect.connect' })}
+        </Button.Label>
       </Button>
 
       <Text
@@ -119,7 +129,7 @@ export default function ConnectScreen() {
           },
         ]}
       >
-        {errorMessage ?? 'Example: https://demo.norish.app or http://localhost:3000'}
+        {errorMessage ?? intl.formatMessage({ id: 'auth.connect.example' })}
       </Text>
     </AuthShell>
   );

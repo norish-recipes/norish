@@ -12,12 +12,12 @@
 
 ## 3. Locale Completeness in `packages/i18n`
 
-- [ ] 3.1 Add missing translation entries for every mobile-used key across all supported languages.
-- [ ] 3.2 Ensure any newly introduced keys include non-empty values in every supported locale file.
-- [ ] 3.3 Verify no duplicate near-equivalent keys were added when an existing key could be reused.
+- [x] 3.1 Add missing translation entries for every mobile-used key across all supported languages.
+- [x] 3.2 Ensure any newly introduced keys include non-empty values in every supported locale file.
+- [x] 3.3 Verify no duplicate near-equivalent keys were added when an existing key could be reused.
 
 ## 4. Validation and Regression Safety
 
-- [ ] 4.1 Run existing translation validation (or add one if missing) to fail on unresolved keys and missing locale entries.
-- [ ] 4.2 Execute mobile app tests/build checks relevant to i18n rendering and fix regressions.
-- [ ] 4.3 Perform spot QA in multiple locales on key mobile flows to confirm correct wording and no fallback text.
+- [x] 4.1 Run existing translation validation (or add one if missing) to fail on unresolved keys and missing locale entries.
+- [x] 4.2 Execute mobile app tests/build checks relevant to i18n rendering and fix regressions.
+- [x] 4.3 Perform spot QA in multiple locales on key mobile flows to confirm correct wording and no fallback text.

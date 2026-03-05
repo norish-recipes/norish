@@ -61,6 +61,14 @@ export const subSheetStyles = StyleSheet.create({
   gradientFill: {
     ...StyleSheet.absoluteFillObject,
   },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  actionButtonSlot: {
+    flex: 1,
+    minWidth: 0,
+  },
 });
 
 export const photoStyles = StyleSheet.create({

@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Button, useThemeColor } from 'heroui-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { colorStyles, subSheetStyles } from '@/components/shell/sheet/add-recipe-sheet.styles';
 import { ShellSheet } from '@/components/shell/sheet';
@@ -22,6 +23,7 @@ export function ImportFromUrlSheet({
   onIsPresentedChange,
   onDone,
 }: ImportFromUrlSheetProps) {
+  const intl = useIntl();
   const [url, setUrl] = useState('');
   const { importRecipe, importRecipeWithAI } = useRecipesContext();
   const { isAIEnabled, isLoading: isLoadingPermissions } = usePermissionsContext();
@@ -91,15 +93,17 @@ export function ImportFromUrlSheet({
       initialDetent="medium"
     >
       <View style={subSheetStyles.container}>
-        <Text style={[subSheetStyles.title, colorStyles.text(foregroundColor)]}>Import from URL</Text>
+        <Text style={[subSheetStyles.title, colorStyles.text(foregroundColor)]}>
+          {intl.formatMessage({ id: 'common.import.url.title' })}
+        </Text>
         <Text style={[subSheetStyles.subtitle, colorStyles.text(mutedColor)]}>
-          Paste a link to any recipe website.
+          {intl.formatMessage({ id: 'common.import.url.label' })}
         </Text>
 
         <TextInput
           value={url}
           onChangeText={setUrl}
-          placeholder="https://example.com/recipe"
+          placeholder={intl.formatMessage({ id: 'common.import.url.placeholder' })}
           placeholderTextColor={mutedColor}
           autoCapitalize="none"
           autoCorrect={false}
@@ -112,35 +116,41 @@ export function ImportFromUrlSheet({
           ]}
         />
 
-        <View className="flex-row gap-2.5">
+        <View style={subSheetStyles.actionRow}>
           {showAIActions ? (
+            <View style={subSheetStyles.actionButtonSlot}>
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full overflow-hidden"
+                isDisabled={!isValidUrl}
+                onPress={handleAIImport}
+              >
+                <LinearGradient
+                  colors={['#fb7185', '#d946ef', '#6366f1']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={subSheetStyles.gradientFill}
+                />
+                <Ionicons name="flash-outline" size={18} color="#fff" />
+                <Button.Label style={subSheetStyles.whiteLabel}>
+                  {intl.formatMessage({ id: 'common.actions.aiImport' })}
+                </Button.Label>
+              </Button>
+            </View>
+          ) : null}
+          <View style={subSheetStyles.actionButtonSlot}>
             <Button
               variant="primary"
               size="lg"
-              className="flex-1 overflow-hidden"
+              className="w-full"
               isDisabled={!isValidUrl}
-              onPress={handleAIImport}
+              onPress={handleImport}
             >
-              <LinearGradient
-                colors={['#fb7185', '#d946ef', '#6366f1']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={subSheetStyles.gradientFill}
-              />
-              <Ionicons name="flash-outline" size={20} color="#fff" />
-              <Button.Label style={subSheetStyles.whiteLabel}>AI Import</Button.Label>
+              <Ionicons name="arrow-down-circle-outline" size={18} color={accentForegroundColor} />
+              <Button.Label>{intl.formatMessage({ id: 'common.actions.import' })}</Button.Label>
             </Button>
-          ) : null}
-          <Button
-            variant="primary"
-            size="lg"
-            className="flex-1"
-            isDisabled={!isValidUrl}
-            onPress={handleImport}
-          >
-            <Ionicons name="arrow-down-circle-outline" size={20} color={accentForegroundColor} />
-            <Button.Label>Import</Button.Label>
-          </Button>
+          </View>
         </View>
       </View>
     </ShellSheet>

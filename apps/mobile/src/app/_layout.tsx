@@ -28,9 +28,9 @@ function AuthGatedProviders({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return (
-      <MobileIntlFallbackProvider>
+      <MobileIntlProvider>
         {children}
-      </MobileIntlFallbackProvider>
+      </MobileIntlProvider>
     );
   }
 
