@@ -23,6 +23,38 @@ import {
 } from '@/lib/network/backend-base-url';
 import { TrpcProvider } from '@/providers/trpc-provider';
 
+function AuthGatedProviders({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <MobileIntlFallbackProvider>
+        {children}
+      </MobileIntlFallbackProvider>
+    );
+  }
+
+  return (
+    <AuthenticatedProviders>
+      {children}
+    </AuthenticatedProviders>
+  );
+}
+
+function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <RecipeFiltersProvider>
+      <PermissionsProvider>
+        <RecipesProvider>
+          <MobileIntlProvider>
+            {children}
+          </MobileIntlProvider>
+        </RecipesProvider>
+      </PermissionsProvider>
+    </RecipeFiltersProvider>
+  );
+}
+
 function RootStack() {
   const { isAuthenticated } = useAuth();
 
@@ -82,16 +114,10 @@ function RootLayoutContent() {
       <ThemeProvider value={effectiveScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <TrpcProvider baseUrl={backendBaseUrl}>
           <AuthProvider backendBaseUrl={backendBaseUrl}>
-            <RecipeFiltersProvider>
-              <PermissionsProvider>
-                <RecipesProvider>
-                  <MobileIntlProvider>
-                    <RootStack />
-                    <PortalHost name="app" />
-                  </MobileIntlProvider>
-                </RecipesProvider>
-              </PermissionsProvider>
-            </RecipeFiltersProvider>
+            <AuthGatedProviders>
+              <RootStack />
+              <PortalHost name="app" />
+            </AuthGatedProviders>
           </AuthProvider>
         </TrpcProvider>
       </ThemeProvider>

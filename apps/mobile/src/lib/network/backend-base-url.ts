@@ -2,6 +2,8 @@ import * as SecureStore from 'expo-secure-store';
 
 import { httpUrlSchema } from '@norish/shared/lib/schema';
 
+import { resetAuthClientStorage } from '@/lib/auth-client';
+
 const BACKEND_BASE_URL_KEY = 'norish.backend-base-url';
 const listeners = new Set<() => void>();
 
@@ -68,6 +70,12 @@ export async function saveBackendBaseUrl(input: string): Promise<string> {
     throw new Error('Please enter a valid backend URL.');
   }
 
+  const existing = await loadBackendBaseUrl();
+
+  if (existing !== normalized) {
+    await resetAuthClientStorage();
+  }
+
   await SecureStore.setItemAsync(BACKEND_BASE_URL_KEY, normalized);
   emitBackendBaseUrlChange();
 
@@ -75,6 +83,7 @@ export async function saveBackendBaseUrl(input: string): Promise<string> {
 }
 
 export async function clearBackendBaseUrl(): Promise<void> {
+  await resetAuthClientStorage();
   await SecureStore.deleteItemAsync(BACKEND_BASE_URL_KEY);
   emitBackendBaseUrlChange();
 }

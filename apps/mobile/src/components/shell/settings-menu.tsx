@@ -1,10 +1,8 @@
 import { Button as UIButton, Picker, Text as UIText } from '@expo/ui/swift-ui';
 import { pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useThemeColor } from 'heroui-native';
 import React, { useSyncExternalStore } from 'react';
-import { Pressable } from 'react-native';
 
 import { type AppearanceMode, useAppearancePreference } from '@/context/appearance-preference-context';
 import { useMobileLocaleSettings } from '@/context/mobile-i18n-context';
@@ -26,17 +24,7 @@ export function SettingsMenu() {
   const { locale } = useSyncExternalStore(subscribeLocaleStore, getLocaleSnapshot, getLocaleSnapshot);
 
   return (
-    <ShellMenu
-      label={
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open settings"
-          style={{ paddingHorizontal: 4 }}
-        >
-          <Ionicons name="settings-outline" size={22} color={mutedColor} />
-        </Pressable>
-      }
-    >
+    <ShellMenu label="Settings" systemImage="gearshape" color={mutedColor}>
       {/* Each Picker with pickerStyle('menu') renders as its own sub-menu row
           with a chevron, opening a secondary flyout of options. */}
       <Picker
