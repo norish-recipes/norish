@@ -2,11 +2,13 @@ import { Button, Card, useThemeColor } from 'heroui-native';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { useAuth } from '@/context/auth-context';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const intl = useIntl();
   const { user, signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [foregroundColor, mutedColor, dangerColor] = useThemeColor([
@@ -27,7 +29,7 @@ export default function ProfileScreen() {
       if (error instanceof Error && error.message) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage('Could not sign out. Please try again.');
+        setErrorMessage(intl.formatMessage({ id: 'auth.errors.default.description' }));
       }
     } finally {
       setIsSigningOut(false);
@@ -42,15 +44,19 @@ export default function ProfileScreen() {
     >
       <Card variant="secondary" className="rounded-2xl border border-separator">
         <Card.Body style={styles.cardBody}>
-          <Card.Title style={{ color: foregroundColor }}>Profile</Card.Title>
+          <Card.Title style={{ color: foregroundColor }}>
+            {intl.formatMessage({ id: 'settings.user.profile.title' })}
+          </Card.Title>
           <Card.Description style={{ color: mutedColor }}>
-            Manage account preferences and end your current mobile session.
+            {intl.formatMessage({ id: 'settings.user.preferences.description' })}
           </Card.Description>
 
           <View style={styles.userDetails}>
-            <Text style={[styles.userLabel, { color: mutedColor }]}>Signed in as</Text>
+            <Text style={[styles.userLabel, { color: mutedColor }]}>
+              {intl.formatMessage({ id: 'auth.emailPassword.signIn' })}
+            </Text>
             <Text style={[styles.userValue, { color: foregroundColor }]}>
-              {user?.email ?? 'Unknown user'}
+              {user?.email ?? intl.formatMessage({ id: 'auth.errors.user_not_found.title' })}
             </Text>
           </View>
 
@@ -61,7 +67,11 @@ export default function ProfileScreen() {
               void handleSignOut();
             }}
           >
-            <Button.Label>{isSigningOut ? 'Signing out...' : 'Sign out'}</Button.Label>
+            <Button.Label>
+              {isSigningOut
+                ? intl.formatMessage({ id: 'common.status.loading' })
+                : intl.formatMessage({ id: 'navbar.userMenu.logout' })}
+            </Button.Label>
           </Button>
 
           {errorMessage && <Text style={{ color: dangerColor }}>{errorMessage}</Text>}

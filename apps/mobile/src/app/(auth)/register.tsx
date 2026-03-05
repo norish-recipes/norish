@@ -2,6 +2,7 @@ import { Button, Card, Input, useThemeColor } from 'heroui-native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { AuthShell } from '@/components/shell/auth-shell';
 import { useAuth } from '@/context/auth-context';
@@ -13,6 +14,7 @@ const MAX_PASSWORD_LENGTH = 128;
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const intl = useIntl();
   const { backendBaseUrl, authClient } = useAuth();
 
   const [foregroundColor, mutedColor, accentColor, dangerColor] = useThemeColor([
@@ -25,7 +27,7 @@ export default function RegisterScreen() {
   if (backendBaseUrl === null) {
     return (
       <AuthShell
-        headingPrefix="Create account on"
+        headingPrefix={intl.formatMessage({ id: 'auth.signup.title' })}
       >
         <View style={styles.centered}>
           <Button
@@ -33,7 +35,7 @@ export default function RegisterScreen() {
               router.replace('/(auth)');
             }}
           >
-            <Button.Label>Open Connect</Button.Label>
+            <Button.Label>{intl.formatMessage({ id: 'auth.errors.backToLogin' })}</Button.Label>
           </Button>
         </View>
       </AuthShell>
@@ -68,6 +70,7 @@ function RegisterForm({
   dangerColor: string;
 }) {
   const router = useRouter();
+  const intl = useIntl();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -86,27 +89,27 @@ function RegisterForm({
     const trimmedEmail = email.trim();
 
     if (!trimmedName) {
-      setErrorMessage('Name is required.');
+      setErrorMessage(intl.formatMessage({ id: 'common.validation.required' }));
       return;
     }
 
     if (!trimmedEmail) {
-      setErrorMessage('Email is required.');
+      setErrorMessage(intl.formatMessage({ id: 'common.validation.required' }));
       return;
     }
 
     if (password.length < MIN_PASSWORD_LENGTH) {
-      setErrorMessage(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+      setErrorMessage(intl.formatMessage({ id: 'auth.signup.errors.passwordTooShort' }));
       return;
     }
 
     if (password.length > MAX_PASSWORD_LENGTH) {
-      setErrorMessage(`Password must be at most ${MAX_PASSWORD_LENGTH} characters.`);
+      setErrorMessage(intl.formatMessage({ id: 'auth.signup.errors.passwordTooLong' }));
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage('Passwords do not match.');
+      setErrorMessage(intl.formatMessage({ id: 'auth.signup.errors.passwordMismatch' }));
       return;
     }
 
@@ -120,7 +123,7 @@ function RegisterForm({
       });
 
       if (error) {
-        setErrorMessage(error.message ?? 'Could not create account.');
+        setErrorMessage(error.message ?? intl.formatMessage({ id: 'auth.signup.errors.createFailed' }));
         return;
       }
 
@@ -130,19 +133,19 @@ function RegisterForm({
       if (error instanceof Error && error.message) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage('Could not create account. Please try again.');
+        setErrorMessage(intl.formatMessage({ id: 'auth.signup.errors.generic' }));
       }
     } finally {
       setIsSubmitting(false);
     }
-  }, [authClient, confirmPassword, email, name, password]);
+  }, [authClient, confirmPassword, email, intl, name, password]);
 
   const signInLink = (
     <Pressable onPress={() => router.replace('/login' as any)} style={styles.linkRow}>
       <Text style={[styles.linkText, { color: mutedColor }]}>
-        Already have an account?{' '}
+        {intl.formatMessage({ id: 'auth.signup.hasAccount' })}{' '}
         <Text style={{ color: accentColor }} className="font-semibold">
-          Sign in
+          {intl.formatMessage({ id: 'auth.signup.signIn' })}
         </Text>
       </Text>
     </Pressable>
@@ -152,12 +155,14 @@ function RegisterForm({
   if (hasData && !registrationEnabled) {
     return (
       <AuthShell
-        headingPrefix="Registration disabled on"
+        headingPrefix={intl.formatMessage({ id: 'auth.errors.registration_is_currently_disabled.title' })}
         footer={signInLink}
       >
-        <Card.Title style={{ color: foregroundColor }}>Registration unavailable</Card.Title>
+        <Card.Title style={{ color: foregroundColor }}>
+          {intl.formatMessage({ id: 'auth.errors.registration_is_currently_disabled.title' })}
+        </Card.Title>
         <Card.Description style={{ color: mutedColor }}>
-          Ask your server administrator to enable registration.
+          {intl.formatMessage({ id: 'auth.errors.registration_is_currently_disabled.description' })}
         </Card.Description>
       </AuthShell>
     );
@@ -169,7 +174,7 @@ function RegisterForm({
 
   return (
     <AuthShell
-      headingPrefix="Create account on"
+      headingPrefix={intl.formatMessage({ id: 'auth.signup.title' })}
       footer={
         <>
           {errorMessage && (
@@ -188,7 +193,7 @@ function RegisterForm({
           }}
           autoCapitalize="words"
           autoCorrect={false}
-          placeholder="Name"
+          placeholder={intl.formatMessage({ id: 'auth.signup.name' })}
         />
         <Input
           value={email}
@@ -199,7 +204,7 @@ function RegisterForm({
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
-          placeholder="Email"
+          placeholder={intl.formatMessage({ id: 'auth.signup.email' })}
         />
         <Input
           value={password}
@@ -208,7 +213,7 @@ function RegisterForm({
             setErrorMessage(null);
           }}
           secureTextEntry
-          placeholder="Password"
+          placeholder={intl.formatMessage({ id: 'auth.signup.password' })}
         />
         <Input
           value={confirmPassword}
@@ -217,7 +222,7 @@ function RegisterForm({
             setErrorMessage(null);
           }}
           secureTextEntry
-          placeholder="Confirm password"
+          placeholder={intl.formatMessage({ id: 'auth.signup.confirmPassword' })}
         />
         <Text style={[styles.hint, { color: mutedColor }]}>
           Password must be {MIN_PASSWORD_LENGTH}-{MAX_PASSWORD_LENGTH} characters.
@@ -229,7 +234,9 @@ function RegisterForm({
           }}
         >
           <Button.Label>
-            {isSubmitting ? 'Creating account...' : 'Create account'}
+            {isSubmitting
+              ? intl.formatMessage({ id: 'common.status.loading' })
+              : intl.formatMessage({ id: 'auth.signup.createAccount' })}
           </Button.Label>
         </Button>
       </View>

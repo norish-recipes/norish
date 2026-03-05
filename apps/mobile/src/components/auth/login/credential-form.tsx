@@ -1,6 +1,7 @@
 import { Button, Input } from 'heroui-native';
 import React from 'react';
 import { View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { styles } from '@/styles/login.styles';
 
@@ -21,6 +22,8 @@ export function CredentialForm({
   isSubmitting,
   onSubmit,
 }: CredentialFormProps) {
+  const intl = useIntl();
+
   return (
     <View style={styles.formSection}>
       <Input
@@ -29,13 +32,13 @@ export function CredentialForm({
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
-        placeholder="Email"
+        placeholder={intl.formatMessage({ id: 'auth.emailPassword.email' })}
       />
       <Input
         value={password}
         onChangeText={setPassword}
         secureTextEntry
-        placeholder="Password"
+        placeholder={intl.formatMessage({ id: 'auth.emailPassword.password' })}
       />
       <Button
         isDisabled={!email.trim() || !password || isSubmitting}
@@ -43,7 +46,11 @@ export function CredentialForm({
           onSubmit();
         }}
       >
-        <Button.Label>{isSubmitting ? 'Signing in...' : 'Sign in with password'}</Button.Label>
+        <Button.Label>
+          {isSubmitting
+            ? intl.formatMessage({ id: 'common.status.loading' })
+            : intl.formatMessage({ id: 'auth.emailPassword.signIn' })}
+        </Button.Label>
       </Button>
     </View>
   );

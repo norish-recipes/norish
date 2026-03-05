@@ -1,8 +1,11 @@
 import { Stack } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
+import { useIntl } from 'react-intl';
 
 export default function SearchLayout() {
+  const intl = useIntl();
+
   return (
     <Stack
       screenOptions={{
@@ -16,9 +19,9 @@ export default function SearchLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Search',
+          title: intl.formatMessage({ id: 'common.actions.search' }),
           headerSearchBarOptions: {
-            placeholder: 'Search recipes',
+            placeholder: intl.formatMessage({ id: 'recipes.dashboard.searchRecipesPlaceholder' }),
             autoCapitalize: 'none',
           },
         }}

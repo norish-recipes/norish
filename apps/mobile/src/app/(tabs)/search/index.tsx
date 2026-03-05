@@ -11,6 +11,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { RecipeEmptyStateCard } from '@/components/recipes/recipe-empty-state-card';
 import { RecipeListRowContent } from '@/components/recipes/recipe-list-row-content';
@@ -29,6 +30,7 @@ import { styles } from '@/styles/index.styles';
 import { hasAppliedRecipeFilters } from '@norish/shared-react/contexts';
 
 export default function SearchScreen() {
+  const intl = useIntl();
   const { filters, setFilters } = useRecipeFiltersContext();
   const {
     recipeCards,
@@ -129,23 +131,27 @@ export default function SearchScreen() {
     return (
       <View style={recipeListScreenStyles.searchEmptyTopSpacing}>
         <RecipeEmptyStateCard
-          title={error ? 'Could not load recipes' : 'No recipes found'}
+          title={
+            error
+              ? intl.formatMessage({ id: 'auth.errors.default.title' })
+              : intl.formatMessage({ id: 'recipes.empty.noResults' })
+          }
           description={
             error
-              ? 'Pull to refresh or try again in a moment.'
-              : 'Try a different ingredient, cuisine, or keyword.'
+              ? intl.formatMessage({ id: 'recipes.empty.noResultsHint' })
+              : intl.formatMessage({ id: 'recipes.empty.noResultsHint' })
           }
         />
       </View>
     );
-  }, [error, isLoading]);
+  }, [error, intl, isLoading]);
 
   return (
     <>
       <Stack.Screen
         options={{
           headerSearchBarOptions: {
-            placeholder: 'Search recipes',
+            placeholder: intl.formatMessage({ id: 'recipes.dashboard.searchRecipesPlaceholder' }),
             autoCapitalize: 'none',
             onChangeText: handleChangeText,
           },
@@ -153,7 +159,7 @@ export default function SearchScreen() {
             <Pressable
               onPress={handleOpenFilterSheet}
               accessibilityRole="button"
-              accessibilityLabel="Open filters"
+              accessibilityLabel={intl.formatMessage({ id: 'common.actions.filter' })}
               style={({ pressed }) => [
                 recipeListScreenStyles.searchHeaderButton,
                 pressed ? recipeListScreenStyles.searchHeaderButtonPressed : null,
@@ -170,7 +176,7 @@ export default function SearchScreen() {
                   color: hasActiveFilters ? accentColor : foregroundColor,
                 }}
               >
-                Filters
+                {intl.formatMessage({ id: 'common.filters.title' })}
               </Text>
             </Pressable>
           ),

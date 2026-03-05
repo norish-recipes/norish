@@ -1,7 +1,9 @@
 import { Button, Card, useThemeColor } from 'heroui-native';
 import React from 'react';
+import { useIntl } from 'react-intl';
 
 export function ProviderErrorState({ onRetry }: { onRetry: () => void }) {
+  const intl = useIntl();
   const [dangerColor, mutedColor] = useThemeColor([
     'danger',
     'muted',
@@ -9,16 +11,18 @@ export function ProviderErrorState({ onRetry }: { onRetry: () => void }) {
 
   return (
     <>
-      <Card.Title style={{ color: dangerColor }}>Could not load providers</Card.Title>
+      <Card.Title style={{ color: dangerColor }}>
+        {intl.formatMessage({ id: 'auth.errors.default.title' })}
+      </Card.Title>
       <Card.Description style={{ color: mutedColor }}>
-        Check backend URL and auth server availability, then retry.
+        {intl.formatMessage({ id: 'auth.errors.default.description' })}
       </Card.Description>
       <Button
         onPress={() => {
           onRetry();
         }}
       >
-        <Button.Label>Retry</Button.Label>
+        <Button.Label>{intl.formatMessage({ id: 'common.actions.retry' })}</Button.Label>
       </Button>
     </>
   );

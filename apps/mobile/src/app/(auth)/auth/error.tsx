@@ -2,6 +2,7 @@ import { Button, Card, useThemeColor } from 'heroui-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 const DEFAULT_PROTECTED_ROUTE = '/(tabs)';
 
@@ -27,6 +28,7 @@ function sanitizeRedirectTarget(target: string | null | undefined): string {
 
 export default function AuthErrorScreen() {
   const router = useRouter();
+  const intl = useIntl();
   const params = useLocalSearchParams();
   const [foregroundColor, mutedColor, dangerColor] = useThemeColor([
     'foreground',
@@ -38,7 +40,7 @@ export default function AuthErrorScreen() {
 
   const errorDescription =
     firstRouteParam(params.error_description as string | string[] | undefined) ??
-    'The OAuth callback could not be completed.';
+    intl.formatMessage({ id: 'auth.errors.default.description' });
 
   const redirectTo = useMemo(
     () =>
@@ -53,9 +55,13 @@ export default function AuthErrorScreen() {
     <View style={styles.screen}>
       <Card variant="secondary" className="rounded-3xl border border-separator">
         <Card.Body style={styles.cardBody}>
-          <Card.Title style={{ color: dangerColor }}>Sign-in failed</Card.Title>
+          <Card.Title style={{ color: dangerColor }}>
+            {intl.formatMessage({ id: 'auth.errors.default.title' })}
+          </Card.Title>
           <Card.Description style={{ color: mutedColor }}>{errorDescription}</Card.Description>
-          <Text style={{ color: mutedColor, fontSize: 12 }}>Error code: {errorCode}</Text>
+          <Text style={{ color: mutedColor, fontSize: 12 }}>
+            {intl.formatMessage({ id: 'auth.errors.errorCode' }, { code: errorCode })}
+          </Text>
 
           <Button
             onPress={() => {
@@ -69,7 +75,7 @@ export default function AuthErrorScreen() {
               );
             }}
           >
-            <Button.Label>Try again</Button.Label>
+            <Button.Label>{intl.formatMessage({ id: 'common.actions.retry' })}</Button.Label>
           </Button>
 
           <Button
@@ -78,12 +84,14 @@ export default function AuthErrorScreen() {
               router.replace('/(auth)' as never);
             }}
           >
-            <Button.Label>Back to Connect</Button.Label>
+            <Button.Label>{intl.formatMessage({ id: 'auth.errors.backToLogin' })}</Button.Label>
           </Button>
         </Card.Body>
       </Card>
 
-      <Text style={[styles.helpText, { color: foregroundColor }]}>You can retry sign-in or confirm your backend URL in Connect.</Text>
+      <Text style={[styles.helpText, { color: foregroundColor }]}>
+        {intl.formatMessage({ id: 'auth.errors.default.description' })}
+      </Text>
     </View>
   );
 }

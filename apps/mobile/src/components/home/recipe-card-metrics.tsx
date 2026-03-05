@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from 'heroui-native';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import type { RecipeCardItem } from '@/lib/recipes/recipe-card.types';
 import { styles } from '@/styles/recipe-card.styles';
@@ -75,6 +76,7 @@ type RecipeCardMetricsProps = {
 };
 
 export function RecipeCardMetrics({ recipe }: RecipeCardMetricsProps) {
+  const intl = useIntl();
   const [accent, warning, danger, divider] = useThemeColor([
     'accent',
     'warning',
@@ -93,9 +95,17 @@ export function RecipeCardMetrics({ recipe }: RecipeCardMetricsProps) {
           <View style={[styles.highlightDivider, { backgroundColor: divider }]} />
         </>
       )}
-      <HighlightItem label="Servings" value={String(recipe.servings)} icon="people-outline" />
+      <HighlightItem
+        label={intl.formatMessage({ id: 'recipes.form.servings' })}
+        value={String(recipe.servings)}
+        icon="people-outline"
+      />
       <View style={[styles.highlightDivider, { backgroundColor: divider }]} />
-      <HighlightItem label="Time" value={formatDuration(recipe.totalDurationMinutes)} icon="time-outline" />
+      <HighlightItem
+        label={intl.formatMessage({ id: 'common.filters.cookingTime' })}
+        value={formatDuration(recipe.totalDurationMinutes)}
+        icon="time-outline"
+      />
     </View>
   );
 }

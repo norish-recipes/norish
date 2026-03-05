@@ -3,6 +3,7 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useThemeColor } from 'heroui-native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 // ---------------------------------------------------------------------------
 // Tab-aware bottom accessory content
@@ -30,12 +31,15 @@ export function TabAccessoryContent({
   onPressRecipe,
   onPressGrocery,
 }: TabAccessoryContentProps) {
+  const intl = useIntl();
   const placement = NativeTabs.BottomAccessory.usePlacement();
   const [foregroundColor] = useThemeColor(['foreground'] as const);
   const isInline = placement === 'inline';
 
   const isRecipe = mode === 'recipe';
-  const label = isRecipe ? 'Add Recipe' : 'Add Grocery';
+  const label = isRecipe
+    ? intl.formatMessage({ id: 'recipes.dashboard.addRecipe' })
+    : intl.formatMessage({ id: 'groceries.page.addItem' });
   const icon: React.ComponentProps<typeof Ionicons>['name'] = isRecipe
     ? 'add-circle'
     : 'cart-outline';

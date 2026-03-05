@@ -1,6 +1,7 @@
 import type { ProviderInfo } from '@norish/shared/contracts';
 import { Button, useThemeColor } from 'heroui-native';
 import React from 'react';
+import { useIntl } from 'react-intl';
 
 import { ProviderIcon } from '@/components/auth';
 
@@ -17,6 +18,7 @@ export function OAuthProviderList({
   isDisabled,
   onPress,
 }: OAuthProviderListProps) {
+  const intl = useIntl();
   const [foregroundColor] = useThemeColor(['foreground'] as const);
 
   return (
@@ -33,8 +35,8 @@ export function OAuthProviderList({
           <ProviderIcon icon={provider.icon} size={18} color={foregroundColor} />
           <Button.Label style={{ color: foregroundColor }}>
             {activeProviderId === provider.id
-              ? 'Opening provider...'
-              : `Continue with ${provider.name}`}
+              ? intl.formatMessage({ id: 'common.status.loading' })
+              : intl.formatMessage({ id: 'auth.provider.signInWith' }, { provider: provider.name })}
           </Button.Label>
         </Button>
       ))}

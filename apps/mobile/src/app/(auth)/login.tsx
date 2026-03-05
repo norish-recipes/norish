@@ -3,6 +3,7 @@ import { useThemeColor } from 'heroui-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { BackendMissingState } from '@/components/auth/login/backend-missing-state';
 import { CredentialForm } from '@/components/auth/login/credential-form';
@@ -29,6 +30,7 @@ function LoginForm({
   redirectTo: string;
 }) {
   const router = useRouter();
+  const intl = useIntl();
   const { authClient, consumeLogoutFlag } = useAuth();
   const [mutedColor, dangerColor, accentColor] = useThemeColor([
     'muted',
@@ -69,13 +71,13 @@ function LoginForm({
         if (oauthError instanceof Error && oauthError.message) {
           setErrorMessage(oauthError.message);
         } else {
-          setErrorMessage('Could not start OAuth sign-in. Please try again.');
+          setErrorMessage(intl.formatMessage({ id: 'auth.errors.default.description' }));
         }
       } finally {
         setActiveOAuthProviderId(null);
       }
     },
-    [authClient, backendBaseUrl, consumeLogoutFlag, redirectTo],
+    [authClient, backendBaseUrl, consumeLogoutFlag, intl, redirectTo],
   );
 
   const handlePasswordSubmit = useCallback(async () => {
@@ -91,7 +93,7 @@ function LoginForm({
       });
 
       if (signInError) {
-        setErrorMessage(signInError.message ?? 'Could not sign in with email and password.');
+        setErrorMessage(signInError.message ?? intl.formatMessage({ id: 'auth.emailPassword.errors.generic' }));
         return;
       }
 
@@ -101,12 +103,12 @@ function LoginForm({
       if (signInError instanceof Error && signInError.message) {
         setErrorMessage(signInError.message);
       } else {
-        setErrorMessage('Could not sign in with email and password.');
+        setErrorMessage(intl.formatMessage({ id: 'auth.emailPassword.errors.generic' }));
       }
     } finally {
       setIsSubmittingCredentials(false);
     }
-  }, [authClient, consumeLogoutFlag, email, password]);
+  }, [authClient, consumeLogoutFlag, email, intl, password]);
 
   return (
     <>
@@ -153,9 +155,9 @@ function LoginForm({
       {registrationEnabled && passwordAuthEnabled && (
         <Pressable onPress={() => router.push('/register' as any)} style={styles.linkRow}>
           <Text style={[styles.linkText, { color: mutedColor }]}>
-            Don't have an account?{' '}
+            {intl.formatMessage({ id: 'auth.emailPassword.noAccount' })}{' '}
             <Text style={{ color: accentColor }} className="font-semibold">
-              Sign up
+              {intl.formatMessage({ id: 'auth.emailPassword.signUp' })}
             </Text>
           </Text>
         </Pressable>
@@ -166,6 +168,7 @@ function LoginForm({
 
 export default function LoginScreen() {
   const router = useRouter();
+  const intl = useIntl();
   const params = useLocalSearchParams();
   const { backendBaseUrl, justLoggedOut } = useAuth();
 
@@ -207,7 +210,7 @@ export default function LoginScreen() {
 
   return (
     <AuthShell
-      headingPrefix="Sign in to"
+      headingPrefix={intl.formatMessage({ id: 'auth.login.title' })}
       footer={footer}
     >
       {backendBaseUrl === null ? (

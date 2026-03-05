@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useImperativeHandle } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useIntl } from 'react-intl';
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -64,6 +65,7 @@ function SwipeableRecipeRowComponent(
   { children, recipeName = 'Recipe', onDelete, onAddToGroceries, onAddToCalendar }: Props,
   ref: React.ForwardedRef<SwipeableRecipeRowRef>,
 ) {
+  const intl = useIntl();
   const translateX = useSharedValue(0);
   const startX = useSharedValue(0);
   const isOpen = useSharedValue(false);
@@ -89,11 +91,15 @@ function SwipeableRecipeRowComponent(
 
   const handleDelete = useCallback(() => {
     close();
-    Alert.alert('Delete recipe', `Remove "${recipeName}" from your recipes?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: onDelete },
-    ]);
-  }, [close, recipeName, onDelete]);
+    Alert.alert(
+      intl.formatMessage({ id: 'recipes.card.deleteRecipe' }),
+      intl.formatMessage({ id: 'recipes.deleteModal.confirmMessage' }, { recipeName }),
+      [
+        { text: intl.formatMessage({ id: 'common.actions.cancel' }), style: 'cancel' },
+        { text: intl.formatMessage({ id: 'common.actions.delete' }), style: 'destructive', onPress: onDelete },
+      ],
+    );
+  }, [close, intl, recipeName, onDelete]);
 
   const panGesture = Gesture.Pan()
     .activeOffsetX([-8, 8])

@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button, useThemeColor } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { ShellSheet } from '@/components/shell/sheet';
 import { PanelButton } from '@/components/shell/panel-button';
@@ -61,6 +62,7 @@ interface FilterSheetProps {
 }
 
 export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSheetProps) {
+  const intl = useIntl();
   const [draft, setDraft] = useState<CanonicalRecipeFilters>(filters);
   const [tagFilter, setTagFilter] = useState('');
   const [titleColor, mutedColor, accentForegroundColor, surfaceColor, separatorColor] = useThemeColor([
@@ -117,8 +119,12 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
     <ShellSheet isPresented={isOpen} onIsPresentedChange={onOpenChange}>
       <View style={sheetStyles.container}>
         <View style={sheetStyles.titleRow}>
-          <Text style={[sheetStyles.title, { color: titleColor }]}>Filters</Text>
-          <Text style={[sheetStyles.subtitle, { color: mutedColor }]}>Narrow your recipe search</Text>
+          <Text style={[sheetStyles.title, { color: titleColor }]}>
+            {intl.formatMessage({ id: 'common.filters.title' })}
+          </Text>
+          <Text style={[sheetStyles.subtitle, { color: mutedColor }]}>
+            {intl.formatMessage({ id: 'common.actions.filter' })}
+          </Text>
         </View>
 
         <ScrollView
@@ -127,7 +133,7 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           style={sheetStyles.scrollWrapper}
         >
           <View style={sectionStyles.section}>
-            <SectionHeader title="Cooking time" />
+            <SectionHeader title={intl.formatMessage({ id: 'common.filters.cookingTime' })} />
             <View style={sectionStyles.chipRow}>
               {RECIPE_COOKING_TIME_OPTIONS.map((option) => (
                 <ChipToggle
@@ -147,7 +153,7 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           </View>
 
           <View style={sectionStyles.section}>
-            <SectionHeader title="Category" />
+            <SectionHeader title={intl.formatMessage({ id: 'common.filters.categories' })} />
             <View style={sectionStyles.chipRow}>
               {RECIPE_CATEGORY_OPTIONS.map((category) => (
                 <ChipToggle
@@ -161,10 +167,10 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           </View>
 
           <View style={sectionStyles.section}>
-            <SectionHeader title="Favorites" />
+            <SectionHeader title={intl.formatMessage({ id: 'common.filters.favorites' })} />
             <View style={sectionStyles.chipRow}>
               <ChipToggle
-                label="Favorites only"
+                  label={intl.formatMessage({ id: 'common.filters.favorites' })}
                 active={draft.showFavoritesOnly}
                 onPress={() =>
                   setDraft((previous) => ({
@@ -177,7 +183,7 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           </View>
 
           <View style={sectionStyles.section}>
-            <SectionHeader title="Min rating" />
+            <SectionHeader title={intl.formatMessage({ id: 'common.filters.favoritesAndRating' })} />
             <View style={sectionStyles.chipRow}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <ChipToggle
@@ -196,11 +202,11 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           </View>
 
           <View style={sectionStyles.section}>
-            <SectionHeader title="Tags" />
+            <SectionHeader title={intl.formatMessage({ id: 'common.filters.tags' })} />
             <TextInput
               value={tagFilter}
               onChangeText={setTagFilter}
-              placeholder="Search tags"
+              placeholder={intl.formatMessage({ id: 'common.filters.searchTags' })}
               placeholderTextColor={mutedColor}
               style={[
                 sectionStyles.tagInput,
@@ -225,11 +231,13 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
         <View style={sheetStyles.footer}>
           <PanelButton variant="secondary" onPress={handleReset}>
             <Ionicons name="refresh-outline" size={18} color={titleColor} />
-            <Button.Label style={{ color: titleColor }}>Reset</Button.Label>
+            <Button.Label style={{ color: titleColor }}>
+              {intl.formatMessage({ id: 'common.actions.reset' })}
+            </Button.Label>
           </PanelButton>
           <PanelButton variant="primary" onPress={handleApply}>
             <Ionicons name="checkmark-outline" size={18} color={accentForegroundColor} />
-            <Button.Label>Apply</Button.Label>
+            <Button.Label>{intl.formatMessage({ id: 'common.actions.apply' })}</Button.Label>
           </PanelButton>
         </View>
       </View>

@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useIntl } from 'react-intl';
 
 import { SectionHeader } from '@/components/home/section-header';
 import { RecipeEmptyStateCard } from '@/components/recipes/recipe-empty-state-card';
@@ -18,6 +19,7 @@ import { styles } from '@/styles/index.styles';
 
 export default function RecipesScreen() {
   const router = useRouter();
+  const intl = useIntl();
   const {
     recipeCards,
     isLoading,
@@ -106,15 +108,15 @@ export default function RecipesScreen() {
     () => (
       <>
         <SectionHeader
-          title="Today"
-          actionLabel="Calendar"
+          title={intl.formatMessage({ id: 'calendar.mobile.today' })}
+          actionLabel={intl.formatMessage({ id: 'calendar.page.title' })}
           onAction={() => router.push('/(tabs)/calendar')}
         />
         <TodaysMealsSection meals={TODAYS_MEALS_MOCK} />
-        <SectionHeader title="Your Collection" />
+        <SectionHeader title={intl.formatMessage({ id: 'recipes.dashboard.title' })} />
       </>
     ),
-    [router],
+    [intl, router],
   );
 
   const renderEmpty = useCallback(() => {
@@ -125,8 +127,8 @@ export default function RecipesScreen() {
     if (error) {
       return (
         <RecipeEmptyStateCard
-          title="Could not load recipes"
-          description="Pull to refresh or try again in a moment."
+          title={intl.formatMessage({ id: 'auth.errors.default.title' })}
+          description={intl.formatMessage({ id: 'recipes.empty.noResultsHint' })}
           dashedBorder={false}
         />
       );
@@ -134,11 +136,11 @@ export default function RecipesScreen() {
 
     return (
       <RecipeEmptyStateCard
-        title="No recipes yet"
-        description="Add your first recipe to start building your home feed."
+        title={intl.formatMessage({ id: 'recipes.empty.noResults' })}
+        description={intl.formatMessage({ id: 'recipes.empty.noResultsHint' })}
       />
     );
-  }, [error, isLoading]);
+  }, [error, intl, isLoading]);
 
   const renderFooter = useCallback(() => {
     if (!isValidating || !recipeCards.length) return null;
