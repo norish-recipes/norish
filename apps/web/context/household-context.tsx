@@ -1,47 +1,13 @@
 "use client";
 
-import { createContext, ReactNode, useContext } from "react";
+import { createHouseholdContext } from "@norish/shared-react/contexts";
 import { useHouseholdQuery, useHouseholdSubscription } from "@/hooks/households";
 
-import type {
-  HouseholdAdminSettingsDto,
-  HouseholdSettingsDto,
-} from "@norish/shared/contracts/dto/household";
+export type { HouseholdContextValue } from "@norish/shared-react/contexts";
 
-type HouseholdContextType = {
-  household: HouseholdSettingsDto | HouseholdAdminSettingsDto | null;
-  currentUserId: string | undefined;
-  isLoading: boolean;
-};
+const { HouseholdProvider, useHouseholdContext } = createHouseholdContext({
+  useHouseholdQuery,
+  useHouseholdSubscription,
+});
 
-const HouseholdContext = createContext<HouseholdContextType | null>(null);
-
-// This provider is needed for updates when allergies change etc..
-export function HouseholdProvider({ children }: { children: ReactNode }) {
-  const { household, currentUserId, isLoading } = useHouseholdQuery();
-
-  // Subscribe to WebSocket events (uses internal cache helpers + useUser for currentUserId)
-  useHouseholdSubscription();
-
-  return (
-    <HouseholdContext.Provider
-      value={{
-        household,
-        currentUserId,
-        isLoading,
-      }}
-    >
-      {children}
-    </HouseholdContext.Provider>
-  );
-}
-
-export function useHouseholdContext() {
-  const context = useContext(HouseholdContext);
-
-  if (!context) {
-    throw new Error("useHouseholdContext must be used within HouseholdProvider");
-  }
-
-  return context;
-}
+export { HouseholdProvider, useHouseholdContext };

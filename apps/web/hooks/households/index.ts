@@ -1,9 +1,14 @@
-export { useHouseholdQuery } from "./use-household-query";
-export type { HouseholdData, HouseholdQueryResult } from "./use-household-query";
+"use client";
 
-export { useHouseholdMutations } from "./use-household-mutations";
-export type { HouseholdMutationsResult } from "./use-household-mutations";
+import { sharedHouseholdHooks } from "./shared-household-hooks";
 
-export { useHouseholdSubscription } from "./use-household-subscription";
+export const useHouseholdQuery = sharedHouseholdHooks.useHouseholdQuery;
+export type { HouseholdData, HouseholdQueryResult } from "@norish/shared-react/hooks";
 
-export { useHouseholdCacheHelpers, type HouseholdCacheHelpers } from "./use-household-cache";
+export const useHouseholdMutations = sharedHouseholdHooks.useHouseholdMutations;
+export type { HouseholdMutationsResult } from "@norish/shared-react/hooks";
+
+export const useHouseholdSubscription = sharedHouseholdHooks.useHouseholdSubscription;
+
+export const useHouseholdCacheHelpers = sharedHouseholdHooks.useHouseholdCacheHelpers;
+export type { HouseholdCacheHelpers } from "@norish/shared-react/hooks";

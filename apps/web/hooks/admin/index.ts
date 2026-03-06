@@ -1,10 +1,12 @@
-export {
-  useAdminConfigsQuery,
-  useUserRoleQuery,
-  useAvailableModelsQuery,
-  useAvailableTranscriptionModelsQuery,
-} from "./use-admin-query";
-export type { AdminConfigsData } from "./use-admin-query";
+"use client";
 
-export { useAdminMutations } from "./use-admin-mutations";
-export type { AdminMutationsResult } from "./use-admin-mutations";
+import { sharedAdminHooks } from "./shared-admin-hooks";
+
+export const useAdminConfigsQuery = sharedAdminHooks.useAdminConfigsQuery;
+export const useUserRoleQuery = sharedAdminHooks.useUserRoleQuery;
+export const useAvailableModelsQuery = sharedAdminHooks.useAvailableModelsQuery;
+export const useAvailableTranscriptionModelsQuery = sharedAdminHooks.useAvailableTranscriptionModelsQuery;
+export type { AdminConfigsData } from "@norish/shared-react/hooks";
+
+export const useAdminMutations = sharedAdminHooks.useAdminMutations;
+export type { AdminMutationsResult } from "@norish/shared-react/hooks";

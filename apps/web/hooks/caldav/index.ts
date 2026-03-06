@@ -1,40 +1,38 @@
+"use client";
+
 /**
  * CalDAV Hooks
  *
  * tRPC-based hooks for CalDAV configuration and sync status management.
- * Replaces the old SWR + custom WebSocket pattern.
  */
 
-// Queries
-export {
-  useCaldavConfigQuery,
-  useCaldavPasswordQuery,
-  useCaldavSyncStatusQuery,
-  useCaldavSummaryQuery,
-  useCaldavConnectionQuery,
-} from "./use-caldav-query";
+import { sharedCaldavHooks } from "./shared-caldav-hooks";
 
+// Queries
+export const useCaldavConfigQuery = sharedCaldavHooks.useCaldavConfigQuery;
+export const useCaldavPasswordQuery = sharedCaldavHooks.useCaldavPasswordQuery;
+export const useCaldavSyncStatusQuery = sharedCaldavHooks.useCaldavSyncStatusQuery;
+export const useCaldavSummaryQuery = sharedCaldavHooks.useCaldavSummaryQuery;
+export const useCaldavConnectionQuery = sharedCaldavHooks.useCaldavConnectionQuery;
 export type {
   CaldavConfigQueryResult,
   CaldavSyncStatusQueryResult,
   CaldavSummaryQueryResult,
-} from "./use-caldav-query";
+} from "@norish/shared-react/hooks";
 
 // Mutations
-export { useCaldavMutations } from "./use-caldav-mutations";
-
+export const useCaldavMutations = sharedCaldavHooks.useCaldavMutations;
 export type {
   SaveCaldavConfigInput,
   TestConnectionInput,
   CaldavMutationsResult,
-} from "./use-caldav-mutations";
+} from "@norish/shared-react/hooks";
 
 // Subscriptions
-export {
-  useCaldavSubscription,
-  useCaldavItemStatusSubscription,
-  useCaldavSyncCompleteSubscription,
-} from "./use-caldav-subscription";
+export const useCaldavSubscription = sharedCaldavHooks.useCaldavSubscription;
+export const useCaldavItemStatusSubscription = sharedCaldavHooks.useCaldavItemStatusSubscription;
+export const useCaldavSyncCompleteSubscription = sharedCaldavHooks.useCaldavSyncCompleteSubscription;
 
 // Cache Helpers
-export { useCaldavCacheHelpers, type CaldavCacheHelpers } from "./use-caldav-cache";
+export const useCaldavCacheHelpers = sharedCaldavHooks.useCaldavCacheHelpers;
+export type { CaldavCacheHelpers } from "@norish/shared-react/hooks";

@@ -16,6 +16,7 @@ export { createUseRecurrenceConfigQuery } from './use-recurrence-config-query';
 export { createUseTimerKeywordsQuery } from './use-timer-keywords-query';
 export { createUseUploadLimitsQuery } from './use-upload-limits-query';
 export { createUseTimersEnabledBaseQuery } from './use-timers-enabled-base-query';
+export { createUseVersionQuery } from './use-version-query';
 
 import { createUseLocaleConfigQuery } from './use-locale-config-query';
 import { createUseTagsQuery } from './use-tags-query';

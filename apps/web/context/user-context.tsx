@@ -8,50 +8,83 @@ import type { User } from "@norish/shared/contracts";
 import { useUser } from "@norish/shared-react/hooks";
 import { signOut as betterAuthSignOut } from "@norish/shared/lib/auth/client";
 
-type UserContextType = {
-  user: User | null;
-  isLoading: boolean;
+import {
+  createUserContext,
+  type UserContextValue,
+} from "@norish/shared-react/contexts";
+
+// Create the shared base context
+const shared = createUserContext({
+  useSessionUser: () => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { user, isLoading } = useUser();
+    return { user, isLoading };
+  },
+  useSignOut: () => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useCallback(async () => {
+      await betterAuthSignOut();
+      window.location.href = "/login?logout=true";
+    }, []);
+  },
+  useFreshUserQuery: (userId) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const trpc = useTRPC();
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { data } = useQuery({
+      ...trpc.user.get.queryOptions(),
+      enabled: Boolean(userId),
+      select: (data) => data.user,
+    });
+    return { user: data };
+  },
+});
+
+// Web extends the shared context with web-only state
+type WebUserContextType = UserContextValue & {
   userMenuOpen: boolean;
   setUserMenuOpen: (open: boolean) => void;
-  signOut: () => void;
 };
 
-const UserContext = createContext<UserContextType | null>(null);
+const WebUserContext = createContext<WebUserContextType | null>(null);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { user: sessionUser, isLoading } = useUser();
-  const trpc = useTRPC();
 
-  const { data: freshUserData } = useQuery({
-    ...trpc.user.get.queryOptions(),
-    enabled: Boolean(sessionUser?.id),
-    select: (data) => data.user,
-  });
+  return (
+    <shared.UserProvider>
+      <WebUserProviderInner userMenuOpen={userMenuOpen} setUserMenuOpen={setUserMenuOpen}>
+        {children}
+      </WebUserProviderInner>
+    </shared.UserProvider>
+  );
+}
 
-  const user = freshUserData ?? sessionUser;
-
-  const signOut = useCallback(async () => {
-    await betterAuthSignOut();
-    window.location.href = "/login?logout=true";
-  }, []);
+function WebUserProviderInner({
+  children,
+  userMenuOpen,
+  setUserMenuOpen,
+}: {
+  children: ReactNode;
+  userMenuOpen: boolean;
+  setUserMenuOpen: (open: boolean) => void;
+}) {
+  const sharedContext = shared.useUserContext();
 
   const value = useMemo(
     () => ({
-      user,
-      isLoading,
+      ...sharedContext,
       userMenuOpen,
       setUserMenuOpen,
-      signOut,
     }),
-    [user, isLoading, userMenuOpen, signOut]
+    [sharedContext, userMenuOpen, setUserMenuOpen]
   );
 
-  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
+  return <WebUserContext.Provider value={value}>{children}</WebUserContext.Provider>;
 }
 
-export function useUserContext() {
-  const context = useContext(UserContext);
+export function useUserContext(): WebUserContextType {
+  const context = useContext(WebUserContext);
 
   if (!context) {
     throw new Error("useUserContext must be used within UserProvider");

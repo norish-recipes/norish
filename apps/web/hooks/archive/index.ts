@@ -1,6 +1,9 @@
-export { useArchiveImportQuery } from "./use-archive-import-query";
-export { useArchiveImportMutation } from "./use-archive-import-mutation";
-export { useArchiveImportSubscription } from "./use-archive-import-subscription";
+"use client";
 
-export type { ArchiveImportQueryResult } from "./use-archive-import-query";
-export type { ArchiveImportMutationResult } from "./use-archive-import-mutation";
+import { sharedArchiveHooks } from "./shared-archive-hooks";
+
+export const useArchiveImportQuery = sharedArchiveHooks.useArchiveImportQuery;
+export const useArchiveImportMutation = sharedArchiveHooks.useArchiveImportMutation;
+export const useArchiveImportSubscription = sharedArchiveHooks.useArchiveImportSubscription;
+
+export type { ArchiveImportQueryResult, ArchiveImportMutationResult } from "@norish/shared-react/hooks";

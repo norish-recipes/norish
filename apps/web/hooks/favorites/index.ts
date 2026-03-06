@@ -1,2 +1,6 @@
-export { useFavoritesQuery } from "./use-favorites-query";
-export { useFavoritesMutation } from "./use-favorites-mutation";
+"use client";
+
+import { sharedFavoritesHooks } from "./shared-favorites-hooks";
+
+export const useFavoritesQuery = sharedFavoritesHooks.useFavoritesQuery;
+export const useFavoritesMutation = sharedFavoritesHooks.useFavoritesMutation;

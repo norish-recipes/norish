@@ -6,9 +6,15 @@ Defines the shared React hook surface in `@norish/shared-react` for config tRPC 
 
 ## Requirements
 
-### Requirement: Shared React exposes reusable config query hooks
+### Requirement: Shared React exposes reusable config hook family
 
-`@norish/shared-react` SHALL provide a reusable hook surface for config tRPC queries currently implemented in web `hooks/config`, including locale configuration queries.
+`@norish/shared-react` SHALL provide a `createConfigHooks` factory that returns all config-related query hooks using tRPC binding injection, including locale configuration queries and the version query hook.
+
+#### Scenario: Complete config hook family is returned
+
+- **WHEN** an app calls `createConfigHooks({ useTRPC })`
+- **THEN** the returned object SHALL include `useLocaleConfigQuery`, `useRecurrenceConfigQuery`, `useTagsQuery`, `useTimerKeywordsQuery`, `useTimersEnabledQuery`, `useUnitsQuery`, `useUploadLimitsQuery`, and `useVersionQuery`
+- **AND** all hooks SHALL use the injected tRPC binding
 
 #### Scenario: Web consumes shared config hooks
 
