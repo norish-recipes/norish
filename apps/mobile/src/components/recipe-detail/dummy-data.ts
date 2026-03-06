@@ -14,7 +14,6 @@ export interface DummyNutrition {
   protein: number;
   carbs: number;
   fat: number;
-  fiber: number;
 }
 
 export interface DummyRecipe {
@@ -32,6 +31,8 @@ export interface DummyRecipe {
   ingredients: DummyIngredient[];
   steps: string[];
   nutrition: DummyNutrition;
+  rating: number;
+  liked: boolean;
 }
 
 export const DUMMY_RECIPE: DummyRecipe = {
@@ -73,6 +74,7 @@ export const DUMMY_RECIPE: DummyRecipe = {
     protein: 38,
     carbs: 4,
     fat: 18,
-    fiber: 1,
   },
+  rating: 4,
+  liked: true,
 };

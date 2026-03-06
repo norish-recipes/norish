@@ -66,7 +66,7 @@ export function ParallaxScrollView({
       ref={scrollRef}
       scrollEventThrottle={16}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
       scrollEnabled={scrollEnabled}
     >
       <Animated.View

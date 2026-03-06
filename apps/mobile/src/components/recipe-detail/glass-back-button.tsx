@@ -1,8 +1,8 @@
-import { GlassView } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
+import { useThemeColor } from 'heroui-native';
 
 /**
  * Liquid-glass back button for the recipe detail header.
@@ -11,17 +11,16 @@ import { Pressable, StyleSheet } from 'react-native';
  */
 export function GlassBackButton() {
   const router = useRouter();
+  const foregroundColor = useThemeColor('foreground');
 
   return (
     <Pressable onPress={() => router.back()} hitSlop={8}>
-      <GlassView style={styles.glass} isInteractive>
-        <SymbolView
-          name="chevron.left"
-          tintColor="#ffffff"
-          weight="semibold"
-          style={styles.symbol}
-        />
-      </GlassView>
+      <SymbolView
+        name="chevron.left"
+        tintColor={foregroundColor}
+        weight="semibold"
+        style={styles.symbol}
+      />
     </Pressable>
   );
 }

@@ -15,31 +15,40 @@ function HighlightItem({ label, value }: HighlightItemProps) {
 
   return (
     <View style={styles.item}>
-      <Text style={[styles.label, { color: mutedColor }]}>{label}</Text>
       <Text style={[styles.value, { color: foregroundColor }]}>{value}</Text>
+      <Text style={[styles.label, { color: mutedColor }]}>{label}</Text>
     </View>
   );
+}
+
+function VerticalDivider() {
+  const separatorColor = useThemeColor('separator');
+
+  return <View style={[styles.divider, { backgroundColor: separatorColor }]} />;
 }
 
 type RecipeHighlightsProps = {
   prepMinutes: number;
   cookMinutes: number;
   totalMinutes: number;
-  servings: number;
 };
 
+/**
+ * Left-aligned prep/cook/total times with vertical separators between items.
+ * Servings are handled separately next to the Ingredients heading.
+ */
 export function RecipeHighlights({
   prepMinutes,
   cookMinutes,
   totalMinutes,
-  servings,
 }: RecipeHighlightsProps) {
   return (
     <View style={styles.container}>
       <HighlightItem label="Prep" value={`${prepMinutes}m`} />
+      <VerticalDivider />
       <HighlightItem label="Cook" value={`${cookMinutes}m`} />
+      <VerticalDivider />
       <HighlightItem label="Total" value={`${totalMinutes}m`} />
-      <HighlightItem label="Servings" value={`${servings}`} />
     </View>
   );
 }
@@ -47,11 +56,11 @@ export function RecipeHighlights({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 16,
     marginBottom: 24,
   },
   item: {
-    alignItems: 'center',
     gap: 2,
   },
   label: {
@@ -61,5 +70,10 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  divider: {
+    width: 1,
+    height: 28,
+    borderRadius: 1,
   },
 });

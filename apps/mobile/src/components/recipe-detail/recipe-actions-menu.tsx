@@ -1,66 +1,126 @@
-import { Button as UIButton } from '@expo/ui/swift-ui';
-import { GlassView } from 'expo-glass-effect';
-import { SymbolView } from 'expo-symbols';
+import { Button as UIButton, Divider as UIDivider } from '@expo/ui/swift-ui';
 import React from 'react';
-import { ActionSheetIOS, Alert, Pressable, StyleSheet } from 'react-native';
+import { Alert } from 'react-native';
 
 import { ShellMenu } from '@/components/shell/menu';
 
 /**
  * Recipe-specific actions menu rendered in the header right slot.
  *
- * Uses a GlassView circle button wrapping a native SwiftUI Menu via
- * the ShellMenu component, giving us both the liquid glass aesthetic
- * and the native iOS context-menu behaviour with SF Symbols.
+ * Native SwiftUI Menu via the ShellMenu component with SF Symbols.
+ * Menu items mirror the web's actions-menu.tsx.
  */
 export function RecipeActionsMenu() {
   return (
-    <GlassView style={styles.glass} isInteractive>
-      <ShellMenu
-        label="Recipe Actions"
-        systemImage="ellipsis"
-      >
-        <UIButton
-          label="Add to Calendar"
-          systemImage="calendar.badge.plus"
-          onPress={() =>
-            Alert.alert('Calendar', 'Added to your meal plan.')
-          }
-        />
-        <UIButton
-          label="Add to Groceries"
-          systemImage="cart.badge.plus"
-          onPress={() =>
-            Alert.alert('Groceries', 'Ingredients added to your grocery list.')
-          }
-        />
-        <UIButton
-          label="Share Recipe"
-          systemImage="square.and.arrow.up"
-          onPress={() => Alert.alert('Share', 'Sharing coming soon!')}
-        />
-        <UIButton
-          label="Print Recipe"
-          systemImage="printer"
-          onPress={() => Alert.alert('Print', 'Printing coming soon!')}
-        />
-        <UIButton
-          label="Report Issue"
-          systemImage="exclamationmark.triangle"
-          onPress={() => Alert.alert('Report', 'Report feature coming soon!')}
-        />
-      </ShellMenu>
-    </GlassView>
+    <ShellMenu label="Recipe Actions" systemImage="ellipsis">
+      {/* Core actions */}
+      <UIButton
+        label="Add to Calendar"
+        systemImage="calendar.badge.plus"
+        onPress={() =>
+          Alert.alert('Calendar', 'Added to your meal plan.')
+        }
+      />
+      <UIButton
+        label="Add to Groceries"
+        systemImage="cart.badge.plus"
+        onPress={() =>
+          Alert.alert(
+            'Groceries',
+            'Ingredients added to your grocery list.',
+          )
+        }
+      />
+      <UIButton
+        label="Share Recipe"
+        systemImage="square.and.arrow.up"
+        onPress={() => Alert.alert('Share', 'Sharing coming soon!')}
+      />
+      <UIButton
+        label="Visit Original Recipe"
+        systemImage="arrow.up.right.square"
+        onPress={() =>
+          Alert.alert('Original', 'Opening original recipe URL…')
+        }
+      />
+
+      <UIDivider />
+
+      {/* Edit / management */}
+      <UIButton
+        label="Edit Recipe"
+        systemImage="pencil"
+        onPress={() => Alert.alert('Edit', 'Editing coming soon!')}
+      />
+      <UIButton
+        label="Convert to Metric"
+        systemImage="arrow.left.arrow.right"
+        onPress={() =>
+          Alert.alert('Convert', 'Unit conversion coming soon!')
+        }
+      />
+      <UIButton
+        label="Keep Screen On"
+        systemImage="iphone"
+        onPress={() =>
+          Alert.alert('Screen On', 'Wake-lock toggled.')
+        }
+      />
+
+      <UIDivider />
+
+      {/* AI actions */}
+      <UIButton
+        label="Auto-Tag"
+        systemImage="sparkles"
+        onPress={() =>
+          Alert.alert('Auto-Tag', 'AI auto-tagging coming soon!')
+        }
+      />
+      <UIButton
+        label="Auto-Categorize"
+        systemImage="sparkles"
+        onPress={() =>
+          Alert.alert(
+            'Auto-Categorize',
+            'AI categorization coming soon!',
+          )
+        }
+      />
+      <UIButton
+        label="Detect Allergies"
+        systemImage="sparkles"
+        onPress={() =>
+          Alert.alert(
+            'Detect Allergies',
+            'AI allergy detection coming soon!',
+          )
+        }
+      />
+      <UIButton
+        label="Estimate Nutrition"
+        systemImage="sparkles"
+        onPress={() =>
+          Alert.alert(
+            'Estimate Nutrition',
+            'AI nutrition estimation coming soon!',
+          )
+        }
+      />
+
+      <UIDivider />
+
+      {/* Destructive */}
+      <UIButton
+        label="Delete Recipe"
+        systemImage="trash"
+        onPress={() =>
+          Alert.alert(
+            'Delete',
+            'Are you sure you want to delete this recipe?',
+          )
+        }
+      />
+    </ShellMenu>
   );
 }
-
-const styles = StyleSheet.create({
-  glass: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-});

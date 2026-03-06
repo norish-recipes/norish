@@ -1,4 +1,3 @@
-import Feather from '@expo/vector-icons/Feather';
 import { Avatar, useThemeColor } from 'heroui-native';
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
@@ -19,7 +18,6 @@ export function RecipeAuthor({ name, initials }: RecipeAuthorProps) {
         </Avatar.Fallback>
       </Avatar>
       <Text style={[styles.name, { color: foregroundColor }]}>{name}</Text>
-      <Feather name="chevron-right" size={16} color={foregroundColor} />
     </Pressable>
   );
 }
