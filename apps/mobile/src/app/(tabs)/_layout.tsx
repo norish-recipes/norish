@@ -21,11 +21,13 @@ function isIOS26OrLater(): boolean {
 // segments[1] is the tab name inside (tabs): 'dashboard' | 'groceries' | 'search' | etc.
 type ActiveTab = 'dashboard' | 'groceries' | 'search' | 'calendar' | 'profile';
 
-function useActiveTab(): ActiveTab {
+function useActiveTab(): { tab: ActiveTab; isRecipeDetail: boolean } {
   const segments = useSegments();
   // segments[0] = '(tabs)', segments[1] = tab name
-  const tab = segments[1] as ActiveTab | undefined;
-  return tab ?? 'dashboard';
+  const tab = (segments[1] as ActiveTab | undefined) ?? 'dashboard';
+  // segments[2] = 'recipe' when on /(tabs)/dashboard/recipe/[id]
+  const isRecipeDetail = tab === 'dashboard' && segments[2] === 'recipe';
+  return { tab, isRecipeDetail };
 }
 
 // ---------------------------------------------------------------------------
@@ -36,14 +38,17 @@ export default function TabsLayout() {
   const [isAddRecipeOpen, setIsAddRecipeOpen] = useState(false);
   const [tintColor, backgroundColor] = useThemeColor(['accent', 'background'] as const);
 
-  const activeTab = useActiveTab();
+  const { tab: activeTab, isRecipeDetail } = useActiveTab();
 
+  // Hide the bottom accessory on recipe detail pages
   const accessoryMode: 'recipe' | 'grocery' | 'hidden' =
-    activeTab === 'dashboard' || activeTab === 'search'
-      ? 'recipe'
-      : activeTab === 'groceries'
-        ? 'grocery'
-        : 'hidden';
+    isRecipeDetail
+      ? 'hidden'
+      : activeTab === 'dashboard' || activeTab === 'search'
+        ? 'recipe'
+        : activeTab === 'groceries'
+          ? 'grocery'
+          : 'hidden';
 
   const openAddRecipeSheet = useCallback(() => setIsAddRecipeOpen(true), []);
 

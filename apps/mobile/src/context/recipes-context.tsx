@@ -97,7 +97,7 @@ const sharedRecipesContext = createRecipesContext({
 
     return {
       toHome: () => {},
-      toRecipe: (id: string) => router.push(`/(tabs)/dashboard/${id}` as never),
+      toRecipe: (id: string) => router.push(`/(tabs)/dashboard/recipe/${id}` as never),
     };
   },
 });

@@ -25,10 +25,11 @@ export default function RecipesLayout() {
           headerRight: () => <SettingsMenu />,
         }}
       />
+      {/* Recipe detail — header options are set directly in the screen component
+          to access glass buttons and transparent header configuration. */}
       <Stack.Screen
-        name="[id]"
+        name="recipe/[id]"
         options={{
-          title: intl.formatMessage({ id: 'recipes.detail.notFound' }),
           headerLargeTitle: false,
         }}
       />
