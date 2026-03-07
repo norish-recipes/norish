@@ -84,7 +84,9 @@ export function ParallaxScrollView({
           style={styles.gradient}
         />
       </Animated.View>
-      <View style={styles.content}>{children}</View>
+      <View className="flex-1 p-4 overflow-hidden -mt-[100px] z-50">
+        {children}
+      </View>
     </Animated.ScrollView>
   );
 }
@@ -97,11 +99,5 @@ const styles = StyleSheet.create({
     right: 0,
     height: 200,
     pointerEvents: 'none',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-    marginTop: -80,
-    zIndex: 50,
-  },
+  }
 });
