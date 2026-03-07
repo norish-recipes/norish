@@ -57,6 +57,7 @@ const trpcBundle = createTRPCProviderBundle<AppRouter>({
   getWsUrl: () => toWsUrl(currentBaseUrl),
   getHeaders: trpcBundleGetHeaders,
   getWebSocketImpl: createMobileWebSocket,
+  enableLoggerLink: false,
 });
 
 export const useTRPC = trpcBundle.useTRPC;

@@ -143,6 +143,11 @@ export function SmartText({
             <TimerChipInline
               key={`timer-${i}`}
               text={seg.originalText}
+              timerId={seg.timerId}
+              durationMs={seg.durationMs}
+              label={seg.label}
+              recipeId={timerContext?.recipeId}
+              recipeName={timerContext?.recipeName}
             />
           );
         }

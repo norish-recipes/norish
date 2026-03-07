@@ -4,6 +4,7 @@ packages:
   - tooling/*
 
 catalog:
+  '@better-auth/expo': 1.4.20
   '@eslint/js': ^9.39.1
   '@heroicons/react': 2.2.0
   '@heroui/react': ^2.8.9
@@ -18,7 +19,6 @@ catalog:
   '@types/react-dom': 19.2.3
   '@vitejs/plugin-react': ^5.1.4
   better-auth: 1.4.20
-  '@better-auth/expo': 1.4.20
   bullmq: ^5.69.3
   date-fns: ^4.1.0
   drizzle-orm: 0.45.1
@@ -52,3 +52,6 @@ onlyBuiltDependencies:
   - ffmpeg-static
   - sharp
   - unrs-resolver
+
+patchedDependencies:
+  expo-widgets@55.0.3: patches/expo-widgets@55.0.3.patch

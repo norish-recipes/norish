@@ -20,6 +20,7 @@ import {
 } from '@/components/recipe-detail/recipe-rating';
 import { RecipeSteps } from '@/components/recipe-detail/recipe-steps';
 import { RecipeTags } from '@/components/recipe-detail/recipe-tags';
+import { TimerFAB } from '@/components/recipe-detail/timer-fab';
 import { SmartText } from '@/components/recipe-detail/text-renderer';
 
 /**
@@ -108,7 +109,7 @@ export default function RecipeDetailScreen() {
         />
 
         {/* Steps */}
-        <RecipeSteps steps={recipe.steps} />
+        <RecipeSteps steps={recipe.steps} recipeId={recipe.id} recipeName={recipe.name} />
 
         {/* Rating */}
         <RecipeRating value={rating} onRate={setRating} />
@@ -116,6 +117,9 @@ export default function RecipeDetailScreen() {
         {/* Nutrition with portion scaling */}
         <RecipeNutrition nutrition={recipe.nutrition} />
       </ParallaxScrollView>
+
+      {/* Floating timer FAB — liquid glass */}
+      <TimerFAB />
     </View>
   );
 }

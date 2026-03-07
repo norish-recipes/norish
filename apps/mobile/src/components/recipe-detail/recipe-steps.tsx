@@ -11,11 +11,13 @@ import { SmartText } from './text-renderer';
 
 type RecipeStepsProps = {
   steps: DummyStep[];
+  recipeId: string;
+  recipeName?: string;
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function RecipeSteps({ steps }: RecipeStepsProps) {
+export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
   const [foregroundColor, accentColor, accentForegroundColor, mutedColor] =
     useThemeColor([
       'foreground',
@@ -85,6 +87,11 @@ export function RecipeSteps({ steps }: RecipeStepsProps) {
               <SmartText
                 style={[styles.stepText, { color: foregroundColor }]}
                 highlightTimers
+                timerContext={{
+                  recipeId,
+                  recipeName,
+                  stepIndex: index,
+                }}
               >
                 {step.text}
               </SmartText>

@@ -38,6 +38,8 @@ type CreateTRPCProviderBundleOptions = {
   getHeaders?: () => HTTPHeaders;
   getWebSocketImpl?: () => typeof WebSocket | undefined;
   maxRetries?: number;
+  /** Set to false to disable tRPC loggerLink (defaults to true) */
+  enableLoggerLink?: boolean;
 };
 
 const defaultGetBaseUrl = () => {
@@ -67,6 +69,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   getHeaders = defaultGetHeaders,
   getWebSocketImpl,
   maxRetries = 10,
+  enableLoggerLink = true,
 }: CreateTRPCProviderBundleOptions) {
   const { TRPCProvider, useTRPC } = createTRPCContext<TRouter>();
   const ConnectionContext = createContext<ConnectionContextValue>({
@@ -130,11 +133,15 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
 
       const tc = createTRPCClient<TRouter>({
         links: [
-          loggerLink({
-            enabled: (opts) =>
-              process.env.NODE_ENV === "development" ||
-              (opts.direction === "down" && opts.result instanceof Error),
-          }),
+          ...(enableLoggerLink
+            ? [
+                loggerLink({
+                  enabled: (opts) =>
+                    process.env.NODE_ENV === "development" ||
+                    (opts.direction === "down" && opts.result instanceof Error),
+                }),
+              ]
+            : []),
           splitLink({
             condition: (op) => op.type === "subscription",
             true: wsLink({ client: wsClient, transformer: superjson as any }),
