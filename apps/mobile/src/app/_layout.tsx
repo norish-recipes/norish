@@ -17,6 +17,7 @@ import { MobileIntlFallbackProvider, MobileIntlProvider } from '@/context/mobile
 import { PermissionsProvider } from '@/context/permissions-context';
 import { RecipeFiltersProvider } from '@/context/recipe-filters-context';
 import { RecipesProvider } from '@/context/recipes-context';
+import { UserProvider } from '@/context/user-context';
 import {
   loadBackendBaseUrl,
   subscribeBackendBaseUrlChange,
@@ -45,11 +46,13 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   return (
     <RecipeFiltersProvider>
       <PermissionsProvider>
-        <RecipesProvider>
-          <MobileIntlProvider>
-            {children}
-          </MobileIntlProvider>
-        </RecipesProvider>
+        <UserProvider>
+          <RecipesProvider>
+            <MobileIntlProvider>
+              {children}
+            </MobileIntlProvider>
+          </RecipesProvider>
+        </UserProvider>
       </PermissionsProvider>
     </RecipeFiltersProvider>
   );

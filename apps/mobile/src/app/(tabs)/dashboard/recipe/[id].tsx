@@ -3,6 +3,7 @@ import { useThemeColor } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+
 import { DUMMY_RECIPE } from '@/components/recipe-detail/dummy-data';
 import { GlassBackButton } from '@/components/recipe-detail/glass-back-button';
 import { ParallaxScrollView } from '@/components/recipe-detail/parallax-scroll-view';
@@ -19,6 +20,7 @@ import {
 } from '@/components/recipe-detail/recipe-rating';
 import { RecipeSteps } from '@/components/recipe-detail/recipe-steps';
 import { RecipeTags } from '@/components/recipe-detail/recipe-tags';
+import { SmartText } from '@/components/recipe-detail/text-renderer';
 
 /**
  * Recipe detail screen with parallax hero image, liquid-glass header buttons,
@@ -87,10 +89,10 @@ export default function RecipeDetailScreen() {
         {/* Cook + Plan quick actions */}
         <RecipeQuickActions />
 
-        {/* Description */}
-        <Text style={[styles.description, { color: mutedColor }]}>
+        {/* Description — SmartText renders bold, italic, links, etc. */}
+        <SmartText style={[styles.description, { color: mutedColor }]}>
           {recipe.description}
-        </Text>
+        </SmartText>
 
         {/* Time stats — left aligned with vertical separators */}
         <RecipeHighlights

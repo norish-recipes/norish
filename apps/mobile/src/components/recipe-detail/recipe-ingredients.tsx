@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 
 import type { DummyIngredient } from './dummy-data';
+import { SmartText } from './text-renderer';
 
 const StyledEntypo = withUniwind(Entypo);
 
@@ -104,6 +105,21 @@ export function RecipeIngredients({
 
       {/* Ingredient rows */}
       {ingredients.map((item, index) => {
+        // ── Heading row (starts with #) ─────────────────────────────────
+        const isHeading = item.name.trim().startsWith('#');
+        if (isHeading) {
+          const headingText = item.name.trim().replace(/^#+\s*/, '');
+          return (
+            <React.Fragment key={`heading-${index}`}>
+              {index > 0 && <View style={styles.headingSpacer} />}
+              <Text style={[styles.groupHeading, { color: foregroundColor }]}>
+                {headingText}
+              </Text>
+            </React.Fragment>
+          );
+        }
+
+        // ── Regular ingredient ──────────────────────────────────────────
         const scaledAmount =
           item.amount && !isNaN(Number(item.amount))
             ? formatServings(Number(item.amount) * scale)
@@ -112,14 +128,20 @@ export function RecipeIngredients({
         return (
           <React.Fragment key={`${item.name}-${index}`}>
             <View style={styles.row}>
-              <Text style={[styles.name, { color: foregroundColor }]}>
+              <SmartText
+                style={[styles.name, { color: foregroundColor }]}
+                highlightTimers
+              >
                 {item.name}
-              </Text>
+              </SmartText>
               <Text style={[styles.amount, { color: mutedColor }]}>
                 {[scaledAmount, item.unit].filter(Boolean).join(' ')}
               </Text>
             </View>
-            {index < ingredients.length - 1 && <Separator />}
+            {index < ingredients.length - 1 &&
+              !ingredients[index + 1]?.name.trim().startsWith('#') && (
+                <Separator />
+              )}
           </React.Fragment>
         );
       })}
@@ -151,6 +173,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     minWidth: 24,
     textAlign: 'center',
+  },
+  groupHeading: {
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+    paddingTop: 4,
+    paddingBottom: 8,
+  },
+  headingSpacer: {
+    height: 8,
   },
   row: {
     flexDirection: 'row',
