@@ -1,7 +1,6 @@
-import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import { useThemeColor } from 'heroui-native';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { DUMMY_RECIPE } from '@/components/recipe-detail/dummy-data';
@@ -11,6 +10,7 @@ import { RecipeActionsMenu } from '@/components/recipe-detail/recipe-actions-men
 import { RecipeAuthor } from '@/components/recipe-detail/recipe-author';
 import { RecipeHighlights } from '@/components/recipe-detail/recipe-highlights';
 import { RecipeIngredients } from '@/components/recipe-detail/recipe-ingredients';
+import { RecipeMediaHeader } from '@/components/recipe-detail/recipe-media-header';
 import { RecipeNutrition } from '@/components/recipe-detail/recipe-nutrition';
 import { RecipeQuickActions } from '@/components/recipe-detail/recipe-quick-actions';
 import {
@@ -37,6 +37,10 @@ export default function RecipeDetailScreen() {
   const [liked, setLiked] = useState(recipe.liked);
   const [rating, setRating] = useState(recipe.rating);
 
+  const handleDoubleTapLike = useCallback(() => {
+    setLiked((prev) => !prev);
+  }, []);
+
   return (
     <View style={[styles.root, { backgroundColor }]}>
       <Stack.Screen
@@ -52,12 +56,11 @@ export default function RecipeDetailScreen() {
       />
 
       <ParallaxScrollView
-        headerImage={
-          <Image
-            source={{ uri: recipe.imageUrl }}
-            contentFit="cover"
-            transition={400}
-            style={StyleSheet.absoluteFill}
+        headerMedia={
+          <RecipeMediaHeader
+            media={recipe.media}
+            liked={liked}
+            onDoubleTapLike={handleDoubleTapLike}
           />
         }
       >

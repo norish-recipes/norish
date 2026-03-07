@@ -16,11 +16,32 @@ export interface DummyNutrition {
   fat: number;
 }
 
+// ---------------------------------------------------------------------------
+// Media types – a recipe header can contain images and/or a single video
+// ---------------------------------------------------------------------------
+
+export type MediaItemImage = {
+  type: 'image';
+  uri: string;
+};
+
+export type MediaItemVideo = {
+  type: 'video';
+  uri: string;
+  /** Optional poster / thumbnail shown before the video plays */
+  posterUri?: string;
+};
+
+export type MediaItem = MediaItemImage | MediaItemVideo;
+
 export interface DummyRecipe {
   id: string;
   name: string;
   description: string;
+  /** @deprecated – use `media` instead for multi-media support */
   imageUrl: string;
+  /** Ordered list of images / video for the hero header */
+  media: MediaItem[];
   source: string;
   sourceInitials: string;
   servings: number;
@@ -42,6 +63,26 @@ export const DUMMY_RECIPE: DummyRecipe = {
     'Juicy grilled chicken marinated in fresh lemon juice, garlic, and a medley of Mediterranean herbs. Served with roasted vegetables for a wholesome, vibrant dinner.',
   imageUrl:
     'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=800&q=80',
+  media: [
+    {
+      type: 'video',
+      uri: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+      posterUri:
+        'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=800&q=80',
+    },
+    {
+      type: 'image',
+      uri: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=800&q=80',
+    },
+    {
+      type: 'image',
+      uri: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=800&q=80',
+    },
+    {
+      type: 'image',
+      uri: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800&q=80',
+    },
+  ],
   source: 'Chef Maria Santos',
   sourceInitials: 'MS',
   servings: 4,

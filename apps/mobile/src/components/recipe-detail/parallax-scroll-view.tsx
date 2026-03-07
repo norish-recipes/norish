@@ -11,7 +11,10 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = PropsWithChildren<{
-  headerImage: ReactElement;
+  /** Simple single-image hero (legacy) */
+  headerImage?: ReactElement;
+  /** Rich multi-media hero (images + video) – takes precedence over headerImage */
+  headerMedia?: ReactElement;
   scrollEnabled?: boolean;
 }>;
 
@@ -23,6 +26,7 @@ type Props = PropsWithChildren<{
 export function ParallaxScrollView({
   children,
   headerImage,
+  headerMedia,
   scrollEnabled,
 }: Props) {
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -76,7 +80,7 @@ export function ParallaxScrollView({
           headerAnimatedStyle,
         ]}
       >
-        {headerImage}
+        {headerMedia ?? headerImage}
         <LinearGradient
           colors={[
             colorKit.setAlpha(themeColorBackground, 0).hex(),
@@ -100,7 +104,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 250,
+    height: 200,
     pointerEvents: 'none',
   }
 });
