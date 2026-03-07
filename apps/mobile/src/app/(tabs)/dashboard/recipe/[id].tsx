@@ -28,16 +28,17 @@ import { RecipeTags } from '@/components/recipe-detail/recipe-tags';
  */
 export default function RecipeDetailScreen() {
   const recipe = DUMMY_RECIPE;
-  const [foregroundColor, mutedColor] = useThemeColor([
+  const [foregroundColor, mutedColor, backgroundColor] = useThemeColor([
     'foreground',
     'muted',
+    'background',
   ] as const);
 
   const [liked, setLiked] = useState(recipe.liked);
   const [rating, setRating] = useState(recipe.rating);
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor }]}>
       <Stack.Screen
         options={{
           headerTransparent: true,

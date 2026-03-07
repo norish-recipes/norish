@@ -33,7 +33,7 @@ export function ParallaxScrollView({
   const themeColorBackground = useThemeColor('background');
 
   // Hero takes up ~50% of the screen height
-  const headerHeight = height * 0.5;
+  const headerHeight = height * 0.6;
 
   const headerAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -68,6 +68,7 @@ export function ParallaxScrollView({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
       scrollEnabled={scrollEnabled}
+      style={{ backgroundColor: themeColorBackground }}
     >
       <Animated.View
         style={[
@@ -79,8 +80,10 @@ export function ParallaxScrollView({
         <LinearGradient
           colors={[
             colorKit.setAlpha(themeColorBackground, 0).hex(),
+            colorKit.setAlpha(themeColorBackground, 0.6).hex(),
             themeColorBackground,
           ]}
+          locations={[0, 0.5, 1]}
           style={styles.gradient}
         />
       </Animated.View>
@@ -97,7 +100,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 200,
+    height: 250,
     pointerEvents: 'none',
   }
 });
