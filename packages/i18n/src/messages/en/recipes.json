@@ -204,5 +204,15 @@
       "editPlaceholder": "Enter tag name...",
       "duplicateTag": "This tag already exists"
     }
+  },
+  "cookMode": {
+    "steps": "Steps",
+    "ingredients": "Ingredients",
+    "servings": "Servings",
+    "serving": "{count, plural, one {# serving} other {# servings}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "Swipe to navigate steps",
+    "swipeIngredients": "Swipe left for ingredients",
+    "swipeBackToSteps": "Swipe right for steps"
   }
 }

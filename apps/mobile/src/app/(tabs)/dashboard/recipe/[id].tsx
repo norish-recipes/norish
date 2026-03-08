@@ -3,7 +3,7 @@ import { useThemeColor } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-
+import { CookModeModal } from '@/components/recipe-detail/cook-mode';
 import { DUMMY_RECIPE } from '@/components/recipe-detail/dummy-data';
 import { GlassBackButton } from '@/components/recipe-detail/glass-back-button';
 import { ParallaxScrollView } from '@/components/recipe-detail/parallax-scroll-view';
@@ -39,9 +39,19 @@ export default function RecipeDetailScreen() {
 
   const [liked, setLiked] = useState(recipe.liked);
   const [rating, setRating] = useState(recipe.rating);
+  const [cookModeVisible, setCookModeVisible] = useState(false);
+  const [servings, setServings] = useState(recipe.servings);
 
   const handleDoubleTapLike = useCallback(() => {
     setLiked((prev) => !prev);
+  }, []);
+
+  const openCookMode = useCallback(() => {
+    setCookModeVisible(true);
+  }, []);
+
+  const closeCookMode = useCallback(() => {
+    setCookModeVisible(false);
   }, []);
 
   return (
@@ -88,7 +98,7 @@ export default function RecipeDetailScreen() {
         />
 
         {/* Cook + Plan quick actions */}
-        <RecipeQuickActions />
+        <RecipeQuickActions onCook={openCookMode} />
 
         {/* Description — SmartText renders bold, italic, links, etc. */}
         <SmartText style={[styles.description, { color: mutedColor }]}>
@@ -106,6 +116,8 @@ export default function RecipeDetailScreen() {
         <RecipeIngredients
           ingredients={recipe.ingredients}
           baseServings={recipe.servings}
+          servings={servings}
+          onServingsChange={setServings}
         />
 
         {/* Steps */}
@@ -120,6 +132,19 @@ export default function RecipeDetailScreen() {
 
       {/* Floating timer FAB — liquid glass */}
       <TimerFAB />
+
+      {/* Cook Mode — full-screen modal */}
+      <CookModeModal
+        visible={cookModeVisible}
+        onClose={closeCookMode}
+        steps={recipe.steps}
+        ingredients={recipe.ingredients}
+        recipeId={recipe.id}
+        recipeName={recipe.name}
+        baseServings={recipe.servings}
+        servings={servings}
+        onServingsChange={setServings}
+      />
     </View>
   );
 }

@@ -204,5 +204,17 @@
       "editPlaceholder": "Tag-Namen eingeben...",
       "duplicateTag": "Dieser Tag existiert bereits"
     }
-  }
+  },
+
+    "cookMode": {
+        "steps": "Schritte",
+        "ingredients": "Zutaten",
+        "servings": "Portionen",
+        "serving": "{count, plural, one {# Portion} other {# Portionen}}",
+        "stepCounter": "{current} / {total}",
+        "swipeSteps": "Wische, um durch die Schritte zu navigieren",
+        "swipeIngredients": "Nach links wischen für Zutaten",
+        "swipeBackToSteps": "Nach rechts wischen für Schritte"
+    }
+
 }

@@ -16,7 +16,7 @@ const StyledEntypo = withUniwind(Entypo);
  * - Plan: secondary pill with accent-colored icon
  * - Groceries: icon-only square button
  */
-export function RecipeQuickActions() {
+export function RecipeQuickActions({ onCook }: { onCook?: () => void }) {
   const [foregroundColor, accentColor, accentForegroundColor] = useThemeColor([
     'foreground',
     'accent',
@@ -29,9 +29,7 @@ export function RecipeQuickActions() {
       <Button
         feedbackVariant="scale"
         className="h-12 px-4 rounded-[14px] flex-row items-center gap-1 bg-accent"
-        onPress={() =>
-          Alert.alert('Cook', 'Cooking mode coming soon!')
-        }
+        onPress={onCook}
       >
         <AntDesign name="fire" size={16} color={accentForegroundColor} />
         <Text style={[styles.pillLabel, { color: accentForegroundColor }]}>

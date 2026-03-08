@@ -79,17 +79,27 @@ function ServingsControl({ servings, onServingsChange }: ServingsControlProps) {
 type RecipeIngredientsProps = {
   ingredients: DummyIngredient[];
   baseServings: number;
+  /** Controlled servings value (optional — uses internal state if omitted) */
+  servings?: number;
+  /** Controlled servings change handler */
+  onServingsChange?: (s: number) => void;
 };
 
 export function RecipeIngredients({
   ingredients,
   baseServings,
+  servings: controlledServings,
+  onServingsChange: controlledOnServingsChange,
 }: RecipeIngredientsProps) {
   const [foregroundColor, mutedColor] = useThemeColor([
     'foreground',
     'muted',
   ] as const);
-  const [servings, setServings] = useState(baseServings);
+  const [internalServings, setInternalServings] = useState(baseServings);
+
+  // Support both controlled and uncontrolled modes
+  const servings = controlledServings ?? internalServings;
+  const setServings = controlledOnServingsChange ?? setInternalServings;
 
   const scale = servings / baseServings;
 

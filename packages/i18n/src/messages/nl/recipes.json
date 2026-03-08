@@ -204,5 +204,17 @@
       "editPlaceholder": "Voer tagnaam in...",
       "duplicateTag": "Deze tag bestaat al"
     }
-  }
+  },
+
+    "cookMode": {
+        "steps": "Stappen",
+        "ingredients": "Ingrediënten",
+        "servings": "Porties",
+        "serving": "{count, plural, one {# portie} other {# porties}}",
+        "stepCounter": "{current} / {total}",
+        "swipeSteps": "Veeg om door stappen te navigeren",
+        "swipeIngredients": "Veeg links voor ingrediënten",
+        "swipeBackToSteps": "Veeg rechts voor stappen"
+    }
+
 }

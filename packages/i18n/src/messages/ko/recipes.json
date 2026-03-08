@@ -204,5 +204,17 @@
       "editPlaceholder": "태그 이름을 입력하세요...",
       "duplicateTag": "이 태그는 이미 존재합니다."
     }
-  }
+  },
+
+    "cookMode": {
+        "steps": "단계",
+        "ingredients": "재료",
+        "servings": "인분",
+        "serving": "{count}인분",
+        "stepCounter": "{current} / {total}",
+        "swipeSteps": "스와이프하여 단계를 탐색하세요",
+        "swipeIngredients": "왼쪽으로 스와이프하여 재료 보기",
+        "swipeBackToSteps": "오른쪽으로 스와이프하여 단계 보기"
+    }
+
 }
