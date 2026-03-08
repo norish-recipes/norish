@@ -6,12 +6,11 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useIntl } from 'react-intl';
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { withUniwind } from 'uniwind';
 
 import type { DummyIngredient } from '../dummy-data';
@@ -19,7 +18,7 @@ import type { DummyIngredient } from '../dummy-data';
 const StyledEntypo = withUniwind(Entypo);
 
 const SWIPE_THRESHOLD = 60;
-const SPRING = { damping: 22, stiffness: 250, mass: 0.7 } as const;
+const SPRING = { damping: 20, stiffness: 200, mass: 0.8 } as const;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -66,9 +65,8 @@ export function CookModeIngredients({
 
   const scale = servings / baseServings;
 
-  // ── Gesture: swipe right → back to steps ──────────────────────────────────
+  // ── Gesture: swipe right → back to steps with rubber-banding ──────────────
   const translateX = useSharedValue(0);
-  const contentOpacity = useSharedValue(1);
 
   const triggerSwipeRight = useCallback(() => {
     onSwipeRight?.();
@@ -78,22 +76,21 @@ export function CookModeIngredients({
     .activeOffsetX([-20, 20])
     .failOffsetY([-15, 15])
     .onUpdate((e) => {
+      // Only rubber-band rightward
       if (e.translationX > 0) {
-        translateX.value = e.translationX * 0.3;
-        contentOpacity.value = 1 - Math.min(e.translationX / 400, 0.4);
+        translateX.value = e.translationX * 0.35;
       }
     })
     .onEnd((e) => {
       if (e.translationX > SWIPE_THRESHOLD) {
-        runOnJS(triggerSwipeRight)();
+        scheduleOnRN(triggerSwipeRight);
       }
+      // Spring back smoothly
       translateX.value = withSpring(0, SPRING);
-      contentOpacity.value = withTiming(1, { duration: 150 });
     });
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
-    opacity: contentOpacity.value,
   }));
 
   const dec = useCallback(() => {
@@ -114,7 +111,10 @@ export function CookModeIngredients({
       >
         {/* Servings control */}
         <View className="flex-row items-center justify-between mb-5 py-2">
-          <Text className="text-[15px] font-medium" style={{ color: mutedColor }}>
+          <Text
+            className="text-[15px] font-medium"
+            style={{ color: mutedColor }}
+          >
             {intl.formatMessage({ id: 'recipes.cookMode.servings' })}
           </Text>
           <View className="flex-row items-center gap-3">
@@ -125,7 +125,11 @@ export function CookModeIngredients({
               className="size-8 rounded-lg bg-surface-tertiary"
               onPress={dec}
             >
-              <StyledEntypo name="minus" size={14} className="text-foreground" />
+              <StyledEntypo
+                name="minus"
+                size={14}
+                className="text-foreground"
+              />
             </Button>
             <Text
               className="text-lg font-bold min-w-[28px] text-center"
@@ -140,7 +144,11 @@ export function CookModeIngredients({
               className="size-8 rounded-lg bg-surface-tertiary"
               onPress={inc}
             >
-              <StyledEntypo name="plus" size={14} className="text-foreground" />
+              <StyledEntypo
+                name="plus"
+                size={14}
+                className="text-foreground"
+              />
             </Button>
           </View>
         </View>

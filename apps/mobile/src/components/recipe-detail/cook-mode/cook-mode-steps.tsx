@@ -6,19 +6,21 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useIntl } from 'react-intl';
 import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
+  SlideInDown,
+  SlideInUp,
+  SlideOutDown,
+  SlideOutUp,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import type { DummyStep } from '../dummy-data';
 import { SmartText } from '../text-renderer';
 
+const SLIDE_DISTANCE = 40;
+const ANIM_DURATION = 250;
+
 const SWIPE_V_THRESHOLD = 40;
 const SWIPE_H_THRESHOLD = 50;
-const SPRING = { damping: 22, stiffness: 250, mass: 0.7 } as const;
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -85,9 +87,26 @@ export function CookModeSteps({
   const totalSteps = resolvedSteps.length;
   const step = resolvedSteps[currentStep];
 
-  // ── Reanimated shared values ──────────────────────────────────────────────
-  const translateY = useSharedValue(0);
-  const contentOpacity = useSharedValue(1);
+  // Track direction: 1 = forward (next), -1 = backward (prev)
+  const prevStepRef = useRef(currentStep);
+  const direction = currentStep >= prevStepRef.current ? 1 : -1;
+  // Update ref after computing direction
+  if (prevStepRef.current !== currentStep) {
+    prevStepRef.current = currentStep;
+  }
+
+  // Directional entering/exiting animations
+  const entering =
+    direction === 1
+      ? SlideInDown.duration(ANIM_DURATION)
+          .withInitialValues({ transform: [{ translateY: SLIDE_DISTANCE }] })
+      : SlideInUp.duration(ANIM_DURATION)
+          .withInitialValues({ transform: [{ translateY: -SLIDE_DISTANCE }] });
+
+  const exiting =
+    direction === 1
+      ? SlideOutUp.duration(ANIM_DURATION)
+      : SlideOutDown.duration(ANIM_DURATION);
 
   const goToNext = useCallback(() => {
     if (currentStep < totalSteps - 1) {
@@ -108,48 +127,37 @@ export function CookModeSteps({
     onSwipeLeft?.();
   }, [onSwipeLeft]);
 
-  const currentStepRef = useRef(currentStep);
-  currentStepRef.current = currentStep;
-  const totalStepsRef = useRef(totalSteps);
-  totalStepsRef.current = totalSteps;
-
   // ── Pan gesture ───────────────────────────────────────────────────────────
   const panGesture = Gesture.Pan()
     .activeOffsetY([-15, 15])
     .activeOffsetX([-20, 20])
-    .onUpdate((e) => {
-      translateY.value = e.translationY * 0.3;
-      contentOpacity.value = 1 - Math.min(Math.abs(e.translationY) / 300, 0.5);
-    })
     .onEnd((e) => {
       const absX = Math.abs(e.translationX);
       const absY = Math.abs(e.translationY);
 
       if (absX > absY && e.translationX < -SWIPE_H_THRESHOLD) {
-        runOnJS(triggerSwipeLeft)();
+        scheduleOnRN(triggerSwipeLeft);
       } else if (absY > absX) {
         if (e.translationY < -SWIPE_V_THRESHOLD) {
-          runOnJS(goToNext)();
+          scheduleOnRN(goToNext);
         } else if (e.translationY > SWIPE_V_THRESHOLD) {
-          runOnJS(goToPrev)();
+          scheduleOnRN(goToPrev);
         }
       }
-      translateY.value = withSpring(0, SPRING);
-      contentOpacity.value = withTiming(1, { duration: 150 });
     });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity: contentOpacity.value,
-  }));
 
   if (!step) return null;
 
   return (
-    <View className="flex-1">
+    <View className="flex-1" style={{ overflow: 'hidden' }}>
       {/* Step content with gesture detector */}
       <GestureDetector gesture={panGesture}>
-        <Animated.View className="flex-1 justify-center" style={animatedStyle}>
+        <Animated.View
+          key={`step-${currentStep}`}
+          entering={entering}
+          exiting={exiting}
+          className="flex-1 justify-center"
+        >
           <View className="px-7 py-10 gap-4 items-start">
             {/* Section heading badge */}
             {step.heading && (
@@ -230,7 +238,10 @@ export function CookModeSteps({
       {/* Navigation footer */}
       <View
         className="flex-row items-center justify-between px-6 py-4 gap-4"
-        style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: `${mutedColor}15` }}
+        style={{
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: `${mutedColor}15`,
+        }}
       >
         {/* Previous */}
         <Pressable
@@ -306,7 +317,6 @@ export function CookModeSteps({
   );
 }
 
-// Only keep styles that can't be expressed with Tailwind
 const styles = StyleSheet.create({
   stepText: {
     fontSize: 22,

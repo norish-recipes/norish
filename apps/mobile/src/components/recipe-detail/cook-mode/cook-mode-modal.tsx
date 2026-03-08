@@ -1,4 +1,3 @@
-import AntDesign from '@expo/vector-icons/AntDesign';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { GlassView } from 'expo-glass-effect';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
@@ -10,10 +9,17 @@ import {
   Modal,
   Pressable,
   StatusBar,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { useIntl } from 'react-intl';
+import Reanimated, {
+  SlideInLeft,
+  SlideInRight,
+  SlideOutLeft,
+  SlideOutRight,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { DummyIngredient, DummyStep } from '../dummy-data';
@@ -23,6 +29,8 @@ import { CookModeIngredients } from './cook-mode-ingredients';
 import { CookModeSteps } from './cook-mode-steps';
 
 const KEEP_AWAKE_TAG = 'cook-mode';
+const TAB_SLIDE_DISTANCE = 50;
+const TAB_ANIM_DURATION = 250;
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -65,6 +73,9 @@ export function CookModeModal({
 
   const [activeTab, setActiveTab] = useState<TabKey>('steps');
   const [currentStep, setCurrentStep] = useState(0);
+
+  // Track tab direction: 1 = going to ingredients (right), -1 = going to steps (left)
+  const tabDirectionRef = useRef<1 | -1>(1);
 
   const TABS = [
     {
@@ -114,6 +125,7 @@ export function CookModeModal({
   const switchTab = useCallback(
     (tab: TabKey) => {
       const index = TABS.findIndex((t) => t.key === tab);
+      tabDirectionRef.current = tab === 'ingredients' ? 1 : -1;
       setActiveTab(tab);
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       Animated.spring(indicatorAnim, {
@@ -168,7 +180,6 @@ export function CookModeModal({
           {/* Recipe name + close */}
           <View className="flex-row items-center justify-between gap-3">
             <View className="flex-row items-center gap-2 flex-1">
-              <AntDesign name="fire" size={18} color={accentColor} />
               <Text
                 className="text-lg font-semibold flex-1"
                 style={{ color: foregroundColor, letterSpacing: -0.2 }}
@@ -178,7 +189,7 @@ export function CookModeModal({
               </Text>
             </View>
 
-            {/* Liquid glass close button */}
+            {/* Liquid glass close button — GlassView needs explicit style, not className */}
             <Pressable
               onPress={handleClose}
               hitSlop={12}
@@ -186,7 +197,7 @@ export function CookModeModal({
                 pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
               ]}
             >
-              <GlassView className="size-9 rounded-full items-center justify-center overflow-hidden">
+              <GlassView style={styles.glassCloseBtn}>
                 <Ionicons name="close" size={18} color={foregroundColor} />
               </GlassView>
             </Pressable>
@@ -243,25 +254,54 @@ export function CookModeModal({
           style={{
             opacity: entranceAnim,
             transform: [{ translateY: contentTranslateY }],
+            overflow: 'hidden',
           }}
         >
           {activeTab === 'steps' ? (
-            <CookModeSteps
-              steps={steps}
-              recipeId={recipeId}
-              recipeName={recipeName}
-              currentStep={currentStep}
-              onStepChange={setCurrentStep}
-              onSwipeLeft={handleSwipeLeft}
-            />
+            <Reanimated.View
+              key="tab-steps"
+              entering={
+                tabDirectionRef.current === -1
+                  ? SlideInLeft.duration(TAB_ANIM_DURATION)
+                    .withInitialValues({ transform: [{ translateX: -TAB_SLIDE_DISTANCE }] })
+                  : undefined
+              }
+              exiting={
+                SlideOutLeft.duration(TAB_ANIM_DURATION)
+              }
+              className="flex-1"
+            >
+              <CookModeSteps
+                steps={steps}
+                recipeId={recipeId}
+                recipeName={recipeName}
+                currentStep={currentStep}
+                onStepChange={setCurrentStep}
+                onSwipeLeft={handleSwipeLeft}
+              />
+            </Reanimated.View>
           ) : (
-            <CookModeIngredients
-              ingredients={ingredients}
-              baseServings={baseServings}
-              servings={servings}
-              onServingsChange={onServingsChange}
-              onSwipeRight={handleSwipeRight}
-            />
+            <Reanimated.View
+              key="tab-ingredients"
+              entering={
+                tabDirectionRef.current === 1
+                  ? SlideInRight.duration(TAB_ANIM_DURATION)
+                    .withInitialValues({ transform: [{ translateX: TAB_SLIDE_DISTANCE }] })
+                  : undefined
+              }
+              exiting={
+                SlideOutRight.duration(TAB_ANIM_DURATION)
+              }
+              className="flex-1"
+            >
+              <CookModeIngredients
+                ingredients={ingredients}
+                baseServings={baseServings}
+                servings={servings}
+                onServingsChange={onServingsChange}
+                onSwipeRight={handleSwipeRight}
+              />
+            </Reanimated.View>
           )}
         </Animated.View>
 
@@ -271,3 +311,13 @@ export function CookModeModal({
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  glassCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
