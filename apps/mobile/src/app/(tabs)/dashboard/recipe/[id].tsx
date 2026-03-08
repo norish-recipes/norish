@@ -58,7 +58,7 @@ function RecipeDetailContent({ recipeId }: { recipeId: string }) {
           headerLargeTitle: false,
           headerBackVisible: false,
           headerLeft: () => <GlassBackButton />,
-          headerRight: () => <RecipeActionsMenu />,
+          headerRight: () => <RecipeActionsMenu ctx={ctx} />,
         }}
       />
       <RecipeDetailView ctx={ctx} recipeId={recipeId} />
