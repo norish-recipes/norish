@@ -1,6 +1,7 @@
 import { Button as UIButton, Divider as UIDivider } from '@expo/ui/swift-ui';
 import React from 'react';
 import { Alert } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { ShellMenu } from '@/components/shell/menu';
 
@@ -11,18 +12,23 @@ import { ShellMenu } from '@/components/shell/menu';
  * Menu items mirror the web's actions-menu.tsx.
  */
 export function RecipeActionsMenu() {
+  const intl = useIntl();
+
   return (
-    <ShellMenu label="Recipe Actions" systemImage="ellipsis">
+    <ShellMenu
+      label={intl.formatMessage({ id: 'recipes.detail.recipeActions' })}
+      systemImage="ellipsis"
+    >
       {/* Core actions */}
       <UIButton
-        label="Add to Calendar"
+        label={intl.formatMessage({ id: 'recipes.actions.addToCalendar' })}
         systemImage="calendar.badge.plus"
         onPress={() =>
           Alert.alert('Calendar', 'Added to your meal plan.')
         }
       />
       <UIButton
-        label="Add to Groceries"
+        label={intl.formatMessage({ id: 'recipes.detail.addToGroceries' })}
         systemImage="cart.badge.plus"
         onPress={() =>
           Alert.alert(
@@ -32,12 +38,12 @@ export function RecipeActionsMenu() {
         }
       />
       <UIButton
-        label="Share Recipe"
+        label={intl.formatMessage({ id: 'recipes.actions.share' })}
         systemImage="square.and.arrow.up"
         onPress={() => Alert.alert('Share', 'Sharing coming soon!')}
       />
       <UIButton
-        label="Visit Original Recipe"
+        label={intl.formatMessage({ id: 'recipes.actions.visitOriginal' })}
         systemImage="arrow.up.right.square"
         onPress={() =>
           Alert.alert('Original', 'Opening original recipe URL…')
@@ -48,19 +54,19 @@ export function RecipeActionsMenu() {
 
       {/* Edit / management */}
       <UIButton
-        label="Edit Recipe"
+        label={intl.formatMessage({ id: 'recipes.actions.edit' })}
         systemImage="pencil"
         onPress={() => Alert.alert('Edit', 'Editing coming soon!')}
       />
       <UIButton
-        label="Convert to Metric"
+        label={intl.formatMessage({ id: 'recipes.convert.toMetric' })}
         systemImage="arrow.left.arrow.right"
         onPress={() =>
           Alert.alert('Convert', 'Unit conversion coming soon!')
         }
       />
       <UIButton
-        label="Keep Screen On"
+        label={intl.formatMessage({ id: 'recipes.actions.keepScreenOn' })}
         systemImage="iphone"
         onPress={() =>
           Alert.alert('Screen On', 'Wake-lock toggled.')
@@ -71,14 +77,14 @@ export function RecipeActionsMenu() {
 
       {/* AI actions */}
       <UIButton
-        label="Auto-Tag"
+        label={intl.formatMessage({ id: 'recipes.actions.autoTag' })}
         systemImage="sparkles"
         onPress={() =>
           Alert.alert('Auto-Tag', 'AI auto-tagging coming soon!')
         }
       />
       <UIButton
-        label="Auto-Categorize"
+        label={intl.formatMessage({ id: 'recipes.actions.autoCategorize' })}
         systemImage="sparkles"
         onPress={() =>
           Alert.alert(
@@ -88,7 +94,7 @@ export function RecipeActionsMenu() {
         }
       />
       <UIButton
-        label="Detect Allergies"
+        label={intl.formatMessage({ id: 'recipes.actions.detectAllergies' })}
         systemImage="sparkles"
         onPress={() =>
           Alert.alert(
@@ -98,7 +104,7 @@ export function RecipeActionsMenu() {
         }
       />
       <UIButton
-        label="Estimate Nutrition"
+        label={intl.formatMessage({ id: 'recipes.actions.estimateNutrition' })}
         systemImage="sparkles"
         onPress={() =>
           Alert.alert(
@@ -112,7 +118,7 @@ export function RecipeActionsMenu() {
 
       {/* Destructive */}
       <UIButton
-        label="Delete Recipe"
+        label={intl.formatMessage({ id: 'recipes.deleteModal.title' })}
         systemImage="trash"
         onPress={() =>
           Alert.alert(

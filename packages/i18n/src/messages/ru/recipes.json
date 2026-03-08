@@ -42,6 +42,8 @@
     "total": "всего",
     "planMeal": "Запланировать",
     "recipeActions": "Действия с рецептом",
+    "instructions": "Инструкция",
+    "cook": "Готовить",
     "switchToDecimal": "Показывать десятичные",
     "switchToFraction": "Показывать дроби"
   },
@@ -50,6 +52,9 @@
     "groceries": "Покупки",
     "edit": "Редактировать",
     "delete": "Удалить",
+    "share": "Поделиться",
+    "visitOriginal": "Открыть оригинальный рецепт",
+    "addToCalendar": "Добавить в календарь",
     "autoTag": "Автотеги",
     "autoTagging": "Генерация тегов...",
     "autoCategorize": "Автокатегоризация",

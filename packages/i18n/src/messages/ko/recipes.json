@@ -42,6 +42,8 @@
     "total": "총",
     "planMeal": "식사 계획",
     "recipeActions": "레시피 작업",
+    "instructions": "조리 방법",
+    "cook": "요리",
     "switchToDecimal": "소수점 표시",
     "switchToFraction": "분수 표시"
   },
@@ -50,6 +52,9 @@
     "groceries": "장보기",
     "edit": "편집",
     "delete": "삭제",
+    "share": "공유",
+    "visitOriginal": "원본 레시피 보기",
+    "addToCalendar": "캘린더에 추가",
     "autoTag": "자동 태그",
     "autoTagging": "태그 생성 중...",
     "autoCategorize": "자동 분류",

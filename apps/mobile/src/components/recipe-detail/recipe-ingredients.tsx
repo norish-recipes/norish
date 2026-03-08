@@ -2,6 +2,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 import { Button, Separator, useThemeColor } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 import { withUniwind } from 'uniwind';
 
 import type { RecipeIngredientsDto } from '@norish/shared/contracts';
@@ -102,6 +103,7 @@ export function RecipeIngredients({
   ] as const);
   const [internalServings, setInternalServings] = useState(baseServings);
   const { mode, toggleMode } = useAmountDisplayPreference();
+  const intl = useIntl();
 
   // Support both controlled and uncontrolled modes
   const servings = controlledServings ?? internalServings;
@@ -114,7 +116,7 @@ export function RecipeIngredients({
       {/* Header row: title + toggle + servings control */}
       <View style={styles.headerRow}>
         <Text style={[styles.title, { color: foregroundColor }]}>
-          Ingredients
+          {intl.formatMessage({ id: 'recipes.detail.ingredients' })}
         </Text>
         <View style={styles.headerControls}>
           <Button

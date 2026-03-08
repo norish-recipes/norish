@@ -3,6 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button, Separator, useThemeColor } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 import { withUniwind } from 'uniwind';
 
 const StyledEntypo = withUniwind(Entypo);
@@ -14,7 +15,7 @@ const StyledEntypo = withUniwind(Entypo);
 const MACROS = [
   {
     key: 'calories' as const,
-    label: 'Calories',
+    labelKey: 'recipes.nutrition.calories',
     unit: 'kcal',
     iconName: 'flame' as const,
     color: '#f97316', // orange-500
@@ -22,7 +23,7 @@ const MACROS = [
   },
   {
     key: 'fat' as const,
-    label: 'Fat',
+    labelKey: 'recipes.nutrition.fat',
     unit: 'g',
     iconName: 'water-outline' as const,
     color: '#eab308', // yellow-500
@@ -30,7 +31,7 @@ const MACROS = [
   },
   {
     key: 'carbs' as const,
-    label: 'Carbs',
+    labelKey: 'recipes.nutrition.carbs',
     unit: 'g',
     iconName: 'cube-outline' as const,
     color: '#3b82f6', // blue-500
@@ -38,7 +39,7 @@ const MACROS = [
   },
   {
     key: 'protein' as const,
-    label: 'Protein',
+    labelKey: 'recipes.nutrition.protein',
     unit: 'g',
     iconName: 'flash' as const,
     color: '#f43f5e', // rose-500
@@ -126,6 +127,7 @@ export function RecipeNutrition({ nutrition }: RecipeNutritionProps) {
     'foreground',
     'muted',
   ] as const);
+  const intl = useIntl();
 
   const [portions, setPortions] = useState(1);
 
@@ -145,7 +147,7 @@ export function RecipeNutrition({ nutrition }: RecipeNutritionProps) {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={[styles.title, { color: foregroundColor }]}>
-          Nutrition
+          {intl.formatMessage({ id: 'recipes.nutrition.title' })}
         </Text>
         <PortionControl portions={portions} onChange={setPortions} />
       </View>
@@ -173,7 +175,7 @@ export function RecipeNutrition({ nutrition }: RecipeNutritionProps) {
                   <Text
                     style={[styles.macroLabel, { color: foregroundColor }]}
                   >
-                    {macro.label}
+                    {intl.formatMessage({ id: macro.labelKey })}
                   </Text>
                 </View>
                 <Text style={[styles.macroValue, { color: foregroundColor }]}>
@@ -191,8 +193,7 @@ export function RecipeNutrition({ nutrition }: RecipeNutritionProps) {
       </View>
       {portions !== 1 && (
         <Text style={[styles.portionHint, { color: mutedColor }]}>
-          Showing for {formatPortions(portions)}{' '}
-          {portions === 1 ? 'serving' : 'servings'}
+          {intl.formatMessage({ id: 'recipes.nutrition.showingPortions' }, { count: portions })}
         </Text>
       )}
     </View>

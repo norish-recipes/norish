@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { useThemeColor } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import type { MappedStep } from '@/lib/recipes/map-recipe-to-steps';
 
@@ -29,6 +30,7 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
       'muted',
       'success',
     ] as const);
+  const intl = useIntl();
 
   // Carousel state
   const [carouselVisible, setCarouselVisible] = useState(false);
@@ -66,7 +68,7 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
   return (
     <View style={styles.container}>
       <Text style={[styles.title, { color: foregroundColor }]}>
-        Instructions
+        {intl.formatMessage({ id: 'recipes.detail.instructions' })}
       </Text>
 
       {steps.map((step, index) => {

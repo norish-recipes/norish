@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useThemeColor } from 'heroui-native';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 type RecipeRatingProps = {
   /** Recipe ID to fetch/persist rating for */
@@ -22,8 +23,9 @@ export function RecipeRating({
   recipeId,
   value,
   onRate,
-  prompt = 'How would you rate this recipe?',
+  prompt,
 }: RecipeRatingProps) {
+  const intl = useIntl();
   const [hoveredStar, setHoveredStar] = useState(0);
   const [foregroundColor, mutedColor, warningColor, surfaceSecondaryColor] =
     useThemeColor([
@@ -39,7 +41,9 @@ export function RecipeRating({
     <View
       style={[styles.container, { backgroundColor: surfaceSecondaryColor }]}
     >
-      <Text style={[styles.prompt, { color: mutedColor }]}>{prompt}</Text>
+      <Text style={[styles.prompt, { color: mutedColor }]}>
+        {prompt ?? intl.formatMessage({ id: 'recipes.detail.ratingPrompt' })}
+      </Text>
       <View style={styles.starsRow}>
         {[1, 2, 3, 4, 5].map((star) => (
           <Pressable

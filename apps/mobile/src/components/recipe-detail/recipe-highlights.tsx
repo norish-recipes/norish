@@ -1,6 +1,7 @@
 import { useThemeColor } from 'heroui-native';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 type HighlightItemProps = {
   label: string;
@@ -43,11 +44,12 @@ export function RecipeHighlights({
   cookMinutes,
   totalMinutes,
 }: RecipeHighlightsProps) {
+  const intl = useIntl();
   const items: { label: string; value: string }[] = [];
 
-  if (prepMinutes != null) items.push({ label: 'Prep', value: `${prepMinutes}m` });
-  if (cookMinutes != null) items.push({ label: 'Cook', value: `${cookMinutes}m` });
-  if (totalMinutes != null) items.push({ label: 'Total', value: `${totalMinutes}m` });
+  if (prepMinutes != null) items.push({ label: intl.formatMessage({ id: 'recipes.timeInputs.prep' }), value: `${prepMinutes}m` });
+  if (cookMinutes != null) items.push({ label: intl.formatMessage({ id: 'recipes.timeInputs.cook' }), value: `${cookMinutes}m` });
+  if (totalMinutes != null) items.push({ label: intl.formatMessage({ id: 'recipes.timeInputs.total' }), value: `${totalMinutes}m` });
 
   if (items.length === 0) return null;
 

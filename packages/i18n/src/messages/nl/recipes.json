@@ -42,6 +42,8 @@
     "total": "totaal",
     "planMeal": "Plannen",
     "recipeActions": "Recept acties",
+    "instructions": "Instructies",
+    "cook": "Koken",
     "switchToDecimal": "Toon decimalen",
     "switchToFraction": "Toon breuken"
   },
@@ -50,6 +52,9 @@
     "groceries": "Boodschappen",
     "edit": "Bewerken",
     "delete": "Verwijder",
+    "share": "Delen",
+    "visitOriginal": "Bekijk Origineel Recept",
+    "addToCalendar": "Toevoegen aan Agenda",
     "autoTag": "Auto-tag",
     "autoTagging": "Tags genereren...",
     "autoCategorize": "Auto Categoriseren",

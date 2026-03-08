@@ -42,6 +42,8 @@
     "total": "total",
     "planMeal": "Planifier un repas",
     "recipeActions": "Actions de la recette",
+    "instructions": "Instructions",
+    "cook": "Cuisiner",
     "switchToDecimal": "Afficher en décimales",
     "switchToFraction": "Afficher en fractions"
   },
@@ -50,6 +52,9 @@
     "groceries": "Courses",
     "edit": "Modifier",
     "delete": "Supprimer",
+    "share": "Partager",
+    "visitOriginal": "Voir la recette originale",
+    "addToCalendar": "Ajouter au calendrier",
     "autoTag": "Auto‑taguer",
     "autoTagging": "Génération des tags...",
     "autoCategorize": "Auto‑catégoriser",

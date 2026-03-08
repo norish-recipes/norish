@@ -4,6 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button, useThemeColor } from 'heroui-native';
 import React from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 import { withUniwind } from 'uniwind';
 
 const StyledEntypo = withUniwind(Entypo);
@@ -17,6 +18,7 @@ const StyledEntypo = withUniwind(Entypo);
  * - Groceries: icon-only square button
  */
 export function RecipeQuickActions({ onCook }: { onCook?: () => void }) {
+  const intl = useIntl();
   const [foregroundColor, accentColor, accentForegroundColor] = useThemeColor([
     'foreground',
     'accent',
@@ -33,7 +35,7 @@ export function RecipeQuickActions({ onCook }: { onCook?: () => void }) {
       >
         <AntDesign name="fire" size={16} color={accentForegroundColor} />
         <Text style={[styles.pillLabel, { color: accentForegroundColor }]}>
-          Cook
+          {intl.formatMessage({ id: 'recipes.detail.cook' })}
         </Text>
       </Button>
 
@@ -48,7 +50,7 @@ export function RecipeQuickActions({ onCook }: { onCook?: () => void }) {
       >
         <StyledEntypo name="plus" size={16} className="text-accent" />
         <Text style={[styles.pillLabel, { color: foregroundColor }]}>
-          Plan
+          {intl.formatMessage({ id: 'recipes.actions.plan' })}
         </Text>
       </Button>
 

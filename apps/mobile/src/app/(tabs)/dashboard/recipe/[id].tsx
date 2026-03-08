@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { useThemeColor } from 'heroui-native';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useIntl } from 'react-intl';
 
 import { GlassBackButton } from '@/components/recipe-detail/glass-back-button';
 import { RecipeActionsMenu } from '@/components/recipe-detail/recipe-actions-menu';
@@ -70,6 +71,7 @@ function RecipeDetailContent({ recipeId }: { recipeId: string }) {
 // ---------------------------------------------------------------------------
 
 function RecipeNotFound() {
+  const intl = useIntl();
   const [foregroundColor, mutedColor, backgroundColor] = useThemeColor([
     'foreground',
     'muted',
@@ -88,10 +90,10 @@ function RecipeNotFound() {
         }}
       />
       <Text style={[styles.notFoundTitle, { color: foregroundColor }]}>
-        Recipe not found
+        {intl.formatMessage({ id: 'recipes.detail.notFound' })}
       </Text>
       <Text style={[styles.notFoundSub, { color: mutedColor }]}>
-        This recipe may have been deleted or you don't have access.
+        {intl.formatMessage({ id: 'recipes.detail.notFoundMessage' })}
       </Text>
     </View>
   );
