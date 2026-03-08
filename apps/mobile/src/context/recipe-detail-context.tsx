@@ -1,4 +1,7 @@
-"use client";
+import { useMutation } from '@tanstack/react-query';
+import { TRPCClientError } from '@trpc/client';
+
+import { createRecipeDetailContext } from '@norish/shared-react/hooks';
 
 import {
   useAllergyDetection,
@@ -7,24 +10,20 @@ import {
   useAutoCategorizationMutation,
   useAutoTagging,
   useAutoTaggingMutation,
+  useFavoritesMutation,
   useNutritionMutation,
   useNutritionQuery,
   useNutritionSubscription,
   useRecipeQuery,
   useRecipeSubscription,
-} from "@/hooks/recipes";
-import { useActiveAllergies } from "@/hooks/user";
-import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
-import { useFavoritesMutation } from "@/hooks/favorites";
-import { useRecipesContext } from "@/context/recipes-context";
-import { useTRPC } from "@/app/providers/trpc-provider";
-import { useMutation } from "@tanstack/react-query";
-import { TRPCClientError } from "@trpc/client";
-
-import { createRecipeDetailContext } from "@norish/shared-react/hooks/recipe-detail";
+} from '@/hooks/recipes';
+import { useRatingQuery, useRatingsMutation } from '@/hooks/ratings';
+import { useActiveAllergies } from '@/hooks/user';
+import { useRecipesContext } from '@/context/recipes-context';
+import { useTRPC } from '@/providers/trpc-provider';
 
 const {
-  RecipeDetailProvider: RecipeContextProvider,
+  RecipeDetailProvider,
   useRecipeContext,
   useRecipeContextRequired,
 } = createRecipeDetailContext({
@@ -55,8 +54,8 @@ const {
   },
   useFavoritesMutation,
   isNotFoundError: (error: unknown) =>
-    error instanceof TRPCClientError && error.data?.code === "NOT_FOUND",
+    error instanceof TRPCClientError && error.data?.code === 'NOT_FOUND',
 });
 
-export { RecipeContextProvider, useRecipeContext, useRecipeContextRequired };
+export { RecipeDetailProvider, useRecipeContext, useRecipeContextRequired };
 

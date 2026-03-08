@@ -28,27 +28,37 @@ function VerticalDivider() {
 }
 
 type RecipeHighlightsProps = {
-  prepMinutes: number;
-  cookMinutes: number;
-  totalMinutes: number;
+  prepMinutes: number | null | undefined;
+  cookMinutes: number | null | undefined;
+  totalMinutes: number | null | undefined;
 };
 
 /**
  * Left-aligned prep/cook/total times with vertical separators between items.
  * Servings are handled separately next to the Ingredients heading.
+ * Only renders items that have values.
  */
 export function RecipeHighlights({
   prepMinutes,
   cookMinutes,
   totalMinutes,
 }: RecipeHighlightsProps) {
+  const items: { label: string; value: string }[] = [];
+
+  if (prepMinutes != null) items.push({ label: 'Prep', value: `${prepMinutes}m` });
+  if (cookMinutes != null) items.push({ label: 'Cook', value: `${cookMinutes}m` });
+  if (totalMinutes != null) items.push({ label: 'Total', value: `${totalMinutes}m` });
+
+  if (items.length === 0) return null;
+
   return (
     <View style={styles.container}>
-      <HighlightItem label="Prep" value={`${prepMinutes}m`} />
-      <VerticalDivider />
-      <HighlightItem label="Cook" value={`${cookMinutes}m`} />
-      <VerticalDivider />
-      <HighlightItem label="Total" value={`${totalMinutes}m`} />
+      {items.map((item, index) => (
+        <React.Fragment key={item.label}>
+          {index > 0 && <VerticalDivider />}
+          <HighlightItem label={item.label} value={item.value} />
+        </React.Fragment>
+      ))}
     </View>
   );
 }

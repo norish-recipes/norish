@@ -22,7 +22,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import type { MediaItem } from './dummy-data';
+import type { MediaItem } from '@/lib/recipes/map-recipe-to-media-items';
+
 import { MediaCarouselModal } from './media-carousel-modal';
 
 // ─── Props ───────────────────────────────────────────────────────────────────

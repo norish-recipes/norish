@@ -13,7 +13,10 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 import { withUniwind } from 'uniwind';
 
-import type { DummyIngredient } from '../dummy-data';
+import type { RecipeIngredientsDto } from '@norish/shared/contracts';
+import { formatAmount } from '@norish/shared/lib/format-amount';
+
+import { useAmountDisplayPreference } from '@/hooks/use-amount-display-preference';
 
 const StyledEntypo = withUniwind(Entypo);
 
@@ -40,7 +43,7 @@ function calcIncServings(servings: number): number {
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type CookModeIngredientsProps = {
-  ingredients: DummyIngredient[];
+  ingredients: RecipeIngredientsDto[];
   baseServings: number;
   servings: number;
   onServingsChange: (s: number) => void;
@@ -63,6 +66,7 @@ export function CookModeIngredients({
     'accent',
   ] as const);
 
+  const { mode: amountMode, toggleMode: toggleAmountMode } = useAmountDisplayPreference();
   const scale = servings / baseServings;
 
   // ── Gesture: swipe right → back to steps with rubber-banding ──────────────
@@ -118,6 +122,18 @@ export function CookModeIngredients({
             {intl.formatMessage({ id: 'recipes.cookMode.servings' })}
           </Text>
           <View className="flex-row items-center gap-3">
+            {/* Fraction / decimal toggle */}
+            <Button
+              variant="secondary"
+              size="sm"
+              isIconOnly
+              className="size-8 rounded-lg bg-surface-tertiary"
+              onPress={toggleAmountMode}
+            >
+              <Text className="text-xs font-semibold text-foreground">
+                {amountMode === 'fraction' ? '½' : '0.5'}
+              </Text>
+            </Button>
             <Button
               variant="secondary"
               size="sm"
@@ -155,10 +171,11 @@ export function CookModeIngredients({
 
         {/* Ingredient list */}
         {ingredients.map((item, index) => {
-          const isHeading = item.name.trim().startsWith('#');
+          const displayName = item.ingredientName ?? '';
+          const isHeading = displayName.trim().startsWith('#');
 
           if (isHeading) {
-            const headingText = item.name.trim().replace(/^#+\s*/, '');
+            const headingText = displayName.trim().replace(/^#+\s*/, '');
             return (
               <React.Fragment key={`heading-${index}`}>
                 {index > 0 && <View className="h-3" />}
@@ -182,18 +199,18 @@ export function CookModeIngredients({
 
           // Scale numeric amounts
           const scaledAmount =
-            item.amount && !isNaN(Number(item.amount))
-              ? formatServings(Number(item.amount) * scale)
-              : item.amount;
+            item.amount != null && !isNaN(Number(item.amount))
+              ? formatAmount(Number(item.amount) * scale, amountMode)
+              : null;
 
           // Strip markdown
-          const cleanName = item.name
+          const cleanName = displayName
             .replace(/\*\*(.+?)\*\*/g, '$1')
             .replace(/\*(.+?)\*/g, '$1')
             .replace(/\[(.+?)\]\(.+?\)/g, '$1');
 
           return (
-            <React.Fragment key={`${item.name}-${index}`}>
+            <React.Fragment key={`${item.id ?? displayName}-${index}`}>
               <View className="flex-row items-center py-3.5 gap-3">
                 <View
                   className="size-1.5 rounded-full shrink-0"
@@ -214,7 +231,7 @@ export function CookModeIngredients({
                 </Text>
               </View>
               {index < ingredients.length - 1 &&
-                !ingredients[index + 1]?.name.trim().startsWith('#') && (
+                !(ingredients[index + 1]?.ingredientName ?? '').trim().startsWith('#') && (
                   <Separator className="opacity-20" />
                 )}
             </React.Fragment>

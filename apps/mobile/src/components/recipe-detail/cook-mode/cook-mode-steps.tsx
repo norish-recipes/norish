@@ -13,7 +13,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import type { DummyStep } from '../dummy-data';
+import type { MappedStep } from '@/lib/recipes/map-recipe-to-steps';
+
 import { SmartText } from '../text-renderer';
 
 const SLIDE_DISTANCE = 40;
@@ -25,7 +26,7 @@ const SWIPE_H_THRESHOLD = 50;
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 type CookModeStepsProps = {
-  steps: DummyStep[];
+  steps: MappedStep[];
   recipeId: string;
   recipeName?: string;
   currentStep: number;
@@ -38,10 +39,10 @@ type ResolvedStep = {
   stepNumber: number;
   text: string;
   heading?: string;
-  images?: DummyStep['images'];
+  images?: MappedStep['images'];
 };
 
-function resolveSteps(steps: DummyStep[]): ResolvedStep[] {
+function resolveSteps(steps: MappedStep[]): ResolvedStep[] {
   const resolved: ResolvedStep[] = [];
   let currentHeading: string | undefined;
   let stepNumber = 0;

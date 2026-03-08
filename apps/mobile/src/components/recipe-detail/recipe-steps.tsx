@@ -1,16 +1,19 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
+import * as Haptics from 'expo-haptics';
 import { useThemeColor } from 'heroui-native';
 import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { DummyStep } from './dummy-data';
+import type { MappedStep } from '@/lib/recipes/map-recipe-to-steps';
+
 import { MediaCarouselModal } from './media-carousel-modal';
 import { SmartText } from './text-renderer';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 type RecipeStepsProps = {
-  steps: DummyStep[];
+  steps: MappedStep[];
   recipeId: string;
   recipeName?: string;
 };
@@ -18,18 +21,35 @@ type RecipeStepsProps = {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
-  const [foregroundColor, accentColor, accentForegroundColor, mutedColor] =
+  const [foregroundColor, accentColor, accentForegroundColor, mutedColor, successColor] =
     useThemeColor([
       'foreground',
       'accent',
       'accent-foreground',
       'muted',
+      'success',
     ] as const);
 
   // Carousel state
   const [carouselVisible, setCarouselVisible] = useState(false);
   const [carouselImages, setCarouselImages] = useState<string[]>([]);
   const [carouselStartIndex, setCarouselStartIndex] = useState(0);
+
+  // Step completion state
+  const [doneSteps, setDoneSteps] = useState<Set<number>>(() => new Set());
+
+  const toggleStep = useCallback((index: number) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setDoneSteps((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  }, []);
 
   const openCarousel = useCallback(
     (images: string[], startIndex: number) => {
@@ -67,34 +87,73 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
         const currentNumber = stepNumber;
         const stepImages = step.images ?? [];
         const imageUris = stepImages.map((si) => si.image);
+        const isDone = doneSteps.has(index);
 
         return (
-          <View key={index} style={styles.stepRow}>
-            {/* Step number badge */}
-            <View style={[styles.stepNumber, { backgroundColor: accentColor }]}>
-              <Text
-                style={[
-                  styles.stepNumberText,
-                  { color: accentForegroundColor },
-                ]}
-              >
-                {currentNumber}
-              </Text>
+          <Pressable
+            key={index}
+            onPress={() => toggleStep(index)}
+            style={({ pressed }) => [
+              styles.stepRow,
+              pressed && styles.stepRowPressed,
+            ]}
+          >
+            {/* Step number badge — shows check icon when done */}
+            <View
+              style={[
+                styles.stepNumber,
+                {
+                  backgroundColor: isDone ? successColor : accentColor,
+                },
+              ]}
+            >
+              {isDone ? (
+                <Ionicons
+                  name="checkmark"
+                  size={16}
+                  color={accentForegroundColor}
+                />
+              ) : (
+                <Text
+                  style={[
+                    styles.stepNumberText,
+                    { color: accentForegroundColor },
+                  ]}
+                >
+                  {currentNumber}
+                </Text>
+              )}
             </View>
 
             {/* Step content */}
-            <View style={styles.stepContent}>
-              <SmartText
-                style={[styles.stepText, { color: foregroundColor }]}
-                highlightTimers
-                timerContext={{
-                  recipeId,
-                  recipeName,
-                  stepIndex: index,
-                }}
-              >
-                {step.text}
-              </SmartText>
+            <View style={[styles.stepContent, isDone && styles.stepContentDone]}>
+              {isDone ? (
+                // When done, render plain text with strike-through (no timer highlight)
+                <Text
+                  style={[
+                    styles.stepText,
+                    styles.stepTextDone,
+                    { color: mutedColor },
+                  ]}
+                >
+                  {step.text
+                    .replace(/\*\*(.+?)\*\*/g, '$1')
+                    .replace(/\*(.+?)\*/g, '$1')
+                    .replace(/\[(.+?)\]\(.+?\)/g, '$1')}
+                </Text>
+              ) : (
+                <SmartText
+                  style={[styles.stepText, { color: foregroundColor }]}
+                  highlightTimers
+                  timerContext={{
+                    recipeId,
+                    recipeName,
+                    stepIndex: index,
+                  }}
+                >
+                  {step.text}
+                </SmartText>
+              )}
 
               {/* Step images — thumbnails that open the carousel */}
               {stepImages.length > 0 && (
@@ -102,11 +161,15 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
                   {stepImages.map((img, imgIdx) => (
                     <Pressable
                       key={imgIdx}
-                      onPress={() => openCarousel(imageUris, imgIdx)}
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        openCarousel(imageUris, imgIdx);
+                      }}
                       style={({ pressed }) => [
                         styles.imageThumbnail,
                         { borderColor: `${mutedColor}30` },
                         pressed && styles.imageThumbnailPressed,
+                        isDone && styles.imageThumbnailDone,
                       ]}
                     >
                       <Image
@@ -128,7 +191,7 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
                 </View>
               )}
             </View>
-          </View>
+          </Pressable>
         );
       })}
 
@@ -168,6 +231,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginBottom: 20,
+    borderRadius: 12,
+    paddingVertical: 2,
+    paddingHorizontal: 2,
+  },
+  stepRowPressed: {
+    opacity: 0.7,
   },
   stepNumber: {
     width: 28,
@@ -185,9 +254,15 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 10,
   },
+  stepContentDone: {
+    opacity: 0.5,
+  },
   stepText: {
     fontSize: 15,
     lineHeight: 22,
+  },
+  stepTextDone: {
+    textDecorationLine: 'line-through',
   },
   imageRow: {
     flexDirection: 'row',
@@ -204,6 +279,9 @@ const styles = StyleSheet.create({
   imageThumbnailPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.95 }],
+  },
+  imageThumbnailDone: {
+    opacity: 0.4,
   },
   imageBadge: {
     position: 'absolute',

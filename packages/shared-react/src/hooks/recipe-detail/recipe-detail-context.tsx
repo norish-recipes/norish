@@ -41,6 +41,12 @@ export type RecipeDetailContextValue = {
   // Allergies list
   allergies: string[];
   allergySet: Set<string>;
+  // Rating
+  userRating: number | null;
+  rateRecipe: (rating: number) => void;
+  // Favorite
+  liked: boolean;
+  toggleLiked: () => void;
 };
 
 export type RecipeDetailAdapters = {
@@ -76,6 +82,10 @@ export type RecipeDetailAdapters = {
       opts: { onSuccess: () => void; onError: () => void }
     ) => void;
   };
+  useRatingQuery: (recipeId: string) => { userRating: number | null };
+  useRatingsMutation: () => { rateRecipe: (recipeId: string, rating: number) => void };
+  useFavoriteIds: () => string[] | undefined;
+  useFavoritesMutation: () => { toggleFavorite: (recipeId: string) => void };
   isNotFoundError: (error: unknown) => boolean;
 };
 
@@ -163,6 +173,26 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
 
     // Mutation for converting measurements
     const convertMutation = adapters.useConvertMutation();
+
+    // --- Ratings ---
+    const { userRating } = adapters.useRatingQuery(recipeId);
+    const { rateRecipe: rateRecipeRaw } = adapters.useRatingsMutation();
+    const rateRecipe = useCallback(
+      (rating: number) => rateRecipeRaw(recipeId, rating),
+      [recipeId, rateRecipeRaw]
+    );
+
+    // --- Favorites ---
+    const favoriteIds = adapters.useFavoriteIds();
+    const { toggleFavorite: toggleFavoriteRaw } = adapters.useFavoritesMutation();
+    const liked = useMemo(
+      () => favoriteIds?.includes(recipeId) ?? false,
+      [favoriteIds, recipeId]
+    );
+    const toggleLiked = useCallback(
+      () => toggleFavoriteRaw(recipeId),
+      [recipeId, toggleFavoriteRaw]
+    );
 
     // Check if error is a 404
     const isNotFound = adapters.isNotFoundError(error);
@@ -289,6 +319,10 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         triggerAllergyDetection,
         allergies,
         allergySet,
+        userRating,
+        rateRecipe,
+        liked,
+        toggleLiked,
       }),
       [
         recipe,
@@ -311,6 +345,10 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         triggerAllergyDetection,
         allergies,
         allergySet,
+        userRating,
+        rateRecipe,
+        liked,
+        toggleLiked,
       ]
     );
 

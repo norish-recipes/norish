@@ -22,7 +22,9 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { DummyIngredient, DummyStep } from '../dummy-data';
+import type { RecipeIngredientsDto } from '@norish/shared/contracts';
+
+import type { MappedStep } from '../../../lib/recipes/map-recipe-to-steps';
 import { TimerFAB } from '../timer-fab';
 
 import { CookModeIngredients } from './cook-mode-ingredients';
@@ -37,8 +39,8 @@ const TAB_ANIM_DURATION = 250;
 type CookModeModalProps = {
   visible: boolean;
   onClose: () => void;
-  steps: DummyStep[];
-  ingredients: DummyIngredient[];
+  steps: MappedStep[];
+  ingredients: RecipeIngredientsDto[];
   recipeId: string;
   recipeName: string;
   baseServings: number;

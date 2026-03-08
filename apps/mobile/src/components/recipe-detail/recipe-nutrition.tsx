@@ -5,8 +5,6 @@ import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 
-import type { DummyNutrition } from './dummy-data';
-
 const StyledEntypo = withUniwind(Entypo);
 
 // ---------------------------------------------------------------------------
@@ -115,7 +113,12 @@ function PortionControl({ portions, onChange }: PortionControlProps) {
 // ---------------------------------------------------------------------------
 
 type RecipeNutritionProps = {
-  nutrition: DummyNutrition;
+  nutrition: {
+    calories: number | null | undefined;
+    fat: string | number | null | undefined;
+    carbs: string | number | null | undefined;
+    protein: string | number | null | undefined;
+  };
 };
 
 export function RecipeNutrition({ nutrition }: RecipeNutritionProps) {
@@ -128,11 +131,11 @@ export function RecipeNutrition({ nutrition }: RecipeNutritionProps) {
 
   const values: Record<string, number | null> = {
     calories:
-      nutrition.calories != null ? nutrition.calories * portions : null,
-    fat: nutrition.fat != null ? nutrition.fat * portions : null,
-    carbs: nutrition.carbs != null ? nutrition.carbs * portions : null,
+      nutrition.calories != null ? Number(nutrition.calories) * portions : null,
+    fat: nutrition.fat != null ? Number(nutrition.fat) * portions : null,
+    carbs: nutrition.carbs != null ? Number(nutrition.carbs) * portions : null,
     protein:
-      nutrition.protein != null ? nutrition.protein * portions : null,
+      nutrition.protein != null ? Number(nutrition.protein) * portions : null,
   };
 
   const hasData = Object.values(values).some((v) => v != null);

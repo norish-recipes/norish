@@ -4,7 +4,11 @@ import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 
-import type { DummyIngredient } from './dummy-data';
+import type { RecipeIngredientsDto } from '@norish/shared/contracts';
+import { formatAmount } from '@norish/shared/lib/format-amount';
+
+import { useAmountDisplayPreference } from '@/hooks/use-amount-display-preference';
+
 import { SmartText } from './text-renderer';
 
 const StyledEntypo = withUniwind(Entypo);
@@ -73,11 +77,12 @@ function ServingsControl({ servings, onServingsChange }: ServingsControlProps) {
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Ingredients list
 // ---------------------------------------------------------------------------
 
 type RecipeIngredientsProps = {
-  ingredients: DummyIngredient[];
+  ingredients: RecipeIngredientsDto[];
   baseServings: number;
   /** Controlled servings value (optional — uses internal state if omitted) */
   servings?: number;
@@ -96,6 +101,7 @@ export function RecipeIngredients({
     'muted',
   ] as const);
   const [internalServings, setInternalServings] = useState(baseServings);
+  const { mode, toggleMode } = useAmountDisplayPreference();
 
   // Support both controlled and uncontrolled modes
   const servings = controlledServings ?? internalServings;
@@ -105,20 +111,35 @@ export function RecipeIngredients({
 
   return (
     <View style={styles.container}>
-      {/* Header row: title + servings control */}
+      {/* Header row: title + toggle + servings control */}
       <View style={styles.headerRow}>
         <Text style={[styles.title, { color: foregroundColor }]}>
           Ingredients
         </Text>
-        <ServingsControl servings={servings} onServingsChange={setServings} />
+        <View style={styles.headerControls}>
+          <Button
+            variant="secondary"
+            size="sm"
+            isIconOnly
+            className="size-7 rounded-lg bg-surface-tertiary"
+            onPress={toggleMode}
+          >
+            <Text className="text-xs font-semibold text-foreground">
+              {mode === 'fraction' ? '½' : '0.5'}
+            </Text>
+          </Button>
+          <ServingsControl servings={servings} onServingsChange={setServings} />
+        </View>
       </View>
 
       {/* Ingredient rows */}
       {ingredients.map((item, index) => {
+        const displayName = item.ingredientName ?? '';
+
         // ── Heading row (starts with #) ─────────────────────────────────
-        const isHeading = item.name.trim().startsWith('#');
+        const isHeading = displayName.trim().startsWith('#');
         if (isHeading) {
-          const headingText = item.name.trim().replace(/^#+\s*/, '');
+          const headingText = displayName.trim().replace(/^#+\s*/, '');
           return (
             <React.Fragment key={`heading-${index}`}>
               {index > 0 && <View style={styles.headingSpacer} />}
@@ -131,25 +152,25 @@ export function RecipeIngredients({
 
         // ── Regular ingredient ──────────────────────────────────────────
         const scaledAmount =
-          item.amount && !isNaN(Number(item.amount))
-            ? formatServings(Number(item.amount) * scale)
-            : item.amount;
+          item.amount != null && !isNaN(Number(item.amount))
+            ? formatAmount(Number(item.amount) * scale, mode)
+            : null;
 
         return (
-          <React.Fragment key={`${item.name}-${index}`}>
+          <React.Fragment key={`${item.id ?? displayName}-${index}`}>
             <View style={styles.row}>
               <SmartText
                 style={[styles.name, { color: foregroundColor }]}
                 highlightTimers
               >
-                {item.name}
+                {displayName}
               </SmartText>
               <Text style={[styles.amount, { color: mutedColor }]}>
                 {[scaledAmount, item.unit].filter(Boolean).join(' ')}
               </Text>
             </View>
             {index < ingredients.length - 1 &&
-              !ingredients[index + 1]?.name.trim().startsWith('#') && (
+              !(ingredients[index + 1]?.ingredientName ?? '').trim().startsWith('#') && (
                 <Separator />
               )}
           </React.Fragment>
@@ -168,6 +189,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  headerControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   title: {
     fontSize: 20,

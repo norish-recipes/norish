@@ -4,11 +4,13 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type RecipeRatingProps = {
-  /** Current rating value (1–5), or 0 if unrated. */
-  value: number;
-  /** Called when the user taps a star. */
+  /** Recipe ID to fetch/persist rating for */
+  recipeId: string;
+  /** Current user's rating value (0–5), 0 or null if unrated */
+  value: number | null;
+  /** Called when the user taps a star */
   onRate?: (rating: number) => void;
-  /** Optional text prompt shown above the stars. */
+  /** Optional text prompt shown above the stars */
   prompt?: string;
 };
 
@@ -17,6 +19,7 @@ type RecipeRatingProps = {
  * Filled stars up to the current value, outline for the rest.
  */
 export function RecipeRating({
+  recipeId,
   value,
   onRate,
   prompt = 'How would you rate this recipe?',
@@ -30,7 +33,7 @@ export function RecipeRating({
       'surface-secondary',
     ] as const);
 
-  const displayValue = hoveredStar || value;
+  const displayValue = hoveredStar || (value ?? 0);
 
   return (
     <View
