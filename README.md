@@ -94,6 +94,9 @@ _Note: AI feature speed can vary by provider, model, and region._
 
 ### Minimal Docker Compose
 
+For a full template, see [docker-compose.example.yml](docker/docker-compose.example.yml).
+
+
 ```yaml
 services:
   norish:
