@@ -118,7 +118,6 @@ services:
       # YT_DLP_BIN_DIR: /app/bin
 
       # First-user auth setup (choose one)
-      # PASSWORD_AUTH_ENABLED=false
       # OIDC_NAME: NoraId
       # OIDC_ISSUER: https://auth.example.com
       # OIDC_CLIENT_ID: <client-id>
