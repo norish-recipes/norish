@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @plugin "@norish/tailwind-config/hero";
-@source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
+@source "../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 @custom-variant dark (&:is(.dark *));
 
 /* Import our custom theme colors */
@@ -11,6 +11,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
