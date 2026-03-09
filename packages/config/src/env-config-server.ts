@@ -59,6 +59,7 @@ if (envPath) {
 
 const isBuild =
   process.env.SKIP_ENV_VALIDATION === "1" ||
+  process.env.VITEST === "true" ||
   process.env.NEXT_PHASE === "phase-production-build" ||
   process.env.NEXT_PHASE === "phase-export";
 
