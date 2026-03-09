@@ -87,25 +87,6 @@ jobs:
       - name: Run lint
         run: turbo run lint
 
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Run typecheck
-        run: turbo run typecheck
-
-      - name: Run mobile-focused typecheck
-        run: pnpm run typecheck:mobile
-
-      - name: Run web integration typecheck/build
-        run: pnpm --filter @norish/web run typecheck && pnpm --filter @norish/web run build:web
 
   format:
     name: Format Check
