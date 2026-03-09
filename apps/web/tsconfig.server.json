@@ -3,13 +3,13 @@
   "include": ["server/index.ts", "server/**/*"],
   "exclude": ["node_modules", ".next"],
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "ESNext",
     "target": "ES2022",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": false,
-    "noEmit": false,
+    "noEmit": true,
     "incremental": false
   }
 }

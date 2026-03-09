@@ -16,10 +16,11 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 README.md
-docker-compose*.yml
-Dockerfile*
+docker/docker-compose*.yml
+docker/Dockerfile*
 .dockerignore
 .github
+.turbo
 uploads/
 .sisyphus
 **/ios

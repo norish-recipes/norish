@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { addToast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import { sharedRecipeFamilyHooks } from "./shared-recipe-hooks";
 

@@ -19,7 +19,7 @@ import {
 import { useTranslations } from "next-intl";
 
 import { ALLOWED_OCR_MIME_SET, MAX_OCR_FILES } from "@norish/shared/contracts";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 interface ImportFromImageModalProps {
   isOpen: boolean;

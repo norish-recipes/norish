@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 
 import type { ServerConfigKey } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import type { FieldDef, ProviderKey, TestResult } from "./types";
 import { useAdminSettingsContext } from "../../context";

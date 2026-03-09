@@ -7,7 +7,7 @@
 
 services:
   norish:
-    image: norish:final
+    image: norish:local
     container_name: norish-app-test
     restart: unless-stopped
     ports:
@@ -25,7 +25,7 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
       chrome-headless:
         condition: service_started
 
@@ -60,6 +60,7 @@ services:
       - "--remote-debugging-address=0.0.0.0"
       - "--remote-debugging-port=3000"
       - "--headless"
+    shm_size: '256m'
 
   # Redis for real-time events
   redis:
@@ -68,6 +69,11 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   db_data:

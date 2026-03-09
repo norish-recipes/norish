@@ -1,7 +1,7 @@
 ##############################
 # Base image (minimal, no pnpm needed at runtime)
 ##############################
-FROM node:25-alpine AS base
+FROM node:25-alpine3.21 AS base
 
 # Security: upgrade all packages to latest versions to fix CVEs
 RUN apk upgrade --no-cache && \
@@ -53,7 +53,8 @@ COPY tooling/typescript/package.json ./tooling/typescript/package.json
 # patches (required for patchedDependencies in pnpm-workspace.yaml)
 COPY patches/ ./patches/
 
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 ##############################
 # Build stage
@@ -190,14 +191,13 @@ COPY --from=build --chown=${UID}:${GID} /app/packages/ ./packages/
 
 # Create upload and bin parent directories only.
 # Subdirectories (recipes/, avatars/, video-temp/) are created on-demand
-# by the app via ensureDir() — no need to hardcode the internal structure here.
 RUN mkdir -p /app/uploads /app/bin && \
     chown -R ${UID}:${GID} /app/uploads /app/bin
 
 # Copy pre-downloaded yt-dlp binary from dedicated build stage
 COPY --from=ytdlp --chown=${UID}:${GID} /ytdlp/yt-dlp /app/bin/yt-dlp
 
-USER node
+USER ${UID}
 
 EXPOSE 3000
 

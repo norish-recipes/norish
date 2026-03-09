@@ -68,7 +68,7 @@ services:
 
   # PostgreSQL Database
   db:
-    image: postgres:18-alpine
+    image: postgres:17-alpine
     container_name: norish-db
     restart: unless-stopped
     environment:
@@ -92,8 +92,7 @@ services:
       - "--remote-debugging-address=0.0.0.0"
       - "--remote-debugging-port=3000"
       - "--headless"
-    ports:
-      - "3003:3000"
+    shm_size: '256m'
 
   # Redis for real-time events
   redis:

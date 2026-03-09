@@ -5,7 +5,7 @@ import { addToast } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import { useArchiveImportQuery } from "./use-archive-import-query";
 

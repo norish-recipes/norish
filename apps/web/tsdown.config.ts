@@ -86,11 +86,5 @@ export default defineConfig({
     "parse-ingredient",
     "html-entities",
     "jsonrepair",
-    // --- UI (needed for SSR if imported server-side) ---
-    "framer-motion",
-    "@heroui/react",
-    "@heroui/system",
-    "mongodb",
-    "effect",
   ],
 });

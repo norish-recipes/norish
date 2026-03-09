@@ -4,7 +4,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { useTranslations } from "next-intl";
 
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import { useGroceriesCacheHelpers } from "./use-groceries-cache";
 

@@ -7,7 +7,7 @@ import { Input, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import type { ClaimMappingValues } from "./oidc-claim-mapping";
 import type { TestResult } from "./types";

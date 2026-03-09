@@ -18,7 +18,7 @@ import {
 import { useTranslations } from "next-intl";
 
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 interface ImportFromPasteModalProps {
   isOpen: boolean;

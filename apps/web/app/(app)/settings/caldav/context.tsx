@@ -19,7 +19,7 @@ import type {
   UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
 import type { CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 type SaveCaldavConfigInput = {
   serverUrl: string;

@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useTranslations } from "next-intl";
 
 import { createUserSettingsContext } from "@norish/shared-react/contexts";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useUserMutations } from "@/hooks/user/use-user-mutations";
 import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 

@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUser } from "@norish/shared-react/hooks";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useUserContext } from "@/context/user-context";
 
 export const sharedHouseholdHooks = createHouseholdHooks({

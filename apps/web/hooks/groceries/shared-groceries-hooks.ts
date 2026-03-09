@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUnitsQuery } from "@/hooks/config";
-import { showSafeErrorToast } from "@norish/shared/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export const sharedGroceriesHooks = createGroceriesHooks({
   useTRPC,
