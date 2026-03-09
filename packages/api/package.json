@@ -7,9 +7,11 @@
     ".": "./src/index.ts",
     "./logger": "./src/logger.ts",
     "./parser": "./src/parser/index.ts",
-    "./*": "./src/*"
+    "./ai/providers": "./src/ai/providers/index.ts",
+    "./*": "./src/*.ts"
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json --noCheck",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "typecheck": "tsc --noEmit --noCheck",

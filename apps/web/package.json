@@ -9,7 +9,7 @@
     "build:web": "next build",
     "build:server": "tsdown --config ./tsdown.config.ts",
     "update-sw": "node scripts/update-sw-version.js",
-    "start": "node ../../dist-server/index.cjs",
+    "start": "node ../../dist-server/index.mjs",
     "test": "vitest --config ./vitest.config.ts",
     "test:run": "vitest run --config ./vitest.config.ts",
     "test:coverage": "vitest run --coverage --config ./vitest.config.ts",

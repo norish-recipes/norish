@@ -14,6 +14,7 @@
     "./lib/*": "./src/lib/*.ts"
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json --noCheck",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "typecheck": "tsc --noEmit",

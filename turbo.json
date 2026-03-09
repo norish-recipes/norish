@@ -8,7 +8,7 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "dist-server/**", ".cache/**"]
+      "outputs": ["dist/**", "dist-server/**", ".cache/**", "**/*.tsbuildinfo"]
     },
     "build:server": {
       "dependsOn": ["^build:server"],
