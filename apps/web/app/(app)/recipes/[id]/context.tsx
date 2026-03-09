@@ -21,7 +21,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 
-import { createRecipeDetailContext } from "@norish/shared-react/hooks/recipe-detail";
+import { createRecipeDetailContext } from "@norish/shared-react/hooks";
 
 const {
   RecipeDetailProvider: RecipeContextProvider,

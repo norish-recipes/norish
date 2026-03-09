@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Server } from "node:http";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
-import { WebSocketServer } from "ws";
+import * as wsModule from "ws";
 
 import { trpcLogger } from "@norish/shared-server/logger";
 import { auth } from "@norish/auth/auth";
@@ -23,9 +23,13 @@ declare module "node:http" {
   }
 }
 
+// ws exports differ between ESM (named exports) and CJS (default export with Server)
+const WsServer = (wsModule as any).WebSocketServer ?? (wsModule as any).Server ?? (wsModule as any).default?.Server;
+type WsServerType = InstanceType<typeof WsServer>;
+
 // Use globalThis to survive HMR in development
 const globalForWs = globalThis as unknown as {
-  trpcWss: WebSocketServer | null;
+  trpcWss: WsServerType | null;
   trpcHandler: ReturnType<typeof applyWSSHandler> | null;
 };
 
@@ -39,7 +43,7 @@ export function initTrpcWebSocket(server: Server) {
     return;
   }
 
-  trpcWss = new WebSocketServer({ noServer: true });
+  trpcWss = new WsServer({ noServer: true });
   globalForWs.trpcWss = trpcWss;
 
   trpcHandler = applyWSSHandler({

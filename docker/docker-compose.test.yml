@@ -1,0 +1,75 @@
+# Test the locally-built Docker image with full infrastructure.
+# Usage:
+#   1. Build the image first:  docker build -f docker/Dockerfile -t norish:local .
+#   2. Run everything:         docker compose -f docker/docker-compose.test.yml up
+#   3. Open:                   http://localhost:3000
+#   4. Stop:                   docker compose -f docker/docker-compose.test.yml down
+
+services:
+  norish:
+    image: norish:final
+    container_name: norish-app-test
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - norish_uploads:/app/uploads
+    environment:
+      DATABASE_URL: postgres://postgres:norish@db:5432/norish
+      REDIS_URL: redis://redis:6379
+      AUTH_URL: http://localhost:3000
+      MASTER_KEY: X4fjLgB8egCPwlOQW8iC3JGXAtUIMUOGmk/y29n+YSw=
+      CHROME_WS_ENDPOINT: ws://chrome-headless:3000
+      PASSWORD_AUTH_ENABLED: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      chrome-headless:
+        condition: service_started
+
+  # PostgreSQL Database
+  db:
+    image: postgres:17-alpine
+    container_name: norish-db-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: norish
+      POSTGRES_DB: norish
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Headless Chrome for recipe scraping
+  chrome-headless:
+    image: zenika/alpine-chrome:latest
+    container_name: chrome-headless-test
+    restart: unless-stopped
+    command:
+      - "--no-sandbox"
+      - "--disable-gpu"
+      - "--disable-dev-shm-usage"
+      - "--remote-debugging-address=0.0.0.0"
+      - "--remote-debugging-port=3000"
+      - "--headless"
+
+  # Redis for real-time events
+  redis:
+    image: redis:8.6.0
+    container_name: norish-redis-test
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+volumes:
+  db_data:
+  norish_uploads:
+  redis_data:
