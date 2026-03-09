@@ -7,16 +7,14 @@
 
 import type { Job } from "bullmq";
 
-import type { PolicyEmitContext } from "@norish/trpc/helpers";
 import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import type { PolicyEmitContext } from "@norish/trpc/helpers";
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import { deleteRecipeImagesDir } from "@norish/api/downloader";
 import { createLogger } from "@norish/api/logger";
 import { extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
-import { emitByPolicy } from "@norish/trpc/helpers";
-import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 import {
   getAIConfig,
   getRecipePermissionPolicy,
@@ -28,6 +26,8 @@ import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getQueues } from "@norish/queue/registry";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
+import { emitByPolicy } from "@norish/trpc/helpers";
+import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";

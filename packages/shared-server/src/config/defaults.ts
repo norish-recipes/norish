@@ -1,11 +1,14 @@
 import type { ServerConfigKey } from "@norish/db/zodSchemas/server-config";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
+import { DEFAULT_LOCALE_CONFIG } from "@norish/config/server-config-loader";
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
-import { DEFAULT_LOCALE_CONFIG } from "@norish/config/server-config-loader";
-import { DEFAULT_RECIPE_PERMISSION_POLICY, ServerConfigKeys } from "@norish/db/zodSchemas/server-config";
+import {
+  DEFAULT_RECIPE_PERMISSION_POLICY,
+  ServerConfigKeys,
+} from "@norish/db/zodSchemas/server-config";
 
 import { loadDefaultPrompts } from "../ai/prompts/loader";
 

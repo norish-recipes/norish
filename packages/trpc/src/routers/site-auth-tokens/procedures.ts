@@ -1,10 +1,10 @@
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   createSiteAuthToken,
   deleteSiteAuthToken,
   getTokensByUserId,
   updateSiteAuthToken,
 } from "@norish/db/repositories/site-auth-tokens";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   CreateSiteAuthTokenInputSchema,
   DeleteSiteAuthTokenInputSchema,

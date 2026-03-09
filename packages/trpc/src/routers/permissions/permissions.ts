@@ -1,4 +1,3 @@
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import {
   getAutoTaggingMode,
@@ -6,6 +5,7 @@ import {
   isAIEnabled,
 } from "@norish/config/server-config-loader";
 import { isUserServerAdmin } from "@norish/db";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";

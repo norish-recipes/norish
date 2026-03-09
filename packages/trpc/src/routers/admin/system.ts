@@ -1,14 +1,14 @@
 import { z } from "zod";
 
 import type { ServerConfigKey } from "@norish/config/zod/server-config";
-import { trpcLogger as log } from "@norish/shared-server/logger";
-import { getDefaultConfigValue } from "@norish/shared-server/config/defaults";
 import {
   SchedulerCleanupMonthsSchema,
   SENSITIVE_CONFIG_KEYS,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
 import { setConfig } from "@norish/db/repositories/server-config";
+import { getDefaultConfigValue } from "@norish/shared-server/config/defaults";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";

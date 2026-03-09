@@ -3,9 +3,9 @@ import type { Server } from "node:http";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import * as wsModule from "ws";
 
-import { trpcLogger } from "@norish/shared-server/logger";
 import { auth } from "@norish/auth/auth";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { trpcLogger } from "@norish/shared-server/logger";
 
 import {
   registerConnection,
@@ -24,7 +24,10 @@ declare module "node:http" {
 }
 
 // ws exports differ between ESM (named exports) and CJS (default export with Server)
-const WsServer = (wsModule as any).WebSocketServer ?? (wsModule as any).Server ?? (wsModule as any).default?.Server;
+const WsServer =
+  (wsModule as any).WebSocketServer ??
+  (wsModule as any).Server ??
+  (wsModule as any).default?.Server;
 type WsServerType = InstanceType<typeof WsServer>;
 
 // Use globalThis to survive HMR in development

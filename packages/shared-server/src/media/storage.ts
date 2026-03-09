@@ -6,9 +6,9 @@ import convert from "heic-convert";
 import sharp from "sharp";
 import { v5 as uuidv5 } from "uuid";
 
-import { serverLogger as log } from "@norish/shared-server/logger";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getMaxVideoFileSize } from "@norish/config/server-config-loader";
+import { serverLogger as log } from "@norish/shared-server/logger";
 
 // TODO: This file needs a lot of cleaning up
 // Lots of AI generated code to get heic-convert working.

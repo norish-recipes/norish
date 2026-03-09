@@ -5,8 +5,6 @@ import type {
   HouseholdAdminSettingsDto,
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
-import { trpcLogger as log } from "@norish/shared-server/logger";
-import { permissionsEmitter } from "../permissions/emitter";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   addUserToHousehold,
@@ -25,6 +23,7 @@ import {
   invalidateHouseholdCache,
   invalidateHouseholdCacheForUsers,
 } from "@norish/db/cached-household";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   HouseholdNameSchema,
   JoinCodeSchema,
@@ -36,6 +35,7 @@ import type { HouseholdUserInfo } from "./types";
 import { emitConnectionInvalidation } from "../../connection-manager";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { permissionsEmitter } from "../permissions/emitter";
 import { householdEmitter } from "./emitter";
 
 /**

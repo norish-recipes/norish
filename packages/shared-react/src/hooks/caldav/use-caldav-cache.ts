@@ -22,7 +22,10 @@ export function createUseCaldavCache({ useTRPC }: CreateCaldavHooksOptions) {
           prev: UserCaldavConfigWithoutPasswordDto | null | undefined
         ) => UserCaldavConfigWithoutPasswordDto | null | undefined
       ) => {
-        queryClient.setQueryData<UserCaldavConfigWithoutPasswordDto | null>(configQueryKey, updater);
+        queryClient.setQueryData<UserCaldavConfigWithoutPasswordDto | null>(
+          configQueryKey,
+          updater
+        );
       },
       [queryClient, configQueryKey]
     );

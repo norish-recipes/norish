@@ -1,7 +1,6 @@
+import type { CreateRecipeHooksOptions } from "./types";
 import { createDashboardRecipeHooks } from "./dashboard";
 import { createRecipeFamilyHooks } from "./recipe";
-
-import type { CreateRecipeHooksOptions } from "./types";
 
 export type { CreateRecipeHooksOptions } from "./types";
 

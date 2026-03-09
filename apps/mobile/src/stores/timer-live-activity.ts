@@ -1,6 +1,6 @@
 import { createClientLogger } from '@norish/shared/lib/logger';
 
-import type { TimerStatus } from './timers';
+import type { TimerStatus } from './timer-types';
 
 const logger = createClientLogger('timer-live-activity');
 

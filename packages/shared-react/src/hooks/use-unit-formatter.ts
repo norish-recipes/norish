@@ -27,7 +27,9 @@ export function useUnitFormatter({ locale, units }: UnitFormatterAdapters) {
     const formattedAmount = amount % 1 === 0 ? amount.toString() : amount.toFixed(1);
     const needsSpace = localizedUnit.length > 2;
 
-    return needsSpace ? `${formattedAmount} ${localizedUnit}` : `${formattedAmount}${localizedUnit}`;
+    return needsSpace
+      ? `${formattedAmount} ${localizedUnit}`
+      : `${formattedAmount}${localizedUnit}`;
   };
 
   return {

@@ -1,7 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   checkStoreNameExistsInHousehold,
@@ -13,6 +12,7 @@ import {
   reorderStores,
   updateStore,
 } from "@norish/db/repositories/stores";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   StoreCreateSchema,
   StoreDeleteSchema,

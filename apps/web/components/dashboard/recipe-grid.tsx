@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useContainerColumns } from "@/hooks/use-container-columns";
-import { useScrollRestoration } from "@norish/shared-react/hooks";
 import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
 
+import { useScrollRestoration } from "@norish/shared-react/hooks";
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import RecipeCardSkeleton from "../skeleton/recipe-card-skeleton";

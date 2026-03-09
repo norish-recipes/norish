@@ -5,7 +5,6 @@ import type {
   PlannedItemWithRecipePayload,
   SlotItemSortUpdate,
 } from "@norish/shared/contracts/zod";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   createPlannedItem,
@@ -17,6 +16,7 @@ import {
   moveItem,
   updatePlannedItem,
 } from "@norish/db/repositories/planned-items";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";

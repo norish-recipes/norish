@@ -1,10 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { addToast } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import { sharedRecipeFamilyHooks } from "./shared-recipe-hooks";
 

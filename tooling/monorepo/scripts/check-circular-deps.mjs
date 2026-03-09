@@ -13,6 +13,8 @@ export const DEFAULT_TARGETS = [
   "packages/i18n",
   "packages/queue",
   "packages/shared",
+  "packages/shared-react",
+  "packages/shared-server",
   "packages/trpc",
   "packages/ui",
 ];
@@ -29,6 +31,8 @@ export function buildMadgeArgs(targets) {
     "--json",
     "--extensions",
     "ts,tsx",
+    "--exclude",
+    "dist/",
     "--ts-config",
     "tooling/typescript/base.json",
     ...targets,

@@ -3,7 +3,12 @@
 import { sharedGroceriesHooks } from "./shared-groceries-hooks";
 
 export const useGroceriesQuery = sharedGroceriesHooks.useGroceriesQuery;
-export type { GroceriesData, GroceriesQueryResult, RecipeMap, RecipeInfo } from "@norish/shared-react/hooks";
+export type {
+  GroceriesData,
+  GroceriesQueryResult,
+  RecipeMap,
+  RecipeInfo,
+} from "@norish/shared-react/hooks";
 
 export const useGroceriesMutations = sharedGroceriesHooks.useGroceriesMutations;
 export type { GroceriesMutationsResult, GroceryCreateData } from "@norish/shared-react/hooks";

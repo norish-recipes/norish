@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
-import { useDirtyState } from "@norish/shared-react/hooks";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Input, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { useDirtyState } from "@norish/shared-react/hooks";
 
 import type { ClaimMappingValues } from "./oidc-claim-mapping";
 import type { TestResult } from "./types";

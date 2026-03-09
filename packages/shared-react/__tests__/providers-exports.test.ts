@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { createTRPCProviderBundle } from "@norish/shared-react/providers";
 
 describe("providers exports", () => {

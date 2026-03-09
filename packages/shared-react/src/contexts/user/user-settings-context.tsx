@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext } from "react";
 
-import type { ApiKeyMetadataDto } from "@norish/trpc";
 import type { User } from "@norish/shared/contracts";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
+import type { ApiKeyMetadataDto } from "@norish/trpc";
 
 export type UserSettingsContextValue = {
   user: User | null;
@@ -42,11 +42,17 @@ type UserMutationsAdapter = {
   uploadAvatar: (file: File) => Promise<{ success: boolean; user?: User; error?: string }>;
   deleteAvatar: () => Promise<{ success: boolean; user?: User; error?: string }>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
-  createApiKey: (name?: string) => Promise<{ success: boolean; key?: string; metadata?: ApiKeyMetadataDto; error?: string }>;
+  createApiKey: (
+    name?: string
+  ) => Promise<{ success: boolean; key?: string; metadata?: ApiKeyMetadataDto; error?: string }>;
   deleteApiKey: (keyId: string) => Promise<{ success: boolean; error?: string }>;
   toggleApiKey: (keyId: string, enabled: boolean) => Promise<{ success: boolean; error?: string }>;
-  setAllergies: (allergies: string[]) => Promise<{ success: boolean; allergies?: string[]; error?: string }>;
-  updatePreferences: (preferences: Partial<UserPreferencesDto>) => Promise<{ success: boolean; preferences?: UserPreferencesDto; error?: string }>;
+  setAllergies: (
+    allergies: string[]
+  ) => Promise<{ success: boolean; allergies?: string[]; error?: string }>;
+  updatePreferences: (
+    preferences: Partial<UserPreferencesDto>
+  ) => Promise<{ success: boolean; preferences?: UserPreferencesDto; error?: string }>;
   isUpdatingName: boolean;
   isUploadingAvatar: boolean;
   isDeletingAvatar: boolean;

@@ -5,7 +5,6 @@
  *
  * tRPC-based hooks for CalDAV configuration and sync status management.
  */
-
 import { sharedCaldavHooks } from "./shared-caldav-hooks";
 
 // Queries
@@ -31,7 +30,8 @@ export type {
 // Subscriptions
 export const useCaldavSubscription = sharedCaldavHooks.useCaldavSubscription;
 export const useCaldavItemStatusSubscription = sharedCaldavHooks.useCaldavItemStatusSubscription;
-export const useCaldavSyncCompleteSubscription = sharedCaldavHooks.useCaldavSyncCompleteSubscription;
+export const useCaldavSyncCompleteSubscription =
+  sharedCaldavHooks.useCaldavSyncCompleteSubscription;
 
 // Cache Helpers
 export const useCaldavCacheHelpers = sharedCaldavHooks.useCaldavCacheHelpers;

@@ -6,7 +6,6 @@ import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitch } from "@/components/shared/language-switch";
 import { useUserContext } from "@/context/user-context";
 import { useVersionQuery } from "@/hooks/config";
-import { useUserAvatar } from "@norish/shared-react/hooks";
 import {
   ArrowDownTrayIcon,
   ArrowLeftStartOnRectangleIcon,
@@ -19,6 +18,7 @@ import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/d
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import { useUserAvatar } from "@norish/shared-react/hooks";
 import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
 
 import { ThemeSwitch } from "./theme-switch";

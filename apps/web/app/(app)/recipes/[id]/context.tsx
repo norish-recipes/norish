@@ -1,5 +1,9 @@
 "use client";
 
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { useRecipesContext } from "@/context/recipes-context";
+import { useFavoritesMutation } from "@/hooks/favorites";
+import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import {
   useAllergyDetection,
   useAllergyDetectionMutation,
@@ -14,10 +18,6 @@ import {
   useRecipeSubscription,
 } from "@/hooks/recipes";
 import { useActiveAllergies } from "@/hooks/user";
-import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
-import { useFavoritesMutation } from "@/hooks/favorites";
-import { useRecipesContext } from "@/context/recipes-context";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 
@@ -59,4 +59,3 @@ const {
 });
 
 export { RecipeContextProvider, useRecipeContext, useRecipeContextRequired };
-

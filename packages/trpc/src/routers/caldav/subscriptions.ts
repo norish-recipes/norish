@@ -5,11 +5,11 @@
  */
 
 import { trpcLogger as log } from "@norish/shared-server/logger";
+
+import type { CaldavSubscriptionEvents } from "./types";
 import { createSubscriptionIterable, mergeAsyncIterables } from "../../helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
-import type { CaldavSubscriptionEvents } from "./types";
 import { caldavEmitter } from "./emitter";
 
 /**

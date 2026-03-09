@@ -2,8 +2,8 @@ import type { UserSettingsData } from "@/hooks/user/use-user-query";
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import type { ApiKeyMetadataDto } from "@norish/trpc";
 import type { User } from "@norish/shared/contracts";
+import type { ApiKeyMetadataDto } from "@norish/trpc";
 
 /**
  * Create a test QueryClient with optimized settings for tests

@@ -2,7 +2,6 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { GroceryInsertDto } from "@norish/shared/contracts";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import { createGrocery, updateGrocery } from "@norish/db";
 import {
@@ -12,6 +11,7 @@ import {
   getRecurringGroceryOwnerId,
   updateRecurringGrocery,
 } from "@norish/db/repositories/recurring-groceries";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
 import { authedProcedure } from "../../middleware";

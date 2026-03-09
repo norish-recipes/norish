@@ -1,6 +1,7 @@
-import type { AppRouter } from "@norish/trpc/client";
-import type { createTRPCContext } from "@trpc/tanstack-react-query";
 import type { inferRouterOutputs } from "@trpc/server";
+import type { createTRPCContext } from "@trpc/tanstack-react-query";
+
+import type { AppRouter } from "@norish/trpc/client";
 
 type UserOutputs = inferRouterOutputs<AppRouter>["user"];
 type TrpcContext = ReturnType<typeof createTRPCContext<AppRouter>>;

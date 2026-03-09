@@ -2,9 +2,6 @@ import { mkdir, readdir, writeFile } from "fs/promises";
 import path from "path";
 import { z } from "zod";
 
-import { trpcLogger as log } from "@norish/shared-server/logger";
-import { deleteAvatarByFilename } from "@norish/shared-server/media/avatar-cleanup";
-import { householdEmitter } from "../households/emitter";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
@@ -20,6 +17,8 @@ import {
   updateUserName,
   updateUserPreferences,
 } from "@norish/db";
+import { trpcLogger as log } from "@norish/shared-server/logger";
+import { deleteAvatarByFilename } from "@norish/shared-server/media/avatar-cleanup";
 import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
 import { buildAvatarFilename, isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
@@ -27,6 +26,7 @@ import { buildAvatarFilename, isAvatarFilenameForUser } from "@norish/shared/lib
 import { emitConnectionInvalidation } from "../../connection-manager";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { householdEmitter } from "../households/emitter";
 import { UpdateNameInputSchema, UpdatePreferencesInputSchema } from "./types";
 
 /**

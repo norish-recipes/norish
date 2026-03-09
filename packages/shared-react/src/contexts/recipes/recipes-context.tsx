@@ -1,13 +1,6 @@
-import { createContext, useCallback, useContext, useMemo } from 'react';
+import { createContext, useCallback, useContext, useMemo } from "react";
 
-import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from '@norish/shared/contracts';
-
-import { hasAppliedRecipeFilters, serializeRecipeFilters, toRecipesQueryFilters } from './filter-contract';
-import {
-  createRecipeImportToasts,
-  createRecipeSubscriptionToasts,
-  type RecipeToastAdapter,
-} from './recipe-toast-adapter';
+import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
 
 import type {
   FavoritesMutationResult,
@@ -16,10 +9,17 @@ import type {
   RecipesMutationsResult,
   RecipesQueryResult,
   RecipesSubscriptionCallbacks,
-} from '../../hooks/recipes/dashboard';
+} from "../../hooks/recipes/dashboard";
+import type { RecipeToastAdapter } from "./recipe-toast-adapter";
+import {
+  hasAppliedRecipeFilters,
+  serializeRecipeFilters,
+  toRecipesQueryFilters,
+} from "./filter-contract";
+import { createRecipeImportToasts, createRecipeSubscriptionToasts } from "./recipe-toast-adapter";
 
 export type SharedRecipesContextValue = {
-  recipes: RecipesQueryResult['recipes'];
+  recipes: RecipesQueryResult["recipes"];
   total: number;
   isLoading: boolean;
   isValidating: boolean;
@@ -60,10 +60,10 @@ type CreateRecipesContextOptions = {
   useRecipesQuery: (filters: RecipeFilters) => RecipesQueryResult;
   useRecipesMutations: () => Pick<
     RecipesMutationsResult,
-    'importRecipe' | 'importRecipeWithAI' | 'createRecipe' | 'updateRecipe' | 'deleteRecipe'
+    "importRecipe" | "importRecipeWithAI" | "createRecipe" | "updateRecipe" | "deleteRecipe"
   >;
-  useFavoritesQuery: () => Pick<FavoritesQueryResult, 'favoriteIds' | 'isFavorite' | 'isLoading'>;
-  useFavoritesMutation: () => Pick<FavoritesMutationResult, 'toggleFavorite'>;
+  useFavoritesQuery: () => Pick<FavoritesQueryResult, "favoriteIds" | "isFavorite" | "isLoading">;
+  useFavoritesMutation: () => Pick<FavoritesMutationResult, "toggleFavorite">;
   useUserAllergiesQuery: () => { allergies: string[] };
   useRecipesSubscription: (callbacks?: RecipesSubscriptionCallbacks) => void;
   useToastAdapter: () => RecipeToastAdapter;
@@ -92,7 +92,7 @@ export function createRecipesContext({
 
     const queryFilters = useMemo(
       () => ({ ...toRecipesQueryFilters(filters), ...(queryDefaults ?? {}) }),
-      [filters],
+      [filters]
     );
     const filterKey = useMemo(() => serializeRecipeFilters(filters), [filters]);
 
@@ -109,8 +109,13 @@ export function createRecipesContext({
       invalidate,
     } = useRecipesQuery(queryFilters);
 
-    const { importRecipe: importRecipeMutation, importRecipeWithAI: importRecipeWithAIMutation, createRecipe, updateRecipe, deleteRecipe } =
-      useRecipesMutations();
+    const {
+      importRecipe: importRecipeMutation,
+      importRecipeWithAI: importRecipeWithAIMutation,
+      createRecipe,
+      updateRecipe,
+      deleteRecipe,
+    } = useRecipesMutations();
     const { favoriteIds, isFavorite, isLoading: isFavoritesLoading } = useFavoritesQuery();
     const { toggleFavorite } = useFavoritesMutation();
     const { allergies } = useUserAllergiesQuery();
@@ -118,14 +123,17 @@ export function createRecipesContext({
     const importToasts = useMemo(() => createRecipeImportToasts(toastAdapter), [toastAdapter]);
     const subscriptionToasts = useMemo(
       () => createRecipeSubscriptionToasts(toastAdapter, { onOpenRecipe: navigation.toRecipe }),
-      [navigation.toRecipe, toastAdapter],
+      [navigation.toRecipe, toastAdapter]
     );
 
     useRecipesSubscription(subscriptionToasts);
 
-    const openRecipe = useCallback((id: string) => {
-      navigation.toRecipe(id);
-    }, [navigation]);
+    const openRecipe = useCallback(
+      (id: string) => {
+        navigation.toRecipe(id);
+      },
+      [navigation]
+    );
 
     const importRecipe = useCallback(
       (url: string) => {
@@ -133,7 +141,7 @@ export function createRecipesContext({
         importRecipeMutation(url);
         navigation.toHome();
       },
-      [importRecipeMutation, importToasts, navigation],
+      [importRecipeMutation, importToasts, navigation]
     );
 
     const importRecipeWithAI = useCallback(
@@ -142,7 +150,7 @@ export function createRecipesContext({
         importRecipeWithAIMutation(url);
         navigation.toHome();
       },
-      [importRecipeWithAIMutation, importToasts, navigation],
+      [importRecipeWithAIMutation, importToasts, navigation]
     );
 
     const wrappedCreateRecipe = useCallback(
@@ -150,7 +158,7 @@ export function createRecipesContext({
         createRecipe(input);
         navigation.toHome();
       },
-      [createRecipe, navigation],
+      [createRecipe, navigation]
     );
 
     const wrappedUpdateRecipe = useCallback(
@@ -158,7 +166,7 @@ export function createRecipesContext({
         updateRecipe(id, input);
         navigation.toRecipe(id);
       },
-      [navigation, updateRecipe],
+      [navigation, updateRecipe]
     );
 
     const hasAppliedFilters = useMemo(() => hasAppliedRecipeFilters(filters), [filters]);
@@ -215,7 +223,7 @@ export function createRecipesContext({
         deleteRecipe,
         invalidate,
         openRecipe,
-      ],
+      ]
     );
 
     return <RecipesContext.Provider value={value}>{children}</RecipesContext.Provider>;
@@ -225,7 +233,7 @@ export function createRecipesContext({
     const context = useContext(RecipesContext);
 
     if (!context) {
-      throw new Error('useRecipesContext must be used within RecipesProvider');
+      throw new Error("useRecipesContext must be used within RecipesProvider");
     }
 
     return context;

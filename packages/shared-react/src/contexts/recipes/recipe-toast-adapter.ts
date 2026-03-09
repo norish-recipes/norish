@@ -1,6 +1,6 @@
-import type { RecipesSubscriptionCallbacks } from '../../hooks/recipes/dashboard';
+import type { RecipesSubscriptionCallbacks } from "../../hooks/recipes/dashboard";
 
-export type RecipeToastSeverity = 'default' | 'success' | 'warning' | 'danger';
+export type RecipeToastSeverity = "default" | "success" | "warning" | "danger";
 
 export type RecipeToastAdapter = {
   show: (toast: {
@@ -13,10 +13,10 @@ export type RecipeToastAdapter = {
 };
 
 function readMessage(payload: unknown): string | undefined {
-  if (!payload || typeof payload !== 'object') return undefined;
+  if (!payload || typeof payload !== "object") return undefined;
   const candidate = payload as Record<string, unknown>;
-  if (typeof candidate.message === 'string') return candidate.message;
-  if (typeof candidate.description === 'string') return candidate.description;
+  if (typeof candidate.message === "string") return candidate.message;
+  if (typeof candidate.description === "string") return candidate.description;
   return undefined;
 }
 
@@ -24,16 +24,16 @@ export function createRecipeImportToasts(adapter: RecipeToastAdapter) {
   return {
     showImportRecipePending() {
       adapter.show({
-        severity: 'default',
-        title: 'Importing recipe...',
-        description: 'Import in progress, please wait...',
+        severity: "default",
+        title: "Importing recipe...",
+        description: "Import in progress, please wait...",
       });
     },
     showImportRecipeWithAIPending() {
       adapter.show({
-        severity: 'default',
-        title: 'Importing recipe with AI...',
-        description: 'Import in progress, please wait...',
+        severity: "default",
+        title: "Importing recipe with AI...",
+        description: "Import in progress, please wait...",
       });
     },
   };
@@ -41,19 +41,19 @@ export function createRecipeImportToasts(adapter: RecipeToastAdapter) {
 
 export function createRecipeSubscriptionToasts(
   adapter: RecipeToastAdapter,
-  options?: { onOpenRecipe?: (recipeId: string) => void },
+  options?: { onOpenRecipe?: (recipeId: string) => void }
 ): RecipesSubscriptionCallbacks {
   return {
     onImported: (payload) => {
       const recipeId =
-        payload && typeof payload === 'object' && 'recipe' in payload
+        payload && typeof payload === "object" && "recipe" in payload
           ? ((payload as { recipe?: { id?: string } }).recipe?.id ?? null)
           : null;
 
       adapter.show({
-        severity: 'success',
-        title: 'Recipe imported',
-        actionLabel: recipeId ? 'View' : undefined,
+        severity: "success",
+        title: "Recipe imported",
+        actionLabel: recipeId ? "View" : undefined,
         onActionPress:
           recipeId && options?.onOpenRecipe
             ? () => {
@@ -64,15 +64,15 @@ export function createRecipeSubscriptionToasts(
     },
     onConverted: () => {
       adapter.show({
-        severity: 'success',
-        title: 'Recipe updated',
+        severity: "success",
+        title: "Recipe updated",
       });
     },
     onFailed: (payload) => {
       adapter.show({
-        severity: 'danger',
-        title: 'Recipe processing failed',
-        description: readMessage(payload) ?? 'Please try again.',
+        severity: "danger",
+        title: "Recipe processing failed",
+        description: readMessage(payload) ?? "Please try again.",
       });
     },
     onProcessingToast: (payload) => {
@@ -81,7 +81,7 @@ export function createRecipeSubscriptionToasts(
       if (!message) return;
 
       adapter.show({
-        severity: 'default',
+        severity: "default",
         title: message,
       });
     },

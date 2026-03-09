@@ -5,7 +5,6 @@ import { RecurrenceSuggestion } from "@/app/(app)/groceries/components/recurrenc
 import { StoreSelector } from "@/components/groceries/store-selector";
 import { RecurrencePanel } from "@/components/Panel/consumers/recurrence-panel";
 import Panel, { PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
-import { useGroceryFormState } from "@norish/shared-react/hooks";
 import { useRecurrenceDetection } from "@/hooks/use-recurrence-detection";
 import { Button, Input } from "@heroui/react";
 import { AnimatePresence } from "motion/react";
@@ -13,6 +12,7 @@ import { useTranslations } from "next-intl";
 
 import type { StoreDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+import { useGroceryFormState } from "@norish/shared-react/hooks";
 
 type AddGroceryPanelProps = {
   open: boolean;

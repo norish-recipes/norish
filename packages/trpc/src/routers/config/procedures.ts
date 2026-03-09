@@ -1,4 +1,3 @@
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
@@ -10,6 +9,7 @@ import {
   isTimersEnabled,
 } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@norish/db/repositories/tags";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
@@ -106,12 +106,11 @@ const timerKeywords = authedProcedure.query(async () => {
 const authProviders = publicProcedure.query(async () => {
   log.debug("Getting available auth providers");
 
-  const [providers, registrationEnabled, passwordAuthEnabled] =
-    await Promise.all([
-      getAvailableProviders(),
-      isRegistrationEnabled(),
-      isPasswordAuthEnabled(),
-    ]);
+  const [providers, registrationEnabled, passwordAuthEnabled] = await Promise.all([
+    getAvailableProviders(),
+    isRegistrationEnabled(),
+    isPasswordAuthEnabled(),
+  ]);
 
   return { providers, registrationEnabled, passwordAuthEnabled };
 });

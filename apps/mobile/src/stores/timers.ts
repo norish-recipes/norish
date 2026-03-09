@@ -10,25 +10,12 @@ import {
   requestNotificationPermissions,
   showTimerNotification,
 } from './timer-notifications';
+import type { Timer, TimerStatus } from './timer-types';
 
 export { requestNotificationPermissions } from './timer-notifications';
+export type { Timer, TimerStatus } from './timer-types';
 
 const logger = createClientLogger('timers');
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-export type TimerStatus = 'running' | 'paused' | 'completed';
-
-export type Timer = {
-  id: string;
-  recipeId: string;
-  recipeName?: string;
-  label: string;
-  originalDurationMs: number;
-  remainingMs: number;
-  status: TimerStatus;
-  lastTickAt: number | null;
-};
 
 // ─── Store ───────────────────────────────────────────────────────────────────
 

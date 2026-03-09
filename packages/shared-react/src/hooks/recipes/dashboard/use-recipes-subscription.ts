@@ -260,35 +260,41 @@ export function createUseRecipesSubscription(
       asSubscriptionOptions(
         trpc.recipes.onRecipeBatchCreated.subscriptionOptions(undefined, {
           onData: (payload: any) => {
-            setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
-              if (!prev?.pages?.length) {
+            setAllRecipesData(
+              (prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
+                if (!prev?.pages?.length) {
+                  return {
+                    pages: [
+                      { recipes: payload.recipes, total: payload.recipes.length, nextCursor: null },
+                    ],
+                    pageParams: [0],
+                  };
+                }
+
+                const firstPage = prev.pages[0];
+
+                if (!firstPage) return prev;
+
+                const existingIds = new Set(firstPage.recipes.map((r) => r.id));
+                const newRecipes = payload.recipes.filter(
+                  (r: RecipeDashboardDTO) => !existingIds.has(r.id)
+                );
+
+                if (newRecipes.length === 0) return prev;
+
                 return {
-                  pages: [{ recipes: payload.recipes, total: payload.recipes.length, nextCursor: null }],
-                  pageParams: [0],
+                  ...prev,
+                  pages: [
+                    {
+                      ...firstPage,
+                      recipes: [...newRecipes, ...firstPage.recipes],
+                      total: firstPage.total + newRecipes.length,
+                    },
+                    ...prev.pages.slice(1),
+                  ],
                 };
               }
-
-              const firstPage = prev.pages[0];
-
-              if (!firstPage) return prev;
-
-              const existingIds = new Set(firstPage.recipes.map((r) => r.id));
-              const newRecipes = payload.recipes.filter((r: RecipeDashboardDTO) => !existingIds.has(r.id));
-
-              if (newRecipes.length === 0) return prev;
-
-              return {
-                ...prev,
-                pages: [
-                  {
-                    ...firstPage,
-                    recipes: [...newRecipes, ...firstPage.recipes],
-                    total: firstPage.total + newRecipes.length,
-                  },
-                  ...prev.pages.slice(1),
-                ],
-              };
-            });
+            );
           },
         })
       )

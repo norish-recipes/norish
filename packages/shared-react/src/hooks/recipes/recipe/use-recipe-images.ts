@@ -10,8 +10,12 @@ export function createUseRecipeImages({ useTRPC }: CreateRecipeHooksOptions) {
     const deleteImageMutation = useMutation(trpc.recipes.deleteImage.mutationOptions());
     const uploadStepImageMutation = useMutation(trpc.recipes.uploadStepImage.mutationOptions());
     const deleteStepImageMutation = useMutation(trpc.recipes.deleteStepImage.mutationOptions());
-    const uploadGalleryImageMutation = useMutation(trpc.recipes.uploadGalleryImage.mutationOptions());
-    const deleteGalleryImageMutation = useMutation(trpc.recipes.deleteGalleryImage.mutationOptions());
+    const uploadGalleryImageMutation = useMutation(
+      trpc.recipes.uploadGalleryImage.mutationOptions()
+    );
+    const deleteGalleryImageMutation = useMutation(
+      trpc.recipes.deleteGalleryImage.mutationOptions()
+    );
 
     return {
       uploadImageData: (input: Parameters<typeof uploadImageMutation.mutateAsync>[0]) =>
@@ -20,8 +24,9 @@ export function createUseRecipeImages({ useTRPC }: CreateRecipeHooksOptions) {
       uploadStepImageData: (input: Parameters<typeof uploadStepImageMutation.mutateAsync>[0]) =>
         uploadStepImageMutation.mutateAsync(input),
       deleteStepImage: (url: string) => deleteStepImageMutation.mutateAsync({ url }),
-      uploadGalleryImageData: (input: Parameters<typeof uploadGalleryImageMutation.mutateAsync>[0]) =>
-        uploadGalleryImageMutation.mutateAsync(input),
+      uploadGalleryImageData: (
+        input: Parameters<typeof uploadGalleryImageMutation.mutateAsync>[0]
+      ) => uploadGalleryImageMutation.mutateAsync(input),
       deleteGalleryImage: (imageId: string) => deleteGalleryImageMutation.mutateAsync({ imageId }),
       isUploadingImage: uploadImageMutation.isPending,
       isDeletingImage: deleteImageMutation.isPending,

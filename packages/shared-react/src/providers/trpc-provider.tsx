@@ -1,12 +1,13 @@
 "use client";
 
+import type { HTTPHeaders } from "@trpc/client";
+import type { AnyTRPCRouter } from "@trpc/server";
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createTRPCClient,
   createWSClient,
-  type HTTPHeaders,
   httpBatchLink,
   httpLink,
   isNonJsonSerializable,
@@ -14,7 +15,6 @@ import {
   splitLink,
   wsLink,
 } from "@trpc/client";
-import type { AnyTRPCRouter } from "@trpc/server";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
 

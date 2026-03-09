@@ -6,9 +6,9 @@ import type {
   CaldavSummaryQueryResult,
   CaldavSyncStatusQueryResult,
   CreateCaldavHooksOptions,
+  FetchCalendarsInput,
   SaveCaldavConfigInput,
   TestConnectionInput,
-  FetchCalendarsInput,
 } from "./types";
 
 type CreateUseCaldavMutationsOptions = CreateCaldavHooksOptions & {

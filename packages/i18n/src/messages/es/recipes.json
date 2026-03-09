@@ -211,15 +211,14 @@
     }
   },
 
-    "cookMode": {
-        "steps": "Pasos",
-        "ingredients": "Ingredientes",
-        "servings": "Porciones",
-        "serving": "{count, plural, one {# porción} other {# porciones}}",
-        "stepCounter": "{current} / {total}",
-        "swipeSteps": "Desliza para navegar entre pasos",
-        "swipeIngredients": "Desliza a la izquierda para ingredientes",
-        "swipeBackToSteps": "Desliza a la derecha para pasos"
-    }
-
+  "cookMode": {
+    "steps": "Pasos",
+    "ingredients": "Ingredientes",
+    "servings": "Porciones",
+    "serving": "{count, plural, one {# porción} other {# porciones}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "Desliza para navegar entre pasos",
+    "swipeIngredients": "Desliza a la izquierda para ingredientes",
+    "swipeBackToSteps": "Desliza a la derecha para pasos"
+  }
 }

@@ -1,12 +1,5 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
 import type { ReactNode } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import type {
   FullRecipeDTO,
@@ -64,11 +57,7 @@ export type RecipeDetailAdapters = {
   useNutritionMutation: (recipeId: string) => {
     estimateNutrition: () => void;
   };
-  useNutritionSubscription: (
-    recipeId: string,
-    onStart: () => void,
-    onEnd: () => void
-  ) => void;
+  useNutritionSubscription: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
   useAutoTaggingMutation: () => { mutate: (input: { recipeId: string }) => void };
   useAutoTagging: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
   useAutoCategorizationMutation: () => { mutate: (input: { recipeId: string }) => void };
@@ -185,10 +174,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
     // --- Favorites ---
     const favoriteIds = adapters.useFavoriteIds();
     const { toggleFavorite: toggleFavoriteRaw } = adapters.useFavoritesMutation();
-    const liked = useMemo(
-      () => favoriteIds?.includes(recipeId) ?? false,
-      [favoriteIds, recipeId]
-    );
+    const liked = useMemo(() => favoriteIds?.includes(recipeId) ?? false, [favoriteIds, recipeId]);
     const toggleLiked = useCallback(
       () => toggleFavoriteRaw(recipeId),
       [recipeId, toggleFavoriteRaw]
@@ -265,37 +251,34 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       [convertMutation, recipe, reset]
     );
 
-    const setIngredientAmounts = useCallback(
-      (servings: number) => {
-        const currentRecipe = recipeRef.current;
+    const setIngredientAmounts = useCallback((servings: number) => {
+      const currentRecipe = recipeRef.current;
 
-        if (!currentRecipe || servings == null) return;
+      if (!currentRecipe || servings == null) return;
 
-        setServings(servings);
+      setServings(servings);
 
-        if (servings === currentRecipe.servings) {
-          setAdjustedIngredients(currentRecipe.recipeIngredients);
+      if (servings === currentRecipe.servings) {
+        setAdjustedIngredients(currentRecipe.recipeIngredients);
 
-          return;
-        }
+        return;
+      }
 
-        setAdjustedIngredients(
-          currentRecipe.recipeIngredients.map((ing) => {
-            if (ing.amount == null && ing.amount === "") return ing;
+      setAdjustedIngredients(
+        currentRecipe.recipeIngredients.map((ing) => {
+          if (ing.amount == null && ing.amount === "") return ing;
 
-            const amountNum = Number(ing.amount);
+          const amountNum = Number(ing.amount);
 
-            if (isNaN(amountNum) || amountNum <= 0) return ing;
+          if (isNaN(amountNum) || amountNum <= 0) return ing;
 
-            const newAmount =
-              Math.round((amountNum / currentRecipe.servings) * servings * 10000) / 10000;
+          const newAmount =
+            Math.round((amountNum / currentRecipe.servings) * servings * 10000) / 10000;
 
-            return { ...ing, amount: newAmount };
-          })
-        );
-      },
-      []
-    );
+          return { ...ing, amount: newAmount };
+        })
+      );
+    }, []);
 
     const value = useMemo<RecipeDetailContextValue>(
       () => ({

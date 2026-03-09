@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 
-import type { CreateConfigHooksOptions } from './types';
+import type { CreateConfigHooksOptions } from "./types";
 
 export function createUseTimersEnabledBaseQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useTimersEnabledBaseQuery() {

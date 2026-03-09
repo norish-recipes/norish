@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 
+import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { RecurringGroceryDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-import type { UnitsMap } from "@norish/config/zod/server-config";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
@@ -174,7 +174,12 @@ export function createUseGroceriesMutations({
         if (!prev) return prev;
         const updated = prev.groceries.map((g) =>
           g.id === id
-            ? { ...g, amount: parsed.quantity, unit: parsed.unitOfMeasure, name: parsed.description }
+            ? {
+                ...g,
+                amount: parsed.quantity,
+                unit: parsed.unitOfMeasure,
+                name: parsed.description,
+              }
             : g
         );
 

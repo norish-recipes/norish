@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { PlusIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/24/outline";
 import {
   Button,
@@ -26,8 +27,6 @@ import {
 } from "@heroui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import NewFeatureChip from "../../components/new-feature-chip";
 

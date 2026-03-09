@@ -9,13 +9,13 @@ import {
   truncateErrorMessage,
 } from "@norish/api/caldav/sync-manager";
 import { createLogger } from "@norish/api/logger";
-import { caldavEmitter } from "@norish/trpc/routers/caldav/emitter";
 import {
   createCaldavSyncStatus,
   getCaldavSyncStatusByItemId,
   updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
 import { getBullClient } from "@norish/queue/redis/bullmq";
+import { caldavEmitter } from "@norish/trpc/routers/caldav/emitter";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";

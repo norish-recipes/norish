@@ -8,17 +8,17 @@
 
 import type { Job } from "bullmq";
 
-import type { PolicyEmitContext } from "@norish/trpc/helpers";
 import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
+import type { PolicyEmitContext } from "@norish/trpc/helpers";
 import { detectAllergiesInRecipe } from "@norish/api/ai/allergy-detector";
 import { createLogger } from "@norish/api/logger";
-import { emitByPolicy } from "@norish/trpc/helpers";
-import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getAllergiesForUsers, getHouseholdMemberIds, getRecipeFull } from "@norish/db";
 import { db } from "@norish/db/drizzle";
 import { attachTagsToRecipeByInputTx, getRecipeTagNamesTx } from "@norish/db/repositories/tags";
 import { getBullClient } from "@norish/queue/redis/bullmq";
+import { emitByPolicy } from "@norish/trpc/helpers";
+import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";

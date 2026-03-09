@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 import type { I18nLocaleConfig } from "@norish/config/zod/server-config";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import { I18nLocaleConfigSchema, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { configExists, getConfig, setConfig } from "@norish/db/repositories/server-config";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";

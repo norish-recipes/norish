@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Input, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { ServerConfigKey } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import type { FieldDef, ProviderKey, TestResult } from "./types";
 import { useAdminSettingsContext } from "../../context";

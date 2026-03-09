@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ShieldCheckIcon, UserMinusIcon } from "@heroicons/react/16/solid";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
 import {
@@ -23,8 +24,6 @@ import {
   TableRow,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import { useHouseholdSettingsContext } from "../context";
 

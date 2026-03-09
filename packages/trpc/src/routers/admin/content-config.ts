@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import type { PromptsConfig, TimerKeywordsConfig } from "@norish/config/zod/server-config";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   ContentIndicatorsSchema,
   PromptsConfigInputSchema,
@@ -11,6 +10,7 @@ import {
   UnitsMapSchema,
 } from "@norish/config/zod/server-config";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";

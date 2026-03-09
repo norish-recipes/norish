@@ -10,7 +10,9 @@ const DEFAULT_RECIPE_POLICY: RecipePermissionPolicy = {
 
 const DEFAULT_AUTO_TAGGING_MODE: AutoTaggingMode = "disabled";
 
-export function normalizePermissionsData(input: PermissionsData | null | undefined): NormalizedPermissionsData {
+export function normalizePermissionsData(
+  input: PermissionsData | null | undefined
+): NormalizedPermissionsData {
   return {
     recipePolicy: input?.recipePolicy ?? DEFAULT_RECIPE_POLICY,
     isAIEnabled: input?.isAIEnabled ?? false,
@@ -41,7 +43,11 @@ export function checkPermissionAccess({
   }
 }
 
-export function selectCanViewRecipe(permissions: NormalizedPermissionsData, userId: string, ownerId: string) {
+export function selectCanViewRecipe(
+  permissions: NormalizedPermissionsData,
+  userId: string,
+  ownerId: string
+) {
   return checkPermissionAccess({
     policyLevel: permissions.recipePolicy.view,
     userId,
@@ -51,7 +57,11 @@ export function selectCanViewRecipe(permissions: NormalizedPermissionsData, user
   });
 }
 
-export function selectCanEditRecipe(permissions: NormalizedPermissionsData, userId: string, ownerId: string) {
+export function selectCanEditRecipe(
+  permissions: NormalizedPermissionsData,
+  userId: string,
+  ownerId: string
+) {
   return checkPermissionAccess({
     policyLevel: permissions.recipePolicy.edit,
     userId,
@@ -61,7 +71,11 @@ export function selectCanEditRecipe(permissions: NormalizedPermissionsData, user
   });
 }
 
-export function selectCanDeleteRecipe(permissions: NormalizedPermissionsData, userId: string, ownerId: string) {
+export function selectCanDeleteRecipe(
+  permissions: NormalizedPermissionsData,
+  userId: string,
+  ownerId: string
+) {
   return checkPermissionAccess({
     policyLevel: permissions.recipePolicy.delete,
     userId,

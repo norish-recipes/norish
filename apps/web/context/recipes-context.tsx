@@ -1,15 +1,14 @@
 "use client";
 
-import { addToast } from "@heroui/react";
-import { useRouter } from "next/navigation";
 import { createContext, useContext, useMemo } from "react";
-
+import { useRouter } from "next/navigation";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingsSubscription } from "@/hooks/ratings";
 import { useRecipesMutations, useRecipesQuery } from "@/hooks/recipes";
 import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
+import { addToast } from "@heroui/react";
 
 import type {
   FullRecipeInsertDTO,
@@ -109,12 +108,7 @@ function RecipesContextAdapter({ children }: { children: React.ReactNode }) {
       total,
       allergies,
     }),
-    [
-      base,
-      recipes,
-      total,
-      allergies,
-    ]
+    [base, recipes, total, allergies]
   );
 
   return <RecipesContext.Provider value={value}>{children}</RecipesContext.Provider>;

@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 import type { ServerConfigKey } from "@norish/config/zod/server-config";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getAllConfigs, getConfigSecret } from "@norish/db/repositories/server-config";
 import { getUserServerRole } from "@norish/db/repositories/users";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure, authedProcedure } from "../../middleware";
 import { router } from "../../trpc";

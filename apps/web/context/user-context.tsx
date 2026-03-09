@@ -4,14 +4,11 @@ import { createContext, ReactNode, useCallback, useContext, useMemo, useState } 
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQuery } from "@tanstack/react-query";
 
+import type { UserContextValue } from "@norish/shared-react/contexts";
 import type { User } from "@norish/shared/contracts";
+import { createUserContext } from "@norish/shared-react/contexts";
 import { useUser } from "@norish/shared-react/hooks";
 import { signOut as betterAuthSignOut } from "@norish/shared/lib/auth/client";
-
-import {
-  createUserContext,
-  type UserContextValue,
-} from "@norish/shared-react/contexts";
 
 // Create the shared base context
 const shared = createUserContext({

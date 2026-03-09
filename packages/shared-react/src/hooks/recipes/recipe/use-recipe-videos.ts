@@ -6,8 +6,12 @@ export function createUseRecipeVideos({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRecipeVideos() {
     const trpc = useTRPC();
 
-    const uploadGalleryVideoMutation = useMutation(trpc.recipes.uploadGalleryVideo.mutationOptions());
-    const deleteGalleryVideoMutation = useMutation(trpc.recipes.deleteGalleryVideo.mutationOptions());
+    const uploadGalleryVideoMutation = useMutation(
+      trpc.recipes.uploadGalleryVideo.mutationOptions()
+    );
+    const deleteGalleryVideoMutation = useMutation(
+      trpc.recipes.deleteGalleryVideo.mutationOptions()
+    );
 
     return {
       uploadGalleryVideoData: (

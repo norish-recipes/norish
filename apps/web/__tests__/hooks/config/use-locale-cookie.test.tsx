@@ -7,19 +7,19 @@ vi.mock("@/hooks/config", () => ({
   useLocaleConfigQuery: () => useLocaleConfigQueryMock(),
 }));
 
-describe('useLocaleCookie', () => {
+describe("useLocaleCookie", () => {
   beforeEach(() => {
     useLocaleConfigQueryMock.mockReset();
     document.cookie = "NEXT_LOCALE=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
   });
 
-  it('falls back to API default locale when cookie locale is disabled', async () => {
+  it("falls back to API default locale when cookie locale is disabled", async () => {
     useLocaleConfigQueryMock.mockReturnValue({
       enabledLocales: [
-        { code: 'en', name: 'English' },
-        { code: 'fr', name: 'Francais' },
+        { code: "en", name: "English" },
+        { code: "fr", name: "Francais" },
       ],
-      defaultLocale: 'fr',
+      defaultLocale: "fr",
       isLoading: false,
     });
 
@@ -31,10 +31,10 @@ describe('useLocaleCookie', () => {
     expect(result.current.locale).toBe("fr");
   });
 
-  it('ignores locale changes that are not enabled', async () => {
+  it("ignores locale changes that are not enabled", async () => {
     useLocaleConfigQueryMock.mockReturnValue({
-      enabledLocales: [{ code: 'en', name: 'English' }],
-      defaultLocale: 'en',
+      enabledLocales: [{ code: "en", name: "English" }],
+      defaultLocale: "en",
       isLoading: false,
     });
 

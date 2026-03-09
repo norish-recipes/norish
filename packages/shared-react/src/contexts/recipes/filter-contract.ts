@@ -75,8 +75,7 @@ export function normalizePersistedRecipeFilters(data: unknown): PersistedRecipeF
         SEARCH_FIELDS.includes(field as SearchField)
       )
     : null;
-  const showFavoritesOnly =
-    typeof d.showFavoritesOnly === "boolean" ? d.showFavoritesOnly : null;
+  const showFavoritesOnly = typeof d.showFavoritesOnly === "boolean" ? d.showFavoritesOnly : null;
   const minRating =
     d.minRating === null || (typeof d.minRating === "number" && d.minRating >= 0)
       ? (d.minRating as number | null)

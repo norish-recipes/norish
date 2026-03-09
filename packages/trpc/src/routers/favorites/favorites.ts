@@ -1,10 +1,10 @@
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   getFavoriteRecipeIds,
   getFavoritesByRecipeIds,
   isFavorite,
   toggleFavorite,
 } from "@norish/db/repositories/favorites";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   FavoriteBatchCheckInputSchema,
   FavoriteCheckInputSchema,

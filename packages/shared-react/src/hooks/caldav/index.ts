@@ -1,4 +1,9 @@
 import type { CreateCaldavHooksOptions } from "./types";
+import type { CaldavSubscriptionToastAdapter } from "./use-caldav-subscription";
+import { createUseCaldavCache } from "./use-caldav-cache";
+import { createUseCaldavMutations } from "./use-caldav-mutations";
+import { createUseCaldavQuery } from "./use-caldav-query";
+import { createUseCaldavSubscription } from "./use-caldav-subscription";
 
 export type {
   CreateCaldavHooksOptions,
@@ -15,14 +20,10 @@ export type {
 export { createUseCaldavQuery } from "./use-caldav-query";
 export { createUseCaldavMutations } from "./use-caldav-mutations";
 export { createUseCaldavCache } from "./use-caldav-cache";
-export { createUseCaldavSubscription, type CaldavSubscriptionToastAdapter } from "./use-caldav-subscription";
-
-import { createUseCaldavQuery } from "./use-caldav-query";
-import { createUseCaldavMutations } from "./use-caldav-mutations";
-import { createUseCaldavCache } from "./use-caldav-cache";
-import { createUseCaldavSubscription } from "./use-caldav-subscription";
-
-import type { CaldavSubscriptionToastAdapter } from "./use-caldav-subscription";
+export {
+  createUseCaldavSubscription,
+  type CaldavSubscriptionToastAdapter,
+} from "./use-caldav-subscription";
 
 type CreateCaldavHooksFullOptions = CreateCaldavHooksOptions & {
   useToastAdapter: () => CaldavSubscriptionToastAdapter;

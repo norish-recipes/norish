@@ -1,7 +1,6 @@
-import { createUseFavoritesQuery } from "../recipes/dashboard/use-favorites-query";
-import { createUseFavoritesMutation } from "../recipes/dashboard/use-favorites-mutation";
-
 import type { CreateFavoritesHooksOptions } from "./types";
+import { createUseFavoritesMutation } from "../recipes/dashboard/use-favorites-mutation";
+import { createUseFavoritesQuery } from "../recipes/dashboard/use-favorites-query";
 
 export type { CreateFavoritesHooksOptions } from "./types";
 export type { FavoritesQueryResult } from "../recipes/dashboard/use-favorites-query";

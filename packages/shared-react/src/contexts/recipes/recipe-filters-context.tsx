@@ -1,13 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-import type { RecipeFiltersStorageAdapter } from "../../hooks/recipes/dashboard/recipe-filters-storage-adapter";
-import {
-  DEFAULT_RECIPE_FILTERS,
-  normalizePersistedRecipeFilters,
-} from "./filter-contract";
-
-import type { CanonicalRecipeFilters } from "./filter-contract";
 import { DEFAULT_SEARCH_FIELDS, SearchField } from "@norish/shared/contracts";
+
+import type { RecipeFiltersStorageAdapter } from "../../hooks/recipes/dashboard/recipe-filters-storage-adapter";
+import type { CanonicalRecipeFilters } from "./filter-contract";
+import { DEFAULT_RECIPE_FILTERS, normalizePersistedRecipeFilters } from "./filter-contract";
 
 type RecipeFiltersContextValue = {
   filters: CanonicalRecipeFilters;
@@ -113,9 +110,7 @@ export function createRecipeFiltersContext({
       [filters, setFilters, clearFilters, toggleSearchField, isHydrated]
     );
 
-    return (
-      <RecipeFiltersContext.Provider value={value}>{children}</RecipeFiltersContext.Provider>
-    );
+    return <RecipeFiltersContext.Provider value={value}>{children}</RecipeFiltersContext.Provider>;
   }
 
   function useRecipeFiltersContext() {

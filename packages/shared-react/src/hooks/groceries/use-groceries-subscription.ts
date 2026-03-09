@@ -30,7 +30,9 @@ export function createUseGroceriesSubscription({
 
             const existing = prev.groceries ?? [];
             const incoming = payload.groceries;
-            const newGroceries = incoming.filter((g: any) => !existing.some((eg) => eg.id === g.id));
+            const newGroceries = incoming.filter(
+              (g: any) => !existing.some((eg) => eg.id === g.id)
+            );
 
             if (newGroceries.length === 0) return prev;
 
@@ -111,7 +113,9 @@ export function createUseGroceriesSubscription({
 
             return {
               ...prev,
-              groceries: prev.groceries.map((g) => (g.id === updatedGrocery.id ? updatedGrocery : g)),
+              groceries: prev.groceries.map((g) =>
+                g.id === updatedGrocery.id ? updatedGrocery : g
+              ),
               recurringGroceries: prev.recurringGroceries.map((r) =>
                 r.id === updatedRecurring.id ? updatedRecurring : r
               ),

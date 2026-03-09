@@ -2,7 +2,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
-import type { CalendarCacheHelpers, CalendarMutationsResult, CreateCalendarHooksOptions } from "./types";
+import type {
+  CalendarCacheHelpers,
+  CalendarMutationsResult,
+  CreateCalendarHooksOptions,
+} from "./types";
 
 type CreateUseCalendarMutationsOptions = CreateCalendarHooksOptions & {
   useCalendarCacheHelpers: (startISO: string, endISO: string) => CalendarCacheHelpers;
@@ -154,7 +158,12 @@ export function createUseCalendarMutations({
       deleteMutation.mutate({ itemId });
     };
 
-    const moveItem = (itemId: string, targetDate: string, targetSlot: Slot, targetIndex: number) => {
+    const moveItem = (
+      itemId: string,
+      targetDate: string,
+      targetSlot: Slot,
+      targetIndex: number
+    ) => {
       moveMutation.mutate({ itemId, targetDate, targetSlot, targetIndex });
     };
 

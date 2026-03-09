@@ -2,7 +2,6 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { GroceryUpdateDto } from "@norish/shared/contracts";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import { getUnits } from "@norish/config/server-config-loader";
 import {
@@ -30,6 +29,7 @@ import {
   normalizeIngredientName,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 import { authedProcedure } from "../../middleware";

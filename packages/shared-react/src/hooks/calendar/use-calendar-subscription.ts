@@ -68,7 +68,9 @@ export function createUseCalendarSubscription({
       trpc.calendar.onItemMoved.subscriptionOptions(undefined, {
         onData: (payload: any) => {
           setItems((prev) => {
-            const targetSortMap = new Map(payload.targetSlotItems.map((i: any) => [i.id, i.sortOrder]));
+            const targetSortMap = new Map(
+              payload.targetSlotItems.map((i: any) => [i.id, i.sortOrder])
+            );
             const sourceSortMap = payload.sourceSlotItems
               ? new Map(payload.sourceSlotItems.map((i: any) => [i.id, i.sortOrder]))
               : null;

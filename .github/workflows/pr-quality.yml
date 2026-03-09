@@ -3,8 +3,10 @@ name: PR Quality Checks
 env:
   NODE_ENV: production
   DATABASE_URL: postgres://ci-user:ci-password@localhost:5432/ci-db
-  MASTER_KEY: test-master-key
+  MASTER_KEY: QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=
   SKIP_ENV_VALIDATION: "1"
+  AUTH_URL: http://localhost:3000
+  CHROME_WS_ENDPOINT: ws://localhost:3000
 
 on:
   pull_request:

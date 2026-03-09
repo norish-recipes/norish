@@ -12,7 +12,9 @@ export function createUseCalendarCache({ useTRPC }: CreateCalendarHooksOptions) 
     const queryKey = trpc.calendar.listItems.queryKey({ startISO, endISO });
 
     const setCalendarData = useCallback(
-      (updater: (prev: PlannedItemFromQuery[] | undefined) => PlannedItemFromQuery[] | undefined) => {
+      (
+        updater: (prev: PlannedItemFromQuery[] | undefined) => PlannedItemFromQuery[] | undefined
+      ) => {
         queryClient.setQueryData<PlannedItemFromQuery[]>(queryKey, updater);
       },
       [queryClient, queryKey]

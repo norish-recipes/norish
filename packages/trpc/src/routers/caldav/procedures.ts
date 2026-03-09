@@ -5,11 +5,6 @@ import type {
   ConnectionTestResult,
   UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
-import { CalDavClient, testCalDavConnection } from "@norish/shared-server/caldav/client";
-import { retryFailedSyncs, syncAllFutureItems } from "@norish/shared-server/caldav/sync";
-import { createLogger } from "@norish/shared-server/logger";
-import { authedProcedure } from "../../middleware";
-import { router } from "../../trpc";
 import {
   deleteCaldavConfig,
   getCaldavConfigDecrypted,
@@ -20,7 +15,12 @@ import {
   getCaldavSyncStatusesByUser,
   getSyncStatusSummary,
 } from "@norish/db/repositories/caldav-sync-status";
+import { CalDavClient, testCalDavConnection } from "@norish/shared-server/caldav/client";
+import { retryFailedSyncs, syncAllFutureItems } from "@norish/shared-server/caldav/sync";
+import { createLogger } from "@norish/shared-server/logger";
 
+import { authedProcedure } from "../../middleware";
+import { router } from "../../trpc";
 import { caldavEmitter } from "./emitter";
 import {
   DeleteCaldavConfigInputSchema,

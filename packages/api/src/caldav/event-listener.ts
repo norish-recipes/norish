@@ -1,16 +1,16 @@
 import type Redis from "ioredis";
 import superjson from "superjson";
 
+import type { Slot } from "@norish/shared/contracts";
 import type { CalendarSubscriptionEvents } from "@norish/trpc/routers/calendar/types";
 import type { RecipeSubscriptionEvents } from "@norish/trpc/routers/recipes/types";
-import type { Slot } from "@norish/shared/contracts";
 import { createLogger } from "@norish/api/logger";
-import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import { getCaldavSyncStatusByItemId } from "@norish/db/repositories/caldav-sync-status";
 import { addCaldavSyncJob } from "@norish/queue/caldav-sync/producer";
 import { createSubscriberClient } from "@norish/queue/redis/client";
 import { getQueues } from "@norish/queue/registry";
+import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
 const log = createLogger("caldav-sync");
 

@@ -10,6 +10,7 @@ import {
   useCaldavSummaryQuery,
   useCaldavSyncStatusQuery,
 } from "@/hooks/caldav";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { addToast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -19,7 +20,6 @@ import type {
   UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
 import type { CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 type SaveCaldavConfigInput = {
   serverUrl: string;

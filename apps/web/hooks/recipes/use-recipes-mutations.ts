@@ -1,9 +1,9 @@
 "use client";
 
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useTranslations } from "next-intl";
 
 import type { RecipesMutationsResult } from "@norish/shared-react/hooks";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 import { sharedDashboardRecipeHooks } from "./shared-recipe-hooks";
 

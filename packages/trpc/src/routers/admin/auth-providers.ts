@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import type { ServerConfigKey } from "@norish/config/zod/server-config";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   testGitHubProvider,
   testGoogleProvider,
@@ -22,6 +21,7 @@ import {
   getConfig,
   setConfig,
 } from "@norish/db/repositories/server-config";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";

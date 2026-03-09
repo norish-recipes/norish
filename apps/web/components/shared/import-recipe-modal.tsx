@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import {
   Button,
@@ -14,8 +15,6 @@ import {
   ModalHeader,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 interface ImportRecipeModalProps {
   isOpen: boolean;

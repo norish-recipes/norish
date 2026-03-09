@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { PromptsConfigInput } from "@norish/config/zod/server-config";
-import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
 import { getPrompts } from "@norish/config/server-config-loader";
+import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
 
 const PROMPTS_DIR = resolveExistingWorkspacePath(
   join("packages", "shared-server", "src", "ai", "prompts")

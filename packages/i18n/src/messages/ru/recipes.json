@@ -211,15 +211,14 @@
     }
   },
 
-    "cookMode": {
-        "steps": "Шаги",
-        "ingredients": "Ингредиенты",
-        "servings": "Порции",
-        "serving": "{count, plural, one {# порция} few {# порции} many {# порций} other {# порций}}",
-        "stepCounter": "{current} / {total}",
-        "swipeSteps": "Проведите для навигации по шагам",
-        "swipeIngredients": "Проведите влево для ингредиентов",
-        "swipeBackToSteps": "Проведите вправо для шагов"
-    }
-
+  "cookMode": {
+    "steps": "Шаги",
+    "ingredients": "Ингредиенты",
+    "servings": "Порции",
+    "serving": "{count, plural, one {# порция} few {# порции} many {# порций} other {# порций}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "Проведите для навигации по шагам",
+    "swipeIngredients": "Проведите влево для ингредиентов",
+    "swipeBackToSteps": "Проведите вправо для шагов"
+  }
 }

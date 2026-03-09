@@ -13,8 +13,8 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createPerplexity } from "@ai-sdk/perplexity";
 import { createOllama } from "ollama-ai-provider-v2";
 
-import { aiLogger } from "@norish/shared-server/logger";
 import { getAIConfig } from "@norish/config/server-config-loader";
+import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIProvider, GenerationSettings, ModelConfig } from "./types";
 
