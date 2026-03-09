@@ -19,8 +19,8 @@ export function parseHumanDurationToMinutes(s?: string | null): number | undefin
   const colonMatch = lower.match(/^(\d{1,2}):(\d{2})\s*(?:h|hr)?$/i);
 
   if (colonMatch) {
-    const hours = parseInt(colonMatch[1], 10);
-    const minutes = parseInt(colonMatch[2], 10);
+    const hours = parseInt(colonMatch[1]!, 10);
+    const minutes = parseInt(colonMatch[2]!, 10);
     const total = hours * 60 + minutes;
 
     return Number.isFinite(total) && total > 0 ? total : undefined;
@@ -32,8 +32,8 @@ export function parseHumanDurationToMinutes(s?: string | null): number | undefin
   // For minutes: require 'm' not to be followed by word characters (to avoid matching words like "medium")
   const minMatch = lower.match(/(\d+)\s*(?:mins?|minutes?|m)(?!\w)/i);
 
-  const hours = hourMatch ? parseInt(hourMatch[1], 10) : 0;
-  const minutes = minMatch ? parseInt(minMatch[1], 10) : 0;
+  const hours = hourMatch ? parseInt(hourMatch[1]!, 10) : 0;
+  const minutes = minMatch ? parseInt(minMatch[1]!, 10) : 0;
 
   const total = hours * 60 + minutes;
 

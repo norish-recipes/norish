@@ -8,6 +8,13 @@ const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefine
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     recipes: {
+      get: {
+        queryKey: vi.fn(() => ["recipes", "get"]),
+        queryOptions: vi.fn((input) => ({
+          queryKey: ["recipes", "get", input],
+          queryFn: vi.fn(),
+        })),
+      },
       onUpdated: {
         subscriptionOptions: vi.fn((_, options) => {
           subscriptionCallbacks.onUpdated = options?.onData;

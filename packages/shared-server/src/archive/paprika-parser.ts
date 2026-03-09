@@ -165,7 +165,7 @@ export async function extractPaprikaRecipes(
       // Extract first photo if available
       let imageBuffer: Buffer | undefined = undefined;
 
-      if (recipe.photos && recipe.photos.length > 0 && recipe.photos[0].data) {
+      if (recipe.photos && recipe.photos.length > 0 && recipe.photos[0]?.data) {
         try {
           imageBuffer = base64ToBuffer(recipe.photos[0].data);
         } catch {

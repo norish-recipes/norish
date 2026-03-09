@@ -87,19 +87,23 @@ export async function getArchiveInfo(zip: JSZip): Promise<ArchiveInfo> {
 
   if (nestedZips.length > 0) {
     // Try to load first nested zip and check for recipe.json
-    try {
-      const firstZipBuffer = await nestedZips[0].async("arraybuffer");
-      const nestedZip = await JSZip.loadAsync(firstZipBuffer);
-      const recipeFile = nestedZip.file("recipe.json");
+    const firstZip = nestedZips[0];
 
-      if (recipeFile) {
-        return {
-          format: ArchiveFormat.TANDOOR,
-          count: nestedZips.length,
-        };
+    if (firstZip) {
+      try {
+        const firstZipBuffer = await firstZip.async("arraybuffer");
+        const nestedZip = await JSZip.loadAsync(firstZipBuffer);
+        const recipeFile = nestedZip.file("recipe.json");
+
+        if (recipeFile) {
+          return {
+            format: ArchiveFormat.TANDOOR,
+            count: nestedZips.length,
+          };
+        }
+      } catch {
+        // Not a valid Tandoor format
       }
-    } catch {
-      // Not a valid Tandoor format
     }
   }
 
@@ -251,7 +255,7 @@ async function* generateMelaRecipes(
   const melaRecipes = await parseMelaArchive(zip);
 
   for (let i = 0; i < melaRecipes.length; i++) {
-    const dto = await parseMelaRecipeToDTO(melaRecipes[i]);
+    const dto = await parseMelaRecipeToDTO(melaRecipes[i]!);
 
     yield { dto, fileName: `recipe_${i + 1}.melarecipe` };
   }

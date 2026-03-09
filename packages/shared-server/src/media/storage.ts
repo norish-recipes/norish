@@ -47,9 +47,9 @@ async function ensureDir(dir: string): Promise<void> {
 
 function extFromContentType(ct?: string | null): string | undefined {
   if (!ct) return undefined;
-  const mime = ct.split(";", 1)[0].trim().toLowerCase();
+  const mime = ct.split(";", 1)[0]?.trim().toLowerCase();
 
-  return CT_TO_EXT.get(mime);
+  return mime ? CT_TO_EXT.get(mime) : undefined;
 }
 
 function extFromUrl(u: string): string | undefined {
@@ -380,7 +380,8 @@ async function deleteImageByUrlCore(url: string, options: DeleteImageOptions): P
     throw new Error(`Invalid ${options.label} image URL format`);
   }
 
-  const [, recipeId, filename] = match;
+  const recipeId = match[1]!;
+  const filename = match[2]!;
 
   // Validate recipeId is a UUID
   if (!/^[a-f0-9-]{36}$/i.test(recipeId)) {
@@ -508,9 +509,7 @@ export async function downloadBestImageFromJsonLd(
   })();
 
   // Try each candidate in order
-  for (let i = 0; i < ordered.length; i++) {
-    const cand = ordered[i];
-
+  for (const cand of ordered) {
     try {
       return await downloadImage(cand.url, recipeId);
     } catch (_e) {
@@ -642,8 +641,8 @@ export async function downloadAllImagesFromJsonLd(
   const downloadedUrls: string[] = [];
 
   // Try each candidate in order up to maxImages
-  for (let i = 0; i < ordered.length && downloadedUrls.length < maxImages; i++) {
-    const cand = ordered[i];
+  for (const cand of ordered) {
+    if (downloadedUrls.length >= maxImages) break;
 
     try {
       const webUrl = await downloadImage(cand.url, recipeId);
@@ -976,7 +975,8 @@ export async function deleteVideoByUrl(url: string): Promise<void> {
     throw new Error("Invalid video URL format");
   }
 
-  const [, recipeId, filename] = match;
+  const recipeId = match[1]!;
+  const filename = match[2]!;
 
   // Validate recipeId is a UUID
   if (!/^[a-f0-9-]{36}$/i.test(recipeId)) {

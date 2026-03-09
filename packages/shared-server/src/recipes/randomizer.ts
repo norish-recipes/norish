@@ -10,7 +10,7 @@ function shuffleArray<T>(array: T[]): T[] {
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
 
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    [shuffled[i]!, shuffled[j]!] = [shuffled[j]!, shuffled[i]!];
   }
 
   return shuffled;
@@ -34,25 +34,25 @@ export function selectWeightedRandomRecipe(
   candidates: RandomRecipeCandidate[]
 ): RandomRecipeCandidate | null {
   if (candidates.length === 0) return null;
-  if (candidates.length === 1) return candidates[0];
+  if (candidates.length === 1) return candidates[0] ?? null;
 
   const shuffled = shuffleArray(candidates);
   const weights = shuffled.map(calculateWeight);
   const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
 
   if (totalWeight <= 0) {
-    return candidates[Math.floor(Math.random() * candidates.length)];
+    return candidates[Math.floor(Math.random() * candidates.length)] ?? null;
   }
 
   let random = Math.random() * totalWeight;
 
   for (let i = 0; i < shuffled.length; i++) {
-    random -= weights[i];
+    random -= weights[i]!;
 
     if (random <= 0) {
-      return shuffled[i];
+      return shuffled[i] ?? null;
     }
   }
 
-  return shuffled[shuffled.length - 1];
+  return shuffled[shuffled.length - 1] ?? null;
 }

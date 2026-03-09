@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": "./src",
     "lib": ["ES2022", "DOM"],
-    "types": ["node"]
+    "types": ["node"],
+    "noUncheckedIndexedAccess": false
   },
   "include": ["src"],
   "exclude": ["node_modules", "src/**/*.test.ts", "src/**/*.test.tsx"]
