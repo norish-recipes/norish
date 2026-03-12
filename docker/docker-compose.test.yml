@@ -18,9 +18,12 @@ services:
       DATABASE_URL: postgres://postgres:norish@db:5432/norish
       REDIS_URL: redis://redis:6379
       AUTH_URL: http://localhost:3000
+      # Include host LAN IP for mobile app access
+      TRUSTED_ORIGINS: http://localhost:3000,http://192.168.*.*:3000,exp://,exp://**,exp://192.168.*.*:*/**
       MASTER_KEY: X4fjLgB8egCPwlOQW8iC3JGXAtUIMUOGmk/y29n+YSw=
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000
       PASSWORD_AUTH_ENABLED: "true"
+      LOG_LEVEL: debug
     depends_on:
       db:
         condition: service_healthy
@@ -57,6 +60,7 @@ services:
       - "--no-sandbox"
       - "--disable-gpu"
       - "--disable-dev-shm-usage"
+      - "--disable-features=dbus"
       - "--remote-debugging-address=0.0.0.0"
       - "--remote-debugging-port=3000"
       - "--headless"

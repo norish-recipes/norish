@@ -58,7 +58,7 @@
     "superjson": "catalog:",
     "tsdav": "^2.1.8",
     "uuid": "13.0.0",
-    "ws": "8.19.0",
+    "ws": "catalog:",
     "yt-dlp-wrap": "^2.3.12",
     "zod": "catalog:"
   },

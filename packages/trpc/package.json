@@ -1,6 +1,6 @@
 {
   "name": "@norish/trpc",
-  "version": "0.17.0-beta",
+  "version": "0.17.1-beta",
   "private": true,
   "type": "module",
   "types": "./dist/public.d.ts",
@@ -57,7 +57,7 @@
     "ioredis": "catalog:",
     "jszip": "catalog:",
     "superjson": "catalog:",
-    "ws": "8.19.0",
+    "ws": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

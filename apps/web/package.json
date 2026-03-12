@@ -1,6 +1,6 @@
 {
   "name": "@norish/web",
-  "version": "0.17.0-beta",
+  "version": "0.17.1-beta",
   "private": true,
   "type": "module",
   "scripts": {
@@ -60,6 +60,7 @@
     "server-only": "catalog:",
     "use-sound": "^5.0.0",
     "usehooks-ts": "^3.1.1",
+    "ws": "catalog:",
     "zustand": "5.0.11"
   },
   "devDependencies": {
