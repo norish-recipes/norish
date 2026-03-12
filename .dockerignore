@@ -1,5 +1,6 @@
 # .dockerignore
 node_modules
+**/node_modules
 .next
 .git
 .gitignore
@@ -16,9 +17,33 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 README.md
-docker-compose*.yml
-Dockerfile*
+docker/docker-compose*.yml
+docker/Dockerfile*
 .dockerignore
 .github
+.turbo
 uploads/
 .sisyphus
+**/ios
+**/android
+
+# Exclude dist directories except packages/trpc/dist (type declarations needed for build)
+apps/web/dist
+packages/api/dist
+packages/auth/dist
+packages/config/dist
+packages/db/dist
+packages/i18n/dist
+packages/queue/dist
+packages/shared/dist
+packages/shared-react/dist
+packages/shared-server/dist
+packages/ui/dist
+tooling/**/dist
+
+# Mobile app
+apps/mobile/
+
+# OpenSpec artifacts — not needed in Docker build
+openspec/
+docs/

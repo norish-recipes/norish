@@ -1,0 +1,40 @@
+{
+  "name": "@norish/queue",
+  "version": "0.17.0-beta",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contracts/*": "./src/contracts/*.ts",
+    "./redis/client": "./src/redis/client.ts",
+    "./redis/bullmq": "./src/redis/bullmq.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json --noCheck",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit --noCheck",
+    "clean": "git clean -xdf .cache .turbo node_modules dist",
+    "test": "vitest run --config ./vitest.config.ts"
+  },
+  "dependencies": {
+    "@norish/config": "workspace:*",
+    "@norish/db": "workspace:*",
+    "@norish/shared": "workspace:*",
+    "bullmq": "catalog:",
+    "date-fns": "catalog:",
+    "drizzle-orm": "catalog:",
+    "ioredis": "catalog:",
+    "superjson": "catalog:"
+  },
+  "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "vitest": "catalog:"
+  },
+  "prettier": "@norish/prettier-config"
+}

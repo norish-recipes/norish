@@ -4,6 +4,7 @@
 
 # dependencies
 /node_modules
+**/node_modules/
 /.pnp
 .pnp.js
 
@@ -11,7 +12,7 @@
 /coverage
 
 # next.js
-/.next/
+**/.next/
 /out/
 
 /public/recipes/
@@ -45,6 +46,12 @@ bun.lockb
 # uploads
 /uploads
 
+# runtime data
+.runtime/
+/.runtime
+/.turbo
+.turbo/
+
 # yt-dlp binary (downloaded at runtime)
 /yt-dlp
 /yt-dlp.exe
@@ -57,3 +64,18 @@ docker-compose.yml
 .sisyphus
 /.sisyphus
 /.sisyphus/
+
+**/.runtime/**
+
+.cache
+
+.expo-export-ios-test
+.expo-export-test
+
+**/ios
+**/android
+
+**/.expo
+**/dist
+
+docs/

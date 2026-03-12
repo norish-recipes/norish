@@ -335,4 +335,4 @@ The PostgreSQL container leak is the most serious issue:
 - **Timer Parser Investigation**: Code uses `Math.max()` correctly per user decision
 - **German Units Analysis**: All 61 units exist, none need to be added
 - **CalDAV Investigation**: planned-items repository confirmed to exist
-- **Project Conventions**: `openspec/project.md` for logging, testing patterns
+- **Project Conventions**: `CONTRIBUTING.md` for logging, testing patterns

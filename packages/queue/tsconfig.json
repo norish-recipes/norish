@@ -1,0 +1,11 @@
+{
+  "extends": "@norish/tsconfig/compiled-package.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "paths": {
+      "@norish/queue/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

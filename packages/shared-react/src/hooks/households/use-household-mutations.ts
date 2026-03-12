@@ -1,0 +1,178 @@
+
+import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
+import type {
+  CreateHouseholdHooksOptions,
+  HouseholdMutationsResult,
+  HouseholdQueryResult,
+} from "./types";
+
+import { useMutation } from "@tanstack/react-query";
+
+type CreateUseHouseholdMutationsOptions = CreateHouseholdHooksOptions & {
+  useHouseholdQuery: () => HouseholdQueryResult;
+  useCurrentUserName: () => string | null;
+};
+
+export function createUseHouseholdMutations({
+  useTRPC,
+  useHouseholdQuery,
+  useCurrentUserName,
+}: CreateUseHouseholdMutationsOptions) {
+  return function useHouseholdMutations(): HouseholdMutationsResult {
+    const trpc = useTRPC();
+    const { setHouseholdData, invalidate, currentUserId } = useHouseholdQuery();
+    const userName = useCurrentUserName();
+
+    const createMutation = useMutation(trpc.households.create.mutationOptions());
+    const joinMutation = useMutation(trpc.households.join.mutationOptions());
+    const leaveMutation = useMutation(trpc.households.leave.mutationOptions());
+    const kickMutation = useMutation(trpc.households.kick.mutationOptions());
+    const regenerateCodeMutation = useMutation(trpc.households.regenerateCode.mutationOptions());
+    const transferAdminMutation = useMutation(trpc.households.transferAdmin.mutationOptions());
+
+    const createHousehold = (name: string): void => {
+      if (!name.trim()) {
+        throw new Error("Household name cannot be empty");
+      }
+
+      if (!currentUserId) {
+        throw new Error("User ID not available");
+      }
+
+      createMutation.mutate(
+        { name: name.trim() },
+        {
+          onSuccess: ({ id }) => {
+            // Optimistically add the household
+            const optimisticHousehold: HouseholdSettingsDto = {
+              id,
+              name: name.trim(),
+              users: [
+                {
+                  id: currentUserId,
+                  name: userName,
+                  isAdmin: true,
+                },
+              ],
+              allergies: [],
+            };
+
+            setHouseholdData((prev) => ({
+              household: optimisticHousehold,
+              currentUserId: prev?.currentUserId ?? currentUserId,
+            }));
+          },
+          onError: () => invalidate(),
+        }
+      );
+    };
+
+    const joinHousehold = (code: string): void => {
+      if (!code.trim()) {
+        throw new Error("Join code cannot be empty");
+      }
+
+      if (!currentUserId) {
+        throw new Error("User ID not available");
+      }
+
+      joinMutation.mutate(
+        { code: code.trim() },
+        {
+          // Optimistic update will come from the subscription (onCreated)
+          onError: () => invalidate(),
+        }
+      );
+    };
+
+    const leaveHousehold = (householdId: string): void => {
+      leaveMutation.mutate(
+        { householdId },
+        {
+          onSuccess: () => {
+            // Clear household from cache
+            setHouseholdData((prev) => ({
+              household: null,
+              currentUserId: prev?.currentUserId ?? currentUserId ?? "",
+            }));
+          },
+          onError: () => invalidate(),
+        }
+      );
+    };
+
+    const kickUser = (householdId: string, userId: string): void => {
+      kickMutation.mutate(
+        { householdId, userId },
+        {
+          onSuccess: () => {
+            // Optimistically remove the user from the list
+            setHouseholdData((prev) => {
+              if (!prev?.household) return prev;
+
+              return {
+                ...prev,
+                household: {
+                  ...prev.household,
+                  users: prev.household.users.filter((u) => u.id !== userId),
+                },
+              };
+            });
+          },
+          onError: () => invalidate(),
+        }
+      );
+    };
+
+    const regenerateJoinCode = (householdId: string): void => {
+      regenerateCodeMutation.mutate(
+        { householdId },
+        {
+          // The new join code will come from the subscription
+          onError: () => invalidate(),
+        }
+      );
+    };
+
+    const transferAdmin = (householdId: string, newAdminId: string): void => {
+      transferAdminMutation.mutate(
+        { householdId, newAdminId },
+        {
+          onSuccess: () => {
+            // Optimistically update admin status
+            setHouseholdData((prev) => {
+              if (!prev?.household) return prev;
+
+              // After transferring admin, current user is no longer admin
+              // So we need to update the household to non-admin view
+              const updatedHousehold: HouseholdSettingsDto = {
+                id: prev.household.id,
+                name: prev.household.name,
+                users: prev.household.users.map((u) => ({
+                  ...u,
+                  isAdmin: u.id === newAdminId,
+                })),
+                allergies: prev.household.allergies,
+              };
+
+              return {
+                ...prev,
+                household: updatedHousehold,
+              };
+            });
+          },
+          onError: () => invalidate(),
+        }
+      );
+    };
+
+    return {
+      createHousehold,
+      joinHousehold,
+      leaveHousehold,
+      kickUser,
+      regenerateJoinCode,
+      transferAdmin,
+    };
+  };
+}

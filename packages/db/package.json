@@ -1,0 +1,43 @@
+{
+  "name": "@norish/db",
+  "version": "0.17.0-beta",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./schema/*": "./src/schema/*.ts",
+    "./drizzle": "./src/drizzle.ts",
+    "./zodSchemas": "./src/zodSchemas/index.ts",
+    "./zodSchemas/*": "./src/zodSchemas/*.ts",
+    "./repositories": "./src/repositories/index.ts",
+    "./repositories/*": "./src/repositories/*.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json --noCheck",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo node_modules dist"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:",
+    "fuse.js": "catalog:",
+    "pg": "catalog:",
+    "superjson": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "@testcontainers/postgresql": "catalog:",
+    "@types/pg": "8.16.0",
+    "drizzle-kit": "0.31.9",
+    "vitest": "catalog:"
+  },
+  "prettier": "@norish/prettier-config"
+}

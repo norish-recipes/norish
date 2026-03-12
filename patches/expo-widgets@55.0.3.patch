@@ -1,0 +1,12 @@
+diff --git a/scripts/build-bundle.mjs b/scripts/build-bundle.mjs
+index afaa72c326171bf1daa44d82aa93b399791eee70..ad2a8ec1276b00ea074e3525e784b18ec8c7b5e4 100755
+--- a/scripts/build-bundle.mjs
++++ b/scripts/build-bundle.mjs
+@@ -50,7 +50,6 @@ const result = await spawn(
+     path.join(__dirname, '../bundle/index.ts'),
+     '--dev',
+     'false',
+-    '--skip-server',
+     ...argv.slice(2),
+   ],
+   {

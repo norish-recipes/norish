@@ -1,0 +1,9 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      "env": ["MASTER_KEY", "AUTH_URL"]
+    }
+  }
+}
