@@ -111,13 +111,21 @@ RUN pnpm deploy --filter @norish/web --prod /app/deploy && \
            turbo turbo-* && \
     # Remove packages superseded by system binaries (apk add ffmpeg)
     rm -rf ffmpeg-static && \
-    # Remove wrong-platform binaries (keep only linux-arm64-musl for Alpine)
-    rm -rf @next/swc-darwin-* @next/swc-win32-* @next/swc-linux-x64-gnu \
-           @swc/core-darwin-* @swc/core-win32-* @swc/core-linux-x64-* \
-           @img/sharp-darwin-* @img/sharp-win32-* @img/sharp-linux-x64 \
-           @img/sharp-libvips-darwin-* @img/sharp-libvips-win32-* @img/sharp-libvips-linux-x64 \
-           lightningcss-darwin-* lightningcss-win32-* lightningcss-linux-x64-gnu \
-           @next/eslint-plugin-next
+    # Remove wrong-platform native binaries (keep only linux musl variants for Alpine)
+    # pnpm deploy creates a flat node_modules: scoped packages are at @scope/pkg-name
+    cd @next && find . -maxdepth 1 -type d -name 'swc-*' \
+      ! -name '*linux-x64-musl*' ! -name '*linux-arm64-musl*' \
+      -exec rm -rf {} + && cd .. && \
+    cd @swc && find . -maxdepth 1 -type d -name 'core-*' \
+      ! -name '*linux-x64-musl*' ! -name '*linux-arm64-musl*' \
+      -exec rm -rf {} + && cd .. && \
+    cd @img && find . -maxdepth 1 -type d -name 'sharp-*' \
+      ! -name '*linuxmusl-x64*' ! -name '*linuxmusl-arm64*' \
+      -exec rm -rf {} + && cd .. && \
+    find . -maxdepth 1 -type d -name 'lightningcss-*' \
+      ! -name '*linux-x64-musl*' ! -name '*linux-arm64-musl*' \
+      -exec rm -rf {} + && \
+    rm -rf @next/eslint-plugin-next
 
 # Strip test files and dev configs from packages/ before they get copied to runtime.
 # This avoids shipping test fixtures, vitest configs, and TS build configs.
