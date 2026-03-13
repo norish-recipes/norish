@@ -3,8 +3,10 @@ name: PR Quality Checks
 env:
   NODE_ENV: production
   DATABASE_URL: postgres://ci-user:ci-password@localhost:5432/ci-db
-  MASTER_KEY: test-master-key
+  MASTER_KEY: QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=
   SKIP_ENV_VALIDATION: "1"
+  AUTH_URL: http://localhost:3000
+  CHROME_WS_ENDPOINT: ws://localhost:3000
 
 on:
   pull_request:
@@ -13,7 +15,7 @@ on:
       - "rc/**"
   push:
     branches:
-      - "*"
+      - main
 
 permissions:
   contents: read
@@ -26,21 +28,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
   build:
     name: Build
@@ -50,24 +39,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Run build
         run: pnpm run build
+
+  dependency-cycles:
+    name: Dependency Cycles
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
+
+      - name: Run circular dependency gate
+        run: pnpm run deps:cycles
 
   tests:
     name: Tests
@@ -77,24 +67,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Run tests
-        run: pnpm test
+        run: pnpm run test
 
   lint:
     name: Lint
@@ -104,24 +81,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Run lint
         run: pnpm run lint
+
 
   format:
     name: Format Check
@@ -131,23 +96,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
-      - name: Verify pnpm installation
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Run format check
-        run: pnpm run format:check
+        run: pnpm run format
 
   i18n:
     name: Locale Keys Check
@@ -157,16 +110,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.13.1
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-          run_install: false
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
 
       - name: Check locale keys
         run: pnpm run i18n:check
+

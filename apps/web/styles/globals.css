@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@plugin "@norish/tailwind-config/hero";
+@source "../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
+@custom-variant dark (&:is(.dark *));
+
+/* Import our custom theme colors */
+@import "@norish/tailwind-config/theme";
+
+/* Custom fade-in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@utility fade-in {
+  animation: fade-in var(--duration, 300ms) ease-in;
+}
+
+@utility fade-in-fast {
+  animation: fade-in 150ms ease-in;
+}
+
+@utility fade-in-slow {
+  animation: fade-in 500ms ease-in;
+}

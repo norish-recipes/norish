@@ -1,0 +1,40 @@
+{
+  "name": "@norish/config",
+  "version": "0.17.0-beta",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./env-config-server": "./src/env-config-server.ts",
+    "./server-config-loader": "./src/server-config-loader.ts",
+    "./zod/server-config": "./src/zod/server-config.ts",
+    "./content-indicators.default.json": "./src/content-indicators.default.json",
+    "./recurrence-config.default.json": "./src/recurrence-config.default.json",
+    "./timer-keywords.default.json": "./src/timer-keywords.default.json",
+    "./units.default.json": "./src/units.default.json"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json --noCheck",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo node_modules dist",
+    "test": "vitest run --config ./vitest.config.ts"
+  },
+  "dependencies": {
+    "@norish/db": "workspace:*",
+    "dotenv": "17.3.1",
+    "server-only": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
+  },
+  "prettier": "@norish/prettier-config"
+}

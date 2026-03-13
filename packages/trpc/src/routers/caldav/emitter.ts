@@ -1,0 +1,12 @@
+import type { CaldavSubscriptionEvents } from "./types";
+
+import { createTypedEmitter, TypedEmitter } from "../../emitter";
+
+// Use globalThis to persist across HMR in development
+declare global {
+  var __caldavEmitter__: TypedEmitter<CaldavSubscriptionEvents> | undefined;
+}
+
+export const caldavEmitter: TypedEmitter<CaldavSubscriptionEvents> =
+  globalThis.__caldavEmitter__ ||
+  (globalThis.__caldavEmitter__ = createTypedEmitter<CaldavSubscriptionEvents>("caldav"));
