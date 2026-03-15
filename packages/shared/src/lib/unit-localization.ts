@@ -1,6 +1,6 @@
 import type { FlatUnitsMap, UnitsMap } from "@norish/config/zod/server-config";
 
-import { selectUnitForm } from "@/lib/unit-form-selector";
+import { selectUnitForm } from "./unit-form-selector";
 
 /**
  * Flatten locale-aware units config to flat format for parse-ingredient library.
