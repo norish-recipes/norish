@@ -5,6 +5,7 @@ import Image from "next/image";
 import { CheckIcon } from "@heroicons/react/16/solid";
 
 import { useRecipeContext } from "../context";
+import { triggerHaptic } from "@/lib/haptics";
 
 import { SmartInstruction } from "@/components/recipe/smart-instruction";
 import ImageLightbox from "@/components/shared/image-lightbox";
@@ -19,6 +20,14 @@ export default function StepsList() {
   const [lightboxInitialIndex, setLightboxInitialIndex] = useState(0);
 
   const toggle = (i: number) => {
+    // Call haptics synchronously in the event handler's call stack so browsers treat it as a user gesture (required by Chrome).
+    try {
+      const adding = !done.has(i);
+      triggerHaptic(adding ? "success" : "selection");
+    } catch {
+      // ignore
+    }
+
     setDone((prev) => {
       const next = new Set(prev);
 
