@@ -1,11 +1,12 @@
 import type { IFuseOptions } from "fuse.js";
-import type { RecipeCategory } from "@norish/shared/contracts";
-
 import Fuse from "fuse.js";
+
+import type { RecipeCategory } from "@norish/shared/contracts";
 import deFormalRecipes from "@norish/i18n/messages/de-formal/recipes.json";
 import deInformalRecipes from "@norish/i18n/messages/de-informal/recipes.json";
 import enRecipes from "@norish/i18n/messages/en/recipes.json";
 import frRecipes from "@norish/i18n/messages/fr/recipes.json";
+import itRecipes from "@norish/i18n/messages/it/recipes.json";
 import koRecipes from "@norish/i18n/messages/ko/recipes.json";
 import nlRecipes from "@norish/i18n/messages/nl/recipes.json";
 
@@ -31,6 +32,7 @@ const RECIPES_MESSAGE_BUNDLES: RecipesMessageSubset[] = [
   deFormalRecipes as RecipesMessageSubset,
   deInformalRecipes as RecipesMessageSubset,
   koRecipes as RecipesMessageSubset,
+  itRecipes as RecipesMessageSubset,
 ];
 
 const CATEGORY_MESSAGE_KEYS: Record<RecipeCategory, RecipeCategoryKey> = {
