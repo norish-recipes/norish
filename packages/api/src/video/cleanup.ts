@@ -1,0 +1,54 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+
+import { videoLogger as log } from "@norish/api/logger";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
+
+export async function cleanupFile(filePath: string): Promise<void> {
+  try {
+    await fs.unlink(filePath);
+  } catch (_error: any) {
+    // Ignore if file doesn't exist
+  }
+}
+
+export async function cleanupOldTempFiles(maxAgeMs: number = 60 * 60 * 1000): Promise<void> {
+  const tempDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "video-temp");
+
+  try {
+    await fs.mkdir(tempDir, { recursive: true });
+
+    const files = await fs.readdir(tempDir);
+    const now = Date.now();
+    let cleanedCount = 0;
+
+    for (const file of files) {
+      const filePath = path.join(tempDir, file);
+
+      try {
+        const stats = await fs.stat(filePath);
+
+        if (!stats.isFile()) continue;
+
+        const age = now - stats.mtimeMs;
+
+        if (age > maxAgeMs) {
+          await fs.unlink(filePath);
+          cleanedCount++;
+        }
+      } catch (error: any) {
+        log.warn({ err: error, filePath }, "Failed to process file");
+      }
+    }
+
+    if (cleanedCount > 0) {
+      log.info({ cleanedCount }, `Removed ${cleanedCount} old temporary file(s)`);
+    }
+  } catch (error: any) {
+    log.error({ err: error }, "Failed to cleanup old temp files");
+  }
+}
+
+export async function initializeCleanup(): Promise<void> {
+  await cleanupOldTempFiles();
+}

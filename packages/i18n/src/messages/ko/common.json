@@ -1,0 +1,215 @@
+{
+  "actions": {
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "duplicate": "복제",
+    "edit": "편집",
+    "create": "만들기",
+    "add": "추가",
+    "remove": "제거",
+    "close": "닫기",
+    "apply": "적용",
+    "reset": "초기화",
+    "clear": "지우기",
+    "confirm": "확인",
+    "back": "뒤로",
+    "next": "다음",
+    "done": "완료",
+    "retry": "재시도",
+    "submit": "제출",
+    "search": "검색",
+    "filter": "필터",
+    "sort": "정렬",
+    "import": "가져오기",
+    "aiImport": "AI로 가져오기",
+    "importWithAI": "AI로 가져오기",
+    "goHome": "집으로 이동",
+    "test": "테스트",
+    "format": "서식",
+    "restoreDefaults": "기본값 복원",
+    "saveChanges": "변경사항 저장",
+    "revealSecret": "시크릿 표시",
+    "hideSecret": "시크릿 숨기기",
+    "enterNewValue": "새 값을 입력하세요",
+    "cancelEditing": "편집 취소"
+  },
+  "status": {
+    "loading": "불러오는 중...",
+    "saving": "저장 중...",
+    "deleting": "삭제 중...",
+    "error": "오류",
+    "success": "성공",
+    "noResults": "검색 결과가 없습니다",
+    "changing": "변경 중…"
+  },
+  "filters": {
+    "title": "필터",
+    "search": "검색",
+    "sort": "정렬",
+    "mode": "모드",
+    "modeAll": "모두",
+    "modeAny": "하나라도",
+    "tags": "태그",
+    "searchTags": "태그 검색",
+    "favoritesAndRating": "즐겨찾기 및 평가",
+    "favorites": "즐겨찾기",
+    "cookingTime": "조리시간",
+    "cookingTimeUnder15": "15분 미만",
+    "cookingTimeUnder30": "30분 미만",
+    "cookingTimeUnder60": "60분 미만",
+    "cookingTimeUnder120": "120분 미만",
+    "categories": "카테고리",
+    "category": {
+      "breakfast": "아침",
+      "lunch": "점심",
+      "dinner": "저녁",
+      "snack": "간식"
+    },
+    "sortByTitle": "제목",
+    "sortByDate": "날짜",
+    "clearFilters": "필터 지우기"
+  },
+  "time": {
+    "minutes": "분",
+    "hours": "시간"
+  },
+  "validation": {
+    "required": "이 필드는 필수입니다",
+    "invalidUrl": "유효한 URL을 입력하세요."
+  },
+  "errors": {
+    "operationFailed": "작업에 실패했습니다",
+    "nameCannotBeEmpty": "이름은 비워 둘 수 없습니다",
+    "technicalDetails": "문제가 발생했습니다. 기술적인 세부사항은 브라우저 콘솔을 확인하세요."
+  },
+  "slots": {
+    "breakfast": "아침",
+    "lunch": "점심",
+    "dinner": "저녁",
+    "snack": "간식",
+    "chooseSlot": "시간대 선택"
+  },
+  "connection": {
+    "connecting": "Norish에 연결 중...",
+    "syncing": "동기화 중입니다. 잠시 기다려 주세요...",
+    "checkInternet": "인터넷 연결을 확인해주세요",
+    "gettingUpdates": "최신 업데이트를 받는 동안 잠시만 기다려 주세요."
+  },
+  "language": {
+    "title": "언어"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "페이지를 찾을 수 없음",
+    "message": "이런! Nora가 찾으시는 페이지를 찾을 수 없어요. 페이지가 이동되었거나 존재하지 않을 수 있어요."
+  },
+  "import": {
+    "url": {
+      "title": "레시피 가져오기",
+      "label": "레시피 URL",
+      "placeholder": "https://example.com/your-recipe",
+      "failed": "레시피를 가져오지 못했습니다.",
+      "failedWithAI": "AI를 사용하여 레시피를 가져오지 못했습니다."
+    },
+    "paste": {
+      "title": "붙여넣기로 가져오기",
+      "label": "레시피 텍스트 또는 JSON-LD",
+      "placeholder": "여기에 레시피(자유 텍스트) 또는 JSON-LD를 붙여넣으세요...",
+      "characters": "{count} / {max}자",
+      "tooLarge": "붙여넣기가 너무 큽니다.",
+      "maxCharacters": "최대 {max}자까지 입력할 수 있습니다.",
+      "importing": "레시피를 가져오는 중...",
+      "importingWithAI": "AI를 사용하여 레시피를 가져오는 중...",
+      "inProgress": "가져오기가 진행 중입니다. 잠시 기다려 주세요...",
+      "failed": "가져오기 실패"
+    },
+    "image": {
+      "title": "이미지에서 가져오기",
+      "dropzone": "여기에 이미지를 놓거나 클릭하여 찾아보세요.",
+      "paste": "붙여넣기",
+      "formats": "파일 당 최대 10MB 용량의 JPG, PNG, WebP를 지원합니다.",
+      "invalidType": "잘못된 파일 형식",
+      "notSupported": "{name}은(는) 지원되지 않는 이미지 형식입니다.",
+      "tooLarge": "파일이 너무 큽니다.",
+      "exceeds": "{name}이(가) 10MB 제한을 초과했습니다.",
+      "tooMany": "파일이 너무 많습니다.",
+      "maxFiles": "최대 {max}개 파일까지 업로드할 수 있습니다.",
+      "importing": "이미지에서 레시피를 가져오는 중...",
+      "analyzing": "이미지를 분석하는 중입니다. 잠시 기다려 주세요...",
+      "failed": "가져오기 실패",
+      "selectedCount": "{count}개의 이미지가 선택되었습니다. 하나의 레시피로 결합됩니다.",
+      "library": "라이브러리",
+      "takePhoto": "사진 촬영",
+      "counter": "{count} / {max} 사진",
+      "importFromCount": "{count, plural, one {#장 사진에서 가져오기} other {#장 사진에서 가져오기}}"
+    },
+    "menu": {
+      "description": "URL에서 가져오거나 사진을 스캔하거나 처음부터 시작하세요."
+    }
+  },
+  "formatting": {
+    "title": "서식 지정 팁",
+    "heading": "제목을 만들려면 줄 앞에 <strong>#</strong>을 입력하세요",
+    "bold": "굵게 표시하려면 <strong>**이중 별표**</strong>로 묶으세요.",
+    "recipeLink": "다른 레시피에 연결하려면 <strong>/recipe 이름</strong>을 입력하세요.",
+    "helpAriaLabel": "서식 지정 도움말"
+  },
+  "tagInput": {
+    "placeholder": "공백으로 구분된 태그를 입력하세요..."
+  },
+  "recurrence": {
+    "title": "반복",
+    "frequency": "빈도",
+    "interval": "간격",
+    "onDay": "해당 일",
+    "daily": "매일",
+    "weekly": "매주",
+    "monthly": "매월",
+    "day": "일",
+    "days": "일",
+    "week": "주",
+    "weeks": "주",
+    "month": "월",
+    "months": "개월",
+    "next": "다음:",
+    "every": "매",
+    "everyOther": "격",
+    "on": "-에",
+    "today": "오늘",
+    "tomorrow": "내일",
+    "weekdays": {
+      "sun": "일",
+      "mon": "월",
+      "tue": "화",
+      "wed": "수",
+      "thu": "목",
+      "fri": "금",
+      "sat": "토"
+    },
+    "weekdaysFull": {
+      "0": "일요일",
+      "1": "월요일",
+      "2": "화요일",
+      "3": "수요일",
+      "4": "목요일",
+      "5": "금요일",
+      "6": "토요일"
+    }
+  },
+  "badges": {
+    "new": "신규"
+  },
+  "timer": {
+    "done": "완료",
+    "done_action": "완료",
+    "one": "타이머",
+    "other": "타이머",
+    "label_one": "타이머 1개",
+    "label_other": "{count}개의 타이머",
+    "notification_title": "타이머 완료",
+    "notification_body": "{label}이(가) 완료되었습니다!",
+    "notifications_disabled": "알림이 비활성화되었습니다.",
+    "notifications_disabled_hint": "타이머가 백그라운드에서 완료될 때 알림을 받으려면 브라우저 설정에서 알림을 활성화하세요."
+  }
+}

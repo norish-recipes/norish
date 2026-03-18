@@ -1,0 +1,31 @@
+{
+  "name": "@norish/ui",
+  "version": "0.17.0-beta",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./rating-stars": "./src/rating-stars.tsx",
+    "./star-rating": "./src/star-rating.tsx"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json --noCheck",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo node_modules dist"
+  },
+  "dependencies": {
+    "@heroicons/react": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "@types/react": "catalog:"
+  },
+  "prettier": "@norish/prettier-config"
+}

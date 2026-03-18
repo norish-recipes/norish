@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Norish! This guide will help you 
 
 ## Prerequisites
 
-- **Node.js** 22.x or later
+- **Node.js** 22.22.0 (see `.nvmrc`)
 - **pnpm** 10.x or later
 - **Docker** (for PostgreSQL and Redis)
 - **Git**
@@ -55,14 +55,14 @@ pnpm dev
 | Command              | Description                              |
 | -------------------- | ---------------------------------------- |
 | `pnpm dev`           | Start development server with hot reload |
+| `pnpm dev:mobile`    | Start Expo mobile workspace              |
 | `pnpm build`         | Create production build                  |
 | `pnpm start`         | Run production server                    |
-| `pnpm test`          | Run tests in watch mode                  |
-| `pnpm test:run`      | Run tests once                           |
+| `pnpm test`          | Run tests via Turbo (all workspaces)     |
+| `pnpm test:run`      | Alias for `pnpm test`                    |
 | `pnpm test:coverage` | Run tests with coverage report           |
 | `pnpm lint`          | Check for linting errors                 |
-| `pnpm lint:fix`      | Fix linting errors automatically         |
-| `pnpm format`        | Format code with Prettier                |
+| `pnpm format`        | Check formatting with Prettier           |
 | `pnpm format:check`  | Check formatting without changes         |
 | `pnpm i18n:check`    | Check for missing locale keys            |
 | `pnpm db:push`       | Push schema changes to database          |
@@ -71,24 +71,54 @@ pnpm dev
 
 ```
 norish/
-├── app/              # Next.js App Router pages
-│   ├── (app)/        # Authenticated pages
-│   ├── (auth)/       # Login/signup pages
-│   └── api/          # API routes
-├── components/       # React components (HeroUI + Tailwind)
-├── context/          # React contexts
-├── hooks/            # React hooks organized by domain
-├── server/           # Backend code
-│   ├── auth/         # Authentication (Better Auth)
-│   ├── db/           # Database (Drizzle ORM)
-│   ├── trpc/         # tRPC routers
-│   └── queue/        # Background jobs (BullMQ)
-├── i18n/             # Internationalization
-│   ├── config.ts     # Locale configuration
-│   └── messages/     # Translation files
-├── types/            # TypeScript types and DTOs
-└── tooling/          # ESLint, Vitest, Tailwind configs
+├── apps/             # App workspaces
+│   ├── web/          # Next.js app (App Router + server entry)
+│   └── mobile/       # Expo app workspace (@norish/mobile)
+├── packages/         # Shared libraries
+│   ├── api/          # Server API logic (routers, AI, parsing)
+│   ├── auth/         # Auth helpers
+│   ├── config/       # Shared config
+│   ├── db/           # Drizzle schema + repositories
+│   ├── i18n/         # Locale tooling and data
+│   ├── queue/        # Background jobs
+│   ├── shared/       # Shared utilities and contracts
+│   ├── shared-react/ # Shared React hooks and contexts
+│   ├── shared-server/# Shared server utilities
+│   ├── trpc/         # tRPC router definitions
+│   └── ui/           # UI component library
+├── tooling/          # Repo tooling
+│   ├── eslint/        # @norish/eslint-config
+│   ├── github/        # Shared GitHub Actions composite actions
+│   ├── monorepo/      # Circular dependency checks
+│   ├── prettier/      # @norish/prettier-config
+│   ├── tailwind/      # @norish/tailwind-config
+│   └── typescript/    # @norish/tsconfig
+└── docker/           # Local runtime containers
 ```
+
+## Script Ownership
+
+- Root `package.json` scripts are orchestration only and delegate into owned workspaces.
+- Monorepo control scripts live in `tooling/monorepo/scripts/`.
+- App-owned scripts live in `apps/<app>/scripts/`.
+- Package-owned scripts live in `packages/<package>/scripts/`.
+
+## Shared Tooling Packages
+
+- Shared lint, format, and TypeScript settings are published as workspace packages under `tooling/`.
+- Workspaces should compose from these packages instead of creating root-level config files.
+- Current shared packages:
+  - `@norish/eslint-config` (`tooling/eslint`) with `base`, `react`, and `nextjs` exports
+  - `@norish/prettier-config` (`tooling/prettier`)
+  - `@norish/tsconfig` (`tooling/typescript`) with `base.json` and `compiled-package.json`
+  - `@norish/tailwind-config` (`tooling/tailwind`) with `theme` and `postcss-config` exports
+
+### Adding a New Shared Config
+
+1. Create or update a workspace package under `tooling/` with a `package.json` and explicit `exports`.
+2. Add the package to `pnpm-workspace.yaml` and consume it via `workspace:*` from each owning workspace.
+3. Wire each workspace through local `package.json` scripts (for example `lint`, `format`, `typecheck`) and local config files that import shared config exports.
+4. Run `pnpm run deps:cycles` and relevant `turbo run` checks before opening a PR.
 
 ## Code Style Guidelines
 
@@ -183,26 +213,26 @@ pnpm build
 
 ## Testing
 
-Tests are located in `__tests__/` and mirror the source structure. We use Vitest with React Testing Library.
+Tests are colocated in workspace `__tests__/` directories (e.g., `apps/web/__tests__/...`, `packages/shared/__tests__/...`). We use Vitest with React Testing Library.
 
 ```bash
 # Run all tests
 pnpm test:run
 
-# Run specific test file
-pnpm test:run __tests__/hooks/recipes/use-recipes-query.test.ts
+# Run tests for a specific workspace
+pnpm --filter @norish/web run test
 
-# Watch mode
-pnpm test
+# Run a specific test file (from within the workspace directory)
+cd apps/web && pnpm exec vitest run __tests__/hooks/recipes/use-recipes-query.test.ts
 ```
 
 ## Adding Translations
 
-Norish uses a configurable locale system. Locales are defined in `config/server-config-loader.ts` and can be enabled/disabled at runtime via the Admin UI or environment variables.
+Norish uses a configurable locale system. Locales are defined in `packages/config/src/server-config-loader.ts` and can be enabled/disabled at runtime via the Admin UI or environment variables.
 
 ### 1. Add Locale to DEFAULT_LOCALE_CONFIG
 
-Edit `config/server-config-loader.ts` to add the new locale:
+Edit `packages/config/src/server-config-loader.ts` to add the new locale:
 
 ```typescript
 export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
@@ -221,7 +251,7 @@ This is the single source of truth for all locale configuration.
 
 ### 2. Create Translation Files
 
-Create a new folder `i18n/messages/{your-locale}/` with the following files:
+Create a new folder `packages/i18n/src/messages/{your-locale}/` with the following files:
 
 - `common.json` - Common UI strings
 - `recipes.json` - Recipe-related strings
@@ -231,7 +261,14 @@ Create a new folder `i18n/messages/{your-locale}/` with the following files:
 - `navbar.json` - Navigation strings
 - `auth.json` - Authentication strings
 
-Copy the structure from `i18n/messages/en/` as a starting point.
+Copy the structure from `packages/i18n/src/messages/en/` as a starting point.
+
+### 2.1 Register Message Loaders (Required for Mobile/Expo)
+
+Expo Metro does not support fully dynamic JSON imports for locale bundles.
+After adding a new locale folder, update `packages/i18n/src/messages.ts` and add static loader entries for every section (`common`, `recipes`, `groceries`, `calendar`, `settings`, `navbar`, `auth`) under `MESSAGE_LOADERS`.
+
+If you skip this, iOS/Android bundling can fail with an "Invalid call" error from dynamic `import(...)`.
 
 ### 3. Verify Translations
 

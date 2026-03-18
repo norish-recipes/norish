@@ -111,6 +111,7 @@ services:
       MASTER_KEY: <32-byte-base64-key> # openssl rand -base64 32
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000
       REDIS_URL: redis://redis:6379
+      UPLOADS_DIR: /app/uploads
 
       # Optional
       # NEXT_PUBLIC_LOG_LEVEL: info
@@ -223,18 +224,18 @@ Server owners/admins can manage:
 
 ### Optional general Runtime
 
-| Variable              | Description                                | Default                     |
-| --------------------- | ------------------------------------------ | --------------------------- |
-| `NODE_ENV`            | Runtime environment                        | `development`               |
-| `HOST`                | Server bind address                        | `0.0.0.0`                   |
-| `PORT`                | Server port                                | `3000`                      |
-| `AUTH_URL`            | Public URL for auth callbacks and links    | `http://localhost:3000`     |
-| `TRUSTED_ORIGINS`     | Comma-separated additional trusted origins | (empty)                     |
-| `UPLOADS_DIR`         | Upload storage directory                   | `./uploads`                 |
-| `CHROME_WS_ENDPOINT`  | Playwright CDP WebSocket endpoint          | `ws://chrome-headless:3000` |
-| `REDIS_URL`           | Redis connection URL                       | `redis://localhost:6379`    |
-| `ENABLE_REGISTRATION` | Allow new-user registration                | `false`                     |
-| `AI_ENABLED`          | Enable AI features globally                | `false`                     |
+| Variable              | Description                                | Default                                           |
+| --------------------- | ------------------------------------------ | ------------------------------------------------- |
+| `NODE_ENV`            | Runtime environment                        | `development`                                     |
+| `HOST`                | Server bind address                        | `0.0.0.0`                                         |
+| `PORT`                | Server port                                | `3000`                                            |
+| `AUTH_URL`            | Public URL for auth callbacks and links    | `http://localhost:3000`                           |
+| `TRUSTED_ORIGINS`     | Comma-separated additional trusted origins | (empty)                                           |
+| `UPLOADS_DIR`         | Upload storage directory                   | `./.runtime/uploads` (dev), `/app/uploads` (prod) |
+| `CHROME_WS_ENDPOINT`  | Playwright CDP WebSocket endpoint          | `ws://chrome-headless:3000`                       |
+| `REDIS_URL`           | Redis connection URL                       | `redis://localhost:6379`                          |
+| `ENABLE_REGISTRATION` | Allow new-user registration                | `false`                                           |
+| `AI_ENABLED`          | Enable AI features globally                | `false`                                           |
 
 ### Optional auth setup
 
@@ -286,16 +287,16 @@ These are only used when claim mapping is enabled.
 
 ### Optional Video + Transcription
 
-| Variable                   | Description                                     | Default       |
-| -------------------------- | ----------------------------------------------- | ------------- |
-| `VIDEO_PARSING_ENABLED`    | Enable video parsing pipeline                   | `false`       |
-| `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length                   | `120`         |
-| `YT_DLP_VERSION`           | yt-dlp version used by downloader               | `2025.11.12`  |
-| `YT_DLP_BIN_DIR`           | Folder containing yt-dlp binary                 | env-dependent |
-| `TRANSCRIPTION_PROVIDER`   | Transcription provider                          | `disabled`    |
-| `TRANSCRIPTION_ENDPOINT`   | Transcription endpoint (local/custom providers) | (empty)       |
-| `TRANSCRIPTION_API_KEY`    | Transcription API key                           | (empty)       |
-| `TRANSCRIPTION_MODEL`      | Transcription model                             | `whisper-1`   |
+| Variable                   | Description                                     | Default                                   |
+| -------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| `VIDEO_PARSING_ENABLED`    | Enable video parsing pipeline                   | `false`                                   |
+| `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length                   | `120`                                     |
+| `YT_DLP_VERSION`           | yt-dlp version used by downloader               | `2025.11.12`                              |
+| `YT_DLP_BIN_DIR`           | Folder containing yt-dlp binary                 | `./.runtime/bin` (dev), `/app/bin` (prod) |
+| `TRANSCRIPTION_PROVIDER`   | Transcription provider                          | `disabled`                                |
+| `TRANSCRIPTION_ENDPOINT`   | Transcription endpoint (local/custom providers) | (empty)                                   |
+| `TRANSCRIPTION_API_KEY`    | Transcription API key                           | (empty)                                   |
+| `TRANSCRIPTION_MODEL`      | Transcription model                             | `whisper-1`                               |
 
 ### Optional (Parsing + Content Detection)
 
@@ -327,7 +328,7 @@ These are only used when claim mapping is enabled.
 
 ```bash
 # Clone the repository
-git clone https://github.com/mikeve97/norish.git
+git clone https://github.com/norish-recipes/norish.git
 cd norish
 
 # Install dependencies
@@ -336,12 +337,14 @@ pnpm install
 # Create your environment file
 cp .env.example .env.local
 
-# Start required services (for example via Docker)
-# docker run -d --name norish-db -e POSTGRES_PASSWORD=norish -e POSTGRES_DB=norish -p 5432:5432 postgres:17-alpine
-# docker run -d --name norish-redis -p 6379:6379 redis:7-alpine
+# Start required services (Postgres, Redis, Chrome)
+pnpm run docker:up
 
-# Run the app
+# Run the web app
 pnpm run dev
+
+# Run the mobile app (Expo)
+pnpm run dev:mobile
 ```
 
 ### Development Commands
@@ -349,14 +352,18 @@ pnpm run dev
 | Command                  | Description                                               |
 | ------------------------ | --------------------------------------------------------- |
 | `pnpm run dev`           | Start development server with hot reload                  |
+| `pnpm run dev:mobile`    | Start Expo mobile workspace (`apps/mobile`)               |
+| `pnpm run build:web`     | Build Next.js app workspace (`apps/web`)                  |
 | `pnpm run build`         | Full production build (Next.js + server + service worker) |
-| `pnpm run test`          | Run tests in watch mode                                   |
-| `pnpm run test:run`      | Run tests once                                            |
+| `pnpm run test`          | Run tests via Turbo across all workspaces                 |
+| `pnpm run test:run`      | Run tests once via Turbo                                  |
 | `pnpm run test:coverage` | Run tests with coverage report                            |
-| `pnpm run lint`          | Lint and auto-fix issues                                  |
-| `pnpm run lint:check`    | Lint TypeScript files                                     |
-| `pnpm run format`        | Format files with Prettier                                |
-| `pnpm run format:check`  | Check formatting without changing files                   |
+| `pnpm run lint`          | Check for linting errors across all workspaces            |
+| `pnpm run lint:check`    | Lint all workspaces and run monorepo integrity checks     |
+| `pnpm run format`        | Check formatting across all workspaces (no auto-fix)      |
+| `pnpm run typecheck`     | Run type checking across all workspaces                   |
+| `pnpm run docker:up`     | Start local dependency stack via Compose                  |
+| `pnpm run docker:down`   | Stop local dependency stack                               |
 
 ---
 
@@ -364,11 +371,8 @@ pnpm run dev
 
 ### Frontend
 
-- Next.js 16
-- Tailwind CSS 4
-- HeroUI
-- Framer Motion
-- TanStack Query
+- Web: Next.js 16 App Router, React 19, HeroUI v2, Tailwind CSS v4, Motion, TanStack Query
+- Mobile: Expo SDK 55, Expo Router, React Native 0.83, React 19, HeroUI Native v1 RC3, Uniwind, Tailwind CSS v4 theme tokens
 
 ### Backend
 
@@ -415,4 +419,5 @@ This list is not limited to the below but the ones I know:
 
 Last but not least, a picture of our lovely dog Nora:
 
-<img src="./public/nora.jpg" width="25%" alt="Nora" />
+<img src="./apps/web/public/nora.jpg" width="25%" alt="Nora" />
+

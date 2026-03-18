@@ -1,0 +1,61 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "CI",
+    "npm_lifecycle_event",
+    "SKIP_ENV_VALIDATION",
+    "DATABASE_URL",
+    "MASTER_KEY",
+    "AUTH_URL",
+    "CHROME_WS_ENDPOINT",
+    "REDIS_URL"
+  ],
+  "tasks": {
+    "topo": {
+      "dependsOn": ["^topo"],
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "dist-server/**", ".cache/**", "**/*.tsbuildinfo"]
+    },
+    "build:server": {
+      "dependsOn": ["^build:server"],
+      "outputs": []
+    },
+    "update-sw": {
+      "dependsOn": ["^update-sw"],
+      "outputs": ["public/sw.js"]
+    },
+    "dev": {
+      "dependsOn": ["^dev"],
+      "cache": false,
+      "persistent": true
+    },
+    "lint:check": {
+      "dependsOn": ["^lint:check"],
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": ["dist/**", "**/*.tsbuildinfo", ".cache/**"]
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "outputs": ["coverage/**"]
+    },
+    "format": {
+      "dependsOn": ["^format"],
+      "outputs": [],
+      "outputLogs": "new-only"
+    },
+    "deps:cycles": {
+      "cache": false
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "name": "@norish/trpc",
+  "version": "0.17.1-beta",
+  "private": true,
+  "type": "module",
+  "types": "./dist/public.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/public.d.ts",
+      "default": "./src/public.ts"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./src/client.ts"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "default": "./src/server.ts"
+    },
+    "./helpers": {
+      "types": "./dist/helpers.d.ts",
+      "default": "./src/helpers.ts"
+    },
+    "./connection-manager": {
+      "types": "./dist/connection-manager.d.ts",
+      "default": "./src/connection-manager.ts"
+    },
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "default": "./src/middleware.ts"
+    },
+    "./trpc": {
+      "types": "./dist/trpc.d.ts",
+      "default": "./src/trpc.ts"
+    },
+    "./routers/*": {
+      "types": "./dist/routers/*.d.ts",
+      "default": "./src/routers/*.ts"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist .cache && tsc -p tsconfig.json --noCheck",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "rm -rf dist .cache && tsc -p tsconfig.json --noCheck",
+    "clean": "git clean -xdf .cache .turbo node_modules dist"
+  },
+  "dependencies": {
+    "@norish/auth": "workspace:*",
+    "@norish/config": "workspace:*",
+    "@norish/db": "workspace:*",
+    "@norish/queue": "workspace:*",
+    "@norish/shared": "workspace:*",
+    "@norish/shared-server": "workspace:*",
+    "@trpc/server": "catalog:",
+    "bullmq": "catalog:",
+    "ioredis": "catalog:",
+    "jszip": "catalog:",
+    "superjson": "catalog:",
+    "ws": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
+    "@types/ws": "8.18.1",
+    "eslint": "catalog:",
+    "prettier": "catalog:"
+  },
+  "prettier": "@norish/prettier-config"
+}

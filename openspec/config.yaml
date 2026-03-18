@@ -1,0 +1,53 @@
+schema: spec-driven
+
+context: |
+  Norish is a real-time recipe sharing application designed for household collaboration.
+  It enables users to manage recipes, grocery lists, meal planning calendars, and video
+  content with live synchronization across household members.
+
+  Tech stack:
+  - Runtime: Node.js 22.x with TypeScript 5.9
+  - Framework: Next.js 16 (App Router) with custom Node server
+  - Mobile: Expo with React native, HeroUI native, Expo UI, Expo SDK55. 
+  - Package Manager: pnpm 10.x (monorepo with Turborepo)
+  - Frontend: React 19, HeroUI, Tailwind CSS v4, Motion, TanStack Query
+  - Backend: tRPC with WebSocket subscriptions, PostgreSQL + Drizzle ORM, Redis + BullMQ
+  - Auth: Better Auth (SSO/OIDC/OAuth2)
+  - AI: Vercel AI SDK with multi-provider support
+  - Build: tsdown (server), Next.js (client)
+  - Testing: Vitest with React Testing Library
+  - Linting: ESLint 9 (flat config) with Prettier
+
+  Conventions:
+  - Import paths use @/ alias
+  - No console.log — use Pino logger instead
+  - No type suppression (as any, @ts-ignore, @ts-expect-error)
+  - Repository pattern for database access
+  - Hooks: use-{domain}-{type}.ts, Components: PascalCase, Files: kebab-case
+  - Real-time pattern: mutations -> server events -> WebSocket subscriptions -> React Query cache
+
+  Monorepo structure:
+  - apps/web — Next.js web app
+  - apps/mobile — Expo mobile app
+  - packages/api — Server API logic (routers, AI, parsing)
+  - packages/auth — Auth helpers
+  - packages/config — Shared config and env validation
+  - packages/db — Drizzle schema + repositories
+  - packages/i18n — Locale tooling and data
+  - packages/queue — Background jobs (BullMQ)
+  - packages/shared — Shared utilities and contracts
+  - packages/shared-react — Shared React hooks and contexts
+  - packages/shared-server — Shared server utilities
+  - packages/trpc — tRPC router definitions
+  - packages/ui — UI component library
+  - tooling/ — ESLint, Prettier, TypeScript, Tailwind configs
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours

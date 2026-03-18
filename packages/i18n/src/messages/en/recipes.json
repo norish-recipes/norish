@@ -1,0 +1,223 @@
+{
+  "dashboard": {
+    "title": "All recipes",
+    "searchPlaceholder": "Search or add recipe...",
+    "searchRecipesPlaceholder": "Search recipes...",
+    "recipeCount": "{count, plural, one {# recipe} other {# recipes}}",
+    "addRecipe": "Add Recipe",
+    "importFromUrl": "URL",
+    "importFromPaste": "Paste",
+    "importFromImage": "Image",
+    "searchFields": {
+      "title": "Title",
+      "description": "Description",
+      "ingredients": "Ingredients",
+      "steps": "Steps",
+      "tags": "Tags"
+    }
+  },
+  "empty": {
+    "title": "Your recipe collection awaits",
+    "description": "Paste a recipe URL in the search field above and watch the magic happen.",
+    "noResults": "No recipes found",
+    "noResultsHint": "Try adjusting or clearing your filters."
+  },
+  "card": {
+    "noImage": "No image available",
+    "viewGroceries": "View groceries",
+    "addToCalendar": "Add to calendar",
+    "deleteRecipe": "Delete recipe"
+  },
+  "detail": {
+    "backToRecipes": "Back to recipes",
+    "viewOriginal": "View original recipe",
+    "ingredients": "Ingredients",
+    "steps": "Steps",
+    "notes": "Notes",
+    "addToGroceries": "Add to groceries",
+    "ratingPrompt": "What did you think of this recipe?",
+    "notFound": "Recipe Not Found",
+    "notFoundMessage": "This recipe doesn't exist or you don't have permission to view it.",
+    "prep": "prep",
+    "total": "total",
+    "planMeal": "Plan meal",
+    "recipeActions": "Recipe actions",
+    "instructions": "Instructions",
+    "cook": "Cook",
+    "switchToDecimal": "Show decimals",
+    "switchToFraction": "Show fractions"
+  },
+  "actions": {
+    "plan": "Plan",
+    "groceries": "Groceries",
+    "edit": "Edit",
+    "delete": "Delete",
+    "share": "Share",
+    "visitOriginal": "Visit Original Recipe",
+    "addToCalendar": "Add to Calendar",
+    "autoTag": "Auto-tag",
+    "autoTagging": "Generating tags...",
+    "autoCategorize": "Auto Categorize",
+    "detectAllergies": "Detect Allergies",
+    "detectingAllergies": "Detecting allergies...",
+    "estimateNutrition": "Estimate Nutrition",
+    "estimatingNutrition": "Estimating nutrition...",
+    "screenOn": "Screen On",
+    "keepScreenOn": "Keep Screen On",
+    "actionsLabel": "Actions"
+  },
+  "convert": {
+    "ariaLabel": "Convert measurement system",
+    "toMetric": "Convert to Metric",
+    "toUS": "Convert to US"
+  },
+  "deleteModal": {
+    "title": "Delete Recipe",
+    "confirmMessage": "Are you sure you want to delete \"{recipeName}\"?",
+    "warning": "This action cannot be undone."
+  },
+  "form": {
+    "createTitle": "Create Recipe",
+    "editTitle": "Edit Recipe",
+    "createDescription": "Add a new recipe to your collection",
+    "editDescription": "Update your recipe details",
+    "initializingForm": "Initializing form...",
+    "photo": "Photo",
+    "basicInfo": "Basic Information",
+    "ingredients": "Ingredients",
+    "instructions": "Instructions",
+    "tags": "Tags",
+    "nutrition": "Nutrition",
+    "nutritionPerServing": "(per serving, optional)",
+    "details": "Details",
+    "additionalInfo": "Additional Information",
+    "recipeName": "Recipe Name",
+    "recipeNamePlaceholder": "e.g., Chocolate Chip Cookies",
+    "description": "Description",
+    "descriptionPlaceholder": "A brief description of what makes this recipe special...",
+    "notes": "Notes",
+    "notesPlaceholder": "Add prep notes, adjustments or serving tips for this recipe...",
+    "ingredientsHelp": "Type ingredients like \"2 cups flour\" - we'll automatically parse amounts and units.",
+    "instructionsHelp": "Write clear step-by-step instructions. Press Enter to move to the next step.",
+    "tagsHelp": "Type tags and click suggestions to add. Selected tags are blue, new tags have a dashed border.",
+    "tagsAndCategories": "Tags & Categories",
+    "categoriesHelp": "Select meal categories for this recipe.",
+    "category": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    },
+    "calories": "Calories",
+    "fat": "Fat (g)",
+    "carbs": "Carbs (g)",
+    "protein": "Protein (g)",
+    "servings": "Servings",
+    "cookingTimes": "Cooking Times",
+    "optional": "(optional)",
+    "sourceUrl": "Source URL",
+    "sourceUrlPlaceholder": "https://example.com/recipe",
+    "measurementSystemNote": "We auto-detect the measurement system from your ingredients, but you can override it here.",
+    "measurementSystemEditNote": " Note: This updates the system label but does not convert units. Use the Convert action after saving.",
+    "createRecipe": "Create Recipe",
+    "saveChanges": "Save Changes",
+    "uploading": "Uploading...",
+    "clickToUpload": "Click to upload or drag and drop",
+    "pasteToUpload": "to paste",
+    "imageFormats": "PNG, JPG, WEBP up to 5MB"
+  },
+  "gallery": {
+    "addImage": "Add image",
+    "uploading": "Uploading...",
+    "uploadFailed": "Upload failed",
+    "dragToReorder": "Drag to reorder",
+    "maxImagesReached": "Maximum {max} images allowed",
+    "maxVideosReached": "Maximum {max} videos allowed",
+    "invalidFileType": "Invalid file type"
+  },
+  "carousel": {
+    "noImageAvailable": "No image available",
+    "noMediaAvailable": "No media available",
+    "videoPlayer": {
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "fullscreen": "Enter fullscreen",
+      "exitFullscreen": "Exit fullscreen"
+    }
+  },
+  "validation": {
+    "nameRequired": "Recipe name is required",
+    "ingredientsRequired": "At least one ingredient is required",
+    "stepsRequired": "At least one step is required",
+    "servingsMin": "Servings must be at least 1"
+  },
+  "nutrition": {
+    "title": "Nutrition",
+    "calories": "Calories",
+    "fat": "Fat",
+    "carbs": "Carbs",
+    "protein": "Protein",
+    "showingPortions": "Showing values for {count} {count, plural, one {portion} other {portions}}",
+    "noInfo": "No nutrition information available",
+    "estimateWithAI": "Estimate with AI"
+  },
+  "measurementSystem": {
+    "label": "Measurement System",
+    "detected": "Detected: {system}",
+    "metric": "Metric",
+    "us": "US"
+  },
+  "timeInputs": {
+    "prep": "Prep",
+    "cook": "Cook",
+    "total": "Total"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Step {number}: Describe the step...",
+    "stepPlaceholderShort": "Step {number}"
+  },
+  "ingredientInput": {
+    "placeholder": "e.g., 2 cups flour"
+  },
+  "wakeLock": {
+    "keepScreenOn": "Keep Screen on",
+    "notSupported": "Keep screen awake is not supported in this browser",
+    "activeTooltip": "Screen will stay awake while cooking",
+    "inactiveTooltip": "Keep screen awake while following steps",
+    "ariaLabel": "Keep screen awake"
+  },
+  "toasts": {
+    "processingBoth": "Processing tags & allergies",
+    "processingTags": "Generating tags",
+    "processingAllergies": "Detecting allergies",
+    "bothComplete": "Tags & allergies updated",
+    "tagsComplete": "Tags generated",
+    "allergiesComplete": "Allergies detected",
+    "imported": "Recipe imported",
+    "converted": "Measurements converted",
+    "convertedDescription": "Recipe converted to {system} units",
+    "failed": "Recipe operation failed",
+    "failedDescription": "Something went wrong while processing your recipe. Check the browser console for technical details.",
+    "batchImported": "Recipes imported",
+    "batchImportedDescription": "{count} recipes imported from archive",
+    "view": "View",
+    "open": "Open"
+  },
+  "tags": {
+    "panel": {
+      "editTitle": "Edit Tag",
+      "editPlaceholder": "Enter tag name...",
+      "duplicateTag": "This tag already exists"
+    }
+  },
+  "cookMode": {
+    "steps": "Steps",
+    "ingredients": "Ingredients",
+    "servings": "Servings",
+    "serving": "{count, plural, one {# serving} other {# servings}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "Swipe to navigate steps",
+    "swipeIngredients": "Swipe left for ingredients",
+    "swipeBackToSteps": "Swipe right for steps"
+  }
+}

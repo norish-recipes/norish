@@ -1,0 +1,41 @@
+{
+  "name": "@norish/tailwind-config",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./theme": "./theme.css",
+    "./native-theme": {
+      "node": "./native-theme.js",
+      "default": "./native-theme.css"
+    },
+    "./postcss-config": "./postcss-config.js",
+    "./hero": "./hero.ts"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo node_modules",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "catalog:",
+    "postcss": "catalog:",
+    "tailwindcss": "catalog:"
+  },
+  "peerDependencies": {
+    "@heroui/react": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@heroui/react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@heroui/react": "catalog:",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
+  },
+  "prettier": "@norish/prettier-config"
+}

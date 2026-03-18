@@ -1,0 +1,144 @@
+
+import type { CaldavSyncStatus, CaldavSyncStatusViewDto } from "@norish/shared/contracts";
+import type { CaldavSubscriptionEvents } from "@norish/trpc";
+import type { CaldavCacheHelpers, CreateCaldavHooksOptions } from "./types";
+
+import { createClientLogger } from "@norish/shared/lib/logger";
+import { useSubscription } from "@trpc/tanstack-react-query";
+
+const log = createClientLogger("CaldavSubscription");
+
+type SyncEventPayload = {
+  type: keyof CaldavSubscriptionEvents;
+  data: CaldavSubscriptionEvents[keyof CaldavSubscriptionEvents];
+};
+
+export type CaldavSubscriptionToastAdapter = {
+  showSyncCompleteToast: (totalSynced: number, totalFailed: number) => void;
+};
+
+type CreateUseCaldavSubscriptionOptions = CreateCaldavHooksOptions & {
+  useCaldavCacheHelpers: () => CaldavCacheHelpers;
+  useToastAdapter: () => CaldavSubscriptionToastAdapter;
+};
+
+export function createUseCaldavSubscription({
+  useTRPC,
+  useCaldavCacheHelpers,
+  useToastAdapter,
+}: CreateUseCaldavSubscriptionOptions) {
+  function useCaldavSubscription() {
+    const trpc = useTRPC();
+    const { setConfig, setStatuses, invalidateSyncStatus, invalidateSummary } =
+      useCaldavCacheHelpers();
+    const toastAdapter = useToastAdapter();
+
+    useSubscription(
+      trpc.caldavSubscriptions.onSyncEvent.subscriptionOptions(undefined, {
+        onData: (event: SyncEventPayload) => {
+          const { type, data } = event;
+
+          if (type === "configSaved") {
+            const payload = data as CaldavSubscriptionEvents["configSaved"];
+
+            setConfig(() => payload.config);
+          } else if (type === "syncCompleted" || type === "syncFailed") {
+            invalidateSyncStatus();
+            invalidateSummary();
+          } else if (type === "itemStatusUpdated") {
+            const payload = data as CaldavSubscriptionEvents["itemStatusUpdated"];
+
+            setStatuses((prev) => {
+              if (!prev) return prev;
+
+              const { itemId, itemType, syncStatus, errorMessage, caldavEventUid } = payload;
+
+              const updatedStatuses = prev.statuses.map((status) => {
+                if (status.itemId === itemId && status.itemType === itemType) {
+                  return {
+                    ...status,
+                    syncStatus: syncStatus as CaldavSyncStatus,
+                    errorMessage,
+                    caldavEventUid,
+                    lastSyncAt: new Date(),
+                  } satisfies CaldavSyncStatusViewDto;
+                }
+
+                return status;
+              });
+
+              return { ...prev, statuses: updatedStatuses };
+            });
+            invalidateSummary();
+          } else if (type === "initialSyncComplete") {
+            const payload = data as CaldavSubscriptionEvents["initialSyncComplete"];
+
+            toastAdapter.showSyncCompleteToast(payload.totalSynced, payload.totalFailed);
+            invalidateSyncStatus();
+            invalidateSummary();
+          }
+        },
+        onError: (error) => {
+          log.error({ err: error }, "CalDAV subscription error");
+        },
+      })
+    );
+  }
+
+  function useCaldavItemStatusSubscription() {
+    const trpc = useTRPC();
+    const { setStatuses, invalidateSummary } = useCaldavCacheHelpers();
+
+    useSubscription(
+      trpc.caldavSubscriptions.onItemStatusUpdated.subscriptionOptions(undefined, {
+        onData: (data) => {
+          const { itemId, itemType, syncStatus, errorMessage, caldavEventUid } = data;
+
+          setStatuses((prev) => {
+            if (!prev) return prev;
+
+            const updatedStatuses = prev.statuses.map((status) => {
+              if (status.itemId === itemId && status.itemType === itemType) {
+                return {
+                  ...status,
+                  syncStatus: syncStatus as CaldavSyncStatus,
+                  errorMessage,
+                  caldavEventUid,
+                  lastSyncAt: new Date(),
+                } satisfies CaldavSyncStatusViewDto;
+              }
+
+              return status;
+            });
+
+            return { ...prev, statuses: updatedStatuses };
+          });
+
+          invalidateSummary();
+        },
+      })
+    );
+  }
+
+  function useCaldavSyncCompleteSubscription() {
+    const trpc = useTRPC();
+    const { invalidateSyncStatus, invalidateSummary } = useCaldavCacheHelpers();
+    const toastAdapter = useToastAdapter();
+
+    useSubscription(
+      trpc.caldavSubscriptions.onInitialSyncComplete.subscriptionOptions(undefined, {
+        onData: (data) => {
+          toastAdapter.showSyncCompleteToast(data.totalSynced, data.totalFailed);
+          invalidateSyncStatus();
+          invalidateSummary();
+        },
+      })
+    );
+  }
+
+  return {
+    useCaldavSubscription,
+    useCaldavItemStatusSubscription,
+    useCaldavSyncCompleteSubscription,
+  };
+}

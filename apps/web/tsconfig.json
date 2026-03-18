@@ -1,0 +1,23 @@
+{
+  "extends": "@norish/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "dom", "dom.iterable"],
+    "noImplicitAny": false,
+    "noCheck": true, // This needs to be fixed, https://github.com/norish-recipes/norish/issues/333
+    "jsx": "preserve",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"],
+      "~/*": ["./*"],
+      "@norish/web/*": ["./*"],
+      "@norish/auth/*": ["../../packages/auth/src/*"],
+      "@norish/queue/*": ["../../packages/queue/src/*"]
+    }
+  },
+  "include": [".", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
