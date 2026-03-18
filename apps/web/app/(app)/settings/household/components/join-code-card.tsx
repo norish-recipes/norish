@@ -1,19 +1,18 @@
 "use client";
 
-import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
-
-import { useState, useEffect } from "react";
-import { Card, CardBody, CardHeader, Input, Button, addToast } from "@heroui/react";
-import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowPathIcon,
   ClipboardDocumentIcon as ClipboardDocumentIconSolid,
 } from "@heroicons/react/16/solid";
+import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicons/react/24/outline";
+import { addToast, Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useHouseholdSettingsContext } from "../context";
+import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { useHouseholdSettingsContext } from "../context";
 
 export default function JoinCodeCard() {
   const t = useTranslations("settings.household.joinCode");
@@ -82,17 +81,6 @@ export default function JoinCodeCard() {
   const handleCopyJoinCode = async () => {
     // Type guard ensures household has joinCode
     if ("joinCode" in household && household.joinCode) {
-      if (!navigator.clipboard || !navigator.clipboard.writeText) {
-        showSafeErrorToast({
-          title: t("copyFailed"),
-          description: tErrors("technicalDetails"),
-          color: "danger",
-          context: "household-join-code:copy-unsupported",
-        });
-
-        return;
-      }
-
       try {
         await navigator.clipboard.writeText(household.joinCode);
         addToast({
