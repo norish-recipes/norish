@@ -93,8 +93,6 @@ function RecipeCardComponent({
 
   const handleDeleteClick = useCallback(() => {
     onDeleteModalOpen();
-    // Keep the row open for the delete animation after confirmation
-    setTimeout(() => rowRef.current?.openRow(), 0);
   }, [onDeleteModalOpen]);
 
   const handleDeleteConfirm = useCallback(() => {
