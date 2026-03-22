@@ -2,14 +2,15 @@
 
 import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Chip, Input } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
+import { formatUnit } from "@norish/shared/lib/unit-localization";
 
 import IngredientInput, { ParsedIngredient } from "@/components/recipes/ingredient-input";
 import MeasurementSystemSelector from "@/components/recipes/measurement-system-selector";
@@ -36,7 +37,8 @@ export interface RecipeFormProps {
 export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const router = useRouter();
   const { createRecipe, updateRecipe } = useRecipesContext();
-  const { units } = useUnitsQuery();
+  const locale = useLocale();
+  const { units, isLoading: isLoadingUnits } = useUnitsQuery();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const t = useTranslations("recipes.form");
@@ -70,6 +72,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   );
   const [detectedSystem, setDetectedSystem] = useState<MeasurementSystem | null>(null);
   const [manuallySetSystem, setManuallySetSystem] = useState(false);
+  const initializedRecipeIdRef = useRef<string | null>(null);
 
   // Media state - unified array of images and videos
   const [media, setMedia] = useState<RecipeGalleryMedia[]>(() => {
@@ -130,7 +133,9 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   // Initialize ingredients and steps from initialData
   // Filter by the current systemUsed to only show items for the active measurement system
   useEffect(() => {
-    if (initialData && mode === "edit") {
+    if (mode !== "edit" || !initialData || isLoadingUnits) return;
+    if (initializedRecipeIdRef.current === initialData.id) return;
+
       // Filter ingredients by the recipe's measurement system
       const filteredIngredients = initialData.recipeIngredients.filter(
         (ing) => ing.systemUsed === initialData.systemUsed
@@ -139,7 +144,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       const initIngredients: ParsedIngredient[] = filteredIngredients.map((ing) => ({
         ingredientName: ing.ingredientName,
         amount: ing.amount,
-        unit: ing.unit,
+        unit: ing.unit ? formatUnit(ing.unit, locale, units, ing.amount) : null,
         order: ing.order,
         systemUsed: ing.systemUsed,
       }));
@@ -159,8 +164,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       }));
 
       setSteps(initSteps);
-    }
-  }, [initialData, mode]);
+      initializedRecipeIdRef.current = initialData.id;
+  }, [initialData, isLoadingUnits, locale, mode, units]);
 
   // Detect measurement system from ingredients and auto-select
   useEffect(() => {
