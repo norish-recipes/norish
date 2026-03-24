@@ -4,7 +4,10 @@ import type { RecipeListContext } from "@norish/db";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
+import {
+  getRecipePermissionPolicy,
+  isProvenanceEnabled as checkProvenanceEnabled,
+} from "@norish/config/server-config-loader";
 import {
   addStepsAndIngredientsToRecipeByInput,
   createRecipeWithRefs,
@@ -34,6 +37,7 @@ import {
   addImportJob,
   addNutritionEstimationJob,
   addPasteImportJob,
+  addProvenanceInferenceJob,
 } from "@norish/queue";
 import { getQueues } from "@norish/queue/registry";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -234,6 +238,20 @@ const create = authedProcedure.input(FullRecipeInsertSchema).mutation(({ ctx, in
           "created",
           { recipe: dashboardDto }
         );
+
+        // Check if we need to auto-infer provenance
+        const { getAIConfig } = await import("@norish/config/server-config-loader");
+        const aiConfig = await getAIConfig();
+
+        if (aiConfig?.provenanceAutoNew) {
+          const queues = getQueues();
+
+          await addProvenanceInferenceJob(queues.provenanceInference, {
+            recipeId: createdId,
+            userId: ctx.user.id,
+            householdKey: ctx.householdKey,
+          });
+        }
       }
     })
     .catch((err) => handleError(ctx, err, "create recipe", { recipeId }));
@@ -882,6 +900,69 @@ const triggerAllergyDetection = authedProcedure
     return { success: true };
   });
 
+const triggerProvenanceInference = authedProcedure
+  .input(z.object({ recipeId: z.uuid() }))
+  .mutation(async ({ ctx, input }) => {
+    const { recipeId } = input;
+
+    log.info({ userId: ctx.user.id, recipeId }, "Queueing provenance inference for recipe");
+
+    const [aiEnabled, provenanceEnabled] = await Promise.all([
+      checkAIEnabled(),
+      checkProvenanceEnabled(),
+    ]);
+
+    if (!aiEnabled || !provenanceEnabled) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Provenance inference features are disabled",
+      });
+    }
+
+    const recipe = await getRecipeFull(recipeId);
+
+    if (!recipe) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Recipe not found",
+      });
+    }
+
+    if (recipe.recipeIngredients.length === 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Recipe has no ingredients to infer origin from",
+      });
+    }
+
+    // Add to queue for background processing
+    const queues = getQueues();
+    const result = await addProvenanceInferenceJob(queues.provenanceInference, {
+      recipeId,
+      userId: ctx.user.id,
+      householdKey: ctx.householdKey,
+    });
+
+    if (result.status === "duplicate") {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "Provenance inference is already in progress for this recipe",
+      });
+    }
+
+    const policy = await getRecipePermissionPolicy();
+
+    emitByPolicy(
+      recipeEmitter,
+      policy.view,
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "provenanceInferenceStarted",
+      { recipeId }
+    );
+
+    return { success: true };
+  });
+
 export const recipesProcedures = router({
   list,
   get,
@@ -896,6 +977,7 @@ export const recipesProcedures = router({
   triggerAutoTag,
   triggerAutoCategorize,
   triggerAllergyDetection,
+  triggerProvenanceInference,
   reserveId,
   autocomplete,
   updateCategories,

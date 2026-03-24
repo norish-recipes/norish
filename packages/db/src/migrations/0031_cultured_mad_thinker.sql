@@ -1,0 +1,4 @@
+CREATE TYPE "public"."cuisine_enum" AS ENUM('American', 'British', 'Caribbean', 'Chinese', 'French', 'Greek', 'Indian', 'Italian', 'Japanese', 'Korean', 'Latin American', 'Lebanese', 'Mediterranean', 'Mexican', 'Middle Eastern', 'Spanish', 'Thai', 'Vietnamese', 'Other');--> statement-breakpoint
+UPDATE "recipes" SET "origin" = NULL, "cuisine_style" = NULL;--> statement-breakpoint
+ALTER TABLE "recipes" ALTER COLUMN "origin" SET DATA TYPE varchar(2);--> statement-breakpoint
+ALTER TABLE "recipes" ALTER COLUMN "cuisine_style" SET DATA TYPE "public"."cuisine_enum" USING "cuisine_style"::"public"."cuisine_enum";

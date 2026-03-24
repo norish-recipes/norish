@@ -36,6 +36,10 @@ export type RecipeSubscriptionEvents = {
   allergyDetectionStarted: { recipeId: string };
   allergyDetectionCompleted: { recipeId: string };
 
+  // Provenance inference events
+  provenanceInferenceStarted: { recipeId: string };
+  provenanceInferenceCompleted: { recipeId: string };
+
   // Processing toast events (sent directly from workers with i18n key)
   processingToast: {
     recipeId: string;
