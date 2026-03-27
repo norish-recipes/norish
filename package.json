@@ -5,6 +5,9 @@
   "type": "module",
   "packageManager": "pnpm@10.30.1",
   "scripts": {
+    "devsetup": "pnpm run devsetup:copyenvfile && pnpm run devsetup:createmasterkey",
+    "devsetup:copyenvfile": "node -e \"const fs=require('fs');if(!fs.existsSync('.env.local'))fs.copyFileSync('.env.example','.env.local')\"",
+    "devsetup:createmasterkey": "node -e \"const fs=require('fs'),crypto=require('crypto'),f='.env.local';fs.writeFileSync(f,fs.readFileSync(f,'utf8').replace('<32-byte-base64-key>',crypto.randomBytes(32).toString('base64')))\"",
     "dev": "turbo watch dev -F @norish/web... --continue",
     "dev:mobile": "pnpm --filter @norish/mobile run start",
     "build:web": "pnpm --filter @norish/web run build:web",

@@ -355,8 +355,10 @@ cd norish
 # Install dependencies
 pnpm install
 
-# Create your environment file
-cp .env.example .env.local
+# Run devsetup
+# This copies .env.example to .env.local if it doesn't exist yet
+# Then generates a new master key for encryption and adds it to the env file if it's not defined yet.
+pnpm run devsetup
 
 # Start required services (Postgres, Redis, Chrome)
 pnpm run docker:up
@@ -370,21 +372,22 @@ pnpm run dev:mobile
 
 ### Development Commands
 
-| Command                  | Description                                               |
-| ------------------------ | --------------------------------------------------------- |
-| `pnpm run dev`           | Start development server with hot reload                  |
-| `pnpm run dev:mobile`    | Start Expo mobile workspace (`apps/mobile`)               |
-| `pnpm run build:web`     | Build Next.js app workspace (`apps/web`)                  |
-| `pnpm run build`         | Full production build (Next.js + server + service worker) |
-| `pnpm run test`          | Run tests via Turbo across all workspaces                 |
-| `pnpm run test:run`      | Run tests once via Turbo                                  |
-| `pnpm run test:coverage` | Run tests with coverage report                            |
-| `pnpm run lint`          | Check for linting errors across all workspaces            |
-| `pnpm run lint:check`    | Lint all workspaces and run monorepo integrity checks     |
-| `pnpm run format`        | Check formatting across all workspaces (no auto-fix)      |
-| `pnpm run typecheck`     | Run type checking across all workspaces                   |
-| `pnpm run docker:up`     | Start local dependency stack via Compose                  |
-| `pnpm run docker:down`   | Stop local dependency stack                               |
+| Command                  | Description                                                          |
+| ------------------------ | -------------------------------------------------------------------- |
+| `pnpm run devsetup`      | Create `.env.local` if missing and generate `MASTER_KEY` if missing  |
+| `pnpm run dev`           | Start development server with hot reload                             |
+| `pnpm run dev:mobile`    | Start Expo mobile workspace (`apps/mobile`)                          |
+| `pnpm run build:web`     | Build Next.js app workspace (`apps/web`)                             |
+| `pnpm run build`         | Full production build (Next.js + server + service worker)            |
+| `pnpm run test`          | Run tests via Turbo across all workspaces                            |
+| `pnpm run test:run`      | Run tests once via Turbo                                             |
+| `pnpm run test:coverage` | Run tests with coverage report                                       |
+| `pnpm run lint`          | Check for linting errors across all workspaces                       |
+| `pnpm run lint:check`    | Lint all workspaces and run monorepo integrity checks                |
+| `pnpm run format`        | Check formatting across all workspaces (no auto-fix)                 |
+| `pnpm run typecheck`     | Run type checking across all workspaces                              |
+| `pnpm run docker:up`     | Start local dependency stack via Compose                             |
+| `pnpm run docker:down`   | Stop local dependency stack                                          |
 
 ---
 
