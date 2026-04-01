@@ -12,7 +12,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
 import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
-import { encrypt } from "@norish/auth/crypto";
+import { encrypt, hashToken } from "@norish/auth/crypto";
 import { getRecipeFull } from "@norish/db";
 import * as schema from "@norish/db/schema";
 
@@ -77,6 +77,7 @@ export async function cleanDatabase() {
   await db.delete(schema.tags);
   await db.delete(schema.recipeRatings);
   await db.delete(schema.recipeFavorites);
+  await db.delete(schema.recipeShares);
   await db.delete(schema.recipes);
   await db.delete(schema.ingredients);
   await db.delete(schema.plannedItems);
@@ -181,6 +182,32 @@ export async function createTestRecipe(
     .returning();
 
   return (await getRecipeFull(recipe.id))!;
+}
+
+export async function createTestRecipeShare(
+  userId: string,
+  recipeId: string,
+  overrides: Partial<typeof schema.recipeShares.$inferInsert> & { token?: string } = {}
+) {
+  const db = getTestDb();
+  const token = overrides.token ?? `share-token-${Date.now()}`;
+
+  const [share] = await db
+    .insert(schema.recipeShares)
+    .values({
+      userId,
+      recipeId,
+      tokenHash: overrides.tokenHash ?? hashToken(token),
+      expiresAt: overrides.expiresAt ?? null,
+      revokedAt: overrides.revokedAt ?? null,
+      lastAccessedAt: overrides.lastAccessedAt ?? null,
+      createdAt: overrides.createdAt ?? new Date(),
+      updatedAt: overrides.updatedAt ?? new Date(),
+      version: overrides.version ?? 1,
+    })
+    .returning();
+
+  return { share, token };
 }
 
 /**
