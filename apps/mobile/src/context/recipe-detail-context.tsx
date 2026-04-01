@@ -17,6 +17,7 @@ import {
   useRecipeQuery,
   useRecipeSubscription,
 } from '@/hooks/recipes';
+import { sharedRecipeShareHooks } from '@/hooks/recipes/shared-recipe-hooks';
 import { useRatingQuery, useRatingsMutation } from '@/hooks/ratings';
 import { useActiveAllergies } from '@/hooks/user';
 import { useRecipesContext } from '@/context/recipes-context';
@@ -28,6 +29,9 @@ const {
 } = createRecipeDetailContext({
   useRecipeQuery,
   useRecipeSubscription,
+  useRecipeSharesQuery: sharedRecipeShareHooks.useRecipeSharesQuery,
+  useRecipeShareSubscription: sharedRecipeShareHooks.useRecipeShareSubscription,
+  useRecipeShareMutations: sharedRecipeShareHooks.useRecipeShareMutations,
   useNutritionQuery,
   useNutritionMutation,
   useNutritionSubscription,

@@ -9,3 +9,4 @@ const sharedRecipeHooks = createRecipeHooks({ useTRPC });
 
 export const sharedDashboardRecipeHooks = sharedRecipeHooks.dashboard;
 export const sharedRecipeFamilyHooks = sharedRecipeHooks.recipe;
+export const sharedRecipeShareHooks = sharedRecipeHooks.shares;

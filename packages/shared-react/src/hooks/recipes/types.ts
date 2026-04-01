@@ -17,6 +17,10 @@ type SubscriptionProceduresContract = {
     onCreated: { subscriptionOptions: SubscriptionOptionsFactory };
     onImportStarted: { subscriptionOptions: SubscriptionOptionsFactory };
     onImported: { subscriptionOptions: SubscriptionOptionsFactory };
+    onShareCreated: { subscriptionOptions: SubscriptionOptionsFactory };
+    onShareUpdated: { subscriptionOptions: SubscriptionOptionsFactory };
+    onShareRevoked: { subscriptionOptions: SubscriptionOptionsFactory };
+    onShareDeleted: { subscriptionOptions: SubscriptionOptionsFactory };
     onUpdated: { subscriptionOptions: SubscriptionOptionsFactory };
     onDeleted: { subscriptionOptions: SubscriptionOptionsFactory };
     onConverted: { subscriptionOptions: SubscriptionOptionsFactory };
