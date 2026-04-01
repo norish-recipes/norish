@@ -13,6 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { versionColumn } from "./shared";
+import { recipeShares } from "./recipe-shares";
 
 // User table with encrypted PII fields
 export const users = pgTable(
@@ -199,6 +200,7 @@ export const userRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
   apiKeys: many(apiKeys),
+  recipeShares: many(recipeShares),
 }));
 
 export const sessionRelations = relations(sessions, ({ one }) => ({

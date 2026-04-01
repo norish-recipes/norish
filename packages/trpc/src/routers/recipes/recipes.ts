@@ -94,7 +94,7 @@ function handleError(
  * Returns true if allowed, throws FORBIDDEN if not.
  * Orphaned recipes (no owner) allow any action.
  */
-async function assertRecipeAccess(
+export async function assertRecipeAccess(
   ctx: UserContext,
   recipeId: string,
   action: PermissionAction

@@ -23,5 +23,6 @@ export * from "./server-config";
 export * from "./api-logs";
 export * from "./recipe-favorites";
 export * from "./recipe-ratings";
+export * from "./recipe-shares";
 export * from "./user-allergies";
 export * from "./site-auth-tokens";

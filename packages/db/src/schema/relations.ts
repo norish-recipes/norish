@@ -8,6 +8,7 @@ import { ingredients } from "./ingredients";
 import { recipeImages } from "./recipe-images";
 import { recipeIngredients } from "./recipe-ingredients";
 import { recipeRatings } from "./recipe-ratings";
+import { recipeShares } from "./recipe-shares";
 import { recipeTags } from "./recipe-tags";
 import { recipeVideos } from "./recipe-videos";
 import { recipes } from "./recipes";
@@ -25,6 +26,7 @@ export const recipesRelations = relations(recipes, ({ many }) => ({
   ratings: many(recipeRatings),
   images: many(recipeImages),
   videos: many(recipeVideos),
+  shares: many(recipeShares),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -154,6 +156,17 @@ export const recipeRatingsRelations = relations(recipeRatings, ({ one }) => ({
   }),
   recipe: one(recipes, {
     fields: [recipeRatings.recipeId],
+    references: [recipes.id],
+  }),
+}));
+
+export const recipeSharesRelations = relations(recipeShares, ({ one }) => ({
+  user: one(users, {
+    fields: [recipeShares.userId],
+    references: [users.id],
+  }),
+  recipe: one(recipes, {
+    fields: [recipeShares.recipeId],
     references: [recipes.id],
   }),
 }));
