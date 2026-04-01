@@ -49,6 +49,7 @@ vi.mock("@norish/api/startup/media-cleanup", () => ({
 
 vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
+    MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
     UPLOADS_DIR: "/tmp/uploads",
     MAX_AVATAR_FILE_SIZE: 5 * 1024 * 1024,
   },

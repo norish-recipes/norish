@@ -7,7 +7,9 @@ import { createMockAuthedContext, createMockFullRecipe, createMockHousehold, cre
 const assertRecipeAccessMock = vi.hoisted(() => vi.fn());
 const createRecipeShareMock = vi.hoisted(() => vi.fn());
 const deleteRecipeShareMock = vi.hoisted(() => vi.fn());
+const emitByPolicyMock = vi.hoisted(() => vi.fn());
 const getActiveRecipeShareByTokenMock = vi.hoisted(() => vi.fn());
+const getRecipePermissionPolicyMock = vi.hoisted(() => vi.fn());
 const getPublicRecipeViewMock = vi.hoisted(() => vi.fn());
 const getRecipeFullMock = vi.hoisted(() => vi.fn());
 const getRecipeShareByIdMock = vi.hoisted(() => vi.fn());
@@ -20,6 +22,14 @@ const isUserServerAdminMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../../src/routers/recipes/recipes", () => ({
   assertRecipeAccess: assertRecipeAccessMock,
+}));
+
+vi.mock("../../src/helpers", () => ({
+  emitByPolicy: emitByPolicyMock,
+}));
+
+vi.mock("@norish/config/server-config-loader", () => ({
+  getRecipePermissionPolicy: getRecipePermissionPolicyMock,
 }));
 
 vi.mock("@norish/db/repositories/recipe-shares", () => ({
@@ -68,6 +78,7 @@ describe("recipe share procedures", () => {
     vi.clearAllMocks();
     isUserServerAdminMock.mockResolvedValue(false);
     getCachedHouseholdForUserMock.mockResolvedValue(household);
+    getRecipePermissionPolicyMock.mockResolvedValue({ view: "household" });
     getRecipeShareStatusMock.mockReturnValue("active");
   });
 
@@ -96,6 +107,18 @@ describe("recipe share procedures", () => {
       recipeId,
       expiresIn: "forever",
     });
+    expect(emitByPolicyMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "household",
+      { userId: user.id, householdKey: authedCtx.householdKey },
+      "shareCreated",
+      {
+        type: "created",
+        recipeId,
+        shareId,
+        version: 1,
+      }
+    );
     expect(result.url).toBe("/share/token-1");
   });
 
@@ -186,5 +209,132 @@ describe("recipe share procedures", () => {
 
     await expect(caller.shareGet({ id: shareId })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(assertRecipeAccessMock).not.toHaveBeenCalled();
+  });
+
+  it("emits a policy-scoped realtime event when a share is updated", async () => {
+    const caller = recipeSharesProcedures.createCaller(authedCtx as never);
+
+    getRecipeShareByIdMock.mockResolvedValue({
+      id: shareId,
+      userId: user.id,
+      recipeId,
+      tokenHash: "hashed",
+      expiresAt: null,
+      revokedAt: null,
+      lastAccessedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      version: 1,
+    });
+    updateRecipeShareMock.mockResolvedValue({
+      stale: false,
+      value: {
+        id: shareId,
+        userId: user.id,
+        recipeId,
+        expiresAt: null,
+        revokedAt: null,
+        lastAccessedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        version: 2,
+        status: "active",
+      },
+    });
+
+    await caller.shareUpdate({ id: shareId, version: 1, expiresIn: "1month" });
+
+    expect(emitByPolicyMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "household",
+      { userId: user.id, householdKey: authedCtx.householdKey },
+      "shareUpdated",
+      {
+        type: "updated",
+        recipeId,
+        shareId,
+        version: 2,
+      }
+    );
+  });
+
+  it("emits a policy-scoped realtime event when a share is revoked", async () => {
+    const caller = recipeSharesProcedures.createCaller(authedCtx as never);
+
+    getRecipeShareByIdMock.mockResolvedValue({
+      id: shareId,
+      userId: user.id,
+      recipeId,
+      tokenHash: "hashed",
+      expiresAt: null,
+      revokedAt: null,
+      lastAccessedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      version: 2,
+    });
+    revokeRecipeShareMock.mockResolvedValue({
+      stale: false,
+      value: {
+        id: shareId,
+        userId: user.id,
+        recipeId,
+        expiresAt: null,
+        revokedAt: new Date(),
+        lastAccessedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        version: 3,
+        status: "revoked",
+      },
+    });
+
+    await caller.shareRevoke({ id: shareId, version: 2 });
+
+    expect(emitByPolicyMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "household",
+      { userId: user.id, householdKey: authedCtx.householdKey },
+      "shareRevoked",
+      {
+        type: "revoked",
+        recipeId,
+        shareId,
+        version: 3,
+      }
+    );
+  });
+
+  it("emits a policy-scoped realtime event when a share is deleted", async () => {
+    const caller = recipeSharesProcedures.createCaller(authedCtx as never);
+
+    getRecipeShareByIdMock.mockResolvedValue({
+      id: shareId,
+      userId: user.id,
+      recipeId,
+      tokenHash: "hashed",
+      expiresAt: null,
+      revokedAt: null,
+      lastAccessedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      version: 4,
+    });
+    deleteRecipeShareMock.mockResolvedValue({ stale: false });
+
+    await caller.shareDelete({ id: shareId, version: 4 });
+
+    expect(emitByPolicyMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "household",
+      { userId: user.id, householdKey: authedCtx.householdKey },
+      "shareDeleted",
+      {
+        type: "deleted",
+        recipeId,
+        shareId,
+        version: 4,
+      }
+    );
   });
 });

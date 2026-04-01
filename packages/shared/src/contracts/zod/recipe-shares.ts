@@ -6,10 +6,12 @@ import { measurementSystems, recipeCategorySchema } from "./recipe";
 
 export const recipeShareExpiryPolicies = ["1day", "1week", "1month", "1year", "forever"] as const;
 export const recipeShareStatuses = ["active", "expired", "revoked"] as const;
+export const recipeShareLifecycleEventTypes = ["created", "updated", "revoked", "deleted"] as const;
 
 export const RecipeShareSelectSchema = createSelectSchema(recipeShares);
 export const RecipeShareExpiryPolicySchema = z.enum(recipeShareExpiryPolicies);
 export const RecipeShareStatusSchema = z.enum(recipeShareStatuses);
+export const RecipeShareLifecycleEventTypeSchema = z.enum(recipeShareLifecycleEventTypes);
 
 const RecipeShareManagementBaseSchema = RecipeShareSelectSchema.omit({
   tokenHash: true,
@@ -63,6 +65,13 @@ export const RecipeShareMutationResultSchema = RecipeShareSummarySchema.extend({
 export const RecipeShareDeleteResultSchema = z.object({
   success: z.literal(true),
   stale: z.boolean(),
+});
+
+export const RecipeShareLifecycleEventSchema = z.object({
+  type: RecipeShareLifecycleEventTypeSchema,
+  recipeId: z.uuid(),
+  shareId: z.uuid(),
+  version: z.number().int().positive(),
 });
 
 export const PublicRecipeTagSchema = z.object({

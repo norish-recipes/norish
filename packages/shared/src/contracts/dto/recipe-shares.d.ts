@@ -4,6 +4,7 @@ import type {
   PublicRecipeViewSchema,
   RecipeShareCreatedSchema,
   RecipeShareDeleteResultSchema,
+  RecipeShareLifecycleEventSchema,
   RecipeShareMutationResultSchema,
   RecipeShareSelectSchema,
   RecipeShareSummarySchema,
@@ -16,6 +17,7 @@ export type RecipeShareSummaryDto = z.output<typeof RecipeShareSummarySchema>;
 export type RecipeShareCreatedDto = z.output<typeof RecipeShareCreatedSchema>;
 export type RecipeShareMutationResultDto = z.output<typeof RecipeShareMutationResultSchema>;
 export type RecipeShareDeleteResultDto = z.output<typeof RecipeShareDeleteResultSchema>;
+export type RecipeShareLifecycleEventDto = z.output<typeof RecipeShareLifecycleEventSchema>;
 export type CreateRecipeShareInputDto = z.input<typeof CreateRecipeShareInputSchema>;
 export type UpdateRecipeShareInputDto = z.input<typeof UpdateRecipeShareInputSchema>;
 export type ResolveSharedRecipeInputDto = z.input<typeof ResolveSharedRecipeInputSchema>;

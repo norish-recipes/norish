@@ -20,6 +20,7 @@ import {
   useRecipeQuery,
   useRecipeSubscription,
 } from "@/hooks/recipes";
+import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { useActiveAllergies } from "@/hooks/user";
 
 const {
@@ -29,6 +30,9 @@ const {
 } = createRecipeDetailContext({
   useRecipeQuery,
   useRecipeSubscription,
+  useRecipeSharesQuery: sharedRecipeShareHooks.useRecipeSharesQuery,
+  useRecipeShareSubscription: sharedRecipeShareHooks.useRecipeShareSubscription,
+  useRecipeShareMutations: sharedRecipeShareHooks.useRecipeShareMutations,
   useNutritionQuery,
   useNutritionMutation,
   useNutritionSubscription,
