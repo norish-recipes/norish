@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Calendario"
+  },
+  "mobile": {
+    "today": "Oggi",
+    "scrollToToday": "Vai a oggi"
+  },
+  "editNote": {
+    "title": "Modifica Nota",
+    "noteLabel": "Nota",
+    "notePlaceholder": "Inserisci nota...",
+    "date": "Data",
+    "slot": "Pasto"
+  },
+  "navigation": {
+    "previousMonth": "Mese precedente",
+    "nextMonth": "Mese successivo",
+    "prev": "Prec",
+    "next": "Succ"
+  },
+  "weekdays": {
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mer",
+    "thu": "Gio",
+    "fri": "Ven",
+    "sat": "Sab",
+    "sun": "Dom"
+  },
+  "timeline": {
+    "noItems": "Nulla in pianificazione",
+    "goToRecipe": "Vai alla ricetta",
+    "addItem": "Aggiungi",
+    "untitled": "Senza titolo",
+    "serving": "porzione",
+    "servings": "porzioni",
+    "noImage": "Nessuna immagine",
+    "recipe": "Ricetta",
+    "note": "Nota"
+  },
+  "editPlannedRecipe": {
+    "title": "Modifica Ricetta Pianificata",
+    "date": "Data",
+    "slot": "Pasto"
+  },
+  "panel": {
+    "addToCalendar": "Aggiungi al Calendario",
+    "addRecipe": "Aggiungi Ricetta",
+    "noDaysAvailable": "Nessun giorno disponibile.",
+    "searchPlaceholder": "Ricerca ricette o aggiungi note...",
+    "addNote": "Aggiungi Nota: {input}",
+    "randomRecipe": "Ricetta a Caso",
+    "noRecipesFound": "Nessuna ricetta trovata.",
+    "failedToLoadRecipes": "Impossibile caricare le ricette."
+  }
+}

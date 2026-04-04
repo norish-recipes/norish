@@ -1,0 +1,223 @@
+{
+  "dashboard": {
+    "title": "Tutte le ricette",
+    "searchPlaceholder": "Seleziona o aggiungi ricetta...",
+    "searchRecipesPlaceholder": "Cerca ricette...",
+    "recipeCount": "{count, plural, one {# ricetta} other {# ricette}}",
+    "addRecipe": "Aggiungi Ricetta",
+    "importFromUrl": "URL",
+    "importFromPaste": "Incolla",
+    "importFromImage": "Immagine",
+    "searchFields": {
+      "title": "Titolo",
+      "description": "Descrizione",
+      "ingredients": "Ingredienti",
+      "steps": "Passi",
+      "tags": "Tag"
+    }
+  },
+  "empty": {
+    "title": "Il tuo libro di ricette ti aspetta",
+    "description": "Incolla un URL nel campo di ricerca e guarda che succede.",
+    "noResults": "Nessuna ricetta trovata",
+    "noResultsHint": "Prova a sistemare o eliminare i tuoi filtri."
+  },
+  "card": {
+    "noImage": "Nessuna immagine disponibile",
+    "viewGroceries": "Vedi ingredienti",
+    "addToCalendar": "Aggiungi al calendario",
+    "deleteRecipe": "Cancella ricetta"
+  },
+  "detail": {
+    "backToRecipes": "Torna alle ricette",
+    "viewOriginal": "Vedi ricetta originale",
+    "ingredients": "Ingredienti",
+    "steps": "Passi",
+    "notes": "Note",
+    "addToGroceries": "Aggiungi agli ingredienti",
+    "ratingPrompt": "Che ne pensi di questa ricetta?",
+    "notFound": "Ricetta Non Trovata",
+    "notFoundMessage": "Questa ricetta non esiste o non hai i permessi per vederla.",
+    "prep": "preparazione",
+    "total": "totale",
+    "planMeal": "Piano alimentare",
+    "recipeActions": "Azioni ricetta",
+    "instructions": "Istruzioni",
+    "cook": "Cucina",
+    "switchToDecimal": "Mostra decimali",
+    "switchToFraction": "Mostra frazioni"
+  },
+  "actions": {
+    "plan": "Pianifica",
+    "groceries": "Ingredienti",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "share": "Condividi",
+    "visitOriginal": "Vedi Ricetta Originale",
+    "addToCalendar": "Aggiungi al Calendario",
+    "autoTag": "Tag automatico",
+    "autoTagging": "Generazione tag...",
+    "autoCategorize": "Categorizza Automaticamente",
+    "detectAllergies": "Trova Allergie",
+    "detectingAllergies": "Ricerca allergie...",
+    "estimateNutrition": "Stima Valori Nutrizionali",
+    "estimatingNutrition": "Stima valori nutrizionali...",
+    "screenOn": "Schermo Acceso",
+    "keepScreenOn": "Mantieni lo Schermo Acceso",
+    "actionsLabel": "Azioni"
+  },
+  "convert": {
+    "ariaLabel": "Converti unità di misura",
+    "toMetric": "Converti a Metrico",
+    "toUS": "Converti a Imperiale"
+  },
+  "deleteModal": {
+    "title": "Cancella Ricetta",
+    "confirmMessage": "Sei sicuro di voler cancellare \"{recipeName}\"?",
+    "warning": "Questa azione è irreversibile."
+  },
+  "form": {
+    "createTitle": "Crea Ricetta",
+    "editTitle": "Modifica Ricetta",
+    "createDescription": "Aggiungi una ricetta al tuo libro di ricette",
+    "editDescription": "Aggiorna i dettagli della ricetta",
+    "initializingForm": "Inizializzazione modulo...",
+    "photo": "Foto",
+    "basicInfo": "Informazioni di Base",
+    "ingredients": "Ingredienti",
+    "instructions": "Istruzioni",
+    "tags": "Tag",
+    "nutrition": "Stima Valori Nutrizionali",
+    "nutritionPerServing": "(per porzione, opzionale)",
+    "details": "Dettagli",
+    "additionalInfo": "Informazioni Aggiuntive",
+    "recipeName": "Nome Ricetta",
+    "recipeNamePlaceholder": "ad esempio, Biscotti al Cioccolato",
+    "description": "Descrizione",
+    "descriptionPlaceholder": "Una breve descrizione di ciò che rende questa ricetta speciale...",
+    "notes": "Note",
+    "notesPlaceholder": "Aggiungi note sulla preparazione, modifiche o consigli per servire questa ricetta...",
+    "ingredientsHelp": "Inserisci ingredienti come \"500 grammi di farina\" - individueremo automaticamente quantità e unità di misura.",
+    "instructionsHelp": "Scrivi istruzioni passo passo chiare. Premi invio per andare al prossimo passo.",
+    "tagsHelp": "Inserisci tag e clicca sui suggerimenti per aggiungere. I tag selezionati sono blu, i tag nuovi hanno il bordo tratteggiato.",
+    "tagsAndCategories": "Tag e Categorie",
+    "categoriesHelp": "Seleziona i pasti per questa ricetta.",
+    "category": {
+      "breakfast": "Colazione",
+      "lunch": "Pranzo",
+      "dinner": "Cena",
+      "snack": "Spuntino"
+    },
+    "calories": "Calorie",
+    "fat": "Grassi (g)",
+    "carbs": "Carboidrati (g)",
+    "protein": "Proteine (g)",
+    "servings": "Porzioni",
+    "cookingTimes": "Tempi di Preparazione",
+    "optional": "(opzionale)",
+    "sourceUrl": "URL Sorgente",
+    "sourceUrlPlaceholder": "https://esempio.com/ricetta",
+    "measurementSystemNote": "Individuiamo il sistema di unità di misura della tua ricetta in automatico, ma lo puoi impostare manualmente qui.",
+    "measurementSystemEditNote": " Nota: questo aggiorna il sistema di etichette, ma non converte le unità. Per convertire, usa l'azione Converti dopo aver salvato.",
+    "createRecipe": "Crea Ricetta",
+    "saveChanges": "Salva Cambiamenti",
+    "uploading": "Caricamento...",
+    "clickToUpload": "Premi su carica oppure trascina e rilascia",
+    "pasteToUpload": "incolla",
+    "imageFormats": "PNG, JPG, WEBP fino a 5MB"
+  },
+  "gallery": {
+    "addImage": "Aggiungi immagine",
+    "uploading": "Caricamento...",
+    "uploadFailed": "Caricamento fallito",
+    "dragToReorder": "Trascina per riordinare",
+    "maxImagesReached": "Massimo {max} immagini consentite",
+    "maxVideosReached": "Massimo {max} video consentiti",
+    "invalidFileType": "Tipo di file non valido"
+  },
+  "carousel": {
+    "noImageAvailable": "Nessuna immagine disponibile",
+    "noMediaAvailable": "Nessun file multimediale disponibile",
+    "videoPlayer": {
+      "mute": "Disattiva l'audio",
+      "unmute": "Riattiva l'audio",
+      "fullscreen": "Schermo intero",
+      "exitFullscreen": "Disattiva schermo intero"
+    }
+  },
+  "validation": {
+    "nameRequired": "Il nome della ricetta è obbligatorio",
+    "ingredientsRequired": "Devi inserire almeno un ingrediente",
+    "stepsRequired": "Devi inserire almeno una fase",
+    "servingsMin": "Deve esserci almeno una porzione"
+  },
+  "nutrition": {
+    "title": "Valori nutrizionali",
+    "calories": "Calorie",
+    "fat": "Grassi",
+    "carbs": "Carboidrati",
+    "protein": "Proteine",
+    "showingPortions": "Valori per {count} {count, plural, one {porzione} other {porzioni}}",
+    "noInfo": "Nessuna informazione sui valori nutrizionali disponibile",
+    "estimateWithAI": "Stima con l'AI"
+  },
+  "measurementSystem": {
+    "label": "Unità di Misura",
+    "detected": "Individuato: {system}",
+    "metric": "Metrico",
+    "us": "Imperiale"
+  },
+  "timeInputs": {
+    "prep": "Preparazione",
+    "cook": "Cottura",
+    "total": "Totale"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Passo {number}: Descrivi il passo...",
+    "stepPlaceholderShort": "Passo {number}"
+  },
+  "ingredientInput": {
+    "placeholder": "ad esempio, 500g di farina"
+  },
+  "wakeLock": {
+    "keepScreenOn": "Mantieni lo Schermo Acceso",
+    "notSupported": "La funzione \"Mantieni schermo acceso\" non è supportata in questo browser",
+    "activeTooltip": "Lo schermo resterà acceso mentre cucini",
+    "inactiveTooltip": "Mantieni lo schermo acceso mentre segui i passi",
+    "ariaLabel": "Mantieni lo schermo acceso"
+  },
+  "toasts": {
+    "processingBoth": "Elaborazione tag e allergie",
+    "processingTags": "Generazione tag",
+    "processingAllergies": "Individuazione allergie",
+    "bothComplete": "Tag e allergie aggiornati",
+    "tagsComplete": "Tag generati",
+    "allergiesComplete": "Allergie individuate",
+    "imported": "Ricetta importata",
+    "converted": "Unità di misura convertite",
+    "convertedDescription": "Ricetta convertita al sistema {system}",
+    "failed": "Operazione sulla ricetta fallita",
+    "failedDescription": "Qualcosa è andato storto durante l'elaborazione della tua ricetta. Controlla la console del browser per dettagli tecnici.",
+    "batchImported": "Ricette importate",
+    "batchImportedDescription": "{count} ricette importate dall'archivio",
+    "view": "Vedi",
+    "open": "Apri"
+  },
+  "tags": {
+    "panel": {
+      "editTitle": "Modifica Tag",
+      "editPlaceholder": "Inserisci nome tag...",
+      "duplicateTag": "Questo tag esiste già"
+    }
+  },
+  "cookMode": {
+    "steps": "Passi",
+    "ingredients": "Ingredienti",
+    "servings": "Porzioni",
+    "serving": "{count, plural, one {# porzione} other {# porzioni}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "Scorri per navigare i passi",
+    "swipeIngredients": "Scorri a sinistra per gli ingredienti",
+    "swipeBackToSteps": "Scorri a destra per i passi"
+  }
+}

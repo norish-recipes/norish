@@ -1,0 +1,78 @@
+{
+  "page": {
+    "title": "Spesa",
+    "addItem": "Aggiungi",
+    "addItems": "Aggiungi",
+    "viewByStore": "Per Negozio",
+    "viewByRecipe": "Per Ricetta",
+    "viewMode": "Vista",
+    "manageStores": "Gestisci Negozi",
+    "storeViewOptions": "Opzioni Vista Negozi",
+    "groupIngredients": "Raggruppa gli ingredienti"
+  },
+  "empty": {
+    "title": "La tua lista della spesa ti aspetta",
+    "description": "Aggiungi elementi usando il tasto \"Aggiungi\" per iniziare.",
+    "manual": "Elementi Manuali"
+  },
+  "item": {
+    "unnamedItem": "Oggetto senza nome",
+    "fromRecipes": "Da {count, plural, one {# ricetta} other {# ricette}}",
+    "items": "{count, plural, one {# elemento} other {# elementi}}"
+  },
+  "store": {
+    "unsorted": "Non Ordinati",
+    "noItems": "Nessun elemento in questo negozio",
+    "storeActions": "Azioni negozio",
+    "markAllDone": "Segna tutti come completati",
+    "deleteDone": "Cancella i completati",
+    "done": "{count} completati"
+  },
+  "storeManager": {
+    "title": "Gestisci Negozi",
+    "addStore": "Aggiungi Negozio",
+    "editStore": "Modifica Negozio",
+    "deleteStore": "Elimina Negozio",
+    "storeName": "Nome Negozio",
+    "storeNamePlaceholder": "e.g., Supermercato",
+    "storeColor": "Colore",
+    "storeIcon": "Icona",
+    "confirmDelete": "Sei sicuro di voler eliminare {storeName}?",
+    "deleteWarning": "Gli elementi di questo negozio saranno spostati fra i Non Ordinati.",
+    "noStoresYet": "Ancora nessun negozio",
+    "createStoreHint": "Crea un negozio per organizzare la tua spesa",
+    "hasItems": "Questo negozio ha {count} elemento.",
+    "hasItemsPlural": "Questo negozio ha {count} elementi.",
+    "whatToDo": "Cosa ci vuoi fare?",
+    "keepItems": "Mantieni gli elementi",
+    "keepItemsDescription": "Spostali fra i Non Ordinati",
+    "deleteItems": "Cancella elementi",
+    "deleteItemsDescription": "Cancella tutti gli elementi di questo negozio",
+    "noItems": "Questo negozio non ha elementi.",
+    "create": "Crea"
+  },
+  "panel": {
+    "addTitle": "Aggiungi Ingrediente",
+    "editTitle": "Modifica Ingrediente",
+    "itemName": "Nome elemento",
+    "itemNamePlaceholder": "ad esempio Latte, Uova, Pane...",
+    "selectStore": "Seleziona negozio",
+    "noStore": "Nessun negozio",
+    "recurrence": "Frequenza",
+    "savePreference": "Ricorda negozio per questo elemento",
+    "addAnother": "Aggiungi un altro",
+    "addRepeat": "+ Ripeti",
+    "storeOptional": "Negozio (Opzionale)",
+    "autoDetectFromHistory": "Individua automaticamente dalla cronologia",
+    "autoDetectOrSelect": "Individua automaticamente o seleziona",
+    "placeholder": "ad esempio 1kg di petto di pollo",
+    "editPlaceholder": "ad esempio latte ogni settimana",
+    "servings": "Porzioni",
+    "loadingIngredients": "Caricamento ingredienti...",
+    "noIngredients": "Nessun ingrediente.",
+    "addSelectedToGroceries": "Aggiungi ingredienti",
+    "ingredientsAdded": "Ingredienti aggiunti alla lista della spesa.",
+    "ingredientsFailed": "Impossibile aggiungere ingredienti alla lista della spesa.",
+    "addToGroceries": "Aggiungi alla Lista della spesa"
+  }
+}

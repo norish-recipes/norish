@@ -244,6 +244,7 @@ export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
     ko: { name: "한국어", enabled: true },
     pl: { name: "Polski", enabled: true },
     da: { name: "Dansk", enabled: true },
+    it: { name: "Italiano", enabled: true},
   },
 };
 
