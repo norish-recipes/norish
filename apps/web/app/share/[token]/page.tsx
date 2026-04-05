@@ -1,6 +1,27 @@
 "use client";
 
 import { use, useEffect, useMemo, useState } from "react";
+import AmountDisplayToggle from "@/app/(app)/recipes/[id]/components/amount-display-toggle";
+import AuthorChip from "@/app/(app)/recipes/[id]/components/author-chip";
+import { ReadonlyIngredientsList } from "@/app/(app)/recipes/[id]/components/ingredient-list";
+import { ReadonlyStepsList } from "@/app/(app)/recipes/[id]/components/steps-list";
+import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/app/(app)/recipes/[id]/recipe-layout-constants";
+import { PublicSmartInstruction } from "@/components/recipe/public-smart-instruction";
+import {
+  ReadonlyNutritionCard,
+  ReadonlyNutritionSection,
+} from "@/components/recipes/nutrition-card";
+import {
+  ReadonlyRecipeMedia,
+  ReadonlyRecipeNotes,
+  ReadonlyRecipeSummary,
+} from "@/components/recipes/readonly-recipe-sections";
+import AuthLanguageSelector from "@/components/shared/auth-language-selector";
+import { NotFoundView } from "@/components/shared/not-found-view";
+import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
+import { TimerTicker } from "@/components/timer-dock";
+import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
+import { useSharePublicConfigQuery } from "@/hooks/recipes/use-share-public-config-query";
 import { ArrowsRightLeftIcon, MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import {
   Button,
@@ -15,25 +36,8 @@ import {
 } from "@heroui/react";
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
-import type { MeasurementSystem } from "@norish/shared/contracts";
 
-import { ReadonlyIngredientsList } from "@/app/(app)/recipes/[id]/components/ingredient-list";
-import { ReadonlyStepsList } from "@/app/(app)/recipes/[id]/components/steps-list";
-import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/app/(app)/recipes/[id]/recipe-layout-constants";
-import AmountDisplayToggle from "@/app/(app)/recipes/[id]/components/amount-display-toggle";
-import AuthorChip from "@/app/(app)/recipes/[id]/components/author-chip";
-import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
-import AuthLanguageSelector from "@/components/shared/auth-language-selector";
-import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
-import { ReadonlyNutritionCard, ReadonlyNutritionSection } from "@/components/recipes/nutrition-card";
-import {
-  ReadonlyRecipeMedia,
-  ReadonlyRecipeNotes,
-  ReadonlyRecipeSummary,
-} from "@/components/recipes/readonly-recipe-sections";
-import { NotFoundView } from "@/components/shared/not-found-view";
-import { PublicSmartInstruction } from "@/components/recipe/public-smart-instruction";
-import { TimerTicker } from "@/components/timer-dock";
+import type { MeasurementSystem } from "@norish/shared/contracts";
 
 type Props = {
   params: Promise<{ token: string }>;
@@ -160,8 +164,10 @@ function useShareRecipeState(recipe: {
 
   const availableSystems = useMemo(
     () =>
-      Array.from(new Set(recipe.recipeIngredients.map((ri) => ri.systemUsed))) as MeasurementSystem[],
-    [recipe.recipeIngredients],
+      Array.from(
+        new Set(recipe.recipeIngredients.map((ri) => ri.systemUsed))
+      ) as MeasurementSystem[],
+    [recipe.recipeIngredients]
   );
 
   const ratio = servings / recipe.servings;
@@ -172,7 +178,7 @@ function useShareRecipeState(recipe: {
         ...ing,
         amount: ing.amount != null ? ing.amount * ratio : null,
       })),
-    [recipe.recipeIngredients, ratio],
+    [recipe.recipeIngredients, ratio]
   );
 
   return {
@@ -190,9 +196,10 @@ function useShareRecipeState(recipe: {
 function SharedRecipePageDesktop({ token }: { token: string }) {
   const t = useTranslations("recipes.detail");
   const { recipe } = sharedRecipeShareHooks.useSharedRecipeQuery(token);
+  const { units } = useSharePublicConfigQuery(token);
 
   const state = useShareRecipeState(
-    recipe ?? { servings: 1, systemUsed: "metric", recipeIngredients: [] },
+    recipe ?? { servings: 1, systemUsed: "metric", recipeIngredients: [] }
   );
 
   if (!recipe) return null;
@@ -229,6 +236,7 @@ function SharedRecipePageDesktop({ token }: { token: string }) {
                 interactive
                 ingredients={state.adjustedIngredients}
                 systemUsed={state.activeSystem}
+                units={units}
               />
             </CardBody>
           </Card>
@@ -260,6 +268,7 @@ function SharedRecipePageDesktop({ token }: { token: string }) {
                 interactive
                 InstructionComponent={PublicSmartInstruction}
                 recipeId={token}
+                token={token}
                 recipeName={recipe.name}
                 steps={recipe.steps}
                 systemUsed={state.activeSystem}
@@ -277,16 +286,20 @@ function SharedRecipePageDesktop({ token }: { token: string }) {
 function SharedRecipePageMobile({ token }: { token: string }) {
   const t = useTranslations("recipes.detail");
   const { recipe } = sharedRecipeShareHooks.useSharedRecipeQuery(token);
+  const { units } = useSharePublicConfigQuery(token);
 
   const state = useShareRecipeState(
-    recipe ?? { servings: 1, systemUsed: "metric", recipeIngredients: [] },
+    recipe ?? { servings: 1, systemUsed: "metric", recipeIngredients: [] }
   );
 
   if (!recipe) return null;
 
   return (
     <div className="-mx-4 -mt-4 flex w-[calc(100%+2rem)] flex-col md:hidden">
-      <div className="relative w-full overflow-hidden" style={{ height: MOBILE_RECIPE_MEDIA_HEIGHT_STYLE }}>
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ height: MOBILE_RECIPE_MEDIA_HEIGHT_STYLE }}
+      >
         <ReadonlyRecipeMedia
           aspectRatio="4/3"
           className="h-full rounded-none shadow-none"
@@ -307,7 +320,11 @@ function SharedRecipePageMobile({ token }: { token: string }) {
         />
       </div>
 
-      <Card className="bg-content1 relative z-10 -mt-6 overflow-visible rounded-t-3xl" radius="none" shadow="sm">
+      <Card
+        className="bg-content1 relative z-10 -mt-6 overflow-visible rounded-t-3xl"
+        radius="none"
+        shadow="sm"
+      >
         <CardBody className="space-y-6 px-4 py-5">
           <ReadonlyRecipeSummary recipe={recipe} timeVariant="mobile" />
 
@@ -335,6 +352,7 @@ function SharedRecipePageMobile({ token }: { token: string }) {
                 interactive
                 ingredients={state.adjustedIngredients}
                 systemUsed={state.activeSystem}
+                units={units}
               />
             </div>
           </div>
@@ -359,6 +377,7 @@ function SharedRecipePageMobile({ token }: { token: string }) {
                 interactive
                 InstructionComponent={PublicSmartInstruction}
                 recipeId={token}
+                token={token}
                 recipeName={recipe.name}
                 steps={recipe.steps}
                 systemUsed={state.activeSystem}

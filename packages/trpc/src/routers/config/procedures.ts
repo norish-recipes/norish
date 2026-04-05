@@ -49,8 +49,8 @@ const tags = authedProcedure.query(async ({ ctx }) => {
  * Get units configuration for ingredient parsing
  * Units rarely change, safe to cache aggressively on client
  */
-const units = publicProcedure.query(async () => {
-  log.debug("Getting units config");
+const units = authedProcedure.query(async ({ ctx }) => {
+  log.debug({ userId: ctx.user.id }, "Getting units config");
 
   const unitsMap = await getUnits();
 
@@ -83,14 +83,14 @@ const uploadLimits = authedProcedure.query(() => {
 /**
  * Check if recipe timers are enabled globally
  */
-const timersEnabled = publicProcedure.query(async () => {
+const timersEnabled = authedProcedure.query(async () => {
   return await isTimersEnabled();
 });
 
 /**
  * Get timer keywords configuration
  */
-const timerKeywords = publicProcedure.query(async () => {
+const timerKeywords = authedProcedure.query(async () => {
   const config = await getTimerKeywords();
 
   return config;
