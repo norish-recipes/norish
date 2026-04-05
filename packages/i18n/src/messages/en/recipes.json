@@ -66,6 +66,50 @@
     "keepScreenOn": "Keep Screen On",
     "actionsLabel": "Actions"
   },
+  "sharePanel": {
+    "title": "Share recipe",
+    "description": "Create and manage public links for {recipeName}.",
+    "expiryLabel": "Link expiration",
+    "createLink": "Create link",
+    "latestLink": "Latest link",
+    "currentLinks": "Current links",
+    "empty": "No share links yet.",
+    "createSuccess": "Share link created",
+    "copySuccess": "Link copied",
+    "copyLink": "Copy",
+    "openLink": "Open",
+    "createdAt": "Created: {value}",
+    "expiresAt": "Expires: {value}",
+    "lastAccessedAt": "Last opened: {value}",
+    "never": "Never",
+    "expiryOptions": {
+      "1day": "1 day",
+      "1week": "1 week",
+      "1month": "1 month",
+      "1year": "1 year",
+      "forever": "Never"
+    },
+    "status": {
+      "active": "Active",
+      "expired": "Expired",
+      "revoked": "Revoked"
+    },
+    "revokeModal": {
+      "title": "Revoke link",
+      "message": "This link for {recipeName} will stop working until you reactivate it.",
+      "confirm": "Revoke"
+    },
+    "reactivateModal": {
+      "title": "Reactivate link",
+      "message": "This link for {recipeName} will become active again.",
+      "confirm": "Reactivate"
+    },
+    "deleteModal": {
+      "title": "Delete link",
+      "message": "Delete this share link for {recipeName}? This cannot be undone.",
+      "confirm": "Delete link"
+    }
+  },
   "convert": {
     "ariaLabel": "Convert measurement system",
     "toMetric": "Convert to Metric",

@@ -5,6 +5,8 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export type RecipeShareCacheHelpers = {
   invalidateRecipeShares: (recipeId: string) => void;
+  invalidateMyRecipeShares: () => void;
+  invalidateAdminRecipeShares: () => void;
   invalidateRecipeShare: (shareId: string) => void;
   removeRecipeShare: (shareId: string) => void;
 };
@@ -32,6 +34,18 @@ export function createUseRecipeShareCacheHelpers({ useTRPC }: CreateRecipeHooksO
       [queryClient, trpc]
     );
 
+    const invalidateMyRecipeShares = useCallback(() => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.recipes.shareListMine.queryKey(),
+      });
+    }, [queryClient, trpc]);
+
+    const invalidateAdminRecipeShares = useCallback(() => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.recipes.shareListAdmin.queryKey(),
+      });
+    }, [queryClient, trpc]);
+
     const removeRecipeShare = useCallback(
       (shareId: string) => {
         queryClient.removeQueries({
@@ -43,6 +57,8 @@ export function createUseRecipeShareCacheHelpers({ useTRPC }: CreateRecipeHooksO
 
     return {
       invalidateRecipeShares,
+      invalidateMyRecipeShares,
+      invalidateAdminRecipeShares,
       invalidateRecipeShare,
       removeRecipeShare,
     };

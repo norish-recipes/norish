@@ -27,10 +27,12 @@ export type RecipeDetailContextValue = {
   createShare: (expiresIn?: CreateRecipeShareInputDto["expiresIn"]) => void;
   updateShare: (input: UpdateRecipeShareInputDto) => void;
   revokeShare: (id: string, version: number) => void;
+  reactivateShare: (id: string, version: number) => void;
   deleteShare: (id: string, version: number) => void;
   isCreatingShare: boolean;
   isUpdatingShare: boolean;
   isRevokingShare: boolean;
+  isReactivatingShare: boolean;
   isDeletingShare: boolean;
   convertingTo: MeasurementSystem | null;
   adjustedIngredients: RecipeIngredientsDto[];
@@ -79,10 +81,12 @@ export type RecipeDetailAdapters = {
     createShare: (expiresIn?: CreateRecipeShareInputDto["expiresIn"]) => void;
     updateShare: (input: UpdateRecipeShareInputDto) => void;
     revokeShare: (id: string, version: number) => void;
+    reactivateShare: (id: string, version: number) => void;
     deleteShare: (id: string, version: number) => void;
     isCreating: boolean;
     isUpdating: boolean;
     isRevoking: boolean;
+    isReactivating: boolean;
     isDeleting: boolean;
   };
   useNutritionQuery: (recipeId: string) => {
@@ -143,10 +147,12 @@ function useDefaultRecipeShareMutations(): RecipeShareMutationsAdapterResult {
     createShare: noop,
     updateShare: noop,
     revokeShare: noop,
+    reactivateShare: noop,
     deleteShare: noop,
     isCreating: false,
     isUpdating: false,
     isRevoking: false,
+    isReactivating: false,
     isDeleting: false,
   };
 }
@@ -178,10 +184,12 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       createShare,
       updateShare,
       revokeShare,
+      reactivateShare,
       deleteShare,
       isCreating: isCreatingShare,
       isUpdating: isUpdatingShare,
       isRevoking: isRevokingShare,
+      isReactivating: isReactivatingShare,
       isDeleting: isDeletingShare,
     } = useRecipeShareMutations(recipeId);
     const [_servings, setServings] = useState<number | null>(null);
@@ -403,13 +411,15 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         shareError,
         refreshShares,
         createShare,
-        updateShare,
-        revokeShare,
-        deleteShare,
-        isCreatingShare,
-        isUpdatingShare,
-        isRevokingShare,
-        isDeletingShare,
+      updateShare,
+      revokeShare,
+      reactivateShare,
+      deleteShare,
+      isCreatingShare,
+      isUpdatingShare,
+      isRevokingShare,
+      isReactivatingShare,
+      isDeletingShare,
         convertingTo,
         adjustedIngredients,
         currentServings: _servings ?? recipe?.servings ?? 1,

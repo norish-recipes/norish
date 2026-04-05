@@ -30,6 +30,9 @@ export default function PreferencesCard() {
   const disabled = !globalEnabled;
 
   const currentLocale = getLocalePreference(user) ?? defaultLocale;
+  const selectedLocale = enabledLocales.some((locale) => locale.code === currentLocale)
+    ? currentLocale
+    : undefined;
 
   const handleToggle = useCallback(
     async (value: boolean) => {
@@ -98,7 +101,7 @@ export default function PreferencesCard() {
             aria-label={t("language.title")}
             className="max-w-[200px]"
             isDisabled={isUpdatingPreferences || enabledLocales.length === 0}
-            selectedKeys={currentLocale ? [currentLocale] : []}
+            selectedKeys={selectedLocale ? [selectedLocale] : []}
             onSelectionChange={(keys) => {
               const selected = Array.from(keys)[0] as string;
 

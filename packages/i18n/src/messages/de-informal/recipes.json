@@ -66,6 +66,50 @@
     "keepScreenOn": "Bildschirm an",
     "actionsLabel": "Aktionen"
   },
+  "sharePanel": {
+    "title": "Rezept teilen",
+    "description": "Erstelle und verwalte öffentliche Links für {recipeName}.",
+    "expiryLabel": "Link-Ablauf",
+    "createLink": "Link erstellen",
+    "latestLink": "Neuester Link",
+    "currentLinks": "Aktuelle Links",
+    "empty": "Noch keine Freigabe-Links.",
+    "createSuccess": "Freigabe-Link erstellt",
+    "copySuccess": "Link kopiert",
+    "copyLink": "Kopieren",
+    "openLink": "Öffnen",
+    "createdAt": "Erstellt: {value}",
+    "expiresAt": "Läuft ab: {value}",
+    "lastAccessedAt": "Zuletzt geöffnet: {value}",
+    "never": "Nie",
+    "expiryOptions": {
+      "1day": "1 Tag",
+      "1week": "1 Woche",
+      "1month": "1 Monat",
+      "1year": "1 Jahr",
+      "forever": "Nie"
+    },
+    "status": {
+      "active": "Aktiv",
+      "expired": "Abgelaufen",
+      "revoked": "Widerrufen"
+    },
+    "revokeModal": {
+      "title": "Link widerrufen",
+      "message": "Dieser Link für {recipeName} funktioniert nicht mehr, bis du ihn reaktivierst.",
+      "confirm": "Widerrufen"
+    },
+    "reactivateModal": {
+      "title": "Link reaktivieren",
+      "message": "Dieser Link für {recipeName} wird wieder aktiv.",
+      "confirm": "Reaktivieren"
+    },
+    "deleteModal": {
+      "title": "Link löschen",
+      "message": "Diesen Freigabe-Link für {recipeName} löschen? Dies kann nicht rückgängig gemacht werden.",
+      "confirm": "Link löschen"
+    }
+  },
   "convert": {
     "ariaLabel": "Maßeinheit umwandeln",
     "toMetric": "In metrisch umwandeln",

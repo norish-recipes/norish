@@ -127,6 +127,33 @@
         "title": "Favorieten tonen",
         "description": "Favoriet-/hartpictogrammen op receptkaarten en detailpagina's weergeven"
       }
+    },
+    "shareLinks": {
+      "title": "Receptdeellinks",
+      "description": "Bekijk en beheer alle publieke receptlinks die je hebt aangemaakt.",
+      "empty": "Geen deellinks gevonden.",
+      "table": {
+        "recipe": "RECEPT",
+        "status": "STATUS",
+        "created": "AANGEMAAKT",
+        "expires": "VERLOOPDATUM",
+        "actions": "ACTIES"
+      },
+      "revokeModal": {
+        "title": "Link intrekken",
+        "message": "Deze link voor {recipeName} werkt niet meer totdat je hem opnieuw activeert.",
+        "confirm": "Intrekken"
+      },
+      "reactivateModal": {
+        "title": "Link opnieuw activeren",
+        "message": "Deze link voor {recipeName} wordt weer actief.",
+        "confirm": "Opnieuw activeren"
+      },
+      "deleteModal": {
+        "title": "Link verwijderen",
+        "message": "Deze deellink voor {recipeName} verwijderen? Dit kan niet ongedaan worden gemaakt.",
+        "confirm": "Link verwijderen"
+      }
     }
   },
   "household": {
@@ -275,6 +302,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderatie van receptdeling",
+      "description": "Bekijk publieke receptlinks in de hele instantie en beheer hun levenscyclus.",
+      "empty": "Geen deellinks gevonden.",
+      "table": {
+        "recipe": "RECEPT",
+        "owner": "EIGENAAR",
+        "status": "STATUS",
+        "created": "AANGEMAAKT",
+        "expires": "VERLOOPDATUM",
+        "actions": "ACTIES"
+      },
+      "revokeModal": {
+        "title": "Link intrekken",
+        "message": "Deze link voor {recipeName} werkt niet meer totdat hij opnieuw wordt geactiveerd.",
+        "confirm": "Intrekken"
+      },
+      "reactivateModal": {
+        "title": "Link opnieuw activeren",
+        "message": "Deze link voor {recipeName} wordt weer actief.",
+        "confirm": "Opnieuw activeren"
+      },
+      "deleteModal": {
+        "title": "Link verwijderen",
+        "message": "Deze deellink voor {recipeName} verwijderen? Dit kan niet ongedaan worden gemaakt.",
+        "confirm": "Link verwijderen"
+      }
+    },
     "general": {
       "title": "Algemeen",
       "allowRegistration": "Nieuwe registraties toestaan",

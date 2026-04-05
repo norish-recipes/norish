@@ -26,7 +26,7 @@ import { useAutoHide } from "@/hooks/auto-hide";
 const logger = createClientLogger("timer-dock");
 
 // Global tick loop component - only runs when timers are active
-function TimerTicker() {
+export function TimerTicker() {
   const tick = useTimerStore((state) => state.tick);
   const timers = useTimerStore((state) => state.timers);
 

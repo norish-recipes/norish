@@ -127,6 +127,33 @@
         "description": "Favoriten-/Herzsymbole auf Rezeptkarten und Detailseiten anzeigen"
       },
       "applyError": "Einstellung konnte nicht angewendet werden"
+    },
+    "shareLinks": {
+      "title": "Rezept-Freigabe-Links",
+      "description": "Überprüfen und verwalten Sie alle von Ihnen erstellten öffentlichen Rezept-Links.",
+      "empty": "Keine Freigabe-Links gefunden.",
+      "table": {
+        "recipe": "REZEPT",
+        "status": "STATUS",
+        "created": "ERSTELLT",
+        "expires": "LÄUFT AB",
+        "actions": "AKTIONEN"
+      },
+      "revokeModal": {
+        "title": "Link widerrufen",
+        "message": "Dieser Link für {recipeName} funktioniert nicht mehr, bis Sie ihn reaktivieren.",
+        "confirm": "Widerrufen"
+      },
+      "reactivateModal": {
+        "title": "Link reaktivieren",
+        "message": "Dieser Link für {recipeName} wird wieder aktiv.",
+        "confirm": "Reaktivieren"
+      },
+      "deleteModal": {
+        "title": "Link löschen",
+        "message": "Diesen Freigabe-Link für {recipeName} löschen? Dies kann nicht rückgängig gemacht werden.",
+        "confirm": "Link löschen"
+      }
     }
   },
   "household": {
@@ -275,6 +302,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderation von Rezept-Freigaben",
+      "description": "Überprüfen Sie öffentliche Rezept-Links der gesamten Instanz und moderieren Sie deren Lebenszyklus.",
+      "empty": "Keine Freigabe-Links gefunden.",
+      "table": {
+        "recipe": "REZEPT",
+        "owner": "EIGENTÜMER",
+        "status": "STATUS",
+        "created": "ERSTELLT",
+        "expires": "LÄUFT AB",
+        "actions": "AKTIONEN"
+      },
+      "revokeModal": {
+        "title": "Link widerrufen",
+        "message": "Dieser Link für {recipeName} funktioniert nicht mehr, bis er reaktiviert wird.",
+        "confirm": "Widerrufen"
+      },
+      "reactivateModal": {
+        "title": "Link reaktivieren",
+        "message": "Dieser Link für {recipeName} wird wieder aktiv.",
+        "confirm": "Reaktivieren"
+      },
+      "deleteModal": {
+        "title": "Link löschen",
+        "message": "Diesen Freigabe-Link für {recipeName} löschen? Dies kann nicht rückgängig gemacht werden.",
+        "confirm": "Link löschen"
+      }
+    },
     "general": {
       "title": "Allgemein",
       "allowRegistration": "Neue Benutzerregistrierung zulassen",

@@ -66,6 +66,50 @@
     "keepScreenOn": "Hold skærm tændt",
     "actionsLabel": "Handlinger"
   },
+  "sharePanel": {
+    "title": "Del opskrift",
+    "description": "Opret og administrer offentlige links til {recipeName}.",
+    "expiryLabel": "Linkudløb",
+    "createLink": "Opret link",
+    "latestLink": "Seneste link",
+    "currentLinks": "Aktuelle links",
+    "empty": "Ingen delelinks endnu.",
+    "createSuccess": "Delelink oprettet",
+    "copySuccess": "Link kopieret",
+    "copyLink": "Kopier",
+    "openLink": "Åbn",
+    "createdAt": "Oprettet: {value}",
+    "expiresAt": "Udløber: {value}",
+    "lastAccessedAt": "Sidst åbnet: {value}",
+    "never": "Aldrig",
+    "expiryOptions": {
+      "1day": "1 dag",
+      "1week": "1 uge",
+      "1month": "1 måned",
+      "1year": "1 år",
+      "forever": "Aldrig"
+    },
+    "status": {
+      "active": "Aktiv",
+      "expired": "Udløbet",
+      "revoked": "Tilbagekaldt"
+    },
+    "revokeModal": {
+      "title": "Tilbagekald link",
+      "message": "Dette link til {recipeName} holder op med at virke, indtil du genaktiverer det.",
+      "confirm": "Tilbagekald"
+    },
+    "reactivateModal": {
+      "title": "Genaktiver link",
+      "message": "Dette link til {recipeName} bliver aktivt igen.",
+      "confirm": "Genaktiver"
+    },
+    "deleteModal": {
+      "title": "Slet link",
+      "message": "Slet dette delelink til {recipeName}? Dette kan ikke fortrydes.",
+      "confirm": "Slet link"
+    }
+  },
   "convert": {
     "ariaLabel": "Konverter målesystem",
     "toMetric": "Konverter til metrisk",

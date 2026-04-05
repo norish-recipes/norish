@@ -127,6 +127,33 @@
         "description": "레시피 카드와 상세 페이지에 즐겨찾기/하트 아이콘을 표시합니다"
       },
       "applyError": "환경설정을 적용하지 못했습니다"
+    },
+    "shareLinks": {
+      "title": "레시피 공유 링크",
+      "description": "내가 만든 모든 공개 레시피 링크를 검토하고 관리합니다.",
+      "empty": "공유 링크를 찾을 수 없습니다.",
+      "table": {
+        "recipe": "레시피",
+        "status": "상태",
+        "created": "생성일",
+        "expires": "만료일",
+        "actions": "작업"
+      },
+      "revokeModal": {
+        "title": "링크 취소",
+        "message": "{recipeName}의 이 링크는 재활성화할 때까지 작동하지 않습니다.",
+        "confirm": "취소"
+      },
+      "reactivateModal": {
+        "title": "링크 재활성화",
+        "message": "{recipeName}의 이 링크가 다시 활성화됩니다.",
+        "confirm": "재활성화"
+      },
+      "deleteModal": {
+        "title": "링크 삭제",
+        "message": "{recipeName}의 이 공유 링크를 삭제하시겠습니까? 되돌릴 수 없습니다.",
+        "confirm": "링크 삭제"
+      }
     }
   },
   "household": {
@@ -275,6 +302,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "레시피 공유 모더레이션",
+      "description": "인스턴스 전체의 공개 레시피 링크를 검토하고 생명주기를 관리합니다.",
+      "empty": "공유 링크를 찾을 수 없습니다.",
+      "table": {
+        "recipe": "레시피",
+        "owner": "소유자",
+        "status": "상태",
+        "created": "생성일",
+        "expires": "만료일",
+        "actions": "작업"
+      },
+      "revokeModal": {
+        "title": "링크 취소",
+        "message": "{recipeName}의 이 링크는 재활성화될 때까지 작동하지 않습니다.",
+        "confirm": "취소"
+      },
+      "reactivateModal": {
+        "title": "링크 재활성화",
+        "message": "{recipeName}의 이 링크가 다시 활성화됩니다.",
+        "confirm": "재활성화"
+      },
+      "deleteModal": {
+        "title": "링크 삭제",
+        "message": "{recipeName}의 이 공유 링크를 삭제하시겠습니까? 되돌릴 수 없습니다.",
+        "confirm": "링크 삭제"
+      }
+    },
     "general": {
       "title": "일반",
       "allowRegistration": "신규 사용자 등록 허용",

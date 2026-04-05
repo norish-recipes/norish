@@ -55,6 +55,50 @@
     "screenOn": "Ekran włączony", "keepScreenOn": "Utrzymaj ekran włączony",
     "actionsLabel": "Akcje"
   },
+  "sharePanel": {
+    "title": "Udostępnij przepis",
+    "description": "Twórz i zarządzaj publicznymi linkami dla {recipeName}.",
+    "expiryLabel": "Wygaśnięcie linku",
+    "createLink": "Utwórz link",
+    "latestLink": "Najnowszy link",
+    "currentLinks": "Aktualne linki",
+    "empty": "Brak linków do udostępniania.",
+    "createSuccess": "Link do udostępniania utworzony",
+    "copySuccess": "Link skopiowany",
+    "copyLink": "Kopiuj",
+    "openLink": "Otwórz",
+    "createdAt": "Utworzono: {value}",
+    "expiresAt": "Wygasa: {value}",
+    "lastAccessedAt": "Ostatnio otwarto: {value}",
+    "never": "Nigdy",
+    "expiryOptions": {
+      "1day": "1 dzień",
+      "1week": "1 tydzień",
+      "1month": "1 miesiąc",
+      "1year": "1 rok",
+      "forever": "Nigdy"
+    },
+    "status": {
+      "active": "Aktywny",
+      "expired": "Wygasły",
+      "revoked": "Odwołany"
+    },
+    "revokeModal": {
+      "title": "Odwołaj link",
+      "message": "Ten link do {recipeName} przestanie działać do momentu reaktywacji.",
+      "confirm": "Odwołaj"
+    },
+    "reactivateModal": {
+      "title": "Reaktywuj link",
+      "message": "Ten link do {recipeName} znowu stanie się aktywny.",
+      "confirm": "Reaktywuj"
+    },
+    "deleteModal": {
+      "title": "Usuń link",
+      "message": "Usunąć ten link do {recipeName}? Tej operacji nie można cofnąć.",
+      "confirm": "Usuń link"
+    }
+  },
   "convert": {
     "ariaLabel": "Przelicz system miar",
     "toMetric": "Przelicz na metryczny",

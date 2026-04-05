@@ -66,6 +66,50 @@
     "keepScreenOn": "Garder l’écran allumé",
     "actionsLabel": "Actions"
   },
+  "sharePanel": {
+    "title": "Partager la recette",
+    "description": "Créez et gérez des liens publics pour {recipeName}.",
+    "expiryLabel": "Expiration du lien",
+    "createLink": "Créer un lien",
+    "latestLink": "Dernier lien",
+    "currentLinks": "Liens actuels",
+    "empty": "Aucun lien de partage pour l'instant.",
+    "createSuccess": "Lien de partage créé",
+    "copySuccess": "Lien copié",
+    "copyLink": "Copier",
+    "openLink": "Ouvrir",
+    "createdAt": "Créé : {value}",
+    "expiresAt": "Expire : {value}",
+    "lastAccessedAt": "Dernier accès : {value}",
+    "never": "Jamais",
+    "expiryOptions": {
+      "1day": "1 jour",
+      "1week": "1 semaine",
+      "1month": "1 mois",
+      "1year": "1 an",
+      "forever": "Jamais"
+    },
+    "status": {
+      "active": "Actif",
+      "expired": "Expiré",
+      "revoked": "Révoqué"
+    },
+    "revokeModal": {
+      "title": "Révoquer le lien",
+      "message": "Ce lien pour {recipeName} cessera de fonctionner jusqu'à ce que vous le réactiviez.",
+      "confirm": "Révoquer"
+    },
+    "reactivateModal": {
+      "title": "Réactiver le lien",
+      "message": "Ce lien pour {recipeName} redeviendra actif.",
+      "confirm": "Réactiver"
+    },
+    "deleteModal": {
+      "title": "Supprimer le lien",
+      "message": "Supprimer ce lien de partage pour {recipeName} ? Cette action est irréversible.",
+      "confirm": "Supprimer le lien"
+    }
+  },
   "convert": {
     "ariaLabel": "Convertir le système de mesure",
     "toMetric": "Convertir en métrique",
