@@ -7,6 +7,7 @@ import {
   DevicePhoneMobileIcon,
   EllipsisHorizontalIcon,
   PencilSquareIcon,
+  ShareIcon,
   ShoppingCartIcon,
   SparklesIcon,
   TrashIcon,
@@ -25,6 +26,7 @@ import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/co
 import { useRecipeContextRequired } from "../context";
 
 import { useWakeLockContext } from "./wake-lock-context";
+import RecipeSharePanel from "./recipe-share-panel";
 
 import { useActiveAllergies } from "@/hooks/user";
 import { useRecipesContext } from "@/context/recipes-context";
@@ -49,6 +51,7 @@ export default function ActionsMenu({ id }: Props) {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [openCalendar, setOpenCalendar] = React.useState(false);
   const [openGroceries, setOpenGroceries] = React.useState(false);
+  const [openSharePanel, setOpenSharePanel] = React.useState(false);
   const {
     isOpen: isDeleteModalOpen,
     onOpen: onDeleteModalOpen,
@@ -103,6 +106,13 @@ export default function ActionsMenu({ id }: Props) {
     ];
 
     if (canEdit) {
+      items.push({
+        key: "share",
+        label: t("share"),
+        icon: <ShareIcon className="size-4" />,
+        onPress: () => setOpenSharePanel(true),
+      });
+
       items.push({
         key: "edit",
         label: t("edit"),
@@ -260,6 +270,8 @@ export default function ActionsMenu({ id }: Props) {
       <MiniGroceries open={openGroceries} recipeId={id} onOpenChange={setOpenGroceries} />
 
       <MiniCalendar open={openCalendar} recipeId={id} onOpenChange={setOpenCalendar} />
+
+      <RecipeSharePanel open={openSharePanel} onOpenChange={setOpenSharePanel} />
 
       <DeleteRecipeModal
         isOpen={isDeleteModalOpen}

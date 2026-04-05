@@ -1,8 +1,10 @@
 import crypto from "node:crypto";
 
 import type {
+  AdminRecipeShareInventoryDto,
   CreateRecipeShareInputDto,
   PublicRecipeViewDTO,
+  RecipeShareInventoryDto,
   RecipeShareCreatedDto,
   RecipeShareDto,
   RecipeShareSummaryDto,
@@ -12,9 +14,13 @@ import type {
 import { and, desc, eq, sql } from "drizzle-orm";
 import { hashToken } from "@norish/auth/crypto";
 import { db } from "@norish/db/drizzle";
+import { users } from "@norish/db/schema/auth";
+import { recipes } from "@norish/db/schema/recipes";
 import { recipeShares } from "@norish/db/schema/recipe-shares";
 import {
+  AdminRecipeShareInventorySchema,
   CreateRecipeShareInputSchema,
+  RecipeShareInventorySchema,
   RecipeShareCreatedSchema,
   RecipeShareSelectSchema,
   UpdateRecipeShareInputSchema,
@@ -128,6 +134,48 @@ export async function getAllRecipeShares(): Promise<RecipeShareSummaryDto[]> {
   return rows.map((row) => toRecipeShareSummary(RecipeShareSelectSchema.parse(row)));
 }
 
+export async function getRecipeShareInventoryByUserId(userId: string): Promise<RecipeShareInventoryDto[]> {
+  const rows = await db
+    .select({
+      share: recipeShares,
+      recipeName: recipes.name,
+    })
+    .from(recipeShares)
+    .innerJoin(recipes, eq(recipeShares.recipeId, recipes.id))
+    .where(eq(recipeShares.userId, userId))
+    .orderBy(desc(recipeShares.createdAt));
+
+  return rows.map(({ share, recipeName }) =>
+    RecipeShareInventorySchema.parse({
+      ...toRecipeShareSummary(RecipeShareSelectSchema.parse(share)),
+      recipeName,
+    })
+  );
+}
+
+export async function getRecipeShareInventoryForAdmin(): Promise<AdminRecipeShareInventoryDto[]> {
+  const rows = await db
+    .select({
+      share: recipeShares,
+      recipeName: recipes.name,
+      ownerId: users.id,
+      ownerName: users.name,
+    })
+    .from(recipeShares)
+    .innerJoin(recipes, eq(recipeShares.recipeId, recipes.id))
+    .innerJoin(users, eq(recipeShares.userId, users.id))
+    .orderBy(desc(recipeShares.createdAt));
+
+  return rows.map(({ share, recipeName, ownerId, ownerName }) =>
+    AdminRecipeShareInventorySchema.parse({
+      ...toRecipeShareSummary(RecipeShareSelectSchema.parse(share)),
+      recipeName,
+      ownerId,
+      ownerName,
+    })
+  );
+}
+
 export async function updateRecipeShare(
   input: UpdateRecipeShareInputDto
 ): Promise<MutationOutcome<RecipeShareSummaryDto>> {
@@ -158,6 +206,27 @@ export async function revokeRecipeShare(
     .update(recipeShares)
     .set({
       revokedAt: new Date(),
+      updatedAt: new Date(),
+      version: sql`${recipeShares.version} + 1`,
+    })
+    .where(and(eq(recipeShares.id, id), eq(recipeShares.version, version)))
+    .returning();
+
+  if (!row) {
+    return staleOutcome();
+  }
+
+  return appliedOutcome(toRecipeShareSummary(RecipeShareSelectSchema.parse(row)));
+}
+
+export async function reactivateRecipeShare(
+  id: string,
+  version: number
+): Promise<MutationOutcome<RecipeShareSummaryDto>> {
+  const [row] = await db
+    .update(recipeShares)
+    .set({
+      revokedAt: null,
       updatedAt: new Date(),
       version: sql`${recipeShares.version} + 1`,
     })

@@ -1,14 +1,29 @@
-import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
-import { recipeShares } from "@norish/db/schema/recipe-shares";
 
 import { measurementSystems, recipeCategorySchema } from "./recipe";
 
 export const recipeShareExpiryPolicies = ["1day", "1week", "1month", "1year", "forever"] as const;
 export const recipeShareStatuses = ["active", "expired", "revoked"] as const;
-export const recipeShareLifecycleEventTypes = ["created", "updated", "revoked", "deleted"] as const;
+export const recipeShareLifecycleEventTypes = [
+  "created",
+  "updated",
+  "revoked",
+  "reactivated",
+  "deleted",
+] as const;
 
-export const RecipeShareSelectSchema = createSelectSchema(recipeShares);
+export const RecipeShareSelectSchema = z.object({
+  id: z.uuid(),
+  userId: z.string(),
+  recipeId: z.uuid(),
+  tokenHash: z.string(),
+  expiresAt: z.date().nullable(),
+  revokedAt: z.date().nullable(),
+  lastAccessedAt: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  version: z.number().int().positive(),
+});
 export const RecipeShareExpiryPolicySchema = z.enum(recipeShareExpiryPolicies);
 export const RecipeShareStatusSchema = z.enum(recipeShareStatuses);
 export const RecipeShareLifecycleEventTypeSchema = z.enum(recipeShareLifecycleEventTypes);
@@ -17,8 +32,20 @@ const RecipeShareManagementBaseSchema = RecipeShareSelectSchema.omit({
   tokenHash: true,
 });
 
-export const RecipeShareSummarySchema = RecipeShareManagementBaseSchema.extend({
+// Backward-compatible alias for older linked workspace copies.
+export const RecipeShareManagementSummarySchema = RecipeShareManagementBaseSchema.extend({
   status: RecipeShareStatusSchema,
+});
+
+export const RecipeShareSummarySchema = RecipeShareManagementSummarySchema;
+
+export const RecipeShareInventorySchema = RecipeShareSummarySchema.extend({
+  recipeName: z.string(),
+});
+
+export const AdminRecipeShareInventorySchema = RecipeShareInventorySchema.extend({
+  ownerId: z.string(),
+  ownerName: z.string().nullable(),
 });
 
 export const CreateRecipeShareInputSchema = z.object({
@@ -41,6 +68,11 @@ export const UpdateRecipeShareInputSchema = z.object({
 });
 
 export const RevokeRecipeShareInputSchema = z.object({
+  id: z.uuid(),
+  version: z.number().int().positive(),
+});
+
+export const ReactivateRecipeShareInputSchema = z.object({
   id: z.uuid(),
   version: z.number().int().positive(),
 });
@@ -122,9 +154,9 @@ export const PublicRecipeViewSchema = z.object({
   totalMinutes: z.number().int().nullable(),
   systemUsed: z.enum(measurementSystems),
   calories: z.number().int().nullable(),
-  fat: z.number().nullable(),
-  carbs: z.number().nullable(),
-  protein: z.number().nullable(),
+  fat: z.string().nullable(),
+  carbs: z.string().nullable(),
+  protein: z.string().nullable(),
   categories: z.array(recipeCategorySchema).default([]),
   tags: z.array(PublicRecipeTagSchema).default([]),
   recipeIngredients: z.array(PublicRecipeIngredientSchema).default([]),

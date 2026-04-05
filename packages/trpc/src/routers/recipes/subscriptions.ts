@@ -29,6 +29,11 @@ const onShareRevoked = createEnvelopeAwareSubscription(
   "shareRevoked",
   "recipe share revoked"
 );
+const onShareReactivated = createEnvelopeAwareSubscription(
+  recipeEmitter,
+  "shareReactivated",
+  "recipe share reactivated"
+);
 const onShareDeleted = createEnvelopeAwareSubscription(
   recipeEmitter,
   "shareDeleted",
@@ -91,6 +96,7 @@ export const recipesSubscriptions = router({
   onShareCreated,
   onShareUpdated,
   onShareRevoked,
+  onShareReactivated,
   onShareDeleted,
   onNutritionStarted,
   onAutoTaggingStarted,

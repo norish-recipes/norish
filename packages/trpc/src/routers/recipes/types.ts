@@ -21,6 +21,7 @@ export type RecipeSubscriptionEvents = {
   shareCreated: RecipeShareLifecycleEventDto;
   shareUpdated: RecipeShareLifecycleEventDto;
   shareRevoked: RecipeShareLifecycleEventDto;
+  shareReactivated: RecipeShareLifecycleEventDto;
   shareDeleted: RecipeShareLifecycleEventDto;
   updated: { recipe: FullRecipeDTO };
   deleted: { id: string };

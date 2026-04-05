@@ -85,5 +85,16 @@ export function createUseRecipeShareSubscription(
         })
       )
     );
+
+    useSubscription(
+      asSubscriptionOptions(
+        trpc.recipes.onShareReactivated.subscriptionOptions(undefined, {
+          enabled: !!recipeId,
+          onData: ({ payload }: any) => {
+            handleEvent(payload);
+          },
+        })
+      )
+    );
   };
 }

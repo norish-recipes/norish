@@ -41,7 +41,9 @@
   "connection": {
     "connecting": "Łączenie z Norish...", "syncing": "Synchronizacja, proszę czekać...",
     "checkInternet": "Sprawdź połączenie internetowe",
-    "gettingUpdates": "Chwileczkę, pobieramy najnowsze aktualizacje"
+    "gettingUpdates": "Chwileczkę, pobieramy najnowsze aktualizacje",
+    "offlineBanner": "Jesteś offline, wyświetlane są dane z pamięci podręcznej",
+    "serverUnreachableBanner": "Nie można połączyć się z serwerem Norish, wyświetlane są dane z pamięci podręcznej"
   },
   "language": { "title": "Język" },
   "notFound": { "code": "404", "title": "Nie znaleziono strony", "message": "Ups! Nora nie mogła znaleźć tego, czego szukasz." },

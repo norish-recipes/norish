@@ -66,6 +66,50 @@
     "keepScreenOn": "Scherm Aan Houden",
     "actionsLabel": "Acties"
   },
+  "sharePanel": {
+    "title": "Recept delen",
+    "description": "Maak en beheer publieke links voor {recipeName}.",
+    "expiryLabel": "Linkverval",
+    "createLink": "Link aanmaken",
+    "latestLink": "Laatste link",
+    "currentLinks": "Huidige links",
+    "empty": "Nog geen deellinks.",
+    "createSuccess": "Deellink aangemaakt",
+    "copySuccess": "Link gekopieerd",
+    "copyLink": "Kopiëren",
+    "openLink": "Openen",
+    "createdAt": "Aangemaakt: {value}",
+    "expiresAt": "Verloopt: {value}",
+    "lastAccessedAt": "Laatst geopend: {value}",
+    "never": "Nooit",
+    "expiryOptions": {
+      "1day": "1 dag",
+      "1week": "1 week",
+      "1month": "1 maand",
+      "1year": "1 jaar",
+      "forever": "Nooit"
+    },
+    "status": {
+      "active": "Actief",
+      "expired": "Verlopen",
+      "revoked": "Ingetrokken"
+    },
+    "revokeModal": {
+      "title": "Link intrekken",
+      "message": "Deze link voor {recipeName} werkt niet meer totdat je hem opnieuw activeert.",
+      "confirm": "Intrekken"
+    },
+    "reactivateModal": {
+      "title": "Link opnieuw activeren",
+      "message": "Deze link voor {recipeName} wordt weer actief.",
+      "confirm": "Opnieuw activeren"
+    },
+    "deleteModal": {
+      "title": "Link verwijderen",
+      "message": "Deze deellink voor {recipeName} verwijderen? Dit kan niet ongedaan worden gemaakt.",
+      "confirm": "Link verwijderen"
+    }
+  },
   "convert": {
     "ariaLabel": "Converteer meetsysteem",
     "toMetric": "Converteer naar metrisch",

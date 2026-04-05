@@ -127,6 +127,33 @@
         "description": "Afficher les icônes de favoris/cœur sur les cartes de recettes et les pages de détail"
       },
       "applyError": "Échec de l'application du paramètre"
+    },
+    "shareLinks": {
+      "title": "Liens de partage de recettes",
+      "description": "Consultez et gérez tous les liens publics de recettes que vous avez créés.",
+      "empty": "Aucun lien de partage trouvé.",
+      "table": {
+        "recipe": "RECETTE",
+        "status": "STATUT",
+        "created": "CRÉÉ",
+        "expires": "EXPIRE",
+        "actions": "ACTIONS"
+      },
+      "revokeModal": {
+        "title": "Révoquer le lien",
+        "message": "Ce lien pour {recipeName} cessera de fonctionner jusqu'à ce que vous le réactiviez.",
+        "confirm": "Révoquer"
+      },
+      "reactivateModal": {
+        "title": "Réactiver le lien",
+        "message": "Ce lien pour {recipeName} redeviendra actif.",
+        "confirm": "Réactiver"
+      },
+      "deleteModal": {
+        "title": "Supprimer le lien",
+        "message": "Supprimer ce lien de partage pour {recipeName} ? Cette action est irréversible.",
+        "confirm": "Supprimer le lien"
+      }
     }
   },
   "household": {
@@ -275,6 +302,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Modération du partage de recettes",
+      "description": "Consultez les liens publics de recettes sur toute l'instance et modérez leur cycle de vie.",
+      "empty": "Aucun lien de partage trouvé.",
+      "table": {
+        "recipe": "RECETTE",
+        "owner": "PROPRIÉTAIRE",
+        "status": "STATUT",
+        "created": "CRÉÉ",
+        "expires": "EXPIRE",
+        "actions": "ACTIONS"
+      },
+      "revokeModal": {
+        "title": "Révoquer le lien",
+        "message": "Ce lien pour {recipeName} cessera de fonctionner jusqu'à ce qu'il soit réactivé.",
+        "confirm": "Révoquer"
+      },
+      "reactivateModal": {
+        "title": "Réactiver le lien",
+        "message": "Ce lien pour {recipeName} redeviendra actif.",
+        "confirm": "Réactiver"
+      },
+      "deleteModal": {
+        "title": "Supprimer le lien",
+        "message": "Supprimer ce lien de partage pour {recipeName} ? Cette action est irréversible.",
+        "confirm": "Supprimer le lien"
+      }
+    },
     "general": {
       "title": "Général",
       "allowRegistration": "Autoriser l'inscription de nouveaux utilisateurs",

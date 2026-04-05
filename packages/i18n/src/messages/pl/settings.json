@@ -127,6 +127,33 @@
         "description": "Wyświetlaj ikony ulubionych/serca na kartach przepisów i stronach szczegółów"
       },
       "applyError": "Nie udało się zastosować preferencji"
+    },
+    "shareLinks": {
+      "title": "Linki do udostępniania przepisów",
+      "description": "Przeglądaj i zarządzaj wszystkimi publicznymi linkami do przepisów, które utworzyłeś.",
+      "empty": "Nie znaleziono linków do udostępniania.",
+      "table": {
+        "recipe": "PRZEPIS",
+        "status": "STATUS",
+        "created": "UTWORZONO",
+        "expires": "WYGASA",
+        "actions": "AKCJE"
+      },
+      "revokeModal": {
+        "title": "Odwołaj link",
+        "message": "Ten link do {recipeName} przestanie działać do momentu reaktywacji.",
+        "confirm": "Odwołaj"
+      },
+      "reactivateModal": {
+        "title": "Reaktywuj link",
+        "message": "Ten link do {recipeName} znowu stanie się aktywny.",
+        "confirm": "Reaktywuj"
+      },
+      "deleteModal": {
+        "title": "Usuń link",
+        "message": "Usunąć ten link do {recipeName}? Tej operacji nie można cofnąć.",
+        "confirm": "Usuń link"
+      }
     }
   },
   "household": {
@@ -275,6 +302,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderacja udostępniania przepisów",
+      "description": "Przeglądaj publiczne linki do przepisów w całej instancji i moderuj ich cykl życia.",
+      "empty": "Nie znaleziono linków do udostępniania.",
+      "table": {
+        "recipe": "PRZEPIS",
+        "owner": "WŁAŚCICIEL",
+        "status": "STATUS",
+        "created": "UTWORZONO",
+        "expires": "WYGASA",
+        "actions": "AKCJE"
+      },
+      "revokeModal": {
+        "title": "Odwołaj link",
+        "message": "Ten link do {recipeName} przestanie działać do momentu reaktywacji.",
+        "confirm": "Odwołaj"
+      },
+      "reactivateModal": {
+        "title": "Reaktywuj link",
+        "message": "Ten link do {recipeName} znowu stanie się aktywny.",
+        "confirm": "Reaktywuj"
+      },
+      "deleteModal": {
+        "title": "Usuń link",
+        "message": "Usunąć ten link do {recipeName}? Tej operacji nie można cofnąć.",
+        "confirm": "Usuń link"
+      }
+    },
     "general": {
       "title": "Ogólne",
       "allowRegistration": "Zezwalaj na rejestrację nowych użytkowników",
