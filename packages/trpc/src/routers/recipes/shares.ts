@@ -1,7 +1,17 @@
-import type { RecipeShareDto, RecipeShareLifecycleEventDto } from "@norish/shared/contracts/dto/recipe-shares";
-
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
+import type {
+  RecipeShareDto,
+  RecipeShareLifecycleEventDto,
+} from "@norish/shared/contracts/dto/recipe-shares";
+import {
+  getRecipePermissionPolicy,
+  getTimerKeywords,
+  getUnits,
+  isTimersEnabled,
+} from "@norish/config/server-config-loader";
+import { UnitsMapSchema } from "@norish/config/zod/server-config";
 import {
   createRecipeShare,
   deleteRecipeShare,
@@ -9,20 +19,21 @@ import {
   getRecipeShareById,
   getRecipeShareInventoryByUserId,
   getRecipeShareInventoryForAdmin,
-  getRecipeShareStatus,
   getRecipeSharesByUserId,
+  getRecipeShareStatus,
   reactivateRecipeShare,
   revokeRecipeShare,
   updateRecipeShare,
 } from "@norish/db/repositories/recipe-shares";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { TimerKeywordsSchema } from "@norish/shared/contracts/zod";
 import {
+  AdminRecipeShareInventorySchema,
   CreateRecipeShareInputSchema,
   DeleteRecipeShareInputSchema,
   GetRecipeShareInputSchema,
   ListRecipeSharesInputSchema,
   PublicRecipeViewSchema,
-  AdminRecipeShareInventorySchema,
   ReactivateRecipeShareInputSchema,
   RecipeShareCreatedSchema,
   RecipeShareDeleteResultSchema,
@@ -33,12 +44,10 @@ import {
   RevokeRecipeShareInputSchema,
   UpdateRecipeShareInputSchema,
 } from "@norish/shared/contracts/zod/recipe-shares";
-import { z } from "zod";
 
-import { adminProcedure, authedProcedure, sharedRecipeProcedure } from "../../middleware";
 import { emitByPolicy } from "../../helpers";
+import { adminProcedure, authedProcedure, sharedRecipeProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { recipeEmitter } from "./emitter";
 import { assertRecipeAccess } from "./recipes";
 
@@ -241,7 +250,10 @@ const remove = authedProcedure
   });
 
 const getShared = sharedRecipeProcedure.output(PublicRecipeViewSchema).query(async ({ ctx }) => {
-  const publicRecipe = await getPublicRecipeView(ctx.sharedRecipe.share.recipeId, ctx.sharedRecipe.token);
+  const publicRecipe = await getPublicRecipeView(
+    ctx.sharedRecipe.share.recipeId,
+    ctx.sharedRecipe.token
+  );
 
   if (!publicRecipe) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Shared recipe not found" });
@@ -249,6 +261,28 @@ const getShared = sharedRecipeProcedure.output(PublicRecipeViewSchema).query(asy
 
   return publicRecipe;
 });
+
+const sharePublicConfig = sharedRecipeProcedure
+  .output(
+    z.object({
+      units: UnitsMapSchema,
+      timersEnabled: z.boolean(),
+      timerKeywords: TimerKeywordsSchema,
+    })
+  )
+  .query(async () => {
+    const [units, timersEnabled, timerKeywords] = await Promise.all([
+      getUnits(),
+      isTimersEnabled(),
+      getTimerKeywords(),
+    ]);
+
+    return {
+      units,
+      timersEnabled,
+      timerKeywords,
+    };
+  });
 
 export const recipeSharesProcedures = router({
   shareCreate: create,
@@ -261,4 +295,5 @@ export const recipeSharesProcedures = router({
   shareReactivate: reactivate,
   shareDelete: remove,
   getShared,
+  sharePublicConfig,
 });

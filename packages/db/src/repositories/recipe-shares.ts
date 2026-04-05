@@ -12,7 +12,7 @@ import type {
 } from "@norish/shared/contracts/dto/recipe-shares";
 
 import { and, desc, eq, sql } from "drizzle-orm";
-import { hashToken } from "@norish/auth/crypto";
+import { hashToken, safeDecrypt } from "@norish/auth/crypto";
 import { db } from "@norish/db/drizzle";
 import { users } from "@norish/db/schema/auth";
 import { recipes } from "@norish/db/schema/recipes";
@@ -171,7 +171,7 @@ export async function getRecipeShareInventoryForAdmin(): Promise<AdminRecipeShar
       ...toRecipeShareSummary(RecipeShareSelectSchema.parse(share)),
       recipeName,
       ownerId,
-      ownerName,
+      ownerName: safeDecrypt(ownerName),
     })
   );
 }

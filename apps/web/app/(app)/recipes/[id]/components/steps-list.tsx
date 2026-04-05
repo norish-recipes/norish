@@ -2,13 +2,12 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { CheckIcon } from "@heroicons/react/16/solid";
-
-import { useRecipeContext } from "../context";
-
 import { SmartInstruction } from "@/components/recipe/smart-instruction";
 import ImageLightbox from "@/components/shared/image-lightbox";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import { CheckIcon } from "@heroicons/react/16/solid";
+
+import { useRecipeContext } from "../context";
 
 type StepLike = {
   step: string;
@@ -20,6 +19,7 @@ type StepLike = {
 type SmartInstructionLike = React.ComponentType<{
   text: string;
   recipeId: string;
+  token?: string;
   recipeName?: string;
   stepIndex: number;
 }>;
@@ -30,6 +30,7 @@ type ReadonlyStepsListProps = {
   interactive?: boolean;
   enableTimers?: boolean;
   recipeId?: string;
+  token?: string;
   recipeName?: string;
   /** Override the timer-aware instruction renderer (e.g. for public share pages). */
   InstructionComponent?: SmartInstructionLike;
@@ -41,6 +42,7 @@ export function ReadonlyStepsList({
   interactive = false,
   enableTimers = false,
   recipeId,
+  token,
   recipeName,
   InstructionComponent = SmartInstruction,
 }: ReadonlyStepsListProps) {
@@ -86,7 +88,9 @@ export function ReadonlyStepsList({
     setLightboxOpen(true);
   };
 
-  const filteredSteps = steps.filter((s) => s.systemUsed === systemUsed).sort((a, b) => a.order - b.order);
+  const filteredSteps = steps
+    .filter((s) => s.systemUsed === systemUsed)
+    .sort((a, b) => a.order - b.order);
 
   let stepNumber = 0;
 
@@ -153,6 +157,7 @@ export function ReadonlyStepsList({
                     {interactive && !isDone && enableTimers ? (
                       <InstructionComponent
                         recipeId={recipeId || ""}
+                        token={token}
                         recipeName={recipeName}
                         stepIndex={currentStepNumber - 1}
                         text={s.step}

@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { CheckIcon } from "@heroicons/react/20/solid";
-import { formatAmount } from "@norish/shared/lib/format-amount";
-
-import { useRecipeContextRequired } from "../context";
-
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
+import { CheckIcon } from "@heroicons/react/20/solid";
+import { useLocale } from "next-intl";
+
+import type { UnitsMap } from "@norish/config/zod/server-config";
+import { useUnitFormatter as useSharedUnitFormatter } from "@norish/shared-react/hooks";
+import { formatAmount } from "@norish/shared/lib/format-amount";
+
+import { useRecipeContextRequired } from "../context";
 
 type IngredientLike = {
   ingredientName: string;
@@ -22,16 +25,21 @@ type ReadonlyIngredientsListProps = {
   ingredients: IngredientLike[];
   systemUsed: string;
   interactive?: boolean;
+  units?: UnitsMap;
 };
 
-export function ReadonlyIngredientsList({
+type ReadonlyIngredientsListContentProps = Omit<ReadonlyIngredientsListProps, "units"> & {
+  formatUnitOnly: (unit: string | null | undefined, amount?: number | null | undefined) => string;
+};
+
+function ReadonlyIngredientsListContent({
   ingredients,
   systemUsed,
   interactive = false,
-}: ReadonlyIngredientsListProps) {
+  formatUnitOnly,
+}: ReadonlyIngredientsListContentProps) {
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
   const { mode } = useAmountDisplayPreference();
-  const { formatUnitOnly } = useUnitFormatter();
 
   const toggle = (idx: number) => {
     if (!interactive) {
@@ -122,7 +130,9 @@ export function ReadonlyIngredientsList({
                   {amount !== "" && (
                     <span
                       className={`text-base font-bold tabular-nums ${
-                        interactive && isChecked ? "text-default-500 line-through" : "text-foreground"
+                        interactive && isChecked
+                          ? "text-default-500 line-through"
+                          : "text-foreground"
                       }`}
                     >
                       {amount}
@@ -142,7 +152,10 @@ export function ReadonlyIngredientsList({
                   <span
                     className={`text-base ${interactive && isChecked ? "text-default-400 line-through" : "text-base"}`}
                   >
-                    <SmartMarkdownRenderer disableLinks={interactive && isChecked} text={it.ingredientName} />
+                    <SmartMarkdownRenderer
+                      disableLinks={interactive && isChecked}
+                      text={it.ingredientName}
+                    />
                   </span>
                 </div>
               </div>
@@ -153,9 +166,35 @@ export function ReadonlyIngredientsList({
   );
 }
 
+function ReadonlyIngredientsListWithConfiguredUnits({
+  units,
+  ...props
+}: ReadonlyIngredientsListProps & { units: UnitsMap }) {
+  const locale = useLocale();
+  const { formatUnitOnly } = useSharedUnitFormatter({ locale, units });
+
+  return <ReadonlyIngredientsListContent {...props} formatUnitOnly={formatUnitOnly} />;
+}
+
+function ReadonlyIngredientsListWithUserUnits(props: Omit<ReadonlyIngredientsListProps, "units">) {
+  const { formatUnitOnly } = useUnitFormatter();
+
+  return <ReadonlyIngredientsListContent {...props} formatUnitOnly={formatUnitOnly} />;
+}
+
+export function ReadonlyIngredientsList(props: ReadonlyIngredientsListProps) {
+  if (props.units) {
+    return <ReadonlyIngredientsListWithConfiguredUnits {...props} units={props.units} />;
+  }
+
+  return <ReadonlyIngredientsListWithUserUnits {...props} />;
+}
+
 export default function IngredientsList() {
   const { adjustedIngredients, recipe } = useRecipeContextRequired();
   const display = adjustedIngredients?.length > 0 ? adjustedIngredients : recipe.recipeIngredients;
 
-  return <ReadonlyIngredientsList ingredients={display} interactive systemUsed={recipe.systemUsed} />;
+  return (
+    <ReadonlyIngredientsList ingredients={display} interactive systemUsed={recipe.systemUsed} />
+  );
 }

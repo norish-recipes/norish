@@ -2,19 +2,27 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMockAuthedContext, createMockFullRecipe, createMockHousehold, createMockUser } from "./test-utils";
+import {
+  createMockAuthedContext,
+  createMockFullRecipe,
+  createMockHousehold,
+  createMockUser,
+} from "./test-utils";
 
 const assertRecipeAccessMock = vi.hoisted(() => vi.fn());
 const createRecipeShareMock = vi.hoisted(() => vi.fn());
 const deleteRecipeShareMock = vi.hoisted(() => vi.fn());
 const emitByPolicyMock = vi.hoisted(() => vi.fn());
 const getActiveRecipeShareByTokenMock = vi.hoisted(() => vi.fn());
+const getTimerKeywordsMock = vi.hoisted(() => vi.fn());
 const getRecipePermissionPolicyMock = vi.hoisted(() => vi.fn());
 const getPublicRecipeViewMock = vi.hoisted(() => vi.fn());
 const getRecipeFullMock = vi.hoisted(() => vi.fn());
 const getRecipeShareByIdMock = vi.hoisted(() => vi.fn());
 const getRecipeSharesByUserIdMock = vi.hoisted(() => vi.fn());
 const getRecipeShareStatusMock = vi.hoisted(() => vi.fn());
+const getUnitsMock = vi.hoisted(() => vi.fn());
+const isTimersEnabledMock = vi.hoisted(() => vi.fn());
 const revokeRecipeShareMock = vi.hoisted(() => vi.fn());
 const updateRecipeShareMock = vi.hoisted(() => vi.fn());
 const getCachedHouseholdForUserMock = vi.hoisted(() => vi.fn());
@@ -30,6 +38,9 @@ vi.mock("../../src/helpers", () => ({
 
 vi.mock("@norish/config/server-config-loader", () => ({
   getRecipePermissionPolicy: getRecipePermissionPolicyMock,
+  getTimerKeywords: getTimerKeywordsMock,
+  getUnits: getUnitsMock,
+  isTimersEnabled: isTimersEnabledMock,
 }));
 
 vi.mock("@norish/db/repositories/recipe-shares", () => ({
@@ -80,6 +91,15 @@ describe("recipe share procedures", () => {
     getCachedHouseholdForUserMock.mockResolvedValue(household);
     getRecipePermissionPolicyMock.mockResolvedValue({ view: "household" });
     getRecipeShareStatusMock.mockReturnValue("active");
+    getUnitsMock.mockResolvedValue({});
+    isTimersEnabledMock.mockResolvedValue(true);
+    getTimerKeywordsMock.mockResolvedValue({
+      enabled: true,
+      hours: ["hour"],
+      minutes: ["minute"],
+      seconds: ["second"],
+      isOverridden: false,
+    });
   });
 
   it("creates a share after enforcing recipe edit access", async () => {
@@ -181,14 +201,93 @@ describe("recipe share procedures", () => {
     expect(result.image).toBe("/share/valid-token/media/cover.jpg");
   });
 
+  it("returns the public share config for a valid share token", async () => {
+    const caller = recipeSharesProcedures.createCaller(publicCtx as never);
+
+    getActiveRecipeShareByTokenMock.mockResolvedValue({
+      id: shareId,
+      userId: user.id,
+      recipeId,
+      tokenHash: "hashed",
+      expiresAt: null,
+      revokedAt: null,
+      lastAccessedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      version: 2,
+    });
+    getRecipeFullMock.mockResolvedValue(createMockFullRecipe({ id: recipeId }));
+    getUnitsMock.mockResolvedValue({
+      gram: {
+        short: [{ locale: "en", name: "g" }],
+        plural: [{ locale: "en", name: "grams" }],
+        alternates: ["gram"],
+      },
+    });
+    isTimersEnabledMock.mockResolvedValue(false);
+    getTimerKeywordsMock.mockResolvedValue({
+      enabled: true,
+      hours: ["hr"],
+      minutes: ["min"],
+      seconds: ["sec"],
+      isOverridden: true,
+    });
+
+    const result = await caller.sharePublicConfig({ token: "valid-token" });
+
+    expect(getActiveRecipeShareByTokenMock).toHaveBeenCalledWith("valid-token", {
+      touchLastAccessedAt: true,
+    });
+    expect(getUnitsMock).toHaveBeenCalledOnce();
+    expect(isTimersEnabledMock).toHaveBeenCalledOnce();
+    expect(getTimerKeywordsMock).toHaveBeenCalledOnce();
+    expect(result).toEqual({
+      units: {
+        gram: {
+          short: [{ locale: "en", name: "g" }],
+          plural: [{ locale: "en", name: "grams" }],
+          alternates: ["gram"],
+        },
+      },
+      timersEnabled: false,
+      timerKeywords: {
+        enabled: true,
+        hours: ["hr"],
+        minutes: ["min"],
+        seconds: ["sec"],
+        isOverridden: true,
+      },
+    });
+  });
+
+  it("rejects public share config requests for invalid tokens", async () => {
+    const caller = recipeSharesProcedures.createCaller(publicCtx as never);
+
+    getActiveRecipeShareByTokenMock.mockResolvedValue(null);
+
+    await expect(caller.sharePublicConfig({ token: "invalid-token" })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+
+    expect(getUnitsMock).not.toHaveBeenCalled();
+    expect(isTimersEnabledMock).not.toHaveBeenCalled();
+    expect(getTimerKeywordsMock).not.toHaveBeenCalled();
+  });
+
   it("rejects invalid, expired, and revoked public tokens with the same not-found error", async () => {
     const caller = recipeSharesProcedures.createCaller(publicCtx as never);
 
     getActiveRecipeShareByTokenMock.mockResolvedValue(null);
 
-    await expect(caller.getShared({ token: "invalid-token" })).rejects.toMatchObject({ code: "NOT_FOUND" });
-    await expect(caller.getShared({ token: "expired-token" })).rejects.toMatchObject({ code: "NOT_FOUND" });
-    await expect(caller.getShared({ token: "revoked-token" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(caller.getShared({ token: "invalid-token" })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    await expect(caller.getShared({ token: "expired-token" })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    await expect(caller.getShared({ token: "revoked-token" })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
   });
 
   it("does not allow a user to manage another user's share", async () => {

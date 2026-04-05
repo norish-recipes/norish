@@ -3,27 +3,26 @@
 /**
  * Share-page-safe variant of SmartInstruction.
  *
- * The original SmartInstruction uses `useTimersEnabledQuery` which internally
- * calls `useUserContext` — unavailable on the public `/share/` pages.
- * This component uses the base query instead (global setting only, no user
- * preference) and re-exports the same visual output.
+ * The original SmartInstruction uses authenticated config hooks via
+ * `useTimersEnabledQuery`, which depend on user context.
+ * This variant reads the dedicated public share-page config instead and keeps
+ * the same visual output.
  */
-
 import React, { useMemo } from "react";
 import Link from "next/link";
+import { TimerChip } from "@/components/recipe/timer-chip";
+import { useSharePublicConfigQuery } from "@/hooks/recipes/use-share-public-config-query";
 import ReactMarkdown from "react-markdown";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { parseTimerDurations } from "@norish/shared/lib/timer-parser";
-
-import { useTimerKeywordsQuery } from "@/hooks/config";
-import { sharedConfigHooks } from "@/hooks/config/shared-config-hooks";
-import { TimerChip } from "@/components/recipe/timer-chip";
 
 const logger = createClientLogger("public-smart-instruction");
 
 interface PublicSmartInstructionProps {
   text: string;
   recipeId: string;
+  token: string;
   recipeName?: string;
   stepIndex: number;
 }
@@ -48,12 +47,11 @@ type Segment = {
 export function PublicSmartInstruction({
   text,
   recipeId,
+  token,
   recipeName,
   stepIndex,
 }: PublicSmartInstructionProps) {
-  // Use base query (global config only), no UserProvider required
-  const { globalEnabled: timersEnabled } = sharedConfigHooks.useTimersEnabledBaseQuery();
-  const { timerKeywords } = useTimerKeywordsQuery();
+  const { timersEnabled, timerKeywords } = useSharePublicConfigQuery(token);
 
   const segments = useMemo(() => {
     const allSegments: Segment[] = [];
@@ -174,7 +172,7 @@ function preprocessMarkdown(text: string): string {
   // On share pages, recipe cross-references don't resolve — strip the link
   processed = processed.replace(
     /\[([^\]]+)\]\(id:[a-zA-Z0-9-]+\)/g,
-    (_: string, recipeName: string) => recipeName,
+    (_: string, recipeName: string) => recipeName
   );
 
   return processed;
@@ -233,7 +231,7 @@ function insertTimers(text: string, segments: Segment[]): React.ReactNode[] {
           originalText={segment.data.originalText}
           recipeId={segment.data.recipeId}
           recipeName={segment.data.recipeName}
-        />,
+        />
       );
     }
 

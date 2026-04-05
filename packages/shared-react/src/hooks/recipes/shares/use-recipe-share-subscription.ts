@@ -19,7 +19,7 @@ export function createUseRecipeShareSubscription(
     callbacks: RecipeShareSubscriptionCallbacks = {}
   ) {
     const trpc = useTRPC();
-    const { invalidateRecipeShares, invalidateRecipeShare, removeRecipeShare } =
+    const { invalidateRecipeShares, invalidateMyRecipeShares, invalidateAdminRecipeShares, invalidateRecipeShare, removeRecipeShare } =
       dependencies.useRecipeShareCacheHelpers();
 
     const asSubscriptionOptions = (options: unknown): Parameters<typeof useSubscription>[0] => {
@@ -27,6 +27,10 @@ export function createUseRecipeShareSubscription(
     };
 
     const handleEvent = (payload: RecipeShareLifecycleEventDto) => {
+      // Always invalidate inventory queries so settings pages stay fresh.
+      invalidateMyRecipeShares();
+      invalidateAdminRecipeShares();
+
       if (!recipeId || payload.recipeId !== recipeId) {
         return;
       }
