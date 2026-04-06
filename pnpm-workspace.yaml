@@ -4,21 +4,22 @@ packages:
   - tooling/*
 
 catalog:
-  '@better-auth/api-key': 1.5.4
-  '@better-auth/expo': 1.5.4
-  '@eslint/js': ^9.39.4
-  '@heroicons/react': 2.2.0
-  '@heroui/react': ^2.8.10
-  '@tailwindcss/postcss': ^4.2.2
-  '@tanstack/react-query': ^5.95.2
-  '@testcontainers/postgresql': ^11.13.0
-  '@trpc/client': ^11.15.1
-  '@trpc/server': ^11.15.1
-  '@trpc/tanstack-react-query': ^11.15.1
-  '@types/node': ^25.5.0
-  '@types/react': 19.2.14
-  '@types/react-dom': 19.2.3
-  '@vitejs/plugin-react': ^5.2.0
+  "@better-auth/api-key": 1.5.4
+  "@better-auth/expo": 1.5.4
+  "@eslint/js": ^9.39.4
+  "@heroicons/react": 2.2.0
+  "@heroui/react": ^2.8.10
+  "@scalar/nextjs-api-reference": ^0.10.6
+  "@tailwindcss/postcss": ^4.2.2
+  "@tanstack/react-query": ^5.95.2
+  "@testcontainers/postgresql": ^11.13.0
+  "@trpc/client": ^11.15.1
+  "@trpc/server": ^11.15.1
+  "@trpc/tanstack-react-query": ^11.15.1
+  "@types/node": ^25.5.0
+  "@types/react": 19.2.14
+  "@types/react-dom": 19.2.3
+  "@vitejs/plugin-react": ^5.2.0
   better-auth: 1.5.4
   bullmq: ^5.71.1
   date-fns: ^4.1.0
@@ -38,20 +39,22 @@ catalog:
   server-only: ^0.0.1
   superjson: ^2.2.6
   tailwindcss: ^4.2.2
+  trpc-to-openapi: ^3.2.0
   turbo: ^2.8.20
   typescript: 5.9.3
   vite: ^7.1.12
   vitest: ^4.1.2
   ws: 8.19.0
   zod: 4.3.6
+  zod-openapi: ^5.4.2
 
 injectWorkspacePackages: true
 
 nodeLinker: hoisted
 
 onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
-  - '@heroui/shared-utils'
+  - "@tailwindcss/oxide"
+  - "@heroui/shared-utils"
   - esbuild
   - ffmpeg-static
   - sharp

@@ -58,8 +58,10 @@
     "ioredis": "catalog:",
     "jszip": "catalog:",
     "superjson": "catalog:",
+    "trpc-to-openapi": "catalog:",
     "ws": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "zod-openapi": "catalog:"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",

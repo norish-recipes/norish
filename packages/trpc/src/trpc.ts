@@ -1,21 +1,24 @@
-import type { Context } from "./context";
-
+import type { OpenApiMeta } from "trpc-to-openapi";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 
+import type { Context } from "./context";
 import { trpcLogger } from "./logger";
 
-const t = initTRPC.context<Context>().create({
-  transformer: superjson,
-  errorFormatter({ shape, error: _error }) {
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-      },
-    };
-  },
-});
+const t = initTRPC
+  .context<Context>()
+  .meta<OpenApiMeta>()
+  .create({
+    transformer: superjson,
+    errorFormatter({ shape, error: _error }) {
+      return {
+        ...shape,
+        data: {
+          ...shape.data,
+        },
+      };
+    },
+  });
 
 const loggerMiddleware = t.middleware(async ({ ctx, path, type, next }) => {
   const start = Date.now();

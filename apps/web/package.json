@@ -44,6 +44,7 @@
     "@norish/shared-server": "workspace:*",
     "@norish/trpc": "workspace:*",
     "@norish/ui": "workspace:*",
+    "@scalar/nextjs-api-reference": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-virtual": "^3.13.23",
     "@trpc/client": "catalog:",
