@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API-sleutels",
       "description": "API-sleutels bieden toegang tot de Norish API. Gebruik ze voor integraties, snelkoppelingen en automatisering.",
+      "docsLink": "API-documentatie openen",
       "keyNameLabel": "Sleutelnaam (optioneel)",
       "keyNamePlaceholder": "bijv. iOS Snelkoppeling",
       "createKey": "Sleutel aanmaken",

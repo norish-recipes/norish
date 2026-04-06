@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API Keys",
       "description": "API keys allow programmatic access to the Norish API. Use them for integrations, shortcuts, and automation.",
+      "docsLink": "Open API docs",
       "keyNameLabel": "Key Name (optional)",
       "keyNamePlaceholder": "e.g., iOS Shortcut",
       "createKey": "Create Key",

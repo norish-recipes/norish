@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API-ключи",
       "description": "API-ключи позволяют программно обращаться к Norish API. Используйте их для интеграций, быстрых команд и автоматизации.",
+      "docsLink": "Открыть документацию API",
       "keyNameLabel": "Название ключа (необязательно)",
       "keyNamePlaceholder": "например, iOS Shortcut",
       "createKey": "Создать ключ",
