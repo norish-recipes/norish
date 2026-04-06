@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API 키",
       "description": "API 키를 사용하면 Norish API에 프로그래밍 방식으로 접근할 수 있습니다. 통합, 바로가기, 자동화에 사용하세요.",
+      "docsLink": "API 문서 열기",
       "keyNameLabel": "키 이름(선택사항)",
       "keyNamePlaceholder": "예: iOS 단축키",
       "createKey": "키 만들기",

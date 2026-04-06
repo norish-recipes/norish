@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "Claves API",
       "description": "Las claves API permiten acceso programático a la API de Norish. Úsalas para integraciones, atajos y automatizaciones.",
+      "docsLink": "Abrir documentación de la API",
       "keyNameLabel": "Nombre de la clave (opcional)",
       "keyNamePlaceholder": "p. ej., Atajo iOS",
       "createKey": "Crear clave",

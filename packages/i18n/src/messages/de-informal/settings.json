@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API-Schlüssel",
       "description": "API-Schlüssel ermöglichen programmatischen Zugriff auf die Norish API. Nutze sie für Integrationen, Shortcuts und Automatisierung.",
+      "docsLink": "API-Dokumentation öffnen",
       "keyNameLabel": "Schlüsselbenennung (optional)",
       "keyNamePlaceholder": "z.B. iOS-Verknüpfung",
       "createKey": "Schlüssel erstellen",

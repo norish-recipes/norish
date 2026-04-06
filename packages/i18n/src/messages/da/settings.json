@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API-nøgler",
       "description": "API-nøgler giver programmatisk adgang til Norish API. Brug dem til integrationer, genveje og automatisering.",
+      "docsLink": "Åbn API-dokumentation",
       "keyNameLabel": "Nøglenavn (valgfrit)",
       "keyNamePlaceholder": "f.eks. iOS-genvej",
       "createKey": "Opret nøgle",

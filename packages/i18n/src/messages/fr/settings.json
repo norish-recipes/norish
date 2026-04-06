@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "Clés API",
       "description": "Les clés API permettent un accès programmatique à l’API Norish. Utilisez-les pour des intégrations, raccourcis et automatisations.",
+      "docsLink": "Ouvrir la documentation de l’API",
       "keyNameLabel": "Nom de la clé (optionnel)",
       "keyNamePlaceholder": "ex. : Raccourci iOS",
       "createKey": "Créer une clé",
