@@ -1,5 +1,6 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { z } from "zod";
+
 import { measurementSystemEnum, recipes } from "@norish/db/schema";
 
 import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
@@ -8,7 +9,7 @@ import {
   RecipeIngredientInputSchema,
   RecipeIngredientsWithIdSchema,
 } from "./recipe-ingredients";
-import { RecipeVideoSchema, RecipeVideosArraySchema } from "./recipe-videos";
+import { RecipeVideosArraySchema, RecipeVideoSchema } from "./recipe-videos";
 import { StepOutputSchema, StepStepSchema } from "./steps";
 import { TagNameSchema, TagSummarySchema } from "./tag";
 
@@ -79,18 +80,40 @@ export const measurementSystems = measurementSystemEnum.enumValues;
 
 // tRPC input schemas
 export const RecipeListInputSchema = z.object({
-  cursor: z.number().int().nonnegative().default(0),
-  limit: z.number().int().min(1).max(200).default(50),
-  search: z.string().optional(),
+  cursor: z.number().int().nonnegative().default(0).describe("Zero-based pagination offset. Defaults to 0."),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(200)
+    .default(50)
+    .describe("Maximum number of recipes to return. Defaults to 50."),
+  search: z.string().optional().describe("Optional free-text search term."),
   searchFields: z
     .array(z.enum(["title", "description", "ingredients", "steps", "tags"]))
-    .default(["title", "ingredients"]),
-  tags: z.array(z.string()).optional(),
-  categories: z.array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"])).optional(),
-  filterMode: z.enum(["AND", "OR"]).default("OR"),
-  sortMode: z.enum(["titleAsc", "titleDesc", "dateAsc", "dateDesc", "none"]).default("dateDesc"),
-  minRating: z.number().min(1).max(5).optional(),
-  maxCookingTime: z.number().int().min(1).optional(),
+    .default(["title", "ingredients"])
+    .describe("Fields searched when `search` is provided. Defaults to `title` and `ingredients`."),
+  tags: z.array(z.string()).optional().describe("Optional tag filter."),
+  categories: z
+    .array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]))
+    .optional()
+    .describe("Optional meal category filter."),
+  filterMode: z
+    .enum(["AND", "OR"])
+    .default("OR")
+    .describe("How multi-value filters are combined. Defaults to `OR`."),
+  sortMode: z
+    .enum(["titleAsc", "titleDesc", "dateAsc", "dateDesc", "none"])
+    .default("dateDesc")
+    .describe("Sort order for the returned recipes. Defaults to `dateDesc`."),
+  minRating: z.number().min(1).max(5).optional().describe("Optional minimum recipe rating."),
+  maxCookingTime: z.number().int().min(1).optional().describe("Optional maximum cooking time in minutes."),
+});
+
+export const RecipeListResultSchema = z.object({
+  recipes: z.array(RecipeDashboardSchema),
+  total: z.number().int().nonnegative(),
+  nextCursor: z.number().int().nonnegative().nullable(),
 });
 
 export const RecipeGetInputSchema = z.object({
@@ -127,4 +150,10 @@ export const OcrImportFileSchema = z.object({
 
 export const RecipeImageImportInputSchema = z.object({
   files: z.array(OcrImportFileSchema).min(1).max(10),
+});
+
+export const RecipeImportResultSchema = z.object({
+  recipeId: z.uuid(),
+  status: z.enum(["queued", "exists"]),
+  recipe: RecipeDashboardSchema.nullable().optional(),
 });

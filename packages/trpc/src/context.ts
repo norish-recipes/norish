@@ -1,13 +1,13 @@
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import type { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
+
 import type { SubscriptionMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
 import type { User } from "@norish/shared/contracts";
 import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
-
 import { auth } from "@norish/auth/auth";
 import { getHouseholdForUser } from "@norish/db";
-import { isOperationId } from "@norish/shared/lib/operation-helpers";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { isOperationId } from "@norish/shared/lib/operation-helpers";
 
 type ContextHousehold = {
   id: string;
@@ -26,27 +26,13 @@ export type Context = {
   operationId: OperationId | null;
 };
 
-/**
- * Create context for HTTP requests (Next.js fetch adapter)
- */
-export async function createContext(opts: FetchCreateContextFnOptions): Promise<Context> {
-  const { req } = opts;
-
-  // Read operationId from the x-operation-id header
-  const rawOperationId = req.headers.get("x-operation-id");
-  const operationId = isOperationId(rawOperationId) ? (rawOperationId as OperationId) : null;
-
-  if (operationId) {
-    log.debug(
-      { operationId, requestUrl: req.url },
-      "Received tRPC request with correlation ID"
-    );
-  }
-
+export async function createHttpContextFromHeaders(
+  headers: Headers,
+  operationId: OperationId | null
+): Promise<Context> {
   try {
-    // Use BetterAuth's getSession API which handles both session cookies and API keys
     const session = await auth.api.getSession({
-      headers: req.headers,
+      headers,
     });
 
     if (!session?.user?.id) {
@@ -79,6 +65,23 @@ export async function createContext(opts: FetchCreateContextFnOptions): Promise<
   } catch {
     return { user: null, household: null, connectionId: null, multiplexer: null, operationId };
   }
+}
+
+/**
+ * Create context for HTTP requests (Next.js fetch adapter)
+ */
+export async function createContext(opts: FetchCreateContextFnOptions): Promise<Context> {
+  const { req } = opts;
+
+  // Read operationId from the x-operation-id header
+  const rawOperationId = req.headers.get("x-operation-id");
+  const operationId = isOperationId(rawOperationId) ? (rawOperationId as OperationId) : null;
+
+  if (operationId) {
+    log.debug({ operationId, requestUrl: req.url }, "Received tRPC request with correlation ID");
+  }
+
+  return createHttpContextFromHeaders(req.headers, operationId);
 }
 
 export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<Context> {

@@ -49,7 +49,7 @@ import { emitByPolicy } from "../../helpers";
 import { adminProcedure, authedProcedure, sharedRecipeProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { recipeEmitter } from "./emitter";
-import { assertRecipeAccess } from "./recipes";
+import { assertRecipeAccess } from "./helpers";
 
 type ShareMutationContext = {
   user: { id: string };

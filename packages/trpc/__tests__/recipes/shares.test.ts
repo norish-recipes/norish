@@ -28,7 +28,7 @@ const updateRecipeShareMock = vi.hoisted(() => vi.fn());
 const getCachedHouseholdForUserMock = vi.hoisted(() => vi.fn());
 const isUserServerAdminMock = vi.hoisted(() => vi.fn());
 
-vi.mock("../../src/routers/recipes/recipes", () => ({
+vi.mock("../../src/routers/recipes/helpers", () => ({
   assertRecipeAccess: assertRecipeAccessMock,
 }));
 

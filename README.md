@@ -40,6 +40,7 @@ Norish is a real-time, household-first recipe app for planning meals, sharing gr
     - [Optional (Internationalization)](#optional-internationalization)
   - [Local Development](#local-development)
     - [Development Commands](#development-commands)
+  - [Recipe API](#recipe-api)
   - [Tech Stack](#tech-stack)
     - [Frontend](#frontend)
     - [Backend](#backend)
@@ -385,6 +386,30 @@ pnpm run dev:mobile
 | `pnpm run typecheck`     | Run type checking across all workspaces                   |
 | `pnpm run docker:up`     | Start local dependency stack via Compose                  |
 | `pnpm run docker:down`   | Stop local dependency stack                               |
+
+---
+
+## API
+
+Norish exposes an API under `/api/v1`. Currently the API is limited to recipes, the plan is to add at least a few new endpoints with each release.
+
+- Visual docs: `/api/docs`
+- OpenAPI spec JSON: `/api/openapi.json`
+- Current endpoints:
+  - `GET /api/v1/recipes/{id}`
+  - `POST /api/v1/recipes/search` - List recipes with optional filters.
+  - `POST /api/v1/recipes/import/url`
+  - `POST /api/v1/recipes/import/paste`
+
+Authentication:
+
+- `x-api-key: <your-api-key>`
+- `Authorization: Bearer <your-api-key>`
+
+Notes:
+
+- `/api/docs` and `/api/openapi.json` require a signed-in web session.
+- `POST /api/v1/recipes/search` returns a paginated recipe list. Optional filters include `search`, `searchFields`, `tags`, `categories`, `filterMode`, `sortMode`, `minRating`, and `maxCookingTime`. `cursor` defaults to `0` and `limit` defaults to `50`.
 
 ---
 

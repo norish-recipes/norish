@@ -265,7 +265,9 @@ describe("recipes procedures", () => {
           .query(async ({ input }) => {
             const recipe = await getRecipeFull(input.id);
 
-            if (!recipe) return null;
+            if (!recipe) {
+              throw new Error("Recipe not found");
+            }
 
             if (recipe.userId) {
               const canView = await canAccessResource(
@@ -276,7 +278,9 @@ describe("recipes procedures", () => {
                 ctx.isServerAdmin
               );
 
-              if (!canView) return null;
+              if (!canView) {
+                throw new Error("Recipe not found");
+              }
             }
 
             return recipe;
@@ -297,7 +301,7 @@ describe("recipes procedures", () => {
       expect(result).toEqual(mockRecipe);
     });
 
-    it("returns null when user lacks view permission", async () => {
+    it("throws when user lacks view permission", async () => {
       const mockRecipe = createMockFullRecipe({ id: "r1", userId: "other-user-id" });
 
       getRecipeFull.mockResolvedValue(mockRecipe);
@@ -309,7 +313,9 @@ describe("recipes procedures", () => {
           .query(async ({ input }) => {
             const recipe = await getRecipeFull(input.id);
 
-            if (!recipe) return null;
+            if (!recipe) {
+              throw new Error("Recipe not found");
+            }
 
             if (recipe.userId) {
               const canView = await canAccessResource(
@@ -320,7 +326,9 @@ describe("recipes procedures", () => {
                 ctx.isServerAdmin
               );
 
-              if (!canView) return null;
+              if (!canView) {
+                throw new Error("Recipe not found");
+              }
             }
 
             return recipe;
@@ -328,9 +336,7 @@ describe("recipes procedures", () => {
       });
 
       const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.get({ id: "r1" });
-
-      expect(result).toBeNull();
+      await expect(caller.get({ id: "r1" })).rejects.toThrow("Recipe not found");
     });
 
     it("returns orphaned recipe without permission check", async () => {
@@ -344,7 +350,9 @@ describe("recipes procedures", () => {
           .query(async ({ input }) => {
             const recipe = await getRecipeFull(input.id);
 
-            if (!recipe) return null;
+            if (!recipe) {
+              throw new Error("Recipe not found");
+            }
 
             if (recipe.userId) {
               const canView = await canAccessResource(
@@ -355,7 +363,9 @@ describe("recipes procedures", () => {
                 ctx.isServerAdmin
               );
 
-              if (!canView) return null;
+              if (!canView) {
+                throw new Error("Recipe not found");
+              }
             }
 
             return recipe;
