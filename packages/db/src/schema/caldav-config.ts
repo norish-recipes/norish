@@ -1,8 +1,7 @@
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-import { versionColumn } from "./shared";
-
 import { users } from "./auth";
+import { versionColumn } from "./shared";
 
 export const userCaldavConfig = pgTable("user_caldav_config", {
   userId: text("user_id")

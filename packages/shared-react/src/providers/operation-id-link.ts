@@ -10,10 +10,10 @@
  * mutation input schemas.
  */
 
-import type { AnyTRPCRouter } from "@trpc/server";
 import type { TRPCLink } from "@trpc/client";
-
+import type { AnyTRPCRouter } from "@trpc/server";
 import { observable } from "@trpc/server/observable";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { generateOperationId, isOperationId } from "@norish/shared/lib/operation-helpers";
 
@@ -53,7 +53,9 @@ export function createOperationIdLink<TRouter extends AnyTRPCRouter>(): TRPCLink
           operationId,
           // Merge into headers so httpLink/httpBatchLink sends it to the server
           headers: {
-            ...((op.context as Record<string, unknown>)?.headers as Record<string, string> | undefined),
+            ...((op.context as Record<string, unknown>)?.headers as
+              | Record<string, string>
+              | undefined),
             [OPERATION_ID_HEADER]: operationId,
           },
         },

@@ -1,34 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ArrowLeftIcon,
-  ArrowTopRightOnSquareIcon,
-  CakeIcon,
-  ClockIcon,
-  FireIcon,
-  MoonIcon,
-  SunIcon,
-  WrenchScrewdriverIcon,
-} from "@heroicons/react/16/solid";
-import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
-import { useTranslations } from "next-intl";
-import {
-  formatMinutesHM,
-  isAllergenTag,
-  sortTagsWithAllergyPriority,
-} from "@norish/shared/lib/helpers";
-import {
-  getShowFavoritesPreference,
-  getShowRatingsPreference,
-} from "@norish/shared/lib/user-preferences";
-import StarRating from "@norish/ui/star-rating";
-
-import AmountDisplayToggle from "./components/amount-display-toggle";
-import AuthorChip from "./components/author-chip";
-import ServingsControl from "./components/servings-control";
-
-import { useRecipeContextRequired } from "./context";
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
@@ -46,7 +18,34 @@ import HeartButton from "@/components/shared/heart-button";
 import { useUserContext } from "@/context/user-context";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import {
+  ArrowLeftIcon,
+  ArrowTopRightOnSquareIcon,
+  CakeIcon,
+  ClockIcon,
+  FireIcon,
+  MoonIcon,
+  SunIcon,
+  WrenchScrewdriverIcon,
+} from "@heroicons/react/16/solid";
+import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
+import {
+  formatMinutesHM,
+  isAllergenTag,
+  sortTagsWithAllergyPriority,
+} from "@norish/shared/lib/helpers";
+import {
+  getShowFavoritesPreference,
+  getShowRatingsPreference,
+} from "@norish/shared/lib/user-preferences";
+import StarRating from "@norish/ui/star-rating";
+
+import AmountDisplayToggle from "./components/amount-display-toggle";
+import AuthorChip from "./components/author-chip";
+import ServingsControl from "./components/servings-control";
+import { useRecipeContextRequired } from "./context";
 
 export default function RecipePageDesktop() {
   const {

@@ -14,10 +14,12 @@ Norish now has the backend and shared-react primitives for public recipe sharing
 ## Capabilities
 
 ### New Capabilities
+
 - `web-recipe-share-management`: Web recipe, user-settings, and admin-settings surfaces for managing public recipe share links.
 - `web-public-shared-recipe-page`: Anonymous readonly web rendering for shared recipes using reusable recipe detail components instead of a monolithic page.
 
 ### Modified Capabilities
+
 - `public-recipe-sharing`: Extend the share lifecycle requirements to cover reactivation of revoked links and admin-visible instance-wide management metadata needed by the new web surfaces.
 
 ## Impact

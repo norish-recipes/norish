@@ -1,6 +1,6 @@
-import { createRecipeHooks } from '@norish/shared-react/hooks';
+import { useTRPC } from "@/providers/trpc-provider";
 
-import { useTRPC } from '@/providers/trpc-provider';
+import { createRecipeHooks } from "@norish/shared-react/hooks";
 
 const sharedRecipeHooks = createRecipeHooks({ useTRPC });
 

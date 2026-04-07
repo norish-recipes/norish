@@ -1,31 +1,30 @@
-import '@/global.css';
+import "@/global.css";
 
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { HeroUINativeProvider } from 'heroui-native';
-import { PortalHost } from 'heroui-native/portal';
-import React from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
-import { useUserLocaleSync } from '@/hooks/use-user-locale-sync';
+import React from "react";
+import { StyleSheet, useColorScheme } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   AppearancePreferenceProvider,
   useAppearancePreference,
-} from '@/context/appearance-preference-context';
-import { AuthProvider, useAuth } from '@/context/auth-context';
-import { HouseholdProvider } from '@/context/household-context';
-import { MobileIntlFallbackProvider, MobileIntlProvider } from '@/context/mobile-i18n-context';
-import { NetworkProvider } from '@/context/network-context';
-import { PermissionsProvider } from '@/context/permissions-context';
-import { RecipeFiltersProvider } from '@/context/recipe-filters-context';
-import { RecipesProvider } from '@/context/recipes-context';
-import { UserProvider } from '@/context/user-context';
-import { useBackendBaseUrl } from '@/hooks/use-backend-base-url';
-import { useCacheHydration } from '@/hooks/use-cache-hydration';
-import { useCacheInvalidationOnReconnect } from '@/hooks/use-cache-lifecycle';
-import { useSessionRevalidation } from '@/hooks/use-session-revalidation';
-import { TrpcProvider } from '@/providers/trpc-provider';
+} from "@/context/appearance-preference-context";
+import { AuthProvider, useAuth } from "@/context/auth-context";
+import { HouseholdProvider } from "@/context/household-context";
+import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/context/mobile-i18n-context";
+import { NetworkProvider } from "@/context/network-context";
+import { PermissionsProvider } from "@/context/permissions-context";
+import { RecipeFiltersProvider } from "@/context/recipe-filters-context";
+import { RecipesProvider } from "@/context/recipes-context";
+import { UserProvider } from "@/context/user-context";
+import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
+import { useCacheHydration } from "@/hooks/use-cache-hydration";
+import { useCacheInvalidationOnReconnect } from "@/hooks/use-cache-lifecycle";
+import { useSessionRevalidation } from "@/hooks/use-session-revalidation";
+import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
+import { TrpcProvider } from "@/providers/trpc-provider";
+import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { Stack } from "expo-router";
+import { HeroUINativeProvider } from "heroui-native";
+import { PortalHost } from "heroui-native/portal";
 
 // ============================================================================
 // Entry point
@@ -59,10 +58,9 @@ function RootLayoutContent() {
     return null;
   }
 
-  const effectiveScheme =
-    mode === 'system' ? (systemColorScheme ?? 'light') : mode;
+  const effectiveScheme = mode === "system" ? (systemColorScheme ?? "light") : mode;
 
-  const theme = effectiveScheme === 'dark' ? DarkTheme : DefaultTheme;
+  const theme = effectiveScheme === "dark" ? DarkTheme : DefaultTheme;
 
   // No backend URL configured — minimal provider tree (setup / onboarding)
   if (!backendBaseUrl) {
@@ -126,9 +124,7 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
         <UserProvider>
           <AuthenticatedEffects />
           <HouseholdProvider>
-            <RecipesProvider>
-              {children}
-            </RecipesProvider>
+            <RecipesProvider>{children}</RecipesProvider>
           </HouseholdProvider>
         </UserProvider>
       </PermissionsProvider>

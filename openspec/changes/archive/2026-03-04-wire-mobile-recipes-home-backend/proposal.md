@@ -14,9 +14,11 @@ The mobile recipe-home work is underway, but the shared recipe hook extraction i
 ## Capabilities
 
 ### New Capabilities
+
 - `shared-recipe-hooks`: Shared React recipe hooks with clear dashboard-vs-singular boundaries and app-owned tRPC binding support for web and mobile.
 
 ### Modified Capabilities
+
 - `mobile-home-recipe-cards`: Home recipe list requirements shift from mock-only bootstrap behavior to backend-backed dashboard-hook behavior and explicit loading/error/empty states.
 - `home-dashboard`: Dashboard sections shift from mixed fixture/subset wiring to backend-backed dashboard hooks, except Today meal slots which remain temporary fixture data pending follow-up meal-plan hook extraction.
 

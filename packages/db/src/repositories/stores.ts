@@ -1,14 +1,14 @@
 import type { IFuseOptions } from "fuse.js";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import Fuse from "fuse.js";
+import z from "zod";
+
 import type {
   IngredientStorePreferenceDto,
   StoreDto,
   StoreInsertDto,
   StoreUpdateDto,
 } from "@norish/shared/contracts/dto/stores";
-
-import { and, eq, inArray, sql } from "drizzle-orm";
-import Fuse from "fuse.js";
-import z from "zod";
 import { db } from "@norish/db/drizzle";
 import { groceries, ingredientStorePreferences, stores } from "@norish/db/schema";
 import {
@@ -139,7 +139,9 @@ export async function updateStore(input: StoreUpdateDto): Promise<StoreDto | nul
   return validated.data;
 }
 
-export async function reorderStores(storeUpdates: { id: string; version: number }[]): Promise<StoreDto[]> {
+export async function reorderStores(
+  storeUpdates: { id: string; version: number }[]
+): Promise<StoreDto[]> {
   return await db.transaction(async (trx) => {
     const updatedStores: StoreDto[] = [];
 
@@ -157,7 +159,8 @@ export async function reorderStores(storeUpdates: { id: string; version: number 
       if (row) {
         const validated = StoreSelectBaseSchema.safeParse(row);
 
-        if (!validated.success) throw new Error(`Failed to parse reordered store (id=${storeUpdate.id})`);
+        if (!validated.success)
+          throw new Error(`Failed to parse reordered store (id=${storeUpdate.id})`);
         updatedStores.push(validated.data);
       }
     }
@@ -378,7 +381,11 @@ export async function upsertIngredientStorePreference(
     .values(parsed.data)
     .onConflictDoUpdate({
       target: [ingredientStorePreferences.userId, ingredientStorePreferences.normalizedName],
-      set: { storeId, updatedAt: new Date(), version: sql`${ingredientStorePreferences.version} + 1` },
+      set: {
+        storeId,
+        updatedAt: new Date(),
+        version: sql`${ingredientStorePreferences.version} + 1`,
+      },
     })
     .returning();
 

@@ -12,6 +12,7 @@ The mobile app already handles local-first state well, but write operations stil
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-outbox`: Persist failed mobile mutation requests and replay them automatically when the backend becomes reachable again.
 
 ### Modified Capabilities

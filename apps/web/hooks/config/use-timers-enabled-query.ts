@@ -1,11 +1,10 @@
 "use client";
 
+import { useUserContext } from "@/context/user-context";
 
 import { getTimersEnabledPreference } from "@norish/shared/lib/user-preferences";
 
 import { sharedConfigHooks } from "./shared-config-hooks";
-
-import { useUserContext } from "@/context/user-context";
 
 /**
  * Hook to check if recipe timers are enabled globally AND for the current user.

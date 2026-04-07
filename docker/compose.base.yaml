@@ -23,6 +23,8 @@ services:
       - "--remote-debugging-port=3003"
       - "--headless"
     shm_size: "256m"
+    ports:
+      - "3003:3000"
 
   # Redis for real-time events
   redis:

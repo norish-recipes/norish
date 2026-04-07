@@ -1,20 +1,17 @@
 "use client";
 
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
-import type { Slot } from "@norish/shared/contracts";
-
 import { useState } from "react";
-import { useWindowSize } from "usehooks-ts";
-
-import { CalendarContextProvider } from "./context";
-
 import { DesktopTimeline } from "@/components/calendar/desktop";
 import { MobileTimeline } from "@/components/calendar/mobile";
 import { EditNotePanel } from "@/components/Panel/consumers/edit-note-panel";
 import { EditPlannedRecipePanel } from "@/components/Panel/consumers/edit-planned-recipe-panel";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
+import { useWindowSize } from "usehooks-ts";
 
+import type { Slot } from "@norish/shared/contracts";
 
+import { CalendarContextProvider } from "./context";
 
 function CalendarPageContent() {
   const [miniRecipesOpen, setMiniRecipesOpen] = useState(false);

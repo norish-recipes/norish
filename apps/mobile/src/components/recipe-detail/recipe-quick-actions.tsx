@@ -1,11 +1,11 @@
-import AntDesign from '@expo/vector-icons/AntDesign';
-import Entypo from '@expo/vector-icons/Entypo';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Button, useThemeColor } from 'heroui-native';
-import React from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
-import { useIntl } from 'react-intl';
-import { withUniwind } from 'uniwind';
+import React from "react";
+import { Alert, StyleSheet, Text, View } from "react-native";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Entypo from "@expo/vector-icons/Entypo";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Button, useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
+import { withUniwind } from "uniwind";
 
 const StyledEntypo = withUniwind(Entypo);
 
@@ -20,9 +20,9 @@ const StyledEntypo = withUniwind(Entypo);
 export function RecipeQuickActions({ onCook }: { onCook?: () => void }) {
   const intl = useIntl();
   const [foregroundColor, accentColor, accentForegroundColor] = useThemeColor([
-    'foreground',
-    'accent',
-    'accent-foreground',
+    "foreground",
+    "accent",
+    "accent-foreground",
   ] as const);
 
   return (
@@ -30,12 +30,12 @@ export function RecipeQuickActions({ onCook }: { onCook?: () => void }) {
       {/* Cook — primary pill */}
       <Button
         feedbackVariant="scale"
-        className="h-12 px-4 rounded-[14px] flex-row items-center gap-1 bg-accent"
+        className="bg-accent h-12 flex-row items-center gap-1 rounded-[14px] px-4"
         onPress={onCook}
       >
         <AntDesign name="fire" size={16} color={accentForegroundColor} />
         <Text style={[styles.pillLabel, { color: accentForegroundColor }]}>
-          {intl.formatMessage({ id: 'recipes.detail.cook' })}
+          {intl.formatMessage({ id: "recipes.detail.cook" })}
         </Text>
       </Button>
 
@@ -43,14 +43,12 @@ export function RecipeQuickActions({ onCook }: { onCook?: () => void }) {
       <Button
         variant="secondary"
         feedbackVariant="scale"
-        className="h-12 px-4 rounded-[14px] flex-row items-center gap-1 bg-surface-tertiary"
-        onPress={() =>
-          Alert.alert('Plan', 'Meal planning coming soon!')
-        }
+        className="bg-surface-tertiary h-12 flex-row items-center gap-1 rounded-[14px] px-4"
+        onPress={() => Alert.alert("Plan", "Meal planning coming soon!")}
       >
         <StyledEntypo name="plus" size={16} className="text-accent" />
         <Text style={[styles.pillLabel, { color: foregroundColor }]}>
-          {intl.formatMessage({ id: 'recipes.actions.plan' })}
+          {intl.formatMessage({ id: "recipes.actions.plan" })}
         </Text>
       </Button>
 
@@ -58,14 +56,9 @@ export function RecipeQuickActions({ onCook }: { onCook?: () => void }) {
       <Button
         variant="secondary"
         feedbackVariant="scale"
-        className="size-12 rounded-[14px] justify-center items-center bg-surface-tertiary"
+        className="bg-surface-tertiary size-12 items-center justify-center rounded-[14px]"
         isIconOnly
-        onPress={() =>
-          Alert.alert(
-            'Groceries',
-            'Ingredients added to your grocery list.',
-          )
-        }
+        onPress={() => Alert.alert("Groceries", "Ingredients added to your grocery list.")}
       >
         <Ionicons name="cart-outline" size={18} color={foregroundColor} />
       </Button>
@@ -75,12 +68,12 @@ export function RecipeQuickActions({ onCook }: { onCook?: () => void }) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     marginBottom: 20,
   },
   pillLabel: {
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

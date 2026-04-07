@@ -1,7 +1,7 @@
-import { useThemeColor } from 'heroui-native';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { useIntl } from 'react-intl';
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
 
 type HighlightItemProps = {
   label: string;
@@ -9,10 +9,7 @@ type HighlightItemProps = {
 };
 
 function HighlightItem({ label, value }: HighlightItemProps) {
-  const [mutedColor, foregroundColor] = useThemeColor([
-    'muted',
-    'foreground',
-  ] as const);
+  const [mutedColor, foregroundColor] = useThemeColor(["muted", "foreground"] as const);
 
   return (
     <View style={styles.item}>
@@ -23,7 +20,7 @@ function HighlightItem({ label, value }: HighlightItemProps) {
 }
 
 function VerticalDivider() {
-  const separatorColor = useThemeColor('separator');
+  const separatorColor = useThemeColor("separator");
 
   return <View style={[styles.divider, { backgroundColor: separatorColor }]} />;
 }
@@ -47,9 +44,21 @@ export function RecipeHighlights({
   const intl = useIntl();
   const items: { label: string; value: string }[] = [];
 
-  if (prepMinutes != null) items.push({ label: intl.formatMessage({ id: 'recipes.timeInputs.prep' }), value: `${prepMinutes}m` });
-  if (cookMinutes != null) items.push({ label: intl.formatMessage({ id: 'recipes.timeInputs.cook' }), value: `${cookMinutes}m` });
-  if (totalMinutes != null) items.push({ label: intl.formatMessage({ id: 'recipes.timeInputs.total' }), value: `${totalMinutes}m` });
+  if (prepMinutes != null)
+    items.push({
+      label: intl.formatMessage({ id: "recipes.timeInputs.prep" }),
+      value: `${prepMinutes}m`,
+    });
+  if (cookMinutes != null)
+    items.push({
+      label: intl.formatMessage({ id: "recipes.timeInputs.cook" }),
+      value: `${cookMinutes}m`,
+    });
+  if (totalMinutes != null)
+    items.push({
+      label: intl.formatMessage({ id: "recipes.timeInputs.total" }),
+      value: `${totalMinutes}m`,
+    });
 
   if (items.length === 0) return null;
 
@@ -67,8 +76,8 @@ export function RecipeHighlights({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 16,
     marginBottom: 24,
   },
@@ -77,11 +86,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   value: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   divider: {
     width: 1,

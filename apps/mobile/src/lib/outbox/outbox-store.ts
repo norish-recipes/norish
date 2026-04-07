@@ -1,13 +1,13 @@
-import { createClientLogger } from '@norish/shared/lib/logger';
+import { outboxStorage } from "@/lib/storage/outbox-mmkv";
 
-import { outboxStorage } from '@/lib/storage/outbox-mmkv';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-import type { OutboxItem, OutboxRequestMetadata } from './outbox-types';
+import type { OutboxItem, OutboxRequestMetadata } from "./outbox-types";
 
-const log = createClientLogger('outbox-store');
+const log = createClientLogger("outbox-store");
 
 /** MMKV key under which the outbox queue is persisted. */
-const STORAGE_KEY = 'outbox-queue';
+const STORAGE_KEY = "outbox-queue";
 
 function readQueue(): OutboxItem[] {
   try {
@@ -19,7 +19,7 @@ function readQueue(): OutboxItem[] {
 
     return JSON.parse(raw) as OutboxItem[];
   } catch (error) {
-    log.warn({ error }, 'Failed to read outbox queue, resetting');
+    log.warn({ error }, "Failed to read outbox queue, resetting");
     outboxStorage.delete(STORAGE_KEY);
 
     return [];
@@ -30,7 +30,7 @@ function writeQueue(items: OutboxItem[]): void {
   try {
     outboxStorage.set(STORAGE_KEY, JSON.stringify(items));
   } catch (error) {
-    log.warn({ error }, 'Failed to write outbox queue');
+    log.warn({ error }, "Failed to write outbox queue");
   }
 }
 
@@ -53,7 +53,7 @@ function generateId(): string {
 export function enqueue(
   path: string,
   serializedInput: string,
-  request: Partial<OutboxRequestMetadata> = {},
+  request: Partial<OutboxRequestMetadata> = {}
 ): OutboxItem {
   const item: OutboxItem = {
     id: generateId(),
@@ -89,7 +89,7 @@ export function loadAll(): OutboxItem[] {
  * Update an existing outbox item in place (e.g. to bump retry metadata).
  * No-op if the item is not found.
  */
-export function update(id: string, patch: Partial<Omit<OutboxItem, 'id'>>): void {
+export function update(id: string, patch: Partial<Omit<OutboxItem, "id">>): void {
   const queue = readQueue();
   const index = queue.findIndex((item) => item.id === id);
 

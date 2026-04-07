@@ -1,14 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
-import type { AuthProvidersResponse } from '@norish/shared/contracts';
+import { useTRPC } from "@/providers/trpc-provider";
+import { useQuery } from "@tanstack/react-query";
 
-import { useTRPC } from '@/providers/trpc-provider';
+import type { AuthProvidersResponse } from "@norish/shared/contracts";
 
 export function useAuthProvidersQuery() {
   const trpc = useTRPC();
   const query = useQuery(
     trpc.config.authProviders.queryOptions(undefined, {
       staleTime: 30_000,
-    }),
+    })
   );
   const data = query.data as AuthProvidersResponse | undefined;
 

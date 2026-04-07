@@ -1,9 +1,9 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useThemeColor } from 'heroui-native';
-import React from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { useIntl } from 'react-intl';
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
 
 // ---------------------------------------------------------------------------
 // Tab-aware bottom accessory content
@@ -18,7 +18,7 @@ import { useIntl } from 'react-intl';
 // here.
 // ---------------------------------------------------------------------------
 
-export type AccessoryMode = 'recipe' | 'grocery';
+export type AccessoryMode = "recipe" | "grocery";
 
 type TabAccessoryContentProps = {
   mode: AccessoryMode;
@@ -33,33 +33,33 @@ export function TabAccessoryContent({
 }: TabAccessoryContentProps) {
   const intl = useIntl();
   const placement = NativeTabs.BottomAccessory.usePlacement();
-  const [foregroundColor] = useThemeColor(['foreground'] as const);
-  const isInline = placement === 'inline';
+  const [foregroundColor] = useThemeColor(["foreground"] as const);
+  const isInline = placement === "inline";
 
-  const isRecipe = mode === 'recipe';
+  const isRecipe = mode === "recipe";
   const label = isRecipe
-    ? intl.formatMessage({ id: 'recipes.dashboard.addRecipe' })
-    : intl.formatMessage({ id: 'groceries.page.addItem' });
-  const icon: React.ComponentProps<typeof Ionicons>['name'] = isRecipe
-    ? 'add-circle'
-    : 'cart-outline';
+    ? intl.formatMessage({ id: "recipes.dashboard.addRecipe" })
+    : intl.formatMessage({ id: "groceries.page.addItem" });
+  const icon: React.ComponentProps<typeof Ionicons>["name"] = isRecipe
+    ? "add-circle"
+    : "cart-outline";
   const onPress = isRecipe ? onPressRecipe : onPressGrocery;
 
   return (
-    <View style={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ height: "100%", alignItems: "center", justifyContent: "center" }}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={label}
         style={({ pressed }) => ({
-          flexDirection: 'row',
-          alignItems: 'center',
+          flexDirection: "row",
+          alignItems: "center",
           gap: 6,
           opacity: pressed ? 0.6 : 1,
         })}
       >
         <Ionicons name={icon} size={isInline ? 20 : 24} color={foregroundColor} />
-        <Text style={{ color: foregroundColor, fontSize: isInline ? 15 : 17, fontWeight: '600' }}>
+        <Text style={{ color: foregroundColor, fontSize: isInline ? 15 : 17, fontWeight: "600" }}>
           {label}
         </Text>
       </Pressable>

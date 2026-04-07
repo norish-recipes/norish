@@ -1,18 +1,21 @@
-import { QueryClient } from '@tanstack/react-query';
-import { persistQueryClientRestore, persistQueryClientSubscribe } from '@tanstack/query-persist-client-core';
-import Constants from 'expo-constants';
+import {
+  persistQueryClientRestore,
+  persistQueryClientSubscribe,
+} from "@tanstack/query-persist-client-core";
+import { QueryClient } from "@tanstack/react-query";
+import Constants from "expo-constants";
 
-import { createClientLogger } from '@norish/shared/lib/logger';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-import { createMmkvPersister } from './mmkv-persister';
+import { createMmkvPersister } from "./mmkv-persister";
 
-const log = createClientLogger('query-cache');
+const log = createClientLogger("query-cache");
 
 /** 24 hours in ms. */
 const MAX_AGE_MS = 1000 * 60 * 60 * 24;
 
 const APP_VERSION =
-  Constants.expoConfig?.version ?? Constants.manifest2?.extra?.expoClient?.version ?? '0.0.0';
+  Constants.expoConfig?.version ?? Constants.manifest2?.extra?.expoClient?.version ?? "0.0.0";
 
 type PersistedQueryClientResult = {
   queryClient: QueryClient;
@@ -35,11 +38,11 @@ export function createPersistedQueryClient(): PersistedQueryClientResult {
       queries: {
         staleTime: 1000 * 60 * 5,
         gcTime: 1000 * 60 * 10,
-        refetchOnMount: 'always',
+        refetchOnMount: "always",
         retry: 1,
       },
       mutations: {
-        networkMode: 'always',
+        networkMode: "always",
         retry: 0,
       },
     },
@@ -52,10 +55,10 @@ export function createPersistedQueryClient(): PersistedQueryClientResult {
     buster: APP_VERSION,
   })
     .then(() => {
-      log.info('Query cache restored from MMKV');
+      log.info("Query cache restored from MMKV");
     })
     .catch((error) => {
-      log.warn({ error }, 'Query cache restore failed, starting fresh');
+      log.warn({ error }, "Query cache restore failed, starting fresh");
     })
     .then(() => {
       // Subscribe to keep cache persisted after restore, regardless of success/failure
@@ -64,7 +67,7 @@ export function createPersistedQueryClient(): PersistedQueryClientResult {
         persister,
         buster: APP_VERSION,
         dehydrateOptions: {
-          shouldDehydrateQuery: (query) => query.state.status === 'success',
+          shouldDehydrateQuery: (query) => query.state.status === "success",
         },
       });
     });

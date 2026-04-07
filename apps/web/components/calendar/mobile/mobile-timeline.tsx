@@ -1,9 +1,9 @@
 "use client";
 
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
-import type { Slot } from "@norish/shared/contracts";
-import type { PlannedItemDisplay } from "./types";
-
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
 import {
   DndContext,
   DragOverlay,
@@ -17,16 +17,15 @@ import {
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useLocale } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
-import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import type { Slot } from "@norish/shared/contracts";
+import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
+
+import type { PlannedItemDisplay } from "./types";
 import { TimelineDaySection } from "./timeline-day-section";
 import { TimelineDragOverlay } from "./timeline-drag-overlay";
 import { TimelineScrollToToday } from "./timeline-scroll-to-today";
 import { SLOT_ORDER } from "./types";
-
-import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 
 const mobileDragActivationDelayMs = 300;
 const mobileDragTolerancePx = 10;

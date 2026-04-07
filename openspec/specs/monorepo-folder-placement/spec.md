@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change add-folder-by-folder-monorepo-plan. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Complete Root Folder Placement Coverage
 
 Every top-level folder and file SHALL have a disposition: migrate, split, keep-root, generated, runtime-data, or remove. Tooling directories (`tooling/eslint/`, `tooling/prettier/`, `tooling/typescript/`, `tooling/vitest/`, `tooling/tailwind/`) SHALL be proper pnpm workspace packages with `package.json` and defined `exports`. The `tooling/github/` directory SHALL contain a composite GitHub Action for CI environment setup.
@@ -106,4 +108,3 @@ Root `__tests__/**` content SHALL be migrated into owning workspace test locatio
 - **THEN** migrated root test files SHALL be deleted from the root `__tests__/**` tree in the same wave
 - **AND** empty legacy directories under root `__tests__/` SHALL be removed
 - **AND** root hygiene policy and dependency exception tracking SHALL be updated to reflect the new ownership.
-

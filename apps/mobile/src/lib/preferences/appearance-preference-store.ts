@@ -1,22 +1,22 @@
-import { Directory, File, Paths } from 'expo-file-system';
+import { Directory, File, Paths } from "expo-file-system";
 
-export type AppearanceMode = 'light' | 'dark' | 'system';
+export type AppearanceMode = "light" | "dark" | "system";
 
-const APPEARANCE_DIRECTORY = new Directory(Paths.document, 'preferences');
-const APPEARANCE_FILE = new File(APPEARANCE_DIRECTORY, 'appearance-mode.json');
+const APPEARANCE_DIRECTORY = new Directory(Paths.document, "preferences");
+const APPEARANCE_FILE = new File(APPEARANCE_DIRECTORY, "appearance-mode.json");
 
 type AppearanceFilePayload = {
   mode: AppearanceMode;
 };
 
 function isAppearanceMode(value: unknown): value is AppearanceMode {
-  return value === 'light' || value === 'dark' || value === 'system';
+  return value === "light" || value === "dark" || value === "system";
 }
 
 export async function loadAppearanceMode(): Promise<AppearanceMode> {
   try {
     if (!APPEARANCE_FILE.exists) {
-      return 'system';
+      return "system";
     }
 
     const content = await APPEARANCE_FILE.text();
@@ -26,9 +26,9 @@ export async function loadAppearanceMode(): Promise<AppearanceMode> {
       return parsed.mode;
     }
 
-    return 'system';
+    return "system";
   } catch {
-    return 'system';
+    return "system";
   }
 }
 

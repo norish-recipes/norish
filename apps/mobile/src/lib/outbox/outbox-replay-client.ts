@@ -1,13 +1,14 @@
-import superjson from 'superjson';
-import { createClientLogger } from '@norish/shared/lib/logger';
+import superjson from "superjson";
 
-import { isBackendUnreachableError } from './error-classification';
-import type { OutboxItem, OutboxRequestMetadata } from './outbox-types';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-export const OUTBOX_REPLAY_HEADER = 'x-replay-origin';
-export const OUTBOX_REPLAY_HEADER_VALUE = 'mobile-outbox';
+import type { OutboxItem, OutboxRequestMetadata } from "./outbox-types";
+import { isBackendUnreachableError } from "./error-classification";
 
-const log = createClientLogger('outbox-replay-client');
+export const OUTBOX_REPLAY_HEADER = "x-replay-origin";
+export const OUTBOX_REPLAY_HEADER_VALUE = "mobile-outbox";
+
+const log = createClientLogger("outbox-replay-client");
 
 type TraversableClientNode = Record<string, unknown> | ((...args: never[]) => unknown);
 
@@ -21,7 +22,7 @@ type ReplayContext = {
 };
 
 export function isOutboxReplayContext(context: unknown): boolean {
-  if (!context || typeof context !== 'object') {
+  if (!context || typeof context !== "object") {
     return false;
   }
 
@@ -50,11 +51,11 @@ function createReplayContext(request: OutboxRequestMetadata): ReplayContext {
 }
 
 function isTraversableClientNode(value: unknown): value is TraversableClientNode {
-  return (typeof value === 'object' && value !== null) || typeof value === 'function';
+  return (typeof value === "object" && value !== null) || typeof value === "function";
 }
 
 function getMutationProcedure(client: OutboxMutationClient, path: string) {
-  const procedure = path.split('.').reduce<unknown>((current, segment) => {
+  const procedure = path.split(".").reduce<unknown>((current, segment) => {
     if (!isTraversableClientNode(current)) {
       return undefined;
     }
@@ -68,18 +69,18 @@ function getMutationProcedure(client: OutboxMutationClient, path: string) {
 
   const mutate = (procedure as { mutate?: unknown }).mutate;
 
-  return typeof mutate === 'function' ? mutate : null;
+  return typeof mutate === "function" ? mutate : null;
 }
 
 export async function replayOutboxItem(
   client: OutboxMutationClient,
-  item: OutboxItem,
+  item: OutboxItem
 ): Promise<boolean> {
   try {
     const mutate = getMutationProcedure(client, item.path);
 
     if (!mutate) {
-      log.warn({ itemId: item.id, path: item.path }, 'Outbox replay mutation procedure not found');
+      log.warn({ itemId: item.id, path: item.path }, "Outbox replay mutation procedure not found");
 
       return false;
     }
@@ -91,14 +92,16 @@ export async function replayOutboxItem(
     return true;
   } catch (error) {
     if (!isBackendUnreachableError(error)) {
-      log.debug(`Outbox replay delivered but backend returned an error for ${item.path}; removing item`);
+      log.debug(
+        `Outbox replay delivered but backend returned an error for ${item.path}; removing item`
+      );
 
       return true;
     }
 
     log.warn(
       { error, itemId: item.id, path: item.path, attempts: item.attempts + 1 },
-      'Outbox replay mutation failed',
+      "Outbox replay mutation failed"
     );
 
     return false;

@@ -10,9 +10,8 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { versionColumn } from "./shared";
-
 import { users } from "./auth";
+import { versionColumn } from "./shared";
 
 export const caldavItemTypes = ["recipe", "note"] as const;
 export const caldavSyncStatuses = ["pending", "synced", "failed", "removed"] as const;

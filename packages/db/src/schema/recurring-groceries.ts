@@ -1,8 +1,7 @@
 import { date, index, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-import { versionColumn } from "./shared";
-
 import { users } from "./auth";
+import { versionColumn } from "./shared";
 
 export const recurringGroceries = pgTable(
   "recurring_groceries",

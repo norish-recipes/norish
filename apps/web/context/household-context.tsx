@@ -1,9 +1,8 @@
 "use client";
 
-import { createHouseholdContext } from "@norish/shared-react/contexts";
-
 import { useHouseholdQuery, useHouseholdSubscription } from "@/hooks/households";
 
+import { createHouseholdContext } from "@norish/shared-react/contexts";
 
 export type { HouseholdContextValue } from "@norish/shared-react/contexts";
 

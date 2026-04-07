@@ -1,36 +1,27 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { GlassView } from 'expo-glass-effect';
-import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import * as Haptics from 'expo-haptics';
-import { useThemeColor } from 'heroui-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Animated,
-  Modal,
-  Pressable,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { useIntl } from 'react-intl';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Animated, Modal, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import Reanimated, {
   SlideInLeft,
   SlideInRight,
   SlideOutLeft,
   SlideOutRight,
-} from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { GlassView } from "expo-glass-effect";
+import * as Haptics from "expo-haptics";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
+import { useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
 
-import type { RecipeIngredientsDto } from '@norish/shared/contracts';
+import type { RecipeIngredientsDto } from "@norish/shared/contracts";
 
-import type { MappedStep } from '../../../lib/recipes/map-recipe-to-steps';
-import { TimerFAB } from '../timer-fab';
+import type { MappedStep } from "../../../lib/recipes/map-recipe-to-steps";
+import { TimerFAB } from "../timer-fab";
+import { CookModeIngredients } from "./cook-mode-ingredients";
+import { CookModeSteps } from "./cook-mode-steps";
 
-import { CookModeIngredients } from './cook-mode-ingredients';
-import { CookModeSteps } from './cook-mode-steps';
-
-const KEEP_AWAKE_TAG = 'cook-mode';
+const KEEP_AWAKE_TAG = "cook-mode";
 const TAB_SLIDE_DISTANCE = 50;
 const TAB_ANIM_DURATION = 250;
 
@@ -48,7 +39,7 @@ type CookModeModalProps = {
   onServingsChange: (s: number) => void;
 };
 
-type TabKey = 'steps' | 'ingredients';
+type TabKey = "steps" | "ingredients";
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -65,15 +56,14 @@ export function CookModeModal({
 }: CookModeModalProps) {
   const intl = useIntl();
   const insets = useSafeAreaInsets();
-  const [foregroundColor, mutedColor, accentColor, backgroundColor] =
-    useThemeColor([
-      'foreground',
-      'muted',
-      'accent',
-      'background',
-    ] as const);
+  const [foregroundColor, mutedColor, accentColor, backgroundColor] = useThemeColor([
+    "foreground",
+    "muted",
+    "accent",
+    "background",
+  ] as const);
 
-  const [activeTab, setActiveTab] = useState<TabKey>('steps');
+  const [activeTab, setActiveTab] = useState<TabKey>("steps");
   const [currentStep, setCurrentStep] = useState(0);
 
   // Track tab direction: 1 = going to ingredients (right), -1 = going to steps (left)
@@ -81,14 +71,14 @@ export function CookModeModal({
 
   const TABS = [
     {
-      key: 'steps' as TabKey,
-      label: intl.formatMessage({ id: 'recipes.cookMode.steps' }),
-      icon: 'list-outline',
+      key: "steps" as TabKey,
+      label: intl.formatMessage({ id: "recipes.cookMode.steps" }),
+      icon: "list-outline",
     },
     {
-      key: 'ingredients' as TabKey,
-      label: intl.formatMessage({ id: 'recipes.cookMode.ingredients' }),
-      icon: 'nutrition-outline',
+      key: "ingredients" as TabKey,
+      label: intl.formatMessage({ id: "recipes.cookMode.ingredients" }),
+      icon: "nutrition-outline",
     },
   ];
 
@@ -127,7 +117,7 @@ export function CookModeModal({
   const switchTab = useCallback(
     (tab: TabKey) => {
       const index = TABS.findIndex((t) => t.key === tab);
-      tabDirectionRef.current = tab === 'ingredients' ? 1 : -1;
+      tabDirectionRef.current = tab === "ingredients" ? 1 : -1;
       setActiveTab(tab);
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       Animated.spring(indicatorAnim, {
@@ -137,7 +127,7 @@ export function CookModeModal({
         useNativeDriver: true,
       }).start();
     },
-    [indicatorAnim, TABS],
+    [indicatorAnim, TABS]
   );
 
   const handleClose = useCallback(() => {
@@ -145,8 +135,8 @@ export function CookModeModal({
     onClose();
   }, [onClose]);
 
-  const handleSwipeLeft = useCallback(() => switchTab('ingredients'), [switchTab]);
-  const handleSwipeRight = useCallback(() => switchTab('steps'), [switchTab]);
+  const handleSwipeLeft = useCallback(() => switchTab("ingredients"), [switchTab]);
+  const handleSwipeRight = useCallback(() => switchTab("steps"), [switchTab]);
 
   // ── Tab bar sizing ────────────────────────────────────────────────────────
   const [tabBarWidth, setTabBarWidth] = useState(0);
@@ -173,7 +163,7 @@ export function CookModeModal({
       <View className="flex-1" style={{ backgroundColor, paddingTop: insets.top }}>
         {/* ── Header ───────────────────────────────────────────────────── */}
         <Animated.View
-          className="px-6 pt-2 gap-4"
+          className="gap-4 px-6 pt-2"
           style={{
             opacity: entranceAnim,
             transform: [{ translateY: contentTranslateY }],
@@ -181,9 +171,9 @@ export function CookModeModal({
         >
           {/* Recipe name + close */}
           <View className="flex-row items-center justify-between gap-3">
-            <View className="flex-row items-center gap-2 flex-1">
+            <View className="flex-1 flex-row items-center gap-2">
               <Text
-                className="text-lg font-semibold flex-1"
+                className="flex-1 text-lg font-semibold"
                 style={{ color: foregroundColor, letterSpacing: -0.2 }}
                 numberOfLines={1}
               >
@@ -195,9 +185,7 @@ export function CookModeModal({
             <Pressable
               onPress={handleClose}
               hitSlop={12}
-              style={({ pressed }) => [
-                pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
-              ]}
+              style={({ pressed }) => [pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] }]}
             >
               <GlassView style={styles.glassCloseBtn}>
                 <Ionicons name="close" size={18} color={foregroundColor} />
@@ -207,13 +195,13 @@ export function CookModeModal({
 
           {/* ── Tab bar ─────────────────────────────────────────────────── */}
           <View
-            className="flex-row rounded-[14px] p-1 relative overflow-hidden"
+            className="relative flex-row overflow-hidden rounded-[14px] p-1"
             style={{ backgroundColor: `${mutedColor}12` }}
             onLayout={(e) => setTabBarWidth(e.nativeEvent.layout.width)}
           >
             {tabWidth > 0 && (
               <Animated.View
-                className="absolute top-1 left-1 bottom-1 rounded-[10px]"
+                className="absolute top-1 bottom-1 left-1 rounded-[10px]"
                 style={{
                   width: tabWidth,
                   backgroundColor: `${accentColor}18`,
@@ -228,7 +216,7 @@ export function CookModeModal({
                 <Pressable
                   key={tab.key}
                   onPress={() => switchTab(tab.key)}
-                  className="flex-1 flex-row items-center justify-center gap-1.5 py-2.5 z-[1]"
+                  className="z-[1] flex-1 flex-row items-center justify-center gap-1.5 py-2.5"
                 >
                   <Ionicons
                     name={tab.icon as any}
@@ -239,7 +227,7 @@ export function CookModeModal({
                     className="text-sm"
                     style={{
                       color: isActive ? accentColor : `${mutedColor}80`,
-                      fontWeight: isActive ? '600' : '400',
+                      fontWeight: isActive ? "600" : "400",
                     }}
                   >
                     {tab.label}
@@ -256,21 +244,20 @@ export function CookModeModal({
           style={{
             opacity: entranceAnim,
             transform: [{ translateY: contentTranslateY }],
-            overflow: 'hidden',
+            overflow: "hidden",
           }}
         >
-          {activeTab === 'steps' ? (
+          {activeTab === "steps" ? (
             <Reanimated.View
               key="tab-steps"
               entering={
                 tabDirectionRef.current === -1
-                  ? SlideInLeft.duration(TAB_ANIM_DURATION)
-                    .withInitialValues({ transform: [{ translateX: -TAB_SLIDE_DISTANCE }] })
+                  ? SlideInLeft.duration(TAB_ANIM_DURATION).withInitialValues({
+                      transform: [{ translateX: -TAB_SLIDE_DISTANCE }],
+                    })
                   : undefined
               }
-              exiting={
-                SlideOutLeft.duration(TAB_ANIM_DURATION)
-              }
+              exiting={SlideOutLeft.duration(TAB_ANIM_DURATION)}
               className="flex-1"
             >
               <CookModeSteps
@@ -287,13 +274,12 @@ export function CookModeModal({
               key="tab-ingredients"
               entering={
                 tabDirectionRef.current === 1
-                  ? SlideInRight.duration(TAB_ANIM_DURATION)
-                    .withInitialValues({ transform: [{ translateX: TAB_SLIDE_DISTANCE }] })
+                  ? SlideInRight.duration(TAB_ANIM_DURATION).withInitialValues({
+                      transform: [{ translateX: TAB_SLIDE_DISTANCE }],
+                    })
                   : undefined
               }
-              exiting={
-                SlideOutRight.duration(TAB_ANIM_DURATION)
-              }
+              exiting={SlideOutRight.duration(TAB_ANIM_DURATION)}
               className="flex-1"
             >
               <CookModeIngredients
@@ -319,7 +305,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

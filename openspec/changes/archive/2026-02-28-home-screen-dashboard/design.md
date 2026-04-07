@@ -7,6 +7,7 @@ This change is purely a **mobile mockup** — no backend calls, no persistence, 
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Restructure the recipes tab into a vertically scrollable dashboard with named sections
 - Add a "Today's Meals" section at the top with Breakfast / Lunch / Dinner slots linking to recipes
 - Add a "Continue Cooking" horizontal scroll row surfacing recently-touched recipes
@@ -15,6 +16,7 @@ This change is purely a **mobile mockup** — no backend calls, no persistence, 
 - Fix the settings cogwheel to be visible in both light and dark mode
 
 **Non-Goals:**
+
 - Real meal planning logic or calendar integration (that's the Calendar tab's domain)
 - Backend API calls or persistence of any kind
 - User personalization or preference-based recommendations
@@ -37,10 +39,11 @@ Each section (TodaysMeals, ContinueCookingRow, DiscoverRow) is a standalone comp
 Three cards (Breakfast / Lunch / Dinner) rendered in a horizontal `ScrollView`. Each slot shows: meal type label, recipe name, course emoji or icon, and a brief subtitle. If no meal is planned for a slot, a "+" add prompt is shown instead. This is mock data — no real planning state.
 
 **Data shape** (mock only, local to the component or a new mock file):
+
 ```ts
 type PlannedMeal = {
-  slot: 'Breakfast' | 'Lunch' | 'Dinner';
-  recipeId: string | null;  // null = no meal planned
+  slot: "Breakfast" | "Lunch" | "Dinner";
+  recipeId: string | null; // null = no meal planned
   recipeTitle: string | null;
   imageUrl: string | null;
   totalDurationMinutes: number | null;
@@ -58,6 +61,7 @@ A `ScrollView` with `horizontal` prop renders a row of compact recipe cards. The
 The `glassWrap` border and `settingsButtonIos` background both use hardcoded `rgba(255,255,255,...)` values that only work on dark backgrounds. The fix uses `useThemeColor(['separator', 'surface'])` and conditionally adjusts opacity, or switches to a fully opaque `surface` token so that it creates contrast in both modes.
 
 Specifically:
+
 - `settingsButtonIos` background: `rgba(127,127,127,0.15)` — neutral grey works on both light and dark backgrounds
 - `glassWrap` border: `rgba(0,0,0,0.12)` in light mode, `rgba(255,255,255,0.25)` in dark mode — driven by resolved theme
 - The `BlurView` tint already switches between `systemChromeMaterialDark` and `systemChromeMaterialLight`, which is correct; only the container background/border needs updating

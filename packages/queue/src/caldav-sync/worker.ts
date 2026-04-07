@@ -1,21 +1,21 @@
 import type { Job } from "bullmq";
+
 import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 import type { Slot } from "@norish/shared/contracts";
 import type { CaldavSyncStatusInsertDto } from "@norish/shared/contracts/dto/caldav-sync-status";
 import type { CaldavSubscriptionEvents } from "@norish/trpc";
-
 import {
   deletePlannedItem,
   syncPlannedItem,
   truncateErrorMessage,
 } from "@norish/api/caldav/sync-manager";
-import { createLogger } from "@norish/shared-server/logger";
 import {
   createCaldavSyncStatus,
   getCaldavSyncStatusByItemId,
   updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
 import { getBullClient } from "@norish/queue/redis/bullmq";
+import { createLogger } from "@norish/shared-server/logger";
 import { caldavEmitter } from "@norish/trpc/routers/caldav/emitter";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";

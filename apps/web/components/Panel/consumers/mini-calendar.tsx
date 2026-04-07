@@ -1,6 +1,10 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
+import Panel from "@/components/Panel/Panel";
+import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
+import { useRecipeQuery } from "@/hooks/recipes";
 import { ExclamationTriangleIcon, PlusIcon } from "@heroicons/react/16/solid";
 import {
   Button,
@@ -12,6 +16,7 @@ import {
 } from "@heroui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
+
 import { Slot } from "@norish/shared/contracts";
 import {
   addMonths,
@@ -20,11 +25,6 @@ import {
   endOfMonth,
   startOfMonth,
 } from "@norish/shared/lib/helpers";
-
-import { useRecipeQuery } from "@/hooks/recipes";
-import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
-import Panel from "@/components/Panel/Panel";
-import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 
 const ESTIMATED_DAY_HEIGHT = 180;
 

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { useUserContext } from "@/context/user-context";
 import { ArrowsRightLeftIcon, SparklesIcon } from "@heroicons/react/20/solid";
 import {
   Button,
@@ -11,14 +13,12 @@ import {
   Spinner,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import { MeasurementSystem } from "@norish/shared/contracts";
 import { getShowConversionButtonPreference } from "@norish/shared/lib/user-preferences";
 import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 import { useRecipeContextRequired } from "../context";
-
-import { useUserContext } from "@/context/user-context";
-import { usePermissionsContext } from "@/context/permissions-context";
 
 type ConversionOption = {
   key: MeasurementSystem;

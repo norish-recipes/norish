@@ -2,10 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import notfoundjpg from "@/public/404.jpg";
 import { HomeIcon } from "@heroicons/react/16/solid";
 import { Button, Card, CardBody } from "@heroui/react";
-
-import notfoundjpg from "@/public/404.jpg";
 
 export default function NotFound() {
   return (

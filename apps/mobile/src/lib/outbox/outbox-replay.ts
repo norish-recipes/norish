@@ -1,9 +1,9 @@
-import { createClientLogger } from '@norish/shared/lib/logger';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-import type { OutboxItem } from './outbox-types';
-import * as outboxStore from './outbox-store';
+import type { OutboxItem } from "./outbox-types";
+import * as outboxStore from "./outbox-store";
 
-const log = createClientLogger('outbox-replay');
+const log = createClientLogger("outbox-replay");
 
 // ---------------------------------------------------------------------------
 // Retry delay
@@ -148,7 +148,7 @@ function scheduleReplayAt(timestampMs: number, reason: string): void {
  */
 export function processQueue(): Promise<DrainQueueResult> {
   if (processingPromise) {
-    log.debug('Replay already in progress, skipping');
+    log.debug("Replay already in progress, skipping");
 
     return processingPromise;
   }
@@ -164,11 +164,10 @@ async function runProcessQueue(): Promise<DrainQueueResult> {
   const hadPendingItems = outboxStore.size() > 0;
 
   if (!replayFn) {
-    log.warn({}, 'No replay function registered, skipping outbox processing');
+    log.warn({}, "No replay function registered, skipping outbox processing");
 
     return createDrainQueueResult(hadPendingItems);
   }
-
 
   clearScheduledReplay();
 
@@ -188,7 +187,7 @@ async function runProcessQueue(): Promise<DrainQueueResult> {
     if (item.nextRetryAt && new Date(item.nextRetryAt).getTime() > now) {
       nextScheduledRetry = trackEarlierRetry(
         nextScheduledRetry,
-        new Date(item.nextRetryAt).getTime(),
+        new Date(item.nextRetryAt).getTime()
       );
       log.debug(`Skipping item ${item.id}: next retry at ${item.nextRetryAt}`);
 
@@ -209,7 +208,7 @@ async function runProcessQueue(): Promise<DrainQueueResult> {
         outboxStore.remove(item.id);
         log.warn(
           { itemId: item.id, path: item.path, attempts: newAttempts },
-          'Outbox replay hit max attempts; dropping item',
+          "Outbox replay hit max attempts; dropping item"
         );
 
         continue;
@@ -223,21 +222,16 @@ async function runProcessQueue(): Promise<DrainQueueResult> {
         nextRetryAt,
       });
 
-      nextScheduledRetry = trackEarlierRetry(
-        nextScheduledRetry,
-        new Date(nextRetryAt).getTime(),
-      );
+      nextScheduledRetry = trackEarlierRetry(nextScheduledRetry, new Date(nextRetryAt).getTime());
 
-      log.debug(
-        `Item ${item.id} replay failed (attempt ${newAttempts}), next retry in ${delay}ms`,
-      );
+      log.debug(`Item ${item.id} replay failed (attempt ${newAttempts}), next retry in ${delay}ms`);
 
       break;
     }
   }
 
   if (nextScheduledRetry !== null) {
-    scheduleReplayAt(nextScheduledRetry, 'next eligible outbox item');
+    scheduleReplayAt(nextScheduledRetry, "next eligible outbox item");
   }
 
   return createDrainQueueResult(hadPendingItems);

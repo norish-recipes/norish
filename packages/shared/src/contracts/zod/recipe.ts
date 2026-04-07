@@ -80,7 +80,12 @@ export const measurementSystems = measurementSystemEnum.enumValues;
 
 // tRPC input schemas
 export const RecipeListInputSchema = z.object({
-  cursor: z.number().int().nonnegative().default(0).describe("Zero-based pagination offset. Defaults to 0."),
+  cursor: z
+    .number()
+    .int()
+    .nonnegative()
+    .default(0)
+    .describe("Zero-based pagination offset. Defaults to 0."),
   limit: z
     .number()
     .int()
@@ -107,7 +112,12 @@ export const RecipeListInputSchema = z.object({
     .default("dateDesc")
     .describe("Sort order for the returned recipes. Defaults to `dateDesc`."),
   minRating: z.number().min(1).max(5).optional().describe("Optional minimum recipe rating."),
-  maxCookingTime: z.number().int().min(1).optional().describe("Optional maximum cooking time in minutes."),
+  maxCookingTime: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe("Optional maximum cooking time in minutes."),
 });
 
 export const RecipeListResultSchema = z.object({

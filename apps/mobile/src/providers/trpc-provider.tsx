@@ -1,25 +1,25 @@
-import type { AppRouter } from '@norish/trpc/client';
-import { createTRPCProviderBundle } from '@norish/shared-react/providers';
-import { createClientLogger } from '@norish/shared/lib/logger';
-import React, { useEffect, useMemo, useSyncExternalStore } from 'react';
-
-import { getAuthClient } from '@/lib/auth-client';
+import type { OutboxMutationClient } from "@/lib/outbox";
+import React, { useEffect, useMemo, useSyncExternalStore } from "react";
+import { notifyBackendConnect, notifyBackendDisconnect } from "@/context/network-context";
+import { getAuthClient } from "@/lib/auth-client";
 import {
   getAuthTransportSnapshot,
   invalidateSession,
   subscribeAuthTransport,
-} from '@/lib/auth-session-sync';
-import { notifyBackendDisconnect, notifyBackendConnect } from '@/context/network-context';
-import { createPersistedQueryClient } from '@/lib/query-cache/create-persisted-query-client';
+} from "@/lib/auth-session-sync";
 import {
   createOutboxLink,
-  type OutboxMutationClient,
-  setReplayFn,
   replayOutboxItem,
+  setReplayFn,
   startOutboxProcessor,
-} from '@/lib/outbox';
+} from "@/lib/outbox";
+import { createPersistedQueryClient } from "@/lib/query-cache/create-persisted-query-client";
 
-const log = createClientLogger('mobile-trpc');
+import type { AppRouter } from "@norish/trpc/client";
+import { createTRPCProviderBundle } from "@norish/shared-react/providers";
+import { createClientLogger } from "@norish/shared/lib/logger";
+
+const log = createClientLogger("mobile-trpc");
 
 type ManagedWebSocketClient = {
   close: () => Promise<void>;
@@ -41,22 +41,22 @@ type HeaderCapableWebSocket = typeof WebSocket & {
   new (
     url: string | URL,
     protocols?: string | string[],
-    options?: { headers: Record<string, string> },
+    options?: { headers: Record<string, string> }
   ): WebSocket;
 };
 
 function toWsUrl(baseUrl: string): string {
   const parsed = new URL(baseUrl);
 
-  parsed.protocol = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
-  parsed.pathname = '/trpc';
-  parsed.search = '';
-  parsed.hash = '';
+  parsed.protocol = parsed.protocol === "https:" ? "wss:" : "ws:";
+  parsed.pathname = "/trpc";
+  parsed.search = "";
+  parsed.hash = "";
 
-  return parsed.toString().replace(/\/+$/, '');
+  return parsed.toString().replace(/\/+$/, "");
 }
 
-let currentBaseUrl = '';
+let currentBaseUrl = "";
 
 function createMobileWebSocket(): typeof WebSocket | undefined {
   const NativeWebSocket = globalThis.WebSocket as HeaderCapableWebSocket | undefined;
@@ -121,12 +121,12 @@ const trpcBundle = createTRPCProviderBundle<AppRouter>({
   onWebSocketClose: notifyBackendDisconnect,
   onWebSocketOpen: notifyBackendConnect,
   onWebSocketUnauthorized: () => {
-    log.info('WebSocket rejected with unauthorized response, signing out');
-    void invalidateSession('websocket-unauthorized');
+    log.info("WebSocket rejected with unauthorized response, signing out");
+    void invalidateSession("websocket-unauthorized");
   },
   onUnauthorized: () => {
-    log.info('tRPC request returned unauthorized response, signing out');
-    void invalidateSession('transport-unauthorized');
+    log.info("tRPC request returned unauthorized response, signing out");
+    void invalidateSession("transport-unauthorized");
   },
   mutationLink: createOutboxLink<AppRouter>(),
   invalidateOnReconnect: false,
@@ -160,11 +160,11 @@ export function TrpcProvider({
   const authTransportSnapshot = useSyncExternalStore(
     subscribeAuthTransport,
     getAuthTransportSnapshot,
-    getAuthTransportSnapshot,
+    getAuthTransportSnapshot
   );
   const providerKey = useMemo(
     () => `${baseUrl}:${authTransportSnapshot.version}`,
-    [authTransportSnapshot.version, baseUrl],
+    [authTransportSnapshot.version, baseUrl]
   );
 
   currentBaseUrl = baseUrl;

@@ -19,7 +19,18 @@
     "시간",
     "시"
   ],
-  "minutes": ["minute", "minutes", "min", "mins", "m", "minuten", "minuut", "minut", "minutter", "분"],
+  "minutes": [
+    "minute",
+    "minutes",
+    "min",
+    "mins",
+    "m",
+    "minuten",
+    "minuut",
+    "minut",
+    "minutter",
+    "분"
+  ],
   "seconds": [
     "second",
     "seconds",

@@ -4,10 +4,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { setFavorite } from "@norish/db/repositories/favorites";
-import {
-  deleteDoneInStore,
-  updateGroceries,
-} from "@norish/db/repositories/groceries";
+import { deleteDoneInStore, updateGroceries } from "@norish/db/repositories/groceries";
 import { rateRecipe } from "@norish/db/repositories/ratings";
 import { deleteStore } from "@norish/db/repositories/stores";
 import { groceries, recipeFavorites, recipeRatings, stores } from "@norish/db/schema";

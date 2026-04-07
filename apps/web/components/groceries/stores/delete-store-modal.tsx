@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
 import {
   Button,
   Modal,
@@ -13,8 +14,6 @@ import {
 } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 interface DeleteStoreModalProps {
   isOpen: boolean;

@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { generateOperationId } from "@norish/shared/lib/operation-helpers";
 import { runWithOperationContext } from "@norish/shared-server/lib/operation-context";
+import { generateOperationId } from "@norish/shared/lib/operation-helpers";
 
+import { createOperationAwareQueue } from "../../src/operation-aware-queue";
 import {
   createContextAwareProcessor,
   extractJobOperationId,
@@ -34,8 +35,6 @@ vi.mock("bullmq", async (importOriginal) => {
     Queue: MockQueue,
   };
 });
-
-import { createOperationAwareQueue } from "../../src/operation-aware-queue";
 
 describe("withJobOperationContext", () => {
   it("attaches the current operationId to job data", () => {

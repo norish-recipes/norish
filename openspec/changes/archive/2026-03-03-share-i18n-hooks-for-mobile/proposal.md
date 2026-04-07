@@ -13,10 +13,12 @@ Mobile currently does not consume the shared i18n package or the server-driven e
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-i18n-integration`: Mobile can load translations from `@norish/i18n`, validate locale selection, and apply server-enabled locale choices.
 - `shared-config-hooks`: Shared React hooks expose reusable config query behavior (including locale config) for both web and mobile clients.
 
 ### Modified Capabilities
+
 - `mobile-ui`: Language selection surfaces use server-enabled locales and display translated labels when mobile i18n is active.
 
 ## Impact

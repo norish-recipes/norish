@@ -2,20 +2,20 @@
 
 import type { AnyTRPCRouter } from "@trpc/server";
 import type { ReactNode } from "react";
-
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
+
 import { normalizeSubscriptionData } from "@norish/shared/lib/operation-helpers";
 
+import type { CreateTRPCProviderBundleOptions } from "./trpc-links";
 import {
   createTRPCClientLinks,
   defaultGetBaseUrl,
   defaultGetHeaders,
   defaultGetWsUrl,
   isNormalWebSocketClose,
-  type CreateTRPCProviderBundleOptions,
 } from "./trpc-links";
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "disconnected";
@@ -94,7 +94,6 @@ function createNormalizedUseTRPC<TTrpc>(useRawTRPC: () => TTrpc) {
     return useMemo(() => wrapTrpcProxy(trpc, new WeakMap()), [trpc]);
   };
 }
-
 
 export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   logger,
@@ -215,7 +214,12 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
 
       previousStatusRef.current = status;
 
-      if (status === "connected" && wasDisconnected && queryClientRef.current && invalidateOnReconnect) {
+      if (
+        status === "connected" &&
+        wasDisconnected &&
+        queryClientRef.current &&
+        invalidateOnReconnect
+      ) {
         logger.info("Connection restored, invalidating queries");
         queryClientRef.current.invalidateQueries();
       }

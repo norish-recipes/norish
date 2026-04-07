@@ -1,10 +1,10 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 export function createSwipeableRecipeRowStyles(actionWidth: number, leftActionsWidth: number) {
   return StyleSheet.create({
     container: {
-      position: 'relative',
-      overflow: 'hidden',
+      position: "relative",
+      overflow: "hidden",
       borderRadius: 16,
     },
     row: {
@@ -12,14 +12,14 @@ export function createSwipeableRecipeRowStyles(actionWidth: number, leftActionsW
       zIndex: 2,
     },
     leftActions: {
-      position: 'absolute',
+      position: "absolute",
       right: 0,
       top: 0,
       bottom: 0,
       width: leftActionsWidth,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-end",
       paddingRight: 8,
       gap: 8,
       zIndex: 1,
@@ -31,9 +31,9 @@ export function createSwipeableRecipeRowStyles(actionWidth: number, leftActionsW
     actionInner: {
       flex: 1,
       borderRadius: 999,
-      overflow: 'hidden',
-      alignItems: 'center',
-      justifyContent: 'center',
+      overflow: "hidden",
+      alignItems: "center",
+      justifyContent: "center",
     },
   });
 }

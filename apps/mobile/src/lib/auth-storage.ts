@@ -1,10 +1,10 @@
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
 
-import { createClientLogger } from '@norish/shared/lib/logger';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-const log = createClientLogger('auth-storage');
+const log = createClientLogger("auth-storage");
 
-export const AUTH_STORAGE_PREFIX = 'norish';
+export const AUTH_STORAGE_PREFIX = "norish";
 
 const AUTH_COOKIE_KEY = `${AUTH_STORAGE_PREFIX}_cookie`;
 const AUTH_SESSION_DATA_KEY = `${AUTH_STORAGE_PREFIX}_session_data`;
@@ -17,7 +17,7 @@ export type PersistedUser = {
 };
 
 function readRequiredString(value: unknown): string | null {
-  if (typeof value !== 'string' || value.length === 0) {
+  if (typeof value !== "string" || value.length === 0) {
     return null;
   }
 
@@ -25,13 +25,13 @@ function readRequiredString(value: unknown): string | null {
 }
 
 function toPersistedUser(value: unknown): PersistedUser | null {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return null;
   }
 
   const user = (value as { user?: unknown }).user;
 
-  if (typeof user !== 'object' || user === null) {
+  if (typeof user !== "object" || user === null) {
     return null;
   }
 
@@ -50,7 +50,7 @@ function toPersistedUser(value: unknown): PersistedUser | null {
     return null;
   }
 
-  if (image !== undefined && image !== null && typeof image !== 'string') {
+  if (image !== undefined && image !== null && typeof image !== "string") {
     return null;
   }
 
@@ -79,7 +79,7 @@ export async function readPersistedSession(): Promise<PersistedUser | null> {
       SecureStore.getItemAsync(AUTH_SESSION_DATA_KEY),
     ]);
   } catch {
-    log.warn('Failed to read persisted auth data from SecureStore');
+    log.warn("Failed to read persisted auth data from SecureStore");
     return null;
   }
 
@@ -96,14 +96,14 @@ export async function readPersistedSession(): Promise<PersistedUser | null> {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    log.warn('Failed to parse persisted session data from SecureStore');
+    log.warn("Failed to parse persisted session data from SecureStore");
     return null;
   }
 
   const user = toPersistedUser(parsed);
 
   if (!user) {
-    log.warn('Persisted session data has an invalid shape');
+    log.warn("Persisted session data has an invalid shape");
   }
 
   return user;

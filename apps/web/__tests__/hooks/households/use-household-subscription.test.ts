@@ -314,7 +314,9 @@ describe("useHouseholdSubscription", () => {
       });
 
       await waitFor(() => {
-        const data = queryClient.getQueryData<{ household: { version: number } }>(householdQueryKey);
+        const data = queryClient.getQueryData<{ household: { version: number } }>(
+          householdQueryKey
+        );
 
         expect(data?.household).toMatchObject({ version: 2 });
       });

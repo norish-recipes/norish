@@ -1,9 +1,8 @@
 import { index, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
-import { versionColumn } from "./shared";
-
 import { users } from "./auth";
 import { recipes } from "./recipes";
+import { versionColumn } from "./shared";
 
 export const recipeFavorites = pgTable(
   "recipe_favorites",

@@ -1,3 +1,5 @@
+import { and, eq, sql } from "drizzle-orm";
+
 import type {
   CreateSiteAuthTokenInputDto,
   SiteAuthTokenDecryptedDto,
@@ -5,8 +7,6 @@ import type {
   SiteAuthTokenSafeDto,
   UpdateSiteAuthTokenInputDto,
 } from "@norish/shared/contracts/dto/site-auth-tokens";
-
-import { and, eq, sql } from "drizzle-orm";
 import { decrypt, encrypt } from "@norish/auth/crypto";
 import { db } from "@norish/db/drizzle";
 import { siteAuthTokens } from "@norish/db/schema";
@@ -16,7 +16,8 @@ import {
   UpdateSiteAuthTokenInputSchema,
 } from "@norish/shared/contracts/zod/site-auth-tokens";
 
-import { appliedOutcome, type MutationOutcome, staleOutcome } from "./mutation-outcomes";
+import type { MutationOutcome } from "./mutation-outcomes";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 function decryptToken(token: SiteAuthTokenDto): SiteAuthTokenDecryptedDto {
   return {
@@ -161,10 +162,7 @@ export async function deleteSiteAuthToken(
   tokenId: string,
   version: number
 ): Promise<MutationOutcome<void>> {
-  const whereConditions = [
-    eq(siteAuthTokens.id, tokenId),
-    eq(siteAuthTokens.userId, userId),
-  ];
+  const whereConditions = [eq(siteAuthTokens.id, tokenId), eq(siteAuthTokens.userId, userId)];
 
   if (version) {
     whereConditions.push(eq(siteAuthTokens.version, version));

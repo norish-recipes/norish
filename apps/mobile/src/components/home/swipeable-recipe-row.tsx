@@ -1,17 +1,16 @@
-import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useImperativeHandle } from 'react';
-import { Alert, Pressable, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useIntl } from 'react-intl';
+import type { SharedValue } from "react-native-reanimated";
+import React, { useCallback, useImperativeHandle } from "react";
+import { Alert, Pressable, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   interpolate,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  type SharedValue,
-} from 'react-native-reanimated';
-
-import { createSwipeableRecipeRowStyles } from '@/styles/swipeable-recipe-row.styles';
+} from "react-native-reanimated";
+import { createSwipeableRecipeRowStyles } from "@/styles/swipeable-recipe-row.styles";
+import { Ionicons } from "@expo/vector-icons";
+import { useIntl } from "react-intl";
 
 const ACTION_WIDTH = 72;
 const SPRING = { damping: 22, stiffness: 300, mass: 0.8 } as const;
@@ -31,7 +30,7 @@ type Props = {
 };
 
 type ActionButtonProps = {
-  icon: React.ComponentProps<typeof Ionicons>['name'];
+  icon: React.ComponentProps<typeof Ionicons>["name"];
   color: string;
   progress: SharedValue<number>;
   index: number;
@@ -43,8 +42,8 @@ function ActionButton({ icon, color, progress, index, total, onPress }: ActionBu
   const animStyle = useAnimatedStyle(() => {
     const p = progress.value;
     const delay = (index / total) * 0.35;
-    const scale = interpolate(p, [delay, delay + 0.25, 1], [0.4, 0.85, 1], 'clamp');
-    const opacity = interpolate(p, [delay, delay + 0.2], [0, 1], 'clamp');
+    const scale = interpolate(p, [delay, delay + 0.25, 1], [0.4, 0.85, 1], "clamp");
+    const opacity = interpolate(p, [delay, delay + 0.2], [0, 1], "clamp");
     return { transform: [{ scale }], opacity };
   });
 
@@ -62,8 +61,8 @@ function ActionButton({ icon, color, progress, index, total, onPress }: ActionBu
 }
 
 function SwipeableRecipeRowComponent(
-  { children, recipeName = 'Recipe', onDelete, onAddToGroceries, onAddToCalendar }: Props,
-  ref: React.ForwardedRef<SwipeableRecipeRowRef>,
+  { children, recipeName = "Recipe", onDelete, onAddToGroceries, onAddToCalendar }: Props,
+  ref: React.ForwardedRef<SwipeableRecipeRowRef>
 ) {
   const intl = useIntl();
   const translateX = useSharedValue(0);
@@ -92,12 +91,16 @@ function SwipeableRecipeRowComponent(
   const handleDelete = useCallback(() => {
     close();
     Alert.alert(
-      intl.formatMessage({ id: 'recipes.card.deleteRecipe' }),
-      intl.formatMessage({ id: 'recipes.deleteModal.confirmMessage' }, { recipeName }),
+      intl.formatMessage({ id: "recipes.card.deleteRecipe" }),
+      intl.formatMessage({ id: "recipes.deleteModal.confirmMessage" }, { recipeName }),
       [
-        { text: intl.formatMessage({ id: 'common.actions.cancel' }), style: 'cancel' },
-        { text: intl.formatMessage({ id: 'common.actions.delete' }), style: 'destructive', onPress: onDelete },
-      ],
+        { text: intl.formatMessage({ id: "common.actions.cancel" }), style: "cancel" },
+        {
+          text: intl.formatMessage({ id: "common.actions.delete" }),
+          style: "destructive",
+          onPress: onDelete,
+        },
+      ]
     );
   }, [close, intl, recipeName, onDelete]);
 
@@ -153,7 +156,7 @@ function SwipeableRecipeRowComponent(
   const leftProgress = useSharedValue(0);
 
   const leftActionsStyle = useAnimatedStyle(() => {
-    const p = interpolate(translateX.value, [-leftActionsWidth, 0], [1, 0], 'clamp');
+    const p = interpolate(translateX.value, [-leftActionsWidth, 0], [1, 0], "clamp");
     leftProgress.value = p;
     return { opacity: p > 0 ? 1 : 0 };
   });

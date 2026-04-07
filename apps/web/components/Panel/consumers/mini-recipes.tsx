@@ -1,19 +1,19 @@
 "use client";
 
 import { ChangeEvent, memo, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
+import Panel from "@/components/Panel/Panel";
+import { SlotDropdown } from "@/components/shared/slot-dropdown";
+import MiniRecipeSkeleton from "@/components/skeleton/mini-recipe-skeleton";
+import { useRandomRecipe, useRecipesQuery } from "@/hooks/recipes";
 import { ArrowPathIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button, Image, Input } from "@heroui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
+
 import { RecipeCategory, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
 import { dateKey } from "@norish/shared/lib/helpers";
-
-import { useRandomRecipe, useRecipesQuery } from "@/hooks/recipes";
-import MiniRecipeSkeleton from "@/components/skeleton/mini-recipe-skeleton";
-import { SlotDropdown } from "@/components/shared/slot-dropdown";
-import Panel from "@/components/Panel/Panel";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 
 const ESTIMATED_ITEM_HEIGHT = 88; // ~80px image + 8px padding
 

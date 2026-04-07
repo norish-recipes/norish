@@ -1,12 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { createUserSettingsContext } from "@norish/shared-react/contexts";
-
 import { useUserMutations } from "@/hooks/user/use-user-mutations";
 import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { useTranslations } from "next-intl";
 
+import { createUserSettingsContext } from "@norish/shared-react/contexts";
 
 export type { UserSettingsContextValue } from "@norish/shared-react/contexts";
 
@@ -14,7 +13,6 @@ const { UserSettingsProvider, useUserSettingsContext } = createUserSettingsConte
   useUserSettingsQuery,
   useUserMutations,
   useErrorHandler: () => {
-     
     const tErrors = useTranslations("common.errors");
 
     return {

@@ -73,7 +73,9 @@ export function isEventEnvelope<T = unknown>(data: unknown): data is RealtimeEve
  * This allows existing `onData` handlers to continue working with `payload`
  * while envelope-aware consumers can also inspect `meta`.
  */
-export function normalizeSubscriptionData<T = unknown>(data: unknown): NormalizedSubscriptionData<T> {
+export function normalizeSubscriptionData<T = unknown>(
+  data: unknown
+): NormalizedSubscriptionData<T> {
   if (isEventEnvelope<T>(data)) {
     return { meta: data.meta, payload: data.payload };
   }

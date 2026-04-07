@@ -1,4 +1,4 @@
-export type TimerStatus = 'running' | 'paused' | 'completed';
+export type TimerStatus = "running" | "paused" | "completed";
 
 export type Timer = {
   id: string;

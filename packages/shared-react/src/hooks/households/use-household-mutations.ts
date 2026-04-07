@@ -1,12 +1,12 @@
+import { useMutation } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
+
 import type {
   CreateHouseholdHooksOptions,
   HouseholdMutationsResult,
   HouseholdQueryResult,
 } from "./types";
-
-import { useMutation } from "@tanstack/react-query";
 
 type CreateUseHouseholdMutationsOptions = CreateHouseholdHooksOptions & {
   useHouseholdQuery: () => HouseholdQueryResult;
@@ -93,7 +93,7 @@ export function createUseHouseholdMutations({
     const leaveHousehold = (householdId: string): void => {
       const currentMembershipVersion =
         household?.id === householdId
-          ? household.users.find((user) => user.id === currentUserId)?.version ?? 1
+          ? (household.users.find((user) => user.id === currentUserId)?.version ?? 1)
           : 1;
 
       leaveMutation.mutate(
@@ -114,7 +114,7 @@ export function createUseHouseholdMutations({
     const kickUser = (householdId: string, userId: string): void => {
       const memberVersion =
         household?.id === householdId
-          ? household.users.find((user) => user.id === userId)?.version ?? 1
+          ? (household.users.find((user) => user.id === userId)?.version ?? 1)
           : 1;
 
       kickMutation.mutate(

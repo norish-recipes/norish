@@ -1,4 +1,4 @@
-type SessionInvalidationReason = 'transport-unauthorized' | 'websocket-unauthorized';
+type SessionInvalidationReason = "transport-unauthorized" | "websocket-unauthorized";
 
 type SessionInvalidationHandler = (reason: SessionInvalidationReason) => Promise<void>;
 
@@ -48,7 +48,9 @@ export function setHasActiveSession(hasActiveSession: boolean): void {
   emitSnapshotChange();
 }
 
-export function registerSessionInvalidationHandler(handler: SessionInvalidationHandler | null): () => void {
+export function registerSessionInvalidationHandler(
+  handler: SessionInvalidationHandler | null
+): () => void {
   invalidationHandler = handler;
 
   return () => {

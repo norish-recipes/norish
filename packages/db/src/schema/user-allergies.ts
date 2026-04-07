@@ -1,8 +1,7 @@
 import { index, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-import { versionColumn } from "./shared";
-
 import { users } from "./auth";
+import { versionColumn } from "./shared";
 import { tags } from "./tags";
 
 export const userAllergies = pgTable(

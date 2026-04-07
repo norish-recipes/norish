@@ -1,10 +1,9 @@
-import { Button, Card, useThemeColor } from 'heroui-native';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useIntl } from 'react-intl';
-
-import { useAuth } from '@/context/auth-context';
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useAuth } from "@/context/auth-context";
+import { useRouter } from "expo-router";
+import { Button, Card, useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -12,9 +11,9 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [foregroundColor, mutedColor, dangerColor] = useThemeColor([
-    'foreground',
-    'muted',
-    'danger',
+    "foreground",
+    "muted",
+    "danger",
   ] as const);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -24,12 +23,12 @@ export default function ProfileScreen() {
 
     try {
       await signOut();
-      router.replace('/login?logout=true' as never);
+      router.replace("/login?logout=true" as never);
     } catch (error) {
       if (error instanceof Error && error.message) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage(intl.formatMessage({ id: 'auth.errors.default.description' }));
+        setErrorMessage(intl.formatMessage({ id: "auth.errors.default.description" }));
       }
     } finally {
       setIsSigningOut(false);
@@ -42,21 +41,21 @@ export default function ProfileScreen() {
       contentInsetAdjustmentBehavior="always"
       showsVerticalScrollIndicator={false}
     >
-      <Card variant="secondary" className="rounded-2xl border border-separator">
+      <Card variant="secondary" className="border-separator rounded-2xl border">
         <Card.Body style={styles.cardBody}>
           <Card.Title style={{ color: foregroundColor }}>
-            {intl.formatMessage({ id: 'settings.user.profile.title' })}
+            {intl.formatMessage({ id: "settings.user.profile.title" })}
           </Card.Title>
           <Card.Description style={{ color: mutedColor }}>
-            {intl.formatMessage({ id: 'settings.user.preferences.description' })}
+            {intl.formatMessage({ id: "settings.user.preferences.description" })}
           </Card.Description>
 
           <View style={styles.userDetails}>
             <Text style={[styles.userLabel, { color: mutedColor }]}>
-              {intl.formatMessage({ id: 'auth.emailPassword.signIn' })}
+              {intl.formatMessage({ id: "auth.emailPassword.signIn" })}
             </Text>
             <Text style={[styles.userValue, { color: foregroundColor }]}>
-              {user?.email ?? intl.formatMessage({ id: 'auth.errors.user_not_found.title' })}
+              {user?.email ?? intl.formatMessage({ id: "auth.errors.user_not_found.title" })}
             </Text>
           </View>
 
@@ -69,8 +68,8 @@ export default function ProfileScreen() {
           >
             <Button.Label>
               {isSigningOut
-                ? intl.formatMessage({ id: 'common.status.loading' })
-                : intl.formatMessage({ id: 'navbar.userMenu.logout' })}
+                ? intl.formatMessage({ id: "common.status.loading" })
+                : intl.formatMessage({ id: "navbar.userMenu.logout" })}
             </Button.Label>
           </Button>
 
@@ -102,6 +101,6 @@ const styles = StyleSheet.create({
   userValue: {
     fontSize: 15,
     lineHeight: 21,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

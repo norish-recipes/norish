@@ -11,12 +11,14 @@ The gap is in `AuthProviderInner`: it calls `authClient.useSession()` which make
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Allow previously-authenticated users to bypass the login screen when the backend is unreachable
 - Use the locally-persisted session data from `expo-secure-store` as the auth source when offline
 - Validate the cached session against the backend once connectivity is restored and sign out if invalid
 - No UX disruption — the user should seamlessly transition between online and offline states
 
 **Non-Goals:**
+
 - Offline login (entering credentials while offline) — not supported
 - Offline mutations (writes are already blocked by the mutation guard)
 - Web app offline support — out of scope
@@ -31,9 +33,10 @@ The gap is in `AuthProviderInner`: it calls `authClient.useSession()` which make
 **Rationale:** The `expoClient` plugin already persists session data (user object + session metadata) to SecureStore on every successful auth response. This data is available synchronously (SecureStore is an on-device encrypted store). Reading it directly avoids the network dependency.
 
 **Alternatives considered:**
-- *Intercepting the Better Auth fetch layer* — too fragile, couples us to Better Auth internals.
-- *Caching the last-known session in MMKV* — redundant, SecureStore already has it.
-- *Using a custom session atom/store* — adds complexity; SecureStore is already the source of truth for the expo plugin.
+
+- _Intercepting the Better Auth fetch layer_ — too fragile, couples us to Better Auth internals.
+- _Caching the last-known session in MMKV_ — redundant, SecureStore already has it.
+- _Using a custom session atom/store_ — adds complexity; SecureStore is already the source of truth for the expo plugin.
 
 ### D2: Auth context consumes network state
 
@@ -50,6 +53,7 @@ The gap is in `AuthProviderInner`: it calls `authClient.useSession()` which make
 **Rationale:** `backendReachable` is initialized to `false` before WebSocket reachability signals arrive. If we immediately treat that as authoritative "offline," the app can briefly trust cached SecureStore session data even when backend reachability is about to become `online`.
 
 **Behavioral intent:**
+
 - avoid a startup flicker between unauthenticated/authenticated trees caused by transient `backendReachable: false`
 - only choose the offline persisted-session path once reachability is in `ready` state and still unreachable
 
@@ -72,6 +76,7 @@ The gap is in `AuthProviderInner`: it calls `authClient.useSession()` which make
 **Rationale:** Keeps the SecureStore key management centralized alongside `clearAuthStorage`. The auth context calls this helper rather than reaching into SecureStore directly.
 
 **Validation contract:**
+
 - parse JSON safely in `try/catch`
 - require a `user` object with string `id`, `email`, `name`
 - treat `image` as optional nullable string
@@ -86,10 +91,10 @@ The gap is in `AuthProviderInner`: it calls `authClient.useSession()` which make
 
 ## Risks / Trade-offs
 
-- **Stale session shown briefly** — If a user's session was revoked server-side while they were offline, they will see the app briefly until `useSessionRevalidation` signs them out on reconnect. This is acceptable because the cached data is read-only (mutations are blocked offline) and the window is short. → *Mitigation: existing revalidation hook handles this.*
+- **Stale session shown briefly** — If a user's session was revoked server-side while they were offline, they will see the app briefly until `useSessionRevalidation` signs them out on reconnect. This is acceptable because the cached data is read-only (mutations are blocked offline) and the window is short. → _Mitigation: existing revalidation hook handles this._
 
-- **SecureStore data format coupling** — We depend on the internal format of Better Auth's `expoClient` session data key. If the plugin changes its serialization, parsing will fail. → *Mitigation: wrap in try/catch and fall back to `isAuthenticated: false` on parse failure.*
+- **SecureStore data format coupling** — We depend on the internal format of Better Auth's `expoClient` session data key. If the plugin changes its serialization, parsing will fail. → _Mitigation: wrap in try/catch and fall back to `isAuthenticated: false` on parse failure._
 
-- **Race condition on startup** — On cold start, the network state initializes as `backendReachable: false` briefly before the WebSocket connects. If we immediately read SecureStore, the user might flash as "authenticated offline" before transitioning to online. → *Mitigation: keep auth in transitional/loading behavior while `runtimeState === 'initializing'`, and only use persisted-session fallback once reachability is `ready` and still unreachable.*
+- **Race condition on startup** — On cold start, the network state initializes as `backendReachable: false` briefly before the WebSocket connects. If we immediately read SecureStore, the user might flash as "authenticated offline" before transitioning to online. → _Mitigation: keep auth in transitional/loading behavior while `runtimeState === 'initializing'`, and only use persisted-session fallback once reachability is `ready` and still unreachable._
 
-- **Startup reachability ambiguity** — `runtimeState` settles to `ready` independently from websocket connect timing, so there can still be a short "ready + unreachable" window before backend connect signal arrives. → *Mitigation: preserve auth-loading state during initialization and avoid forced auth-state flips until the first stable ready tick; rely on subsequent live session source once backend becomes reachable.*
+- **Startup reachability ambiguity** — `runtimeState` settles to `ready` independently from websocket connect timing, so there can still be a short "ready + unreachable" window before backend connect signal arrives. → _Mitigation: preserve auth-loading state during initialization and avoid forced auth-state flips until the first stable ready tick; rely on subsequent live session source once backend becomes reachable._

@@ -1,8 +1,7 @@
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useMutation } from "@tanstack/react-query";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
+import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseAutoTagging({ useTRPC }: CreateRecipeHooksOptions) {
   return function useAutoTagging(

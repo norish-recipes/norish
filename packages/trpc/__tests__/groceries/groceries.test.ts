@@ -2,8 +2,9 @@
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { trpcLogger } from "@norish/shared-server/logger";
-import { router } from "../../src/trpc";
+
 import {
   assignGroceryToStoreProcedure,
   createGroceryProcedure,
@@ -13,7 +14,7 @@ import {
   markGroceryDoneProcedure,
   markGroceryUndoneProcedure,
 } from "../../src/routers/groceries/groceries";
-
+import { router } from "../../src/trpc";
 // Import mocks for assertions
 import {
   assignGroceryToStore,
@@ -165,8 +166,9 @@ describe("groceries openapi procedures", () => {
     const storeId = crypto.randomUUID();
 
     listGroceriesByUsers.mockResolvedValue([]);
-    createGroceries.mockImplementation(async (items: Array<{ id: string; groceries: { name: string | null } }>) =>
-      items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name }))
+    createGroceries.mockImplementation(
+      async (items: Array<{ id: string; groceries: { name: string | null } }>) =>
+        items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name }))
     );
 
     const caller = openApiGroceriesRouter.createCaller({ ...ctx, multiplexer: null } as any);

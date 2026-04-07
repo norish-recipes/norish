@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 const SPACING = {
   two: 8,
@@ -16,8 +16,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: SPACING.three,
   },
   listContent: {
-    width: '100%',
-    alignSelf: 'center',
+    width: "100%",
+    alignSelf: "center",
     maxWidth: LIST_MAX_WIDTH,
   },
   header: {
@@ -27,12 +27,12 @@ export const styles = StyleSheet.create({
   heading: {
     fontSize: 30,
     lineHeight: 36,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   subheading: {
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: '500',
+    fontWeight: "500",
     opacity: 0.7,
   },
   separator: {
@@ -43,12 +43,12 @@ export const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   emptyTitle: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 14,
   },
   emptyDescription: {
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 14,
   },
 });

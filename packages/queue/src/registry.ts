@@ -9,6 +9,7 @@
  */
 
 import type { Queue } from "bullmq";
+
 import type {
   AllergyDetectionJobData,
   AutoCategorizationJobData,
@@ -19,10 +20,9 @@ import type {
   PasteImportJobData,
   RecipeImportJobData,
 } from "@norish/queue/contracts/job-types";
-import type { ScheduledTaskJobData } from "./scheduled-tasks/queue";
-
 import { createLogger } from "@norish/shared-server/logger";
 
+import type { ScheduledTaskJobData } from "./scheduled-tasks/queue";
 import { createAllergyDetectionQueue } from "./allergy-detection/queue";
 import { createAutoCategorizationQueue } from "./auto-categorization/queue";
 import { createAutoTaggingQueue } from "./auto-tagging/queue";

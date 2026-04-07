@@ -24,11 +24,7 @@ export async function testOIDCProvider(config: {
     const data = await response.json();
     const config = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
 
-    if (
-      !config ||
-      !("authorization_endpoint" in config) ||
-      !("token_endpoint" in config)
-    ) {
+    if (!config || !("authorization_endpoint" in config) || !("token_endpoint" in config)) {
       return {
         success: false,
         error: "Invalid OIDC configuration: missing required endpoints",

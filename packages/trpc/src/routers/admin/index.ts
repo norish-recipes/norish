@@ -1,5 +1,4 @@
 import { router } from "../../trpc";
-
 import { aiConfigProcedures } from "./ai-config";
 import { authProvidersProcedures } from "./auth-providers";
 import { adminConfigProcedures } from "./config";

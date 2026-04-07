@@ -10,7 +10,6 @@ import { RatingGetInputSchema, RatingInputSchema } from "@norish/shared/contract
 import { emitByPolicy } from "../../helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { ratingsEmitter } from "./emitter";
 
 interface UserContext {

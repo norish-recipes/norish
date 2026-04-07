@@ -1,9 +1,8 @@
 import { date, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-import { versionColumn } from "./shared";
-
 import { users } from "./auth";
 import { recipes } from "./recipes";
+import { versionColumn } from "./shared";
 
 export const slotTypeEnum = pgEnum("slot_type", ["Breakfast", "Lunch", "Dinner", "Snack"]);
 

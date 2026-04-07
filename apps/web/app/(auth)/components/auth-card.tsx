@@ -1,11 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-
-import { Card, CardBody, Divider } from "@heroui/react";
-
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { AuthLanguageSelector } from "@/components/shared/auth-language-selector";
+import { Card, CardBody, Divider } from "@heroui/react";
 
 interface AuthCardProps {
   title: string;

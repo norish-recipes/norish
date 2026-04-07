@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
+import { Panel, PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
 import { ArrowTopRightOnSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { Button, DatePicker, Select, SelectItem } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
 import { useTranslations } from "next-intl";
-import { Slot } from "@norish/shared/contracts";
 
-import { Panel, PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
-import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { Slot } from "@norish/shared/contracts";
 
 const SLOTS: Slot[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 

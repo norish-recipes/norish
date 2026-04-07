@@ -1,8 +1,9 @@
 "use client";
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import EditTagPanel from "@/components/Panel/consumers/edit-tag-panel";
+import { useTagsQuery } from "@/hooks/config";
 import {
   closestCenter,
   DndContext,
@@ -23,9 +24,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-
-import { useTagsQuery } from "@/hooks/config";
-import EditTagPanel from "@/components/Panel/consumers/edit-tag-panel";
 
 interface SortableTagItemProps {
   tag: string;

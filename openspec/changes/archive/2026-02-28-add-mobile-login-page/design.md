@@ -7,6 +7,7 @@ The mobile app already includes Expo Router and deep-link scheme support (`app.j
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Introduce a dedicated mobile login screen and unauthenticated route surface.
 - Introduce mobile tRPC client/provider wiring as a prerequisite capability.
 - Add default route protection so app content requires an authenticated session.
@@ -15,6 +16,7 @@ The mobile app already includes Expo Router and deep-link scheme support (`app.j
 - Keep backend contract changes minimal and aligned with existing auth configuration.
 
 **Non-Goals:**
+
 - Replacing or redesigning server-side BetterAuth configuration.
 - Building a full mobile signup/password-reset flow in this change.
 - Introducing provider-specific custom auth logic beyond existing BetterAuth behavior.
@@ -24,12 +26,14 @@ The mobile app already includes Expo Router and deep-link scheme support (`app.j
 ### 1. Add explicit public vs protected mobile route surfaces
 
 Mobile routing will distinguish unauthenticated and authenticated surfaces:
+
 - Public auth routes (login and auth callback/error handling)
 - Protected app routes (existing tabs and app content)
 
 A root auth guard in mobile layout/router logic will check session state before rendering protected routes and redirect to login when session is missing.
 
 **Alternatives considered:**
+
 - Guarding each screen individually. Rejected because it is repetitive and easy to bypass for new routes.
 
 ### 2. Add mobile tRPC foundation before auth feature wiring
@@ -37,6 +41,7 @@ A root auth guard in mobile layout/router logic will check session state before 
 This change includes a prerequisite capability (`mobile-trpc-foundation`) so mobile can call backend procedures using the same tRPC stack used by web. Provider discovery and future mobile data access should go through the tRPC client/provider abstraction rather than ad-hoc fetch calls.
 
 **Alternatives considered:**
+
 - Deferring tRPC and using direct fetch for login-only APIs. Rejected because it creates a one-off networking path and immediate migration overhead.
 
 ### 3. Use backend-driven provider availability for login UI via a public tRPC procedure
@@ -44,6 +49,7 @@ This change includes a prerequisite capability (`mobile-trpc-foundation`) so mob
 The web app currently resolves providers server-side by calling `getAvailableProviders()` directly in `apps/web/app/(auth)/login/page.tsx`. Mobile cannot reuse that server-only import path, so we will expose a public tRPC procedure (proposed path: `config.authProviders`) that returns the same provider payload by reusing existing provider-resolution logic. This keeps provider behavior consistent with web and avoids hardcoded mobile provider lists.
 
 **Alternatives considered:**
+
 - Hardcoded provider buttons in mobile. Rejected because it drifts from server configuration and creates runtime failures when providers are disabled.
 - Attempting to reuse web server-component provider lookup directly from mobile. Rejected because mobile cannot call server-only module imports.
 
@@ -52,6 +58,7 @@ The web app currently resolves providers server-side by calling `getAvailablePro
 OAuth sign-in will launch an external auth flow and return to app deep links (`mobile://...`) for completion. Callback handling will finalize auth and route users to protected content (or an explicit auth error surface on failure).
 
 **Alternatives considered:**
+
 - Embedding web login in an in-app WebView. Rejected for poorer UX and increased complexity around cookie/session handling.
 
 ### 5. Centralize mobile auth client configuration around backend URL env var
@@ -59,6 +66,7 @@ OAuth sign-in will launch an external auth flow and return to app deep links (`m
 A mobile auth client module will be introduced so auth calls (session read, provider sign-in initiation, sign-out) consistently use the configured backend base URL. Missing/invalid backend URL will produce a clear login-screen error state.
 
 **Alternatives considered:**
+
 - Inline URL usage per screen/service. Rejected due to duplication and higher misconfiguration risk.
 
 ### 6. Keep login implementation OAuth-first
@@ -66,6 +74,7 @@ A mobile auth client module will be introduced so auth calls (session read, prov
 Given existing usage patterns, login UX will prioritize social/OAuth providers. Password login can remain optional and only displayed when backend configuration enables it.
 
 **Alternatives considered:**
+
 - Credential-only first pass. Rejected because it does not match current deployment usage.
 
 ### 7. Support single-provider OAuth auto-redirect with web parity safeguards
@@ -73,6 +82,7 @@ Given existing usage patterns, login UX will prioritize social/OAuth providers. 
 When backend configuration yields exactly one OAuth provider and credential auth is disabled, mobile login will auto-start provider sign-in, matching current web behavior. Auto-redirect will be skipped in explicit post-logout flows so users can remain on the login screen intentionally.
 
 **Alternatives considered:**
+
 - Always showing provider selection first. Rejected because single-provider setups add unnecessary friction.
 
 ## Risks / Trade-offs

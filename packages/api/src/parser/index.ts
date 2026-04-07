@@ -1,8 +1,6 @@
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import { isVideoUrl } from "@norish/api/helpers";
-import { parserLogger as log } from "@norish/shared-server/logger";
 import {
   extractRecipeNodesFromJsonLd,
   tryExtractRecipeFromJsonLd,
@@ -14,6 +12,7 @@ import {
   isVideoParsingEnabled,
   shouldAlwaysUseAI,
 } from "@norish/config/server-config-loader";
+import { parserLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 
 import { fetchViaPlaywright } from "./fetch";
@@ -86,7 +85,14 @@ async function extractWithAIPreference(
     log.info({ url }, "AI: using extracted JSON-LD as input (fewer tokens)");
     const jsonLdInput = JSON.stringify(jsonLdNodes, null, 2);
 
-    const fromJsonLd = await tryExtractWithAI(jsonLdInput, recipeId, url, allergies, requireAI, html);
+    const fromJsonLd = await tryExtractWithAI(
+      jsonLdInput,
+      recipeId,
+      url,
+      allergies,
+      requireAI,
+      html
+    );
 
     if (fromJsonLd) return fromJsonLd;
   }

@@ -1,28 +1,25 @@
-import { DEFAULT_LOCALE } from '@norish/i18n/config';
-import { loadLocaleMessages } from '@norish/i18n/messages';
-import enAuthMessages from '@norish/i18n/messages/en/auth.json';
-import enCalendarMessages from '@norish/i18n/messages/en/calendar.json';
-import enCommonMessages from '@norish/i18n/messages/en/common.json';
-import enGroceriesMessages from '@norish/i18n/messages/en/groceries.json';
-import enNavbarMessages from '@norish/i18n/messages/en/navbar.json';
-import enRecipesMessages from '@norish/i18n/messages/en/recipes.json';
-import enSettingsMessages from '@norish/i18n/messages/en/settings.json';
-import type { EnabledLocale } from '@norish/shared-react/hooks';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { IntlProvider } from 'react-intl';
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-
-import { useAuth } from '@/context/auth-context';
-import {
-  buildLocaleDisplayMap,
-  resolveLocaleSelection,
-} from '@/lib/i18n/locale-state';
-import { publishLocale } from '@/lib/i18n/locale-store';
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/context/auth-context";
+import { buildLocaleDisplayMap, resolveLocaleSelection } from "@/lib/i18n/locale-state";
+import { publishLocale } from "@/lib/i18n/locale-store";
 import {
   loadLocalePreference,
   saveLocalePreference,
-} from '@/lib/preferences/locale-preference-store';
-import { useTRPC } from '@/providers/trpc-provider';
+} from "@/lib/preferences/locale-preference-store";
+import { useTRPC } from "@/providers/trpc-provider";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { IntlProvider } from "react-intl";
+
+import type { EnabledLocale } from "@norish/shared-react/hooks";
+import { DEFAULT_LOCALE } from "@norish/i18n/config";
+import { loadLocaleMessages } from "@norish/i18n/messages";
+import enAuthMessages from "@norish/i18n/messages/en/auth.json";
+import enCalendarMessages from "@norish/i18n/messages/en/calendar.json";
+import enCommonMessages from "@norish/i18n/messages/en/common.json";
+import enGroceriesMessages from "@norish/i18n/messages/en/groceries.json";
+import enNavbarMessages from "@norish/i18n/messages/en/navbar.json";
+import enRecipesMessages from "@norish/i18n/messages/en/recipes.json";
+import enSettingsMessages from "@norish/i18n/messages/en/settings.json";
 
 type MobileLocaleContextValue = {
   locale: string;
@@ -45,30 +42,28 @@ const FALLBACK_MESSAGES: Record<string, unknown> = {
 };
 
 const BUNDLED_LOCALES: EnabledLocale[] = [
-  { code: 'en', name: 'English' },
-  { code: 'nl', name: 'Nederlands' },
-  { code: 'de-formal', name: 'Deutsch (Sie)' },
-  { code: 'de-informal', name: 'Deutsch (Du)' },
-  { code: 'fr', name: 'Francais' },
-  { code: 'es', name: 'Espanol' },
-  { code: 'ru', name: 'Russkii' },
-  { code: 'ko', name: 'Hangugeo' },
+  { code: "en", name: "English" },
+  { code: "nl", name: "Nederlands" },
+  { code: "de-formal", name: "Deutsch (Sie)" },
+  { code: "de-informal", name: "Deutsch (Du)" },
+  { code: "fr", name: "Francais" },
+  { code: "es", name: "Espanol" },
+  { code: "ru", name: "Russkii" },
+  { code: "ko", name: "Hangugeo" },
 ];
 
-
-
-function flattenMessages(messages: Record<string, unknown>, prefix = ''): Record<string, string> {
+function flattenMessages(messages: Record<string, unknown>, prefix = ""): Record<string, string> {
   const flatMessages: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(messages)) {
     const nextKey = prefix ? `${prefix}.${key}` : key;
 
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       flatMessages[nextKey] = value;
       continue;
     }
 
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
       Object.assign(flatMessages, flattenMessages(value as Record<string, unknown>, nextKey));
     }
   }
@@ -82,7 +77,6 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
   const [preferredLocale, setPreferredLocale] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, unknown>>(FALLBACK_MESSAGES);
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
-
 
   const updatePreferencesMutation = useMutation(trpc.user.updatePreferences.mutationOptions());
   const { data: userSettings } = useQuery({
@@ -141,7 +135,11 @@ function MobileLocaleProviderInner({ children }: { children: React.ReactNode }) 
       localeNames,
       isLoading: isMessagesLoading,
       setLocale: (nextLocale: string) => {
-        const nextResolved = resolveLocaleSelection(nextLocale, localeOptions, effectiveDefaultLocale);
+        const nextResolved = resolveLocaleSelection(
+          nextLocale,
+          localeOptions,
+          effectiveDefaultLocale
+        );
 
         if (nextResolved === activeLocale) {
           return;
@@ -206,7 +204,7 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
   const localeNames = useMemo(() => buildLocaleDisplayMap(localeOptions), [localeOptions]);
   const activeLocale = useMemo(
     () => resolveLocaleSelection(preferredLocale, localeOptions, DEFAULT_LOCALE),
-    [preferredLocale, localeOptions],
+    [preferredLocale, localeOptions]
   );
 
   useEffect(() => {
@@ -256,7 +254,7 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
         void saveLocalePreference(nextResolved);
       },
     }),
-    [activeLocale, isLoadingMessages, localeNames, localeOptions],
+    [activeLocale, isLoadingMessages, localeNames, localeOptions]
   );
 
   return (
@@ -276,7 +274,7 @@ export function useMobileLocaleSettings() {
   const context = useContext(MobileLocaleContext);
 
   if (!context) {
-    throw new Error('useMobileLocaleSettings must be used inside MobileIntlProvider');
+    throw new Error("useMobileLocaleSettings must be used inside MobileIntlProvider");
   }
 
   return context;

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { isUpdateAvailable } from "@norish/shared/lib/version";
 
 const GITHUB_TAGS_URL = "https://api.github.com/repos/norish-recipes/norish/tags";

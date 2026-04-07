@@ -1,7 +1,6 @@
 "use client";
 
 import type { CalendarData } from "@/hooks/calendar";
-
 import {
   createContext,
   ReactNode,
@@ -12,10 +11,10 @@ import {
   useRef,
   useState,
 } from "react";
+import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
+
 import { Slot } from "@norish/shared/contracts";
 import { addWeeks, dateKey, getWeekEnd, getWeekStart } from "@norish/shared/lib/helpers";
-
-import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
 
 type PlannedItem = {
   id: string;

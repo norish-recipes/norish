@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, ReactNode, useContext } from "react";
-
 import { useWakeLock } from "@/hooks/use-wake-lock";
 
 interface WakeLockContextValue {

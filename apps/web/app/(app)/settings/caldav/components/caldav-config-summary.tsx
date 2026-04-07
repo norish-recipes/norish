@@ -13,7 +13,6 @@ import { Button, Card, CardBody, CardHeader, Chip, Switch, useDisclosure } from 
 import { useTranslations } from "next-intl";
 
 import { useCalDavSettingsContext } from "../context";
-
 import DeleteCalDavModal from "./delete-caldav-modal";
 
 interface CalDavConfigSummaryProps {

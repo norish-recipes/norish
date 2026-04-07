@@ -1,7 +1,6 @@
 import { index, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { versionColumn } from "./shared";
-
 import { steps } from "./steps";
 
 export const stepImages = pgTable(

@@ -1,6 +1,6 @@
 import path from "path";
-
 import { z } from "zod";
+
 import { getMaxVideoFileSize } from "@norish/config/server-config-loader";
 import {
   addRecipeVideos,
@@ -190,7 +190,10 @@ const deleteGalleryVideo = authedProcedure
       const result = await deleteRecipeVideoById(input.videoId, input.version);
 
       if (result.stale) {
-        log.info({ userId: ctx.user.id, videoId: input.videoId, version: input.version }, "Ignoring stale gallery video delete");
+        log.info(
+          { userId: ctx.user.id, videoId: input.videoId, version: input.version },
+          "Ignoring stale gallery video delete"
+        );
         return { success: true, stale: true };
       }
 

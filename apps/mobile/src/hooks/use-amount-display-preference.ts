@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { storage } from "@/lib/storage/mmkv";
 
-import { createUseAmountDisplayPreference } from '@norish/shared-react/hooks';
-
-import { storage } from '@/lib/storage/mmkv';
+import { createUseAmountDisplayPreference } from "@norish/shared-react/hooks";
 
 /**
  * Module-level in-memory cache + subscriber set, keyed by storage key.
@@ -27,10 +26,10 @@ function notifySubscribers(key: string, value: unknown) {
 function useMmkvStorageState<T>(
   key: string,
   defaultValue: T,
-  validate?: (data: unknown) => T | null,
+  validate?: (data: unknown) => T | null
 ): [T, (updater: T | ((prev: T) => T)) => void] {
-  const [value, setValue] = useState<T>(
-    () => (cache.has(key) ? (cache.get(key) as T) : defaultValue),
+  const [value, setValue] = useState<T>(() =>
+    cache.has(key) ? (cache.get(key) as T) : defaultValue
   );
 
   // Keep a ref to the latest value so the subscriber doesn't cause loops
@@ -78,13 +77,11 @@ function useMmkvStorageState<T>(
   const setValueAndPersist = useCallback(
     (updater: T | ((prev: T) => T)) => {
       const prev = valueRef.current;
-      const next = typeof updater === 'function'
-        ? (updater as (prev: T) => T)(prev)
-        : updater;
+      const next = typeof updater === "function" ? (updater as (prev: T) => T)(prev) : updater;
       storage.set(key, JSON.stringify(next));
       notifySubscribers(key, next);
     },
-    [key],
+    [key]
   );
 
   return [value, setValueAndPersist];

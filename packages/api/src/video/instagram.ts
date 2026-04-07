@@ -1,10 +1,9 @@
 import type { VideoMetadata } from "@norish/api/video/types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
-import { downloadImage } from "@norish/shared-server/media/storage";
-import { videoLogger as log } from "@norish/shared-server/logger";
 import { fetchViaPlaywright } from "@norish/api/parser/fetch";
+import { videoLogger as log } from "@norish/shared-server/logger";
+import { downloadImage } from "@norish/shared-server/media/storage";
 
 /**
  * Check if URL is from Instagram.

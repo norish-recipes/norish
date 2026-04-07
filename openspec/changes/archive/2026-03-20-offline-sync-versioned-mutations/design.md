@@ -7,6 +7,7 @@ That makes the version foundation inconsistent before offline replay even starts
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Add explicit integer `version` columns to all Norish-owned mutable application tables instead of maintaining a first-wave allowlist.
 - Increment versions on successful authoritative writes so the stored token is usable for future compare-and-swap contracts.
 - Surface `version` through generated zod schemas, manual DTO interfaces, repository outputs, and realtime payloads for every versioned entity.
@@ -14,6 +15,7 @@ That makes the version foundation inconsistent before offline replay even starts
 - Keep this change focused on the versioning foundation that later replay-safe mutation work will consume.
 
 **Non-Goals:**
+
 - Define replay-safe mutation outcomes, operation receipts, or toggle-migration behavior in this change.
 - Build conflict-resolution UI or field-level merge tooling.
 - Use `updatedAt`, transport headers, or client timestamps as the comparison token.
@@ -28,6 +30,7 @@ That makes the version foundation inconsistent before offline replay even starts
 **Why:** The repo already has a broad set of mutable entity families. Doing this once avoids repeated migrations, partial DTO adoption, and follow-on work that has to rediscover which tables are version-ready.
 
 **Alternatives considered:**
+
 - Keep a first-wave allowlist: rejected because it preserves contract inconsistency and forces later schema churn.
 - Use `updatedAt` as the universal token: rejected because timestamps are harder to compare strictly and easier to serialize inconsistently.
 
@@ -38,6 +41,7 @@ That makes the version foundation inconsistent before offline replay even starts
 **Why:** Many tables already repeat the same timestamp columns. Adding `version` everywhere is a good point to centralize the shared mutable-row shape and reduce copy-paste drift.
 
 **Alternatives considered:**
+
 - Hand-add `version` to every table forever: rejected because it increases duplication and makes future consistency fixes harder.
 - Force every table through one rigid base abstraction: rejected because some tables already diverge enough that a helper should stay optional.
 
@@ -48,6 +52,7 @@ That makes the version foundation inconsistent before offline replay even starts
 **Why:** Adding a column in the database is not enough if the version disappears at the contract boundary. The offline client needs the same token that the server stores, and manual DTO definitions are the easiest place to accidentally lose it.
 
 **Alternatives considered:**
+
 - Only expose versions on a small subset of read models: rejected because callers would still need special-case knowledge.
 - Keep versions database-only until replay-safe writes land: rejected because it delays contract cleanup and makes the next change harder to stage.
 
@@ -58,6 +63,7 @@ That makes the version foundation inconsistent before offline replay even starts
 **Why:** Recipes may still use the recipe row as the main optimistic boundary, but versioning child rows now keeps the data model consistent and leaves room for future direct child edits or sync diagnostics.
 
 **Alternatives considered:**
+
 - Only version aggregate roots: rejected because it conflicts with the goal of making all mutable entity DTOs comparison-ready now.
 
 ### 5. Replay-safe mutation contracts move to a separate change

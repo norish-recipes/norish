@@ -4,7 +4,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { trpcLogger } from "@norish/shared-server/logger";
 import { householdsRouter } from "@norish/trpc/routers/households/households";
 
-import { createMockAuthedContext, createMockHousehold, createMockUser } from "../calendar/test-utils";
+import {
+  createMockAuthedContext,
+  createMockHousehold,
+  createMockUser,
+} from "../calendar/test-utils";
 
 const householdDb = vi.hoisted(() => ({
   addUserToHousehold: vi.fn(),

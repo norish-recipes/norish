@@ -1,3 +1,5 @@
+import { and, asc, desc, eq, ilike, inArray, lte, or, sql } from "drizzle-orm";
+import z from "zod";
 
 import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import type {
@@ -14,16 +16,14 @@ import type {
 } from "@norish/shared/contracts/dto/recipe-ingredient";
 import type { StepDto, StepInsertDto } from "@norish/shared/contracts/dto/steps";
 import type { FilterMode, SearchField, SortOrder } from "@norish/shared/contracts/store-types";
-
-import z from "zod";
-import { and, asc, desc, eq, ilike, inArray, lte, or, sql } from "drizzle-orm";
-import { dbLogger } from "@norish/db/logger";
 import {
   DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
+import { dbLogger } from "@norish/db/logger";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
+import type { MutationOutcome } from "./mutation-outcomes";
 import { db } from "../drizzle";
 import {
   ingredients,
@@ -42,9 +42,8 @@ import {
   FullRecipeUpdateSchema,
   RecipeDashboardSchema,
 } from "../zodSchemas";
-
 import { attachIngredientsToRecipeByInputTx, getOrCreateManyIngredientsTx } from "./ingredients";
-import { appliedOutcome, type MutationOutcome, staleOutcome } from "./mutation-outcomes";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { getConfig } from "./server-config";
 import { createManyRecipeStepsTx } from "./steps";
 import { attachTagsToRecipeByInputTx } from "./tags";
@@ -67,7 +66,10 @@ export async function GetTotalRecipeCount(): Promise<number> {
   return Number(result?.[0]?.count ?? 0);
 }
 
-export async function deleteRecipeById(id: string, version?: number): Promise<MutationOutcome<void>> {
+export async function deleteRecipeById(
+  id: string,
+  version?: number
+): Promise<MutationOutcome<void>> {
   const whereConditions = [eq(recipes.id, id)];
 
   if (version) {
@@ -506,10 +508,11 @@ export async function listRecipes(
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
       version: r.version,
-      tags: (r.recipeTags ?? []).flatMap((rt: { tag?: { name?: string; version?: number } | null }) =>
-        rt.tag && typeof rt.tag.name === "string" && typeof rt.tag.version === "number"
-          ? [{ name: rt.tag.name, version: rt.tag.version }]
-          : []
+      tags: (r.recipeTags ?? []).flatMap(
+        (rt: { tag?: { name?: string; version?: number } | null }) =>
+          rt.tag && typeof rt.tag.name === "string" && typeof rt.tag.version === "number"
+            ? [{ name: rt.tag.name, version: rt.tag.version }]
+            : []
       ),
       averageRating,
       ratingCount,
@@ -839,7 +842,14 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
         orderBy: (images, { asc }) => [asc(images.order)],
       },
       videos: {
-        columns: { id: true, video: true, thumbnail: true, duration: true, order: true, version: true },
+        columns: {
+          id: true,
+          video: true,
+          thumbnail: true,
+          duration: true,
+          order: true,
+          version: true,
+        },
         orderBy: (videos, { asc }) => [asc(videos.order)],
       },
     },
@@ -848,7 +858,9 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
   if (!full) return null;
 
   // fetch author if exists
-  let author: { id: string; name: string | null; image: string | null; version: number } | undefined;
+  let author:
+    | { id: string; name: string | null; image: string | null; version: number }
+    | undefined;
 
   if (full.userId) {
     const { getUserAuthorInfo } = await import("./users");
@@ -961,7 +973,10 @@ export async function addStepsAndIngredientsToRecipeByInput(
   });
 }
 
-async function resolveRecipeIngredientIdsTx(tx: any, inputs: NonNullable<FullRecipeUpdateDTO["recipeIngredients"]>) {
+async function resolveRecipeIngredientIdsTx(
+  tx: any,
+  inputs: NonNullable<FullRecipeUpdateDTO["recipeIngredients"]>
+) {
   const names = Array.from(
     new Set(inputs.map((item) => item.ingredientName?.trim() ?? "").filter(Boolean))
   );
@@ -972,7 +987,8 @@ async function resolveRecipeIngredientIdsTx(tx: any, inputs: NonNullable<FullRec
     ingredientId:
       item.ingredientId ??
       resolvedIngredients.find(
-        (ingredient) => ingredient.name.toLowerCase().trim() === item.ingredientName?.toLowerCase().trim()
+        (ingredient) =>
+          ingredient.name.toLowerCase().trim() === item.ingredientName?.toLowerCase().trim()
       )?.id ??
       null,
   }));
@@ -987,7 +1003,9 @@ async function syncRecipeIngredientsTx(
   const existing = await tx
     .select({ id: recipeIngredients.id })
     .from(recipeIngredients)
-    .where(and(eq(recipeIngredients.recipeId, recipeId), eq(recipeIngredients.systemUsed, systemUsed)));
+    .where(
+      and(eq(recipeIngredients.recipeId, recipeId), eq(recipeIngredients.systemUsed, systemUsed))
+    );
   const existingById = new Map(existing.map((row: { id: string }) => [row.id, row]));
   const resolvedInputs = await resolveRecipeIngredientIdsTx(tx, inputs);
   const retainedIds = new Set<string>();
@@ -1103,7 +1121,10 @@ async function syncRecipeStepsTx(
       continue;
     }
 
-    const [insertedStep] = await tx.insert(stepsTable).values(values).returning({ id: stepsTable.id });
+    const [insertedStep] = await tx
+      .insert(stepsTable)
+      .values(values)
+      .returning({ id: stepsTable.id });
 
     if (insertedStep) {
       await syncStepImagesTx(tx, insertedStep.id, step.images ?? []);
@@ -1711,9 +1732,7 @@ export async function deleteRecipeVideoById(
 /**
  * Get all videos for a recipe
  */
-export async function getRecipeVideos(
-  recipeId: string
-): Promise<
+export async function getRecipeVideos(recipeId: string): Promise<
   {
     id: string;
     video: string;

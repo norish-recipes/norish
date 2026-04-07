@@ -1,6 +1,6 @@
-import type { AIConfig, VideoConfig } from "@norish/config/zod/server-config";
-
 import { z } from "zod";
+
+import type { AIConfig, VideoConfig } from "@norish/config/zod/server-config";
 import { testAIEndpoint as testAIEndpointFn } from "@norish/auth/connection-tests";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {

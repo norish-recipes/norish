@@ -1,8 +1,7 @@
-import { createAuthClient } from 'better-auth/react';
-import { expoClient } from '@better-auth/expo/client';
-import * as SecureStore from 'expo-secure-store';
-
-import { AUTH_STORAGE_PREFIX, clearAuthStorage } from '@/lib/auth-storage';
+import { AUTH_STORAGE_PREFIX, clearAuthStorage } from "@/lib/auth-storage";
+import { expoClient } from "@better-auth/expo/client";
+import { createAuthClient } from "better-auth/react";
+import * as SecureStore from "expo-secure-store";
 
 let _client: ReturnType<typeof createAuthClient> | null = null;
 let _currentBaseUrl: string | null = null;
@@ -16,7 +15,7 @@ export function getAuthClient(baseUrl: string): ReturnType<typeof createAuthClie
     baseURL: baseUrl,
     plugins: [
       expoClient({
-        scheme: 'mobile',
+        scheme: "mobile",
         storagePrefix: AUTH_STORAGE_PREFIX,
         storage: SecureStore,
       }),

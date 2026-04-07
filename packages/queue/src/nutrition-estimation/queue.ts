@@ -6,6 +6,7 @@
  */
 
 import type { Queue } from "bullmq";
+
 import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 

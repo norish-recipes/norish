@@ -5,12 +5,14 @@ The mobile app is an Expo starter that currently renders a custom start card wit
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Add HeroUI Native RC3 to the mobile app and configure provider/bootstrap requirements.
 - Ensure HeroUI components can consume the existing native Tailwind theme tokens instead of creating a competing theme source.
 - Replace the current start screen card with HeroUI `Card` while preserving existing user-facing behavior.
 - Establish a repeatable migration pattern for additional screen components.
 
 **Non-Goals:**
+
 - Full-screen or app-wide UI migration to HeroUI in this change.
 - Redesigning feature flows, copy, or navigation structure on the start screen.
 - Replacing the existing Tailwind theme token file or introducing a new design token system.

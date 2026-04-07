@@ -1,8 +1,8 @@
 import type { BrowserContext } from "playwright-core";
-import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
-import { parserLogger as log } from "@norish/shared-server/logger";
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { getBrowser } from "@norish/api/playwright";
+import { parserLogger as log } from "@norish/shared-server/logger";
 
 const BROWSER_HEADERS = {
   "User-Agent":
@@ -113,7 +113,10 @@ export async function fetchViaPlaywright(
       log.debug({ url: targetUrl }, "Cloudflare challenge detected, waiting for resolution");
       await page
         .waitForFunction(
-          () => !(globalThis as { document?: { title?: string } }).document?.title?.includes("Just a moment"),
+          () =>
+            !(globalThis as { document?: { title?: string } }).document?.title?.includes(
+              "Just a moment"
+            ),
           { timeout: 15000 }
         )
         .catch(() => {});

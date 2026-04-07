@@ -2,8 +2,9 @@
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { favoritesProcedures } from "@norish/trpc/routers/favorites/favorites";
+
 import { trpcLogger } from "@norish/shared-server/logger";
+import { favoritesProcedures } from "@norish/trpc/routers/favorites/favorites";
 
 import {
   getFavoriteRecipeIds,

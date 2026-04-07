@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import {
@@ -20,10 +21,7 @@ import {
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../context";
-
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
-
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export default function GeneralCard() {
   const t = useTranslations("settings.admin.general");

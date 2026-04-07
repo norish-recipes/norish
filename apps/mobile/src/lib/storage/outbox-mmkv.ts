@@ -1,4 +1,4 @@
-import { MMKV } from 'react-native-mmkv';
+import { MMKV } from "react-native-mmkv";
 
 /**
  * Dedicated MMKV instance for the mutation outbox.
@@ -6,4 +6,4 @@ import { MMKV } from 'react-native-mmkv';
  * Isolated from general and query-cache storage so outbox reads/writes
  * never interfere with other persisted data.
  */
-export const outboxStorage = new MMKV({ id: 'norish-outbox' });
+export const outboxStorage = new MMKV({ id: "norish-outbox" });

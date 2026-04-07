@@ -6,10 +6,10 @@
  */
 
 import type { Queue } from "bullmq";
-import type { ScheduledTaskJobData } from "./queue";
 
 import { createLogger } from "@norish/shared-server/logger";
 
+import type { ScheduledTaskJobData } from "./queue";
 
 const log = createLogger("queue:scheduled-tasks");
 

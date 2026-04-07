@@ -14,9 +14,11 @@
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-trpc-type-boundary`: Provides a standalone tRPC contract/runtime boundary consumed by both API server and clients without importing API internals.
 
 ### Modified Capabilities
+
 - `mobile-trpc-integration`: Update mobile tRPC integration requirements to consume router types from the extracted standalone tRPC package.
 - `web-trpc-integration`: Update web tRPC integration requirements to consume router/runtime contracts from the extracted standalone tRPC package.
 

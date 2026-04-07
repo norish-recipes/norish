@@ -1,5 +1,7 @@
 // @vitest-environment node
 
+import { GET as getSharedRecipeMedia } from "@/app/share/[token]/media/[filename]/route";
+import { GET as getSharedStepMedia } from "@/app/share/[token]/steps/[filename]/route";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const statMock = vi.hoisted(() => vi.fn());
@@ -16,9 +18,6 @@ vi.mock("node:fs/promises", () => ({
 vi.mock("@norish/db/repositories/recipe-shares", () => ({
   getActiveRecipeShareByToken: getActiveRecipeShareByTokenMock,
 }));
-
-import { GET as getSharedRecipeMedia } from "@/app/share/[token]/media/[filename]/route";
-import { GET as getSharedStepMedia } from "@/app/share/[token]/steps/[filename]/route";
 
 describe("recipe media share access", () => {
   const recipeId = "123e4567-e89b-12d3-a456-426614174000";
@@ -47,9 +46,12 @@ describe("recipe media share access", () => {
   it("returns not found for invalid shared media tokens", async () => {
     getActiveRecipeShareByTokenMock.mockResolvedValue(null);
 
-    const response = await getSharedRecipeMedia(new Request("http://localhost/share/bad-token/media/cover.jpg"), {
-      params: Promise.resolve({ token: "bad-token", filename: "cover.jpg" }),
-    });
+    const response = await getSharedRecipeMedia(
+      new Request("http://localhost/share/bad-token/media/cover.jpg"),
+      {
+        params: Promise.resolve({ token: "bad-token", filename: "cover.jpg" }),
+      }
+    );
 
     expect(response.status).toBe(404);
   });

@@ -1,6 +1,6 @@
-import { buttonStyle, foregroundStyle, labelStyle } from '@expo/ui/swift-ui/modifiers';
-import { Host, Menu } from '@expo/ui/swift-ui';
-import React from 'react';
+import React from "react";
+import { Host, Menu } from "@expo/ui/swift-ui";
+import { buttonStyle, foregroundStyle, labelStyle } from "@expo/ui/swift-ui/modifiers";
 
 export interface ShellMenuProps {
   /** Text label for the menu trigger button. */
@@ -15,14 +15,14 @@ export interface ShellMenuProps {
 
 export function ShellMenu({ label, systemImage, color, children }: ShellMenuProps) {
   return (
-    <Host matchContents style={{ justifyContent: 'center', alignItems: 'center' }}>
+    <Host matchContents style={{ justifyContent: "center", alignItems: "center" }}>
       <Menu
         label={label}
         systemImage={systemImage}
         modifiers={[
           ...(color ? [foregroundStyle(color)] : []),
-          labelStyle('iconOnly'),
-          buttonStyle('plain'),
+          labelStyle("iconOnly"),
+          buttonStyle("plain"),
         ]}
       >
         {children}

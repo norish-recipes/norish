@@ -13,9 +13,11 @@ The mobile app currently has no runtime-configurable backend URL, so it cannot r
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-trpc-integration`: Mobile backend base URL onboarding and persistence for future tRPC client initialization.
 
 ### Modified Capabilities
+
 - None.
 
 ## Impact

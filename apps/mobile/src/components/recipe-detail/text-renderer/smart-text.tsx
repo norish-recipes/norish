@@ -1,14 +1,13 @@
-import React, { useMemo } from 'react';
-import { Text } from 'react-native';
+import React, { useMemo } from "react";
+import { Text } from "react-native";
+import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@/hooks/config";
 
-import { parseTimerDurations } from '@norish/shared/lib/timer-parser';
+import { parseTimerDurations } from "@norish/shared/lib/timer-parser";
 
-import { useTimerKeywordsQuery, useTimersEnabledQuery } from '@/hooks/config';
-
-import { stripMarkdownForTimerDetection } from './parse-blocks';
-import { RichTextBlock } from './rich-text-block';
-import { TimerChipInline } from './timer-chip-inline';
-import type { SmartTextProps, TopSegment } from './types';
+import type { SmartTextProps, TopSegment } from "./types";
+import { stripMarkdownForTimerDetection } from "./parse-blocks";
+import { RichTextBlock } from "./rich-text-block";
+import { TimerChipInline } from "./timer-chip-inline";
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -39,8 +38,7 @@ export function SmartText({
   const { timersEnabled } = useTimersEnabledQuery();
   const { timerKeywords } = useTimerKeywordsQuery();
 
-  const shouldHighlightTimers =
-    highlightTimers && timersEnabled && timerKeywords.enabled;
+  const shouldHighlightTimers = highlightTimers && timersEnabled && timerKeywords.enabled;
 
   // Parse timer segments using the shared parser on markdown-stripped text
   const segments = useMemo<TopSegment[]>(() => {
@@ -82,7 +80,7 @@ export function SmartText({
         if (origStart > lastOriginalEnd) {
           const before = text.slice(lastOriginalEnd, origStart);
           if (before.length > 0) {
-            result.push({ type: 'richtext', content: before });
+            result.push({ type: "richtext", content: before });
           }
         }
 
@@ -92,13 +90,11 @@ export function SmartText({
           : `timer-${idx}`;
 
         result.push({
-          type: 'timer',
+          type: "timer",
           originalText: match.originalText,
           durationMs: match.durationSeconds * 1000,
           timerId,
-          label: timerContext
-            ? `Step ${timerContext.stepIndex + 1} Timer`
-            : match.label,
+          label: timerContext ? `Step ${timerContext.stepIndex + 1} Timer` : match.label,
         });
 
         lastOriginalEnd = origEnd;
@@ -106,7 +102,7 @@ export function SmartText({
 
       // Remaining text after last timer
       if (lastOriginalEnd < text.length) {
-        result.push({ type: 'richtext', content: text.slice(lastOriginalEnd) });
+        result.push({ type: "richtext", content: text.slice(lastOriginalEnd) });
       }
 
       return result;
@@ -122,12 +118,7 @@ export function SmartText({
 
   if (!hasTimers) {
     return (
-      <RichTextBlock
-        text={text}
-        style={style}
-        disableLinks={disableLinks}
-        textProps={textProps}
-      />
+      <RichTextBlock text={text} style={style} disableLinks={disableLinks} textProps={textProps} />
     );
   }
 
@@ -138,7 +129,7 @@ export function SmartText({
   return (
     <Text style={style} {...textProps}>
       {segments.map((seg, i) => {
-        if (seg.type === 'timer') {
+        if (seg.type === "timer") {
           return (
             <TimerChipInline
               key={`timer-${i}`}

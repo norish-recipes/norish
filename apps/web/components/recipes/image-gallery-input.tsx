@@ -1,9 +1,10 @@
 "use client";
 
 import type { DragEndEvent } from "@dnd-kit/core";
-
 import React, { useRef, useState } from "react";
 import NextImage from "next/image";
+import { useRecipeImages } from "@/hooks/recipes";
+import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import {
   closestCenter,
   DndContext,
@@ -23,11 +24,9 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Bars2Icon, PhotoIcon, StarIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
+
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { createClientLogger } from "@norish/shared/lib/logger";
-
-import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
-import { useRecipeImages } from "@/hooks/recipes";
 
 const log = createClientLogger("ImageGalleryInput");
 
@@ -183,13 +182,13 @@ export default function ImageGalleryInput({
       const nextOrder = images.length;
       const result = await uploadGalleryImage(file, recipeId, nextOrder);
 
-        if (result.success && result.url) {
-          const newImage: RecipeGalleryImage = {
-            id: result.id,
-            image: result.url,
-            order: result.order ?? nextOrder,
-            version: result.version,
-          };
+      if (result.success && result.url) {
+        const newImage: RecipeGalleryImage = {
+          id: result.id,
+          image: result.url,
+          order: result.order ?? nextOrder,
+          version: result.version,
+        };
 
         onChange([...images, newImage]);
       } else if (result.error) {

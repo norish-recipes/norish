@@ -3,6 +3,7 @@ import { createOpenApiFetchHandler, generateOpenApiDocument } from "trpc-to-open
 import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
 import { isOperationId } from "@norish/shared/lib/operation-helpers";
 
+import { createHttpContextFromHeaders } from "./context";
 import {
   createPlannedRecipeProcedure,
   deletePlannedRecipeProcedure,
@@ -18,7 +19,6 @@ import {
   markGroceryDoneProcedure,
   markGroceryUndoneProcedure,
 } from "./routers/groceries/groceries";
-import { createHttpContextFromHeaders } from "./context";
 import {
   getProcedure,
   importFromPasteProcedure,

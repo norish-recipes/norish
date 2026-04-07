@@ -2,12 +2,12 @@
 
 import React, { useMemo } from "react";
 import Link from "next/link";
+import { TimerChip } from "@/components/recipe/timer-chip";
+import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@/hooks/config";
 import ReactMarkdown from "react-markdown";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { parseTimerDurations } from "@norish/shared/lib/timer-parser";
-
-import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@/hooks/config";
-import { TimerChip } from "@/components/recipe/timer-chip";
 
 const logger = createClientLogger("smart-instruction");
 

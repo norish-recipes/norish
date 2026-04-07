@@ -1,8 +1,5 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { GlassView } from 'expo-glass-effect';
-import * as Haptics from 'expo-haptics';
-import { useThemeColor } from 'heroui-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { Timer } from "@/stores/timers";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -12,15 +9,14 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
+} from "react-native";
+import { requestNotificationPermissions, useTimerStore } from "@/stores/timers";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { GlassView } from "expo-glass-effect";
+import * as Haptics from "expo-haptics";
+import { useThemeColor } from "heroui-native";
 
-import { formatTimerMs } from '@norish/shared/lib/helpers';
-
-import {
-  requestNotificationPermissions,
-  useTimerStore,
-  type Timer,
-} from '@/stores/timers';
+import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 // Wrap GlassView for Animated so glass blur updates during morph
 const AnimatedGlassView = Animated.createAnimatedComponent(GlassView);
@@ -39,7 +35,7 @@ function getSmartIncrement(originalDurationMs: number): number {
 function TimerTicker() {
   const tick = useTimerStore((s) => s.tick);
   const timers = useTimerStore((s) => s.timers);
-  const hasRunning = timers.some((t) => t.status === 'running');
+  const hasRunning = timers.some((t) => t.status === "running");
 
   useEffect(() => {
     if (!hasRunning) return;
@@ -59,13 +55,13 @@ function TimerRow({ timer, isLast }: { timer: Timer; isLast: boolean }) {
   const adjustTimer = useTimerStore((s) => s.adjustTimer);
 
   const [foregroundColor, dangerColor, mutedColor] = useThemeColor([
-    'foreground',
-    'danger',
-    'muted',
+    "foreground",
+    "danger",
+    "muted",
   ] as const);
 
-  const isCompleted = timer.status === 'completed';
-  const isRunning = timer.status === 'running';
+  const isCompleted = timer.status === "completed";
+  const isRunning = timer.status === "running";
   const smartIncrement = getSmartIncrement(timer.originalDurationMs);
 
   const handlePlayPause = useCallback(() => {
@@ -86,17 +82,17 @@ function TimerRow({ timer, isLast }: { timer: Timer; isLast: boolean }) {
     <View
       style={[
         styles.timerRow,
-        !isLast && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: `${mutedColor}30` },
+        !isLast && {
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: `${mutedColor}30`,
+        },
       ]}
     >
       {/* Timer info */}
       <View style={styles.timerInfo}>
         <Text
           numberOfLines={1}
-          style={[
-            styles.timerLabel,
-            { color: isCompleted ? dangerColor : foregroundColor },
-          ]}
+          style={[styles.timerLabel, { color: isCompleted ? dangerColor : foregroundColor }]}
         >
           {timer.label}
         </Text>
@@ -105,12 +101,7 @@ function TimerRow({ timer, isLast }: { timer: Timer; isLast: boolean }) {
             {timer.recipeName}
           </Text>
         ) : null}
-        <Text
-          style={[
-            styles.timerTime,
-            { color: isCompleted ? dangerColor : foregroundColor },
-          ]}
-        >
+        <Text style={[styles.timerTime, { color: isCompleted ? dangerColor : foregroundColor }]}>
           {formatTimerMs(timer.remainingMs)}
         </Text>
       </View>
@@ -154,11 +145,7 @@ function TimerRow({ timer, isLast }: { timer: Timer; isLast: boolean }) {
         ) : (
           <View style={styles.actionRow}>
             <Pressable onPress={handlePlayPause} hitSlop={6} style={styles.controlButton}>
-              <Ionicons
-                name={isRunning ? 'pause' : 'play'}
-                size={16}
-                color={foregroundColor}
-              />
+              <Ionicons name={isRunning ? "pause" : "play"} size={16} color={foregroundColor} />
             </Pressable>
             <Pressable onPress={handleRemove} hitSlop={6} style={styles.controlButton}>
               <Ionicons name="close" size={16} color={dangerColor} />
@@ -169,7 +156,6 @@ function TimerRow({ timer, isLast }: { timer: Timer; isLast: boolean }) {
     </View>
   );
 }
-
 
 // ─── Morph dimensions ────────────────────────────────────────────────────────
 
@@ -189,18 +175,15 @@ export function TimerFAB() {
   const timers = useTimerStore((s) => s.timers);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const runningTimers = timers.filter((t) => t.status === 'running');
-  const pausedTimers = timers.filter((t) => t.status === 'paused');
-  const completedTimers = timers.filter((t) => t.status === 'completed');
+  const runningTimers = timers.filter((t) => t.status === "running");
+  const pausedTimers = timers.filter((t) => t.status === "paused");
+  const completedTimers = timers.filter((t) => t.status === "completed");
   const allActive = [...completedTimers, ...runningTimers, ...pausedTimers];
 
   const hasTimers = allActive.length > 0;
   const hasCompleted = completedTimers.length > 0;
 
-  const [foregroundColor, dangerColor] = useThemeColor([
-    'foreground',
-    'danger',
-  ] as const);
+  const [foregroundColor, dangerColor] = useThemeColor(["foreground", "danger"] as const);
 
   // Single morph animation driver (0 = collapsed, 1 = expanded)
   const morphAnim = useRef(new Animated.Value(0)).current;
@@ -283,8 +266,8 @@ export function TimerFAB() {
 
   // Sort timers: completed first, then by remaining time
   const sortedTimers = [...allActive].sort((a, b) => {
-    if (a.status === 'completed' && b.status !== 'completed') return -1;
-    if (b.status === 'completed' && a.status !== 'completed') return 1;
+    if (a.status === "completed" && b.status !== "completed") return -1;
+    if (b.status === "completed" && a.status !== "completed") return 1;
     return a.remainingMs - b.remainingMs;
   });
 
@@ -301,7 +284,7 @@ export function TimerFAB() {
   // Compute expanded height based on timer count
   const expandedHeight = Math.min(
     EXPANDED_HEADER_HEIGHT + timerCount * EXPANDED_HEIGHT_PER_TIMER,
-    EXPANDED_MAX_HEIGHT,
+    EXPANDED_MAX_HEIGHT
   );
 
   // Interpolated morph values
@@ -330,7 +313,7 @@ export function TimerFAB() {
             opacity: fadeAnim,
           },
         ]}
-        pointerEvents={hasTimers ? 'auto' : 'none'}
+        pointerEvents={hasTimers ? "auto" : "none"}
       >
         <Pressable onPress={handleToggle} disabled={isExpanded}>
           <AnimatedGlassView
@@ -338,82 +321,66 @@ export function TimerFAB() {
               width: morphWidth,
               height: morphHeight,
               borderRadius: morphRadius,
-              overflow: 'hidden' as const,
+              overflow: "hidden" as const,
             }}
           >
-              {/* ── Collapsed content (cross-fades out) ──────────────── */}
-              <Animated.View
-                style={[
-                  styles.collapsedContent,
-                  { opacity: collapsedOpacity },
-                ]}
-                pointerEvents={isExpanded ? 'none' : 'auto'}
-              >
-                {/* Timer icon */}
-                <Ionicons
-                  name="timer-outline"
-                  size={22}
-                  color={hasCompleted ? dangerColor : foregroundColor}
-                />
+            {/* ── Collapsed content (cross-fades out) ──────────────── */}
+            <Animated.View
+              style={[styles.collapsedContent, { opacity: collapsedOpacity }]}
+              pointerEvents={isExpanded ? "none" : "auto"}
+            >
+              {/* Timer icon */}
+              <Ionicons
+                name="timer-outline"
+                size={22}
+                color={hasCompleted ? dangerColor : foregroundColor}
+              />
 
-                {/* Timer display */}
-                <View style={styles.collapsedInfo}>
-                  <Text
-                    numberOfLines={1}
-                    style={[styles.collapsedLabel, { color: `${foregroundColor}99` }]}
-                  >
-                    {timerCount === 1
-                      ? topTimer!.label
-                      : `${timerCount} Timers`}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.collapsedTime,
-                      { color: hasCompleted ? dangerColor : foregroundColor },
-                    ]}
-                  >
-                    {formatTimerMs(topTimer!.remainingMs)}
-                  </Text>
-                </View>
-
-                <Ionicons
-                  name="chevron-up"
-                  size={14}
-                  color={`${foregroundColor}60`}
-                />
-              </Animated.View>
-
-              {/* ── Expanded content (cross-fades in) ─────────────────── */}
-              <Animated.View
-                style={[
-                  StyleSheet.absoluteFill,
-                  { opacity: expandedOpacity },
-                ]}
-                pointerEvents={isExpanded ? 'auto' : 'none'}
-              >
-                {/* Header */}
-                <Pressable onPress={handleToggle} style={styles.expandedHeader}>
-                  <Text style={[styles.expandedHeaderTitle, { color: foregroundColor }]}>
-                    {timerCount === 1 ? '1 Timer' : `${timerCount} Timers`}
-                  </Text>
-                  <Ionicons name="chevron-down" size={16} color={foregroundColor} />
-                </Pressable>
-
-                {/* Timer list */}
-                <ScrollView
-                  style={styles.timerList}
-                  showsVerticalScrollIndicator={false}
-                  bounces={false}
+              {/* Timer display */}
+              <View style={styles.collapsedInfo}>
+                <Text
+                  numberOfLines={1}
+                  style={[styles.collapsedLabel, { color: `${foregroundColor}99` }]}
                 >
-                  {sortedTimers.map((timer, idx) => (
-                    <TimerRow
-                      key={timer.id}
-                      timer={timer}
-                      isLast={idx === sortedTimers.length - 1}
-                    />
-                  ))}
-                </ScrollView>
-              </Animated.View>
+                  {timerCount === 1 ? topTimer!.label : `${timerCount} Timers`}
+                </Text>
+                <Text
+                  style={[
+                    styles.collapsedTime,
+                    { color: hasCompleted ? dangerColor : foregroundColor },
+                  ]}
+                >
+                  {formatTimerMs(topTimer!.remainingMs)}
+                </Text>
+              </View>
+
+              <Ionicons name="chevron-up" size={14} color={`${foregroundColor}60`} />
+            </Animated.View>
+
+            {/* ── Expanded content (cross-fades in) ─────────────────── */}
+            <Animated.View
+              style={[StyleSheet.absoluteFill, { opacity: expandedOpacity }]}
+              pointerEvents={isExpanded ? "auto" : "none"}
+            >
+              {/* Header */}
+              <Pressable onPress={handleToggle} style={styles.expandedHeader}>
+                <Text style={[styles.expandedHeaderTitle, { color: foregroundColor }]}>
+                  {timerCount === 1 ? "1 Timer" : `${timerCount} Timers`}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color={foregroundColor} />
+              </Pressable>
+
+              {/* Timer list */}
+              <ScrollView
+                style={styles.timerList}
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+              >
+                {sortedTimers.map((timer, idx) => (
+                  <TimerRow key={timer.id} timer={timer} isLast={idx === sortedTimers.length - 1} />
+                ))}
+              </ScrollView>
+            </Animated.View>
           </AnimatedGlassView>
         </Pressable>
       </Animated.View>
@@ -425,52 +392,52 @@ export function TimerFAB() {
 
 const styles = StyleSheet.create({
   fabContainer: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 100 : 80,
+    position: "absolute",
+    bottom: Platform.OS === "ios" ? 100 : 80,
     right: 16,
     zIndex: 999,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
 
   // Collapsed content (overlaid inside the morphing container)
   collapsedContent: {
     ...StyleSheet.absoluteFillObject,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 10,
     paddingHorizontal: 16,
   },
   collapsedInfo: {
-    justifyContent: 'center',
+    justifyContent: "center",
     flexShrink: 1,
   },
   collapsedLabel: {
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: "500",
     maxWidth: 100,
     marginBottom: 1,
   },
   collapsedTime: {
     fontSize: 18,
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'],
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
     letterSpacing: -0.3,
   },
 
   // Expanded content
   expandedHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(255,255,255,0.15)',
+    borderBottomColor: "rgba(255,255,255,0.15)",
   },
   expandedHeaderTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   timerList: {
     flex: 1,
@@ -478,8 +445,8 @@ const styles = StyleSheet.create({
 
   // Timer row
   timerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -490,7 +457,7 @@ const styles = StyleSheet.create({
   },
   timerLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 2,
   },
   timerRecipeName: {
@@ -499,29 +466,29 @@ const styles = StyleSheet.create({
   },
   timerTime: {
     fontSize: 20,
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'],
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
     letterSpacing: -0.3,
   },
   timerControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   adjustRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 4,
   },
   actionRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 4,
   },
   controlButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   divider: {
     width: 1,
@@ -534,7 +501,6 @@ const styles = StyleSheet.create({
   },
   doneButtonText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
-

@@ -1,7 +1,8 @@
 import { and, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import z from "zod";
-import { dbLogger } from "@norish/db/logger";
+
 import { db } from "@norish/db/drizzle";
+import { dbLogger } from "@norish/db/logger";
 import { groceries, recurringGroceries } from "@norish/db/schema";
 import {
   GrocerySelectBaseSchema,
@@ -289,7 +290,10 @@ export async function getDueRecurringGroceries(): Promise<DueRecurringGrocery[]>
  * Uncheck a grocery item by setting isDone to false.
  */
 export async function uncheckGrocery(groceryId: string): Promise<void> {
-  await db.update(groceries).set({ isDone: false, version: sql`${groceries.version} + 1` }).where(eq(groceries.id, groceryId));
+  await db
+    .update(groceries)
+    .set({ isDone: false, version: sql`${groceries.version} + 1` })
+    .where(eq(groceries.id, groceryId));
 }
 
 /**

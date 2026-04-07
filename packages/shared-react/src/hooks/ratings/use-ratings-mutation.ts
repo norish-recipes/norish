@@ -1,9 +1,7 @@
-import type { CreateRatingsHooksOptions } from "./types";
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import type { CreateRatingsHooksOptions } from "./types";
 import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../optimistic-updates";
-
 
 type UserRatingData = { recipeId: string; userRating: number | null; version: number | null };
 
@@ -81,7 +79,11 @@ export function createUseRatingsMutation({
         const userRatingQueryKey = trpc.ratings.getUserRating.queryKey({ recipeId });
         const previousUserRating = queryClient.getQueryData<UserRatingData>(userRatingQueryKey);
 
-        rateMutation.mutate({ recipeId, rating, version: previousUserRating?.version ?? undefined });
+        rateMutation.mutate({
+          recipeId,
+          rating,
+          version: previousUserRating?.version ?? undefined,
+        });
       },
       isRating: rateMutation.isPending,
     };

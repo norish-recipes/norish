@@ -1,7 +1,5 @@
 "use client";
 
-import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
-
 import { useEffect, useState } from "react";
 import {
   ArrowPathIcon,
@@ -11,6 +9,7 @@ import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicon
 import { Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 
 import { useHouseholdSettingsContext } from "../context";
 

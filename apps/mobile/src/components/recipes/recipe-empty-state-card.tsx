@@ -1,8 +1,7 @@
-import { Card } from 'heroui-native';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-
-import { styles as screenStyles } from '@/styles/index.styles';
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import { styles as screenStyles } from "@/styles/index.styles";
+import { Card } from "heroui-native";
 
 type RecipeEmptyStateCardProps = {
   title: string;
@@ -19,7 +18,11 @@ export function RecipeEmptyStateCard({
     <View style={styles.container}>
       <Card
         variant="secondary"
-        className={dashedBorder ? 'rounded-2xl border border-dashed border-separator' : 'rounded-2xl border border-separator'}
+        className={
+          dashedBorder
+            ? "border-separator rounded-2xl border border-dashed"
+            : "border-separator rounded-2xl border"
+        }
       >
         <Card.Body style={screenStyles.emptyBody}>
           <Card.Title style={screenStyles.emptyTitle}>{title}</Card.Title>

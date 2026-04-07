@@ -1,11 +1,8 @@
 "use client";
 
-import type {
-  AdminRecipeShareInventoryDto,
-  RecipeShareInventoryDto,
-} from "@norish/shared/contracts/dto/recipe-shares";
-
 import { useState } from "react";
+import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
+import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { PauseIcon, PlayIcon, TrashIcon } from "@heroicons/react/24/outline";
 import {
   Button,
@@ -26,8 +23,10 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
-import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
+import type {
+  AdminRecipeShareInventoryDto,
+  RecipeShareInventoryDto,
+} from "@norish/shared/contracts/dto/recipe-shares";
 
 type ShareRow = RecipeShareInventoryDto | AdminRecipeShareInventoryDto;
 type ConfirmAction = { share: ShareRow; type: "revoke" | "reactivate" | "delete" } | null;
@@ -64,9 +63,12 @@ export default function ShareLinksTableCard({
   const handleConfirm = () => {
     if (!confirmAction) return;
 
-    if (confirmAction.type === "revoke") revokeShare(confirmAction.share.id, confirmAction.share.version);
-    if (confirmAction.type === "reactivate") reactivateShare(confirmAction.share.id, confirmAction.share.version);
-    if (confirmAction.type === "delete") deleteShare(confirmAction.share.id, confirmAction.share.version);
+    if (confirmAction.type === "revoke")
+      revokeShare(confirmAction.share.id, confirmAction.share.version);
+    if (confirmAction.type === "reactivate")
+      reactivateShare(confirmAction.share.id, confirmAction.share.version);
+    if (confirmAction.type === "delete")
+      deleteShare(confirmAction.share.id, confirmAction.share.version);
 
     setConfirmAction(null);
   };
@@ -85,7 +87,7 @@ export default function ShareLinksTableCard({
       case "recipe":
         return share.recipeName;
       case "owner":
-        return hasOwnerFields(share) ? share.ownerName ?? share.ownerId : "-";
+        return hasOwnerFields(share) ? (share.ownerName ?? share.ownerId) : "-";
       case "status":
         return <RecipeShareStatusChip status={share.status} />;
       case "created":
@@ -161,11 +163,15 @@ export default function ShareLinksTableCard({
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>{confirmAction ? t(`${confirmAction.type}Modal.title`) : ""}</ModalHeader>
+              <ModalHeader>
+                {confirmAction ? t(`${confirmAction.type}Modal.title`) : ""}
+              </ModalHeader>
               <ModalBody>
                 <p>
                   {confirmAction
-                    ? t(`${confirmAction.type}Modal.message`, { recipeName: confirmAction.share.recipeName })
+                    ? t(`${confirmAction.type}Modal.message`, {
+                        recipeName: confirmAction.share.recipeName,
+                      })
                     : ""}
                 </p>
               </ModalBody>

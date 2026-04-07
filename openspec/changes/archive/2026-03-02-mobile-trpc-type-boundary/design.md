@@ -7,6 +7,7 @@ The change must preserve strict tRPC typing in mobile and web (no `any` fallback
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Provide a clean public tRPC boundary for client consumers (`AppRouter` plus minimal supporting public tRPC types).
 - Allow `apps/mobile` typecheck to run independently from unrelated server source compile failures.
 - Keep mobile and web tRPC provider/client integrations strongly typed and aligned with server router contracts.
@@ -14,6 +15,7 @@ The change must preserve strict tRPC typing in mobile and web (no `any` fallback
 - Keep runtime request behavior unchanged.
 
 **Non-Goals:**
+
 - Replacing tRPC transport or client architecture.
 - Rewriting server routers/procedures.
 - Suppressing errors with broad `skipLibCheck`, `skip` scripts, or `any` casts.
@@ -23,16 +25,19 @@ The change must preserve strict tRPC typing in mobile and web (no `any` fallback
 ### Decision 1: Compare boundary strategies and choose extracted standalone tRPC package
 
 Option A - Type-only export from `@norish/api` via declarations/dist:
+
 - Approach: build declarations in `@norish/api` and expose `@norish/api/trpc-types` subpath.
 - Pros: minimal package count; no extra package publishing/linking.
 - Cons: mobile still depends on API package build outputs and lifecycle; boundary can drift if API package exports/runtime concerns change; CI ordering still tightly coupled to API package state.
 
 Option B - Dedicated contract package generated from API declarations:
+
 - Approach: add `@norish/trpc-contract` (or `@norish/api-trpc-types`) that ships declaration-only public types generated from API router declarations.
 - Pros: strongest boundary clarity; client dependencies are explicit and runtime-safe; independent client typecheck is easier to gate in CI; migration path for additional clients is straightforward.
 - Cons: extra package/build step and release choreography; requires clear generation/update workflow to avoid stale contracts.
 
 Option C - Extract tRPC from API into a standalone package:
+
 - Approach: move router composition and related modules out of API package into a new shared package consumed by server and clients.
 - Pros: cleanest ownership model; single source of truth for router contracts and composition; removes API-package coupling for all clients, not only mobile.
 - Cons: larger scope than A/B; requires careful package boundary design and import migration; higher chance of temporary breakage during extraction.
@@ -40,6 +45,7 @@ Option C - Extract tRPC from API into a standalone package:
 Chosen approach: **Option C**.
 
 Rationale:
+
 - Produces the cleanest long-term dependency graph by making tRPC contracts independent of API runtime package internals.
 - Solves mobile isolation and also prevents the same coupling issue for future clients.
 - Acceptable migration risk for this non-release branch, with rollback available through git history if extraction destabilizes.
@@ -78,6 +84,7 @@ Rationale:
 9. Document migration guidance for future clients.
 
 Rollback plan:
+
 - Keep a short-lived compatibility re-export from `@norish/api/trpc` while migration completes.
 - If extraction destabilizes runtime/typecheck, revert the extraction commit series and restore previous import wiring.
 

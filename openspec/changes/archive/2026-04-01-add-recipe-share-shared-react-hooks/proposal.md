@@ -13,9 +13,11 @@ The backend now supports public recipe share links, but web and mobile still lac
 ## Capabilities
 
 ### New Capabilities
+
 - `recipe-share-react-state`: Provide cross-platform `shared-react` hooks, contexts, and realtime cache synchronization for authenticated recipe-share management and shared recipe resolution.
 
 ### Modified Capabilities
+
 - None.
 
 ## Impact

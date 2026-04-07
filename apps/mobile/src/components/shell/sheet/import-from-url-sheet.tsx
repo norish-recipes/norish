@@ -1,16 +1,15 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import * as Clipboard from 'expo-clipboard';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Button, useThemeColor } from 'heroui-native';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
-import { useIntl } from 'react-intl';
-
-import { colorStyles, subSheetStyles } from '@/components/shell/sheet/add-recipe-sheet.styles';
-import { ShellSheet } from '@/components/shell/sheet';
-import { usePermissionsContext } from '@/context/permissions-context';
-import { useRecipesContext } from '@/context/recipes-context';
-import { canShowAIAction } from '@/lib/permissions/mobile-action-visibility';
+import React, { useCallback, useEffect, useState } from "react";
+import { Text, TextInput, View } from "react-native";
+import { ShellSheet } from "@/components/shell/sheet";
+import { colorStyles, subSheetStyles } from "@/components/shell/sheet/add-recipe-sheet.styles";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { useRecipesContext } from "@/context/recipes-context";
+import { canShowAIAction } from "@/lib/permissions/mobile-action-visibility";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import * as Clipboard from "expo-clipboard";
+import { LinearGradient } from "expo-linear-gradient";
+import { Button, useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
 
 interface ImportFromUrlSheetProps {
   isPresented: boolean;
@@ -24,20 +23,15 @@ export function ImportFromUrlSheet({
   onDone,
 }: ImportFromUrlSheetProps) {
   const intl = useIntl();
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState("");
   const { importRecipe, importRecipeWithAI } = useRecipesContext();
   const { isAIEnabled, isLoading: isLoadingPermissions } = usePermissionsContext();
-  const [foregroundColor, mutedColor, accentForegroundColor, backgroundColor, separatorColor] = useThemeColor([
-    'foreground',
-    'muted',
-    'accent-foreground',
-    'background',
-    'separator',
-  ] as const);
+  const [foregroundColor, mutedColor, accentForegroundColor, backgroundColor, separatorColor] =
+    useThemeColor(["foreground", "muted", "accent-foreground", "background", "separator"] as const);
 
   useEffect(() => {
     if (!isPresented) {
-      setUrl('');
+      setUrl("");
       return;
     }
 
@@ -56,8 +50,7 @@ export function ImportFromUrlSheet({
         if (/^https?:\/\/.+/i.test(text.trim())) {
           setUrl(text.trim());
         }
-      } catch {
-      }
+      } catch {}
     };
 
     void fillFromClipboard();
@@ -89,21 +82,21 @@ export function ImportFromUrlSheet({
     <ShellSheet
       isPresented={isPresented}
       onIsPresentedChange={onIsPresentedChange}
-      detents={['medium']}
+      detents={["medium"]}
       initialDetent="medium"
     >
       <View style={subSheetStyles.container}>
         <Text style={[subSheetStyles.title, colorStyles.text(foregroundColor)]}>
-          {intl.formatMessage({ id: 'common.import.url.title' })}
+          {intl.formatMessage({ id: "common.import.url.title" })}
         </Text>
         <Text style={[subSheetStyles.subtitle, colorStyles.text(mutedColor)]}>
-          {intl.formatMessage({ id: 'common.import.url.label' })}
+          {intl.formatMessage({ id: "common.import.url.label" })}
         </Text>
 
         <TextInput
           value={url}
           onChangeText={setUrl}
-          placeholder={intl.formatMessage({ id: 'common.import.url.placeholder' })}
+          placeholder={intl.formatMessage({ id: "common.import.url.placeholder" })}
           placeholderTextColor={mutedColor}
           autoCapitalize="none"
           autoCorrect={false}
@@ -127,14 +120,14 @@ export function ImportFromUrlSheet({
                 onPress={handleAIImport}
               >
                 <LinearGradient
-                  colors={['#fb7185', '#d946ef', '#6366f1']}
+                  colors={["#fb7185", "#d946ef", "#6366f1"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={subSheetStyles.gradientFill}
                 />
                 <Ionicons name="flash-outline" size={18} color="#fff" />
                 <Button.Label style={subSheetStyles.whiteLabel}>
-                  {intl.formatMessage({ id: 'common.actions.aiImport' })}
+                  {intl.formatMessage({ id: "common.actions.aiImport" })}
                 </Button.Label>
               </Button>
             </View>
@@ -148,7 +141,7 @@ export function ImportFromUrlSheet({
               onPress={handleImport}
             >
               <Ionicons name="arrow-down-circle-outline" size={18} color={accentForegroundColor} />
-              <Button.Label>{intl.formatMessage({ id: 'common.actions.import' })}</Button.Label>
+              <Button.Label>{intl.formatMessage({ id: "common.actions.import" })}</Button.Label>
             </Button>
           </View>
         </View>

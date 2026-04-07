@@ -1,11 +1,11 @@
 import type { TRPCSubscriptionProcedure } from "@trpc/server";
+
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type { SubscriptionMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
 import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime-envelope";
-import type { TypedEmitter } from "./emitter";
-
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
+import type { TypedEmitter } from "./emitter";
 import { authedProcedure } from "./middleware";
 
 type AuthedSubscriptionProcedure = TRPCSubscriptionProcedure<{
@@ -161,19 +161,19 @@ export async function* mergeAsyncIterables<T>(
 
     pending.set(
       idx,
-        new Promise((resolve) => {
-          queueMicrotask(() => {
-            // Double-check abort inside microtask since signal may have changed
-            if (signal?.aborted) return;
-            const iterator = iterators[idx];
+      new Promise((resolve) => {
+        queueMicrotask(() => {
+          // Double-check abort inside microtask since signal may have changed
+          if (signal?.aborted) return;
+          const iterator = iterators[idx];
 
-            if (!iterator) {
-              return;
-            }
+          if (!iterator) {
+            return;
+          }
 
-            iterator.next().then((result) => resolve({ index: idx, result }));
-          });
-        })
+          iterator.next().then((result) => resolve({ index: idx, result }));
+        });
+      })
     );
   };
 
@@ -238,9 +238,18 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
   // This consolidates all subscriptions into a single Redis connection
   if (ctx.multiplexer) {
     return [
-      ctx.multiplexer.subscribe<RealtimeEventEnvelope<TEvents[typeof event]>>(householdEventName, signal),
-      ctx.multiplexer.subscribe<RealtimeEventEnvelope<TEvents[typeof event]>>(broadcastEventName, signal),
-      ctx.multiplexer.subscribe<RealtimeEventEnvelope<TEvents[typeof event]>>(userEventName, signal),
+      ctx.multiplexer.subscribe<RealtimeEventEnvelope<TEvents[typeof event]>>(
+        householdEventName,
+        signal
+      ),
+      ctx.multiplexer.subscribe<RealtimeEventEnvelope<TEvents[typeof event]>>(
+        broadcastEventName,
+        signal
+      ),
+      ctx.multiplexer.subscribe<RealtimeEventEnvelope<TEvents[typeof event]>>(
+        userEventName,
+        signal
+      ),
     ];
   }
 

@@ -172,7 +172,9 @@ describe("planned items repository", () => {
 
   describe("deletePlannedItem", () => {
     it("removes item and reindexes remaining items", async () => {
-      const deleteWhere = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "item-1", userId: "user-1", date, slot }]) });
+      const deleteWhere = vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([{ id: "item-1", userId: "user-1", date, slot }]),
+      });
       const deleteFn = vi.fn().mockReturnValue({ where: deleteWhere });
       const updateWhere = vi
         .fn()

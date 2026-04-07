@@ -1,29 +1,26 @@
 "use client";
 
-import { addToast } from "@heroui/react";
-import { useTranslations } from "next-intl";
-import { createHouseholdHooks, useUser } from "@norish/shared-react/hooks";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { addToast } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
+import { createHouseholdHooks, useUser } from "@norish/shared-react/hooks";
 
 export const sharedHouseholdHooks = createHouseholdHooks({
   useTRPC,
   useCurrentUserId: () => {
-     
     const { user } = useUser();
 
     return user?.id;
   },
   useCurrentUserName: () => {
-     
     const { user } = useUserContext();
 
     return user?.name ?? null;
   },
   useToastAdapter: () => {
-     
     const tErrors = useTranslations("common.errors");
 
     return {

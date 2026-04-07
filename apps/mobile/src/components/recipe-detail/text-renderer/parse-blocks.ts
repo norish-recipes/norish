@@ -1,4 +1,4 @@
-import type { BlockToken, InlineToken } from './types';
+import type { BlockToken, InlineToken } from "./types";
 
 // ─── Block parsing ───────────────────────────────────────────────────────────
 
@@ -8,14 +8,14 @@ import type { BlockToken, InlineToken } from './types';
 export function parseBlocks(text: string): BlockToken[] {
   if (!text) return [];
 
-  const lines = text.split('\n');
+  const lines = text.split("\n");
   const blocks: BlockToken[] = [];
   let currentLines: string[] = [];
 
   const flushParagraph = () => {
     if (currentLines.length > 0) {
-      const joined = currentLines.join('\n');
-      blocks.push({ type: 'paragraph', children: parseInline(joined) });
+      const joined = currentLines.join("\n");
+      blocks.push({ type: "paragraph", children: parseInline(joined) });
       currentLines = [];
     }
   };
@@ -25,7 +25,7 @@ export function parseBlocks(text: string): BlockToken[] {
     if (headingMatch) {
       flushParagraph();
       blocks.push({
-        type: 'heading',
+        type: "heading",
         level: headingMatch[1]!.length,
         children: parseInline(headingMatch[2]!),
       });
@@ -56,28 +56,28 @@ export function parseInline(text: string): InlineToken[] {
   while ((match = regex.exec(text)) !== null) {
     // Text before this match
     if (match.index > lastIndex) {
-      tokens.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+      tokens.push({ type: "text", content: text.slice(lastIndex, match.index) });
     }
 
     if (match[1] != null) {
-      tokens.push({ type: 'bold-italic', content: match[1] });
+      tokens.push({ type: "bold-italic", content: match[1] });
     } else if (match[2] != null) {
-      tokens.push({ type: 'bold', content: match[2] });
+      tokens.push({ type: "bold", content: match[2] });
     } else if (match[3] != null) {
-      tokens.push({ type: 'bold', content: match[3] });
+      tokens.push({ type: "bold", content: match[3] });
     } else if (match[4] != null) {
-      tokens.push({ type: 'italic', content: match[4] });
+      tokens.push({ type: "italic", content: match[4] });
     } else if (match[5] != null) {
-      tokens.push({ type: 'italic', content: match[5] });
+      tokens.push({ type: "italic", content: match[5] });
     } else if (match[6] != null && match[7] != null) {
-      tokens.push({ type: 'link', label: match[6], href: match[7] });
+      tokens.push({ type: "link", label: match[6], href: match[7] });
     }
 
     lastIndex = match.index + match[0].length;
   }
 
   if (lastIndex < text.length) {
-    tokens.push({ type: 'text', content: text.slice(lastIndex) });
+    tokens.push({ type: "text", content: text.slice(lastIndex) });
   }
 
   return tokens;
@@ -175,7 +175,7 @@ export function stripMarkdownForTimerDetection(text: string): StrippedText {
   toOriginal.push(text.length);
 
   return {
-    plain: plainChars.join(''),
+    plain: plainChars.join(""),
     toOriginal,
   };
 }

@@ -13,9 +13,11 @@ We need a clear ownership model for TRPC that removes `@norish/trpc -> @norish/a
 ## Capabilities
 
 ### New Capabilities
+
 - `trpc-api-layer-separation`: Define and enforce a package/layer split where TRPC owns router/procedures/contracts and API owns endpoint hosting.
 
 ### Modified Capabilities
+
 - `dependency-boundaries`: Tighten requirement language to enforce one-way import direction (`api -> trpc`, not `trpc -> api`).
 - `mobile-trpc-type-boundary`: Clarify that client-facing TRPC typing stays stable with `AppRouter` sourced from TRPC boundary exports.
 

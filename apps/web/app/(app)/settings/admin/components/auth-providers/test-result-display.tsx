@@ -1,10 +1,9 @@
 "use client";
 
-import type { TestResult } from "./types";
-
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
+import type { TestResult } from "./types";
 
 interface TestResultDisplayProps {
   result: TestResult | null;

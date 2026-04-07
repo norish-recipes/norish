@@ -1,8 +1,10 @@
 /** Microdata helpers: parse HTML microdata and return normalized Recipe-like objects. */
 import { createRequire } from "node:module";
+
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
-import { extractImageCandidates } from "./parsers";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+
+import { extractImageCandidates } from "./parsers";
 
 const require = createRequire(import.meta.url);
 const microdata = require("microdata-node") as {

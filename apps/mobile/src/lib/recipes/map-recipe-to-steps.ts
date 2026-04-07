@@ -2,9 +2,9 @@
  * Maps FullRecipeDTO.steps into the shape consumed by RecipeSteps and CookMode.
  */
 
-import type { FullRecipeDTO } from '@norish/shared/contracts';
+import type { FullRecipeDTO } from "@norish/shared/contracts";
 
-import { resolveImageUri } from './resolve-image-url';
+import { resolveImageUri } from "./resolve-image-url";
 
 /** The shape RecipeSteps and CookMode components expect */
 export type MappedStep = {
@@ -20,14 +20,12 @@ export type MappedStep = {
  */
 export function mapRecipeToSteps(
   recipe: FullRecipeDTO,
-  backendBaseUrl: string | null,
+  backendBaseUrl: string | null
 ): MappedStep[] {
-  const sorted = [...(recipe.steps ?? [])].sort(
-    (a, b) => (a.order ?? 0) - (b.order ?? 0),
-  );
+  const sorted = [...(recipe.steps ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return sorted.map((step) => ({
-    text: step.step ?? '',
+    text: step.step ?? "",
     images:
       step.images && step.images.length > 0
         ? step.images.map((img) => ({

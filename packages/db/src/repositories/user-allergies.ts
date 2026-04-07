@@ -1,4 +1,5 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
+
 import { db } from "@norish/db/drizzle";
 import { tags, userAllergies, users } from "@norish/db/schema";
 
@@ -16,9 +17,9 @@ export async function getUserAllergies(
       .then((result) => result[0] ?? null),
     db
       .select({ name: tags.name, version: userAllergies.version })
-    .from(userAllergies)
-    .innerJoin(tags, eq(userAllergies.tagId, tags.id))
-    .where(eq(userAllergies.userId, userId))
+      .from(userAllergies)
+      .innerJoin(tags, eq(userAllergies.tagId, tags.id))
+      .where(eq(userAllergies.userId, userId))
       .orderBy(sql`lower(${tags.name})`),
   ]);
 
@@ -77,7 +78,9 @@ export async function updateUserAllergies(
     const [updatedUser] = await tx
       .update(users)
       .set({ version: nextVersion })
-      .where(and(eq(users.id, userId), eq(users.version, currentVersion === 0 ? 1 : currentVersion)))
+      .where(
+        and(eq(users.id, userId), eq(users.version, currentVersion === 0 ? 1 : currentVersion))
+      )
       .returning({ version: users.version });
 
     if (!updatedUser) {

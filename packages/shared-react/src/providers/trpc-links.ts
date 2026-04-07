@@ -1,24 +1,20 @@
 import type { HTTPHeaders, TRPCLink } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
-
 import {
-  TRPCClientError,
   createWSClient,
   httpBatchLink,
   httpLink,
   isNonJsonSerializable,
   loggerLink,
   splitLink,
+  TRPCClientError,
   wsLink,
 } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
 import superjson from "superjson";
 
 import { createOperationIdLink } from "./operation-id-link";
-import {
-  createBatchRequestHeadersResolver,
-  createRequestHeadersResolver,
-} from "./request-headers";
+import { createBatchRequestHeadersResolver, createRequestHeadersResolver } from "./request-headers";
 
 export type TrpcLogger = {
   info: (message: string) => void;
@@ -154,7 +150,9 @@ export function isUnauthorizedTRPCError(cause: unknown): boolean {
     return true;
   }
 
-  return typeof error.message === "string" && /(?:^|\b)(401|unauthorized)(?:\b|$)/i.test(error.message);
+  return (
+    typeof error.message === "string" && /(?:^|\b)(401|unauthorized)(?:\b|$)/i.test(error.message)
+  );
 }
 
 export function shouldNotifyWebSocketDisconnect(cause: unknown): boolean {
@@ -162,7 +160,7 @@ export function shouldNotifyWebSocketDisconnect(cause: unknown): boolean {
 }
 
 function createUnauthorizedLink<TRouter extends AnyTRPCRouter>(
-  onUnauthorized: ((cause: unknown) => void) | undefined,
+  onUnauthorized: ((cause: unknown) => void) | undefined
 ): TRPCLink<TRouter> {
   return () => {
     return ({ op, next }) => {
@@ -187,7 +185,10 @@ function createUnauthorizedLink<TRouter extends AnyTRPCRouter>(
   };
 }
 
-function createHttpMutationLink(getBaseUrl: () => string, getHeaders: () => HTTPHeaders): TRPCLink<any> {
+function createHttpMutationLink(
+  getBaseUrl: () => string,
+  getHeaders: () => HTTPHeaders
+): TRPCLink<any> {
   return httpLink({
     url: `${getBaseUrl()}/api/trpc`,
     headers: createRequestHeadersResolver(getHeaders),
@@ -197,7 +198,7 @@ function createHttpMutationLink(getBaseUrl: () => string, getHeaders: () => HTTP
 
 function createHttpFormDataMutationLink(
   getBaseUrl: () => string,
-  getHeaders: () => HTTPHeaders,
+  getHeaders: () => HTTPHeaders
 ): TRPCLink<any> {
   return httpLink({
     url: `${getBaseUrl()}/api/trpc`,
@@ -211,7 +212,7 @@ function createHttpFormDataMutationLink(
 
 function createHttpTransportLink<TRouter extends AnyTRPCRouter>(
   getBaseUrl: () => string,
-  getHeaders: () => HTTPHeaders,
+  getHeaders: () => HTTPHeaders
 ): TRPCLink<TRouter> {
   return splitLink({
     condition: (op) => op.type === "mutation",
@@ -278,7 +279,7 @@ export function createTRPCClientLinks<TRouter extends AnyTRPCRouter>({
         logger,
         onWebSocketOpen,
         onWebSocketClose,
-        onWebSocketUnauthorized,
+        onWebSocketUnauthorized
       )
     : null;
 
@@ -323,7 +324,7 @@ function createWsClient(
   logger: TrpcLogger,
   onWebSocketOpen: (() => void) | undefined,
   onWebSocketClose: ((cause: unknown) => void) | undefined,
-  onWebSocketUnauthorized: ((cause: unknown) => void) | undefined,
+  onWebSocketUnauthorized: ((cause: unknown) => void) | undefined
 ) {
   let handledUnauthorizedClose = false;
   let suppressNextNormalClose = false;

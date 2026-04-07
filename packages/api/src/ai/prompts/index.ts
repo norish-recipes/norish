@@ -5,7 +5,11 @@
  */
 
 // Core prompt loading and filling
-export { loadPrompt, loadDefaultPrompts, fillPrompt } from "@norish/shared-server/ai/prompts/loader";
+export {
+  loadPrompt,
+  loadDefaultPrompts,
+  fillPrompt,
+} from "@norish/shared-server/ai/prompts/loader";
 
 // Prompt builders for specific extraction types
 export {

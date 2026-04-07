@@ -1,9 +1,9 @@
 import { and, eq, inArray } from "drizzle-orm";
 
+import type { MutationOutcome } from "./mutation-outcomes";
 import { db } from "../drizzle";
 import { recipeFavorites } from "../schema";
-
-import { appliedOutcome, type MutationOutcome, staleOutcome } from "./mutation-outcomes";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 export async function addFavorite(userId: string, recipeId: string): Promise<void> {
   await db
@@ -29,7 +29,10 @@ export async function setFavorite(
     return appliedOutcome({ isFavorite: true });
   }
 
-  const whereConditions = [eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)];
+  const whereConditions = [
+    eq(recipeFavorites.userId, userId),
+    eq(recipeFavorites.recipeId, recipeId),
+  ];
 
   if (version) {
     whereConditions.push(eq(recipeFavorites.version, version));

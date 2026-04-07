@@ -6,7 +6,6 @@
  * Only scheduled-tasks runs continuously for cron jobs.
  */
 
-import { createLogger } from "@norish/shared-server/logger";
 import { startAllergyDetectionWorker } from "@norish/queue/allergy-detection/worker";
 import { startAutoCategorizationWorker } from "@norish/queue/auto-categorization/worker";
 import { startAutoTaggingWorker } from "@norish/queue/auto-tagging/worker";
@@ -23,6 +22,7 @@ import {
   startScheduledTasksWorker,
   stopScheduledTasksWorker,
 } from "@norish/queue/scheduled-tasks/worker";
+import { createLogger } from "@norish/shared-server/logger";
 
 const log = createLogger("bullmq");
 

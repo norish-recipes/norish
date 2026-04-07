@@ -1,17 +1,16 @@
 import type { InfiniteData } from "@tanstack/react-query";
-import type { PendingRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+
+import type { PendingRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+
+import type { CreateRecipeHooksOptions } from "../types";
 
 export const OPTIMISTIC_PENDING_RECIPE_PREFIX = "optimistic-pending-recipe:";
 
 function isOptimisticPendingRecipeId(recipeId: string): boolean {
   return recipeId.startsWith(OPTIMISTIC_PENDING_RECIPE_PREFIX);
 }
-
-
 
 export type InfiniteRecipeData = InfiniteData<{
   recipes: RecipeDashboardDTO[];
@@ -90,7 +89,8 @@ export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptio
           );
 
           return next.filter(
-            (pending, index) => next.findIndex((item) => item.recipeId === pending.recipeId) === index
+            (pending, index) =>
+              next.findIndex((item) => item.recipeId === pending.recipeId) === index
           );
         });
       },
@@ -106,7 +106,9 @@ export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptio
             return arr;
           }
 
-          const optimisticPending = arr.find((pending) => isOptimisticPendingRecipeId(pending.recipeId));
+          const optimisticPending = arr.find((pending) =>
+            isOptimisticPendingRecipeId(pending.recipeId)
+          );
 
           if (!optimisticPending) {
             return [...arr, { recipeId, url: "", addedAt: Date.now() }];

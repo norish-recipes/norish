@@ -82,7 +82,13 @@ export default function ApiKeyCard() {
         </CardHeader>
         <CardBody className="gap-4">
           <p className="text-default-600 text-base">{t("description")}</p>
-          <Link className="w-fit" href="/api/docs" rel="noopener noreferrer" size="sm" target="_blank">
+          <Link
+            className="w-fit"
+            href="/api/docs"
+            rel="noopener noreferrer"
+            size="sm"
+            target="_blank"
+          >
             {t("docsLink")}
           </Link>
 

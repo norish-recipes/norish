@@ -33,8 +33,9 @@ That setup makes event delivery simple, but it erases the metadata we need for o
 **Why**: Offline reconciliation needs both identities: a client-originated `operationId` to match queued work, and a server-originated `eventId` to uniquely identify emitted events. Keeping both in transport metadata avoids contaminating domain DTOs. A version field lets us evolve the envelope later if offline retrace introduces additional metadata.
 
 **Alternatives considered**:
-- *Add metadata fields directly to every payload type*: too invasive and leaks transport concerns into domain contracts.
-- *Store metadata only in logs*: helps observability, but clients still cannot reconcile or persist events.
+
+- _Add metadata fields directly to every payload type_: too invasive and leaks transport concerns into domain contracts.
+- _Store metadata only in logs_: helps observability, but clients still cannot reconcile or persist events.
 
 ### 2. Generate `operationId` at the client mutation edge
 
@@ -43,8 +44,9 @@ That setup makes event delivery simple, but it erases the metadata we need for o
 **Why**: The client is the only place that can create an identifier before work is queued offline. Generating it centrally at the mutation edge keeps the footprint low and avoids touching every mutation call site.
 
 **Alternatives considered**:
-- *Generate `operationId` on the server*: too late for offline outbox reconciliation because the client would not know the ID before enqueueing work.
-- *Require every caller to generate IDs manually*: possible, but high churn and easy to miss.
+
+- _Generate `operationId` on the server_: too late for offline outbox reconciliation because the client would not know the ID before enqueueing work.
+- _Require every caller to generate IDs manually_: possible, but high churn and easy to miss.
 
 ### 3. Propagate `operationId` through backend request and queue edges
 
@@ -53,8 +55,9 @@ That setup makes event delivery simple, but it erases the metadata we need for o
 **Why**: Many Norish actions do not emit their final event in the initial HTTP request. If correlation stops at the request boundary, offline clients still cannot match later async success/failure events back to the original queued action.
 
 **Alternatives considered**:
-- *Only propagate through synchronous request handling*: insufficient for worker-driven imports, processing, and similar pipelines.
-- *Embed `operationId` directly inside each BullMQ payload DTO*: workable, but more invasive than a shared job metadata edge.
+
+- _Only propagate through synchronous request handling_: insufficient for worker-driven imports, processing, and similar pipelines.
+- _Embed `operationId` directly inside each BullMQ payload DTO_: workable, but more invasive than a shared job metadata edge.
 
 ### 4. Apply the envelope in Redis publish, not in individual emitters
 
@@ -63,8 +66,9 @@ That setup makes event delivery simple, but it erases the metadata we need for o
 **Why**: This keeps all existing `emitToHousehold`, `emitToUser`, `broadcast`, and `emitGlobal` call sites unchanged. The edge already knows both the payload and the final channel, and it can read the active operation context, so it is the narrowest place to stamp metadata consistently.
 
 **Alternatives considered**:
-- *Wrap payloads at each router/emitter call site*: high churn and easy to apply inconsistently.
-- *Wrap at tRPC subscription yield time only*: misses direct Redis consumers and server-side listeners.
+
+- _Wrap payloads at each router/emitter call site_: high churn and easy to apply inconsistently.
+- _Wrap at tRPC subscription yield time only_: misses direct Redis consumers and server-side listeners.
 
 ### 5. Parse envelopes once on subscription ingress and expose compatibility helpers on egress
 
@@ -73,8 +77,9 @@ That setup makes event delivery simple, but it erases the metadata we need for o
 **Why**: This keeps current subscription routers mostly intact while making the richer object available for future migrations. It also avoids repeated `superjson.parse()` and ad hoc envelope unwrapping in many call sites.
 
 **Alternatives considered**:
-- *Immediately switch every subscription procedure to envelope output*: possible, but would cascade changes through all client handlers at once.
-- *Keep subscriptions returning raw payload forever*: blocks offline retrace because clients never see metadata.
+
+- _Immediately switch every subscription procedure to envelope output_: possible, but would cascade changes through all client handlers at once.
+- _Keep subscriptions returning raw payload forever_: blocks offline retrace because clients never see metadata.
 
 ### 6. Client hooks receive a small normalizer rather than broad handler rewrites
 
@@ -88,9 +93,10 @@ Existing `onData` handlers can continue reading `payload` with minimal wrapper c
 **Why**: Web and mobile have many mutation and subscription hooks. Normalizing once near the tRPC edge keeps the migration local to shared provider/hook factories and app-specific edge adapters instead of every cache mutation callback.
 
 **Alternatives considered**:
-- *Require every `onData` callback to branch on envelope shape*: repetitive and error-prone.
-- *Require every mutation hook to manually attach `operationId`*: repetitive and easy to miss.
-- *Hide metadata entirely from clients*: simpler short-term, but defeats the purpose of enabling future offline retrace.
+
+- _Require every `onData` callback to branch on envelope shape_: repetitive and error-prone.
+- _Require every mutation hook to manually attach `operationId`_: repetitive and easy to miss.
+- _Hide metadata entirely from clients_: simpler short-term, but defeats the purpose of enabling future offline retrace.
 
 ### 7. Envelope metadata is append-only and non-authoritative for business ordering
 

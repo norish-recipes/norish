@@ -151,12 +151,14 @@ Use Pino logger instead of `console.log`:
 
 ```typescript
 // Server-side
-import { createLogger } from "@/server/logger";
-const log = createLogger("my-module");
-log.info("Something happened");
 
 // Client-side
 import { createClientLogger } from "@/lib/logger";
+import { createLogger } from "@/server/logger";
+
+const log = createLogger("my-module");
+log.info("Something happened");
+
 const log = createClientLogger("MyComponent");
 ```
 
@@ -167,6 +169,7 @@ Always use the repository pattern:
 ```typescript
 // Good - use repository
 import { getRecipeById } from "@/server/db/repositories/recipes";
+
 const recipe = await getRecipeById(id);
 
 // Bad - direct db access in routers

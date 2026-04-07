@@ -1,8 +1,8 @@
-import type { QueryClient } from '@tanstack/react-query';
+import type { QueryClient } from "@tanstack/react-query";
 
-import { createClientLogger } from '@norish/shared/lib/logger';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-const log = createClientLogger('prefetch-budget');
+const log = createClientLogger("prefetch-budget");
 
 /**
  * Maximum number of recipe entries that were prefetched (not user-navigated)
@@ -27,7 +27,11 @@ export function has(id: string): boolean {
  * If the budget is already at capacity, the oldest entry is evicted from both
  * the tracker and the QueryClient cache.
  */
-export function add(id: string, queryClient: QueryClient, getQueryKey: (id: string) => unknown[]): void {
+export function add(
+  id: string,
+  queryClient: QueryClient,
+  getQueryKey: (id: string) => unknown[]
+): void {
   // Deduplicate — move to end if already present (refresh LRU position).
   trackedIds = trackedIds.filter((existing) => existing !== id);
   trackedIds.push(id);
@@ -38,7 +42,7 @@ export function add(id: string, queryClient: QueryClient, getQueryKey: (id: stri
     const queryKey = getQueryKey(evictedId);
 
     queryClient.removeQueries({ queryKey, exact: true });
-    log.debug({ evictedId, prefetchCount: trackedIds.length }, 'Evicted oldest prefetched recipe');
+    log.debug({ evictedId, prefetchCount: trackedIds.length }, "Evicted oldest prefetched recipe");
   }
 }
 

@@ -5,6 +5,7 @@ We need to remove `@norish/trpc -> @norish/api` coupling while keeping runtime b
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Enforce one-way package dependency direction between API and TRPC.
 - Keep client-facing TRPC contracts stable for mobile/web consumers.
 - Preserve endpoint/runtime behavior while keeping router/procedure ownership in TRPC.
@@ -12,6 +13,7 @@ We need to remove `@norish/trpc -> @norish/api` coupling while keeping runtime b
 - Use existing validation checks only; no new custom scripts.
 
 **Non-Goals:**
+
 - No framework migration (for example NestJS).
 - No broad runtime service-locator registry introduced as required architecture.
 - No intentional API contract changes for existing tRPC consumers.
@@ -20,6 +22,7 @@ We need to remove `@norish/trpc -> @norish/api` coupling while keeping runtime b
 ## Decisions
 
 ### Decision: Use layer ownership instead of broad DI registry
+
 - `@norish/trpc` owns `AppRouter`, procedures, and TRPC contracts.
 - `@norish/api` owns endpoint hosting and mounts TRPC router via adapter/route integration.
 - `@norish/trpc` SHALL NOT import `@norish/api/*`.
@@ -27,16 +30,19 @@ We need to remove `@norish/trpc -> @norish/api` coupling while keeping runtime b
 - Alternative considered: centralized `runtime-deps.ts` contract and setter/getter. Rejected due to high fragility and maintenance overhead.
 
 ### Decision: Re-home API-only utilities currently imported by TRPC
+
 - Any logic currently living under `@norish/api/*` but required by TRPC procedures will be moved to boundary-safe locations (TRPC-owned modules or existing shared/runtime packages) so TRPC no longer back-imports API.
 - Rationale: preserves Model A ownership without forcing broad DI registries.
 - Alternative considered: keep logic in API and inject everything into TRPC. Rejected due to high maintenance complexity.
 
 ### Decision: Clean-cut migration with no shims/re-exports
+
 - During migration, imports are updated directly to final module homes.
 - We will not add temporary compatibility wrappers, bridge modules, alias re-exports, or duplicate APIs.
 - Rationale: avoids long-tail cleanup and guarantees final architecture at merge time.
 
 ### Decision: Keep package surface small and avoid package proliferation
+
 - Prefer refactoring responsibilities inside existing `@norish/api` and `@norish/trpc` packages.
 - Introduce a dedicated `@norish/shared-server` package as the single new boundary for server-only code shared by API and TRPC.
 - Outside `@norish/shared-server`, avoid introducing additional package boundaries unless a concrete cycle cannot be resolved.
@@ -44,6 +50,7 @@ We need to remove `@norish/trpc -> @norish/api` coupling while keeping runtime b
 - Alternative considered: introduce additional core/foundation packages now. Deferred to avoid package overload.
 
 ### Decision: Shared placement policy for cross-consumer code
+
 - If code is used by both API and TRPC and is server-only, it should live in `@norish/shared-server` as the final home.
 - If code is only consumed by server packages, it should live in `@norish/shared-server` even if it is technically client-safe.
 - `@norish/shared` is reserved for modules that have intentional client consumers and are part of client-safe shared boundaries.
@@ -52,6 +59,7 @@ We need to remove `@norish/trpc -> @norish/api` coupling while keeping runtime b
 - Rationale: this keeps one canonical implementation for cross-consumer server logic while preserving client/server safety boundaries.
 
 ### Decision: Final destination map for utilities moved out of API
+
 - Logging used by both API and TRPC -> `@norish/shared-server/logger`.
 - Downloader/media utilities used by TRPC (`deleteRecipeImagesDir`, `saveVideoBytes`, `deleteVideoByUrl`) -> `@norish/shared-server/media/storage`.
 - Avatar deletion helper used by TRPC (`deleteAvatarByFilename`) -> `@norish/shared-server/media/avatar-cleanup`.
@@ -63,6 +71,7 @@ We need to remove `@norish/trpc -> @norish/api` coupling while keeping runtime b
 - Any genuinely client-safe shared code remains in `@norish/shared`.
 
 ### Decision: Keep current validation gates
+
 - Use existing monorepo dependency checks, typecheck targets, and build checks as acceptance criteria.
 - Rationale: avoids adding script complexity while still validating boundary correctness.
 - Alternative considered: add bespoke import-guard scripts. Rejected per project preference.

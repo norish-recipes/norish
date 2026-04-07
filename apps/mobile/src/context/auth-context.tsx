@@ -1,21 +1,15 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import type { PersistedUser } from "@/lib/auth-storage";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useNetworkStatus } from "@/context/network-context";
+import { clearAllQueryCaches } from "@/hooks/use-cache-lifecycle";
+import { getAuthClient, resetAuthClientStorage } from "@/lib/auth-client";
+import { registerSessionInvalidationHandler, setHasActiveSession } from "@/lib/auth-session-sync";
+import { readPersistedSession } from "@/lib/auth-storage";
+import { closeMobileTrpcConnections } from "@/providers/trpc-provider";
 
-import { createClientLogger } from '@norish/shared/lib/logger';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-import { getAuthClient, resetAuthClientStorage } from '@/lib/auth-client';
-import {
-  type PersistedUser,
-  readPersistedSession,
-} from '@/lib/auth-storage';
-import {
-  registerSessionInvalidationHandler,
-  setHasActiveSession,
-} from '@/lib/auth-session-sync';
-import { clearAllQueryCaches } from '@/hooks/use-cache-lifecycle';
-import { useNetworkStatus } from '@/context/network-context';
-import { closeMobileTrpcConnections } from '@/providers/trpc-provider';
-
-const log = createClientLogger('auth');
+const log = createClientLogger("auth");
 
 type AuthContextValue = {
   backendBaseUrl: string | null;
@@ -38,50 +32,58 @@ function AuthProviderInner({
   children: React.ReactNode;
 }) {
   const [authClientVersion, setAuthClientVersion] = useState(0);
-  const authClient = useMemo(() => getAuthClient(backendBaseUrl), [authClientVersion, backendBaseUrl]);
+  const authClient = useMemo(
+    () => getAuthClient(backendBaseUrl),
+    [authClientVersion, backendBaseUrl]
+  );
   const { data: session, isPending, error: sessionError } = authClient.useSession();
   const [justLoggedOut, setJustLoggedOut] = useState(false);
-  const [authOverride, setAuthOverride] = useState<'none' | 'signed-out'>('none');
+  const [authOverride, setAuthOverride] = useState<"none" | "signed-out">("none");
 
   // Network awareness
   const { backendReachable, deviceOnline, runtimeState } = useNetworkStatus();
 
   // Persisted session state (loaded once when backend is unreachable)
   const [persistedUser, setPersistedUser] = useState<PersistedUser | null>(null);
-  const [persistedSessionStatus, setPersistedSessionStatus] = useState<'idle' | 'loading' | 'loaded'>('idle');
+  const [persistedSessionStatus, setPersistedSessionStatus] = useState<
+    "idle" | "loading" | "loaded"
+  >("idle");
 
   const liveUser = useMemo(
     () =>
       session?.user
         ? {
-          id: session.user.id,
-          email: session.user.email,
-          name: session.user.name,
-          image: session.user.image,
-        }
+            id: session.user.id,
+            email: session.user.email,
+            name: session.user.name,
+            image: session.user.image,
+          }
         : null,
-    [session?.user?.id, session?.user?.email, session?.user?.name, session?.user?.image],
+    [session?.user?.id, session?.user?.email, session?.user?.name, session?.user?.image]
   );
-  const usePersistedAuth = runtimeState === 'ready' && !liveUser && (!deviceOnline || (!!sessionError && !backendReachable));
+  const usePersistedAuth =
+    runtimeState === "ready" &&
+    !liveUser &&
+    (!deviceOnline || (!!sessionError && !backendReachable));
 
   useEffect(() => {
-    if (!usePersistedAuth || persistedSessionStatus !== 'idle') {
+    if (!usePersistedAuth || persistedSessionStatus !== "idle") {
       return;
     }
 
-    setPersistedSessionStatus('loading');
+    setPersistedSessionStatus("loading");
 
     void readPersistedSession().then((user) => {
       setPersistedUser(user);
-      setPersistedSessionStatus('loaded');
+      setPersistedSessionStatus("loaded");
     });
   }, [persistedSessionStatus, usePersistedAuth]);
 
   const { isAuthenticated, isLoading, user } = useMemo(() => {
-    if (authOverride === 'signed-out' || runtimeState === 'initializing') {
+    if (authOverride === "signed-out" || runtimeState === "initializing") {
       return {
         isAuthenticated: false,
-        isLoading: runtimeState === 'initializing',
+        isLoading: runtimeState === "initializing",
         user: null,
       };
     }
@@ -89,7 +91,7 @@ function AuthProviderInner({
     if (usePersistedAuth) {
       return {
         isAuthenticated: !!persistedUser,
-        isLoading: persistedSessionStatus === 'loading',
+        isLoading: persistedSessionStatus === "loading",
         user: persistedUser,
       };
     }
@@ -99,10 +101,19 @@ function AuthProviderInner({
       isLoading: isPending,
       user: liveUser,
     };
-  }, [authOverride, isPending, liveUser, persistedSessionStatus, persistedUser, runtimeState, session?.user, usePersistedAuth]);
+  }, [
+    authOverride,
+    isPending,
+    liveUser,
+    persistedSessionStatus,
+    persistedUser,
+    runtimeState,
+    session?.user,
+    usePersistedAuth,
+  ]);
 
   const signOut = useCallback(async () => {
-    setAuthOverride('signed-out');
+    setAuthOverride("signed-out");
     setHasActiveSession(false);
     await closeMobileTrpcConnections();
     clearAllQueryCaches();
@@ -110,17 +121,17 @@ function AuthProviderInner({
     try {
       await authClient.signOut();
     } catch (error) {
-      log.warn({ error }, 'Remote sign out failed, resetting local auth client state');
+      log.warn({ error }, "Remote sign out failed, resetting local auth client state");
     } finally {
       try {
         await resetAuthClientStorage();
       } catch (storageError) {
-        log.warn({ error: storageError }, 'Failed to reset auth client storage during sign out');
+        log.warn({ error: storageError }, "Failed to reset auth client storage during sign out");
       }
 
       setAuthClientVersion((current) => current + 1);
       setPersistedUser(null);
-      setPersistedSessionStatus('idle');
+      setPersistedSessionStatus("idle");
       setJustLoggedOut(true);
       setHasActiveSession(false);
     }
@@ -143,7 +154,7 @@ function AuthProviderInner({
 
   const consumeLogoutFlag = useCallback(() => {
     setJustLoggedOut(false);
-    setAuthOverride('none');
+    setAuthOverride("none");
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -157,7 +168,16 @@ function AuthProviderInner({
       signOut,
       consumeLogoutFlag,
     }),
-    [authClient, backendBaseUrl, consumeLogoutFlag, isAuthenticated, isLoading, justLoggedOut, signOut, user],
+    [
+      authClient,
+      backendBaseUrl,
+      consumeLogoutFlag,
+      isAuthenticated,
+      isLoading,
+      justLoggedOut,
+      signOut,
+      user,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -178,10 +198,10 @@ export function AuthProvider({
       isLoading: false,
       justLoggedOut: false,
       user: null,
-      signOut: async () => { },
-      consumeLogoutFlag: () => { },
+      signOut: async () => {},
+      consumeLogoutFlag: () => {},
     }),
-    [],
+    []
   );
 
   if (!backendBaseUrl) {
@@ -195,7 +215,7 @@ export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error('useAuth must be used inside AuthProvider');
+    throw new Error("useAuth must be used inside AuthProvider");
   }
 
   return context;

@@ -1,10 +1,9 @@
-import type { RatingsSubscriptionCallbacks, RecipesSubscriptionCallbacks } from "../../hooks/recipes/dashboard";
-import {
-  readProcessingToastPayload,
-  readToastMessage,
-  type ToastAdapter,
-  type ToastSeverity,
-} from "../toast-adapter";
+import type {
+  RatingsSubscriptionCallbacks,
+  RecipesSubscriptionCallbacks,
+} from "../../hooks/recipes/dashboard";
+import type { ToastAdapter, ToastSeverity } from "../toast-adapter";
+import { readProcessingToastPayload, readToastMessage } from "../toast-adapter";
 
 export type RecipeToastSeverity = ToastSeverity;
 export type RecipeToastAdapter = ToastAdapter;
@@ -61,7 +60,8 @@ export function createRecipeSubscriptionToasts(
       adapter.show({
         severity: "danger",
         title: adapter.translate("recipes.toasts.failed"),
-        description: readToastMessage(payload) ?? adapter.translate("recipes.toasts.failedDescription"),
+        description:
+          readToastMessage(payload) ?? adapter.translate("recipes.toasts.failedDescription"),
       });
     },
     onProcessingToast: (payload) => {

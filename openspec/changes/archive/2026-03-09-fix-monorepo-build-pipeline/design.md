@@ -15,12 +15,14 @@ The Norish project completed phase 1 of its monorepo migration, introducing a Tu
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Fix `next build` so the web app compiles successfully
 - Make the Docker image buildable with the current monorepo structure
 - Ensure all CI workflows pass with the full workspace topology
 - Align versions and configuration across all infrastructure files
 
 **Non-Goals:**
+
 - Splitting the Dockerfile into separate app-specific stages (future work)
 - Adding mobile CI/CD (handled by separate Expo EAS pipelines)
 - Refactoring the custom server build (`tsdown`) — that works fine already

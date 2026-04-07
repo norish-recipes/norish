@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
-
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+
+import { db } from "@norish/db";
 import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
 import { dbLogger } from "@norish/shared-server/logger";
-import { db } from "@norish/db";
 
 const MIGRATIONS_RELATIVE_PATH = path.join("packages", "db", "src", "migrations");
 const JOURNAL_FILENAME = path.join("meta", "_journal.json");

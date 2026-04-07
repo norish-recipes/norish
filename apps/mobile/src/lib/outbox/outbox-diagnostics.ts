@@ -1,9 +1,9 @@
-import { createClientLogger } from '@norish/shared/lib/logger';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-import * as outboxStore from './outbox-store';
-import { isProcessing } from './outbox-replay';
+import { isProcessing } from "./outbox-replay";
+import * as outboxStore from "./outbox-store";
 
-const log = createClientLogger('outbox-diagnostics');
+const log = createClientLogger("outbox-diagnostics");
 
 export type OutboxDiagnostics = {
   /** Number of items currently in the outbox. */
@@ -45,12 +45,12 @@ export function logOutboxDiagnostics(): void {
   const diagnostics = getOutboxDiagnostics();
 
   if (diagnostics.queueLength === 0) {
-    log.debug({}, 'Outbox empty');
+    log.debug({}, "Outbox empty");
 
     return;
   }
 
   log.debug(
-    `Outbox: ${diagnostics.queueLength} item(s), replaying=${diagnostics.isReplaying}, oldest=${diagnostics.oldestItemAt}`,
+    `Outbox: ${diagnostics.queueLength} item(s), replaying=${diagnostics.isReplaying}, oldest=${diagnostics.oldestItemAt}`
   );
 }

@@ -1,6 +1,6 @@
-import { createConfigHooks } from '@norish/shared-react/hooks';
+import { useTRPC } from "@/providers/trpc-provider";
 
-import { useTRPC } from '@/providers/trpc-provider';
+import { createConfigHooks } from "@norish/shared-react/hooks";
 
 const sharedConfigHooks = createConfigHooks({ useTRPC });
 

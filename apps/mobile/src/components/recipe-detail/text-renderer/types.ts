@@ -1,24 +1,24 @@
-import type { StyleProp, TextProps, TextStyle } from 'react-native';
+import type { StyleProp, TextProps, TextStyle } from "react-native";
 
 // ─── Inline token types ──────────────────────────────────────────────────────
 
 export type InlineToken =
-  | { type: 'text'; content: string }
-  | { type: 'bold'; content: string }
-  | { type: 'italic'; content: string }
-  | { type: 'bold-italic'; content: string }
-  | { type: 'link'; label: string; href: string };
+  | { type: "text"; content: string }
+  | { type: "bold"; content: string }
+  | { type: "italic"; content: string }
+  | { type: "bold-italic"; content: string }
+  | { type: "link"; label: string; href: string };
 
 // ─── Block token types ───────────────────────────────────────────────────────
 
 export type BlockToken =
-  | { type: 'heading'; level: number; children: InlineToken[] }
-  | { type: 'paragraph'; children: InlineToken[] };
+  | { type: "heading"; level: number; children: InlineToken[] }
+  | { type: "paragraph"; children: InlineToken[] };
 
 // ─── Timer segment types ─────────────────────────────────────────────────────
 
 export type TimerSegment = {
-  type: 'timer';
+  type: "timer";
   originalText: string;
   durationMs: number;
   timerId: string;
@@ -26,7 +26,7 @@ export type TimerSegment = {
 };
 
 export type RichTextSegment = {
-  type: 'richtext';
+  type: "richtext";
   content: string;
 };
 

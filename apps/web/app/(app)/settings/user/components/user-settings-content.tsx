@@ -1,7 +1,6 @@
 "use client";
 
 import { UserSettingsProvider } from "../context";
-
 import AllergiesCard from "./allergies-card";
 import ApiTokenCard from "./api-token-card";
 import ArchiveImportCard from "./archive-import-card";

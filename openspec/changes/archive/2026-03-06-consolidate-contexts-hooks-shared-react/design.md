@@ -3,10 +3,12 @@
 The Norish monorepo has a `packages/shared-react` package that serves as the shared React logic layer for both web and mobile apps. Several contexts and hooks have already been successfully migrated there:
 
 **Already shared:**
+
 - **Contexts**: `recipes-context` (via `createRecipesContext` factory), `recipe-filters-context` (via `createRecipeFiltersContext` factory)
 - **Hooks**: `permissions` (via `createPermissionsHooks`), `config` (via `createConfigHooks`), `recipes` (via `createRecipeHooks` — dashboard + recipe families), `user` (via `useUser`), plus standalone hooks (`use-dirty-state`, `use-grocery-form-state`, `use-connection-monitor`, `use-scroll-restoration`, `use-servings-scaler`, `use-unit-formatter`, `use-user-avatar`)
 
 **Still duplicated or web-only:**
+
 - **Contexts**: `permissions-context` (near-identical in web + mobile), `household-context` (web), `user-context` (web), `archive-import-context` (web)
 - **Hook families**: `households`, `favorites`, `ratings`, `groceries`, `stores`, `calendar`, `caldav`, `admin`, `archive` (all web-only with tRPC bindings)
 - **Remaining recipe hooks**: auto-tagging, nutrition, allergy detection, images, videos, prefetch, autocomplete, random recipe
@@ -17,12 +19,14 @@ The established pattern uses a **factory function** that accepts platform-specif
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Unify all shareable React contexts and hooks into `packages/shared-react` using the established factory/adapter pattern
 - Eliminate the near-duplicate permissions context implementations in web and mobile
 - Enable mobile to adopt more hook families as mobile features grow (households, groceries, etc.)
 - Maintain the thin-wrapper pattern: each app wires platform adapters and re-exports
 
 **Non-Goals:**
+
 - Moving platform-specific hooks that depend on browser APIs (`use-clipboard-image-paste`, `use-container-columns`, `use-in-view`, `use-local-storage`, `use-wake-lock`, `use-auto-hide`)
 - Moving mobile-only contexts that are deeply tied to native APIs (`auth-context` with Expo auth, `appearance-preference-context` with Uniwind, `mobile-i18n-context` with Expo locale, `settings-sheet-context` with native sheet)
 - Refactoring the tRPC router layer or API contracts
@@ -38,8 +42,9 @@ The established pattern uses a **factory function** that accepts platform-specif
 **Rationale**: This pattern is already working well. Each factory accepts hooks/adapters as parameters, creates the React context internally, and returns `{ Provider, useContext }`. Apps call the factory with their platform-specific implementations.
 
 **Alternatives considered**:
-- *Direct context with conditional imports* — Rejected because it would couple shared-react to platform packages
-- *Abstract class / inheritance* — Over-engineered for React hook composition
+
+- _Direct context with conditional imports_ — Rejected because it would couple shared-react to platform packages
+- _Abstract class / inheritance_ — Over-engineered for React hook composition
 
 ### 2. Factory pattern for hooks – `create*Hooks({ useTRPC })`
 
@@ -68,6 +73,7 @@ The established pattern uses a **factory function** that accepts platform-specif
 ### 6. Hook families follow consistent module structure
 
 **Decision**: Each hook family in `shared-react/src/hooks/<domain>/` follows:
+
 ```
 <domain>/
   index.ts           — factory export + type re-exports
@@ -80,6 +86,7 @@ The established pattern uses a **factory function** that accepts platform-specif
 ### 7. Batch migration in priority tiers
 
 **Decision**: Prioritize based on immediate code deduplication value:
+
 1. **Tier 1** — Permissions context (active duplication in web+mobile)
 2. **Tier 2** — Household, favorites, ratings hooks + household/user contexts (used heavily, straightforward)
 3. **Tier 3** — Groceries, stores hooks (larger, more complex)

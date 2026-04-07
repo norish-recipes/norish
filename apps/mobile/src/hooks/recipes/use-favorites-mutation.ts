@@ -1,3 +1,3 @@
-import { sharedDashboardRecipeHooks } from './shared-recipe-hooks';
+import { sharedDashboardRecipeHooks } from "./shared-recipe-hooks";
 
 export const useFavoritesMutation = sharedDashboardRecipeHooks.useFavoritesMutation;

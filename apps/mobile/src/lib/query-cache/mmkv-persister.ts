@@ -1,12 +1,10 @@
-import type { PersistedClient, Persister } from '@tanstack/query-persist-client-core';
+import type { PersistedClient, Persister } from "@tanstack/query-persist-client-core";
+import { queryCacheStorage } from "@/lib/storage/query-cache-mmkv";
 
-import { createClientLogger } from '@norish/shared/lib/logger';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-import { queryCacheStorage } from '@/lib/storage/query-cache-mmkv';
-
-const log = createClientLogger('query-persister');
-const STORAGE_KEY = 'tanstack-query-cache';
-
+const log = createClientLogger("query-persister");
+const STORAGE_KEY = "tanstack-query-cache";
 
 export function createMmkvPersister(): Persister {
   return {
@@ -14,7 +12,7 @@ export function createMmkvPersister(): Persister {
       try {
         queryCacheStorage.set(STORAGE_KEY, JSON.stringify(client));
       } catch (error) {
-        log.warn({ error }, 'Failed to persist query cache');
+        log.warn({ error }, "Failed to persist query cache");
       }
     },
 
@@ -28,7 +26,7 @@ export function createMmkvPersister(): Persister {
 
         return JSON.parse(raw) as PersistedClient;
       } catch (error) {
-        log.warn({ error }, 'Failed to restore query cache, clearing storage');
+        log.warn({ error }, "Failed to restore query cache, clearing storage");
         queryCacheStorage.delete(STORAGE_KEY);
 
         return undefined;
@@ -39,7 +37,7 @@ export function createMmkvPersister(): Persister {
       try {
         queryCacheStorage.delete(STORAGE_KEY);
       } catch (error) {
-        log.warn({ error }, 'Failed to remove persisted query cache');
+        log.warn({ error }, "Failed to remove persisted query cache");
       }
     },
   };

@@ -1,3 +1,5 @@
+import { and, eq, sql } from "drizzle-orm";
+
 import type {
   HouseholdDto,
   HouseholdInsertDto,
@@ -5,8 +7,6 @@ import type {
   HouseholdUserInsertDto,
   HouseholdWithUsersNamesDto,
 } from "@norish/shared/contracts/dto/household";
-
-import { and, eq, sql } from "drizzle-orm";
 import { db } from "@norish/db/drizzle";
 import { households, householdUsers } from "@norish/db/schema";
 import {
@@ -17,7 +17,8 @@ import {
   HouseholdWithUsersNamesSchema,
 } from "@norish/shared/contracts/zod/household";
 
-import { appliedOutcome, type MutationOutcome, staleOutcome } from "./mutation-outcomes";
+import type { MutationOutcome } from "./mutation-outcomes";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { getUsersByIds } from "./users";
 
 export async function getUsersByHouseholdId(householdId: string): Promise<HouseholdUserDto[]> {
@@ -181,7 +182,10 @@ export async function removeUserFromHousehold(
   version?: number
 ): Promise<MutationOutcome<void>> {
   return await db.transaction(async (tx) => {
-    const whereConditions = [eq(householdUsers.householdId, householdId), eq(householdUsers.userId, userId)];
+    const whereConditions = [
+      eq(householdUsers.householdId, householdId),
+      eq(householdUsers.userId, userId),
+    ];
 
     if (version) {
       whereConditions.push(eq(householdUsers.version, version));
@@ -251,7 +255,12 @@ export async function regenerateJoinCode(
 
   const [row] = await db
     .update(households)
-    .set({ joinCode: code, joinCodeExpiresAt: expiresAt, updatedAt: new Date(), version: sql`${households.version} + 1` })
+    .set({
+      joinCode: code,
+      joinCodeExpiresAt: expiresAt,
+      updatedAt: new Date(),
+      version: sql`${households.version} + 1`,
+    })
     .where(and(...whereConditions))
     .returning();
 
@@ -331,7 +340,11 @@ export async function transferHouseholdAdmin(
 
   const [row] = await db
     .update(households)
-    .set({ adminUserId: newAdminId, updatedAt: new Date(), version: sql`${households.version} + 1` })
+    .set({
+      adminUserId: newAdminId,
+      updatedAt: new Date(),
+      version: sql`${households.version} + 1`,
+    })
     .where(and(...whereConditions))
     .returning();
 

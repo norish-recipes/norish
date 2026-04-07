@@ -1,12 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { GroceryDto } from "@norish/shared/contracts";
-
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Bars3Icon } from "@heroicons/react/16/solid";
 
+import type { GroceryDto } from "@norish/shared/contracts";
 
 interface SortableGroceryItemProps {
   grocery: GroceryDto;

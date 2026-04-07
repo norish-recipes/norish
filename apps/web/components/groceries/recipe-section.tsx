@@ -1,8 +1,6 @@
 "use client";
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
-
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   closestCenter,
@@ -24,6 +22,7 @@ import { BookOpenIcon, ChevronDownIcon, TagIcon } from "@heroicons/react/16/soli
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 
 import { GroceryDragOverlay, SortableGroceryItem } from "./dnd";
 import { GroceryItem } from "./grocery-item";

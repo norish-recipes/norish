@@ -1,5 +1,4 @@
 import type { CreateUserHooksOptions } from "./types";
-
 import { createUseUserAllergiesQuery } from "./use-user-allergies-query";
 
 export type { CreateUserHooksOptions, UserAllergies } from "./types";

@@ -649,17 +649,17 @@ export function stripHtmlTags(html: string): string {
 **Location:** Lines 321-326
 
 ```typescript
-// CURRENT (DISABLED):
-logger.warn(
-  "Recipe name updated - CalDAV sync temporarily disabled during planned_items migration"
-);
-
 // TODO: Re-enable after planned-items repository is implemented
 // This requires getPlannedItemsByRecipeId from the new repository
 
 // FIX - UNCOMMENT AND IMPLEMENT:
 // Import at top of file:
 import { getPlannedItemsByRecipeId } from "@/server/db/repositories/planned-items";
+
+// CURRENT (DISABLED):
+logger.warn(
+  "Recipe name updated - CalDAV sync temporarily disabled during planned_items migration"
+);
 
 // Replace disabled code with:
 logger.debug({ recipeId }, "Recipe name updated, syncing calendar items");
@@ -682,6 +682,9 @@ for (const item of plannedItems) {
 **Location:** Lines 334-342
 
 ```typescript
+// FIX - IMPLEMENT ACTUAL SYNC:
+import { getFuturePlannedItems } from "@/server/db/repositories/planned-items";
+
 // CURRENT (DISABLED):
 export async function syncAllFutureItems(userId: string): Promise<{
   totalSynced: number;
@@ -692,9 +695,6 @@ export async function syncAllFutureItems(userId: string): Promise<{
   // TODO: Re-enable after planned-items repository is implemented
   return { totalSynced: 0, totalFailed: 0 };
 }
-
-// FIX - IMPLEMENT ACTUAL SYNC:
-import { getFuturePlannedItems } from "@/server/db/repositories/planned-items";
 
 export async function syncAllFutureItems(userId: string): Promise<{
   totalSynced: number;

@@ -1,13 +1,12 @@
 "use client";
 
+import { useAutoHide } from "@/hooks/auto-hide";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { useGroceriesUIContext } from "../context";
-
-import { useAutoHide } from "@/hooks/auto-hide";
 
 /**
  * Mobile floating add button that repositions based on nav visibility.

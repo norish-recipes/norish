@@ -1,13 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import TagInput from "@/components/shared/tag-input";
 import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Button, Card, CardBody, CardHeader } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useUserSettingsContext } from "../context";
-
-import TagInput from "@/components/shared/tag-input";
 
 export default function AllergiesCard() {
   const t = useTranslations("settings.user.allergies");

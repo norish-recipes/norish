@@ -1,9 +1,9 @@
-import type { RecipeCardItem } from './recipe-card.types';
+import type { RecipeCardItem } from "./recipe-card.types";
 
 export type RecipeListRow =
-  | { id: string; type: 'recipe'; recipe: RecipeCardItem }
-  | { id: string; type: 'initial-skeleton' }
-  | { id: string; type: 'pending-import' };
+  | { id: string; type: "recipe"; recipe: RecipeCardItem }
+  | { id: string; type: "initial-skeleton" }
+  | { id: string; type: "pending-import" };
 
 type BuildRecipeListRowsOptions = {
   recipes: RecipeCardItem[];
@@ -27,19 +27,19 @@ export function buildRecipeListRows({
   if ((isLoading || isValidating) && recipes.length === 0) {
     return Array.from({ length: 4 }, (_, index) => ({
       id: `${initialSkeletonPrefix}-${index}`,
-      type: 'initial-skeleton' as const,
+      type: "initial-skeleton" as const,
     }));
   }
 
   const recipeRows: RecipeListRow[] = recipes.map((recipe) => ({
     id: `${recipePrefix}-${recipe.id}`,
-    type: 'recipe',
+    type: "recipe",
     recipe,
   }));
 
   const pendingRows: RecipeListRow[] = Array.from({ length: pendingCount }, (_, index) => ({
     id: `${pendingImportPrefix}-${index}`,
-    type: 'pending-import',
+    type: "pending-import",
   }));
 
   return [...pendingRows, ...recipeRows];

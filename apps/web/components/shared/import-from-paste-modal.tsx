@@ -2,6 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { useRecipesMutations } from "@/hooks/recipes";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import {
   addToast,
@@ -14,11 +17,8 @@ import {
   Textarea,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
-import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { useRecipesMutations } from "@/hooks/recipes";
-import { usePermissionsContext } from "@/context/permissions-context";
+import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
 interface ImportFromPasteModalProps {
   isOpen: boolean;

@@ -17,10 +17,12 @@ The mobile auth screens added in the login-screen-overhaul change introduced sev
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-trpc-typing`: Typed tRPC client in the mobile app — `useTRPC()` returns a fully typed router interface derived from `AppRouter`, enabling correct autocompletion and eliminating `any` casts.
 - `mobile-auth-hooks`: Dedicated hook layer for mobile auth tRPC calls and connect-screen URL logic, mirroring the web app's `hooks/<domain>/` pattern.
 
 ### Modified Capabilities
+
 - `mobile-auth-login`: Remove auto-redirect scenario for single provider — the requirement "single OAuth provider auto-redirect" is being dropped.
 
 ## Impact

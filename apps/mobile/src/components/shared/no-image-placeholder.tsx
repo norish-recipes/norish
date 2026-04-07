@@ -1,10 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useThemeColor } from 'heroui-native';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useThemeColor } from "heroui-native";
 
 type NoImagePlaceholderProps = {
-  variant?: 'card' | 'header';
+  variant?: "card" | "header";
 };
 
 const ICON_SIZE: Record<string, number> = {
@@ -17,8 +17,8 @@ const ICON_SIZE: Record<string, number> = {
  * over a neutral surface background. Used in recipe cards and the media header
  * when an image URL is missing or fails to load.
  */
-export function NoImagePlaceholder({ variant = 'card' }: NoImagePlaceholderProps) {
-  const [bgColor, iconColor] = useThemeColor(['surface-tertiary', 'muted'] as const);
+export function NoImagePlaceholder({ variant = "card" }: NoImagePlaceholderProps) {
+  const [bgColor, iconColor] = useThemeColor(["surface-tertiary", "muted"] as const);
 
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
@@ -34,7 +34,7 @@ export function NoImagePlaceholder({ variant = 'card' }: NoImagePlaceholderProps
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

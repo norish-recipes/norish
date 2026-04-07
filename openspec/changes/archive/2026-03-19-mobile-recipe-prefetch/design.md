@@ -7,11 +7,13 @@ On mobile, the dashboard and search screens render recipes in a `FlatList`. Reac
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Prefetch `recipes.get` for recipe cards currently visible on the dashboard and search `FlatList` screens so recipe detail opens from cache.
 - Bound the number of prefetched full-recipe entries persisted to MMKV to limit device storage and startup restore time.
 - Keep the implementation simple, mobile-only, and non-disruptive to existing cache persistence.
 
 **Non-Goals:**
+
 - Sharing a single cross-platform abstraction with web. The web hook uses DOM-specific `IntersectionObserver`; the mobile hook uses RN-specific `FlatList.onViewableItemsChanged`. A shared contract adds complexity for minimal gain — they can converge later if needed.
 - Prefetching images or media — only the recipe data object is prefetched.
 - Evicting non-prefetch queries (dashboard list, favorites, etc.) — the budget only applies to individually-prefetched `recipes.get` entries.

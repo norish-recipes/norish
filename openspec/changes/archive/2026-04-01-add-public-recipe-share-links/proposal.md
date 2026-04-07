@@ -14,9 +14,11 @@ Norish recipes currently require authenticated access, which blocks a common hou
 ## Capabilities
 
 ### New Capabilities
+
 - `public-recipe-sharing`: Create, manage, validate, and consume public recipe share links and the readonly recipe/media data they expose.
 
 ### Modified Capabilities
+
 None.
 
 ## Impact

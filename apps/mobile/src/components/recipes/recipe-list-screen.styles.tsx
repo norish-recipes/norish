@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React from "react";
+import { StyleSheet, View } from "react-native";
 
 export const recipeListScreenStyles = StyleSheet.create({
   list: {
@@ -13,7 +13,7 @@ export const recipeListScreenStyles = StyleSheet.create({
   },
   loadingFooter: {
     paddingVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   dashboardListInset: {
     paddingBottom: 60,
@@ -25,8 +25,8 @@ export const recipeListScreenStyles = StyleSheet.create({
     paddingTop: 16,
   },
   searchHeaderButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -37,7 +37,7 @@ export const recipeListScreenStyles = StyleSheet.create({
   },
   searchHeaderButtonLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

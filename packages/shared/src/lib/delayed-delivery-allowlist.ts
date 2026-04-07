@@ -49,8 +49,7 @@ export const delayedDeliveryImmediateOnlyMutations = [
   "caldav.syncAll",
 ] as const;
 
-export type DelayedDeliveryEligibleMutation =
-  (typeof delayedDeliveryEligibleMutations)[number];
+export type DelayedDeliveryEligibleMutation = (typeof delayedDeliveryEligibleMutations)[number];
 
 export type DelayedDeliveryImmediateOnlyMutation =
   (typeof delayedDeliveryImmediateOnlyMutations)[number];

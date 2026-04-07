@@ -1,10 +1,10 @@
+import { z } from "zod";
+
 import type {
   ArchiveImportError,
   ArchiveSkippedItem,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
-
-import { z } from "zod";
 import {
   ArchiveFormat,
   calculateBatchSize,
@@ -40,7 +40,10 @@ const importArchive = authedProcedure
     const isPaprikaRecipes = fileName.endsWith(".paprikarecipes");
     const isZip = fileName.endsWith(".zip");
 
-    log.debug({ userId: ctx.user.id, fileName: file.name, size: file.size }, "Archive file received");
+    log.debug(
+      { userId: ctx.user.id, fileName: file.name, size: file.size },
+      "Archive file received"
+    );
 
     if (!isMela && !isPaprikaRecipes && !isZip) {
       log.warn({ userId: ctx.user.id, fileName: file.name }, "Archive import: invalid file type");

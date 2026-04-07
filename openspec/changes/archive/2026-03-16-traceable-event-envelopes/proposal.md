@@ -13,6 +13,7 @@ Norish's real-time subscriptions currently ship bare domain payloads from Redis 
 ## Capabilities
 
 ### New Capabilities
+
 - `traceable-realtime-events`: Standardize operation correlation and metadata envelopes for Redis/tRPC realtime events so offline clients can reconcile queued actions against later server events.
 
 ### Modified Capabilities

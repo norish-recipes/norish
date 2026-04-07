@@ -5,12 +5,14 @@ The mobile experience currently lacks a dedicated, recipe-first home feed, while
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Deliver a mobile home screen that renders a performant vertical list of recipe cards.
 - Surface required recipe attributes on each card: image, title, two-line description, servings, rating, tags, course, liked state, and total duration.
 - Use deterministic mock data so UI can be built and tested without backend coupling.
 - Align visual structure with existing web dashboard patterns without copying desktop layout assumptions.
 
 **Non-Goals:**
+
 - Implement backend integration, pagination APIs, or personalized ranking.
 - Introduce recipe editing flows from the home list.
 - Finalize long-term data contracts for ratings/tags beyond what the mock model requires.

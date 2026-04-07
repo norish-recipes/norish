@@ -5,7 +5,7 @@ The mobile recipe detail page currently renders entirely from a hardcoded `DUMMY
 ## What Changes
 
 - **Create a mobile `RecipeDetailProvider`** by calling `createRecipeDetailContext` with mobile-specific adapters (mirroring the web's `context.tsx`), providing recipe query, subscription, nutrition, auto-tagging, auto-categorization, allergy detection, and measurement conversion support.
-- **Export recipe-family hooks for mobile** — re-export `sharedRecipeFamilyHooks` members (useRecipeQuery, useRecipeSubscription, useNutritionQuery, useNutritionMutation, useNutritionSubscription, useAutoTagging*, useAutoCategorization*, useAllergyDetection*, useConvertMutation) as individual hook files, following the same pattern already used for dashboard hooks.
+- **Export recipe-family hooks for mobile** — re-export `sharedRecipeFamilyHooks` members (useRecipeQuery, useRecipeSubscription, useNutritionQuery, useNutritionMutation, useNutritionSubscription, useAutoTagging*, useAutoCategorization*, useAllergyDetection\*, useConvertMutation) as individual hook files, following the same pattern already used for dashboard hooks.
 - **Wire the `[id].tsx` screen** to use `RecipeDetailProvider` + `useRecipeContext` instead of importing `DUMMY_RECIPE`. Pass the route param `id` to the provider.
 - **Adapt all recipe-detail components** to accept `FullRecipeDTO`-shaped data (from `@norish/shared/contracts`) instead of `Dummy*` types:
   - `RecipeIngredients` → accept `RecipeIngredientsDto[]` (with `ingredientName`, nullable `amount`, `unit`, `order`)
@@ -25,9 +25,11 @@ The mobile recipe detail page currently renders entirely from a hardcoded `DUMMY
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-recipe-detail-context`: Mobile recipe detail context wiring — creating and providing `RecipeDetailProvider` with all required adapter hooks for the mobile app.
 
 ### Modified Capabilities
+
 - `mobile-recipe-live-data`: The recipe detail screen now uses live data from the backend instead of just dashboard/search surfaces.
 
 ## Impact

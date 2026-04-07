@@ -1,18 +1,17 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import * as ImagePicker from 'expo-image-picker';
-import { Button, useThemeColor } from 'heroui-native';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
-import { useIntl } from 'react-intl';
-
+import React, { useCallback, useEffect, useState } from "react";
+import { Image, ScrollView, Text, View } from "react-native";
+import { ShellSheet } from "@/components/shell/sheet";
 import {
   colorStyles,
   photoStyles,
   subSheetStyles,
-} from '@/components/shell/sheet/add-recipe-sheet.styles';
-import { ShellSheet } from '@/components/shell/sheet';
-import { usePermissionsContext } from '@/context/permissions-context';
-import { canShowAIAction } from '@/lib/permissions/mobile-action-visibility';
+} from "@/components/shell/sheet/add-recipe-sheet.styles";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { canShowAIAction } from "@/lib/permissions/mobile-action-visibility";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import * as ImagePicker from "expo-image-picker";
+import { Button, useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
 
 const MAX_PHOTOS = 10;
 
@@ -26,10 +25,10 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
   const [photos, setPhotos] = useState<string[]>([]);
   const { isAIEnabled, isLoading: isLoadingPermissions } = usePermissionsContext();
   const [foregroundColor, mutedColor, accentForegroundColor, dangerColor] = useThemeColor([
-    'foreground',
-    'muted',
-    'accent-foreground',
-    'danger',
+    "foreground",
+    "muted",
+    "accent-foreground",
+    "danger",
   ] as const);
 
   useEffect(() => {
@@ -43,14 +42,17 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
     if (remaining <= 0) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       allowsMultipleSelection: true,
       selectionLimit: remaining,
       quality: 0.8,
     });
 
     if (!result.canceled) {
-      setPhotos((prev) => [...prev, ...result.assets.map((asset) => asset.uri).slice(0, remaining)]);
+      setPhotos((prev) => [
+        ...prev,
+        ...result.assets.map((asset) => asset.uri).slice(0, remaining),
+      ]);
     }
   }, [photos.length]);
 
@@ -58,7 +60,7 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
     if (photos.length >= MAX_PHOTOS) return;
 
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       quality: 0.8,
     });
 
@@ -81,15 +83,15 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
     <ShellSheet
       isPresented={isPresented}
       onIsPresentedChange={onIsPresentedChange}
-      detents={['medium', 'large']}
+      detents={["medium", "large"]}
       initialDetent="medium"
     >
       <View style={subSheetStyles.container}>
         <Text style={[subSheetStyles.title, colorStyles.text(foregroundColor)]}>
-          {intl.formatMessage({ id: 'common.import.image.title' })}
+          {intl.formatMessage({ id: "common.import.image.title" })}
         </Text>
         <Text style={[subSheetStyles.subtitle, colorStyles.text(mutedColor)]}>
-          {intl.formatMessage({ id: 'common.import.image.maxFiles' }, { max: MAX_PHOTOS })}
+          {intl.formatMessage({ id: "common.import.image.maxFiles" }, { max: MAX_PHOTOS })}
         </Text>
 
         {photos.length > 0 && (
@@ -121,7 +123,10 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
         )}
 
         <Text style={[photoStyles.counter, colorStyles.text(mutedColor)]}>
-          {intl.formatMessage({ id: 'common.import.image.counter' }, { count: photos.length, max: MAX_PHOTOS })}
+          {intl.formatMessage(
+            { id: "common.import.image.counter" },
+            { count: photos.length, max: MAX_PHOTOS }
+          )}
         </Text>
 
         <View className="flex-row gap-2.5">
@@ -133,7 +138,7 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
             onPress={pickFromLibrary}
           >
             <Ionicons name="images-outline" size={18} color={accentForegroundColor} />
-            <Button.Label>{intl.formatMessage({ id: 'common.import.image.library' })}</Button.Label>
+            <Button.Label>{intl.formatMessage({ id: "common.import.image.library" })}</Button.Label>
           </Button>
           <Button
             variant="primary"
@@ -143,7 +148,9 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
             onPress={takePhoto}
           >
             <Ionicons name="camera-outline" size={18} color={accentForegroundColor} />
-            <Button.Label>{intl.formatMessage({ id: 'common.import.image.takePhoto' })}</Button.Label>
+            <Button.Label>
+              {intl.formatMessage({ id: "common.import.image.takePhoto" })}
+            </Button.Label>
           </Button>
         </View>
 
@@ -151,7 +158,10 @@ export function ScanPhotoSheet({ isPresented, onIsPresentedChange }: ScanPhotoSh
           <Button variant="primary" size="lg" className="w-full">
             <Ionicons name="flash-outline" size={18} color={accentForegroundColor} />
             <Button.Label>
-              {intl.formatMessage({ id: 'common.import.image.importFromCount' }, { count: photos.length })}
+              {intl.formatMessage(
+                { id: "common.import.image.importFromCount" },
+                { count: photos.length }
+              )}
             </Button.Label>
           </Button>
         )}

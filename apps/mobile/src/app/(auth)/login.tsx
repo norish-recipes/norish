@@ -1,58 +1,48 @@
-import type { ProviderInfo } from '@norish/shared/contracts';
-import { useThemeColor } from 'heroui-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, Text } from 'react-native';
-import { useIntl } from 'react-intl';
-
-import { BackendMissingState } from '@/components/auth/login/backend-missing-state';
-import { CredentialForm } from '@/components/auth/login/credential-form';
-import { NoProvidersState } from '@/components/auth/login/no-providers-state';
-import { OAuthProviderList } from '@/components/auth/login/oauth-provider-list';
-import { ProviderErrorState } from '@/components/auth/login/provider-error-state';
-import { ProviderLoadingState } from '@/components/auth/login/provider-loading-state';
-import { AuthShell } from '@/components/shell/auth-shell';
-import { useAuth } from '@/context/auth-context';
-import { useAuthProvidersQuery } from '@/hooks/trpc/login/use-auth-providers-query';
-import { styles } from '@/styles/login.styles';
+import React, { useCallback, useMemo, useState } from "react";
+import { Pressable, Text } from "react-native";
+import { BackendMissingState } from "@/components/auth/login/backend-missing-state";
+import { CredentialForm } from "@/components/auth/login/credential-form";
+import { NoProvidersState } from "@/components/auth/login/no-providers-state";
+import { OAuthProviderList } from "@/components/auth/login/oauth-provider-list";
+import { ProviderErrorState } from "@/components/auth/login/provider-error-state";
+import { ProviderLoadingState } from "@/components/auth/login/provider-loading-state";
+import { AuthShell } from "@/components/shell/auth-shell";
+import { useAuth } from "@/context/auth-context";
+import { useAuthProvidersQuery } from "@/hooks/trpc/login/use-auth-providers-query";
+import { styles } from "@/styles/login.styles";
 import {
   DEFAULT_PROTECTED_ROUTE,
   firstParam,
   sanitizeRedirectTarget,
   toProviderType,
-} from '@/util/auth';
+} from "@/util/auth";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
 
-function LoginForm({
-  backendBaseUrl,
-  redirectTo,
-}: {
-  backendBaseUrl: string;
-  redirectTo: string;
-}) {
+import type { ProviderInfo } from "@norish/shared/contracts";
+
+function LoginForm({ backendBaseUrl, redirectTo }: { backendBaseUrl: string; redirectTo: string }) {
   const router = useRouter();
   const intl = useIntl();
   const { authClient, consumeLogoutFlag } = useAuth();
   const [mutedColor, dangerColor, accentColor] = useThemeColor([
-    'muted',
-    'danger',
-    'accent',
+    "muted",
+    "danger",
+    "accent",
   ] as const);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmittingCredentials, setIsSubmittingCredentials] = useState(false);
   const [activeOAuthProviderId, setActiveOAuthProviderId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const {
-    providers,
-    registrationEnabled,
-    passwordAuthEnabled,
-    isLoading,
-    error,
-    refetch,
-  } = useAuthProvidersQuery();
-  const credentialProvider = providers.find((provider) => toProviderType(provider) === 'credential');
-  const oauthProviders = providers.filter((provider) => toProviderType(provider) === 'oauth');
+  const { providers, registrationEnabled, passwordAuthEnabled, isLoading, error, refetch } =
+    useAuthProvidersQuery();
+  const credentialProvider = providers.find(
+    (provider) => toProviderType(provider) === "credential"
+  );
+  const oauthProviders = providers.filter((provider) => toProviderType(provider) === "oauth");
 
   const handleOAuthSignIn = useCallback(
     async (provider: ProviderInfo) => {
@@ -71,13 +61,13 @@ function LoginForm({
         if (oauthError instanceof Error && oauthError.message) {
           setErrorMessage(oauthError.message);
         } else {
-          setErrorMessage(intl.formatMessage({ id: 'auth.errors.default.description' }));
+          setErrorMessage(intl.formatMessage({ id: "auth.errors.default.description" }));
         }
       } finally {
         setActiveOAuthProviderId(null);
       }
     },
-    [authClient, backendBaseUrl, consumeLogoutFlag, intl, redirectTo],
+    [authClient, backendBaseUrl, consumeLogoutFlag, intl, redirectTo]
   );
 
   const handlePasswordSubmit = useCallback(async () => {
@@ -93,7 +83,9 @@ function LoginForm({
       });
 
       if (signInError) {
-        setErrorMessage(signInError.message ?? intl.formatMessage({ id: 'auth.emailPassword.errors.generic' }));
+        setErrorMessage(
+          signInError.message ?? intl.formatMessage({ id: "auth.emailPassword.errors.generic" })
+        );
         return;
       }
 
@@ -103,7 +95,7 @@ function LoginForm({
       if (signInError instanceof Error && signInError.message) {
         setErrorMessage(signInError.message);
       } else {
-        setErrorMessage(intl.formatMessage({ id: 'auth.emailPassword.errors.generic' }));
+        setErrorMessage(intl.formatMessage({ id: "auth.emailPassword.errors.generic" }));
       }
     } finally {
       setIsSubmittingCredentials(false);
@@ -150,14 +142,16 @@ function LoginForm({
         </>
       )}
 
-      {errorMessage && <Text style={[styles.errorText, { color: dangerColor }]}>{errorMessage}</Text>}
+      {errorMessage && (
+        <Text style={[styles.errorText, { color: dangerColor }]}>{errorMessage}</Text>
+      )}
 
       {registrationEnabled && passwordAuthEnabled && (
-        <Pressable onPress={() => router.push('/register' as any)} style={styles.linkRow}>
+        <Pressable onPress={() => router.push("/register" as any)} style={styles.linkRow}>
           <Text style={[styles.linkText, { color: mutedColor }]}>
-            {intl.formatMessage({ id: 'auth.emailPassword.noAccount' })}{' '}
+            {intl.formatMessage({ id: "auth.emailPassword.noAccount" })}{" "}
             <Text style={{ color: accentColor }} className="font-semibold">
-              {intl.formatMessage({ id: 'auth.emailPassword.signUp' })}
+              {intl.formatMessage({ id: "auth.emailPassword.signUp" })}
             </Text>
           </Text>
         </Pressable>
@@ -172,35 +166,32 @@ export default function LoginScreen() {
   const params = useLocalSearchParams();
   const { backendBaseUrl, justLoggedOut } = useAuth();
 
-  const [mutedColor, accentColor] = useThemeColor([
-    'muted',
-    'accent',
-  ] as const);
+  const [mutedColor, accentColor] = useThemeColor(["muted", "accent"] as const);
 
   const redirectTo = useMemo(
     () =>
       sanitizeRedirectTarget(
-        firstParam(params.redirectTo as string | string[] | undefined) ?? DEFAULT_PROTECTED_ROUTE,
+        firstParam(params.redirectTo as string | string[] | undefined) ?? DEFAULT_PROTECTED_ROUTE
       ),
-    [params.redirectTo],
+    [params.redirectTo]
   );
 
   const justLoggedOutFromQuery =
-    firstParam(params.logout as string | string[] | undefined) === 'true';
+    firstParam(params.logout as string | string[] | undefined) === "true";
 
   const footer = (
     <>
       {backendBaseUrl !== null && (
         <Pressable
           onPress={() => {
-            router.push('/(auth)');
+            router.push("/(auth)");
           }}
           style={styles.linkRow}
         >
           <Text style={[styles.linkText, { color: mutedColor }]}>
-            {intl.formatMessage({ id: 'auth.login.wrongServer' })}{' '}
+            {intl.formatMessage({ id: "auth.login.wrongServer" })}{" "}
             <Text style={{ color: accentColor }} className="font-semibold">
-              {intl.formatMessage({ id: 'auth.login.changeServer' })}
+              {intl.formatMessage({ id: "auth.login.changeServer" })}
             </Text>
           </Text>
         </Pressable>
@@ -209,14 +200,11 @@ export default function LoginScreen() {
   );
 
   return (
-    <AuthShell
-      headingPrefix={intl.formatMessage({ id: 'auth.login.title' })}
-      footer={footer}
-    >
+    <AuthShell headingPrefix={intl.formatMessage({ id: "auth.login.title" })} footer={footer}>
       {backendBaseUrl === null ? (
         <BackendMissingState
           onOpenConnect={() => {
-            router.replace('/(auth)');
+            router.replace("/(auth)");
           }}
         />
       ) : (

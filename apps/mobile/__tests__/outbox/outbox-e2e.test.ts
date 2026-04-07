@@ -1,4 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { getOutboxDiagnostics } from "../../src/lib/outbox/outbox-diagnostics";
+import { computeRetryDelay, processQueue, setReplayFn } from "../../src/lib/outbox/outbox-replay";
+import * as outboxStore from "../../src/lib/outbox/outbox-store";
 
 // ---------------------------------------------------------------------------
 // Mock MMKV storage (simulates durable persistence across "restarts")
@@ -6,7 +10,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockStorage = new Map<string, string>();
 
-vi.mock('@/lib/storage/outbox-mmkv', () => ({
+vi.mock("@/lib/storage/outbox-mmkv", () => ({
   outboxStorage: {
     getString: (key: string) => mockStorage.get(key),
     set: (key: string, value: string) => mockStorage.set(key, value),
@@ -14,7 +18,7 @@ vi.mock('@/lib/storage/outbox-mmkv', () => ({
   },
 }));
 
-vi.mock('@norish/shared/lib/logger', () => ({
+vi.mock("@norish/shared/lib/logger", () => ({
   createClientLogger: () => ({
     info: vi.fn(),
     warn: vi.fn(),
@@ -22,25 +26,15 @@ vi.mock('@norish/shared/lib/logger', () => ({
   }),
 }));
 
-import * as outboxStore from '../../src/lib/outbox/outbox-store';
-import {
-  processQueue,
-  setReplayFn,
-  computeRetryDelay,
-} from '../../src/lib/outbox/outbox-replay';
-import {
-  getOutboxDiagnostics,
-} from '../../src/lib/outbox/outbox-diagnostics';
-
-describe('outbox end-to-end flow', () => {
+describe("outbox end-to-end flow", () => {
   beforeEach(() => {
     mockStorage.clear();
   });
 
-  it('simulates offline mutation failure → app restart → reconnect → queue drain', async () => {
+  it("simulates offline mutation failure → app restart → reconnect → queue drain", async () => {
     // Step 1: User performs a mutation while offline — it fails and gets enqueued
-    outboxStore.enqueue('recipes.update', '{"json":{"id":"recipe-1","title":"Updated"}}');
-    outboxStore.enqueue('groceries.add', '{"json":{"name":"Milk","quantity":2}}');
+    outboxStore.enqueue("recipes.update", '{"json":{"id":"recipe-1","title":"Updated"}}');
+    outboxStore.enqueue("groceries.add", '{"json":{"name":"Milk","quantity":2}}');
 
     expect(outboxStore.size()).toBe(2);
 
@@ -49,8 +43,8 @@ describe('outbox end-to-end flow', () => {
     const afterRestart = outboxStore.loadAll();
 
     expect(afterRestart).toHaveLength(2);
-    expect(afterRestart[0].path).toBe('recipes.update');
-    expect(afterRestart[1].path).toBe('groceries.add');
+    expect(afterRestart[0].path).toBe("recipes.update");
+    expect(afterRestart[1].path).toBe("groceries.add");
 
     // Step 3: Backend is still unreachable — replay fails
     const replayFn = vi.fn().mockResolvedValue(false);
@@ -75,7 +69,7 @@ describe('outbox end-to-end flow', () => {
 
     // First item is skipped due to retry delay, second is attempted
     expect(replayFn).toHaveBeenCalledTimes(1);
-    expect(replayFn.mock.calls[0][0].path).toBe('groceries.add');
+    expect(replayFn.mock.calls[0][0].path).toBe("groceries.add");
 
     // Second item also fails
     const afterSecondPass = outboxStore.loadAll();
@@ -96,7 +90,7 @@ describe('outbox end-to-end flow', () => {
     expect(outboxStore.size()).toBe(0);
   });
 
-  it('diagnostics reflect queue state accurately', async () => {
+  it("diagnostics reflect queue state accurately", async () => {
     // Empty queue
     let diag = getOutboxDiagnostics();
 
@@ -106,9 +100,9 @@ describe('outbox end-to-end flow', () => {
     expect(diag.byPath).toEqual({});
 
     // Add items
-    outboxStore.enqueue('recipes.update', '"a"');
-    outboxStore.enqueue('recipes.update', '"b"');
-    outboxStore.enqueue('groceries.add', '"c"');
+    outboxStore.enqueue("recipes.update", '"a"');
+    outboxStore.enqueue("recipes.update", '"b"');
+    outboxStore.enqueue("groceries.add", '"c"');
 
     diag = getOutboxDiagnostics();
 
@@ -116,8 +110,8 @@ describe('outbox end-to-end flow', () => {
     expect(diag.isReplaying).toBe(false);
     expect(diag.oldestItemAt).toBeDefined();
     expect(diag.byPath).toEqual({
-      'recipes.update': 2,
-      'groceries.add': 1,
+      "recipes.update": 2,
+      "groceries.add": 1,
     });
 
     // Drain
@@ -130,8 +124,8 @@ describe('outbox end-to-end flow', () => {
     expect(diag.queueLength).toBe(0);
   });
 
-  it('drops queued items after the second replay failure', async () => {
-    outboxStore.enqueue('test.mutation', '"payload"');
+  it("drops queued items after the second replay failure", async () => {
+    outboxStore.enqueue("test.mutation", '"payload"');
 
     setReplayFn(vi.fn().mockResolvedValue(false));
 
@@ -157,9 +151,9 @@ describe('outbox end-to-end flow', () => {
     expect(computeRetryDelay(5)).toBe(60_000); // 2000 * 2^5 = 64000, capped to 60000
   });
 
-  it('drops an item after two replay failures and continues draining later items', async () => {
-    outboxStore.enqueue('recipes.update', '"first"');
-    outboxStore.enqueue('recipes.delete', '"second"');
+  it("drops an item after two replay failures and continues draining later items", async () => {
+    outboxStore.enqueue("recipes.update", '"first"');
+    outboxStore.enqueue("recipes.delete", '"second"');
 
     const replayFn = vi
       .fn()

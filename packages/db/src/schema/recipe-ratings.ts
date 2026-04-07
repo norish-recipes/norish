@@ -1,9 +1,8 @@
 import { index, integer, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
-import { versionColumn } from "./shared";
-
 import { users } from "./auth";
 import { recipes } from "./recipes";
+import { versionColumn } from "./shared";
 
 export const recipeRatings = pgTable(
   "recipe_ratings",

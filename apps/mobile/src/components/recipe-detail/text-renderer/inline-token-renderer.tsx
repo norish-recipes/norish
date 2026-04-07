@@ -1,8 +1,9 @@
-import { useThemeColor } from 'heroui-native';
-import React from 'react';
-import { Linking, Text, type TextStyle } from 'react-native';
+import type { TextStyle } from "react-native";
+import React from "react";
+import { Linking, Text } from "react-native";
+import { useThemeColor } from "heroui-native";
 
-import type { InlineToken } from './types';
+import type { InlineToken } from "./types";
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -22,54 +23,44 @@ export function InlineTokenRenderer({
   baseStyle,
   disableLinks = false,
 }: InlineTokenRendererProps) {
-  const [foregroundColor, linkColor] = useThemeColor([
-    'foreground',
-    'link',
-  ] as const);
+  const [foregroundColor, linkColor] = useThemeColor(["foreground", "link"] as const);
 
   return (
     <>
       {tokens.map((token, i) => {
         switch (token.type) {
-          case 'bold':
+          case "bold":
             return (
-              <Text
-                key={i}
-                style={[baseStyle, { fontWeight: '700', color: foregroundColor }]}
-              >
+              <Text key={i} style={[baseStyle, { fontWeight: "700", color: foregroundColor }]}>
                 {token.content}
               </Text>
             );
-          case 'italic':
+          case "italic":
             return (
-              <Text key={i} style={[baseStyle, { fontStyle: 'italic' }]}>
+              <Text key={i} style={[baseStyle, { fontStyle: "italic" }]}>
                 {token.content}
               </Text>
             );
-          case 'bold-italic':
+          case "bold-italic":
             return (
               <Text
                 key={i}
                 style={[
                   baseStyle,
-                  { fontWeight: '700', fontStyle: 'italic', color: foregroundColor },
+                  { fontWeight: "700", fontStyle: "italic", color: foregroundColor },
                 ]}
               >
                 {token.content}
               </Text>
             );
-          case 'link': {
-            const href = token.href.startsWith('id:')
+          case "link": {
+            const href = token.href.startsWith("id:")
               ? `/recipes/${token.href.slice(3)}`
               : token.href;
 
             if (disableLinks) {
               return (
-                <Text
-                  key={i}
-                  className="underline"
-                  style={[baseStyle, { color: foregroundColor }]}
-                >
+                <Text key={i} className="underline" style={[baseStyle, { color: foregroundColor }]}>
                   {token.label}
                 </Text>
               );
@@ -81,7 +72,7 @@ export function InlineTokenRenderer({
                 className="underline"
                 style={[baseStyle, { color: linkColor }]}
                 onPress={() => {
-                  if (href.startsWith('http')) {
+                  if (href.startsWith("http")) {
                     Linking.openURL(href);
                   }
                 }}
@@ -90,7 +81,7 @@ export function InlineTokenRenderer({
               </Text>
             );
           }
-          case 'text':
+          case "text":
           default:
             return (
               <Text key={i} style={baseStyle}>
