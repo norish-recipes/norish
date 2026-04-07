@@ -12,6 +12,7 @@ import {
 import { getRecipesWithoutCategories } from "@norish/db/repositories/recipes";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
+import { addProvenanceInferenceJob } from "@norish/queue/provenance-inference/producer";
 import { getQueues } from "@norish/queue/registry";
 import { listModels, listTranscriptionModels } from "@norish/shared-server/ai/providers";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -37,13 +38,22 @@ const updateAIConfig = adminProcedure.input(AIConfigSchema).mutation(async ({ in
   // Get current AI config to check if enabled state changed
   const currentConfig = await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG);
   const enabledChanged = currentConfig?.enabled !== input.enabled;
+  const provenanceChanged = currentConfig?.provenanceEnabled !== input.provenanceEnabled;
+  const autoTaggingChanged = currentConfig?.autoTaggingMode !== input.autoTaggingMode;
 
   await setConfig(ServerConfigKeys.AI_CONFIG, input, ctx.user.id, true);
 
   // Broadcast permission policy update to all users if AI enabled state changed
   // This allows UI to show/hide recipe convert button
-  if (enabledChanged) {
-    log.info({ enabled: input.enabled }, "AI enabled state changed, broadcasting policy update");
+  if (enabledChanged || provenanceChanged || autoTaggingChanged) {
+    log.info(
+      {
+        enabled: input.enabled,
+        provenance: input.provenanceEnabled,
+        autoTagging: input.autoTaggingMode,
+      },
+      "AI config UI-affecting state changed, broadcasting policy update"
+    );
     const recipePolicy = await getRecipePermissionPolicy();
 
     permissionsEmitter.broadcast("policyUpdated", { recipePolicy });
@@ -206,6 +216,39 @@ const categorizeAllRecipes = adminProcedure.mutation(async ({ ctx }) => {
   return { queued: uncategorized.length };
 });
 
+const backfillProvenance = adminProcedure.mutation(async ({ ctx }) => {
+  log.info({ userId: ctx.user.id }, "Bulk provenance backfill requested");
+
+  const { getRecipesWithoutProvenance } = await import("@norish/db/repositories/recipes");
+  const withoutProvenance = await getRecipesWithoutProvenance();
+
+  if (withoutProvenance.length === 0) {
+    log.info("No recipes needing provenance found");
+
+    return { queued: 0 };
+  }
+
+  const queues = getQueues();
+
+  for (const recipe of withoutProvenance) {
+    await addProvenanceInferenceJob(queues.provenanceInference, {
+      recipeId: recipe.id,
+      userId: ctx.user.id,
+      householdKey: ctx.household?.id ?? "",
+    });
+  }
+
+  log.info({ count: withoutProvenance.length }, "Bulk provenance inference jobs queued");
+
+  return { queued: withoutProvenance.length };
+});
+
+const getProvenanceStatus = adminProcedure.query(async () => {
+  const { getProvenanceStats } = await import("@norish/db/repositories/recipes");
+
+  return await getProvenanceStats();
+});
+
 export const aiConfigProcedures = router({
   updateAIConfig,
   updateVideoConfig,
@@ -213,4 +256,6 @@ export const aiConfigProcedures = router({
   listAvailableModels,
   listAvailableTranscriptionModels,
   categorizeAllRecipes,
+  backfillProvenance,
+  getProvenanceStatus,
 });

@@ -506,7 +506,17 @@
       },
       "connectionSuccess": "Verbindung erfolgreich",
       "testConnection": "Verbindung testen",
-      "vision": "Vision"
+      "vision": "Vision",
+      "provenanceSectionTitle": "Rezept-Herkunft",
+      "provenanceDescription": "Herkunft, Küche und Region deiner Rezepte automatisch mit KI erkennen.",
+      "provenanceEnabled": "Herkunfts-Erkennung aktivieren",
+      "provenanceEnabledDesc": "Küche und Herkunft für alle importierten Rezepte identifizieren",
+      "provenanceAutoNew": "Neue Rezepte automatisch verarbeiten",
+      "provenanceAutoNewDesc": "Herkunft für jedes neu importierte Rezept automatisch ableiten",
+      "backfillRecipes": "Rezepte stapelweise verarbeiten",
+      "backfillRecipesDesc": "Herkunfts-Erkennung für alle Rezepte anstoßen, die noch nicht verarbeitet wurden.",
+      "backfillQueued": "{value} Rezepte für die Verarbeitung in die Warteschlange gestellt",
+      "startBackfill": "Stapelverarbeitung starten"
     },
     "videoConfig": {
       "enableVideo": "Video-Parsing aktivieren",

@@ -25,6 +25,8 @@ export interface PermissionsContextValue {
   autoTaggingMode: AutoTaggingMode;
   /** Whether auto-tagging is enabled (not disabled) */
   isAutoTaggingEnabled: boolean;
+  /** Whether provenance features are enabled */
+  isProvenanceEnabled: boolean;
   /** Loading state */
   isLoading: boolean;
   /** Check if current user can view a recipe */
@@ -88,6 +90,7 @@ export function createPermissionsContext({
         isServerAdmin: data?.isServerAdmin ?? false,
         autoTaggingMode: data?.autoTaggingMode ?? "disabled",
         isAutoTaggingEnabled: selectIsAutoTaggingEnabled(normalized),
+        isProvenanceEnabled: normalized.isProvenanceEnabled,
         isLoading: isLoadingPermissions,
         canViewRecipe,
         canEditRecipe,

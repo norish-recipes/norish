@@ -7,7 +7,7 @@ import { QUEUE_NAMES, baseWorkerOptions, WORKER_CONCURRENCY, STALLED_INTERVAL } 
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 import { getBullClient } from "../redis/bullmq";
-import { createLogger } from "@norish/api/logger";
+import { createLogger } from "@norish/shared-server/logger";
 import { getRecipeFull, db } from "@norish/db";
 import { recipes } from "@norish/db/schema";
 import { inferProvenanceForRecipe } from "@norish/api/ai/origin-inferrer";
@@ -96,7 +96,7 @@ export async function processProvenanceInferenceJob(
     throw new Error(result.error);
   }
 
-  const { originCountry, originRegion, cuisine, provenanceNote } = result.data;
+  const { originCountry, originRegion, cuisines, provenanceNote } = result.data;
 
   // Update recipe in database
   await db
@@ -104,7 +104,7 @@ export async function processProvenanceInferenceJob(
     .set({
       originCountry,
       originRegion,
-      cuisine,
+      cuisines,
       provenanceNote,
       updatedAt: new Date(),
     })

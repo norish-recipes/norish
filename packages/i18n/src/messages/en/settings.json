@@ -506,7 +506,17 @@
       },
       "connectionSuccess": "Connection successful",
       "testConnection": "Test Connection",
-      "vision": "vision"
+      "vision": "vision",
+      "provenanceSectionTitle": "Recipe Provenance",
+      "provenanceDescription": "Automatically detect the origin, cuisine, and region of your recipes using AI.",
+      "provenanceEnabled": "Enable Provenance Inference",
+      "provenanceEnabledDesc": "Identify cuisine and origin for all imported recipes",
+      "provenanceAutoNew": "Auto-process New Recipes",
+      "provenanceAutoNewDesc": "Automatically infer provenance for every newly imported recipe",
+      "backfillRecipes": "Batch Process Recipes",
+      "backfillRecipesDesc": "Infer provenance for all recipes that haven't been processed yet.",
+      "backfillQueued": "Queued {value} recipes for processing",
+      "startBackfill": "Start Batch Processing"
     },
     "videoConfig": {
       "enableVideo": "Enable Video Parsing",

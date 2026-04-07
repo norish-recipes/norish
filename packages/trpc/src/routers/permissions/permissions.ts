@@ -4,6 +4,7 @@ import {
   getAutoTaggingMode,
   getRecipePermissionPolicy,
   isAIEnabled,
+  isProvenanceEnabled,
 } from "@norish/config/server-config-loader";
 import { isUserServerAdmin } from "@norish/db";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -14,9 +15,10 @@ import { router } from "../../trpc";
 const get = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting permissions");
 
-  const [recipePolicy, aiEnabled, serverAdmin, autoTaggingMode] = await Promise.all([
+  const [recipePolicy, aiEnabled, provenanceEnabled, serverAdmin, autoTaggingMode] = await Promise.all([
     getRecipePermissionPolicy() as Promise<RecipePermissionPolicy>,
     isAIEnabled(),
+    isProvenanceEnabled(),
     isUserServerAdmin(ctx.user.id),
     getAutoTaggingMode(),
   ]);
@@ -24,6 +26,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
   return {
     recipePolicy,
     isAIEnabled: aiEnabled,
+    isProvenanceEnabled: provenanceEnabled,
     householdUserIds: ctx.householdUserIds,
     isServerAdmin: serverAdmin,
     autoTaggingMode,

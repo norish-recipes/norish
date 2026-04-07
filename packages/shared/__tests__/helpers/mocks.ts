@@ -97,7 +97,7 @@ export function createMockRecipe(overrides: Record<string, unknown> = {}) {
     totalTime: 45,
     source: null,
     image: null,
-    cuisine: null,
+    cuisines: [],
     category: null,
     tags: [],
     isFavorite: false,

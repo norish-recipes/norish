@@ -4,7 +4,7 @@ import type { ProvenanceInferenceJobData, AddProvenanceInferenceJobResult } from
 import { QUEUE_NAMES, provenanceInferenceJobOptions } from "../config";
 
 // import { getQueues } from "@norish/queue/registry";
-import { createLogger } from "@norish/api/logger";
+import { createLogger } from "@norish/shared-server/logger";
 import { isAIEnabled } from "@norish/config/server-config-loader";
 
 const log = createLogger("queue:provenance-inference:producer");

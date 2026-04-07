@@ -5,7 +5,7 @@ import { createUserSettingsContext } from "@norish/shared-react/contexts";
 
 import { useUserMutations } from "@/hooks/user/use-user-mutations";
 import { useUserSettingsQuery } from "@/hooks/user/use-user-query";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
 
 
 export type { UserSettingsContextValue } from "@norish/shared-react/contexts";

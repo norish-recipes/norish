@@ -14,26 +14,38 @@ export function RecipeProvenance({ variant = "card" }: { variant?: "card" | "sec
   const locale = useLocale();
   const { recipe, isInferringProvenance } = useRecipeContextRequired();
 
-  const hasData = !!(recipe.originCountry || recipe.originRegion || recipe.cuisine);
+  const hasData = !!(recipe.originCountry || recipe.originRegion || (recipe.cuisines?.length ?? 0) > 0);
 
   if (!hasData && !isInferringProvenance) {
     return null;
   }
 
+  // Country Flag Emoji Helper
+  const getFlagEmoji = (countryCode: string) => {
+    const codePoints = countryCode
+      .toUpperCase()
+      .split("")
+      .map((char) => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+  };
+
   let displayCountry = recipe.originCountry;
   if (recipe.originCountry) {
     try {
-      displayCountry = new Intl.DisplayNames([locale], { type: "region" }).of(recipe.originCountry) || recipe.originCountry;
+      displayCountry =
+        new Intl.DisplayNames([locale], { type: "region" }).of(recipe.originCountry) ||
+        recipe.originCountry;
     } catch (e) {
       // fallback
     }
   }
 
-  const displayCuisine = recipe.cuisine ? t(`cuisines.${recipe.cuisine}`) : null;
+  const cuisinesList = (recipe.cuisines || []).map((c: any) => t(`cuisines.${c}`));
+  const displayCuisines = cuisinesList.join(", ");
 
   const content = (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-6">
+      <div className="flex flex-wrap gap-x-8 gap-y-4">
         {/* Inferring state is now handled solely by the header icon */}
 
         {recipe.originCountry && (
@@ -41,7 +53,12 @@ export function RecipeProvenance({ variant = "card" }: { variant?: "card" | "sec
             <span className="text-default-400 text-xs font-medium tracking-wider uppercase">
               {t("origin")}
             </span>
-            <span className="text-base font-semibold">{displayCountry}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl" role="img" aria-label={displayCountry ?? ""}>
+                {getFlagEmoji(recipe.originCountry)}
+              </span>
+              <span className="text-base font-semibold">{displayCountry}</span>
+            </div>
           </div>
         )}
 
@@ -54,12 +71,12 @@ export function RecipeProvenance({ variant = "card" }: { variant?: "card" | "sec
           </div>
         )}
 
-        {recipe.cuisine && (
+        {(recipe.cuisines?.length ?? 0) > 0 && (
           <div className="border-default-200 flex flex-col border-l-1 pl-4">
             <span className="text-default-400 text-xs font-medium tracking-wider uppercase">
               {t("cuisine")}
             </span>
-            <span className="text-base font-semibold">{displayCuisine}</span>
+            <span className="text-base font-semibold">{displayCuisines}</span>
           </div>
         )}
       </div>

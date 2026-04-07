@@ -21,6 +21,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta content="yes" name="apple-mobile-web-app-capable" />
       </head>
       <body
+        suppressHydrationWarning
         className={`bg-background text-foreground min-h-dvh font-sans antialiased ${fontSans.variable}`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>

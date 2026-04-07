@@ -506,7 +506,17 @@
       },
       "connectionSuccess": "Conexión correcta",
       "testConnection": "Probar conexión",
-      "vision": "visión"
+      "vision": "visión",
+      "provenanceSectionTitle": "Procedencia de recetas",
+      "provenanceDescription": "Detecta automáticamente el origen, la cocina y la región de tus recetas con IA.",
+      "provenanceEnabled": "Activar inferencia de procedencia",
+      "provenanceEnabledDesc": "Identificar la cocina y el origen de todas las recetas importadas",
+      "provenanceAutoNew": "Procesado automático de nuevas recetas",
+      "provenanceAutoNewDesc": "Deducir automáticamente la procedencia para cada nueva receta",
+      "backfillRecipes": "Procesado por lotes de recetas",
+      "backfillRecipesDesc": "Lanzar la inferencia de procedencia para todas las recetas no procesadas.",
+      "backfillQueued": "{value} recetas encoladas para procesado",
+      "startBackfill": "Iniciar procesado por lotes"
     },
     "videoConfig": {
       "enableVideo": "Activar analizador de vídeo",

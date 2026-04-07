@@ -21,6 +21,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
   const [unitConversion, setUnitConversion] = useState("");
   const [nutritionEstimation, setNutritionEstimation] = useState("");
   const [autoTagging, setAutoTagging] = useState("");
+  const [provenanceInference, setProvenanceInference] = useState("");
   const [saving, setSaving] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -32,6 +33,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
       setUnitConversion(prompts.unitConversion);
       setNutritionEstimation(prompts.nutritionEstimation);
       setAutoTagging(prompts.autoTagging);
+      setProvenanceInference(prompts.provenanceInference ?? "");
     }
   }, [prompts]);
 
@@ -42,11 +44,12 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
         recipeExtraction !== prompts.recipeExtraction ||
         unitConversion !== prompts.unitConversion ||
         nutritionEstimation !== prompts.nutritionEstimation ||
-        autoTagging !== prompts.autoTagging;
+        autoTagging !== prompts.autoTagging ||
+        provenanceInference !== (prompts.provenanceInference ?? "");
 
       setHasChanges(changed);
     }
-  }, [recipeExtraction, unitConversion, nutritionEstimation, autoTagging, prompts]);
+  }, [recipeExtraction, unitConversion, nutritionEstimation, autoTagging, provenanceInference, prompts]);
 
   useEffect(() => {
     onDirtyChange?.(hasChanges);
@@ -59,6 +62,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
       unitConversion,
       nutritionEstimation,
       autoTagging,
+      provenanceInference,
     }).finally(() => {
       setSaving(false);
     });
@@ -126,6 +130,18 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
           placeholder={t("autoTaggingPlaceholder")}
           value={autoTagging}
           onValueChange={setAutoTagging}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Textarea
+          description={t("provenanceInferenceDescription", { fallback: "Prompt used to Infer Provenance from its title and ingredients." })}
+          label={t("provenanceInference", { fallback: "Provenance Inference Prompt" })}
+          maxRows={15}
+          minRows={6}
+          placeholder={t("provenanceInferencePlaceholder", { fallback: "Enter provenance inference prompt here..." })}
+          value={provenanceInference}
+          onValueChange={setProvenanceInference}
         />
       </div>
 

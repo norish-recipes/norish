@@ -125,6 +125,7 @@ export const PromptsConfigSchema = z.object({
   unitConversion: z.string(),
   nutritionEstimation: z.string(),
   autoTagging: z.string(),
+  provenanceInference: z.string().optional().default(""),
   isOverridden: z.boolean().default(false),
 });
 
@@ -252,6 +253,8 @@ export const AIConfigSchema = z.object({
   autoTagAllergies: z.boolean().default(true),
   alwaysUseAI: z.boolean().default(false),
   autoTaggingMode: AutoTaggingModeSchema.default("disabled"),
+  provenanceEnabled: z.boolean().default(false),
+  provenanceAutoNew: z.boolean().default(false),
 });
 
 export type AIConfig = z.infer<typeof AIConfigSchema>;

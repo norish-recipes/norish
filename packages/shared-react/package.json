@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./hooks": "./src/hooks/index.ts",
     "./contexts": "./src/contexts/index.ts",
-    "./providers": "./src/providers/index.ts"
+    "./providers": "./src/providers/index.ts",
+    "./lib/*": "./src/lib/*.ts"
   },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json --noCheck",
@@ -22,6 +23,7 @@
     "@norish/i18n": "workspace:*",
     "@norish/shared": "workspace:*",
     "@norish/trpc": "workspace:*",
+    "@heroui/react": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",

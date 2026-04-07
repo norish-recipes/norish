@@ -18,6 +18,7 @@ export function normalizePermissionsData(
     householdUserIds: input?.householdUserIds ?? null,
     isServerAdmin: input?.isServerAdmin ?? false,
     autoTaggingMode: input?.autoTaggingMode ?? DEFAULT_AUTO_TAGGING_MODE,
+    isProvenanceEnabled: input?.isProvenanceEnabled ?? false,
   };
 }
 

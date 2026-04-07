@@ -117,3 +117,22 @@ export function useAvailableTranscriptionModelsQuery(options: {
     isLoading,
   };
 }
+
+/**
+ * Query hook for recipe provenance processing status.
+ */
+export function useProvenanceStatusQuery() {
+  const trpc = useTRPC();
+
+  const { data, error, isLoading } = useQuery({
+    ...trpc.admin.getProvenanceStatus.queryOptions(),
+    refetchOnWindowFocus: true,
+  });
+
+  return {
+    status: data ?? { total: 0, processed: 0 },
+    error,
+    isLoading,
+    queryKey: trpc.admin.getProvenanceStatus.queryKey(),
+  };
+}

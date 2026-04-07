@@ -22,10 +22,12 @@ import type {
   VideoConfig,
 } from "@norish/config/zod/server-config";
 
-import { createContext, useCallback, useContext } from "react";
+import { createContext, useCallback, useContext, useEffect } from "react";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
-import { useAdminConfigsQuery, useAdminMutations } from "@/hooks/admin";
+import { useAdminConfigsQuery, useAdminMutations, useProvenanceStatusQuery } from "@/hooks/admin";
+import { useSubscription } from "@trpc/tanstack-react-query";
+import { useTRPC } from "@/app/providers/trpc-provider";
 
 
 interface AdminSettingsContextValue {
@@ -45,6 +47,7 @@ interface AdminSettingsContextValue {
   recipePermissionPolicy: RecipePermissionPolicy | undefined;
   prompts: PromptsConfig | undefined;
   timerKeywords: TimerKeywordsConfig | undefined;
+  provenanceStatus: { total: number; processed: number } | undefined;
 
   // Loading states
   isLoading: boolean;
@@ -89,6 +92,7 @@ interface AdminSettingsContextValue {
   testAIEndpoint: (
     config: Pick<AIConfig, "provider" | "endpoint" | "apiKey">
   ) => Promise<{ success: boolean; error?: string }>;
+  backfillProvenance: () => Promise<{ queued: number }>;
   restartServer: () => Promise<void>;
 
   // Secret fetching
@@ -103,6 +107,8 @@ const AdminSettingsContext = createContext<AdminSettingsContextValue | null>(nul
 export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   // Use tRPC hooks
   const { configs, isLoading, invalidate } = useAdminConfigsQuery();
+  const { status: provenanceStatus, queryKey: provenanceQueryKey } = useProvenanceStatusQuery();
+  const trpc = useTRPC();
   const mutations = useAdminMutations();
 
   // Extract typed config values
@@ -275,6 +281,10 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     [mutations]
   );
 
+  const backfillProv = useCallback(async () => {
+    return mutations.backfillProvenance();
+  }, [mutations]);
+
   const restart = useCallback(async () => {
     await mutations.restartServer();
   }, [mutations]);
@@ -289,6 +299,16 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(() => {
     invalidate();
   }, [invalidate]);
+
+  // Set up subscription for real-time provenance status updates
+  useSubscription(
+    trpc.recipes.onProvenanceInferenceCompleted.subscriptionOptions(undefined, {
+      onData: () => {
+        // Refresh provenance status when a recipe is processed
+        queryClient.invalidateQueries({ queryKey: provenanceQueryKey });
+      },
+    })
+  );
 
   const value: AdminSettingsContextValue = {
     registrationEnabled,
@@ -306,6 +326,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     recipePermissionPolicy,
     prompts,
     timerKeywords,
+    provenanceStatus,
     isLoading,
     updateRegistration,
     updatePasswordAuth,
@@ -326,6 +347,7 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
     restoreDefaultConfig: restoreDefault,
     testAuthProvider: testAuth,
     testAIEndpoint: testAI,
+    backfillProvenance: backfillProv,
     restartServer: restart,
     fetchConfigSecret: fetchSecret,
     refresh,

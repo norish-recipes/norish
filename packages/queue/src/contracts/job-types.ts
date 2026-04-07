@@ -103,3 +103,13 @@ export type AddAllergyDetectionJobResult =
   | { status: "queued"; job: Job<AllergyDetectionJobData> }
   | { status: "duplicate"; existingJobId: string }
   | { status: "skipped"; reason: "disabled" | "no_allergies" };
+
+export interface ProvenanceInferenceJobData {
+  recipeId: string;
+  userId: string;
+  householdKey: string;
+}
+
+export type AddProvenanceInferenceJobResult =
+  | { status: "queued"; job: Job<ProvenanceInferenceJobData> }
+  | { status: "duplicate"; existingJobId: string };

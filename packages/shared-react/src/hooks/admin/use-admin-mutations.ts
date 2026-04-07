@@ -49,6 +49,7 @@ export type AdminMutationsResult = {
   testAIEndpoint: (
     config: Pick<AIConfig, "provider" | "endpoint" | "apiKey">
   ) => Promise<{ success: boolean; error?: string }>;
+  backfillProvenance: () => Promise<{ queued: number }>;
   updateRecipePermissionPolicy: (
     policy: RecipePermissionPolicy
   ) => Promise<{ success: boolean; error?: string }>;
@@ -93,6 +94,7 @@ export function createUseAdminMutations({
     const updateAIConfigMutation = useMutation(trpc.admin.updateAIConfig.mutationOptions());
     const updateVideoConfigMutation = useMutation(trpc.admin.updateVideoConfig.mutationOptions());
     const testAIEndpointMutation = useMutation(trpc.admin.testAIEndpoint.mutationOptions());
+    const backfillProvenanceMutation = useMutation(trpc.admin.backfillProvenance.mutationOptions());
     const updatePermissionPolicyMutation = useMutation(
       trpc.admin.updateRecipePermissionPolicy.mutationOptions()
     );
@@ -175,6 +177,9 @@ export function createUseAdminMutations({
       },
       testAIEndpoint: async (config) => {
         return testAIEndpointMutation.mutateAsync(config);
+      },
+      backfillProvenance: async () => {
+        return backfillProvenanceMutation.mutateAsync();
       },
       updateRecipePermissionPolicy: async (policy) => {
         return withInvalidate(updatePermissionPolicyMutation.mutateAsync(policy));

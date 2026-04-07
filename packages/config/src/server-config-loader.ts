@@ -189,6 +189,15 @@ export async function isAIEnabled(): Promise<boolean> {
 }
 
 /**
+ * Check if provenance inference is enabled
+ */
+export async function isProvenanceEnabled(): Promise<boolean> {
+  const aiConfig = await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG);
+
+  return (aiConfig?.enabled && aiConfig?.provenanceEnabled) ?? false;
+}
+
+/**
  * Check if imports should always use AI (skip structured parsers)
  * Only returns true if AI is enabled AND alwaysUseAI is set
  */

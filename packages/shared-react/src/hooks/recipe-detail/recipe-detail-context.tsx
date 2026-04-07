@@ -32,6 +32,9 @@ export type RecipeDetailContextValue = {
   // Allergy detection
   isDetectingAllergies: boolean;
   triggerAllergyDetection: () => void;
+  // Provenance inference
+  isInferringProvenance: boolean;
+  triggerProvenanceInference: () => void;
   // Allergies list
   allergies: string[];
   allergySet: Set<string>;
@@ -65,6 +68,8 @@ export type RecipeDetailAdapters = {
   useAutoCategorization: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
   useAllergyDetectionMutation: () => { mutate: (input: { recipeId: string }) => void };
   useAllergyDetection: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
+  useProvenanceInferenceMutation: () => { mutate: (input: { recipeId: string }) => void };
+  useProvenanceInference: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
   useActiveAllergies: () => { allergies: string[]; allergySet: Set<string> };
   useConvertMutation: () => {
     mutate: (
@@ -157,6 +162,21 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       if (!recipe) return;
       allergyDetectionMutation.mutate({ recipeId: recipe.id });
     }, [recipe, allergyDetectionMutation]);
+
+    // Provenance inference hooks
+    const [isInferringProvenance, setIsInferringProvenance] = useState(false);
+    const provenanceInferenceMutation = adapters.useProvenanceInferenceMutation();
+
+    adapters.useProvenanceInference(
+      recipeId,
+      () => setIsInferringProvenance(true),
+      () => setIsInferringProvenance(false)
+    );
+
+    const triggerProvenanceInference = useCallback(() => {
+      if (!recipe) return;
+      provenanceInferenceMutation.mutate({ recipeId: recipe.id });
+    }, [recipe, provenanceInferenceMutation]);
 
     // Get allergies
     const { allergies, allergySet } = adapters.useActiveAllergies();
@@ -301,6 +321,8 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         triggerAutoCategorize,
         isDetectingAllergies,
         triggerAllergyDetection,
+        isInferringProvenance,
+        triggerProvenanceInference,
         allergies,
         allergySet,
         userRating,
@@ -327,6 +349,8 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         triggerAutoCategorize,
         isDetectingAllergies,
         triggerAllergyDetection,
+        isInferringProvenance,
+        triggerProvenanceInference,
         allergies,
         allergySet,
         userRating,

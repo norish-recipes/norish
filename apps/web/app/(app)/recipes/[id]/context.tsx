@@ -21,6 +21,8 @@ import {
   useRecipeQuery,
   useRecipeSubscription,
 } from "@/hooks/recipes";
+import { useProvenanceInference } from "@/hooks/recipes/use-provenance-inference";
+import { useProvenanceInferenceMutation } from "@/hooks/recipes/use-provenance-inference-mutation";
 import { useActiveAllergies } from "@/hooks/user";
 
 const {
@@ -39,6 +41,8 @@ const {
   useAutoCategorization,
   useAllergyDetectionMutation,
   useAllergyDetection,
+  useProvenanceInferenceMutation,
+  useProvenanceInference,
   useActiveAllergies,
   useConvertMutation: () => {
      

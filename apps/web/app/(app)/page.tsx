@@ -6,6 +6,7 @@ import CreateRecipeButton from "@/components/dashboard/create-recipe-button";
 import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import RecipeGrid from "@/components/dashboard/recipe-grid";
 import SearchInput from "@/components/dashboard/search-input";
+import { ClientOnly } from "@/components/shared/client-only";
 
 
 export default async function Home() {
@@ -20,11 +21,15 @@ export default async function Home() {
     <div className="flex min-h-0 w-full flex-1 flex-col">
       <div className="mb-6 flex min-h-10 shrink-0 items-center justify-between">
         <h1 className="text-2xl font-bold">{t("title")}</h1>
-        <CreateRecipeButton />
+        <ClientOnly>
+          <CreateRecipeButton />
+        </ClientOnly>
       </div>
 
       <div className="mb-6">
-        <SearchInput />
+        <ClientOnly>
+          <SearchInput />
+        </ClientOnly>
       </div>
 
       <div className="min-h-0 flex-1">

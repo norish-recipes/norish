@@ -15,7 +15,7 @@ import { useTranslations } from "next-intl";
 
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
 
 interface ImportRecipeModalProps {
   isOpen: boolean;

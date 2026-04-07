@@ -45,7 +45,35 @@
     "instructions": "Instructions",
     "cook": "Cook",
     "switchToDecimal": "Show decimals",
-    "switchToFraction": "Show fractions"
+    "switchToFraction": "Show fractions",
+    "provenance": {
+      "title": "Provenance",
+      "origin": "Origin",
+      "subRegion": "Region",
+      "cuisine": "Cuisine",
+      "reasoning": "AI Insight",
+      "cuisines": {
+        "American": "American",
+        "British": "British",
+        "Caribbean": "Caribbean",
+        "Chinese": "Chinese",
+        "French": "French",
+        "Greek": "Greek",
+        "Indian": "Indian",
+        "Italian": "Italian",
+        "Japanese": "Japanese",
+        "Korean": "Korean",
+        "Latin American": "Latin American",
+        "Lebanese": "Lebanese",
+        "Mediterranean": "Mediterranean",
+        "Mexican": "Mexican",
+        "Middle Eastern": "Middle Eastern",
+        "Spanish": "Spanish",
+        "Thai": "Thai",
+        "Vietnamese": "Vietnamese",
+        "Other": "Specialty"
+      }
+    }
   },
   "actions": {
     "plan": "Plan",
@@ -62,6 +90,8 @@
     "detectingAllergies": "Detecting allergies...",
     "estimateNutrition": "Estimate Nutrition",
     "estimatingNutrition": "Estimating nutrition...",
+    "inferProvenance": "Infer Provenance",
+    "inferringProvenance": "Inferring provenance...",
     "screenOn": "Screen On",
     "keepScreenOn": "Keep Screen On",
     "actionsLabel": "Actions"

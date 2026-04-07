@@ -16,7 +16,7 @@ import { OIDCClaimMapping } from "./oidc-claim-mapping";
 import { ProviderActions } from "./provider-actions";
 import { TestResultDisplay } from "./test-result-display";
 
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
 import SecretInput from "@/components/shared/secret-input";
 
 interface OIDCProviderFormProps {

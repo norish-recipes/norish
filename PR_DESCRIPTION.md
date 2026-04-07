@@ -1,6 +1,8 @@
 # Pull Request: Recipe Provenance: AI-Powered Origin Inference & Batch Processing
 
 ## Description
+Have now updated this draft PR to work with the new monorepo structure. Have applied the feedback to normalize the provenance. This remains still a directional draft PR needing feedback to help shape it. Thoughts on the best way to present this data to the user? Happy to take your lead on this.
+
 This PR implements the "Recipe Provenance" feature, which uses AI to automatically identify the country of origin, regional specifics, and cuisine styles for recipes based on their title, description, and ingredients. It also introduces a robust batch processing system for backfilling provenance data across the entire library with real-time UI feedback.
 
 ## Key Features & Changes

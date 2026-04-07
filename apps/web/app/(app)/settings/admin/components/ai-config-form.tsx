@@ -8,6 +8,7 @@ import {
   Autocomplete,
   AutocompleteItem,
   Button,
+  Chip,
   Input,
   Select,
   SelectItem,
@@ -39,7 +40,14 @@ type ModelOption = {
 export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const t = useTranslations("settings.admin.aiConfig");
   const tActions = useTranslations("common.actions");
-  const { aiConfig, updateAIConfig, testAIEndpoint, fetchConfigSecret } = useAdminSettingsContext();
+  const { 
+    aiConfig, 
+    updateAIConfig, 
+    testAIEndpoint, 
+    fetchConfigSecret, 
+    backfillProvenance,
+    provenanceStatus
+  } = useAdminSettingsContext();
 
   const [enabled, setEnabled] = useState(aiConfig?.enabled ?? false);
   const [provider, setProvider] = useState(aiConfig?.provider ?? "openai");
@@ -54,12 +62,15 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const [autoTaggingMode, setAutoTaggingMode] = useState<AutoTaggingMode>(
     aiConfig?.autoTaggingMode ?? "disabled"
   );
+  const [provenanceEnabled, setProvenanceEnabled] = useState(aiConfig?.provenanceEnabled ?? false);
+  const [provenanceAutoNew, setProvenanceAutoNew] = useState(aiConfig?.provenanceAutoNew ?? false);
   const [testing, setTesting] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   // Fetch available models from the provider
-  // Cloud providers that don't require an endpoint (use official APIs)
   const cloudProviders = [
     "openai",
     "azure",
@@ -70,15 +81,10 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     "perplexity",
     "groq",
   ];
-  // Local providers that need an endpoint
   const localProviders = ["ollama", "lm-studio"];
-  // Azure optionally accepts endpoint for custom resource URL
   const needsEndpoint = localProviders.includes(provider) || provider === "generic-openai";
   const supportsOptionalEndpoint = provider === "azure";
-  // Cloud providers need API key, local providers don't, generic-openai may need one
   const needsApiKey = cloudProviders.includes(provider) || provider === "generic-openai";
-  // API key is only considered "configured" if the saved config matches the current provider
-  // This prevents validation from passing when switching between providers
   const isApiKeyConfigured = !!aiConfig?.apiKey && aiConfig?.provider === provider;
 
   const canFetchModels =
@@ -87,7 +93,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       ? apiKey || isApiKeyConfigured
       : localProviders.includes(provider)
         ? endpoint
-        : endpoint); // generic-openai needs endpoint
+        : endpoint);
 
   const { models: availableModels, isLoading: isLoadingModels } = useAvailableModelsQuery({
     provider: provider as AIConfig["provider"],
@@ -96,14 +102,12 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     enabled: !!canFetchModels,
   });
 
-  // Create model options for autocomplete (includes current value even if not in list)
   const modelOptions = useMemo(() => {
     const options = (availableModels as AvailableModel[]).map((m) => ({
       value: m.id,
       supportsVision: m.supportsVision,
     }));
 
-    // Add current model if not in list (allows keeping custom/typed values)
     if (model && !options.some((o: ModelOption) => o.value === model)) {
       options.unshift({ value: model, supportsVision: undefined });
     }
@@ -111,14 +115,12 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     return options;
   }, [availableModels, model]);
 
-  // Vision model options (filter to vision-capable models if available)
   const visionModelOptions = useMemo(() => {
     const options = (availableModels as AvailableModel[]).map((m) => ({
       value: m.id,
       supportsVision: m.supportsVision,
     }));
 
-    // Add current vision model if not in list
     if (visionModel && !options.some((o: ModelOption) => o.value === visionModel)) {
       options.unshift({ value: visionModel, supportsVision: undefined });
     }
@@ -127,7 +129,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   }, [availableModels, visionModel]);
 
   useEffect(() => {
-    if (aiConfig) {
+    if (aiConfig && !initialized) {
       setEnabled(aiConfig.enabled);
       setProvider(aiConfig.provider);
       setEndpoint(aiConfig.endpoint ?? "");
@@ -138,10 +140,12 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       setAutoTagAllergies(aiConfig.autoTagAllergies ?? true);
       setAlwaysUseAI(aiConfig.alwaysUseAI ?? false);
       setAutoTaggingMode(aiConfig.autoTaggingMode ?? "disabled");
+      setProvenanceEnabled(aiConfig.provenanceEnabled ?? false);
+      setProvenanceAutoNew(aiConfig.provenanceAutoNew ?? false);
+      setInitialized(true);
     }
-  }, [aiConfig]);
+  }, [aiConfig, initialized]);
 
-  // Validation: Can't enable AI without valid config
   const hasValidConfig =
     (model ?? "").trim() !== "" &&
     (!needsEndpoint || (endpoint ?? "").trim() !== "") &&
@@ -149,6 +153,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
 
   const canEnable = !enabled || hasValidConfig;
   const showValidationWarning = enabled && !hasValidConfig;
+
   const hasChanges = useMemo(() => {
     if (!aiConfig) return false;
 
@@ -163,6 +168,8 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       autoTagAllergies !== (aiConfig.autoTagAllergies ?? true) ||
       alwaysUseAI !== (aiConfig.alwaysUseAI ?? false) ||
       autoTaggingMode !== (aiConfig.autoTaggingMode ?? "disabled") ||
+      provenanceEnabled !== (aiConfig.provenanceEnabled ?? false) ||
+      provenanceAutoNew !== (aiConfig.provenanceAutoNew ?? false) ||
       apiKey.trim() !== ""
     );
   }, [
@@ -177,6 +184,8 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     autoTagAllergies,
     alwaysUseAI,
     autoTaggingMode,
+    provenanceEnabled,
+    provenanceAutoNew,
     apiKey,
   ]);
 
@@ -188,29 +197,14 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     return await fetchConfigSecret(ServerConfigKeys.AI_CONFIG, "apiKey");
   }, [fetchConfigSecret]);
 
-  // Clear model fields when provider changes to avoid invalid model selection
   const handleProviderChange = (newProvider: AIConfig["provider"]) => {
     if (newProvider !== provider) {
       setProvider(newProvider);
-      // Clear API key and models when switching providers - user must select from list
       setApiKey("");
       setModel("");
       setVisionModel("");
-      // Clear endpoint when switching to cloud providers (they don't need one)
-      const newCloudProviders = [
-        "openai",
-        "anthropic",
-        "google",
-        "mistral",
-        "deepseek",
-        "perplexity",
-        "groq",
-      ];
-
-      if (newCloudProviders.includes(newProvider)) {
-        setEndpoint("");
-      }
-      // Azure keeps endpoint as optional (for custom resource URL)
+      const cloudP = ["openai", "anthropic", "google", "mistral", "deepseek", "perplexity", "groq"];
+      if (cloudP.includes(newProvider)) setEndpoint("");
     }
   };
 
@@ -223,10 +217,18 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         endpoint: endpoint || undefined,
         apiKey: apiKey || undefined,
       });
-
       setTestResult(result);
     } finally {
       setTesting(false);
+    }
+  };
+
+  const handleBackfill = async () => {
+    setBackfilling(true);
+    try {
+      await backfillProvenance();
+    } finally {
+      setBackfilling(false);
     }
   };
 
@@ -247,9 +249,12 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         autoTagAllergies,
         alwaysUseAI,
         autoTaggingMode: autoTaggingMode as AIConfig["autoTaggingMode"],
+        provenanceEnabled,
+        provenanceAutoNew,
       });
     } finally {
       setSaving(false);
+      setInitialized(false);
     }
   };
 
@@ -429,6 +434,85 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         <SelectItem key="predefined_db">{t("autoTaggingModes.predefinedDb")}</SelectItem>
         <SelectItem key="freeform">{t("autoTaggingModes.freeform")}</SelectItem>
       </Select>
+
+      <div className="border-default-200 flex flex-col gap-4 rounded-lg border p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">
+            {t("provenanceSectionTitle", { fallback: "Recipe Provenance Settings" })}
+          </h3>
+          {provenanceStatus && provenanceStatus.processed < provenanceStatus.total && (
+            <Chip color="primary" size="sm" variant="flat">
+              {t("backfillProgress", {
+                processed: provenanceStatus.processed,
+                total: provenanceStatus.total,
+                fallback: `${provenanceStatus.processed} of ${provenanceStatus.total} processed`,
+              })}
+            </Chip>
+          )}
+        </div>
+        <p className="text-default-500 mb-2 text-sm">
+          {t("provenanceDescription", {
+            fallback: "You can customize the AI instructions for provenance in the Prompts tab.",
+          })}
+        </p>
+
+        <label className="flex items-center justify-between cursor-pointer w-full">
+          <div className="flex flex-col gap-1">
+            <span className="font-medium">{t("provenanceEnabled", { fallback: "Enable Provenance Features" })}</span>
+            <span className="text-default-500 text-sm">
+              {t("provenanceEnabledDesc", {
+                fallback: "Show the provenance spark button on recipe pages.",
+              })}
+            </span>
+          </div>
+          <Switch
+            color="success"
+            isDisabled={!enabled}
+            isSelected={provenanceEnabled}
+            onValueChange={setProvenanceEnabled}
+          />
+        </label>
+
+        <label className="flex items-center justify-between cursor-pointer w-full">
+          <div className="flex flex-col gap-1">
+            <span className="font-medium">{t("provenanceAutoNew", { fallback: "Auto-Infer on Import" })}</span>
+            <span className="text-default-500 text-sm">
+              {t("provenanceAutoNewDesc", {
+                fallback: "Automatically infer origin for newly imported recipes.",
+              })}
+            </span>
+          </div>
+          <Switch
+            color="success"
+            isDisabled={!enabled || !provenanceEnabled}
+            isSelected={provenanceAutoNew}
+            onValueChange={setProvenanceAutoNew}
+          />
+        </label>
+
+        <div className="border-default-200 flex items-center justify-between border-t pt-4">
+          <div className="flex flex-col gap-1">
+            <span className="font-medium">
+              {t("backfillRecipes", { fallback: "Backfill Existing Recipes" })}
+            </span>
+            <span className="text-default-500 text-sm">
+              {t("backfillRecipesDesc", {
+                fallback: "Queue missing recipes for provenance inference.",
+              })}
+            </span>
+          </div>
+          <Button
+            color="primary"
+            isDisabled={!enabled || !provenanceEnabled}
+            isLoading={backfilling}
+            size="sm"
+            variant="flat"
+            onPress={handleBackfill}
+          >
+            {t("startBackfill", { fallback: "Start Batch Processing" })}
+          </Button>
+        </div>
+      </div>
 
       {testResult && (
         <div

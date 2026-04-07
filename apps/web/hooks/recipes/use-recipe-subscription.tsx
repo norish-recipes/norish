@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { sharedRecipeFamilyHooks } from "./shared-recipe-hooks";
 
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
 
 export function useRecipeSubscription(recipeId: string | null) {
   const tErrors = useTranslations("common.errors");

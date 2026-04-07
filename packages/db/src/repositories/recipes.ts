@@ -441,6 +441,10 @@ export async function listRecipes(
         totalMinutes: true,
         calories: true,
         categories: true,
+        originCountry: true,
+        originRegion: true,
+        cuisines: true,
+        provenanceNote: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -485,6 +489,10 @@ export async function listRecipes(
       totalMinutes: r.totalMinutes ?? null,
       calories: r.calories ?? null,
       categories: r.categories ?? [],
+      originCountry: r.originCountry ?? null,
+      originRegion: r.originRegion ?? null,
+      cuisines: r.cuisines ?? [],
+      provenanceNote: r.provenanceNote ?? null,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
       tags: (r.recipeTags ?? [])
@@ -532,6 +540,10 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
       totalMinutes: true,
       calories: true,
       categories: true,
+      originCountry: true,
+      originRegion: true,
+      cuisines: true,
+      provenanceNote: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -575,6 +587,10 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
     totalMinutes: r.totalMinutes ?? null,
     calories: r.calories ?? null,
     categories: r.categories ?? [],
+    originCountry: r.originCountry ?? null,
+    originRegion: r.originRegion ?? null,
+    cuisines: r.cuisines ?? [],
+    provenanceNote: r.provenanceNote ?? null,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
     tags: (r.recipeTags ?? [])
@@ -730,6 +746,42 @@ export async function getRecipesWithoutCategories(): Promise<{ id: string; name:
   return rows;
 }
 
+export async function getRecipesWithoutProvenance(): Promise<{ id: string; name: string }[]> {
+  const rows = await db
+    .select({ id: recipes.id, name: recipes.name })
+    .from(recipes)
+    .where(
+      and(
+        sql`${recipes.originCountry} IS NULL`,
+        sql`${recipes.originRegion} IS NULL`,
+        sql`cardinality(${recipes.cuisines}) = 0`
+      )
+    );
+
+  return rows;
+}
+
+export async function getProvenanceStats(): Promise<{ total: number; processed: number }> {
+  const [totalResult, unprocessedResult] = await Promise.all([
+    db.select({ count: sql<number>`count(*)` }).from(recipes),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(recipes)
+      .where(
+        and(
+          sql`${recipes.originCountry} IS NULL`,
+          sql`${recipes.originRegion} IS NULL`,
+          sql`cardinality(${recipes.cuisines}) = 0`
+        )
+      ),
+  ]);
+
+  const total = Number(totalResult?.[0]?.count ?? 0);
+  const unprocessed = Number(unprocessedResult?.[0]?.count ?? 0);
+
+  return { total, processed: total - unprocessed };
+}
+
 export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
   const full = await db.query.recipes.findFirst({
     where: eq(recipes.id, id),
@@ -751,6 +803,10 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       carbs: true,
       protein: true,
       categories: true,
+      originCountry: true,
+      originRegion: true,
+      cuisines: true,
+      provenanceNote: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -821,6 +877,10 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     fat: full.fat ?? null,
     carbs: full.carbs ?? null,
     protein: full.protein ?? null,
+    originCountry: full.originCountry ?? null,
+    originRegion: full.originRegion ?? null,
+    cuisines: full.cuisines ?? [],
+    provenanceNote: full.provenanceNote ?? null,
     categories: full.categories ?? [],
     steps: ((full.steps as any) ?? []).map((s: any) => ({
       step: s.step,

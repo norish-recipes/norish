@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { useArchiveImportQuery } from "./use-archive-import-query";
 
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type ArchiveImportMutationResult = {

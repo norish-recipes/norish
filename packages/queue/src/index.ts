@@ -36,6 +36,7 @@ export { createAutoTaggingQueue } from "./auto-tagging/queue";
 export { createAutoCategorizationQueue } from "./auto-categorization/queue";
 export { createAllergyDetectionQueue } from "./allergy-detection/queue";
 export { createCaldavSyncQueue } from "./caldav-sync/queue";
+export { createProvenanceInferenceQueue } from "./provenance-inference/queue";
 export { createScheduledTasksQueue } from "./scheduled-tasks/queue";
 
 // Producers
@@ -50,6 +51,7 @@ export {
 } from "./auto-categorization/producer";
 export { addAllergyDetectionJob, isAllergyDetectionJobActive } from "./allergy-detection/producer";
 export { addCaldavSyncJob } from "./caldav-sync/producer";
+export { addProvenanceInferenceJob } from "./provenance-inference/producer";
 export { initializeScheduledJobs } from "./scheduled-tasks/producer";
 
 // Workers
@@ -70,6 +72,10 @@ export {
   stopAllergyDetectionWorker,
 } from "./allergy-detection/worker";
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
+export {
+  startProvenanceInferenceWorker,
+  stopProvenanceInferenceWorker,
+} from "./provenance-inference/worker";
 export { startScheduledTasksWorker, stopScheduledTasksWorker } from "./scheduled-tasks/worker";
 
 // Types from @norish/shared/contracts
@@ -90,6 +96,8 @@ export type {
   AddAllergyDetectionJobResult,
   CaldavSyncJobData,
   CaldavSyncOperation,
+  ProvenanceInferenceJobData,
+  AddProvenanceInferenceJobResult,
 } from "@norish/queue/contracts/job-types";
 
 // Types from scheduled-tasks

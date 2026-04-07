@@ -506,7 +506,17 @@
       },
       "connectionSuccess": "Connexion réussie",
       "testConnection": "Tester la connexion",
-      "vision": "vision"
+      "vision": "vision",
+      "provenanceSectionTitle": "Provenance des recettes",
+      "provenanceDescription": "Détecter l'origine, la cuisine et la région de vos recettes grâce à l'IA.",
+      "provenanceEnabled": "Activer l'inférence de provenance",
+      "provenanceEnabledDesc": "Identifier la cuisine et l'origine pour toutes les recettes importées",
+      "provenanceAutoNew": "Traitement auto des nouvelles recettes",
+      "provenanceAutoNewDesc": "Déduire automatiquement la provenance pour chaque nouvelle recette",
+      "backfillRecipes": "Traitement par lot des recettes",
+      "backfillRecipesDesc": "Lancer l'inférence de provenance pour toutes les recettes non traitées.",
+      "backfillQueued": "{value} recettes mises en file d'attente pour traitement",
+      "startBackfill": "Démarrer le traitement par lot"
     },
     "videoConfig": {
       "enableVideo": "Activer l’analyse vidéo",

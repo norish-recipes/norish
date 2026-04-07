@@ -22,6 +22,7 @@ import {
 import StarRating from "@norish/ui/star-rating";
 
 import AuthorChip from "./components/author-chip";
+import { RecipeProvenance } from "./components/recipe-provenance";
 import { useRecipeContextRequired } from "./context";
 
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
@@ -247,6 +248,8 @@ export default function RecipePageMobile() {
               })}
             </div>
           )}
+
+          <RecipeProvenance variant="section" />
 
           <Divider />
 

@@ -24,10 +24,10 @@ export const CUISINE_STYLES = [
 
 export const provenanceInferenceSchema = z
   .object({
-    originCountry: z.string().length(2).toUpperCase(),
-    originRegion: z.string().nullable(),
-    cuisine: z.enum(CUISINE_STYLES).nullable(),
-    provenanceNote: z.string(),
+    originCountry: z.string().length(2).toUpperCase().describe("ISO-3166-1 alpha-2 country code (e.g., IT, US, JP)"),
+    originRegion: z.string().nullable().describe("Specific region or state if applicable"),
+    cuisines: z.array(z.enum(CUISINE_STYLES)).describe("Primary cuisines. Can be multiple for fusion dishes."),
+    provenanceNote: z.string().describe("Descriptive note about why this provenance was inferred. Mention fusion or style nuances here."),
   })
   .strict();
 

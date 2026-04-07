@@ -19,6 +19,7 @@ export interface NormalizedPermissionsData {
   householdUserIds: string[] | null;
   isServerAdmin: boolean;
   autoTaggingMode: AutoTaggingMode;
+  isProvenanceEnabled: boolean;
 }
 
 export interface PermissionAccessInput {

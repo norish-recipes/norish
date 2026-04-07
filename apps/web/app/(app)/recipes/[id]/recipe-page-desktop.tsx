@@ -26,6 +26,7 @@ import StarRating from "@norish/ui/star-rating";
 
 import AmountDisplayToggle from "./components/amount-display-toggle";
 import AuthorChip from "./components/author-chip";
+import { RecipeProvenance } from "./components/recipe-provenance";
 import ServingsControl from "./components/servings-control";
 
 import { useRecipeContextRequired } from "./context";
@@ -188,6 +189,8 @@ export default function RecipePageDesktop() {
               )}
             </CardBody>
           </Card>
+
+          <RecipeProvenance variant="card" />
 
           {/* Ingredients Card (separate) */}
           <Card className="bg-content1 rounded-2xl shadow-md">

@@ -55,7 +55,7 @@ export default function ActionsMenu({ id }: Props) {
     onClose: onDeleteModalClose,
   } = useDisclosure();
   const router = useRouter();
-  const { canEditRecipe, canDeleteRecipe, isAutoTaggingEnabled, isAIEnabled } =
+  const { canEditRecipe, canDeleteRecipe, isAutoTaggingEnabled, isAIEnabled, isProvenanceEnabled } =
     usePermissionsContext();
   const { deleteRecipe } = useRecipesContext();
   const {
@@ -68,6 +68,8 @@ export default function ActionsMenu({ id }: Props) {
     triggerAllergyDetection,
     isEstimatingNutrition,
     estimateNutrition,
+    isInferringProvenance,
+    triggerProvenanceInference,
   } = useRecipeContextRequired();
   const { allergies } = useActiveAllergies();
   const { isSupported, isActive, toggle } = useWakeLockContext();
@@ -174,6 +176,19 @@ export default function ActionsMenu({ id }: Props) {
       });
     }
 
+    // Show provenance inference when AI is enabled, provenance is enabled, and user can edit
+    if (isAIEnabled && isProvenanceEnabled && canEdit) {
+      items.push({
+        key: "infer-provenance",
+        label: isInferringProvenance ? t("inferringProvenance") : t("inferProvenance"),
+        icon: <SparklesIcon className="size-4" />,
+        onPress: triggerProvenanceInference,
+        labelClassName: cssAIGradientText,
+        iconClassName: cssAIIconColor,
+        isDisabled: isInferringProvenance,
+      });
+    }
+
     if (canDelete) {
       items.push({
         key: "delete",
@@ -207,6 +222,9 @@ export default function ActionsMenu({ id }: Props) {
     estimateNutrition,
     isCategorizing,
     triggerAutoCategorize,
+    isInferringProvenance,
+    triggerProvenanceInference,
+    isProvenanceEnabled,
   ]);
 
   return (

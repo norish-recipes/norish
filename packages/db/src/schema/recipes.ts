@@ -8,12 +8,35 @@ import {
   timestamp,
   unique,
   uuid,
+  varchar,
 } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
 import { recipeCategoryEnum } from "./recipe-categories";
 
 export const measurementSystemEnum = pgEnum("measurement_system", ["metric", "us"]);
+
+export const cuisineEnum = pgEnum("cuisine_enum", [
+  "American",
+  "British",
+  "Caribbean",
+  "Chinese",
+  "French",
+  "Greek",
+  "Indian",
+  "Italian",
+  "Japanese",
+  "Korean",
+  "Latin American",
+  "Lebanese",
+  "Mediterranean",
+  "Mexican",
+  "Middle Eastern",
+  "Spanish",
+  "Thai",
+  "Vietnamese",
+  "Other"
+]);
 
 export const recipes = pgTable(
   "recipes",
@@ -36,6 +59,10 @@ export const recipes = pgTable(
     fat: numeric("fat", { precision: 6, scale: 2 }),
     carbs: numeric("carbs", { precision: 6, scale: 2 }),
     protein: numeric("protein", { precision: 6, scale: 2 }),
+    originCountry: varchar("origin", { length: 2 }),
+    originRegion: text("origin_sub_region"),
+    cuisines: cuisineEnum("cuisines").array().notNull().default([]),
+    provenanceNote: text("origin_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     categories: recipeCategoryEnum("categories").array().notNull().default([]),

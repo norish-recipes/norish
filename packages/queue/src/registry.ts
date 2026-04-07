@@ -18,6 +18,7 @@ import type {
   NutritionEstimationJobData,
   PasteImportJobData,
   RecipeImportJobData,
+  ProvenanceInferenceJobData,
 } from "@norish/queue/contracts/job-types";
 import type { ScheduledTaskJobData } from "./scheduled-tasks/queue";
 
@@ -31,6 +32,7 @@ import { createImageImportQueue } from "./image-import/queue";
 import { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
 import { createPasteImportQueue } from "./paste-import/queue";
 import { createRecipeImportQueue } from "./recipe-import/queue";
+import { createProvenanceInferenceQueue } from "./provenance-inference/queue";
 import { createScheduledTasksQueue } from "./scheduled-tasks/queue";
 
 const log = createLogger("queue:registry");
@@ -52,6 +54,7 @@ interface QueueRegistry {
   autoCategorization: Queue<AutoCategorizationJobData>;
   allergyDetection: Queue<AllergyDetectionJobData>;
   caldavSync: Queue<CaldavSyncJobData>;
+  provenanceInference: Queue<ProvenanceInferenceJobData>;
   scheduledTasks: Queue<ScheduledTaskJobData>;
 }
 
@@ -79,6 +82,7 @@ export function initializeQueues(): QueueRegistry {
     autoCategorization: createAutoCategorizationQueue(),
     allergyDetection: createAllergyDetectionQueue(),
     caldavSync: createCaldavSyncQueue(),
+    provenanceInference: createProvenanceInferenceQueue(),
     scheduledTasks: createScheduledTasksQueue(),
   };
 
@@ -122,6 +126,7 @@ export async function closeAllQueues(): Promise<void> {
     registry.autoCategorization.close(),
     registry.allergyDetection.close(),
     registry.caldavSync.close(),
+    registry.provenanceInference.close(),
     registry.scheduledTasks.close(),
   ]);
 
