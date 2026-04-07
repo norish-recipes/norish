@@ -4,10 +4,8 @@ import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   checkStoreNameExistsInHousehold,
   countGroceriesInStore,
-  createStore,
   deleteStore,
   getStoreOwnerId,
-  listStoresByUserIds,
   reorderStores,
   updateStore,
 } from "@norish/db/repositories/stores";
@@ -23,54 +21,62 @@ import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { groceryEmitter } from "../groceries/emitter";
 
+import { createStoreData, listStoresData } from "./stores-helpers";
+import {
+  createStoreOutputSchema,
+  listStoresOutputSchema,
+  storeIdInputSchema,
+} from "./stores-openapi-types";
 import { storeEmitter } from "./emitter";
 
 const list = authedProcedure.query(async ({ ctx }) => {
-  log.debug({ userId: ctx.user.id }, "Listing stores");
-
-  const stores = await listStoresByUserIds(ctx.userIds);
-
-  log.debug({ userId: ctx.user.id, storeCount: stores.length }, "Stores listed");
-
-  return stores;
+  return listStoresData(ctx);
 });
 
 const create = authedProcedure.input(StoreCreateSchema).mutation(async ({ ctx, input }) => {
-  const storeId = crypto.randomUUID();
+  try {
+    const createdStore = await createStoreData(ctx, input);
 
-  log.info({ userId: ctx.user.id, storeName: input.name }, "Creating store");
-
-  // Check for duplicate name in household
-  const exists = await checkStoreNameExistsInHousehold(input.name, ctx.userIds);
-
-  if (exists) {
-    throw new TRPCError({
-      code: "CONFLICT",
-      message: "A store with this name already exists",
-    });
+    return createdStore.id;
+  } catch (err) {
+    log.error({ err, userId: ctx.user.id }, "Failed to create store");
+    throw err;
   }
-
-  const storeData = {
-    userId: ctx.user.id,
-    name: input.name,
-    color: input.color ?? "primary",
-    icon: input.icon ?? "ShoppingBagIcon",
-    sortOrder: 0,
-  };
-
-  createStore(storeId, storeData)
-    .then((createdStore) => {
-      log.info({ userId: ctx.user.id, storeId: createdStore.id }, "Store created");
-      storeEmitter.emitToHousehold(ctx.householdKey, "created", {
-        store: createdStore,
-      });
-    })
-    .catch((err) => {
-      log.error({ err, userId: ctx.user.id }, "Failed to create store");
-    });
-
-  return storeId;
 });
+
+export const listStoresProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/stores",
+      protect: true,
+      tags: ["Stores"],
+      summary: "List stores",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .output(listStoresOutputSchema)
+  .query(async ({ ctx }) => listStoresData(ctx));
+
+export const createStoreProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "POST",
+      path: "/stores",
+      protect: true,
+      tags: ["Stores"],
+      summary: "Create a store",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        409: "A store with this name already exists",
+      },
+    },
+  })
+  .input(StoreCreateSchema)
+  .output(createStoreOutputSchema)
+  .mutation(async ({ ctx, input }) => createStoreData(ctx, input));
 
 const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ ctx, input }) => {
   log.debug({ userId: ctx.user.id, storeId: input.id }, "Updating store");
@@ -198,7 +204,7 @@ const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx,
 });
 
 const getGroceryCount = authedProcedure
-  .input(z.object({ storeId: z.uuid() }))
+  .input(storeIdInputSchema)
   .query(async ({ ctx, input }) => {
     const ownerId = await getStoreOwnerId(input.storeId);
 

@@ -1,6 +1,7 @@
 /**
  * Mock for @norish/db
  */
+import { z } from "zod";
 import { vi } from "vitest";
 
 export const listGroceriesByUsers = vi.fn();
@@ -22,10 +23,7 @@ export const GroceryCreateSchema = {
   safeParse: vi.fn((v) => ({ success: true, data: v })),
 };
 
-export const GroceryUpdateBaseSchema = {
-  parse: vi.fn((v) => v),
-  safeParse: vi.fn((v) => ({ success: true, data: v })),
-};
+export const GroceryUpdateBaseSchema = z.object({}).passthrough();
 
 export const GroceryUpdateInputSchema = {
   parse: vi.fn((v) => v),
@@ -41,6 +39,8 @@ export const GroceryDeleteSchema = {
   parse: vi.fn((v) => v),
   safeParse: vi.fn((v) => ({ success: true, data: v })),
 };
+
+export const GrocerySelectBaseSchema = z.object({}).passthrough();
 
 export function resetDbMocks() {
   listGroceriesByUsers.mockReset();

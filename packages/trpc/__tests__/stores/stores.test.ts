@@ -2,7 +2,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { trpcLogger } from "@norish/shared-server/logger";
-import { storesProcedures } from "@norish/trpc/routers/stores/stores";
+import { router } from "../../src/trpc";
+import {
+  createStoreProcedure,
+  listStoresProcedure,
+  storesProcedures,
+} from "../../src/routers/stores/stores";
 
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "../calendar/test-utils";
@@ -34,6 +39,11 @@ vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
+
+const openApiStoresRouter = router({
+  listStores: listStoresProcedure,
+  createStore: createStoreProcedure,
+});
 
 describe("stores procedures", () => {
   const user = createMockUser();
@@ -103,5 +113,52 @@ describe("stores procedures", () => {
     expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "reordered", {
       stores: [reorderedStore],
     });
+  });
+
+  it("lists stores for the API endpoint", async () => {
+    const stores = [
+      {
+        id: crypto.randomUUID(),
+        userId: ctx.user.id,
+        name: "Pantry",
+        color: "primary",
+        icon: "ShoppingBagIcon",
+        sortOrder: 0,
+        version: 1,
+      },
+    ];
+
+    storesRepository.listStoresByUserIds.mockResolvedValue(stores);
+
+    const caller = openApiStoresRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const result = await caller.listStores();
+
+    expect(result).toEqual(stores);
+  });
+
+  it("creates and returns a store for the API endpoint", async () => {
+    storesRepository.checkStoreNameExistsInHousehold.mockResolvedValue(false);
+    storesRepository.createStore.mockImplementation(async (id: string, data: Record<string, unknown>) => ({
+      id,
+      ...data,
+      version: 1,
+    }));
+
+    const caller = openApiStoresRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const result = await caller.createStore({ name: "Market", color: "primary", icon: "ShoppingBagIcon" });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        name: "Market",
+        userId: ctx.user.id,
+      })
+    );
+    expect(storeEmitter.emitToHousehold).toHaveBeenCalledWith(
+      ctx.householdKey,
+      "created",
+      expect.objectContaining({
+        store: expect.objectContaining({ name: "Market" }),
+      })
+    );
   });
 });

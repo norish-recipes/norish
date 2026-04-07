@@ -3,6 +3,21 @@ import { createOpenApiFetchHandler, generateOpenApiDocument } from "trpc-to-open
 import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
 import { isOperationId } from "@norish/shared/lib/operation-helpers";
 
+import {
+  createPlannedRecipeProcedure,
+  deletePlannedRecipeProcedure,
+  listMonthPlannedRecipesProcedure,
+  listTodayPlannedRecipesProcedure,
+  listWeekPlannedRecipesProcedure,
+} from "./routers/calendar/planned-items";
+import {
+  assignGroceryToStoreProcedure,
+  createGroceryProcedure,
+  deleteGroceryProcedure,
+  listGroceriesProcedure,
+  markGroceryDoneProcedure,
+  markGroceryUndoneProcedure,
+} from "./routers/groceries/groceries";
 import { createHttpContextFromHeaders } from "./context";
 import {
   getProcedure,
@@ -10,6 +25,7 @@ import {
   importFromUrlProcedure,
   listProcedure,
 } from "./routers/recipes/recipes";
+import { createStoreProcedure, listStoresProcedure } from "./routers/stores/stores";
 import { router } from "./trpc";
 
 export const openApiRouter = router({
@@ -17,6 +33,19 @@ export const openApiRouter = router({
   recipeSearch: listProcedure,
   recipeImportUrl: importFromUrlProcedure,
   recipeImportPaste: importFromPasteProcedure,
+  groceryList: listGroceriesProcedure,
+  groceryCreate: createGroceryProcedure,
+  groceryMarkDone: markGroceryDoneProcedure,
+  groceryMarkUndone: markGroceryUndoneProcedure,
+  groceryDelete: deleteGroceryProcedure,
+  groceryAssignStore: assignGroceryToStoreProcedure,
+  storeList: listStoresProcedure,
+  storeCreate: createStoreProcedure,
+  plannedRecipesToday: listTodayPlannedRecipesProcedure,
+  plannedRecipesWeek: listWeekPlannedRecipesProcedure,
+  plannedRecipesMonth: listMonthPlannedRecipesProcedure,
+  plannedRecipeCreate: createPlannedRecipeProcedure,
+  plannedRecipeDelete: deletePlannedRecipeProcedure,
 });
 
 function buildOpenApiHeaders(req: Request) {
@@ -54,8 +83,8 @@ export function getOpenApiDocument(baseUrl: string) {
     title: "Norish Recipe API",
     description: "API access for Norish recipes and imports.",
     version: "1.0.0",
-    baseUrl,
-    tags: ["Recipes", "Recipe Imports"],
+    baseUrl: new URL("/api/v1", `${baseUrl}/`).toString(),
+    tags: ["Recipes", "Recipe Imports", "Groceries", "Stores", "Planned Recipes"],
     securitySchemes: {
       ApiKeyAuth: {
         type: "apiKey",
