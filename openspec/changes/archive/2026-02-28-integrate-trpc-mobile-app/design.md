@@ -5,6 +5,7 @@ The mobile app currently redirects from the root route directly into tab content
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Add a first-run connection setup screen with a HeroUI card, URL input, and connect button.
 - Verify entered URLs with `GET /api/health` before saving.
 - Persist the backend base URL in secure storage.
@@ -12,6 +13,7 @@ The mobile app currently redirects from the root route directly into tab content
 - Provide a reusable helper for generating `/api/trpc` URL from the saved base URL.
 
 **Non-Goals:**
+
 - Full tRPC provider/client integration in this change.
 - Authentication/session onboarding.
 - Supporting multiple saved backends or environment switching UI.
@@ -23,6 +25,7 @@ The mobile app currently redirects from the root route directly into tab content
 Startup gating will be implemented in the root route (`src/app/index.tsx`) to keep routing changes minimal and predictable. The root route decides whether to redirect to the connect screen or tabs based on persisted base URL presence.
 
 **Alternatives considered:**
+
 - Global route guards in layout. Rejected to keep this change focused on first-run startup only.
 
 ### 2. Use secure storage for backend URL
@@ -30,6 +33,7 @@ Startup gating will be implemented in the root route (`src/app/index.tsx`) to ke
 The backend base URL will be stored with `expo-secure-store` using a single key. This aligns with the requirement to keep connection configuration in secure device storage.
 
 **Alternatives considered:**
+
 - `expo-file-system` preferences storage. Rejected because the requirement explicitly asks for secure store.
 
 ### 3. Validate connection using `/api/health`
@@ -37,6 +41,7 @@ The backend base URL will be stored with `expo-secure-store` using a single key.
 The connect flow will call `${baseUrl}/api/health` and only persist the URL when the response is successful. This prevents saving malformed or unreachable hosts.
 
 **Alternatives considered:**
+
 - Save immediately without connectivity test. Rejected due to poor first-run failure UX.
 
 ### 4. Centralize URL normalization and endpoint helpers
@@ -44,6 +49,7 @@ The connect flow will call `${baseUrl}/api/health` and only persist the URL when
 A small networking utility module will normalize input URLs (trim whitespace, strip trailing slashes) and expose endpoint builders for `/api/health` and `/api/trpc`.
 
 **Alternatives considered:**
+
 - Inline string concatenation in route components. Rejected to avoid duplicated URL logic and future bugs.
 
 ## Risks / Trade-offs

@@ -2,6 +2,7 @@
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { trpcLogger } from "@norish/shared-server/logger";
 import { ratingsProcedures } from "@norish/trpc/routers/ratings/ratings";
 

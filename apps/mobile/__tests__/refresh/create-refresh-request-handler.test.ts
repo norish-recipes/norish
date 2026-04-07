@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vitest";
 
-import { createRefreshRequestHandler } from '../../src/lib/refresh/create-refresh-request-handler';
+import { createRefreshRequestHandler } from "../../src/lib/refresh/create-refresh-request-handler";
 
-describe('createRefreshRequestHandler', () => {
-  it('prevents overlapping refresh requests', async () => {
+describe("createRefreshRequestHandler", () => {
+  it("prevents overlapping refresh requests", async () => {
     let callCount = 0;
     let release = () => {};
     const task = vi.fn(() => {
@@ -35,15 +35,15 @@ describe('createRefreshRequestHandler', () => {
     expect(task).toHaveBeenCalledTimes(2);
   });
 
-  it('resets in-flight guard after failures', async () => {
+  it("resets in-flight guard after failures", async () => {
     const task = vi
       .fn<() => Promise<void>>()
-      .mockRejectedValueOnce(new Error('boom'))
+      .mockRejectedValueOnce(new Error("boom"))
       .mockResolvedValueOnce(undefined);
 
     const refresh = createRefreshRequestHandler(task);
 
-    await expect(refresh()).rejects.toThrow('boom');
+    await expect(refresh()).rejects.toThrow("boom");
     await expect(refresh()).resolves.toBeUndefined();
     expect(task).toHaveBeenCalledTimes(2);
   });

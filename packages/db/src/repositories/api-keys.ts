@@ -1,6 +1,6 @@
-import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
-
 import { and, eq } from "drizzle-orm";
+
+import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
 import { db } from "@norish/db/drizzle";
 import { apiKeys } from "@norish/db/schema/auth";
 

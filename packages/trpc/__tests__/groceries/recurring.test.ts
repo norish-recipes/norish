@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { recurringGroceriesProcedures } from "@norish/trpc/routers/groceries/recurring";
+
 import { groceryEmitter } from "../mocks/grocery-emitter";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { calculateNextOccurrence } from "../mocks/recurrence";
@@ -20,7 +22,6 @@ import {
   createMockRecurringGrocery,
   createMockUser,
 } from "./test-utils";
-import { recurringGroceriesProcedures } from "@norish/trpc/routers/groceries/recurring";
 
 // Setup mocks
 vi.mock("@norish/db", () => import("../mocks/db"));

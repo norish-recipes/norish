@@ -5,12 +5,14 @@ Web already has a permissions/server-settings contract through `permissions-cont
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Define one shared, typed permissions/server-settings hook contract in `@norish/shared-react` consumable by both web and mobile.
 - Ensure mobile UI gates AI and delete actions from resolved permission/settings state, preventing unavailable actions from being shown.
 - Add pull-to-refresh on primary Norish mobile list/feed surfaces with consistent loading and refetch behavior.
 - Preserve existing app-owned tRPC injection pattern so shared packages do not import app-local provider code.
 
 **Non-Goals:**
+
 - Redesigning mobile recipe/list visual layouts beyond refresh affordance and action gating.
 - Changing backend permission semantics or adding new permission types.
 - Replacing all existing app wrappers; wrappers remain where app-specific composition is required.

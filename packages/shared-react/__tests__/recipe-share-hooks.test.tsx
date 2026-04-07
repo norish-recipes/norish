@@ -1,20 +1,20 @@
-import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
-import type { CreateRecipeHooksOptions } from "../src/hooks/recipes/types";
-import type { RecipeDetailContextValue } from "../src/hooks/recipe-detail/recipe-detail-context";
-
 import React, { act } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
 import {
   createRecipeDetailContext,
   createRecipeHooks,
   createUseRecipeShareCacheHelpers,
-  createUseRecipeShareSubscription,
   createUseRecipeSharesQuery,
+  createUseRecipeShareSubscription,
   createUseSharedRecipeQuery,
 } from "@norish/shared-react/hooks";
+
+import type { RecipeDetailContextValue } from "../src/hooks/recipe-detail/recipe-detail-context";
+import type { CreateRecipeHooksOptions } from "../src/hooks/recipes/types";
 
 const useSubscriptionMock = vi.hoisted(() => vi.fn());
 
@@ -114,13 +114,25 @@ function createMockUseTRPC() {
           { input: { recipeId }, type: "query" },
         ],
       },
+      shareListMine: {
+        queryKey: () => [["recipes", "shareListMine"], { type: "query" }],
+      },
+      shareListAdmin: {
+        queryKey: () => [["recipes", "shareListAdmin"], { type: "query" }],
+      },
       shareGet: {
-        queryKey: ({ id }: { id: string }) => [["recipes", "shareGet"], { input: { id }, type: "query" }],
+        queryKey: ({ id }: { id: string }) => [
+          ["recipes", "shareGet"],
+          { input: { id }, type: "query" },
+        ],
       },
       onShareCreated: { subscriptionOptions: createSubscriptionOptionsFactory("onShareCreated") },
       onShareUpdated: { subscriptionOptions: createSubscriptionOptionsFactory("onShareUpdated") },
       onShareRevoked: { subscriptionOptions: createSubscriptionOptionsFactory("onShareRevoked") },
       onShareDeleted: { subscriptionOptions: createSubscriptionOptionsFactory("onShareDeleted") },
+      onShareReactivated: {
+        subscriptionOptions: createSubscriptionOptionsFactory("onShareReactivated"),
+      },
     },
   };
 
@@ -289,13 +301,17 @@ describe("recipe share hooks", () => {
       );
     });
 
-    expect(useSubscriptionMock).toHaveBeenCalledTimes(4);
+    expect(useSubscriptionMock).toHaveBeenCalledTimes(5);
 
     const createdOptions = useSubscriptionMock.mock.calls[0]?.[0] as {
-      onData?: (event: { payload: { type: string; recipeId: string; shareId: string; version: number } }) => void;
+      onData?: (event: {
+        payload: { type: string; recipeId: string; shareId: string; version: number };
+      }) => void;
     };
     const deletedOptions = useSubscriptionMock.mock.calls[3]?.[0] as {
-      onData?: (event: { payload: { type: string; recipeId: string; shareId: string; version: number } }) => void;
+      onData?: (event: {
+        payload: { type: string; recipeId: string; shareId: string; version: number };
+      }) => void;
     };
 
     act(() => {

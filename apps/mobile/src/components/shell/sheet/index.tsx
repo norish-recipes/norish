@@ -1,13 +1,10 @@
-import { BottomSheet, Group, Host, RNHostView } from '@expo/ui/swift-ui';
-import {
-  presentationDetents,
-  presentationDragIndicator,
-  type PresentationDetent,
-} from '@expo/ui/swift-ui/modifiers';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Button } from 'heroui-native';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import type { PresentationDetent } from "@expo/ui/swift-ui/modifiers";
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import { BottomSheet, Group, Host, RNHostView } from "@expo/ui/swift-ui";
+import { presentationDetents, presentationDragIndicator } from "@expo/ui/swift-ui/modifiers";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Button } from "heroui-native";
 
 export interface ShellSheetProps {
   /** Whether the sheet is currently presented. */
@@ -33,8 +30,8 @@ export interface ShellSheetProps {
 export function ShellSheet({
   isPresented,
   onIsPresentedChange,
-  detents = ['medium', 'large'],
-  initialDetent = 'medium',
+  detents = ["medium", "large"],
+  initialDetent = "medium",
   children,
 }: ShellSheetProps) {
   const [selectedDetent, setSelectedDetent] = React.useState<PresentationDetent>(initialDetent);
@@ -47,17 +44,14 @@ export function ShellSheet({
 
   return (
     <Host matchContents>
-      <BottomSheet
-        isPresented={isPresented}
-        onIsPresentedChange={onIsPresentedChange}
-      >
+      <BottomSheet isPresented={isPresented} onIsPresentedChange={onIsPresentedChange}>
         <Group
           modifiers={[
             presentationDetents(detents, {
               selection: selectedDetent,
               onSelectionChange: setSelectedDetent,
             }),
-            presentationDragIndicator('visible'),
+            presentationDragIndicator("visible"),
           ]}
         >
           <RNHostView>
@@ -85,11 +79,11 @@ export function ShellSheet({
 const styles = StyleSheet.create({
   contentRoot: {
     flex: 1,
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
   },
   closeRow: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
 });

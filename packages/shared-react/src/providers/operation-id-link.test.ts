@@ -37,7 +37,7 @@ describe("createOperationIdLink", () => {
           signal: null,
         },
         next,
-      }),
+      })
     );
 
     expect(next).toHaveBeenCalledOnce();
@@ -84,7 +84,7 @@ describe("createOperationIdLink", () => {
           signal: null,
         },
         next,
-      }),
+      })
     );
 
     const headers = createRequestHeadersResolver(() => ({}))({
@@ -105,7 +105,7 @@ describe("createOperationIdLink", () => {
           },
         } as never);
         observer.complete();
-      }),
+      })
     );
 
     const link = createOperationIdLink()({});
@@ -121,14 +121,14 @@ describe("createOperationIdLink", () => {
           signal: null,
         },
         next,
-      }),
+      })
     );
 
     expect(next).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "query",
         context: {},
-      }),
+      })
     );
   });
 });

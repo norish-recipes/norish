@@ -1,8 +1,8 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   centered: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 8,
   },
   formSection: {
@@ -11,20 +11,20 @@ export const styles = StyleSheet.create({
   errorText: {
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   inlineInfo: {
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   linkRow: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 4,
   },
   linkText: {
     fontSize: 14,
     lineHeight: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

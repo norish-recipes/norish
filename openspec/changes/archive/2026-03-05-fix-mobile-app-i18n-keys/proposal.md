@@ -12,9 +12,11 @@ The mobile app currently ships with incomplete locale coverage and many UI strin
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-i18n-key-alignment`: Ensure the mobile app consistently references valid, canonical translation keys and has complete language coverage for app-used strings.
 
 ### Modified Capabilities
+
 - None.
 
 ## Impact

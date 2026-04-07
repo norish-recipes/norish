@@ -1,7 +1,5 @@
 "use client";
 
-import type { DndGroceryContextValue, DndGroceryProviderProps } from "./types";
-
 import { createContext, useContext, useMemo } from "react";
 import {
   DndContext,
@@ -15,6 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
+import type { DndGroceryContextValue, DndGroceryProviderProps } from "./types";
 import { GroceryDragOverlay } from "./grocery-drag-overlay";
 import { useGroceryDnd } from "./use-grocery-dnd";
 

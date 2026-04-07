@@ -1,7 +1,5 @@
 import type { OIDCClaimConfig } from "@norish/config/zod/server-config";
 import type { HouseholdUserInfo } from "@norish/trpc/routers/households/types";
-
-import { authLogger } from "@norish/shared-server/logger";
 import { invalidateHouseholdCacheForUsers } from "@norish/db/cached-household";
 import {
   addUserToHousehold,
@@ -11,6 +9,7 @@ import {
 } from "@norish/db/repositories/households";
 import { getUserById, setUserAdminStatus } from "@norish/db/repositories/users";
 import { getPublisherClient } from "@norish/queue/redis/client";
+import { authLogger } from "@norish/shared-server/logger";
 import { emitConnectionInvalidation } from "@norish/trpc/connection-manager";
 import { householdEmitter } from "@norish/trpc/routers/households/emitter";
 

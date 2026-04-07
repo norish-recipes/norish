@@ -1,15 +1,14 @@
 "use client";
 
 import { use, useEffect } from "react";
+import { NotFoundView } from "@/components/shared/not-found-view";
+import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { useTranslations } from "next-intl";
 
 import { WakeLockProvider } from "./components/wake-lock-context";
 import { RecipeContextProvider, useRecipeContext } from "./context";
 import RecipePageDesktop from "./recipe-page-desktop";
 import RecipePageMobile from "./recipe-page-mobile";
-
-import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
-import { NotFoundView } from "@/components/shared/not-found-view";
 
 type Props = {
   params: Promise<{ id: string }>;

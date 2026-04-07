@@ -176,7 +176,11 @@ describe("useRecipesMutations", () => {
       const pendingKey = [["recipes", "getPending"], { type: "query" }];
 
       act(() => {
-        mutationOpts.onError(new TRPCClientError("Request failed"), { url: "https://example.com/recipe" }, context);
+        mutationOpts.onError(
+          new TRPCClientError("Request failed"),
+          { url: "https://example.com/recipe" },
+          context
+        );
       });
 
       const pendingRecipes = queryClient.getQueryData<Array<{ recipeId: string }>>(pendingKey);

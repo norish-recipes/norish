@@ -1,8 +1,8 @@
-import { SymbolView } from 'expo-symbols';
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { Pressable, StyleSheet } from 'react-native';
-import { useThemeColor } from 'heroui-native';
+import React from "react";
+import { Pressable, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
+import { SymbolView } from "expo-symbols";
+import { useThemeColor } from "heroui-native";
 
 /**
  * Liquid-glass back button for the recipe detail header.
@@ -11,7 +11,7 @@ import { useThemeColor } from 'heroui-native';
  */
 export function GlassBackButton() {
   const router = useRouter();
-  const foregroundColor = useThemeColor('foreground');
+  const foregroundColor = useThemeColor("foreground");
 
   return (
     <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -30,8 +30,8 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   symbol: {
     width: 17,

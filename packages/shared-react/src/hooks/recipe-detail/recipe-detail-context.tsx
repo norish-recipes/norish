@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+
 import type {
   CreateRecipeShareInputDto,
   FullRecipeDTO,
@@ -8,10 +10,7 @@ import type {
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts";
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-
 import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
-
 
 // --- Types ---
 
@@ -116,14 +115,17 @@ export type RecipeDetailAdapters = {
   isNotFoundError: (error: unknown) => boolean;
 };
 
-type RecipeSharesQueryAdapterResult = NonNullable<RecipeDetailAdapters["useRecipeSharesQuery"]> extends (
-  ...args: never[]
-) => infer TResult
-  ? TResult
-  : never;
+type RecipeSharesQueryAdapterResult =
+  NonNullable<RecipeDetailAdapters["useRecipeSharesQuery"]> extends (
+    ...args: never[]
+  ) => infer TResult
+    ? TResult
+    : never;
 
 type RecipeShareMutationsAdapterResult =
-  NonNullable<RecipeDetailAdapters["useRecipeShareMutations"]> extends (...args: never[]) => infer TResult
+  NonNullable<RecipeDetailAdapters["useRecipeShareMutations"]> extends (
+    ...args: never[]
+  ) => infer TResult
     ? TResult
     : never;
 
@@ -411,15 +413,15 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         shareError,
         refreshShares,
         createShare,
-      updateShare,
-      revokeShare,
-      reactivateShare,
-      deleteShare,
-      isCreatingShare,
-      isUpdatingShare,
-      isRevokingShare,
-      isReactivatingShare,
-      isDeletingShare,
+        updateShare,
+        revokeShare,
+        reactivateShare,
+        deleteShare,
+        isCreatingShare,
+        isUpdatingShare,
+        isRevokingShare,
+        isReactivatingShare,
+        isDeletingShare,
         convertingTo,
         adjustedIngredients,
         currentServings: _servings ?? recipe?.servings ?? 1,

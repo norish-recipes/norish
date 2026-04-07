@@ -1,10 +1,9 @@
 "use client";
 
-import type { StoreColor, StoreDto } from "@norish/shared/contracts";
-
 import { Fragment, useMemo } from "react";
 import { Select, SelectItem } from "@heroui/react";
 
+import type { StoreColor, StoreDto } from "@norish/shared/contracts";
 
 import { DynamicHeroIcon } from "./dynamic-hero-icon";
 import { getStoreColorClasses } from "./store-colors";

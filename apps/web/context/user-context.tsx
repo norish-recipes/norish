@@ -1,35 +1,30 @@
 "use client";
 
+import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery } from "@tanstack/react-query";
 
 import type { UserContextValue } from "@norish/shared-react/contexts";
-
-import { useQuery } from "@tanstack/react-query";
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import { createUserContext } from "@norish/shared-react/contexts";
 import { useUser } from "@norish/shared-react/hooks";
 import { signOut as betterAuthSignOut } from "@norish/shared/lib/auth/client";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-
 // Create the shared base context
 const shared = createUserContext({
   useSessionUser: () => {
-     
     const { user, isLoading } = useUser();
 
     return { user, isLoading };
   },
   useSignOut: () => {
-     
     return useCallback(async () => {
       await betterAuthSignOut();
       window.location.href = "/login?logout=true";
     }, []);
   },
   useFreshUserQuery: (userId) => {
-     
     const trpc = useTRPC();
-     
+
     const { data } = useQuery({
       ...trpc.user.get.queryOptions(),
       enabled: Boolean(userId),

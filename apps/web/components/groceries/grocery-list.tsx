@@ -1,18 +1,17 @@
 "use client";
 
-import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
-
+import { useMemo } from "react";
+import { useUnitsQuery } from "@/hooks/config/use-units-query";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 
 import { DndGroceryProvider, DndGroupedGroceryProvider } from "./dnd";
 import { GroupedStoreSection } from "./grouped-store-section";
 import { StoreSection } from "./store-section";
-
-import { useUnitsQuery } from "@/hooks/config/use-units-query";
 
 interface GroceryListProps {
   groceries: GroceryDto[];

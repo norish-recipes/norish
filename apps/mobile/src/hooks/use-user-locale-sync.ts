@@ -1,8 +1,8 @@
-import { getLocalePreference } from '@norish/shared/lib/user-preferences';
-import { useEffect } from 'react';
+import { useEffect } from "react";
+import { useMobileLocaleSettings } from "@/context/mobile-i18n-context";
+import { useUserContext } from "@/context/user-context";
 
-import { useMobileLocaleSettings } from '@/context/mobile-i18n-context';
-import { useUserContext } from '@/context/user-context';
+import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 
 /**
  * Syncs the authenticated user's server-side locale preference into the

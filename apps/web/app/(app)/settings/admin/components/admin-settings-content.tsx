@@ -1,8 +1,8 @@
 "use client";
 
+import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
 
 import { AdminSettingsProvider, useAdminSettingsContext } from "../context";
-
 import AIProcessingCard from "./ai-processing-card";
 import { AuthProvidersCard } from "./auth-providers";
 import ContentDetectionCard from "./content-detection-card";
@@ -10,8 +10,6 @@ import GeneralCard from "./general-card";
 import PermissionPolicyCard from "./permission-policy-card";
 import AdminShareLinksCard from "./share-links-card";
 import SystemCard from "./system-card";
-
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
 
 function AdminSettingsContent() {
   const { isLoading } = useAdminSettingsContext();

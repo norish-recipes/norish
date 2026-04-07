@@ -9,7 +9,8 @@ const mockQueryKey = vi.fn();
 const mockMutate = vi.fn();
 
 vi.mock("@tanstack/react-query", async () => {
-  const actual = await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
+  const actual =
+    await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
 
   return {
     ...actual,
@@ -59,7 +60,10 @@ describe("useRatingsMutation", () => {
 
   describe("optimistic updates", () => {
     it("optimistically updates user rating", async () => {
-      queryClient.setQueryData(userRatingQueryKey, createMockUserRatingData(testRecipeId, null, null));
+      queryClient.setQueryData(
+        userRatingQueryKey,
+        createMockUserRatingData(testRecipeId, null, null)
+      );
 
       const { renderHook, act } = require("@testing-library/react");
       const { result: _result } = renderHook(() => useRatingsMutation(), {
@@ -117,7 +121,11 @@ describe("useRatingsMutation", () => {
 
       let context:
         | {
-            previousUserRating: { recipeId: string; userRating: number | null; version: number | null };
+            previousUserRating: {
+              recipeId: string;
+              userRating: number | null;
+              version: number | null;
+            };
             userRatingQueryKey: unknown;
             averageRatingQueryKey: unknown;
           }
@@ -128,7 +136,11 @@ describe("useRatingsMutation", () => {
       });
 
       act(() => {
-        mutationOpts.onError(new TRPCClientError("Request failed"), { recipeId: testRecipeId, rating: 5 }, context);
+        mutationOpts.onError(
+          new TRPCClientError("Request failed"),
+          { recipeId: testRecipeId, rating: 5 },
+          context
+        );
       });
 
       const cachedData = queryClient.getQueryData<{

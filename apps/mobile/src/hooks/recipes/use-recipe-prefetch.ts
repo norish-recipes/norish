@@ -1,15 +1,14 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import type { ViewToken } from 'react-native';
-import type { createTRPCContext } from '@trpc/tanstack-react-query';
-import type { AppRouter } from '@norish/trpc/client';
+import type { RecipeListRow } from "@/lib/recipes/build-recipe-list-rows";
+import type { createTRPCContext } from "@trpc/tanstack-react-query";
+import type { ViewToken } from "react-native";
+import { useCallback, useEffect, useRef } from "react";
+import * as prefetchBudget from "@/lib/query-cache/prefetch-budget";
+import { useTRPC } from "@/providers/trpc-provider";
+import { useQueryClient } from "@tanstack/react-query";
 
-import { useTRPC } from '@/providers/trpc-provider';
-import * as prefetchBudget from '@/lib/query-cache/prefetch-budget';
+import type { AppRouter } from "@norish/trpc/client";
 
-import type { RecipeListRow } from '@/lib/recipes/build-recipe-list-rows';
-
-type TrpcProxy = ReturnType<ReturnType<typeof createTRPCContext<AppRouter>>['useTRPC']>;
+type TrpcProxy = ReturnType<ReturnType<typeof createTRPCContext<AppRouter>>["useTRPC"]>;
 
 const DEBOUNCE_MS = 300;
 const RETRY_DELAY_MS = 1000;
@@ -32,7 +31,7 @@ export function useRecipePrefetch() {
 
   const getQueryKey = useCallback(
     (id: string) => trpc.recipes.get.queryOptions({ id }).queryKey,
-    [trpc.recipes.get],
+    [trpc.recipes.get]
   );
 
   const prefetchBatch = useCallback(() => {
@@ -41,7 +40,7 @@ export function useRecipePrefetch() {
     for (const item of items) {
       const row = item.item as RecipeListRow;
 
-      if (row.type !== 'recipe') continue;
+      if (row.type !== "recipe") continue;
 
       const recipeId = row.recipe.id;
 
@@ -85,7 +84,7 @@ export function useRecipePrefetch() {
 
       timerRef.current = setTimeout(prefetchBatch, DEBOUNCE_MS);
     },
-    [prefetchBatch],
+    [prefetchBatch]
   );
 
   // Cleanup timer on unmount.

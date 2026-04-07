@@ -1,10 +1,10 @@
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { CaldavSyncStatus, CaldavSyncStatusViewDto } from "@norish/shared/contracts";
 import type { CaldavSubscriptionEvents } from "@norish/trpc";
-import type { CaldavCacheHelpers, CreateCaldavHooksOptions } from "./types";
-
 import { createClientLogger } from "@norish/shared/lib/logger";
-import { useSubscription } from "@trpc/tanstack-react-query";
+
+import type { CaldavCacheHelpers, CreateCaldavHooksOptions } from "./types";
 
 const log = createClientLogger("CaldavSubscription");
 
@@ -83,11 +83,7 @@ export function createUseCaldavSubscription({
             setStatuses((prev) => {
               if (!prev) return prev;
 
-              const updatedStatuses = applyCaldavStatusUpdate(
-                prev.statuses,
-                payload,
-                new Date()
-              );
+              const updatedStatuses = applyCaldavStatusUpdate(prev.statuses, payload, new Date());
 
               return { ...prev, statuses: updatedStatuses };
             });

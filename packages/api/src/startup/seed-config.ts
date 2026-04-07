@@ -7,9 +7,6 @@ import type {
   ServerConfigKey,
   TimerKeywordsConfig,
 } from "@norish/db/zodSchemas/server-config";
-
-import { loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
-import { serverLogger } from "@norish/shared-server/logger";
 import { setAuthProviderCache } from "@norish/auth/provider-cache";
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -32,6 +29,8 @@ import {
   UnitsConfigSchema,
   UnitsMapSchema,
 } from "@norish/db/zodSchemas/server-config";
+import { loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
+import { serverLogger } from "@norish/shared-server/logger";
 
 /**
  * Configuration definition for seeding

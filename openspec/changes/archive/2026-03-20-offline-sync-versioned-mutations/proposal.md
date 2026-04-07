@@ -12,9 +12,11 @@ Mobile offline replay needs a stable concurrency token on every mutable entity, 
 ## Capabilities
 
 ### New Capabilities
+
 - `entity-version-contracts`: Monotonic version columns and compare-friendly DTO exposure for Norish mutable entities.
 
 ### Modified Capabilities
+
 None.
 
 ## Impact

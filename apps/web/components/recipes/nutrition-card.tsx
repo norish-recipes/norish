@@ -1,15 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
+import AIActionButton from "@/components/shared/ai-action-button";
+import { usePermissionsContext } from "@/context/permissions-context";
 import { BeakerIcon, BoltIcon, CubeIcon, FireIcon } from "@heroicons/react/16/solid";
 import { Card, CardBody, Divider, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import NutritionPortionControl from "./nutrition-portion-control";
-
-import { usePermissionsContext } from "@/context/permissions-context";
-import AIActionButton from "@/components/shared/ai-action-button";
-import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
 
 type NutritionRecipeLike = {
   calories: number | null;
@@ -56,7 +55,8 @@ const MACROS = [
 function getNutritionData(recipe: NutritionRecipeLike, portions: number) {
   const parsedFat = typeof recipe.fat === "string" ? parseFloat(recipe.fat) : recipe.fat;
   const parsedCarbs = typeof recipe.carbs === "string" ? parseFloat(recipe.carbs) : recipe.carbs;
-  const parsedProtein = typeof recipe.protein === "string" ? parseFloat(recipe.protein) : recipe.protein;
+  const parsedProtein =
+    typeof recipe.protein === "string" ? parseFloat(recipe.protein) : recipe.protein;
 
   return {
     hasData:
@@ -70,7 +70,13 @@ function getNutritionData(recipe: NutritionRecipeLike, portions: number) {
   };
 }
 
-function NutritionValues({ inCard = true, recipe }: { inCard?: boolean; recipe: NutritionRecipeLike }) {
+function NutritionValues({
+  inCard = true,
+  recipe,
+}: {
+  inCard?: boolean;
+  recipe: NutritionRecipeLike;
+}) {
   const t = useTranslations("recipes.nutrition");
   const [portions, setPortions] = useState(1);
   const nutritionData = useMemo(() => getNutritionData(recipe, portions), [recipe, portions]);
@@ -108,7 +114,9 @@ function NutritionValues({ inCard = true, recipe }: { inCard?: boolean; recipe: 
         })}
       </div>
       {portions !== 1 && (
-        <p className="text-default-400 mt-2 text-center text-xs">{t("showingPortions", { count: portions })}</p>
+        <p className="text-default-400 mt-2 text-center text-xs">
+          {t("showingPortions", { count: portions })}
+        </p>
       )}
     </>
   );

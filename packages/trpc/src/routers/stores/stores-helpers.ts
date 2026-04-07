@@ -1,13 +1,13 @@
 import type z from "zod";
-
 import { TRPCError } from "@trpc/server";
+
 import {
   checkStoreNameExistsInHousehold,
   createStore,
   listStoresByUserIds,
 } from "@norish/db/repositories/stores";
-import { StoreCreateSchema } from "@norish/shared/contracts/zod";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { StoreCreateSchema } from "@norish/shared/contracts/zod";
 
 import { storeEmitter } from "./emitter";
 

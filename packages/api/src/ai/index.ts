@@ -104,7 +104,10 @@ export {
 } from "./features/recipe-extraction";
 
 // Unit conversion
-export { convertRecipeDataWithAI, type ConversionResult } from "@norish/shared-server/ai/unit-converter";
+export {
+  convertRecipeDataWithAI,
+  type ConversionResult,
+} from "@norish/shared-server/ai/unit-converter";
 export type { ConversionOutput } from "@norish/shared-server/ai/unit-converter";
 
 // Nutrition estimation

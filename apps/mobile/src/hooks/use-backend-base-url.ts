@@ -1,9 +1,5 @@
-import { useEffect, useState } from 'react';
-
-import {
-  loadBackendBaseUrl,
-  subscribeBackendBaseUrlChange,
-} from '@/lib/network/backend-base-url';
+import { useEffect, useState } from "react";
+import { loadBackendBaseUrl, subscribeBackendBaseUrlChange } from "@/lib/network/backend-base-url";
 
 /**
  * Loads (and live-updates) the backend base URL from MMKV storage.

@@ -1,7 +1,7 @@
 import { mkdir, readdir, writeFile } from "fs/promises";
 import path from "path";
-
 import { z } from "zod";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
@@ -79,7 +79,10 @@ const updatePreferences = authedProcedure
     const result = await updateUserPreferences(ctx.user.id, merged, input.version);
 
     if (result.stale) {
-      log.info({ userId: ctx.user.id, version: input.version }, "Ignoring stale user preferences mutation");
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user preferences mutation"
+      );
       return {
         success: true,
         stale: true,
@@ -114,7 +117,10 @@ const updateName = authedProcedure
     const result = await updateUserName(ctx.user.id, trimmedName, input.version);
 
     if (result.stale) {
-      log.info({ userId: ctx.user.id, version: input.version }, "Ignoring stale user name mutation");
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user name mutation"
+      );
       return { success: true, stale: true };
     }
 
@@ -227,7 +233,10 @@ const deleteAvatar = authedProcedure
     const clearResult = await clearUserAvatar(ctx.user.id, input.version);
 
     if (clearResult.stale) {
-      log.info({ userId: ctx.user.id, version: input.version }, "Ignoring stale user avatar delete");
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user avatar delete"
+      );
       return { success: true, stale: true };
     }
 
@@ -326,7 +335,10 @@ const setAllergies = authedProcedure
     const result = await updateUserAllergies(ctx.user.id, input.allergies, input.version);
 
     if (result.stale) {
-      log.info({ userId: ctx.user.id, version: input.version }, "Ignoring stale user allergies mutation");
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user allergies mutation"
+      );
       const currentAllergies = await getUserAllergies(ctx.user.id);
 
       return {

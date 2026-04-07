@@ -1,3 +1,3 @@
-import { MMKV } from 'react-native-mmkv';
+import { MMKV } from "react-native-mmkv";
 
-export const queryCacheStorage = new MMKV({ id: 'norish-query-cache' });
+export const queryCacheStorage = new MMKV({ id: "norish-query-cache" });

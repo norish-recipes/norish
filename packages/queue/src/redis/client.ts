@@ -6,8 +6,9 @@
  */
 
 import Redis from "ioredis";
-import { createLogger, redactUrl } from "@norish/shared-server/logger";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { createLogger, redactUrl } from "@norish/shared-server/logger";
 
 const log = createLogger("redis");
 

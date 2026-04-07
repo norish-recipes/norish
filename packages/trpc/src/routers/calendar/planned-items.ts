@@ -1,10 +1,10 @@
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
 import type {
   PlannedItemWithRecipePayload,
   SlotItemSortUpdate,
 } from "@norish/shared/contracts/zod";
-
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   getPlannedItemById,
@@ -13,26 +13,26 @@ import {
   moveItem,
   updatePlannedItem,
 } from "@norish/db/repositories/planned-items";
+import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   PlannedItemDeleteInputSchema,
   PlannedItemMoveInputSchema,
   PlannedItemUpdateInputSchema,
 } from "@norish/shared/contracts/zod";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import { dateKey, endOfMonth, startOfMonth } from "@norish/shared/lib/helpers";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
+import { calendarEmitter } from "./emitter";
 import {
+  buildPlannedItemPayload,
   createCalendarItem,
   deleteCalendarItem,
+  endOfServerWeek,
   getServerToday,
   listItemsByRange,
   listPlannedRecipesByRange,
   startOfServerWeek,
-  buildPlannedItemPayload,
-  endOfServerWeek,
 } from "./planned-items-helpers";
 import {
   createItemInput,
@@ -44,7 +44,6 @@ import {
   plannedRecipeMutationOutputSchema,
   slotSchema,
 } from "./planned-items-openapi-types";
-import { calendarEmitter } from "./emitter";
 
 export const listTodayPlannedRecipesProcedure = authedProcedure
   .meta({
@@ -83,7 +82,11 @@ export const listWeekPlannedRecipesProcedure = authedProcedure
   .query(async ({ ctx }) => {
     const today = getServerToday();
 
-    return listPlannedRecipesByRange(ctx, dateKey(startOfServerWeek(today)), dateKey(endOfServerWeek(today)));
+    return listPlannedRecipesByRange(
+      ctx,
+      dateKey(startOfServerWeek(today)),
+      dateKey(endOfServerWeek(today))
+    );
   });
 
 export const listMonthPlannedRecipesProcedure = authedProcedure
@@ -250,67 +253,71 @@ export const plannedItemsProcedures = router({
     return createCalendarItem(ctx, input);
   }),
 
-  deleteItem: authedProcedure.input(PlannedItemDeleteInputSchema).mutation(async ({ ctx, input }) => {
-    return deleteCalendarItem(ctx, input);
-  }),
+  deleteItem: authedProcedure
+    .input(PlannedItemDeleteInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      return deleteCalendarItem(ctx, input);
+    }),
 
-  updateItem: authedProcedure.input(PlannedItemUpdateInputSchema).mutation(async ({ ctx, input }) => {
-    const { itemId, title, version } = input;
-    const householdKey = ctx.householdKey;
-    const userId = ctx.user.id;
+  updateItem: authedProcedure
+    .input(PlannedItemUpdateInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { itemId, title, version } = input;
+      const householdKey = ctx.householdKey;
+      const userId = ctx.user.id;
 
-    const item = await getPlannedItemById(itemId);
+      const item = await getPlannedItemById(itemId);
 
-    if (!item) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Planned item not found",
-      });
-    }
-
-    await assertHouseholdAccess(ctx.user.id, item.userId);
-
-    try {
-      const updateResult = await updatePlannedItem(itemId, { title }, version);
-
-      if (updateResult.stale) {
-        log.info({ userId, itemId, version }, "Ignoring stale calendar update mutation");
-        return { success: true, stale: true };
+      if (!item) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Planned item not found",
+        });
       }
 
-      const itemWithRecipe = await getPlannedItemWithRecipeById(updateResult.value.id);
+      await assertHouseholdAccess(ctx.user.id, item.userId);
 
-      if (!itemWithRecipe) {
-        throw new Error("Failed to fetch updated item");
+      try {
+        const updateResult = await updatePlannedItem(itemId, { title }, version);
+
+        if (updateResult.stale) {
+          log.info({ userId, itemId, version }, "Ignoring stale calendar update mutation");
+          return { success: true, stale: true };
+        }
+
+        const itemWithRecipe = await getPlannedItemWithRecipeById(updateResult.value.id);
+
+        if (!itemWithRecipe) {
+          throw new Error("Failed to fetch updated item");
+        }
+
+        const itemPayload: PlannedItemWithRecipePayload = {
+          id: itemWithRecipe.id,
+          date: itemWithRecipe.date,
+          slot: itemWithRecipe.slot,
+          sortOrder: itemWithRecipe.sortOrder,
+          itemType: itemWithRecipe.itemType,
+          recipeId: itemWithRecipe.recipeId,
+          title: itemWithRecipe.title,
+          userId: itemWithRecipe.userId,
+          version: itemWithRecipe.version,
+          recipeName: itemWithRecipe.recipeName,
+          recipeImage: itemWithRecipe.recipeImage,
+          servings: itemWithRecipe.servings,
+          calories: itemWithRecipe.calories,
+        };
+
+        calendarEmitter.emitToHousehold(householdKey, "itemUpdated", {
+          item: itemPayload,
+        });
+
+        return { success: true, stale: false };
+      } catch (err) {
+        log.error({ err, userId, itemId }, "Failed to update calendar item");
+        calendarEmitter.emitToHousehold(householdKey, "failed", {
+          reason: "Failed to update item",
+        });
+        return { success: false };
       }
-
-      const itemPayload: PlannedItemWithRecipePayload = {
-        id: itemWithRecipe.id,
-        date: itemWithRecipe.date,
-        slot: itemWithRecipe.slot,
-        sortOrder: itemWithRecipe.sortOrder,
-        itemType: itemWithRecipe.itemType,
-        recipeId: itemWithRecipe.recipeId,
-        title: itemWithRecipe.title,
-        userId: itemWithRecipe.userId,
-        version: itemWithRecipe.version,
-        recipeName: itemWithRecipe.recipeName,
-        recipeImage: itemWithRecipe.recipeImage,
-        servings: itemWithRecipe.servings,
-        calories: itemWithRecipe.calories,
-      };
-
-      calendarEmitter.emitToHousehold(householdKey, "itemUpdated", {
-        item: itemPayload,
-      });
-
-      return { success: true, stale: false };
-    } catch (err) {
-      log.error({ err, userId, itemId }, "Failed to update calendar item");
-      calendarEmitter.emitToHousehold(householdKey, "failed", {
-        reason: "Failed to update item",
-      });
-      return { success: false };
-    }
-  }),
+    }),
 });

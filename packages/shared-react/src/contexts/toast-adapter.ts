@@ -19,12 +19,7 @@ export type ToastAdapter = {
 };
 
 function isToastSeverity(value: unknown): value is ToastSeverity {
-  return (
-    value === "default" ||
-    value === "success" ||
-    value === "warning" ||
-    value === "danger"
-  );
+  return value === "default" || value === "success" || value === "warning" || value === "danger";
 }
 
 export function readToastMessage(payload: unknown): string | undefined {

@@ -260,7 +260,12 @@ describe("processClaimsForUser", () => {
     vi.clearAllMocks();
     mockGetHouseholdForUser.mockResolvedValue(null);
     mockFindOrCreateHouseholdByName.mockResolvedValue({ id: "household-456", name: "test" });
-    mockAddUserToHousehold.mockResolvedValue(undefined);
+    mockAddUserToHousehold.mockResolvedValue({
+      householdId: "household-456",
+      userId,
+      isAdmin: false,
+      version: 1,
+    });
     mockSetUserAdminStatus.mockResolvedValue(undefined);
     mockGetUsersByHouseholdId.mockResolvedValue([]);
     mockGetUserById.mockResolvedValue({

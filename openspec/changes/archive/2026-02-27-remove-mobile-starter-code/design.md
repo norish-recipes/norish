@@ -7,12 +7,14 @@ The target state is a lean app shell that keeps active product surfaces running 
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Remove starter-only route and navigation references (`explore`, docs links, starter branding).
 - Remove template-only shared UI/theme/hook files when they are not required by current product screens.
 - Preserve currently active mobile functionality (home feed rendering, swipe actions, providers/safe-area setup).
 - Leave the mobile app in a compile-ready state with no imports pointing to deleted starter files.
 
 **Non-Goals:**
+
 - Redesigning the home recipe card feature or changing its product behavior.
 - Introducing backend integration changes or API contract changes.
 - Performing broad visual restyling beyond what is needed to remove starter dependencies.

@@ -13,6 +13,7 @@ The mobile app's auth screens were refactored in the `login-screen-overhaul` cha
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Full tRPC type inference in mobile — `useTRPC()` returns `AppRouter`-typed client, no `any` casts at call sites.
 - Hook layer for auth tRPC calls mirroring the web `hooks/<domain>/` convention.
 - `useBackendUrl` hook encapsulating connect-screen startup logic.
@@ -23,6 +24,7 @@ The mobile app's auth screens were refactored in the `login-screen-overhaul` cha
 - Styles consolidated: Tailwind `className` where NativeWind supports it; remaining native-only styles in `*.styles.ts` under `src/styles/`.
 
 **Non-Goals:**
+
 - Changes to the web app (read-only reference).
 - Changes to `@norish/api` router or procedures.
 - Any new auth features or UX flows.
@@ -49,6 +51,7 @@ The mobile app's auth screens were refactored in the `login-screen-overhaul` cha
 **Rationale**: The web uses `hooks/config/use-recurrence-config-query.ts` et al. — each file owns exactly one query, exposes a named return shape, and imports `useTRPC` locally. This makes the query reusable, testable, and consistent across platforms.
 
 **File**: `src/hooks/trpc/login/use-auth-providers-query.ts`
+
 ```ts
 export function useAuthProvidersQuery() {
   const trpc = useTRPC();
@@ -73,9 +76,10 @@ export function useAuthProvidersQuery() {
 **Rationale**: The effect is a self-contained async state machine with three outcomes (redirect to login, prefill URL, show empty form). Extracting it makes the connect screen a thin presentation layer and makes the logic testable.
 
 **Shape**:
+
 ```ts
 export function useBackendUrl() {
-  const [baseUrl, setBaseUrl] = useState('');
+  const [baseUrl, setBaseUrl] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
   // ... the existing useEffect body, unchanged
   return { baseUrl, setBaseUrl, isHydrated };
@@ -88,14 +92,14 @@ export function useBackendUrl() {
 
 **Decision**: Break `login.tsx`'s `LoginForm` into:
 
-| Component | File | Responsibility |
-|---|---|---|
-| `ProviderLoadingState` | `components/auth/login/provider-loading-state.tsx` | Loading spinner + text |
-| `ProviderErrorState` | `components/auth/login/provider-error-state.tsx` | Error message + retry button |
-| `NoProvidersState` | `components/auth/login/no-providers-state.tsx` | Empty provider message |
-| `CredentialForm` | `components/auth/login/credential-form.tsx` | Email/password inputs + submit |
-| `OAuthProviderList` | `components/auth/login/oauth-provider-list.tsx` | Maps OAuth providers to buttons |
-| `BackendMissingState` | `components/auth/login/backend-missing-state.tsx` | No-backend-URL fallback |
+| Component              | File                                               | Responsibility                  |
+| ---------------------- | -------------------------------------------------- | ------------------------------- |
+| `ProviderLoadingState` | `components/auth/login/provider-loading-state.tsx` | Loading spinner + text          |
+| `ProviderErrorState`   | `components/auth/login/provider-error-state.tsx`   | Error message + retry button    |
+| `NoProvidersState`     | `components/auth/login/no-providers-state.tsx`     | Empty provider message          |
+| `CredentialForm`       | `components/auth/login/credential-form.tsx`        | Email/password inputs + submit  |
+| `OAuthProviderList`    | `components/auth/login/oauth-provider-list.tsx`    | Maps OAuth providers to buttons |
+| `BackendMissingState`  | `components/auth/login/backend-missing-state.tsx`  | No-backend-URL fallback         |
 
 `login.tsx` (the screen file) remains but becomes the orchestrator: renders `AuthShell`, passes props down, owns the `LoginForm` sub-component which assembles the pieces.
 
@@ -133,7 +137,8 @@ export function useBackendUrl() {
 
 ### 8. Styles consolidation
 
-**Decision**: 
+**Decision**:
+
 - Use Tailwind `className` props for colour, spacing, and typography where HeroUI Native / NativeWind supports it (e.g. `className="text-foreground font-semibold"` instead of `style={{ color: foregroundColor, fontWeight: '600' }}`).
 - Native-only styles (flex layout, specific pixel values not in the Tailwind scale, border radii) go into `*.styles.ts` files.
 - All `*.styles.ts` files move to `src/styles/` (following the already-migrated `index.styles.ts`).

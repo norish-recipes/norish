@@ -1,16 +1,15 @@
 import type { ReactNode } from "react";
-
 import { createElement } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook, act } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import { useStoresMutations } from "@/hooks/stores/use-stores-mutations";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockDeleteMutation = vi.fn();
 
 vi.mock("@tanstack/react-query", async () => {
-  const actual = await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
+  const actual =
+    await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
 
   return {
     ...actual,
@@ -37,7 +36,17 @@ const invalidate = vi.fn();
 
 vi.mock("@/hooks/stores/use-stores-query", () => ({
   useStoresQuery: () => ({
-    stores: [{ id: "store-1", version: 6, name: "Pantry", color: "primary", icon: "ShoppingBagIcon", sortOrder: 0, userId: "user-1" }],
+    stores: [
+      {
+        id: "store-1",
+        version: 6,
+        name: "Pantry",
+        color: "primary",
+        icon: "ShoppingBagIcon",
+        sortOrder: 0,
+        userId: "user-1",
+      },
+    ],
     setStoresData,
     invalidate,
   }),

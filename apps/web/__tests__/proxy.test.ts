@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { NextRequest } from "next/server";
+import { proxy } from "@/proxy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSessionMock = vi.hoisted(() => vi.fn());
@@ -12,8 +13,6 @@ vi.mock("@norish/auth/auth", () => ({
     },
   },
 }));
-
-import { proxy } from "@/proxy";
 
 describe("proxy share access", () => {
   beforeEach(() => {
@@ -28,7 +27,9 @@ describe("proxy share access", () => {
   });
 
   it("allows shared media routes without an authenticated session", async () => {
-    const response = await proxy(new NextRequest("http://localhost/share/public-token/media/cover.jpg"));
+    const response = await proxy(
+      new NextRequest("http://localhost/share/public-token/media/cover.jpg")
+    );
 
     expect(response.headers.get("x-middleware-next")).toBe("1");
     expect(getSessionMock).not.toHaveBeenCalled();

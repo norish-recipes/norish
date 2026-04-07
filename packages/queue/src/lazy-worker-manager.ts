@@ -13,8 +13,8 @@
  */
 
 import type { ConnectionOptions, Job, Processor, WorkerOptions } from "bullmq";
-
 import { Queue, QueueEvents, Worker } from "bullmq";
+
 import { createLogger } from "@norish/shared-server/logger";
 
 import { createContextAwareProcessor } from "./queue-operation-context";
@@ -339,10 +339,7 @@ function startPolling<T>(state: LazyWorkerState<T>): void {
       const waiting = counts.waiting ?? 0;
 
       if (waiting > 0) {
-        log.info(
-          { queueName, waiting },
-          "Polling: found waiting jobs, ensuring worker is running"
-        );
+        log.info({ queueName, waiting }, "Polling: found waiting jobs, ensuring worker is running");
         await ensureWorkerRunning(state);
       }
     } catch (err) {
@@ -385,10 +382,7 @@ function scheduleWarmIdle<T>(state: LazyWorkerState<T>): void {
       const waiting = counts.waiting ?? 0;
 
       if (active > 0 || waiting > 0) {
-        log.debug(
-          { queueName, active, waiting },
-          "Jobs still present, skipping warm idle"
-        );
+        log.debug({ queueName, active, waiting }, "Jobs still present, skipping warm idle");
 
         return;
       }
@@ -428,10 +422,7 @@ function scheduleColdShutdown<T>(state: LazyWorkerState<T>): void {
       const waiting = counts.waiting ?? 0;
 
       if (active > 0 || waiting > 0) {
-        log.debug(
-          { queueName, active, waiting },
-          "Jobs arrived during cold idle, resuming"
-        );
+        log.debug({ queueName, active, waiting }, "Jobs arrived during cold idle, resuming");
         await ensureWorkerRunning(state);
 
         return;

@@ -1,11 +1,10 @@
-import * as SecureStore from 'expo-secure-store';
+import { clearQueryCachesOnUrlChange } from "@/hooks/use-cache-lifecycle";
+import { resetAuthClientStorage } from "@/lib/auth-client";
+import * as SecureStore from "expo-secure-store";
 
-import { httpUrlSchema } from '@norish/shared/lib/schema';
+import { httpUrlSchema } from "@norish/shared/lib/schema";
 
-import { clearQueryCachesOnUrlChange } from '@/hooks/use-cache-lifecycle';
-import { resetAuthClientStorage } from '@/lib/auth-client';
-
-const BACKEND_BASE_URL_KEY = 'norish.backend-base-url';
+const BACKEND_BASE_URL_KEY = "norish.backend-base-url";
 const listeners = new Set<() => void>();
 
 function emitBackendBaseUrlChange() {
@@ -38,10 +37,10 @@ export function normalizeBackendBaseUrl(input: string): string | null {
   try {
     const parsed = new URL(candidate);
 
-    parsed.hash = '';
-    parsed.search = '';
-    
-    return parsed.toString().replace(/\/+$/, '');
+    parsed.hash = "";
+    parsed.search = "";
+
+    return parsed.toString().replace(/\/+$/, "");
   } catch {
     return null;
   }
@@ -68,7 +67,7 @@ export async function saveBackendBaseUrl(input: string): Promise<string> {
   const normalized = normalizeBackendBaseUrl(input);
 
   if (!normalized) {
-    throw new Error('Please enter a valid backend URL.');
+    throw new Error("Please enter a valid backend URL.");
   }
 
   const existing = await loadBackendBaseUrl();

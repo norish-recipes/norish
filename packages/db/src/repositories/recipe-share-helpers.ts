@@ -1,7 +1,13 @@
 import type { FullRecipeDTO } from "@norish/shared/contracts";
-import type { PublicRecipeViewDTO, RecipeShareDto, RecipeShareSummaryDto } from "@norish/shared/contracts/dto/recipe-shares";
-
-import { PublicRecipeViewSchema, RecipeShareSummarySchema } from "@norish/shared/contracts/zod/recipe-shares";
+import type {
+  PublicRecipeViewDTO,
+  RecipeShareDto,
+  RecipeShareSummaryDto,
+} from "@norish/shared/contracts/dto/recipe-shares";
+import {
+  PublicRecipeViewSchema,
+  RecipeShareSummarySchema,
+} from "@norish/shared/contracts/zod/recipe-shares";
 
 export type RecipeShareStatus = "active" | "expired" | "revoked";
 export type RecipeShareExpiryPolicy = "1day" | "1week" | "1month" | "1year" | "forever";
@@ -27,7 +33,10 @@ export function toRecipeShareSummary(share: RecipeShareDto): RecipeShareSummaryD
   });
 }
 
-export function resolveRecipeShareExpiresAt(policy: RecipeShareExpiryPolicy, now = new Date()): Date | null {
+export function resolveRecipeShareExpiresAt(
+  policy: RecipeShareExpiryPolicy,
+  now = new Date()
+): Date | null {
   const expiresAt = new Date(now);
 
   switch (policy) {
@@ -48,7 +57,10 @@ export function resolveRecipeShareExpiresAt(policy: RecipeShareExpiryPolicy, now
   }
 }
 
-export function toSharedMediaUrl(url: string | null | undefined, shareToken: string): string | null {
+export function toSharedMediaUrl(
+  url: string | null | undefined,
+  shareToken: string
+): string | null {
   if (!url) {
     return null;
   }
@@ -73,7 +85,10 @@ export function toSharedMediaUrl(url: string | null | undefined, shareToken: str
   return url;
 }
 
-export function mapRecipeToPublicRecipeView(recipe: FullRecipeDTO, shareToken: string): PublicRecipeViewDTO {
+export function mapRecipeToPublicRecipeView(
+  recipe: FullRecipeDTO,
+  shareToken: string
+): PublicRecipeViewDTO {
   return PublicRecipeViewSchema.parse({
     name: recipe.name,
     description: recipe.description ?? null,

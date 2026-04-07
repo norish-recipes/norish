@@ -1,4 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  computeRetryDelay,
+  isProcessing,
+  processQueue,
+  setReplayFn,
+} from "../../src/lib/outbox/outbox-replay";
+import * as outboxStore from "../../src/lib/outbox/outbox-store";
 
 // ---------------------------------------------------------------------------
 // Mock MMKV storage
@@ -6,7 +14,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockStorage = new Map<string, string>();
 
-vi.mock('@/lib/storage/outbox-mmkv', () => ({
+vi.mock("@/lib/storage/outbox-mmkv", () => ({
   outboxStorage: {
     getString: (key: string) => mockStorage.get(key),
     set: (key: string, value: string) => mockStorage.set(key, value),
@@ -14,7 +22,7 @@ vi.mock('@/lib/storage/outbox-mmkv', () => ({
   },
 }));
 
-vi.mock('@norish/shared/lib/logger', () => ({
+vi.mock("@norish/shared/lib/logger", () => ({
   createClientLogger: () => ({
     info: vi.fn(),
     warn: vi.fn(),
@@ -22,15 +30,7 @@ vi.mock('@norish/shared/lib/logger', () => ({
   }),
 }));
 
-import * as outboxStore from '../../src/lib/outbox/outbox-store';
-import {
-  processQueue,
-  setReplayFn,
-  isProcessing,
-  computeRetryDelay,
-} from '../../src/lib/outbox/outbox-replay';
-
-describe('outbox-replay', () => {
+describe("outbox-replay", () => {
   beforeEach(() => {
     mockStorage.clear();
     vi.useRealTimers();
@@ -38,27 +38,27 @@ describe('outbox-replay', () => {
     setReplayFn(vi.fn());
   });
 
-  describe('computeRetryDelay', () => {
-    it('uses exponential backoff', () => {
+  describe("computeRetryDelay", () => {
+    it("uses exponential backoff", () => {
       expect(computeRetryDelay(0)).toBe(2_000);
       expect(computeRetryDelay(1)).toBe(4_000);
       expect(computeRetryDelay(2)).toBe(8_000);
       expect(computeRetryDelay(3)).toBe(16_000);
     });
 
-    it('caps at 60 seconds', () => {
+    it("caps at 60 seconds", () => {
       expect(computeRetryDelay(10)).toBe(60_000);
       expect(computeRetryDelay(20)).toBe(60_000);
     });
   });
 
-  describe('processQueue', () => {
-    it('removes items on successful replay', async () => {
+  describe("processQueue", () => {
+    it("removes items on successful replay", async () => {
       const replayFn = vi.fn().mockResolvedValue(true);
 
       setReplayFn(replayFn);
 
-      outboxStore.enqueue('recipes.update', '"data"');
+      outboxStore.enqueue("recipes.update", '"data"');
 
       expect(outboxStore.size()).toBe(1);
 
@@ -68,7 +68,7 @@ describe('outbox-replay', () => {
       expect(outboxStore.size()).toBe(0);
     });
 
-    it('replays items in insertion order', async () => {
+    it("replays items in insertion order", async () => {
       const replayedPaths: string[] = [];
 
       setReplayFn(async (item) => {
@@ -77,19 +77,19 @@ describe('outbox-replay', () => {
         return true;
       });
 
-      outboxStore.enqueue('first', '"1"');
-      outboxStore.enqueue('second', '"2"');
-      outboxStore.enqueue('third', '"3"');
+      outboxStore.enqueue("first", '"1"');
+      outboxStore.enqueue("second", '"2"');
+      outboxStore.enqueue("third", '"3"');
 
       await processQueue();
 
-      expect(replayedPaths).toEqual(['first', 'second', 'third']);
+      expect(replayedPaths).toEqual(["first", "second", "third"]);
     });
 
-    it('increments delay metadata on failed attempts', async () => {
+    it("increments delay metadata on failed attempts", async () => {
       setReplayFn(vi.fn().mockResolvedValue(false));
 
-      outboxStore.enqueue('recipes.update', '"data"');
+      outboxStore.enqueue("recipes.update", '"data"');
 
       await processQueue();
 
@@ -100,16 +100,17 @@ describe('outbox-replay', () => {
       expect(items[0].nextRetryAt).toBeDefined();
     });
 
-    it('stops processing on first failure', async () => {
-      const replayFn = vi.fn()
+    it("stops processing on first failure", async () => {
+      const replayFn = vi
+        .fn()
         .mockResolvedValueOnce(true) // first item succeeds
         .mockResolvedValueOnce(false); // second item fails
 
       setReplayFn(replayFn);
 
-      outboxStore.enqueue('first', '"1"');
-      outboxStore.enqueue('second', '"2"');
-      outboxStore.enqueue('third', '"3"');
+      outboxStore.enqueue("first", '"1"');
+      outboxStore.enqueue("second", '"2"');
+      outboxStore.enqueue("third", '"3"');
 
       await processQueue();
 
@@ -119,19 +120,19 @@ describe('outbox-replay', () => {
       const remaining = outboxStore.loadAll();
 
       expect(remaining).toHaveLength(2);
-      expect(remaining[0].path).toBe('second');
+      expect(remaining[0].path).toBe("second");
       expect(remaining[0].attempts).toBe(1);
-      expect(remaining[1].path).toBe('third');
+      expect(remaining[1].path).toBe("third");
       expect(remaining[1].attempts).toBe(0);
     });
 
-    it('skips items not yet eligible for retry', async () => {
+    it("skips items not yet eligible for retry", async () => {
       const replayFn = vi.fn().mockResolvedValue(true);
 
       setReplayFn(replayFn);
 
       // Enqueue an item with a future retry time
-      const item = outboxStore.enqueue('recipes.update', '"data"');
+      const item = outboxStore.enqueue("recipes.update", '"data"');
 
       outboxStore.update(item.id, {
         nextRetryAt: new Date(Date.now() + 999_999).toISOString(),
@@ -143,7 +144,7 @@ describe('outbox-replay', () => {
       expect(outboxStore.size()).toBe(1);
     });
 
-    it('does not run concurrently', async () => {
+    it("does not run concurrently", async () => {
       let resolveReplay: () => void;
       const replayPromise = new Promise<boolean>((resolve) => {
         resolveReplay = () => resolve(true);
@@ -151,7 +152,7 @@ describe('outbox-replay', () => {
 
       setReplayFn(() => replayPromise);
 
-      outboxStore.enqueue('recipes.update', '"data"');
+      outboxStore.enqueue("recipes.update", '"data"');
 
       const firstPass = processQueue();
 
@@ -169,7 +170,7 @@ describe('outbox-replay', () => {
       expect(isProcessing()).toBe(false);
     });
 
-    it('does nothing when queue is empty', async () => {
+    it("does nothing when queue is empty", async () => {
       const replayFn = vi.fn();
 
       setReplayFn(replayFn);
@@ -179,7 +180,7 @@ describe('outbox-replay', () => {
       expect(replayFn).not.toHaveBeenCalled();
     });
 
-    it('schedules another pass after a failed replay delay elapses', async () => {
+    it("schedules another pass after a failed replay delay elapses", async () => {
       vi.useFakeTimers();
 
       const replayFn = vi
@@ -189,7 +190,7 @@ describe('outbox-replay', () => {
 
       setReplayFn(replayFn);
 
-      outboxStore.enqueue('recipes.update', '"data"');
+      outboxStore.enqueue("recipes.update", '"data"');
 
       await processQueue();
 

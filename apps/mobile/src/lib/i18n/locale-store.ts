@@ -9,7 +9,7 @@ type LocaleSnapshot = {
 const listeners = new Set<() => void>();
 
 let snapshot: LocaleSnapshot = {
-  locale: 'en',
+  locale: "en",
 };
 
 function emit() {

@@ -6,6 +6,7 @@ import { PencilIcon } from "@heroicons/react/20/solid";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 import { Avatar, Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import { useUserAvatar } from "@norish/shared-react/hooks";
 
 import { useUserSettingsContext } from "../context";

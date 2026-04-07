@@ -9,7 +9,8 @@ const mockMutationOptions = vi.fn();
 const mockMutate = vi.fn();
 
 vi.mock("@tanstack/react-query", async () => {
-  const actual = await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
+  const actual =
+    await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
 
   return {
     ...actual,
@@ -124,7 +125,11 @@ describe("useFavoritesMutation", () => {
 
       // Simulate error - should rollback
       act(() => {
-        mutationOpts.onError(new Error("Failed"), { recipeId: "recipe-2", isFavorite: true }, context);
+        mutationOpts.onError(
+          new Error("Failed"),
+          { recipeId: "recipe-2", isFavorite: true },
+          context
+        );
       });
 
       cachedData = queryClient.getQueryData<{
@@ -154,7 +159,11 @@ describe("useFavoritesMutation", () => {
       });
 
       act(() => {
-        mutationOpts.onError(new TRPCClientError("Request failed"), { recipeId: "recipe-2", isFavorite: true }, context);
+        mutationOpts.onError(
+          new TRPCClientError("Request failed"),
+          { recipeId: "recipe-2", isFavorite: true },
+          context
+        );
       });
 
       const cachedData = queryClient.getQueryData<{
@@ -203,7 +212,11 @@ describe("useFavoritesMutation", () => {
         result.current.toggleFavorite("recipe-1");
       });
 
-      expect(mockMutate).toHaveBeenCalledWith({ recipeId: "recipe-1", isFavorite: false, version: 4 });
+      expect(mockMutate).toHaveBeenCalledWith({
+        recipeId: "recipe-1",
+        isFavorite: false,
+        version: 4,
+      });
     });
   });
 

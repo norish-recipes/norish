@@ -1,7 +1,6 @@
 "use client";
 
 import type { PanInfo } from "motion/react";
-
 import React, {
   createContext,
   ReactElement,

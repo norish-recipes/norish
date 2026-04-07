@@ -1,11 +1,10 @@
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
 import type {
   HouseholdAdminSettingsDto,
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
-import type { HouseholdUserInfo } from "./types";
-
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   addUserToHousehold,
@@ -38,12 +37,11 @@ import {
   UUIDSchema,
 } from "@norish/shared/lib/validation/schemas";
 
-
+import type { HouseholdUserInfo } from "./types";
 import { emitConnectionInvalidation } from "../../connection-manager";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { permissionsEmitter } from "../permissions/emitter";
-
 import { householdEmitter } from "./emitter";
 
 /**
@@ -253,64 +251,65 @@ const join = authedProcedure
     return { householdId };
   });
 
-const leave = authedProcedure
-  .input(LeaveHouseholdInputSchema)
-  .mutation(async ({ ctx, input }) => {
-    const { householdId, version } = input;
+const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({ ctx, input }) => {
+  const { householdId, version } = input;
 
-    log.info({ userId: ctx.user.id, householdId }, "Leaving household");
+  log.info({ userId: ctx.user.id, householdId }, "Leaving household");
 
-    const household = await getHouseholdForUser(ctx.user.id);
+  const household = await getHouseholdForUser(ctx.user.id);
 
-    if (!household || household.id !== householdId) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "You are not in this household",
+  if (!household || household.id !== householdId) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You are not in this household",
+    });
+  }
+
+  // Check if user is admin with other members
+  if (household.adminUserId === ctx.user.id && household.users.length > 1) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+        "You must transfer admin privileges before leaving. Go to Household Settings to assign a new admin.",
+    });
+  }
+
+  // Store remaining member IDs from the already-fetched household data
+  const remainingMemberIds = household.users.filter((u) => u.id !== ctx.user.id).map((u) => u.id);
+
+  // Remove user async and emit events - fire and forget
+  removeUserFromHousehold(householdId, ctx.user.id, version)
+    .then(async (result) => {
+      if (result.stale) {
+        log.info(
+          { userId: ctx.user.id, householdId, version },
+          "Ignoring stale household leave mutation"
+        );
+        return;
+      }
+
+      log.info({ userId: ctx.user.id, householdId }, "User left household");
+
+      // Invalidate cache for leaving user AND remaining members (their user list changed)
+      await invalidateHouseholdCacheForUsers([ctx.user.id, ...remainingMemberIds]);
+
+      // Terminate connection to rebind subscriptions (now user-only channels)
+      await emitConnectionInvalidation(ctx.user.id, "household-left");
+
+      // Emit to remaining members
+      for (const memberId of remainingMemberIds) {
+        householdEmitter.emitToUser(memberId, "userLeft", { userId: ctx.user.id });
+      }
+    })
+    .catch((err) => {
+      log.error({ err, userId: ctx.user.id }, "Failed to leave household");
+      householdEmitter.emitToUser(ctx.user.id, "failed", {
+        reason: "Failed to leave household",
       });
-    }
+    });
 
-    // Check if user is admin with other members
-    if (household.adminUserId === ctx.user.id && household.users.length > 1) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message:
-          "You must transfer admin privileges before leaving. Go to Household Settings to assign a new admin.",
-      });
-    }
-
-    // Store remaining member IDs from the already-fetched household data
-    const remainingMemberIds = household.users.filter((u) => u.id !== ctx.user.id).map((u) => u.id);
-
-    // Remove user async and emit events - fire and forget
-    removeUserFromHousehold(householdId, ctx.user.id, version)
-      .then(async (result) => {
-        if (result.stale) {
-          log.info({ userId: ctx.user.id, householdId, version }, "Ignoring stale household leave mutation");
-          return;
-        }
-
-        log.info({ userId: ctx.user.id, householdId }, "User left household");
-
-        // Invalidate cache for leaving user AND remaining members (their user list changed)
-        await invalidateHouseholdCacheForUsers([ctx.user.id, ...remainingMemberIds]);
-
-        // Terminate connection to rebind subscriptions (now user-only channels)
-        await emitConnectionInvalidation(ctx.user.id, "household-left");
-
-        // Emit to remaining members
-        for (const memberId of remainingMemberIds) {
-          householdEmitter.emitToUser(memberId, "userLeft", { userId: ctx.user.id });
-        }
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to leave household");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to leave household",
-        });
-      });
-
-    return { success: true };
-  });
+  return { success: true };
+});
 
 const kick = authedProcedure
   .input(KickHouseholdUserInputSchema)

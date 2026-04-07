@@ -18,7 +18,10 @@ export type RecipeVideosResult = {
     version?: number;
     error?: string;
   }>;
-  deleteGalleryVideo: (videoId: string, version: number) => Promise<{ success: boolean; error?: string }>;
+  deleteGalleryVideo: (
+    videoId: string,
+    version: number
+  ) => Promise<{ success: boolean; error?: string }>;
   isUploadingGalleryVideo: boolean;
   isDeletingGalleryVideo: boolean;
 };

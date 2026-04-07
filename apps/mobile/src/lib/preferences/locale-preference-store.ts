@@ -1,8 +1,8 @@
-import { getValidLocale, isValidLocale } from '@norish/i18n/config';
+import { storage } from "@/lib/storage/mmkv";
 
-import { storage } from '@/lib/storage/mmkv';
+import { getValidLocale, isValidLocale } from "@norish/i18n/config";
 
-const LOCALE_PREFERENCE_KEY = 'preferences.locale';
+const LOCALE_PREFERENCE_KEY = "preferences.locale";
 
 type LocaleFilePayload = {
   locale: string;

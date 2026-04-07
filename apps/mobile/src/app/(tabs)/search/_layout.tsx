@@ -1,7 +1,7 @@
-import { Stack } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
-import { useIntl } from 'react-intl';
+import React from "react";
+import { Platform } from "react-native";
+import { Stack } from "expo-router";
+import { useIntl } from "react-intl";
 
 export default function SearchLayout() {
   const intl = useIntl();
@@ -11,7 +11,7 @@ export default function SearchLayout() {
       screenOptions={{
         headerShown: true,
         headerLargeTitle: true,
-        headerTransparent: Platform.OS === 'ios',
+        headerTransparent: Platform.OS === "ios",
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
       }}
@@ -19,10 +19,10 @@ export default function SearchLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: intl.formatMessage({ id: 'common.actions.search' }),
+          title: intl.formatMessage({ id: "common.actions.search" }),
           headerSearchBarOptions: {
-            placeholder: intl.formatMessage({ id: 'recipes.dashboard.searchRecipesPlaceholder' }),
-            autoCapitalize: 'none',
+            placeholder: intl.formatMessage({ id: "recipes.dashboard.searchRecipesPlaceholder" }),
+            autoCapitalize: "none",
           },
         }}
       />

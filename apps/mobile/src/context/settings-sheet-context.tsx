@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext } from "react";
 
 type SettingsSheetContextValue = {
   openSettingsSheet: () => void;
@@ -24,7 +24,7 @@ export function useSettingsSheet() {
   const context = useContext(SettingsSheetContext);
 
   if (!context) {
-    throw new Error('useSettingsSheet must be used inside SettingsSheetProvider');
+    throw new Error("useSettingsSheet must be used inside SettingsSheetProvider");
   }
 
   return context;

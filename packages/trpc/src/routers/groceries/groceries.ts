@@ -1,7 +1,7 @@
-import type { GroceryUpdateDto } from "@norish/shared/contracts";
-
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+
+import type { GroceryUpdateDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import { getUnits } from "@norish/config/server-config-loader";
 import {
@@ -19,22 +19,21 @@ import {
   updateGroceries,
 } from "@norish/db";
 import {
-  AssignGroceryToStoreInputSchema,
-  DeleteDoneGroceriesInputSchema,
-  MarkAllDoneGroceriesInputSchema,
-  ReorderGroceriesInStoreInputSchema,
-} from "@norish/shared/contracts/zod";
-import {
   getStoreOwnerId,
   normalizeIngredientName,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import {
+  AssignGroceryToStoreInputSchema,
+  DeleteDoneGroceriesInputSchema,
+  MarkAllDoneGroceriesInputSchema,
+  ReorderGroceriesInStoreInputSchema,
+} from "@norish/shared/contracts/zod";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { groceryEmitter } from "./emitter";
 import {
   assignGroceryToStoreData,
@@ -121,7 +120,10 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       const updatedGroceries = await updateGroceries([parsed.data as GroceryUpdateDto]);
 
       if (updatedGroceries.length === 0) {
-        log.info({ userId: ctx.user.id, groceryId, version }, "Ignoring stale grocery update mutation");
+        log.info(
+          { userId: ctx.user.id, groceryId, version },
+          "Ignoring stale grocery update mutation"
+        );
         return;
       }
 
@@ -156,21 +158,23 @@ const toggle = authedProcedure.input(GroceryToggleSchema).mutation(async ({ ctx,
   }
 });
 
-const deleteGroceries = authedProcedure.input(GroceryDeleteSchema).mutation(async ({ ctx, input }) => {
-  try {
-    await deleteGroceriesData(ctx, input);
+const deleteGroceries = authedProcedure
+  .input(GroceryDeleteSchema)
+  .mutation(async ({ ctx, input }) => {
+    try {
+      await deleteGroceriesData(ctx, input);
 
-    return { success: true };
-  } catch (err) {
-    const groceryIds = input.groceries.map((grocery) => grocery.id);
+      return { success: true };
+    } catch (err) {
+      const groceryIds = input.groceries.map((grocery) => grocery.id);
 
-    log.error({ err, userId: ctx.user.id, groceryIds }, "Failed to delete groceries");
-    groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-      reason: err instanceof Error ? err.message : "Failed to delete groceries",
-    });
-    throw err;
-  }
-});
+      log.error({ err, userId: ctx.user.id, groceryIds }, "Failed to delete groceries");
+      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+        reason: err instanceof Error ? err.message : "Failed to delete groceries",
+      });
+      throw err;
+    }
+  });
 
 export const listGroceriesProcedure = authedProcedure
   .meta({
@@ -256,7 +260,10 @@ export const markGroceryDoneProcedure = authedProcedure
 
       return { grocery: updated[0] ?? null, stale: updated.length === 0 };
     } catch (err) {
-      log.error({ err, userId: ctx.user.id, groceryId: input.id }, "Failed to mark grocery done via API");
+      log.error(
+        { err, userId: ctx.user.id, groceryId: input.id },
+        "Failed to mark grocery done via API"
+      );
       groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
         reason: err instanceof Error ? err.message : "Failed to update grocery",
       });
@@ -324,7 +331,10 @@ export const deleteGroceryProcedure = authedProcedure
 
       return { success: true, stale: result.deletedIds.length === 0 };
     } catch (err) {
-      log.error({ err, userId: ctx.user.id, groceryId: input.id }, "Failed to delete grocery via API");
+      log.error(
+        { err, userId: ctx.user.id, groceryId: input.id },
+        "Failed to delete grocery via API"
+      );
       groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
         reason: err instanceof Error ? err.message : "Failed to delete grocery",
       });

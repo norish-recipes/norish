@@ -11,6 +11,7 @@ The current `apps/web` test baseline is also noisy: `pnpm --filter @norish/web r
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Add a recipe-page share management entry point that opens a bottom panel for create/list/copy/revoke/reactivate/delete flows.
 - Add user-settings and admin-settings inventory views for recipe share links that match established web card/table/action patterns.
 - Deliver a readonly public share page at `/share/[token]` that reuses extracted recipe detail presentation components instead of duplicating or creating one monolithic page.
@@ -20,6 +21,7 @@ The current `apps/web` test baseline is also noisy: `pnpm --filter @norish/web r
 - Include the small desktop recipe hero radius fix in the same workstream because it lives in the same recipe-detail surface.
 
 **Non-Goals:**
+
 - Reworking the mobile app share flow.
 - Redesigning recipe sharing permissions beyond the already established edit-access model.
 - Adding SEO metadata, social previews, analytics, or public indexing behavior for shared recipe pages.
@@ -73,9 +75,10 @@ The current `apps/web` test baseline is also noisy: `pnpm --filter @norish/web r
    - Alternative considered: defer all failing tests as unrelated debt. Rejected because the user explicitly asked for a baseline and fix plan.
 
 10. Fix the desktop media radius as a small recipe-detail visual correction within this change.
-   - Decision: address the missing bottom radius at the hero/media container level while extracting shared page components so desktop recipe and shared layouts do not diverge.
-   - Rationale: the issue is localized to the same recipe-detail composition work and is inexpensive to correct while touching the hero structure.
-   - Alternative considered: plan it separately. Rejected because it is part of the same surface and would create unnecessary follow-up churn.
+
+- Decision: address the missing bottom radius at the hero/media container level while extracting shared page components so desktop recipe and shared layouts do not diverge.
+- Rationale: the issue is localized to the same recipe-detail composition work and is inexpensive to correct while touching the hero structure.
+- Alternative considered: plan it separately. Rejected because it is part of the same surface and would create unnecessary follow-up churn.
 
 ## Risks / Trade-offs
 
@@ -97,6 +100,7 @@ The current `apps/web` test baseline is also noisy: `pnpm --filter @norish/web r
 7. Capture the current failing web test baseline, fix pre-existing blockers in the identified suites, and then add targeted coverage for the new share workflows.
 
 Rollback strategy:
+
 - Hide the recipe/settings/admin share UI entry points and remove the `/share/[token]` page while keeping the already-additive backend share model intact.
 - Because the main work is UI and contract extension, rollback can be performed by reverting the web surfaces and any newly introduced share endpoints without touching existing recipe data.
 

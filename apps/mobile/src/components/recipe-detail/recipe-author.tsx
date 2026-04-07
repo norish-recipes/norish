@@ -1,24 +1,25 @@
-import { Avatar, useThemeColor } from 'heroui-native';
-import React from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
-import type { AuthorDTO } from '@norish/shared/contracts';
+import React from "react";
+import { Pressable, StyleSheet, Text } from "react-native";
+import { Avatar, useThemeColor } from "heroui-native";
+
+import type { AuthorDTO } from "@norish/shared/contracts";
 
 type RecipeAuthorProps = {
   author: AuthorDTO | undefined;
 };
 
 function getInitials(name: string | null | undefined): string {
-  if (!name) return '?';
+  if (!name) return "?";
   return name
     .split(/\s+/)
     .map((w) => w[0]?.toUpperCase())
     .filter(Boolean)
     .slice(0, 2)
-    .join('');
+    .join("");
 }
 
 export function RecipeAuthor({ author }: RecipeAuthorProps) {
-  const foregroundColor = useThemeColor('foreground');
+  const foregroundColor = useThemeColor("foreground");
 
   if (!author?.name) return null;
 
@@ -26,7 +27,7 @@ export function RecipeAuthor({ author }: RecipeAuthorProps) {
 
   return (
     <Pressable style={styles.container}>
-      <Avatar alt={author.name} size="sm" className="size-8 border-foreground/20">
+      <Avatar alt={author.name} size="sm" className="border-foreground/20 size-8">
         <Avatar.Fallback>
           <Text style={styles.fallbackText}>{initials}</Text>
         </Avatar.Fallback>
@@ -38,14 +39,14 @@ export function RecipeAuthor({ author }: RecipeAuthorProps) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
   fallbackText: {
     fontSize: 10,
-    fontWeight: '700',
-    color: '#ffffff',
+    fontWeight: "700",
+    color: "#ffffff",
   },
   name: {
     fontSize: 15,

@@ -1,11 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
+import { useAuth } from "@/context/auth-context";
+import { useNetworkStatus } from "@/context/network-context";
 
-import { createClientLogger } from '@norish/shared/lib/logger';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-import { useAuth } from '@/context/auth-context';
-import { useNetworkStatus } from '@/context/network-context';
-
-const log = createClientLogger('session-revalidation');
+const log = createClientLogger("session-revalidation");
 
 /**
  * Listens for `appOnline: false => true` transitions and silently
@@ -35,7 +34,7 @@ export function useSessionRevalidation() {
 
     async function revalidate() {
       try {
-        log.info('App back online, validating session');
+        log.info("App back online, validating session");
 
         const { data: session } = await authClient!.getSession();
 
@@ -44,7 +43,7 @@ export function useSessionRevalidation() {
         }
 
         if (!session?.user) {
-          log.info('Session invalid or expired, signing out');
+          log.info("Session invalid or expired, signing out");
           await signOut();
         }
       } catch (error) {
@@ -52,7 +51,7 @@ export function useSessionRevalidation() {
           return;
         }
 
-        log.warn({ error }, 'Session validation failed transiently, will retry on next reconnect');
+        log.warn({ error }, "Session validation failed transiently, will retry on next reconnect");
       }
     }
 

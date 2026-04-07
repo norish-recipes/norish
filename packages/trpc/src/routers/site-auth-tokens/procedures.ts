@@ -41,7 +41,10 @@ const update = authedProcedure
     const result = await updateSiteAuthToken(ctx.user.id, input);
 
     if (result.stale || !result.value) {
-      log.info({ userId: ctx.user.id, tokenId: input.id, version: input.version }, "Ignoring stale site auth token update");
+      log.info(
+        { userId: ctx.user.id, tokenId: input.id, version: input.version },
+        "Ignoring stale site auth token update"
+      );
       return { stale: true };
     }
 
@@ -57,7 +60,10 @@ const remove = authedProcedure
     const result = await deleteSiteAuthToken(ctx.user.id, input.id, input.version);
 
     if (result.stale) {
-      log.info({ userId: ctx.user.id, tokenId: input.id, version: input.version }, "Ignoring stale site auth token delete");
+      log.info(
+        { userId: ctx.user.id, tokenId: input.id, version: input.version },
+        "Ignoring stale site auth token delete"
+      );
       return { success: true, stale: true };
     }
 

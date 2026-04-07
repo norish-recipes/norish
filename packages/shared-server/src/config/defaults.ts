@@ -1,5 +1,4 @@
 import type { ServerConfigKey } from "@norish/db/zodSchemas/server-config";
-
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";

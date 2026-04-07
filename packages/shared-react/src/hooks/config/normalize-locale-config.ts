@@ -1,7 +1,6 @@
-import type { EnabledLocale, LocaleConfigResult } from "./types";
-
 import { DEFAULT_LOCALE, isValidLocale } from "@norish/i18n/config";
 
+import type { EnabledLocale, LocaleConfigResult } from "./types";
 
 export function normalizeLocaleConfig(
   input: LocaleConfigResult | null | undefined

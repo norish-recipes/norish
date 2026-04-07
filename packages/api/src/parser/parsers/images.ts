@@ -5,6 +5,7 @@
  */
 
 import * as cheerio from "cheerio";
+
 import { downloadAllImagesFromJsonLd } from "@norish/shared-server/media/storage";
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod";
 
@@ -70,7 +71,9 @@ function parseSrcsetUrls(srcset: string): string[] {
   return srcset
     .split(",")
     .map((candidate) => candidate.trim().split(/\s+/)[0])
-    .filter((candidate): candidate is string => typeof candidate === "string" && candidate.length > 0);
+    .filter(
+      (candidate): candidate is string => typeof candidate === "string" && candidate.length > 0
+    );
 }
 
 function collectRawSources($img: cheerio.Cheerio<any>): string[] {

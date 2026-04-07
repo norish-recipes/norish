@@ -1,16 +1,15 @@
 "use client";
 
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { addToast } from "@heroui/react";
 import { useTranslations } from "next-intl";
-import { createArchiveHooks } from "@norish/shared-react/hooks";
 
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { useTRPC } from "@/app/providers/trpc-provider";
+import { createArchiveHooks } from "@norish/shared-react/hooks";
 
 export const sharedArchiveHooks = createArchiveHooks({
   useTRPC,
   useMutationToastAdapter: () => {
-     
     const tErrors = useTranslations("common.errors");
 
     return {

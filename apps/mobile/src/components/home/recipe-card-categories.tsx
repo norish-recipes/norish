@@ -1,8 +1,7 @@
-import { Chip } from 'heroui-native';
-import React from 'react';
-import { ScrollView } from 'react-native';
-
-import { styles } from '@/styles/recipe-card.styles';
+import React from "react";
+import { ScrollView } from "react-native";
+import { styles } from "@/styles/recipe-card.styles";
+import { Chip } from "heroui-native";
 
 type RecipeCardCategoriesProps = {
   recipeId: string;
@@ -20,7 +19,11 @@ function RecipeCardCategoriesComponent({
   if ((categories?.length ?? 0) === 0) return null;
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesRow}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.categoriesRow}
+    >
       {(categories ?? []).map((category) => (
         <Chip
           key={`${recipeId}-${category}`}

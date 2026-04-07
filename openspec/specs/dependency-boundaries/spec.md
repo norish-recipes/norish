@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change refactor-turborepo-monorepo-foundation. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Circular Dependency Baseline and Remediation
 
 The migration SHALL start from an explicit circular dependency baseline and remove all detected circular imports before finalizing workspace extraction.
@@ -111,4 +113,3 @@ Configuration loader modules SHALL import only the specific repository module(s)
 - **WHEN** `packages/config/src/server-config-loader.ts` reads or writes server config values
 - **THEN** it SHALL use scoped imports for server-config data access
 - **AND** it SHALL NOT import `@norish/db/repositories` barrel exports.
-

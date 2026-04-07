@@ -1,5 +1,6 @@
 import type { QueryKey } from "@tanstack/react-query";
 import type { createTRPCContext } from "@trpc/tanstack-react-query";
+
 import type { StoreCreateDto, StoreDto, StoreUpdateInput } from "@norish/shared/contracts";
 import type { AppRouter } from "@norish/trpc/client";
 
@@ -28,7 +29,11 @@ export type StoreGrocerySnapshot = Array<{ id: string; version: number }>;
 export type StoresMutationsResult = {
   createStore: (data: StoreCreateDto) => Promise<string>;
   updateStore: (data: StoreUpdateDraft) => void;
-  deleteStore: (storeId: string, deleteGroceries: boolean, grocerySnapshot: StoreGrocerySnapshot) => void;
+  deleteStore: (
+    storeId: string,
+    deleteGroceries: boolean,
+    grocerySnapshot: StoreGrocerySnapshot
+  ) => void;
   reorderStores: (storeIds: string[]) => void;
   isCreating: boolean;
   isUpdating: boolean;

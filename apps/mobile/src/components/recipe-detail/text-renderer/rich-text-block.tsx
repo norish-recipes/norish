@@ -1,9 +1,10 @@
-import { useThemeColor } from 'heroui-native';
-import React from 'react';
-import { StyleSheet, Text, type StyleProp, type TextProps, type TextStyle } from 'react-native';
+import type { StyleProp, TextProps, TextStyle } from "react-native";
+import React from "react";
+import { StyleSheet, Text } from "react-native";
+import { useThemeColor } from "heroui-native";
 
-import { InlineTokenRenderer } from './inline-token-renderer';
-import { parseBlocks } from './parse-blocks';
+import { InlineTokenRenderer } from "./inline-token-renderer";
+import { parseBlocks } from "./parse-blocks";
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ export function RichTextBlock({
   asFragment = false,
   textProps,
 }: RichTextBlockProps) {
-  const [foregroundColor] = useThemeColor(['foreground'] as const);
+  const [foregroundColor] = useThemeColor(["foreground"] as const);
   const flatStyle = StyleSheet.flatten(style);
 
   const blocks = parseBlocks(text);
@@ -48,11 +49,11 @@ export function RichTextBlock({
   const baseColor = (flatStyle?.color as string) ?? foregroundColor;
 
   const content = blocks.map((block, bi) => {
-    if (block.type === 'heading') {
+    if (block.type === "heading") {
       return (
         <Text
           key={bi}
-          className="text-[17px] font-bold leading-6 mt-1"
+          className="mt-1 text-[17px] leading-6 font-bold"
           style={{ color: foregroundColor }}
         >
           <InlineTokenRenderer
@@ -60,7 +61,7 @@ export function RichTextBlock({
             baseStyle={{ color: foregroundColor }}
             disableLinks={disableLinks}
           />
-          {'\n'}
+          {"\n"}
         </Text>
       );
     }

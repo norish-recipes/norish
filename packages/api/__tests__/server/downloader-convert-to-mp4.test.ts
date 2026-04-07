@@ -1,8 +1,9 @@
 // @vitest-environment node
 import { EventEmitter } from "events";
 import path from "node:path";
-
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { convertToMp4 } from "@norish/shared-server/media/storage";
 
 const mockState = vi.hoisted(() => ({
   fsStatMock: vi.fn(),
@@ -93,8 +94,6 @@ mockState.spawnMock.mockImplementation((cmd: string, args: string[]) => {
 vi.mock("child_process", () => ({
   spawn: mockState.spawnMock,
 }));
-
-import { convertToMp4 } from "@norish/shared-server/media/storage";
 
 describe("convertToMp4", () => {
   const normalizePath = (value: string) => value.replaceAll("\\", "/");

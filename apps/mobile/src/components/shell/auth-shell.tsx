@@ -1,15 +1,9 @@
-import { Card, useThemeColor } from 'heroui-native';
-import React from 'react';
-import type { ReactNode } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import type { ReactNode } from "react";
+import React from "react";
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-native";
+import { Card, useThemeColor } from "heroui-native";
 
-import { AuthLogo } from '../auth/auth-logo';
+import { AuthLogo } from "../auth/auth-logo";
 
 interface AuthShellProps {
   /** Text before the logo in the heading row, e.g. "Sign in to" */
@@ -27,12 +21,12 @@ interface AuthShellProps {
  * wrapper. Each screen provides its own card content and optional footer.
  */
 export function AuthShell({ headingPrefix, children, footer }: AuthShellProps) {
-  const [foregroundColor] = useThemeColor(['foreground'] as const);
+  const [foregroundColor] = useThemeColor(["foreground"] as const);
 
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <View style={styles.content}>
         <View style={styles.heroCopy}>
@@ -42,10 +36,8 @@ export function AuthShell({ headingPrefix, children, footer }: AuthShellProps) {
           </View>
         </View>
 
-        <Card variant="secondary" className="rounded-3xl border border-separator">
-          <Card.Body style={styles.cardBody}>
-            {children}
-          </Card.Body>
+        <Card variant="secondary" className="border-separator rounded-3xl border">
+          <Card.Body style={styles.cardBody}>{children}</Card.Body>
         </Card>
 
         {footer}
@@ -60,7 +52,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 20,
     paddingVertical: 32,
     gap: 20,
@@ -70,15 +62,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   headingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
     gap: 4,
   },
   title: {
     fontSize: 32,
     lineHeight: 38,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   subtitle: {
     fontSize: 15,

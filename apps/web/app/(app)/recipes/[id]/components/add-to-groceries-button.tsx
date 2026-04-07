@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import { MiniGroceries } from "@/components/Panel/consumers";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useRecipeContextRequired } from "../context";
-
-import { MiniGroceries } from "@/components/Panel/consumers";
 
 type Props = {
   recipeId: string;

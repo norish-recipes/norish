@@ -7,6 +7,7 @@ The backend URL is entered once on the `connect` screen and stored in `expo-secu
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Render `logo.svg` (copied from web) on all three auth screens (connect, login, register) in place of the text eyebrow
 - Fix centering and eliminate the phantom scrollbar on all three screens
 - Fix the screen that stays solid black on app launch until the user minimises/restores the window
@@ -14,6 +15,7 @@ The backend URL is entered once on the `connect` screen and stored in `expo-secu
 - Re-initialize the BetterAuth client in `AuthProvider` whenever the backend URL changes, without an app restart
 
 **Non-Goals:**
+
 - Changing the web app's auth screens
 - Redesigning the auth flow steps or adding new auth methods
 - Altering BetterAuth server configuration

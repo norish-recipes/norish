@@ -1,7 +1,5 @@
 "use client";
 
-import type { CalDavCalendarInfo } from "@norish/shared/contracts";
-
 import { useEffect, useRef, useState } from "react";
 import { EyeIcon, EyeSlashIcon, InformationCircleIcon } from "@heroicons/react/16/solid";
 import { ServerIcon } from "@heroicons/react/24/outline";
@@ -18,9 +16,9 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { CalDavCalendarInfo } from "@norish/shared/contracts";
 
 import { useCalDavSettingsContext } from "../context";
-
 import CalDavConfigEditModal from "./caldav-config-edit-modal";
 import CalDavConfigSummary from "./caldav-config-summary";
 

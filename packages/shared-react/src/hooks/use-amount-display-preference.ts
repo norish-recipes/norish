@@ -1,7 +1,6 @@
-import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
-
 import { useCallback } from "react";
 
+import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
 
 const DEFAULT_MODE: AmountDisplayMode = "fraction";
 

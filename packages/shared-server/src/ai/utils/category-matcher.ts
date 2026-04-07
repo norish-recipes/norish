@@ -1,7 +1,7 @@
 import type { IFuseOptions } from "fuse.js";
-import type { RecipeCategory } from "@norish/shared/contracts";
-
 import Fuse from "fuse.js";
+
+import type { RecipeCategory } from "@norish/shared/contracts";
 import deFormalRecipes from "@norish/i18n/messages/de-formal/recipes.json";
 import deInformalRecipes from "@norish/i18n/messages/de-informal/recipes.json";
 import enRecipes from "@norish/i18n/messages/en/recipes.json";

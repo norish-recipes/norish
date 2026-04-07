@@ -1,10 +1,10 @@
-import type { FullRecipeDTO } from "@norish/shared/contracts";
-
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { TRPCClientError } from "@trpc/client";
-import { createRecipeDetailContext } from "@norish/shared-react/hooks";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { FullRecipeDTO } from "@norish/shared/contracts";
+import { createRecipeDetailContext } from "@norish/shared-react/hooks";
 
 import "@testing-library/jest-dom";
 
@@ -95,8 +95,11 @@ describe("RecipeDetailContext", () => {
     | null = null;
 
   function hasLocalMeasurementSystem(recipe: FullRecipeDTO, target: "metric" | "us"): boolean {
-    const hasTargetIngredients = recipe.recipeIngredients.some((ingredient) => ingredient.systemUsed === target);
-    const hasTargetSteps = recipe.steps.length === 0 || recipe.steps.some((step) => step.systemUsed === target);
+    const hasTargetIngredients = recipe.recipeIngredients.some(
+      (ingredient) => ingredient.systemUsed === target
+    );
+    const hasTargetSteps =
+      recipe.steps.length === 0 || recipe.steps.some((step) => step.systemUsed === target);
 
     return hasTargetIngredients && hasTargetSteps;
   }

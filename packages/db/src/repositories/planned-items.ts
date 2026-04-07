@@ -1,8 +1,10 @@
 import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+
 import { db } from "@norish/db/drizzle";
 import { plannedItems, recipes } from "@norish/db/schema";
 
-import { appliedOutcome, type MutationOutcome, staleOutcome } from "./mutation-outcomes";
+import type { MutationOutcome } from "./mutation-outcomes";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 type PlannedItem = typeof plannedItems.$inferSelect;
 type PlannedItemInsert = typeof plannedItems.$inferInsert;
@@ -374,7 +376,11 @@ export async function reorderInSlot(
     for (const update of updates) {
       const [row] = await trx
         .update(plannedItems)
-        .set({ sortOrder: update.sortOrder, updatedAt: new Date(), version: sql`${plannedItems.version} + 1` })
+        .set({
+          sortOrder: update.sortOrder,
+          updatedAt: new Date(),
+          version: sql`${plannedItems.version} + 1`,
+        })
         .where(eq(plannedItems.id, update.id))
         .returning();
 

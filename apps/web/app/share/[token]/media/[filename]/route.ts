@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-
 import { serveRecipeMedia } from "@/lib/recipe-media";
-import { getSharedRecipeByToken, getSharedRecipeMediaCacheControl } from "@/lib/recipe-share-access";
+import {
+  getSharedRecipeByToken,
+  getSharedRecipeMediaCacheControl,
+} from "@/lib/recipe-share-access";
 
 export const runtime = "nodejs";
 

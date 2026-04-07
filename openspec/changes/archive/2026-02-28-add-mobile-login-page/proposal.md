@@ -15,10 +15,12 @@ The mobile app currently has no authentication, while web and server authenticat
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-trpc-foundation`: Mobile app tRPC client/provider wiring for consuming public and authenticated procedures.
 - `mobile-auth-login`: Mobile authentication entry flow, including login screen rendering, social OAuth initiation, callback handling, and post-login navigation.
 
 ### Modified Capabilities
+
 - None.
 
 ## Impact

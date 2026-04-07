@@ -1,7 +1,7 @@
 // @vitest-environment node
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
   createRecipeShare,
@@ -19,8 +19,8 @@ import * as schema from "@norish/db/schema";
 
 import {
   createTestIngredient,
-  createTestRecipeShare,
   createTestRecipeIngredients,
+  createTestRecipeShare,
   createTestRecipeStep,
   getTestDb,
 } from "../../../helpers/db-test-helpers";
@@ -108,7 +108,10 @@ describe("recipe share repository", () => {
   });
 
   it("rejects expired and revoked tokens uniformly and updates lastAccessedAt for active shares", async () => {
-    const { share: activeShare, token: activeToken } = await createTestRecipeShare(testUserId, testRecipeId);
+    const { share: activeShare, token: activeToken } = await createTestRecipeShare(
+      testUserId,
+      testRecipeId
+    );
     const { token: expiredToken } = await createTestRecipeShare(testUserId, testRecipeId, {
       token: "expired-token",
       expiresAt: new Date(Date.now() - 60_000),
@@ -130,7 +133,9 @@ describe("recipe share repository", () => {
 
   it("builds a sanitized public recipe view with share-scoped media URLs", async () => {
     const db = getTestDb();
-    const { token } = await createTestRecipeShare(testUserId, testRecipeId, { token: "public-token" });
+    const { token } = await createTestRecipeShare(testUserId, testRecipeId, {
+      token: "public-token",
+    });
     const ingredient = await createTestIngredient({ name: "Flour" });
     const step = await createTestRecipeStep(testRecipeId, "metric", {
       step: "Add toppings",

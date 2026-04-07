@@ -5,13 +5,13 @@ import { trpcLogger } from "@norish/shared-server/logger";
 import { plannedItemsProcedures } from "@norish/trpc/routers/calendar/planned-items";
 
 import { calendarEmitter } from "../mocks/calendar-emitter";
+import { assertHouseholdAccess } from "../mocks/permissions";
 import {
   deletePlannedItem,
   getPlannedItemById,
   moveItem,
   updatePlannedItem,
 } from "../mocks/planned-items";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
 
 vi.mock("@norish/db/repositories/planned-items", () => import("../mocks/planned-items"));

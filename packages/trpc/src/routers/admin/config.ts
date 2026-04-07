@@ -1,6 +1,6 @@
-import type { ServerConfigKey } from "@norish/config/zod/server-config";
-
 import { z } from "zod";
+
+import type { ServerConfigKey } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getAllConfigs, getConfigSecret } from "@norish/db/repositories/server-config";
 import { getUserServerRole } from "@norish/db/repositories/users";

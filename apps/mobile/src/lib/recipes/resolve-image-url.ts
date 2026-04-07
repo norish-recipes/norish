@@ -15,14 +15,14 @@ export type AuthenticatedImageSource = {
 export function resolveImageUrl(
   image: string | null | undefined,
   backendBaseUrl: string | null,
-  authCookie: string | null,
+  authCookie: string | null
 ): AuthenticatedImageSource | null {
   if (!image) return null;
 
   const uri = /^https?:\/\//i.test(image)
     ? image
     : backendBaseUrl
-      ? `${backendBaseUrl.replace(/\/+$/, '')}/${image.replace(/^\/+/, '')}`
+      ? `${backendBaseUrl.replace(/\/+$/, "")}/${image.replace(/^\/+/, "")}`
       : image;
 
   return {
@@ -36,11 +36,11 @@ export function resolveImageUrl(
  */
 export function resolveImageUri(
   image: string | null | undefined,
-  backendBaseUrl: string | null,
+  backendBaseUrl: string | null
 ): string {
-  if (!image) return '';
+  if (!image) return "";
   if (/^https?:\/\//i.test(image)) return image;
   if (!backendBaseUrl) return image;
 
-  return `${backendBaseUrl.replace(/\/+$/, '')}/${image.replace(/^\/+/, '')}`;
+  return `${backendBaseUrl.replace(/\/+$/, "")}/${image.replace(/^\/+/, "")}`;
 }

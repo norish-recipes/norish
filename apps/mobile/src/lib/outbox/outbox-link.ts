@@ -1,41 +1,42 @@
-import type { TRPCLink } from '@trpc/client';
-import type { AnyTRPCRouter } from '@trpc/server';
-
-import { observable } from '@trpc/server/observable';
-import { createClientLogger } from '@norish/shared/lib/logger';
-import type { HTTPHeaders } from '@trpc/client';
-import superjson from 'superjson';
-
-import { isBackendUnreachableError } from './error-classification';
-import { isOutboxReplayContext } from './outbox-replay-client';
-import * as outboxStore from './outbox-store';
-import { processQueue } from './outbox-replay';
-import type { OutboxRequestMetadata } from './outbox-types';
+import type { ReachabilitySnapshot } from "@/lib/network/reachability-store";
+import type { HTTPHeaders, TRPCLink } from "@trpc/client";
+import type { AnyTRPCRouter } from "@trpc/server";
 import {
   getReachabilitySnapshot,
-  type ReachabilitySnapshot,
   subscribeToReachabilitySnapshot,
-} from '@/lib/network/reachability-store';
+} from "@/lib/network/reachability-store";
+import { observable } from "@trpc/server/observable";
+import superjson from "superjson";
 
-const log = createClientLogger('outbox-link');
+import { createClientLogger } from "@norish/shared/lib/logger";
+
+import type { OutboxRequestMetadata } from "./outbox-types";
+import { isBackendUnreachableError } from "./error-classification";
+import { processQueue } from "./outbox-replay";
+import { isOutboxReplayContext } from "./outbox-replay-client";
+import * as outboxStore from "./outbox-store";
+
+const log = createClientLogger("outbox-link");
 
 function normalizeHeaders(headers: HTTPHeaders | undefined): Record<string, string> {
   if (!headers) {
     return {};
   }
 
-  if (typeof (headers as Headers)[Symbol.iterator] === 'function') {
+  if (typeof (headers as Headers)[Symbol.iterator] === "function") {
     return Object.fromEntries(headers as Iterable<[string, string]>);
   }
 
   return Object.fromEntries(
-    Object.entries(headers as Record<string, string | string[] | undefined>).flatMap(([key, value]) => {
-      if (typeof value === 'undefined') {
-        return [];
-      }
+    Object.entries(headers as Record<string, string | string[] | undefined>).flatMap(
+      ([key, value]) => {
+        if (typeof value === "undefined") {
+          return [];
+        }
 
-      return [[key, Array.isArray(value) ? value.join(', ') : value]];
-    }),
+        return [[key, Array.isArray(value) ? value.join(", ") : value]];
+      }
+    )
   );
 }
 
@@ -44,7 +45,7 @@ function getRequestMetadata(context: unknown): OutboxRequestMetadata {
 
   return {
     operationId:
-      typeof opContext.operationId === 'string' && opContext.operationId.length > 0
+      typeof opContext.operationId === "string" && opContext.operationId.length > 0
         ? opContext.operationId
         : null,
     headers: normalizeHeaders(opContext.headers as HTTPHeaders | undefined),
@@ -54,7 +55,7 @@ function getRequestMetadata(context: unknown): OutboxRequestMetadata {
 export function createOutboxLink<TRouter extends AnyTRPCRouter>(): TRPCLink<TRouter> {
   return () => {
     return ({ op, next }) => {
-      if (op.type !== 'mutation') {
+      if (op.type !== "mutation") {
         return next(op);
       }
 
@@ -96,12 +97,10 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(): TRPCLink<TRou
 type UnsubscribeFn = () => void;
 
 function isBackendReachable(snapshot: ReachabilitySnapshot): boolean {
-  return snapshot.runtimeState === 'ready' && snapshot.appOnline;
+  return snapshot.runtimeState === "ready" && snapshot.appOnline;
 }
 
-export function subscribeToReachability(
-  onReachable: (reachable: boolean) => void,
-): UnsubscribeFn {
+export function subscribeToReachability(onReachable: (reachable: boolean) => void): UnsubscribeFn {
   let wasReachable = isBackendReachable(getReachabilitySnapshot());
 
   return subscribeToReachabilitySnapshot((snapshot) => {
@@ -123,7 +122,7 @@ export function startOutboxProcessor(): UnsubscribeFn {
 
   return subscribeToReachability((reachable) => {
     if (reachable) {
-      log.debug('Backend became reachable, triggering outbox replay');
+      log.debug("Backend became reachable, triggering outbox replay");
       void processQueue();
     }
   });

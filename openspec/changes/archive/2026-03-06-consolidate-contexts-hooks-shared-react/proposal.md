@@ -17,6 +17,7 @@ Web and mobile still maintain duplicate context and hook implementations that fo
 ## Capabilities
 
 ### New Capabilities
+
 - `shared-permissions-context`: Shared permissions context factory with user-ID adapter injection, replacing duplicated web/mobile implementations
 - `shared-household-context`: Shared household context factory with subscription adapter
 - `shared-user-context`: Shared user context factory with sign-out and session adapters
@@ -31,6 +32,7 @@ Web and mobile still maintain duplicate context and hook implementations that fo
 - `shared-standalone-hooks`: Platform-agnostic standalone hooks (amount display preference, recurrence detection)
 
 ### Modified Capabilities
+
 - `shared-recipe-hooks`: Add remaining recipe hooks not yet moved (auto-tagging, nutrition, allergy detection, recipe images/videos, prefetch, autocomplete, random recipe)
 - `shared-config-hooks`: Add version query hook not yet moved
 

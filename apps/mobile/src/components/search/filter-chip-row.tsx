@@ -1,10 +1,9 @@
-import { useThemeColor } from 'heroui-native';
-import React, { useCallback } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useThemeColor } from "heroui-native";
 
-import { RECIPE_FILTER_PRESETS } from '@norish/shared-react/contexts';
-
-import type { CanonicalRecipeFilters } from '@norish/shared-react/contexts';
+import type { CanonicalRecipeFilters } from "@norish/shared-react/contexts";
+import { RECIPE_FILTER_PRESETS } from "@norish/shared-react/contexts";
 
 interface FilterChipRowProps {
   filters: CanonicalRecipeFilters;
@@ -13,10 +12,10 @@ interface FilterChipRowProps {
 
 export function FilterChipRow({ filters, onFiltersChange }: FilterChipRowProps) {
   const [accentColor, foregroundColor, surfaceColor, separatorColor] = useThemeColor([
-    'accent',
-    'foreground',
-    'surface',
-    'separator',
+    "accent",
+    "foreground",
+    "surface",
+    "separator",
   ] as const);
 
   const handlePresetPress = useCallback(
@@ -25,7 +24,7 @@ export function FilterChipRow({ filters, onFiltersChange }: FilterChipRowProps) 
       if (!preset) return;
       onFiltersChange(preset.apply(filters));
     },
-    [filters, onFiltersChange],
+    [filters, onFiltersChange]
   );
 
   return (
@@ -51,10 +50,7 @@ export function FilterChipRow({ filters, onFiltersChange }: FilterChipRowProps) 
               ]}
             >
               <Text
-                style={[
-                  styles.chipLabel,
-                  { color: active ? '#ffffff' : foregroundColor },
-                ]}
+                style={[styles.chipLabel, { color: active ? "#ffffff" : foregroundColor }]}
                 numberOfLines={1}
               >
                 {preset.label}
@@ -75,8 +71,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   chip: {
     paddingHorizontal: 12,
@@ -86,7 +82,7 @@ const styles = StyleSheet.create({
   },
   chipLabel: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
     lineHeight: 18,
   },
 });

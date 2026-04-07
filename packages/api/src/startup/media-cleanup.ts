@@ -1,13 +1,12 @@
-import type { Dirent } from "node:fs";
-
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { Dirent } from "node:fs";
 
-import { schedulerLogger } from "@norish/shared-server/logger";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { db } from "@norish/db/drizzle";
 import { getAllUserAvatars } from "@norish/db/repositories";
 import { recipeImages, recipes, recipeVideos, stepImages } from "@norish/db/schema";
+import { schedulerLogger } from "@norish/shared-server/logger";
 import { isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
 
 function getRecipesDiskDir() {

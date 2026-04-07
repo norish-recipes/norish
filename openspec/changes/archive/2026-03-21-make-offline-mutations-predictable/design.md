@@ -58,8 +58,8 @@ There are also a few paths that are already closer to the desired shape:
 
 **Alternatives considered:**
 
-- *Assume all current mutations are safe once versions exist*: rejected because many repositories currently ignore those versions.
-- *Make the outbox decide case-by-case without a shared contract*: rejected because the safety rules belong at the API boundary, not inside the transport queue.
+- _Assume all current mutations are safe once versions exist_: rejected because many repositories currently ignore those versions.
+- _Make the outbox decide case-by-case without a shared contract_: rejected because the safety rules belong at the API boundary, not inside the transport queue.
 
 ### 2. Standardize on three safe mutation patterns
 
@@ -73,8 +73,8 @@ There are also a few paths that are already closer to the desired shape:
 
 **Alternatives considered:**
 
-- *Keep server-derived toggles and broad live sweeps*: rejected because late delivery changes the meaning of the same request.
-- *Rely on `updatedAt` or current reads instead of explicit snapshots*: rejected because it still allows stale requests to target the wrong current rows.
+- _Keep server-derived toggles and broad live sweeps_: rejected because late delivery changes the meaning of the same request.
+- _Rely on `updatedAt` or current reads instead of explicit snapshots_: rejected because it still allows stale requests to target the wrong current rows.
 
 ### 3. Enforce version checks in the write query itself
 
@@ -90,8 +90,8 @@ This applies to:
 
 **Alternatives considered:**
 
-- *Accept `version` for logging only*: rejected because it provides no protection.
-- *Do a read, compare in application code, then blind update*: rejected because it still allows races between read and write.
+- _Accept `version` for logging only_: rejected because it provides no protection.
+- _Do a read, compare in application code, then blind update_: rejected because it still allows races between read and write.
 
 ### 4. Store deletion becomes snapshot-based and conditionally removes the container
 
@@ -101,8 +101,8 @@ This applies to:
 
 **Alternatives considered:**
 
-- *Delete every grocery currently in the store at delivery time*: rejected because late delivery can erase newly added groceries.
-- *Never delete the store if any mismatch exists*: rejected because it over-penalizes benign late additions when the snapshot work can still be applied safely.
+- _Delete every grocery currently in the store at delivery time_: rejected because late delivery can erase newly added groceries.
+- _Never delete the store if any mismatch exists_: rejected because it over-penalizes benign late additions when the snapshot work can still be applied safely.
 
 ### 5. Existing near-safe contracts are upgraded instead of replaced
 
@@ -112,7 +112,7 @@ This applies to:
 
 **Alternatives considered:**
 
-- *Redesign every mutation shape from scratch*: rejected because it creates unnecessary client churn for contracts that are already mostly correct.
+- _Redesign every mutation shape from scratch_: rejected because it creates unnecessary client churn for contracts that are already mostly correct.
 
 ### 6. First rollout excludes all create-style mutations and mutable join lookups
 
@@ -122,8 +122,8 @@ This applies to:
 
 **Alternatives considered:**
 
-- *Make create flows deterministic now*: rejected because it adds a larger cross-domain migration than the first rollout needs.
-- *Allow creates because conflicts are unlikely*: rejected because delayed-delivery contracts must be predictable, not merely low-risk.
+- _Make create flows deterministic now_: rejected because it adds a larger cross-domain migration than the first rollout needs.
+- _Allow creates because conflicts are unlikely_: rejected because delayed-delivery contracts must be predictable, not merely low-risk.
 
 ### 7. Stale delayed writes become logged no-ops in the first rollout
 
@@ -133,8 +133,8 @@ This applies to:
 
 **Alternatives considered:**
 
-- *Bundle structured receipts or exactly-once delivery now*: rejected because it adds a larger infrastructure project and new storage concerns.
-- *Silently swallow stale writes with no logging*: rejected because operators still need visibility into delayed requests that no longer apply.
+- _Bundle structured receipts or exactly-once delivery now_: rejected because it adds a larger infrastructure project and new storage concerns.
+- _Silently swallow stale writes with no logging_: rejected because operators still need visibility into delayed requests that no longer apply.
 
 ### 8. Security-sensitive versioned mutations stay in scope
 
@@ -144,7 +144,7 @@ This applies to:
 
 **Alternatives considered:**
 
-- *Exclude all security-sensitive actions for extra caution*: rejected because the same version and explicit-target protections apply here, and blanket exclusion would leave known unsafe writes unaddressed.
+- _Exclude all security-sensitive actions for extra caution_: rejected because the same version and explicit-target protections apply here, and blanket exclusion would leave known unsafe writes unaddressed.
 
 ## Risks / Trade-offs
 

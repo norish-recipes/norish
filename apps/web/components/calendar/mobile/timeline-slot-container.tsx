@@ -1,11 +1,10 @@
 "use client";
 
-
-import type { Slot } from "@norish/shared/contracts";
-import type { PlannedItemDisplay } from "./types";
-
 import { memo } from "react";
 
+import type { Slot } from "@norish/shared/contracts";
+
+import type { PlannedItemDisplay } from "./types";
 import { TimelinePlannedItem } from "./timeline-planned-item";
 
 type TimelineSlotContainerProps = {

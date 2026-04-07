@@ -1,5 +1,3 @@
-import * as Network from 'expo-network';
-
 import React, {
   createContext,
   useCallback,
@@ -9,28 +7,28 @@ import React, {
   useRef,
   useState,
   useSyncExternalStore,
-} from 'react';
-import { AppState } from 'react-native';
-import { onlineManager } from '@tanstack/react-query';
-
-import { createClientLogger } from '@norish/shared/lib/logger';
-
+} from "react";
+import { AppState } from "react-native";
+import { useBackendHealthProbe } from "@/hooks/use-backend-health-probe";
+import { getAuthTransportSnapshot, subscribeAuthTransport } from "@/lib/auth-session-sync";
 import {
   resetReachabilitySnapshot,
   setReachabilitySnapshot,
-} from '@/lib/network/reachability-store';
-import { getAuthTransportSnapshot, subscribeAuthTransport } from '@/lib/auth-session-sync';
-import { useBackendHealthProbe } from '@/hooks/use-backend-health-probe';
+} from "@/lib/network/reachability-store";
+import { onlineManager } from "@tanstack/react-query";
+import * as Network from "expo-network";
 
-const log = createClientLogger('network');
+import { createClientLogger } from "@norish/shared/lib/logger";
+
+const log = createClientLogger("network");
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type ReachabilityMode = 'offline' | 'backend-unreachable' | 'online';
+export type ReachabilityMode = "offline" | "backend-unreachable" | "online";
 
-type RuntimeState = 'initializing' | 'ready';
+type RuntimeState = "initializing" | "ready";
 
 type NetworkStatusValue = {
   deviceOnline: boolean;
@@ -101,9 +99,7 @@ export function useNetworkStatus(): NetworkStatusValue {
   const ctx = useContext(NetworkContext);
 
   if (!ctx) {
-    throw new Error(
-      'useNetworkStatus must be used inside a <NetworkProvider>',
-    );
+    throw new Error("useNetworkStatus must be used inside a <NetworkProvider>");
   }
 
   return ctx;
@@ -115,21 +111,18 @@ type NetworkProviderProps = {
   children: React.ReactNode;
 };
 
-export function NetworkProvider({
-  backendBaseUrl,
-  children,
-}: NetworkProviderProps) {
+export function NetworkProvider({ backendBaseUrl, children }: NetworkProviderProps) {
   // ---- state ----
   const [deviceOnline, setDeviceOnline] = useState(true); // assume online until we know otherwise
   const [backendReachable, setBackendReachable] = useState(false);
-  const [runtimeState, setRuntimeState] = useState<RuntimeState>('initializing');
+  const [runtimeState, setRuntimeState] = useState<RuntimeState>("initializing");
 
   // ---- refs ----
   const isMountedRef = useRef(true);
   const authTransportSnapshot = useSyncExternalStore(
     subscribeAuthTransport,
     getAuthTransportSnapshot,
-    getAuthTransportSnapshot,
+    getAuthTransportSnapshot
   );
 
   // -------------------------------------------------------------------
@@ -143,9 +136,7 @@ export function NetworkProvider({
         const state = await Network.getNetworkStateAsync();
 
         if (!cancelled) {
-          setDeviceOnline(
-            (state.isInternetReachable ?? state.isConnected) ?? false,
-          );
+          setDeviceOnline(state.isInternetReachable ?? state.isConnected ?? false);
         }
       } catch {
         if (!cancelled) {
@@ -158,8 +149,8 @@ export function NetworkProvider({
 
     // expo-network does not have a subscription API on all platforms,
     // so we also listen for AppState changes to re-check.
-    const sub = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active') {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
         void checkDevice();
       }
     });
@@ -182,7 +173,7 @@ export function NetworkProvider({
   useEffect(() => {
     // No async probe needed — just settle as ready.
     // Backend reachability is determined by HTTP health checks and WebSocket signals.
-    setRuntimeState('ready');
+    setRuntimeState("ready");
   }, [backendBaseUrl]);
 
   // -------------------------------------------------------------------
@@ -210,7 +201,7 @@ export function NetworkProvider({
     prevDeviceOnlineRef.current = deviceOnline;
 
     if (wasOffline && deviceOnline) {
-      log.info('Device connectivity restored — waiting for WebSocket to reconnect');
+      log.info("Device connectivity restored — waiting for WebSocket to reconnect");
     }
 
     if (!deviceOnline) {
@@ -229,7 +220,7 @@ export function NetworkProvider({
       }
 
       setBackendReachable(true);
-      log.info('WebSocket connected — backend marked reachable');
+      log.info("WebSocket connected — backend marked reachable");
     });
 
     return unsubscribe;
@@ -245,7 +236,7 @@ export function NetworkProvider({
       }
 
       setBackendReachable(false);
-      log.info('WebSocket disconnected — backend marked unreachable');
+      log.info("WebSocket disconnected — backend marked unreachable");
     });
 
     return unsubscribe;
@@ -265,7 +256,7 @@ export function NetworkProvider({
       // still be needed before any WebSocket connection exists.
       setOnline(deviceOnline);
 
-      return () => { };
+      return () => {};
     });
   }, [deviceOnline]);
 
@@ -273,10 +264,10 @@ export function NetworkProvider({
   // Derive mode
   // -------------------------------------------------------------------
   const mode: ReachabilityMode = !deviceOnline
-    ? 'offline'
+    ? "offline"
     : !backendReachable
-      ? 'backend-unreachable'
-      : 'online';
+      ? "backend-unreachable"
+      : "online";
 
   // Log mode transitions
   const prevModeRef = useRef(mode);
@@ -313,10 +304,8 @@ export function NetworkProvider({
       mode,
       runtimeState,
     }),
-    [appOnline, backendReachable, deviceOnline, mode, runtimeState],
+    [appOnline, backendReachable, deviceOnline, mode, runtimeState]
   );
 
-  return (
-    <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>
-  );
+  return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>;
 }

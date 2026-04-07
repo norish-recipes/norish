@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { serveRecipeStepMedia } from "@/lib/recipe-media";
+
 export const runtime = "nodejs";
 
 const VALID_UUID_PATTERN = /^[a-f0-9-]{36}$/i;
-
-import { serveRecipeStepMedia } from "@/lib/recipe-media";
 
 export async function GET(
   req: Request,

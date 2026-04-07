@@ -1,5 +1,4 @@
 import type { Queue, QueueOptions } from "bullmq";
-
 import { Queue as BullQueue } from "bullmq";
 
 import { withJobOperationContext } from "./queue-operation-context";

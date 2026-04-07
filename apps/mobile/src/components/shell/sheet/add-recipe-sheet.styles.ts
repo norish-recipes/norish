@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 export const menuStyles = StyleSheet.create({
   container: {
@@ -8,16 +8,16 @@ export const menuStyles = StyleSheet.create({
     gap: 12,
   },
   iconContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 20,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
   },
 });
@@ -32,7 +32,7 @@ export const subSheetStyles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   subtitle: {
     fontSize: 14,
@@ -56,13 +56,13 @@ export const subSheetStyles = StyleSheet.create({
     minHeight: 200,
   },
   whiteLabel: {
-    color: '#fff',
+    color: "#fff",
   },
   gradientFill: {
     ...StyleSheet.absoluteFillObject,
   },
   actionRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
   actionButtonSlot: {
@@ -82,14 +82,14 @@ export const photoStyles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 10,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   thumb: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   removeButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 4,
     right: 4,
     width: 22,
@@ -97,7 +97,7 @@ export const photoStyles = StyleSheet.create({
   },
   counter: {
     fontSize: 12,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: -8,
   },
 });

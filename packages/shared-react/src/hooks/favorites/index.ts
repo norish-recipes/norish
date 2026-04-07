@@ -1,5 +1,4 @@
 import type { CreateFavoritesHooksOptions } from "./types";
-
 import { createUseFavoritesMutation } from "../recipes/dashboard/use-favorites-mutation";
 import { createUseFavoritesQuery } from "../recipes/dashboard/use-favorites-query";
 

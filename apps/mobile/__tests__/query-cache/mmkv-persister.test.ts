@@ -1,4 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { createMmkvPersister } from "../../src/lib/query-cache/mmkv-persister";
 
 // Mock MMKV
 const mockSet = vi.fn();
@@ -6,7 +8,7 @@ const mockGetString = vi.fn();
 const mockDelete = vi.fn();
 const mockClearAll = vi.fn();
 
-vi.mock('@/lib/storage/query-cache-mmkv', () => ({
+vi.mock("@/lib/storage/query-cache-mmkv", () => ({
   queryCacheStorage: {
     set: (...args: unknown[]) => mockSet(...args),
     getString: (...args: unknown[]) => mockGetString(...args),
@@ -15,7 +17,7 @@ vi.mock('@/lib/storage/query-cache-mmkv', () => ({
   },
 }));
 
-vi.mock('@norish/shared/lib/logger', () => ({
+vi.mock("@norish/shared/lib/logger", () => ({
   createClientLogger: () => ({
     info: vi.fn(),
     warn: vi.fn(),
@@ -23,9 +25,7 @@ vi.mock('@norish/shared/lib/logger', () => ({
   }),
 }));
 
-import { createMmkvPersister } from '../../src/lib/query-cache/mmkv-persister';
-
-describe('mmkv-persister', () => {
+describe("mmkv-persister", () => {
   let persister: ReturnType<typeof createMmkvPersister>;
 
   beforeEach(() => {
@@ -33,48 +33,45 @@ describe('mmkv-persister', () => {
     persister = createMmkvPersister();
   });
 
-  describe('persistClient', () => {
-    it('serializes and stores the client state', () => {
+  describe("persistClient", () => {
+    it("serializes and stores the client state", () => {
       const client = {
         timestamp: Date.now(),
-        buster: '1.0.0',
+        buster: "1.0.0",
         clientState: { mutations: [], queries: [] },
       };
 
       persister.persistClient(client);
 
-      expect(mockSet).toHaveBeenCalledWith(
-        'tanstack-query-cache',
-        JSON.stringify(client),
-      );
+      expect(mockSet).toHaveBeenCalledWith("tanstack-query-cache", JSON.stringify(client));
     });
 
-    it('catches errors without throwing', () => {
+    it("catches errors without throwing", () => {
       mockSet.mockImplementation(() => {
-        throw new Error('write failed');
+        throw new Error("write failed");
       });
 
       expect(() =>
         persister.persistClient({
           timestamp: Date.now(),
-          buster: '1.0.0',
+          buster: "1.0.0",
           clientState: { mutations: [], queries: [] },
-        }),
+        })
       ).not.toThrow();
     });
   });
 
-  describe('restoreClient', () => {
-    it('returns undefined when no cached data exists', () => {
+  describe("restoreClient", () => {
+    it("returns undefined when no cached data exists", () => {
       mockGetString.mockReturnValue(undefined);
 
       expect(persister.restoreClient()).toBeUndefined();
     });
 
-    it('deserializes and returns stored client state', () => {
+    it("deserializes and returns stored client state", () => {
       const client = {
         timestamp: Date.now(),
-        buster: '1.0.0',
+        buster: "1.0.0",
         clientState: { mutations: [], queries: [] },
       };
 
@@ -85,43 +82,43 @@ describe('mmkv-persister', () => {
       expect(restored).toEqual(client);
     });
 
-    it('handles corrupt data gracefully and clears storage', () => {
-      mockGetString.mockReturnValue('not-valid-json{{{');
+    it("handles corrupt data gracefully and clears storage", () => {
+      mockGetString.mockReturnValue("not-valid-json{{{");
 
       const result = persister.restoreClient();
 
       expect(result).toBeUndefined();
-      expect(mockDelete).toHaveBeenCalledWith('tanstack-query-cache');
+      expect(mockDelete).toHaveBeenCalledWith("tanstack-query-cache");
     });
 
-    it('handles read errors gracefully and clears storage', () => {
+    it("handles read errors gracefully and clears storage", () => {
       mockGetString.mockImplementation(() => {
-        throw new Error('read failed');
+        throw new Error("read failed");
       });
 
       expect(persister.restoreClient()).toBeUndefined();
-      expect(mockDelete).toHaveBeenCalledWith('tanstack-query-cache');
+      expect(mockDelete).toHaveBeenCalledWith("tanstack-query-cache");
     });
   });
 
-  describe('removeClient', () => {
-    it('deletes the stored data', () => {
+  describe("removeClient", () => {
+    it("deletes the stored data", () => {
       persister.removeClient();
 
-      expect(mockDelete).toHaveBeenCalledWith('tanstack-query-cache');
+      expect(mockDelete).toHaveBeenCalledWith("tanstack-query-cache");
     });
 
-    it('catches errors without throwing', () => {
+    it("catches errors without throwing", () => {
       mockDelete.mockImplementation(() => {
-        throw new Error('delete failed');
+        throw new Error("delete failed");
       });
 
       expect(() => persister.removeClient()).not.toThrow();
     });
   });
 
-  describe('round-trip', () => {
-    it('persisted data can be restored', () => {
+  describe("round-trip", () => {
+    it("persisted data can be restored", () => {
       let stored: string | undefined;
 
       mockSet.mockImplementation((_key: string, value: string) => {
@@ -131,14 +128,14 @@ describe('mmkv-persister', () => {
 
       const original = {
         timestamp: Date.now(),
-        buster: '2.0.0',
+        buster: "2.0.0",
         clientState: {
           mutations: [],
           queries: [
             {
-              queryKey: ['test'],
+              queryKey: ["test"],
               queryHash: '["test"]',
-              state: { data: { hello: 'world' }, status: 'success' },
+              state: { data: { hello: "world" }, status: "success" },
             },
           ],
         },

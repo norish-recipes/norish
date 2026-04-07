@@ -1,8 +1,8 @@
 "use client";
 
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-
 import { motion } from "motion/react";
+
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
 import { RecurrencePill } from "./recurrence-pill";

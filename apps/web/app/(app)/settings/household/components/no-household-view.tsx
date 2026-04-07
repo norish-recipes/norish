@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { FormEvent, useState } from "react";
+import { HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import {
   Button,
   Card,
@@ -10,7 +11,6 @@ import {
   InputOtp,
   REGEXP_ONLY_DIGITS,
 } from "@heroui/react";
-import { HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 import { useHouseholdSettingsContext } from "../context";

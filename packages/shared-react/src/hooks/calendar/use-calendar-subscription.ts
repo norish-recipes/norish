@@ -1,8 +1,8 @@
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
-import type { CalendarCacheHelpers, CreateCalendarHooksOptions } from "./types";
 
-import { useSubscription } from "@trpc/tanstack-react-query";
+import type { CalendarCacheHelpers, CreateCalendarHooksOptions } from "./types";
 
 type CreateUseCalendarSubscriptionOptions = CreateCalendarHooksOptions & {
   useCalendarCacheHelpers: (startISO: string, endISO: string) => CalendarCacheHelpers;

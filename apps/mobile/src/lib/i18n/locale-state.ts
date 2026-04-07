@@ -1,12 +1,12 @@
-import { DEFAULT_LOCALE, getValidLocale, isValidLocale } from '@norish/i18n/config';
-import type { EnabledLocale } from '@norish/shared-react/hooks';
+import type { EnabledLocale } from "@norish/shared-react/hooks";
+import { DEFAULT_LOCALE, getValidLocale, isValidLocale } from "@norish/i18n/config";
 
 type LocaleDisplayMap = Record<string, string>;
 
 function getLocaleDisplayName(localeCode: string): string {
   try {
-    const baseLanguage = localeCode.split('-')[0] ?? localeCode;
-    const displayNames = new Intl.DisplayNames(['en'], { type: 'language' });
+    const baseLanguage = localeCode.split("-")[0] ?? localeCode;
+    const displayNames = new Intl.DisplayNames(["en"], { type: "language" });
     const resolved = displayNames.of(baseLanguage);
 
     return resolved || localeCode;
@@ -57,9 +57,7 @@ export function resolveLocaleSelection(
   return enabledLocales[0]?.code ?? DEFAULT_LOCALE;
 }
 
-export function buildLocaleDisplayMap(
-  locales: EnabledLocale[]
-): LocaleDisplayMap {
+export function buildLocaleDisplayMap(locales: EnabledLocale[]): LocaleDisplayMap {
   const displayMap: LocaleDisplayMap = {};
 
   for (const locale of locales) {

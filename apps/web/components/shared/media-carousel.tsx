@@ -2,14 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import NextImage from "next/image";
+import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
+import ImageLightbox from "@/components/shared/image-lightbox";
+import VideoPlayer from "@/components/shared/video-player";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-
-import VideoPlayer from "@/components/shared/video-player";
-import ImageLightbox from "@/components/shared/image-lightbox";
-import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
 
 export interface MediaItem {
   type: "image" | "video";

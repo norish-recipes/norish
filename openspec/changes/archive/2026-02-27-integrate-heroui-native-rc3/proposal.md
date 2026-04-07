@@ -12,9 +12,11 @@ The mobile Expo starter currently uses baseline UI primitives, which slows down 
 ## Capabilities
 
 ### New Capabilities
+
 - `heroui-native-integration`: Adds a standardized HeroUI Native setup for the mobile app, including provider wiring, theme token alignment, and baseline component usage patterns.
 
 ### Modified Capabilities
+
 - `mobile-ui`: Updates starter screen UI requirements to use HeroUI Native Card primitives instead of ad hoc card styling.
 
 ## Impact

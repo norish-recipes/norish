@@ -14,6 +14,7 @@ Norish's delayed-delivery mobile outbox will send some mutations after the user 
 ## Capabilities
 
 ### New Capabilities
+
 - `delayed-delivery-mutation-safety`: Contract rules, mutation inventory, and stale-write protections that make delayed mobile delivery predictable without replay-specific workflow changes.
 
 ### Modified Capabilities

@@ -1,7 +1,8 @@
 "use client";
 
-import type { RecipeCategory } from "@norish/shared/contracts";
-
+import AuthorChip from "@/app/(app)/recipes/[id]/components/author-chip";
+import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import {
   ArrowTopRightOnSquareIcon,
   CakeIcon,
@@ -13,22 +14,25 @@ import {
 } from "@heroicons/react/16/solid";
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import type { RecipeCategory } from "@norish/shared/contracts";
 import {
   formatMinutesHM,
   isAllergenTag,
   sortTagsWithAllergyPriority,
 } from "@norish/shared/lib/helpers";
 
-import AuthorChip from "@/app/(app)/recipes/[id]/components/author-chip";
-import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
-import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-
 type RecipeTagLike = { name: string };
 
 type RecipeMediaLike = {
   image?: string | null;
   images?: Array<{ image: string; order?: number }>;
-  videos?: Array<{ video: string; thumbnail?: string | null; duration?: number | null; order: number }>;
+  videos?: Array<{
+    video: string;
+    thumbnail?: string | null;
+    duration?: number | null;
+    order: number;
+  }>;
 };
 
 type RecipeSummaryLike = RecipeMediaLike & {
@@ -92,11 +96,17 @@ export function ReadonlyRecipeMedia({
 
       {topLeftContent && <div className="absolute top-4 left-4 z-50">{topLeftContent}</div>}
       {topRightContent && <div className="absolute top-4 right-4 z-50">{topRightContent}</div>}
-      {bottomRightContent && <div className="absolute right-4 bottom-8 z-50">{bottomRightContent}</div>}
+      {bottomRightContent && (
+        <div className="absolute right-4 bottom-8 z-50">{bottomRightContent}</div>
+      )}
 
       {!topLeftContent && recipe.author && (
         <div className="absolute top-4 left-4 z-50">
-          <AuthorChip image={recipe.author.image} name={recipe.author.name} userId={recipe.author.id} />
+          <AuthorChip
+            image={recipe.author.image}
+            name={recipe.author.name}
+            userId={recipe.author.id}
+          />
         </div>
       )}
     </div>

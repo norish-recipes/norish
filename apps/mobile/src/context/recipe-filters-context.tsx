@@ -1,9 +1,9 @@
-import { createRecipeFiltersContext } from '@norish/shared-react/contexts';
-
 import {
   mobileRecipeFiltersStorageAdapter,
   RECIPE_FILTERS_STORAGE_KEY,
-} from '@/hooks/recipes/recipe-filters-storage-adapter';
+} from "@/hooks/recipes/recipe-filters-storage-adapter";
+
+import { createRecipeFiltersContext } from "@norish/shared-react/contexts";
 
 const recipeFiltersContext = createRecipeFiltersContext({
   storageAdapter: mobileRecipeFiltersStorageAdapter,

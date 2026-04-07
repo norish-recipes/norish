@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { redactUrl } from "../../src/logger";
 
 describe("redactUrl", () => {

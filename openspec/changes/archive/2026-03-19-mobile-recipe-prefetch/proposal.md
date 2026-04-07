@@ -11,9 +11,11 @@ On web, the `useRecipePrefetch` hook uses `IntersectionObserver` to prefetch ful
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-recipe-prefetch`: Viewability-driven prefetching of full recipe data on mobile, with a configurable cache budget to bound MMKV usage.
 
 ### Modified Capabilities
+
 - `mobile-offline-cache`: Add a requirement that the persisted cache should respect a maximum number of individually-prefetched recipe entries to limit device storage usage.
 
 ## Impact

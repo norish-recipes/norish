@@ -1,11 +1,10 @@
-import { Uniwind } from 'uniwind';
-import React, { useCallback, useEffect, useSyncExternalStore } from 'react';
-
+import type { AppearanceMode } from "@/lib/preferences/appearance-preference-store";
+import React, { useCallback, useEffect, useSyncExternalStore } from "react";
 import {
-  type AppearanceMode,
   loadAppearanceMode,
   saveAppearanceMode,
-} from '@/lib/preferences/appearance-preference-store';
+} from "@/lib/preferences/appearance-preference-store";
+import { Uniwind } from "uniwind";
 
 export type { AppearanceMode };
 
@@ -17,7 +16,7 @@ type AppearanceSnapshot = {
 const listeners = new Set<() => void>();
 
 let snapshot: AppearanceSnapshot = {
-  mode: 'system',
+  mode: "system",
   hydrated: false,
 };
 let initPromise: Promise<void> | null = null;
@@ -40,8 +39,8 @@ function getSnapshot(): AppearanceSnapshot {
 }
 
 function applyAppearanceMode(mode: AppearanceMode) {
-  if (mode === 'system') {
-    Uniwind.setTheme('system');
+  if (mode === "system") {
+    Uniwind.setTheme("system");
     return;
   }
 
@@ -74,11 +73,7 @@ function setAppearanceMode(nextMode: AppearanceMode) {
   emit();
 }
 
-export function AppearancePreferenceProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function AppearancePreferenceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void ensureInitialized();
   }, []);

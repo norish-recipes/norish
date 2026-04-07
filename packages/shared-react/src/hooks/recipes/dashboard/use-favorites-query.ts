@@ -1,8 +1,7 @@
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { CreateRecipeHooksOptions } from "../types";
 
 export type FavoritesQueryResult = {
   favoriteIds: string[];

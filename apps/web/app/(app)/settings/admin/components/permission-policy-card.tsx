@@ -1,12 +1,11 @@
 "use client";
 
-import type { PermissionLevel } from "@norish/config/zod/server-config";
-
 import { useState } from "react";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Card, CardBody, CardHeader, Select, SelectItem } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { PermissionLevel } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
 

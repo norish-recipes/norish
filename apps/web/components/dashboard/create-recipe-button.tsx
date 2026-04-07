@@ -2,6 +2,10 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import ImportFromImageModal from "@/components/shared/import-from-image-modal";
+import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
+import ImportRecipeModal from "@/components/shared/import-recipe-modal";
+import { usePermissionsContext } from "@/context/permissions-context";
 import {
   ArrowDownTrayIcon,
   ClipboardDocumentIcon,
@@ -11,11 +15,6 @@ import {
 import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/dropdown";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import ImportFromImageModal from "@/components/shared/import-from-image-modal";
-import ImportFromPasteModal from "@/components/shared/import-from-paste-modal";
-import ImportRecipeModal from "@/components/shared/import-recipe-modal";
-import { usePermissionsContext } from "@/context/permissions-context";
 
 export default function CreateRecipeButton() {
   const router = useRouter();

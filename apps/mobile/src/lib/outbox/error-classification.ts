@@ -1,1 +1,1 @@
-export { isBackendUnreachableError } from '@norish/shared/lib/trpc-errors';
+export { isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";

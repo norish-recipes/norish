@@ -97,6 +97,7 @@ The `backendBaseUrl === null` case (no server configured) is handled inside the 
 ### 3. Route Structure Changes
 
 **Before:**
+
 ```
 app/
   _layout.tsx        ← RootLayoutContent + MobileAuthGuard
@@ -112,6 +113,7 @@ app/
 ```
 
 **After:**
+
 ```
 app/
   _layout.tsx        ← Stack with Stack.Protected guards
@@ -136,7 +138,7 @@ getHeaders: () => {
   const cookies = client.getCookie();
   if (!cookies) return {};
   return { Cookie: cookies };
-}
+};
 ```
 
 The `authToken` prop is removed. The `providerKey` still changes when the base URL changes to force reconnection, but no longer tracks an auth token.
@@ -182,6 +184,7 @@ When the user submits a valid backend URL on the connect screen, instead of `rou
 ### 7. Server-Side Changes
 
 **Add `expo()` plugin:**
+
 ```ts
 import { expo } from "@better-auth/expo";
 // ...
@@ -194,13 +197,14 @@ plugins: [
 ```
 
 **Add trusted origin:**
+
 ```ts
 trustedOrigins: [
   SERVER_CONFIG.AUTH_URL,
   ...SERVER_CONFIG.TRUSTED_ORIGINS,
   "mobile://",
   // ... dev origins
-]
+];
 ```
 
 **Remove `bearer()` plugin** -- no longer needed.
@@ -222,25 +226,25 @@ The 200+ line context file shrinks to ~50 lines.
 
 ### 9. Files Deleted
 
-| File | Reason |
-|------|--------|
-| `apps/web/app/api/mobile-auth/callback/route.ts` | Replaced by expo plugin's authorization proxy |
-| `apps/web/app/api/mobile-auth/exchange/route.ts` | No more handoff codes |
-| `apps/web/app/api/mobile-auth/error/route.ts` | Errors handled via deep link params by expo plugin |
-| `apps/web/lib/auth/mobile-handoff-store.ts` | In-memory store no longer needed |
-| `apps/mobile/src/lib/auth/mobile-auth-service.ts` | Replaced by authClient methods |
-| `apps/mobile/src/lib/auth/mobile-auth-session-token.ts` | SecureStore managed by expoClient plugin |
-| `apps/mobile/src/components/auth/mobile-auth-guard.tsx` | Replaced by Stack.Protected |
+| File                                                    | Reason                                             |
+| ------------------------------------------------------- | -------------------------------------------------- |
+| `apps/web/app/api/mobile-auth/callback/route.ts`        | Replaced by expo plugin's authorization proxy      |
+| `apps/web/app/api/mobile-auth/exchange/route.ts`        | No more handoff codes                              |
+| `apps/web/app/api/mobile-auth/error/route.ts`           | Errors handled via deep link params by expo plugin |
+| `apps/web/lib/auth/mobile-handoff-store.ts`             | In-memory store no longer needed                   |
+| `apps/mobile/src/lib/auth/mobile-auth-service.ts`       | Replaced by authClient methods                     |
+| `apps/mobile/src/lib/auth/mobile-auth-session-token.ts` | SecureStore managed by expoClient plugin           |
+| `apps/mobile/src/components/auth/mobile-auth-guard.tsx` | Replaced by Stack.Protected                        |
 
 ### 10. Files Renamed (drop `mobile-` prefix)
 
-| Before | After |
-|--------|-------|
-| `context/mobile-auth-context.tsx` | `context/auth-context.tsx` |
-| `providers/mobile-trpc-provider.tsx` | `providers/trpc-provider.tsx` |
-| `MobileAuthProvider` / `useMobileAuth` | `AuthProvider` / `useAuth` |
-| `MobileTrpcProvider` / `useMobileTRPC` | `TrpcProvider` / `useTRPC` |
-| `MobileAuthShell` | `AuthShell` (or removed entirely if guards handle it) |
+| Before                                 | After                                                 |
+| -------------------------------------- | ----------------------------------------------------- |
+| `context/mobile-auth-context.tsx`      | `context/auth-context.tsx`                            |
+| `providers/mobile-trpc-provider.tsx`   | `providers/trpc-provider.tsx`                         |
+| `MobileAuthProvider` / `useMobileAuth` | `AuthProvider` / `useAuth`                            |
+| `MobileTrpcProvider` / `useMobileTRPC` | `TrpcProvider` / `useTRPC`                            |
+| `MobileAuthShell`                      | `AuthShell` (or removed entirely if guards handle it) |
 
 ### 11. Metro Config
 
@@ -288,6 +292,7 @@ export interface AuthProvidersResponse {
 **Mobile: Registration screen**
 
 Add `apps/mobile/src/app/(auth)/register.tsx` with the same layout as the login/connect screens (eyebrow, title, subtitle, card). The form collects:
+
 - Name (text input)
 - Email (email input)
 - Password (secure text)
@@ -327,18 +332,22 @@ app/
 ### 14. Dependencies
 
 **Add to server (`packages/auth` or root):**
+
 - `@better-auth/expo` (server plugin)
 
 **Add to mobile (`apps/mobile`):**
+
 - `@better-auth/expo` (client plugin)
 - `better-auth` (for `createAuthClient` from `better-auth/react`)
 - `expo-network` (required by expoClient for connectivity detection)
 - `expo-linking` (required by expoClient for deep link URL creation)
 
 **Already installed (no changes):**
+
 - `expo-web-browser` (used internally by expoClient)
 - `expo-secure-store` (used as storage for expoClient)
 - `expo-constants` (used by expoClient to read scheme)
 
 **Remove from server auth config:**
+
 - `bearer` import from `better-auth/plugins` (no longer used)

@@ -1,22 +1,17 @@
-import Entypo from '@expo/vector-icons/Entypo';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Button, Separator, useThemeColor } from 'heroui-native';
-import React, { useCallback } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useIntl } from 'react-intl';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
-import { withUniwind } from 'uniwind';
+import React, { useCallback } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
+import Entypo from "@expo/vector-icons/Entypo";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Button, Separator, useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
+import { withUniwind } from "uniwind";
 
-import type { RecipeIngredientsDto } from '@norish/shared/contracts';
-import { formatAmount } from '@norish/shared/lib/format-amount';
-
-import { useAmountDisplayPreference } from '@/hooks/use-amount-display-preference';
+import type { RecipeIngredientsDto } from "@norish/shared/contracts";
+import { formatAmount } from "@norish/shared/lib/format-amount";
 
 const StyledEntypo = withUniwind(Entypo);
 
@@ -27,7 +22,7 @@ const SPRING = { damping: 20, stiffness: 200, mass: 0.8 } as const;
 
 function formatServings(n: number): string {
   if (Number.isInteger(n)) return String(n);
-  return n.toFixed(2).replace(/\.?0+$/, '');
+  return n.toFixed(2).replace(/\.?0+$/, "");
 }
 
 function calcDecServings(servings: number): number {
@@ -61,9 +56,9 @@ export function CookModeIngredients({
 }: CookModeIngredientsProps) {
   const intl = useIntl();
   const [foregroundColor, mutedColor, accentColor] = useThemeColor([
-    'foreground',
-    'muted',
-    'accent',
+    "foreground",
+    "muted",
+    "accent",
   ] as const);
 
   const { mode: amountMode, toggleMode: toggleAmountMode } = useAmountDisplayPreference();
@@ -114,12 +109,9 @@ export function CookModeIngredients({
         style={animatedStyle}
       >
         {/* Servings control */}
-        <View className="flex-row items-center justify-between mb-5 py-2">
-          <Text
-            className="text-[15px] font-medium"
-            style={{ color: mutedColor }}
-          >
-            {intl.formatMessage({ id: 'recipes.cookMode.servings' })}
+        <View className="mb-5 flex-row items-center justify-between py-2">
+          <Text className="text-[15px] font-medium" style={{ color: mutedColor }}>
+            {intl.formatMessage({ id: "recipes.cookMode.servings" })}
           </Text>
           <View className="flex-row items-center gap-3">
             {/* Fraction / decimal toggle */}
@@ -127,28 +119,24 @@ export function CookModeIngredients({
               variant="secondary"
               size="sm"
               isIconOnly
-              className="size-8 rounded-lg bg-surface-tertiary"
+              className="bg-surface-tertiary size-8 rounded-lg"
               onPress={toggleAmountMode}
             >
-              <Text className="text-xs font-semibold text-foreground">
-                {amountMode === 'fraction' ? '½' : '0.5'}
+              <Text className="text-foreground text-xs font-semibold">
+                {amountMode === "fraction" ? "½" : "0.5"}
               </Text>
             </Button>
             <Button
               variant="secondary"
               size="sm"
               isIconOnly
-              className="size-8 rounded-lg bg-surface-tertiary"
+              className="bg-surface-tertiary size-8 rounded-lg"
               onPress={dec}
             >
-              <StyledEntypo
-                name="minus"
-                size={14}
-                className="text-foreground"
-              />
+              <StyledEntypo name="minus" size={14} className="text-foreground" />
             </Button>
             <Text
-              className="text-lg font-bold min-w-[28px] text-center"
+              className="min-w-[28px] text-center text-lg font-bold"
               style={{ color: foregroundColor }}
             >
               {formatServings(servings)}
@@ -157,30 +145,26 @@ export function CookModeIngredients({
               variant="secondary"
               size="sm"
               isIconOnly
-              className="size-8 rounded-lg bg-surface-tertiary"
+              className="bg-surface-tertiary size-8 rounded-lg"
               onPress={inc}
             >
-              <StyledEntypo
-                name="plus"
-                size={14}
-                className="text-foreground"
-              />
+              <StyledEntypo name="plus" size={14} className="text-foreground" />
             </Button>
           </View>
         </View>
 
         {/* Ingredient list */}
         {ingredients.map((item, index) => {
-          const displayName = item.ingredientName ?? '';
-          const isHeading = displayName.trim().startsWith('#');
+          const displayName = item.ingredientName ?? "";
+          const isHeading = displayName.trim().startsWith("#");
 
           if (isHeading) {
-            const headingText = displayName.trim().replace(/^#+\s*/, '');
+            const headingText = displayName.trim().replace(/^#+\s*/, "");
             return (
               <React.Fragment key={`heading-${index}`}>
                 {index > 0 && <View className="h-3" />}
                 <View
-                  className="pb-2 mb-1"
+                  className="mb-1 pb-2"
                   style={{
                     borderBottomWidth: StyleSheet.hairlineWidth,
                     borderBottomColor: `${mutedColor}15`,
@@ -205,33 +189,30 @@ export function CookModeIngredients({
 
           // Strip markdown
           const cleanName = displayName
-            .replace(/\*\*(.+?)\*\*/g, '$1')
-            .replace(/\*(.+?)\*/g, '$1')
-            .replace(/\[(.+?)\]\(.+?\)/g, '$1');
+            .replace(/\*\*(.+?)\*\*/g, "$1")
+            .replace(/\*(.+?)\*/g, "$1")
+            .replace(/\[(.+?)\]\(.+?\)/g, "$1");
 
           return (
             <React.Fragment key={`${item.id ?? displayName}-${index}`}>
-              <View className="flex-row items-center py-3.5 gap-3">
+              <View className="flex-row items-center gap-3 py-3.5">
                 <View
-                  className="size-1.5 rounded-full shrink-0"
+                  className="size-1.5 shrink-0 rounded-full"
                   style={{ backgroundColor: accentColor }}
                 />
                 <Text
-                  className="text-[17px] flex-1"
+                  className="flex-1 text-[17px]"
                   style={{ color: foregroundColor }}
                   numberOfLines={2}
                 >
                   {cleanName}
                 </Text>
-                <Text
-                  className="text-[15px] font-medium shrink-0"
-                  style={{ color: mutedColor }}
-                >
-                  {[scaledAmount, item.unit].filter(Boolean).join(' ')}
+                <Text className="shrink-0 text-[15px] font-medium" style={{ color: mutedColor }}>
+                  {[scaledAmount, item.unit].filter(Boolean).join(" ")}
                 </Text>
               </View>
               {index < ingredients.length - 1 &&
-                !(ingredients[index + 1]?.ingredientName ?? '').trim().startsWith('#') && (
+                !(ingredients[index + 1]?.ingredientName ?? "").trim().startsWith("#") && (
                   <Separator className="opacity-20" />
                 )}
             </React.Fragment>
@@ -239,14 +220,10 @@ export function CookModeIngredients({
         })}
 
         {/* Swipe hint */}
-        <View className="flex-row items-center gap-1.5 mt-6 justify-center">
-          <Ionicons
-            name="arrow-forward"
-            size={14}
-            color={`${mutedColor}80`}
-          />
+        <View className="mt-6 flex-row items-center justify-center gap-1.5">
+          <Ionicons name="arrow-forward" size={14} color={`${mutedColor}80`} />
           <Text className="text-xs" style={{ color: `${mutedColor}80` }}>
-            {intl.formatMessage({ id: 'recipes.cookMode.swipeBackToSteps' })}
+            {intl.formatMessage({ id: "recipes.cookMode.swipeBackToSteps" })}
           </Text>
         </View>
       </Animated.ScrollView>

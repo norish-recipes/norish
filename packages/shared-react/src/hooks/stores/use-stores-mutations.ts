@@ -1,5 +1,7 @@
+import { useMutation } from "@tanstack/react-query";
 
 import type { StoreCreateDto, StoreDeleteInput, StoreDto } from "@norish/shared/contracts";
+
 import type {
   CreateStoresHooksOptions,
   StoreGrocerySnapshot,
@@ -7,8 +9,6 @@ import type {
   StoresQueryResult,
   StoreUpdateDraft,
 } from "./types";
-
-import { useMutation } from "@tanstack/react-query";
 
 type CreateUseStoresMutationsOptions = CreateStoresHooksOptions & {
   useStoresQuery: () => StoresQueryResult;
@@ -70,9 +70,12 @@ export function createUseStoresMutations({
         return prev.map((s) => (s.id === data.id ? { ...s, ...data } : s));
       });
 
-      updateMutation.mutate({ ...data, version: getStoreVersion(data.id) }, {
-        onError: () => invalidate(),
-      });
+      updateMutation.mutate(
+        { ...data, version: getStoreVersion(data.id) },
+        {
+          onError: () => invalidate(),
+        }
+      );
     };
 
     const deleteStore = (
@@ -93,12 +96,9 @@ export function createUseStoresMutations({
         grocerySnapshot,
       };
 
-      deleteMutation.mutate(
-        input,
-        {
-          onError: () => invalidate(),
-        }
-      );
+      deleteMutation.mutate(input, {
+        onError: () => invalidate(),
+      });
     };
 
     const reorderStores = (storeIds: string[]) => {

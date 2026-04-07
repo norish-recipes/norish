@@ -39,17 +39,6 @@
     "deps:cycles": "node tooling/monorepo/scripts/check-circular-deps.mjs",
     "i18n:check": "pnpm --filter @norish/i18n run check:locale-keys"
   },
-  "dependencies": {
-    "@norish/api": "workspace:*",
-    "@norish/auth": "workspace:*",
-    "@norish/config": "workspace:*",
-    "@norish/db": "workspace:*",
-    "@norish/i18n": "workspace:*",
-    "@norish/queue": "workspace:*",
-    "@norish/shared": "workspace:*",
-    "@norish/ui": "workspace:*",
-    "@norish/web": "workspace:*"
-  },
   "devDependencies": {
     "@norish/prettier-config": "workspace:*",
     "turbo": "catalog:",

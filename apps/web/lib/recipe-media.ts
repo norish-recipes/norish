@@ -1,8 +1,8 @@
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-
 import { NextResponse } from "next/server";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 const VALID_FILENAME_PATTERN = /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/;
@@ -124,7 +124,12 @@ async function serveRecipeMediaFileResponse(req: Request, filePath: string, cach
   }
 }
 
-export async function serveRecipeMedia(req: Request, recipeId: string, filename: string, cacheControl: string) {
+export async function serveRecipeMedia(
+  req: Request,
+  recipeId: string,
+  filename: string,
+  cacheControl: string
+) {
   const invalidFilename = validateFilename(filename);
 
   if (invalidFilename) {
@@ -141,7 +146,11 @@ export async function serveRecipeMedia(req: Request, recipeId: string, filename:
   return serveRecipeMediaFileResponse(req, filePath, cacheControl);
 }
 
-export async function serveRecipeStepMedia(recipeId: string, filename: string, cacheControl: string) {
+export async function serveRecipeStepMedia(
+  recipeId: string,
+  filename: string,
+  cacheControl: string
+) {
   const invalidFilename = validateFilename(filename);
 
   if (invalidFilename) {

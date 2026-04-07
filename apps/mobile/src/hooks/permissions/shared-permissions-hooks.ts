@@ -1,5 +1,5 @@
-import { createPermissionsHooks } from '@norish/shared-react/hooks';
+import { useTRPC } from "@/providers/trpc-provider";
 
-import { useTRPC } from '@/providers/trpc-provider';
+import { createPermissionsHooks } from "@norish/shared-react/hooks";
 
 export const sharedPermissionsHooks = createPermissionsHooks({ useTRPC });

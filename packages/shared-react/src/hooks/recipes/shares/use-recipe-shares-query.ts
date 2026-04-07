@@ -1,13 +1,14 @@
 import type { QueryKey } from "@tanstack/react-query";
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 import type {
   AdminRecipeShareInventoryDto,
   RecipeShareInventoryDto,
   RecipeShareSummaryDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
-import type { CreateRecipeHooksOptions } from "../types";
 
-import { useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CreateRecipeHooksOptions } from "../types";
 
 export type RecipeSharesQueryResult = {
   shares: RecipeShareSummaryDto[];
@@ -15,9 +16,7 @@ export type RecipeSharesQueryResult = {
   error: unknown;
   queryKey: QueryKey;
   setSharesData: (
-    updater: (
-      prev: RecipeShareSummaryDto[] | undefined
-    ) => RecipeShareSummaryDto[] | undefined
+    updater: (prev: RecipeShareSummaryDto[] | undefined) => RecipeShareSummaryDto[] | undefined
   ) => void;
   invalidate: () => void;
 };
@@ -45,9 +44,7 @@ export function createUseRecipeSharesQuery({ useTRPC }: CreateRecipeHooksOptions
 
     const setSharesData = useCallback(
       (
-        updater: (
-          prev: RecipeShareSummaryDto[] | undefined
-        ) => RecipeShareSummaryDto[] | undefined
+        updater: (prev: RecipeShareSummaryDto[] | undefined) => RecipeShareSummaryDto[] | undefined
       ) => {
         queryClient.setQueryData<RecipeShareSummaryDto[]>(queryKey, updater);
       },

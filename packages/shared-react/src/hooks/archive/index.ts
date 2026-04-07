@@ -1,9 +1,6 @@
-import type {
-  CreateArchiveHooksOptions,
-} from "./types";
+import type { CreateArchiveHooksOptions } from "./types";
 import type { ArchiveMutationToastAdapter } from "./use-archive-mutation";
 import type { ArchiveSubscriptionToastAdapter } from "./use-archive-subscription";
-
 import { createUseArchiveCache } from "./use-archive-cache";
 import { createUseArchiveMutation } from "./use-archive-mutation";
 import { createUseArchiveQuery } from "./use-archive-query";

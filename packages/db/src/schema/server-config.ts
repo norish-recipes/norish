@@ -1,10 +1,8 @@
 import crypto from "crypto";
-
 import { boolean, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
-import { versionColumn } from "./shared";
-
 import { users } from "./auth";
+import { versionColumn } from "./shared";
 
 export const serverConfig = pgTable(
   "server_config",

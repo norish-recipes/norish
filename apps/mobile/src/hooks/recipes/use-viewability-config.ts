@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import type { ViewabilityConfig, ViewToken } from 'react-native';
+import type { ViewabilityConfig, ViewToken } from "react-native";
+import { useRef } from "react";
 
 /**
  * A stable `viewabilityConfig` for use with `FlatList`.

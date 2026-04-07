@@ -1,9 +1,9 @@
 "use client";
 
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
-import type { Slot } from "@norish/shared/contracts";
-
 import { memo, useMemo } from "react";
+import { TimelineSlotContainer } from "@/components/calendar/mobile/timeline-slot-container";
+import { SLOTS } from "@/components/calendar/mobile/types";
 import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import {
@@ -18,9 +18,7 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { SLOTS } from "@/components/calendar/mobile/types";
-import { TimelineSlotContainer } from "@/components/calendar/mobile/timeline-slot-container";
-
+import type { Slot } from "@norish/shared/contracts";
 
 type DesktopDayCardProps = {
   date: Date;

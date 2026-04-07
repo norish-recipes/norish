@@ -1,11 +1,11 @@
+import { and, eq, sql } from "drizzle-orm";
+
 import type {
   SaveCaldavConfigInputDto,
   UserCaldavConfigDecryptedDto,
   UserCaldavConfigDto,
   UserCaldavConfigInsertDto,
 } from "@norish/shared/contracts/dto/caldav-config";
-
-import { and, eq, sql } from "drizzle-orm";
 import { decrypt, encrypt } from "@norish/auth/crypto";
 import { db } from "@norish/db/drizzle";
 import { userCaldavConfig } from "@norish/db/schema";
@@ -14,7 +14,8 @@ import {
   UserCaldavConfigSelectSchema,
 } from "@norish/shared/contracts/zod/caldav-config";
 
-import { appliedOutcome, type MutationOutcome, staleOutcome } from "./mutation-outcomes";
+import type { MutationOutcome } from "./mutation-outcomes";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 export async function getCaldavConfigByUserId(userId: string): Promise<UserCaldavConfigDto | null> {
   const rows = await db

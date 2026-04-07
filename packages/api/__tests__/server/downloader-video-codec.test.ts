@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 
+import { isWebPlayableMp4CodecPair } from "@norish/shared-server/media/storage";
+
 vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     UPLOADS_DIR: "/test/uploads",
@@ -30,8 +32,6 @@ vi.mock("sharp", () => ({
 vi.mock("heic-convert", () => ({
   default: vi.fn(),
 }));
-
-import { isWebPlayableMp4CodecPair } from "@norish/shared-server/media/storage";
 
 describe("isWebPlayableMp4CodecPair", () => {
   it("accepts H.264 video with AAC audio", () => {

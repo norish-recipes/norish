@@ -1,4 +1,7 @@
-export function canShowAIAction(options: { isAIEnabled: boolean; isLoadingPermissions: boolean }): boolean {
+export function canShowAIAction(options: {
+  isAIEnabled: boolean;
+  isLoadingPermissions: boolean;
+}): boolean {
   return options.isAIEnabled && !options.isLoadingPermissions;
 }
 

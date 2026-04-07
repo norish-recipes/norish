@@ -1,9 +1,6 @@
-import type {
-  PlannedItemWithRecipePayload,
-} from "@norish/shared/contracts/zod";
-import type { CreateItemInput, PlannedRecipeListItem } from "./planned-items-openapi-types";
-
 import { TRPCError } from "@trpc/server";
+
+import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   createPlannedItem,
@@ -12,9 +9,10 @@ import {
   getPlannedItemWithRecipeById,
   listPlannedItemsByUserAndDateRange,
 } from "@norish/db/repositories/planned-items";
-import { PlannedItemDeleteInputSchema } from "@norish/shared/contracts/zod";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { PlannedItemDeleteInputSchema } from "@norish/shared/contracts/zod";
 
+import type { CreateItemInput, PlannedRecipeListItem } from "./planned-items-openapi-types";
 import { calendarEmitter } from "./emitter";
 
 export type CalendarProcedureContext = {
@@ -23,7 +21,9 @@ export type CalendarProcedureContext = {
   householdKey: string;
 };
 
-type PlannedItemWithRecipeRow = Awaited<ReturnType<typeof listPlannedItemsByUserAndDateRange>>[number];
+type PlannedItemWithRecipeRow = Awaited<
+  ReturnType<typeof listPlannedItemsByUserAndDateRange>
+>[number];
 
 export function buildPlannedItemPayload(
   item: Pick<
@@ -60,7 +60,9 @@ export function buildPlannedItemPayload(
   };
 }
 
-export function toPlannedRecipeListItem(item: PlannedItemWithRecipeRow): PlannedRecipeListItem | null {
+export function toPlannedRecipeListItem(
+  item: PlannedItemWithRecipeRow
+): PlannedRecipeListItem | null {
   if (item.itemType !== "recipe" || !item.recipeId) {
     return null;
   }
@@ -107,7 +109,11 @@ export function endOfServerWeek(date: Date) {
   return end;
 }
 
-export async function listItemsByRange(ctx: CalendarProcedureContext, startISO: string, endISO: string) {
+export async function listItemsByRange(
+  ctx: CalendarProcedureContext,
+  startISO: string,
+  endISO: string
+) {
   return listPlannedItemsByUserAndDateRange(ctx.userIds, startISO, endISO);
 }
 

@@ -1,6 +1,6 @@
-import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
-
 import { z } from "zod";
+
+import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
 import {
   CaldavConfigSavedEventSchema,
   CaldavInitialSyncCompleteEventSchema,
@@ -11,7 +11,6 @@ import {
   DeleteCaldavConfigInputSchema as SharedDeleteCaldavConfigInputSchema,
   SaveCaldavConfigInputSchema as SharedSaveCaldavConfigInputSchema,
 } from "@norish/shared/contracts/zod";
-
 
 export type CaldavItemType = "recipe" | "note";
 export type CaldavSyncStatus = "pending" | "synced" | "failed" | "removed";

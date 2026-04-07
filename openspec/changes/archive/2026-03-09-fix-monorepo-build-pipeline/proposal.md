@@ -21,7 +21,7 @@ _None — this is a fix/alignment change, not a new feature._
 
 ### Modified Capabilities
 
-- `monorepo-architecture`: The Dockerfile, CI workflows, and `.dockerignore` must include all workspace packages created during the monorepo migration (shared-react, shared-server, trpc, tooling/*). The package export maps must cover all subpath imports used across apps.
+- `monorepo-architecture`: The Dockerfile, CI workflows, and `.dockerignore` must include all workspace packages created during the monorepo migration (shared-react, shared-server, trpc, tooling/\*). The package export maps must cover all subpath imports used across apps.
 
 ## Impact
 

@@ -1,17 +1,7 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useEvent } from 'expo';
-import * as Haptics from 'expo-haptics';
-import { Image } from 'expo-image';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import React, { useCallback, useRef, useState } from 'react';
-import {
-  FlatList,
-  Pressable,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-  type ViewToken,
-} from 'react-native';
+import type { MediaItem } from "@/lib/recipes/map-recipe-to-media-items";
+import type { ViewToken } from "react-native";
+import React, { useCallback, useRef, useState } from "react";
+import { FlatList, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -20,13 +10,15 @@ import Animated, {
   withSequence,
   withSpring,
   withTiming,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
+import { NoImagePlaceholder } from "@/components/shared/no-image-placeholder";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useEvent } from "expo";
+import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
+import { useVideoPlayer, VideoView } from "expo-video";
 
-import type { MediaItem } from '@/lib/recipes/map-recipe-to-media-items';
-
-import { NoImagePlaceholder } from '@/components/shared/no-image-placeholder';
-
-import { MediaCarouselModal } from './media-carousel-modal';
+import { MediaCarouselModal } from "./media-carousel-modal";
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -132,7 +124,7 @@ export function RecipeMediaHeader({ media, liked, onDoubleTapLike }: Props) {
         // Phase 2: hold briefly at full size
         withTiming(1.0, { duration: HOLD_DURATION }),
         // Phase 3: shrink to ~24px (like button icon size: 24/60 ≈ 0.4)
-        withTiming(0.4, { duration: FLIGHT_DURATION, easing: flightEasing }),
+        withTiming(0.4, { duration: FLIGHT_DURATION, easing: flightEasing })
       );
 
       // ── Opacity: fade in → stay visible → snap off at end ──────────────
@@ -140,11 +132,10 @@ export function RecipeMediaHeader({ media, liked, onDoubleTapLike }: Props) {
         withTiming(1, { duration: POP_IN_DURATION * 0.6 }),
         // Stay visible for the rest of pop-in + hold + most of flight
         withTiming(1, {
-          duration:
-            POP_IN_DURATION * 0.4 + HOLD_DURATION + FLIGHT_DURATION - 60,
+          duration: POP_IN_DURATION * 0.4 + HOLD_DURATION + FLIGHT_DURATION - 60,
         }),
         // Snap invisible
-        withTiming(0, { duration: 60 }),
+        withTiming(0, { duration: 60 })
       );
 
       // ── X translation: fly right towards the like button ───────────────
@@ -154,7 +145,7 @@ export function RecipeMediaHeader({ media, liked, onDoubleTapLike }: Props) {
         withTiming(targetX, {
           duration: FLIGHT_DURATION,
           easing: Easing.bezier(0.2, 0.0, 0.7, 1.0),
-        }),
+        })
       );
 
       // ── Y translation: fly downward (positive) with ease-in ────────────
@@ -164,16 +155,16 @@ export function RecipeMediaHeader({ media, liked, onDoubleTapLike }: Props) {
         withTiming(targetY, {
           duration: FLIGHT_DURATION,
           easing: Easing.bezier(0.3, 0.0, 0.8, 1.0),
-        }),
+        })
       );
 
       // ── Rotation: tilts clockwise as it flies down-right ───────────────
       heartRotate.value = withDelay(
         TOTAL_BEFORE_FLIGHT,
-        withTiming(15, { duration: FLIGHT_DURATION, easing: flightEasing }),
+        withTiming(15, { duration: FLIGHT_DURATION, easing: flightEasing })
       );
     },
-    [heartScale, heartOpacity, heartTranslateX, heartTranslateY, heartRotate, width, height],
+    [heartScale, heartOpacity, heartTranslateX, heartTranslateY, heartRotate, width, height]
   );
 
   const handlePress = useCallback(
@@ -188,11 +179,11 @@ export function RecipeMediaHeader({ media, liked, onDoubleTapLike }: Props) {
         lastTap.current = now;
         // Single tap – open carousel for non-errored images only
         const item = media[index];
-        if (item?.type === 'image' && !errorIndices.has(index)) {
+        if (item?.type === "image" && !errorIndices.has(index)) {
           setTimeout(() => {
             if (lastTap.current !== 0) {
               const imageIndices = media
-                .map((m, i) => (m.type === 'image' && !errorIndices.has(i) ? i : -1))
+                .map((m, i) => (m.type === "image" && !errorIndices.has(i) ? i : -1))
                 .filter((i) => i >= 0);
               const imageOnlyIdx = imageIndices.indexOf(index);
               setCarouselStartIndex(imageOnlyIdx >= 0 ? imageOnlyIdx : 0);
@@ -203,24 +194,21 @@ export function RecipeMediaHeader({ media, liked, onDoubleTapLike }: Props) {
         }
       }
     },
-    [media, liked, errorIndices, triggerLikeAnimation, onDoubleTapLike],
+    [media, liked, errorIndices, triggerLikeAnimation, onDoubleTapLike]
   );
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems[0]) {
-        setActiveIndex(viewableItems[0].index ?? 0);
-      }
-    },
-  ).current;
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems[0]) {
+      setActiveIndex(viewableItems[0].index ?? 0);
+    }
+  }).current;
 
   const viewabilityConfig = useRef({
     viewAreaCoveragePercentThreshold: 50,
   }).current;
 
   const imageOnlyMedia = media.filter(
-    (m, i): m is Extract<MediaItem, { type: 'image' }> =>
-      m.type === 'image' && !errorIndices.has(i),
+    (m, i): m is Extract<MediaItem, { type: "image" }> => m.type === "image" && !errorIndices.has(i)
   );
 
   return (
@@ -254,13 +242,13 @@ export function RecipeMediaHeader({ media, liked, onDoubleTapLike }: Props) {
         pointerEvents="none"
         style={[
           {
-            position: 'absolute',
-            top: '58%',
+            position: "absolute",
+            top: "58%",
             left: 20,
             width: 60,
             height: 60,
-            alignItems: 'center',
-            justifyContent: 'center',
+            alignItems: "center",
+            justifyContent: "center",
           },
           heartAnimatedStyle,
         ]}
@@ -270,11 +258,7 @@ export function RecipeMediaHeader({ media, liked, onDoubleTapLike }: Props) {
 
       {/* Pagination dots */}
       {media.length > 1 && (
-        <PaginationDots
-          count={media.length}
-          active={activeIndex}
-          media={media}
-        />
+        <PaginationDots count={media.length} active={activeIndex} media={media} />
       )}
 
       {/* Full-screen image carousel modal */}
@@ -311,7 +295,7 @@ function MediaSlide({
     onSlideError(index);
   }, [index, onSlideError]);
 
-  if (item.type === 'video') {
+  if (item.type === "video") {
     return (
       <View style={{ width }}>
         <VideoSlide item={item} width={width} onDoubleTap={onPress} />
@@ -347,7 +331,7 @@ function VideoSlide({
   width,
   onDoubleTap,
 }: {
-  item: Extract<MediaItem, { type: 'video' }>;
+  item: Extract<MediaItem, { type: "video" }>;
   width: number;
   onDoubleTap: () => void;
 }) {
@@ -358,7 +342,7 @@ function VideoSlide({
     p.play();
   });
 
-  const { isPlaying } = useEvent(player, 'playingChange', {
+  const { isPlaying } = useEvent(player, "playingChange", {
     isPlaying: player.playing,
   });
 
@@ -379,7 +363,7 @@ function VideoSlide({
   }, []);
 
   return (
-    <View style={{ width, height: '100%' }}>
+    <View style={{ width, height: "100%" }}>
       {/* Poster image behind the video */}
       {item.posterUri && (
         <Image
@@ -400,41 +384,33 @@ function VideoSlide({
       />
 
       {/* Transparent tap target for double-tap detection */}
-      <Pressable
-        onPress={onDoubleTap}
-        className="absolute inset-0"
-        style={{ zIndex: 1 }}
-      />
+      <Pressable onPress={onDoubleTap} className="absolute inset-0" style={{ zIndex: 1 }} />
 
       {/* Video controls — lower, just above the gradient zone */}
       <View
-        className="absolute left-3 right-3 flex-row justify-between items-center"
-        style={{ bottom: '25%', zIndex: 2 }}
+        className="absolute right-3 left-3 flex-row items-center justify-between"
+        style={{ bottom: "25%", zIndex: 2 }}
       >
         <Pressable
           onPress={handlePlayPause}
           hitSlop={8}
-          className="size-11 rounded-full bg-black/50 items-center justify-center"
+          className="size-11 items-center justify-center rounded-full bg-black/50"
         >
-          <Ionicons
-            name={isPlaying ? 'pause' : 'play'}
-            size={20}
-            color="#fff"
-          />
+          <Ionicons name={isPlaying ? "pause" : "play"} size={20} color="#fff" />
         </Pressable>
 
         <View className="flex-row gap-2">
           <Pressable
             onPress={handlePiP}
             hitSlop={8}
-            className="size-11 rounded-full bg-black/50 items-center justify-center"
+            className="size-11 items-center justify-center rounded-full bg-black/50"
           >
             <Ionicons name="albums-outline" size={18} color="#fff" />
           </Pressable>
           <Pressable
             onPress={handleFullscreen}
             hitSlop={8}
-            className="size-11 rounded-full bg-black/50 items-center justify-center"
+            className="size-11 items-center justify-center rounded-full bg-black/50"
           >
             <Ionicons name="expand-outline" size={18} color="#fff" />
           </Pressable>
@@ -457,19 +433,17 @@ function PaginationDots({
 }) {
   return (
     <View
-      className="absolute left-0 right-0 flex-row justify-center items-center gap-1.5"
-      style={{ bottom: '22%' }}
+      className="absolute right-0 left-0 flex-row items-center justify-center gap-1.5"
+      style={{ bottom: "22%" }}
     >
       {Array.from({ length: count }).map((_, i) => (
         <View
           key={i}
-          className={`rounded items-center justify-center ${
-            i === active ? 'size-2 bg-white' : 'size-1.5 bg-white/45'
+          className={`items-center justify-center rounded ${
+            i === active ? "size-2 bg-white" : "size-1.5 bg-white/45"
           }`}
         >
-          {media[i]?.type === 'video' && (
-            <Ionicons name="videocam" size={6} color="#fff" />
-          )}
+          {media[i]?.type === "video" && <Ionicons name="videocam" size={6} color="#fff" />}
         </View>
       ))}
     </View>

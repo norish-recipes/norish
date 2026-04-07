@@ -1,8 +1,7 @@
 import { index, integer, pgTable, primaryKey, timestamp, uuid } from "drizzle-orm/pg-core";
 
-import { versionColumn } from "./shared";
-
 import { recipes } from "./recipes";
+import { versionColumn } from "./shared";
 import { tags } from "./tags";
 
 export const recipeTags = pgTable(

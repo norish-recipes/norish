@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
-import { AppState } from 'react-native';
-
-import { getBackendHealthUrl } from '@/lib/network/backend-base-url';
+import { useEffect } from "react";
+import { AppState } from "react-native";
+import { getBackendHealthUrl } from "@/lib/network/backend-base-url";
 
 const BACKEND_HEALTH_TIMEOUT_MS = 5_000;
 const BACKEND_HEALTH_POLL_INTERVAL_MS = 30_000;
@@ -43,7 +42,7 @@ export function useBackendHealthProbe({
 
       try {
         const response = await fetch(healthUrl, {
-          method: 'GET',
+          method: "GET",
           signal: controller.signal,
         });
 
@@ -65,8 +64,8 @@ export function useBackendHealthProbe({
 
     void probeBackend();
 
-    const appStateSub = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active') {
+    const appStateSub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
         void probeBackend();
       }
     });

@@ -1,5 +1,5 @@
-import { Button } from 'heroui-native';
-import React from 'react';
+import React from "react";
+import { Button } from "heroui-native";
 
 /**
  * Pre-sized sheet footer button. Wraps HeroUI Button with size="lg" and
@@ -12,11 +12,7 @@ export function PanelButton({
   ...props
 }: React.ComponentProps<typeof Button>) {
   return (
-    <Button
-      size="md"
-      className={['flex-1', className].filter(Boolean).join(' ')}
-      {...props}
-    >
+    <Button size="md" className={["flex-1", className].filter(Boolean).join(" ")} {...props}>
       {children}
     </Button>
   );

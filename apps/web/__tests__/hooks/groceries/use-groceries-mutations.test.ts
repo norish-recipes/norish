@@ -56,14 +56,26 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       toggle: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.toggle })) },
       update: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.update })) },
       delete: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.delete })) },
-      createRecurring: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.createRecurring })) },
-      updateRecurring: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.updateRecurring })) },
-      deleteRecurring: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.deleteRecurring })) },
-      checkRecurring: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.checkRecurring })) },
+      createRecurring: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.createRecurring })),
+      },
+      updateRecurring: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.updateRecurring })),
+      },
+      deleteRecurring: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.deleteRecurring })),
+      },
+      checkRecurring: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.checkRecurring })),
+      },
       markAllDone: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.markAllDone })) },
       deleteDone: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.deleteDone })) },
-      assignToStore: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.assignToStore })) },
-      reorderInStore: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.reorderInStore })) },
+      assignToStore: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.assignToStore })),
+      },
+      reorderInStore: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.reorderInStore })),
+      },
     },
     config: {
       units: {

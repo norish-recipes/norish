@@ -1,15 +1,15 @@
-import type { User } from "@norish/shared/contracts/dto/user";
-
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { authLogger } from "@norish/db/logger";
-import { decrypt, encrypt, hmacIndex } from "@norish/auth/crypto";
 
+import type { User } from "@norish/shared/contracts/dto/user";
+import { decrypt, encrypt, hmacIndex } from "@norish/auth/crypto";
+import { authLogger } from "@norish/db/logger";
+
+import type { MutationOutcome } from "./mutation-outcomes";
 import { db } from "../drizzle";
 import { accounts, users } from "../schema/auth";
 import { ServerConfigKeys } from "../zodSchemas/server-config";
-
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { setConfig } from "./server-config";
-import { appliedOutcome, type MutationOutcome, staleOutcome } from "./mutation-outcomes";
 
 type VersionedUser = User & { version: number };
 
@@ -264,7 +264,10 @@ export async function getAllUserAvatars(): Promise<
   }));
 }
 
-export async function clearUserAvatar(userId: string, version?: number): Promise<MutationOutcome<void>> {
+export async function clearUserAvatar(
+  userId: string,
+  version?: number
+): Promise<MutationOutcome<void>> {
   const whereConditions = [eq(users.id, userId)];
 
   if (version) {

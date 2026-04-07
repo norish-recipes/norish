@@ -21,6 +21,7 @@ Norish currently maintains custom structured recipe parsing for URL imports, inc
 ## Capabilities
 
 ### New Capabilities
+
 - `recipe-url-import`: URL recipe imports use a dedicated parser backend that accepts fetched HTML and URL context, supports a deprecated legacy fallback path, and preserves the existing downstream recipe creation flow.
 
 ### Modified Capabilities

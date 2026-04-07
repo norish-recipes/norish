@@ -1,17 +1,10 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { LayoutChangeEvent, Pressable } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-
-import { RecipeCard } from '@/components/home/recipe-card';
-import {
-  SwipeableRecipeRow,
-  type SwipeableRecipeRowRef,
-} from '@/components/home/swipeable-recipe-row';
-import type { RecipeCardItem } from '@/lib/recipes/recipe-card.types';
+import type { SwipeableRecipeRowRef } from "@/components/home/swipeable-recipe-row";
+import type { RecipeCardItem } from "@/lib/recipes/recipe-card.types";
+import React, { useCallback, useEffect, useRef } from "react";
+import { LayoutChangeEvent, Pressable } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { RecipeCard } from "@/components/home/recipe-card";
+import { SwipeableRecipeRow } from "@/components/home/swipeable-recipe-row";
 
 type SwipeableRecipeListItemProps = {
   item: RecipeCardItem;
@@ -57,7 +50,7 @@ function SwipeableRecipeListItemComponent({
     return {
       opacity: opacity.value,
       height: height.value,
-      overflow: 'hidden',
+      overflow: "hidden",
     };
   });
 

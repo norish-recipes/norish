@@ -1,22 +1,21 @@
-import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { Image } from 'expo-image';
-import { Chip } from 'heroui-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import type { RecipeCardItem } from "@/lib/recipes/recipe-card.types";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Pressable, ScrollView, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSequence,
   withSpring,
   withTiming,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
+import { NoImagePlaceholder } from "@/components/shared/no-image-placeholder";
+import { styles } from "@/styles/recipe-card.styles";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
+import { Chip } from "heroui-native";
 
-import { NoImagePlaceholder } from '@/components/shared/no-image-placeholder';
-import type { RecipeCardItem } from '@/lib/recipes/recipe-card.types';
-import { styles } from '@/styles/recipe-card.styles';
-
-import { isAllergenTag, sortTagsWithAllergyPriority } from '@norish/shared/lib/helpers';
+import { isAllergenTag, sortTagsWithAllergyPriority } from "@norish/shared/lib/helpers";
 
 type RecipeCardImageProps = {
   recipe: RecipeCardItem;
@@ -37,12 +36,12 @@ function RecipeCardImageComponent({ recipe, onPress, onDoubleTapLike }: RecipeCa
   const allergies = recipe.allergies ?? [];
   const allergySet = React.useMemo(
     () => new Set(allergies.map((item) => item.toLowerCase())),
-    [allergies],
+    [allergies]
   );
   const tags = React.useMemo(() => {
     return sortTagsWithAllergyPriority(
       (recipe.tags ?? []).map((name) => ({ name })),
-      allergies,
+      allergies
     ).map((tag) => tag.name);
   }, [recipe.tags, allergies]);
 
@@ -95,12 +94,12 @@ function RecipeCardImageComponent({ recipe, onPress, onDoubleTapLike }: RecipeCa
       heartScale.value = withSequence(
         withSpring(1.2, { damping: 8, stiffness: 400, mass: 0.6 }),
         withTiming(1.0, { duration: 100 }),
-        withTiming(0, { duration: 200 }),
+        withTiming(0, { duration: 200 })
       );
       heartOpacity.value = withSequence(
         withTiming(1, { duration: 200 }),
         withTiming(1, { duration: 300 }),
-        withTiming(0, { duration: 200 }),
+        withTiming(0, { duration: 200 })
       );
 
       onDoubleTapLike();
@@ -124,7 +123,9 @@ function RecipeCardImageComponent({ recipe, onPress, onDoubleTapLike }: RecipeCa
         ) : (
           <Image
             source={
-              recipe.imageHeaders ? { uri: recipe.imageUrl, headers: recipe.imageHeaders } : { uri: recipe.imageUrl }
+              recipe.imageHeaders
+                ? { uri: recipe.imageUrl, headers: recipe.imageHeaders }
+                : { uri: recipe.imageUrl }
             }
             contentFit="cover"
             transition={300}
@@ -134,16 +135,17 @@ function RecipeCardImageComponent({ recipe, onPress, onDoubleTapLike }: RecipeCa
         )}
 
         {/* Double-tap heart overlay */}
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.heartOverlay, heartAnimatedStyle]}
-        >
+        <Animated.View pointerEvents="none" style={[styles.heartOverlay, heartAnimatedStyle]}>
           <Ionicons name="heart" size={60} color="#ff4d6d" />
         </Animated.View>
 
         {tags.length > 0 ? (
           <View className="absolute inset-x-0 bottom-0 pb-2.5" pointerEvents="box-none">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagRow}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.tagRow}
+            >
               {tags.map((chip) => {
                 const isAllergen = isAllergenTag(chip, allergySet);
 
@@ -152,15 +154,11 @@ function RecipeCardImageComponent({ recipe, onPress, onDoubleTapLike }: RecipeCa
                     key={`${recipe.id}-${chip}`}
                     size="sm"
                     variant="soft"
-                    color={isAllergen ? 'warning' : 'default'}
+                    color={isAllergen ? "warning" : "default"}
                     animation="disable-all"
-                    className={
-                      isAllergen
-                        ? 'shrink-0'
-                        : 'shrink-0 bg-black/40 backdrop-blur-md'
-                    }
+                    className={isAllergen ? "shrink-0" : "shrink-0 bg-black/40 backdrop-blur-md"}
                   >
-                    <Chip.Label className={`text-xs ${isAllergen ? '' : 'text-white'}`}>
+                    <Chip.Label className={`text-xs ${isAllergen ? "" : "text-white"}`}>
                       {chip}
                     </Chip.Label>
                   </Chip>

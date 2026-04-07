@@ -7,6 +7,7 @@ This change introduces a new backend capability that lets an authenticated user 
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Add a secure public recipe sharing model based on a single opaque token URL (`/share/<token>`).
 - Store only a hashed token at rest while supporting revocation and configurable expiration.
 - Add authenticated share-management APIs and anonymous share-consumption APIs.
@@ -15,6 +16,7 @@ This change introduces a new backend capability that lets an authenticated user 
 - Keep expiration and revocation checks centralized so the same validation rules apply across procedures and media routes.
 
 **Non-Goals:**
+
 - Building the actual web share page UI or any mobile share flows.
 - Adding SEO indexing, social crawler metadata, or analytics for share-link traffic.
 - Redesigning recipe ownership or the existing recipe permission policy system.
@@ -78,6 +80,7 @@ This change introduces a new backend capability that lets an authenticated user 
 5. Add repository, router, and media-route tests for token hashing, expiry, revocation, DTO sanitization, and anonymous access rules.
 
 Rollback strategy:
+
 - Disable the new tRPC procedures and remove the proxy/share-media allow paths.
 - The schema change is additive, so rollback does not require touching existing recipe data.
 

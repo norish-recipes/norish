@@ -22,7 +22,10 @@ export type RecipeImagesResult = {
     version?: number;
     error?: string;
   }>;
-  deleteGalleryImage: (imageId: string, version: number) => Promise<{ success: boolean; error?: string }>;
+  deleteGalleryImage: (
+    imageId: string,
+    version: number
+  ) => Promise<{ success: boolean; error?: string }>;
   isUploadingImage: boolean;
   isDeletingImage: boolean;
   isUploadingStepImage: boolean;

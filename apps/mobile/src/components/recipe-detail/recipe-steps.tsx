@@ -1,15 +1,14 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Image } from 'expo-image';
-import * as Haptics from 'expo-haptics';
-import { useThemeColor } from 'heroui-native';
-import React, { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useIntl } from 'react-intl';
+import type { MappedStep } from "@/lib/recipes/map-recipe-to-steps";
+import React, { useCallback, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
+import { useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
 
-import type { MappedStep } from '@/lib/recipes/map-recipe-to-steps';
-
-import { MediaCarouselModal } from './media-carousel-modal';
-import { SmartText } from './text-renderer';
+import { MediaCarouselModal } from "./media-carousel-modal";
+import { SmartText } from "./text-renderer";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -23,13 +22,7 @@ type RecipeStepsProps = {
 
 export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
   const [foregroundColor, accentColor, accentForegroundColor, mutedColor, successColor] =
-    useThemeColor([
-      'foreground',
-      'accent',
-      'accent-foreground',
-      'muted',
-      'success',
-    ] as const);
+    useThemeColor(["foreground", "accent", "accent-foreground", "muted", "success"] as const);
   const intl = useIntl();
 
   // Carousel state
@@ -53,14 +46,11 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
     });
   }, []);
 
-  const openCarousel = useCallback(
-    (images: string[], startIndex: number) => {
-      setCarouselImages(images);
-      setCarouselStartIndex(startIndex);
-      setCarouselVisible(true);
-    },
-    [],
-  );
+  const openCarousel = useCallback((images: string[], startIndex: number) => {
+    setCarouselImages(images);
+    setCarouselStartIndex(startIndex);
+    setCarouselVisible(true);
+  }, []);
 
   // Count actual numbered steps (skip headings)
   let stepNumber = 0;
@@ -68,19 +58,17 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
   return (
     <View style={styles.container}>
       <Text style={[styles.title, { color: foregroundColor }]}>
-        {intl.formatMessage({ id: 'recipes.detail.instructions' })}
+        {intl.formatMessage({ id: "recipes.detail.instructions" })}
       </Text>
 
       {steps.map((step, index) => {
-        const isHeading = step.text.trim().startsWith('#');
+        const isHeading = step.text.trim().startsWith("#");
 
         if (isHeading) {
-          const headingText = step.text.trim().replace(/^#+\s*/, '');
+          const headingText = step.text.trim().replace(/^#+\s*/, "");
           return (
             <View key={index} style={styles.headingRow}>
-              <Text style={[styles.headingText, { color: foregroundColor }]}>
-                {headingText}
-              </Text>
+              <Text style={[styles.headingText, { color: foregroundColor }]}>{headingText}</Text>
             </View>
           );
         }
@@ -95,10 +83,7 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
           <Pressable
             key={index}
             onPress={() => toggleStep(index)}
-            style={({ pressed }) => [
-              styles.stepRow,
-              pressed && styles.stepRowPressed,
-            ]}
+            style={({ pressed }) => [styles.stepRow, pressed && styles.stepRowPressed]}
           >
             {/* Step number badge — shows check icon when done */}
             <View
@@ -110,18 +95,9 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
               ]}
             >
               {isDone ? (
-                <Ionicons
-                  name="checkmark"
-                  size={16}
-                  color={accentForegroundColor}
-                />
+                <Ionicons name="checkmark" size={16} color={accentForegroundColor} />
               ) : (
-                <Text
-                  style={[
-                    styles.stepNumberText,
-                    { color: accentForegroundColor },
-                  ]}
-                >
+                <Text style={[styles.stepNumberText, { color: accentForegroundColor }]}>
                   {currentNumber}
                 </Text>
               )}
@@ -131,17 +107,11 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
             <View style={[styles.stepContent, isDone && styles.stepContentDone]}>
               {isDone ? (
                 // When done, render plain text with strike-through (no timer highlight)
-                <Text
-                  style={[
-                    styles.stepText,
-                    styles.stepTextDone,
-                    { color: mutedColor },
-                  ]}
-                >
+                <Text style={[styles.stepText, styles.stepTextDone, { color: mutedColor }]}>
                   {step.text
-                    .replace(/\*\*(.+?)\*\*/g, '$1')
-                    .replace(/\*(.+?)\*/g, '$1')
-                    .replace(/\[(.+?)\]\(.+?\)/g, '$1')}
+                    .replace(/\*\*(.+?)\*\*/g, "$1")
+                    .replace(/\*(.+?)\*/g, "$1")
+                    .replace(/\[(.+?)\]\(.+?\)/g, "$1")}
                 </Text>
               ) : (
                 <SmartText
@@ -182,10 +152,8 @@ export function RecipeSteps({ steps, recipeId, recipeName }: RecipeStepsProps) {
                       />
                       {/* Multi-image badge */}
                       {stepImages.length > 1 && imgIdx === 0 && (
-                        <View style={[styles.imageBadge, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
-                          <Text style={styles.imageBadgeText}>
-                            {stepImages.length}
-                          </Text>
+                        <View style={[styles.imageBadge, { backgroundColor: "rgba(0,0,0,0.6)" }]}>
+                          <Text style={styles.imageBadgeText}>{stepImages.length}</Text>
                         </View>
                       )}
                     </Pressable>
@@ -216,7 +184,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
   },
   headingRow: {
@@ -226,11 +194,11 @@ const styles = StyleSheet.create({
   },
   headingText: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: -0.2,
   },
   stepRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginBottom: 20,
     borderRadius: 12,
@@ -244,13 +212,13 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     flexShrink: 0,
   },
   stepNumberText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   stepContent: {
     flex: 1,
@@ -264,18 +232,18 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   stepTextDone: {
-    textDecorationLine: 'line-through',
+    textDecorationLine: "line-through",
   },
   imageRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   imageThumbnail: {
     width: 64,
     height: 64,
     borderRadius: 10,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
   },
   imageThumbnailPressed: {
@@ -286,18 +254,18 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   imageBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 4,
     right: 4,
     borderRadius: 8,
     paddingHorizontal: 5,
     paddingVertical: 1,
     minWidth: 18,
-    alignItems: 'center',
+    alignItems: "center",
   },
   imageBadgeText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

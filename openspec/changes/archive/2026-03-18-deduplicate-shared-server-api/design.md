@@ -42,6 +42,7 @@ Today, 27 files (~4,800 lines) are duplicated across 5 zones: logger, media/down
 **Decision**: Add export entries to `packages/shared-server/package.json` for all modules that `api` or other consumers need:
 
 New exports needed:
+
 - `./ai/helpers`
 - `./ai/prompts/loader`
 - `./ai/providers/factory` (consumers import individual providers)

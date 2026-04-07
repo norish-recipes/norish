@@ -9,17 +9,24 @@ import {
   addUserToHousehold,
   createHousehold,
   createTag,
-  getUserAllergies,
-  getUserById,
   getHouseholdForUser,
   getRecipeFull,
-  updateUserAllergies,
-  updateUserName,
+  getUserAllergies,
+  getUserById,
   updateRecipeImageOrder,
   updateRecipeVideoOrder,
   updateTagName,
+  updateUserAllergies,
+  updateUserName,
 } from "@norish/db";
-import { recipeImages, recipeVideos, stepImages, tags, userAllergies, users } from "@norish/db/schema";
+import {
+  recipeImages,
+  recipeVideos,
+  stepImages,
+  tags,
+  userAllergies,
+  users,
+} from "@norish/db/schema";
 
 import {
   createTestIngredient,
@@ -96,11 +103,16 @@ describe("versioned repository behavior", () => {
 
   it("starts nested recipe entities at version 1 and increments media versions on reorder", async () => {
     const ingredient = await createTestIngredient({ name: "Flour" });
-    const recipeIngredient = await createTestRecipeIngredients(testRecipeId, ingredient.id, "metric", {
-      amount: "250",
-      unit: "g",
-      order: "0",
-    });
+    const recipeIngredient = await createTestRecipeIngredients(
+      testRecipeId,
+      ingredient.id,
+      "metric",
+      {
+        amount: "250",
+        unit: "g",
+        order: "0",
+      }
+    );
     const step = await createTestRecipeStep(testRecipeId, "metric", {
       step: "Mix ingredients",
       order: "0",
@@ -124,8 +136,16 @@ describe("versioned repository behavior", () => {
     await updateRecipeImageOrder(image!.id, 2);
     await updateRecipeVideoOrder(video!.id, 3);
 
-    const [updatedImage] = await db.select().from(recipeImages).where(eq(recipeImages.id, image!.id)).limit(1);
-    const [updatedVideo] = await db.select().from(recipeVideos).where(eq(recipeVideos.id, video!.id)).limit(1);
+    const [updatedImage] = await db
+      .select()
+      .from(recipeImages)
+      .where(eq(recipeImages.id, image!.id))
+      .limit(1);
+    const [updatedVideo] = await db
+      .select()
+      .from(recipeVideos)
+      .where(eq(recipeVideos.id, video!.id))
+      .limit(1);
     const fullRecipe = await getRecipeFull(testRecipeId);
 
     expect(updatedImage).toMatchObject({ version: 2, order: "2" });

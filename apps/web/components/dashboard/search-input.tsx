@@ -1,18 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRecipesContext } from "@/context/recipes-context";
+import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
+
 import { isUrl } from "@norish/shared/lib/helpers";
 
 import Filters from "../shared/filters";
-
 import SearchFieldToggles from "./search-field-toggles";
-
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useRecipesContext } from "@/context/recipes-context";
 
 export default function SearchInput() {
   const t = useTranslations("recipes.dashboard");

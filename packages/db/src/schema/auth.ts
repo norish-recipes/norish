@@ -1,5 +1,4 @@
 import crypto from "crypto";
-
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
@@ -12,8 +11,8 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { versionColumn } from "./shared";
 import { recipeShares } from "./recipe-shares";
+import { versionColumn } from "./shared";
 
 // User table with encrypted PII fields
 export const users = pgTable(

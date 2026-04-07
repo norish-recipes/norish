@@ -1,6 +1,6 @@
-import type { ServerConfigKey } from "@norish/config/zod/server-config";
-
 import { z } from "zod";
+
+import type { ServerConfigKey } from "@norish/config/zod/server-config";
 import {
   SchedulerCleanupMonthsSchema,
   SENSITIVE_CONFIG_KEYS,

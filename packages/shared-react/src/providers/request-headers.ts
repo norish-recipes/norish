@@ -70,7 +70,9 @@ function getOperationHeaders(op: OperationLike): HTTPHeaders | undefined {
   return headers as HTTPHeaders;
 }
 
-export function mergeHttpHeaders(...sources: Array<HTTPHeaders | undefined>): Record<string, string> {
+export function mergeHttpHeaders(
+  ...sources: Array<HTTPHeaders | undefined>
+): Record<string, string> {
   const headers: Record<string, string> = {};
 
   for (const source of sources) {

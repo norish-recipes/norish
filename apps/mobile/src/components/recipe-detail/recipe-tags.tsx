@@ -1,6 +1,6 @@
-import { Chip } from 'heroui-native';
-import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import React from "react";
+import { ScrollView, StyleSheet } from "react-native";
+import { Chip } from "heroui-native";
 
 type RecipeTagsProps = {
   tags: string[];
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   tagRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
 });

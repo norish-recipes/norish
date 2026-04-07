@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+
 import {
   createRecipeWithRefs,
   dashboardRecipe,
@@ -9,17 +10,17 @@ import { rateRecipe } from "@norish/db/repositories/ratings";
 import { FullRecipeInsertDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import {
-  buildMealieLookups,
-  extractMealieRecipeImage,
-  parseMealieArchive,
-  parseMealieRecipeToDTO,
-} from "./mealie-parser";
-import {
   detectMealieLegacyArchive,
   extractMealieLegacyImage,
   extractMealieLegacyRecipes,
   parseMealieLegacyRecipeToDTO,
 } from "./mealie-legacy-parser";
+import {
+  buildMealieLookups,
+  extractMealieRecipeImage,
+  parseMealieArchive,
+  parseMealieRecipeToDTO,
+} from "./mealie-parser";
 import { parseMelaArchive, parseMelaRecipeToDTO } from "./mela-parser";
 import { extractPaprikaRecipes, parsePaprikaRecipeToDTO } from "./paprika-parser";
 import { extractTandoorRecipes, parseTandoorRecipeToDTO } from "./tandoor-parser";

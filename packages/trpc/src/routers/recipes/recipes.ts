@@ -383,12 +383,12 @@ const convertMeasurements = authedProcedure
         // Check edit permission (uses recipe.userId directly since we have the full recipe)
         const permissionCheck = recipe.userId
           ? canAccessResource(
-            "edit",
-            ctx.user.id,
-            recipe.userId,
-            ctx.householdUserIds,
-            ctx.isServerAdmin
-          )
+              "edit",
+              ctx.user.id,
+              recipe.userId,
+              ctx.householdUserIds,
+              ctx.isServerAdmin
+            )
           : Promise.resolve(true);
 
         return permissionCheck.then((canEdit) => {

@@ -1,6 +1,6 @@
-import { Stack } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import React from "react";
+import { Platform } from "react-native";
+import { Stack } from "expo-router";
 
 export default function CalendarLayout() {
   return (
@@ -8,12 +8,12 @@ export default function CalendarLayout() {
       screenOptions={{
         headerShown: true,
         headerLargeTitle: true,
-        headerTransparent: Platform.OS === 'ios',
+        headerTransparent: Platform.OS === "ios",
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
       }}
     >
-      <Stack.Screen name="index" options={{ title: 'Calendar' }} />
+      <Stack.Screen name="index" options={{ title: "Calendar" }} />
     </Stack>
   );
 }

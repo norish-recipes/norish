@@ -14,12 +14,14 @@ The mobile app currently behaves as though "online" is a single binary state. In
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-network-status`: Device connectivity detection, backend reachability checks, app-online derivation, and TanStack Query `onlineManager` integration.
 - `mobile-offline-cache`: MMKV-backed TanStack Query cache persistence, hard-gated cache hydration on cold start, invalidation-on-reconnect logic, and cache clearing boundaries.
 - `mobile-offline-auth`: Session re-validation when the backend becomes reachable again, automatic sign-out when the session is expired/revoked, and offline-tolerant auth flow.
 - `mobile-offline-indicator`: Shell-level reachability banner component with distinct offline and backend-unreachable states and i18n support.
 
 ### Modified Capabilities
+
 - `mobile-trpc-integration`: The shared tRPC provider bundle's `QueryClient` setup will be extended to accept an externally-created client so the mobile app can restore persisted cache before rendering and drive reachability from `appOnline` rather than relying solely on WebSocket status.
 
 ## Impact

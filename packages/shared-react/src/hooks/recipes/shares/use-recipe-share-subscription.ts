@@ -1,8 +1,9 @@
+import { useSubscription } from "@trpc/tanstack-react-query";
+
 import type { RecipeShareLifecycleEventDto } from "@norish/shared/contracts";
+
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipeShareCacheHelpers } from "./use-recipe-share-cache";
-
-import { useSubscription } from "@trpc/tanstack-react-query";
 
 export type RecipeShareSubscriptionCallbacks = {
   onEvent?: (payload: RecipeShareLifecycleEventDto) => void;
@@ -19,8 +20,13 @@ export function createUseRecipeShareSubscription(
     callbacks: RecipeShareSubscriptionCallbacks = {}
   ) {
     const trpc = useTRPC();
-    const { invalidateRecipeShares, invalidateMyRecipeShares, invalidateAdminRecipeShares, invalidateRecipeShare, removeRecipeShare } =
-      dependencies.useRecipeShareCacheHelpers();
+    const {
+      invalidateRecipeShares,
+      invalidateMyRecipeShares,
+      invalidateAdminRecipeShares,
+      invalidateRecipeShare,
+      removeRecipeShare,
+    } = dependencies.useRecipeShareCacheHelpers();
 
     const asSubscriptionOptions = (options: unknown): Parameters<typeof useSubscription>[0] => {
       return options as Parameters<typeof useSubscription>[0];
