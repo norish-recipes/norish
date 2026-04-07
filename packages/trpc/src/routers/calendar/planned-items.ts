@@ -7,11 +7,8 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
-  createPlannedItem,
-  deletePlannedItem,
   getPlannedItemById,
   getPlannedItemWithRecipeById,
-  listPlannedItemsByUserAndDateRange,
   listPlannedItemsWithRecipeBySlot,
   moveItem,
   updatePlannedItem,
@@ -22,40 +19,140 @@ import {
   PlannedItemUpdateInputSchema,
 } from "@norish/shared/contracts/zod";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { dateKey, endOfMonth, startOfMonth } from "@norish/shared/lib/helpers";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 
+import {
+  createCalendarItem,
+  deleteCalendarItem,
+  getServerToday,
+  listItemsByRange,
+  listPlannedRecipesByRange,
+  startOfServerWeek,
+  buildPlannedItemPayload,
+  endOfServerWeek,
+} from "./planned-items-helpers";
+import {
+  createItemInput,
+  createPlannedRecipeInputSchema,
+  deletePlannedRecipeOutputSchema,
+  itemTypeSchema,
+  listItemsInput,
+  plannedRecipeListItemSchema,
+  plannedRecipeMutationOutputSchema,
+  slotSchema,
+} from "./planned-items-openapi-types";
 import { calendarEmitter } from "./emitter";
 
-const slotSchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
-const itemTypeSchema = z.enum(["recipe", "note"]);
-
-const listItemsInput = z.object({
-  startISO: z.string(),
-  endISO: z.string(),
-});
-
-const createItemInput = z
-  .object({
-    date: z.string(),
-    slot: slotSchema,
-    itemType: itemTypeSchema,
-    recipeId: z.string().uuid().optional(),
-    title: z.string().optional(),
+export const listTodayPlannedRecipesProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/planned-recipes/today",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Get planned recipes for today",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
   })
-  .refine((data) => data.itemType !== "recipe" || data.recipeId, {
-    message: "recipeId is required for recipe items",
-  })
-  .refine((data) => data.itemType !== "note" || data.title, {
-    message: "title is required for note items",
+  .output(z.array(plannedRecipeListItemSchema))
+  .query(async ({ ctx }) => {
+    const today = dateKey(getServerToday());
+
+    return listPlannedRecipesByRange(ctx, today, today);
   });
+
+export const listWeekPlannedRecipesProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/planned-recipes/week",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Get planned recipes for the current week",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .output(z.array(plannedRecipeListItemSchema))
+  .query(async ({ ctx }) => {
+    const today = getServerToday();
+
+    return listPlannedRecipesByRange(ctx, dateKey(startOfServerWeek(today)), dateKey(endOfServerWeek(today)));
+  });
+
+export const listMonthPlannedRecipesProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/planned-recipes/month",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Get planned recipes for the current month",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .output(z.array(plannedRecipeListItemSchema))
+  .query(async ({ ctx }) => {
+    const today = getServerToday();
+
+    return listPlannedRecipesByRange(ctx, dateKey(startOfMonth(today)), dateKey(endOfMonth(today)));
+  });
+
+export const createPlannedRecipeProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "POST",
+      path: "/planned-recipes",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Create a planned recipe",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .input(createPlannedRecipeInputSchema)
+  .output(plannedRecipeMutationOutputSchema)
+  .mutation(async ({ ctx, input }) => {
+    return createCalendarItem(ctx, {
+      date: input.date,
+      slot: input.slot,
+      itemType: "recipe",
+      recipeId: input.recipeId,
+    });
+  });
+
+export const deletePlannedRecipeProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "DELETE",
+      path: "/planned-recipes/{itemId}",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Delete a planned recipe",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        404: "Planned item not found",
+      },
+    },
+  })
+  .input(PlannedItemDeleteInputSchema)
+  .output(deletePlannedRecipeOutputSchema)
+  .mutation(async ({ ctx, input }) => deleteCalendarItem(ctx, input));
 
 export const plannedItemsProcedures = router({
   listItems: authedProcedure.input(listItemsInput).query(async ({ ctx, input }) => {
     const { startISO, endISO } = input;
 
-    return listPlannedItemsByUserAndDateRange(ctx.userIds, startISO, endISO);
+    return listItemsByRange(ctx, startISO, endISO);
   }),
 
   moveItem: authedProcedure.input(PlannedItemMoveInputSchema).mutation(async ({ ctx, input }) => {
@@ -150,70 +247,11 @@ export const plannedItemsProcedures = router({
   }),
 
   createItem: authedProcedure.input(createItemInput).mutation(async ({ ctx, input }) => {
-    const { date, slot, itemType, recipeId, title } = input;
-
-    const newItem = await createPlannedItem({
-      userId: ctx.user.id,
-      date,
-      slot,
-      itemType,
-      recipeId: recipeId ?? null,
-      title: title ?? null,
-    });
-
-    const itemWithRecipe = await getPlannedItemWithRecipeById(newItem.id);
-
-    const itemPayload: PlannedItemWithRecipePayload = {
-      id: newItem.id,
-      date: newItem.date,
-      slot: newItem.slot,
-      sortOrder: newItem.sortOrder,
-      itemType: newItem.itemType,
-      recipeId: newItem.recipeId,
-      title: newItem.title,
-      userId: newItem.userId,
-      version: newItem.version,
-      recipeName: itemWithRecipe?.recipeName ?? null,
-      recipeImage: itemWithRecipe?.recipeImage ?? null,
-      servings: itemWithRecipe?.servings ?? null,
-      calories: itemWithRecipe?.calories ?? null,
-    };
-
-    calendarEmitter.emitToHousehold(ctx.householdKey, "itemCreated", {
-      item: itemPayload,
-    });
-
-    return { id: newItem.id };
+    return createCalendarItem(ctx, input);
   }),
 
   deleteItem: authedProcedure.input(PlannedItemDeleteInputSchema).mutation(async ({ ctx, input }) => {
-    const { itemId, version } = input;
-
-    const item = await getPlannedItemById(itemId);
-
-    if (!item) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Planned item not found",
-      });
-    }
-
-    await assertHouseholdAccess(ctx.user.id, item.userId);
-
-    const deleteResult = await deletePlannedItem(itemId, version);
-
-    if (deleteResult.stale) {
-      log.info({ userId: ctx.user.id, itemId, version }, "Ignoring stale calendar delete mutation");
-      return { success: true, stale: true };
-    }
-
-    calendarEmitter.emitToHousehold(ctx.householdKey, "itemDeleted", {
-      itemId,
-      date: item.date,
-      slot: item.slot,
-    });
-
-    return { success: true, stale: false };
+    return deleteCalendarItem(ctx, input);
   }),
 
   updateItem: authedProcedure.input(PlannedItemUpdateInputSchema).mutation(async ({ ctx, input }) => {

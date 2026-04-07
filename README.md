@@ -416,7 +416,7 @@ pnpm run dev:mobile
 
 ## API
 
-Norish exposes an API under `/api/v1`. Currently the API is limited to recipes, the plan is to add at least a few new endpoints with each release.
+Norish exposes an API under `/api/v1`.
 
 - Visual docs: `/api/docs`
 - OpenAPI spec JSON: `/api/openapi.json`
@@ -425,6 +425,19 @@ Norish exposes an API under `/api/v1`. Currently the API is limited to recipes, 
   - `POST /api/v1/recipes/search` - List recipes with optional filters.
   - `POST /api/v1/recipes/import/url`
   - `POST /api/v1/recipes/import/paste`
+  - `GET /api/v1/groceries`
+  - `POST /api/v1/groceries`
+  - `PATCH /api/v1/groceries/{id}/done`
+  - `PATCH /api/v1/groceries/{id}/undone`
+  - `PATCH /api/v1/groceries/{id}/store`
+  - `DELETE /api/v1/groceries/{id}`
+  - `GET /api/v1/stores`
+  - `POST /api/v1/stores`
+  - `GET /api/v1/planned-recipes/today`
+  - `GET /api/v1/planned-recipes/week`
+  - `GET /api/v1/planned-recipes/month`
+  - `POST /api/v1/planned-recipes`
+  - `DELETE /api/v1/planned-recipes/{itemId}`
 
 Authentication:
 
@@ -435,6 +448,9 @@ Notes:
 
 - `/api/docs` and `/api/openapi.json` require a signed-in web session.
 - `POST /api/v1/recipes/search` returns a paginated recipe list. Optional filters include `search`, `searchFields`, `tags`, `categories`, `filterMode`, `sortMode`, `minRating`, and `maxCookingTime`. `cursor` defaults to `0` and `limit` defaults to `50`.
+- Grocery mutation endpoints that target a single grocery require a `version` field for optimistic concurrency.
+- `PATCH /api/v1/groceries/{id}/store` accepts `storeId` and optional `savePreference` in the request body.
+- Planned recipe range endpoints use the server timezone for today/week/month boundaries. The week range is Monday through Sunday.
 
 ---
 

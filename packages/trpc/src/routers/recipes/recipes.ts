@@ -46,6 +46,12 @@ import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { recipeEmitter } from "./emitter";
 import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
+import {
+  randomRecipeInputSchema,
+  recipeAutocompleteInputSchema,
+  recipeIdInputSchema,
+  recipeImportPasteInputSchema,
+} from "./recipes-openapi-types";
 
 // Procedures
 export const listProcedure = authedProcedure
@@ -482,7 +488,7 @@ const convertMeasurements = authedProcedure
   });
 
 const autocomplete = authedProcedure
-  .input(z.object({ query: z.string().min(1).max(100) }))
+  .input(recipeAutocompleteInputSchema)
   .query(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, query: input.query }, "Searching recipes for autocomplete");
 
@@ -498,11 +504,7 @@ const autocomplete = authedProcedure
   });
 
 const getRandomRecipe = authedProcedure
-  .input(
-    z.object({
-      category: z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]).optional(),
-    })
-  )
+  .input(randomRecipeInputSchema)
   .query(async ({ ctx, input }) => {
     const listCtx: RecipeListContext = {
       userId: ctx.user.id,
@@ -600,12 +602,7 @@ export const importFromPasteProcedure = authedProcedure
       },
     },
   })
-  .input(
-    z.object({
-      text: z.string().min(1).max(MAX_RECIPE_PASTE_CHARS),
-      forceAI: z.boolean().optional(),
-    })
-  )
+  .input(recipeImportPasteInputSchema)
   .output(z.uuid())
   .mutation(async ({ ctx, input }) => {
     const recipeId = crypto.randomUUID();
@@ -636,7 +633,7 @@ export const importFromPasteProcedure = authedProcedure
   });
 
 const estimateNutrition = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
+  .input(recipeIdInputSchema)
   .mutation(async ({ ctx, input }) => {
     const { recipeId } = input;
 
@@ -697,7 +694,7 @@ const estimateNutrition = authedProcedure
   });
 
 const triggerAutoTag = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
+  .input(recipeIdInputSchema)
   .mutation(async ({ ctx, input }) => {
     const { recipeId } = input;
 
@@ -764,7 +761,7 @@ const triggerAutoTag = authedProcedure
   });
 
 const triggerAutoCategorize = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
+  .input(recipeIdInputSchema)
   .mutation(async ({ ctx, input }) => {
     const { recipeId } = input;
 
@@ -820,7 +817,7 @@ const triggerAutoCategorize = authedProcedure
   });
 
 const triggerAllergyDetection = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
+  .input(recipeIdInputSchema)
   .mutation(async ({ ctx, input }) => {
     const { recipeId } = input;
 
