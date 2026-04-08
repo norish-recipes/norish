@@ -139,7 +139,7 @@ export function useAdminMutations(): AdminMutationsResult {
     const result = await promise;
 
     if (result.success) {
-      invalidate();
+      await invalidate();
     }
 
     return result;

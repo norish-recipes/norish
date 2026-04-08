@@ -7,6 +7,7 @@ import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/p
 import {
   getRecipePermissionPolicy,
   isProvenanceEnabled as checkProvenanceEnabled,
+  getAIConfig,
 } from "@norish/config/server-config-loader";
 import {
   addStepsAndIngredientsToRecipeByInput,
@@ -240,7 +241,6 @@ const create = authedProcedure.input(FullRecipeInsertSchema).mutation(({ ctx, in
         );
 
         // Check if we need to auto-infer provenance
-        const { getAIConfig } = await import("@norish/config/server-config-loader");
         const aiConfig = await getAIConfig();
 
         if (aiConfig?.provenanceAutoNew) {

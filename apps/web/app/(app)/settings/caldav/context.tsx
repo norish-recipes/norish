@@ -20,7 +20,7 @@ import {
   useCaldavSummaryQuery,
   useCaldavSyncStatusQuery,
 } from "@/hooks/caldav";
-import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 
 type SaveCaldavConfigInput = {

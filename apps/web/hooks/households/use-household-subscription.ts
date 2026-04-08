@@ -9,7 +9,7 @@ import { useUser } from "@norish/shared-react/hooks";
 
 import { useHouseholdCacheHelpers } from "./use-household-cache";
 
-import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 /**

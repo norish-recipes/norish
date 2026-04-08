@@ -5,7 +5,7 @@ import { createGroceriesHooks } from "@norish/shared-react/hooks";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUnitsQuery } from "@/hooks/config";
-import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 
 export const sharedGroceriesHooks = createGroceriesHooks({

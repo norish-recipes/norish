@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+/**
+ * IMPORTANT: This enum is forced in the PostgreSQL Database natively via `cuisine_enum`.
+ * If you extend this array in the future, you MUST also create an accompanying 
+ * Drizzle migration explicitly executing an internal ALTER TYPE DDL query to insert your addition.
+ */
 export const CUISINE_STYLES = [
   "American",
   "British",

@@ -6,7 +6,7 @@ import { useTRPC } from "@/app/providers/trpc-provider";
 /**
  * Hook to track provenance inference status for a recipe via WebSockets
  */
-export function useProvenanceInference(
+export function useProvenanceInferenceSubscriptions(
   recipeId: string | null,
   onStarted?: () => void,
   onCompleted?: () => void

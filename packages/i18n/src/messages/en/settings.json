@@ -515,6 +515,7 @@
       "provenanceAutoNewDesc": "Automatically infer provenance for every newly imported recipe",
       "backfillRecipes": "Batch Process Recipes",
       "backfillRecipesDesc": "Infer provenance for all recipes that haven't been processed yet.",
+      "backfillProgress": "{processed} of {total} processed",
       "backfillQueued": "Queued {value} recipes for processing",
       "startBackfill": "Start Batch Processing"
     },

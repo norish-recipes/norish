@@ -6,7 +6,7 @@ import { createHouseholdHooks, useUser } from "@norish/shared-react/hooks";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
-import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export const sharedHouseholdHooks = createHouseholdHooks({
   useTRPC,

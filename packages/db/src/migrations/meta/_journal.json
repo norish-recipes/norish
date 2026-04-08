@@ -218,6 +218,13 @@
       "when": 1771424928200,
       "tag": "0030_add-apikey-configid",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1775624770479,
+      "tag": "0031_previous_magus",
+      "breakpoints": true
     }
   ]
 }

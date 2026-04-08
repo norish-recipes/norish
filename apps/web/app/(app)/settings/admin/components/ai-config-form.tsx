@@ -254,7 +254,6 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       });
     } finally {
       setSaving(false);
-      setInitialized(false);
     }
   };
 

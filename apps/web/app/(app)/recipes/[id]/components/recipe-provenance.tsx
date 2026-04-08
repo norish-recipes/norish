@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Card, CardBody, CardHeader, Divider } from "@heroui/react";
+import { Card, CardBody, CardHeader, Divider, Skeleton } from "@heroui/react";
 import { useTranslations, useLocale } from "next-intl";
 import { SparklesIcon } from "@heroicons/react/16/solid";
 
@@ -43,7 +43,22 @@ export function RecipeProvenance({ variant = "card" }: { variant?: "card" | "sec
   const cuisinesList = (recipe.cuisines || []).map((c: any) => t(`cuisines.${c}`));
   const displayCuisines = cuisinesList.join(", ");
 
-  const content = (
+  const content = isInferringProvenance && !hasData ? (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-x-8 gap-y-4">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-4 w-16 rounded-lg" />
+          <Skeleton className="h-6 w-32 rounded-lg" />
+        </div>
+        <div className="flex flex-col gap-2 pl-4">
+          <Skeleton className="h-4 w-20 rounded-lg" />
+          <Skeleton className="h-6 w-24 rounded-lg" />
+        </div>
+      </div>
+      <Divider className="bg-default-100" />
+      <Skeleton className="h-4 w-3/4 rounded-lg mt-2" />
+    </div>
+  ) : (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-x-8 gap-y-4">
         {/* Inferring state is now handled solely by the header icon */}

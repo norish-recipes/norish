@@ -31,11 +31,13 @@ export async function processProvenanceInferenceJob(
   const policy = await getRecipePermissionPolicy();
   const { userId, householdKey } = job.data;
 
-  emitByPolicy(recipeEmitter, policy.view, { userId, householdKey }, "processingToast", {
-    recipeId,
-    titleKey: "processingProvenance",
-    severity: "default",
-  });
+  if (userId) {
+    recipeEmitter.emitToUser(userId, "processingToast", {
+      recipeId,
+      titleKey: "processingProvenance",
+      severity: "default",
+    });
+  }
 
   const enabled = await isProvenanceEnabled();
 
@@ -129,11 +131,13 @@ export async function processProvenanceInferenceJob(
     { recipeId }
   );
 
-  emitByPolicy(recipeEmitter, policy.view, { userId, householdKey }, "processingToast", {
-    recipeId,
-    titleKey: "provenanceComplete",
-    severity: "success",
-  });
+  if (userId) {
+    recipeEmitter.emitToUser(userId, "processingToast", {
+      recipeId,
+      titleKey: "provenanceComplete",
+      severity: "success",
+    });
+  }
 
   log.info({ recipeId, originCountry }, "Provenance inference completed and saved");
 }

@@ -18,6 +18,8 @@ import type { FilterMode, SearchField, SortOrder } from "@norish/shared/contract
 import z from "zod";
 import { and, asc, desc, eq, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { dbLogger } from "@norish/db/logger";
+import { recipeFavorites } from "../schema/recipe-favorites";
+import { recipeRatings } from "../schema/recipe-ratings";
 import {
   DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
@@ -1175,9 +1177,6 @@ export async function getRandomRecipeCandidates(
   if (rows.length === 0) return [];
 
   const recipeIds = rows.map((r) => r.id);
-
-  const { recipeFavorites } = await import("../schema/recipe-favorites");
-  const { recipeRatings } = await import("../schema/recipe-ratings");
 
   const [favoriteCounts, ratingAverages] = await Promise.all([
     db

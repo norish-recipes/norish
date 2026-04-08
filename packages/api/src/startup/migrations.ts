@@ -28,6 +28,10 @@ export async function runMigrations(): Promise<void> {
     dbLogger.info("Migrations complete");
   } catch (err) {
     dbLogger.error({ err }, "Migration failed");
-    throw err;
+    if (process.env.NODE_ENV === "production") {
+      throw err;
+    } else {
+      dbLogger.warn("Ignoring migration failure in development environment");
+    }
   }
 }

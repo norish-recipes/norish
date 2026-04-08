@@ -3,7 +3,7 @@ import { act, renderHook } from "@testing-library/react";
 
 import { createMockTrpcClient } from "./test-utils";
 
-import { useProvenanceInference } from "@/hooks/recipes/use-provenance-inference";
+import { useProvenanceInferenceSubscriptions } from "@/hooks/recipes/use-provenance-inference-subscriptions";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 vi.mock("@/app/providers/trpc-provider", () => ({
@@ -25,7 +25,7 @@ vi.mock("@trpc/tanstack-react-query", () => {
   };
 });
 
-describe("useProvenanceInference", () => {
+describe("useProvenanceInferenceSubscriptions", () => {
   const mockTrpc = createMockTrpcClient();
 
   beforeEach(() => {
@@ -35,14 +35,14 @@ describe("useProvenanceInference", () => {
   });
 
   it("should initialize with isInferring false", () => {
-    const { result } = renderHook(() => useProvenanceInference("recipe-1"));
+    const { result } = renderHook(() => useProvenanceInferenceSubscriptions("recipe-1"));
 
     expect(result.current.isInferring).toBe(false);
   });
 
   it("should call onStarted when started", () => {
     const onStarted = vi.fn();
-    const { result } = renderHook(() => useProvenanceInference("recipe-1", onStarted));
+    const { result } = renderHook(() => useProvenanceInferenceSubscriptions("recipe-1", onStarted));
 
     // Simulate started event
     act(() => {

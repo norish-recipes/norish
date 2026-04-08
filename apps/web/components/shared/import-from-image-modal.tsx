@@ -19,7 +19,7 @@ import { ALLOWED_OCR_MIME_SET, MAX_OCR_FILES } from "@norish/shared/contracts";
 import { useUploadLimitsQuery } from "@/hooks/config";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
-import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 interface ImportFromImageModalProps {
   isOpen: boolean;

@@ -25,8 +25,10 @@ import type {
 import { createContext, useCallback, useContext, useEffect } from "react";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
-import { useAdminConfigsQuery, useAdminMutations, useProvenanceStatusQuery } from "@/hooks/admin";
+import { useAdminConfigsQuery, useAdminMutations } from "@/hooks/admin";
+import { useProvenanceStatusQuery } from "@/hooks/admin/use-admin-query";
 import { useSubscription } from "@trpc/tanstack-react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 
@@ -106,6 +108,7 @@ const AdminSettingsContext = createContext<AdminSettingsContextValue | null>(nul
 
 export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   // Use tRPC hooks
+  const queryClient = useQueryClient();
   const { configs, isLoading, invalidate } = useAdminConfigsQuery();
   const { status: provenanceStatus, queryKey: provenanceQueryKey } = useProvenanceStatusQuery();
   const trpc = useTRPC();

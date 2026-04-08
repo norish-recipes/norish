@@ -22,7 +22,9 @@ export async function initializeScheduledJobs(queue: Queue<ScheduledTaskJobData>
   const existing = await queue.getJobSchedulers();
 
   for (const job of existing) {
-    await queue.removeJobScheduler(job.key);
+    if (job?.key) {
+      await queue.removeJobScheduler(job.key);
+    }
   }
 
   const cronMidnight = "0 0 * * *"; // Daily at midnight

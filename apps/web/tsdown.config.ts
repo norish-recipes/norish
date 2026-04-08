@@ -14,6 +14,11 @@ export default defineConfig({
   // Node.js cannot load at runtime. All other npm packages remain external
   // and are resolved from node_modules at runtime.
   noExternal: [/^@norish\//],
+  rolldownOptions: {
+    output: {
+      inlineDynamicImports: true
+    }
+  },
   // Suppress warning for deps that are intentionally inlined from @norish/* packages.
   // Some lightweight transitive deps get pulled in — this is fine and expected.
   inlineOnly: false,

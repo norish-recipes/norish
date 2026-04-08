@@ -11,6 +11,7 @@ import { recipeRatings } from "./recipe-ratings";
 import { recipeTags } from "./recipe-tags";
 import { recipeVideos } from "./recipe-videos";
 import { recipes } from "./recipes";
+import { recipeFavorites } from "./recipe-favorites";
 import { serverConfig } from "./server-config";
 import { stepImages } from "./step-images";
 import { steps } from "./steps";
@@ -23,6 +24,7 @@ export const recipesRelations = relations(recipes, ({ many }) => ({
   recipeTags: many(recipeTags),
   steps: many(steps),
   ratings: many(recipeRatings),
+  favorites: many(recipeFavorites),
   images: many(recipeImages),
   videos: many(recipeVideos),
 }));
@@ -166,5 +168,16 @@ export const userAllergiesRelations = relations(userAllergies, ({ one }) => ({
   tag: one(tags, {
     fields: [userAllergies.tagId],
     references: [tags.id],
+  }),
+}));
+
+export const recipeFavoritesRelations = relations(recipeFavorites, ({ one }) => ({
+  user: one(users, {
+    fields: [recipeFavorites.userId],
+    references: [users.id],
+  }),
+  recipe: one(recipes, {
+    fields: [recipeFavorites.recipeId],
+    references: [recipes.id],
   }),
 }));

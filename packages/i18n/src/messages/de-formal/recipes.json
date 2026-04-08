@@ -45,7 +45,35 @@
     "instructions": "Anleitung",
     "cook": "Kochen",
     "switchToDecimal": "Dezimalzahlen anzeigen",
-    "switchToFraction": "Brüche anzeigen"
+    "switchToFraction": "Brüche anzeigen",
+    "provenance": {
+      "title": "Herkunft",
+      "origin": "Ursprung",
+      "subRegion": "Region",
+      "cuisine": "Küche",
+      "reasoning": "KI-Erkenntnis",
+      "cuisines": {
+        "American": "Amerikanisch",
+        "British": "Britisch",
+        "Caribbean": "Karibisch",
+        "Chinese": "Chinesisch",
+        "French": "Französisch",
+        "Greek": "Griechisch",
+        "Indian": "Indisch",
+        "Italian": "Italienisch",
+        "Japanese": "Japanisch",
+        "Korean": "Koreanisch",
+        "Latin American": "Lateinamerikanisch",
+        "Lebanese": "Libanesisch",
+        "Mediterranean": "Mediterran",
+        "Mexican": "Mexikanisch",
+        "Middle Eastern": "Nahöstlich",
+        "Spanish": "Spanisch",
+        "Thai": "Thailändisch",
+        "Vietnamese": "Vietnamesisch",
+        "Other": "Spezialität"
+      }
+    }
   },
   "actions": {
     "plan": "Planen",

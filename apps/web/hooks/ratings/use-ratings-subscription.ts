@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
-import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export function useRatingsSubscription() {
   const tErrors = useTranslations("common.errors");

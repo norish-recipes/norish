@@ -1,3 +1,5 @@
+import "./polyfill";
+
 import { initCaldavSync } from "@norish/api/caldav/event-listener";
 import { redactUrl, serverLogger as log } from "@norish/shared-server/logger";
 import { createServer } from "@norish/api/startup/http-server";

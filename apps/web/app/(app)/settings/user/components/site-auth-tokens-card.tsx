@@ -28,7 +28,7 @@ import { useTranslations } from "next-intl";
 
 import NewFeatureChip from "../../components/new-feature-chip";
 
-import { showSafeErrorToast } from "@norish/shared-react/lib/safe-error-toast";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
 export default function SiteAuthTokensCard() {
