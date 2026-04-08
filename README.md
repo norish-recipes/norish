@@ -135,7 +135,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          'node -e "require(''http'').get(''http://localhost:3000/api/health'', r => process.exit(r.statusCode===200?0:1))"',
+          'node -e "require(''http'').get(''http://localhost:3000/api/v1/health'', r => process.exit(r.statusCode===200?0:1))"',
         ]
       interval: 1m
       timeout: 15s
@@ -409,6 +409,7 @@ Norish exposes an API under `/api/v1`.
 - Visual docs: `/api/docs`
 - OpenAPI spec JSON: `/api/openapi.json`
 - Current endpoints:
+  - `GET /api/v1/health` - Public health check for the API and internal parser service.
   - `GET /api/v1/recipes/{id}`
   - `POST /api/v1/recipes/search` - List recipes with optional filters.
   - `POST /api/v1/recipes/import/url`
@@ -435,6 +436,8 @@ Authentication:
 Notes:
 
 - `/api/docs` and `/api/openapi.json` require a signed-in web session.
+- `GET /api/v1/health` is public and returns `200` only when the API and parser service are both healthy.
+- Other documented `/api/v1` endpoints require API credentials.
 - `POST /api/v1/recipes/search` returns a paginated recipe list. Optional filters include `search`, `searchFields`, `tags`, `categories`, `filterMode`, `sortMode`, `minRating`, and `maxCookingTime`. `cursor` defaults to `0` and `limit` defaults to `50`.
 - Grocery mutation endpoints that target a single grocery require a `version` field for optimistic concurrency.
 - `PATCH /api/v1/groceries/{id}/store` accepts `storeId` and optional `savePreference` in the request body.
