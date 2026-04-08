@@ -4,6 +4,7 @@ import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
 import { isOperationId } from "@norish/shared/lib/operation-helpers";
 
 import { createHttpContextFromHeaders } from "./context";
+import { health } from "./routers/config/procedures";
 import {
   createPlannedRecipeProcedure,
   deletePlannedRecipeProcedure,
@@ -29,6 +30,7 @@ import { createStoreProcedure, listStoresProcedure } from "./routers/stores/stor
 import { router } from "./trpc";
 
 export const openApiRouter = router({
+  health,
   recipeGet: getProcedure,
   recipeSearch: listProcedure,
   recipeImportUrl: importFromUrlProcedure,
@@ -84,7 +86,7 @@ export function getOpenApiDocument(baseUrl: string) {
     description: "API access for Norish recipes and imports.",
     version: "1.0.0",
     baseUrl: new URL("/api/v1", `${baseUrl}/`).toString(),
-    tags: ["Recipes", "Recipe Imports", "Groceries", "Stores", "Planned Recipes"],
+    tags: ["Health", "Recipes", "Recipe Imports", "Groceries", "Stores", "Planned Recipes"],
     securitySchemes: {
       ApiKeyAuth: {
         type: "apiKey",
