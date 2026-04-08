@@ -18,6 +18,12 @@ FROM base AS builder-base
 
 RUN npm install -g pnpm@10.30.1
 
+COPY --from=ghcr.io/astral-sh/uv:0.11.4 /uv /uvx /bin/
+
+ENV UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=0 \
+    UV_PYTHON_INSTALL_DIR=/app/.uv/python
+
 ##############################
 # All Dependencies (for build)
 ##############################
@@ -30,6 +36,8 @@ ENV SHARP_IGNORE_GLOBAL_LIBVIPS=0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json .npmrc ./
 COPY apps/web/package.json ./apps/web/package.json
+COPY apps/parser-api/pyproject.toml ./apps/parser-api/pyproject.toml
+COPY apps/parser-api/uv.lock ./apps/parser-api/uv.lock
 
 # packages/*
 COPY packages/api/package.json ./packages/api/package.json
@@ -54,7 +62,7 @@ COPY tooling/typescript/package.json ./tooling/typescript/package.json
 COPY patches/ ./patches/
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+    SKIP_PARSER_API_INSTALL=1 pnpm install --frozen-lockfile
 
 ##############################
 # Build stage
@@ -73,12 +81,19 @@ COPY --from=deps /app/node_modules ./node_modules
 
 COPY . .
 
+RUN --mount=type=cache,target=/root/.local/share/uv/python \
+    UV_PYTHON_DOWNLOADS=1 uv python install 3.14
+
 # With injectWorkspacePackages enabled, workspace packages are copied into
 # node_modules during install. Re-run install after copying the full repo so
 # injected workspace deps include non-package.json files (tsconfig presets,
 # source files, message JSON, etc.) before the build runs.
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile --ignore-scripts --child-concurrency=1
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=cache,target=/root/.local/share/uv/python \
+    UV_PYTHON_DOWNLOADS=0 uv sync --project /app/apps/parser-api --locked --python 3.14
 
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     SKIP_ENV_VALIDATION=1
@@ -201,6 +216,8 @@ COPY --from=build --chown=${UID}:${GID} /app/deploy/node_modules/ ./node_modules
 # --- Static + public assets (not included in standalone trace) ---
 COPY --from=build --chown=${UID}:${GID} /app/apps/web/.next/static/ ./apps/web/.next/static/
 COPY --from=build --chown=${UID}:${GID} /app/apps/web/public/ ./apps/web/public/
+COPY --from=build --chown=${UID}:${GID} /app/apps/parser-api/ ./apps/parser-api/
+COPY --from=build --chown=${UID}:${GID} /app/.uv/python/ /app/.uv/python/
 
 # --- Custom server entry point (@norish/* code is compiled into this bundle) ---
 COPY --from=build --chown=${UID}:${GID} /app/dist-server/ ./dist-server/
@@ -227,5 +244,5 @@ VOLUME ["/app/uploads"]
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode===200?0:1))" || exit 1
 
-# Run directly with node
-CMD ["node", "dist-server/index.mjs"]
+# Run directly with node; the custom server starts the embedded parser API when needed
+CMD ["node", "/app/dist-server/index.mjs"]

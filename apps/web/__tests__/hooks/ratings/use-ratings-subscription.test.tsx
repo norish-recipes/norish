@@ -5,6 +5,10 @@ import { createTestQueryClient, createTestWrapper } from "./test-utils";
 
 const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefined> = {};
 
+function emitPayload(payload: unknown) {
+  return { payload };
+}
+
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     recipes: {
@@ -79,10 +83,12 @@ describe("useRatingsSubscription", () => {
     });
 
     act(() => {
-      subscriptionCallbacks.onRatingFailed?.({
-        recipeId: "recipe-1",
-        reason: "Very long backend stack trace that should not be shown in toast",
-      });
+      subscriptionCallbacks.onRatingFailed?.(
+        emitPayload({
+          recipeId: "recipe-1",
+          reason: "Very long backend stack trace that should not be shown in toast",
+        })
+      );
     });
 
     expect(addToast).toHaveBeenCalledWith(

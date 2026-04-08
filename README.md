@@ -257,6 +257,8 @@ When no component vars are set, the fallback URL is:
 | `TRUSTED_ORIGINS`     | Comma-separated additional trusted origins | (empty)                                           |
 | `UPLOADS_DIR`         | Upload storage directory                   | `./.runtime/uploads` (dev), `/app/uploads` (prod) |
 | `CHROME_WS_ENDPOINT`  | Playwright CDP WebSocket endpoint          | `ws://chrome-headless:3000`                       |
+| `PARSER_API_TIMEOUT_MS` | Parser API timeout in milliseconds       | `15000`                                           |
+| `LEGACY_RECIPE_PARSER_ROLLBACK` | Re-enable deprecated legacy structured parser | `false`                        |
 | `REDIS_URL`           | Redis connection URL                       | `redis://localhost:6379`                          |
 | `ENABLE_REGISTRATION` | Allow new-user registration                | `false`                                           |
 | `AI_ENABLED`          | Enable AI features globally                | `false`                                           |
@@ -330,6 +332,15 @@ These are only used when claim mapping is enabled.
 | `CONTENT_INDICATORS`  | Override recipe-content indicator configuration | (empty) |
 | `CONTENT_INGREDIENTS` | Override ingredient-content configuration       | (empty) |
 
+### Parser Rollout And Rollback
+
+- Default non-video URL imports use the Python parser API first.
+- By default, the custom Node server starts and supervises an embedded parser at `http://127.0.0.1:8001`.
+- Norish always talks to the parser on that fixed internal loopback address.
+- Set `LEGACY_RECIPE_PARSER_ROLLBACK=true` and restart Norish to switch structured imports back to the deprecated JSON-LD and microdata parser.
+- Reset `LEGACY_RECIPE_PARSER_ROLLBACK=false` after the parser API is healthy again.
+- Parser failure-code mapping and dependency upgrade workflow live in `apps/parser-api/README.md`.
+
 ### Optional (Scheduler + Upload Limits)
 
 | Variable                   | Description                        | Default     |
@@ -381,13 +392,15 @@ cd norish
 # Install dependencies
 pnpm install
 
+# This also runs uv sync --locked in apps/parser-api and creates its .venv
+
 # Create your environment file
 cp .env.example .env.local
 
 # Start required services (Postgres, Redis, Chrome)
 pnpm run docker:up
 
-# Run the web app
+# Run the web app (it also starts the embedded parser from apps/parser-api/.venv)
 pnpm run dev
 
 # Run the mobile app (Expo)

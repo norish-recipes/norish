@@ -9,7 +9,9 @@
     "MASTER_KEY",
     "AUTH_URL",
     "CHROME_WS_ENDPOINT",
-    "REDIS_URL"
+    "REDIS_URL",
+    "PARSER_API_TIMEOUT_MS",
+    "LEGACY_RECIPE_PARSER_ROLLBACK"
   ],
   "tasks": {
     "topo": {

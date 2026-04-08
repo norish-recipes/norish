@@ -5,7 +5,8 @@
   "type": "module",
   "packageManager": "pnpm@10.30.1",
   "scripts": {
-    "dev": "turbo watch dev -F @norish/web... --continue",
+    "dev": "turbo watch dev --filter=@norish/web... --continue",
+    "dev:tui": "turbo watch dev --ui=tui --filter=@norish/web... --continue",
     "dev:mobile": "pnpm --filter @norish/mobile run start",
     "build:web": "pnpm --filter @norish/web run build:web",
     "build": "turbo run build",

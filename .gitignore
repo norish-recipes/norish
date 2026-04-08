@@ -6,6 +6,12 @@
 /node_modules
 **/node_modules/
 .pnpm-store/
+**/.venv/
+**/__pycache__/
+**/*.egg-info/
+*.py[cod]
+**/.pytest_cache/
+**/.ruff_cache/
 /.pnp
 .pnp.js
 
@@ -79,7 +85,6 @@ docker-compose.yml
 **/.expo
 **/dist
 
-docs/
 
 .devcontainer/.env
 
@@ -87,3 +92,4 @@ docs/
 .devcontainer/*/
 !.devcontainer/default/
 !.devcontainer/default/**
+

@@ -1,4 +1,7 @@
-/** Microdata helpers: parse HTML microdata and return normalized Recipe-like objects. */
+/**
+ * @deprecated Legacy rollback parser helpers kept only for `LEGACY_RECIPE_PARSER_ROLLBACK`.
+ * Microdata helpers: parse HTML microdata and return normalized Recipe-like objects.
+ */
 import { createRequire } from "node:module";
 
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";

@@ -192,6 +192,13 @@ const ServerConfigSchema = z.object({
     .min(1, "CHROME_WS_ENDPOINT is required for web scraping")
     .default("ws://chrome-headless:3000"),
 
+  PARSER_API_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
+  LEGACY_RECIPE_PARSER_ROLLBACK: z
+    .string()
+    .transform((val) => val === "true" || val === "1")
+    .pipe(z.boolean())
+    .default(false),
+
   // Scheduler Configuration
   SCHEDULER_CLEANUP_MONTHS: z.coerce.number().default(3),
 
@@ -223,6 +230,15 @@ const ServerConfigSchema = z.object({
 });
 
 export type ServerConfig = z.infer<typeof ServerConfigSchema>;
+export const INTERNAL_PARSER_API_HOST = "127.0.0.1";
+export const INTERNAL_PARSER_API_PORT = 8001;
+export const INTERNAL_PARSER_API_URL =
+  `http://${INTERNAL_PARSER_API_HOST}:${INTERNAL_PARSER_API_PORT}`;
+
+export function buildInternalParserApiUrl(pathname: string): string {
+  return new URL(pathname, INTERNAL_PARSER_API_URL).toString();
+}
+
 let configInstance: ServerConfig | null = null;
 
 export function initializeServerConfig(): ServerConfig {
