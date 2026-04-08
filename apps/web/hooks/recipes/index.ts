@@ -46,3 +46,9 @@ export {
 } from "@norish/shared-react/hooks";
 
 export { useRandomRecipe, type RandomRecipeResult } from "./use-random-recipe";
+export {
+  useProvenanceInferenceSubscriptions,
+} from "./use-provenance-inference-subscriptions";
+export {
+  useProvenanceInferenceMutation,
+} from "./use-provenance-inference-mutation";
