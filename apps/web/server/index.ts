@@ -10,8 +10,11 @@ import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config
 import { startWorkers } from "@norish/queue/start-workers";
 import { serverLogger as log, redactUrl } from "@norish/shared-server/logger";
 
+import { startEmbeddedParser } from "./embedded-parser";
+
 async function main() {
   const config = initializeServerConfig();
+  const embeddedParser = await startEmbeddedParser(config);
 
   log.info("-".repeat(50));
   log.info("Server configuration loaded:");
@@ -45,7 +48,10 @@ async function main() {
 
   const { server, hostname, port } = await createServer();
 
-  registerShutdownHandlers(server);
+  registerShutdownHandlers(
+    server,
+    embeddedParser ? [{ name: "Stop embedded parser", run: embeddedParser.stop }] : []
+  );
 
   server.listen(port, hostname, () => {
     log.info("-".repeat(50));

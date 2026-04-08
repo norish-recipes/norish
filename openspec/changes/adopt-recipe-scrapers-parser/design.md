@@ -44,7 +44,7 @@ This is a cross-cutting change because it affects `packages/api`, `packages/queu
 
 ### Upgrade ownership: scheduled dependency review with parser regression verification
 
-- **Decision:** Treat `recipe-scrapers` updates as a routine dependency maintenance task for the parser API, verified by contract tests, fixture-based import tests, and a curated manual URL verification list before merging.
+- **Decision:** Treat `recipe-scrapers` updates as a routine dependency maintenance task for the parser API, verified by contract tests, fixture-based import tests, and documented representative manual URL spot checks before merging.
 - **Rationale:** The package will only remain useful if Norish actively maintains it. A lightweight but explicit review workflow makes that responsibility concrete without requiring immediate upstream adoption on every release.
 - **Alternatives considered:**
   - Upgrade only when imports break: lowest effort, but encourages long periods of drift and harder catch-up upgrades.
@@ -122,10 +122,10 @@ This is a cross-cutting change because it affects `packages/api`, `packages/queu
   - Require exact section/heading parity with current JSON-LD parsing: too strict for the new library contract.
   - Collapse all instructions into one note field: unacceptable regression in cooking flow.
 
-### Category and tag mapping: conservative categories, broader metadata-derived tags
+### Category and tag mapping: conservative categories with explicit synonyms, broader metadata-derived tags
 
-- **Decision:** Map Norish meal categories only when scraper fields clearly indicate `Breakfast`, `Lunch`, `Dinner`, or `Snack`; otherwise leave categories empty so existing auto-categorization can run. Normalize scraper metadata such as `keywords`, `category`, `cuisine`, and dietary restriction fields into Norish tags with lowercase trim-and-dedupe rules.
-- **Rationale:** Norish categories are intentionally narrow, while scraper metadata is broad and site-specific. Conservative category mapping avoids false positives while still keeping useful metadata via tags.
+- **Decision:** Map Norish meal categories only when scraper fields clearly indicate a supported meal category or an explicit close synonym that Norish intentionally treats as equivalent, such as `Brunch` -> `Breakfast`, `Supper` -> `Dinner`, and `Appetizer`, `Dessert`, or `Side Dish` -> `Snack`; otherwise leave categories empty so existing auto-categorization can run. Normalize scraper metadata such as `keywords`, `category`, `cuisine`, and dietary restriction fields into Norish tags with lowercase trim-and-dedupe rules.
+- **Rationale:** Norish categories are intentionally narrow, while scraper metadata is broad and site-specific. Restricting mappings to explicit supported categories and a short synonym list keeps behavior predictable without throwing away useful meal signals.
 - **Alternatives considered:**
   - Aggressively infer meal categories from weak signals: higher coverage, but too error-prone.
   - Ignore scraper metadata beyond ingredients and steps: simpler, but throws away useful classification data.
@@ -148,7 +148,7 @@ This is a cross-cutting change because it affects `packages/api`, `packages/queu
 
 ## Risks / Trade-offs
 
-- **Parser inconsistency across sites** -> Mitigated by keeping the legacy backend behind an env flag, pinning `recipe-scrapers`, and adding regression tests for representative recipe URLs.
+- **Parser inconsistency across sites** -> Mitigated by keeping the legacy backend behind an env flag, pinning `recipe-scrapers`, adding regression tests for representative recipes, and documenting representative manual spot checks for release validation.
 - **Operational overhead from a new runtime** -> Mitigated by using a dedicated parser API with health checks, documented service wiring, and a narrow HTTP contract.
 - **Contract drift between Node and Python** -> Mitigated by typed request/response schemas and contract tests that validate sample parser responses.
 - **Slower import latency from an extra network hop** -> Mitigated by keeping the parser service close to the main app within the deployment network and limiting the HTTP payload to fetched HTML plus metadata.

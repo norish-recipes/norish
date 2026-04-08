@@ -1,4 +1,7 @@
-/** JSON-LD helpers: scan HTML, collect structured data, and return Recipe nodes. */
+/**
+ * @deprecated Legacy rollback parser helpers kept only for `LEGACY_RECIPE_PARSER_ROLLBACK`.
+ * JSON-LD helpers: scan HTML, collect structured data, and return Recipe nodes.
+ */
 import * as cheerio from "cheerio";
 
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";

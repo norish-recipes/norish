@@ -13,6 +13,21 @@ vi.mock("@tanstack/react-query", async () => {
 
   return {
     ...actual,
+    useQuery: vi.fn(() => ({
+      data: [
+        {
+          id: "store-1",
+          version: 6,
+          name: "Pantry",
+          color: "primary",
+          icon: "ShoppingBagIcon",
+          sortOrder: 0,
+          userId: "user-1",
+        },
+      ],
+      error: null,
+      isLoading: false,
+    })),
     useMutation: vi.fn((options?: { mutationFn?: (...args: unknown[]) => unknown }) => ({
       mutate: options?.mutationFn ?? vi.fn(),
       isPending: false,
@@ -23,32 +38,18 @@ vi.mock("@tanstack/react-query", async () => {
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
     stores: {
+      list: {
+        queryKey: vi.fn(() => ["stores", "list"]),
+        queryOptions: vi.fn(() => ({
+          queryKey: ["stores", "list"],
+          queryFn: vi.fn(async () => []),
+        })),
+      },
       create: { mutationOptions: vi.fn() },
       update: { mutationOptions: vi.fn() },
       delete: { mutationOptions: vi.fn(() => ({ mutationFn: mockDeleteMutation })) },
       reorder: { mutationOptions: vi.fn() },
     },
-  }),
-}));
-
-const setStoresData = vi.fn();
-const invalidate = vi.fn();
-
-vi.mock("@/hooks/stores/use-stores-query", () => ({
-  useStoresQuery: () => ({
-    stores: [
-      {
-        id: "store-1",
-        version: 6,
-        name: "Pantry",
-        color: "primary",
-        icon: "ShoppingBagIcon",
-        sortOrder: 0,
-        userId: "user-1",
-      },
-    ],
-    setStoresData,
-    invalidate,
   }),
 }));
 

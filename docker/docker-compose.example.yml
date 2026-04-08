@@ -19,6 +19,8 @@ services:
 
       # Optional
       UPLOADS_DIR: /app/uploads # Runtime volume path
+      # PARSER_API_TIMEOUT_MS: 15000
+      # LEGACY_RECIPE_PARSER_ROLLBACK: false
       # NEXT_PUBLIC_LOG_LEVEL: info       # trace, debug, info, warn, error, fatal (default: info in prod, debug in dev)
       # TRUSTED_ORIGINS:http://192.168.1.100:3000,https://norish.example.com  # Additional trusted origins, comma separated. Useful when behind a proxy or using multiple domains.
 

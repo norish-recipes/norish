@@ -5,6 +5,12 @@
 # dependencies
 /node_modules
 **/node_modules/
+**/.venv/
+**/__pycache__/
+**/*.egg-info/
+*.py[cod]
+**/.pytest_cache/
+**/.ruff_cache/
 /.pnp
 .pnp.js
 

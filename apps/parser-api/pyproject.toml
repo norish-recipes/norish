@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=80", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "norish-parser-api"
+version = "0.18.0"
+description = "Norish FastAPI wrapper around recipe-scrapers"
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+  "beautifulsoup4==4.14.3",
+  "fastapi==0.116.1",
+  "recipe-scrapers==15.10.0",
+  "uvicorn==0.35.0",
+]
+
+[tool.setuptools]
+packages = ["app"]

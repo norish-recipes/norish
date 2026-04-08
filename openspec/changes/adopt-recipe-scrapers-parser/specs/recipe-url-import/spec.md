@@ -135,9 +135,9 @@ The system SHALL normalize structured parser output into Norish's recipe DTO for
 
 The system SHALL map narrow Norish meal categories conservatively while preserving broader scraper metadata as normalized tags.
 
-#### Scenario: Clear meal-category signal is present
+#### Scenario: Clear meal-category signal or close synonym is present
 
-- **WHEN** scraper metadata clearly indicates `Breakfast`, `Lunch`, `Dinner`, or `Snack`
+- **WHEN** scraper metadata clearly indicates `Breakfast`, `Lunch`, `Dinner`, or `Snack`, or a close synonym such as `Brunch`, `Supper`, `Appetizer`, `Dessert`, or `Side Dish`
 - **THEN** the system SHALL map that signal into Norish categories
 
 #### Scenario: Meal-category signal is weak or ambiguous
