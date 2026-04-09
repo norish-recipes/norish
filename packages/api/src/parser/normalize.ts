@@ -38,7 +38,7 @@ const log = parserLogger.child({ module: "normalize" });
  * @param keywords - The keywords field from JSON-LD
  * @returns Array of tag objects
  */
-function parseTags(keywords: unknown): { name: string }[] {
+export function parseTags(keywords: unknown): { name: string }[] {
   if (!Array.isArray(keywords)) return [];
 
   return keywords
@@ -46,7 +46,7 @@ function parseTags(keywords: unknown): { name: string }[] {
     .map((k) => ({ name: k.toLowerCase() }));
 }
 
-function parseCategories(recipeCategory: unknown): RecipeCategory[] {
+export function parseCategories(recipeCategory: unknown): RecipeCategory[] {
   const validCategories: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
   const categoryMap: Record<string, RecipeCategory> = {
     breakfast: "Breakfast",

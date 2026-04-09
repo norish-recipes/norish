@@ -10,7 +10,6 @@ import type { Job } from "bullmq";
 
 import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/trpc/helpers";
-import { generateTagsForRecipe } from "@norish/api/ai/auto-tagger";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getRecipeFull } from "@norish/db";
 import { db } from "@norish/db/drizzle";
@@ -20,12 +19,14 @@ import { createLogger } from "@norish/shared-server/logger";
 import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
+import { requireQueueApiHandler } from "../api-handlers";
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:auto-tagging");
 
 async function processAutoTaggingJob(job: Job<AutoTaggingJobData>): Promise<void> {
+  const generateTagsForRecipe = requireQueueApiHandler("generateTagsForRecipe");
   const { recipeId, userId, householdKey } = job.data;
 
   log.info(

@@ -6,6 +6,7 @@ import { createMockInfiniteData, createTestQueryClient, createTestWrapper } from
 
 const mockMutate = vi.fn();
 const mockImportFromUrlMutationOptions = vi.fn((options?: unknown) => options);
+const mockImportFromPasteMutationOptions = vi.fn((options?: unknown) => options);
 
 vi.mock("@tanstack/react-query", async () => {
   const actual = await vi.importActual("@tanstack/react-query");
@@ -61,7 +62,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       },
       importFromUrl: { mutationOptions: mockImportFromUrlMutationOptions },
       importFromImages: { mutationOptions: vi.fn() },
-      importFromPaste: { mutationOptions: vi.fn() },
+      importFromPaste: { mutationOptions: mockImportFromPasteMutationOptions },
       create: { mutationOptions: vi.fn() },
       update: { mutationOptions: vi.fn() },
       delete: { mutationOptions: vi.fn() },
@@ -87,6 +88,7 @@ describe("useRecipesMutations", () => {
     vi.clearAllMocks();
     mockMutate.mockReset();
     mockImportFromUrlMutationOptions.mockClear();
+    mockImportFromPasteMutationOptions.mockClear();
     queryClient = createTestQueryClient();
   });
 
@@ -202,6 +204,49 @@ describe("useRecipesMutations", () => {
       });
 
       expect(() => result.current.createRecipe).not.toThrow();
+    });
+  });
+
+  describe("importRecipeFromPaste", () => {
+    it("fans out pending recipe placeholders for multiple returned recipe IDs", async () => {
+      queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
+      queryClient.setQueryData([["recipes", "getPending"], { type: "query" }], []);
+
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+
+      renderHook(() => useRecipesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const pasteMutationOptions = mockImportFromPasteMutationOptions.mock.calls[0][0] as {
+        onMutate: () => { optimisticPendingId: string };
+        onSuccess: (
+          result: { recipeIds: string[] },
+          variables: { text: string; forceAI?: boolean },
+          context: { optimisticPendingId: string }
+        ) => void;
+      };
+
+      const context = pasteMutationOptions.onMutate();
+
+      act(() => {
+        pasteMutationOptions.onSuccess(
+          { recipeIds: ["recipe-1", "recipe-2", "recipe-3"] },
+          { text: "paste" },
+          context
+        );
+      });
+
+      const pendingRecipes = queryClient.getQueryData<Array<{ recipeId: string }>>([
+        ["recipes", "getPending"],
+        { type: "query" },
+      ]);
+
+      expect(pendingRecipes?.map((entry) => entry.recipeId)).toEqual([
+        "recipe-1",
+        "recipe-2",
+        "recipe-3",
+      ]);
     });
   });
 

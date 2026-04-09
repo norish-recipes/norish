@@ -40,16 +40,6 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
 
     if (!trimmed) return;
 
-    if (trimmed.length > MAX_RECIPE_PASTE_CHARS) {
-      addToast({
-        title: t("tooLarge"),
-        description: t("maxCharacters", { max: MAX_RECIPE_PASTE_CHARS.toLocaleString() }),
-        color: "warning",
-      });
-
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -149,10 +139,7 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
                 onValueChange={setText}
               />
               <p className="text-default-500 text-xs">
-                {t("characters", {
-                  count: text.length.toLocaleString(),
-                  max: MAX_RECIPE_PASTE_CHARS.toLocaleString(),
-                })}
+                {t("maxCharacters", { max: MAX_RECIPE_PASTE_CHARS.toLocaleString() })}
               </p>
             </ModalBody>
             <ModalFooter>

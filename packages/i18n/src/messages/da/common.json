@@ -120,7 +120,7 @@
       "placeholder": "Indsæt en opskrift (fritekst) eller JSON-LD her...",
       "characters": "{count} / {max} tegn",
       "tooLarge": "Indsætningen er for stor",
-      "maxCharacters": "Maksimalt {max} tegn er tilladt",
+      "maxCharacters": "Maksimalt {max} tegn pr. opskrift",
       "importing": "Importerer opskrift...",
       "importingWithAI": "Importerer opskrift med AI...",
       "inProgress": "Importering i gang, vent venligst...",

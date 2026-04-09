@@ -10,7 +10,6 @@ import type { Job } from "bullmq";
 
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/trpc/helpers";
-import { extractRecipeFromImages } from "@norish/api/ai/image-recipe-parser";
 import { getAIConfig, getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   addRecipeImages,
@@ -24,6 +23,7 @@ import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/med
 import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
+import { requireQueueApiHandler } from "../api-handlers";
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
@@ -33,6 +33,7 @@ const log = createLogger("worker:image-import");
  * Process a single image import job.
  */
 async function processImageImportJob(job: Job<ImageImportJobData>): Promise<void> {
+  const extractRecipeFromImages = requireQueueApiHandler("extractRecipeFromImages");
   const { recipeId, userId, householdKey, householdUserIds, files } = job.data;
 
   log.info({ jobId: job.id, recipeId, fileCount: files.length }, "Processing image import job");

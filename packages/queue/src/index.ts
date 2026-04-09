@@ -43,6 +43,7 @@ export { createScheduledTasksQueue } from "./scheduled-tasks/queue";
 export { addImportJob } from "./recipe-import/producer";
 export { addImageImportJob } from "./image-import/producer";
 export { addPasteImportJob } from "./paste-import/producer";
+export { MAX_STRUCTURED_PASTE_RECIPES, preparePasteImport } from "./paste-import/parser";
 export { addNutritionEstimationJob } from "./nutrition-estimation/producer";
 export { addAutoTaggingJob, isAutoTaggingJobActive } from "./auto-tagging/producer";
 export {

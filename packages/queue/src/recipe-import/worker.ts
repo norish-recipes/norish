@@ -9,7 +9,6 @@ import type { Job } from "bullmq";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/trpc/helpers";
-import { parseRecipeFromUrl } from "@norish/api/parser";
 import { getAIConfig, getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   createRecipeWithRefs,
@@ -28,6 +27,7 @@ import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
+import { requireQueueApiHandler } from "../api-handlers";
 import {
   baseWorkerOptions,
   QUEUE_NAMES,
@@ -45,6 +45,7 @@ const log = createLogger("worker:recipe-import");
  * Called by the worker for each job.
  */
 async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
+  const parseRecipeFromUrl = requireQueueApiHandler("parseRecipeFromUrl");
   const { url, recipeId, userId, householdKey, householdUserIds } = job.data;
 
   log.info(

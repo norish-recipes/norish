@@ -9,7 +9,6 @@ import type { Job } from "bullmq";
 
 import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/trpc/helpers";
-import { estimateNutritionFromIngredients } from "@norish/api/ai/nutrition-estimator";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getRecipeFull, updateRecipeWithRefs } from "@norish/db";
 import { getBullClient } from "@norish/queue/redis/bullmq";
@@ -17,12 +16,14 @@ import { createLogger } from "@norish/shared-server/logger";
 import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
+import { requireQueueApiHandler } from "../api-handlers";
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:nutrition-estimation");
 
 async function processNutritionJob(job: Job<NutritionEstimationJobData>): Promise<void> {
+  const estimateNutritionFromIngredients = requireQueueApiHandler("estimateNutritionFromIngredients");
   const { recipeId, userId, householdKey } = job.data;
 
   log.info(

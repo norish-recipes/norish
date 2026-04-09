@@ -120,7 +120,7 @@
       "placeholder": "Paste a recipe (free text) or JSON-LD here...",
       "characters": "{count} / {max} characters",
       "tooLarge": "Paste too large",
-      "maxCharacters": "Maximum {max} characters allowed",
+      "maxCharacters": "Maximum {max} characters per recipe",
       "importing": "Importing recipe...",
       "importingWithAI": "Importing recipe with AI...",
       "inProgress": "Import in progress, please wait...",

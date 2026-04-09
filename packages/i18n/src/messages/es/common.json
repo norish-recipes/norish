@@ -115,7 +115,7 @@
       "placeholder": "Pega una receta (texto libre) o JSON-LD aquí...",
       "characters": "{count} / {max} caracteres",
       "tooLarge": "Texto demasiado largo",
-      "maxCharacters": "Máximo {max} caracteres permitidos",
+      "maxCharacters": "Máximo {max} caracteres por receta",
       "importing": "Importando receta...",
       "importingWithAI": "Importando receta con IA...",
       "inProgress": "Importando, espera por favor...",

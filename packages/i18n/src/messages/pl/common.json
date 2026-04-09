@@ -112,7 +112,7 @@
       "placeholder": "Wklej przepis lub JSON-LD...",
       "characters": "{count} / {max} znaków",
       "tooLarge": "Wklejony tekst jest za duży",
-      "maxCharacters": "Maksymalnie {max} znaków",
+      "maxCharacters": "Maksymalnie {max} znaków na przepis",
       "importing": "Importowanie przepisu...",
       "importingWithAI": "Importowanie przepisu z AI...",
       "inProgress": "Import w toku, proszę czekać...",
