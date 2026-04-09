@@ -16,7 +16,7 @@ import { createLogger } from "@norish/shared-server/logger";
 import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
-import { requireQueueApiHandler } from "../api-handlers";
+import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 

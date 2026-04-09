@@ -91,14 +91,27 @@ export interface QueueApiHandlers {
   cleanupOldTempFiles(maxAgeMs?: number): Promise<void>;
 }
 
-let registeredHandlers: Partial<QueueApiHandlers> = {};
+const globalForQueueApiHandlers = globalThis as typeof globalThis & {
+  __norishQueueApiHandlers__?: Partial<QueueApiHandlers>;
+};
+
+function getRegisteredHandlers(): Partial<QueueApiHandlers> {
+  if (!globalForQueueApiHandlers.__norishQueueApiHandlers__) {
+    globalForQueueApiHandlers.__norishQueueApiHandlers__ = {};
+  }
+
+  return globalForQueueApiHandlers.__norishQueueApiHandlers__;
+}
 
 export function registerQueueApiHandlers(handlers: Partial<QueueApiHandlers>): void {
-  registeredHandlers = { ...registeredHandlers, ...handlers };
+  globalForQueueApiHandlers.__norishQueueApiHandlers__ = {
+    ...getRegisteredHandlers(),
+    ...handlers,
+  };
 }
 
 export function requireQueueApiHandler<K extends keyof QueueApiHandlers>(name: K): QueueApiHandlers[K] {
-  const handler = registeredHandlers[name];
+  const handler = getRegisteredHandlers()[name];
 
   if (!handler) {
     throw new Error(`Queue API handler not registered: ${String(name)}`);
@@ -108,5 +121,5 @@ export function requireQueueApiHandler<K extends keyof QueueApiHandlers>(name: K
 }
 
 export function resetQueueApiHandlersForTests(): void {
-  registeredHandlers = {};
+  globalForQueueApiHandlers.__norishQueueApiHandlers__ = {};
 }

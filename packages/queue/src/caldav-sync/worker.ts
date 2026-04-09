@@ -13,7 +13,7 @@ import { getBullClient } from "@norish/queue/redis/bullmq";
 import { createLogger } from "@norish/shared-server/logger";
 import { caldavEmitter } from "@norish/trpc/routers/caldav/emitter";
 
-import { requireQueueApiHandler } from "../api-handlers";
+import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
