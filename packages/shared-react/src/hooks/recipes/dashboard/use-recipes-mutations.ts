@@ -174,13 +174,25 @@ export function createUseRecipesMutations(
 
           return { optimisticPendingId };
         },
-        onSuccess: (recipeId, _variables, context) => {
-          if (!context) {
-            addPendingRecipe(recipeId);
+        onSuccess: (result, _variables, context) => {
+          const [firstRecipeId, ...remainingRecipeIds] = result.recipeIds;
+
+          if (!firstRecipeId) {
+            if (context) {
+              removePendingRecipe(context.optimisticPendingId);
+            }
+
+            invalidate();
             return;
           }
 
-          replacePendingRecipe(context.optimisticPendingId, recipeId);
+          if (!context) {
+            result.recipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
+            return;
+          }
+
+          replacePendingRecipe(context.optimisticPendingId, firstRecipeId);
+          remainingRecipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
         },
         onError: (error, variables, context) => {
           handleImportError(

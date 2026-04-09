@@ -120,7 +120,7 @@
       "placeholder": "Füge ein Rezept (Freitext) oder JSON-LD ein...",
       "characters": "{count} / {max} Zeichen",
       "tooLarge": "Paste zu groß",
-      "maxCharacters": "Maximal {max} Zeichen erlaubt",
+      "maxCharacters": "Maximal {max} Zeichen pro Rezept erlaubt",
       "importing": "Rezept wird importiert...",
       "importingWithAI": "Rezept wird mit KI importiert...",
       "inProgress": "Import wird ausgeführt, bitte warten...",

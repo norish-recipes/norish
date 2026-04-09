@@ -1,17 +1,8 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
 import { tryExtractRecipeFromJsonLd } from "@norish/api/parser/jsonld";
 import { tryExtractRecipeFromMicrodata } from "@norish/api/parser/microdata";
-
-function hasValidLegacyRecipeData(recipe: FullRecipeInsertDTO | null): recipe is FullRecipeInsertDTO {
-  return Boolean(
-    recipe?.name?.trim() &&
-      Array.isArray(recipe.recipeIngredients) &&
-      recipe.recipeIngredients.length > 0 &&
-      Array.isArray(recipe.steps) &&
-      recipe.steps.length > 0
-  );
-}
 
 /**
  * @deprecated Temporary rollback path for the legacy JSON-LD and microdata parser.
@@ -23,13 +14,13 @@ export async function tryLegacyStructuredRecipeParsing(
 ): Promise<FullRecipeInsertDTO | null> {
   const jsonLdParsed = await tryExtractRecipeFromJsonLd(url, html, recipeId);
 
-  if (hasValidLegacyRecipeData(jsonLdParsed)) {
+  if (hasRecipeNameIngredientsAndSteps(jsonLdParsed)) {
     return jsonLdParsed;
   }
 
   const microParsed = await tryExtractRecipeFromMicrodata(url, html, recipeId);
 
-  if (hasValidLegacyRecipeData(microParsed)) {
+  if (hasRecipeNameIngredientsAndSteps(microParsed)) {
     return microParsed;
   }
 

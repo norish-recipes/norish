@@ -15,6 +15,7 @@ import {
 } from "@norish/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
 const parserEnvConfig = SERVER_CONFIG as typeof SERVER_CONFIG & {
   LEGACY_RECIPE_PARSER_ROLLBACK: boolean;
@@ -24,22 +25,6 @@ export interface ParseRecipeResult {
   recipe: FullRecipeInsertDTO;
   /** Whether AI was used for extraction (affects auto-tagging) */
   usedAI: boolean;
-}
-
-/**
- * Checks if a parsed recipe has valid ingredients and steps.
- * Used to determine if structured parsing was successful.
- */
-function hasValidRecipeData(recipe: FullRecipeInsertDTO | null): recipe is FullRecipeInsertDTO {
-  return (
-    !!recipe &&
-    typeof recipe.name === "string" &&
-    recipe.name.trim().length > 0 &&
-    Array.isArray(recipe.recipeIngredients) &&
-    recipe.recipeIngredients.length > 0 &&
-    Array.isArray(recipe.steps) &&
-    recipe.steps.length > 0
-  );
 }
 
 interface StructuredParserFailure {
@@ -147,7 +132,7 @@ async function tryPythonStructuredParser(
 
     const adapted = await adaptRecipeScrapersResponse(response, recipeId, url);
 
-    if (hasValidRecipeData(adapted)) {
+    if (hasRecipeNameIngredientsAndSteps(adapted)) {
       return { recipe: adapted, failure: null };
     }
 

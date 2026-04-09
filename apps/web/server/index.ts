@@ -2,6 +2,7 @@ import { initCaldavSync } from "@norish/api/caldav/event-listener";
 import { createServer } from "@norish/api/startup/http-server";
 import { runStartupMaintenanceCleanup } from "@norish/api/startup/maintenance-cleanup";
 import { migrateGalleryImages } from "@norish/api/startup/migrate-gallery-images";
+import { registerApiHandlersForQueue } from "@norish/api/startup/register-queue-api-handlers";
 import { runMigrations } from "@norish/api/startup/migrations";
 import { seedServerConfig } from "@norish/api/startup/seed-config";
 import { registerShutdownHandlers } from "@norish/api/startup/shutdown";
@@ -38,6 +39,8 @@ async function main() {
 
   await runStartupMaintenanceCleanup();
   log.info("-".repeat(50));
+
+  registerApiHandlersForQueue();
 
   initCaldavSync();
   log.info("CalDAV sync service initialized");

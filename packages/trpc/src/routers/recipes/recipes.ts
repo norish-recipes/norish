@@ -32,13 +32,13 @@ import {
   addImportJob,
   addNutritionEstimationJob,
   addPasteImportJob,
+  preparePasteImport,
 } from "@norish/queue";
 import { getQueues } from "@norish/queue/registry";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
 import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
-import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
 
 import { emitByPolicy } from "../../helpers";
@@ -51,6 +51,7 @@ import {
   recipeAutocompleteInputSchema,
   recipeIdInputSchema,
   recipeImportPasteInputSchema,
+  recipeImportPasteOutputSchema,
 } from "./recipes-openapi-types";
 
 // Procedures
@@ -603,23 +604,21 @@ export const importFromPasteProcedure = authedProcedure
     },
   })
   .input(recipeImportPasteInputSchema)
-  .output(z.uuid())
+  .output(recipeImportPasteOutputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = crypto.randomUUID();
+    const preparedImport = await preparePasteImport(input.text, input.forceAI);
 
     log.info(
-      { userId: ctx.user.id, recipeId, textLength: input.text.length },
+      { userId: ctx.user.id, recipeIds: preparedImport.recipeIds, textLength: input.text.length },
       "Processing paste import request"
     );
 
     const queues = getQueues();
     const result = await addPasteImportJob(queues.pasteImport, {
-      recipeId,
+      ...preparedImport,
       userId: ctx.user.id,
       householdKey: ctx.householdKey,
       householdUserIds: ctx.householdUserIds,
-      text: input.text,
-      forceAI: input.forceAI,
     });
 
     if (result.status === "duplicate") {
@@ -629,7 +628,7 @@ export const importFromPasteProcedure = authedProcedure
       });
     }
 
-    return recipeId;
+    return { recipeIds: preparedImport.recipeIds };
   });
 
 const estimateNutrition = authedProcedure

@@ -120,7 +120,7 @@
       "placeholder": "여기에 레시피(자유 텍스트) 또는 JSON-LD를 붙여넣으세요...",
       "characters": "{count} / {max}자",
       "tooLarge": "붙여넣기가 너무 큽니다.",
-      "maxCharacters": "최대 {max}자까지 입력할 수 있습니다.",
+      "maxCharacters": "레시피당 최대 {max}자까지 입력할 수 있습니다.",
       "importing": "레시피를 가져오는 중...",
       "importingWithAI": "AI를 사용하여 레시피를 가져오는 중...",
       "inProgress": "가져오기가 진행 중입니다. 잠시 기다려 주세요...",

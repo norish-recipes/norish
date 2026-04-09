@@ -48,16 +48,28 @@ export type AddImageImportJobResult =
   | { status: "duplicate"; existingJobId: string };
 
 export interface PasteImportJobData {
-  recipeId: string;
+  batchId: string;
+  recipeIds: string[];
   userId: string;
   householdKey: string;
   householdUserIds: string[] | null;
   text: string;
   forceAI?: boolean;
+  structuredRecipes?: StructuredPasteImportRecipe[];
+}
+
+export interface StructuredPasteImportRecipe {
+  recipeId: string;
+  recipe: import("@norish/shared/contracts").FullRecipeInsertDTO;
+  importedRating: number | null;
+}
+
+export interface PasteImportJobResult {
+  recipeIds: string[];
 }
 
 export type AddPasteImportJobResult =
-  | { status: "queued"; job: Job<PasteImportJobData> }
+  | { status: "queued"; job: Job<PasteImportJobData, PasteImportJobResult> }
   | { status: "duplicate"; existingJobId: string };
 
 export interface NutritionEstimationJobData {

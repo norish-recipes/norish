@@ -27,7 +27,8 @@
     "date-fns": "catalog:",
     "drizzle-orm": "catalog:",
     "ioredis": "catalog:",
-    "superjson": "catalog:"
+    "superjson": "catalog:",
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",
