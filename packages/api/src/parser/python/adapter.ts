@@ -79,6 +79,8 @@ function collectInstructionSource(recipe: ScraperRecipe): unknown {
     .filter(Boolean);
 }
 
+// TODO: This needs to become a setting in admin/user settings as the tags often do not make sense.
+// For now its unused.
 function collectTagCandidates(recipe: ScraperRecipe): string[] {
   return [
     ...normalizeDelimitedStrings(recipe.keywords),
@@ -89,6 +91,8 @@ function collectTagCandidates(recipe: ScraperRecipe): string[] {
   ];
 }
 
+// TODO: This needs to become a setting in admin/user settings as the tags often do not make sense.
+// For now its unused.
 function normalizeTags(recipe: ScraperRecipe): { name: string }[] {
   const seen = new Set<string>();
 
@@ -163,10 +167,10 @@ function buildNutrition(recipe: ScraperRecipe) {
 function hasRequiredRecipeFields(recipe: FullRecipeInsertDTO): boolean {
   return Boolean(
     recipe.name?.trim() &&
-      Array.isArray(recipe.recipeIngredients) &&
-      recipe.recipeIngredients.length > 0 &&
-      Array.isArray(recipe.steps) &&
-      recipe.steps.length > 0
+    Array.isArray(recipe.recipeIngredients) &&
+    recipe.recipeIngredients.length > 0 &&
+    Array.isArray(recipe.steps) &&
+    recipe.steps.length > 0
   );
 }
 
@@ -217,7 +221,11 @@ export async function adaptRecipeScrapersResponse(
     systemUsed,
     steps,
     recipeIngredients,
-    tags: normalizeTags(recipe),
+    // Temporary: do not auto-apply parser-supplied tags from scraped recipe data.
+    // This is because the tags are often not very useful when supplied by the parser.
+    // Should become a user-configurable setting in admin/user settings.
+    // tags: normalizeTags(recipe),
+    tags: [],
     categories: mapCategories(recipe),
     images,
     videos,
