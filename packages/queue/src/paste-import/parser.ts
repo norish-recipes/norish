@@ -16,7 +16,7 @@ import {
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 import YAML from "yaml";
 
-import { requireQueueApiHandler } from "../api-handlers";
+import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import type { PasteImportJobData, StructuredPasteImportRecipe } from "../contracts/job-types";
 
 export const MAX_STRUCTURED_PASTE_RECIPES = 25;

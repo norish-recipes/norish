@@ -7,7 +7,7 @@ import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-clean
 import { checkRecurringGroceries } from "@norish/queue/scheduler/recurring-grocery-check";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { requireQueueApiHandler } from "../api-handlers";
+import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 
 const log = createLogger("worker:scheduled-tasks");

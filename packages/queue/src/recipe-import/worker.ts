@@ -27,7 +27,7 @@ import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
-import { requireQueueApiHandler } from "../api-handlers";
+import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import {
   baseWorkerOptions,
   QUEUE_NAMES,
