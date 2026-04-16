@@ -4,6 +4,7 @@ import type {
   FullRecipeDTO,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
+import type { RecipeShareLifecycleEventDto } from "@norish/shared/contracts/dto/recipe-shares";
 
 /**
  * Recipe subscription event payloads.
@@ -17,6 +18,11 @@ export type RecipeSubscriptionEvents = {
     /** Toast key to show - undefined means processing will follow (no toast needed) */
     toast?: "imported";
   };
+  shareCreated: RecipeShareLifecycleEventDto;
+  shareUpdated: RecipeShareLifecycleEventDto;
+  shareRevoked: RecipeShareLifecycleEventDto;
+  shareReactivated: RecipeShareLifecycleEventDto;
+  shareDeleted: RecipeShareLifecycleEventDto;
   updated: { recipe: FullRecipeDTO };
   deleted: { id: string };
   converted: { recipe: FullRecipeDTO };

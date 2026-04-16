@@ -1,10 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+
 import type { CreateRecipeHooksOptions } from "../types";
 import type { InfiniteRecipeData, RecipesCacheHelpers } from "./use-recipes-cache";
-
-import { useSubscription } from "@trpc/tanstack-react-query";
-import { useQueryClient } from "@tanstack/react-query";
 
 export type RecipesSubscriptionCallbacks = {
   onImported?: (payload: unknown) => void;
@@ -26,7 +26,7 @@ export function createUseRecipesSubscription(
     const {
       setAllRecipesData,
       invalidate,
-      addPendingRecipe,
+      replaceOldestOptimisticPendingRecipe,
       removePendingRecipe,
       addAutoTaggingRecipe,
       removeAutoTaggingRecipe,
@@ -117,7 +117,7 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onCreated.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             removePendingRecipe(payload.recipe.id);
             addRecipeToList(payload.recipe);
           },
@@ -128,8 +128,8 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onImportStarted.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
-            addPendingRecipe(payload.recipeId);
+          onData: ({ payload }: any) => {
+            replaceOldestOptimisticPendingRecipe(payload.recipeId);
           },
         })
       )
@@ -138,9 +138,10 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onImported.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             const pendingId = payload.pendingRecipeId ?? payload.recipe.id;
 
+            replaceOldestOptimisticPendingRecipe(pendingId);
             removePendingRecipe(pendingId);
             addRecipeToList(payload.recipe);
             callbacks.onImported?.(payload);
@@ -152,7 +153,7 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onUpdated.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             updateRecipeInList(payload.recipe);
             queryClient.invalidateQueries({
               queryKey: [["recipes", "get"], { input: { id: payload.recipe.id }, type: "query" }],
@@ -166,7 +167,7 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onDeleted.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             removeRecipeFromList(payload.id);
             queryClient.invalidateQueries({
               queryKey: [["recipes", "get"], { input: { id: payload.id }, type: "query" }],
@@ -179,7 +180,7 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onConverted.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             updateRecipeInList(payload.recipe);
             queryClient.invalidateQueries({
               queryKey: [["recipes", "get"], { input: { id: payload.recipe.id }, type: "query" }],
@@ -193,8 +194,9 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onFailed.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             if (payload.recipeId) {
+              replaceOldestOptimisticPendingRecipe(payload.recipeId);
               removePendingRecipe(payload.recipeId);
               removeAutoTaggingRecipe(payload.recipeId);
               removeAllergyDetectionRecipe(payload.recipeId);
@@ -210,7 +212,7 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onAutoTaggingStarted.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             addAutoTaggingRecipe(payload.recipeId);
           },
         })
@@ -220,7 +222,7 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onAllergyDetectionStarted.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             addAllergyDetectionRecipe(payload.recipeId);
           },
         })
@@ -230,7 +232,7 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onAutoTaggingCompleted.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             removeAutoTaggingRecipe(payload.recipeId);
           },
         })
@@ -240,7 +242,7 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onAllergyDetectionCompleted.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             removeAllergyDetectionRecipe(payload.recipeId);
           },
         })
@@ -250,7 +252,7 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onProcessingToast.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             callbacks.onProcessingToast?.(payload);
           },
         })
@@ -260,7 +262,7 @@ export function createUseRecipesSubscription(
     useSubscription(
       asSubscriptionOptions(
         trpc.recipes.onRecipeBatchCreated.subscriptionOptions(undefined, {
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             setAllRecipesData(
               (prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
                 if (!prev?.pages?.length) {

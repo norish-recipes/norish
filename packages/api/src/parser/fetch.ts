@@ -1,10 +1,10 @@
 import type { BrowserContext } from "playwright-core";
+
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-
-import { parserLogger as log } from "@norish/shared-server/logger";
 import { getBrowser } from "@norish/api/playwright";
+import { parserLogger as log } from "@norish/shared-server/logger";
 
-const BROWSER_HEADERS: Record<string, string> = {
+const BROWSER_HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
   Accept:
@@ -21,7 +21,7 @@ const BROWSER_HEADERS: Record<string, string> = {
   "Upgrade-Insecure-Requests": "1",
   DNT: "1",
   Connection: "keep-alive",
-};
+} as const;
 
 function getReferer(url: string): string {
   try {
@@ -56,7 +56,7 @@ export async function fetchViaPlaywright(
       "Sec-Fetch-User": BROWSER_HEADERS["Sec-Fetch-User"],
       "Upgrade-Insecure-Requests": BROWSER_HEADERS["Upgrade-Insecure-Requests"],
       Referer: referer,
-      DNT: BROWSER_HEADERS["DNT"],
+      DNT: BROWSER_HEADERS.DNT,
     };
 
     const headerTokens = tokens?.filter((t) => t.type === "header") ?? [];
@@ -112,7 +112,13 @@ export async function fetchViaPlaywright(
     if (isChallenging) {
       log.debug({ url: targetUrl }, "Cloudflare challenge detected, waiting for resolution");
       await page
-        .waitForFunction(() => !document.title.includes("Just a moment"), { timeout: 15000 })
+        .waitForFunction(
+          () =>
+            !(globalThis as { document?: { title?: string } }).document?.title?.includes(
+              "Just a moment"
+            ),
+          { timeout: 15000 }
+        )
         .catch(() => {});
       await page.waitForLoadState("networkidle").catch(() => {});
     }

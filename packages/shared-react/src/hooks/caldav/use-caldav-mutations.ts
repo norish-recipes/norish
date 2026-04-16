@@ -1,3 +1,5 @@
+import { useMutation } from "@tanstack/react-query";
+
 import type {
   CaldavConfigQueryResult,
   CaldavMutationsResult,
@@ -9,8 +11,12 @@ import type {
   TestConnectionInput,
 } from "./types";
 
-import { useMutation } from "@tanstack/react-query";
-
+export function resolveCaldavConfigVersion(
+  inputVersion?: number,
+  currentVersion?: number
+): number | undefined {
+  return inputVersion ?? currentVersion;
+}
 
 type CreateUseCaldavMutationsOptions = CreateCaldavHooksOptions & {
   useCaldavConfigQuery: () => CaldavConfigQueryResult;
@@ -26,9 +32,10 @@ export function createUseCaldavMutations({
 }: CreateUseCaldavMutationsOptions) {
   return function useCaldavMutations(): CaldavMutationsResult {
     const trpc = useTRPC();
-    const { setConfig, invalidate: invalidateConfig } = useCaldavConfigQuery();
+    const { config, setConfig, invalidate: invalidateConfig } = useCaldavConfigQuery();
     const { invalidate: invalidateSyncStatus } = useCaldavSyncStatusQuery();
     const { invalidate: invalidateSummary } = useCaldavSummaryQuery();
+    const currentConfigVersion = config?.version;
 
     const saveConfigMutation = useMutation(trpc.caldav.saveConfig.mutationOptions());
     const testConnectionMutation = useMutation(trpc.caldav.testConnection.mutationOptions());
@@ -39,7 +46,10 @@ export function createUseCaldavMutations({
 
     return {
       saveConfig: async (input: SaveCaldavConfigInput) => {
-        const result = await saveConfigMutation.mutateAsync(input);
+        const result = await saveConfigMutation.mutateAsync({
+          ...input,
+          version: resolveCaldavConfigVersion(input.version, currentConfigVersion),
+        });
 
         setConfig(() => result);
         invalidateSyncStatus();
@@ -54,7 +64,7 @@ export function createUseCaldavMutations({
         return fetchCalendarsMutation.mutateAsync(input);
       },
       deleteConfig: async (deleteEvents: boolean = false) => {
-        await deleteConfigMutation.mutateAsync({ deleteEvents });
+        await deleteConfigMutation.mutateAsync({ deleteEvents, version: currentConfigVersion });
         setConfig(() => null);
         invalidateConfig();
         invalidateSyncStatus();

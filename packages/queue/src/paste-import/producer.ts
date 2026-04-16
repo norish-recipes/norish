@@ -6,19 +6,20 @@
  */
 
 import type { Queue } from "bullmq";
+
 import type {
   AddPasteImportJobResult,
   PasteImportJobData,
+  PasteImportJobResult,
 } from "@norish/queue/contracts/job-types";
-
 import { createLogger } from "@norish/shared-server/logger";
 
 import { isJobInQueue } from "../helpers";
 
 const log = createLogger("queue:paste-import");
 
-function generatePasteJobId(recipeId: string): string {
-  return `paste-import_${recipeId}`;
+function generatePasteJobId(batchId: string): string {
+  return `paste-import_${batchId}`;
 }
 
 /**
@@ -26,25 +27,25 @@ function generatePasteJobId(recipeId: string): string {
  * Returns conflict status if a duplicate job already exists.
  */
 export async function addPasteImportJob(
-  queue: Queue<PasteImportJobData>,
+  queue: Queue<PasteImportJobData, PasteImportJobResult>,
   data: PasteImportJobData
 ): Promise<AddPasteImportJobResult> {
-  const jobId = generatePasteJobId(data.recipeId);
+  const jobId = generatePasteJobId(data.batchId);
 
   log.debug(
-    { recipeId: data.recipeId, jobId, textLength: data.text.length },
+    { batchId: data.batchId, recipeIds: data.recipeIds, jobId, textLength: data.text.length },
     "Adding paste import job"
   );
 
   if (await isJobInQueue(queue, jobId)) {
-    log.warn({ recipeId: data.recipeId, jobId }, "Duplicate paste import job rejected");
+    log.warn({ batchId: data.batchId, jobId }, "Duplicate paste import job rejected");
 
     return { status: "duplicate", existingJobId: jobId };
   }
 
   const job = await queue.add("paste-import", data, { jobId });
 
-  log.info({ jobId: job.id, recipeId: data.recipeId }, "Paste import job added to queue");
+  log.info({ jobId: job.id, batchId: data.batchId }, "Paste import job added to queue");
 
   return { status: "queued", job };
 }

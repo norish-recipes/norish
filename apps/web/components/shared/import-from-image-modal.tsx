@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useUploadLimitsQuery } from "@/hooks/config";
+import { useRecipesMutations } from "@/hooks/recipes";
+import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { PhotoIcon, SparklesIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import {
   addToast,
@@ -14,12 +19,8 @@ import {
   ModalHeader,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
-import { ALLOWED_OCR_MIME_SET, MAX_OCR_FILES } from "@norish/shared/contracts";
 
-import { useUploadLimitsQuery } from "@/hooks/config";
-import { useRecipesMutations } from "@/hooks/recipes";
-import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { ALLOWED_OCR_MIME_SET, MAX_OCR_FILES } from "@norish/shared/contracts";
 
 interface ImportFromImageModalProps {
   isOpen: boolean;
@@ -224,10 +225,13 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
                 <div className="mt-4 grid grid-cols-4 gap-2">
                   {files.map(({ id, file, preview }) => (
                     <div key={id} className="group relative">
-                      <img
+                      <Image
+                        unoptimized
                         alt={file.name}
                         className="h-20 w-full rounded-lg object-cover"
+                        height={80}
                         src={preview}
+                        width={160}
                       />
                       <button
                         className="bg-danger absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-white opacity-0 transition-opacity group-hover:opacity-100"

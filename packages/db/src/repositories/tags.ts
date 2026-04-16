@@ -1,7 +1,7 @@
-import type { TagDto } from "@norish/shared/contracts/dto/tag";
-
 import { asc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
+
+import type { TagDto } from "@norish/shared/contracts/dto/tag";
 import { db } from "@norish/db/drizzle";
 import { recipeTags, tags } from "@norish/db/schema";
 import { TagSelectBaseSchema } from "@norish/shared/contracts/zod";
@@ -210,7 +210,7 @@ export async function updateTagName(
     // Same name (case-insensitive), just update the casing
     await db
       .update(tags)
-      .set({ name: cleanedNew })
+      .set({ name: cleanedNew, version: sql`${tags.version} + 1` })
       .where(eq(sql`lower(${tags.name})`, cleanedOld.toLowerCase()));
 
     return { merged: false, newName: cleanedNew };
@@ -239,7 +239,7 @@ export async function updateTagName(
       // Merge: update all recipe_tags to point to existing tag, delete old tag
       await tx
         .update(recipeTags)
-        .set({ tagId: existingTag.id })
+        .set({ tagId: existingTag.id, version: sql`${recipeTags.version} + 1` })
         .where(eq(recipeTags.tagId, oldTag.id));
 
       await tx.delete(tags).where(eq(tags.id, oldTag.id));
@@ -247,7 +247,10 @@ export async function updateTagName(
       return { merged: true, newName: existingTag.name };
     } else {
       // Simple rename
-      await tx.update(tags).set({ name: cleanedNew }).where(eq(tags.id, oldTag.id));
+      await tx
+        .update(tags)
+        .set({ name: cleanedNew, version: sql`${tags.version} + 1` })
+        .where(eq(tags.id, oldTag.id));
 
       return { merged: false, newName: cleanedNew };
     }

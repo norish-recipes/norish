@@ -1,10 +1,11 @@
 import type { TRPCSubscriptionProcedure } from "@trpc/server";
+
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type { SubscriptionMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
-import type { TypedEmitter } from "./emitter";
-
+import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime-envelope";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
+import type { TypedEmitter } from "./emitter";
 import { authedProcedure } from "./middleware";
 
 type AuthedSubscriptionProcedure = TRPCSubscriptionProcedure<{
@@ -79,6 +80,19 @@ export function createSubscriptionIterable<T>(
   return emitter.createSubscription(channel, signal) as AsyncIterable<T>;
 }
 
+export function createEnvelopeSubscriptionIterable<T>(
+  emitter: TypedEmitter<Record<string, T>>,
+  multiplexer: SubscriptionMultiplexer | null,
+  channel: string,
+  signal?: AbortSignal
+): AsyncIterable<RealtimeEventEnvelope<T>> {
+  if (multiplexer) {
+    return multiplexer.subscribe<RealtimeEventEnvelope<T>>(channel, signal);
+  }
+
+  return emitter.createSubscription(channel, signal) as AsyncIterable<RealtimeEventEnvelope<T>>;
+}
+
 /**
  * Emit events based on the view policy.
  * - "everyone" => broadcast to all users
@@ -151,7 +165,13 @@ export async function* mergeAsyncIterables<T>(
         queueMicrotask(() => {
           // Double-check abort inside microtask since signal may have changed
           if (signal?.aborted) return;
-          iterators[idx].next().then((result) => resolve({ index: idx, result }));
+          const iterator = iterators[idx];
+
+          if (!iterator) {
+            return;
+          }
+
+          iterator.next().then((result) => resolve({ index: idx, result }));
         });
       })
     );
@@ -198,7 +218,7 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
   ctx: PolicySubscribeContext,
   event: keyof TEvents & string,
   signal?: AbortSignal
-): AsyncIterable<TEvents[typeof event]>[] {
+): AsyncIterable<RealtimeEventEnvelope<TEvents[typeof event]>>[] {
   const householdEventName = emitter.householdEvent(ctx.householdKey, event);
   const broadcastEventName = emitter.broadcastEvent(event);
   const userEventName = emitter.userEvent(ctx.userId, event);
@@ -218,25 +238,55 @@ export function createPolicyAwareIterables<TEvents extends Record<string, unknow
   // This consolidates all subscriptions into a single Redis connection
   if (ctx.multiplexer) {
     return [
-      ctx.multiplexer.subscribe<TEvents[typeof event]>(householdEventName, signal),
-      ctx.multiplexer.subscribe<TEvents[typeof event]>(broadcastEventName, signal),
-      ctx.multiplexer.subscribe<TEvents[typeof event]>(userEventName, signal),
+      ctx.multiplexer.subscribe<RealtimeEventEnvelope<TEvents[typeof event]>>(
+        householdEventName,
+        signal
+      ),
+      ctx.multiplexer.subscribe<RealtimeEventEnvelope<TEvents[typeof event]>>(
+        broadcastEventName,
+        signal
+      ),
+      ctx.multiplexer.subscribe<RealtimeEventEnvelope<TEvents[typeof event]>>(
+        userEventName,
+        signal
+      ),
     ];
   }
 
   // Fallback to direct subscriptions (HTTP polling, tests, etc.)
   return [
-    emitter.createSubscription(householdEventName, signal),
-    emitter.createSubscription(broadcastEventName, signal),
-    emitter.createSubscription(userEventName, signal),
+    emitter.createSubscription(householdEventName, signal) as AsyncIterable<
+      RealtimeEventEnvelope<TEvents[typeof event]>
+    >,
+    emitter.createSubscription(broadcastEventName, signal) as AsyncIterable<
+      RealtimeEventEnvelope<TEvents[typeof event]>
+    >,
+    emitter.createSubscription(userEventName, signal) as AsyncIterable<
+      RealtimeEventEnvelope<TEvents[typeof event]>
+    >,
   ];
 }
 
-export function createPolicyAwareSubscription<
+/**
+ * Envelope-aware subscription: yields full RealtimeEventEnvelope objects.
+ * This is the canonical subscription path.
+ *
+ * @example
+ * ```ts
+ * const onImported = createEnvelopeAwareSubscription(recipeEmitter, "imported", "recipe imports");
+ * ```
+ */
+export function createEnvelopeAwareSubscription<
   TEvents extends Record<string, unknown>,
   K extends keyof TEvents & string,
 >(emitter: TypedEmitter<TEvents>, eventName: K, logMessage: string): AuthedSubscriptionProcedure {
   return authedProcedure.subscription(async function* ({ ctx, signal }) {
+    if (!ctx.user) {
+      await waitForAbort(signal);
+
+      return;
+    }
+
     const policyCtx: PolicySubscribeContext = {
       userId: ctx.user.id,
       householdKey: ctx.householdKey,
@@ -245,19 +295,20 @@ export function createPolicyAwareSubscription<
 
     log.trace(
       { userId: ctx.user.id, householdKey: ctx.householdKey, hasMultiplexer: !!ctx.multiplexer },
-      `Subscribed to ${logMessage}`
+      `Subscribed (envelope-aware) to ${logMessage}`
     );
 
     try {
       const iterables = createPolicyAwareIterables(emitter, policyCtx, eventName, signal);
 
       for await (const data of mergeAsyncIterables(iterables, signal)) {
-        yield data as TEvents[K];
+        // Yield the full envelope — consumers get { meta, payload }
+        yield data as RealtimeEventEnvelope<TEvents[K]>;
       }
     } finally {
       log.trace(
         { userId: ctx.user.id, householdKey: ctx.householdKey },
-        `Unsubscribed from ${logMessage}`
+        `Unsubscribed (envelope-aware) from ${logMessage}`
       );
     }
   });

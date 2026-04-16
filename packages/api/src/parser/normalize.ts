@@ -10,14 +10,10 @@
  * - Videos
  */
 
-
 import type { RecipeCategory } from "@norish/shared/contracts";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-
-import { randomUUID } from "crypto";
-
-import { parserLogger } from "@norish/shared-server/logger";
 import { getUnits } from "@norish/config/server-config-loader";
+import { parserLogger } from "@norish/shared-server/logger";
 
 import {
   extractNutrition,
@@ -40,7 +36,7 @@ const log = parserLogger.child({ module: "normalize" });
  * @param keywords - The keywords field from JSON-LD
  * @returns Array of tag objects
  */
-function parseTags(keywords: unknown): { name: string }[] {
+export function parseTags(keywords: unknown): { name: string }[] {
   if (!Array.isArray(keywords)) return [];
 
   return keywords
@@ -48,7 +44,7 @@ function parseTags(keywords: unknown): { name: string }[] {
     .map((k) => ({ name: k.toLowerCase() }));
 }
 
-function parseCategories(recipeCategory: unknown): RecipeCategory[] {
+export function parseCategories(recipeCategory: unknown): RecipeCategory[] {
   const validCategories: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
   const categoryMap: Record<string, RecipeCategory> = {
     breakfast: "Breakfast",
@@ -105,21 +101,18 @@ function parseCategories(recipeCategory: unknown): RecipeCategory[] {
  * 7. Assembles the final DTO
  *
  * @param json - The JSON-LD Recipe node
- * @param recipeId - Optional recipe ID (generates UUID if not provided)
+ * @param recipeId - Recipe ID allocated by the entry point
  * @returns The normalized recipe DTO, or null if json is falsy
  */
 export async function normalizeRecipeFromJson(
   json: unknown,
-  recipeId?: string
+  recipeId: string
 ): Promise<FullRecipeInsertDTO | null> {
   if (!json) return null;
 
   const jsonObj = json as Record<string, unknown>;
 
-  // Generate a recipe ID if not provided, needed for image storage paths
-  const effectiveRecipeId = recipeId ?? randomUUID();
-
-  log.debug({ recipeId: effectiveRecipeId }, "Normalizing recipe from JSON-LD");
+  log.debug({ recipeId }, "Normalizing recipe from JSON-LD");
   log.debug({ json: jsonObj }, "Recipe JSON-LD content");
   // Get unit configuration for ingredient parsing
   const units = await getUnits();
@@ -137,10 +130,10 @@ export async function normalizeRecipeFromJson(
   const nutrition = extractNutrition(jsonObj);
 
   // --- IMAGES ---
-  const { images, primaryImage } = await parseImages(jsonObj.image, effectiveRecipeId);
+  const { images, primaryImage } = await parseImages(jsonObj.image, recipeId);
 
   // --- VIDEOS (from VideoObject in JSON-LD) ---
-  const { videos } = await parseVideos(jsonObj.video, effectiveRecipeId);
+  const { videos } = await parseVideos(jsonObj.video, recipeId);
 
   if (videos.length > 0) {
     log.debug({ count: videos.length }, "Parsed videos from JSON-LD");
@@ -154,7 +147,7 @@ export async function normalizeRecipeFromJson(
 
   // --- FINAL STRUCTURE ---
   return {
-    id: effectiveRecipeId,
+    id: recipeId,
     name: metadata.name,
     description: metadata.description,
     notes: metadata.notes,

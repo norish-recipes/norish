@@ -1,0 +1,36 @@
+services:
+  norish-devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    volumes:
+      - ../..:/workspaces/norish:cached
+
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+
+    networks:
+      - norish-devcontainer-network
+    env_file:
+      - ../.env # Shared between devcontainers
+    ports:
+      - "3000:3000" # Web
+      - "8081:8081" # Expo Go
+
+  db:
+    networks:
+      - norish-devcontainer-network
+
+  chrome-headless:
+    networks:
+      - norish-devcontainer-network
+
+  redis:
+    networks:
+      - norish-devcontainer-network
+
+# Use shared network so apps can communicate through namespace without exposing ports to host.
+networks:
+  norish-devcontainer-network:
+    driver: bridge

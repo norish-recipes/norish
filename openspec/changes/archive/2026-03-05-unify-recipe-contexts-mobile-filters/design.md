@@ -3,6 +3,7 @@
 Recipe filtering logic currently spans two separate context implementations and mobile relies on dummy filters that diverge from web behavior. In addition, mobile dashboard and search are not fully wired to shared/live recipe data, and loading feedback is inconsistent when pages load or new recipes appear. The change moves both contexts into `shared-react`, aligns mobile with the real filter model, wires mobile data surfaces to actual data streams, and removes web-only coupling that prevents safe reuse in mobile runtimes.
 
 Constraints:
+
 - Mobile and web must consume the same filter contract without introducing platform-specific forks.
 - Existing consumers should migrate with low churn, ideally through compatibility exports/adapters.
 - Shared package code must avoid dependencies that assume browser-only runtime behavior.
@@ -10,6 +11,7 @@ Constraints:
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Establish a single source of truth for recipe contexts in `shared-react`.
 - Define one cross-platform filter contract (state shape, option model, update semantics).
 - Replace mobile dummy filters with shared, real filter definitions.
@@ -18,6 +20,7 @@ Constraints:
 - Improve perceived performance with recipe card skeleton states during initial and incremental loading.
 
 **Non-Goals:**
+
 - Reworking recipe ranking/query business rules.
 - Redesigning filter UI/visuals on web or mobile.
 - Changing backend filter API semantics beyond required payload normalization.
@@ -26,44 +29,54 @@ Constraints:
 ## Decisions
 
 ### Decision: Split domain contract from React integration
+
 Create a platform-neutral module for filter schema, state transitions, and serialization; keep React context providers/hooks as thin wrappers around this domain layer.
 
 Rationale: Mobile can reuse core behavior even where React integration constraints differ.
 
 Alternatives considered:
+
 - Keep current contexts and patch mobile mappings: rejected because drift will continue.
 - Duplicate context logic per client: rejected due to maintenance overhead and inconsistent behavior.
 
 ### Decision: Move both recipe contexts to `shared-react` with compatibility exports
+
 Relocate context source into `shared-react` and expose stable entrypoints. Keep short-lived compatibility re-exports in existing locations to reduce migration risk.
 
 Rationale: Enables incremental consumer adoption and avoids broad, atomic refactors.
 
 Alternatives considered:
+
 - Big-bang import rewrite: rejected because it increases rollout risk.
 
 ### Decision: Canonical filter contract shared by web and mobile
+
 Define required fields for each filter type, default values, and deterministic payload transformation. Mobile must use the same option set and keys as web.
 
 Rationale: Prevents mismatched behavior and contract drift across clients.
 
 Alternatives considered:
+
 - Client-specific adapters only: rejected because contract differences remain hidden and brittle.
 
 ### Decision: Mobile dashboard and search consume shared live data hooks/selectors
+
 Use shared context selectors/adapters to power recipe lists in mobile dashboard and search screens so both surfaces read from actual recipe data and live update pathways.
 
 Rationale: Reduces stale state and duplicated fetching logic, while keeping behavior aligned with shared contract updates.
 
 Alternatives considered:
+
 - Keep existing page-local data wiring: rejected because it preserves drift and delays live update adoption.
 
 ### Decision: Standardize recipe skeleton loading states
+
 Create `recipe-card-skeleton.tsx` under `components/skeletons` and use it for both initial page load and incremental "new recipe added" loading slots.
 
 Rationale: Gives consistent, reusable loading UX and improves perceived responsiveness.
 
 Alternatives considered:
+
 - Spinner-only loading indicators: rejected because they provide less layout stability and weaker perceived performance.
 
 ## Risks / Trade-offs

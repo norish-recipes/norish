@@ -132,12 +132,13 @@ export function renderHookWithProviders<TResult>(
  * Create mock household user data
  */
 export function createMockHouseholdUser(
-  overrides: Partial<{ id: string; name: string | null; isAdmin: boolean }> = {}
+  overrides: Partial<{ id: string; name: string | null; isAdmin: boolean; version: number }> = {}
 ) {
   return {
     id: `user-${Math.random().toString(36).slice(2)}`,
     name: "Test User",
     isAdmin: false,
+    version: 1,
     ...overrides,
   };
 }
@@ -151,6 +152,7 @@ export function createMockHouseholdSettings(
   return {
     id: `household-${Math.random().toString(36).slice(2)}`,
     name: "Test Household",
+    version: 1,
     users: [createMockHouseholdUser({ isAdmin: true })],
     allergies: [],
     ...overrides,
@@ -166,6 +168,7 @@ export function createMockHouseholdAdminSettings(
   return {
     id: `household-${Math.random().toString(36).slice(2)}`,
     name: "Test Household",
+    version: 1,
     joinCode: "123456",
     joinCodeExpiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
     users: [createMockHouseholdUser({ isAdmin: true })],

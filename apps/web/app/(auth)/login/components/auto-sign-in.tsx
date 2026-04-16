@@ -1,14 +1,13 @@
 "use client";
 
-import type { ProviderInfo } from "@norish/shared/contracts";
-
-import { Card, CardBody, Spinner } from "@heroui/react";
 import { useEffect, useRef } from "react";
+import { BrandLogo } from "@/components/brand/brand-logo";
+import { Card, CardBody, Spinner } from "@heroui/react";
+
+import type { ProviderInfo } from "@norish/shared/contracts";
 import { signIn } from "@norish/shared/lib/auth/client";
 
 import { ProviderIcon } from "./provider-icon";
-
-import { BrandLogo } from "@/components/brand/brand-logo";
 
 interface AutoSignInProps {
   provider: ProviderInfo;

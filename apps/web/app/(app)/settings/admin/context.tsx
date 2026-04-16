@@ -1,6 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { createContext, useCallback, useContext } from "react";
+import { useAdminConfigsQuery, useAdminMutations } from "@/hooks/admin";
+
 import type {
   AIConfig,
   AuthProviderGitHub,
@@ -21,16 +24,12 @@ import type {
   UnitsMap,
   VideoConfig,
 } from "@norish/config/zod/server-config";
-
-import { createContext, useCallback, useContext, useEffect } from "react";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
-import { useAdminConfigsQuery, useAdminMutations } from "@/hooks/admin";
 import { useProvenanceStatusQuery } from "@/hooks/admin/use-admin-query";
 import { useSubscription } from "@trpc/tanstack-react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/app/providers/trpc-provider";
-
 
 interface AdminSettingsContextValue {
   // Data

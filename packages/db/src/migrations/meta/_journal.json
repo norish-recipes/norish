@@ -222,8 +222,29 @@
     {
       "idx": 31,
       "version": "7",
-      "when": 1775624770479,
-      "tag": "0031_previous_magus",
+      "when": 1773989364378,
+      "tag": "0031_outgoing_killraven",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1774014638502,
+      "tag": "0032_rainy_randall",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1775030436191,
+      "tag": "0033_graceful_living_tribunal",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1776370381822,
+      "tag": "0034_sharp_lady_vermin",
       "breakpoints": true
     }
   ]

@@ -15,12 +15,14 @@ The recipe filtering flow is currently split across two context implementations,
 ## Capabilities
 
 ### New Capabilities
+
 - `shared-recipe-contexts`: Provide reusable recipe contexts from `shared-react` with platform-safe dependency boundaries.
 - `recipe-filter-contract`: Define a single cross-platform recipe filter contract used by both web and mobile clients.
 - `mobile-recipe-live-data`: Ensure mobile dashboard and search screens consume live/shared recipe data flows.
 - `recipe-loading-skeletons`: Provide consistent skeleton loading states for recipe list initialization and incremental updates.
 
 ### Modified Capabilities
+
 - None.
 
 ## Impact

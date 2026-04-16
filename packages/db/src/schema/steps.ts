@@ -1,6 +1,7 @@
 import { index, numeric, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 import { measurementSystemEnum, recipes } from "./recipes";
+import { versionColumn } from "./shared";
 
 export const steps = pgTable(
   "steps",
@@ -14,6 +15,7 @@ export const steps = pgTable(
     order: numeric("order"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    ...versionColumn,
   },
   (t) => [
     index("idx_steps_recipe_id").on(t.recipeId),

@@ -1,8 +1,9 @@
-import type { UnitsMap } from "@norish/config/zod/server-config";
-
 import { decode } from "html-entities";
 import { jsonrepair } from "jsonrepair";
 import { parseIngredient } from "parse-ingredient";
+
+import type { UnitsMap } from "@norish/config/zod/server-config";
+import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { httpUrlSchema } from "@norish/shared/lib/schema";
 import { flattenForLibrary } from "@norish/shared/lib/unit-localization";
 
@@ -103,6 +104,18 @@ export const formatMinutesHM = (mins?: number): string | undefined => {
 
   return `${h}:${m.toString().padStart(2, "0")}h`;
 };
+
+export function hasRecipeNameIngredientsAndSteps(
+  recipe: FullRecipeInsertDTO | null | undefined
+): recipe is FullRecipeInsertDTO {
+  return Boolean(
+    recipe?.name?.trim() &&
+    Array.isArray(recipe.recipeIngredients) &&
+    recipe.recipeIngredients.length > 0 &&
+    Array.isArray(recipe.steps) &&
+    recipe.steps.length > 0
+  );
+}
 
 export const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number = 300) => {
   let timeout: ReturnType<typeof setTimeout> | null = null;

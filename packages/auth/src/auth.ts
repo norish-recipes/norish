@@ -1,7 +1,5 @@
 import type { BetterAuthOptions, Where } from "better-auth";
 import type { DBAdapter } from "better-auth/adapters";
-import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
-
 import { apiKey } from "@better-auth/api-key";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
@@ -9,7 +7,8 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
-import { authLogger } from "@norish/shared-server/logger";
+
+import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
 import { AUTH_SECRET, encrypt, hmacIndex, safeDecrypt } from "@norish/auth/crypto";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { isRegistrationEnabled } from "@norish/config/server-config-loader";
@@ -20,6 +19,7 @@ import { setConfig } from "@norish/db/repositories/server-config";
 import { countUsers } from "@norish/db/repositories/users";
 import * as schema from "@norish/db/schema/auth";
 import { getPublisherClient } from "@norish/queue/redis/client";
+import { authLogger } from "@norish/shared-server/logger";
 
 import {
   getPendingOIDCProfile,
@@ -187,9 +187,6 @@ function buildEmailAndPasswordConfig() {
     maxPasswordLength: 128,
   };
 }
-
-// Lazy-initialized auth instance
-let _auth: ReturnType<typeof betterAuth> | null = null;
 
 function createAuth() {
   const emailAndPasswordConfig = buildEmailAndPasswordConfig();
@@ -469,6 +466,9 @@ function createAuth() {
 
 // Type for the auth instance including plugins
 type AuthInstance = ReturnType<typeof createAuth>;
+
+// Lazy-initialized auth instance
+let _auth: AuthInstance | null = null;
 
 /**
  * Get the auth instance (lazy-initialized on first access)

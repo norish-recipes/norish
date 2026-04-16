@@ -9,6 +9,23 @@ import {
   createTestWrapper,
 } from "./test-utils";
 
+const mockLeaveMutate = vi.fn();
+const mockKickMutate = vi.fn();
+const mockRegenerateMutate = vi.fn();
+const mockTransferMutate = vi.fn();
+
+vi.mock("@tanstack/react-query", async () => {
+  const actual = await vi.importActual("@tanstack/react-query");
+
+  return {
+    ...actual,
+    useMutation: vi.fn((options: { mutationFn?: (...args: unknown[]) => unknown } | undefined) => ({
+      mutate: options?.mutationFn ?? vi.fn(),
+      isPending: false,
+    })),
+  };
+});
+
 // Mock tRPC provider
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
@@ -22,10 +39,10 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       },
       create: { mutationOptions: vi.fn() },
       join: { mutationOptions: vi.fn() },
-      leave: { mutationOptions: vi.fn() },
-      kick: { mutationOptions: vi.fn() },
-      regenerateCode: { mutationOptions: vi.fn() },
-      transferAdmin: { mutationOptions: vi.fn() },
+      leave: { mutationOptions: vi.fn(() => ({ mutationFn: mockLeaveMutate })) },
+      kick: { mutationOptions: vi.fn(() => ({ mutationFn: mockKickMutate })) },
+      regenerateCode: { mutationOptions: vi.fn(() => ({ mutationFn: mockRegenerateMutate })) },
+      transferAdmin: { mutationOptions: vi.fn(() => ({ mutationFn: mockTransferMutate })) },
     },
   }),
 }));
@@ -42,6 +59,10 @@ describe("useHouseholdMutations", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLeaveMutate.mockReset();
+    mockKickMutate.mockReset();
+    mockRegenerateMutate.mockReset();
+    mockTransferMutate.mockReset();
     queryClient = createTestQueryClient();
   });
 
@@ -161,6 +182,53 @@ describe("useHouseholdMutations", () => {
       const returnType = result.current.leaveHousehold;
 
       expect(returnType.length).toBe(1); // Takes 1 argument
+    });
+  });
+
+  describe("versioned mutation inputs", () => {
+    it("passes the current membership version when leaving a household", async () => {
+      const initialData = createMockHouseholdData(
+        createMockHouseholdSettings({
+          id: "h1",
+          users: [createMockHouseholdUser({ id: "current-user", isAdmin: true, version: 4 })],
+        }),
+        "current-user"
+      );
+
+      queryClient.setQueryData(["households", "get"], initialData);
+
+      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
+      const { result } = renderHook(() => useHouseholdMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      result.current.leaveHousehold("h1");
+
+      expect(mockLeaveMutate).toHaveBeenCalledWith(
+        { householdId: "h1", version: 4 },
+        expect.any(Object)
+      );
+    });
+
+    it("passes household version when regenerating join code", async () => {
+      const initialData = createMockHouseholdData(
+        createMockHouseholdSettings({ id: "h1", version: 6 }),
+        "current-user"
+      );
+
+      queryClient.setQueryData(["households", "get"], initialData);
+
+      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
+      const { result } = renderHook(() => useHouseholdMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      result.current.regenerateJoinCode("h1");
+
+      expect(mockRegenerateMutate).toHaveBeenCalledWith(
+        { householdId: "h1", version: 6 },
+        expect.any(Object)
+      );
     });
   });
 });

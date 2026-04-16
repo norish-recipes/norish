@@ -138,6 +138,7 @@ export function renderHookWithProviders<TResult>(
 export function createMockGrocery(overrides: Partial<GroceryDto> = {}): GroceryDto {
   return {
     id: `grocery-${Math.random().toString(36).slice(2)}`,
+    version: 1,
     name: "Test Grocery",
     amount: 1,
     unit: "piece",
@@ -158,6 +159,7 @@ export function createMockRecurringGrocery(
 ): RecurringGroceryDto {
   return {
     id: `recurring-${Math.random().toString(36).slice(2)}`,
+    version: 1,
     name: "Test Recurring",
     amount: 1,
     unit: "piece",

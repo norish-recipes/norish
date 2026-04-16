@@ -6,9 +6,10 @@
  * the server via `config/server-config-loader.ts` and stored in the database.
  *
  * TO ADD A NEW LANGUAGE:
- * 1. Create translation files in `i18n/messages/{locale}/`
- * 2. Add the locale entry to DEFAULT_LOCALE_CONFIG in `config/server-config-loader.ts`
- * 3. The locale will be available immediately (enabled by default)
+ * 1. Add the locale entry to `src/locales.ts`
+ * 2. Create translation files in `i18n/messages/{locale}/`
+ * 3. Register static message loaders in `src/messages.ts`
+ * 4. The locale will be available immediately (enabled by default)
  */
 
 /**

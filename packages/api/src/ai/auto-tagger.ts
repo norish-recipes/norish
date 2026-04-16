@@ -1,16 +1,15 @@
+import { generateText, Output } from "ai";
+
+import { getAutoTaggingMode, isAIEnabled } from "@norish/config/server-config-loader";
+import { listAllTagNames } from "@norish/db/repositories/tags";
+import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import { aiLogger } from "@norish/shared-server/logger";
+
 import type { AIResult } from "./core/types";
 import type { RecipeForTagging } from "./prompts/builder";
 import type { AutoTaggingOutput } from "./schemas/auto-tagging.schema";
-
-import { generateText, Output } from "ai";
-import { aiLogger } from "@norish/shared-server/logger";
-import { getAutoTaggingMode, isAIEnabled } from "@norish/config/server-config-loader";
-import { listAllTagNames } from "@norish/db/repositories/tags";
-
-
 import { aiError, aiSuccess, getErrorMessage, mapErrorToCode } from "./core/types";
 import { buildAutoTaggingPrompt } from "./prompts/builder";
-import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
 import { autoTaggingSchema } from "./schemas/auto-tagging.schema";
 
 // Re-export types for consumers

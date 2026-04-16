@@ -1,10 +1,8 @@
-import { getTimersEnabledPreference } from '@norish/shared/lib/user-preferences';
-import { createConfigHooks } from '@norish/shared-react/hooks';
+import { useUserContext } from "@/context/user-context";
 
-import { useUserContext } from '@/context/user-context';
-import { useTRPC } from '@/providers/trpc-provider';
+import { getTimersEnabledPreference } from "@norish/shared/lib/user-preferences";
 
-const sharedConfigHooks = createConfigHooks({ useTRPC });
+import { sharedConfigHooks } from "./shared-config-hooks";
 
 /**
  * Hook to check if recipe timers are enabled globally AND for the current user.
@@ -15,8 +13,7 @@ const sharedConfigHooks = createConfigHooks({ useTRPC });
 export function useTimersEnabledQuery() {
   const user = useUserContext().user;
 
-  const { globalEnabled, error, isLoading } =
-    sharedConfigHooks.useTimersEnabledBaseQuery();
+  const { globalEnabled, error, isLoading } = sharedConfigHooks.useTimersEnabledBaseQuery();
   const userPrefEnabled = getTimersEnabledPreference(user);
 
   const isTimersEnabled = globalEnabled && userPrefEnabled;

@@ -1,10 +1,32 @@
 "use client";
 
+import { useVersionQuery } from "@/hooks/config/use-version-query";
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-export default function NewFeatureChip() {
+function getMinorVersion(version: string | undefined) {
+  if (!version) return null;
+
+  const match = version.match(/^(\d+)\.(\d+)/);
+
+  if (!match) return null;
+
+  return `${match[1]}.${match[2]}`;
+}
+
+type NewFeatureChipProps = {
+  showOnVersion: string;
+};
+
+export default function NewFeatureChip({ showOnVersion }: NewFeatureChipProps) {
   const tCommon = useTranslations("common");
+  const { currentVersion } = useVersionQuery();
+  const currentMinorVersion = getMinorVersion(currentVersion);
+  const targetMinorVersion = getMinorVersion(showOnVersion);
+
+  if (!currentMinorVersion || currentMinorVersion !== targetMinorVersion) {
+    return null;
+  }
 
   return (
     <Chip

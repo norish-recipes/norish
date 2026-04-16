@@ -1,15 +1,15 @@
 import type Redis from "ioredis";
+import superjson from "superjson";
+
 import type { Slot } from "@norish/shared/contracts";
 import type { CalendarSubscriptionEvents } from "@norish/trpc/routers/calendar/types";
 import type { RecipeSubscriptionEvents } from "@norish/trpc/routers/recipes/types";
-
-import superjson from "superjson";
-import { createLogger } from "@norish/shared-server/logger";
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import { getCaldavSyncStatusByItemId } from "@norish/db/repositories/caldav-sync-status";
 import { addCaldavSyncJob } from "@norish/queue/caldav-sync/producer";
 import { createSubscriberClient } from "@norish/queue/redis/client";
 import { getQueues } from "@norish/queue/registry";
+import { createLogger } from "@norish/shared-server/logger";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
 const log = createLogger("caldav-sync");
@@ -142,6 +142,12 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
     subscriber.on("pmessage", (_pattern: string, channel: string, message: string) => {
       const parts = channel.split(":");
       const eventName = parts[parts.length - 1];
+
+      if (!eventName) {
+        log.warn({ channel }, "Ignoring calendar event with missing event name");
+
+        return;
+      }
 
       let data: unknown;
 

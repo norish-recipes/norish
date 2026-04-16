@@ -1,9 +1,8 @@
-import { Button, Input } from 'heroui-native';
-import React from 'react';
-import { View } from 'react-native';
-import { useIntl } from 'react-intl';
-
-import { styles } from '@/styles/login.styles';
+import React from "react";
+import { View } from "react-native";
+import { styles } from "@/styles/login.styles";
+import { Button, Input } from "heroui-native";
+import { useIntl } from "react-intl";
 
 type CredentialFormProps = {
   email: string;
@@ -32,13 +31,13 @@ export function CredentialForm({
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
-        placeholder={intl.formatMessage({ id: 'auth.emailPassword.email' })}
+        placeholder={intl.formatMessage({ id: "auth.emailPassword.email" })}
       />
       <Input
         value={password}
         onChangeText={setPassword}
         secureTextEntry
-        placeholder={intl.formatMessage({ id: 'auth.emailPassword.password' })}
+        placeholder={intl.formatMessage({ id: "auth.emailPassword.password" })}
       />
       <Button
         isDisabled={!email.trim() || !password || isSubmitting}
@@ -48,8 +47,8 @@ export function CredentialForm({
       >
         <Button.Label>
           {isSubmitting
-            ? intl.formatMessage({ id: 'common.status.loading' })
-            : intl.formatMessage({ id: 'auth.emailPassword.signIn' })}
+            ? intl.formatMessage({ id: "common.status.loading" })
+            : intl.formatMessage({ id: "auth.emailPassword.signIn" })}
         </Button.Label>
       </Button>
     </View>

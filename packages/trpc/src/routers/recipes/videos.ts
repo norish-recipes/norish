@@ -1,6 +1,6 @@
 import path from "path";
-
 import { z } from "zod";
+
 import { getMaxVideoFileSize } from "@norish/config/server-config-loader";
 import {
   addRecipeVideos,
@@ -12,7 +12,7 @@ import {
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { deleteVideoByUrl, saveVideoBytes } from "@norish/shared-server/media/storage";
 import { ALLOWED_VIDEO_MIME_SET } from "@norish/shared/contracts";
-import { MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
+import { DeleteRecipeVideoInputSchema, MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
@@ -114,6 +114,12 @@ const uploadGalleryVideo = authedProcedure
           },
         ]);
 
+        if (!videoRecord) {
+          return { success: false, error: "Failed to create video record" };
+        }
+
+        const versionedVideoRecord = videoRecord as typeof videoRecord & { version: number };
+
         log.info(
           { userId: ctx.user.id, recipeId, url: savedVideo.video, videoId: videoRecord.id },
           "Gallery video uploaded"
@@ -126,6 +132,7 @@ const uploadGalleryVideo = authedProcedure
           duration: videoRecord.duration,
           thumbnail: videoRecord.thumbnail,
           order: videoRecord.order,
+          version: versionedVideoRecord.version,
         };
       } else {
         // Recipe doesn't exist yet (new recipe form), just return the URL
@@ -156,7 +163,7 @@ const uploadGalleryVideo = authedProcedure
  * Removes from database and filesystem
  */
 const deleteGalleryVideo = authedProcedure
-  .input(z.object({ videoId: z.string().uuid() }))
+  .input(DeleteRecipeVideoInputSchema)
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, videoId: input.videoId }, "Deleting gallery video");
 
@@ -180,14 +187,23 @@ const deleteGalleryVideo = authedProcedure
       }
 
       // Delete from database
-      await deleteRecipeVideoById(input.videoId);
+      const result = await deleteRecipeVideoById(input.videoId, input.version);
+
+      if (result.stale) {
+        log.info(
+          { userId: ctx.user.id, videoId: input.videoId, version: input.version },
+          "Ignoring stale gallery video delete"
+        );
+
+        return { success: true, stale: true };
+      }
 
       log.info(
         { userId: ctx.user.id, videoId: input.videoId, url: videoRecord.video },
         "Gallery video deleted"
       );
 
-      return { success: true };
+      return { success: true, stale: false };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to delete gallery video";
 

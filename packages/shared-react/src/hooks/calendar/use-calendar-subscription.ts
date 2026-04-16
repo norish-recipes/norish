@@ -1,8 +1,8 @@
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
-import type { CalendarCacheHelpers, CreateCalendarHooksOptions } from "./types";
 
-import { useSubscription } from "@trpc/tanstack-react-query";
+import type { CalendarCacheHelpers, CreateCalendarHooksOptions } from "./types";
 
 type CreateUseCalendarSubscriptionOptions = CreateCalendarHooksOptions & {
   useCalendarCacheHelpers: (startISO: string, endISO: string) => CalendarCacheHelpers;
@@ -22,7 +22,7 @@ export function createUseCalendarSubscription({
 
     useSubscription(
       trpc.calendar.onItemCreated.subscriptionOptions(undefined, {
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           setItems((prev) => {
             const exists = prev.some((item) => item.id === payload.item.id);
 
@@ -41,6 +41,7 @@ export function createUseCalendarSubscription({
               recipeImage: payload.item.recipeImage,
               servings: payload.item.servings,
               calories: payload.item.calories,
+              version: payload.item.version ?? 1,
               createdAt: new Date(),
               updatedAt: new Date(),
             };
@@ -58,7 +59,7 @@ export function createUseCalendarSubscription({
 
     useSubscription(
       trpc.calendar.onItemDeleted.subscriptionOptions(undefined, {
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           setItems((prev) => prev.filter((item) => item.id !== payload.itemId));
         },
       })
@@ -66,7 +67,7 @@ export function createUseCalendarSubscription({
 
     useSubscription(
       trpc.calendar.onItemMoved.subscriptionOptions(undefined, {
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           setItems((prev) => {
             const targetSortMap = new Map(
               payload.targetSlotItems.map((i: any) => [i.id, i.sortOrder])
@@ -82,6 +83,7 @@ export function createUseCalendarSubscription({
                   date: payload.item.date,
                   slot: payload.item.slot,
                   sortOrder: payload.item.sortOrder,
+                  version: payload.item.version ?? item.version,
                   updatedAt: new Date(),
                 };
               }
@@ -116,7 +118,7 @@ export function createUseCalendarSubscription({
 
     useSubscription(
       trpc.calendar.onItemUpdated.subscriptionOptions(undefined, {
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           setItems((prev) =>
             prev.map((item) => {
               if (item.id === payload.item.id) {
@@ -133,6 +135,7 @@ export function createUseCalendarSubscription({
                   recipeImage: payload.item.recipeImage,
                   servings: payload.item.servings,
                   calories: payload.item.calories,
+                  version: payload.item.version ?? item.version,
                   updatedAt: new Date(),
                 };
               }

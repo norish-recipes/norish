@@ -1,17 +1,11 @@
 "use client";
 
-import { sharedCalendarHooks } from "./shared-calendar-hooks";
-
-export const useCalendarQuery = sharedCalendarHooks.useCalendarQuery;
-export type { CalendarData, CalendarQueryResult } from "@norish/shared-react/hooks";
-
-export const useCalendarMutations = sharedCalendarHooks.useCalendarMutations;
-export type { CalendarMutationsResult } from "@norish/shared-react/hooks";
-
-export const useCalendarSubscription = sharedCalendarHooks.useCalendarSubscription;
-
-export const useCalendarCacheHelpers = sharedCalendarHooks.useCalendarCacheHelpers;
-export type { CalendarCacheHelpers } from "@norish/shared-react/hooks";
-
-// Web-only hook — depends on browser DnD APIs
+export {
+  useCalendarQuery,
+  type CalendarData,
+  type CalendarQueryResult,
+} from "./use-calendar-query";
+export { useCalendarMutations, type CalendarMutationsResult } from "./use-calendar-mutations";
+export { useCalendarSubscription } from "./use-calendar-subscription";
+export { useCalendarCacheHelpers, type CalendarCacheHelpers } from "./use-calendar-cache";
 export { useCalendarDnd } from "./use-calendar-dnd";

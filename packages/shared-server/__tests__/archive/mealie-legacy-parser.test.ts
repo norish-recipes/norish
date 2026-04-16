@@ -314,7 +314,10 @@ describe("Mealie Legacy Parser", () => {
   describe("parseMealieLegacyRecipeToDTO", () => {
     it("converts a legacy recipe to DTO", async () => {
       const recipe = createLegacyRecipe();
-      const dto = await parseMealieLegacyRecipeToDTO(recipe);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        recipe,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
 
       expect(dto).not.toBeNull();
       expect(dto.name).toBe("Test Recipe");
@@ -325,7 +328,10 @@ describe("Mealie Legacy Parser", () => {
 
     it("parses unparsed ingredients from note field", async () => {
       const recipe = createLegacyRecipe();
-      const dto = await parseMealieLegacyRecipeToDTO(recipe);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        recipe,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
 
       expect(dto.recipeIngredients).toHaveLength(2);
       expect(dto.recipeIngredients![0].ingredientName).toBe("flour");
@@ -338,7 +344,10 @@ describe("Mealie Legacy Parser", () => {
 
     it("maps instructions preserving order", async () => {
       const recipe = createLegacyRecipe();
-      const dto = await parseMealieLegacyRecipeToDTO(recipe);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        recipe,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
 
       expect(dto.steps).toHaveLength(2);
       expect(dto.steps![0].step).toBe("Mix the ingredients together");
@@ -347,7 +356,10 @@ describe("Mealie Legacy Parser", () => {
 
     it("resolves inline tags and categories", async () => {
       const recipe = createLegacyRecipe();
-      const dto = await parseMealieLegacyRecipeToDTO(recipe);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        recipe,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
 
       expect(dto.tags).toHaveLength(3); // 2 tags + 1 category
       const tagNames = dto.tags!.map((t) => t.name);
@@ -363,7 +375,10 @@ describe("Mealie Legacy Parser", () => {
         recipe_category: [{ id: "cat-1", name: "dinner", slug: "dinner" }], // same name, different case
       });
 
-      const dto = await parseMealieLegacyRecipeToDTO(recipe);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        recipe,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
 
       expect(dto.tags).toHaveLength(1);
       expect(dto.tags![0].name).toBe("Dinner");
@@ -372,14 +387,21 @@ describe("Mealie Legacy Parser", () => {
     it("handles recipe with image buffer", async () => {
       const recipe = createLegacyRecipe();
       const imageBuffer = Buffer.from("fake-image-data");
-      const dto = await parseMealieLegacyRecipeToDTO(recipe, imageBuffer);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        recipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        imageBuffer
+      );
 
       expect(dto.image).toBe("mocked-image-guid");
     });
 
     it("handles recipe with no tags or categories", async () => {
       const recipe = createLegacyRecipe({ tags: [], recipe_category: [] });
-      const dto = await parseMealieLegacyRecipeToDTO(recipe);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        recipe,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
 
       expect(dto.tags).toHaveLength(0);
     });
@@ -394,7 +416,10 @@ describe("Mealie Legacy Parser", () => {
         },
       });
 
-      const dto = await parseMealieLegacyRecipeToDTO(recipe);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        recipe,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
 
       expect(dto.calories).toBe(350);
       expect(dto.fat).toBe("15");
@@ -419,7 +444,10 @@ describe("Mealie Legacy Parser", () => {
         ],
       });
 
-      const dto = await parseMealieLegacyRecipeToDTO(recipe);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        recipe,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
 
       expect(dto.recipeIngredients).toHaveLength(1);
       expect(dto.recipeIngredients![0].ingredientName).toBe("flour");
@@ -430,7 +458,9 @@ describe("Mealie Legacy Parser", () => {
     it("throws for recipe with no name", async () => {
       const recipe = createLegacyRecipe({ name: "" });
 
-      await expect(parseMealieLegacyRecipeToDTO(recipe)).rejects.toThrow("Missing recipe name");
+      await expect(
+        parseMealieLegacyRecipeToDTO(recipe, "123e4567-e89b-42d3-a456-426614174000")
+      ).rejects.toThrow("Missing recipe name");
     });
 
     it("matches the user-provided chicken shawarma example", async () => {
@@ -489,7 +519,10 @@ describe("Mealie Legacy Parser", () => {
         recipe_category: [{ id: "cat-1", name: "Dinner", slug: "dinner" }],
       };
 
-      const dto = await parseMealieLegacyRecipeToDTO(shawarmaRecipe);
+      const dto = await parseMealieLegacyRecipeToDTO(
+        shawarmaRecipe,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
 
       expect(dto.name).toBe("Homemade Chicken Shawarma");
       expect(dto.url).toBe("https://www.instagram.com/reel/C2yTnDMuaRk/");

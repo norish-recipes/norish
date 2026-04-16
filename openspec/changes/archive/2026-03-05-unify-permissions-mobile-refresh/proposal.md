@@ -12,9 +12,11 @@ Mobile currently lacks the same permission and server-setting awareness used on 
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-pull-to-refresh`: Defines pull-to-refresh behavior, refresh state UX, and data revalidation expectations for primary mobile recipe/feed surfaces.
 
 ### Modified Capabilities
+
 - `shared-config-hooks`: Expand shared hook contract to include permission/server-settings query primitives consumable by both web and mobile.
 - `mobile-ui`: Require permission-driven visibility for AI/delete controls in mobile surfaces that expose those actions.
 

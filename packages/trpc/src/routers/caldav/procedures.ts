@@ -1,10 +1,10 @@
+import { TRPCError } from "@trpc/server";
+
 import type {
   CalDavCalendarInfo,
   ConnectionTestResult,
   UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
-
-import { TRPCError } from "@trpc/server";
 import {
   deleteCaldavConfig,
   getCaldavConfigDecrypted,
@@ -21,7 +21,6 @@ import { createLogger } from "@norish/shared-server/logger";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { caldavEmitter } from "./emitter";
 import {
   DeleteCaldavConfigInputSchema,
@@ -85,7 +84,8 @@ export const caldavRouter = router({
         password = existingConfig.password;
       }
 
-      await saveCaldavConfig(userId, {
+      const result = await saveCaldavConfig(userId, {
+        version: input.version,
         serverUrl: input.serverUrl,
         calendarUrl: input.calendarUrl ?? null,
         username: input.username,
@@ -96,6 +96,21 @@ export const caldavRouter = router({
         dinnerTime: input.dinnerTime,
         snackTime: input.snackTime,
       });
+
+      if (result.stale) {
+        log.info({ userId, version: input.version }, "Ignoring stale CalDAV config save");
+
+        const currentConfig = await getCaldavConfigWithoutPassword(userId);
+
+        if (!currentConfig) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "CalDAV configuration changed before this update was applied",
+          });
+        }
+
+        return currentConfig;
+      }
 
       // Get the saved config without password for response
       const configWithoutPassword = await getCaldavConfigWithoutPassword(userId);
@@ -197,7 +212,13 @@ export const caldavRouter = router({
 
       log.info({ userId, deleteEvents: input.deleteEvents }, "Deleting CalDAV configuration");
 
-      await deleteCaldavConfig(userId);
+      const result = await deleteCaldavConfig(userId, input.version);
+
+      if (result.stale) {
+        log.info({ userId, version: input.version }, "Ignoring stale CalDAV config delete");
+
+        return { success: true };
+      }
 
       // Emit config deleted event
       caldavEmitter.emitToUser(userId, "configSaved", { config: null });

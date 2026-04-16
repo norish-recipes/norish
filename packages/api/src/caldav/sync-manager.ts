@@ -1,12 +1,10 @@
-import type { Slot } from "@norish/shared/contracts";
 import type { CreateEventInput } from "@norish/shared-server/caldav/client";
-
+import type { Slot } from "@norish/shared/contracts";
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import {
   getCaldavSyncStatusByItemId,
   updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
-
 import { CalDavClient } from "@norish/shared-server/caldav/client";
 
 export function truncateErrorMessage(error: string): string {
@@ -14,7 +12,7 @@ export function truncateErrorMessage(error: string): string {
 }
 
 function parseTimeRange(timeRange: string): { start: string; end: string } {
-  const [start, end] = timeRange.split("-");
+  const [start = "00:00", end = "00:00"] = timeRange.split("-");
 
   return { start: start.trim(), end: end.trim() };
 }
@@ -37,11 +35,16 @@ export function getEventTimeRange(
   };
 
   const timeRange = slotTimeMap[slot];
+
+  if (!timeRange) {
+    throw new Error(`Missing configured time range for slot: ${slot}`);
+  }
+
   const { start: startTime, end: endTime } = parseTimeRange(timeRange);
 
-  const [year, month, day] = date.split("-").map(Number);
-  const [startHour, startMinute] = startTime.split(":").map(Number);
-  const [endHour, endMinute] = endTime.split(":").map(Number);
+  const [year = 1970, month = 1, day = 1] = date.split("-").map(Number);
+  const [startHour = 0, startMinute = 0] = startTime.split(":").map(Number);
+  const [endHour = 0, endMinute = 0] = endTime.split(":").map(Number);
 
   return {
     start: new Date(Date.UTC(year, month - 1, day, startHour, startMinute)),

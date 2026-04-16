@@ -1,22 +1,25 @@
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import { isVideoUrl } from "@norish/api/helpers";
-import { parserLogger as log } from "@norish/shared-server/logger";
-import {
-  extractRecipeNodesFromJsonLd,
-  tryExtractRecipeFromJsonLd,
-} from "@norish/api/parser/jsonld";
-import { tryExtractRecipeFromMicrodata } from "@norish/api/parser/microdata";
+import { fetchViaPlaywright } from "@norish/api/parser/fetch";
+import { extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
+import { tryLegacyStructuredRecipeParsing } from "@norish/api/parser/legacy";
+import { adaptRecipeScrapersResponse } from "@norish/api/parser/python/adapter";
+import { callRecipeScrapersParser } from "@norish/api/parser/python/client";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   getContentIndicators,
   isAIEnabled,
   isVideoParsingEnabled,
   shouldAlwaysUseAI,
 } from "@norish/config/server-config-loader";
+import { parserLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
-import { fetchViaPlaywright } from "./fetch";
+const parserEnvConfig = SERVER_CONFIG as typeof SERVER_CONFIG & {
+  LEGACY_RECIPE_PARSER_ROLLBACK: boolean;
+};
 
 export interface ParseRecipeResult {
   recipe: FullRecipeInsertDTO;
@@ -24,18 +27,24 @@ export interface ParseRecipeResult {
   usedAI: boolean;
 }
 
-/**
- * Checks if a parsed recipe has valid ingredients and steps.
- * Used to determine if structured parsing was successful.
- */
-function hasValidRecipeData(recipe: FullRecipeInsertDTO | null): recipe is FullRecipeInsertDTO {
-  return (
-    !!recipe &&
-    Array.isArray(recipe.recipeIngredients) &&
-    recipe.recipeIngredients.length > 0 &&
-    Array.isArray(recipe.steps) &&
-    recipe.steps.length > 0
-  );
+interface StructuredParserFailure {
+  code: string;
+  message: string;
+}
+
+interface StructuredParseOutcome {
+  recipe: FullRecipeInsertDTO | null;
+  failure: StructuredParserFailure | null;
+}
+
+const NON_RECIPE_FAILURE_CODES = new Set(["NoSchemaFoundInWildMode", "RecipeSchemaNotFound"]);
+
+function getStructuredFailureMessage(code: string): string {
+  if (NON_RECIPE_FAILURE_CODES.has(code)) {
+    return "Page does not appear to contain a recipe.";
+  }
+
+  return `Python parser failed: ${code}`;
 }
 
 /**
@@ -86,7 +95,14 @@ async function extractWithAIPreference(
     log.info({ url }, "AI: using extracted JSON-LD as input (fewer tokens)");
     const jsonLdInput = JSON.stringify(jsonLdNodes, null, 2);
 
-    const fromJsonLd = await tryExtractWithAI(jsonLdInput, recipeId, url, allergies, requireAI, html);
+    const fromJsonLd = await tryExtractWithAI(
+      jsonLdInput,
+      recipeId,
+      url,
+      allergies,
+      requireAI,
+      html
+    );
 
     if (fromJsonLd) return fromJsonLd;
   }
@@ -96,24 +112,70 @@ async function extractWithAIPreference(
   return tryExtractWithAI(html, recipeId, url, allergies, requireAI, html);
 }
 
-/**
- * Attempts structured parsing using JSON-LD and microdata extractors.
- * Returns recipe if either parser produces valid data, null otherwise.
- */
-async function tryStructuredParsers(
+async function tryPythonStructuredParser(
   url: string,
   html: string,
   recipeId: string
-): Promise<FullRecipeInsertDTO | null> {
-  const jsonLdParsed = await tryExtractRecipeFromJsonLd(url, html, recipeId);
+): Promise<StructuredParseOutcome> {
+  try {
+    const response = await callRecipeScrapersParser({ url, html });
 
-  if (hasValidRecipeData(jsonLdParsed)) return jsonLdParsed;
+    if (!response.ok) {
+      return {
+        recipe: null,
+        failure: {
+          code: response.error,
+          message: getStructuredFailureMessage(response.error),
+        },
+      };
+    }
 
-  const microParsed = await tryExtractRecipeFromMicrodata(url, html, recipeId);
+    const adapted = await adaptRecipeScrapersResponse(response, recipeId, url);
 
-  if (hasValidRecipeData(microParsed)) return microParsed;
+    if (hasRecipeNameIngredientsAndSteps(adapted)) {
+      return { recipe: adapted, failure: null };
+    }
 
-  return null;
+    return {
+      recipe: null,
+      failure: {
+        code: "InvalidRecipeData",
+        message: "Python parser returned incomplete recipe data",
+      },
+    };
+  } catch (error: unknown) {
+    log.error({ err: error, url }, "Python parser request failed");
+
+    return {
+      recipe: null,
+      failure: {
+        code: "ParserServiceRequestFailed",
+        message: "Python parser request failed",
+      },
+    };
+  }
+}
+
+async function tryStructuredParser(
+  url: string,
+  html: string,
+  recipeId: string
+): Promise<StructuredParseOutcome> {
+  if (parserEnvConfig.LEGACY_RECIPE_PARSER_ROLLBACK) {
+    const legacy = await tryLegacyStructuredRecipeParsing(url, html, recipeId);
+
+    return legacy
+      ? { recipe: legacy, failure: null }
+      : {
+          recipe: null,
+          failure: {
+            code: "LegacyParserNoRecipe",
+            message: "Legacy structured parser did not return a valid recipe",
+          },
+        };
+  }
+
+  return tryPythonStructuredParser(url, html, recipeId);
 }
 
 /**
@@ -159,11 +221,7 @@ export async function parseRecipeFromUrl(
 
   if (!html) throw new Error("Cannot fetch recipe page.");
 
-  if (!(await isPageLikelyRecipe(html))) {
-    throw new Error("Page does not appear to contain a recipe.");
-  }
-
-  const useAIOnly = forceAI ?? (await shouldAlwaysUseAI());
+  const useAIOnly = Boolean(forceAI || (await shouldAlwaysUseAI()));
 
   if (useAIOnly) {
     const recipe = await extractWithAIPreference(html, recipeId, url, allergies, true);
@@ -173,13 +231,31 @@ export async function parseRecipeFromUrl(
     return { recipe, usedAI: true };
   }
 
-  const structured = await tryStructuredParsers(url, html, recipeId);
+  const structured = await tryStructuredParser(url, html, recipeId);
 
-  if (structured) return { recipe: structured, usedAI: false };
+  if (structured.recipe) return { recipe: structured.recipe, usedAI: false };
 
-  const recipe = await extractWithAIPreference(html, recipeId, url, allergies, false);
+  const aiEnabled = await isAIEnabled();
 
-  if (recipe) return { recipe, usedAI: true };
+  if (aiEnabled && (await isPageLikelyRecipe(html))) {
+    log.info(
+      {
+        url,
+        failureCode: structured.failure?.code,
+        legacyRollback: parserEnvConfig.LEGACY_RECIPE_PARSER_ROLLBACK,
+      },
+      "Structured parsing failed, attempting AI fallback"
+    );
+
+    const recipe = await extractWithAIPreference(html, recipeId, url, allergies, false);
+
+    if (recipe) return { recipe, usedAI: true };
+  }
+
+  if (structured.failure) {
+    log.error({ url, failureCode: structured.failure.code }, "Structured parsing failed");
+    throw new Error(structured.failure.message);
+  }
 
   log.error({ url }, "All extraction methods failed");
   throw new Error("Cannot parse recipe.");

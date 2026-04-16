@@ -5,12 +5,14 @@ Web keeps multiple `hooks/config` query hooks app-local even though the query pa
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Provide reusable config query hooks in `@norish/shared-react` that work with both web and mobile tRPC providers.
 - Keep `config.localeConfig` as the single server source of truth for enabled locales and default locale.
 - Enable mobile to load/apply translations from `@norish/i18n` and consume the same enabled locale list as web.
 - Refactor web `hooks/config` query hooks to reuse shared implementations without behavior regression.
 
 **Non-Goals:**
+
 - Adding a new locale configuration endpoint or changing backend locale schema.
 - Rewriting all existing web UI components that consume config hooks.
 - Delivering full translated coverage for every mobile screen in this change (focus is wiring and integration path).

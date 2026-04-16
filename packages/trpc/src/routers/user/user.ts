@@ -1,7 +1,7 @@
 import { mkdir, readdir, writeFile } from "fs/promises";
 import path from "path";
-
 import { z } from "zod";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
@@ -20,6 +20,11 @@ import {
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { deleteAvatarByFilename } from "@norish/shared-server/media/avatar-cleanup";
 import { IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
+import {
+  DeleteUserAvatarInputSchema,
+  UpdateUserNameInputSchema,
+  UpdateUserPreferencesInputSchema,
+} from "@norish/shared/contracts/zod";
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
 import { buildAvatarFilename, isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
 
@@ -27,8 +32,6 @@ import { emitConnectionInvalidation } from "../../connection-manager";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { householdEmitter } from "../households/emitter";
-
-import { UpdateNameInputSchema, UpdatePreferencesInputSchema } from "./types";
 
 /**
  * Get current user settings (user profile + API keys)
@@ -48,6 +51,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
       email: freshUser?.email ?? ctx.user.email,
       name: freshUser?.name ?? ctx.user.name,
       image: freshUser?.image ?? ctx.user.image,
+      version: freshUser?.version ?? 1,
       preferences: preferences as any,
     },
     apiKeys: apiKeys.map((k) => ({
@@ -65,40 +69,74 @@ const get = authedProcedure.query(async ({ ctx }) => {
  */
 
 const updatePreferences = authedProcedure
-  .input(UpdatePreferencesInputSchema)
+  .input(UpdateUserPreferencesInputSchema)
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, updates: input.preferences }, "Updating user preferences");
 
     const current = await getUserPreferences(ctx.user.id);
     const merged = { ...(current ?? {}), ...(input.preferences ?? {}) };
 
-    await updateUserPreferences(ctx.user.id, merged);
+    const result = await updateUserPreferences(ctx.user.id, merged, input.version);
 
-    return { success: true, preferences: merged };
+    if (result.stale) {
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user preferences mutation"
+      );
+
+      return {
+        success: true,
+        stale: true,
+        preferences: current ?? {},
+        version: input.version,
+      };
+    }
+
+    const updatedUser = await getUserById(ctx.user.id);
+
+    return {
+      success: true,
+      preferences: merged,
+      version: updatedUser?.version ?? input.version,
+    };
   });
 
 /**
  * Update user name
  */
-const updateName = authedProcedure.input(UpdateNameInputSchema).mutation(async ({ ctx, input }) => {
-  log.debug({ userId: ctx.user.id }, "Updating user name");
+const updateName = authedProcedure
+  .input(UpdateUserNameInputSchema)
+  .mutation(async ({ ctx, input }) => {
+    log.debug({ userId: ctx.user.id }, "Updating user name");
 
-  const trimmedName = input.name.trim();
+    const trimmedName = input.name.trim();
 
-  if (!trimmedName) {
-    return { success: false, error: "Name cannot be empty" };
-  }
+    if (!trimmedName) {
+      return { success: false, error: "Name cannot be empty" };
+    }
 
-  await updateUserName(ctx.user.id, trimmedName);
+    const result = await updateUserName(ctx.user.id, trimmedName, input.version);
 
-  return {
-    success: true,
-    user: {
-      ...ctx.user,
-      name: trimmedName,
-    },
-  };
-});
+    if (result.stale) {
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user name mutation"
+      );
+
+      return { success: true, stale: true };
+    }
+
+    const updatedUser = await getUserById(ctx.user.id);
+
+    if (!updatedUser) {
+      return { success: false, error: "User not found" };
+    }
+
+    return {
+      success: true,
+      user: updatedUser,
+    };
+  });
 
 /**
  * Upload user avatar (FormData input)
@@ -109,9 +147,14 @@ const uploadAvatar = authedProcedure
     log.debug({ userId: ctx.user.id }, "Uploading avatar");
 
     const file = input.get("file") as File | null;
+    const version = Number(input.get("version"));
 
     if (!file) {
       return { success: false, error: "No file provided" };
+    }
+
+    if (!Number.isInteger(version) || version < 1) {
+      return { success: false, error: "Current user version is required" };
     }
 
     // Validate mime type
@@ -159,52 +202,75 @@ const uploadAvatar = authedProcedure
     const protectedPath = `/avatars/${filename}`;
 
     // Update database
-    await updateUserAvatar(ctx.user.id, protectedPath);
+    const result = await updateUserAvatar(ctx.user.id, protectedPath, version);
+
+    if (result.stale) {
+      await deleteAvatarByFilename(filename);
+      log.info({ userId: ctx.user.id, version }, "Ignoring stale user avatar upload");
+
+      return { success: true, stale: true };
+    }
+
+    const updatedUser = await getUserById(ctx.user.id);
+
+    if (!updatedUser) {
+      return { success: false, error: "User not found" };
+    }
 
     log.info({ userId: ctx.user.id, path: protectedPath }, "Avatar uploaded");
 
     return {
       success: true,
-      user: {
-        ...ctx.user,
-        image: protectedPath,
-      },
+      user: updatedUser,
     };
   });
 
 /**
  * Delete user avatar
  */
-const deleteAvatar = authedProcedure.mutation(async ({ ctx }) => {
-  log.debug({ userId: ctx.user.id }, "Deleting avatar");
+const deleteAvatar = authedProcedure
+  .input(DeleteUserAvatarInputSchema)
+  .mutation(async ({ ctx, input }) => {
+    log.debug({ userId: ctx.user.id }, "Deleting avatar");
 
-  const avatarDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
+    const clearResult = await clearUserAvatar(ctx.user.id, input.version);
 
-  // Delete all avatars for this user
-  try {
-    const existingFiles = await readdir(avatarDir);
-    const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
+    if (clearResult.stale) {
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user avatar delete"
+      );
 
-    for (const avatar of userAvatars) {
-      await deleteAvatarByFilename(avatar);
+      return { success: true, stale: true };
     }
-  } catch {
-    // Ignore errors
-  }
 
-  // Clear from database
-  await clearUserAvatar(ctx.user.id);
+    const avatarDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
 
-  log.info({ userId: ctx.user.id }, "Avatar deleted");
+    // Delete all avatars for this user
+    try {
+      const existingFiles = await readdir(avatarDir);
+      const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
 
-  return {
-    success: true,
-    user: {
-      ...ctx.user,
-      image: null,
-    },
-  };
-});
+      for (const avatar of userAvatars) {
+        await deleteAvatarByFilename(avatar);
+      }
+    } catch {
+      // Ignore errors
+    }
+
+    const updatedUser = await getUserById(ctx.user.id);
+
+    if (!updatedUser) {
+      return { success: false, error: "User not found" };
+    }
+
+    log.info({ userId: ctx.user.id }, "Avatar deleted");
+
+    return {
+      success: true,
+      user: updatedUser,
+    };
+  });
 
 /**
  * Delete user account
@@ -259,7 +325,7 @@ const getAllergies = authedProcedure.query(async ({ ctx }) => {
 
   const allergies = await getUserAllergies(ctx.user.id);
 
-  return { allergies };
+  return allergies;
 });
 
 /**
@@ -270,7 +336,24 @@ const setAllergies = authedProcedure
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, count: input.allergies.length }, "Updating user allergies");
 
-    await updateUserAllergies(ctx.user.id, input.allergies);
+    const result = await updateUserAllergies(ctx.user.id, input.allergies, input.version);
+
+    if (result.stale) {
+      log.info(
+        { userId: ctx.user.id, version: input.version },
+        "Ignoring stale user allergies mutation"
+      );
+      const currentAllergies = await getUserAllergies(ctx.user.id);
+
+      return {
+        success: true,
+        stale: true,
+        allergies: currentAllergies.allergies,
+        version: currentAllergies.version,
+      };
+    }
+
+    const updatedAllergies = await getUserAllergies(ctx.user.id);
 
     if (ctx.household) {
       const userIds = ctx.household.users.map((u) => u.id);
@@ -288,7 +371,11 @@ const setAllergies = authedProcedure
 
     log.info({ userId: ctx.user.id, allergies: input.allergies }, "User allergies updated");
 
-    return { success: true, allergies: input.allergies };
+    return {
+      success: true,
+      allergies: updatedAllergies.allergies,
+      version: updatedAllergies.version,
+    };
   });
 
 export const userProcedures = router({

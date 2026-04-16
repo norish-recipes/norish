@@ -4,13 +4,13 @@ import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PromptsConfig, PromptsConfigInput } from "@norish/config/zod/server-config";
-// Import mocks for assertions
-import { loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
 import {
   PromptsConfigInputSchema,
   PromptsConfigSchema,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
+// Import mocks for assertions
+import { loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
 
 import { getConfig, setConfig } from "../mocks/server-config";
 import { isUserServerAdmin } from "../mocks/users";

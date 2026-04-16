@@ -7,9 +7,6 @@ import type {
   ServerConfigKey,
   TimerKeywordsConfig,
 } from "@norish/db/zodSchemas/server-config";
-
-import { loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
-import { serverLogger } from "@norish/shared-server/logger";
 import { setAuthProviderCache } from "@norish/auth/provider-cache";
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -24,6 +21,7 @@ import {
   configExists,
   deleteConfig,
   getConfig,
+  normalizeAndBackfillConfig,
   setConfig,
 } from "@norish/db/repositories/server-config";
 import {
@@ -32,6 +30,8 @@ import {
   UnitsConfigSchema,
   UnitsMapSchema,
 } from "@norish/db/zodSchemas/server-config";
+import { loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
+import { serverLogger } from "@norish/shared-server/logger";
 
 /**
  * Configuration definition for seeding
@@ -109,6 +109,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
       apiKey: SERVER_CONFIG.AI_API_KEY || undefined,
       temperature: SERVER_CONFIG.AI_TEMPERATURE,
       maxTokens: SERVER_CONFIG.AI_MAX_TOKENS,
+      timeoutMs: SERVER_CONFIG.AI_TIMEOUT_MS,
     }),
     sensitive: true, // sensitive due to API key
     description: `AI config (${SERVER_CONFIG.AI_ENABLED ? "enabled" : "disabled"})`,
@@ -120,6 +121,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
       maxLengthSeconds: SERVER_CONFIG.VIDEO_MAX_LENGTH_SECONDS,
       maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
       ytDlpVersion: SERVER_CONFIG.YT_DLP_VERSION,
+      ytDlpProxy: SERVER_CONFIG.YT_DLP_PROXY || undefined,
       transcriptionProvider: SERVER_CONFIG.TRANSCRIPTION_PROVIDER,
       transcriptionEndpoint: SERVER_CONFIG.TRANSCRIPTION_ENDPOINT || undefined,
       transcriptionApiKey: SERVER_CONFIG.TRANSCRIPTION_API_KEY || undefined,
@@ -168,6 +170,7 @@ export async function seedServerConfig(): Promise<void> {
   // Always validate and seed missing configs
   const seededCount = await seedMissingConfigs();
 
+  await normalizeExistingConfigs();
   await importEnvAuthProvidersIfMissing();
   await syncUnits();
   await syncPrompts();
@@ -231,6 +234,14 @@ async function seedMissingConfigs(): Promise<number> {
   }
 
   return seededCount;
+}
+
+async function normalizeExistingConfigs(): Promise<void> {
+  const keys = Object.values(ServerConfigKeys) as ServerConfigKey[];
+
+  for (const key of keys) {
+    await normalizeAndBackfillConfig(key);
+  }
 }
 
 /**
@@ -650,6 +661,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
         model: "gpt-5-mini",
         temperature: 1.0,
         maxTokens: 10000,
+        timeoutMs: 300000,
       };
     case ServerConfigKeys.VIDEO_CONFIG:
       return {

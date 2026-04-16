@@ -1,13 +1,17 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { recurringGroceriesProcedures } from "@norish/trpc/routers/groceries/recurring";
+
 import { groceryEmitter } from "../mocks/grocery-emitter";
+import { assertHouseholdAccess } from "../mocks/permissions";
 import { calculateNextOccurrence } from "../mocks/recurrence";
 // Import mocks for assertions
 import {
   createRecurringGrocery,
   deleteRecurringGroceryById,
   getRecurringGroceryById,
+  getRecurringGroceryOwnerId,
   updateRecurringGrocery,
 } from "../mocks/recurring-groceries";
 // Import test utilities
@@ -25,8 +29,13 @@ vi.mock(
   "@norish/db/repositories/recurring-groceries",
   () => import("../mocks/recurring-groceries")
 );
+vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/trpc/routers/groceries/emitter", () => import("../mocks/grocery-emitter"));
 vi.mock("@norish/shared/lib/recurrence/calculator", () => import("../mocks/recurrence"));
+vi.mock("@norish/shared-server/logger", () => ({
+  trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+  createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+}));
 
 describe("recurring groceries procedures", () => {
   const mockUser = createMockUser();
@@ -36,6 +45,8 @@ describe("recurring groceries procedures", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     ctx = createMockAuthedContext(mockUser, mockHousehold);
+    getRecurringGroceryOwnerId.mockResolvedValue(ctx.user.id);
+    assertHouseholdAccess.mockResolvedValue(undefined);
   });
 
   describe("createRecurring", () => {
@@ -149,6 +160,30 @@ describe("recurring groceries procedures", () => {
         ctx.householdKey,
         "recurringDeleted",
         { recurringGroceryId }
+      );
+    });
+
+    it("logs stale recurring deletes as no-ops", async () => {
+      deleteRecurringGroceryById.mockResolvedValue({ stale: true });
+
+      const caller = recurringGroceriesProcedures.createCaller({
+        ...ctx,
+        multiplexer: null,
+      } as any);
+
+      const result = await caller.deleteRecurring({
+        recurringGroceryId: "r1",
+        version: 4,
+      });
+
+      expect(result).toEqual({ success: true });
+      await Promise.resolve();
+
+      expect(deleteRecurringGroceryById).toHaveBeenCalledWith("r1", 4);
+      expect(groceryEmitter.emitToHousehold).not.toHaveBeenCalledWith(
+        ctx.householdKey,
+        "recurringDeleted",
+        expect.anything()
       );
     });
   });

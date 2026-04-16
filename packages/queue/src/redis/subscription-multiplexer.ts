@@ -12,11 +12,10 @@
  * - Automatic cleanup when all listeners unsubscribe
  */
 
-import type Redis from "ioredis";
-
 import { EventEmitter } from "node:events";
-
+import type Redis from "ioredis";
 import superjson from "superjson";
+
 import { redisLogger as log } from "@norish/shared-server/logger";
 
 import { createSubscriberClient } from "./client";
@@ -91,7 +90,9 @@ export class SubscriptionMultiplexer {
 
       queueMicrotask(() => {
         try {
-          this.emitter.emit(channel, superjson.parse(message));
+          const parsed = superjson.parse(message);
+
+          this.emitter.emit(channel, parsed);
         } catch (err) {
           log.error({ err, channel }, "Failed to parse multiplexed message");
         }

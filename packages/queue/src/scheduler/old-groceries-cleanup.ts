@@ -1,7 +1,8 @@
 import { format, startOfMonth, subMonths } from "date-fns";
-import { schedulerLogger } from "@norish/shared-server/logger";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { deleteDoneGroceriesBefore } from "@norish/db/repositories/groceries";
+import { schedulerLogger } from "@norish/shared-server/logger";
 
 // Exludes recurring groceries
 export async function cleanupOldGroceries(): Promise<{ deleted: number }> {

@@ -1,6 +1,10 @@
 import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+
 import { db } from "@norish/db/drizzle";
 import { plannedItems, recipes } from "@norish/db/schema";
+
+import type { MutationOutcome } from "./mutation-outcomes";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 type PlannedItem = typeof plannedItems.$inferSelect;
 type PlannedItemInsert = typeof plannedItems.$inferInsert;
@@ -31,6 +35,7 @@ export async function listPlannedItemsByUserAndDateRange(
       itemType: plannedItems.itemType,
       recipeId: plannedItems.recipeId,
       title: plannedItems.title,
+      version: plannedItems.version,
       createdAt: plannedItems.createdAt,
       updatedAt: plannedItems.updatedAt,
       recipeName: recipes.name,
@@ -67,6 +72,7 @@ export async function listPlannedItemsWithRecipeBySlot(
       itemType: plannedItems.itemType,
       recipeId: plannedItems.recipeId,
       title: plannedItems.title,
+      version: plannedItems.version,
       createdAt: plannedItems.createdAt,
       updatedAt: plannedItems.updatedAt,
       recipeName: recipes.name,
@@ -99,6 +105,7 @@ export async function getPlannedItemWithRecipeById(
       itemType: plannedItems.itemType,
       recipeId: plannedItems.recipeId,
       title: plannedItems.title,
+      version: plannedItems.version,
       createdAt: plannedItems.createdAt,
       updatedAt: plannedItems.updatedAt,
       recipeName: recipes.name,
@@ -179,33 +186,56 @@ export async function createPlannedItem(input: PlannedItemInsert): Promise<Plann
 
 export async function updatePlannedItem(
   id: string,
-  updates: PlannedItemUpdate
-): Promise<PlannedItem | null> {
+  updates: PlannedItemUpdate,
+  version?: number
+): Promise<MutationOutcome<PlannedItem>> {
+  const whereConditions = [eq(plannedItems.id, id)];
+
+  if (version) {
+    whereConditions.push(eq(plannedItems.version, version));
+  }
+
   const [row] = await db
     .update(plannedItems)
-    .set({ ...updates, updatedAt: new Date() })
-    .where(eq(plannedItems.id, id))
+    .set({ ...updates, updatedAt: new Date(), version: sql`${plannedItems.version} + 1` })
+    .where(and(...whereConditions))
     .returning();
 
-  return row ?? null;
+  if (!row) {
+    return staleOutcome();
+  }
+
+  return appliedOutcome(row);
 }
 
-export async function deletePlannedItem(id: string): Promise<PlannedItem[]> {
+export async function deletePlannedItem(
+  id: string,
+  version?: number
+): Promise<MutationOutcome<{ deletedItem: PlannedItem; reindexedItems: PlannedItem[] }>> {
   return await db.transaction(async (trx) => {
-    const [current] = await trx.select().from(plannedItems).where(eq(plannedItems.id, id)).limit(1);
+    const deleteWhereConditions = [eq(plannedItems.id, id)];
 
-    if (!current) return [];
+    if (version) {
+      deleteWhereConditions.push(eq(plannedItems.version, version));
+    }
 
-    await trx.delete(plannedItems).where(eq(plannedItems.id, id));
+    const [deletedItem] = await trx
+      .delete(plannedItems)
+      .where(and(...deleteWhereConditions))
+      .returning();
+
+    if (!deletedItem) {
+      return staleOutcome();
+    }
 
     const remaining = await trx
       .select()
       .from(plannedItems)
       .where(
         and(
-          eq(plannedItems.userId, current.userId),
-          eq(plannedItems.date, current.date),
-          eq(plannedItems.slot, current.slot)
+          eq(plannedItems.userId, deletedItem.userId),
+          eq(plannedItems.date, deletedItem.date),
+          eq(plannedItems.slot, deletedItem.slot)
         )
       )
       .orderBy(asc(plannedItems.sortOrder));
@@ -218,14 +248,14 @@ export async function deletePlannedItem(id: string): Promise<PlannedItem[]> {
       if (!item) continue;
       const [row] = await trx
         .update(plannedItems)
-        .set({ sortOrder: i, updatedAt: new Date() })
+        .set({ sortOrder: i, updatedAt: new Date(), version: sql`${plannedItems.version} + 1` })
         .where(eq(plannedItems.id, item.id))
         .returning();
 
       if (row) updated.push(row);
     }
 
-    return updated;
+    return appliedOutcome({ deletedItem, reindexedItems: updated });
   });
 }
 
@@ -233,16 +263,23 @@ export async function moveItem(
   itemId: string,
   targetDate: string,
   targetSlot: PlannedItemSlot,
-  targetIndex: number
-): Promise<PlannedItem | null> {
+  targetIndex: number,
+  version?: number
+): Promise<MutationOutcome<PlannedItem>> {
   return await db.transaction(async (trx) => {
+    const currentWhereConditions = [eq(plannedItems.id, itemId)];
+
+    if (version) {
+      currentWhereConditions.push(eq(plannedItems.version, version));
+    }
+
     const [current] = await trx
       .select()
       .from(plannedItems)
-      .where(eq(plannedItems.id, itemId))
+      .where(and(...currentWhereConditions))
       .limit(1);
 
-    if (!current) return null;
+    if (!current) return staleOutcome();
 
     const sourceItems = await trx
       .select()
@@ -285,7 +322,7 @@ export async function moveItem(
 
         await trx
           .update(plannedItems)
-          .set({ sortOrder: i, updatedAt: new Date() })
+          .set({ sortOrder: i, updatedAt: new Date(), version: sql`${plannedItems.version} + 1` })
           .where(eq(plannedItems.id, item.id))
           .returning();
       }
@@ -298,6 +335,7 @@ export async function moveItem(
 
       if (!item) continue;
       const updateData: PlannedItemUpdate = { sortOrder: i, updatedAt: new Date() };
+      const versionIncrement = sql`${plannedItems.version} + 1`;
 
       if (item.id === itemId) {
         updateData.date = targetDate;
@@ -306,8 +344,12 @@ export async function moveItem(
 
       const [row] = await trx
         .update(plannedItems)
-        .set(updateData)
-        .where(eq(plannedItems.id, item.id))
+        .set({ ...updateData, version: versionIncrement })
+        .where(
+          item.id === itemId && version
+            ? and(eq(plannedItems.id, item.id), eq(plannedItems.version, version))
+            : eq(plannedItems.id, item.id)
+        )
         .returning();
 
       if (row && item.id === itemId) {
@@ -315,7 +357,11 @@ export async function moveItem(
       }
     }
 
-    return moved;
+    if (!moved) {
+      return staleOutcome();
+    }
+
+    return appliedOutcome(moved);
   });
 }
 
@@ -330,7 +376,11 @@ export async function reorderInSlot(
     for (const update of updates) {
       const [row] = await trx
         .update(plannedItems)
-        .set({ sortOrder: update.sortOrder, updatedAt: new Date() })
+        .set({
+          sortOrder: update.sortOrder,
+          updatedAt: new Date(),
+          version: sql`${plannedItems.version} + 1`,
+        })
         .where(eq(plannedItems.id, update.id))
         .returning();
 

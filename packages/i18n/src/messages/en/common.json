@@ -94,7 +94,9 @@
     "connecting": "Connecting to Norish...",
     "syncing": "Syncing please wait...",
     "checkInternet": "Please check your internet connection",
-    "gettingUpdates": "Just a moment while we get the latest updates"
+    "gettingUpdates": "Just a moment while we get the latest updates",
+    "offlineBanner": "You're offline, showing cached data",
+    "serverUnreachableBanner": "Can't reach the Norish server, showing cached data"
   },
   "language": {
     "title": "Language"
@@ -118,7 +120,7 @@
       "placeholder": "Paste a recipe (free text) or JSON-LD here...",
       "characters": "{count} / {max} characters",
       "tooLarge": "Paste too large",
-      "maxCharacters": "Maximum {max} characters allowed",
+      "maxCharacters": "Maximum {max} characters per recipe",
       "importing": "Importing recipe...",
       "importingWithAI": "Importing recipe with AI...",
       "inProgress": "Import in progress, please wait...",

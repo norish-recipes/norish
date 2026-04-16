@@ -249,6 +249,7 @@ export const AIConfigSchema = z.object({
   apiKey: z.string().optional(),
   temperature: z.number().min(0).max(2),
   maxTokens: z.number().int().positive(),
+  timeoutMs: z.number().int().positive().optional().default(300000),
   autoTagAllergies: z.boolean().default(true),
   alwaysUseAI: z.boolean().default(false),
   autoTaggingMode: AutoTaggingModeSchema.default("disabled"),
@@ -324,6 +325,7 @@ export const VideoConfigSchema = z.object({
   maxLengthSeconds: z.number().int().positive(),
   maxVideoFileSize: z.number().int().positive(), // Max video file size in bytes
   ytDlpVersion: z.string().min(1),
+  ytDlpProxy: z.string().optional(),
   // Transcription settings (required for video processing)
   transcriptionProvider: TranscriptionProviderSchema,
   transcriptionEndpoint: z.url("Endpoint must be a valid URL").optional(),
@@ -372,6 +374,7 @@ export const ServerConfigEntrySchema = z.object({
   valueEnc: z.string().nullable(),
   isSensitive: z.boolean(),
   updatedBy: z.uuid().nullable(),
+  version: z.number(),
   updatedAt: z.date(),
   createdAt: z.date(),
 });
@@ -405,6 +408,37 @@ export type UserServerRole = z.infer<typeof UserServerRoleSchema>;
 // ============================================================================
 // Validation helpers
 // ============================================================================
+
+const SERVER_CONFIG_MIGRATIONS: Partial<Record<ServerConfigKey, (value: unknown) => unknown>> = {
+  [ServerConfigKeys.UNITS]: (value) => {
+    const legacyWrapped =
+      typeof value === "object" && value !== null && "units" in value && "isOverwritten" in value
+        ? UnitsMapSchema.safeParse((value as { units: unknown }).units)
+        : null;
+
+    if (legacyWrapped?.success) {
+      return {
+        units: legacyWrapped.data,
+        isOverridden: false,
+      };
+    }
+
+    const legacy = UnitsMapSchema.safeParse(value);
+
+    if (legacy.success) {
+      return {
+        units: legacy.data,
+        isOverridden: false,
+      };
+    }
+
+    return value;
+  },
+};
+
+function migrateConfigValue(key: ServerConfigKey, value: unknown): unknown {
+  return SERVER_CONFIG_MIGRATIONS[key]?.(value) ?? value;
+}
 
 /**
  * Get the appropriate Zod schema for a given config key
@@ -445,16 +479,25 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
 }
 
 /**
+ * Normalize config values through key-specific migrations and the current schema.
+ */
+export function normalizeConfigValue(
+  key: ServerConfigKey,
+  value: unknown
+): { success: true; data: unknown } | { success: false; error: z.ZodError } {
+  const schema = getSchemaForConfigKey(key);
+
+  return schema.safeParse(migrateConfigValue(key, value));
+}
+
+/**
  * Validate config value against its schema
  */
 export function validateConfigValue(
   key: ServerConfigKey,
   value: unknown
 ): { success: true; data: unknown } | { success: false; error: z.ZodError } {
-  const schema = getSchemaForConfigKey(key);
-  const result = schema.safeParse(value);
-
-  return result;
+  return normalizeConfigValue(key, value);
 }
 
 /**

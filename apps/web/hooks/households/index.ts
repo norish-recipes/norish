@@ -1,14 +1,10 @@
 "use client";
 
-import { sharedHouseholdHooks } from "./shared-household-hooks";
-
-export const useHouseholdQuery = sharedHouseholdHooks.useHouseholdQuery;
-export type { HouseholdData, HouseholdQueryResult } from "@norish/shared-react/hooks";
-
-export const useHouseholdMutations = sharedHouseholdHooks.useHouseholdMutations;
-export type { HouseholdMutationsResult } from "@norish/shared-react/hooks";
-
-export const useHouseholdSubscription = sharedHouseholdHooks.useHouseholdSubscription;
-
-export const useHouseholdCacheHelpers = sharedHouseholdHooks.useHouseholdCacheHelpers;
-export type { HouseholdCacheHelpers } from "@norish/shared-react/hooks";
+export {
+  useHouseholdQuery,
+  type HouseholdData,
+  type HouseholdQueryResult,
+} from "./use-household-query";
+export { useHouseholdMutations, type HouseholdMutationsResult } from "./use-household-mutations";
+export { useHouseholdSubscription } from "./use-household-subscription";
+export { useHouseholdCacheHelpers, type HouseholdCacheHelpers } from "./use-household-cache";

@@ -157,7 +157,7 @@ describe("CalDAV Subscription Hook", () => {
     });
 
     it("handles itemStatusUpdated event type correctly", () => {
-      const updatedStatus = createMockSyncStatusView({ syncStatus: "synced" });
+      const updatedStatus = createMockSyncStatusView({ syncStatus: "synced", version: 2 });
       const event = {
         type: "itemStatusUpdated" as const,
         userId: "user-123",
@@ -167,6 +167,7 @@ describe("CalDAV Subscription Hook", () => {
 
       expect(event.type).toBe("itemStatusUpdated");
       expect(event.status.syncStatus).toBe("synced");
+      expect(event.status.version).toBe(2);
     });
 
     it("handles configSaved event type correctly", () => {
@@ -208,6 +209,7 @@ describe("CalDAV Subscription Hook", () => {
       const updatedStatus = createMockSyncStatusView({
         id: "status-1",
         syncStatus: "synced",
+        version: 2,
       });
 
       // Simulate the merge logic
@@ -216,6 +218,7 @@ describe("CalDAV Subscription Hook", () => {
       );
 
       expect(newStatuses[0].syncStatus).toBe("synced");
+      expect(newStatuses[0].version).toBe(2);
       expect(newStatuses[1].syncStatus).toBe("pending");
     });
 

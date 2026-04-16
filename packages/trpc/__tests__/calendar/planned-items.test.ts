@@ -1,14 +1,24 @@
 // @vitest-environment node
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  createPlannedRecipeProcedure,
+  deletePlannedRecipeProcedure,
+  listMonthPlannedRecipesProcedure,
+  listTodayPlannedRecipesProcedure,
+  listWeekPlannedRecipesProcedure,
+} from "../../src/routers/calendar/planned-items";
+import { router } from "../../src/trpc";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import {
   createPlannedItem,
   deletePlannedItem,
   getPlannedItemById,
   getPlannedItemOwnerId,
+  getPlannedItemWithRecipeById,
+  listPlannedItemsByUserAndDateRange,
   moveItem,
 } from "../mocks/planned-items";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
@@ -148,6 +158,193 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
 
   return t.createCallerFactory(testRouter)(ctx);
 }
+
+const openApiCalendarRouter = router({
+  listTodayPlannedRecipes: listTodayPlannedRecipesProcedure,
+  listWeekPlannedRecipes: listWeekPlannedRecipesProcedure,
+  listMonthPlannedRecipes: listMonthPlannedRecipesProcedure,
+  createPlannedRecipe: createPlannedRecipeProcedure,
+  deletePlannedRecipe: deletePlannedRecipeProcedure,
+});
+
+describe("calendar planned recipe openapi procedures", () => {
+  const mockUser = createMockUser();
+  const mockHousehold = createMockHousehold();
+  let ctx: ReturnType<typeof createMockAuthedContext>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2025-01-15T12:00:00"));
+    ctx = createMockAuthedContext(mockUser, mockHousehold);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("lists today's planned recipes only", async () => {
+    listPlannedItemsByUserAndDateRange.mockResolvedValue([
+      {
+        id: crypto.randomUUID(),
+        userId: ctx.user.id,
+        date: "2025-01-15",
+        slot: "Breakfast",
+        sortOrder: 0,
+        itemType: "recipe",
+        recipeId: crypto.randomUUID(),
+        title: null,
+        version: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        recipeName: "Omelette",
+        recipeImage: null,
+        servings: 2,
+        calories: 250,
+      },
+      {
+        id: crypto.randomUUID(),
+        userId: ctx.user.id,
+        date: "2025-01-15",
+        slot: "Lunch",
+        sortOrder: 0,
+        itemType: "note",
+        recipeId: null,
+        title: "Leftovers",
+        version: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        recipeName: null,
+        recipeImage: null,
+        servings: null,
+        calories: null,
+      },
+    ]);
+
+    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const result = await caller.listTodayPlannedRecipes();
+
+    expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
+      ctx.userIds,
+      "2025-01-15",
+      "2025-01-15"
+    );
+    expect(result).toEqual([
+      {
+        id: expect.any(String),
+        date: "2025-01-15",
+        slot: "Breakfast",
+        sortOrder: 0,
+        recipeId: expect.any(String),
+        version: 1,
+        recipeName: "Omelette",
+        recipeImage: null,
+        servings: 2,
+        calories: 250,
+      },
+    ]);
+  });
+
+  it("lists the current week's planned recipes using server time", async () => {
+    listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
+
+    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    await caller.listWeekPlannedRecipes();
+
+    expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
+      ctx.userIds,
+      "2025-01-13",
+      "2025-01-19"
+    );
+  });
+
+  it("lists the current month's planned recipes using server time", async () => {
+    listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
+
+    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    await caller.listMonthPlannedRecipes();
+
+    expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
+      ctx.userIds,
+      "2025-01-01",
+      "2025-01-31"
+    );
+  });
+
+  it("creates a planned recipe item", async () => {
+    const itemId = crypto.randomUUID();
+    const recipeId = crypto.randomUUID();
+
+    createPlannedItem.mockResolvedValue({
+      id: itemId,
+      userId: ctx.user.id,
+      date: "2025-01-20",
+      slot: "Dinner",
+      sortOrder: 0,
+      itemType: "recipe",
+      recipeId,
+      title: null,
+      version: 1,
+    });
+    getPlannedItemWithRecipeById.mockResolvedValue({
+      id: itemId,
+      userId: ctx.user.id,
+      date: "2025-01-20",
+      slot: "Dinner",
+      sortOrder: 0,
+      itemType: "recipe",
+      recipeId,
+      title: null,
+      version: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      recipeName: "Pasta",
+      recipeImage: null,
+      servings: 4,
+      calories: 600,
+    });
+
+    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const result = await caller.createPlannedRecipe({
+      date: "2025-01-20",
+      slot: "Dinner",
+      recipeId,
+    });
+
+    expect(createPlannedItem).toHaveBeenCalledWith({
+      userId: ctx.user.id,
+      date: "2025-01-20",
+      slot: "Dinner",
+      itemType: "recipe",
+      recipeId,
+      title: null,
+    });
+    expect(result).toEqual({ id: itemId });
+  });
+
+  it("deletes a planned recipe item", async () => {
+    const itemId = crypto.randomUUID();
+
+    getPlannedItemById.mockResolvedValue({
+      id: itemId,
+      userId: ctx.user.id,
+      date: "2025-01-20",
+      slot: "Dinner",
+      sortOrder: 0,
+      itemType: "recipe",
+      recipeId: crypto.randomUUID(),
+      title: null,
+      version: 2,
+    });
+    deletePlannedItem.mockResolvedValue({ stale: false, value: {} });
+    assertHouseholdAccess.mockResolvedValue(undefined);
+
+    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const result = await caller.deletePlannedRecipe({ itemId, version: 2 });
+
+    expect(result).toEqual({ success: true, stale: false });
+  });
+});
 
 describe("calendar planned items procedures", () => {
   const mockUser = createMockUser();

@@ -1,5 +1,4 @@
 import type { CreateAdminHooksOptions } from "./types";
-
 import { createUseAdminMutations } from "./use-admin-mutations";
 import { createUseAdminQuery } from "./use-admin-query";
 

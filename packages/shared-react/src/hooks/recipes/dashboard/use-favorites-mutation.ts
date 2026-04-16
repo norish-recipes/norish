@@ -1,14 +1,22 @@
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import type { CreateRecipeHooksOptions } from "../types";
+import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../../optimistic-updates";
 
 export type FavoritesMutationResult = {
   toggleFavorite: (recipeId: string) => void;
   isToggling: boolean;
 };
 
-export function createUseFavoritesMutation({ useTRPC }: CreateRecipeHooksOptions) {
+type FavoritesListData = {
+  favoriteIds: string[];
+  favoriteVersions: Record<string, number>;
+};
+
+export function createUseFavoritesMutation({
+  useTRPC,
+  shouldPreserveOptimisticUpdate,
+}: CreateRecipeHooksOptions) {
   return function useFavoritesMutation(): FavoritesMutationResult {
     const trpc = useTRPC();
     const queryClient = useQueryClient();
@@ -16,38 +24,62 @@ export function createUseFavoritesMutation({ useTRPC }: CreateRecipeHooksOptions
 
     const toggleMutation = useMutation(
       trpc.favorites.toggle.mutationOptions({
-        onMutate: async ({ recipeId }) => {
+        onMutate: async ({ recipeId, isFavorite: desiredState }) => {
           await queryClient.cancelQueries({ queryKey });
 
-          const previousData = queryClient.getQueryData<{ favoriteIds: string[] }>(queryKey);
+          const previousData = queryClient.getQueryData<FavoritesListData>(queryKey);
 
-          queryClient.setQueryData<{ favoriteIds: string[] }>(queryKey, (old) => {
-            if (!old) return { favoriteIds: [recipeId] };
-
-            const isFavorite = old.favoriteIds.includes(recipeId);
+          queryClient.setQueryData<FavoritesListData>(queryKey, (old) => {
+            if (!old) {
+              return desiredState
+                ? { favoriteIds: [recipeId], favoriteVersions: {} }
+                : { favoriteIds: [], favoriteVersions: {} };
+            }
 
             return {
-              favoriteIds: isFavorite
-                ? old.favoriteIds.filter((id) => id !== recipeId)
-                : [...old.favoriteIds, recipeId],
+              favoriteIds: desiredState
+                ? old.favoriteIds.includes(recipeId)
+                  ? old.favoriteIds
+                  : [...old.favoriteIds, recipeId]
+                : old.favoriteIds.filter((id) => id !== recipeId),
+              favoriteVersions: desiredState
+                ? old.favoriteVersions
+                : Object.fromEntries(
+                    Object.entries(old.favoriteVersions).filter(([id]) => id !== recipeId)
+                  ),
             };
           });
 
           return { previousData };
         },
-        onError: (_err, _variables, context) => {
+        onError: (error, _variables, context) => {
+          if (preserveOptimisticUpdate(error, shouldPreserveOptimisticUpdate)) {
+            return;
+          }
+
           if (context?.previousData) {
             queryClient.setQueryData(queryKey, context.previousData);
           }
         },
-        onSettled: () => {
+        onSettled: (_data, error) => {
+          if (error && preserveOptimisticUpdate(error, shouldPreserveOptimisticUpdate)) {
+            return;
+          }
+
           queryClient.invalidateQueries({ queryKey });
         },
       })
     );
 
     const toggleFavorite = (recipeId: string) => {
-      toggleMutation.mutate({ recipeId });
+      const favorites = queryClient.getQueryData<FavoritesListData>(queryKey);
+      const isCurrentlyFavorite = favorites?.favoriteIds.includes(recipeId) ?? false;
+
+      toggleMutation.mutate({
+        recipeId,
+        isFavorite: !isCurrentlyFavorite,
+        version: favorites?.favoriteVersions[recipeId],
+      });
     };
 
     return {

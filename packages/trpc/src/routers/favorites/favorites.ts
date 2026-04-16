@@ -1,29 +1,35 @@
 import {
-  getFavoriteRecipeIds,
+  getFavoriteRecipesWithVersions,
   getFavoritesByRecipeIds,
   isFavorite,
-  toggleFavorite,
+  setFavorite,
 } from "@norish/db/repositories/favorites";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   FavoriteBatchCheckInputSchema,
   FavoriteCheckInputSchema,
-  FavoriteToggleInputSchema,
+  FavoriteSetInputSchema,
 } from "@norish/shared/contracts/zod";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 
-const toggle = authedProcedure.input(FavoriteToggleInputSchema).mutation(async ({ ctx, input }) => {
-  const { recipeId } = input;
+const toggle = authedProcedure.input(FavoriteSetInputSchema).mutation(async ({ ctx, input }) => {
+  const { recipeId, isFavorite: desiredState, version } = input;
 
-  log.debug({ userId: ctx.user.id, recipeId }, "Toggling recipe favorite");
+  log.debug({ userId: ctx.user.id, recipeId, isFavorite: desiredState }, "Setting recipe favorite");
 
-  const result = await toggleFavorite(ctx.user.id, recipeId);
+  const result = await setFavorite(ctx.user.id, recipeId, desiredState, version);
 
-  log.info({ userId: ctx.user.id, recipeId, isFavorite: result.isFavorite }, "Favorite toggled");
+  if (result.stale) {
+    log.info({ userId: ctx.user.id, recipeId, version }, "Ignoring stale favorite mutation");
 
-  return { recipeId, isFavorite: result.isFavorite };
+    return { recipeId, isFavorite: desiredState, stale: true };
+  }
+
+  log.info({ userId: ctx.user.id, recipeId, isFavorite: result.value.isFavorite }, "Favorite set");
+
+  return { recipeId, isFavorite: result.value.isFavorite, stale: false };
 });
 
 const check = authedProcedure.input(FavoriteCheckInputSchema).query(async ({ ctx, input }) => {
@@ -39,9 +45,14 @@ const check = authedProcedure.input(FavoriteCheckInputSchema).query(async ({ ctx
 const list = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting favorite recipe IDs");
 
-  const favoriteIds = await getFavoriteRecipeIds(ctx.user.id);
+  const favorites = await getFavoriteRecipesWithVersions(ctx.user.id);
 
-  return { favoriteIds };
+  return {
+    favoriteIds: favorites.map((favorite) => favorite.recipeId),
+    favoriteVersions: Object.fromEntries(
+      favorites.map((favorite) => [favorite.recipeId, favorite.version])
+    ),
+  };
 });
 
 const batchCheck = authedProcedure

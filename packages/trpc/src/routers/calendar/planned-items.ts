@@ -1,76 +1,162 @@
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
 import type {
   PlannedItemWithRecipePayload,
   SlotItemSortUpdate,
 } from "@norish/shared/contracts/zod";
-
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
-  createPlannedItem,
-  deletePlannedItem,
   getPlannedItemById,
   getPlannedItemWithRecipeById,
-  listPlannedItemsByUserAndDateRange,
   listPlannedItemsWithRecipeBySlot,
   moveItem,
   updatePlannedItem,
 } from "@norish/db/repositories/planned-items";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import {
+  PlannedItemDeleteInputSchema,
+  PlannedItemMoveInputSchema,
+  PlannedItemUpdateInputSchema,
+} from "@norish/shared/contracts/zod";
+import { dateKey, endOfMonth, startOfMonth } from "@norish/shared/lib/helpers";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { calendarEmitter } from "./emitter";
+import {
+  createCalendarItem,
+  deleteCalendarItem,
+  endOfServerWeek,
+  getServerToday,
+  listItemsByRange,
+  listPlannedRecipesByRange,
+  startOfServerWeek,
+} from "./planned-items-helpers";
+import {
+  createItemInput,
+  createPlannedRecipeInputSchema,
+  deletePlannedRecipeOutputSchema,
+  listItemsInput,
+  plannedRecipeListItemSchema,
+  plannedRecipeMutationOutputSchema,
+} from "./planned-items-openapi-types";
 
-const slotSchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
-const itemTypeSchema = z.enum(["recipe", "note"]);
-
-const listItemsInput = z.object({
-  startISO: z.string(),
-  endISO: z.string(),
-});
-
-const moveItemInput = z.object({
-  itemId: z.string().uuid(),
-  targetDate: z.string(),
-  targetSlot: slotSchema,
-  targetIndex: z.number().int().min(0),
-});
-
-const createItemInput = z
-  .object({
-    date: z.string(),
-    slot: slotSchema,
-    itemType: itemTypeSchema,
-    recipeId: z.string().uuid().optional(),
-    title: z.string().optional(),
+export const listTodayPlannedRecipesProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/planned-recipes/today",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Get planned recipes for today",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
   })
-  .refine((data) => data.itemType !== "recipe" || data.recipeId, {
-    message: "recipeId is required for recipe items",
-  })
-  .refine((data) => data.itemType !== "note" || data.title, {
-    message: "title is required for note items",
+  .output(z.array(plannedRecipeListItemSchema))
+  .query(async ({ ctx }) => {
+    const today = dateKey(getServerToday());
+
+    return listPlannedRecipesByRange(ctx, today, today);
   });
 
-const deleteItemInput = z.object({
-  itemId: z.string().uuid(),
-});
+export const listWeekPlannedRecipesProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/planned-recipes/week",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Get planned recipes for the current week",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .output(z.array(plannedRecipeListItemSchema))
+  .query(async ({ ctx }) => {
+    const today = getServerToday();
 
-const updateItemInput = z.object({
-  itemId: z.string().uuid(),
-  title: z.string().min(1),
-});
+    return listPlannedRecipesByRange(
+      ctx,
+      dateKey(startOfServerWeek(today)),
+      dateKey(endOfServerWeek(today))
+    );
+  });
+
+export const listMonthPlannedRecipesProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/planned-recipes/month",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Get planned recipes for the current month",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .output(z.array(plannedRecipeListItemSchema))
+  .query(async ({ ctx }) => {
+    const today = getServerToday();
+
+    return listPlannedRecipesByRange(ctx, dateKey(startOfMonth(today)), dateKey(endOfMonth(today)));
+  });
+
+export const createPlannedRecipeProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "POST",
+      path: "/planned-recipes",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Create a planned recipe",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .input(createPlannedRecipeInputSchema)
+  .output(plannedRecipeMutationOutputSchema)
+  .mutation(async ({ ctx, input }) => {
+    return createCalendarItem(ctx, {
+      date: input.date,
+      slot: input.slot,
+      itemType: "recipe",
+      recipeId: input.recipeId,
+    });
+  });
+
+export const deletePlannedRecipeProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "DELETE",
+      path: "/planned-recipes/{itemId}",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Delete a planned recipe",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        404: "Planned item not found",
+      },
+    },
+  })
+  .input(PlannedItemDeleteInputSchema)
+  .output(deletePlannedRecipeOutputSchema)
+  .mutation(async ({ ctx, input }) => deleteCalendarItem(ctx, input));
 
 export const plannedItemsProcedures = router({
   listItems: authedProcedure.input(listItemsInput).query(async ({ ctx, input }) => {
     const { startISO, endISO } = input;
 
-    return listPlannedItemsByUserAndDateRange(ctx.userIds, startISO, endISO);
+    return listItemsByRange(ctx, startISO, endISO);
   }),
 
-  moveItem: authedProcedure.input(moveItemInput).mutation(async ({ ctx, input }) => {
-    const { itemId, targetDate, targetSlot, targetIndex } = input;
+  moveItem: authedProcedure.input(PlannedItemMoveInputSchema).mutation(async ({ ctx, input }) => {
+    const { itemId, targetDate, targetSlot, targetIndex, version } = input;
 
     const item = await getPlannedItemById(itemId);
 
@@ -87,14 +173,15 @@ export const plannedItemsProcedures = router({
       return { success: true, moved: false };
     }
 
-    const movedItem = await moveItem(itemId, targetDate, targetSlot, targetIndex);
+    const moveResult = await moveItem(itemId, targetDate, targetSlot, targetIndex, version);
 
-    if (!movedItem) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to move item",
-      });
+    if (moveResult.stale) {
+      log.info({ userId: ctx.user.id, itemId, version }, "Ignoring stale calendar move mutation");
+
+      return { success: true, moved: false, stale: true };
     }
+
+    const movedItem = moveResult.value;
 
     const isCrossSlot = item.date !== targetDate || item.slot !== targetSlot;
 
@@ -141,6 +228,7 @@ export const plannedItemsProcedures = router({
       recipeId: movedItemWithRecipe.recipeId,
       title: movedItemWithRecipe.title,
       userId: movedItemWithRecipe.userId,
+      version: movedItemWithRecipe.version,
       recipeName: movedItemWithRecipe.recipeName,
       recipeImage: movedItemWithRecipe.recipeImage,
       servings: movedItemWithRecipe.servings,
@@ -156,93 +244,47 @@ export const plannedItemsProcedures = router({
       oldSortOrder: item.sortOrder,
     });
 
-    return { success: true, moved: true };
+    return { success: true, moved: true, stale: false };
   }),
 
   createItem: authedProcedure.input(createItemInput).mutation(async ({ ctx, input }) => {
-    const { date, slot, itemType, recipeId, title } = input;
-
-    const newItem = await createPlannedItem({
-      userId: ctx.user.id,
-      date,
-      slot,
-      itemType,
-      recipeId: recipeId ?? null,
-      title: title ?? null,
-    });
-
-    const itemWithRecipe = await getPlannedItemWithRecipeById(newItem.id);
-
-    const itemPayload: PlannedItemWithRecipePayload = {
-      id: newItem.id,
-      date: newItem.date,
-      slot: newItem.slot,
-      sortOrder: newItem.sortOrder,
-      itemType: newItem.itemType,
-      recipeId: newItem.recipeId,
-      title: newItem.title,
-      userId: newItem.userId,
-      recipeName: itemWithRecipe?.recipeName ?? null,
-      recipeImage: itemWithRecipe?.recipeImage ?? null,
-      servings: itemWithRecipe?.servings ?? null,
-      calories: itemWithRecipe?.calories ?? null,
-    };
-
-    calendarEmitter.emitToHousehold(ctx.householdKey, "itemCreated", {
-      item: itemPayload,
-    });
-
-    return { id: newItem.id };
+    return createCalendarItem(ctx, input);
   }),
 
-  deleteItem: authedProcedure.input(deleteItemInput).mutation(async ({ ctx, input }) => {
-    const { itemId } = input;
+  deleteItem: authedProcedure
+    .input(PlannedItemDeleteInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      return deleteCalendarItem(ctx, input);
+    }),
 
-    const item = await getPlannedItemById(itemId);
+  updateItem: authedProcedure
+    .input(PlannedItemUpdateInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { itemId, title, version } = input;
+      const householdKey = ctx.householdKey;
+      const userId = ctx.user.id;
 
-    if (!item) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Planned item not found",
-      });
-    }
+      const item = await getPlannedItemById(itemId);
 
-    await assertHouseholdAccess(ctx.user.id, item.userId);
+      if (!item) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Planned item not found",
+        });
+      }
 
-    await deletePlannedItem(itemId);
+      await assertHouseholdAccess(ctx.user.id, item.userId);
 
-    calendarEmitter.emitToHousehold(ctx.householdKey, "itemDeleted", {
-      itemId,
-      date: item.date,
-      slot: item.slot,
-    });
+      try {
+        const updateResult = await updatePlannedItem(itemId, { title }, version);
 
-    return { success: true };
-  }),
+        if (updateResult.stale) {
+          log.info({ userId, itemId, version }, "Ignoring stale calendar update mutation");
 
-  updateItem: authedProcedure.input(updateItemInput).mutation(async ({ ctx, input }) => {
-    const { itemId, title } = input;
-    const householdKey = ctx.householdKey;
-    const userId = ctx.user.id;
-
-    const item = await getPlannedItemById(itemId);
-
-    if (!item) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Planned item not found",
-      });
-    }
-
-    await assertHouseholdAccess(ctx.user.id, item.userId);
-
-    updatePlannedItem(itemId, { title })
-      .then(async (updatedItem) => {
-        if (!updatedItem) {
-          throw new Error("Failed to update item");
+          return { success: true, stale: true };
         }
 
-        const itemWithRecipe = await getPlannedItemWithRecipeById(updatedItem.id);
+        const itemWithRecipe = await getPlannedItemWithRecipeById(updateResult.value.id);
 
         if (!itemWithRecipe) {
           throw new Error("Failed to fetch updated item");
@@ -257,6 +299,7 @@ export const plannedItemsProcedures = router({
           recipeId: itemWithRecipe.recipeId,
           title: itemWithRecipe.title,
           userId: itemWithRecipe.userId,
+          version: itemWithRecipe.version,
           recipeName: itemWithRecipe.recipeName,
           recipeImage: itemWithRecipe.recipeImage,
           servings: itemWithRecipe.servings,
@@ -266,14 +309,15 @@ export const plannedItemsProcedures = router({
         calendarEmitter.emitToHousehold(householdKey, "itemUpdated", {
           item: itemPayload,
         });
-      })
-      .catch((err) => {
+
+        return { success: true, stale: false };
+      } catch (err) {
         log.error({ err, userId, itemId }, "Failed to update calendar item");
         calendarEmitter.emitToHousehold(householdKey, "failed", {
           reason: "Failed to update item",
         });
-      });
 
-    return { success: true };
-  }),
+        return { success: false };
+      }
+    }),
 });

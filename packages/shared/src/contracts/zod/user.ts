@@ -17,6 +17,21 @@ export const UserDtoSchema = z.object({
   email: z.string(),
   name: z.string(),
   image: z.string().nullable().optional(),
+  version: z.number().int().positive(),
   isServerAdmin: z.boolean().optional(),
   preferences: UserPreferencesSchema.optional(),
+});
+
+export const UpdateUserNameInputSchema = z.object({
+  name: z.string().min(1, "Name cannot be empty").max(100, "Name too long"),
+  version: z.number().int().positive(),
+});
+
+export const UpdateUserPreferencesInputSchema = z.object({
+  version: z.number().int().positive(),
+  preferences: UserPreferencesSchema.partial(),
+});
+
+export const DeleteUserAvatarInputSchema = z.object({
+  version: z.number().int().positive(),
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { addToast } from "@heroui/react";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("safe-error-toast");

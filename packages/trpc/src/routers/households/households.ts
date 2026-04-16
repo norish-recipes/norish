@@ -1,11 +1,10 @@
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
 import type {
   HouseholdAdminSettingsDto,
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
-import type { HouseholdUserInfo } from "./types";
-
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   addUserToHousehold,
@@ -26,18 +25,18 @@ import {
 } from "@norish/db/cached-household";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
-  HouseholdNameSchema,
-  JoinCodeSchema,
-  UserIdSchema,
-  UUIDSchema,
-} from "@norish/shared/lib/validation/schemas";
+  KickHouseholdUserInputSchema,
+  LeaveHouseholdInputSchema,
+  RegenerateHouseholdJoinCodeInputSchema,
+  TransferHouseholdAdminInputSchema,
+} from "@norish/shared/contracts/zod";
+import { HouseholdNameSchema, JoinCodeSchema } from "@norish/shared/lib/validation/schemas";
 
-
+import type { HouseholdUserInfo } from "./types";
 import { emitConnectionInvalidation } from "../../connection-manager";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { permissionsEmitter } from "../permissions/emitter";
-
 import { householdEmitter } from "./emitter";
 
 /**
@@ -50,31 +49,45 @@ function toHouseholdDto(
 ): HouseholdSettingsDto | HouseholdAdminSettingsDto | null {
   if (!household) return null;
 
-  const isAdmin = household.adminUserId === userId;
+  const typedHousehold = household as typeof household & {
+    version: number;
+    users: Array<{ id: string; name: string | null; isAdmin?: boolean; version: number }>;
+  };
+
+  const isAdmin = typedHousehold.adminUserId === userId;
   const now = new Date();
   const isJoinCodeExpired =
-    !household.joinCodeExpiresAt || new Date(household.joinCodeExpiresAt) < now;
+    !typedHousehold.joinCodeExpiresAt || new Date(typedHousehold.joinCodeExpiresAt) < now;
+  const typedUsers = typedHousehold.users as Array<{
+    id: string;
+    name: string | null;
+    isAdmin?: boolean;
+    version: number;
+  }>;
 
-  const users = household.users.map((u) => ({
+  const users = typedUsers.map((u) => ({
     id: u.id,
     name: u.name ?? null,
-    isAdmin: u.isAdmin ?? u.id === household.adminUserId,
+    isAdmin: u.isAdmin ?? u.id === typedHousehold.adminUserId,
+    version: u.version,
   }));
 
   if (isAdmin) {
     return {
-      id: household.id,
-      name: household.name,
-      joinCode: isJoinCodeExpired ? null : household.joinCode,
-      joinCodeExpiresAt: isJoinCodeExpired ? null : household.joinCodeExpiresAt,
+      id: typedHousehold.id,
+      name: typedHousehold.name,
+      version: typedHousehold.version,
+      joinCode: isJoinCodeExpired ? null : typedHousehold.joinCode,
+      joinCodeExpiresAt: isJoinCodeExpired ? null : typedHousehold.joinCodeExpiresAt,
       users,
       allergies,
     } as HouseholdAdminSettingsDto;
   }
 
   return {
-    id: household.id,
-    name: household.name,
+    id: typedHousehold.id,
+    name: typedHousehold.name,
+    version: typedHousehold.version,
     users,
     allergies,
   } as HouseholdSettingsDto;
@@ -195,8 +208,9 @@ const join = authedProcedure
 
     // Add user async and emit events
     addUserToHousehold({ householdId, userId: ctx.user.id })
-      .then(async () => {
+      .then(async (membership) => {
         log.info({ userId: ctx.user.id, householdId }, "User joined household");
+        const versionedMembership = membership as typeof membership & { version: number };
 
         // Get full household for the joining user
         const fullHousehold = await getHouseholdForUser(ctx.user.id);
@@ -209,11 +223,12 @@ const join = authedProcedure
         householdEmitter.emitToUser(ctx.user.id, "created", { household: dto! });
 
         // Emit to existing household members
-        const userInfo: HouseholdUserInfo = {
+        const userInfo = {
           id: ctx.user.id,
           name: ctx.user.name ?? null,
           isAdmin: false,
-        };
+          version: versionedMembership.version,
+        } as HouseholdUserInfo;
 
         householdEmitter.emitToHousehold(householdId, "userJoined", { user: userInfo });
 
@@ -231,64 +246,71 @@ const join = authedProcedure
     return { householdId };
   });
 
-const leave = authedProcedure
-  .input(z.object({ householdId: UUIDSchema }))
-  .mutation(async ({ ctx, input }) => {
-    const { householdId } = input;
+const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({ ctx, input }) => {
+  const { householdId, version } = input;
 
-    log.info({ userId: ctx.user.id, householdId }, "Leaving household");
+  log.info({ userId: ctx.user.id, householdId }, "Leaving household");
 
-    const household = await getHouseholdForUser(ctx.user.id);
+  const household = await getHouseholdForUser(ctx.user.id);
 
-    if (!household || household.id !== householdId) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "You are not in this household",
+  if (!household || household.id !== householdId) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You are not in this household",
+    });
+  }
+
+  // Check if user is admin with other members
+  if (household.adminUserId === ctx.user.id && household.users.length > 1) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+        "You must transfer admin privileges before leaving. Go to Household Settings to assign a new admin.",
+    });
+  }
+
+  // Store remaining member IDs from the already-fetched household data
+  const remainingMemberIds = household.users.filter((u) => u.id !== ctx.user.id).map((u) => u.id);
+
+  // Remove user async and emit events - fire and forget
+  removeUserFromHousehold(householdId, ctx.user.id, version)
+    .then(async (result) => {
+      if (result.stale) {
+        log.info(
+          { userId: ctx.user.id, householdId, version },
+          "Ignoring stale household leave mutation"
+        );
+
+        return;
+      }
+
+      log.info({ userId: ctx.user.id, householdId }, "User left household");
+
+      // Invalidate cache for leaving user AND remaining members (their user list changed)
+      await invalidateHouseholdCacheForUsers([ctx.user.id, ...remainingMemberIds]);
+
+      // Terminate connection to rebind subscriptions (now user-only channels)
+      await emitConnectionInvalidation(ctx.user.id, "household-left");
+
+      // Emit to remaining members
+      for (const memberId of remainingMemberIds) {
+        householdEmitter.emitToUser(memberId, "userLeft", { userId: ctx.user.id });
+      }
+    })
+    .catch((err) => {
+      log.error({ err, userId: ctx.user.id }, "Failed to leave household");
+      householdEmitter.emitToUser(ctx.user.id, "failed", {
+        reason: "Failed to leave household",
       });
-    }
+    });
 
-    // Check if user is admin with other members
-    if (household.adminUserId === ctx.user.id && household.users.length > 1) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message:
-          "You must transfer admin privileges before leaving. Go to Household Settings to assign a new admin.",
-      });
-    }
-
-    // Store remaining member IDs from the already-fetched household data
-    const remainingMemberIds = household.users.filter((u) => u.id !== ctx.user.id).map((u) => u.id);
-
-    // Remove user async and emit events - fire and forget
-    removeUserFromHousehold(householdId, ctx.user.id)
-      .then(async () => {
-        log.info({ userId: ctx.user.id, householdId }, "User left household");
-
-        // Invalidate cache for leaving user AND remaining members (their user list changed)
-        await invalidateHouseholdCacheForUsers([ctx.user.id, ...remainingMemberIds]);
-
-        // Terminate connection to rebind subscriptions (now user-only channels)
-        await emitConnectionInvalidation(ctx.user.id, "household-left");
-
-        // Emit to remaining members
-        for (const memberId of remainingMemberIds) {
-          householdEmitter.emitToUser(memberId, "userLeft", { userId: ctx.user.id });
-        }
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to leave household");
-        householdEmitter.emitToUser(ctx.user.id, "failed", {
-          reason: "Failed to leave household",
-        });
-      });
-
-    return { success: true };
-  });
+  return { success: true };
+});
 
 const kick = authedProcedure
-  .input(z.object({ householdId: UUIDSchema, userId: UserIdSchema }))
+  .input(KickHouseholdUserInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const { householdId, userId: userIdToKick } = input;
+    const { householdId, userId: userIdToKick, version } = input;
 
     log.info({ userId: ctx.user.id, householdId, userIdToKick }, "Kicking user from household");
 
@@ -325,8 +347,17 @@ const kick = authedProcedure
       household?.users.filter((u) => u.id !== userIdToKick).map((u) => u.id) ?? [];
 
     // Kick user async and emit events
-    kickUserFromHousehold(householdId, userIdToKick, ctx.user.id)
-      .then(async () => {
+    kickUserFromHousehold(householdId, userIdToKick, ctx.user.id, version)
+      .then(async (result) => {
+        if (result.stale) {
+          log.info(
+            { userId: ctx.user.id, householdId, userIdToKick, version },
+            "Ignoring stale household kick mutation"
+          );
+
+          return;
+        }
+
         log.info({ userId: ctx.user.id, householdId, userIdToKick }, "User kicked from household");
 
         // Emit to the kicked user FIRST (before their connection is terminated)
@@ -359,9 +390,9 @@ const kick = authedProcedure
   });
 
 const regenerateCode = authedProcedure
-  .input(z.object({ householdId: UUIDSchema }))
+  .input(RegenerateHouseholdJoinCodeInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const { householdId } = input;
+    const { householdId, version } = input;
 
     log.info({ userId: ctx.user.id, householdId }, "Regenerating join code");
 
@@ -376,14 +407,26 @@ const regenerateCode = authedProcedure
     }
 
     // Regenerate code async and emit events
-    regenerateJoinCode(householdId)
-      .then((household) => {
+    regenerateJoinCode(householdId, version)
+      .then((result) => {
+        if (result.stale || !result.value) {
+          log.info(
+            { userId: ctx.user.id, householdId, version },
+            "Ignoring stale household join-code regeneration"
+          );
+
+          return;
+        }
+
+        const household = result.value;
+
         log.info({ userId: ctx.user.id, householdId }, "Join code regenerated");
 
         // Emit to all household members
         householdEmitter.emitToHousehold(householdId, "joinCodeRegenerated", {
           joinCode: household.joinCode!,
           joinCodeExpiresAt: household.joinCodeExpiresAt!.toISOString(),
+          version: household.version,
         });
       })
       .catch((err) => {
@@ -397,9 +440,9 @@ const regenerateCode = authedProcedure
   });
 
 const transferAdmin = authedProcedure
-  .input(z.object({ householdId: UUIDSchema, newAdminId: UserIdSchema }))
+  .input(TransferHouseholdAdminInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const { householdId, newAdminId } = input;
+    const { householdId, newAdminId, version } = input;
 
     log.info({ userId: ctx.user.id, householdId, newAdminId }, "Transferring admin");
 
@@ -421,14 +464,26 @@ const transferAdmin = authedProcedure
     }
 
     // Transfer admin async and emit events
-    transferHouseholdAdmin(householdId, ctx.user.id, newAdminId)
-      .then(() => {
+    transferHouseholdAdmin(householdId, ctx.user.id, newAdminId, version)
+      .then((result) => {
+        if (result.stale || !result.value) {
+          log.info(
+            { userId: ctx.user.id, householdId, newAdminId, version },
+            "Ignoring stale household admin transfer"
+          );
+
+          return;
+        }
+
+        const household = result.value;
+
         log.info({ userId: ctx.user.id, householdId, newAdminId }, "Admin transferred");
 
         // Emit to all household members
         householdEmitter.emitToHousehold(householdId, "adminTransferred", {
           oldAdminId: ctx.user.id,
           newAdminId,
+          version: household.version,
         });
       })
       .catch((err) => {

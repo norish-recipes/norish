@@ -21,34 +21,9 @@ permissions:
   contents: read
 
 jobs:
-  install:
-    name: Install dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: install
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Run build
-        run: pnpm run build
-
   dependency-cycles:
     name: Dependency Cycles
     runs-on: ubuntu-latest
-    needs: install
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -59,60 +34,12 @@ jobs:
       - name: Run circular dependency gate
         run: pnpm run deps:cycles
 
-  tests:
-    name: Tests
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Run tests
-        run: pnpm run test
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Run lint
-        run: pnpm run lint
-
-
-  format:
-    name: Format Check
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Run format check
-        run: pnpm run format
-
-  i18n:
-    name: Locale Keys Check
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Check locale keys
-        run: pnpm run i18n:check
-
+  quality:
+    name: Quality Checks
+    uses: ./.github/workflows/_node-ci.yml
+    with:
+      run-build: true
+      run-tests: true
+      run-lint: true
+      run-format: true
+      run-i18n: true

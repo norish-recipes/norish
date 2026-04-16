@@ -1,11 +1,7 @@
 "use client";
 
 import type { RecipeMap } from "@/hooks/groceries";
-import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
-
 import {
   useGroceriesMutations,
   useGroceriesQuery,
@@ -13,6 +9,8 @@ import {
 } from "@/hooks/groceries";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 // =============================================================================
 // View Mode Types

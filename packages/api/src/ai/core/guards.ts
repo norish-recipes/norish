@@ -5,10 +5,9 @@
  * and to require AI as a precondition.
  */
 
-import type { AIResult } from "./types";
-
 import { getAIConfig } from "@norish/config/server-config-loader";
 
+import type { AIResult } from "./types";
 import { aiError } from "./types";
 
 /**

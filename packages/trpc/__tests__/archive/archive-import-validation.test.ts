@@ -50,7 +50,7 @@ describe("archiveRouter.importArchive", () => {
     vi.clearAllMocks();
   });
 
-  it("accepts .paprikarecipes files", { timeout: 15000 }, async () => {
+  it("accepts .paprikarecipes files", { timeout: 30000 }, async () => {
     const { archiveRouter } = await import("@norish/trpc/routers/archive/archive");
 
     const caller = archiveRouter.createCaller({

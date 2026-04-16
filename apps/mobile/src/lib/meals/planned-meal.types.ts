@@ -1,5 +1,5 @@
 export type PlannedMeal = {
-  slot: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack';
+  slot: "Breakfast" | "Lunch" | "Dinner" | "Snack";
   recipeId: string | null;
   recipeTitle: string | null;
   imageUrl: string | null;

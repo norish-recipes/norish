@@ -5,15 +5,14 @@
  * a FullRecipeInsertDTO with both measurement systems.
  */
 
+import { decode } from "html-entities";
 
 import type { RecipeExtractionOutput } from "@norish/api/ai/schemas/recipe.schema";
 import type { FullRecipeInsertDTO, RecipeCategory } from "@norish/shared/contracts/dto/recipe";
-
-import { decode } from "html-entities";
-import { matchCategory } from "@norish/shared-server/ai/utils/category-matcher";
-import { aiLogger } from "@norish/shared-server/logger";
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
 import { getUnits } from "@norish/config/server-config-loader";
+import { matchCategory } from "@norish/shared-server/ai/utils/category-matcher";
+import { aiLogger } from "@norish/shared-server/logger";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 /**
@@ -38,7 +37,7 @@ export interface NormalizeExtractionOptions {
   /**
    * Recipe ID (for image storage paths).
    */
-  recipeId?: string;
+  recipeId: string;
 }
 
 /**
@@ -102,7 +101,7 @@ export function validateExtractionOutput(output: RecipeExtractionOutput | null):
  */
 export async function normalizeExtractionOutput(
   output: RecipeExtractionOutput,
-  options: NormalizeExtractionOptions = {}
+  options: NormalizeExtractionOptions
 ): Promise<FullRecipeInsertDTO | null> {
   const { url, image, imageCandidates, recipeId } = options;
 

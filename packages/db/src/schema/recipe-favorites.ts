@@ -2,6 +2,7 @@ import { index, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-co
 
 import { users } from "./auth";
 import { recipes } from "./recipes";
+import { versionColumn } from "./shared";
 
 export const recipeFavorites = pgTable(
   "recipe_favorites",
@@ -14,6 +15,7 @@ export const recipeFavorites = pgTable(
       .notNull()
       .references(() => recipes.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    ...versionColumn,
   },
   (t) => [
     unique("uq_recipe_favorites_user_recipe").on(t.userId, t.recipeId),

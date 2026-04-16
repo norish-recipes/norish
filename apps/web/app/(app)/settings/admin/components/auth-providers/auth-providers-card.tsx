@@ -16,7 +16,6 @@ import { useTranslations } from "next-intl";
 import { useAdminSettingsContext } from "../../context";
 import { RestartRequiredChip } from "../restart-required-chip";
 import { UnsavedChangesChip } from "../unsaved-changes-chip";
-
 import { AuthProviderForm } from "./auth-provider-form";
 import { EnvManagedBadge } from "./env-managed-badge";
 import { OIDCProviderForm } from "./oidc-provider-form";

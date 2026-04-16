@@ -307,6 +307,62 @@
           "rule": "week"
         }
       ]
+    },
+    "it": {
+      "everyWords": ["ogni"],
+      "otherWords": ["altro", "altra"],
+      "onWords": ["il", "di"],
+      "numberWords": {
+        "un": 1,
+        "uno": 1,
+        "due": 2,
+        "tre": 3,
+        "quattro": 4,
+        "cinque": 5,
+        "sei": 6,
+        "sette": 7,
+        "otto": 8,
+        "nove": 9,
+        "dieci": 10
+      },
+      "unitWords": {
+        "day": ["giorno", "giorni", "giornaliero", "quotidiano"],
+        "week": ["settimana", "settimane", "settimanale"],
+        "month": ["mese", "mesi", "mensile"]
+      },
+      "weekdayWords": {
+        "domenica": 0,
+        "dom": 0,
+        "lunedì": 1,
+        "lunedi": 1,
+        "lun": 1,
+        "martedì": 2,
+        "martedi": 2,
+        "mar": 2,
+        "mercoledì": 3,
+        "mercoledi": 3,
+        "mer": 3,
+        "giovedì": 4,
+        "giovedi": 4,
+        "gio": 4,
+        "venerdì": 5,
+        "venerdi": 5,
+        "ven": 5,
+        "sabato": 6,
+        "sab": 6
+      },
+      "intervalHints": [
+        {
+          "phrases": ["ogni due settimane"],
+          "interval": 2,
+          "rule": "week"
+        },
+        {
+          "phrases": ["a giorni alterni", "ogni due giorni"],
+          "interval": 2,
+          "rule": "day"
+        }
+      ]
     }
   }
 }

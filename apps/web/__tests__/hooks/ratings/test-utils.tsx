@@ -24,6 +24,10 @@ export function createMockAverageRatingData(
   return { recipeId, averageRating, ratingCount };
 }
 
-export function createMockUserRatingData(recipeId: string, userRating: number | null = null) {
-  return { recipeId, userRating };
+export function createMockUserRatingData(
+  recipeId: string,
+  userRating: number | null = null,
+  version: number | null = null
+) {
+  return { recipeId, userRating, version };
 }

@@ -1,3 +1,5 @@
+import type { LocaleCatalogCode } from "./locales";
+
 export const I18N_MESSAGE_SECTIONS = [
   "common",
   "recipes",
@@ -11,7 +13,7 @@ export const I18N_MESSAGE_SECTIONS = [
 type MessageSection = (typeof I18N_MESSAGE_SECTIONS)[number];
 type MessageLoader = () => Promise<{ default: Record<string, unknown> }>;
 
-const MESSAGE_LOADERS: Record<string, Partial<Record<MessageSection, MessageLoader>>> = {
+const MESSAGE_LOADERS: Record<LocaleCatalogCode, Partial<Record<MessageSection, MessageLoader>>> = {
   en: {
     common: () => import("./messages/en/common.json"),
     recipes: () => import("./messages/en/recipes.json"),
@@ -102,11 +104,20 @@ const MESSAGE_LOADERS: Record<string, Partial<Record<MessageSection, MessageLoad
     navbar: () => import("./messages/da/navbar.json"),
     auth: () => import("./messages/da/auth.json"),
   },
+  it: {
+    common: () => import("./messages/it/common.json"),
+    recipes: () => import("./messages/it/recipes.json"),
+    groceries: () => import("./messages/it/groceries.json"),
+    calendar: () => import("./messages/it/calendar.json"),
+    settings: () => import("./messages/it/settings.json"),
+    navbar: () => import("./messages/it/navbar.json"),
+    auth: () => import("./messages/it/auth.json"),
+  },
 };
 
 export async function loadLocaleMessages(locale: string): Promise<Record<string, unknown>> {
   const messages: Record<string, unknown> = {};
-  const localeLoaders = MESSAGE_LOADERS[locale] ?? {};
+  const localeLoaders = MESSAGE_LOADERS[locale as LocaleCatalogCode] ?? {};
 
   for (const section of I18N_MESSAGE_SECTIONS) {
     const loadSection = localeLoaders[section];

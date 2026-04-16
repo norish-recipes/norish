@@ -1,30 +1,25 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { LayoutChangeEvent, Pressable } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-
-import { RecipeCard } from '@/components/home/recipe-card';
-import {
-  SwipeableRecipeRow,
-  type SwipeableRecipeRowRef,
-} from '@/components/home/swipeable-recipe-row';
-import type { RecipeCardItem } from '@/lib/recipes/recipe-card.types';
+import type { SwipeableRecipeRowRef } from "@/components/home/swipeable-recipe-row";
+import type { RecipeCardItem } from "@/lib/recipes/recipe-card.types";
+import React, { useCallback, useEffect, useRef } from "react";
+import { LayoutChangeEvent, Pressable } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { RecipeCard } from "@/components/home/recipe-card";
+import { SwipeableRecipeRow } from "@/components/home/swipeable-recipe-row";
 
 type SwipeableRecipeListItemProps = {
   item: RecipeCardItem;
   onDelete: (id: string) => void;
   onPress: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
   isDeleting: boolean;
   canDelete: boolean;
 };
 
-export function SwipeableRecipeListItem({
+function SwipeableRecipeListItemComponent({
   item,
   onDelete,
   onPress,
+  onToggleFavorite,
   isDeleting,
   canDelete,
 }: SwipeableRecipeListItemProps) {
@@ -55,7 +50,7 @@ export function SwipeableRecipeListItem({
     return {
       opacity: opacity.value,
       height: height.value,
-      overflow: 'hidden',
+      overflow: "hidden",
     };
   });
 
@@ -67,6 +62,10 @@ export function SwipeableRecipeListItem({
     onPress(item.id);
   }, [item.id, onPress]);
 
+  const handleDoubleTapLike = useCallback(() => {
+    onToggleFavorite(item.id);
+  }, [item.id, onToggleFavorite]);
+
   return (
     <Animated.View style={animatedStyle} onLayout={handleLayout}>
       <SwipeableRecipeRow
@@ -75,9 +74,11 @@ export function SwipeableRecipeListItem({
         onDelete={canDelete ? handleDelete : undefined}
       >
         <Pressable onPress={handlePress}>
-          <RecipeCard recipe={item} />
+          <RecipeCard recipe={item} onPress={handlePress} onDoubleTapLike={handleDoubleTapLike} />
         </Pressable>
       </SwipeableRecipeRow>
     </Animated.View>
   );
 }
+
+export const SwipeableRecipeListItem = React.memo(SwipeableRecipeListItemComponent);

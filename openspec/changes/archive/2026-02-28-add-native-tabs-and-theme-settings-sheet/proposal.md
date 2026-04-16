@@ -13,10 +13,12 @@ The mobile app needs a clearer navigation model and quick access to app-level co
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-native-tabs-navigation`: Defines the mobile shell tab model, tab destinations, native search tab behavior, and minimize-on-scroll behavior.
 - `mobile-theme-settings-sheet`: Defines the shell settings entrypoint and bottom-sheet UX for selecting Light, Dark, or System appearance mode.
 
 ### Modified Capabilities
+
 - None.
 
 ## Impact

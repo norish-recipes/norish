@@ -13,6 +13,7 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("SwipeableRow");

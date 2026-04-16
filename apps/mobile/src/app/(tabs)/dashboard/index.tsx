@@ -1,21 +1,26 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useIntl } from 'react-intl';
-
-import { SectionHeader } from '@/components/home/section-header';
-import { RecipeEmptyStateCard } from '@/components/recipes/recipe-empty-state-card';
-import { RecipeListRowContent } from '@/components/recipes/recipe-list-row-content';
-import { recipeListScreenStyles } from '@/components/recipes/recipe-list-screen.styles';
-import { TodaysMealsSection } from '@/components/home/todays-meals-section';
-import { usePermissionsContext } from '@/context/permissions-context';
-import { useRecipesContext } from '@/context/recipes-context';
-import { TODAYS_MEALS_MOCK } from '@/lib/meals/planned-meal-mock-data';
-import { canShowDeleteAction } from '@/lib/permissions/mobile-action-visibility';
-import { createRefreshRequestHandler } from '@/lib/refresh/create-refresh-request-handler';
-import { createNextDeletingIds } from '@/lib/recipes/create-next-deleting-ids';
-import { buildRecipeListRows, type RecipeListRow } from '@/lib/recipes/build-recipe-list-rows';
-import { styles } from '@/styles/index.styles';
+import type { RecipeListRow } from "@/lib/recipes/build-recipe-list-rows";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
+import { SectionHeader } from "@/components/home/section-header";
+import { TodaysMealsSection } from "@/components/home/todays-meals-section";
+import { RecipeEmptyStateCard } from "@/components/recipes/recipe-empty-state-card";
+import { RecipeListRowContent } from "@/components/recipes/recipe-list-row-content";
+import {
+  recipeListScreenStyles,
+  RowSeparator,
+} from "@/components/recipes/recipe-list-screen.styles";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { useRecipesContext } from "@/context/recipes-context";
+import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
+import { useViewableItemsRef, viewabilityConfig } from "@/hooks/recipes/use-viewability-config";
+import { TODAYS_MEALS_MOCK } from "@/lib/meals/planned-meal-mock-data";
+import { canShowDeleteAction } from "@/lib/permissions/mobile-action-visibility";
+import { buildRecipeListRows } from "@/lib/recipes/build-recipe-list-rows";
+import { createNextDeletingIds } from "@/lib/recipes/create-next-deleting-ids";
+import { createRefreshRequestHandler } from "@/lib/refresh/create-refresh-request-handler";
+import { styles } from "@/styles/index.styles";
+import { useRouter } from "expo-router";
+import { useIntl } from "react-intl";
 
 export default function RecipesScreen() {
   const router = useRouter();
@@ -30,12 +35,19 @@ export default function RecipesScreen() {
     pendingRecipeIds,
     openRecipe,
     deleteRecipe,
+    toggleFavorite,
     invalidate,
   } = useRecipesContext();
+
+  const { onViewableItemsChanged } = useRecipePrefetch();
+  const viewableItemsRef = useViewableItemsRef(onViewableItemsChanged);
   const { canDeleteRecipe, isLoading: isLoadingPermissions } = usePermissionsContext();
 
   const [deletingIds, setDeletingIds] = useState<ReadonlySet<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const recipeCardsRef = useRef(recipeCards);
+  recipeCardsRef.current = recipeCards;
 
   const listRows = useMemo<RecipeListRow[]>(() => {
     return buildRecipeListRows({
@@ -43,18 +55,18 @@ export default function RecipesScreen() {
       isLoading,
       isValidating,
       pendingCount: pendingRecipeIds.size,
-      recipePrefix: 'dashboard-recipe',
-      initialSkeletonPrefix: 'initial-skeleton',
-      pendingImportPrefix: 'pending-import',
+      recipePrefix: "dashboard-recipe",
+      initialSkeletonPrefix: "initial-skeleton",
+      pendingImportPrefix: "pending-import",
     });
   }, [isLoading, isValidating, recipeCards, pendingRecipeIds.size]);
 
   const handleDelete = useCallback(
     (id: string) => {
       setDeletingIds((prev) => createNextDeletingIds(prev, id));
-      deleteRecipe(id);
+      deleteRecipe(id, recipeCardsRef.current.find((recipe) => recipe.id === id)?.version ?? 1);
     },
-    [deleteRecipe],
+    [deleteRecipe]
   );
 
   const canDeleteOwnerRecipe = useCallback(
@@ -65,12 +77,12 @@ export default function RecipesScreen() {
         canDeleteRecipe,
       });
     },
-    [canDeleteRecipe, isLoadingPermissions],
+    [canDeleteRecipe, isLoadingPermissions]
   );
 
   const runRefresh = useMemo(
     () => createRefreshRequestHandler(async () => invalidate()),
-    [invalidate],
+    [invalidate]
   );
 
   const handleRefresh = useCallback(() => {
@@ -83,19 +95,30 @@ export default function RecipesScreen() {
       });
   }, [runRefresh]);
 
+  const handleToggleFavorite = useCallback(
+    (id: string) => {
+      toggleFavorite(id);
+    },
+    [toggleFavorite]
+  );
+
   const renderRow = useCallback(
-    ({ item }: { item: RecipeListRow }) => (
-      <View style={recipeListScreenStyles.rowContainer}>
-        <RecipeListRowContent
-          row={item}
-          onDelete={handleDelete}
-          onPress={openRecipe}
-          deletingIds={deletingIds}
-          canDeleteRecipe={canDeleteOwnerRecipe}
-        />
-      </View>
-    ),
-    [canDeleteOwnerRecipe, handleDelete, openRecipe, deletingIds],
+    ({ item }: { item: RecipeListRow }) => {
+      const recipe = item.type === "recipe" ? item.recipe : null;
+      return (
+        <View style={recipeListScreenStyles.rowContainer}>
+          <RecipeListRowContent
+            row={item}
+            onDelete={handleDelete}
+            onPress={openRecipe}
+            onToggleFavorite={handleToggleFavorite}
+            isDeleting={recipe !== null && deletingIds.has(recipe.id)}
+            canDelete={recipe !== null && canDeleteOwnerRecipe(recipe.ownerId)}
+          />
+        </View>
+      );
+    },
+    [canDeleteOwnerRecipe, handleDelete, handleToggleFavorite, openRecipe, deletingIds]
   );
 
   const handleLoadMore = useCallback(() => {
@@ -108,15 +131,15 @@ export default function RecipesScreen() {
     () => (
       <>
         <SectionHeader
-          title={intl.formatMessage({ id: 'calendar.mobile.today' })}
-          actionLabel={intl.formatMessage({ id: 'calendar.page.title' })}
-          onAction={() => router.push('/(tabs)/calendar')}
+          title={intl.formatMessage({ id: "calendar.mobile.today" })}
+          actionLabel={intl.formatMessage({ id: "calendar.page.title" })}
+          onAction={() => router.push("/(tabs)/calendar")}
         />
         <TodaysMealsSection meals={TODAYS_MEALS_MOCK} />
-        <SectionHeader title={intl.formatMessage({ id: 'recipes.dashboard.title' })} />
+        <SectionHeader title={intl.formatMessage({ id: "recipes.dashboard.title" })} />
       </>
     ),
-    [intl, router],
+    [intl, router]
   );
 
   const renderEmpty = useCallback(() => {
@@ -127,8 +150,8 @@ export default function RecipesScreen() {
     if (error) {
       return (
         <RecipeEmptyStateCard
-          title={intl.formatMessage({ id: 'auth.errors.default.title' })}
-          description={intl.formatMessage({ id: 'recipes.empty.noResultsHint' })}
+          title={intl.formatMessage({ id: "auth.errors.default.title" })}
+          description={intl.formatMessage({ id: "recipes.empty.noResultsHint" })}
           dashedBorder={false}
         />
       );
@@ -136,8 +159,8 @@ export default function RecipesScreen() {
 
     return (
       <RecipeEmptyStateCard
-        title={intl.formatMessage({ id: 'recipes.empty.noResults' })}
-        description={intl.formatMessage({ id: 'recipes.empty.noResultsHint' })}
+        title={intl.formatMessage({ id: "recipes.empty.noResults" })}
+        description={intl.formatMessage({ id: "recipes.empty.noResultsHint" })}
       />
     );
   }, [error, intl, isLoading]);
@@ -158,12 +181,14 @@ export default function RecipesScreen() {
       data={listRows}
       keyExtractor={(item) => item.id}
       renderItem={renderRow}
-      ItemSeparatorComponent={() => <View style={recipeListScreenStyles.rowSeparator} />}
+      ItemSeparatorComponent={RowSeparator}
       ListHeaderComponent={renderHeader}
       ListEmptyComponent={renderEmpty}
       ListFooterComponent={renderFooter}
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.6}
+      onViewableItemsChanged={viewableItemsRef.current}
+      viewabilityConfig={viewabilityConfig}
       contentContainerStyle={[styles.listContent, recipeListScreenStyles.dashboardListInset]}
       contentInsetAdjustmentBehavior="automatic"
       automaticallyAdjustsScrollIndicatorInsets

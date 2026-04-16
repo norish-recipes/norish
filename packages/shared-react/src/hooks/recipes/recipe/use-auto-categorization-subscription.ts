@@ -1,8 +1,7 @@
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useMutation } from "@tanstack/react-query";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
+import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseAutoCategorization({ useTRPC }: CreateRecipeHooksOptions) {
   return function useAutoCategorization(
@@ -15,7 +14,7 @@ export function createUseAutoCategorization({ useTRPC }: CreateRecipeHooksOption
     useSubscription(
       trpc.recipes.onAutoCategorizationStarted.subscriptionOptions(undefined, {
         enabled: !!recipeId,
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           if (payload.recipeId === recipeId) {
             onStarted();
           }
@@ -26,7 +25,7 @@ export function createUseAutoCategorization({ useTRPC }: CreateRecipeHooksOption
     useSubscription(
       trpc.recipes.onAutoCategorizationCompleted.subscriptionOptions(undefined, {
         enabled: !!recipeId,
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           if (payload.recipeId === recipeId) {
             onCompleted();
           }
@@ -37,7 +36,7 @@ export function createUseAutoCategorization({ useTRPC }: CreateRecipeHooksOption
     useSubscription(
       trpc.recipes.onUpdated.subscriptionOptions(undefined, {
         enabled: !!recipeId,
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           if (payload.recipe.id === recipeId) {
             onCompleted();
           }
@@ -48,7 +47,7 @@ export function createUseAutoCategorization({ useTRPC }: CreateRecipeHooksOption
     useSubscription(
       trpc.recipes.onFailed.subscriptionOptions(undefined, {
         enabled: !!recipeId,
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           if (payload.recipeId === recipeId) {
             onCompleted();
           }
@@ -59,7 +58,7 @@ export function createUseAutoCategorization({ useTRPC }: CreateRecipeHooksOption
     useSubscription(
       trpc.recipes.onUpdated.subscriptionOptions(undefined, {
         enabled: !!recipeId,
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           if (payload.recipe.id === recipeId) {
             onCompleted();
           }

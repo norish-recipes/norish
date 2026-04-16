@@ -151,12 +151,14 @@ Use Pino logger instead of `console.log`:
 
 ```typescript
 // Server-side
-import { createLogger } from "@/server/logger";
-const log = createLogger("my-module");
-log.info("Something happened");
 
 // Client-side
 import { createClientLogger } from "@/lib/logger";
+import { createLogger } from "@/server/logger";
+
+const log = createLogger("my-module");
+log.info("Something happened");
+
 const log = createClientLogger("MyComponent");
 ```
 
@@ -167,6 +169,7 @@ Always use the repository pattern:
 ```typescript
 // Good - use repository
 import { getRecipeById } from "@/server/db/repositories/recipes";
+
 const recipe = await getRecipeById(id);
 
 // Bad - direct db access in routers
@@ -228,26 +231,23 @@ cd apps/web && pnpm exec vitest run __tests__/hooks/recipes/use-recipes-query.te
 
 ## Adding Translations
 
-Norish uses a configurable locale system. Locales are defined in `packages/config/src/server-config-loader.ts` and can be enabled/disabled at runtime via the Admin UI or environment variables.
+Norish uses a configurable locale system. The bundled locale catalog lives in `packages/i18n/src/locales.ts`, server defaults are derived from that catalog in `packages/config/src/server-config-loader.ts`, and locales can be enabled/disabled at runtime via the Admin UI or environment variables.
 
-### 1. Add Locale to DEFAULT_LOCALE_CONFIG
+### 1. Add Locale to the Bundled Locale Catalog
 
-Edit `packages/config/src/server-config-loader.ts` to add the new locale:
+Edit `packages/i18n/src/locales.ts` to add the new locale metadata:
 
 ```typescript
-export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
-  defaultLocale: "en",
-  locales: {
-    en: { name: "English", enabled: true },
-    nl: { name: "Nederlands", enabled: true },
-    "de-formal": { name: "Deutsch (Sie)", enabled: true },
-    "de-informal": { name: "Deutsch (Du)", enabled: true },
-    "your-locale": { name: "Your Language", enabled: true },
-  },
-};
+export const LOCALE_CATALOG = {
+  en: { name: "English" },
+  nl: { name: "Nederlands" },
+  "de-formal": { name: "Deutsch (Sie)" },
+  "de-informal": { name: "Deutsch (Du)" },
+  "your-locale": { name: "Your Language" },
+} as const;
 ```
 
-This is the single source of truth for all locale configuration.
+This is the single source of truth for bundled locale metadata used by web, mobile fallback, and server defaults.
 
 ### 2. Create Translation Files
 
@@ -263,7 +263,7 @@ Create a new folder `packages/i18n/src/messages/{your-locale}/` with the followi
 
 Copy the structure from `packages/i18n/src/messages/en/` as a starting point.
 
-### 2.1 Register Message Loaders (Required for Mobile/Expo)
+### 2.1 Register Message Loaders (Required for Web and Mobile)
 
 Expo Metro does not support fully dynamic JSON imports for locale bundles.
 After adding a new locale folder, update `packages/i18n/src/messages.ts` and add static loader entries for every section (`common`, `recipes`, `groceries`, `calendar`, `settings`, `navbar`, `auth`) under `MESSAGE_LOADERS`.
@@ -287,7 +287,7 @@ The check runs automatically in CI and will block PRs with missing translations.
 
 ### 4. Enable the Locale
 
-New locales are **enabled by default** when added to `DEFAULT_LOCALE_CONFIG`. You can also control this via:
+New locales are **enabled by default** once added to `LOCALE_CATALOG` and wired into `packages/i18n/src/messages.ts`. You can also control runtime availability via:
 
 - **Admin UI**: Go to **Settings => Admin => General** to enable/disable locales
 - **Environment variable**: Set `ENABLED_LOCALES=en,nl,your-locale` (comma-separated list)

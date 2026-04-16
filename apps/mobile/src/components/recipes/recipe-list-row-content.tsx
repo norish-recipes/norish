@@ -1,34 +1,35 @@
-import React from 'react';
-
+import type { RecipeListRow } from "@/lib/recipes/build-recipe-list-rows";
+import React from "react";
+import { SwipeableRecipeListItem } from "@/components/recipes/swipeable-recipe-list-item";
 import {
   ImportingRecipePlaceholder,
   RecipeCardSkeleton,
-} from '@/components/skeletons/recipe-card-skeleton';
-import { SwipeableRecipeListItem } from '@/components/recipes/swipeable-recipe-list-item';
-import type { RecipeListRow } from '@/lib/recipes/build-recipe-list-rows';
+} from "@/components/skeletons/recipe-card-skeleton";
 
 type RecipeListRowContentProps = {
   row: RecipeListRow;
   onDelete: (id: string) => void;
   onPress: (id: string) => void;
-  deletingIds: ReadonlySet<string>;
-  canDeleteRecipe: (ownerId: string | null) => boolean;
+  onToggleFavorite: (id: string) => void;
+  isDeleting: boolean;
+  canDelete: boolean;
   compactPlaceholder?: boolean;
 };
 
-export function RecipeListRowContent({
+function RecipeListRowContentComponent({
   row,
   onDelete,
   onPress,
-  deletingIds,
-  canDeleteRecipe,
+  onToggleFavorite,
+  isDeleting,
+  canDelete,
   compactPlaceholder = false,
 }: RecipeListRowContentProps) {
-  if (row.type === 'initial-skeleton') {
+  if (row.type === "initial-skeleton") {
     return <RecipeCardSkeleton compact={compactPlaceholder} />;
   }
 
-  if (row.type === 'pending-import') {
+  if (row.type === "pending-import") {
     return <ImportingRecipePlaceholder compact={compactPlaceholder} />;
   }
 
@@ -37,8 +38,11 @@ export function RecipeListRowContent({
       item={row.recipe}
       onDelete={onDelete}
       onPress={onPress}
-      isDeleting={deletingIds.has(row.recipe.id)}
-      canDelete={canDeleteRecipe(row.recipe.ownerId)}
+      onToggleFavorite={onToggleFavorite}
+      isDeleting={isDeleting}
+      canDelete={canDelete}
     />
   );
 }
+
+export const RecipeListRowContent = React.memo(RecipeListRowContentComponent);

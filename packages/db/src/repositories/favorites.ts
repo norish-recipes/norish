@@ -1,7 +1,9 @@
 import { and, eq, inArray } from "drizzle-orm";
 
+import type { MutationOutcome } from "./mutation-outcomes";
 import { db } from "../drizzle";
 import { recipeFavorites } from "../schema";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 export async function addFavorite(userId: string, recipeId: string): Promise<void> {
   await db
@@ -16,9 +18,43 @@ export async function removeFavorite(userId: string, recipeId: string): Promise<
     .where(and(eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)));
 }
 
+export async function setFavorite(
+  userId: string,
+  recipeId: string,
+  isFavorite: boolean,
+  version?: number
+): Promise<MutationOutcome<{ isFavorite: boolean }>> {
+  if (isFavorite) {
+    await addFavorite(userId, recipeId);
+
+    return appliedOutcome({ isFavorite: true });
+  }
+
+  const whereConditions = [
+    eq(recipeFavorites.userId, userId),
+    eq(recipeFavorites.recipeId, recipeId),
+  ];
+
+  if (version) {
+    whereConditions.push(eq(recipeFavorites.version, version));
+  }
+
+  const deleted = await db
+    .delete(recipeFavorites)
+    .where(and(...whereConditions))
+    .returning({ recipeId: recipeFavorites.recipeId });
+
+  if (deleted.length === 0 && version) {
+    return staleOutcome({ isFavorite: false });
+  }
+
+  return appliedOutcome({ isFavorite: false });
+}
+
 export async function toggleFavorite(
   userId: string,
-  recipeId: string
+  recipeId: string,
+  _version?: number
 ): Promise<{ isFavorite: boolean }> {
   const existing = await db
     .select({ id: recipeFavorites.id })
@@ -54,6 +90,15 @@ export async function getFavoriteRecipeIds(userId: string): Promise<string[]> {
     .where(eq(recipeFavorites.userId, userId));
 
   return results.map((r) => r.recipeId);
+}
+
+export async function getFavoriteRecipesWithVersions(
+  userId: string
+): Promise<Array<{ recipeId: string; version: number }>> {
+  return await db
+    .select({ recipeId: recipeFavorites.recipeId, version: recipeFavorites.version })
+    .from(recipeFavorites)
+    .where(eq(recipeFavorites.userId, userId));
 }
 
 export async function getFavoritesByRecipeIds(

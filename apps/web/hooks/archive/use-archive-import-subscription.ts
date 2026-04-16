@@ -1,12 +1,12 @@
 "use client";
 
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { addToast } from "@heroui/react";
 import { useSubscription } from "@trpc/tanstack-react-query";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import { useArchiveImportCacheHelpers } from "./use-archive-cache";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 const log = createClientLogger("ArchiveImportSubscription");
 
@@ -24,7 +24,7 @@ export function useArchiveImportSubscription(): void {
   // Subscribe to progress events (user-scoped)
   useSubscription(
     trpc.archive.onArchiveProgress.subscriptionOptions(undefined, {
-      onData: (payload: any) => {
+      onData: ({ payload }: any) => {
         log.debug({ payload }, "Progress event received");
         setImportState((prev) => {
           // If no previous state or not importing, initialize with progress data
@@ -59,7 +59,7 @@ export function useArchiveImportSubscription(): void {
   // Subscribe to completion events (user-scoped)
   useSubscription(
     trpc.archive.onArchiveCompleted.subscriptionOptions(undefined, {
-      onData: (payload: any) => {
+      onData: ({ payload }: any) => {
         log.debug({ payload }, "Completion event received");
         // Update state to mark import as complete
         setImportState((prev) => {

@@ -1,12 +1,12 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+
 import type {
   CalendarCacheHelpers,
   CalendarMutationsResult,
   CreateCalendarHooksOptions,
 } from "./types";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type CreateUseCalendarMutationsOptions = CreateCalendarHooksOptions & {
   useCalendarCacheHelpers: (startISO: string, endISO: string) => CalendarCacheHelpers;
@@ -21,6 +21,12 @@ export function createUseCalendarMutations({
     const queryClient = useQueryClient();
     const queryKey = trpc.calendar.listItems.queryKey({ startISO, endISO });
     const { setCalendarData, invalidate } = useCalendarCacheHelpers(startISO, endISO);
+
+    const getCurrentItemVersion = (itemId: string): number => {
+      const items = queryClient.getQueryData<PlannedItemFromQuery[]>(queryKey) ?? [];
+
+      return items.find((item) => item.id === itemId)?.version ?? 1;
+    };
 
     const createMutation = useMutation(
       trpc.calendar.createItem.mutationOptions({
@@ -155,7 +161,7 @@ export function createUseCalendarMutations({
     };
 
     const deleteItem = (itemId: string) => {
-      deleteMutation.mutate({ itemId });
+      deleteMutation.mutate({ itemId, version: getCurrentItemVersion(itemId) });
     };
 
     const moveItem = (
@@ -164,11 +170,17 @@ export function createUseCalendarMutations({
       targetSlot: Slot,
       targetIndex: number
     ) => {
-      moveMutation.mutate({ itemId, targetDate, targetSlot, targetIndex });
+      moveMutation.mutate({
+        itemId,
+        version: getCurrentItemVersion(itemId),
+        targetDate,
+        targetSlot,
+        targetIndex,
+      });
     };
 
     const updateItem = (itemId: string, title: string) => {
-      updateMutation.mutate({ itemId, title });
+      updateMutation.mutate({ itemId, version: getCurrentItemVersion(itemId), title });
     };
 
     return {

@@ -7,16 +7,16 @@
  */
 
 import type { Job } from "bullmq";
+
 import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/trpc/helpers";
-
-import { detectAllergiesInRecipe } from "@norish/api/ai/allergy-detector";
-import { createLogger } from "@norish/shared-server/logger";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getAllergiesForUsers, getHouseholdMemberIds, getRecipeFull } from "@norish/db";
 import { db } from "@norish/db/drizzle";
 import { attachTagsToRecipeByInputTx, getRecipeTagNamesTx } from "@norish/db/repositories/tags";
+import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
+import { createLogger } from "@norish/shared-server/logger";
 import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
@@ -26,6 +26,7 @@ import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 const log = createLogger("worker:allergy-detection");
 
 async function processAllergyDetectionJob(job: Job<AllergyDetectionJobData>): Promise<void> {
+  const detectAllergiesInRecipe = requireQueueApiHandler("detectAllergiesInRecipe");
   const { recipeId, userId, householdKey } = job.data;
 
   log.info(

@@ -52,6 +52,7 @@ describe("useRatingQuery", () => {
 
       expect(result.current.averageRating).toBeNull();
       expect(result.current.userRating).toBeNull();
+      expect(result.current.userRatingVersion).toBeUndefined();
       expect(result.current.ratingCount).toBe(0);
     });
 
@@ -82,7 +83,7 @@ describe("useRatingQuery", () => {
       });
       mockUserRatingQueryOptions.mockReturnValue({
         queryKey: [["ratings", "getUserRating"], { input: { recipeId: testRecipeId } }],
-        queryFn: async () => createMockUserRatingData(testRecipeId, 5),
+        queryFn: async () => createMockUserRatingData(testRecipeId, 5, 7),
       });
 
       const { renderHook } = require("@testing-library/react");
@@ -97,6 +98,7 @@ describe("useRatingQuery", () => {
       expect(result.current.averageRating).toBe(4.5);
       expect(result.current.ratingCount).toBe(10);
       expect(result.current.userRating).toBe(5);
+      expect(result.current.userRatingVersion).toBe(7);
     });
 
     it("handles user with no rating", async () => {

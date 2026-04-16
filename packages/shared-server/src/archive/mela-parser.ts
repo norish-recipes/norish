@@ -1,6 +1,5 @@
-import crypto from "crypto";
-
 import JSZip from "jszip";
+
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 
@@ -35,19 +34,20 @@ export type MelaRecipe = {
  * Parse a single .melarecipe JSON payload and map to our Recipe shape.
  * Image bytes are reconstructed from the first images[] entry if present.
  */
-export async function parseMelaRecipeToDTO(json: MelaRecipe): Promise<FullRecipeInsertDTO> {
+export async function parseMelaRecipeToDTO(
+  json: MelaRecipe,
+  recipeId: string
+): Promise<FullRecipeInsertDTO> {
   const title = (json.title || "").trim();
 
   if (!title) throw new Error("Missing title");
 
-  // Generate recipe ID upfront so images are saved to the correct folder
-  const recipeId = crypto.randomUUID();
-
   // Save first image if present
   let image: string | undefined = undefined;
+  const firstImage = json.images?.[0];
 
-  if (json.images && json.images.length) {
-    image = await saveBase64Image(json.images[0], recipeId);
+  if (firstImage) {
+    image = await saveBase64Image(firstImage, recipeId);
   }
 
   const dto = await buildRecipeDTO({
@@ -64,7 +64,6 @@ export async function parseMelaRecipeToDTO(json: MelaRecipe): Promise<FullRecipe
     categories: json.categories,
   });
 
-  // Add the pre-generated recipe ID to ensure the image path matches
   return { ...dto, id: recipeId };
 }
 

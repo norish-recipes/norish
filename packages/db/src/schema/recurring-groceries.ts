@@ -1,6 +1,7 @@
 import { date, index, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { versionColumn } from "./shared";
 
 export const recurringGroceries = pgTable(
   "recurring_groceries",
@@ -27,6 +28,7 @@ export const recurringGroceries = pgTable(
     // Metadata
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    ...versionColumn,
   },
   (t) => [
     index("idx_recurring_groceries_user_id").on(t.userId),

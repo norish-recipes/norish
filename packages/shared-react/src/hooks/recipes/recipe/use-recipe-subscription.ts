@@ -1,8 +1,7 @@
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipeQueryResult } from "./use-recipe-query";
-
-import { useSubscription } from "@trpc/tanstack-react-query";
 
 export type RecipeSubscriptionCallbacks = {
   onConverted?: (payload: unknown) => void;
@@ -31,7 +30,7 @@ export function createUseRecipeSubscription(
       asSubscriptionOptions(
         trpc.recipes.onUpdated.subscriptionOptions(undefined, {
           enabled: !!recipeId,
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             if (payload.recipe.id !== recipeId) return;
 
             setRecipeData(() => payload.recipe);
@@ -44,7 +43,7 @@ export function createUseRecipeSubscription(
       asSubscriptionOptions(
         trpc.recipes.onConverted.subscriptionOptions(undefined, {
           enabled: !!recipeId,
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             if (payload.recipe.id !== recipeId) return;
 
             setRecipeData(() => payload.recipe);
@@ -58,7 +57,7 @@ export function createUseRecipeSubscription(
       asSubscriptionOptions(
         trpc.recipes.onDeleted.subscriptionOptions(undefined, {
           enabled: !!recipeId,
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             if (payload.id !== recipeId) return;
 
             callbacks.onDeleted?.(payload);
@@ -71,7 +70,7 @@ export function createUseRecipeSubscription(
       asSubscriptionOptions(
         trpc.recipes.onFailed.subscriptionOptions(undefined, {
           enabled: !!recipeId,
-          onData: (payload: any) => {
+          onData: ({ payload }: any) => {
             if (payload.recipeId !== recipeId) return;
 
             invalidate();

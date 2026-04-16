@@ -3,6 +3,7 @@
 The app uses Expo Router for file-based routing with `NativeTabs` from `expo-router/unstable-native-tabs` as the tab bar. This abstraction wraps `@react-navigation/bottom-tabs` internally but exposes only a subset of the underlying API. Specifically, `bottomAccessory` (which allows rendering a custom view inline with the collapsed/minimized tab bar) is not exposed through the Expo Router abstraction. The `@react-navigation/bottom-tabs` package (v7.7.3) is already a direct dependency and ships `createNativeBottomTabNavigator` in its `unstable` sub-path export, which surfaces the full native tab bar feature set.
 
 The three target features all come from `createNativeBottomTabNavigator`:
+
 1. `tabBarMinimizeBehavior: "onScrollDown"` — tab bar hides on scroll down, reappears on scroll up (iOS 26+)
 2. `bottomAccessory` — a render prop that injects a component into both the regular (expanded) and inline (collapsed) tab bar positions, used to embed a search bar on the home screen
 3. `tabBarIcon` with a custom image/SF Symbol for the profile tab
@@ -12,6 +13,7 @@ Since Expo Router will continue to own the file-based screen routing, the migrat
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Replace `expo-router/unstable-native-tabs` `NativeTabs` with `createNativeBottomTabNavigator` from `@react-navigation/bottom-tabs/unstable`
 - Enable `tabBarMinimizeBehavior: "onScrollDown"` for all tabs
 - Render a `bottomAccessory` search bar on the Recipes (home) tab that taps through to the existing `/search` route
@@ -19,6 +21,7 @@ Since Expo Router will continue to own the file-based screen routing, the migrat
 - Preserve the four existing tab destinations and their routes
 
 **Non-Goals:**
+
 - Changing the search screen itself (`(tabs)/search.tsx`) — only the entry point changes
 - Adding new tabs or removing existing tabs
 - Implementing a full profile avatar/photo — a custom SF Symbol icon is sufficient

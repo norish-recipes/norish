@@ -38,8 +38,11 @@ Norish is a real-time, household-first recipe app for planning meals, sharing gr
     - [Optional (Parsing + Content Detection)](#optional-parsing--content-detection)
     - [Optional (Scheduler + Upload Limits)](#optional-scheduler--upload-limits)
     - [Optional (Internationalization)](#optional-internationalization)
-  - [Local Development](#local-development)
+  - [Development Setup](#development-setup)
+    - [Devcontainer Development](#devcontainer-development)
+    - [Local Development](#local-development)
     - [Development Commands](#development-commands)
+  - [Recipe API](#recipe-api)
   - [Tech Stack](#tech-stack)
     - [Frontend](#frontend)
     - [Backend](#backend)
@@ -84,7 +87,7 @@ Norish is intentionally minimal. It focuses on practical day-to-day use.
 - **Authentication options**: OIDC, OAuth providers, and first-time password auth fallback.
 - **Admin settings UI** for runtime configuration.
 - **Permission policies** for recipe visibility/edit/delete scopes.
-- **Internationalization (i18n)** currently supporting EN, NL, DE, FR, ES, RU, KO, PL, and DA
+- **Internationalization (i18n)** currently supporting EN, NL, DE, FR, ES, RU, KO, PL, DA, and IT
 
 _Note: AI feature speed can vary by provider, model, and region._
 
@@ -134,7 +137,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          'node -e "require(''http'').get(''http://localhost:3000/api/health'', r => process.exit(r.statusCode===200?0:1))"',
+          'node -e "require(''http'').get(''http://localhost:3000/api/v1/health'', r => process.exit(r.statusCode===200?0:1))"',
         ]
       interval: 1m
       timeout: 15s
@@ -254,6 +257,8 @@ When no component vars are set, the fallback URL is:
 | `TRUSTED_ORIGINS`     | Comma-separated additional trusted origins | (empty)                                           |
 | `UPLOADS_DIR`         | Upload storage directory                   | `./.runtime/uploads` (dev), `/app/uploads` (prod) |
 | `CHROME_WS_ENDPOINT`  | Playwright CDP WebSocket endpoint          | `ws://chrome-headless:3000`                       |
+| `PARSER_API_TIMEOUT_MS` | Parser API timeout in milliseconds       | `15000`                                           |
+| `LEGACY_RECIPE_PARSER_ROLLBACK` | Re-enable deprecated legacy structured parser | `false`                        |
 | `REDIS_URL`           | Redis connection URL                       | `redis://localhost:6379`                          |
 | `ENABLE_REGISTRATION` | Allow new-user registration                | `false`                                           |
 | `AI_ENABLED`          | Enable AI features globally                | `false`                                           |
@@ -305,6 +310,7 @@ These are only used when claim mapping is enabled.
 | `AI_API_KEY`     | API key for provider               | (empty)      |
 | `AI_TEMPERATURE` | Generation temperature             | `1.0`        |
 | `AI_MAX_TOKENS`  | Maximum tokens for model responses | `10000`      |
+| `AI_TIMEOUT_MS`  | Maximum time for AI response (ms)  | `300000`     |
 
 ### Optional Video + Transcription
 
@@ -327,6 +333,15 @@ These are only used when claim mapping is enabled.
 | `CONTENT_INDICATORS`  | Override recipe-content indicator configuration | (empty) |
 | `CONTENT_INGREDIENTS` | Override ingredient-content configuration       | (empty) |
 
+### Parser Rollout And Rollback
+
+- Default non-video URL imports use the Python parser API first.
+- By default, the custom Node server starts and supervises an embedded parser at `http://127.0.0.1:8001`.
+- Norish always talks to the parser on that fixed internal loopback address.
+- Set `LEGACY_RECIPE_PARSER_ROLLBACK=true` and restart Norish to switch structured imports back to the deprecated JSON-LD and microdata parser.
+- Reset `LEGACY_RECIPE_PARSER_ROLLBACK=false` after the parser API is healthy again.
+- Parser failure-code mapping and dependency upgrade workflow live in `apps/parser-api/README.md`.
+
 ### Optional (Scheduler + Upload Limits)
 
 | Variable                   | Description                        | Default     |
@@ -345,7 +360,30 @@ These are only used when claim mapping is enabled.
 
 ---
 
-## Local Development
+## Development Setup
+
+### Devcontainer Development
+
+```bash
+# Open the repository in the provided devcontainer
+# Dependencies are installed automatically via postCreateCommand
+
+# Create your environment file
+cp .env.example .env.local
+
+# Run the web app
+pnpm run dev
+
+# Run the mobile app (Expo)
+pnpm run dev:mobile
+```
+
+### Devcontainer Additional Information
+
+- The devcontainer starts the required dependency services (`db`, `redis`, and `chrome-headless`) for you, so you do not need to run `pnpm run docker:up`.
+- If you want to edit the devcontainer settings just make a copy of the default folder, all folders inside .devcontainers are untracked, except default of course.
+
+### Local Development
 
 ```bash
 # Clone the repository
@@ -355,13 +393,15 @@ cd norish
 # Install dependencies
 pnpm install
 
+# This also runs uv sync --locked in apps/parser-api and creates its .venv
+
 # Create your environment file
 cp .env.example .env.local
 
 # Start required services (Postgres, Redis, Chrome)
 pnpm run docker:up
 
-# Run the web app
+# Run the web app (it also starts the embedded parser from apps/parser-api/.venv)
 pnpm run dev
 
 # Run the mobile app (Expo)
@@ -385,6 +425,49 @@ pnpm run dev:mobile
 | `pnpm run typecheck`     | Run type checking across all workspaces                   |
 | `pnpm run docker:up`     | Start local dependency stack via Compose                  |
 | `pnpm run docker:down`   | Stop local dependency stack                               |
+
+---
+
+## API
+
+Norish exposes an API under `/api/v1`.
+
+- Visual docs: `/api/docs`
+- OpenAPI spec JSON: `/api/openapi.json`
+- Current endpoints:
+  - `GET /api/v1/health` - Public health check for the API and internal parser service.
+  - `GET /api/v1/recipes/{id}`
+  - `POST /api/v1/recipes/search` - List recipes with optional filters.
+  - `POST /api/v1/recipes/import/url`
+  - `POST /api/v1/recipes/import/paste`
+  - `GET /api/v1/groceries`
+  - `POST /api/v1/groceries`
+  - `PATCH /api/v1/groceries/{id}/done`
+  - `PATCH /api/v1/groceries/{id}/undone`
+  - `PATCH /api/v1/groceries/{id}/store`
+  - `DELETE /api/v1/groceries/{id}`
+  - `GET /api/v1/stores`
+  - `POST /api/v1/stores`
+  - `GET /api/v1/planned-recipes/today`
+  - `GET /api/v1/planned-recipes/week`
+  - `GET /api/v1/planned-recipes/month`
+  - `POST /api/v1/planned-recipes`
+  - `DELETE /api/v1/planned-recipes/{itemId}`
+
+Authentication:
+
+- `x-api-key: <your-api-key>`
+- `Authorization: Bearer <your-api-key>`
+
+Notes:
+
+- `/api/docs` and `/api/openapi.json` require a signed-in web session.
+- `GET /api/v1/health` is public and returns `200` only when the API and parser service are both healthy.
+- Other documented `/api/v1` endpoints require API credentials.
+- `POST /api/v1/recipes/search` returns a paginated recipe list. Optional filters include `search`, `searchFields`, `tags`, `categories`, `filterMode`, `sortMode`, `minRating`, and `maxCookingTime`. `cursor` defaults to `0` and `limit` defaults to `50`.
+- Grocery mutation endpoints that target a single grocery require a `version` field for optimistic concurrency.
+- `PATCH /api/v1/groceries/{id}/store` accepts `storeId` and optional `savePreference` in the request body.
+- Planned recipe range endpoints use the server timezone for today/week/month boundaries. The week range is Monday through Sunday.
 
 ---
 

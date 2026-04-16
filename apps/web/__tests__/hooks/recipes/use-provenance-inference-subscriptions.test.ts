@@ -34,15 +34,15 @@ describe("useProvenanceInferenceSubscriptions", () => {
     (globalThis as any).simulateSubscriptionCallbacks = [];
   });
 
-  it("should initialize with isInferring false", () => {
+  it("should initialize cleanly", () => {
     const { result } = renderHook(() => useProvenanceInferenceSubscriptions("recipe-1"));
 
-    expect(result.current.isInferring).toBe(false);
+    expect(result.current).toBeUndefined();
   });
 
   it("should call onStarted when started", () => {
     const onStarted = vi.fn();
-    const { result } = renderHook(() => useProvenanceInferenceSubscriptions("recipe-1", onStarted));
+    renderHook(() => useProvenanceInferenceSubscriptions("recipe-1", onStarted));
 
     // Simulate started event
     act(() => {
@@ -55,6 +55,5 @@ describe("useProvenanceInferenceSubscriptions", () => {
     });
 
     expect(onStarted).toHaveBeenCalled();
-    expect(result.current.isInferring).toBe(true);
   });
 });

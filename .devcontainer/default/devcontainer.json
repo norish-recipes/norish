@@ -1,0 +1,85 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-postgres
+{
+  "name": "Norish Default Devcontainer",
+  "dockerComposeFile": [
+    "compose.devcontainer.yaml",
+    "../../docker/compose.base.yaml",
+    "compose.devcontainer.yaml"
+    // compose.devcontainer.yaml is added twice intentionally
+    // When merging compose files the first compose path is used as the relative for all of them
+    // So putting it first allows to use it's path then it gets overwritten by base and overwrites it again.
+    // From docker docs:
+    // When you use multiple Compose files, all paths in the files are relative to the first configuration file specified with -f. You can use the --project-directory option to override this base path.
+    // no project-directory arg in devcontainer.json so have to resort to this.
+  ],
+  "service": "norish-devcontainer",
+  "runServices": [
+    "norish-devcontainer",
+    "db",
+    "redis",
+    "chrome-headless"
+  ],
+  "initializeCommand": "bash .devcontainer/make_hostip_env_for_expo.sh", // Script that gets host ip and saves it to .devcontainer/.env REACT_NATIVE_PACKAGER_HOSTNAME, necessary for expo in devcontainer
+  "shutdownAction": "stopCompose",
+  "workspaceFolder": "/workspaces/norish",
+  "containerEnv": {
+    "AUTH_URL": "http://localhost:3000",
+    "DATABASE_URL": "postgres://postgres:norish@db:5432/norish",
+    "CHROME_WS_ENDPOINT": "ws://chrome-headless:3003",
+    "REDIS_URL": "redis://redis:6379"
+    // "REACT_NATIVE_PACKAGER_HOSTNAME": "Your host local ip", // Optiional: Use only if the automatic approach is not working for you for some reason, this takes precedence over the .env file 
+  },
+  "forwardPorts": [
+    3000,
+    8081
+  ], // 3000 for web, 8081 for expo
+  "postCreateCommand": "pnpm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "steoates.autoimport",
+        "formulahendry.auto-rename-tag",
+        "ms-azuretools.vscode-docker",
+        "mikestead.dotenv",
+        "dsznajder.es7-react-js-snippets",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-playwright.playwright",
+        "yoavbls.pretty-ts-errors",
+        "bradlc.vscode-tailwindcss",
+        "wayou.vscode-todo-highlight",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "always",
+          "source.organizeImports": "never"
+        },
+        "eslint.validate": [
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact"
+        ],
+        "eslint.useFlatConfig": true,
+        "eslint.workingDirectories": [
+          {
+            "pattern": "apps/*/"
+          },
+          {
+            "pattern": "packages/*/"
+          },
+          {
+            "pattern": "tooling/*/"
+          }
+        ],
+        "prettier.prettierPath": "./node_modules/prettier",
+        "prettier.requireConfig": true
+      }
+    }
+  }
+}

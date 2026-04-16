@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "Clés API",
       "description": "Les clés API permettent un accès programmatique à l’API Norish. Utilisez-les pour des intégrations, raccourcis et automatisations.",
+      "docsLink": "Ouvrir la documentation de l’API",
       "keyNameLabel": "Nom de la clé (optionnel)",
       "keyNamePlaceholder": "ex. : Raccourci iOS",
       "createKey": "Créer une clé",
@@ -127,6 +128,33 @@
         "description": "Afficher les icônes de favoris/cœur sur les cartes de recettes et les pages de détail"
       },
       "applyError": "Échec de l'application du paramètre"
+    },
+    "shareLinks": {
+      "title": "Liens de partage de recettes",
+      "description": "Consultez et gérez tous les liens publics de recettes que vous avez créés.",
+      "empty": "Aucun lien de partage trouvé.",
+      "table": {
+        "recipe": "RECETTE",
+        "status": "STATUT",
+        "created": "CRÉÉ",
+        "expires": "EXPIRE",
+        "actions": "ACTIONS"
+      },
+      "revokeModal": {
+        "title": "Révoquer le lien",
+        "message": "Ce lien pour {recipeName} cessera de fonctionner jusqu'à ce que vous le réactiviez.",
+        "confirm": "Révoquer"
+      },
+      "reactivateModal": {
+        "title": "Réactiver le lien",
+        "message": "Ce lien pour {recipeName} redeviendra actif.",
+        "confirm": "Réactiver"
+      },
+      "deleteModal": {
+        "title": "Supprimer le lien",
+        "message": "Supprimer ce lien de partage pour {recipeName} ? Cette action est irréversible.",
+        "confirm": "Supprimer le lien"
+      }
     }
   },
   "household": {
@@ -179,7 +207,9 @@
       "regenerateButton": "Régénérer",
       "expired": "Expiré",
       "noCodeDescription": "Aucun code actif. Générez-en un pour inviter de nouveaux membres.",
-      "generateButton": "Générer un code"
+      "generateButton": "Générer un code",
+      "copySuccess": "Code copié",
+      "copyFailed": "Impossible de copier le code"
     },
     "create": {
       "title": "Créer un foyer",
@@ -275,6 +305,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Modération du partage de recettes",
+      "description": "Consultez les liens publics de recettes sur toute l'instance et modérez leur cycle de vie.",
+      "empty": "Aucun lien de partage trouvé.",
+      "table": {
+        "recipe": "RECETTE",
+        "owner": "PROPRIÉTAIRE",
+        "status": "STATUT",
+        "created": "CRÉÉ",
+        "expires": "EXPIRE",
+        "actions": "ACTIONS"
+      },
+      "revokeModal": {
+        "title": "Révoquer le lien",
+        "message": "Ce lien pour {recipeName} cessera de fonctionner jusqu'à ce qu'il soit réactivé.",
+        "confirm": "Révoquer"
+      },
+      "reactivateModal": {
+        "title": "Réactiver le lien",
+        "message": "Ce lien pour {recipeName} redeviendra actif.",
+        "confirm": "Réactiver"
+      },
+      "deleteModal": {
+        "title": "Supprimer le lien",
+        "message": "Supprimer ce lien de partage pour {recipeName} ? Cette action est irréversible.",
+        "confirm": "Supprimer le lien"
+      }
+    },
     "general": {
       "title": "Général",
       "allowRegistration": "Autoriser l'inscription de nouveaux utilisateurs",
@@ -492,6 +550,7 @@
       "temperature": "Température : {value}",
       "temperatureHint": "Bas = plus précis, Haut = plus créatif",
       "maxTokens": "Tokens max",
+      "requestTimeout": "Délai d'expiration (ms)",
       "autoTagAllergies": "Détection auto des tags d’allergies",
       "autoTagAllergiesDescription": "Ajoute automatiquement des tags liés aux allergies lors de l’import",
       "alwaysUseAI": "Toujours utiliser l’import IA",
@@ -529,6 +588,8 @@
       "maxFileSizeDescription": "Taille maximale des fichiers vidéo téléchargés",
       "ytDlpVersion": "Version de yt-dlp",
       "ytDlpVersionDescription": "Version utilisée pour les téléchargements vidéo",
+      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxyDescription": "Proxy HTTP/SOCKS5 pour yt-dlp",
       "transcription": "Transcription",
       "transcriptionDescription": "Convertit l’audio en texte pour extraire les recettes",
       "transcriptionProvider": "Fournisseur de transcription",

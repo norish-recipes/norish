@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { versionColumn } from "./shared";
 
 export const caldavItemTypes = ["recipe", "note"] as const;
 export const caldavSyncStatuses = ["pending", "synced", "failed", "removed"] as const;
@@ -35,6 +36,7 @@ export const caldavSyncStatus = pgTable(
     lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    ...versionColumn,
   },
   (t) => [
     unique("uq_caldav_sync_user_item").on(t.userId, t.itemId),

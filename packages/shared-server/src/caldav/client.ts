@@ -1,3 +1,6 @@
+import { DAVCalendar, DAVClient } from "tsdav";
+import { v4 as uuidv4 } from "uuid";
+
 import type {
   CalDavCalendarInfo,
   CalDavClientOptions,
@@ -5,9 +8,6 @@ import type {
   CreatedEvent,
   CreateEventInput,
 } from "@norish/shared/contracts/dto/caldav";
-
-import { DAVCalendar, DAVClient } from "tsdav";
-import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "@norish/shared-server/logger";
 
 import { buildIcs } from "./ics-helpers";
@@ -115,7 +115,13 @@ export class CalDavClient {
     }
 
     // Fall back to first calendar
-    return calendars[0];
+    const firstCalendar = calendars[0];
+
+    if (!firstCalendar) {
+      throw new Error("No calendars found on the server");
+    }
+
+    return firstCalendar;
   }
 
   /**

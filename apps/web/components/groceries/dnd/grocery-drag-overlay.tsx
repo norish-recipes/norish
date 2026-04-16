@@ -1,14 +1,12 @@
 "use client";
 
-import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
-
+import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Bars3Icon } from "@heroicons/react/16/solid";
 import { Checkbox } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
-import { useUnitFormatter } from "@/hooks/use-unit-formatter";
-
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
 interface GroceryDragOverlayProps {
   grocery: GroceryDto;

@@ -1,8 +1,7 @@
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useMutation } from "@tanstack/react-query";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
+import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseAllergyDetection({ useTRPC }: CreateRecipeHooksOptions) {
   return function useAllergyDetection(
@@ -15,7 +14,7 @@ export function createUseAllergyDetection({ useTRPC }: CreateRecipeHooksOptions)
     useSubscription(
       trpc.recipes.onAllergyDetectionStarted.subscriptionOptions(undefined, {
         enabled: !!recipeId,
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           if (payload.recipeId === recipeId) {
             onStarted();
           }
@@ -26,7 +25,7 @@ export function createUseAllergyDetection({ useTRPC }: CreateRecipeHooksOptions)
     useSubscription(
       trpc.recipes.onFailed.subscriptionOptions(undefined, {
         enabled: !!recipeId,
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           if (payload.recipeId === recipeId) {
             onCompleted();
           }
@@ -37,7 +36,7 @@ export function createUseAllergyDetection({ useTRPC }: CreateRecipeHooksOptions)
     useSubscription(
       trpc.recipes.onAllergyDetectionCompleted.subscriptionOptions(undefined, {
         enabled: !!recipeId,
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           if (payload.recipeId === recipeId) {
             onCompleted();
           }

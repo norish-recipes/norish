@@ -10,10 +10,10 @@
  */
 
 import type { RedisOptions } from "ioredis";
-
 import Redis from "ioredis";
-import { createLogger } from "@norish/shared-server/logger";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { createLogger } from "@norish/shared-server/logger";
 
 const log = createLogger("redis:bullmq");
 

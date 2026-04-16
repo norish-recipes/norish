@@ -1,7 +1,5 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Image } from 'expo-image';
-import { GlassView } from 'expo-glass-effect';
-import React, { useRef, useState } from 'react';
+import type { ViewToken } from "react-native";
+import React, { useRef, useState } from "react";
 import {
   FlatList,
   Modal,
@@ -10,9 +8,11 @@ import {
   Text,
   useWindowDimensions,
   View,
-  type ViewToken,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { GlassView } from "expo-glass-effect";
+import { Image } from "expo-image";
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -29,12 +29,7 @@ type Props = {
  * Full-screen image carousel modal with swipe navigation, counter,
  * and a liquid-glass close button.
  */
-export function MediaCarouselModal({
-  visible,
-  images,
-  startIndex = 0,
-  onClose,
-}: Props) {
+export function MediaCarouselModal({ visible, images, startIndex = 0, onClose }: Props) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(startIndex);
@@ -47,13 +42,11 @@ export function MediaCarouselModal({
     }
   }, [visible, startIndex]);
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems[0]) {
-        setActiveIndex(viewableItems[0].index ?? 0);
-      }
-    },
-  ).current;
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems[0]) {
+      setActiveIndex(viewableItems[0].index ?? 0);
+    }
+  }).current;
 
   const viewabilityConfig = useRef({
     viewAreaCoveragePercentThreshold: 50,
@@ -71,10 +64,10 @@ export function MediaCarouselModal({
       <View className="flex-1 bg-black/95">
         {/* Header bar */}
         <View
-          className="absolute top-0 left-0 right-0 z-10 flex-row justify-between items-center px-4 pb-3"
+          className="absolute top-0 right-0 left-0 z-10 flex-row items-center justify-between px-4 pb-3"
           style={{ paddingTop: insets.top + 8 }}
         >
-          <Text className="text-white text-[15px] font-semibold">
+          <Text className="text-[15px] font-semibold text-white">
             {activeIndex + 1} / {images.length}
           </Text>
 
@@ -107,8 +100,8 @@ export function MediaCarouselModal({
               style={{
                 width,
                 height,
-                justifyContent: 'center',
-                alignItems: 'center',
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
               <Image
@@ -123,16 +116,14 @@ export function MediaCarouselModal({
 
         {/* Bottom pagination bar */}
         <View
-          className="absolute bottom-0 left-0 right-0 flex-row justify-center items-center gap-1.5"
+          className="absolute right-0 bottom-0 left-0 flex-row items-center justify-center gap-1.5"
           style={{ paddingBottom: insets.bottom + 12 }}
         >
           {images.map((_, i) => (
             <View
               key={i}
               className={`rounded ${
-                i === activeIndex
-                  ? 'size-2 bg-white'
-                  : 'size-1.5 bg-white/40'
+                i === activeIndex ? "size-2 bg-white" : "size-1.5 bg-white/40"
               }`}
             />
           ))}
@@ -149,7 +140,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

@@ -1,13 +1,11 @@
 "use client";
 
-import type { Locale } from "@norish/i18n/config";
-
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { DEFAULT_LOCALE, isValidLocale } from "@norish/i18n/config";
-
 import { useLocaleConfigQuery } from "@/hooks/config";
 
+import type { Locale } from "@norish/i18n/config";
+import { DEFAULT_LOCALE, isValidLocale } from "@norish/i18n/config";
 
 const LOCALE_COOKIE_NAME = "NEXT_LOCALE";
 

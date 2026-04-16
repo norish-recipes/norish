@@ -1,11 +1,11 @@
+import { and, eq, sql } from "drizzle-orm";
+
 import type {
   SaveCaldavConfigInputDto,
   UserCaldavConfigDecryptedDto,
   UserCaldavConfigDto,
   UserCaldavConfigInsertDto,
 } from "@norish/shared/contracts/dto/caldav-config";
-
-import { eq } from "drizzle-orm";
 import { decrypt, encrypt } from "@norish/auth/crypto";
 import { db } from "@norish/db/drizzle";
 import { userCaldavConfig } from "@norish/db/schema";
@@ -13,6 +13,9 @@ import {
   SaveCaldavConfigInputSchema,
   UserCaldavConfigSelectSchema,
 } from "@norish/shared/contracts/zod/caldav-config";
+
+import type { MutationOutcome } from "./mutation-outcomes";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 export async function getCaldavConfigByUserId(userId: string): Promise<UserCaldavConfigDto | null> {
   const rows = await db
@@ -50,6 +53,7 @@ export async function getCaldavConfigDecrypted(
     lunchTime: config.lunchTime,
     dinnerTime: config.dinnerTime,
     snackTime: config.snackTime,
+    version: config.version,
     createdAt: config.createdAt,
     updatedAt: config.updatedAt,
   };
@@ -76,6 +80,7 @@ export async function getCaldavConfigWithoutPassword(
     lunchTime: config.lunchTime,
     dinnerTime: config.dinnerTime,
     snackTime: config.snackTime,
+    version: config.version,
     createdAt: config.createdAt,
     updatedAt: config.updatedAt,
   };
@@ -84,7 +89,7 @@ export async function getCaldavConfigWithoutPassword(
 export async function saveCaldavConfig(
   userId: string,
   input: SaveCaldavConfigInputDto
-): Promise<UserCaldavConfigDto> {
+): Promise<MutationOutcome<UserCaldavConfigDto>> {
   const validated = SaveCaldavConfigInputSchema.safeParse(input);
 
   if (!validated.success) throw new Error("Invalid CalDAV config input");
@@ -101,28 +106,63 @@ export async function saveCaldavConfig(
     dinnerTime: validated.data.dinnerTime,
     snackTime: validated.data.snackTime,
   };
+  const requestedVersion = (input as { version?: number }).version;
 
-  const [row] = await db
-    .insert(userCaldavConfig)
-    .values(encrypted)
-    .onConflictDoUpdate({
-      target: userCaldavConfig.userId,
-      set: {
+  const existing = await getCaldavConfigByUserId(userId);
+
+  let row: UserCaldavConfigDto | undefined;
+
+  if (!existing) {
+    [row] = await db.insert(userCaldavConfig).values(encrypted).returning();
+  } else {
+    const whereConditions = [eq(userCaldavConfig.userId, userId)];
+
+    if (requestedVersion) {
+      whereConditions.push(eq(userCaldavConfig.version, requestedVersion));
+    }
+
+    [row] = await db
+      .update(userCaldavConfig)
+      .set({
         ...encrypted,
         updatedAt: new Date(),
-      },
-    })
-    .returning();
+        version: sql`${userCaldavConfig.version} + 1`,
+      })
+      .where(and(...whereConditions))
+      .returning();
+  }
+
+  if (!row) {
+    return staleOutcome();
+  }
 
   const result = UserCaldavConfigSelectSchema.safeParse(row);
 
   if (!result.success) throw new Error("Failed to save CalDAV config");
 
-  return result.data;
+  return appliedOutcome(result.data);
 }
 
-export async function deleteCaldavConfig(userId: string): Promise<void> {
-  await db.delete(userCaldavConfig).where(eq(userCaldavConfig.userId, userId));
+export async function deleteCaldavConfig(
+  userId: string,
+  version?: number
+): Promise<MutationOutcome<void>> {
+  const whereConditions = [eq(userCaldavConfig.userId, userId)];
+
+  if (version) {
+    whereConditions.push(eq(userCaldavConfig.version, version));
+  }
+
+  const deleted = await db
+    .delete(userCaldavConfig)
+    .where(and(...whereConditions))
+    .returning({ userId: userCaldavConfig.userId });
+
+  if (deleted.length === 0 && version) {
+    return staleOutcome();
+  }
+
+  return appliedOutcome(undefined);
 }
 
 export async function getEnabledCaldavConfigs(): Promise<UserCaldavConfigDto[]> {
@@ -160,6 +200,7 @@ export async function getHouseholdCaldavConfigs(
       lunchTime: row.lunchTime,
       dinnerTime: row.dinnerTime,
       snackTime: row.snackTime,
+      version: row.version,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

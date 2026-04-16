@@ -39,6 +39,7 @@ describe("useFavoritesQuery", () => {
       });
 
       expect(result.current.favoriteIds).toEqual([]);
+      expect(result.current.favoriteVersions).toEqual({});
     });
 
     it("returns loading state initially", () => {
@@ -59,10 +60,11 @@ describe("useFavoritesQuery", () => {
   describe("data fetching", () => {
     it("returns favoriteIds after successful fetch", async () => {
       const mockIds = ["recipe-1", "recipe-2", "recipe-3"];
+      const mockVersions = { "recipe-1": 1, "recipe-2": 2, "recipe-3": 3 };
 
       mockQueryOptions.mockReturnValue({
         queryKey: mockQueryKey,
-        queryFn: async () => createMockFavoritesData(mockIds),
+        queryFn: async () => createMockFavoritesData(mockIds, mockVersions),
       });
 
       const { renderHook } = require("@testing-library/react");
@@ -75,6 +77,8 @@ describe("useFavoritesQuery", () => {
       });
 
       expect(result.current.favoriteIds).toEqual(mockIds);
+      expect(result.current.favoriteVersions).toEqual(mockVersions);
+      expect(result.current.getFavoriteVersion("recipe-2")).toBe(2);
     });
   });
 

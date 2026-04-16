@@ -1,1 +1,1 @@
-export { CookModeModal } from './cook-mode-modal';
+export { CookModeModal } from "./cook-mode-modal";

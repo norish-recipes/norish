@@ -1,9 +1,8 @@
-import type { Server } from "node:http";
-
 import { randomUUID } from "node:crypto";
-
+import type { Server } from "node:http";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import * as wsModule from "ws";
+
 import { auth } from "@norish/auth/auth";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { trpcLogger } from "@norish/shared-server/logger";
@@ -105,7 +104,7 @@ export function initTrpcWebSocket(server: Server) {
       return;
     }
 
-    trpcWss!.handleUpgrade(req, socket, head, (ws) => {
+    trpcWss!.handleUpgrade(req, socket, head, (ws: wsModule.WebSocket) => {
       // Generate unique connection ID for multiplexer management
       const connectionId = randomUUID();
 

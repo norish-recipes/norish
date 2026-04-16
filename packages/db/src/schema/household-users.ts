@@ -2,6 +2,7 @@ import { index, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/p
 
 import { users } from "./auth";
 import { households } from "./households";
+import { versionColumn } from "./shared";
 
 export const householdUsers = pgTable(
   "household_users",
@@ -13,6 +14,7 @@ export const householdUsers = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    ...versionColumn,
   },
   (t) => [
     primaryKey({

@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import { MiniCalendar } from "@/components/Panel/consumers";
+import { useRecipeQuery } from "@/hooks/recipes";
 import { CalendarDaysIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import { useRecipeQuery } from "@/hooks/recipes";
-import { MiniCalendar } from "@/components/Panel/consumers";
 
 type Props = {
   recipeId: string;

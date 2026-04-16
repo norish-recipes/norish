@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API Keys",
       "description": "API keys allow programmatic access to the Norish API. Use them for integrations, shortcuts, and automation.",
+      "docsLink": "Open API docs",
       "keyNameLabel": "Key Name (optional)",
       "keyNamePlaceholder": "e.g., iOS Shortcut",
       "createKey": "Create Key",
@@ -127,6 +128,33 @@
         "description": "Display favorite/heart icons on recipe cards and detail pages"
       },
       "applyError": "Failed to apply preference"
+    },
+    "shareLinks": {
+      "title": "Recipe share links",
+      "description": "Review and manage every public recipe link you have created.",
+      "empty": "No share links found.",
+      "table": {
+        "recipe": "RECIPE",
+        "status": "STATUS",
+        "created": "CREATED",
+        "expires": "EXPIRES",
+        "actions": "ACTIONS"
+      },
+      "revokeModal": {
+        "title": "Revoke link",
+        "message": "This link for {recipeName} will stop working until you reactivate it.",
+        "confirm": "Revoke"
+      },
+      "reactivateModal": {
+        "title": "Reactivate link",
+        "message": "This link for {recipeName} will become active again.",
+        "confirm": "Reactivate"
+      },
+      "deleteModal": {
+        "title": "Delete link",
+        "message": "Delete this share link for {recipeName}? This cannot be undone.",
+        "confirm": "Delete link"
+      }
     }
   },
   "household": {
@@ -179,7 +207,9 @@
       "regenerateButton": "Regenerate",
       "expired": "Expired",
       "noCodeDescription": "No active join code. Generate one to invite new members.",
-      "generateButton": "Generate Join Code"
+      "generateButton": "Generate Join Code",
+      "copySuccess": "Join code copied",
+      "copyFailed": "Failed to copy join code"
     },
     "create": {
       "title": "Create Household",
@@ -275,6 +305,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Recipe share moderation",
+      "description": "Review public recipe links across the instance and moderate their lifecycle.",
+      "empty": "No share links found.",
+      "table": {
+        "recipe": "RECIPE",
+        "owner": "OWNER",
+        "status": "STATUS",
+        "created": "CREATED",
+        "expires": "EXPIRES",
+        "actions": "ACTIONS"
+      },
+      "revokeModal": {
+        "title": "Revoke link",
+        "message": "This link for {recipeName} will stop working until it is reactivated.",
+        "confirm": "Revoke"
+      },
+      "reactivateModal": {
+        "title": "Reactivate link",
+        "message": "This link for {recipeName} will become active again.",
+        "confirm": "Reactivate"
+      },
+      "deleteModal": {
+        "title": "Delete link",
+        "message": "Delete this share link for {recipeName}? This cannot be undone.",
+        "confirm": "Delete link"
+      }
+    },
     "general": {
       "title": "General",
       "allowRegistration": "Allow new user registration",
@@ -492,6 +550,7 @@
       "temperature": "Temperature: {value}",
       "temperatureHint": "Lower = more focused, Higher = more creative",
       "maxTokens": "Max Tokens",
+      "requestTimeout": "Request Timeout (ms)",
       "autoTagAllergies": "Auto-detect Allergy Tags",
       "autoTagAllergiesDescription": "Automatically add allergy-related tags when importing recipes",
       "alwaysUseAI": "Always Use AI Importing",
@@ -530,6 +589,8 @@
       "maxFileSizeDescription": "Maximum size for downloaded video files",
       "ytDlpVersion": "yt-dlp Version",
       "ytDlpVersionDescription": "Version of yt-dlp to use for video downloads",
+      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxyDescription": "HTTP/SOCKS5 proxy for yt-dlp",
       "transcription": "Transcription",
       "transcriptionDescription": "Convert video audio to text for recipe extraction",
       "transcriptionProvider": "Transcription Provider",

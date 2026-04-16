@@ -1,7 +1,6 @@
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useMutation } from "@tanstack/react-query";
 
+import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseRecipeImages({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRecipeImages() {
@@ -28,7 +27,8 @@ export function createUseRecipeImages({ useTRPC }: CreateRecipeHooksOptions) {
       uploadGalleryImageData: (
         input: Parameters<typeof uploadGalleryImageMutation.mutateAsync>[0]
       ) => uploadGalleryImageMutation.mutateAsync(input),
-      deleteGalleryImage: (imageId: string) => deleteGalleryImageMutation.mutateAsync({ imageId }),
+      deleteGalleryImage: (imageId: string, version: number) =>
+        deleteGalleryImageMutation.mutateAsync({ imageId, version }),
       isUploadingImage: uploadImageMutation.isPending,
       isDeletingImage: deleteImageMutation.isPending,
       isUploadingStepImage: uploadStepImageMutation.isPending,

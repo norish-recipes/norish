@@ -214,7 +214,7 @@ describe("Tandoor Parser", () => {
     });
 
     it("converts Tandoor recipe to DTO", async () => {
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.name).toBe("'Bami'");
       expect(dto.description).toContain("bami");
@@ -227,7 +227,7 @@ describe("Tandoor Parser", () => {
     });
 
     it("flattens ingredients from all steps", async () => {
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.recipeIngredients).toHaveLength(2);
       expect(dto.recipeIngredients![0].ingredientName).toBe("mienestjes");
@@ -239,7 +239,7 @@ describe("Tandoor Parser", () => {
     });
 
     it("maps steps correctly (ignoring nested ingredients)", async () => {
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.steps).toHaveLength(2);
       expect(dto.steps![0].step).toBe(
@@ -258,14 +258,14 @@ describe("Tandoor Parser", () => {
         },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.steps).toHaveLength(1);
       expect(dto.steps![0].step).toBe("**Step Note** Do the thing");
     });
 
     it("extracts tags from keywords", async () => {
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.tags).toHaveLength(3);
       expect(dto.tags![0].name).toBe("hoofdgerecht");
@@ -280,7 +280,7 @@ describe("Tandoor Parser", () => {
         { name: "snack", description: "" },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.categories).toContain("Breakfast");
       expect(dto.categories).toContain("Dinner");
@@ -295,7 +295,7 @@ describe("Tandoor Parser", () => {
         { name: "Collation", description: "" },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.categories).toContain("Breakfast");
       expect(dto.categories).toContain("Lunch");
@@ -307,7 +307,7 @@ describe("Tandoor Parser", () => {
       mockRecipe.working_time = 20;
       mockRecipe.waiting_time = 40;
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.prepMinutes).toBe(20);
       expect(dto.cookMinutes).toBe(40);
@@ -318,7 +318,7 @@ describe("Tandoor Parser", () => {
       mockRecipe.working_time = null;
       mockRecipe.waiting_time = null;
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.prepMinutes).toBeUndefined();
       expect(dto.cookMinutes).toBeUndefined();
@@ -327,7 +327,11 @@ describe("Tandoor Parser", () => {
 
     it("saves image when buffer provided", async () => {
       const imageBuffer = Buffer.from("fake-image-data");
-      const dto = await parseTandoorRecipeToDTO(mockRecipe, imageBuffer);
+      const dto = await parseTandoorRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        imageBuffer
+      );
 
       expect(dto.image).toBe("mocked-image-guid");
     });
@@ -348,7 +352,7 @@ describe("Tandoor Parser", () => {
         },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.systemUsed).toBe("us");
       expect(dto.recipeIngredients![0].systemUsed).toBe("us");
@@ -370,7 +374,7 @@ describe("Tandoor Parser", () => {
         },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       // Metric should win (1 vs 1, ties go to metric)
       expect(dto.systemUsed).toBe("metric");
@@ -394,7 +398,7 @@ describe("Tandoor Parser", () => {
         },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.recipeIngredients).toHaveLength(1);
       expect(dto.recipeIngredients![0].ingredientName).toBe("flour");
@@ -419,7 +423,7 @@ describe("Tandoor Parser", () => {
         },
       ];
 
-      const dto = await parseTandoorRecipeToDTO(mockRecipe);
+      const dto = await parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000");
 
       expect(dto.steps).toHaveLength(1);
       expect(dto.steps![0].step).toBe("Valid step");
@@ -428,7 +432,9 @@ describe("Tandoor Parser", () => {
     it("throws on missing recipe name", async () => {
       mockRecipe.name = "";
 
-      await expect(parseTandoorRecipeToDTO(mockRecipe)).rejects.toThrow("Missing recipe name");
+      await expect(
+        parseTandoorRecipeToDTO(mockRecipe, "123e4567-e89b-42d3-a456-426614174000")
+      ).rejects.toThrow("Missing recipe name");
     });
   });
 

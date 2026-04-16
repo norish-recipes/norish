@@ -2,8 +2,6 @@
  * AI Provider Factory - Creates AI model instances from configuration.
  */
 
-import type { AIProvider, GenerationSettings, ModelConfig } from "./types";
-
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAzure } from "@ai-sdk/azure";
 import { createDeepSeek } from "@ai-sdk/deepseek";
@@ -14,9 +12,12 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createPerplexity } from "@ai-sdk/perplexity";
 import { createOllama } from "ai-sdk-ollama";
+
 import { getAIConfig } from "@norish/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
+import type { AIProvider, GenerationSettings, ModelConfig } from "./types";
+import { createFetchWithTimeout } from "./ai-fetcher";
 
 /**
  * Get configured AI models.
@@ -42,16 +43,20 @@ export function createModelsFromConfig(config: {
   visionModel?: string;
   endpoint?: string;
   apiKey?: string;
+  timeoutMs?: number;
 }): ModelConfig {
-  const { provider, model, visionModel, endpoint, apiKey } = config;
+  const { provider, model, visionModel, endpoint, apiKey, timeoutMs } = config;
 
   aiLogger.debug({ provider, model, visionModel }, "Creating AI models");
+
+  // Create a custom fetch that maintains a singleton Undici Agent cache
+  const customFetch = createFetchWithTimeout(timeoutMs as number);
 
   switch (provider) {
     case "openai": {
       if (!apiKey) throw new Error("API Key is required for OpenAI provider");
 
-      const openai = createOpenAI({ apiKey });
+      const openai = createOpenAI({ apiKey, fetch: customFetch });
 
       return {
         model: openai(model),
@@ -65,7 +70,7 @@ export function createModelsFromConfig(config: {
 
       // ai-sdk-ollama uses the Ollama host directly (e.g. http://localhost:11434)
       const ollamaBaseUrl = endpoint.replace(/\/+$/, "").replace(/\/api$/, "");
-      const ollama = createOllama({ baseURL: ollamaBaseUrl });
+      const ollama = createOllama({ baseURL: ollamaBaseUrl, fetch: customFetch });
 
       return {
         model: ollama(model, { structuredOutputs: true }),
@@ -90,6 +95,7 @@ export function createModelsFromConfig(config: {
         baseURL: normalizedEndpoint,
         headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : undefined,
         supportsStructuredOutputs: true,
+        fetch: customFetch,
       });
 
       return {
@@ -103,7 +109,7 @@ export function createModelsFromConfig(config: {
       if (!apiKey) throw new Error("API Key is required for Perplexity provider");
 
       // Use the official Perplexity AI SDK provider
-      const perplexity = createPerplexity({ apiKey });
+      const perplexity = createPerplexity({ apiKey, fetch: customFetch });
 
       return {
         model: perplexity(model),
@@ -125,9 +131,9 @@ export function createModelsFromConfig(config: {
           baseUrl = `${baseUrl}/openai`;
         }
 
-        azure = createAzure({ apiKey, baseURL: baseUrl });
+        azure = createAzure({ apiKey, baseURL: baseUrl, fetch: customFetch });
       } else {
-        azure = createAzure({ apiKey });
+        azure = createAzure({ apiKey, fetch: customFetch });
       }
 
       return {
@@ -140,7 +146,7 @@ export function createModelsFromConfig(config: {
     case "mistral": {
       if (!apiKey) throw new Error("API Key is required for Mistral provider");
 
-      const mistral = createMistral({ apiKey });
+      const mistral = createMistral({ apiKey, fetch: customFetch });
 
       return {
         model: mistral(model),
@@ -152,7 +158,7 @@ export function createModelsFromConfig(config: {
     case "anthropic": {
       if (!apiKey) throw new Error("API Key is required for Anthropic provider");
 
-      const anthropic = createAnthropic({ apiKey });
+      const anthropic = createAnthropic({ apiKey, fetch: customFetch });
 
       return {
         model: anthropic(model),
@@ -164,7 +170,7 @@ export function createModelsFromConfig(config: {
     case "deepseek": {
       if (!apiKey) throw new Error("API Key is required for DeepSeek provider");
 
-      const deepseek = createDeepSeek({ apiKey });
+      const deepseek = createDeepSeek({ apiKey, fetch: customFetch });
 
       return {
         model: deepseek(model),
@@ -176,7 +182,7 @@ export function createModelsFromConfig(config: {
     case "google": {
       if (!apiKey) throw new Error("API Key is required for Google AI provider");
 
-      const google = createGoogleGenerativeAI({ apiKey });
+      const google = createGoogleGenerativeAI({ apiKey, fetch: customFetch });
 
       return {
         model: google(model),
@@ -188,7 +194,7 @@ export function createModelsFromConfig(config: {
     case "groq": {
       if (!apiKey) throw new Error("API Key is required for Groq provider");
 
-      const groq = createGroq({ apiKey });
+      const groq = createGroq({ apiKey, fetch: customFetch });
 
       return {
         model: groq(model),
@@ -212,5 +218,6 @@ export async function getGenerationSettings(): Promise<GenerationSettings> {
   return {
     temperature: config?.temperature,
     maxOutputTokens: config?.maxTokens,
+    abortSignal: AbortSignal.timeout(config?.timeoutMs as number),
   };
 }

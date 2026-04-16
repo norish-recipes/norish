@@ -6,26 +6,31 @@
  */
 
 import type { Job } from "bullmq";
-import type { PasteImportJobData } from "@norish/queue/contracts/job-types";
+
+import type {
+  PasteImportJobData,
+  PasteImportJobResult,
+  StructuredPasteImportRecipe,
+} from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import type { PolicyEmitContext } from "@norish/trpc/helpers";
-
-import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
-import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
-import { createLogger } from "@norish/shared-server/logger";
-import { extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
-import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
 import {
   getAIConfig,
   getRecipePermissionPolicy,
   isAIEnabled,
 } from "@norish/config/server-config-loader";
 import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@norish/db";
+import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
+import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getQueues } from "@norish/queue/registry";
+import { createLogger } from "@norish/shared-server/logger";
+import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
+import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
+import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
@@ -43,24 +48,6 @@ function escapeHtml(text: string): string {
     .replaceAll("'", "&#39;");
 }
 
-function looksLikeJson(text: string): boolean {
-  const t = text.trim();
-
-  if (t.startsWith("{") || t.startsWith("[")) return true;
-
-  return t.includes("@context") || t.includes("@graph") || t.includes('"@type"');
-}
-
-function hasStepsAndIngredients(parsed: FullRecipeInsertDTO): boolean {
-  return (
-    !!parsed &&
-    Array.isArray(parsed.recipeIngredients) &&
-    parsed.recipeIngredients.length > 0 &&
-    Array.isArray(parsed.steps) &&
-    parsed.steps.length > 0
-  );
-}
-
 interface ParseResult {
   recipe: FullRecipeInsertDTO;
   usedAI: boolean;
@@ -72,11 +59,12 @@ async function parseFromPastedText(
   allergies?: string[],
   forceAI?: boolean
 ): Promise<ParseResult> {
+  const extractRecipeWithAI = requireQueueApiHandler("extractRecipeWithAI");
   const trimmed = text.trim();
 
   if (!trimmed) throw new Error("No text provided");
   if (trimmed.length > MAX_RECIPE_PASTE_CHARS) {
-    throw new Error(`Paste is too large (max ${MAX_RECIPE_PASTE_CHARS} characters)`);
+    throw new Error(`Paste is too large (max ${MAX_RECIPE_PASTE_CHARS} characters per recipe)`);
   }
 
   const aiEnabled = await isAIEnabled();
@@ -89,27 +77,11 @@ async function parseFromPastedText(
     const html = `<html><body><main><h1>Pasted recipe</h1><p>${escapeHtml(trimmed)}</p></main></body></html>`;
     const ai = await extractRecipeWithAI(html, recipeId, undefined, allergies);
 
-    if (ai.success && hasStepsAndIngredients(ai.data)) {
+    if (ai.success && hasRecipeNameIngredientsAndSteps(ai.data)) {
       return { recipe: ai.data, usedAI: true };
     }
 
     throw new Error("Could not parse pasted recipe.");
-  }
-
-  if (looksLikeJson(trimmed)) {
-    const html = `<html><head></head><body><script type="application/ld+json">${trimmed}</script></body></html>`;
-    const nodes = extractRecipeNodesFromJsonLd(html);
-
-    if (nodes.length > 0) {
-      const normalized = await normalizeRecipeFromJson(nodes[0], recipeId);
-
-      if (normalized) {
-        normalized.url = null;
-        if (hasStepsAndIngredients(normalized)) {
-          return { recipe: normalized, usedAI: false };
-        }
-      }
-    }
   }
 
   if (!aiEnabled) {
@@ -119,18 +91,68 @@ async function parseFromPastedText(
   const html = `<html><body><main><h1>Pasted recipe</h1><p>${escapeHtml(trimmed)}</p></main></body></html>`;
   const ai = await extractRecipeWithAI(html, recipeId, undefined, allergies);
 
-  if (ai.success && hasStepsAndIngredients(ai.data)) {
+  if (ai.success && hasRecipeNameIngredientsAndSteps(ai.data)) {
     return { recipe: ai.data, usedAI: true };
   }
 
   throw new Error("Could not parse pasted recipe.");
 }
 
-async function processPasteImportJob(job: Job<PasteImportJobData>): Promise<void> {
-  const { recipeId, userId, householdKey, householdUserIds, text, forceAI } = job.data;
+function normalizeImportedRating(rating: number | null): number | null {
+  if (rating == null || !Number.isFinite(rating)) {
+    return null;
+  }
+
+  return Math.min(5, Math.max(1, Math.round(rating)));
+}
+
+async function persistImportedRating(
+  userId: string,
+  recipeId: string,
+  rating: number | null
+): Promise<void> {
+  const normalizedRating = normalizeImportedRating(rating);
+
+  if (normalizedRating == null) {
+    return;
+  }
+
+  await rateRecipe(userId, recipeId, normalizedRating);
+  const stats = await getAverageRating(recipeId);
+
+  log.debug({ recipeId, rating: normalizedRating, stats }, "Imported rating persisted");
+}
+
+async function createStructuredRecipe(
+  structuredRecipe: StructuredPasteImportRecipe,
+  userId: string,
+  _householdKey: string
+): Promise<string | null> {
+  const parsed = FullRecipeInsertSchema.safeParse(structuredRecipe.recipe);
+
+  if (!parsed.success || !hasRecipeNameIngredientsAndSteps(parsed.data)) {
+    return null;
+  }
+
+  const createdId = await createRecipeWithRefs(structuredRecipe.recipeId, userId, parsed.data);
+
+  if (!createdId) {
+    return null;
+  }
+
+  await persistImportedRating(userId, createdId, structuredRecipe.importedRating);
+
+  return createdId;
+}
+
+export async function processPasteImportJob(
+  job: Job<PasteImportJobData>
+): Promise<PasteImportJobResult> {
+  const { recipeIds, structuredRecipes, userId, householdKey, householdUserIds, text, forceAI } =
+    job.data;
 
   log.info(
-    { jobId: job.id, recipeId, attempt: job.attemptsMade + 1 },
+    { jobId: job.id, recipeIds, attempt: job.attemptsMade + 1 },
     "Processing paste import job"
   );
 
@@ -138,9 +160,11 @@ async function processPasteImportJob(job: Job<PasteImportJobData>): Promise<void
   const viewPolicy = policy.view;
   const ctx: PolicyEmitContext = { userId, householdKey };
 
-  emitByPolicy(recipeEmitter, viewPolicy, ctx, "importStarted", {
-    recipeId,
-    url: "[pasted]",
+  recipeIds.forEach((recipeId) => {
+    emitByPolicy(recipeEmitter, viewPolicy, ctx, "importStarted", {
+      recipeId,
+      url: "[pasted]",
+    });
   });
 
   const aiConfig = await getAIConfig();
@@ -156,43 +180,65 @@ async function processPasteImportJob(job: Job<PasteImportJobData>): Promise<void
     );
   }
 
-  const parseResult = await parseFromPastedText(text, recipeId, allergyNames, forceAI);
+  const createdRecipeIds: string[] = [];
 
-  const createdId = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
+  if (structuredRecipes && structuredRecipes.length > 0) {
+    for (const structuredRecipe of structuredRecipes) {
+      const createdId = await createStructuredRecipe(structuredRecipe, userId, householdKey);
 
-  if (!createdId) {
-    throw new Error("Failed to save imported recipe");
+      if (!createdId) {
+        continue;
+      }
+
+      createdRecipeIds.push(createdId);
+    }
+
+    if (createdRecipeIds.length === 0) {
+      throw new Error("No valid recipes found in structured paste input.");
+    }
+  } else {
+    const recipeId = recipeIds[0];
+
+    if (!recipeId) {
+      throw new Error("Missing recipe ID for paste import.");
+    }
+
+    const parseResult = await parseFromPastedText(text, recipeId, allergyNames, forceAI);
+    const createdId = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
+
+    if (!createdId) {
+      throw new Error("Failed to save imported recipe");
+    }
+
+    createdRecipeIds.push(createdId);
   }
 
-  const dashboardDto = await dashboardRecipe(createdId);
+  const queues = getQueues();
 
-  if (dashboardDto) {
-    log.info(
-      { jobId: job.id, recipeId: createdId, usedAI: parseResult.usedAI },
-      "Pasted recipe imported successfully"
-    );
+  for (const createdId of createdRecipeIds) {
+    const dashboardDto = await dashboardRecipe(createdId);
 
-    // If AI was used, no processing will follow - show imported toast
-    // If AI was NOT used, auto-tagging/allergy detection will follow - no toast needed
+    if (!dashboardDto) {
+      continue;
+    }
+
+    const usedAI = !structuredRecipes || structuredRecipes.length === 0;
+
+    log.info({ jobId: job.id, recipeId: createdId, usedAI }, "Pasted recipe imported successfully");
+
     emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
       recipe: dashboardDto,
-      pendingRecipeId: recipeId,
-      toast: parseResult.usedAI ? "imported" : undefined,
+      pendingRecipeId: createdId,
+      toast: usedAI ? "imported" : undefined,
     });
 
-    // Trigger auto-tagging only if AI was NOT used for extraction
-    // (AI extraction already includes auto-tagging instructions in the prompt)
-    if (!parseResult.usedAI) {
-      const queues = getQueues();
-
+    if (!usedAI) {
       await addAutoTaggingJob(queues.autoTagging, {
         recipeId: createdId,
         userId,
         householdKey,
       });
 
-      // Trigger allergy detection for structured imports
-      // (AI extraction already handles allergy detection inline)
       await addAllergyDetectionJob(queues.allergyDetection, {
         recipeId: createdId,
         userId,
@@ -200,6 +246,8 @@ async function processPasteImportJob(job: Job<PasteImportJobData>): Promise<void
       });
     }
   }
+
+  return { recipeIds: createdRecipeIds };
 }
 
 async function handleJobFailed(
@@ -208,14 +256,14 @@ async function handleJobFailed(
 ): Promise<void> {
   if (!job) return;
 
-  const { recipeId, userId, householdKey } = job.data;
+  const { recipeIds, userId, householdKey } = job.data;
   const maxAttempts = job.opts.attempts ?? 3;
   const isFinalFailure = job.attemptsMade >= maxAttempts;
 
   log.error(
     {
       jobId: job.id,
-      recipeId,
+      recipeIds,
       attempt: job.attemptsMade,
       maxAttempts,
       isFinalFailure,
@@ -224,16 +272,18 @@ async function handleJobFailed(
     "Paste import job failed"
   );
 
-  await deleteRecipeImagesDir(recipeId);
+  await Promise.all(recipeIds.map((recipeId) => deleteRecipeImagesDir(recipeId)));
 
   if (isFinalFailure) {
     const policy = await getRecipePermissionPolicy();
     const ctx: PolicyEmitContext = { userId, householdKey };
 
-    emitByPolicy(recipeEmitter, policy.view, ctx, "failed", {
-      reason: error.message || "Failed to import recipe",
-      recipeId,
-      url: "[pasted]",
+    recipeIds.forEach((recipeId) => {
+      emitByPolicy(recipeEmitter, policy.view, ctx, "failed", {
+        reason: error.message || "Failed to import recipe",
+        recipeId,
+        url: "[pasted]",
+      });
     });
   }
 }

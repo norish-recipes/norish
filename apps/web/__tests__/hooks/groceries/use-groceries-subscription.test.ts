@@ -12,6 +12,10 @@ import {
 // Track subscription callbacks
 const subscriptionCallbacks: Record<string, (data: unknown) => void> = {};
 
+function emitPayload(payload: unknown) {
+  return { payload };
+}
+
 vi.mock("@trpc/tanstack-react-query", () => ({
   useSubscription: vi.fn((options) => {
     // Extract event name from the options and store callback
@@ -158,7 +162,7 @@ describe("useGroceriesSubscription", () => {
 
       // Simulate WebSocket event
       act(() => {
-        subscriptionCallbacks.onCreated({ groceries: [newGrocery] });
+        subscriptionCallbacks.onCreated(emitPayload({ groceries: [newGrocery] }));
       });
 
       const cachedData =
@@ -183,7 +187,7 @@ describe("useGroceriesSubscription", () => {
 
       // Try to add the same grocery
       act(() => {
-        subscriptionCallbacks.onCreated({ groceries: [existingGrocery] });
+        subscriptionCallbacks.onCreated(emitPayload({ groceries: [existingGrocery] }));
       });
 
       const cachedData =
@@ -210,7 +214,7 @@ describe("useGroceriesSubscription", () => {
       const updatedGrocery = { ...existingGrocery, isDone: true };
 
       act(() => {
-        subscriptionCallbacks.onUpdated({ changedGroceries: [updatedGrocery] });
+        subscriptionCallbacks.onUpdated(emitPayload({ changedGroceries: [updatedGrocery] }));
       });
 
       const cachedData =
@@ -236,7 +240,7 @@ describe("useGroceriesSubscription", () => {
       const updatedGrocery1 = { ...grocery1, name: "Whole Milk" };
 
       act(() => {
-        subscriptionCallbacks.onUpdated({ changedGroceries: [updatedGrocery1] });
+        subscriptionCallbacks.onUpdated(emitPayload({ changedGroceries: [updatedGrocery1] }));
       });
 
       const cachedData =
@@ -263,7 +267,7 @@ describe("useGroceriesSubscription", () => {
       });
 
       act(() => {
-        subscriptionCallbacks.onDeleted({ groceryIds: ["g1"] });
+        subscriptionCallbacks.onDeleted(emitPayload({ groceryIds: ["g1"] }));
       });
 
       const cachedData =
@@ -289,7 +293,7 @@ describe("useGroceriesSubscription", () => {
       });
 
       act(() => {
-        subscriptionCallbacks.onDeleted({ groceryIds: ["g1", "g3"] });
+        subscriptionCallbacks.onDeleted(emitPayload({ groceryIds: ["g1", "g3"] }));
       });
 
       const cachedData =
@@ -317,10 +321,12 @@ describe("useGroceriesSubscription", () => {
       const newRecurring = createMockRecurringGrocery({ id: "r1", name: "Weekly Eggs" });
 
       act(() => {
-        subscriptionCallbacks.onRecurringCreated({
-          grocery: newGrocery,
-          recurringGrocery: newRecurring,
-        });
+        subscriptionCallbacks.onRecurringCreated(
+          emitPayload({
+            grocery: newGrocery,
+            recurringGrocery: newRecurring,
+          })
+        );
       });
 
       const cachedData =
@@ -352,10 +358,12 @@ describe("useGroceriesSubscription", () => {
       const updatedRecurring = { ...recurring, name: "Weekly Organic Eggs" };
 
       act(() => {
-        subscriptionCallbacks.onRecurringUpdated({
-          grocery: updatedGrocery,
-          recurringGrocery: updatedRecurring,
-        });
+        subscriptionCallbacks.onRecurringUpdated(
+          emitPayload({
+            grocery: updatedGrocery,
+            recurringGrocery: updatedRecurring,
+          })
+        );
       });
 
       const cachedData =
@@ -383,7 +391,7 @@ describe("useGroceriesSubscription", () => {
       });
 
       act(() => {
-        subscriptionCallbacks.onRecurringDeleted({ recurringGroceryId: "r1" });
+        subscriptionCallbacks.onRecurringDeleted(emitPayload({ recurringGroceryId: "r1" }));
       });
 
       const cachedData =
@@ -410,7 +418,7 @@ describe("useGroceriesSubscription", () => {
       });
 
       act(() => {
-        subscriptionCallbacks.onFailed({ reason: "Failed to save grocery" });
+        subscriptionCallbacks.onFailed(emitPayload({ reason: "Failed to save grocery" }));
       });
 
       expect(addToast).toHaveBeenCalledWith(

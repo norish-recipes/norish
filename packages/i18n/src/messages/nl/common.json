@@ -94,7 +94,9 @@
     "connecting": "Verbinden met Norish...",
     "syncing": "Synchroniseren, even geduld...",
     "checkInternet": "Controleer uw internetverbinding",
-    "gettingUpdates": "Even geduld terwijl we de laatste updates ophalen"
+    "gettingUpdates": "Even geduld terwijl we de laatste updates ophalen",
+    "offlineBanner": "Je bent offline, opgeslagen gegevens worden getoond",
+    "serverUnreachableBanner": "Kan de Norish-server niet bereiken, opgeslagen gegevens worden getoond"
   },
   "language": {
     "title": "Taal"
@@ -118,7 +120,7 @@
       "placeholder": "Plak hier een recept (vrije tekst) of JSON-LD...",
       "characters": "{count} / {max} tekens",
       "tooLarge": "Tekst is te groot",
-      "maxCharacters": "Maximaal {max} tekens toegestaan",
+      "maxCharacters": "Maximaal {max} karakters per recept",
       "importing": "Importeren...",
       "importingWithAI": "Importeren met AI...",
       "inProgress": "Importeren bezig, even geduld...",

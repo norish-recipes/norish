@@ -6,13 +6,12 @@
  */
 
 import type { ZodSchema } from "zod";
-import type { AIResult, ExecuteOptions, ImageContent, MessageContent } from "./types";
-
 import { generateText, Output } from "ai";
-import { aiLogger } from "@norish/shared-server/logger";
 
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
+import { aiLogger } from "@norish/shared-server/logger";
 
+import type { AIResult, ExecuteOptions, ImageContent, MessageContent } from "./types";
 import { isAIEnabled } from "./guards";
 import { aiError, aiSuccess, getErrorMessage, mapErrorToCode } from "./types";
 
@@ -96,6 +95,7 @@ export async function execute<T>(options: ExecuteOptions<T>): Promise<AIResult<T
       system: systemMessage,
       temperature: temperature ?? settings.temperature,
       maxOutputTokens: maxTokens ?? settings.maxOutputTokens,
+      abortSignal: settings.abortSignal,
     };
 
     // Execute the AI call - use messages format for vision, prompt for text

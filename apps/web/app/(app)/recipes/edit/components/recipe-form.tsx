@@ -1,16 +1,8 @@
 "use client";
 
 import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
-
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Chip, Input } from "@heroui/react";
-import { useTranslations } from "next-intl";
-import { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
-import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
-import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
-import { createClientLogger } from "@norish/shared/lib/logger";
-
 import IngredientInput, { ParsedIngredient } from "@/components/recipes/ingredient-input";
 import MeasurementSystemSelector from "@/components/recipes/measurement-system-selector";
 import MediaGalleryInput from "@/components/recipes/media-gallery-input";
@@ -23,6 +15,14 @@ import EditRecipeSkeleton from "@/components/skeleton/edit-recipe-skeleton";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useUnitsQuery } from "@/hooks/config";
 import { useRecipeId } from "@/hooks/recipes";
+import { Button, Chip, Input } from "@heroui/react";
+import { useLocale, useTranslations } from "next-intl";
+
+import { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
+import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { createClientLogger } from "@norish/shared/lib/logger";
+import { formatUnit } from "@norish/shared/lib/unit-localization";
 
 const log = createClientLogger("RecipeForm");
 
@@ -36,7 +36,8 @@ export interface RecipeFormProps {
 export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const router = useRouter();
   const { createRecipe, updateRecipe } = useRecipesContext();
-  const { units } = useUnitsQuery();
+  const locale = useLocale();
+  const { units, isLoading: isLoadingUnits } = useUnitsQuery();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const t = useTranslations("recipes.form");
@@ -70,6 +71,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   );
   const [detectedSystem, setDetectedSystem] = useState<MeasurementSystem | null>(null);
   const [manuallySetSystem, setManuallySetSystem] = useState(false);
+  const initializedRecipeIdRef = useRef<string | null>(null);
 
   // Media state - unified array of images and videos
   const [media, setMedia] = useState<RecipeGalleryMedia[]>(() => {
@@ -83,6 +85,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           type: "image",
           src: img.image,
           order: img.order,
+          version: img.version,
         });
       });
     } else if (initialData?.image) {
@@ -100,6 +103,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           thumbnail: vid.thumbnail,
           duration: vid.duration,
           order: vid.order,
+          version: vid.version,
         });
       });
     }
@@ -130,37 +134,40 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   // Initialize ingredients and steps from initialData
   // Filter by the current systemUsed to only show items for the active measurement system
   useEffect(() => {
-    if (initialData && mode === "edit") {
-      // Filter ingredients by the recipe's measurement system
-      const filteredIngredients = initialData.recipeIngredients.filter(
-        (ing) => ing.systemUsed === initialData.systemUsed
-      );
+    if (mode !== "edit" || !initialData || isLoadingUnits) return;
+    if (initializedRecipeIdRef.current === initialData.id) return;
 
-      const initIngredients: ParsedIngredient[] = filteredIngredients.map((ing) => ({
-        ingredientName: ing.ingredientName,
-        amount: ing.amount,
-        unit: ing.unit,
-        order: ing.order,
-        systemUsed: ing.systemUsed,
-      }));
+    // Filter ingredients by the recipe's measurement system
+    const filteredIngredients = initialData.recipeIngredients.filter(
+      (ing) => ing.systemUsed === initialData.systemUsed
+    );
 
-      setIngredients(initIngredients);
+    const initIngredients: ParsedIngredient[] = filteredIngredients.map((ing) => ({
+      id: ing.id,
+      version: ing.version,
+      ingredientName: ing.ingredientName,
+      amount: ing.amount,
+      unit: ing.unit ? formatUnit(ing.unit, locale, units, ing.amount) : null,
+      order: ing.order,
+      systemUsed: ing.systemUsed,
+    }));
 
-      // Filter steps by the recipe's measurement system
-      const filteredSteps = initialData.steps.filter(
-        (s) => s.systemUsed === initialData.systemUsed
-      );
+    setIngredients(initIngredients);
 
-      const initSteps: Step[] = filteredSteps.map((s) => ({
-        step: s.step,
-        order: s.order,
-        systemUsed: s.systemUsed,
-        images: s.images || [],
-      }));
+    // Filter steps by the recipe's measurement system
+    const filteredSteps = initialData.steps.filter((s) => s.systemUsed === initialData.systemUsed);
 
-      setSteps(initSteps);
-    }
-  }, [initialData, mode]);
+    const initSteps: Step[] = filteredSteps.map((s) => ({
+      step: s.step,
+      order: s.order,
+      systemUsed: s.systemUsed,
+      version: s.version,
+      images: s.images || [],
+    }));
+
+    setSteps(initSteps);
+    initializedRecipeIdRef.current = initialData.id;
+  }, [initialData, isLoadingUnits, locale, mode, units]);
 
   // Detect measurement system from ingredients and auto-select
   useEffect(() => {
@@ -223,6 +230,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           id: img.id,
           image: img.src,
           order: img.order,
+          version: img.version,
         }));
 
       // Get primary image (first image by order) for legacy image field
@@ -238,6 +246,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           thumbnail: vid.thumbnail ?? null,
           duration: vid.duration ?? null,
           order: vid.order,
+          version: vid.version,
         }));
 
       const recipeData = {
@@ -258,6 +267,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         tags: tags.map((t) => ({ name: t })),
         categories,
         recipeIngredients: ingredients.map((ing, idx) => ({
+          id: ing.id,
+          version: ing.version,
           ingredientName: ing.ingredientName,
           ingredientId: null,
           amount: ing.amount,
@@ -269,6 +280,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           step: s.step,
           order: idx,
           systemUsed: s.systemUsed,
+          version: s.version,
           images: s.images || [],
         })),
         // Images array field
@@ -285,7 +297,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           throw err;
         }
       } else if (mode === "edit" && initialData) {
-        await updateRecipe(initialData.id, recipeData);
+        await updateRecipe(initialData.id, {
+          ...recipeData,
+          version: initialData.version,
+        });
       }
     } catch (err) {
       setErrors({ submit: (err as Error).message });

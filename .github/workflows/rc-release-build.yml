@@ -20,9 +20,12 @@ permissions:
   packages: write
 
 jobs:
-  rc-release:
-    name: RC Beta Release Build
+  prepare-release:
+    name: RC Beta Release Prep
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.compute_tag.outputs.tag }}
+      image_tags: ${{ steps.image_tags.outputs.value }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -45,12 +48,6 @@ jobs:
             echo "::error::RC branch version '$VERSION' must contain '-beta' suffix"
             exit 1
           fi
-
-      - name: Run tests
-        run: pnpm run test:run
-
-      - name: Build production
-        run: pnpm run build
 
       - name: Compute tag name
         id: compute_tag
@@ -88,44 +85,20 @@ jobs:
           git tag "$TAG"
           git push origin "refs/tags/$TAG"
 
-      - name: Free up disk space
+      - name: Set image tags
+        id: image_tags
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo docker system prune -af
-          df -h
+          {
+            echo 'value<<EOF'
+            echo 'ghcr.io/norish-recipes/norish:${{ steps.compute_tag.outputs.tag }}'
+            echo 'docker.io/norishapp/norish:${{ steps.compute_tag.outputs.tag }}'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./docker/Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            ghcr.io/norish-recipes/norish:${{ steps.compute_tag.outputs.tag }}
-            docker.io/norishapp/norish:${{ steps.compute_tag.outputs.tag }}
+  docker-publish:
+    uses: ./.github/workflows/_docker-build.yml
+    needs: prepare-release
+    secrets: inherit
+    with:
+      push: true
+      image-tags: ${{ needs.prepare-release.outputs.image_tags }}

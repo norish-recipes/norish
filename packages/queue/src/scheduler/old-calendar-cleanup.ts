@@ -1,9 +1,10 @@
 import { format, startOfMonth, subMonths } from "date-fns";
 import { lte } from "drizzle-orm";
-import { schedulerLogger } from "@norish/shared-server/logger";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { db } from "@norish/db/drizzle";
 import { plannedItems } from "@norish/db/schema";
+import { schedulerLogger } from "@norish/shared-server/logger";
 
 export async function cleanupOldCalendarData(): Promise<{
   plannedItemsDeleted: number;

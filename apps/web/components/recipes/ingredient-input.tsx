@@ -1,17 +1,19 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import SmartTextInput from "@/components/shared/smart-text-input";
+import { useUnitsQuery } from "@/hooks/config";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
+
 import { MeasurementSystem } from "@norish/shared/contracts";
 import { debounce, parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
-import { useUnitsQuery } from "@/hooks/config";
-import SmartTextInput from "@/components/shared/smart-text-input";
-
 export interface ParsedIngredient {
+  id?: string;
+  version?: number;
   ingredientName: string;
   amount: number | null;
   unit: string | null;
@@ -30,12 +32,17 @@ export interface IngredientInputProps {
 interface IngredientItem {
   id: string;
   text: string;
+  recipeIngredientId?: string;
+  version?: number;
 }
 
 let nextId = 0;
 
-function createItem(text: string): IngredientItem {
-  return { id: `ing-${nextId++}`, text };
+function createItem(
+  text: string,
+  meta?: Pick<IngredientItem, "recipeIngredientId" | "version">
+): IngredientItem {
+  return { id: `ing-${nextId++}`, text, ...meta };
 }
 
 export default function IngredientInput({
@@ -60,7 +67,10 @@ export default function IngredientInput({
         if (ing.unit) parts.push(ing.unit);
         if (ing.ingredientName) parts.push(ing.ingredientName);
 
-        return createItem(parts.join(" "));
+        return createItem(parts.join(" "), {
+          recipeIngredientId: ing.id,
+          version: ing.version,
+        });
       });
 
       setItems([...formatted, createItem("")]);
@@ -69,8 +79,8 @@ export default function IngredientInput({
   }, [ingredients.length]);
 
   const parseIngredient = useCallback(
-    (text: string, order: number): ParsedIngredient | null => {
-      const trimmed = text.trim();
+    (item: IngredientItem, order: number): ParsedIngredient | null => {
+      const trimmed = item.text.trim();
 
       if (!trimmed) return null;
 
@@ -79,6 +89,8 @@ export default function IngredientInput({
       if (!parsed || parsed.length === 0) {
         // Fallback: treat entire text as ingredient name
         return {
+          id: item.recipeIngredientId,
+          version: item.version,
           ingredientName: trimmed,
           amount: null,
           unit: null,
@@ -90,6 +102,8 @@ export default function IngredientInput({
       const first = parsed[0];
 
       return {
+        id: item.recipeIngredientId,
+        version: item.version,
         ingredientName: first.description || trimmed,
         amount: first.quantity ? Number(first.quantity) : null,
         unit: first.unitOfMeasure || null,
@@ -104,7 +118,7 @@ export default function IngredientInput({
     (updatedItems: IngredientItem[]) => {
       const doUpdate = debounce((items: IngredientItem[]) => {
         const parsed = items
-          .map((item, idx) => parseIngredient(item.text, idx))
+          .map((item, idx) => parseIngredient(item, idx))
           .filter((ing): ing is ParsedIngredient => ing !== null);
 
         onChange(parsed);

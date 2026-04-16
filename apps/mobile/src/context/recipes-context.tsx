@@ -1,25 +1,25 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Toast, useThemeColor, useToast } from 'heroui-native';
-import { useRouter } from 'expo-router';
-import React, { createContext, useContext, useMemo } from 'react';
-import { View } from 'react-native';
-
-import { useAuth } from '@/context/auth-context';
-import { useRecipeFiltersContext } from '@/context/recipe-filters-context';
+import React, { createContext, useContext, useMemo } from "react";
+import { View } from "react-native";
+import { useAuth } from "@/context/auth-context";
+import { useRecipeFiltersContext } from "@/context/recipe-filters-context";
 import {
   useFavoritesMutation,
   useFavoritesQuery,
   useRecipesMutations,
   useRecipesQuery,
   useRecipesSubscription,
-} from '@/hooks/recipes';
-import { useUserAllergiesQuery } from '@/hooks/user';
-import { mapDashboardRecipeToCardItem } from '@/lib/recipes/map-dashboard-recipe-to-card-item';
+} from "@/hooks/recipes";
+import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
+import { useUserAllergiesQuery } from "@/hooks/user";
+import { mapDashboardRecipeToCardItem } from "@/lib/recipes/map-dashboard-recipe-to-card-item";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
+import { Toast, useThemeColor, useToast } from "heroui-native";
+import { useIntl } from "react-intl";
 
-import {
-  createRecipesContext,
-  type SharedRecipesContextValue,
-} from '@norish/shared-react/contexts';
+import type { SharedRecipesContextValue } from "@norish/shared-react/contexts";
+import { createIntlMessageTranslator } from "@norish/i18n";
+import { createRecipesContext } from "@norish/shared-react/contexts";
 
 const sharedRecipesContext = createRecipesContext({
   useRecipesFiltersContext: useRecipeFiltersContext,
@@ -29,51 +29,49 @@ const sharedRecipesContext = createRecipesContext({
   useFavoritesMutation,
   useUserAllergiesQuery,
   useRecipesSubscription,
+  useRatingsSubscription: sharedDashboardRecipeHooks.useRatingsSubscription,
   useToastAdapter: () => {
+    const intl = useIntl();
     const { toast } = useToast();
     const [successColor, warningColor, dangerColor] = useThemeColor([
-      'success',
-      'warning',
-      'danger',
+      "success",
+      "warning",
+      "danger",
     ] as const);
 
     return {
       show: ({ severity, title, description, actionLabel, onActionPress }) => {
-        const variant =
-          severity === 'default' ? 'default' : severity;
+        const variant = severity === "default" ? "default" : severity;
 
-        const iconName: React.ComponentProps<typeof Ionicons>['name'] =
-          severity === 'success'
-            ? 'checkmark-circle'
-            : severity === 'warning'
-              ? 'warning'
-              : severity === 'danger'
-                ? 'alert-circle'
-                : 'information-circle';
+        const iconName: React.ComponentProps<typeof Ionicons>["name"] =
+          severity === "success"
+            ? "checkmark-circle"
+            : severity === "warning"
+              ? "warning"
+              : severity === "danger"
+                ? "alert-circle"
+                : "information-circle";
 
         // Use explicit color prop for Ionicons — className alone may not apply
         // correctly in all theme contexts. Default (import pending) toasts have
         // a dark background so the icon should be white to match the title text.
         const iconColor =
-          severity === 'success' ? successColor
-            : severity === 'warning' ? warningColor
-              : severity === 'danger' ? dangerColor
-                : '#ffffff';
+          severity === "success"
+            ? successColor
+            : severity === "warning"
+              ? warningColor
+              : severity === "danger"
+                ? dangerColor
+                : "#ffffff";
 
         toast.show({
           component: (props) => (
             <Toast variant={variant} {...props} className="flex-row items-center gap-3">
-              <Ionicons
-                name={iconName}
-                size={24}
-                color={iconColor}
-              />
+              <Ionicons name={iconName} size={24} color={iconColor} />
               <View className="flex-1 gap-0.5">
                 <Toast.Title className="text-foreground">{title}</Toast.Title>
                 {description ? (
-                  <Toast.Description className="text-muted">
-                    {description}
-                  </Toast.Description>
+                  <Toast.Description className="text-muted">{description}</Toast.Description>
                 ) : null}
               </View>
               {actionLabel ? (
@@ -90,6 +88,7 @@ const sharedRecipesContext = createRecipesContext({
           ),
         });
       },
+      translate: createIntlMessageTranslator((descriptor) => intl.formatMessage(descriptor)),
     };
   },
   useNavigationAdapter: () => {
@@ -128,9 +127,9 @@ function MobileRecipesContextAdapter({ children }: { children: React.ReactNode }
         mapDashboardRecipeToCardItem(recipe, backendBaseUrl, authCookie, {
           favoriteIds: favoriteSet,
           allergies: base.allergies,
-        }),
+        })
       ),
-    [base.recipes, base.allergies, backendBaseUrl, authCookie, favoriteSet],
+    [base.recipes, base.allergies, backendBaseUrl, authCookie, favoriteSet]
   );
 
   const value = useMemo<MobileRecipesContextValue>(
@@ -138,7 +137,7 @@ function MobileRecipesContextAdapter({ children }: { children: React.ReactNode }
       ...base,
       recipeCards,
     }),
-    [base, recipeCards],
+    [base, recipeCards]
   );
 
   return <MobileRecipesContext.Provider value={value}>{children}</MobileRecipesContext.Provider>;
@@ -148,7 +147,7 @@ export function useRecipesContext() {
   const context = useContext(MobileRecipesContext);
 
   if (!context) {
-    throw new Error('useRecipesContext must be used within RecipesProvider');
+    throw new Error("useRecipesContext must be used within RecipesProvider");
   }
 
   return context;

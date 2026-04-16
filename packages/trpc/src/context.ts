@@ -1,16 +1,13 @@
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import type { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
 
+import type { SubscriptionMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
+import type { User } from "@norish/shared/contracts";
+import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
 import { auth } from "@norish/auth/auth";
 import { getHouseholdForUser } from "@norish/db";
-
-type ContextUser = {
-  id: string;
-  email: string;
-  name: string;
-  image: string | null;
-  isServerAdmin: boolean;
-};
+import { trpcLogger as log } from "@norish/shared-server/logger";
+import { isOperationId } from "@norish/shared/lib/operation-helpers";
 
 type ContextHousehold = {
   id: string;
@@ -18,18 +15,57 @@ type ContextHousehold = {
   users: Array<{ id: string; name: string }>;
 };
 
-type ContextMultiplexer = {
-  close(): Promise<void>;
-};
-
 export type Context = {
-  user: ContextUser | null;
+  user: User | null;
   household: ContextHousehold | null;
   /** Unique ID for this WebSocket connection (WS only) */
   connectionId: string | null;
   /** Subscription multiplexer for this connection (WS only, set lazily in middleware) */
-  multiplexer: ContextMultiplexer | null;
+  multiplexer: SubscriptionMultiplexer | null;
+  /** Client-generated operation ID for mutation correlation */
+  operationId: OperationId | null;
 };
+
+export async function createHttpContextFromHeaders(
+  headers: Headers,
+  operationId: OperationId | null
+): Promise<Context> {
+  try {
+    const session = await auth.api.getSession({
+      headers,
+    });
+
+    if (!session?.user?.id) {
+      return { user: null, household: null, connectionId: null, multiplexer: null, operationId };
+    }
+
+    const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
+    const user: User = {
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name || "",
+      image: session.user.image || null,
+      version: 1,
+      isServerAdmin: sessionUser.isServerOwner || sessionUser.isServerAdmin || false,
+    };
+
+    const dbHousehold = await getHouseholdForUser(user.id);
+    const household: ContextHousehold | null = dbHousehold
+      ? {
+          id: dbHousehold.id,
+          name: dbHousehold.name,
+          users: dbHousehold.users.map((householdUser) => ({
+            id: householdUser.id,
+            name: householdUser.name ?? "",
+          })),
+        }
+      : null;
+
+    return { user, household, connectionId: null, multiplexer: null, operationId };
+  } catch {
+    return { user: null, household: null, connectionId: null, multiplexer: null, operationId };
+  }
+}
 
 /**
  * Create context for HTTP requests (Next.js fetch adapter)
@@ -37,31 +73,15 @@ export type Context = {
 export async function createContext(opts: FetchCreateContextFnOptions): Promise<Context> {
   const { req } = opts;
 
-  try {
-    // Use BetterAuth's getSession API which handles both session cookies and API keys
-    const session = await auth.api.getSession({
-      headers: req.headers,
-    });
+  // Read operationId from the x-operation-id header
+  const rawOperationId = req.headers.get("x-operation-id");
+  const operationId = isOperationId(rawOperationId) ? (rawOperationId as OperationId) : null;
 
-    if (!session?.user?.id) {
-      return { user: null, household: null, connectionId: null, multiplexer: null };
-    }
-
-    const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
-    const user: ContextUser = {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name || "",
-      image: session.user.image || null,
-      isServerAdmin: sessionUser.isServerOwner || sessionUser.isServerAdmin || false,
-    };
-
-    const household = await getHouseholdForUser(user.id);
-
-    return { user, household, connectionId: null, multiplexer: null };
-  } catch {
-    return { user: null, household: null, connectionId: null, multiplexer: null };
+  if (operationId) {
+    log.debug({ operationId, requestUrl: req.url }, "Received tRPC request with correlation ID");
   }
+
+  return createHttpContextFromHeaders(req.headers, operationId);
 }
 
 export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<Context> {
@@ -83,20 +103,21 @@ export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<
     const session = await auth.api.getSession({ headers });
 
     if (!session?.user?.id) {
-      return { user: null, household: null, connectionId, multiplexer: null };
+      return { user: null, household: null, connectionId, multiplexer: null, operationId: null };
     }
 
     const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
-    const user: ContextUser = {
+    const user: User = {
       id: session.user.id,
       email: session.user.email,
       name: session.user.name || "",
       image: session.user.image || null,
+      version: 1,
       isServerAdmin: sessionUser.isServerOwner || sessionUser.isServerAdmin || false,
     };
 
-    return { user, household: null, connectionId, multiplexer: null };
+    return { user, household: null, connectionId, multiplexer: null, operationId: null };
   } catch {
-    return { user: null, household: null, connectionId, multiplexer: null };
+    return { user: null, household: null, connectionId, multiplexer: null, operationId: null };
   }
 }

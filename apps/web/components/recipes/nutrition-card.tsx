@@ -1,15 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
+import AIActionButton from "@/components/shared/ai-action-button";
+import { usePermissionsContext } from "@/context/permissions-context";
 import { BeakerIcon, BoltIcon, CubeIcon, FireIcon } from "@heroicons/react/16/solid";
 import { Card, CardBody, Divider, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import NutritionPortionControl from "./nutrition-portion-control";
 
-import { usePermissionsContext } from "@/context/permissions-context";
-import AIActionButton from "@/components/shared/ai-action-button";
-import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
+type NutritionRecipeLike = {
+  calories: number | null;
+  fat: number | string | null;
+  carbs: number | string | null;
+  protein: number | string | null;
+};
 
 const MACROS = [
   {
@@ -46,6 +52,87 @@ const MACROS = [
   },
 ] as const;
 
+function getNutritionData(recipe: NutritionRecipeLike, portions: number) {
+  const parsedFat = typeof recipe.fat === "string" ? parseFloat(recipe.fat) : recipe.fat;
+  const parsedCarbs = typeof recipe.carbs === "string" ? parseFloat(recipe.carbs) : recipe.carbs;
+  const parsedProtein =
+    typeof recipe.protein === "string" ? parseFloat(recipe.protein) : recipe.protein;
+
+  return {
+    hasData:
+      recipe.calories != null || parsedFat != null || parsedCarbs != null || parsedProtein != null,
+    values: {
+      calories: recipe.calories != null ? recipe.calories * portions : null,
+      fat: parsedFat != null ? parsedFat * portions : null,
+      carbs: parsedCarbs != null ? parsedCarbs * portions : null,
+      protein: parsedProtein != null ? parsedProtein * portions : null,
+    },
+  };
+}
+
+function NutritionValues({
+  inCard = true,
+  recipe,
+}: {
+  inCard?: boolean;
+  recipe: NutritionRecipeLike;
+}) {
+  const t = useTranslations("recipes.nutrition");
+  const [portions, setPortions] = useState(1);
+  const nutritionData = useMemo(() => getNutritionData(recipe, portions), [recipe, portions]);
+
+  if (!nutritionData.hasData) {
+    return null;
+  }
+
+  const content = (
+    <>
+      <div className={`flex items-center justify-between ${inCard ? "mb-3" : ""}`}>
+        <h2 className="text-lg font-semibold">{t("title")}</h2>
+        <NutritionPortionControl portions={portions} onChange={setPortions} />
+      </div>
+      <div className="divide-default-100 divide-y">
+        {MACROS.map(({ key, labelKey, unit, icon: Icon, color, bg }) => {
+          const value = nutritionData.values[key];
+
+          if (value == null) return null;
+
+          return (
+            <div key={key} className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-3">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${bg}`}>
+                  <Icon className={`h-4 w-4 ${color}`} />
+                </div>
+                <span className="text-base">{t(labelKey)}</span>
+              </div>
+              <span className="text-foreground text-base font-semibold">
+                {Math.round(value)}
+                <span className="text-default-500 ml-1 font-normal">{unit}</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {portions !== 1 && (
+        <p className="text-default-400 mt-2 text-center text-xs">
+          {t("showingPortions", { count: portions })}
+        </p>
+      )}
+    </>
+  );
+
+  return inCard ? (
+    <Card className="bg-content1 rounded-2xl shadow-md">
+      <CardBody className="p-5">{content}</CardBody>
+    </Card>
+  ) : (
+    <>
+      <Divider />
+      <div className="space-y-2">{content}</div>
+    </>
+  );
+}
+
 function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
   const { recipe, isEstimatingNutrition, estimateNutrition } = useRecipeContext();
   const { isAIEnabled } = usePermissionsContext();
@@ -56,25 +143,14 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
   const nutritionData = useMemo(() => {
     if (!recipe) return null;
 
-    const parsedFat = typeof recipe.fat === "string" ? parseFloat(recipe.fat) : recipe.fat;
-    const parsedCarbs = typeof recipe.carbs === "string" ? parseFloat(recipe.carbs) : recipe.carbs;
-    const parsedProtein =
-      typeof recipe.protein === "string" ? parseFloat(recipe.protein) : recipe.protein;
-
-    const hasData =
-      recipe.calories != null || parsedFat != null || parsedCarbs != null || parsedProtein != null;
+    const values = getNutritionData(recipe, portions);
+    const hasData = values.hasData;
 
     if (!hasData && !isAIEnabled) return null;
 
     return {
       hasData,
-      values: {
-        // Values are stored per-serving, multiply by portions to scale
-        calories: recipe.calories != null ? recipe.calories * portions : null,
-        fat: parsedFat != null ? parsedFat * portions : null,
-        carbs: parsedCarbs != null ? parsedCarbs * portions : null,
-        protein: parsedProtein != null ? parsedProtein * portions : null,
-      },
+      values: values.values,
     };
   }, [recipe, portions, isAIEnabled]);
 
@@ -159,6 +235,14 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
 
 export function NutritionSection() {
   return <NutritionDisplay inCard={false} />;
+}
+
+export function ReadonlyNutritionCard({ recipe }: { recipe: NutritionRecipeLike }) {
+  return <NutritionValues recipe={recipe} />;
+}
+
+export function ReadonlyNutritionSection({ recipe }: { recipe: NutritionRecipeLike }) {
+  return <NutritionValues inCard={false} recipe={recipe} />;
 }
 
 export default function NutritionCard() {

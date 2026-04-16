@@ -1,6 +1,5 @@
-import crypto from "crypto";
-
 import JSZip from "jszip";
+
 import { getUnits } from "@norish/config/server-config-loader";
 import { FullRecipeInsertSchema } from "@norish/db";
 import { serverLogger as log } from "@norish/shared-server/logger";
@@ -9,7 +8,6 @@ import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-s
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 import { saveImageBytes } from "../media/storage";
-
 import { parseHumanDurationToMinutes } from "./parser-helpers";
 
 export type MealieDatabase = {
@@ -406,14 +404,12 @@ export async function parseMealieRecipeToDTO(
   ingredients: MealieIngredient[],
   instructions: MealieInstruction[],
   lookups: MealieLookups,
+  recipeId: string,
   imageBuffer?: Buffer
 ): Promise<FullRecipeInsertDTO> {
   const title = recipe.name?.trim();
 
   if (!title) throw new Error("Missing recipe name");
-
-  // Generate recipe ID upfront so images are saved to the correct folder
-  const recipeId = crypto.randomUUID();
 
   // Load units for parsing unparsed ingredients
   const units = await getUnits();

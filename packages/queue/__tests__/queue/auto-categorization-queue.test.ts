@@ -10,6 +10,7 @@ const mockGetJob = vi.fn();
 const mockClose = vi.fn();
 const mockCreateLazyWorker = vi.fn();
 const mockStopLazyWorker = vi.fn();
+const mockCategorizeRecipe = vi.fn();
 
 vi.mock("bullmq", () => {
   return {
@@ -83,8 +84,13 @@ vi.mock("@norish/db", () => ({
   updateRecipeCategories: vi.fn(),
 }));
 
-vi.mock("@norish/api/ai/auto-categorizer", () => ({
-  categorizeRecipe: vi.fn(),
+vi.mock("@norish/queue/api-handlers", () => ({
+  requireQueueApiHandler: vi.fn(
+    (name: string) =>
+      ({
+        categorizeRecipe: mockCategorizeRecipe,
+      })[name]
+  ),
 }));
 
 vi.mock("@norish/queue/redis/subscription-multiplexer", () => ({
@@ -198,7 +204,6 @@ describe("Auto-Categorization Queue", () => {
   describe("processAutoCategorizationJob", () => {
     it("does not overwrite existing categories", async () => {
       const { getRecipeFull, updateRecipeCategories } = await import("@norish/db");
-      const { categorizeRecipe } = await import("@norish/api/ai/auto-categorizer");
       const { getRecipePermissionPolicy } = await import("@norish/config/server-config-loader");
       const { startAutoCategorizationWorker } =
         await import("@norish/queue/auto-categorization/worker");
@@ -251,7 +256,7 @@ describe("Auto-Categorization Queue", () => {
         opts: {},
       });
 
-      expect(categorizeRecipe).not.toHaveBeenCalled();
+      expect(mockCategorizeRecipe).not.toHaveBeenCalled();
       expect(updateRecipeCategories).not.toHaveBeenCalled();
     });
   });

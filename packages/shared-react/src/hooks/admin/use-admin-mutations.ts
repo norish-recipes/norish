@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type {
   AIConfig,
@@ -10,9 +11,8 @@ import type {
   TimerKeywordsInput,
   VideoConfig,
 } from "@norish/config/zod/server-config";
-import type { CreateAdminHooksOptions } from "./types";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { CreateAdminHooksOptions } from "./types";
 
 export type AdminMutationsResult = {
   updateRegistration: (enabled: boolean) => Promise<{ success: boolean }>;

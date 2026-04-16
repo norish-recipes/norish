@@ -1,23 +1,22 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Button, useThemeColor } from 'heroui-native';
-import React, { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
-import { useIntl } from 'react-intl';
+import React, { useCallback, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { PanelButton } from "@/components/shell/panel-button";
+import { ShellSheet } from "@/components/shell/sheet";
+import { useTagsQuery } from "@/hooks/config";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Button, useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
 
-import { ShellSheet } from '@/components/shell/sheet';
-import { PanelButton } from '@/components/shell/panel-button';
-import { useTagsQuery } from '@/hooks/config';
-
+import type { CanonicalRecipeFilters } from "@norish/shared-react/contexts";
+import type { RecipeCategory } from "@norish/shared/contracts";
 import {
   DEFAULT_RECIPE_FILTERS,
   RECIPE_CATEGORY_OPTIONS,
   RECIPE_COOKING_TIME_OPTIONS,
-  type CanonicalRecipeFilters,
-} from '@norish/shared-react/contexts';
-import type { RecipeCategory } from '@norish/shared/contracts';
+} from "@norish/shared-react/contexts";
 
 function SectionHeader({ title }: { title: string }) {
-  const [foregroundColor] = useThemeColor(['foreground'] as const);
+  const [foregroundColor] = useThemeColor(["foreground"] as const);
   return <Text style={[sectionStyles.header, { color: foregroundColor }]}>{title}</Text>;
 }
 
@@ -31,10 +30,10 @@ function ChipToggle({
   onPress: () => void;
 }) {
   const [accentColor, foregroundColor, surfaceColor, separatorColor] = useThemeColor([
-    'accent',
-    'foreground',
-    'surface',
-    'separator',
+    "accent",
+    "foreground",
+    "surface",
+    "separator",
   ] as const);
 
   return (
@@ -49,7 +48,9 @@ function ChipToggle({
         },
       ]}
     >
-      <Text style={[chipStyles.label, { color: active ? '#ffffff' : foregroundColor }]}>{label}</Text>
+      <Text style={[chipStyles.label, { color: active ? "#ffffff" : foregroundColor }]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -64,21 +65,16 @@ interface FilterSheetProps {
 export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSheetProps) {
   const intl = useIntl();
   const [draft, setDraft] = useState<CanonicalRecipeFilters>(filters);
-  const [tagFilter, setTagFilter] = useState('');
-  const [titleColor, mutedColor, accentForegroundColor, surfaceColor, separatorColor] = useThemeColor([
-    'foreground',
-    'muted',
-    'accent-foreground',
-    'surface',
-    'separator',
-  ] as const);
+  const [tagFilter, setTagFilter] = useState("");
+  const [titleColor, mutedColor, accentForegroundColor, surfaceColor, separatorColor] =
+    useThemeColor(["foreground", "muted", "accent-foreground", "surface", "separator"] as const);
   const { tags, isLoading: isTagsLoading } = useTagsQuery();
   const tagOptions: string[] = isTagsLoading ? draft.searchTags : tags;
 
   React.useEffect(() => {
     if (isOpen) {
       setDraft(filters);
-      setTagFilter('');
+      setTagFilter("");
     }
   }, [isOpen, filters]);
 
@@ -120,10 +116,10 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
       <View style={sheetStyles.container}>
         <View style={sheetStyles.titleRow}>
           <Text style={[sheetStyles.title, { color: titleColor }]}>
-            {intl.formatMessage({ id: 'common.filters.title' })}
+            {intl.formatMessage({ id: "common.filters.title" })}
           </Text>
           <Text style={[sheetStyles.subtitle, { color: mutedColor }]}>
-            {intl.formatMessage({ id: 'common.actions.filter' })}
+            {intl.formatMessage({ id: "common.actions.filter" })}
           </Text>
         </View>
 
@@ -133,7 +129,7 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           style={sheetStyles.scrollWrapper}
         >
           <View style={sectionStyles.section}>
-            <SectionHeader title={intl.formatMessage({ id: 'common.filters.cookingTime' })} />
+            <SectionHeader title={intl.formatMessage({ id: "common.filters.cookingTime" })} />
             <View style={sectionStyles.chipRow}>
               {RECIPE_COOKING_TIME_OPTIONS.map((option) => (
                 <ChipToggle
@@ -153,7 +149,7 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           </View>
 
           <View style={sectionStyles.section}>
-            <SectionHeader title={intl.formatMessage({ id: 'common.filters.categories' })} />
+            <SectionHeader title={intl.formatMessage({ id: "common.filters.categories" })} />
             <View style={sectionStyles.chipRow}>
               {RECIPE_CATEGORY_OPTIONS.map((category) => (
                 <ChipToggle
@@ -167,10 +163,10 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           </View>
 
           <View style={sectionStyles.section}>
-            <SectionHeader title={intl.formatMessage({ id: 'common.filters.favorites' })} />
+            <SectionHeader title={intl.formatMessage({ id: "common.filters.favorites" })} />
             <View style={sectionStyles.chipRow}>
               <ChipToggle
-                  label={intl.formatMessage({ id: 'common.filters.favorites' })}
+                label={intl.formatMessage({ id: "common.filters.favorites" })}
                 active={draft.showFavoritesOnly}
                 onPress={() =>
                   setDraft((previous) => ({
@@ -183,12 +179,14 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           </View>
 
           <View style={sectionStyles.section}>
-            <SectionHeader title={intl.formatMessage({ id: 'common.filters.favoritesAndRating' })} />
+            <SectionHeader
+              title={intl.formatMessage({ id: "common.filters.favoritesAndRating" })}
+            />
             <View style={sectionStyles.chipRow}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <ChipToggle
                   key={star}
-                  label={'★'.repeat(star)}
+                  label={"★".repeat(star)}
                   active={draft.minRating === star}
                   onPress={() =>
                     setDraft((previous) => ({
@@ -202,11 +200,11 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           </View>
 
           <View style={sectionStyles.section}>
-            <SectionHeader title={intl.formatMessage({ id: 'common.filters.tags' })} />
+            <SectionHeader title={intl.formatMessage({ id: "common.filters.tags" })} />
             <TextInput
               value={tagFilter}
               onChangeText={setTagFilter}
-              placeholder={intl.formatMessage({ id: 'common.filters.searchTags' })}
+              placeholder={intl.formatMessage({ id: "common.filters.searchTags" })}
               placeholderTextColor={mutedColor}
               style={[
                 sectionStyles.tagInput,
@@ -232,12 +230,12 @@ export function FilterSheet({ isOpen, onOpenChange, filters, onApply }: FilterSh
           <PanelButton variant="secondary" onPress={handleReset}>
             <Ionicons name="refresh-outline" size={18} color={titleColor} />
             <Button.Label style={{ color: titleColor }}>
-              {intl.formatMessage({ id: 'common.actions.reset' })}
+              {intl.formatMessage({ id: "common.actions.reset" })}
             </Button.Label>
           </PanelButton>
           <PanelButton variant="primary" onPress={handleApply}>
             <Ionicons name="checkmark-outline" size={18} color={accentForegroundColor} />
-            <Button.Label>{intl.formatMessage({ id: 'common.actions.apply' })}</Button.Label>
+            <Button.Label>{intl.formatMessage({ id: "common.actions.apply" })}</Button.Label>
           </PanelButton>
         </View>
       </View>
@@ -251,13 +249,13 @@ const sectionStyles = StyleSheet.create({
   },
   header: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   tagInput: {
@@ -278,7 +276,7 @@ const chipStyles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
     lineHeight: 18,
   },
 });
@@ -296,7 +294,7 @@ const sheetStyles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   subtitle: {
     fontSize: 14,
@@ -309,7 +307,7 @@ const sheetStyles = StyleSheet.create({
     paddingBottom: 16,
   },
   footer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
     marginTop: 16,
   },

@@ -1,29 +1,22 @@
 "use client";
 
-import type { HTTPHeaders } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
 import type { ReactNode } from "react";
-
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  createTRPCClient,
-  createWSClient,
-  httpBatchLink,
-  httpLink,
-  isNonJsonSerializable,
-  loggerLink,
-  splitLink,
-  wsLink,
-} from "@trpc/client";
+import { createTRPCClient } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
-import superjson from "superjson";
 
-type TrpcLogger = {
-  info: (message: string) => void;
-  warn: (meta: unknown, message: string) => void;
-  debug: (meta: unknown, message: string) => void;
-};
+import { normalizeSubscriptionData } from "@norish/shared/lib/operation-helpers";
+
+import type { CreateTRPCProviderBundleOptions } from "./trpc-links";
+import {
+  createTRPCClientLinks,
+  defaultGetBaseUrl,
+  defaultGetHeaders,
+  defaultGetWsUrl,
+  isNormalWebSocketClose,
+} from "./trpc-links";
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "disconnected";
 
@@ -32,36 +25,75 @@ type ConnectionContextValue = {
   isConnected: boolean;
 };
 
-type CreateTRPCProviderBundleOptions = {
-  logger: TrpcLogger;
-  getBaseUrl?: () => string;
-  getWsUrl?: () => string;
-  getHeaders?: () => HTTPHeaders;
-  getWebSocketImpl?: () => typeof WebSocket | undefined;
-  maxRetries?: number;
-  /** Set to false to disable tRPC loggerLink (defaults to true) */
-  enableLoggerLink?: boolean;
+type TRPCClientContextValue = object | null;
+
+type SubscriptionObserverOptions = {
+  onData?: (data: unknown) => void;
 };
 
-const defaultGetBaseUrl = () => {
-  if (typeof window !== "undefined") {
-    return "";
+export function wrapSubscriptionObserverOptions(options: unknown): unknown {
+  if (!options || typeof options !== "object") {
+    return options;
   }
 
-  return `http://localhost:${process.env.PORT ?? 3000}`;
-};
+  const observerOptions = options as SubscriptionObserverOptions;
 
-const defaultGetWsUrl = () => {
-  if (typeof window !== "undefined") {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-
-    return `${protocol}//${window.location.host}/trpc`;
+  if (typeof observerOptions.onData !== "function") {
+    return options;
   }
 
-  return `ws://localhost:${process.env.PORT ?? 3000}/trpc`;
-};
+  return {
+    ...observerOptions,
+    onData: (data: unknown) => observerOptions.onData?.(normalizeSubscriptionData(data)),
+  };
+}
 
-const defaultGetHeaders = (): HTTPHeaders => ({});
+export function wrapTrpcProxy<T>(value: T, cache: WeakMap<object, unknown>): T {
+  if ((typeof value !== "object" && typeof value !== "function") || value === null) {
+    return value;
+  }
+
+  const cached = cache.get(value as object);
+
+  if (cached) {
+    return cached as T;
+  }
+
+  const proxy = new Proxy(value as object, {
+    get(target, prop, receiver) {
+      const result = Reflect.get(target, prop, receiver);
+
+      if (prop === "subscriptionOptions" && typeof result === "function") {
+        return (...args: unknown[]) => {
+          if (args.length === 0) {
+            return Reflect.apply(result, target, args);
+          }
+
+          const wrappedArgs = [...args];
+          const lastArgIndex = wrappedArgs.length - 1;
+
+          wrappedArgs[lastArgIndex] = wrapSubscriptionObserverOptions(wrappedArgs[lastArgIndex]);
+
+          return Reflect.apply(result, target, wrappedArgs);
+        };
+      }
+
+      return wrapTrpcProxy(result, cache);
+    },
+  });
+
+  cache.set(value as object, proxy);
+
+  return proxy as T;
+}
+
+function createNormalizedUseTRPC<TTrpc>(useRawTRPC: () => TTrpc) {
+  return function useNormalizedTRPC() {
+    const trpc = useRawTRPC();
+
+    return useMemo(() => wrapTrpcProxy(trpc, new WeakMap()), [trpc]);
+  };
+}
 
 export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   logger,
@@ -69,112 +101,125 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   getWsUrl = defaultGetWsUrl,
   getHeaders = defaultGetHeaders,
   getWebSocketImpl,
-  maxRetries = 10,
+  wsLazyEnabled = true,
+  getWsLazyEnabled,
+  wsLazyCloseMs = 0,
   enableLoggerLink = true,
+  getQueryClient: externalGetQueryClient,
+  onWebSocketClose,
+  onWebSocketOpen,
+  onWebSocketUnauthorized,
+  onWebSocketClientCreate,
+  onWebSocketClientDestroy,
+  onUnauthorized,
+  mutationLink,
+  extraLinks = [],
+  invalidateOnReconnect = true,
 }: CreateTRPCProviderBundleOptions) {
-  const { TRPCProvider, useTRPC } = createTRPCContext<TRouter>();
+  const { TRPCProvider, useTRPC: useRawTRPC } = createTRPCContext<TRouter>();
+  const useTRPC = createNormalizedUseTRPC(useRawTRPC);
   const ConnectionContext = createContext<ConnectionContextValue>({
     status: "idle",
     isConnected: false,
   });
+  const TRPCClientContext = createContext<TRPCClientContextValue>(null);
 
   function useConnectionStatus() {
     return useContext(ConnectionContext);
+  }
+
+  function useTRPCClient() {
+    return useContext(TRPCClientContext);
   }
 
   function TRPCProviderWrapper({ children }: { children: ReactNode }) {
     const [status, setStatus] = useState<ConnectionStatus>("idle");
     const previousStatusRef = useRef<ConnectionStatus>("idle");
     const queryClientRef = useRef<QueryClient | null>(null);
+    const webSocketClientRef = useRef<{ close: () => Promise<void> } | null>(null);
 
     const [{ queryClient, trpcClient }] = useState(() => {
-      const qc = new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 1000 * 60 * 5,
-            gcTime: 1000 * 60 * 10,
-            refetchOnWindowFocus: true,
-            refetchOnMount: "always",
-            retry: 1,
-          },
-        },
-      });
+      const qc = externalGetQueryClient
+        ? externalGetQueryClient()
+        : new QueryClient({
+            defaultOptions: {
+              queries: {
+                staleTime: 1000 * 60 * 5,
+                gcTime: 1000 * 60 * 10,
+                refetchOnWindowFocus: true,
+                refetchOnMount: "always",
+                retry: 1,
+              },
+            },
+          });
 
       queryClientRef.current = qc;
 
-      const wsClient = createWSClient({
-        url: getWsUrl,
-        WebSocket: getWebSocketImpl?.(),
-        lazy: {
-          enabled: true,
-          closeMs: 0,
-        },
-        retryDelayMs: (attemptIndex) => {
-          if (attemptIndex >= maxRetries) {
-            logger.warn({ attemptIndex }, "Max WebSocket retries reached, giving up");
-
-            return Infinity;
-          }
-
-          const delay = Math.min(1000 * Math.pow(2, attemptIndex), 30000);
-
-          logger.debug({ attemptIndex, delay }, "WebSocket reconnecting");
-
-          return delay;
-        },
-        onOpen: () => {
-          logger.info("WebSocket connected");
-          setStatus("connected");
-        },
-        onClose: (cause) => {
-          logger.info(`WebSocket closed: ${JSON.stringify(cause)}`);
-          setStatus("disconnected");
-        },
-      });
-
       const tc = createTRPCClient<TRouter>({
-        links: [
-          ...(enableLoggerLink
-            ? [
-                loggerLink({
-                  enabled: (opts) =>
-                    process.env.NODE_ENV === "development" ||
-                    (opts.direction === "down" && opts.result instanceof Error),
-                }),
-              ]
-            : []),
-          splitLink({
-            condition: (op) => op.type === "subscription",
-            true: wsLink({ client: wsClient, transformer: superjson as any }),
-            false: splitLink({
-              condition: (op) => isNonJsonSerializable(op.input),
-              true: httpLink({
-                url: `${getBaseUrl()}/api/trpc`,
-                headers: getHeaders,
-                transformer: {
-                  serialize: (data: unknown) => data,
-                  deserialize: superjson.deserialize,
-                } as any,
-              }),
-              false: httpBatchLink({
-                url: `${getBaseUrl()}/api/trpc`,
-                headers: getHeaders,
-                transformer: superjson as any,
-              }),
-            }),
-          }),
-        ],
+        links: createTRPCClientLinks<TRouter>({
+          logger,
+          getBaseUrl,
+          getWsUrl,
+          getHeaders,
+          getWebSocketImpl,
+          wsLazyEnabled,
+          getWsLazyEnabled,
+          wsLazyCloseMs,
+          enableLoggerLink,
+          onWebSocketClientCreate: (client) => {
+            webSocketClientRef.current = client;
+            onWebSocketClientCreate?.(client);
+          },
+          onWebSocketOpen: () => {
+            setStatus("connected");
+            onWebSocketOpen?.();
+          },
+          onWebSocketClose: (cause) => {
+            if (isNormalWebSocketClose(cause)) {
+              setStatus("idle");
+
+              return;
+            }
+
+            setStatus("disconnected");
+            onWebSocketClose?.(cause);
+          },
+          onWebSocketUnauthorized,
+          onUnauthorized,
+          mutationLink,
+          extraLinks,
+        }),
       });
 
       return { queryClient: qc, trpcClient: tc };
     });
 
     useEffect(() => {
-      const wasDisconnected = previousStatusRef.current !== "connected";
+      return () => {
+        const client = webSocketClientRef.current;
+
+        webSocketClientRef.current = null;
+
+        if (!client) {
+          return;
+        }
+
+        onWebSocketClientDestroy?.(client);
+        void client.close().catch(() => null);
+      };
+    }, [onWebSocketClientDestroy]);
+
+    useEffect(() => {
+      const wasDisconnected = previousStatusRef.current === "disconnected";
 
       previousStatusRef.current = status;
 
-      if (status === "connected" && wasDisconnected && queryClientRef.current) {
+      if (
+        status === "connected" &&
+        wasDisconnected &&
+        queryClientRef.current &&
+        invalidateOnReconnect
+      ) {
         logger.info("Connection restored, invalidating queries");
         queryClientRef.current.invalidateQueries();
       }
@@ -187,11 +232,13 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
 
     return (
       <ConnectionContext.Provider value={connectionValue}>
-        <QueryClientProvider client={queryClient}>
-          <TRPCProvider queryClient={queryClient} trpcClient={trpcClient}>
-            {children}
-          </TRPCProvider>
-        </QueryClientProvider>
+        <TRPCClientContext.Provider value={trpcClient as object}>
+          <QueryClientProvider client={queryClient}>
+            <TRPCProvider queryClient={queryClient} trpcClient={trpcClient}>
+              {children}
+            </TRPCProvider>
+          </QueryClientProvider>
+        </TRPCClientContext.Provider>
       </ConnectionContext.Provider>
     );
   }
@@ -200,6 +247,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
     TRPCProvider,
     TRPCProviderWrapper,
     useTRPC,
+    useTRPCClient,
     useConnectionStatus,
   };
 }

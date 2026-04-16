@@ -6,6 +6,10 @@ import { createMockInfiniteData, createTestQueryClient, createTestWrapper } from
 // Track subscription callbacks
 const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefined> = {};
 
+function emitPayload(payload: unknown) {
+  return { payload };
+}
+
 // Mock tRPC provider
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({
@@ -321,10 +325,12 @@ describe("useRecipesSubscription", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      subscriptionCallbacks.onFailed?.({
-        reason:
-          "Error processing URL https://instagram.com/p/abc123... stacktrace: very long technical details",
-      });
+      subscriptionCallbacks.onFailed?.(
+        emitPayload({
+          reason:
+            "Error processing URL https://instagram.com/p/abc123... stacktrace: very long technical details",
+        })
+      );
 
       const { addToast } = await import("@heroui/react");
 

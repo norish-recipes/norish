@@ -4,11 +4,10 @@
  * Handles Schema.org recipeIngredient arrays and strings.
  */
 
+import { decode } from "html-entities";
 
 import type { UnitsMap } from "@norish/config/server-config-loader";
 import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
-
-import { decode } from "html-entities";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";

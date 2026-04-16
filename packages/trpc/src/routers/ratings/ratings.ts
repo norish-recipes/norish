@@ -1,12 +1,15 @@
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
-import { getAverageRating, getUserRating, rateRecipe } from "@norish/db/repositories/ratings";
+import {
+  getAverageRating,
+  getUserRatingWithVersion,
+  rateRecipe,
+} from "@norish/db/repositories/ratings";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { RatingGetInputSchema, RatingInputSchema } from "@norish/shared/contracts/zod";
 
 import { emitByPolicy } from "../../helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { ratingsEmitter } from "./emitter";
 
 interface UserContext {
@@ -27,12 +30,18 @@ async function emitRatingFailed(ctx: UserContext, recipeId: string, reason: stri
 }
 
 const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) => {
-  const { recipeId, rating } = input;
+  const { recipeId, rating, version } = input;
 
   log.debug({ userId: ctx.user.id, recipeId, rating }, "Rating recipe");
 
-  rateRecipe(ctx.user.id, recipeId, rating)
+  rateRecipe(ctx.user.id, recipeId, rating, version)
     .then(async (result) => {
+      if (result.stale) {
+        log.info({ userId: ctx.user.id, recipeId, version }, "Ignoring stale rating mutation");
+
+        return;
+      }
+
       const stats = await getAverageRating(recipeId);
       const policy = await getRecipePermissionPolicy();
 
@@ -59,9 +68,9 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) 
 const getUserRatingProcedure = authedProcedure
   .input(RatingGetInputSchema)
   .query(async ({ ctx, input }) => {
-    const rating = await getUserRating(ctx.user.id, input.recipeId);
+    const rating = await getUserRatingWithVersion(ctx.user.id, input.recipeId);
 
-    return { recipeId: input.recipeId, userRating: rating };
+    return { recipeId: input.recipeId, userRating: rating.rating, version: rating.version };
   });
 
 const getAverage = authedProcedure.input(RatingGetInputSchema).query(async ({ input }) => {

@@ -1,13 +1,11 @@
 "use client";
 
-import type { PlannedItemDisplay } from "./types";
-
 import { memo, useMemo } from "react";
+import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 import { useTranslations } from "next-intl";
 
+import type { PlannedItemDisplay } from "./types";
 import { buildItemSubtitle } from "./types";
-
-import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
 
 type PlannedItemContentProps = {
   item: PlannedItemDisplay;

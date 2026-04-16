@@ -6,12 +6,9 @@
  */
 
 import type { Job } from "bullmq";
+
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/trpc/helpers";
-
-import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
-import { createLogger } from "@norish/shared-server/logger";
-import { parseRecipeFromUrl } from "@norish/api/parser";
 import { getAIConfig, getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   createRecipeWithRefs,
@@ -21,10 +18,13 @@ import {
 } from "@norish/db";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
+import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
 import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getQueues } from "@norish/queue/registry";
+import { createLogger } from "@norish/shared-server/logger";
+import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
@@ -45,6 +45,7 @@ const log = createLogger("worker:recipe-import");
  * Called by the worker for each job.
  */
 async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
+  const parseRecipeFromUrl = requireQueueApiHandler("parseRecipeFromUrl");
   const { url, recipeId, userId, householdKey, householdUserIds } = job.data;
 
   log.info(
@@ -220,14 +221,16 @@ async function handleJobFailed(
  * Call during server startup.
  */
 export async function startRecipeImportWorker(): Promise<void> {
+  const rawProcessor = (job: Job<RecipeImportJobData>) =>
+    withTimeout(
+      () => processImportJob(job),
+      RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
+      "Recipe import job"
+    );
+
   await createLazyWorker<RecipeImportJobData>(
     QUEUE_NAMES.RECIPE_IMPORT,
-    (job) =>
-      withTimeout(
-        () => processImportJob(job),
-        RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
-        "Recipe import job"
-      ),
+    rawProcessor,
     {
       connection: getBullClient(),
       ...baseWorkerOptions,

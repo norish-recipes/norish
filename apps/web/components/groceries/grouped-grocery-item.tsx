@@ -1,18 +1,16 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
-import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
-
 import { memo, useCallback, useState } from "react";
+import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { ChevronDownIcon } from "@heroicons/react/16/solid";
 import { Checkbox } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { useUnitFormatter } from "@/hooks/use-unit-formatter";
-import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
-
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
 
 /**
  * Format inline source breakdown showing recipe names and amounts.

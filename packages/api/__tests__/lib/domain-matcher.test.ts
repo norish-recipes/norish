@@ -13,6 +13,7 @@ function makeToken(
     name: "Authorization",
     value: "Bearer token123",
     type: "header",
+    version: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

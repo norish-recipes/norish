@@ -2,26 +2,46 @@
   "page": { "title": "Kalendarz" },
   "mobile": { "today": "Dziś", "scrollToToday": "Przejdź do dziś" },
   "editNote": {
-    "title": "Edytuj notatkę", "noteLabel": "Notatka",
-    "notePlaceholder": "Wpisz notatkę...", "date": "Data", "slot": "Posiłek"
+    "title": "Edytuj notatkę",
+    "noteLabel": "Notatka",
+    "notePlaceholder": "Wpisz notatkę...",
+    "date": "Data",
+    "slot": "Posiłek"
   },
   "navigation": {
-    "previousMonth": "Poprzedni miesiąc", "nextMonth": "Następny miesiąc",
-    "prev": "Poprz", "next": "Nast"
+    "previousMonth": "Poprzedni miesiąc",
+    "nextMonth": "Następny miesiąc",
+    "prev": "Poprz",
+    "next": "Nast"
   },
-  "weekdays": { "mon": "Pn", "tue": "Wt", "wed": "Śr", "thu": "Cz", "fri": "Pt", "sat": "Sb", "sun": "Nd" },
+  "weekdays": {
+    "mon": "Pn",
+    "tue": "Wt",
+    "wed": "Śr",
+    "thu": "Cz",
+    "fri": "Pt",
+    "sat": "Sb",
+    "sun": "Nd"
+  },
   "timeline": {
-    "noItems": "Brak zaplanowanych posiłków", "goToRecipe": "Przejdź do przepisu",
-    "addItem": "Dodaj pozycję", "untitled": "Bez tytułu",
-    "serving": "porcja", "servings": "porcje", "noImage": "Brak obrazu",
-    "recipe": "Przepis", "note": "Notatka"
+    "noItems": "Brak zaplanowanych posiłków",
+    "goToRecipe": "Przejdź do przepisu",
+    "addItem": "Dodaj pozycję",
+    "untitled": "Bez tytułu",
+    "serving": "porcja",
+    "servings": "porcje",
+    "noImage": "Brak obrazu",
+    "recipe": "Przepis",
+    "note": "Notatka"
   },
   "editPlannedRecipe": { "title": "Edytuj zaplanowany przepis", "date": "Data", "slot": "Posiłek" },
   "panel": {
-    "addToCalendar": "Dodaj do kalendarza", "addRecipe": "Dodaj przepis",
+    "addToCalendar": "Dodaj do kalendarza",
+    "addRecipe": "Dodaj przepis",
     "noDaysAvailable": "Brak dostępnych dni.",
     "searchPlaceholder": "Szukaj przepisów lub dodaj notatki...",
-    "addNote": "Dodaj notatkę: {input}", "randomRecipe": "Losowy przepis",
+    "addNote": "Dodaj notatkę: {input}",
+    "randomRecipe": "Losowy przepis",
     "noRecipesFound": "Nie znaleziono przepisów.",
     "failedToLoadRecipes": "Nie udało się załadować przepisów."
   }

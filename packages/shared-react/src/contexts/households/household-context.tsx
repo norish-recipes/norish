@@ -1,11 +1,11 @@
+import { createContext, useContext, useMemo } from "react";
 
 import type {
   HouseholdAdminSettingsDto,
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
-import type { HouseholdMutationsResult, HouseholdQueryResult } from "../../hooks/households/types";
 
-import { createContext, useContext, useMemo } from "react";
+import type { HouseholdMutationsResult, HouseholdQueryResult } from "../../hooks/households/types";
 
 export type HouseholdContextValue = {
   household: HouseholdSettingsDto | HouseholdAdminSettingsDto | null;

@@ -72,14 +72,15 @@ vi.mock("@/app/providers/trpc-provider", () => ({
               url: `/recipes/images/test-gallery.jpg`,
               id: "gallery-123",
               order: 0,
+              version: 1,
             };
           }),
         }),
       },
       deleteGalleryImage: {
         mutationOptions: () => ({
-          mutationFn: vi.fn(async ({ imageId }: { imageId: string }) => {
-            if (!imageId) {
+          mutationFn: vi.fn(async ({ imageId, version }: { imageId: string; version: number }) => {
+            if (!imageId || !version) {
               return { success: false, error: "Missing imageId" };
             }
 
@@ -327,6 +328,7 @@ describe("useRecipeImages", () => {
       expect(response.url).toBe("/recipes/images/test-gallery.jpg");
       expect(response.id).toBe("gallery-123");
       expect(response.order).toBe(0);
+      expect(response.version).toBe(1);
     });
 
     it("creates FormData with file, recipeId, and optional order", async () => {
@@ -367,7 +369,7 @@ describe("useRecipeImages", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const response = await result.current.deleteGalleryImage("gallery-123");
+      const response = await result.current.deleteGalleryImage("gallery-123", 1);
 
       expect(response.success).toBe(true);
     });
@@ -378,7 +380,7 @@ describe("useRecipeImages", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      const deletePromise = result.current.deleteGalleryImage("gallery-123");
+      const deletePromise = result.current.deleteGalleryImage("gallery-123", 1);
 
       await deletePromise;
 

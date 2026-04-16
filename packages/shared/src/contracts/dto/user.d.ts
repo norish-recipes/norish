@@ -11,6 +11,7 @@ export interface User {
   email: string;
   name: string;
   image?: string | null;
+  version: number;
   isServerAdmin?: boolean;
   preferences?: UserPreferences;
 }

@@ -1,15 +1,14 @@
-import { Button as UIButton, Divider as UIDivider } from '@expo/ui/swift-ui';
-import * as KeepAwake from 'expo-keep-awake';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Linking, Share } from 'react-native';
-import { useIntl } from 'react-intl';
-import { useRouter } from 'expo-router';
+import React, { useCallback, useMemo, useState } from "react";
+import { Alert, Linking, Share } from "react-native";
+import { ShellMenu } from "@/components/shell/menu";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { useRecipesContext } from "@/context/recipes-context";
+import { Button as UIButton, Divider as UIDivider } from "@expo/ui/swift-ui";
+import * as KeepAwake from "expo-keep-awake";
+import { useRouter } from "expo-router";
+import { useIntl } from "react-intl";
 
-import type { RecipeDetailContextValue } from '@norish/shared-react/hooks';
-
-import { ShellMenu } from '@/components/shell/menu';
-import { useRecipesContext } from '@/context/recipes-context';
-import { usePermissionsContext } from '@/context/permissions-context';
+import type { RecipeDetailContextValue } from "@norish/shared-react/hooks";
 
 type RecipeActionsMenuProps = {
   /** Recipe context — passed as a prop because the native header renders outside the RecipeDetailProvider tree. */
@@ -69,9 +68,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
     if (!recipe) return;
     try {
       await Share.share({
-        message: recipe.url
-          ? `${recipe.name}\n${recipe.url}`
-          : recipe.name,
+        message: recipe.url ? `${recipe.name}\n${recipe.url}` : recipe.name,
         title: recipe.name,
         url: recipe.url ?? undefined,
       });
@@ -88,8 +85,8 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       await Linking.openURL(recipe.url);
     } catch {
       Alert.alert(
-        intl.formatMessage({ id: 'auth.errors.default.title' }),
-        intl.formatMessage({ id: 'recipes.actions.visitOriginal' }),
+        intl.formatMessage({ id: "auth.errors.default.title" }),
+        intl.formatMessage({ id: "recipes.actions.visitOriginal" })
       );
     }
   }, [recipe?.url, intl]);
@@ -98,25 +95,22 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
   const handleDelete = useCallback(() => {
     if (!recipe) return;
     Alert.alert(
-      intl.formatMessage({ id: 'recipes.deleteModal.title' }),
-      intl.formatMessage(
-        { id: 'recipes.deleteModal.confirmMessage' },
-        { recipeName: recipe.name },
-      ),
+      intl.formatMessage({ id: "recipes.deleteModal.title" }),
+      intl.formatMessage({ id: "recipes.deleteModal.confirmMessage" }, { recipeName: recipe.name }),
       [
         {
-          text: intl.formatMessage({ id: 'recipes.deleteModal.title' }),
-          style: 'destructive',
+          text: intl.formatMessage({ id: "recipes.deleteModal.title" }),
+          style: "destructive",
           onPress: () => {
-            deleteRecipe(recipe.id);
+            deleteRecipe(recipe.id, recipe.version);
             router.back();
           },
         },
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
-      ],
+      ]
     );
   }, [intl, recipe, deleteRecipe, router]);
 
@@ -124,18 +118,13 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
   // Check which measurement systems already exist in the recipe's ingredients
   // (mirrors web's system-convert-menu logic)
   const availableSystems = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          (recipe?.recipeIngredients ?? []).map((ri: any) => ri.systemUsed),
-        ),
-      ),
-    [recipe?.recipeIngredients],
+    () => Array.from(new Set((recipe?.recipeIngredients ?? []).map((ri: any) => ri.systemUsed))),
+    [recipe?.recipeIngredients]
   );
 
   // Use the effective system (convertingTo takes precedence while conversion is in flight)
-  const effectiveSystem = convertingTo ?? recipe?.systemUsed ?? 'metric';
-  const targetSystem = effectiveSystem === 'metric' ? 'us' : 'metric';
+  const effectiveSystem = convertingTo ?? recipe?.systemUsed ?? "metric";
+  const targetSystem = effectiveSystem === "metric" ? "us" : "metric";
 
   // Only show the convert button if the target system data already exists (instant switch)
   // OR if AI is enabled (AI-powered conversion)
@@ -152,37 +141,34 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
 
   // Derive permission booleans
   const canEdit = !isLoadingPermissions && (recipe.userId ? canEditRecipe(recipe.userId) : true);
-  const canDelete = !isLoadingPermissions && (recipe.userId ? canDeleteRecipe(recipe.userId) : true);
+  const canDelete =
+    !isLoadingPermissions && (recipe.userId ? canDeleteRecipe(recipe.userId) : true);
   const hasAllergies = allergies.length > 0;
 
   return (
     <ShellMenu
-      label={intl.formatMessage({ id: 'recipes.detail.recipeActions' })}
+      label={intl.formatMessage({ id: "recipes.detail.recipeActions" })}
       systemImage="ellipsis"
     >
       {/* Core actions */}
       <UIButton
-        label={intl.formatMessage({ id: 'recipes.actions.addToCalendar' })}
+        label={intl.formatMessage({ id: "recipes.actions.addToCalendar" })}
         systemImage="calendar.badge.plus"
-        onPress={() =>
-          Alert.alert('Calendar', 'Meal planning coming soon!')
-        }
+        onPress={() => Alert.alert("Calendar", "Meal planning coming soon!")}
       />
       <UIButton
-        label={intl.formatMessage({ id: 'recipes.detail.addToGroceries' })}
+        label={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
         systemImage="cart.badge.plus"
-        onPress={() =>
-          Alert.alert('Groceries', 'Add to groceries coming soon!')
-        }
+        onPress={() => Alert.alert("Groceries", "Add to groceries coming soon!")}
       />
       <UIButton
-        label={intl.formatMessage({ id: 'recipes.actions.share' })}
+        label={intl.formatMessage({ id: "recipes.actions.share" })}
         systemImage="square.and.arrow.up"
         onPress={handleShare}
       />
       {recipe.url ? (
         <UIButton
-          label={intl.formatMessage({ id: 'recipes.actions.visitOriginal' })}
+          label={intl.formatMessage({ id: "recipes.actions.visitOriginal" })}
           systemImage="arrow.up.right.square"
           onPress={handleVisitOriginal}
         />
@@ -193,17 +179,19 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       {/* Edit / management */}
       {canEdit ? (
         <UIButton
-          label={intl.formatMessage({ id: 'recipes.actions.edit' })}
+          label={intl.formatMessage({ id: "recipes.actions.edit" })}
           systemImage="pencil"
-          onPress={() => Alert.alert('Edit', 'Recipe editing coming soon!')}
+          onPress={() => Alert.alert("Edit", "Recipe editing coming soon!")}
         />
       ) : null}
       {canConvert ? (
         <UIButton
           label={
             convertingTo != null
-              ? `${intl.formatMessage({ id: targetSystem === 'us' ? 'recipes.convert.toUS' : 'recipes.convert.toMetric' })}…`
-              : intl.formatMessage({ id: targetSystem === 'us' ? 'recipes.convert.toUS' : 'recipes.convert.toMetric' })
+              ? `${intl.formatMessage({ id: targetSystem === "us" ? "recipes.convert.toUS" : "recipes.convert.toMetric" })}…`
+              : intl.formatMessage({
+                  id: targetSystem === "us" ? "recipes.convert.toUS" : "recipes.convert.toMetric",
+                })
           }
           systemImage="arrow.left.arrow.right"
           onPress={handleConvert}
@@ -211,9 +199,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       ) : null}
       <UIButton
         label={intl.formatMessage({
-          id: isScreenKeptOn
-            ? 'recipes.actions.screenOn'
-            : 'recipes.actions.keepScreenOn',
+          id: isScreenKeptOn ? "recipes.actions.screenOn" : "recipes.actions.keepScreenOn",
         })}
         systemImage="iphone"
         onPress={toggleKeepAwake}
@@ -225,9 +211,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       {isAutoTaggingEnabled && canEdit ? (
         <UIButton
           label={intl.formatMessage({
-            id: isAutoTagging
-              ? 'recipes.actions.autoTagging'
-              : 'recipes.actions.autoTag',
+            id: isAutoTagging ? "recipes.actions.autoTagging" : "recipes.actions.autoTag",
           })}
           systemImage="sparkles"
           onPress={triggerAutoTag}
@@ -235,7 +219,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       ) : null}
       {isAIEnabled && canEdit ? (
         <UIButton
-          label={intl.formatMessage({ id: 'recipes.actions.autoCategorize' })}
+          label={intl.formatMessage({ id: "recipes.actions.autoCategorize" })}
           systemImage="sparkles"
           onPress={() => triggerAutoCategorize()}
         />
@@ -244,8 +228,8 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
         <UIButton
           label={intl.formatMessage({
             id: isDetectingAllergies
-              ? 'recipes.actions.detectingAllergies'
-              : 'recipes.actions.detectAllergies',
+              ? "recipes.actions.detectingAllergies"
+              : "recipes.actions.detectAllergies",
           })}
           systemImage="sparkles"
           onPress={triggerAllergyDetection}
@@ -255,8 +239,8 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
         <UIButton
           label={intl.formatMessage({
             id: isEstimatingNutrition
-              ? 'recipes.actions.estimatingNutrition'
-              : 'recipes.actions.estimateNutrition',
+              ? "recipes.actions.estimatingNutrition"
+              : "recipes.actions.estimateNutrition",
           })}
           systemImage="sparkles"
           onPress={estimateNutrition}
@@ -267,7 +251,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       {canDelete ? <UIDivider /> : null}
       {canDelete ? (
         <UIButton
-          label={intl.formatMessage({ id: 'recipes.deleteModal.title' })}
+          label={intl.formatMessage({ id: "recipes.deleteModal.title" })}
           systemImage="trash"
           onPress={handleDelete}
         />

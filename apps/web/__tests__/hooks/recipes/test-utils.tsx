@@ -129,6 +129,17 @@ export function createMockTrpcClient() {
       onAllergyDetectionCompleted: {
         subscriptionOptions: vi.fn(),
       },
+      triggerProvenanceInference: {
+        mutationOptions: vi.fn(() => ({
+          mutationFn: vi.fn(),
+        })),
+      },
+      onProvenanceInferenceStarted: {
+        subscriptionOptions: vi.fn((_, options) => options),
+      },
+      onProvenanceInferenceCompleted: {
+        subscriptionOptions: vi.fn((_, options) => options),
+      },
       onProcessingToast: {
         subscriptionOptions: vi.fn(),
       },

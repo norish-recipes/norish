@@ -1,14 +1,11 @@
-import React, { useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useCallback } from "react";
+import { useAuth } from "@/context/auth-context";
+import { useTRPC } from "@/providers/trpc-provider";
+import { useQuery } from "@tanstack/react-query";
 
-import type { User } from '@norish/shared/contracts';
-import {
-  createUserContext,
-  type UserContextValue,
-} from '@norish/shared-react/contexts';
-
-import { useAuth } from '@/context/auth-context';
-import { useTRPC } from '@/providers/trpc-provider';
+import type { UserContextValue } from "@norish/shared-react/contexts";
+import type { User } from "@norish/shared/contracts";
+import { createUserContext } from "@norish/shared-react/contexts";
 
 /**
  * Mobile UserContext — mirrors web's user-context.tsx using the same
@@ -20,7 +17,6 @@ import { useTRPC } from '@/providers/trpc-provider';
  */
 const shared = createUserContext({
   useSessionUser: () => {
-     
     const { user, isLoading } = useAuth();
 
     const sessionUser: User | null = user
@@ -29,23 +25,22 @@ const shared = createUserContext({
           email: user.email,
           name: user.name,
           image: user.image ?? null,
+          version: 1,
         }
       : null;
 
     return { user: sessionUser, isLoading };
   },
   useSignOut: () => {
-     
     const { signOut } = useAuth();
-     
+
     return useCallback(() => {
       void signOut();
     }, [signOut]);
   },
   useFreshUserQuery: (userId) => {
-     
     const trpc = useTRPC();
-     
+
     const { data } = useQuery({
       ...trpc.user.get.queryOptions(),
       enabled: Boolean(userId),

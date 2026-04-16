@@ -1,24 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import SmartTextInput from "@/components/shared/smart-text-input";
+import { useRecipeImages } from "@/hooks/recipes";
 import { Bars3Icon, PhotoIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Image } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
+
 import { MeasurementSystem } from "@norish/shared/contracts";
 
-import { useRecipeImages } from "@/hooks/recipes";
-import SmartTextInput from "@/components/shared/smart-text-input";
-
 export interface StepImage {
+  id?: string;
   image: string;
   order: number;
+  version?: number;
 }
 
 export interface Step {
   step: string;
   order: number;
   systemUsed: MeasurementSystem;
+  version?: number;
   images?: StepImage[];
 }
 
@@ -34,12 +37,13 @@ interface StepItem {
   id: string;
   text: string;
   images: StepImage[];
+  version?: number;
 }
 
 let nextId = 0;
 
-function createStepItem(text: string, images: StepImage[] = []): StepItem {
-  return { id: `step-${nextId++}`, text, images };
+function createStepItem(text: string, images: StepImage[] = [], version?: number): StepItem {
+  return { id: `step-${nextId++}`, text, images, version };
 }
 
 export default function StepInput({
@@ -66,7 +70,7 @@ export default function StepInput({
       items[0].images.length === 0
     ) {
       setItems([
-        ...steps.map((s) => createStepItem(s.step, s.images || [])),
+        ...steps.map((s) => createStepItem(s.step, s.images || [], s.version)),
         createStepItem("", []),
       ]);
     }
@@ -80,6 +84,7 @@ export default function StepInput({
           step: item.text.trim(),
           order: idx,
           systemUsed,
+          version: item.version,
           images: item.images,
         }))
         .filter((s) => s.step || s.images.length > 0);

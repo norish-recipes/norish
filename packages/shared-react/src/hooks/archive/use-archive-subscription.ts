@@ -1,8 +1,8 @@
-import type { ArchiveImportCacheHelpers, CreateArchiveHooksOptions } from "./types";
-
 import { useSubscription } from "@trpc/tanstack-react-query";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 
+import type { ArchiveImportCacheHelpers, CreateArchiveHooksOptions } from "./types";
 
 const log = createClientLogger("ArchiveImportSubscription");
 
@@ -27,7 +27,7 @@ export function createUseArchiveSubscription({
 
     useSubscription(
       trpc.archive.onArchiveProgress.subscriptionOptions(undefined, {
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           log.debug({ payload }, "Progress event received");
           setImportState((prev) => {
             if (!prev || !prev.isImporting) {
@@ -59,7 +59,7 @@ export function createUseArchiveSubscription({
 
     useSubscription(
       trpc.archive.onArchiveCompleted.subscriptionOptions(undefined, {
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           log.debug({ payload }, "Completion event received");
           setImportState((prev) => {
             const total = prev?.total ?? payload.imported + payload.skipped + payload.errors.length;

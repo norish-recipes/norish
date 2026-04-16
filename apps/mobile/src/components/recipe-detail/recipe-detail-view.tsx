@@ -1,28 +1,24 @@
-import { useThemeColor } from 'heroui-native';
-import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { CookModeModal } from "@/components/recipe-detail/cook-mode";
+import { ParallaxScrollView } from "@/components/recipe-detail/parallax-scroll-view";
+import { RecipeAuthor } from "@/components/recipe-detail/recipe-author";
+import { RecipeHighlights } from "@/components/recipe-detail/recipe-highlights";
+import { RecipeIngredients } from "@/components/recipe-detail/recipe-ingredients";
+import { RecipeMediaHeader } from "@/components/recipe-detail/recipe-media-header";
+import { RecipeNutrition } from "@/components/recipe-detail/recipe-nutrition";
+import { RecipeQuickActions } from "@/components/recipe-detail/recipe-quick-actions";
+import { RecipeLikedButton, RecipeRating } from "@/components/recipe-detail/recipe-rating";
+import { RecipeSteps } from "@/components/recipe-detail/recipe-steps";
+import { RecipeTags } from "@/components/recipe-detail/recipe-tags";
+import { SmartText } from "@/components/recipe-detail/text-renderer";
+import { TimerFAB } from "@/components/recipe-detail/timer-fab";
+import { useAuth } from "@/context/auth-context";
+import { mapRecipeToMediaItems } from "@/lib/recipes/map-recipe-to-media-items";
+import { mapRecipeToSteps } from "@/lib/recipes/map-recipe-to-steps";
+import { useThemeColor } from "heroui-native";
 
-import type { RecipeDetailContextValue } from '@norish/shared-react/hooks';
-
-import { CookModeModal } from '@/components/recipe-detail/cook-mode';
-import { ParallaxScrollView } from '@/components/recipe-detail/parallax-scroll-view';
-import { RecipeAuthor } from '@/components/recipe-detail/recipe-author';
-import { RecipeHighlights } from '@/components/recipe-detail/recipe-highlights';
-import { RecipeIngredients } from '@/components/recipe-detail/recipe-ingredients';
-import { RecipeMediaHeader } from '@/components/recipe-detail/recipe-media-header';
-import { RecipeNutrition } from '@/components/recipe-detail/recipe-nutrition';
-import { RecipeQuickActions } from '@/components/recipe-detail/recipe-quick-actions';
-import {
-  RecipeLikedButton,
-  RecipeRating,
-} from '@/components/recipe-detail/recipe-rating';
-import { RecipeSteps } from '@/components/recipe-detail/recipe-steps';
-import { RecipeTags } from '@/components/recipe-detail/recipe-tags';
-import { SmartText } from '@/components/recipe-detail/text-renderer';
-import { TimerFAB } from '@/components/recipe-detail/timer-fab';
-import { useAuth } from '@/context/auth-context';
-import { mapRecipeToMediaItems } from '@/lib/recipes/map-recipe-to-media-items';
-import { mapRecipeToSteps } from '@/lib/recipes/map-recipe-to-steps';
+import type { RecipeDetailContextValue } from "@norish/shared-react/hooks";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -54,9 +50,9 @@ export function RecipeDetailView({ ctx, recipeId }: RecipeDetailViewProps) {
   } = ctx;
 
   const [foregroundColor, mutedColor, backgroundColor] = useThemeColor([
-    'foreground',
-    'muted',
-    'background',
+    "foreground",
+    "muted",
+    "background",
   ] as const);
 
   const { backendBaseUrl } = useAuth();
@@ -65,22 +61,22 @@ export function RecipeDetailView({ ctx, recipeId }: RecipeDetailViewProps) {
   // --- Media items ---
   const mediaItems = useMemo(
     () => mapRecipeToMediaItems(recipe!, backendBaseUrl),
-    [recipe, backendBaseUrl],
+    [recipe, backendBaseUrl]
   );
 
   // --- Steps ---
   const mappedSteps = useMemo(
     () => mapRecipeToSteps(recipe!, backendBaseUrl),
-    [recipe, backendBaseUrl],
+    [recipe, backendBaseUrl]
   );
 
   // --- Tags (FullRecipeDTO.tags is { name: string }[], need plain strings) ---
   const tags = useMemo(
     () =>
       (recipe!.tags ?? []).map((tag: string | { name: string }) =>
-        typeof tag === 'string' ? tag : tag.name,
+        typeof tag === "string" ? tag : tag.name
       ),
-    [recipe],
+    [recipe]
   );
 
   // --- Nutrition ---
@@ -91,7 +87,7 @@ export function RecipeDetailView({ ctx, recipeId }: RecipeDetailViewProps) {
       carbs: recipe!.carbs,
       protein: recipe!.protein,
     }),
-    [recipe],
+    [recipe]
   );
 
   // --- Cook mode ---
@@ -102,11 +98,7 @@ export function RecipeDetailView({ ctx, recipeId }: RecipeDetailViewProps) {
     <View style={[styles.root, { backgroundColor }]}>
       <ParallaxScrollView
         headerMedia={
-          <RecipeMediaHeader
-            media={mediaItems}
-            liked={liked}
-            onDoubleTapLike={toggleLiked}
-          />
+          <RecipeMediaHeader media={mediaItems} liked={liked} onDoubleTapLike={toggleLiked} />
         }
       >
         {/* Tags — above the title, no heading */}
@@ -114,13 +106,8 @@ export function RecipeDetailView({ ctx, recipeId }: RecipeDetailViewProps) {
 
         {/* Title row with liked button */}
         <View style={styles.titleRow}>
-          <Text style={[styles.title, { color: foregroundColor }]}>
-            {recipe!.name}
-          </Text>
-          <RecipeLikedButton
-            liked={liked}
-            onToggle={toggleLiked}
-          />
+          <Text style={[styles.title, { color: foregroundColor }]}>{recipe!.name}</Text>
+          <RecipeLikedButton liked={liked} onToggle={toggleLiked} />
         </View>
 
         {/* Author — directly under the title */}
@@ -152,18 +139,10 @@ export function RecipeDetailView({ ctx, recipeId }: RecipeDetailViewProps) {
         />
 
         {/* Steps */}
-        <RecipeSteps
-          steps={mappedSteps}
-          recipeId={recipeId}
-          recipeName={recipe!.name}
-        />
+        <RecipeSteps steps={mappedSteps} recipeId={recipeId} recipeName={recipe!.name} />
 
         {/* Rating */}
-        <RecipeRating
-          recipeId={recipeId}
-          value={userRating}
-          onRate={rateRecipe}
-        />
+        <RecipeRating recipeId={recipeId} value={userRating} onRate={rateRecipe} />
 
         {/* Nutrition with portion scaling */}
         <RecipeNutrition nutrition={nutrition} />
@@ -197,14 +176,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 12,
     marginBottom: 6,
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: "800",
     flex: 1,
     letterSpacing: -0.3,
   },

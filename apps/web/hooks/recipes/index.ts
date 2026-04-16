@@ -19,6 +19,7 @@ export { useRecipeAutocomplete } from "./use-recipe-autocomplete";
 export { useRecipeIngredients } from "./use-recipe-ingredients";
 export { useRecipeImages } from "./use-recipe-images";
 export { useRecipeVideos } from "./use-recipe-videos";
+export { useConvertMutation, type ConvertMutationResult } from "./use-convert-mutation";
 
 export { useAutoTaggingQuery } from "./use-auto-tagging-query";
 export { useAutoTagging, useAutoTaggingMutation } from "./use-auto-tagging-subscription";

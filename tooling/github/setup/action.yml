@@ -24,4 +24,6 @@ runs:
 
     - name: Install dependencies
       shell: bash
+      env:
+        SKIP_PARSER_API_INSTALL: "1"
       run: pnpm install --frozen-lockfile

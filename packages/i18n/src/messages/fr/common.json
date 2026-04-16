@@ -94,7 +94,9 @@
     "connecting": "Connection à Norish...",
     "syncing": "Synchronisation veuillez patienter...",
     "checkInternet": "Veuillez vérifier votre connexion internet",
-    "gettingUpdates": "Un instant, nous récupérons les dernières informations."
+    "gettingUpdates": "Un instant, nous récupérons les dernières informations.",
+    "offlineBanner": "Vous êtes hors ligne, affichage des données en cache",
+    "serverUnreachableBanner": "Impossible de contacter le serveur Norish, affichage des données en cache"
   },
   "language": {
     "title": "Langue"
@@ -118,7 +120,7 @@
       "placeholder": "Collez ici une recette (texte libre) ou un fichier JSON-LD...",
       "characters": "{count} / {max} caractères",
       "tooLarge": "Presse papier trop gros",
-      "maxCharacters": "Nombre {max} maximum de caractères atteint",
+      "maxCharacters": "Maximum {max} caractères par recette",
       "importing": "Importation recette...",
       "importingWithAI": "Importion recette avec l'IA...",
       "inProgress": "Importation en cours, veuillez patienter...",

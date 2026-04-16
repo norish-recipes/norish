@@ -1,0 +1,267 @@
+{
+  "dashboard": {
+    "title": "Tutte le ricette",
+    "searchPlaceholder": "Cerca o aggiungi ricetta...",
+    "searchRecipesPlaceholder": "Cerca ricette...",
+    "recipeCount": "{count, plural, one {# ricetta} other {# ricette}}",
+    "addRecipe": "Aggiungi ricetta",
+    "importFromUrl": "URL",
+    "importFromPaste": "Incolla",
+    "importFromImage": "Immagine",
+    "searchFields": {
+      "title": "Titolo",
+      "description": "Descrizione",
+      "ingredients": "Ingredienti",
+      "steps": "Passaggi",
+      "tags": "Tag"
+    }
+  },
+  "empty": {
+    "title": "La tua collezione di ricette ti aspetta",
+    "description": "Incolla l'URL di una ricetta nel campo di ricerca sopra e guarda la magia.",
+    "noResults": "Nessuna ricetta trovata",
+    "noResultsHint": "Prova a modificare o cancellare i filtri."
+  },
+  "card": {
+    "noImage": "Nessuna immagine disponibile",
+    "viewGroceries": "Vedi spesa",
+    "addToCalendar": "Aggiungi al calendario",
+    "deleteRecipe": "Elimina ricetta"
+  },
+  "detail": {
+    "backToRecipes": "Torna alle ricette",
+    "viewOriginal": "Vedi ricetta originale",
+    "ingredients": "Ingredienti",
+    "steps": "Passaggi",
+    "notes": "Note",
+    "addToGroceries": "Aggiungi alla spesa",
+    "ratingPrompt": "Cosa ne pensi di questa ricetta?",
+    "notFound": "Ricetta non trovata",
+    "notFoundMessage": "Questa ricetta non esiste o non hai il permesso di visualizzarla.",
+    "prep": "preparazione",
+    "total": "totale",
+    "planMeal": "Pianifica pasto",
+    "recipeActions": "Azioni ricetta",
+    "instructions": "Istruzioni",
+    "cook": "Cucina",
+    "switchToDecimal": "Mostra decimali",
+    "switchToFraction": "Mostra frazioni"
+  },
+  "actions": {
+    "plan": "Pianifica",
+    "groceries": "Spesa",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "share": "Condividi",
+    "visitOriginal": "Visita ricetta originale",
+    "addToCalendar": "Aggiungi al calendario",
+    "autoTag": "Tag automatici",
+    "autoTagging": "Generazione tag...",
+    "autoCategorize": "Categorizzazione automatica",
+    "detectAllergies": "Rileva allergie",
+    "detectingAllergies": "Rilevamento allergie...",
+    "estimateNutrition": "Stima valori nutrizionali",
+    "estimatingNutrition": "Stima valori nutrizionali...",
+    "screenOn": "Schermo acceso",
+    "keepScreenOn": "Mantieni schermo acceso",
+    "actionsLabel": "Azioni"
+  },
+  "sharePanel": {
+    "title": "Condividi ricetta",
+    "description": "Crea e gestisci link pubblici per {recipeName}.",
+    "expiryLabel": "Scadenza del link",
+    "createLink": "Crea link",
+    "latestLink": "Ultimo link",
+    "currentLinks": "Link attuali",
+    "empty": "Nessun link di condivisione ancora.",
+    "createSuccess": "Link di condivisione creato",
+    "copySuccess": "Link copiato",
+    "copyLink": "Copia",
+    "openLink": "Apri",
+    "createdAt": "Creato: {value}",
+    "expiresAt": "Scade: {value}",
+    "lastAccessedAt": "Ultima apertura: {value}",
+    "never": "Mai",
+    "expiryOptions": {
+      "1day": "1 giorno",
+      "1week": "1 settimana",
+      "1month": "1 mese",
+      "1year": "1 anno",
+      "forever": "Mai"
+    },
+    "status": {
+      "active": "Attivo",
+      "expired": "Scaduto",
+      "revoked": "Revocato"
+    },
+    "revokeModal": {
+      "title": "Revoca link",
+      "message": "Questo link per {recipeName} smetterà di funzionare finché non lo riattiverai.",
+      "confirm": "Revoca"
+    },
+    "reactivateModal": {
+      "title": "Riattiva link",
+      "message": "Questo link per {recipeName} tornerà attivo.",
+      "confirm": "Riattiva"
+    },
+    "deleteModal": {
+      "title": "Elimina link",
+      "message": "Eliminare questo link di condivisione per {recipeName}? Questa azione non può essere annullata.",
+      "confirm": "Elimina link"
+    }
+  },
+  "convert": {
+    "ariaLabel": "Converti sistema di misura",
+    "toMetric": "Converti in metrico",
+    "toUS": "Converti in US"
+  },
+  "deleteModal": {
+    "title": "Elimina ricetta",
+    "confirmMessage": "Sei sicuro di voler eliminare \"{recipeName}\"?",
+    "warning": "Questa azione non può essere annullata."
+  },
+  "form": {
+    "createTitle": "Crea ricetta",
+    "editTitle": "Modifica ricetta",
+    "createDescription": "Aggiungi una nuova ricetta alla tua collezione",
+    "editDescription": "Aggiorna i dettagli della tua ricetta",
+    "initializingForm": "Inizializzazione modulo...",
+    "photo": "Foto",
+    "basicInfo": "Informazioni di base",
+    "ingredients": "Ingredienti",
+    "instructions": "Istruzioni",
+    "tags": "Tag",
+    "nutrition": "Valori nutrizionali",
+    "nutritionPerServing": "(per porzione, opzionale)",
+    "details": "Dettagli",
+    "additionalInfo": "Informazioni aggiuntive",
+    "recipeName": "Nome ricetta",
+    "recipeNamePlaceholder": "es. Biscotti con gocce di cioccolato",
+    "description": "Descrizione",
+    "descriptionPlaceholder": "Una breve descrizione di ciò che rende speciale questa ricetta...",
+    "notes": "Note",
+    "notesPlaceholder": "Aggiungi note di preparazione, modifiche o suggerimenti per questa ricetta...",
+    "ingredientsHelp": "Digita gli ingredienti come \"2 tazze di farina\" - analizzeremo automaticamente quantità e unità.",
+    "instructionsHelp": "Scrivi istruzioni chiare passo dopo passo. Premi Invio per passare al passaggio successivo.",
+    "tagsHelp": "Digita i tag e clicca i suggerimenti per aggiungerli. I tag selezionati sono blu, i nuovi tag hanno un bordo tratteggiato.",
+    "tagsAndCategories": "Tag e categorie",
+    "categoriesHelp": "Seleziona le categorie di pasto per questa ricetta.",
+    "category": {
+      "breakfast": "Colazione",
+      "lunch": "Pranzo",
+      "dinner": "Cena",
+      "snack": "Spuntino"
+    },
+    "calories": "Calorie",
+    "fat": "Grassi (g)",
+    "carbs": "Carboidrati (g)",
+    "protein": "Proteine (g)",
+    "servings": "Porzioni",
+    "cookingTimes": "Tempi di cottura",
+    "optional": "(opzionale)",
+    "sourceUrl": "URL di origine",
+    "sourceUrlPlaceholder": "https://esempio.com/ricetta",
+    "measurementSystemNote": "Rileviamo automaticamente il sistema di misura dai tuoi ingredienti, ma puoi sovrascriverlo qui.",
+    "measurementSystemEditNote": " Nota: questo aggiorna l'etichetta del sistema ma non converte le unità. Usa l'azione Converti dopo il salvataggio.",
+    "createRecipe": "Crea ricetta",
+    "saveChanges": "Salva modifiche",
+    "uploading": "Caricamento...",
+    "clickToUpload": "Clicca per caricare o trascina e rilascia",
+    "pasteToUpload": "per incollare",
+    "imageFormats": "PNG, JPG, WEBP fino a 5MB"
+  },
+  "gallery": {
+    "addImage": "Aggiungi immagine",
+    "uploading": "Caricamento...",
+    "uploadFailed": "Caricamento non riuscito",
+    "dragToReorder": "Trascina per riordinare",
+    "maxImagesReached": "Massimo {max} immagini consentite",
+    "maxVideosReached": "Massimo {max} video consentiti",
+    "invalidFileType": "Tipo di file non valido"
+  },
+  "carousel": {
+    "noImageAvailable": "Nessuna immagine disponibile",
+    "noMediaAvailable": "Nessun media disponibile",
+    "videoPlayer": {
+      "mute": "Disattiva audio",
+      "unmute": "Attiva audio",
+      "fullscreen": "Schermo intero",
+      "exitFullscreen": "Esci da schermo intero"
+    }
+  },
+  "validation": {
+    "nameRequired": "Il nome della ricetta è obbligatorio",
+    "ingredientsRequired": "È richiesto almeno un ingrediente",
+    "stepsRequired": "È richiesto almeno un passaggio",
+    "servingsMin": "Le porzioni devono essere almeno 1"
+  },
+  "nutrition": {
+    "title": "Valori nutrizionali",
+    "calories": "Calorie",
+    "fat": "Grassi",
+    "carbs": "Carboidrati",
+    "protein": "Proteine",
+    "showingPortions": "Valori mostrati per {count} {count, plural, one {porzione} other {porzioni}}",
+    "noInfo": "Nessuna informazione nutrizionale disponibile",
+    "estimateWithAI": "Stima con IA"
+  },
+  "measurementSystem": {
+    "label": "Sistema di misura",
+    "detected": "Rilevato: {system}",
+    "metric": "Metrico",
+    "us": "US"
+  },
+  "timeInputs": {
+    "prep": "Preparazione",
+    "cook": "Cottura",
+    "total": "Totale"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Passaggio {number}: Descrivi il passaggio...",
+    "stepPlaceholderShort": "Passaggio {number}"
+  },
+  "ingredientInput": {
+    "placeholder": "es. 2 tazze di farina"
+  },
+  "wakeLock": {
+    "keepScreenOn": "Mantieni schermo acceso",
+    "notSupported": "Mantenere lo schermo acceso non è supportato in questo browser",
+    "activeTooltip": "Lo schermo rimarrà acceso durante la cottura",
+    "inactiveTooltip": "Mantieni lo schermo acceso mentre segui i passaggi",
+    "ariaLabel": "Mantieni schermo acceso"
+  },
+  "toasts": {
+    "processingBoth": "Elaborazione tag e allergie",
+    "processingTags": "Generazione tag",
+    "processingAllergies": "Rilevamento allergie",
+    "bothComplete": "Tag e allergie aggiornati",
+    "tagsComplete": "Tag generati",
+    "allergiesComplete": "Allergie rilevate",
+    "imported": "Ricetta importata",
+    "converted": "Misure convertite",
+    "convertedDescription": "Ricetta convertita in unità {system}",
+    "failed": "Operazione sulla ricetta non riuscita",
+    "failedDescription": "Qualcosa è andato storto durante l'elaborazione della ricetta. Controlla la console del browser per i dettagli tecnici.",
+    "batchImported": "Ricette importate",
+    "batchImportedDescription": "{count} ricette importate dall'archivio",
+    "view": "Visualizza",
+    "open": "Apri"
+  },
+  "tags": {
+    "panel": {
+      "editTitle": "Modifica tag",
+      "editPlaceholder": "Inserisci nome del tag...",
+      "duplicateTag": "Questo tag esiste già"
+    }
+  },
+  "cookMode": {
+    "steps": "Passaggi",
+    "ingredients": "Ingredienti",
+    "servings": "Porzioni",
+    "serving": "{count, plural, one {# porzione} other {# porzioni}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "Scorri per navigare tra i passaggi",
+    "swipeIngredients": "Scorri a sinistra per gli ingredienti",
+    "swipeBackToSteps": "Scorri a destra per i passaggi"
+  }
+}

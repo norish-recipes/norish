@@ -1,6 +1,7 @@
 import { index, integer, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { versionColumn } from "./shared";
 
 export const stores = pgTable(
   "stores",
@@ -15,6 +16,7 @@ export const stores = pgTable(
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    ...versionColumn,
   },
   (t) => [index("idx_stores_user_id").on(t.userId), index("idx_stores_sort_order").on(t.sortOrder)]
 );
@@ -32,6 +34,7 @@ export const ingredientStorePreferences = pgTable(
       .references(() => stores.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    ...versionColumn,
   },
   (t) => [
     index("idx_ingredient_store_prefs_user_id").on(t.userId),

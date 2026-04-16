@@ -1,5 +1,4 @@
 import type { CreateRecipeHooksOptions } from "../types";
-
 import { createUseFavoritesMutation } from "./use-favorites-mutation";
 import { createUseFavoritesQuery } from "./use-favorites-query";
 import { createUsePendingRecipesQuery } from "./use-pending-recipes-query";
@@ -54,7 +53,7 @@ export function createDashboardRecipeHooks(
     useAllergyDetectionQuery: dependencies.useAllergyDetectionQuery,
   });
   const useRecipesMutations = createUseRecipesMutations(options, {
-    useRecipesQuery,
+    useRecipesCacheHelpers,
   });
   const useRecipesSubscription = createUseRecipesSubscription(options, {
     useRecipesCacheHelpers,

@@ -1,5 +1,5 @@
-import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import React from "react";
+import { ActivityIndicator, View } from "react-native";
 
 // The expoClient plugin from @better-auth/expo intercepts the deep link
 // (mobile://) and automatically extracts the session cookie. Once the session
@@ -8,7 +8,7 @@ import { ActivityIndicator, View } from 'react-native';
 // that happens.
 export default function AuthCallbackScreen() {
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <ActivityIndicator />
     </View>
   );

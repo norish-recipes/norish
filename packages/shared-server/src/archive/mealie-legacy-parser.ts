@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO, IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
 
@@ -365,10 +366,11 @@ function convertLegacyData(legacy: MealieLegacyRecipe): {
  */
 export async function parseMealieLegacyRecipeToDTO(
   legacyRecipe: MealieLegacyRecipe,
+  recipeId: string,
   imageBuffer?: Buffer
 ): Promise<FullRecipeInsertDTO> {
   const recipe = toMealieRecipe(legacyRecipe);
   const { ingredients, instructions, lookups } = convertLegacyData(legacyRecipe);
 
-  return parseMealieRecipeToDTO(recipe, ingredients, instructions, lookups, imageBuffer);
+  return parseMealieRecipeToDTO(recipe, ingredients, instructions, lookups, recipeId, imageBuffer);
 }

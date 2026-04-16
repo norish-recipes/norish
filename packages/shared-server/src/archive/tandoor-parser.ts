@@ -1,7 +1,6 @@
-import crypto from "crypto";
-
 import JSZip from "jszip";
 import { z } from "zod";
+
 import { FullRecipeInsertSchema } from "@norish/db";
 import { matchCategory } from "@norish/shared-server/ai/utils/category-matcher";
 import { saveImageBytes } from "@norish/shared-server/media/storage";
@@ -113,6 +112,7 @@ export type TandoorIngredient = z.infer<typeof TandoorIngredientSchema>;
  */
 export async function parseTandoorRecipeToDTO(
   json: TandoorRecipe,
+  recipeId: string,
   imageBuffer?: Buffer
 ): Promise<FullRecipeInsertDTO> {
   // Validate against schema
@@ -123,9 +123,6 @@ export async function parseTandoorRecipeToDTO(
   if (!name) {
     throw new Error("Missing recipe name");
   }
-
-  // Generate recipe ID upfront so images are saved to the correct folder
-  const recipeId = crypto.randomUUID();
 
   // Save image if present
   let image: string | undefined = undefined;
@@ -296,9 +293,10 @@ export async function extractTandoorRecipes(
       // Find image.* file (first match)
       const imageFiles = nestedZip.file(/^image\./i);
       let imageBuffer: Buffer | undefined = undefined;
+      const firstImageFile = imageFiles[0];
 
-      if (imageFiles.length > 0) {
-        const imageArrayBuffer = await imageFiles[0].async("arraybuffer");
+      if (firstImageFile) {
+        const imageArrayBuffer = await firstImageFile.async("arraybuffer");
 
         imageBuffer = Buffer.from(imageArrayBuffer);
       }

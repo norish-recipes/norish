@@ -1,9 +1,9 @@
 "use client";
 
-import { addToast } from "@heroui/react";
-import { createCaldavHooks } from "@norish/shared-react/hooks";
-
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { addToast } from "@heroui/react";
+
+import { createCaldavHooks } from "@norish/shared-react/hooks";
 
 export const sharedCaldavHooks = createCaldavHooks({
   useTRPC,

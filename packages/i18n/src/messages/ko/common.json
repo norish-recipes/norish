@@ -94,7 +94,9 @@
     "connecting": "Norish에 연결 중...",
     "syncing": "동기화 중입니다. 잠시 기다려 주세요...",
     "checkInternet": "인터넷 연결을 확인해주세요",
-    "gettingUpdates": "최신 업데이트를 받는 동안 잠시만 기다려 주세요."
+    "gettingUpdates": "최신 업데이트를 받는 동안 잠시만 기다려 주세요.",
+    "offlineBanner": "오프라인 상태입니다 캐시된 데이터를 표시합니다",
+    "serverUnreachableBanner": "Norish 서버에 연결할 수 없습니다 캐시된 데이터를 표시합니다"
   },
   "language": {
     "title": "언어"
@@ -118,7 +120,7 @@
       "placeholder": "여기에 레시피(자유 텍스트) 또는 JSON-LD를 붙여넣으세요...",
       "characters": "{count} / {max}자",
       "tooLarge": "붙여넣기가 너무 큽니다.",
-      "maxCharacters": "최대 {max}자까지 입력할 수 있습니다.",
+      "maxCharacters": "레시피당 최대 {max}자까지 입력할 수 있습니다.",
       "importing": "레시피를 가져오는 중...",
       "importingWithAI": "AI를 사용하여 레시피를 가져오는 중...",
       "inProgress": "가져오기가 진행 중입니다. 잠시 기다려 주세요...",

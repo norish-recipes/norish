@@ -1,16 +1,16 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from "@/lib/storage/mmkv";
 
-import { getValidLocale, isValidLocale } from '@norish/i18n/config';
+import { getValidLocale, isValidLocale } from "@norish/i18n/config";
 
-const LOCALE_PREFERENCE_KEY = 'preferences.locale';
+const LOCALE_PREFERENCE_KEY = "preferences.locale";
 
 type LocaleFilePayload = {
   locale: string;
 };
 
-export async function loadLocalePreference(): Promise<string | null> {
+export function loadLocalePreference(): string | null {
   try {
-    const content = await AsyncStorage.getItem(LOCALE_PREFERENCE_KEY);
+    const content = storage.getString(LOCALE_PREFERENCE_KEY);
 
     if (!content) {
       return null;
@@ -28,8 +28,8 @@ export async function loadLocalePreference(): Promise<string | null> {
   }
 }
 
-export async function saveLocalePreference(locale: string): Promise<void> {
+export function saveLocalePreference(locale: string): void {
   const safeLocale = getValidLocale(locale);
 
-  await AsyncStorage.setItem(LOCALE_PREFERENCE_KEY, JSON.stringify({ locale: safeLocale }));
+  storage.set(LOCALE_PREFERENCE_KEY, JSON.stringify({ locale: safeLocale }));
 }

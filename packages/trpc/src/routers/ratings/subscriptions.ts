@@ -1,14 +1,13 @@
-import { createPolicyAwareSubscription } from "../../helpers";
+import { createEnvelopeAwareSubscription } from "../../helpers";
 import { router } from "../../trpc";
-
 import { ratingsEmitter } from "./emitter";
 
-const onRatingUpdated = createPolicyAwareSubscription(
+const onRatingUpdated = createEnvelopeAwareSubscription(
   ratingsEmitter,
   "ratingUpdated",
   "rating updates"
 );
-const onRatingFailed = createPolicyAwareSubscription(
+const onRatingFailed = createEnvelopeAwareSubscription(
   ratingsEmitter,
   "ratingFailed",
   "rating failures"

@@ -39,10 +39,10 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist .cache && tsc -p tsconfig.json --noCheck",
+    "build": "rm -rf dist .cache && pnpm exec tsc -p tsconfig.json --noCheck",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "typecheck": "rm -rf dist .cache && tsc -p tsconfig.json --noCheck",
+    "typecheck": "rm -rf dist .cache && pnpm exec tsc -p tsconfig.json --noCheck",
     "clean": "git clean -xdf .cache .turbo node_modules dist",
     "test": "vitest run --config ./vitest.config.ts"
   },
@@ -58,8 +58,10 @@
     "ioredis": "catalog:",
     "jszip": "catalog:",
     "superjson": "catalog:",
+    "trpc-to-openapi": "catalog:",
     "ws": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "zod-openapi": "catalog:"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",

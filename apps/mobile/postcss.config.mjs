@@ -1,1 +1,1 @@
-export { default } from '@norish/tailwind-config/postcss-config';
+export { default } from "@norish/tailwind-config/postcss-config";

@@ -1,10 +1,18 @@
-/** Microdata helpers: parse HTML microdata and return normalized Recipe-like objects. */
-// microdata-node has no official types; import as any
-// @ts-expect-error microdata-node has no types
-import microdata from "microdata-node";
+/**
+ * @deprecated Legacy rollback parser helpers kept only for `LEGACY_RECIPE_PARSER_ROLLBACK`.
+ * Microdata helpers: parse HTML microdata and return normalized Recipe-like objects.
+ */
+import { createRequire } from "node:module";
+
 import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
-import { extractImageCandidates } from "./parsers";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+
+import { extractImageCandidates } from "./parsers";
+
+const require = createRequire(import.meta.url);
+const microdata = require("microdata-node") as {
+  toJson(input: string): { items?: unknown[] };
+};
 
 function hasImage(node: unknown): boolean {
   if (!node || typeof node !== "object") return false;

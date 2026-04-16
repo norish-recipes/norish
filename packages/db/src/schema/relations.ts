@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
 
-import { users } from "./auth";
+import { accounts, apiKeys, sessions, users } from "./auth";
 import { groceries } from "./groceries";
 import { householdUsers } from "./household-users";
 import { households } from "./households";
@@ -8,6 +8,7 @@ import { ingredients } from "./ingredients";
 import { recipeImages } from "./recipe-images";
 import { recipeIngredients } from "./recipe-ingredients";
 import { recipeRatings } from "./recipe-ratings";
+import { recipeShares } from "./recipe-shares";
 import { recipeTags } from "./recipe-tags";
 import { recipeVideos } from "./recipe-videos";
 import { recipes } from "./recipes";
@@ -27,6 +28,35 @@ export const recipesRelations = relations(recipes, ({ many }) => ({
   favorites: many(recipeFavorites),
   images: many(recipeImages),
   videos: many(recipeVideos),
+  shares: many(recipeShares),
+}));
+
+export const userRelations = relations(users, ({ many }) => ({
+  sessions: many(sessions),
+  accounts: many(accounts),
+  apiKeys: many(apiKeys),
+  recipeShares: many(recipeShares),
+}));
+
+export const sessionRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const accountRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const apiKeyRelations = relations(apiKeys, ({ one }) => ({
+  user: one(users, {
+    fields: [apiKeys.referenceId],
+    references: [users.id],
+  }),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -156,6 +186,17 @@ export const recipeRatingsRelations = relations(recipeRatings, ({ one }) => ({
   }),
   recipe: one(recipes, {
     fields: [recipeRatings.recipeId],
+    references: [recipes.id],
+  }),
+}));
+
+export const recipeSharesRelations = relations(recipeShares, ({ one }) => ({
+  user: one(users, {
+    fields: [recipeShares.userId],
+    references: [users.id],
+  }),
+  recipe: one(recipes, {
+    fields: [recipeShares.recipeId],
     references: [recipes.id],
   }),
 }));

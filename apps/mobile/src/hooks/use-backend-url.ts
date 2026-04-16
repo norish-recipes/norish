@@ -1,11 +1,10 @@
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-
-import { loadBackendBaseUrl } from '@/lib/network/backend-base-url';
+import { useEffect, useState } from "react";
+import { loadBackendBaseUrl } from "@/lib/network/backend-base-url";
+import { useRouter } from "expo-router";
 
 export function useBackendUrl() {
   const router = useRouter();
-  const [baseUrl, setBaseUrl] = useState('');
+  const [baseUrl, setBaseUrl] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
@@ -29,7 +28,7 @@ export function useBackendUrl() {
 
         // Cold-start: URL already configured - skip straight to login.
         // Stack.Protected guard handles final redirect once authenticated.
-        router.replace('/login');
+        router.replace("/login");
         return;
       }
 

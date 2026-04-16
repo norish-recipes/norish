@@ -94,7 +94,9 @@
     "connecting": "Verbindung zu Norish wird hergestellt...",
     "syncing": "Wird synchronisiert, bitte warten...",
     "checkInternet": "Bitte überprüfen Sie Ihre Internetverbindung",
-    "gettingUpdates": "Einen Moment, während wir die neuesten Updates abrufen"
+    "gettingUpdates": "Einen Moment, während wir die neuesten Updates abrufen",
+    "offlineBanner": "Sie sind offline, zwischengespeicherte Daten werden angezeigt",
+    "serverUnreachableBanner": "Der Norish-Server ist nicht erreichbar, zwischengespeicherte Daten werden angezeigt"
   },
   "language": {
     "title": "Sprache"
@@ -118,7 +120,7 @@
       "placeholder": "Füge ein Rezept (Freitext) oder JSON-LD ein...",
       "characters": "{count} / {max} Zeichen",
       "tooLarge": "Paste zu groß",
-      "maxCharacters": "Maximal {max} Zeichen erlaubt",
+      "maxCharacters": "Maximal {max} Zeichen pro Rezept erlaubt",
       "importing": "Rezept wird importiert...",
       "importingWithAI": "Rezept wird mit KI importiert...",
       "inProgress": "Import wird ausgeführt, bitte warten...",

@@ -20,6 +20,14 @@
       {
         "locale": "da",
         "name": "cl"
+      },
+      {
+        "locale": "it",
+        "name": "cl"
+      },
+      {
+        "locale": "fr",
+        "name": "cl"
       }
     ],
     "plural": [
@@ -42,6 +50,14 @@
       {
         "locale": "da",
         "name": "cl"
+      },
+      {
+        "locale": "it",
+        "name": "cl"
+      },
+      {
+        "locale": "fr",
+        "name": "centilitres"
       }
     ],
     "alternates": [
@@ -49,7 +65,11 @@
       "centiliters",
       "zentiliter",
       "cl.",
-      "센티리터"
+      "센티리터",
+      "centilitro",
+      "centilitri",
+      "centilitre",
+      "centilitres"
     ]
   },
   "deciliter": {
@@ -73,6 +93,14 @@
       {
         "locale": "da",
         "name": "dl"
+      },
+      {
+        "locale": "it",
+        "name": "dl"
+      },
+      {
+        "locale": "fr",
+        "name": "dl"
       }
     ],
     "plural": [
@@ -95,6 +123,14 @@
       {
         "locale": "da",
         "name": "dl"
+      },
+      {
+        "locale": "it",
+        "name": "dl"
+      },
+      {
+        "locale": "fr",
+        "name": "décilitres"
       }
     ],
     "alternates": [
@@ -102,7 +138,11 @@
       "deciliters",
       "deziliter",
       "dl.",
-      "데시리터"
+      "데시리터",
+      "decilitro",
+      "decilitri",
+      "décilitre",
+      "décilitres"
     ]
   },
   "gram": {
@@ -126,6 +166,14 @@
       {
         "locale": "da",
         "name": "g"
+      },
+      {
+        "locale": "it",
+        "name": "g"
+      },
+      {
+        "locale": "fr",
+        "name": "g"
       }
     ],
     "plural": [
@@ -148,6 +196,14 @@
       {
         "locale": "da",
         "name": "g"
+      },
+      {
+        "locale": "it",
+        "name": "g"
+      },
+      {
+        "locale": "fr",
+        "name": "grammes"
       }
     ],
     "alternates": [
@@ -159,7 +215,11 @@
       "gramm",
       "grammen",
       "그램",
-      "그람"
+      "그람",
+      "grammo",
+      "grammi",
+      "gramme",
+      "grammes"
     ]
   },
   "teaspoon": {
@@ -183,6 +243,14 @@
       {
         "locale": "da",
         "name": "tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaino"
+      },
+      {
+        "locale": "fr",
+        "name": "càc"
       }
     ],
     "plural": [
@@ -205,6 +273,14 @@
       {
         "locale": "da",
         "name": "tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaini"
+      },
+      {
+        "locale": "fr",
+        "name": "cuillères à café"
       }
     ],
     "alternates": [
@@ -224,7 +300,13 @@
       "t",
       "tsk.",
       "teskefuld",
-      "teskefulde"
+      "teskefulde",
+      "cucchiaino",
+      "cucchiaini",
+      "cc",
+      "cuillère à café",
+      "cuillères à café",
+      "càc"
     ]
   },
   "tablespoon": {
@@ -248,6 +330,14 @@
       {
         "locale": "da",
         "name": "spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaio"
+      },
+      {
+        "locale": "fr",
+        "name": "càs"
       }
     ],
     "plural": [
@@ -270,6 +360,14 @@
       {
         "locale": "da",
         "name": "spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiai"
+      },
+      {
+        "locale": "fr",
+        "name": "cuillères à soupe"
       }
     ],
     "alternates": [
@@ -286,7 +384,13 @@
       "T",
       "spsk.",
       "spiseskefuld",
-      "spiseskefulde"
+      "spiseskefulde",
+      "cucchiaio",
+      "cucchiai",
+      "cucchiaiate",
+      "cuillère à soupe",
+      "cuillères à soupe",
+      "càs"
     ]
   },
   "knife_tip": {
@@ -310,6 +414,10 @@
       {
         "locale": "da",
         "name": "knivspids"
+      },
+      {
+        "locale": "it",
+        "name": "punta di coltello"
       }
     ],
     "plural": [
@@ -332,6 +440,10 @@
       {
         "locale": "da",
         "name": "knivspidser"
+      },
+      {
+        "locale": "it",
+        "name": "punte di coltello"
       }
     ],
     "alternates": [
@@ -345,7 +457,9 @@
       "칼끝",
       "칼끝만큼",
       "knsp",
-      "knsp."
+      "knsp.",
+      "punta di coltello",
+      "punte di coltello"
     ]
   },
   "pinch": {
@@ -369,6 +483,14 @@
       {
         "locale": "da",
         "name": "nip"
+      },
+      {
+        "locale": "it",
+        "name": "pizzico"
+      },
+      {
+        "locale": "fr",
+        "name": "pincée"
       }
     ],
     "plural": [
@@ -391,6 +513,14 @@
       {
         "locale": "da",
         "name": "nip"
+      },
+      {
+        "locale": "it",
+        "name": "pizzichi"
+      },
+      {
+        "locale": "fr",
+        "name": "pincées"
       }
     ],
     "alternates": [
@@ -408,7 +538,12 @@
       "꼬집",
       "약간",
       "et nip",
-      "drys"
+      "drys",
+      "pizzico",
+      "pizzichi",
+      "un pizzico",
+      "pincée",
+      "pincées"
     ]
   },
   "piece": {
@@ -432,6 +567,10 @@
       {
         "locale": "da",
         "name": "stk."
+      },
+      {
+        "locale": "it",
+        "name": "pezzo"
       }
     ],
     "plural": [
@@ -454,6 +593,10 @@
       {
         "locale": "da",
         "name": "stk."
+      },
+      {
+        "locale": "it",
+        "name": "pezzi"
       }
     ],
     "alternates": [
@@ -477,7 +620,11 @@
       "모",
       "토막",
       "styk",
-      "styks"
+      "styks",
+      "pezzo",
+      "pezzi",
+      "pz",
+      "pz."
     ]
   },
   "clove": {
@@ -501,6 +648,10 @@
       {
         "locale": "da",
         "name": "fed"
+      },
+      {
+        "locale": "it",
+        "name": "spicchio"
       }
     ],
     "plural": [
@@ -523,6 +674,10 @@
       {
         "locale": "da",
         "name": "fed"
+      },
+      {
+        "locale": "it",
+        "name": "spicchi"
       }
     ],
     "alternates": [
@@ -534,7 +689,9 @@
       "tenen",
       "쪽",
       "톨",
-      "hvidløgsfed"
+      "hvidløgsfed",
+      "spicchio",
+      "spicchi"
     ]
   },
   "leaf": {
@@ -558,6 +715,14 @@
       {
         "locale": "da",
         "name": "blad"
+      },
+      {
+        "locale": "it",
+        "name": "foglia"
+      },
+      {
+        "locale": "fr",
+        "name": "feuille"
       }
     ],
     "plural": [
@@ -580,6 +745,14 @@
       {
         "locale": "da",
         "name": "blade"
+      },
+      {
+        "locale": "it",
+        "name": "foglie"
+      },
+      {
+        "locale": "fr",
+        "name": "feuilles"
       }
     ],
     "alternates": [
@@ -590,7 +763,13 @@
       "leaf",
       "leaves",
       "잎",
-      "장"
+      "장",
+      "foglia",
+      "foglie",
+      "foglietta",
+      "foglioline",
+      "feuille",
+      "feuilles"
     ]
   },
   "sprig": {
@@ -614,6 +793,10 @@
       {
         "locale": "da",
         "name": "kvist"
+      },
+      {
+        "locale": "it",
+        "name": "rametto"
       }
     ],
     "plural": [
@@ -636,6 +819,10 @@
       {
         "locale": "da",
         "name": "kviste"
+      },
+      {
+        "locale": "it",
+        "name": "rametti"
       }
     ],
     "alternates": [
@@ -655,7 +842,9 @@
       "줄기",
       "가지",
       "stilk",
-      "stilke"
+      "stilke",
+      "rametto",
+      "rametti"
     ]
   },
   "bunch": {
@@ -679,6 +868,10 @@
       {
         "locale": "da",
         "name": "bundt"
+      },
+      {
+        "locale": "it",
+        "name": "mazzo"
       }
     ],
     "plural": [
@@ -701,6 +894,10 @@
       {
         "locale": "da",
         "name": "bundter"
+      },
+      {
+        "locale": "it",
+        "name": "mazzi"
       }
     ],
     "alternates": [
@@ -715,7 +912,11 @@
       "büschel",
       "다발",
       "한단",
-      "단"
+      "단",
+      "mazzo",
+      "mazzi",
+      "mazzetto",
+      "mazzetti"
     ]
   },
   "stalk": {
@@ -739,6 +940,10 @@
       {
         "locale": "da",
         "name": "stængel"
+      },
+      {
+        "locale": "it",
+        "name": "gambo"
       }
     ],
     "plural": [
@@ -761,16 +966,13 @@
       {
         "locale": "da",
         "name": "stængler"
+      },
+      {
+        "locale": "it",
+        "name": "gambi"
       }
     ],
-    "alternates": [
-      "stengel",
-      "stengels",
-      "대",
-      "줄기",
-      "stilk",
-      "stilke"
-    ]
+    "alternates": ["stengel", "stengels", "대", "줄기", "stilk", "stilke", "gambo", "gambi"]
   },
   "pack": {
     "short": [
@@ -793,6 +995,14 @@
       {
         "locale": "da",
         "name": "pakke"
+      },
+      {
+        "locale": "it",
+        "name": "conf."
+      },
+      {
+        "locale": "fr",
+        "name": "paquet"
       }
     ],
     "plural": [
@@ -815,6 +1025,14 @@
       {
         "locale": "da",
         "name": "pakker"
+      },
+      {
+        "locale": "it",
+        "name": "conf."
+      },
+      {
+        "locale": "fr",
+        "name": "paquets"
       }
     ],
     "alternates": [
@@ -838,7 +1056,13 @@
       "봉",
       "봉지",
       "포",
-      "pk."
+      "pk.",
+      "confezione",
+      "confezioni",
+      "conf",
+      "conf.",
+      "paquet",
+      "paquets"
     ]
   },
   "can": {
@@ -862,6 +1086,10 @@
       {
         "locale": "da",
         "name": "dåse"
+      },
+      {
+        "locale": "it",
+        "name": "lattina"
       }
     ],
     "plural": [
@@ -884,6 +1112,10 @@
       {
         "locale": "da",
         "name": "dåser"
+      },
+      {
+        "locale": "it",
+        "name": "lattine"
       }
     ],
     "alternates": [
@@ -906,7 +1138,11 @@
       "kleine dosen",
       "tin",
       "캔",
-      "통"
+      "통",
+      "lattina",
+      "lattine",
+      "barattolo",
+      "barattoli"
     ]
   },
   "jar": {
@@ -930,6 +1166,10 @@
       {
         "locale": "da",
         "name": "glas"
+      },
+      {
+        "locale": "it",
+        "name": "vasetto"
       }
     ],
     "plural": [
@@ -952,6 +1192,10 @@
       {
         "locale": "da",
         "name": "glas"
+      },
+      {
+        "locale": "it",
+        "name": "vasetti"
       }
     ],
     "alternates": [
@@ -965,7 +1209,11 @@
       "pot",
       "potten",
       "병",
-      "유리병"
+      "유리병",
+      "vasetto",
+      "vasetti",
+      "barattolo",
+      "barattoli"
     ]
   },
   "bottle": {
@@ -989,6 +1237,14 @@
       {
         "locale": "da",
         "name": "fl."
+      },
+      {
+        "locale": "it",
+        "name": "bottiglia"
+      },
+      {
+        "locale": "fr",
+        "name": "bouteille"
       }
     ],
     "plural": [
@@ -1011,6 +1267,14 @@
       {
         "locale": "da",
         "name": "flasker"
+      },
+      {
+        "locale": "it",
+        "name": "bottiglie"
+      },
+      {
+        "locale": "fr",
+        "name": "bouteilles"
       }
     ],
     "alternates": [
@@ -1027,7 +1291,11 @@
       "flesjes",
       "flessen",
       "fläschchen",
-      "병"
+      "병",
+      "bottiglia",
+      "bottiglie",
+      "bouteille",
+      "bouteilles"
     ]
   },
   "bag": {
@@ -1051,6 +1319,10 @@
       {
         "locale": "da",
         "name": "pose"
+      },
+      {
+        "locale": "it",
+        "name": "sacchetto"
       }
     ],
     "plural": [
@@ -1073,6 +1345,10 @@
       {
         "locale": "da",
         "name": "poser"
+      },
+      {
+        "locale": "it",
+        "name": "sacchetti"
       }
     ],
     "alternates": [
@@ -1090,7 +1366,11 @@
       "zakjes",
       "zakken",
       "봉지",
-      "자루"
+      "자루",
+      "sacchetto",
+      "sacchetti",
+      "busta",
+      "buste"
     ]
   },
   "box": {
@@ -1114,6 +1394,14 @@
       {
         "locale": "da",
         "name": "æske"
+      },
+      {
+        "locale": "it",
+        "name": "scatola"
+      },
+      {
+        "locale": "fr",
+        "name": "boîte"
       }
     ],
     "plural": [
@@ -1136,6 +1424,14 @@
       {
         "locale": "da",
         "name": "æsker"
+      },
+      {
+        "locale": "it",
+        "name": "scatole"
+      },
+      {
+        "locale": "fr",
+        "name": "boîtes"
       }
     ],
     "alternates": [
@@ -1147,7 +1443,11 @@
       "doosjes",
       "dozen",
       "박스",
-      "상자"
+      "상자",
+      "scatola",
+      "scatole",
+      "boîte",
+      "boîtes"
     ]
   },
   "handful": {
@@ -1171,6 +1471,10 @@
       {
         "locale": "da",
         "name": "håndfuld"
+      },
+      {
+        "locale": "it",
+        "name": "manciata"
       }
     ],
     "plural": [
@@ -1193,6 +1497,10 @@
       {
         "locale": "da",
         "name": "håndfulde"
+      },
+      {
+        "locale": "it",
+        "name": "manciate"
       }
     ],
     "alternates": [
@@ -1207,7 +1515,10 @@
       "hdv",
       "hdv.",
       "한줌",
-      "줌"
+      "줌",
+      "manciata",
+      "manciate",
+      "una manciata"
     ]
   },
   "splash": {
@@ -1231,6 +1542,10 @@
       {
         "locale": "da",
         "name": "skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzo"
       }
     ],
     "plural": [
@@ -1253,6 +1568,10 @@
       {
         "locale": "da",
         "name": "skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzi"
       }
     ],
     "alternates": [
@@ -1268,7 +1587,10 @@
       "조금",
       "et skvæt",
       "slat",
-      "slatter"
+      "slatter",
+      "spruzzo",
+      "spruzzi",
+      "schizzo"
     ]
   },
   "cup": {
@@ -1292,6 +1614,14 @@
       {
         "locale": "da",
         "name": "kop"
+      },
+      {
+        "locale": "it",
+        "name": "tazza"
+      },
+      {
+        "locale": "fr",
+        "name": "tasse"
       }
     ],
     "plural": [
@@ -1314,6 +1644,14 @@
       {
         "locale": "da",
         "name": "kopper"
+      },
+      {
+        "locale": "it",
+        "name": "tazze"
+      },
+      {
+        "locale": "fr",
+        "name": "tasses"
       }
     ],
     "alternates": [
@@ -1336,7 +1674,13 @@
       "tässchen",
       "컵",
       "공기",
-      "pægl"
+      "pægl",
+      "tazza",
+      "tazze",
+      "tazzina",
+      "tazzine",
+      "tasse",
+      "tasses"
     ]
   },
   "glass": {
@@ -1360,6 +1704,14 @@
       {
         "locale": "da",
         "name": "glas"
+      },
+      {
+        "locale": "it",
+        "name": "bicchiere"
+      },
+      {
+        "locale": "fr",
+        "name": "verre"
       }
     ],
     "plural": [
@@ -1382,6 +1734,14 @@
       {
         "locale": "da",
         "name": "glas"
+      },
+      {
+        "locale": "it",
+        "name": "bicchieri"
+      },
+      {
+        "locale": "fr",
+        "name": "verres"
       }
     ],
     "alternates": [
@@ -1394,7 +1754,11 @@
       "kleines glas",
       "shotglas",
       "잔",
-      "컵"
+      "컵",
+      "bicchiere",
+      "bicchieri",
+      "verre",
+      "verres"
     ]
   },
   "slice": {
@@ -1418,6 +1782,14 @@
       {
         "locale": "da",
         "name": "skive"
+      },
+      {
+        "locale": "it",
+        "name": "fetta"
+      },
+      {
+        "locale": "fr",
+        "name": "tranche"
       }
     ],
     "plural": [
@@ -1440,6 +1812,14 @@
       {
         "locale": "da",
         "name": "skiver"
+      },
+      {
+        "locale": "it",
+        "name": "fette"
+      },
+      {
+        "locale": "fr",
+        "name": "tranches"
       }
     ],
     "alternates": [
@@ -1454,7 +1834,11 @@
       "slice",
       "slices",
       "조각",
-      "슬라이스"
+      "슬라이스",
+      "fetta",
+      "fette",
+      "tranche",
+      "tranches"
     ]
   },
   "strip": {
@@ -1478,6 +1862,10 @@
       {
         "locale": "da",
         "name": "strimmel"
+      },
+      {
+        "locale": "it",
+        "name": "striscia"
       }
     ],
     "plural": [
@@ -1500,6 +1888,10 @@
       {
         "locale": "da",
         "name": "strimler"
+      },
+      {
+        "locale": "it",
+        "name": "strisce"
       }
     ],
     "alternates": [
@@ -1509,7 +1901,11 @@
       "strip",
       "strips",
       "채",
-      "가늘게썬조각"
+      "가늘게썬조각",
+      "striscia",
+      "strisce",
+      "listarella",
+      "listarelle"
     ]
   },
   "sheet": {
@@ -1533,6 +1929,14 @@
       {
         "locale": "da",
         "name": "ark"
+      },
+      {
+        "locale": "it",
+        "name": "foglio"
+      },
+      {
+        "locale": "fr",
+        "name": "feuille"
       }
     ],
     "plural": [
@@ -1555,6 +1959,14 @@
       {
         "locale": "da",
         "name": "ark"
+      },
+      {
+        "locale": "it",
+        "name": "fogli"
+      },
+      {
+        "locale": "fr",
+        "name": "feuilles"
       }
     ],
     "alternates": [
@@ -1562,7 +1974,11 @@
       "vellen",
       "velletje",
       "velletjes",
-      "장"
+      "장",
+      "foglio",
+      "fogli",
+      "feuille",
+      "feuilles"
     ]
   },
   "serving": {
@@ -1586,6 +2002,10 @@
       {
         "locale": "da",
         "name": "portion"
+      },
+      {
+        "locale": "it",
+        "name": "porzione"
       }
     ],
     "plural": [
@@ -1608,6 +2028,10 @@
       {
         "locale": "da",
         "name": "portioner"
+      },
+      {
+        "locale": "it",
+        "name": "porzioni"
       }
     ],
     "alternates": [
@@ -1619,7 +2043,9 @@
       "portions",
       "serving",
       "servings",
-      "인분"
+      "인분",
+      "porzione",
+      "porzioni"
     ]
   },
   "round_slice": {
@@ -1643,6 +2069,10 @@
       {
         "locale": "da",
         "name": "skive"
+      },
+      {
+        "locale": "it",
+        "name": "rondella"
       }
     ],
     "plural": [
@@ -1665,6 +2095,10 @@
       {
         "locale": "da",
         "name": "skiver"
+      },
+      {
+        "locale": "it",
+        "name": "rondelle"
       }
     ],
     "alternates": [
@@ -1674,7 +2108,9 @@
       "둥근 조각",
       "동그랗게 썬 것",
       "rundskive",
-      "rundtenom"
+      "rundtenom",
+      "rondella",
+      "rondelle"
     ]
   },
   "ring": {
@@ -1698,6 +2134,10 @@
       {
         "locale": "da",
         "name": "ring"
+      },
+      {
+        "locale": "it",
+        "name": "anello"
       }
     ],
     "plural": [
@@ -1720,16 +2160,13 @@
       {
         "locale": "da",
         "name": "ringe"
+      },
+      {
+        "locale": "it",
+        "name": "anelli"
       }
     ],
-    "alternates": [
-      "ring",
-      "ringen",
-      "ringlein",
-      "링",
-      "고리 모양",
-      "ringe"
-    ]
+    "alternates": ["ring", "ringen", "ringlein", "링", "고리 모양", "ringe", "anello", "anelli"]
   },
   "ball": {
     "short": [
@@ -1752,6 +2189,10 @@
       {
         "locale": "da",
         "name": "kugle"
+      },
+      {
+        "locale": "it",
+        "name": "pallina"
       }
     ],
     "plural": [
@@ -1774,6 +2215,10 @@
       {
         "locale": "da",
         "name": "kugler"
+      },
+      {
+        "locale": "it",
+        "name": "palline"
       }
     ],
     "alternates": [
@@ -1784,7 +2229,9 @@
       "kügelchen",
       "알",
       "경단",
-      "볼"
+      "볼",
+      "pallina",
+      "palline"
     ]
   },
   "dash": {
@@ -1808,6 +2255,10 @@
       {
         "locale": "da",
         "name": "stænk"
+      },
+      {
+        "locale": "it",
+        "name": "goccio"
       }
     ],
     "plural": [
@@ -1830,6 +2281,10 @@
       {
         "locale": "da",
         "name": "stænk"
+      },
+      {
+        "locale": "it",
+        "name": "gocci"
       }
     ],
     "alternates": [
@@ -1838,7 +2293,10 @@
       "dashes",
       "약간",
       "소량",
-      "et stænk"
+      "et stænk",
+      "goccio",
+      "gocci",
+      "un goccio"
     ]
   },
   "drizzle": {
@@ -1862,6 +2320,10 @@
       {
         "locale": "da",
         "name": "dryp"
+      },
+      {
+        "locale": "it",
+        "name": "filo"
       }
     ],
     "plural": [
@@ -1884,6 +2346,10 @@
       {
         "locale": "da",
         "name": "dryp"
+      },
+      {
+        "locale": "it",
+        "name": "fili"
       }
     ],
     "alternates": [
@@ -1892,7 +2358,10 @@
       "drizzles",
       "spritzerchen",
       "살짝",
-      "뿌림"
+      "뿌림",
+      "filo",
+      "fili",
+      "un filo"
     ]
   },
   "scoop": {
@@ -1916,6 +2385,10 @@
       {
         "locale": "da",
         "name": "kugle"
+      },
+      {
+        "locale": "it",
+        "name": "pallina"
       }
     ],
     "plural": [
@@ -1938,14 +2411,13 @@
       {
         "locale": "da",
         "name": "kugler"
+      },
+      {
+        "locale": "it",
+        "name": "palline"
       }
     ],
-    "alternates": [
-      "scoop",
-      "scoops",
-      "스쿱",
-      "국자"
-    ]
+    "alternates": ["scoop", "scoops", "스쿱", "국자", "pallina", "palline"]
   },
   "stick": {
     "short": [
@@ -1968,6 +2440,10 @@
       {
         "locale": "da",
         "name": "stang"
+      },
+      {
+        "locale": "it",
+        "name": "bastoncino"
       }
     ],
     "plural": [
@@ -1990,6 +2466,10 @@
       {
         "locale": "da",
         "name": "stænger"
+      },
+      {
+        "locale": "it",
+        "name": "bastoncini"
       }
     ],
     "alternates": [
@@ -1998,7 +2478,11 @@
       "sticks",
       "stänglein",
       "막대",
-      "스틱"
+      "스틱",
+      "bastoncino",
+      "bastoncini",
+      "stecca",
+      "stecche"
     ]
   },
   "tub": {
@@ -2022,6 +2506,10 @@
       {
         "locale": "da",
         "name": "bæger"
+      },
+      {
+        "locale": "it",
+        "name": "vaschetta"
       }
     ],
     "plural": [
@@ -2044,6 +2532,10 @@
       {
         "locale": "da",
         "name": "bægre"
+      },
+      {
+        "locale": "it",
+        "name": "vaschette"
       }
     ],
     "alternates": [
@@ -2051,7 +2543,11 @@
       "tub",
       "tubs",
       "통",
-      "용기"
+      "용기",
+      "vaschetta",
+      "vaschette",
+      "contenitore",
+      "contenitori"
     ]
   },
   "capful": {
@@ -2075,6 +2571,10 @@
       {
         "locale": "da",
         "name": "hætte"
+      },
+      {
+        "locale": "it",
+        "name": "tappo"
       }
     ],
     "plural": [
@@ -2097,15 +2597,13 @@
       {
         "locale": "da",
         "name": "hætter"
+      },
+      {
+        "locale": "it",
+        "name": "tappi"
       }
     ],
-    "alternates": [
-      "cap full",
-      "capful",
-      "capfuls",
-      "뚜껑",
-      "캡"
-    ]
+    "alternates": ["cap full", "capful", "capfuls", "뚜껑", "캡", "tappo", "tappi", "un tappo"]
   },
   "pouch": {
     "short": [
@@ -2128,6 +2626,10 @@
       {
         "locale": "da",
         "name": "pose"
+      },
+      {
+        "locale": "it",
+        "name": "bustina"
       }
     ],
     "plural": [
@@ -2150,14 +2652,13 @@
       {
         "locale": "da",
         "name": "poser"
+      },
+      {
+        "locale": "it",
+        "name": "bustine"
       }
     ],
-    "alternates": [
-      "pouch",
-      "pouches",
-      "파우치",
-      "주머니"
-    ]
+    "alternates": ["pouch", "pouches", "파우치", "주머니", "bustina", "bustine"]
   },
   "sleeve": {
     "short": [
@@ -2180,6 +2681,10 @@
       {
         "locale": "da",
         "name": "omslag"
+      },
+      {
+        "locale": "it",
+        "name": "confezione"
       }
     ],
     "plural": [
@@ -2202,14 +2707,13 @@
       {
         "locale": "da",
         "name": "omslag"
+      },
+      {
+        "locale": "it",
+        "name": "confezioni"
       }
     ],
-    "alternates": [
-      "sleeve",
-      "sleeves",
-      "봉지",
-      "묶음"
-    ]
+    "alternates": ["sleeve", "sleeves", "봉지", "묶음", "confezione", "confezioni"]
   },
   "roll": {
     "short": [
@@ -2232,6 +2736,10 @@
       {
         "locale": "da",
         "name": "rulle"
+      },
+      {
+        "locale": "it",
+        "name": "rotolo"
       }
     ],
     "plural": [
@@ -2254,6 +2762,10 @@
       {
         "locale": "da",
         "name": "ruller"
+      },
+      {
+        "locale": "it",
+        "name": "rotoli"
       }
     ],
     "alternates": [
@@ -2261,7 +2773,11 @@
       "rolls",
       "röllchen",
       "롤",
-      "말이"
+      "말이",
+      "rotolo",
+      "rotoli",
+      "rotolino",
+      "rotolini"
     ]
   },
   "ear": {
@@ -2285,6 +2801,10 @@
       {
         "locale": "da",
         "name": "kolbe"
+      },
+      {
+        "locale": "it",
+        "name": "pannocchia"
       }
     ],
     "plural": [
@@ -2307,6 +2827,10 @@
       {
         "locale": "da",
         "name": "kolber"
+      },
+      {
+        "locale": "it",
+        "name": "pannocchie"
       }
     ],
     "alternates": [
@@ -2316,7 +2840,9 @@
       "ears of corn",
       "개",
       "이삭",
-      "majskolbe"
+      "majskolbe",
+      "pannocchia",
+      "pannocchie"
     ]
   },
   "wedge": {
@@ -2340,6 +2866,10 @@
       {
         "locale": "da",
         "name": "båd"
+      },
+      {
+        "locale": "it",
+        "name": "spicchio"
       }
     ],
     "plural": [
@@ -2362,15 +2892,13 @@
       {
         "locale": "da",
         "name": "både"
+      },
+      {
+        "locale": "it",
+        "name": "spicchi"
       }
     ],
-    "alternates": [
-      "ecke",
-      "keil",
-      "wedge",
-      "wedges",
-      "쪽"
-    ]
+    "alternates": ["ecke", "keil", "wedge", "wedges", "쪽", "spicchio", "spicchi"]
   },
   "chunk": {
     "short": [
@@ -2393,6 +2921,10 @@
       {
         "locale": "da",
         "name": "klump"
+      },
+      {
+        "locale": "it",
+        "name": "pezzo"
       }
     ],
     "plural": [
@@ -2415,14 +2947,13 @@
       {
         "locale": "da",
         "name": "klumper"
+      },
+      {
+        "locale": "it",
+        "name": "pezzi"
       }
     ],
-    "alternates": [
-      "chunk",
-      "chunks",
-      "덩어리",
-      "토막"
-    ]
+    "alternates": ["chunk", "chunks", "덩어리", "토막", "pezzo", "pezzi", "tocco", "tocchi"]
   },
   "cube": {
     "short": [
@@ -2445,6 +2976,10 @@
       {
         "locale": "da",
         "name": "terning"
+      },
+      {
+        "locale": "it",
+        "name": "cubetto"
       }
     ],
     "plural": [
@@ -2467,6 +3002,10 @@
       {
         "locale": "da",
         "name": "terninger"
+      },
+      {
+        "locale": "it",
+        "name": "cubetti"
       }
     ],
     "alternates": [
@@ -2474,7 +3013,11 @@
       "cubes",
       "würfelchen",
       "깍둑썰기",
-      "큐브"
+      "큐브",
+      "cubetto",
+      "cubetti",
+      "dado",
+      "dadi"
     ]
   },
   "fillet": {
@@ -2498,6 +3041,10 @@
       {
         "locale": "da",
         "name": "filet"
+      },
+      {
+        "locale": "it",
+        "name": "filetto"
       }
     ],
     "plural": [
@@ -2520,6 +3067,10 @@
       {
         "locale": "da",
         "name": "fileter"
+      },
+      {
+        "locale": "it",
+        "name": "filetti"
       }
     ],
     "alternates": [
@@ -2529,7 +3080,9 @@
       "fillets",
       "토막",
       "필렛",
-      "필레"
+      "필레",
+      "filetto",
+      "filetti"
     ]
   },
   "heaping_tablespoon": {
@@ -2553,6 +3106,10 @@
       {
         "locale": "da",
         "name": "toppet spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaio colmo"
       }
     ],
     "plural": [
@@ -2575,6 +3132,10 @@
       {
         "locale": "da",
         "name": "toppet spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiai colmi"
       }
     ],
     "alternates": [
@@ -2600,7 +3161,9 @@
       "spiseske med top",
       "spsk med top",
       "spsk m. top",
-      "spsk. m. top"
+      "spsk. m. top",
+      "cucchiaio colmo",
+      "cucchiai colmi"
     ]
   },
   "scant_tablespoon": {
@@ -2624,6 +3187,10 @@
       {
         "locale": "da",
         "name": "strøget spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaio raso"
       }
     ],
     "plural": [
@@ -2646,6 +3213,10 @@
       {
         "locale": "da",
         "name": "strøget spsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiai rasi"
       }
     ],
     "alternates": [
@@ -2666,7 +3237,9 @@
       "깎은 큰술",
       "strøget spsk.",
       "strøget spiseskefuld",
-      "strøget spiseske"
+      "strøget spiseske",
+      "cucchiaio raso",
+      "cucchiai rasi"
     ]
   },
   "generous_pinch": {
@@ -2690,6 +3263,10 @@
       {
         "locale": "da",
         "name": "godt nip"
+      },
+      {
+        "locale": "it",
+        "name": "pizzico abbondante"
       }
     ],
     "plural": [
@@ -2712,6 +3289,10 @@
       {
         "locale": "da",
         "name": "gode nip"
+      },
+      {
+        "locale": "it",
+        "name": "pizzichi abbondanti"
       }
     ],
     "alternates": [
@@ -2725,7 +3306,10 @@
       "넉넉한 꼬집",
       "큰 꼬집",
       "god knivspids",
-      "stor knivspids"
+      "stor knivspids",
+      "pizzico abbondante",
+      "pizzichi abbondanti",
+      "pizzicone"
     ]
   },
   "large_splash": {
@@ -2749,6 +3333,10 @@
       {
         "locale": "da",
         "name": "stort skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzo abbondante"
       }
     ],
     "plural": [
@@ -2771,6 +3359,10 @@
       {
         "locale": "da",
         "name": "store skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzi abbondanti"
       }
     ],
     "alternates": [
@@ -2780,7 +3372,9 @@
       "großer schuß",
       "großzügiger schuss",
       "넉넉히",
-      "godt skvæt"
+      "godt skvæt",
+      "spruzzo abbondante",
+      "spruzzi abbondanti"
     ]
   },
   "dozen": {
@@ -2804,6 +3398,10 @@
       {
         "locale": "da",
         "name": "dusin"
+      },
+      {
+        "locale": "it",
+        "name": "dozzina"
       }
     ],
     "plural": [
@@ -2826,15 +3424,13 @@
       {
         "locale": "da",
         "name": "dusin"
+      },
+      {
+        "locale": "it",
+        "name": "dozzine"
       }
     ],
-    "alternates": [
-      "dutzende",
-      "dz",
-      "dz.",
-      "다스",
-      "더즌"
-    ]
+    "alternates": ["dutzende", "dz", "dz.", "다스", "더즌", "dozzina", "dozzine"]
   },
   "small_splash": {
     "short": [
@@ -2857,6 +3453,10 @@
       {
         "locale": "da",
         "name": "lille skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzino"
       }
     ],
     "plural": [
@@ -2879,6 +3479,10 @@
       {
         "locale": "da",
         "name": "lille skvæt"
+      },
+      {
+        "locale": "it",
+        "name": "spruzzini"
       }
     ],
     "alternates": [
@@ -2886,7 +3490,10 @@
       "winziger schuss",
       "조금",
       "소량",
-      "en smule"
+      "en smule",
+      "spruzzino",
+      "spruzzini",
+      "piccolo spruzzo"
     ]
   },
   "bulb": {
@@ -2910,6 +3517,10 @@
       {
         "locale": "da",
         "name": "hoved"
+      },
+      {
+        "locale": "it",
+        "name": "bulbo"
       }
     ],
     "plural": [
@@ -2932,13 +3543,13 @@
       {
         "locale": "da",
         "name": "hoveder"
+      },
+      {
+        "locale": "it",
+        "name": "bulbi"
       }
     ],
-    "alternates": [
-      "knöllchen",
-      "통",
-      "뿌리"
-    ]
+    "alternates": ["knöllchen", "통", "뿌리", "bulbo", "bulbi"]
   },
   "head": {
     "short": [
@@ -2961,6 +3572,10 @@
       {
         "locale": "da",
         "name": "hoved"
+      },
+      {
+        "locale": "it",
+        "name": "cespo"
       }
     ],
     "plural": [
@@ -2983,13 +3598,13 @@
       {
         "locale": "da",
         "name": "hoveder"
+      },
+      {
+        "locale": "it",
+        "name": "cespi"
       }
     ],
-    "alternates": [
-      "köpfchen",
-      "통",
-      "포기"
-    ]
+    "alternates": ["köpfchen", "통", "포기", "cespo", "cespi", "testa", "teste"]
   },
   "to_taste": {
     "short": [
@@ -3012,6 +3627,10 @@
       {
         "locale": "da",
         "name": "efter smag"
+      },
+      {
+        "locale": "it",
+        "name": "q.b."
       }
     ],
     "plural": [
@@ -3034,6 +3653,10 @@
       {
         "locale": "da",
         "name": "efter smag"
+      },
+      {
+        "locale": "it",
+        "name": "q.b."
       }
     ],
     "alternates": [
@@ -3045,7 +3668,10 @@
       "취향껏",
       "smages til",
       "efter behag",
-      "efter behov"
+      "efter behov",
+      "q.b.",
+      "quanto basta",
+      "a piacere"
     ]
   },
   "pound": {
@@ -3069,6 +3695,10 @@
       {
         "locale": "da",
         "name": "pund"
+      },
+      {
+        "locale": "it",
+        "name": "libbra"
       }
     ],
     "plural": [
@@ -3091,14 +3721,13 @@
       {
         "locale": "da",
         "name": "pund"
+      },
+      {
+        "locale": "it",
+        "name": "libbre"
       }
     ],
-    "alternates": [
-      "pfd",
-      "pfd.",
-      "파운드",
-      "lb"
-    ]
+    "alternates": ["pfd", "pfd.", "파운드", "lb", "libbra", "libbre"]
   },
   "bar": {
     "short": [
@@ -3121,6 +3750,10 @@
       {
         "locale": "da",
         "name": "plade"
+      },
+      {
+        "locale": "it",
+        "name": "tavoletta"
       }
     ],
     "plural": [
@@ -3143,13 +3776,21 @@
       {
         "locale": "da",
         "name": "plader"
+      },
+      {
+        "locale": "it",
+        "name": "tavolette"
       }
     ],
     "alternates": [
       "reihen",
       "riegelchen",
       "판",
-      "바"
+      "바",
+      "tavoletta",
+      "tavolette",
+      "barretta",
+      "barrette"
     ]
   },
   "bowl": {
@@ -3173,6 +3814,10 @@
       {
         "locale": "da",
         "name": "skål"
+      },
+      {
+        "locale": "it",
+        "name": "ciotola"
       }
     ],
     "plural": [
@@ -3195,13 +3840,13 @@
       {
         "locale": "da",
         "name": "skåle"
+      },
+      {
+        "locale": "it",
+        "name": "ciotole"
       }
     ],
-    "alternates": [
-      "schälchen",
-      "공기",
-      "그릇"
-    ]
+    "alternates": ["schälchen", "공기", "그릇", "ciotola", "ciotole", "scodella", "scodelle"]
   },
   "heaping_teaspoon": {
     "short": [
@@ -3224,6 +3869,10 @@
       {
         "locale": "da",
         "name": "toppet tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaino colmo"
       }
     ],
     "plural": [
@@ -3246,6 +3895,10 @@
       {
         "locale": "da",
         "name": "toppede tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaini colmi"
       }
     ],
     "alternates": [
@@ -3268,7 +3921,9 @@
       "teske med top",
       "tsk med top",
       "tsk m. top",
-      "tsk. m. top"
+      "tsk. m. top",
+      "cucchiaino colmo",
+      "cucchiaini colmi"
     ]
   },
   "scant_teaspoon": {
@@ -3292,6 +3947,10 @@
       {
         "locale": "da",
         "name": "strøget tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaino raso"
       }
     ],
     "plural": [
@@ -3314,6 +3973,10 @@
       {
         "locale": "da",
         "name": "strøget tsk"
+      },
+      {
+        "locale": "it",
+        "name": "cucchiaini rasi"
       }
     ],
     "alternates": [
@@ -3332,7 +3995,9 @@
       "깎은 작은술",
       "strøget tsk.",
       "strøget teskefuld",
-      "strøget teske"
+      "strøget teske",
+      "cucchiaino raso",
+      "cucchiaini rasi"
     ]
   },
   "pot": {
@@ -3356,6 +4021,10 @@
       {
         "locale": "da",
         "name": "gryde"
+      },
+      {
+        "locale": "it",
+        "name": "pentola"
       }
     ],
     "plural": [
@@ -3378,12 +4047,13 @@
       {
         "locale": "da",
         "name": "gryder"
+      },
+      {
+        "locale": "it",
+        "name": "pentole"
       }
     ],
-    "alternates": [
-      "냄비",
-      "솥"
-    ]
+    "alternates": ["냄비", "솥", "pentola", "pentole"]
   },
   "drop": {
     "short": [
@@ -3406,6 +4076,10 @@
       {
         "locale": "da",
         "name": "dråbe"
+      },
+      {
+        "locale": "it",
+        "name": "goccia"
       }
     ],
     "plural": [
@@ -3428,6 +4102,10 @@
       {
         "locale": "da",
         "name": "dråber"
+      },
+      {
+        "locale": "it",
+        "name": "gocce"
       }
     ],
     "alternates": [
@@ -3439,7 +4117,10 @@
       "trpf.",
       "tröpfchen",
       "방울",
-      "한방울"
+      "한방울",
+      "goccia",
+      "gocce",
+      "goccina"
     ]
   },
   "ounce": {
@@ -3463,6 +4144,10 @@
       {
         "locale": "da",
         "name": "oz"
+      },
+      {
+        "locale": "it",
+        "name": "oncia"
       }
     ],
     "plural": [
@@ -3485,13 +4170,13 @@
       {
         "locale": "da",
         "name": "oz"
+      },
+      {
+        "locale": "it",
+        "name": "once"
       }
     ],
-    "alternates": [
-      "oz",
-      "oz.",
-      "온스"
-    ]
+    "alternates": ["oz", "oz.", "온스", "oncia", "once"]
   },
   "milliliter": {
     "short": [
@@ -3513,6 +4198,14 @@
       },
       {
         "locale": "da",
+        "name": "ml"
+      },
+      {
+        "locale": "it",
+        "name": "ml"
+      },
+      {
+        "locale": "fr",
         "name": "ml"
       }
     ],
@@ -3536,6 +4229,14 @@
       {
         "locale": "da",
         "name": "milliliter"
+      },
+      {
+        "locale": "it",
+        "name": "ml"
+      },
+      {
+        "locale": "fr",
+        "name": "millilitres"
       }
     ],
     "alternates": [
@@ -3546,7 +4247,9 @@
       "ml",
       "ml.",
       "밀리리터",
-      "밀리"
+      "밀리",
+      "millilitro",
+      "millilitri"
     ]
   },
   "liter": {
@@ -3570,6 +4273,14 @@
       {
         "locale": "da",
         "name": "l"
+      },
+      {
+        "locale": "it",
+        "name": "l"
+      },
+      {
+        "locale": "fr",
+        "name": "l"
       }
     ],
     "plural": [
@@ -3592,18 +4303,17 @@
       {
         "locale": "da",
         "name": "liter"
+      },
+      {
+        "locale": "it",
+        "name": "l"
+      },
+      {
+        "locale": "fr",
+        "name": "litres"
       }
     ],
-    "alternates": [
-      "liter",
-      "liters",
-      "litre",
-      "litres",
-      "l",
-      "l.",
-      "L",
-      "리터"
-    ]
+    "alternates": ["liter", "liters", "litre", "litres", "l", "l.", "L", "리터", "litro", "litri"]
   },
   "centimeter": {
     "short": [
@@ -3625,6 +4335,14 @@
       },
       {
         "locale": "da",
+        "name": "cm"
+      },
+      {
+        "locale": "it",
+        "name": "cm"
+      },
+      {
+        "locale": "fr",
         "name": "cm"
       }
     ],
@@ -3648,6 +4366,14 @@
       {
         "locale": "da",
         "name": "cm"
+      },
+      {
+        "locale": "it",
+        "name": "cm"
+      },
+      {
+        "locale": "fr",
+        "name": "centimètres"
       }
     ],
     "alternates": [
@@ -3656,7 +4382,11 @@
       "zentimeter",
       "cm.",
       "센치",
-      "센치미터"
+      "센치미터",
+      "centimetro",
+      "centimetri",
+      "centimètre",
+      "centimètres"
     ]
   }
 }

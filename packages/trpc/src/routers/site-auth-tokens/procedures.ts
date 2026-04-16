@@ -38,21 +38,40 @@ const update = authedProcedure
   .input(UpdateSiteAuthTokenInputSchema)
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, tokenId: input.id }, "Updating site auth token");
-    const token = await updateSiteAuthToken(ctx.user.id, input);
+    const result = await updateSiteAuthToken(ctx.user.id, input);
 
-    log.info({ userId: ctx.user.id, tokenId: token.id }, "Site auth token updated");
+    if (result.stale || !result.value) {
+      log.info(
+        { userId: ctx.user.id, tokenId: input.id, version: input.version },
+        "Ignoring stale site auth token update"
+      );
 
-    return token;
+      return { stale: true };
+    }
+
+    log.info({ userId: ctx.user.id, tokenId: result.value.id }, "Site auth token updated");
+
+    return { ...result.value, stale: false };
   });
 
 const remove = authedProcedure
   .input(DeleteSiteAuthTokenInputSchema)
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, tokenId: input.id }, "Deleting site auth token");
-    await deleteSiteAuthToken(ctx.user.id, input.id);
+    const result = await deleteSiteAuthToken(ctx.user.id, input.id, input.version);
+
+    if (result.stale) {
+      log.info(
+        { userId: ctx.user.id, tokenId: input.id, version: input.version },
+        "Ignoring stale site auth token delete"
+      );
+
+      return { success: true, stale: true };
+    }
+
     log.info({ userId: ctx.user.id, tokenId: input.id }, "Site auth token deleted");
 
-    return { success: true };
+    return { success: true, stale: false };
   });
 
 export const siteAuthTokensProcedures = router({ create, list, update, remove });

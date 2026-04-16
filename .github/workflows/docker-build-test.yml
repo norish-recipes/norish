@@ -18,45 +18,6 @@ permissions:
 
 jobs:
   docker-build:
-    name: Docker Multi-Arch Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Build production
-        run: pnpm run build
-
-      - name: Free up disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo docker system prune -af
-          df -h
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Build Docker images (multi-arch)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./docker/Dockerfile
-          push: false
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            norish:test
-
-      - name: Build summary
-        run: |
-          echo "Docker multi-arch build successful!"
+    uses: ./.github/workflows/_docker-build.yml
+    with:
+      image-tags: norish:test

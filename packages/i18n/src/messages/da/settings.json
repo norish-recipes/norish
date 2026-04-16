@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API-nøgler",
       "description": "API-nøgler giver programmatisk adgang til Norish API. Brug dem til integrationer, genveje og automatisering.",
+      "docsLink": "Åbn API-dokumentation",
       "keyNameLabel": "Nøglenavn (valgfrit)",
       "keyNamePlaceholder": "f.eks. iOS-genvej",
       "createKey": "Opret nøgle",
@@ -127,6 +128,33 @@
         "description": "Vis favorit/hjerte-ikoner på opskriftskort og detaljesider"
       },
       "applyError": "Kunne ikke anvende præference"
+    },
+    "shareLinks": {
+      "title": "Opskriftdelelinks",
+      "description": "Gennemse og administrer alle offentlige opskriftlinks, du har oprettet.",
+      "empty": "Ingen delelinks fundet.",
+      "table": {
+        "recipe": "OPSKRIFT",
+        "status": "STATUS",
+        "created": "OPRETTET",
+        "expires": "UDLØBER",
+        "actions": "HANDLINGER"
+      },
+      "revokeModal": {
+        "title": "Tilbagekald link",
+        "message": "Dette link til {recipeName} holder op med at virke, indtil du genaktiverer det.",
+        "confirm": "Tilbagekald"
+      },
+      "reactivateModal": {
+        "title": "Genaktiver link",
+        "message": "Dette link til {recipeName} bliver aktivt igen.",
+        "confirm": "Genaktiver"
+      },
+      "deleteModal": {
+        "title": "Slet link",
+        "message": "Slet dette delelink til {recipeName}? Dette kan ikke fortrydes.",
+        "confirm": "Slet link"
+      }
     }
   },
   "household": {
@@ -179,7 +207,9 @@
       "regenerateButton": "Generer ny",
       "expired": "Udløbet",
       "noCodeDescription": "Ingen aktiv tilmeldingskode. Generer én for at invitere nye medlemmer.",
-      "generateButton": "Generer tilmeldingskode"
+      "generateButton": "Generer tilmeldingskode",
+      "copySuccess": "Tilmeldingskode kopieret",
+      "copyFailed": "Kunne ikke kopiere tilmeldingskoden"
     },
     "create": {
       "title": "Opret husstand",
@@ -275,6 +305,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderation af opskriftdeling",
+      "description": "Gennemse offentlige opskriftlinks på tværs af instansen og moderer deres livscyklus.",
+      "empty": "Ingen delelinks fundet.",
+      "table": {
+        "recipe": "OPSKRIFT",
+        "owner": "EJER",
+        "status": "STATUS",
+        "created": "OPRETTET",
+        "expires": "UDLØBER",
+        "actions": "HANDLINGER"
+      },
+      "revokeModal": {
+        "title": "Tilbagekald link",
+        "message": "Dette link til {recipeName} holder op med at virke, indtil det genaktiveres.",
+        "confirm": "Tilbagekald"
+      },
+      "reactivateModal": {
+        "title": "Genaktiver link",
+        "message": "Dette link til {recipeName} bliver aktivt igen.",
+        "confirm": "Genaktiver"
+      },
+      "deleteModal": {
+        "title": "Slet link",
+        "message": "Slet dette delelink til {recipeName}? Dette kan ikke fortrydes.",
+        "confirm": "Slet link"
+      }
+    },
     "general": {
       "title": "Generelt",
       "allowRegistration": "Tillad ny brugerregistrering",
@@ -492,6 +550,7 @@
       "temperature": "Temperatur: {value}",
       "temperatureHint": "Lavere = mere fokuseret, Højere = mere kreativ",
       "maxTokens": "Maks. tokens",
+      "requestTimeout": "Timeout for anmodning (ms)",
       "autoTagAllergies": "Registrér allergentags automatisk",
       "autoTagAllergiesDescription": "Tilføj automatisk allergenrelaterede tags ved import af opskrifter",
       "alwaysUseAI": "Brug altid AI-import",
@@ -519,6 +578,8 @@
       "maxFileSizeDescription": "Maksimal størrelse for downloadede videofiler",
       "ytDlpVersion": "yt-dlp-version",
       "ytDlpVersionDescription": "Version af yt-dlp til brug ved videodownloads",
+      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxyDescription": "HTTP/SOCKS5-proxy til yt-dlp",
       "transcription": "Transskription",
       "transcriptionDescription": "Konverter videoens lyd til tekst til opskriftudtrækning",
       "transcriptionProvider": "Transskriptionsudbyder",

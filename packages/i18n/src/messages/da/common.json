@@ -94,7 +94,9 @@
     "connecting": "Opretter forbindelse til Norish...",
     "syncing": "Synkroniserer, vent venligst...",
     "checkInternet": "Tjek venligst din internetforbindelse",
-    "gettingUpdates": "Et øjeblik mens vi henter de seneste opdateringer"
+    "gettingUpdates": "Et øjeblik mens vi henter de seneste opdateringer",
+    "offlineBanner": "Du er offline og ser cachelagrede data",
+    "serverUnreachableBanner": "Norish-serveren er ikke tilgængelig, ser cachelagrede data"
   },
   "language": {
     "title": "Sprog"
@@ -118,7 +120,7 @@
       "placeholder": "Indsæt en opskrift (fritekst) eller JSON-LD her...",
       "characters": "{count} / {max} tegn",
       "tooLarge": "Indsætningen er for stor",
-      "maxCharacters": "Maksimalt {max} tegn er tilladt",
+      "maxCharacters": "Maksimalt {max} tegn pr. opskrift",
       "importing": "Importerer opskrift...",
       "importingWithAI": "Importerer opskrift med AI...",
       "inProgress": "Importering i gang, vent venligst...",

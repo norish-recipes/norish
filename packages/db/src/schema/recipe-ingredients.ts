@@ -2,6 +2,7 @@ import { index, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-c
 
 import { ingredients } from "./ingredients";
 import { measurementSystemEnum, recipes } from "./recipes";
+import { versionColumn } from "./shared";
 
 export const recipeIngredients = pgTable(
   "recipe_ingredients",
@@ -19,6 +20,7 @@ export const recipeIngredients = pgTable(
     systemUsed: measurementSystemEnum("system_used").notNull().default("metric"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    ...versionColumn,
   },
   (t) => [
     index("idx_recipe_ingredients_recipe_id").on(t.recipeId),

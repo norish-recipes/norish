@@ -1,7 +1,3 @@
-import { createConfigHooks } from '@norish/shared-react/hooks';
-
-import { useTRPC } from '@/providers/trpc-provider';
-
-const sharedConfigHooks = createConfigHooks({ useTRPC });
+import { sharedConfigHooks } from "./shared-config-hooks";
 
 export const useTimerKeywordsQuery = sharedConfigHooks.useTimerKeywordsQuery;

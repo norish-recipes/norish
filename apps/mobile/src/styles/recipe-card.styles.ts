@@ -1,30 +1,42 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   imageContainer: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 16 / 11,
   },
   imageFill: {
     ...StyleSheet.absoluteFillObject,
   },
-  heartPill: {
-    overflow: 'hidden',
-    borderRadius: 999,
-    width: 30,
-    height: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
+  heartOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
   },
   tagRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 6,
     paddingHorizontal: 10,
   },
   title: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     lineHeight: 22,
+    flex: 1,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  titleHeartBadge: {
+    minWidth: 28,
+    alignItems: "flex-end",
+    paddingTop: 1,
   },
   description: {
     fontSize: 14,
@@ -33,10 +45,10 @@ export const styles = StyleSheet.create({
   categories: {
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   categoriesRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 6,
     paddingVertical: 2,
   },
@@ -46,13 +58,13 @@ export const styles = StyleSheet.create({
   highlightLabel: {
     fontSize: 10,
     lineHeight: 14,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.4,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   highlightValue: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     lineHeight: 18,
   },
   highlightDivider: {
@@ -61,12 +73,12 @@ export const styles = StyleSheet.create({
     borderRadius: 1,
   },
   ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
   },
   metricRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
 });

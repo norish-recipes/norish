@@ -7,12 +7,14 @@ This work touches multiple modules (mobile UI and shared i18n resources), so the
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Align mobile UI translation key usage to canonical keys defined in `packages/i18n`.
 - Ensure mobile-used strings are present for every supported language.
 - Prefer reuse of existing semantically equivalent keys before introducing new keys.
 - Add a validation pass that can detect unresolved keys and missing locale entries for mobile-used namespaces.
 
 **Non-Goals:**
+
 - Rewriting localization architecture or replacing the i18n library.
 - Full copy rewrite for all products beyond mobile scope.
 - Introducing runtime machine translation or fallback generation.

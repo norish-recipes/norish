@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "Klucze API",
       "description": "Klucze API umożliwiają programowy dostęp do API Norish. Używaj ich do integracji, skrótów i automatyzacji.",
+      "docsLink": "Otwórz dokumentację API",
       "keyNameLabel": "Nazwa klucza (opcjonalnie)",
       "keyNamePlaceholder": "np. Skrót iOS",
       "createKey": "Utwórz klucz",
@@ -127,6 +128,33 @@
         "description": "Wyświetlaj ikony ulubionych/serca na kartach przepisów i stronach szczegółów"
       },
       "applyError": "Nie udało się zastosować preferencji"
+    },
+    "shareLinks": {
+      "title": "Linki do udostępniania przepisów",
+      "description": "Przeglądaj i zarządzaj wszystkimi publicznymi linkami do przepisów, które utworzyłeś.",
+      "empty": "Nie znaleziono linków do udostępniania.",
+      "table": {
+        "recipe": "PRZEPIS",
+        "status": "STATUS",
+        "created": "UTWORZONO",
+        "expires": "WYGASA",
+        "actions": "AKCJE"
+      },
+      "revokeModal": {
+        "title": "Odwołaj link",
+        "message": "Ten link do {recipeName} przestanie działać do momentu reaktywacji.",
+        "confirm": "Odwołaj"
+      },
+      "reactivateModal": {
+        "title": "Reaktywuj link",
+        "message": "Ten link do {recipeName} znowu stanie się aktywny.",
+        "confirm": "Reaktywuj"
+      },
+      "deleteModal": {
+        "title": "Usuń link",
+        "message": "Usunąć ten link do {recipeName}? Tej operacji nie można cofnąć.",
+        "confirm": "Usuń link"
+      }
     }
   },
   "household": {
@@ -179,7 +207,9 @@
       "regenerateButton": "Wygeneruj ponownie",
       "expired": "Wygasł",
       "noCodeDescription": "Brak aktywnego kodu dołączenia. Wygeneruj go, aby zaprosić nowych członków.",
-      "generateButton": "Wygeneruj kod dołączenia"
+      "generateButton": "Wygeneruj kod dołączenia",
+      "copySuccess": "Skopiowano kod dołączenia",
+      "copyFailed": "Nie udało się skopiować kodu dołączenia"
     },
     "create": {
       "title": "Utwórz gospodarstwo domowe",
@@ -275,6 +305,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderacja udostępniania przepisów",
+      "description": "Przeglądaj publiczne linki do przepisów w całej instancji i moderuj ich cykl życia.",
+      "empty": "Nie znaleziono linków do udostępniania.",
+      "table": {
+        "recipe": "PRZEPIS",
+        "owner": "WŁAŚCICIEL",
+        "status": "STATUS",
+        "created": "UTWORZONO",
+        "expires": "WYGASA",
+        "actions": "AKCJE"
+      },
+      "revokeModal": {
+        "title": "Odwołaj link",
+        "message": "Ten link do {recipeName} przestanie działać do momentu reaktywacji.",
+        "confirm": "Odwołaj"
+      },
+      "reactivateModal": {
+        "title": "Reaktywuj link",
+        "message": "Ten link do {recipeName} znowu stanie się aktywny.",
+        "confirm": "Reaktywuj"
+      },
+      "deleteModal": {
+        "title": "Usuń link",
+        "message": "Usunąć ten link do {recipeName}? Tej operacji nie można cofnąć.",
+        "confirm": "Usuń link"
+      }
+    },
     "general": {
       "title": "Ogólne",
       "allowRegistration": "Zezwalaj na rejestrację nowych użytkowników",
@@ -492,6 +550,7 @@
       "temperature": "Temperatura: {value}",
       "temperatureHint": "Niżej = bardziej precyzyjne, Wyżej = bardziej kreatywne",
       "maxTokens": "Maks. tokenów",
+      "requestTimeout": "Limit czasu żądania (ms)",
       "autoTagAllergies": "Automatyczne wykrywanie tagów alergii",
       "autoTagAllergiesDescription": "Automatycznie dodawaj tagi związane z alergiami podczas importowania przepisów",
       "alwaysUseAI": "Zawsze używaj AI przy imporcie",
@@ -519,6 +578,8 @@
       "maxFileSizeDescription": "Maksymalny rozmiar pobieranego pliku wideo",
       "ytDlpVersion": "Wersja yt-dlp",
       "ytDlpVersionDescription": "Wersja yt-dlp używana do pobierania wideo",
+      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxyDescription": "Proxy HTTP/SOCKS5 dla yt-dlp",
       "transcription": "Transkrypcja",
       "transcriptionDescription": "Zamień dźwięk z wideo na tekst do ekstrakcji przepisu",
       "transcriptionProvider": "Dostawca transkrypcji",

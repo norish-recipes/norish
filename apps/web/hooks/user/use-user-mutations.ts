@@ -1,16 +1,14 @@
 "use client";
 
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { useMutation } from "@tanstack/react-query";
 
 import type { User } from "@norish/shared/contracts";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
-
-import { useMutation } from "@tanstack/react-query";
 import { getUserPreferences } from "@norish/shared/lib/user-preferences";
 
 import { useUserCacheHelpers } from "./use-user-cache";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type UserMutationsResult = {
   // Profile updates
@@ -29,7 +27,7 @@ export type UserMutationsResult = {
   // Allergies
   setAllergies: (
     allergies: string[]
-  ) => Promise<{ success: boolean; allergies?: string[]; error?: string }>;
+  ) => Promise<{ success: boolean; allergies?: string[]; version?: number; error?: string }>;
 
   // Preferences
   updatePreferences: (
@@ -54,8 +52,14 @@ export type UserMutationsResult = {
  */
 export function useUserMutations(): UserMutationsResult {
   const trpc = useTRPC();
-  const { setUserSettingsData, setAllergiesData, getUserSettingsData, invalidate } =
-    useUserCacheHelpers();
+  const {
+    getAllergiesData,
+    setUserSettingsData,
+    setAllergiesData,
+    getUserSettingsData,
+    invalidate,
+  } = useUserCacheHelpers();
+  const getCurrentUserVersion = () => getUserSettingsData()?.user.version ?? 1;
 
   // Profile mutations
   const updateNameMutation = useMutation(trpc.user.updateName.mutationOptions());
@@ -78,7 +82,10 @@ export function useUserMutations(): UserMutationsResult {
     // Profile updates
     updateName: async (name) => {
       try {
-        const result = await updateNameMutation.mutateAsync({ name });
+        const result = await updateNameMutation.mutateAsync({
+          name,
+          version: getCurrentUserVersion(),
+        });
 
         if (result.success && result.user) {
           setUserSettingsData((prev) => (prev ? { ...prev, user: result.user! } : prev));
@@ -97,6 +104,7 @@ export function useUserMutations(): UserMutationsResult {
         const formData = new FormData();
 
         formData.append("file", file);
+        formData.append("version", String(getCurrentUserVersion()));
 
         const result = await uploadAvatarMutation.mutateAsync(formData);
 
@@ -114,7 +122,7 @@ export function useUserMutations(): UserMutationsResult {
 
     deleteAvatar: async () => {
       try {
-        const result = await deleteAvatarMutation.mutateAsync();
+        const result = await deleteAvatarMutation.mutateAsync({ version: getCurrentUserVersion() });
 
         if (result.success && result.user) {
           setUserSettingsData((prev) => (prev ? { ...prev, user: result.user! } : prev));
@@ -201,10 +209,28 @@ export function useUserMutations(): UserMutationsResult {
     // Allergies
     setAllergies: async (allergies) => {
       try {
-        const result = await setAllergiesMutation.mutateAsync({ allergies });
+        const currentAllergies = getAllergiesData();
+        const result = await setAllergiesMutation.mutateAsync({
+          allergies,
+          version: currentAllergies?.version ?? 0,
+        });
 
         if (result.success) {
-          setAllergiesData(() => ({ allergies: result.allergies ?? [] }));
+          setAllergiesData(() => ({
+            allergies: result.allergies ?? [],
+            version: result.version ?? currentAllergies?.version ?? 0,
+          }));
+          setUserSettingsData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  user: {
+                    ...prev.user,
+                    version: result.version ?? prev.user.version,
+                  },
+                }
+              : prev
+          );
           // Household and calendar updates are handled via WebSocket subscription (onAllergiesUpdated)
         }
 
@@ -233,7 +259,10 @@ export function useUserMutations(): UserMutationsResult {
           };
         });
 
-        const result = await updatePreferencesMutation.mutateAsync({ preferences });
+        const result = await updatePreferencesMutation.mutateAsync({
+          preferences,
+          version: previous?.user.version ?? 1,
+        });
 
         if (!result.success) {
           // Rollback immediately to previous cached value
@@ -246,6 +275,7 @@ export function useUserMutations(): UserMutationsResult {
                   ...prev,
                   user: {
                     ...prev.user,
+                    version: result.version ?? prev.user.version,
                     preferences: { ...getUserPreferences(prev.user), ...result.preferences },
                   },
                 }

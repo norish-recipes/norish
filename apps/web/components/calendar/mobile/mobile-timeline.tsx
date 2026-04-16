@@ -1,9 +1,9 @@
 "use client";
 
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
-import type { Slot } from "@norish/shared/contracts";
-import type { PlannedItemDisplay } from "./types";
-
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
+import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
 import {
   DndContext,
   DragOverlay,
@@ -17,16 +17,16 @@ import {
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useLocale } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
-import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import type { Slot } from "@norish/shared/contracts";
+import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
+
+import type { PlannedItemDisplay } from "./types";
+import { usePrependAnchorRestore } from "../use-prepend-anchor-restore";
 import { TimelineDaySection } from "./timeline-day-section";
 import { TimelineDragOverlay } from "./timeline-drag-overlay";
 import { TimelineScrollToToday } from "./timeline-scroll-to-today";
 import { SLOT_ORDER } from "./types";
-
-import { CalendarSkeletonMobile } from "@/components/skeleton/calendar-skeleton";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 
 const mobileDragActivationDelayMs = 300;
 const mobileDragTolerancePx = 10;
@@ -64,6 +64,10 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   const allDays = useMemo(
     () => eachDayOfInterval(dateRange.start, dateRange.end),
     [dateRange.start, dateRange.end]
+  );
+  const dayKeys = useMemo(() => allDays.map((d) => dateKey(d)), [allDays]);
+  const { captureAnchor, restoreAnchor, shouldAdjustScrollForSizeChange } = usePrependAnchorRestore(
+    { keys: dayKeys }
   );
 
   // Date formatters
@@ -108,9 +112,15 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
   // Window virtualizer (like recipe grid)
   const virtualizer = useWindowVirtualizer({
     count: allDays.length,
+    getItemKey: (index) => dayKeys[index] ?? index,
     estimateSize: () => ESTIMATED_DAY_HEIGHT,
     overscan: 5,
     scrollMargin,
+    shouldAdjustScrollPositionOnItemSizeChange: (item, _delta, instance) => {
+      const scrollOffset = instance.scrollOffset ?? 0;
+
+      return shouldAdjustScrollForSizeChange(item.start, scrollOffset, scrollMargin);
+    },
   });
 
   // Track if we've scrolled to today and if we've triggered expand
@@ -183,6 +193,15 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   const virtualItems = virtualizer.getVirtualItems();
 
+  useLayoutEffect(() => {
+    restoreAnchor(
+      () => virtualizer.getVirtualItems(),
+      (offset) => {
+        virtualizer.scrollToOffset(offset, { behavior: "auto" });
+      }
+    );
+  }, [virtualizer, restoreAnchor]);
+
   // Infinite scroll: trigger expandRange when near the edges
   useEffect(() => {
     if (virtualItems.length === 0 || !hasScrolledRef.current) return;
@@ -196,6 +215,14 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     const isNearEnd = lastItem.index >= allDays.length - 2;
 
     if (isNearStart && !isLoadingMore && !hasTriggeredExpandPastRef.current) {
+      const scrollOffset = virtualizer.scrollOffset ?? 0;
+
+      captureAnchor({
+        index: firstItem.index,
+        itemStart: firstItem.start,
+        scrollOffset,
+      });
+
       hasTriggeredExpandPastRef.current = true;
       expandRange("past");
     }
@@ -210,7 +237,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
     if (!isNearEnd) {
       hasTriggeredExpandFutureRef.current = false;
     }
-  }, [virtualItems, allDays.length, isLoadingMore, expandRange]);
+  }, [virtualItems, allDays.length, isLoadingMore, expandRange, virtualizer, captureAnchor]);
 
   const handleScrollToToday = useCallback(() => {
     virtualizer.scrollToIndex(todayIndex, { align: "start", behavior: "smooth" });
@@ -371,6 +398,7 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
                 <div
                   key={virtualItem.key}
                   ref={virtualizer.measureElement}
+                  data-day-key={key}
                   data-index={virtualItem.index}
                   style={{
                     position: "absolute",

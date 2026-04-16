@@ -203,7 +203,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -221,7 +222,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -272,7 +274,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         parsedIngredients,
         mockInstructions,
-        parsedLookups
+        parsedLookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -310,7 +313,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         parsedIngredients,
         mockInstructions,
-        parsedLookups
+        parsedLookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -343,7 +347,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         parsedIngredients,
         mockInstructions,
-        parsedLookups
+        parsedLookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -378,7 +383,13 @@ describe("Mealie Parser", () => {
       ];
 
       await expect(
-        parseMealieRecipeToDTO(mockRecipe, emptyIngredients, mockInstructions, lookups)
+        parseMealieRecipeToDTO(
+          mockRecipe,
+          emptyIngredients,
+          mockInstructions,
+          lookups,
+          "123e4567-e89b-42d3-a456-426614174000"
+        )
       ).rejects.toThrow("has no valid ingredients after filtering empty ones");
     });
 
@@ -412,7 +423,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mixedIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -438,7 +450,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookupsWithTags
+        lookupsWithTags,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -457,7 +470,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookupsWithCategories
+        lookupsWithCategories,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -477,7 +491,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookupsWithDuplicates
+        lookupsWithDuplicates,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -488,7 +503,13 @@ describe("Mealie Parser", () => {
 
     it("sorts instructions by position", async () => {
       const shuffled = [mockInstructions[1], mockInstructions[0]];
-      const dto = await parseMealieRecipeToDTO(mockRecipe, mockIngredients, shuffled, lookups);
+      const dto = await parseMealieRecipeToDTO(
+        mockRecipe,
+        mockIngredients,
+        shuffled,
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
+      );
 
       expect(dto).not.toBeNull();
       expect(dto!.steps![0].step).toBe("Heat oil in a pan");
@@ -504,7 +525,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -522,7 +544,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -540,7 +563,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -559,7 +583,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -578,7 +603,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -595,7 +621,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -611,7 +638,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         mockIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -641,7 +669,13 @@ describe("Mealie Parser", () => {
       mockRecipe.name = "";
 
       await expect(
-        parseMealieRecipeToDTO(mockRecipe, mockIngredients, mockInstructions, lookups)
+        parseMealieRecipeToDTO(
+          mockRecipe,
+          mockIngredients,
+          mockInstructions,
+          lookups,
+          "123e4567-e89b-42d3-a456-426614174000"
+        )
       ).rejects.toThrow("Missing recipe name");
     });
 
@@ -652,6 +686,7 @@ describe("Mealie Parser", () => {
         mockIngredients,
         mockInstructions,
         lookups,
+        "123e4567-e89b-42d3-a456-426614174000",
         imageBuffer
       );
 
@@ -673,7 +708,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         noteOnlyIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();
@@ -697,7 +733,8 @@ describe("Mealie Parser", () => {
         mockRecipe,
         zeroQuantityIngredients,
         mockInstructions,
-        lookups
+        lookups,
+        "123e4567-e89b-42d3-a456-426614174000"
       );
 
       expect(dto).not.toBeNull();

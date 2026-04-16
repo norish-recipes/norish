@@ -7,6 +7,7 @@ const mockGetConfig = vi.fn();
 const mockSetConfig = vi.fn();
 const mockDeleteConfig = vi.fn();
 const mockConfigExists = vi.fn();
+const mockNormalizeAndBackfillConfig = vi.fn();
 let mockServerConfig: Record<string, string | undefined> = {};
 
 vi.mock("@norish/db/repositories/server-config", () => ({
@@ -14,6 +15,7 @@ vi.mock("@norish/db/repositories/server-config", () => ({
   setConfig: mockSetConfig,
   deleteConfig: mockDeleteConfig,
   configExists: mockConfigExists,
+  normalizeAndBackfillConfig: mockNormalizeAndBackfillConfig,
 }));
 
 vi.mock("@norish/auth/provider-cache", () => ({
@@ -49,6 +51,7 @@ describe("Auth Provider Sync Logic", () => {
     vi.clearAllMocks();
     mockServerConfig = {};
     mockDeleteConfig.mockResolvedValue(undefined);
+    mockNormalizeAndBackfillConfig.mockResolvedValue(false);
   });
 
   afterEach(() => {

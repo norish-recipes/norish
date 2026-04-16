@@ -13,6 +13,7 @@ const userPreferencesState = {
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: vi.fn(() => "en"),
 }));
 
 vi.mock("next/link", () => ({

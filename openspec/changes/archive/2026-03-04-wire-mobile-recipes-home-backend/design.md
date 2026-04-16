@@ -5,12 +5,14 @@
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Align recipe hook extraction with the shared config-hook creation pattern.
 - Split shared recipe hooks into explicit `dashboard` and `recipe` families.
 - Keep platform-specific composition in app wrappers and keep shared-react platform-agnostic.
 - Provide a hook-by-hook phased migration plan for implementation clarity.
 
 **Non-Goals:**
+
 - Redesigning recipe card UI or dashboard layout.
 - Changing backend endpoints/contracts for recipes.
 - Implementing Today planned-meals backend hooks in this change.
@@ -45,19 +47,23 @@
 ## Hook Taxonomy
 
 ### Dashboard family
+
 - Scope: home/dashboard section-level list data and cache behavior.
 - Surfaces: `Continue Cooking`, `Discover`, `Your Collection`.
 
 ### Recipe family
+
 - Scope: single recipe detail, item-level mutations, item-level subscriptions, and related enrichments.
 - Surfaces: recipe detail/edit and item-level flows.
 
 ### Wrapper layer
+
 - Scope: app-specific composition for web/mobile without changing shared query semantics.
 
 ## Hook-by-Phase Plan
 
 ### Phase 1: Shared foundation and boundaries
+
 - `use-recipe-id`: move to shared `recipe` family and keep id normalization reusable.
 - `use-recipes-query`: move to shared `dashboard` family as primary section list query.
 - `use-recipes-cache`: move to shared `dashboard` family for dashboard cache operations.
@@ -65,6 +71,7 @@
 - `use-pending-recipes-query`: move to shared `dashboard` family for list-level pending states.
 
 ### Phase 2: Query and enrichment hook migration
+
 - `use-auto-tagging-query`: move to shared `recipe` family.
 - `use-allergy-detection-query`: move to shared `recipe` family.
 - `use-nutrition-query`: move to shared `recipe` family.
@@ -73,11 +80,13 @@
 - `use-random-recipe`: move to shared `dashboard` family.
 
 ### Phase 2b: Subscription type pipeline hardening
+
 - Type `createPolicyAwareSubscription` without `any` return so subscription procedures remain explicit in router declaration output.
 - Verify emitted `@norish/trpc` declarations preserve subscription procedure types for recipe events.
 - Confirm shared recipe factories can access `subscriptionOptions` from app-owned typed `useTRPC` bindings before Phase 3 migration.
 
 ### Phase 3: Subscription and mutation core split
+
 - `use-auto-tagging-subscription`: move core subscription logic to shared `recipe` family; keep UI side effects in app wrappers.
 - `use-auto-categorization-subscription`: move core subscription logic to shared `recipe` family; keep UI side effects in app wrappers.
 - `use-allergy-detection-subscription`: move core subscription logic to shared `recipe` family; keep UI side effects in app wrappers.
@@ -88,12 +97,14 @@
 - `use-recipe-subscription`: split into shared cache/subscription core plus app-owned wrapper callbacks.
 
 ### Phase 4: Adapter-backed wrappers and web parity
+
 - `use-recipe-filters`: keep wrapper app-owned; extract query-independent storage contract for web/mobile adapter implementations.
 - `use-recipe-images`: move shared query/mutation shape to `recipe` family; keep media payload adaptation in wrappers.
 - `use-recipe-videos`: move shared query/mutation shape to `recipe` family; keep media payload adaptation in wrappers.
 - `use-recipe-prefetch`: keep web-only (no shared migration).
 
 ### Phase 5: Mobile dashboard cutover and cleanup
+
 - `use-recipes-query` + `use-recipes-cache` (+ other dashboard hooks): wire mobile `Continue Cooking`, `Discover`, `Your Collection` to shared dashboard hooks.
 - all non-Today mock paths: remove from mobile runtime.
 - Today adapter: keep isolated fixture source until planned-meals follow-up hooks are implemented.

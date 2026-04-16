@@ -1,5 +1,5 @@
-import { videoLogger } from "@norish/shared-server/logger";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { videoLogger } from "@norish/shared-server/logger";
 
 export async function initializeVideoProcessing(): Promise<void> {
   if (!SERVER_CONFIG.VIDEO_PARSING_ENABLED) {

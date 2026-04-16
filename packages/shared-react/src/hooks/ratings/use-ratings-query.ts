@@ -1,7 +1,6 @@
-import type { CreateRatingsHooksOptions } from "./types";
-
 import { useQuery } from "@tanstack/react-query";
 
+import type { CreateRatingsHooksOptions } from "./types";
 
 export function createUseRatingQuery({ useTRPC }: CreateRatingsHooksOptions) {
   return function useRatingQuery(recipeId: string) {
@@ -14,6 +13,7 @@ export function createUseRatingQuery({ useTRPC }: CreateRatingsHooksOptions) {
       averageRating: averageQuery.data?.averageRating ?? null,
       ratingCount: averageQuery.data?.ratingCount ?? 0,
       userRating: userRatingQuery.data?.userRating ?? null,
+      userRatingVersion: userRatingQuery.data?.version ?? undefined,
       isLoading: averageQuery.isLoading || userRatingQuery.isLoading,
     };
   };

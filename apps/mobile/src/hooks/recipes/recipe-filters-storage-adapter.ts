@@ -1,11 +1,11 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from "@/lib/storage/mmkv";
 
-import type { RecipeFiltersStorageAdapter } from '@norish/shared-react/hooks';
+import type { RecipeFiltersStorageAdapter } from "@norish/shared-react/hooks";
 
-export const RECIPE_FILTERS_STORAGE_KEY = 'norish:recipe-filters';
+export const RECIPE_FILTERS_STORAGE_KEY = "norish:recipe-filters";
 
 export const mobileRecipeFiltersStorageAdapter: RecipeFiltersStorageAdapter = {
-  getItem: (key) => AsyncStorage.getItem(key),
-  setItem: (key, value) => AsyncStorage.setItem(key, value),
-  removeItem: (key) => AsyncStorage.removeItem(key),
+  getItem: (key) => storage.getString(key) ?? null,
+  setItem: (key, value) => storage.set(key, value),
+  removeItem: (key) => storage.delete(key),
 };

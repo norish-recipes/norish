@@ -3,6 +3,7 @@
 The mobile recipe detail page (`apps/mobile/src/app/(tabs)/dashboard/recipe/[id].tsx`) currently imports `DUMMY_RECIPE` from a local `dummy-data.ts` file with bespoke `Dummy*` types. All UI components (`RecipeIngredients`, `RecipeSteps`, `RecipeNutrition`, `RecipeMediaHeader`, `RecipeRating`, `RecipeLikedButton`, `RecipeAuthor`, `RecipeHighlights`, `RecipeTags`) consume these dummy types.
 
 The shared infrastructure is already in place:
+
 - `@norish/shared-react` exports `createRecipeDetailContext` (factory) and `createRecipeHooks` (hooks factory)
 - The mobile app already uses `createRecipeHooks` for dashboard hooks (`sharedDashboardRecipeHooks`) but does **not** re-export the `recipe` family hooks
 - The web app has a working reference implementation at `apps/web/app/(app)/recipes/[id]/context.tsx`
@@ -11,6 +12,7 @@ The shared infrastructure is already in place:
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Replace dummy data with live backend data using the shared `RecipeDetailProvider` pattern
 - Re-export all `sharedRecipeFamilyHooks` members as individual mobile hook files
 - Create a mobile `RecipeDetailProvider` context with full adapter wiring
@@ -21,6 +23,7 @@ The shared infrastructure is already in place:
 - Remove `dummy-data.ts`
 
 **Non-Goals:**
+
 - Wiring add-to-groceries or add-to-calendar actions (leave as placeholders)
 - Changing the visual design or layout of any component
 - Modifying the cook mode behavior (it already works with any steps/ingredients shape)
@@ -47,6 +50,7 @@ The shared infrastructure is already in place:
 **Decision**: Create a `map-recipe-to-detail-props.ts` utility that transforms `FullRecipeDTO` fields into the shapes each component expects (media items, ingredient display, etc.) rather than making each component understand `FullRecipeDTO` directly.
 
 Key mappings:
+
 - `recipe.image` + `recipe.images` + `recipe.videos` → `MediaItem[]` (order: video first if present, then gallery images, then primary image as fallback)
 - `recipe.recipeIngredients` → filtered by `systemUsed`, mapped to display shape with `ingredientName` as the name field
 - `recipe.steps` → mapped from `{ step, order, images }` to the component's expected shape with `text` field

@@ -3,15 +3,20 @@
  *
  * Manages coordinated shutdown of all server components with timeouts
  * to prevent zombie processes. Ensures resources are released in the
- * correct order: HTTP -> CalDAV -> Workers -> Redis.
+ * correct order: HTTP -> CalDAV -> Workers -> extra runtime tasks -> Redis.
  */
 
 import type { Server } from "node:http";
 
 import { stopCaldavSync } from "@norish/api/caldav/event-listener";
-import { serverLogger as log } from "@norish/shared-server/logger";
 import { closeRedisConnections } from "@norish/queue/redis/client";
 import { stopWorkers } from "@norish/queue/start-workers";
+import { serverLogger as log } from "@norish/shared-server/logger";
+
+type ShutdownTask = {
+  name: string;
+  run: () => Promise<void>;
+};
 
 // Shutdown timeouts
 const SHUTDOWN_TIMEOUT_MS = 30_000; // 30 seconds per operation
@@ -67,9 +72,14 @@ let isShuttingDown = false;
  * 1. HTTP server - stop accepting new connections, drain existing
  * 2. CalDAV sync - abort event subscriptions
  * 3. BullMQ workers - complete current jobs, close queues
- * 4. Redis connections - close after all consumers stopped
+ * 4. Extra shutdown tasks - stop embedded child processes or other runtime helpers
+ * 5. Redis connections - close after all consumers stopped
  */
-async function performShutdown(server: Server, signal: string): Promise<void> {
+async function performShutdown(
+  server: Server,
+  signal: string,
+  shutdownTasks: ShutdownTask[]
+): Promise<void> {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
@@ -98,7 +108,13 @@ async function performShutdown(server: Server, signal: string): Promise<void> {
     // 3. Stop all BullMQ workers and close queues
     await withTimeout(stopWorkers(), SHUTDOWN_TIMEOUT_MS, "Stop workers");
 
-    // 4. Close Redis pub/sub connections (after all consumers stopped)
+    // 4. Stop extra runtime helpers that depend on HTTP/workers being drained first
+    for (const task of shutdownTasks) {
+      await withTimeout(task.run(), SHUTDOWN_TIMEOUT_MS, task.name);
+      log.info(`${task.name} completed`);
+    }
+
+    // 5. Close Redis pub/sub connections (after all consumers stopped)
     await withTimeout(closeRedisConnections(), SHUTDOWN_TIMEOUT_MS, "Close Redis");
     log.info("Redis connections closed");
 
@@ -116,7 +132,7 @@ async function performShutdown(server: Server, signal: string): Promise<void> {
  * Register shutdown handlers for SIGTERM and SIGINT.
  * Call this after the HTTP server is created.
  */
-export function registerShutdownHandlers(server: Server): void {
-  process.on("SIGTERM", () => performShutdown(server, "SIGTERM"));
-  process.on("SIGINT", () => performShutdown(server, "SIGINT"));
+export function registerShutdownHandlers(server: Server, shutdownTasks: ShutdownTask[] = []): void {
+  process.on("SIGTERM", () => performShutdown(server, "SIGTERM", shutdownTasks));
+  process.on("SIGINT", () => performShutdown(server, "SIGINT", shutdownTasks));
 }

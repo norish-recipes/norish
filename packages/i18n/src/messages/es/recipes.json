@@ -66,6 +66,50 @@
     "keepScreenOn": "Mantener pantalla encendida",
     "actionsLabel": "Acciones"
   },
+  "sharePanel": {
+    "title": "Compartir receta",
+    "description": "Crea y gestiona enlaces públicos para {recipeName}.",
+    "expiryLabel": "Expiración del enlace",
+    "createLink": "Crear enlace",
+    "latestLink": "Último enlace",
+    "currentLinks": "Enlaces actuales",
+    "empty": "Aún no hay enlaces para compartir.",
+    "createSuccess": "Enlace para compartir creado",
+    "copySuccess": "Enlace copiado",
+    "copyLink": "Copiar",
+    "openLink": "Abrir",
+    "createdAt": "Creado: {value}",
+    "expiresAt": "Expira: {value}",
+    "lastAccessedAt": "Último acceso: {value}",
+    "never": "Nunca",
+    "expiryOptions": {
+      "1day": "1 día",
+      "1week": "1 semana",
+      "1month": "1 mes",
+      "1year": "1 año",
+      "forever": "Nunca"
+    },
+    "status": {
+      "active": "Activo",
+      "expired": "Expirado",
+      "revoked": "Revocado"
+    },
+    "revokeModal": {
+      "title": "Revocar enlace",
+      "message": "Este enlace para {recipeName} dejará de funcionar hasta que lo reactives.",
+      "confirm": "Revocar"
+    },
+    "reactivateModal": {
+      "title": "Reactivar enlace",
+      "message": "Este enlace para {recipeName} volverá a estar activo.",
+      "confirm": "Reactivar"
+    },
+    "deleteModal": {
+      "title": "Eliminar enlace",
+      "message": "¿Eliminar este enlace para compartir {recipeName}? Esta acción no se puede deshacer.",
+      "confirm": "Eliminar enlace"
+    }
+  },
   "convert": {
     "ariaLabel": "Cambiar sistema de medidas",
     "toMetric": "Convertir a sistema métrico",

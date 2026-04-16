@@ -1,30 +1,4 @@
-import {
-  ArrowLeftIcon,
-  ArrowTopRightOnSquareIcon,
-  CakeIcon,
-  ClockIcon,
-  FireIcon,
-  MoonIcon,
-  SunIcon,
-} from "@heroicons/react/16/solid";
-import { Card, CardBody, Chip, Divider, Link } from "@heroui/react";
-import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
-import {
-  formatMinutesHM,
-  isAllergenTag,
-  sortTagsWithAllergyPriority,
-} from "@norish/shared/lib/helpers";
-import {
-  getShowFavoritesPreference,
-  getShowRatingsPreference,
-} from "@norish/shared/lib/user-preferences";
-import StarRating from "@norish/ui/star-rating";
-
-import AuthorChip from "./components/author-chip";
 import { RecipeProvenance } from "./components/recipe-provenance";
-import { useRecipeContextRequired } from "./context";
-
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
 import AmountDisplayToggle from "@/app/(app)/recipes/[id]/components/amount-display-toggle";
@@ -35,14 +9,28 @@ import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-conver
 import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
 import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/app/(app)/recipes/[id]/recipe-layout-constants";
 import { NutritionSection } from "@/components/recipes/nutrition-card";
+import {
+  ReadonlyRecipeMedia,
+  ReadonlyRecipeNotes,
+  ReadonlyRecipeSummary,
+} from "@/components/recipes/readonly-recipe-sections";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
-import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
-import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useUserContext } from "@/context/user-context";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import { ArrowLeftIcon } from "@heroicons/react/16/solid";
+import { Card, CardBody, Divider, Link } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
+import {
+  getShowFavoritesPreference,
+  getShowRatingsPreference,
+} from "@norish/shared/lib/user-preferences";
+import StarRating from "@norish/ui/star-rating";
+
+import AuthorChip from "./components/author-chip";
+import { useRecipeContextRequired } from "./context";
 
 export default function RecipePageMobile() {
   const {
@@ -57,33 +45,12 @@ export default function RecipePageMobile() {
   const { rateRecipe, isRating } = useRatingsMutation();
   const { user } = useUserContext();
   const t = useTranslations("recipes.detail");
-  const tForm = useTranslations("recipes.form");
   const showRatings = getShowRatingsPreference(user);
   const showFavorites = getShowFavoritesPreference(user);
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
   const handleRateRecipe = (rating: number) => rateRecipe(recipe.id, rating);
-
-  // Build media items for MediaCarousel (videos + images)
-  const mediaItems = buildMediaItems(recipe);
-  const initialActiveMediaType = useMemo(() => {
-    if (!mediaItems.length) return "image";
-    const sortedItems = [...mediaItems].sort((a, b) => {
-      if (a.order !== b.order) return a.order - b.order;
-      if (a.type !== b.type) return a.type === "video" ? -1 : 1;
-
-      return 0;
-    });
-
-    return sortedItems[0]?.type ?? "image";
-  }, [mediaItems]);
-  const [activeMediaType, setActiveMediaType] = useState<"image" | "video">(initialActiveMediaType);
-  const [isVideoControlsVisible, setIsVideoControlsVisible] = useState(false);
-
-  useEffect(() => {
-    setActiveMediaType(initialActiveMediaType);
-  }, [initialActiveMediaType]);
 
   return (
     <div
@@ -102,48 +69,34 @@ export default function RecipePageMobile() {
             if (showFavorites) handleToggleFavorite();
           }}
         >
-          <MediaCarousel
+          <ReadonlyRecipeMedia
             aspectRatio="4/3"
-            className="h-full w-full"
-            items={mediaItems}
-            onActiveItemChange={(item) => {
-              setActiveMediaType(item.type);
-              if (item.type !== "video") {
-                setIsVideoControlsVisible(false);
-              }
-            }}
-            onActiveVideoControlsVisibilityChange={setIsVideoControlsVisible}
+            bottomRightContent={
+              showFavorites ? (
+                <HeartButton
+                  showBackground
+                  isFavorite={isFavorite}
+                  size="lg"
+                  onToggle={handleToggleFavorite}
+                />
+              ) : null
+            }
+            className="h-full rounded-none shadow-none"
+            recipe={recipe}
             rounded={false}
+            topLeftContent={
+              recipe?.author ? (
+                <div className="mt-[calc(2.75rem+env(safe-area-inset-top))]">
+                  <AuthorChip
+                    image={recipe.author.image}
+                    name={recipe.author.name}
+                    userId={recipe.author.id}
+                  />
+                </div>
+              ) : null
+            }
           />
         </DoubleTapContainer>
-
-        {/* Author chip */}
-        {recipe?.author && (
-          <div
-            className="absolute left-4 z-50"
-            style={{ top: `calc(3.5rem + env(safe-area-inset-top))` }}
-          >
-            <AuthorChip
-              image={recipe.author.image}
-              name={recipe.author.name}
-              userId={recipe.author.id}
-            />
-          </div>
-        )}
-
-        {/* Heart button - bottom right */}
-        {showFavorites && (
-          <div
-            className={`absolute right-4 z-50 transition-[bottom] duration-200 ${activeMediaType === "video" && isVideoControlsVisible ? "bottom-18" : "bottom-8"}`}
-          >
-            <HeartButton
-              showBackground
-              isFavorite={isFavorite}
-              size="lg"
-              onToggle={handleToggleFavorite}
-            />
-          </div>
-        )}
       </div>
 
       {/* Unified Content Card - contains all sections */}
@@ -166,88 +119,13 @@ export default function RecipePageMobile() {
             </div>
           </div>
 
-          {/* Title */}
-          <h1 className="text-2xl leading-tight font-bold">
-            {recipe.name}
-            {recipe.url && (
-              <a
-                className="ml-2 inline-block align-middle"
-                href={recipe.url}
-                rel="noopener noreferrer"
-                target="_blank"
-                title={t("viewOriginal")}
-              >
-                <ArrowTopRightOnSquareIcon className="text-default-400 hover:text-primary inline h-4 w-4" />
-              </a>
-            )}
-          </h1>
-
-          {/* Description */}
-          {recipe.description && (
-            <p className="text-base leading-relaxed">
-              <SmartMarkdownRenderer text={recipe.description} />
-            </p>
-          )}
-
-          {/* Categories */}
-          {recipe.categories.length > 0 && (
-            <div className="text-default-500 flex flex-wrap items-center gap-4 text-base">
-              {recipe.categories.map((category) => {
-                const IconComponent =
-                  {
-                    Breakfast: FireIcon,
-                    Lunch: SunIcon,
-                    Dinner: MoonIcon,
-                    Snack: CakeIcon,
-                  }[category] || SunIcon;
-
-                return (
-                  <span key={category} className="flex items-center gap-1">
-                    <IconComponent className="h-4 w-4" />
-                    {tForm(`category.${category.toLowerCase()}`)}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Time info */}
-          {(recipe.prepMinutes || recipe.totalMinutes) && (
-            <div className="text-default-500 flex flex-wrap items-center gap-4 text-base">
-              {recipe.prepMinutes && (
-                <div className="flex items-center gap-1">
-                  <ClockIcon className="h-4 w-4" />
-                  {formatMinutesHM(recipe.prepMinutes)} {t("prep")}
-                </div>
-              )}
-              {recipe.totalMinutes && recipe.totalMinutes !== 0 && (
-                <div className="flex items-center gap-1">
-                  <FireIcon className="h-4 w-4" />
-                  {formatMinutesHM(recipe.totalMinutes)} {t("total")}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Tags */}
-          {recipe.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {sortTagsWithAllergyPriority(recipe.tags, allergies).map((tag: { name: string }) => {
-                const isAllergen = isAllergenTag(tag.name, allergySet);
-
-                return (
-                  <Chip
-                    key={tag.name}
-                    className={isAllergen ? "bg-warning text-warning-foreground" : ""}
-                    size="sm"
-                    variant="flat"
-                  >
-                    {tag.name}
-                  </Chip>
-                );
-              })}
-            </div>
-          )}
+          <ReadonlyRecipeSummary
+            actions={<ActionsMenu id={recipe.id} />}
+            allergies={allergies}
+            allergySet={allergySet}
+            recipe={recipe}
+            timeVariant="mobile"
+          />
 
           <RecipeProvenance variant="section" />
 
@@ -282,7 +160,7 @@ export default function RecipePageMobile() {
                   <h2 className="text-lg font-semibold">{t("notes")}</h2>
                 </div>
                 <div>
-                  <SmartMarkdownRenderer text={recipe.notes} />
+                  <ReadonlyRecipeNotes notes={recipe.notes} />
                 </div>
               </div>
               <Divider />

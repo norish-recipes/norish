@@ -2,6 +2,7 @@ import { date, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "dr
 
 import { users } from "./auth";
 import { recipes } from "./recipes";
+import { versionColumn } from "./shared";
 
 export const slotTypeEnum = pgEnum("slot_type", ["Breakfast", "Lunch", "Dinner", "Snack"]);
 
@@ -27,6 +28,7 @@ export const plannedItems = pgTable(
 
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    ...versionColumn,
   },
   (t) => [
     index("idx_planned_items_user_date").on(t.userId, t.date),

@@ -12,9 +12,11 @@ The mobile app still contains Expo starter-template surfaces and helper abstract
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-app-shell-cleanup`: Defines the expected post-template mobile shell with starter screens/components removed and active features still functional.
 
 ### Modified Capabilities
+
 - `mobile-ui`: Replace the starter-screen-specific requirement with requirements for a production-oriented mobile shell that excludes template walkthrough UI.
 
 ## Impact

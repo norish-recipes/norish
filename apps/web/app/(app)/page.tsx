@@ -1,12 +1,11 @@
 import { headers } from "next/headers";
-import { getTranslations } from "next-intl/server";
-import { auth } from "@norish/auth/auth";
-
 import CreateRecipeButton from "@/components/dashboard/create-recipe-button";
 import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import RecipeGrid from "@/components/dashboard/recipe-grid";
 import SearchInput from "@/components/dashboard/search-input";
+import { getTranslations } from "next-intl/server";
 
+import { auth } from "@norish/auth/auth";
 
 export default async function Home() {
   const session = await auth.api.getSession({

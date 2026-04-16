@@ -329,7 +329,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       categories: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output);
+    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
 
     const metricIngredients = result?.recipeIngredients?.filter(
       (ing) => ing.systemUsed === "metric"
@@ -391,7 +391,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       categories: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output);
+    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
 
     expect(result?.categories).toEqual(["Breakfast", "Dinner"]);
   });
@@ -452,7 +452,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       images: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output);
+    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
 
     expect(result).toBeTruthy();
     // Check US ingredients were decoded (with &#8211;)
@@ -515,7 +515,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       images: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output);
+    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
 
     const usSteps = result?.steps?.filter((s) => s.systemUsed === "us");
 
@@ -576,7 +576,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       images: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output);
+    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
 
     const usIngredient = result?.recipeIngredients?.find((ing) => ing.systemUsed === "us");
 
@@ -640,7 +640,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       images: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output);
+    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
 
     const usIngredients = result?.recipeIngredients?.filter((ing) => ing.systemUsed === "us");
 
@@ -696,7 +696,7 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
       images: [],
     } as any);
 
-    const result = await normalizeExtractionOutput(output);
+    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
 
     expect(result?.notes).toBe("Let it rest for 10 minutes – don't skip this step.");
   });

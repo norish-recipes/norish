@@ -1,17 +1,16 @@
 "use client";
 
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { useQuery } from "@tanstack/react-query";
 
 import type { User } from "@norish/shared/contracts";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
-
-import { useQuery } from "@tanstack/react-query";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type UserSettingsData = {
   user: User;
   apiKeys: ApiKeyMetadataDto[];
   allergies: string[];
+  allergiesVersion: number;
 };
 
 /**
@@ -32,6 +31,7 @@ export function useUserSettingsQuery() {
     user: data?.user ?? null,
     apiKeys: data?.apiKeys ?? [],
     allergies: allergiesData?.allergies ?? [],
+    allergiesVersion: allergiesData?.version ?? 0,
     error,
     isLoading: isLoading || isLoadingAllergies,
     queryKey,

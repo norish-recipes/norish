@@ -1,5 +1,6 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import z from "zod";
+
 import { recurringGroceries } from "@norish/db/schema";
 
 export const RecurringGrocerySelectBaseSchema = createSelectSchema(recurringGroceries)
@@ -21,6 +22,7 @@ export const RecurringGroceryInsertBaseSchema = createInsertSchema(recurringGroc
 
 export const RecurringGroceryUpdateBaseSchema = z.object({
   id: z.uuid(),
+  version: z.number().int().positive().optional(),
   name: z.string().optional(),
   unit: z.string().nullable().optional(),
   amount: z.coerce.number().nullable().optional(),

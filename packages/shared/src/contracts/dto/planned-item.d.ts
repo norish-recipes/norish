@@ -8,6 +8,7 @@ interface PlannedItemBase {
   slot: Slot;
   sortOrder: number;
   itemType: PlannedItemType;
+  version: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +42,7 @@ export interface PlannedItemCreateInput {
 
 export interface PlannedItemMoveInput {
   itemId: string;
+  version: number;
   targetDate: string;
   targetSlot: Slot;
   targetIndex: number;
@@ -48,4 +50,11 @@ export interface PlannedItemMoveInput {
 
 export interface PlannedItemDeleteInput {
   itemId: string;
+  version: number;
+}
+
+export interface PlannedItemUpdateInput {
+  itemId: string;
+  version: number;
+  title: string;
 }

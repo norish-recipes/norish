@@ -1,8 +1,14 @@
-
-import type { StoreCreateDto, StoreDto, StoreUpdateInput } from "@norish/shared/contracts";
-import type { CreateStoresHooksOptions, StoresMutationsResult, StoresQueryResult } from "./types";
-
 import { useMutation } from "@tanstack/react-query";
+
+import type { StoreCreateDto, StoreDeleteInput, StoreDto } from "@norish/shared/contracts";
+
+import type {
+  CreateStoresHooksOptions,
+  StoreGrocerySnapshot,
+  StoresMutationsResult,
+  StoresQueryResult,
+  StoreUpdateDraft,
+} from "./types";
 
 type CreateUseStoresMutationsOptions = CreateStoresHooksOptions & {
   useStoresQuery: () => StoresQueryResult;
@@ -15,6 +21,9 @@ export function createUseStoresMutations({
   return function useStoresMutations(): StoresMutationsResult {
     const trpc = useTRPC();
     const { setStoresData, invalidate, stores } = useStoresQuery();
+
+    const getStoreVersion = (storeId: string): number =>
+      stores.find((store) => store.id === storeId)?.version ?? 1;
 
     const createMutation = useMutation(trpc.stores.create.mutationOptions());
     const updateMutation = useMutation(trpc.stores.update.mutationOptions());
@@ -32,6 +41,7 @@ export function createUseStoresMutations({
               color: data.color ?? "primary",
               icon: data.icon ?? "ShoppingBagIcon",
               sortOrder: stores.length,
+              version: 1,
             };
 
             setStoresData((prev) => {
@@ -53,31 +63,42 @@ export function createUseStoresMutations({
       });
     };
 
-    const updateStore = (data: StoreUpdateInput) => {
+    const updateStore = (data: StoreUpdateDraft) => {
       setStoresData((prev) => {
         if (!prev) return prev;
 
         return prev.map((s) => (s.id === data.id ? { ...s, ...data } : s));
       });
 
-      updateMutation.mutate(data, {
-        onError: () => invalidate(),
-      });
+      updateMutation.mutate(
+        { ...data, version: getStoreVersion(data.id) },
+        {
+          onError: () => invalidate(),
+        }
+      );
     };
 
-    const deleteStore = (storeId: string, deleteGroceries: boolean) => {
+    const deleteStore = (
+      storeId: string,
+      deleteGroceries: boolean,
+      grocerySnapshot: StoreGrocerySnapshot
+    ) => {
       setStoresData((prev) => {
         if (!prev) return prev;
 
         return prev.filter((s) => s.id !== storeId);
       });
 
-      deleteMutation.mutate(
-        { storeId, deleteGroceries },
-        {
-          onError: () => invalidate(),
-        }
-      );
+      const input: StoreDeleteInput = {
+        storeId,
+        version: getStoreVersion(storeId),
+        deleteGroceries,
+        grocerySnapshot,
+      };
+
+      deleteMutation.mutate(input, {
+        onError: () => invalidate(),
+      });
     };
 
     const reorderStores = (storeIds: string[]) => {
@@ -95,7 +116,9 @@ export function createUseStoresMutations({
       });
 
       reorderMutation.mutate(
-        { storeIds },
+        {
+          stores: storeIds.map((id) => ({ id, version: getStoreVersion(id) })),
+        },
         {
           onError: () => invalidate(),
         }

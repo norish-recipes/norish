@@ -1,13 +1,11 @@
 "use client";
 
-import type { ProviderInfo } from "@norish/shared/contracts";
-
 import { Divider } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { ProviderInfo } from "@norish/shared/contracts";
 
 import { AuthCard } from "../../components/auth-card";
-
 import { AutoSignIn } from "./auto-sign-in";
 import { EmailPasswordForm } from "./email-password-form";
 import { ProviderButton } from "./provider-button";

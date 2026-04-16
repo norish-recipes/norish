@@ -1,5 +1,7 @@
+import { TRPCError } from "@trpc/server";
+
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   getLocaleConfig,
   getRecurrenceConfig,
@@ -13,6 +15,54 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
+import { healthyResponseSchema, parserHealthSchema } from "./config-openapi-types";
+
+export async function getServiceHealth() {
+  const parserHealthUrl = buildInternalParserApiUrl("/health");
+
+  try {
+    const response = await fetch(parserHealthUrl, {
+      signal: AbortSignal.timeout(SERVER_CONFIG.PARSER_API_TIMEOUT_MS),
+    });
+
+    if (!response.ok) {
+      return {
+        status: "degraded" as const,
+        parser: {
+          status: "error",
+          statusCode: response.status,
+        },
+      };
+    }
+
+    const parserHealth = parserHealthSchema.parse(await response.json());
+
+    if (parserHealth.status !== "ok") {
+      return {
+        status: "degraded" as const,
+        parser: {
+          status: parserHealth.status ?? "unknown",
+          recipeScrapersVersion: parserHealth.recipeScrapersVersion,
+        },
+      };
+    }
+
+    return {
+      status: "ok" as const,
+      parser: {
+        status: "ok" as const,
+        recipeScrapersVersion: parserHealth.recipeScrapersVersion,
+      },
+    };
+  } catch {
+    return {
+      status: "degraded" as const,
+      parser: {
+        status: "unreachable",
+      },
+    };
+  }
+}
 
 /**
  * Get locale configuration (enabled locales and default locale)
@@ -115,6 +165,36 @@ const authProviders = publicProcedure.query(async () => {
   return { providers, registrationEnabled, passwordAuthEnabled };
 });
 
+export const health = publicProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/health",
+      protect: false,
+      tags: ["Health"],
+      summary: "Check API health",
+      description:
+        "Reports API availability and verifies the internal parser service is reachable and healthy.",
+      successDescription: "The API and parser service are healthy.",
+      errorResponses: {
+        503: "The API is up but the parser service is unhealthy or unreachable",
+      },
+    },
+  })
+  .output(healthyResponseSchema)
+  .query(async () => {
+    const health = await getServiceHealth();
+
+    if (health.status !== "ok") {
+      throw new TRPCError({
+        code: "SERVICE_UNAVAILABLE",
+        message: `Parser service is ${health.parser.status}`,
+      });
+    }
+
+    return health;
+  });
+
 export const configProcedures = router({
   localeConfig,
   tags,
@@ -124,4 +204,5 @@ export const configProcedures = router({
   timersEnabled,
   timerKeywords,
   authProviders,
+  health,
 });

@@ -1,5 +1,6 @@
 import type { QueryKey } from "@tanstack/react-query";
 import type { createTRPCContext } from "@trpc/tanstack-react-query";
+
 import type {
   CalDavCalendarInfo,
   CaldavSyncStatusSummaryDto,
@@ -73,6 +74,7 @@ export type CaldavCacheHelpers = {
 };
 
 export type SaveCaldavConfigInput = {
+  version?: number;
   serverUrl: string;
   calendarUrl?: string | null;
   username: string;

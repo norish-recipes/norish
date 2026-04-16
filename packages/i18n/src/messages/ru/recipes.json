@@ -66,6 +66,50 @@
     "keepScreenOn": "Не выключать экран",
     "actionsLabel": "Действия"
   },
+  "sharePanel": {
+    "title": "Поделиться рецептом",
+    "description": "Создавайте публичные ссылки на {recipeName} и управляйте ими.",
+    "expiryLabel": "Срок действия ссылки",
+    "createLink": "Создать ссылку",
+    "latestLink": "Последняя ссылка",
+    "currentLinks": "Текущие ссылки",
+    "empty": "Ссылок для совместного доступа пока нет.",
+    "createSuccess": "Ссылка для совместного доступа создана",
+    "copySuccess": "Ссылка скопирована",
+    "copyLink": "Копировать",
+    "openLink": "Открыть",
+    "createdAt": "Создано: {value}",
+    "expiresAt": "Истекает: {value}",
+    "lastAccessedAt": "Последний доступ: {value}",
+    "never": "Никогда",
+    "expiryOptions": {
+      "1day": "1 день",
+      "1week": "1 неделя",
+      "1month": "1 месяц",
+      "1year": "1 год",
+      "forever": "Никогда"
+    },
+    "status": {
+      "active": "Активна",
+      "expired": "Истекла",
+      "revoked": "Отозвана"
+    },
+    "revokeModal": {
+      "title": "Отозвать ссылку",
+      "message": "Эта ссылка на {recipeName} перестанет работать, пока вы не активируете её снова.",
+      "confirm": "Отозвать"
+    },
+    "reactivateModal": {
+      "title": "Активировать ссылку",
+      "message": "Эта ссылка на {recipeName} снова станет активной.",
+      "confirm": "Активировать"
+    },
+    "deleteModal": {
+      "title": "Удалить ссылку",
+      "message": "Удалить эту ссылку для совместного доступа к {recipeName}? Это действие нельзя отменить.",
+      "confirm": "Удалить ссылку"
+    }
+  },
   "convert": {
     "ariaLabel": "Преобразовать систему мер",
     "toMetric": "Преобразовать в метрическую",

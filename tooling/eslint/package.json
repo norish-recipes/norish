@@ -10,20 +10,20 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "pnpm exec tsc --noEmit"
   },
   "dependencies": {
-    "@eslint/compat": "^2.0.2",
+    "@eslint/compat": "^2.0.3",
     "@eslint/js": "catalog:",
-    "@next/eslint-plugin-next": "^16.1.6",
+    "@next/eslint-plugin-next": "^16.2.1",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-turbo": "^2.5.8",
+    "eslint-plugin-turbo": "^2.8.20",
     "eslint-plugin-unused-imports": "^4.4.1",
-    "globals": "^17.3.0",
-    "typescript-eslint": "^8.56.0"
+    "globals": "^17.4.0",
+    "typescript-eslint": "^8.57.2"
   },
   "devDependencies": {
     "@norish/prettier-config": "workspace:*",

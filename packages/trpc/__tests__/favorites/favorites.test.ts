@@ -3,10 +3,15 @@ import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { trpcLogger } from "@norish/shared-server/logger";
+import { favoritesProcedures } from "@norish/trpc/routers/favorites/favorites";
+
 import {
   getFavoriteRecipeIds,
+  getFavoriteRecipesWithVersions,
   getFavoritesByRecipeIds,
   isFavorite,
+  setFavorite,
   toggleFavorite,
 } from "../mocks/favorites-repository";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
@@ -14,6 +19,7 @@ import { createMockAuthedContext, createMockHousehold, createMockUser } from "./
 vi.mock("@norish/db/repositories/favorites", () => import("../mocks/favorites-repository"));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+  createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
@@ -69,6 +75,24 @@ describe("favorites procedures", () => {
 
       expect(result.isFavorite).toBe(false);
     });
+
+    it("logs a stale favorite mutation as a no-op", async () => {
+      setFavorite.mockResolvedValue({ stale: true, value: { isFavorite: false } });
+
+      const caller = favoritesProcedures.createCaller({ ...ctx, multiplexer: null } as any);
+      const result = await caller.toggle({
+        recipeId: crypto.randomUUID(),
+        isFavorite: false,
+        version: 3,
+      } as any);
+
+      expect(setFavorite).toHaveBeenCalledWith(ctx.user.id, result.recipeId, false, 3);
+      expect(result).toEqual({ recipeId: result.recipeId, isFavorite: false, stale: true });
+      expect(trpcLogger.info).toHaveBeenCalledWith(
+        { userId: ctx.user.id, recipeId: result.recipeId, version: 3 },
+        "Ignoring stale favorite mutation"
+      );
+    });
   });
 
   describe("check", () => {
@@ -117,6 +141,7 @@ describe("favorites procedures", () => {
       const mockIds = ["recipe-1", "recipe-2", "recipe-3"];
 
       getFavoriteRecipeIds.mockResolvedValue(mockIds);
+      getFavoriteRecipesWithVersions.mockResolvedValue([]);
 
       const testRouter = t.router({
         list: t.procedure.query(async () => {

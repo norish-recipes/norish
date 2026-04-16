@@ -1,36 +1,30 @@
-import type { UserCaldavConfigWithoutPasswordDto } from "@norish/shared/contracts";
-
 import { z } from "zod";
 
+import {
+  CaldavConfigSavedEventSchema,
+  CaldavInitialSyncCompleteEventSchema,
+  CaldavItemStatusUpdatedEventSchema,
+  CaldavSyncCompletedEventSchema,
+  CaldavSyncFailedEventSchema,
+  CaldavSyncStartedEventSchema,
+  DeleteCaldavConfigInputSchema as SharedDeleteCaldavConfigInputSchema,
+  SaveCaldavConfigInputSchema as SharedSaveCaldavConfigInputSchema,
+} from "@norish/shared/contracts/zod";
 
 export type CaldavItemType = "recipe" | "note";
 export type CaldavSyncStatus = "pending" | "synced" | "failed" | "removed";
 
 export type CaldavSubscriptionEvents = {
-  configSaved: { config: UserCaldavConfigWithoutPasswordDto | null };
-  syncStarted: { timestamp: string };
-  syncCompleted: { itemId: string; caldavEventUid: string };
-  syncFailed: { itemId: string; errorMessage: string; retryCount: number };
-  itemStatusUpdated: {
-    itemId: string;
-    itemType: CaldavItemType;
-    syncStatus: CaldavSyncStatus;
-    errorMessage: string | null;
-    caldavEventUid: string | null;
-  };
-  initialSyncComplete: { timestamp: string; totalSynced: number; totalFailed: number };
+  configSaved: z.infer<typeof CaldavConfigSavedEventSchema>;
+  syncStarted: z.infer<typeof CaldavSyncStartedEventSchema>;
+  syncCompleted: z.infer<typeof CaldavSyncCompletedEventSchema>;
+  syncFailed: z.infer<typeof CaldavSyncFailedEventSchema>;
+  itemStatusUpdated: z.infer<typeof CaldavItemStatusUpdatedEventSchema>;
+  initialSyncComplete: z.infer<typeof CaldavInitialSyncCompleteEventSchema>;
 };
 
-export const SaveCaldavConfigInputSchema = z.object({
-  serverUrl: z.url(),
-  calendarUrl: z.url().optional().nullable(),
-  username: z.string().min(1),
+export const SaveCaldavConfigInputSchema = SharedSaveCaldavConfigInputSchema.extend({
   password: z.string().optional(),
-  enabled: z.boolean(),
-  breakfastTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
-  lunchTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
-  dinnerTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
-  snackTime: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/),
 });
 
 export const TestCaldavConnectionInputSchema = z.object({
@@ -39,9 +33,7 @@ export const TestCaldavConnectionInputSchema = z.object({
   password: z.string().min(1),
 });
 
-export const DeleteCaldavConfigInputSchema = z.object({
-  deleteEvents: z.boolean().default(false),
-});
+export const DeleteCaldavConfigInputSchema = SharedDeleteCaldavConfigInputSchema;
 
 export const GetSyncStatusInputSchema = z.object({
   page: z.number().int().min(1).default(1),

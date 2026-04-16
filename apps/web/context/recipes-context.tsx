@@ -1,23 +1,22 @@
 "use client";
 
+import { createContext, useContext, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
+import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
+import { useRecipesMutations, useRecipesQuery } from "@/hooks/recipes";
+import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
+import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
+import { addToast } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
 import type {
   FullRecipeInsertDTO,
   FullRecipeUpdateDTO,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
-
-import { createContext, useContext, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { addToast } from "@heroui/react";
+import { createScopedMessageTranslator } from "@norish/i18n";
 import { createRecipesContext } from "@norish/shared-react/contexts";
-
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
-import { useRatingsSubscription } from "@/hooks/ratings";
-import { useRecipesMutations, useRecipesQuery } from "@/hooks/recipes";
-import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
-import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
-
 
 type Ctx = {
   recipes: RecipeDashboardDTO[];
@@ -39,7 +38,7 @@ type Ctx = {
   importRecipeWithAI: (url: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
-  deleteRecipe: (id: string) => void;
+  deleteRecipe: (id: string, version: number) => void;
   invalidate: () => void;
   openRecipe: (id: string) => void;
 };
@@ -52,18 +51,28 @@ const sharedRecipesContext = createRecipesContext({
   useFavoritesMutation,
   useUserAllergiesQuery,
   useRecipesSubscription: sharedDashboardRecipeHooks.useRecipesSubscription,
-  useToastAdapter: () => ({
-    show: ({ severity, title, description, actionLabel, onActionPress }) =>
-      addToast({
-        severity,
-        title,
-        description,
-        shouldShowTimeoutProgress: true,
-        radius: "full",
-        actionLabel,
-        onActionPress,
+  useRatingsSubscription: sharedDashboardRecipeHooks.useRatingsSubscription,
+  useToastAdapter: () => {
+    const tCommon = useTranslations("common");
+    const tRecipes = useTranslations("recipes");
+
+    return {
+      show: ({ severity, title, description, actionLabel, onActionPress }) =>
+        addToast({
+          severity,
+          title,
+          description,
+          shouldShowTimeoutProgress: true,
+          radius: "full",
+          actionLabel,
+          onActionPress,
+        }),
+      translate: createScopedMessageTranslator({
+        common: (messageKey) => tCommon(messageKey as Parameters<typeof tCommon>[0]),
+        recipes: (messageKey) => tRecipes(messageKey as Parameters<typeof tRecipes>[0]),
       }),
-  }),
+    };
+  },
   useNavigationAdapter: () => {
     const router = useRouter();
 
@@ -89,8 +98,6 @@ function RecipesContextAdapter({ children }: { children: React.ReactNode }) {
   const { filters } = useRecipesFiltersContext();
 
   const { allergies } = useActiveAllergies();
-
-  useRatingsSubscription();
 
   const { recipes, total } = useMemo(() => {
     if (!filters.showFavoritesOnly) {

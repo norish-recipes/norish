@@ -16,6 +16,9 @@ export function createTestWrapper(queryClient: QueryClient) {
   };
 }
 
-export function createMockFavoritesData(favoriteIds: string[] = []) {
-  return { favoriteIds };
+export function createMockFavoritesData(
+  favoriteIds: string[] = [],
+  favoriteVersions: Record<string, number> = {}
+) {
+  return { favoriteIds, favoriteVersions };
 }

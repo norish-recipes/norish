@@ -1,7 +1,6 @@
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useMutation } from "@tanstack/react-query";
 
+import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseRecipeVideos({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRecipeVideos() {
@@ -18,7 +17,8 @@ export function createUseRecipeVideos({ useTRPC }: CreateRecipeHooksOptions) {
       uploadGalleryVideoData: (
         input: Parameters<typeof uploadGalleryVideoMutation.mutateAsync>[0]
       ) => uploadGalleryVideoMutation.mutateAsync(input),
-      deleteGalleryVideo: (videoId: string) => deleteGalleryVideoMutation.mutateAsync({ videoId }),
+      deleteGalleryVideo: (videoId: string, version: number) =>
+        deleteGalleryVideoMutation.mutateAsync({ videoId, version }),
       isUploadingGalleryVideo: uploadGalleryVideoMutation.isPending,
       isDeletingGalleryVideo: deleteGalleryVideoMutation.isPending,
     };

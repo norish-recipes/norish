@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API-Schlüssel",
       "description": "API-Schlüssel ermöglichen programmatischen Zugriff auf die Norish API. Nutzen Sie sie für Integrationen, Shortcuts und Automatisierung.",
+      "docsLink": "API-Dokumentation öffnen",
       "keyNameLabel": "Schlüsselbenennung (optional)",
       "keyNamePlaceholder": "z.B. iOS-Verknüpfung",
       "createKey": "Schlüssel erstellen",
@@ -127,6 +128,33 @@
         "description": "Favoriten-/Herzsymbole auf Rezeptkarten und Detailseiten anzeigen"
       },
       "applyError": "Einstellung konnte nicht angewendet werden"
+    },
+    "shareLinks": {
+      "title": "Rezept-Freigabe-Links",
+      "description": "Überprüfen und verwalten Sie alle von Ihnen erstellten öffentlichen Rezept-Links.",
+      "empty": "Keine Freigabe-Links gefunden.",
+      "table": {
+        "recipe": "REZEPT",
+        "status": "STATUS",
+        "created": "ERSTELLT",
+        "expires": "LÄUFT AB",
+        "actions": "AKTIONEN"
+      },
+      "revokeModal": {
+        "title": "Link widerrufen",
+        "message": "Dieser Link für {recipeName} funktioniert nicht mehr, bis Sie ihn reaktivieren.",
+        "confirm": "Widerrufen"
+      },
+      "reactivateModal": {
+        "title": "Link reaktivieren",
+        "message": "Dieser Link für {recipeName} wird wieder aktiv.",
+        "confirm": "Reaktivieren"
+      },
+      "deleteModal": {
+        "title": "Link löschen",
+        "message": "Diesen Freigabe-Link für {recipeName} löschen? Dies kann nicht rückgängig gemacht werden.",
+        "confirm": "Link löschen"
+      }
     }
   },
   "household": {
@@ -179,7 +207,9 @@
       "regenerateButton": "Neu generieren",
       "expired": "Abgelaufen",
       "noCodeDescription": "Kein aktiver Join-Code. Generieren Sie einen, um neue Mitglieder einzuladen.",
-      "generateButton": "Join-Code generieren"
+      "generateButton": "Join-Code generieren",
+      "copySuccess": "Join-Code kopiert",
+      "copyFailed": "Join-Code konnte nicht kopiert werden"
     },
     "create": {
       "title": "Haushalt erstellen",
@@ -275,6 +305,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderation von Rezept-Freigaben",
+      "description": "Überprüfen Sie öffentliche Rezept-Links der gesamten Instanz und moderieren Sie deren Lebenszyklus.",
+      "empty": "Keine Freigabe-Links gefunden.",
+      "table": {
+        "recipe": "REZEPT",
+        "owner": "EIGENTÜMER",
+        "status": "STATUS",
+        "created": "ERSTELLT",
+        "expires": "LÄUFT AB",
+        "actions": "AKTIONEN"
+      },
+      "revokeModal": {
+        "title": "Link widerrufen",
+        "message": "Dieser Link für {recipeName} funktioniert nicht mehr, bis er reaktiviert wird.",
+        "confirm": "Widerrufen"
+      },
+      "reactivateModal": {
+        "title": "Link reaktivieren",
+        "message": "Dieser Link für {recipeName} wird wieder aktiv.",
+        "confirm": "Reaktivieren"
+      },
+      "deleteModal": {
+        "title": "Link löschen",
+        "message": "Diesen Freigabe-Link für {recipeName} löschen? Dies kann nicht rückgängig gemacht werden.",
+        "confirm": "Link löschen"
+      }
+    },
     "general": {
       "title": "Allgemein",
       "allowRegistration": "Neue Benutzerregistrierung zulassen",
@@ -492,6 +550,7 @@
       "temperature": "Temperatur: {value}",
       "temperatureHint": "Niedriger = fokussierter, Höher = kreativer",
       "maxTokens": "Max Token",
+      "requestTimeout": "Zeitüberschreitung der Anforderung (ms)",
       "autoTagAllergies": "Allergene automatisch erkennen",
       "autoTagAllergiesDescription": "Füge automatisch allergiebezogene Tags beim Importieren von Rezepten hinzu",
       "alwaysUseAI": "Immer KI-Import verwenden",
@@ -519,6 +578,8 @@
       "maxFileSizeDescription": "Maximale Größe für heruntergeladene Videodateien",
       "ytDlpVersion": "yt-dlp-Version",
       "ytDlpVersionDescription": "Version von yt-dlp zum Verwenden für Video-Downloads",
+      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxyDescription": "HTTP/SOCKS5-Proxy für yt-dlp",
       "transcription": "Transkription",
       "transcriptionDescription": "Konvertiere Video-Audio zu Text für Rezept-Extraktion",
       "transcriptionProvider": "Transkriptions-Anbieter",

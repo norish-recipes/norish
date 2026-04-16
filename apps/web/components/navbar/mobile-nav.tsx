@@ -3,15 +3,15 @@
 import { useCallback, useEffect, useRef } from "react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
+import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
+import { useUserContext } from "@/context/user-context";
+import { useAutoHide } from "@/hooks/auto-hide";
 import { CalendarDaysIcon, ClipboardDocumentListIcon, HomeIcon } from "@heroicons/react/20/solid";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
+
 import { cssGlassBackdrop } from "@norish/web/config/css-tokens";
 import { siteConfig } from "@norish/web/config/site";
-
-import { useAutoHide } from "@/hooks/auto-hide";
-import { useUserContext } from "@/context/user-context";
-import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 
 // Map hrefs to translation keys (same as navbar.tsx)
 const navLabelKeys: Record<string, "home" | "calendar" | "groceries"> = {

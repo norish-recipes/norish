@@ -14,6 +14,7 @@ describe("matchCategory", () => {
 
   it("matches fuzzy input", () => {
     expect(matchCategory("breakfst")).toBe("Breakfast");
+    expect(matchCategory("snak")).toBe("Snack");
   });
 
   it("matches localized category translations", () => {
@@ -28,6 +29,7 @@ describe("matchCategory", () => {
   });
 
   it("returns null for no match", () => {
+    expect(matchCategory("random")).toBeNull();
     expect(matchCategory("random gibberish")).toBeNull();
   });
 });

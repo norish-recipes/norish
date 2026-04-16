@@ -2,9 +2,11 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Card, CardBody, CardHeader, Select, SelectItem, Switch } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import {
   getLocalePreference,
   getShowConversionButtonPreference,
@@ -14,9 +16,6 @@ import {
 } from "@norish/shared/lib/user-preferences";
 
 import { useUserSettingsContext } from "../context";
-
-import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
-import NewFeatureChip from "@/app/(app)/settings/components/new-feature-chip";
 
 export default function PreferencesCard() {
   const t = useTranslations("settings.user.preferences");
@@ -30,6 +29,9 @@ export default function PreferencesCard() {
   const disabled = !globalEnabled;
 
   const currentLocale = getLocalePreference(user) ?? defaultLocale;
+  const selectedLocale = enabledLocales.some((locale) => locale.code === currentLocale)
+    ? currentLocale
+    : undefined;
 
   const handleToggle = useCallback(
     async (value: boolean) => {
@@ -82,7 +84,6 @@ export default function PreferencesCard() {
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <AdjustmentsHorizontalIcon className="h-5 w-5" />
           {t("title")}
-          <NewFeatureChip />
         </h2>
       </CardHeader>
       <CardBody className="gap-4">
@@ -98,7 +99,7 @@ export default function PreferencesCard() {
             aria-label={t("language.title")}
             className="max-w-[200px]"
             isDisabled={isUpdatingPreferences || enabledLocales.length === 0}
-            selectedKeys={currentLocale ? [currentLocale] : []}
+            selectedKeys={selectedLocale ? [selectedLocale] : []}
             onSelectionChange={(keys) => {
               const selected = Array.from(keys)[0] as string;
 

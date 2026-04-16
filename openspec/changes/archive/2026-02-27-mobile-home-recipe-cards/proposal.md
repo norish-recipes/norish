@@ -12,9 +12,11 @@ The mobile app needs a usable, content-first home experience that helps users qu
 ## Capabilities
 
 ### New Capabilities
+
 - `mobile-home-recipe-cards`: Mobile home feed that presents user recipes as interactive cards with complete summary metadata.
 
 ### Modified Capabilities
+
 - `mobile-ui`: Expand mobile UI requirements to cover home-screen recipe card presentation, metadata visibility, and native interaction expectations.
 
 ## Impact

@@ -1,19 +1,19 @@
 "use client";
 
-import type { UserSettingsDto } from "@norish/trpc";
-
 import { useCallback } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useTRPC } from "@/app/providers/trpc-provider";
-
+import type { UserSettingsDto } from "@norish/trpc";
 
 export type UserAllergiesData = {
   allergies: string[];
+  version: number;
 };
 
 export type UserCacheHelpers = {
   getUserSettingsData: () => UserSettingsDto | undefined;
+  getAllergiesData: () => UserAllergiesData | undefined;
   setUserSettingsData: (
     updater: (prev: UserSettingsDto | undefined) => UserSettingsDto | undefined
   ) => void;
@@ -51,6 +51,11 @@ export function useUserCacheHelpers(): UserCacheHelpers {
     [queryClient, userQueryKey]
   );
 
+  const getAllergiesData = useCallback(
+    () => queryClient.getQueryData<UserAllergiesData>(allergiesQueryKey),
+    [queryClient, allergiesQueryKey]
+  );
+
   const setAllergiesData = useCallback(
     (updater: (prev: UserAllergiesData | undefined) => UserAllergiesData | undefined) => {
       queryClient.setQueryData<UserAllergiesData>(allergiesQueryKey, updater);
@@ -64,6 +69,7 @@ export function useUserCacheHelpers(): UserCacheHelpers {
 
   return {
     getUserSettingsData,
+    getAllergiesData,
     setUserSettingsData,
     setAllergiesData,
     invalidate,

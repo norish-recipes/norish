@@ -107,6 +107,7 @@ describe("CalDAV Mutation Hooks", () => {
       const mockResultConfig = createMockCaldavConfig(configInput);
 
       mockSaveConfigMutate.mockResolvedValueOnce(mockResultConfig);
+      queryClient.setQueryData(mockConfigQueryKey, createMockCaldavConfig({ version: 4 }));
 
       const { result } = renderHook(() => useCaldavMutations(), {
         wrapper: createTestWrapper(queryClient),
@@ -116,7 +117,7 @@ describe("CalDAV Mutation Hooks", () => {
         await result.current.saveConfig(configInput);
       });
 
-      expect(mockSaveConfigMutate).toHaveBeenCalledWith(configInput, expect.anything());
+      expect(mockSaveConfigMutate.mock.calls[0]?.[0]).toEqual({ ...configInput, version: 4 });
     });
 
     it("returns saved config on success", async () => {
@@ -226,6 +227,7 @@ describe("CalDAV Mutation Hooks", () => {
   describe("useCaldavMutations.deleteConfig", () => {
     it("calls deleteConfig mutation", async () => {
       mockDeleteConfigMutate.mockResolvedValueOnce({ success: true });
+      queryClient.setQueryData(mockConfigQueryKey, createMockCaldavConfig({ version: 3 }));
 
       const { result } = renderHook(() => useCaldavMutations(), {
         wrapper: createTestWrapper(queryClient),
@@ -235,14 +237,15 @@ describe("CalDAV Mutation Hooks", () => {
         await result.current.deleteConfig();
       });
 
-      expect(mockDeleteConfigMutate).toHaveBeenCalledWith(
-        { deleteEvents: false },
-        expect.anything()
-      );
+      expect(mockDeleteConfigMutate.mock.calls[0]?.[0]).toEqual({
+        deleteEvents: false,
+        version: 3,
+      });
     });
 
     it("calls deleteConfig mutation with deleteEvents flag", async () => {
       mockDeleteConfigMutate.mockResolvedValueOnce({ success: true });
+      queryClient.setQueryData(mockConfigQueryKey, createMockCaldavConfig({ version: 5 }));
 
       const { result } = renderHook(() => useCaldavMutations(), {
         wrapper: createTestWrapper(queryClient),
@@ -252,10 +255,10 @@ describe("CalDAV Mutation Hooks", () => {
         await result.current.deleteConfig(true);
       });
 
-      expect(mockDeleteConfigMutate).toHaveBeenCalledWith(
-        { deleteEvents: true },
-        expect.anything()
-      );
+      expect(mockDeleteConfigMutate.mock.calls[0]?.[0]).toEqual({
+        deleteEvents: true,
+        version: 5,
+      });
     });
   });
 

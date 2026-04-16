@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useConnectionStatus } from "@/app/providers/trpc-provider";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-
-import { useConnectionStatus } from "@/app/providers/trpc-provider";
 
 export function ConnectionStatusOverlay() {
   const t = useTranslations("common.connection");

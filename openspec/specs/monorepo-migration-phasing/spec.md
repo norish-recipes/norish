@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change add-folder-by-folder-monorepo-plan. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Ordered Multi-Phase Migration Roadmap
 
 The monorepo migration SHALL be executed as an ordered phase roadmap with explicit objectives and prerequisite sequencing.
@@ -137,4 +139,3 @@ Phase B7 of tooling migration SHALL require a passing circular dependency gate b
 - **WHEN** `pnpm run deps:cycles` reports one or more cycles during B7
 - **THEN** Phase C tasks SHALL be treated as blocked
 - **AND** the migration plan SHALL add and complete explicit cycle-remediation tasks before Phase C proceeds.
-

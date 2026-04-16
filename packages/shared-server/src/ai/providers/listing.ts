@@ -2,12 +2,12 @@
  * AI Provider Listing - List available models from providers.
  */
 
-import type { TranscriptionProvider } from "@norish/config/zod/server-config";
-import type { AIProvider, AvailableModel } from "./types";
-
 import { Ollama } from "ollama";
+
+import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import { aiLogger } from "@norish/shared-server/logger";
 
+import type { AIProvider, AvailableModel } from "./types";
 
 // ============================================================================
 // Constants
@@ -74,7 +74,13 @@ async function fetchModelsRaw(options: FetchModelsOptions): Promise<RawModel[]> 
 
     const data = await response.json();
 
-    return data[dataPath] || [];
+    if (!data || typeof data !== "object") {
+      return [];
+    }
+
+    const models = (data as Record<string, unknown>)[dataPath];
+
+    return Array.isArray(models) ? (models as RawModel[]) : [];
   } catch (error) {
     aiLogger.debug({ err: error, provider }, `Failed to list ${provider} models`);
 

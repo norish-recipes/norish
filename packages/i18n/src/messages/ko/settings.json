@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API 키",
       "description": "API 키를 사용하면 Norish API에 프로그래밍 방식으로 접근할 수 있습니다. 통합, 바로가기, 자동화에 사용하세요.",
+      "docsLink": "API 문서 열기",
       "keyNameLabel": "키 이름(선택사항)",
       "keyNamePlaceholder": "예: iOS 단축키",
       "createKey": "키 만들기",
@@ -127,6 +128,33 @@
         "description": "레시피 카드와 상세 페이지에 즐겨찾기/하트 아이콘을 표시합니다"
       },
       "applyError": "환경설정을 적용하지 못했습니다"
+    },
+    "shareLinks": {
+      "title": "레시피 공유 링크",
+      "description": "내가 만든 모든 공개 레시피 링크를 검토하고 관리합니다.",
+      "empty": "공유 링크를 찾을 수 없습니다.",
+      "table": {
+        "recipe": "레시피",
+        "status": "상태",
+        "created": "생성일",
+        "expires": "만료일",
+        "actions": "작업"
+      },
+      "revokeModal": {
+        "title": "링크 취소",
+        "message": "{recipeName}의 이 링크는 재활성화할 때까지 작동하지 않습니다.",
+        "confirm": "취소"
+      },
+      "reactivateModal": {
+        "title": "링크 재활성화",
+        "message": "{recipeName}의 이 링크가 다시 활성화됩니다.",
+        "confirm": "재활성화"
+      },
+      "deleteModal": {
+        "title": "링크 삭제",
+        "message": "{recipeName}의 이 공유 링크를 삭제하시겠습니까? 되돌릴 수 없습니다.",
+        "confirm": "링크 삭제"
+      }
     }
   },
   "household": {
@@ -179,7 +207,9 @@
       "regenerateButton": "재생성",
       "expired": "만료됨",
       "noCodeDescription": "활성 참여 코드가 없습니다. 새 구성원을 초대하려면 코드를 생성하세요.",
-      "generateButton": "참여 코드 만들기"
+      "generateButton": "참여 코드 만들기",
+      "copySuccess": "참여 코드가 복사되었습니다",
+      "copyFailed": "참여 코드 복사에 실패했습니다"
     },
     "create": {
       "title": "가구 만들기",
@@ -275,6 +305,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "레시피 공유 모더레이션",
+      "description": "인스턴스 전체의 공개 레시피 링크를 검토하고 생명주기를 관리합니다.",
+      "empty": "공유 링크를 찾을 수 없습니다.",
+      "table": {
+        "recipe": "레시피",
+        "owner": "소유자",
+        "status": "상태",
+        "created": "생성일",
+        "expires": "만료일",
+        "actions": "작업"
+      },
+      "revokeModal": {
+        "title": "링크 취소",
+        "message": "{recipeName}의 이 링크는 재활성화될 때까지 작동하지 않습니다.",
+        "confirm": "취소"
+      },
+      "reactivateModal": {
+        "title": "링크 재활성화",
+        "message": "{recipeName}의 이 링크가 다시 활성화됩니다.",
+        "confirm": "재활성화"
+      },
+      "deleteModal": {
+        "title": "링크 삭제",
+        "message": "{recipeName}의 이 공유 링크를 삭제하시겠습니까? 되돌릴 수 없습니다.",
+        "confirm": "링크 삭제"
+      }
+    },
     "general": {
       "title": "일반",
       "allowRegistration": "신규 사용자 등록 허용",
@@ -492,6 +550,7 @@
       "temperature": "온도: {value}",
       "temperatureHint": "낮음 = 더 집중적, 높음 = 더 창의적",
       "maxTokens": "최대 토큰",
+      "requestTimeout": "요청 제한 시간 (ms)",
       "autoTagAllergies": "알러지 태그 자동 감지",
       "autoTagAllergiesDescription": "레시피를 가져올 때 알러지 관련 태그를 자동으로 추가합니다.",
       "alwaysUseAI": "항상 AI 가져오기 사용",
@@ -519,6 +578,8 @@
       "maxFileSizeDescription": "다운로드한 비디오 파일의 최대 크기",
       "ytDlpVersion": "yt-dlp 버전",
       "ytDlpVersionDescription": "비디오 다운로드에 사용할 yt-dlp 버전",
+      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxyDescription": "yt-dlp용 HTTP/SOCKS5 프록시",
       "transcription": "전사",
       "transcriptionDescription": "레시피 추출을 위해 동영상 오디오를 텍스트로 변환",
       "transcriptionProvider": "음성 변환 제공업체",

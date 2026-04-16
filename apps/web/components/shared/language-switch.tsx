@@ -1,10 +1,9 @@
 "use client";
 
 import { FC } from "react";
+import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
 import { GlobeAltIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
-
-import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
 
 /**
  * Language switch component for use in dropdown menus

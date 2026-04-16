@@ -1,11 +1,11 @@
 import fs from "fs/promises";
 import path from "path";
-
 import { eq, like, or } from "drizzle-orm";
-import { dbLogger as log } from "@norish/shared-server/logger";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { db } from "@norish/db/drizzle";
 import { recipeImages, recipes } from "@norish/db/schema";
+import { dbLogger as log } from "@norish/shared-server/logger";
 
 const RECIPES_DIR = path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes");
 
@@ -139,7 +139,7 @@ async function migrateThumbnails(stats: MigrationStats): Promise<void> {
     // Check old pattern: /recipes/images/{filename}
     const oldMatch = r.image.match(OLD_THUMBNAIL_URL_PATTERN);
 
-    if (oldMatch) {
+    if (oldMatch?.[1]) {
       filenameToRecipeId.set(oldMatch[1], r.id);
       continue;
     }
@@ -147,8 +147,8 @@ async function migrateThumbnails(stats: MigrationStats): Promise<void> {
     // Check new pattern: /recipes/{recipeId}/{filename}
     const newMatch = r.image.match(NEW_URL_PATTERN);
 
-    if (newMatch) {
-      const [, _recipeId, filename] = newMatch;
+    if (newMatch?.[2]) {
+      const filename = newMatch[2];
 
       filenameToRecipeId.set(filename, r.id);
     }

@@ -1,8 +1,8 @@
 "use client";
 
-import type { AIConfig, AutoTaggingMode } from "@norish/config/zod/server-config";
-
 import { useCallback, useEffect, useMemo, useState } from "react";
+import SecretInput from "@/components/shared/secret-input";
+import { useAvailableModelsQuery } from "@/hooks/admin";
 import { BeakerIcon, CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import {
   Autocomplete,
@@ -16,12 +16,11 @@ import {
   Switch,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import type { AIConfig, AutoTaggingMode } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
-
-import { useAvailableModelsQuery } from "@/hooks/admin";
-import SecretInput from "@/components/shared/secret-input";
 
 interface AIConfigFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
@@ -57,6 +56,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const [apiKey, setApiKey] = useState("");
   const [temperature, setTemperature] = useState(aiConfig?.temperature ?? 0);
   const [maxTokens, setMaxTokens] = useState(aiConfig?.maxTokens ?? 10000);
+  const [timeoutMs, setTimeoutMs] = useState(aiConfig?.timeoutMs ?? 300000);
   const [autoTagAllergies, setAutoTagAllergies] = useState(aiConfig?.autoTagAllergies ?? true);
   const [alwaysUseAI, setAlwaysUseAI] = useState(aiConfig?.alwaysUseAI ?? false);
   const [autoTaggingMode, setAutoTaggingMode] = useState<AutoTaggingMode>(
@@ -137,6 +137,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       setVisionModel(aiConfig.visionModel ?? "");
       setTemperature(aiConfig.temperature);
       setMaxTokens(aiConfig.maxTokens);
+      setTimeoutMs(aiConfig.timeoutMs ?? 300000);
       setAutoTagAllergies(aiConfig.autoTagAllergies ?? true);
       setAlwaysUseAI(aiConfig.alwaysUseAI ?? false);
       setAutoTaggingMode(aiConfig.autoTaggingMode ?? "disabled");
@@ -165,6 +166,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       visionModel !== (aiConfig.visionModel ?? "") ||
       temperature !== aiConfig.temperature ||
       maxTokens !== aiConfig.maxTokens ||
+      timeoutMs !== (aiConfig.timeoutMs ?? 300000) ||
       autoTagAllergies !== (aiConfig.autoTagAllergies ?? true) ||
       alwaysUseAI !== (aiConfig.alwaysUseAI ?? false) ||
       autoTaggingMode !== (aiConfig.autoTaggingMode ?? "disabled") ||
@@ -181,6 +183,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     visionModel,
     temperature,
     maxTokens,
+    timeoutMs,
     autoTagAllergies,
     alwaysUseAI,
     autoTaggingMode,
@@ -246,6 +249,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         apiKey: apiKey || undefined,
         temperature,
         maxTokens,
+        timeoutMs,
         autoTagAllergies,
         alwaysUseAI,
         autoTaggingMode: autoTaggingMode as AIConfig["autoTaggingMode"],
@@ -393,6 +397,14 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         type="number"
         value={maxTokens.toString()}
         onValueChange={(v) => setMaxTokens(parseInt(v) || 10000)}
+      />
+
+      <Input
+        isDisabled={!enabled}
+        label={t("requestTimeout")}
+        type="number"
+        value={timeoutMs.toString()}
+        onValueChange={(v) => setTimeoutMs(parseInt(v) || 300000)}
       />
 
       <div className="flex items-center justify-between">

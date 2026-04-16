@@ -1,6 +1,5 @@
-import React from 'react';
-
-import { SimpleTabScreen } from '@/components/shell/simple-tab-screen';
+import React from "react";
+import { SimpleTabScreen } from "@/components/shell/simple-tab-screen";
 
 export default function CalendarScreen() {
   return (

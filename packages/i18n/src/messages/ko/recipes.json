@@ -66,6 +66,50 @@
     "keepScreenOn": "화면 켜짐 유지",
     "actionsLabel": "작업"
   },
+  "sharePanel": {
+    "title": "레시피 공유",
+    "description": "{recipeName}의 공개 링크를 만들고 관리합니다.",
+    "expiryLabel": "링크 만료",
+    "createLink": "링크 만들기",
+    "latestLink": "최신 링크",
+    "currentLinks": "현재 링크",
+    "empty": "공유 링크가 없습니다.",
+    "createSuccess": "공유 링크가 생성되었습니다",
+    "copySuccess": "링크가 복사되었습니다",
+    "copyLink": "복사",
+    "openLink": "열기",
+    "createdAt": "생성: {value}",
+    "expiresAt": "만료: {value}",
+    "lastAccessedAt": "마지막 접근: {value}",
+    "never": "없음",
+    "expiryOptions": {
+      "1day": "1일",
+      "1week": "1주",
+      "1month": "1개월",
+      "1year": "1년",
+      "forever": "없음"
+    },
+    "status": {
+      "active": "활성",
+      "expired": "만료됨",
+      "revoked": "취소됨"
+    },
+    "revokeModal": {
+      "title": "링크 취소",
+      "message": "{recipeName}의 이 링크는 재활성화할 때까지 작동하지 않습니다.",
+      "confirm": "취소"
+    },
+    "reactivateModal": {
+      "title": "링크 재활성화",
+      "message": "{recipeName}의 이 링크가 다시 활성화됩니다.",
+      "confirm": "재활성화"
+    },
+    "deleteModal": {
+      "title": "링크 삭제",
+      "message": "{recipeName}의 이 공유 링크를 삭제하시겠습니까? 되돌릴 수 없습니다.",
+      "confirm": "링크 삭제"
+    }
+  },
   "convert": {
     "ariaLabel": "측정 단위 전환",
     "toMetric": "미터법으로 변환",

@@ -1,7 +1,8 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  createMockHouseholdAdminSettings,
   createMockHouseholdData,
   createMockHouseholdSettings,
   createMockHouseholdUser,
@@ -272,7 +273,9 @@ describe("useHouseholdSubscription", () => {
 
       act(() => {
         subscriptionCallbacks.onFailed?.({
-          reason: "Very long backend stack trace that should not be shown in toast",
+          payload: {
+            reason: "Very long backend stack trace that should not be shown in toast",
+          },
         });
       });
 
@@ -283,6 +286,79 @@ describe("useHouseholdSubscription", () => {
           color: "danger",
         })
       );
+    });
+  });
+
+  describe("versioned household events", () => {
+    it("updates household version on join code regeneration", async () => {
+      const initialHousehold = createMockHouseholdAdminSettings({ version: 1 });
+      const initialData = createMockHouseholdData(initialHousehold, "current-user");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const { useHouseholdSubscription } =
+        await import("@/hooks/households/use-household-subscription");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onJoinCodeRegenerated?.({
+          payload: {
+            joinCode: "654321",
+            joinCodeExpiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+            version: 2,
+          },
+        });
+      });
+
+      await waitFor(() => {
+        const data = queryClient.getQueryData<{ household: { version: number } }>(
+          householdQueryKey
+        );
+
+        expect(data?.household).toMatchObject({ version: 2 });
+      });
+    });
+
+    it("updates household version on admin transfer", async () => {
+      const initialHousehold = createMockHouseholdSettings({
+        version: 3,
+        users: [
+          createMockHouseholdUser({ id: "user-1", isAdmin: true, version: 1 }),
+          createMockHouseholdUser({ id: "user-2", isAdmin: false, version: 1 }),
+        ],
+      });
+      const initialData = createMockHouseholdData(initialHousehold, "user-1");
+
+      queryClient.setQueryData(householdQueryKey, initialData);
+
+      const { useHouseholdSubscription } =
+        await import("@/hooks/households/use-household-subscription");
+
+      renderHook(() => useHouseholdSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        subscriptionCallbacks.onAdminTransferred?.({
+          payload: {
+            oldAdminId: "user-1",
+            newAdminId: "user-2",
+            version: 4,
+          },
+        });
+      });
+
+      await waitFor(() => {
+        const data = queryClient.getQueryData<{
+          household: { version: number; users: Array<{ id: string; isAdmin?: boolean }> };
+        }>(householdQueryKey);
+
+        expect(data?.household).toMatchObject({ version: 4 });
+        expect(data?.household.users.find((user) => user.id === "user-2")?.isAdmin).toBe(true);
+      });
     });
   });
 });

@@ -5,19 +5,20 @@
  * Callers are responsible for lifecycle (close on shutdown).
  */
 
-import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
+import type { Queue } from "bullmq";
 
-import { Queue } from "bullmq";
+import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import { caldavSyncJobOptions, QUEUE_NAMES } from "../config";
+import { createOperationAwareQueue } from "../operation-aware-queue";
 
 /**
  * Create a CalDAV sync queue instance.
  * One queue instance per process is expected.
  */
 export function createCaldavSyncQueue(): Queue<CaldavSyncJobData> {
-  return new Queue<CaldavSyncJobData>(QUEUE_NAMES.CALDAV_SYNC, {
+  return createOperationAwareQueue<CaldavSyncJobData>(QUEUE_NAMES.CALDAV_SYNC, {
     connection: getBullClient(),
     defaultJobOptions: caldavSyncJobOptions,
   });

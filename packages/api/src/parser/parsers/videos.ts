@@ -6,11 +6,11 @@
  */
 
 import fs from "fs/promises";
-
 import { decode } from "html-entities";
-import { convertToMp4, saveVideoFile } from "@norish/shared-server/media/storage";
-import { parserLogger } from "@norish/shared-server/logger";
+
 import { downloadVideo, getFfmpegPath, getVideoMetadata } from "@norish/api/video/yt-dlp";
+import { parserLogger } from "@norish/shared-server/logger";
+import { convertToMp4, saveVideoFile } from "@norish/shared-server/media/storage";
 
 const log = parserLogger.child({ module: "videos" });
 
@@ -284,6 +284,11 @@ export async function parseVideos(
   // Process videos sequentially to avoid overwhelming resources
   for (let i = 0; i < Math.min(candidates.length, maxVideos); i++) {
     const candidate = candidates[i];
+
+    if (!candidate) {
+      continue;
+    }
+
     const videoUrl = candidate.contentUrl || candidate.url;
 
     if (!videoUrl) continue;

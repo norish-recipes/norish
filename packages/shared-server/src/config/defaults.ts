@@ -1,5 +1,4 @@
 import type { ServerConfigKey } from "@norish/db/zodSchemas/server-config";
-
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
@@ -39,6 +38,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
         maxLengthSeconds: 120,
         maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
         ytDlpVersion: "2025.11.12",
+        ytDlpProxy: undefined,
         transcriptionProvider: "disabled",
         transcriptionModel: "whisper-1",
       };

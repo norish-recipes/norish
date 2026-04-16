@@ -1,158 +1,19 @@
 "use client";
 
-import { useSubscription } from "@trpc/tanstack-react-query";
-import { useTranslations } from "next-intl";
-
-import { useGroceriesCacheHelpers } from "./use-groceries-cache";
-
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useTRPC } from "@/app/providers/trpc-provider";
 
-/**
- * Hook that subscribes to all grocery-related WebSocket events
- * and updates the query cache accordingly.
- *
- * Uses internal cache helpers - no props required.
- * Safe to call from context providers without causing recursion.
- */
-export function useGroceriesSubscription() {
-  const trpc = useTRPC();
-  const tErrors = useTranslations("common.errors");
-  const { setGroceriesData, invalidate } = useGroceriesCacheHelpers();
+import {
+  createUseGroceriesCache,
+  createUseGroceriesSubscription,
+} from "@norish/shared-react/hooks/groceries";
 
-  // onCreated
-  useSubscription(
-    trpc.groceries.onCreated.subscriptionOptions(undefined, {
-      onData: (payload: any) => {
-        setGroceriesData((prev) => {
-          if (!prev) return prev;
+import { useGroceriesErrorAdapter } from "./error-adapter";
 
-          const existing = prev.groceries ?? [];
-          const incoming = payload.groceries;
-          const newGroceries = incoming.filter((g) => !existing.some((eg) => eg.id === g.id));
+const useGroceriesCacheHelpers = createUseGroceriesCache({ useTRPC });
+const useSharedGroceriesSubscription = createUseGroceriesSubscription({
+  useTRPC,
+  useGroceriesCacheHelpers,
+  useErrorAdapter: useGroceriesErrorAdapter,
+});
 
-          if (newGroceries.length === 0) return prev;
-
-          return { ...prev, groceries: [...newGroceries, ...existing] };
-        });
-      },
-    })
-  );
-
-  // onUpdated
-  useSubscription(
-    trpc.groceries.onUpdated.subscriptionOptions(undefined, {
-      onData: (payload: any) => {
-        setGroceriesData((prev) => {
-          if (!prev) return prev;
-
-          const updated = payload.changedGroceries;
-          const updatedList = prev.groceries.map((e) => {
-            const match = updated.find((i) => i.id === e.id);
-
-            return match ? { ...e, ...match } : e;
-          });
-
-          return { ...prev, groceries: updatedList };
-        });
-      },
-    })
-  );
-
-  // onDeleted
-  useSubscription(
-    trpc.groceries.onDeleted.subscriptionOptions(undefined, {
-      onData: (payload: any) => {
-        setGroceriesData((prev) => {
-          if (!prev) return prev;
-
-          const filtered = prev.groceries.filter((g) => !payload.groceryIds.includes(g.id));
-
-          if (filtered.length === prev.groceries.length) return prev;
-
-          return { ...prev, groceries: filtered };
-        });
-      },
-    })
-  );
-
-  // onRecurringCreated
-  useSubscription(
-    trpc.groceries.onRecurringCreated.subscriptionOptions(undefined, {
-      onData: (payload: any) => {
-        setGroceriesData((prev) => {
-          if (!prev) return prev;
-
-          const { grocery: newGrocery, recurringGrocery: newRecurring } = payload;
-
-          const groceries = prev.groceries.some((g) => g.id === newGrocery.id)
-            ? prev.groceries.map((g) => (g.id === newGrocery.id ? newGrocery : g))
-            : [newGrocery, ...prev.groceries];
-
-          const recurringGroceries = prev.recurringGroceries.some((r) => r.id === newRecurring.id)
-            ? prev.recurringGroceries.map((r) => (r.id === newRecurring.id ? newRecurring : r))
-            : [newRecurring, ...prev.recurringGroceries];
-
-          return { ...prev, groceries, recurringGroceries };
-        });
-      },
-    })
-  );
-
-  // onRecurringUpdated
-  useSubscription(
-    trpc.groceries.onRecurringUpdated.subscriptionOptions(undefined, {
-      onData: (payload: any) => {
-        setGroceriesData((prev) => {
-          if (!prev) return prev;
-
-          const { recurringGrocery: updatedRecurring, grocery: updatedGrocery } = payload;
-
-          return {
-            ...prev,
-            groceries: prev.groceries.map((g) => (g.id === updatedGrocery.id ? updatedGrocery : g)),
-            recurringGroceries: prev.recurringGroceries.map((r) =>
-              r.id === updatedRecurring.id ? updatedRecurring : r
-            ),
-          };
-        });
-      },
-    })
-  );
-
-  // onRecurringDeleted
-  useSubscription(
-    trpc.groceries.onRecurringDeleted.subscriptionOptions(undefined, {
-      onData: (payload: any) => {
-        setGroceriesData((prev) => {
-          if (!prev) return prev;
-
-          return {
-            ...prev,
-            groceries: prev.groceries.filter(
-              (g) => g.recurringGroceryId !== payload.recurringGroceryId
-            ),
-            recurringGroceries: prev.recurringGroceries.filter(
-              (r) => r.id !== payload.recurringGroceryId
-            ),
-          };
-        });
-      },
-    })
-  );
-
-  // onFailed
-  useSubscription(
-    trpc.groceries.onFailed.subscriptionOptions(undefined, {
-      onData: (payload: any) => {
-        showSafeErrorToast({
-          title: tErrors("operationFailed"),
-          description: tErrors("technicalDetails"),
-          error: payload.reason,
-          context: "groceries-subscription:onFailed",
-        });
-        invalidate();
-      },
-    })
-  );
-}
+export const useGroceriesSubscription = useSharedGroceriesSubscription;

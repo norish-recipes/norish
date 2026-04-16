@@ -1,8 +1,8 @@
-import { createClientLogger } from '@norish/shared/lib/logger';
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-import type { TimerStatus } from './timer-types';
+import type { TimerStatus } from "./timer-types";
 
-const logger = createClientLogger('timer-live-activity');
+const logger = createClientLogger("timer-live-activity");
 
 // ─── Factory (loaded once at module init) ────────────────────────────────────
 
@@ -11,7 +11,7 @@ let _liveActivityInstance: any = null;
 const timerActivityFactory = (() => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('@/widgets/TimerActivity').default;
+    return require("@/widgets/TimerActivity").default;
   } catch {
     return null;
   }
@@ -21,7 +21,7 @@ const timerActivityFactory = (() => {
 
 export async function startOrUpdateLiveActivity(
   topTimer: { label: string; remainingMs: number; status: TimerStatus },
-  totalCount: number,
+  totalCount: number
 ): Promise<void> {
   if (!timerActivityFactory) return;
 
@@ -41,14 +41,14 @@ export async function startOrUpdateLiveActivity(
       try {
         _liveActivityInstance = timerActivityFactory.start(props);
       } catch (err) {
-        logger.warn(err, 'Live Activity restart failed');
+        logger.warn(err, "Live Activity restart failed");
       }
     }
   } else {
     try {
       _liveActivityInstance = timerActivityFactory.start(props);
     } catch (err) {
-      logger.warn(err, 'Live Activity start failed');
+      logger.warn(err, "Live Activity start failed");
     }
   }
 }
@@ -58,10 +58,10 @@ export async function startOrUpdateLiveActivity(
 export async function endLiveActivity(): Promise<void> {
   try {
     if (_liveActivityInstance) {
-      await _liveActivityInstance.end('default');
+      await _liveActivityInstance.end("default");
       _liveActivityInstance = null;
     }
   } catch (err) {
-    logger.warn(err, 'Live Activity end failed');
+    logger.warn(err, "Live Activity end failed");
   }
 }

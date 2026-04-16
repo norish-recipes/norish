@@ -1,21 +1,22 @@
 "use client";
 
-import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
-
 import { useEffect, useState } from "react";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowPathIcon,
   ClipboardDocumentIcon as ClipboardDocumentIconSolid,
 } from "@heroicons/react/16/solid";
 import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicons/react/24/outline";
-import { Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
+import { addToast, Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 
 import { useHouseholdSettingsContext } from "../context";
 
 export default function JoinCodeCard() {
   const t = useTranslations("settings.household.joinCode");
+  const tErrors = useTranslations("common.errors");
   const { household, currentUserId, regenerateJoinCode } = useHouseholdSettingsContext();
   const [timeRemaining, setTimeRemaining] = useState<string>("");
 
@@ -77,11 +78,25 @@ export default function JoinCodeCard() {
     ? new Date(adminHousehold.joinCodeExpiresAt) < new Date()
     : true;
 
-  const handleCopyJoinCode = () => {
+  const handleCopyJoinCode = async () => {
     // Type guard ensures household has joinCode
     if ("joinCode" in household && household.joinCode) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(household.joinCode);
+      try {
+        await navigator.clipboard.writeText(household.joinCode);
+        addToast({
+          title: t("copySuccess"),
+          color: "success",
+          shouldShowTimeoutProgress: true,
+          radius: "full",
+        });
+      } catch (error) {
+        showSafeErrorToast({
+          title: t("copyFailed"),
+          description: tErrors("technicalDetails"),
+          color: "danger",
+          error,
+          context: "household-join-code:copy",
+        });
       }
     }
   };

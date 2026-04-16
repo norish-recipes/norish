@@ -1,9 +1,9 @@
 import "server-only";
 
-import type { Locale } from "@norish/i18n";
-
 import { cookies, headers } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
+
+import type { Locale } from "@norish/i18n";
 import { auth } from "@norish/auth/auth";
 import {
   getDefaultLocale as getConfigDefaultLocale,

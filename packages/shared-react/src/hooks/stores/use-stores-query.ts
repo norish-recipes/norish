@@ -1,7 +1,6 @@
-import type { CreateStoresHooksOptions, StoresData, StoresQueryResult } from "./types";
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { CreateStoresHooksOptions, StoresData, StoresQueryResult } from "./types";
 
 export function createUseStoresQuery({ useTRPC }: CreateStoresHooksOptions) {
   return function useStoresQuery(): StoresQueryResult {

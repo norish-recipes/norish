@@ -3,7 +3,15 @@ import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getAverageRating, getUserRating, rateRecipe } from "../mocks/ratings-repository";
+import { trpcLogger } from "@norish/shared-server/logger";
+import { ratingsProcedures } from "@norish/trpc/routers/ratings/ratings";
+
+import {
+  getAverageRating,
+  getUserRating,
+  getUserRatingWithVersion,
+  rateRecipe,
+} from "../mocks/ratings-repository";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
 
 vi.mock("@norish/db/repositories/ratings", () => import("../mocks/ratings-repository"));
@@ -13,6 +21,7 @@ vi.mock("@norish/config/server-config-loader", () => ({
 }));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+  createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
@@ -32,6 +41,7 @@ describe("ratings procedures", () => {
   describe("getUserRating", () => {
     it("returns user rating for recipe", async () => {
       getUserRating.mockResolvedValue(4);
+      getUserRatingWithVersion.mockResolvedValue({ rating: 4, version: 2 });
 
       const testRouter = t.router({
         getUserRating: t.procedure
@@ -52,6 +62,7 @@ describe("ratings procedures", () => {
 
     it("returns null when user has not rated", async () => {
       getUserRating.mockResolvedValue(null);
+      getUserRatingWithVersion.mockResolvedValue({ rating: null, version: null });
 
       const testRouter = t.router({
         getUserRating: t.procedure
@@ -153,6 +164,24 @@ describe("ratings procedures", () => {
       const result = await caller.rate({ recipeId: "recipe-1", rating: 3 });
 
       expect(result.isNew).toBe(false);
+    });
+
+    it("logs stale rating mutations as no-ops", async () => {
+      const recipeId = crypto.randomUUID();
+
+      rateRecipe.mockResolvedValue({ rating: 2, isNew: false, stale: true });
+
+      const caller = ratingsProcedures.createCaller({ ...ctx, multiplexer: null } as any);
+      const result = await caller.rate({ recipeId, rating: 2, version: 7 });
+
+      await Promise.resolve();
+
+      expect(result).toEqual({ success: true });
+      expect(rateRecipe).toHaveBeenCalledWith(ctx.user.id, recipeId, 2, 7);
+      expect(trpcLogger.info).toHaveBeenCalledWith(
+        { userId: ctx.user.id, recipeId, version: 7 },
+        "Ignoring stale rating mutation"
+      );
     });
 
     it("validates rating is between 1 and 5", async () => {

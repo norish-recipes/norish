@@ -10,10 +10,10 @@
     "./*": "./src/*.ts"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.json --noCheck",
+    "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "typecheck": "tsc --noEmit --noCheck",
+    "typecheck": "pnpm exec tsc --noEmit --noCheck",
     "clean": "git clean -xdf .cache .turbo node_modules dist",
     "test": "vitest run --config ./vitest.config.ts"
   },

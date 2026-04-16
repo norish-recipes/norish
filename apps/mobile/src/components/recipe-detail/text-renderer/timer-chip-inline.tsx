@@ -1,11 +1,10 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import * as Haptics from 'expo-haptics';
-import { Chip } from 'heroui-native';
-import React, { useCallback } from 'react';
+import React, { useCallback } from "react";
+import { useTimerStore } from "@/stores/timers";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import * as Haptics from "expo-haptics";
+import { Chip } from "heroui-native";
 
-import { formatTimerMs } from '@norish/shared/lib/helpers';
-
-import { useTimerStore } from '@/stores/timers';
+import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -49,9 +48,9 @@ export function TimerChipInline({
   const timers = useTimerStore((s) => s.timers);
 
   const existingTimer = timerId ? timers.find((t) => t.id === timerId) : null;
-  const isRunning = existingTimer?.status === 'running';
-  const isPaused = existingTimer?.status === 'paused';
-  const isCompleted = existingTimer?.status === 'completed';
+  const isRunning = existingTimer?.status === "running";
+  const isPaused = existingTimer?.status === "paused";
+  const isCompleted = existingTimer?.status === "completed";
 
   const handlePress = useCallback(() => {
     if (!timerId || !durationMs) return;
@@ -69,13 +68,7 @@ export function TimerChipInline({
       }
     } else {
       // Add and auto-start
-      addTimer(
-        timerId,
-        recipeId ?? 'unknown',
-        label ?? text,
-        durationMs,
-        recipeName,
-      );
+      addTimer(timerId, recipeId ?? "unknown", label ?? text, durationMs, recipeName);
       startTimer(timerId);
     }
   }, [
@@ -96,42 +89,33 @@ export function TimerChipInline({
 
   // ── Choose icon by status ──────────────────────────────────────────────────
 
-  const iconName: React.ComponentProps<typeof Ionicons>['name'] = isCompleted
-    ? 'refresh'
+  const iconName: React.ComponentProps<typeof Ionicons>["name"] = isCompleted
+    ? "refresh"
     : isRunning
-      ? 'pause'
+      ? "pause"
       : isPaused
-        ? 'play'
-        : 'timer-outline';
+        ? "play"
+        : "timer-outline";
 
   // ── Choose chip colour by status ───────────────────────────────────────────
 
-  const chipColor: React.ComponentProps<typeof Chip>['color'] = isCompleted
-    ? 'danger'
+  const chipColor: React.ComponentProps<typeof Chip>["color"] = isCompleted
+    ? "danger"
     : isRunning
-      ? 'accent'
+      ? "accent"
       : isPaused
-        ? 'warning'
-        : 'default';
+        ? "warning"
+        : "default";
 
   // ── Display text: live countdown when active, original text otherwise ──────
 
-  const displayText = existingTimer
-    ? formatTimerMs(existingTimer.remainingMs)
-    : text;
+  const displayText = existingTimer ? formatTimerMs(existingTimer.remainingMs) : text;
 
   return (
-    <Chip
-      variant="primary"
-      color={chipColor}
-      size="sm"
-      onPress={handlePress}
-    >
+    <Chip variant="primary" color={chipColor} size="sm" onPress={handlePress}>
       <Chip.Label>
-        <Ionicons name={iconName} size={11} />{' '}
-        {displayText}
+        <Ionicons name={iconName} size={11} /> {displayText}
       </Chip.Label>
     </Chip>
   );
 }
-

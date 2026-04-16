@@ -1,9 +1,8 @@
-import crypto from "crypto";
 import { promisify } from "util";
 import { gunzip } from "zlib";
-
 import JSZip from "jszip";
 import { z } from "zod";
+
 import { matchCategory } from "@norish/shared-server/ai/utils/category-matcher";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
@@ -72,6 +71,7 @@ function parsePaprikaNutritionValue(
  */
 export async function parsePaprikaRecipeToDTO(
   json: PaprikaRecipe,
+  recipeId: string,
   imageBuffer?: Buffer
 ): Promise<FullRecipeInsertDTO> {
   // Validate against schema
@@ -82,9 +82,6 @@ export async function parsePaprikaRecipeToDTO(
   if (!name) {
     throw new Error("Missing recipe name");
   }
-
-  // Generate recipe ID upfront so images are saved to the correct folder
-  const recipeId = crypto.randomUUID();
 
   // Save image if provided
   const image = await saveBufferImage(imageBuffer, recipeId);
@@ -122,7 +119,6 @@ export async function parsePaprikaRecipeToDTO(
     categories: validated.categories,
   });
 
-  // Add the pre-generated recipe ID to ensure the image path matches
   return {
     ...dto,
     id: recipeId,

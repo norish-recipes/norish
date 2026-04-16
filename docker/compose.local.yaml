@@ -1,0 +1,15 @@
+services:
+  db:
+    container_name: norish-db-local
+    ports:
+      - "5432:5432"
+
+  chrome-headless:
+    container_name: chrome-headless-local
+    ports:
+      - "3003:3003"
+
+  redis:
+    container_name: norish-redis-local
+    ports:
+      - "6379:6379"

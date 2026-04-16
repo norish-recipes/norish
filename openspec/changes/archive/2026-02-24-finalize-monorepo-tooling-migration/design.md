@@ -4,24 +4,24 @@ The Norish monorepo migration phases 0-6 relocated all product source code but l
 
 ### Current State (norish)
 
-| Tooling Concern | Current Location | Package? | Config Style |
-|---|---|---|---|
-| ESLint | `tooling/eslint/eslint.config.mjs` + root shim | No | Monolithic flat config, FlatCompat |
-| Prettier | Root `.prettierrc` + `.prettierignore` | No | JSON config, no import sorting |
-| TypeScript | Root `tsconfig.json` + `tsconfig.server.json` + `tsconfig.typecheck.json` | No | Monolithic with 18 path aliases |
-| Vitest | `tooling/vitest/vitest.config.ts` + `tooling/vitest/setup.ts` + root shim | No | Centralized with hardcoded aliases |
-| Tailwind | `tooling/tailwind/theme.css` + `tooling/tailwind/hero.ts` | No | CSS vars + HeroUI plugin |
-| CI Setup | Inline in `.github/workflows/*.yml` | No | Per-workflow duplication |
+| Tooling Concern | Current Location                                                          | Package? | Config Style                       |
+| --------------- | ------------------------------------------------------------------------- | -------- | ---------------------------------- |
+| ESLint          | `tooling/eslint/eslint.config.mjs` + root shim                            | No       | Monolithic flat config, FlatCompat |
+| Prettier        | Root `.prettierrc` + `.prettierignore`                                    | No       | JSON config, no import sorting     |
+| TypeScript      | Root `tsconfig.json` + `tsconfig.server.json` + `tsconfig.typecheck.json` | No       | Monolithic with 18 path aliases    |
+| Vitest          | `tooling/vitest/vitest.config.ts` + `tooling/vitest/setup.ts` + root shim | No       | Centralized with hardcoded aliases |
+| Tailwind        | `tooling/tailwind/theme.css` + `tooling/tailwind/hero.ts`                 | No       | CSS vars + HeroUI plugin           |
+| CI Setup        | Inline in `.github/workflows/*.yml`                                       | No       | Per-workflow duplication           |
 
 ### Target State (turbo-norish reference)
 
-| Tooling Concern | Location | Package Name | Config Style |
-|---|---|---|---|
-| ESLint | `tooling/eslint/` | `@norish/eslint-config` | Modular exports: `./base`, `./react`, `./nextjs` |
-| Prettier | `tooling/prettier/` | `@norish/prettier-config` | Shared JS config with import sorting |
-| TypeScript | `tooling/typescript/` | `@norish/tsconfig` | Composable: `base.json`, `compiled-package.json` |
-| Tailwind | `tooling/tailwind/` | `@norish/tailwind-config` | CSS exports: `./theme`, `./postcss-config` |
-| CI Setup | `tooling/github/setup/action.yml` | N/A | Composite GitHub Action |
+| Tooling Concern | Location                          | Package Name              | Config Style                                     |
+| --------------- | --------------------------------- | ------------------------- | ------------------------------------------------ |
+| ESLint          | `tooling/eslint/`                 | `@norish/eslint-config`   | Modular exports: `./base`, `./react`, `./nextjs` |
+| Prettier        | `tooling/prettier/`               | `@norish/prettier-config` | Shared JS config with import sorting             |
+| TypeScript      | `tooling/typescript/`             | `@norish/tsconfig`        | Composable: `base.json`, `compiled-package.json` |
+| Tailwind        | `tooling/tailwind/`               | `@norish/tailwind-config` | CSS exports: `./theme`, `./postcss-config`       |
+| CI Setup        | `tooling/github/setup/action.yml` | N/A                       | Composite GitHub Action                          |
 
 ## Goals / Non-Goals
 
@@ -101,6 +101,7 @@ The Norish monorepo migration phases 0-6 relocated all product source code but l
 **Rationale:** The product code migration (phases 0-6) established this principle in the archived `add-folder-by-folder-monorepo-plan` change. Applying the same discipline to tooling migration prevents orphaned configs that silently shadow the new location (e.g., a leftover root `vitest.config.ts` overriding a workspace-local config) and keeps the hygiene policy enforceable at each gate.
 
 **Applies to:**
+
 - Config files relocated between directories (e.g. `tooling/vitest/setup.ts` -> `apps/web/__tests__/setup.ts`)
 - Root config files relocated to workspaces (e.g. `tsdown.config.ts` -> `apps/web/tsdown.config.ts`)
 - devDependencies moved from root `package.json` to owning workspace `package.json` (remove from root in the same step)
@@ -108,13 +109,13 @@ The Norish monorepo migration phases 0-6 relocated all product source code but l
 
 ## Risks / Trade-offs
 
-| Risk | Mitigation |
-|---|---|
-| ESLint rule changes introduce new lint violations | Run lint across full codebase after conversion; commit autofix pass before switching |
-| Import ordering changes from Prettier plugin create large diff | Run `pnpm format:fix` as a dedicated commit before merging |
-| Removing root path aliases breaks IDE resolution | Ensure pnpm workspace linking provides resolution; update `.vscode/settings.json` if needed |
-| Per-workspace tsconfig drift | `@norish/tsconfig` base enforces strict mode and shared options |
-| CI workflow changes break pipeline | Test in a branch with PR quality checks before merging |
+| Risk                                                           | Mitigation                                                                                  |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| ESLint rule changes introduce new lint violations              | Run lint across full codebase after conversion; commit autofix pass before switching        |
+| Import ordering changes from Prettier plugin create large diff | Run `pnpm format:fix` as a dedicated commit before merging                                  |
+| Removing root path aliases breaks IDE resolution               | Ensure pnpm workspace linking provides resolution; update `.vscode/settings.json` if needed |
+| Per-workspace tsconfig drift                                   | `@norish/tsconfig` base enforces strict mode and shared options                             |
+| CI workflow changes break pipeline                             | Test in a branch with PR quality checks before merging                                      |
 
 ## Migration Plan
 

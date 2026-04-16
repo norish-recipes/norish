@@ -29,6 +29,7 @@
     "apiKeys": {
       "title": "API-sleutels",
       "description": "API-sleutels bieden toegang tot de Norish API. Gebruik ze voor integraties, snelkoppelingen en automatisering.",
+      "docsLink": "API-documentatie openen",
       "keyNameLabel": "Sleutelnaam (optioneel)",
       "keyNamePlaceholder": "bijv. iOS Snelkoppeling",
       "createKey": "Sleutel aanmaken",
@@ -127,6 +128,33 @@
         "title": "Favorieten tonen",
         "description": "Favoriet-/hartpictogrammen op receptkaarten en detailpagina's weergeven"
       }
+    },
+    "shareLinks": {
+      "title": "Receptdeellinks",
+      "description": "Bekijk en beheer alle publieke receptlinks die je hebt aangemaakt.",
+      "empty": "Geen deellinks gevonden.",
+      "table": {
+        "recipe": "RECEPT",
+        "status": "STATUS",
+        "created": "AANGEMAAKT",
+        "expires": "VERLOOPDATUM",
+        "actions": "ACTIES"
+      },
+      "revokeModal": {
+        "title": "Link intrekken",
+        "message": "Deze link voor {recipeName} werkt niet meer totdat je hem opnieuw activeert.",
+        "confirm": "Intrekken"
+      },
+      "reactivateModal": {
+        "title": "Link opnieuw activeren",
+        "message": "Deze link voor {recipeName} wordt weer actief.",
+        "confirm": "Opnieuw activeren"
+      },
+      "deleteModal": {
+        "title": "Link verwijderen",
+        "message": "Deze deellink voor {recipeName} verwijderen? Dit kan niet ongedaan worden gemaakt.",
+        "confirm": "Link verwijderen"
+      }
     }
   },
   "household": {
@@ -179,7 +207,9 @@
       "regenerateButton": "Opnieuw genereren",
       "expired": "Verlopen",
       "noCodeDescription": "Geen actieve join code. Genereer er een om nieuwe leden uit te nodigen.",
-      "generateButton": "Genereer join Code"
+      "generateButton": "Genereer join Code",
+      "copySuccess": "Join-code gekopieerd",
+      "copyFailed": "Join-code kopieren mislukt"
     },
     "create": {
       "title": "Huishouden aanmaken",
@@ -275,6 +305,34 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderatie van receptdeling",
+      "description": "Bekijk publieke receptlinks in de hele instantie en beheer hun levenscyclus.",
+      "empty": "Geen deellinks gevonden.",
+      "table": {
+        "recipe": "RECEPT",
+        "owner": "EIGENAAR",
+        "status": "STATUS",
+        "created": "AANGEMAAKT",
+        "expires": "VERLOOPDATUM",
+        "actions": "ACTIES"
+      },
+      "revokeModal": {
+        "title": "Link intrekken",
+        "message": "Deze link voor {recipeName} werkt niet meer totdat hij opnieuw wordt geactiveerd.",
+        "confirm": "Intrekken"
+      },
+      "reactivateModal": {
+        "title": "Link opnieuw activeren",
+        "message": "Deze link voor {recipeName} wordt weer actief.",
+        "confirm": "Opnieuw activeren"
+      },
+      "deleteModal": {
+        "title": "Link verwijderen",
+        "message": "Deze deellink voor {recipeName} verwijderen? Dit kan niet ongedaan worden gemaakt.",
+        "confirm": "Link verwijderen"
+      }
+    },
     "general": {
       "title": "Algemeen",
       "allowRegistration": "Nieuwe registraties toestaan",
@@ -492,6 +550,7 @@
       "temperature": "Temperatuur: {value}",
       "temperatureHint": "Lager = gefocuster, Hoger = creatiever",
       "maxTokens": "Max Tokens",
+      "requestTimeout": "Time-out van aanvraag (ms)",
       "autoTagAllergies": "Allergietags automatisch detecteren",
       "autoTagAllergiesDescription": "Voeg automatisch allergiegerelateerde tags toe bij het importeren van recepten",
       "alwaysUseAI": "Altijd AI gebruiken voor import",
@@ -519,6 +578,8 @@
       "maxFileSizeDescription": "Maximale grootte voor gedownloade videobestanden",
       "ytDlpVersion": "yt-dlp Versie",
       "ytDlpVersionDescription": "Versie van yt-dlp voor video-downloads",
+      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxyDescription": "HTTP/SOCKS5-proxy voor yt-dlp",
       "transcription": "Transcriptie",
       "transcriptionDescription": "Converteer video-audio naar tekst voor receptextractie",
       "transcriptionProvider": "Transcriptieprovider",

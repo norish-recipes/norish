@@ -13,6 +13,7 @@ export type PlannedItemFromQuery = {
   recipeImage: string | null;
   servings: number | null;
   calories: number | null;
+  version: number;
   createdAt: Date;
   updatedAt: Date;
 };

@@ -20,6 +20,7 @@ export default defineConfig({
     setupFiles: ["./__tests__/setup.ts"],
     globalSetup: ["../../packages/db/__tests__/setup/global-setup.ts"],
     hookTimeout: 60000,
+    testTimeout: 15000,
     include: ["**/*.{test,spec}.{ts,tsx}"],
     exclude: ["node_modules", "**/node_modules/**", "dist-server", ".next"],
     coverage: {

@@ -3,6 +3,7 @@
  */
 
 import type { LanguageModel } from "ai";
+
 import type { AIConfig } from "@norish/config/zod/server-config";
 
 /**
@@ -23,6 +24,7 @@ export interface ModelConfig {
 export interface GenerationSettings {
   temperature?: number;
   maxOutputTokens?: number;
+  abortSignal?: AbortSignal;
 }
 
 /**

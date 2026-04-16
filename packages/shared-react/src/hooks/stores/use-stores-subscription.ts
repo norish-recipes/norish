@@ -1,7 +1,6 @@
-import type { CreateStoresHooksOptions, StoresCacheHelpers } from "./types";
-
 import { useSubscription } from "@trpc/tanstack-react-query";
 
+import type { CreateStoresHooksOptions, StoresCacheHelpers } from "./types";
 
 type CreateUseStoresSubscriptionOptions = CreateStoresHooksOptions & {
   useStoresCacheHelpers: () => StoresCacheHelpers;
@@ -17,7 +16,7 @@ export function createUseStoresSubscription({
 
     useSubscription(
       trpc.stores.onCreated.subscriptionOptions(undefined, {
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           setStoresData((prev) => {
             if (!prev) return [payload.store];
             const exists = prev.some((s) => s.id === payload.store.id);
@@ -34,7 +33,7 @@ export function createUseStoresSubscription({
 
     useSubscription(
       trpc.stores.onUpdated.subscriptionOptions(undefined, {
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           setStoresData((prev) => {
             if (!prev) return prev;
 
@@ -46,7 +45,7 @@ export function createUseStoresSubscription({
 
     useSubscription(
       trpc.stores.onDeleted.subscriptionOptions(undefined, {
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           setStoresData((prev) => {
             if (!prev) return prev;
 
@@ -58,7 +57,7 @@ export function createUseStoresSubscription({
 
     useSubscription(
       trpc.stores.onReordered.subscriptionOptions(undefined, {
-        onData: (payload: any) => {
+        onData: ({ payload }: any) => {
           setStoresData((prev) => {
             if (!prev) return payload.stores;
             const storeMap = new Map(prev.map((s) => [s.id, s]));

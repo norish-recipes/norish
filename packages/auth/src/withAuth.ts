@@ -1,9 +1,9 @@
-import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
-
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+
+import type { HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
 import { auth } from "@norish/auth/auth";
-import { getHouseholdForUser, isUserServerAdmin } from "@norish/db";
+import { getHouseholdForUser, getUserById, isUserServerAdmin } from "@norish/db";
 
 export async function requireUser(): Promise<User> {
   // Use BetterAuth's getSession API which handles both session cookies and API keys
@@ -13,13 +13,17 @@ export async function requireUser(): Promise<User> {
   });
 
   if (session?.user?.id) {
-    // Map BetterAuth user to our User type
-    return {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name || "",
-      image: session.user.image || null,
-    };
+    const user = await getUserById(session.user.id);
+
+    if (user) {
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        version: user.version,
+      };
+    }
   }
 
   throw new Error("UNAUTHORIZED");

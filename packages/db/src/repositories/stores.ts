@@ -1,14 +1,14 @@
 import type { IFuseOptions } from "fuse.js";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import Fuse from "fuse.js";
+import z from "zod";
+
 import type {
   IngredientStorePreferenceDto,
   StoreDto,
   StoreInsertDto,
   StoreUpdateDto,
 } from "@norish/shared/contracts/dto/stores";
-
-import { and, eq, inArray, sql } from "drizzle-orm";
-import Fuse from "fuse.js";
-import z from "zod";
 import { db } from "@norish/db/drizzle";
 import { groceries, ingredientStorePreferences, stores } from "@norish/db/schema";
 import {
@@ -118,10 +118,16 @@ export async function updateStore(input: StoreUpdateDto): Promise<StoreDto | nul
 
   if (!parsed.success) throw new Error("Invalid StoreUpdateDto");
 
+  const whereConditions = [eq(stores.id, input.id)];
+
+  if (parsed.data.version) {
+    whereConditions.push(eq(stores.version, parsed.data.version));
+  }
+
   const [row] = await db
     .update(stores)
-    .set({ ...parsed.data, updatedAt: new Date() })
-    .where(eq(stores.id, input.id))
+    .set({ ...parsed.data, updatedAt: new Date(), version: sql`${stores.version} + 1` })
+    .where(and(...whereConditions))
     .returning();
 
   if (!row) return null;
@@ -133,25 +139,28 @@ export async function updateStore(input: StoreUpdateDto): Promise<StoreDto | nul
   return validated.data;
 }
 
-export async function reorderStores(storeIds: string[]): Promise<StoreDto[]> {
+export async function reorderStores(
+  storeUpdates: { id: string; version: number }[]
+): Promise<StoreDto[]> {
   return await db.transaction(async (trx) => {
     const updatedStores: StoreDto[] = [];
 
-    for (let i = 0; i < storeIds.length; i++) {
-      const storeId = storeIds[i];
+    for (let i = 0; i < storeUpdates.length; i++) {
+      const storeUpdate = storeUpdates[i];
 
-      if (!storeId) continue;
+      if (!storeUpdate) continue;
 
       const [row] = await trx
         .update(stores)
-        .set({ sortOrder: i, updatedAt: new Date() })
-        .where(eq(stores.id, storeId))
+        .set({ sortOrder: i, updatedAt: new Date(), version: sql`${stores.version} + 1` })
+        .where(and(eq(stores.id, storeUpdate.id), eq(stores.version, storeUpdate.version)))
         .returning();
 
       if (row) {
         const validated = StoreSelectBaseSchema.safeParse(row);
 
-        if (!validated.success) throw new Error(`Failed to parse reordered store (id=${storeId})`);
+        if (!validated.success)
+          throw new Error(`Failed to parse reordered store (id=${storeUpdate.id})`);
         updatedStores.push(validated.data);
       }
     }
@@ -162,11 +171,85 @@ export async function reorderStores(storeIds: string[]): Promise<StoreDto[]> {
 
 export async function deleteStore(
   storeId: string,
-  deleteGroceries: boolean
-): Promise<{ deletedGroceryIds: string[] }> {
+  version: number,
+  deleteGroceries: boolean,
+  grocerySnapshot?: Array<{ id: string; version: number }>
+): Promise<{ deletedGroceryIds: string[]; storeDeleted: boolean; stale: boolean }> {
   return await db.transaction(async (trx) => {
     let deletedGroceryIds: string[] = [];
 
+    const [storeRow] = await trx
+      .select({ id: stores.id })
+      .from(stores)
+      .where(and(eq(stores.id, storeId), eq(stores.version, version)))
+      .limit(1);
+
+    if (!storeRow) {
+      return { deletedGroceryIds, storeDeleted: false, stale: true };
+    }
+
+    if (grocerySnapshot && grocerySnapshot.length > 0) {
+      if (deleteGroceries) {
+        for (const grocery of grocerySnapshot) {
+          const deleted = await trx
+            .delete(groceries)
+            .where(
+              and(
+                eq(groceries.id, grocery.id),
+                eq(groceries.version, grocery.version),
+                eq(groceries.storeId, storeId)
+              )
+            )
+            .returning({ id: groceries.id });
+
+          if (deleted.length > 0) {
+            deletedGroceryIds.push(grocery.id);
+          }
+        }
+      } else {
+        for (const grocery of grocerySnapshot) {
+          await trx
+            .update(groceries)
+            .set({ storeId: null, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
+            .where(
+              and(
+                eq(groceries.id, grocery.id),
+                eq(groceries.version, grocery.version),
+                eq(groceries.storeId, storeId)
+              )
+            );
+        }
+      }
+
+      // Only delete store if it is empty after processing the snapshot
+      const [remainingCount] = await trx
+        .select({ count: sql<number>`count(*)` })
+        .from(groceries)
+        .where(eq(groceries.storeId, storeId));
+
+      const isEmpty = (remainingCount?.count ?? 0) === 0;
+
+      if (isEmpty) {
+        // Delete ingredient preferences for this store
+        await trx
+          .delete(ingredientStorePreferences)
+          .where(eq(ingredientStorePreferences.storeId, storeId));
+
+        // Delete the store
+        const deletedStore = await trx
+          .delete(stores)
+          .where(and(eq(stores.id, storeId), eq(stores.version, version)))
+          .returning({ id: stores.id });
+
+        if (deletedStore.length === 0) {
+          return { deletedGroceryIds, storeDeleted: false, stale: true };
+        }
+      }
+
+      return { deletedGroceryIds, storeDeleted: isEmpty, stale: false };
+    }
+
+    // Legacy path (no snapshot): process all current groceries
     if (deleteGroceries) {
       // Get grocery IDs before deleting
       const groceryRows = await trx
@@ -182,7 +265,7 @@ export async function deleteStore(
       // Set storeId to null for groceries in this store
       await trx
         .update(groceries)
-        .set({ storeId: null, updatedAt: new Date() })
+        .set({ storeId: null, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
         .where(eq(groceries.storeId, storeId));
     }
 
@@ -192,9 +275,16 @@ export async function deleteStore(
       .where(eq(ingredientStorePreferences.storeId, storeId));
 
     // Delete the store
-    await trx.delete(stores).where(eq(stores.id, storeId));
+    const deletedStore = await trx
+      .delete(stores)
+      .where(and(eq(stores.id, storeId), eq(stores.version, version)))
+      .returning({ id: stores.id });
 
-    return { deletedGroceryIds };
+    if (deletedStore.length === 0) {
+      return { deletedGroceryIds, storeDeleted: false, stale: true };
+    }
+
+    return { deletedGroceryIds, storeDeleted: true, stale: false };
   });
 }
 
@@ -291,7 +381,11 @@ export async function upsertIngredientStorePreference(
     .values(parsed.data)
     .onConflictDoUpdate({
       target: [ingredientStorePreferences.userId, ingredientStorePreferences.normalizedName],
-      set: { storeId, updatedAt: new Date() },
+      set: {
+        storeId,
+        updatedAt: new Date(),
+        version: sql`${ingredientStorePreferences.version} + 1`,
+      },
     })
     .returning();
 

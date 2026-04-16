@@ -1,6 +1,6 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import LogoSvg from '@/assets/images/logo.svg';
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import LogoSvg from "@/assets/images/logo.svg";
 
 // viewBox is 2370 x 639, so aspect ratio = 639/2370
 const LOGO_ASPECT_RATIO = 639 / 2370;
@@ -26,7 +26,6 @@ export function AuthLogo({ width = 140, inline = false }: AuthLogoProps) {
 
 const styles = StyleSheet.create({
   container: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
 });
-

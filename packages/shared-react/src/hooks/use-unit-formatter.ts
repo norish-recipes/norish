@@ -1,5 +1,4 @@
 import type { UnitsMap } from "@norish/config/zod/server-config";
-
 import { formatUnit } from "@norish/shared/lib/unit-localization";
 
 export type UnitFormatterAdapters = {
@@ -8,6 +7,15 @@ export type UnitFormatterAdapters = {
 };
 
 export function useUnitFormatter({ locale, units }: UnitFormatterAdapters) {
+  const formatUnitOnly = (
+    unit: string | null | undefined,
+    amount?: number | null | undefined
+  ): string => {
+    if (!unit) return "";
+
+    return formatUnit(unit, locale, units, amount);
+  };
+
   const formatAmountUnit = (
     amount: number | null | undefined,
     unit: string | null | undefined
@@ -19,7 +27,7 @@ export function useUnitFormatter({ locale, units }: UnitFormatterAdapters) {
       return `${formattedAmount}\u00D7`;
     }
 
-    const localizedUnit = formatUnit(unit, locale, units);
+    const localizedUnit = formatUnit(unit, locale, units, amount);
 
     if (!amount && amount !== 0) {
       return localizedUnit;
@@ -35,6 +43,7 @@ export function useUnitFormatter({ locale, units }: UnitFormatterAdapters) {
 
   return {
     formatAmountUnit,
+    formatUnitOnly,
     locale,
     units,
   };

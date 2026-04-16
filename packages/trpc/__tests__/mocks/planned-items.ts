@@ -10,6 +10,8 @@ export const reorderInSlot = vi.fn();
 export const getMaxSortOrder = vi.fn();
 export const getPlannedItemOwnerId = vi.fn();
 export const getPlannedItemById = vi.fn();
+export const getPlannedItemWithRecipeById = vi.fn();
+export const listPlannedItemsWithRecipeBySlot = vi.fn();
 
 export function resetPlannedItemsMocks() {
   listPlannedItemsByUserAndDateRange.mockReset();
@@ -22,4 +24,6 @@ export function resetPlannedItemsMocks() {
   getMaxSortOrder.mockReset();
   getPlannedItemOwnerId.mockReset();
   getPlannedItemById.mockReset();
+  getPlannedItemWithRecipeById.mockReset();
+  listPlannedItemsWithRecipeBySlot.mockReset();
 }

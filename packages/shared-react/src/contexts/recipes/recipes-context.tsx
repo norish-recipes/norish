@@ -1,23 +1,27 @@
+import { createContext, useCallback, useContext, useMemo } from "react";
 
 import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
+
 import type {
   FavoritesMutationResult,
   FavoritesQueryResult,
+  RatingsSubscriptionCallbacks,
   RecipeFilters,
   RecipesMutationsResult,
   RecipesQueryResult,
   RecipesSubscriptionCallbacks,
 } from "../../hooks/recipes/dashboard";
 import type { RecipeToastAdapter } from "./recipe-toast-adapter";
-
-import { createContext, useCallback, useContext, useMemo } from "react";
-
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
   toRecipesQueryFilters,
 } from "./filter-contract";
-import { createRecipeImportToasts, createRecipeSubscriptionToasts } from "./recipe-toast-adapter";
+import {
+  createRatingsSubscriptionToasts,
+  createRecipeImportToasts,
+  createRecipeSubscriptionToasts,
+} from "./recipe-toast-adapter";
 
 export type SharedRecipesContextValue = {
   recipes: RecipesQueryResult["recipes"];
@@ -41,7 +45,7 @@ export type SharedRecipesContextValue = {
   importRecipeWithAI: (url: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
-  deleteRecipe: (id: string) => void;
+  deleteRecipe: (id: string, version: number) => void;
   invalidate: () => void;
   openRecipe: (id: string) => void;
 };
@@ -67,6 +71,7 @@ type CreateRecipesContextOptions = {
   useFavoritesMutation: () => Pick<FavoritesMutationResult, "toggleFavorite">;
   useUserAllergiesQuery: () => { allergies: string[] };
   useRecipesSubscription: (callbacks?: RecipesSubscriptionCallbacks) => void;
+  useRatingsSubscription?: (callbacks?: RatingsSubscriptionCallbacks) => void;
   useToastAdapter: () => RecipeToastAdapter;
   useNavigationAdapter: () => RecipesNavigationAdapter;
   queryDefaults?: Partial<RecipeFilters>;
@@ -80,6 +85,7 @@ export function createRecipesContext({
   useFavoritesMutation,
   useUserAllergiesQuery,
   useRecipesSubscription,
+  useRatingsSubscription,
   useToastAdapter,
   useNavigationAdapter,
   queryDefaults,
@@ -126,8 +132,13 @@ export function createRecipesContext({
       () => createRecipeSubscriptionToasts(toastAdapter, { onOpenRecipe: navigation.toRecipe }),
       [navigation.toRecipe, toastAdapter]
     );
+    const ratingsToasts = useMemo(
+      () => createRatingsSubscriptionToasts(toastAdapter),
+      [toastAdapter]
+    );
 
     useRecipesSubscription(subscriptionToasts);
+    useRatingsSubscription?.(ratingsToasts);
 
     const openRecipe = useCallback(
       (id: string) => {

@@ -1,6 +1,6 @@
-import { createRatingsHooks } from '@norish/shared-react/hooks';
+import { useTRPC } from "@/providers/trpc-provider";
 
-import { useTRPC } from '@/providers/trpc-provider';
+import { createRatingsHooks } from "@norish/shared-react/hooks";
 
 const sharedRatingsHooks = createRatingsHooks({ useTRPC });
 

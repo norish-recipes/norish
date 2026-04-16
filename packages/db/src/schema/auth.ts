@@ -1,6 +1,5 @@
 import crypto from "crypto";
-
-import { relations, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -11,6 +10,8 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+
+import { versionColumn } from "./shared";
 
 // User table with encrypted PII fields
 export const users = pgTable(
@@ -44,6 +45,7 @@ export const users = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
+    ...versionColumn,
   },
   (t) => [
     uniqueIndex("user_email_hmac_idx").on(t.emailHmac),
@@ -190,31 +192,3 @@ export const apiKeys = pgTable(
   },
   (t) => [index("apikey_key_idx").on(t.key), index("apikey_user_id_idx").on(t.referenceId)]
 );
-
-// Relations
-export const userRelations = relations(users, ({ many }) => ({
-  sessions: many(sessions),
-  accounts: many(accounts),
-  apiKeys: many(apiKeys),
-}));
-
-export const sessionRelations = relations(sessions, ({ one }) => ({
-  user: one(users, {
-    fields: [sessions.userId],
-    references: [users.id],
-  }),
-}));
-
-export const accountRelations = relations(accounts, ({ one }) => ({
-  user: one(users, {
-    fields: [accounts.userId],
-    references: [users.id],
-  }),
-}));
-
-export const apiKeyRelations = relations(apiKeys, ({ one }) => ({
-  user: one(users, {
-    fields: [apiKeys.referenceId],
-    references: [users.id],
-  }),
-}));

@@ -1,5 +1,4 @@
 import crypto from "crypto";
-
 import { index, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";

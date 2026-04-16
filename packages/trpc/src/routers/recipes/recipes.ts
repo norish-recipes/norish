@@ -1,8 +1,8 @@
-import type { PermissionAction } from "@norish/auth/permissions";
-import type { RecipeListContext } from "@norish/db";
-
+import { randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+
+import type { RecipeListContext } from "@norish/db";
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
 import {
   getRecipePermissionPolicy,
@@ -17,7 +17,6 @@ import {
   FullRecipeInsertSchema,
   getRandomRecipeCandidates,
   getRecipeFull,
-  getRecipeOwnerId,
   listRecipes,
   RecipeConvertInputSchema,
   RecipeDeleteInputSchema,
@@ -39,173 +38,123 @@ import {
   addNutritionEstimationJob,
   addPasteImportJob,
   addProvenanceInferenceJob,
+  preparePasteImport,
 } from "@norish/queue";
 import { getQueues } from "@norish/queue/registry";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
 import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
-import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
+import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
 
 import { emitByPolicy } from "../../helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { recipeEmitter } from "./emitter";
-
-interface UserContext {
-  user: { id: string };
-  householdUserIds: string[] | null;
-  householdKey: string;
-  isServerAdmin: boolean;
-}
-
-/**
- * Emit a failure event based on the view policy
- */
-async function emitFailure(
-  ctx: UserContext,
-  reason: string,
-  meta?: { recipeId?: string; url?: string }
-): Promise<void> {
-  const policy = await getRecipePermissionPolicy();
-
-  emitByPolicy(
-    recipeEmitter,
-    policy.view,
-    { userId: ctx.user.id, householdKey: ctx.householdKey },
-    "failed",
-    { reason, ...meta }
-  );
-}
-
-/**
- * Handle async operation errors with logging and household notification
- */
-function handleError(
-  ctx: UserContext,
-  err: unknown,
-  operation: string,
-  meta?: { recipeId?: string; url?: string }
-): void {
-  const error = err as Error;
-
-  log.error({ err: error, userId: ctx.user.id, ...meta }, `Failed to ${operation}`);
-  emitFailure(ctx, error.message || `Failed to ${operation}`, meta);
-}
-
-/**
- * Check if user can perform an action on a recipe.
- * Returns true if allowed, throws FORBIDDEN if not.
- * Orphaned recipes (no owner) allow any action.
- */
-async function assertRecipeAccess(
-  ctx: UserContext,
-  recipeId: string,
-  action: PermissionAction
-): Promise<void> {
-  const ownerId = await getRecipeOwnerId(recipeId);
-
-  if (ownerId === null) {
-    // Orphaned recipe - anyone can access
-    log.debug({ recipeId }, `${action} orphaned recipe`);
-
-    return;
-  }
-
-  const canAccess = await canAccessResource(
-    action,
-    ctx.user.id,
-    ownerId,
-    ctx.householdUserIds,
-    ctx.isServerAdmin
-  );
-
-  if (!canAccess) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "You do not have permission to access this recipe",
-    });
-  }
-}
+import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
+import {
+  randomRecipeInputSchema,
+  recipeAutocompleteInputSchema,
+  recipeIdInputSchema,
+  recipeImportPasteInputSchema,
+  recipeImportPasteOutputSchema,
+} from "./recipes-openapi-types";
 
 // Procedures
-const list = authedProcedure.input(RecipeListInputSchema).query(async ({ ctx, input }) => {
-  const {
-    cursor,
-    limit,
-    search,
-    searchFields,
-    tags,
-    filterMode,
-    sortMode,
-    minRating,
-    maxCookingTime,
-    categories,
-  } = input;
+export const listProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "POST",
+      path: "/recipes/search",
+      protect: true,
+      tags: ["Recipes"],
+      summary: "List recipes",
+      description:
+        "Returns a paginated list of recipes. All filter fields are optional, so you can omit them to fetch the default recipe list.",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .input(RecipeListInputSchema)
+  .output(RecipeListResultSchema)
+  .query(async ({ ctx, input }) => {
+    const {
+      cursor,
+      limit,
+      search,
+      searchFields,
+      tags,
+      filterMode,
+      sortMode,
+      minRating,
+      maxCookingTime,
+      categories,
+    } = input;
 
-  log.debug({ userId: ctx.user.id, cursor, limit }, "Listing recipes");
+    log.debug({ userId: ctx.user.id, cursor, limit }, "Listing recipes");
 
-  const listCtx: RecipeListContext = {
-    userId: ctx.user.id,
-    householdUserIds: ctx.householdUserIds,
-    isServerAdmin: ctx.isServerAdmin,
-  };
+    const listCtx: RecipeListContext = {
+      userId: ctx.user.id,
+      householdUserIds: ctx.householdUserIds,
+      isServerAdmin: ctx.isServerAdmin,
+    };
 
-  const result = await listRecipes(
-    listCtx,
-    limit,
-    cursor,
-    search,
-    searchFields,
-    tags,
-    filterMode as FilterMode,
-    sortMode as SortOrder,
-    minRating,
-    maxCookingTime,
-    categories
-  );
-
-  log.debug({ count: result.recipes.length, total: result.total }, "Listed recipes");
-
-  return {
-    recipes: result.recipes,
-    total: result.total,
-    nextCursor: cursor + limit < result.total ? cursor + limit : null,
-  };
-});
-
-const get = authedProcedure.input(RecipeGetInputSchema).query(async ({ ctx, input }) => {
-  log.debug({ userId: ctx.user.id, recipeId: input.id }, "Getting recipe");
-
-  const recipe = await getRecipeFull(input.id);
-
-  if (!recipe) {
-    return null;
-  }
-
-  // Check view permission if recipe has an owner
-  if (recipe.userId) {
-    const canView = await canAccessResource(
-      "view",
-      ctx.user.id,
-      recipe.userId,
-      ctx.householdUserIds,
-      ctx.isServerAdmin
+    const result = await listRecipes(
+      listCtx,
+      limit,
+      cursor,
+      search,
+      searchFields,
+      tags,
+      filterMode as FilterMode,
+      sortMode as SortOrder,
+      minRating,
+      maxCookingTime,
+      categories
     );
 
-    if (!canView) {
-      log.warn({ userId: ctx.user.id, recipeId: input.id }, "Access denied to recipe");
+    log.debug({ count: result.recipes.length, total: result.total }, "Listed recipes");
 
-      return null;
+    return {
+      recipes: result.recipes,
+      total: result.total,
+      nextCursor: cursor + limit < result.total ? cursor + limit : null,
+    };
+  });
+
+export const getProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/recipes/{id}",
+      protect: true,
+      tags: ["Recipes"],
+      summary: "Get a recipe by ID",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        404: "Recipe not found",
+      },
+    },
+  })
+  .input(RecipeGetInputSchema)
+  .output(FullRecipeSchema)
+  .query(async ({ ctx, input }) => {
+    log.debug({ userId: ctx.user.id, recipeId: input.id }, "Getting recipe");
+
+    const recipe = await findRecipeForViewer(ctx, input.id);
+
+    if (!recipe) {
+      log.warn({ userId: ctx.user.id, recipeId: input.id }, "Recipe not found or not accessible");
+
+      throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
     }
-  }
 
-  return recipe;
-});
+    return recipe;
+  });
 
 const create = authedProcedure.input(FullRecipeInsertSchema).mutation(({ ctx, input }) => {
-  const recipeId = input.id ?? crypto.randomUUID();
+  const recipeId = input.id ?? randomUUID();
 
   log.info(
     { userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id },
@@ -254,20 +203,26 @@ const create = authedProcedure.input(FullRecipeInsertSchema).mutation(({ ctx, in
         }
       }
     })
-    .catch((err) => handleError(ctx, err, "create recipe", { recipeId }));
+    .catch((err) => handleRecipeError(ctx, err, "create recipe", { recipeId }));
 
   return recipeId;
 });
 
 const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, input }) => {
-  const { id, data } = input;
+  const { id, data, version } = input;
 
   log.info({ userId: ctx.user.id, recipeId: id }, "Updating recipe");
   log.debug({ recipe: input }, "Full recipe data");
 
   assertRecipeAccess(ctx, id, "edit")
     .then(async () => {
-      await updateRecipeWithRefs(id, ctx.user.id, data);
+      const result = await updateRecipeWithRefs(id, ctx.user.id, data, version);
+
+      if (result.stale) {
+        log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe update");
+
+        return;
+      }
 
       const updatedRecipe = await getRecipeFull(id);
 
@@ -284,7 +239,7 @@ const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, i
         );
       }
     })
-    .catch((err) => handleError(ctx, err, "update recipe", { recipeId: id }));
+    .catch((err) => handleRecipeError(ctx, err, "update recipe", { recipeId: id }));
 
   return { success: true };
 });
@@ -293,13 +248,27 @@ const updateCategories = authedProcedure
   .input(
     z.object({
       recipeId: z.string().uuid(),
+      version: z.number().int().positive(),
       categories: z.array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"])),
     })
   )
   .mutation(async ({ ctx, input }) => {
     await assertRecipeAccess(ctx, input.recipeId, "edit");
 
-    await updateRecipeCategories(input.recipeId, input.categories as RecipeCategory[]);
+    const result = await updateRecipeCategories(
+      input.recipeId,
+      input.categories as RecipeCategory[],
+      input.version
+    );
+
+    if (result.stale) {
+      log.info(
+        { userId: ctx.user.id, recipeId: input.recipeId, version: input.version },
+        "Ignoring stale recipe category update"
+      );
+
+      return { success: true, stale: true };
+    }
 
     const updated = await getRecipeFull(input.recipeId);
 
@@ -321,14 +290,20 @@ const updateCategories = authedProcedure
 const deleteProcedure = authedProcedure
   .input(RecipeDeleteInputSchema)
   .mutation(({ ctx, input }) => {
-    const { id } = input;
+    const { id, version } = input;
 
     log.info({ userId: ctx.user.id, recipeId: id }, "Deleting recipe");
 
     assertRecipeAccess(ctx, id, "delete")
       .then(async () => {
         await deleteRecipeImagesDir(id);
-        await deleteRecipeById(id);
+        const result = await deleteRecipeById(id, version);
+
+        if (result.stale) {
+          log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe delete");
+
+          return;
+        }
 
         log.info({ userId: ctx.user.id, recipeId: id }, "Recipe deleted");
         const policy = await getRecipePermissionPolicy();
@@ -341,16 +316,30 @@ const deleteProcedure = authedProcedure
           { id }
         );
       })
-      .catch((err) => handleError(ctx, err, "delete recipe", { recipeId: id }));
+      .catch((err) => handleRecipeError(ctx, err, "delete recipe", { recipeId: id }));
 
     return { success: true };
   });
 
-const importFromUrlProcedure = authedProcedure
+export const importFromUrlProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "POST",
+      path: "/recipes/import/url",
+      protect: true,
+      tags: ["Recipe Imports"],
+      summary: "Queue a recipe import from a URL",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        409: "This recipe already exists or is being imported",
+      },
+    },
+  })
   .input(RecipeImportInputSchema.extend({ forceAI: z.boolean().optional() }))
+  .output(z.uuid())
   .mutation(async ({ ctx, input }) => {
     const { url, forceAI } = input;
-    const recipeId = crypto.randomUUID();
+    const recipeId = randomUUID();
 
     // Add job to queue - returns conflict status if duplicate in queue
     const queues = getQueues();
@@ -374,7 +363,7 @@ const importFromUrlProcedure = authedProcedure
   });
 
 const reserveId = authedProcedure.query(() => {
-  const recipeId = crypto.randomUUID();
+  const recipeId = randomUUID();
 
   log.debug({ recipeId }, "Reserved recipe ID for step image uploads");
 
@@ -384,7 +373,7 @@ const reserveId = authedProcedure.query(() => {
 const convertMeasurements = authedProcedure
   .input(RecipeConvertInputSchema)
   .mutation(({ ctx, input }) => {
-    const { recipeId, targetSystem } = input;
+    const { recipeId, targetSystem, version } = input;
 
     log.info({ userId: ctx.user.id, recipeId, targetSystem }, "Converting recipe measurements");
 
@@ -439,7 +428,16 @@ const convertMeasurements = authedProcedure
       .then((recipe) => {
         // Check if already converted (has ingredients with target system)
         if (recipe.recipeIngredients.some((ri) => ri.systemUsed === targetSystem)) {
-          return setActiveSystemForRecipe(recipe.id, targetSystem).then(async () => {
+          return setActiveSystemForRecipe(recipe.id, targetSystem, version).then(async (result) => {
+            if (result.stale) {
+              log.info(
+                { userId: ctx.user.id, recipeId, version },
+                "Ignoring stale recipe conversion"
+              );
+
+              return null;
+            }
+
             const policy = await getRecipePermissionPolicy();
 
             emitByPolicy(
@@ -491,7 +489,7 @@ const convertMeasurements = authedProcedure
         }));
 
         return addStepsAndIngredientsToRecipeByInput(steps, ingredients)
-          .then(() => setActiveSystemForRecipe(recipe.id, targetSystem))
+          .then(() => setActiveSystemForRecipe(recipe.id, targetSystem, version))
           .then(() => getRecipeFull(recipe.id))
           .then(async (updatedRecipe) => {
             if (updatedRecipe) {
@@ -508,13 +506,13 @@ const convertMeasurements = authedProcedure
             }
           });
       })
-      .catch((err) => handleError(ctx, err, "convert recipe measurements", { recipeId }));
+      .catch((err) => handleRecipeError(ctx, err, "convert recipe measurements", { recipeId }));
 
     return { success: true };
   });
 
 const autocomplete = authedProcedure
-  .input(z.object({ query: z.string().min(1).max(100) }))
+  .input(recipeAutocompleteInputSchema)
   .query(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, query: input.query }, "Searching recipes for autocomplete");
 
@@ -530,11 +528,7 @@ const autocomplete = authedProcedure
   });
 
 const getRandomRecipe = authedProcedure
-  .input(
-    z.object({
-      category: z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]).optional(),
-    })
-  )
+  .input(randomRecipeInputSchema)
   .query(async ({ ctx, input }) => {
     const listCtx: RecipeListContext = {
       userId: ctx.user.id,
@@ -563,18 +557,27 @@ const importFromImagesProcedure = authedProcedure
     const files: Array<{ data: string; mimeType: string; filename: string }> = [];
 
     // Process files from FormData
-    for (const [key, value] of input.entries()) {
-      if (key.startsWith("file") && value instanceof File) {
-        const buffer = Buffer.from(await value.arrayBuffer());
-        const base64 = buffer.toString("base64");
+    const filePromises: Promise<void>[] = [];
 
-        files.push({
-          data: base64,
-          mimeType: value.type,
-          filename: value.name,
-        });
+    input.forEach((value, key) => {
+      if (!key.startsWith("file") || !(value instanceof File)) {
+        return;
       }
-    }
+
+      filePromises.push(
+        value.arrayBuffer().then((arrayBuffer) => {
+          const buffer = Buffer.from(arrayBuffer);
+
+          files.push({
+            data: buffer.toString("base64"),
+            mimeType: value.type,
+            filename: value.name,
+          });
+        })
+      );
+    });
+
+    await Promise.all(filePromises);
 
     if (files.length === 0) {
       throw new TRPCError({
@@ -583,7 +586,7 @@ const importFromImagesProcedure = authedProcedure
       });
     }
 
-    const recipeId = crypto.randomUUID();
+    const recipeId = randomUUID();
 
     log.info(
       { userId: ctx.user.id, fileCount: files.length, recipeId },
@@ -609,29 +612,36 @@ const importFromImagesProcedure = authedProcedure
     return recipeId;
   });
 
-const importFromPasteProcedure = authedProcedure
-  .input(
-    z.object({
-      text: z.string().min(1).max(MAX_RECIPE_PASTE_CHARS),
-      forceAI: z.boolean().optional(),
-    })
-  )
+export const importFromPasteProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "POST",
+      path: "/recipes/import/paste",
+      protect: true,
+      tags: ["Recipe Imports"],
+      summary: "Queue a recipe import from pasted text",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        409: "This import is already in progress",
+      },
+    },
+  })
+  .input(recipeImportPasteInputSchema)
+  .output(recipeImportPasteOutputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = crypto.randomUUID();
+    const preparedImport = await preparePasteImport(input.text, input.forceAI);
 
     log.info(
-      { userId: ctx.user.id, recipeId, textLength: input.text.length },
+      { userId: ctx.user.id, recipeIds: preparedImport.recipeIds, textLength: input.text.length },
       "Processing paste import request"
     );
 
     const queues = getQueues();
     const result = await addPasteImportJob(queues.pasteImport, {
-      recipeId,
+      ...preparedImport,
       userId: ctx.user.id,
       householdKey: ctx.householdKey,
       householdUserIds: ctx.householdUserIds,
-      text: input.text,
-      forceAI: input.forceAI,
     });
 
     if (result.status === "duplicate") {
@@ -641,11 +651,11 @@ const importFromPasteProcedure = authedProcedure
       });
     }
 
-    return recipeId;
+    return { recipeIds: preparedImport.recipeIds };
   });
 
 const estimateNutrition = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
+  .input(recipeIdInputSchema)
   .mutation(async ({ ctx, input }) => {
     const { recipeId } = input;
 
@@ -706,7 +716,7 @@ const estimateNutrition = authedProcedure
   });
 
 const triggerAutoTag = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
+  .input(recipeIdInputSchema)
   .mutation(async ({ ctx, input }) => {
     const { recipeId } = input;
 
@@ -773,7 +783,7 @@ const triggerAutoTag = authedProcedure
   });
 
 const triggerAutoCategorize = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
+  .input(recipeIdInputSchema)
   .mutation(async ({ ctx, input }) => {
     const { recipeId } = input;
 
@@ -829,7 +839,7 @@ const triggerAutoCategorize = authedProcedure
   });
 
 const triggerAllergyDetection = authedProcedure
-  .input(z.object({ recipeId: z.uuid() }))
+  .input(recipeIdInputSchema)
   .mutation(async ({ ctx, input }) => {
     const { recipeId } = input;
 
@@ -964,8 +974,8 @@ const triggerProvenanceInference = authedProcedure
   });
 
 export const recipesProcedures = router({
-  list,
-  get,
+  list: listProcedure,
+  get: getProcedure,
   create,
   update,
   delete: deleteProcedure,

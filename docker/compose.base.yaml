@@ -1,0 +1,36 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: norish
+      POSTGRES_DB: norish
+    volumes:
+      - norish_db_data:/var/lib/postgresql/data
+
+  # Headless Chrome for recipe scraping
+  chrome-headless:
+    image: zenika/alpine-chrome:latest
+    restart: unless-stopped
+    command:
+      - "--no-sandbox"
+      - "--disable-gpu"
+      - "--disable-dev-shm-usage"
+      - "--disable-features=dbus"
+      - "--remote-debugging-address=0.0.0.0"
+      - "--remote-debugging-port=3003"
+      - "--headless"
+    shm_size: "256m"
+
+  # Redis for real-time events
+  redis:
+    image: redis:8.6.0
+    restart: unless-stopped
+    volumes:
+      - norish_redis_data:/data
+
+volumes:
+  norish_db_data:
+  norish_redis_data:

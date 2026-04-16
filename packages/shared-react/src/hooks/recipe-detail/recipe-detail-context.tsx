@@ -1,12 +1,16 @@
 import type { ReactNode } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+
 import type {
+  CreateRecipeShareInputDto,
   FullRecipeDTO,
   MeasurementSystem,
   RecipeIngredientsDto,
+  RecipeShareSummaryDto,
+  UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts";
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-
+import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
 
 // --- Types ---
 
@@ -15,6 +19,20 @@ export type RecipeDetailContextValue = {
   isLoading: boolean;
   error: Error | null;
   isNotFound: boolean;
+  shares: RecipeShareSummaryDto[];
+  isLoadingShares: boolean;
+  shareError: Error | null;
+  refreshShares: () => void;
+  createShare: (expiresIn?: CreateRecipeShareInputDto["expiresIn"]) => void;
+  updateShare: (input: UpdateRecipeShareInputDto) => void;
+  revokeShare: (id: string, version: number) => void;
+  reactivateShare: (id: string, version: number) => void;
+  deleteShare: (id: string, version: number) => void;
+  isCreatingShare: boolean;
+  isUpdatingShare: boolean;
+  isRevokingShare: boolean;
+  isReactivatingShare: boolean;
+  isDeletingShare: boolean;
   convertingTo: MeasurementSystem | null;
   adjustedIngredients: RecipeIngredientsDto[];
   currentServings: number;
@@ -54,6 +72,25 @@ export type RecipeDetailAdapters = {
     invalidate: () => void;
   };
   useRecipeSubscription: (recipeId: string) => void;
+  useRecipeSharesQuery?: (recipeId: string) => {
+    shares: RecipeShareSummaryDto[];
+    isLoading: boolean;
+    error: unknown;
+    invalidate: () => void;
+  };
+  useRecipeShareSubscription?: (recipeId: string | null) => void;
+  useRecipeShareMutations?: (recipeId: string | null) => {
+    createShare: (expiresIn?: CreateRecipeShareInputDto["expiresIn"]) => void;
+    updateShare: (input: UpdateRecipeShareInputDto) => void;
+    revokeShare: (id: string, version: number) => void;
+    reactivateShare: (id: string, version: number) => void;
+    deleteShare: (id: string, version: number) => void;
+    isCreating: boolean;
+    isUpdating: boolean;
+    isRevoking: boolean;
+    isReactivating: boolean;
+    isDeleting: boolean;
+  };
   useNutritionQuery: (recipeId: string) => {
     isEstimating: boolean;
     setIsEstimating: (v: boolean) => void;
@@ -71,11 +108,10 @@ export type RecipeDetailAdapters = {
   useProvenanceInferenceMutation: () => { mutate: (input: { recipeId: string }) => void };
   useProvenanceInference: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
   useActiveAllergies: () => { allergies: string[]; allergySet: Set<string> };
-  useConvertMutation: () => {
-    mutate: (
-      input: { recipeId: string; targetSystem: MeasurementSystem },
-      opts: { onSuccess: () => void; onError: () => void }
-    ) => void;
+  useConvertMutation: (recipeId: string) => {
+    convertMeasurements: (targetSystem: MeasurementSystem, version: number) => void;
+    error: unknown;
+    reset: () => void;
   };
   useRatingQuery: (recipeId: string) => { userRating: number | null };
   useRatingsMutation: () => { rateRecipe: (recipeId: string, rating: number) => void };
@@ -84,10 +120,59 @@ export type RecipeDetailAdapters = {
   isNotFoundError: (error: unknown) => boolean;
 };
 
+type RecipeSharesQueryAdapterResult =
+  NonNullable<RecipeDetailAdapters["useRecipeSharesQuery"]> extends (
+    ...args: never[]
+  ) => infer TResult
+    ? TResult
+    : never;
+
+type RecipeShareMutationsAdapterResult =
+  NonNullable<RecipeDetailAdapters["useRecipeShareMutations"]> extends (
+    ...args: never[]
+  ) => infer TResult
+    ? TResult
+    : never;
+
+const EMPTY_RECIPE_SHARES: RecipeShareSummaryDto[] = [];
+
+function noop() {}
+
+function useDefaultRecipeSharesQuery(): RecipeSharesQueryAdapterResult {
+  return {
+    shares: EMPTY_RECIPE_SHARES,
+    isLoading: false,
+    error: null,
+    invalidate: noop,
+  };
+}
+
+function useDefaultRecipeShareSubscription() {}
+
+function useDefaultRecipeShareMutations(): RecipeShareMutationsAdapterResult {
+  return {
+    createShare: noop,
+    updateShare: noop,
+    revokeShare: noop,
+    reactivateShare: noop,
+    deleteShare: noop,
+    isCreating: false,
+    isUpdating: false,
+    isRevoking: false,
+    isReactivating: false,
+    isDeleting: false,
+  };
+}
+
 // --- Factory ---
 
 export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
   const RecipeContext = createContext<RecipeDetailContextValue | null>(null);
+  const useRecipeSharesQuery = adapters.useRecipeSharesQuery ?? useDefaultRecipeSharesQuery;
+  const useRecipeShareSubscription =
+    adapters.useRecipeShareSubscription ?? useDefaultRecipeShareSubscription;
+  const useRecipeShareMutations =
+    adapters.useRecipeShareMutations ?? useDefaultRecipeShareMutations;
 
   type ProviderProps = {
     recipeId: string;
@@ -96,6 +181,24 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
 
   function RecipeDetailProvider({ recipeId, children }: ProviderProps) {
     const { recipe, isLoading, error } = adapters.useRecipeQuery(recipeId);
+    const {
+      shares,
+      isLoading: isLoadingShares,
+      error: shareQueryError,
+      invalidate: refreshShares,
+    } = useRecipeSharesQuery(recipeId);
+    const {
+      createShare,
+      updateShare,
+      revokeShare,
+      reactivateShare,
+      deleteShare,
+      isCreating: isCreatingShare,
+      isUpdating: isUpdatingShare,
+      isRevoking: isRevokingShare,
+      isReactivating: isReactivatingShare,
+      isDeleting: isDeletingShare,
+    } = useRecipeShareMutations(recipeId);
     const [_servings, setServings] = useState<number | null>(null);
     const [convertingTo, setConvertingTo] = useState<MeasurementSystem | null>(null);
     const [adjustedIngredients, setAdjustedIngredients] = useState<RecipeIngredientsDto[]>([]);
@@ -107,6 +210,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
 
     // Subscribe to real-time updates
     adapters.useRecipeSubscription(recipeId);
+    useRecipeShareSubscription(recipeId);
 
     // Nutrition hooks
     const { isEstimating: isEstimatingNutrition, setIsEstimating: setIsEstimatingNutrition } =
@@ -182,7 +286,10 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
     const { allergies, allergySet } = adapters.useActiveAllergies();
 
     // Mutation for converting measurements
-    const convertMutation = adapters.useConvertMutation();
+    const convertMutation = adapters.useConvertMutation(recipeId);
+    const convertError = convertMutation.error;
+    const resetConvertMutation = convertMutation.reset;
+    const convertMeasurements = convertMutation.convertMeasurements;
 
     // --- Ratings ---
     const { userRating } = adapters.useRatingQuery(recipeId);
@@ -203,6 +310,12 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
 
     // Check if error is a 404
     const isNotFound = adapters.isNotFoundError(error);
+    const shareError =
+      shareQueryError instanceof Error
+        ? shareQueryError
+        : shareQueryError
+          ? new Error(String(shareQueryError))
+          : null;
 
     // Reset servings when navigating to a different recipe
     useEffect(() => {
@@ -255,21 +368,29 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       setAdjustedIngredients(recipe.recipeIngredients);
     }, [recipe]);
 
+    useEffect(() => {
+      if (!convertingTo || !convertError) {
+        return;
+      }
+
+      if (!shouldPreserveOptimisticUpdate(convertError)) {
+        reset();
+      }
+
+      resetConvertMutation();
+    }, [convertError, convertingTo, reset, resetConvertMutation]);
+
     const startConversion = useCallback(
       (target: MeasurementSystem) => {
-        convertMutation.mutate(
-          { recipeId: recipe!.id, targetSystem: target },
-          {
-            onSuccess: () => {
-              setConvertingTo(target);
-            },
-            onError: () => {
-              reset();
-            },
-          }
-        );
+        if (!recipe) {
+          return;
+        }
+
+        setConvertingTo(target);
+
+        convertMeasurements(target, recipe.version);
       },
-      [convertMutation, recipe, reset]
+      [convertMeasurements, recipe]
     );
 
     const setIngredientAmounts = useCallback((servings: number) => {
@@ -307,6 +428,20 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         isLoading,
         error: error instanceof Error ? error : error ? new Error(String(error)) : null,
         isNotFound,
+        shares,
+        isLoadingShares,
+        shareError,
+        refreshShares,
+        createShare,
+        updateShare,
+        revokeShare,
+        reactivateShare,
+        deleteShare,
+        isCreatingShare,
+        isUpdatingShare,
+        isRevokingShare,
+        isReactivatingShare,
+        isDeletingShare,
         convertingTo,
         adjustedIngredients,
         currentServings: _servings ?? recipe?.servings ?? 1,
@@ -335,6 +470,18 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         isLoading,
         error,
         isNotFound,
+        shares,
+        isLoadingShares,
+        shareError,
+        refreshShares,
+        createShare,
+        updateShare,
+        revokeShare,
+        deleteShare,
+        isCreatingShare,
+        isUpdatingShare,
+        isRevokingShare,
+        isDeletingShare,
         convertingTo,
         adjustedIngredients,
         _servings,

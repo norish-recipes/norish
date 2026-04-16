@@ -3,7 +3,9 @@
 ## Purpose
 
 TBD - created by archiving change refactor-turborepo-monorepo-foundation. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Tailored Turborepo Workspace Layout
 
 The repository SHALL adopt a Turborepo workspace layout tailored to Norish, with `apps/*` and `packages/*` boundaries and no unrelated template applications.
@@ -116,4 +118,3 @@ Every subpath import used by `apps/web` or `apps/mobile` from a `packages/*` wor
 - **WHEN** `apps/web` or `apps/mobile` imports `createRecipeDetailContext` from `@norish/shared-react`
 - **THEN** the import SHALL resolve through the `./hooks` barrel export (`@norish/shared-react/hooks`)
 - **AND** deep subpath imports like `@norish/shared-react/hooks/recipe-detail` SHALL NOT be used unless explicitly listed in the `exports` map
-

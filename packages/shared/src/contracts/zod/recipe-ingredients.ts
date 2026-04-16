@@ -1,5 +1,6 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import z from "zod";
+
 import { recipeIngredients } from "@norish/db/schema";
 
 export const RecipeIngredientsSelectBaseSchema = createSelectSchema(recipeIngredients);
@@ -38,6 +39,8 @@ export const RecipeIngredientInputBaseSchema = RecipeIngredientsInsertBaseSchema
   recipeId: true,
   systemUsed: true,
 }).extend({
+  id: z.uuid().optional(),
+  version: z.number().int().positive().optional(),
   amount: z.coerce.number().nullable(),
   ingredientName: z.string().trim().min(1).optional(),
   ingredientId: z.string().nullable(),

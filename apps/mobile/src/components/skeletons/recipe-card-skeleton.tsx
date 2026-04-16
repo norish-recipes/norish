@@ -1,6 +1,6 @@
-import { Card, Skeleton, SkeletonGroup, useThemeColor } from 'heroui-native';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Card, Skeleton, SkeletonGroup, useThemeColor } from "heroui-native";
 
 type RecipeCardSkeletonProps = {
   compact?: boolean;
@@ -21,7 +21,7 @@ export function RecipeCardSkeleton({ compact = false }: RecipeCardSkeletonProps)
         />
 
         {/* Card body */}
-        <View className="gap-2.5 px-3.5 pb-3.5 pt-3">
+        <View className="gap-2.5 px-3.5 pt-3 pb-3.5">
           {/* Title */}
           <SkeletonGroup.Item className="h-5 w-3/4 rounded-md" />
 
@@ -65,10 +65,7 @@ export function RecipeCardSkeleton({ compact = false }: RecipeCardSkeletonProps)
  * on the backend (pending state).
  */
 export function ImportingRecipePlaceholder({ compact = false }: RecipeCardSkeletonProps) {
-  const [foregroundColor, mutedColor] = useThemeColor([
-    'foreground',
-    'muted',
-  ] as const);
+  const [foregroundColor, mutedColor] = useThemeColor(["foreground", "muted"] as const);
 
   return (
     <Card variant="secondary" className="overflow-hidden rounded-2xl p-0">
@@ -81,9 +78,7 @@ export function ImportingRecipePlaceholder({ compact = false }: RecipeCardSkelet
 
         {/* Info overlay */}
         <Card.Body style={styles.importingBody}>
-          <Text style={[styles.importingTitle, { color: foregroundColor }]}>
-            Importing recipe…
-          </Text>
+          <Text style={[styles.importingTitle, { color: foregroundColor }]}>Importing recipe…</Text>
           <Text style={[styles.importingDescription, { color: mutedColor }]}>
             It will appear here as soon as it is ready.
           </Text>
@@ -96,17 +91,17 @@ export function ImportingRecipePlaceholder({ compact = false }: RecipeCardSkelet
 const styles = StyleSheet.create({
   importingBody: {
     gap: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
   importingTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   importingDescription: {
     fontSize: 13,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

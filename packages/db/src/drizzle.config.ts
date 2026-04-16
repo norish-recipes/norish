@@ -1,5 +1,3 @@
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { defineConfig } from "drizzle-kit";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -9,11 +7,9 @@ process.env.SKIP_ENV_VALIDATION = "1";
 
 if (!SERVER_CONFIG.DATABASE_URL) throw new Error("DATABASE_URL is not defined");
 
-const configDir = dirname(fileURLToPath(import.meta.url));
-
 export default defineConfig({
-  schema: "src/schema/**/*.ts",
-  out: "src/migrations",
+  schema: "./src/schema/**/*.ts",
+  out: "./src/migrations",
   dialect: "postgresql",
   dbCredentials: {
     url: SERVER_CONFIG.DATABASE_URL,

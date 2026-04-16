@@ -1,18 +1,18 @@
+import { useMutation } from "@tanstack/react-query";
+
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { RecurringGroceryDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { createClientLogger } from "@norish/shared/lib/logger";
+import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
+
 import type {
   CreateGroceriesHooksOptions,
   GroceriesMutationsResult,
   GroceriesQueryResult,
   GroceryCreateData,
 } from "./types";
-
-import { useMutation } from "@tanstack/react-query";
-import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
-import { createClientLogger } from "@norish/shared/lib/logger";
-import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
-
 
 const log = createClientLogger("GroceriesMutations");
 
@@ -30,6 +30,15 @@ export function createUseGroceriesMutations({
     const trpc = useTRPC();
     const { units } = useUnitsQuery();
     const { setGroceriesData, invalidate, groceries, recurringGroceries } = useGroceriesQuery();
+
+    const getGroceryVersion = (groceryId: string): number =>
+      groceries.find((grocery) => grocery.id === groceryId)?.version ?? 1;
+
+    const getRecurringVersion = (recurringGroceryId: string): number =>
+      recurringGroceries.find((grocery) => grocery.id === recurringGroceryId)?.version ?? 1;
+
+    const mapGroceriesWithVersions = (ids: string[]) =>
+      ids.map((id) => ({ id, version: getGroceryVersion(id) }));
 
     const createMutation = useMutation(trpc.groceries.create.mutationOptions());
     const toggleMutation = useMutation(trpc.groceries.toggle.mutationOptions());
@@ -113,7 +122,10 @@ export function createUseGroceriesMutations({
         return { ...prev, groceries: updated };
       });
 
-      toggleMutation.mutate({ groceryIds: ids, isDone }, { onError: () => invalidate() });
+      toggleMutation.mutate(
+        { groceries: mapGroceriesWithVersions(ids), isDone },
+        { onError: () => invalidate() }
+      );
     };
 
     const toggleRecurringGrocery = (
@@ -162,7 +174,13 @@ export function createUseGroceriesMutations({
       });
 
       checkRecurringMutation.mutate(
-        { recurringGroceryId, groceryId, isDone },
+        {
+          recurringGroceryId,
+          recurringVersion: getRecurringVersion(recurringGroceryId),
+          groceryId,
+          groceryVersion: getGroceryVersion(groceryId),
+          isDone,
+        },
         { onError: () => invalidate() }
       );
     };
@@ -186,7 +204,10 @@ export function createUseGroceriesMutations({
         return { ...prev, groceries: updated };
       });
 
-      updateMutation.mutate({ groceryId: id, raw }, { onError: () => invalidate() });
+      updateMutation.mutate(
+        { groceryId: id, raw, version: getGroceryVersion(id) },
+        { onError: () => invalidate() }
+      );
     };
 
     const updateRecurringGrocery = (
@@ -236,7 +257,9 @@ export function createUseGroceriesMutations({
         updateRecurringMutation.mutate(
           {
             recurringGroceryId,
+            recurringVersion: getRecurringVersion(recurringGroceryId),
             groceryId,
+            groceryVersion: getGroceryVersion(groceryId),
             data: {
               name: parsed.description,
               amount: parsed.quantity ?? null,
@@ -270,8 +293,14 @@ export function createUseGroceriesMutations({
           };
         });
 
-        deleteRecurringMutation.mutate({ recurringGroceryId }, { onError: () => invalidate() });
-        updateMutation.mutate({ groceryId, raw }, { onError: () => invalidate() });
+        deleteRecurringMutation.mutate(
+          { recurringGroceryId, version: getRecurringVersion(recurringGroceryId) },
+          { onError: () => invalidate() }
+        );
+        updateMutation.mutate(
+          { groceryId, raw, version: getGroceryVersion(groceryId) },
+          { onError: () => invalidate() }
+        );
       }
     };
 
@@ -287,7 +316,10 @@ export function createUseGroceriesMutations({
         };
       });
 
-      deleteMutation.mutate({ groceryIds: ids }, { onError: () => invalidate() });
+      deleteMutation.mutate(
+        { groceries: mapGroceriesWithVersions(ids) },
+        { onError: () => invalidate() }
+      );
     };
 
     const deleteRecurringGrocery = (recurringGroceryId: string) => {
@@ -301,7 +333,10 @@ export function createUseGroceriesMutations({
         };
       });
 
-      deleteRecurringMutation.mutate({ recurringGroceryId }, { onError: () => invalidate() });
+      deleteRecurringMutation.mutate(
+        { recurringGroceryId, version: getRecurringVersion(recurringGroceryId) },
+        { onError: () => invalidate() }
+      );
     };
 
     const getRecurringGroceryForGrocery = (groceryId: string): RecurringGroceryDto | null => {
@@ -333,7 +368,7 @@ export function createUseGroceriesMutations({
       });
 
       assignToStoreMutation.mutate(
-        { groceryId, storeId, savePreference },
+        { groceryId, version: getGroceryVersion(groceryId), storeId, savePreference },
         {
           onError: (error) => {
             log.error({ error, groceryId, storeId }, "Failed to assign grocery to store");
@@ -378,7 +413,13 @@ export function createUseGroceriesMutations({
       });
 
       reorderMutation.mutate(
-        { updates, savePreference: true },
+        {
+          updates: updates.map((update) => ({
+            ...update,
+            version: getGroceryVersion(update.id),
+          })),
+          savePreference: true,
+        },
         {
           onError: (error) => {
             log.error({ error, updateCount: updates.length }, "Failed to reorder groceries");
@@ -407,7 +448,12 @@ export function createUseGroceriesMutations({
       });
 
       markAllDoneMutation.mutate(
-        { storeId },
+        {
+          storeId,
+          groceries: groceries
+            .filter((grocery) => grocery.storeId === storeId && !grocery.isDone)
+            .map((grocery) => ({ id: grocery.id, version: grocery.version })),
+        },
         {
           onError: (error) => {
             log.error({ error, storeId }, "Failed to mark groceries as done");
@@ -430,7 +476,12 @@ export function createUseGroceriesMutations({
       });
 
       deleteDoneMutation.mutate(
-        { storeId },
+        {
+          storeId,
+          groceries: groceries
+            .filter((grocery) => grocery.storeId === storeId && grocery.isDone)
+            .map((grocery) => ({ id: grocery.id, version: grocery.version })),
+        },
         {
           onError: (error) => {
             log.error({ error, storeId }, "Failed to delete done groceries");

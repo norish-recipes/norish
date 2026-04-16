@@ -1,0 +1,250 @@
+
+> @norish/web@0.17.3-beta test:run /Users/edylan/Development/norish/apps/web
+> vitest run --config ./vitest.config.ts
+
+
+ RUN  v4.1.2 /Users/edylan/Development/norish/apps/web
+
+ ❯ __tests__/hooks/recipes/use-provenance-inference-subscriptions.test.ts (2 tests | 2 failed) 11ms
+     × should initialize with isInferring false 8ms
+     × should call onStarted when started 1ms
+stderr | __tests__/hooks/user/use-user-query.test.ts > useUserSettingsQuery > initial state > returns null user when no data is loaded
+Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: [["user","get"],{"type":"query"}]
+
+stderr | __tests__/hooks/recipes/use-recipe-id.test.ts > useRecipeId > create mode > starts with loading state and null recipeId
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | __tests__/hooks/recipes/use-recipe-id.test.ts > useRecipeId > create mode > starts with loading state and null recipeId
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ __tests__/hooks/user/use-user-query.test.ts (5 tests) 180ms
+ ✓ __tests__/app/settings/user/preferences-card.test.tsx (8 tests) 234ms
+stderr | __tests__/hooks/recipes/use-recipe-id.test.ts > useRecipeId > return types > returns object with correct structure
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | __tests__/hooks/recipes/use-recipe-id.test.ts > useRecipeId > return types > returns object with correct structure
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ __tests__/hooks/recipes/use-recipe-id.test.ts (9 tests) 447ms
+ ✓ __tests__/hooks/households/use-household-mutations.test.ts (8 tests) 639ms
+       ✓ exports all expected mutation functions  628ms
+stderr | __tests__/hooks/groceries/use-groceries-subscription.test.ts > useGroceriesSubscription > onFailed handler > shows toast notification on failure
+[safe-error-toast] groceries-subscription:onFailed { error: 'Failed to save grocery', metadata: undefined }
+
+ ✓ __tests__/hooks/groceries/use-groceries-subscription.test.ts (11 tests) 718ms
+       ✓ sets up all subscription handlers  707ms
+ ❯ __tests__/app/recipes/recipe-favorites-doubletap.test.tsx (2 tests | 2 failed) 48ms
+     × keeps tap interactions enabled on desktop when favorites are hidden 32ms
+     × keeps tap interactions enabled on mobile when favorites are hidden 12ms
+stderr | __tests__/hooks/households/use-household-subscription.test.ts > useHouseholdSubscription > onFailed handler > shows a generic error toast instead of raw backend errors
+[safe-error-toast] household-subscription:onFailed {
+  error: 'Very long backend stack trace that should not be shown in toast',
+  metadata: undefined
+}
+
+ ❯ __tests__/app/recipes/recipe-detail-context.test.tsx (4 tests | 4 failed) 19ms
+     × sets converting state before the mutation resolves 10ms
+     × switches systems immediately when the target system already exists locally 1ms
+     × keeps the local optimistic system switch when the backend is unreachable 3ms
+     × rolls back the local optimistic system switch for non-network errors 4ms
+ ✓ __tests__/hooks/households/use-household-subscription.test.ts (8 tests) 1105ms
+       ✓ sets up all subscription handlers  1081ms
+ ✓ __tests__/components/import-recipe-modal.test.tsx (4 tests) 130ms
+ ✓ __tests__/app/settings/admin/json-editor.test.tsx (3 tests) 93ms
+ ✓ __tests__/hooks/recipes/use-recipes-query.test.ts (16 tests) 186ms
+ ✓ __tests__/hooks/favorites/use-favorites-query.test.ts (6 tests) 232ms
+ ✓ __tests__/components/planned-item-thumbnail.test.tsx (3 tests) 68ms
+ ✓ __tests__/hooks/calendar/use-calendar-query.test.ts (8 tests) 177ms
+ ✓ __tests__/hooks/ratings/use-ratings-query.test.ts (5 tests) 175ms
+ ✓ __tests__/hooks/calendar/use-calendar-mutations.test.ts (12 tests) 704ms
+ ✓ __tests__/hooks/recipes/use-recipes-subscription.test.ts (9 tests) 60ms
+stderr | __tests__/hooks/groceries/use-groceries-query.test.ts > useGroceriesQuery > setGroceriesData > handles undefined previous data safely
+Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: ["groceries","list"]
+
+ ✓ __tests__/hooks/households/use-household-query.test.ts (7 tests) 234ms
+ ✓ __tests__/hooks/groceries/use-groceries-query.test.ts (8 tests) 185ms
+ ✓ __tests__/hooks/caldav/use-caldav-query.test.ts (14 tests) 822ms
+ ✓ __tests__/hooks/groceries/use-groceries-mutations.test.ts (9 tests) 66ms
+ ✓ __tests__/hooks/recipes/use-recipe-images.test.ts (19 tests) 86ms
+stderr | __tests__/hooks/recipes/use-recipe-subscription.test.tsx > useRecipeSubscription > shows a generic failure toast instead of backend details
+[safe-error-toast] recipe-subscription:onFailed {
+  error: 'Very long backend stack trace that should not be shown in toast',
+  metadata: { recipeId: 'recipe-1', payloadRecipeId: 'recipe-1' }
+}
+
+stderr | __tests__/hooks/recipes/use-recipe-subscription.test.tsx > useRecipeSubscription > shows a generic failure toast instead of backend details
+Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: ["recipes","get",{"id":"recipe-1"}]
+
+ ✓ __tests__/hooks/recipes/use-recipe-subscription.test.tsx (1 test) 51ms
+ ✓ __tests__/components/filters-panel.test.tsx (5 tests) 37ms
+ ✓ __tests__/components/navbar-user-menu.test.tsx (2 tests) 102ms
+ ✓ __tests__/app/settings/user/profile-card.test.tsx (2 tests) 113ms
+stderr | __tests__/components/nutrition-portion-control.test.tsx > NutritionPortionControl > rendering > renders with initial portions value
+React does not recognize the `isIconOnly` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `isicononly` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+
+ ✓ __tests__/components/nutrition-portion-control.test.tsx (17 tests) 33ms
+ ✓ __tests__/hooks/ratings/use-ratings-mutation.test.ts (5 tests) 104ms
+stderr | __tests__/hooks/ratings/use-ratings-subscription.test.tsx > useRatingsSubscription > shows generic toast copy for rating failures
+[safe-error-toast] ratings-subscription:onRatingFailed {
+  error: 'Very long backend stack trace that should not be shown in toast',
+  metadata: { recipeId: 'recipe-1' }
+}
+
+ ✓ __tests__/hooks/ratings/use-ratings-subscription.test.tsx (1 test) 57ms
+ ✓ __tests__/hooks/user/use-user-mutations.test.ts (5 tests) 54ms
+ ✓ __tests__/hooks/favorites/use-favorites-mutation.test.ts (7 tests) 105ms
+ ✓ __tests__/hooks/recipes/use-recipes-mutations.test.ts (10 tests) 43ms
+ ✓ __tests__/hooks/config/use-locale-cookie.test.tsx (2 tests) 24ms
+ ✓ __tests__/integration/calendar-dnd.test.tsx (14 tests) 21ms
+ ✓ __tests__/components/recipe/smart-instruction.test.tsx (1 test) 16ms
+ ✓ __tests__/app/recipes/wake-lock-toggle.test.tsx (2 tests) 12ms
+ ✓ __tests__/hooks/user/use-user-cache.test.ts (2 tests) 20ms
+ ✓ __tests__/app/calendar/context.test.tsx (9 tests) 20ms
+ ✓ __tests__/hooks/caldav/use-caldav-subscription.test.ts (11 tests) 113ms
+ ✓ __tests__/components/calendar/timeline-planned-item.test.tsx (1 test) 14ms
+ ✓ __tests__/app/settings/admin/unsaved-changes-chip.test.tsx (2 tests) 14ms
+ ✓ __tests__/app/providers/base-providers.test.tsx (2 tests) 11ms
+ ✓ __tests__/app/api-docs-routes.test.ts (4 tests) 6ms
+ ✓ __tests__/components/calendar/use-prepend-anchor-restore.test.ts (6 tests) 13ms
+ ✓ __tests__/components/delete-recipe-modal.test.tsx (1 test) 11ms
+ ✓ __tests__/hooks/calendar/use-calendar-subscription.test.ts (10 tests) 23ms
+ ✓ __tests__/app/recipes/system-convert-menu.test.tsx (1 test) 11ms
+ ✓ __tests__/app/recipes/media-route.test.ts (3 tests) 4ms
+ ✓ __tests__/integration/locale-aware-unit-parsing.test.ts (8 tests) 10ms
+ ✓ __tests__/app/avatars/route.test.ts (1 test) 3ms
+ ✓ __tests__/hooks/recipes/use-provenance-inference-mutation.test.ts (1 test) 9ms
+(node:70592) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ stores/timers.test.ts (11 tests) 6ms
+ ✓ __tests__/context/user-context.test.tsx (1 test) 8ms
+ ✓ __tests__/hooks/caldav/use-caldav-mutations.test.ts (17 tests) 29ms
+ ✓ __tests__/app/recipes/author-chip.test.tsx (1 test) 13ms
+ ✓ __tests__/proxy.test.ts (3 tests) 4ms
+ ✓ __tests__/hooks/stores/use-stores-mutations.test.ts (1 test) 8ms
+ ✓ __tests__/hooks/use-dirty-state.test.ts (5 tests) 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  __tests__/app/recipes/recipe-detail-context.test.tsx > RecipeDetailContext > sets converting state before the mutation resolves
+ FAIL  __tests__/app/recipes/recipe-detail-context.test.tsx > RecipeDetailContext > switches systems immediately when the target system already exists locally
+ FAIL  __tests__/app/recipes/recipe-detail-context.test.tsx > RecipeDetailContext > keeps the local optimistic system switch when the backend is unreachable
+ FAIL  __tests__/app/recipes/recipe-detail-context.test.tsx > RecipeDetailContext > rolls back the local optimistic system switch for non-network errors
+TypeError: adapters.useProvenanceInferenceMutation is not a function
+ ❯ RecipeDetailProvider ../../packages/shared-react/src/hooks/recipe-detail/recipe-detail-context.tsx:272:50
+    270|     // Provenance inference hooks
+    271|     const [isInferringProvenance, setIsInferringProvenance] = useState…
+    272|     const provenanceInferenceMutation = adapters.useProvenanceInferenc…
+       |                                                  ^
+    273|
+    274|     adapters.useProvenanceInference(
+ ❯ Object.react_stack_bottom_frame ../../node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks ../../node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent ../../node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork ../../node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+ ❯ runWithFiberInDEV ../../node_modules/react-dom/cjs/react-dom-client.development.js:874:13
+ ❯ performUnitOfWork ../../node_modules/react-dom/cjs/react-dom-client.development.js:17641:22
+ ❯ workLoopSync ../../node_modules/react-dom/cjs/react-dom-client.development.js:17469:41
+ ❯ renderRootSync ../../node_modules/react-dom/cjs/react-dom-client.development.js:17450:11
+ ❯ performWorkOnRoot ../../node_modules/react-dom/cjs/react-dom-client.development.js:16583:35
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  __tests__/app/recipes/recipe-favorites-doubletap.test.tsx > recipe pages favorite visibility > keeps tap interactions enabled on desktop when favorites are hidden
+ FAIL  __tests__/app/recipes/recipe-favorites-doubletap.test.tsx > recipe pages favorite visibility > keeps tap interactions enabled on mobile when favorites are hidden
+Error: [vitest] No "useLocale" export is defined on the "next-intl" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi.mock(import("next-intl"), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    // your mocked methods
+  }
+})
+
+ ❯ RecipeProvenance app/(app)/recipes/[id]/components/recipe-provenance.tsx:14:18
+     12| export function RecipeProvenance({ variant = "card" }: { variant?: "ca…
+     13|   const t = useTranslations("recipes.detail.provenance");
+     14|   const locale = useLocale();
+       |                  ^
+     15|   const { recipe, isInferringProvenance } = useRecipeContextRequired();
+     16|
+ ❯ Object.react_stack_bottom_frame ../../node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks ../../node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent ../../node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork ../../node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+ ❯ runWithFiberInDEV ../../node_modules/react-dom/cjs/react-dom-client.development.js:874:13
+ ❯ performUnitOfWork ../../node_modules/react-dom/cjs/react-dom-client.development.js:17641:22
+ ❯ workLoopSync ../../node_modules/react-dom/cjs/react-dom-client.development.js:17469:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  __tests__/hooks/recipes/use-provenance-inference-subscriptions.test.ts > useProvenanceInferenceSubscriptions > should initialize with isInferring false
+TypeError: Cannot read properties of undefined (reading 'isInferring')
+ ❯ __tests__/hooks/recipes/use-provenance-inference-subscriptions.test.ts:40:27
+     38|     const { result } = renderHook(() => useProvenanceInferenceSubscrip…
+     39|
+     40|     expect(result.current.isInferring).toBe(false);
+       |                           ^
+     41|   });
+     42|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  __tests__/hooks/recipes/use-provenance-inference-subscriptions.test.ts > useProvenanceInferenceSubscriptions > should call onStarted when started
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ __tests__/hooks/recipes/use-provenance-inference-subscriptions.test.ts:57:23
+     55|     });
+     56|
+     57|     expect(onStarted).toHaveBeenCalled();
+       |                       ^
+     58|     expect(result.current.isInferring).toBe(true);
+     59|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+
+ Test Files  3 failed | 56 passed (59)
+      Tests  8 failed | 347 passed (355)
+   Start at  13:15:45
+   Duration  5.67s (transform 4.06s, setup 3.70s, import 28.92s, tests 7.75s, environment 27.68s)
+
+/Users/edylan/Development/norish/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @norish/web@0.17.3-beta test:run: `vitest run --config ./vitest.config.ts`
+Exit status 1

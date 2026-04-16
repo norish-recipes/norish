@@ -1,12 +1,5 @@
 "use client";
 
-import type {
-  GroceryDto,
-  RecurringGroceryDto,
-  StoreColor,
-  StoreDto,
-} from "@norish/shared/contracts";
-
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckIcon,
@@ -18,6 +11,12 @@ import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import type {
+  GroceryDto,
+  RecurringGroceryDto,
+  StoreColor,
+  StoreDto,
+} from "@norish/shared/contracts";
 
 import {
   SortableGroceryItem,

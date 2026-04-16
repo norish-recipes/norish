@@ -1,6 +1,7 @@
 import { index, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { versionColumn } from "./shared";
 
 export const households = pgTable(
   "households",
@@ -14,6 +15,7 @@ export const households = pgTable(
     joinCodeExpiresAt: timestamp("join_code_expires_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    ...versionColumn,
   },
   (t) => [
     index("idx_households_name").on(t.name),

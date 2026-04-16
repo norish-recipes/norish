@@ -9,8 +9,11 @@
     "importFromPaste": "Wklej",
     "importFromImage": "Obraz",
     "searchFields": {
-      "title": "Tytuł", "description": "Opis",
-      "ingredients": "Składniki", "steps": "Kroki", "tags": "Tagi"
+      "title": "Tytuł",
+      "description": "Opis",
+      "ingredients": "Składniki",
+      "steps": "Kroki",
+      "tags": "Tagi"
     }
   },
   "empty": {
@@ -45,15 +48,67 @@
     "switchToFraction": "Pokaż ułamki"
   },
   "actions": {
-    "plan": "Zaplanuj", "groceries": "Zakupy", "edit": "Edytuj", "delete": "Usuń",
-    "share": "Udostępnij", "visitOriginal": "Odwiedź oryginalny przepis",
+    "plan": "Zaplanuj",
+    "groceries": "Zakupy",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "share": "Udostępnij",
+    "visitOriginal": "Odwiedź oryginalny przepis",
     "addToCalendar": "Dodaj do kalendarza",
-    "autoTag": "Auto-tagi", "autoTagging": "Generowanie tagów...",
-    "autoCategorize": "Auto kategoryzacja", "detectAllergies": "Wykryj alergeny",
-    "detectingAllergies": "Wykrywanie alergenów...", "estimateNutrition": "Oszacuj wartości odżywcze",
+    "autoTag": "Auto-tagi",
+    "autoTagging": "Generowanie tagów...",
+    "autoCategorize": "Auto kategoryzacja",
+    "detectAllergies": "Wykryj alergeny",
+    "detectingAllergies": "Wykrywanie alergenów...",
+    "estimateNutrition": "Oszacuj wartości odżywcze",
     "estimatingNutrition": "Szacowanie wartości odżywczych...",
-    "screenOn": "Ekran włączony", "keepScreenOn": "Utrzymaj ekran włączony",
+    "screenOn": "Ekran włączony",
+    "keepScreenOn": "Utrzymaj ekran włączony",
     "actionsLabel": "Akcje"
+  },
+  "sharePanel": {
+    "title": "Udostępnij przepis",
+    "description": "Twórz i zarządzaj publicznymi linkami dla {recipeName}.",
+    "expiryLabel": "Wygaśnięcie linku",
+    "createLink": "Utwórz link",
+    "latestLink": "Najnowszy link",
+    "currentLinks": "Aktualne linki",
+    "empty": "Brak linków do udostępniania.",
+    "createSuccess": "Link do udostępniania utworzony",
+    "copySuccess": "Link skopiowany",
+    "copyLink": "Kopiuj",
+    "openLink": "Otwórz",
+    "createdAt": "Utworzono: {value}",
+    "expiresAt": "Wygasa: {value}",
+    "lastAccessedAt": "Ostatnio otwarto: {value}",
+    "never": "Nigdy",
+    "expiryOptions": {
+      "1day": "1 dzień",
+      "1week": "1 tydzień",
+      "1month": "1 miesiąc",
+      "1year": "1 rok",
+      "forever": "Nigdy"
+    },
+    "status": {
+      "active": "Aktywny",
+      "expired": "Wygasły",
+      "revoked": "Odwołany"
+    },
+    "revokeModal": {
+      "title": "Odwołaj link",
+      "message": "Ten link do {recipeName} przestanie działać do momentu reaktywacji.",
+      "confirm": "Odwołaj"
+    },
+    "reactivateModal": {
+      "title": "Reaktywuj link",
+      "message": "Ten link do {recipeName} znowu stanie się aktywny.",
+      "confirm": "Reaktywuj"
+    },
+    "deleteModal": {
+      "title": "Usuń link",
+      "message": "Usunąć ten link do {recipeName}? Tej operacji nie można cofnąć.",
+      "confirm": "Usuń link"
+    }
   },
   "convert": {
     "ariaLabel": "Przelicz system miar",
@@ -66,40 +121,73 @@
     "warning": "Tej akcji nie można cofnąć."
   },
   "form": {
-    "createTitle": "Utwórz przepis", "editTitle": "Edytuj przepis",
+    "createTitle": "Utwórz przepis",
+    "editTitle": "Edytuj przepis",
     "createDescription": "Dodaj nowy przepis do swojej kolekcji",
     "editDescription": "Zaktualizuj szczegóły przepisu",
     "initializingForm": "Inicjalizacja formularza...",
-    "photo": "Zdjęcie", "basicInfo": "Podstawowe informacje",
-    "ingredients": "Składniki", "instructions": "Instrukcje", "tags": "Tagi",
-    "nutrition": "Wartości odżywcze", "nutritionPerServing": "(na porcję, opcjonalnie)",
-    "details": "Szczegóły", "additionalInfo": "Dodatkowe informacje",
-    "recipeName": "Nazwa przepisu", "recipeNamePlaceholder": "np. Ciasteczka czekoladowe",
-    "description": "Opis", "descriptionPlaceholder": "Krótki opis przepisu...",
-    "notes": "Notatki", "notesPlaceholder": "Uwagi, wskazówki dotyczące podania...",
+    "photo": "Zdjęcie",
+    "basicInfo": "Podstawowe informacje",
+    "ingredients": "Składniki",
+    "instructions": "Instrukcje",
+    "tags": "Tagi",
+    "nutrition": "Wartości odżywcze",
+    "nutritionPerServing": "(na porcję, opcjonalnie)",
+    "details": "Szczegóły",
+    "additionalInfo": "Dodatkowe informacje",
+    "recipeName": "Nazwa przepisu",
+    "recipeNamePlaceholder": "np. Ciasteczka czekoladowe",
+    "description": "Opis",
+    "descriptionPlaceholder": "Krótki opis przepisu...",
+    "notes": "Notatki",
+    "notesPlaceholder": "Uwagi, wskazówki dotyczące podania...",
     "ingredientsHelp": "Wpisuj składniki jak \"2 szklanki mąki\" – automatycznie przetworzymy ilości i jednostki.",
     "instructionsHelp": "Pisz jasne instrukcje krok po kroku. Naciśnij Enter, aby przejść do następnego kroku.",
     "tagsHelp": "Wpisuj tagi i klikaj sugestie, aby dodać.",
-    "tagsAndCategories": "Tagi i kategorie", "categoriesHelp": "Wybierz kategorie posiłku.",
-    "category": { "breakfast": "Śniadanie", "lunch": "Lunch", "dinner": "Obiad", "snack": "Przekąska" },
-    "calories": "Kalorie", "fat": "Tłuszcze (g)", "carbs": "Węglowodany (g)", "protein": "Białko (g)",
-    "servings": "Porcje", "cookingTimes": "Czasy gotowania", "optional": "(opcjonalnie)",
-    "sourceUrl": "URL źródła", "sourceUrlPlaceholder": "https://przykład.pl/przepis",
+    "tagsAndCategories": "Tagi i kategorie",
+    "categoriesHelp": "Wybierz kategorie posiłku.",
+    "category": {
+      "breakfast": "Śniadanie",
+      "lunch": "Lunch",
+      "dinner": "Obiad",
+      "snack": "Przekąska"
+    },
+    "calories": "Kalorie",
+    "fat": "Tłuszcze (g)",
+    "carbs": "Węglowodany (g)",
+    "protein": "Białko (g)",
+    "servings": "Porcje",
+    "cookingTimes": "Czasy gotowania",
+    "optional": "(opcjonalnie)",
+    "sourceUrl": "URL źródła",
+    "sourceUrlPlaceholder": "https://przykład.pl/przepis",
     "measurementSystemNote": "Automatycznie wykrywamy system miar ze składników, możesz go zmienić ręcznie.",
     "measurementSystemEditNote": "Uwaga: zmiana etykiety systemu nie konwertuje jednostek. Użyj akcji Przelicz po zapisaniu.",
-    "createRecipe": "Utwórz przepis", "saveChanges": "Zapisz zmiany",
-    "uploading": "Przesyłanie...", "clickToUpload": "Kliknij lub przeciągnij i upuść",
-    "pasteToUpload": "aby wkleić", "imageFormats": "PNG, JPG, WEBP do 5MB"
+    "createRecipe": "Utwórz przepis",
+    "saveChanges": "Zapisz zmiany",
+    "uploading": "Przesyłanie...",
+    "clickToUpload": "Kliknij lub przeciągnij i upuść",
+    "pasteToUpload": "aby wkleić",
+    "imageFormats": "PNG, JPG, WEBP do 5MB"
   },
   "gallery": {
-    "addImage": "Dodaj obraz", "uploading": "Przesyłanie...",
-    "uploadFailed": "Przesyłanie nie powiodło się", "dragToReorder": "Przeciągnij, aby zmienić kolejność",
-    "maxImagesReached": "Maksymalnie {max} obrazów", "maxVideosReached": "Maksymalnie {max} filmów",
+    "addImage": "Dodaj obraz",
+    "uploading": "Przesyłanie...",
+    "uploadFailed": "Przesyłanie nie powiodło się",
+    "dragToReorder": "Przeciągnij, aby zmienić kolejność",
+    "maxImagesReached": "Maksymalnie {max} obrazów",
+    "maxVideosReached": "Maksymalnie {max} filmów",
     "invalidFileType": "Nieprawidłowy typ pliku"
   },
   "carousel": {
-    "noImageAvailable": "Brak obrazu", "noMediaAvailable": "Brak mediów",
-    "videoPlayer": { "mute": "Wycisz", "unmute": "Włącz dźwięk", "fullscreen": "Pełny ekran", "exitFullscreen": "Wyjdź z pełnego ekranu" }
+    "noImageAvailable": "Brak obrazu",
+    "noMediaAvailable": "Brak mediów",
+    "videoPlayer": {
+      "mute": "Wycisz",
+      "unmute": "Włącz dźwięk",
+      "fullscreen": "Pełny ekran",
+      "exitFullscreen": "Wyjdź z pełnego ekranu"
+    }
   },
   "validation": {
     "nameRequired": "Nazwa przepisu jest wymagana",
@@ -108,15 +196,26 @@
     "servingsMin": "Liczba porcji musi wynosić co najmniej 1"
   },
   "nutrition": {
-    "title": "Wartości odżywcze", "calories": "Kalorie", "fat": "Tłuszcze",
-    "carbs": "Węglowodany", "protein": "Białko",
+    "title": "Wartości odżywcze",
+    "calories": "Kalorie",
+    "fat": "Tłuszcze",
+    "carbs": "Węglowodany",
+    "protein": "Białko",
     "showingPortions": "Wartości dla {count} {count, plural, one {porcji} other {porcji}}",
     "noInfo": "Brak informacji o wartościach odżywczych",
     "estimateWithAI": "Oszacuj z AI"
   },
-  "measurementSystem": { "label": "System miar", "detected": "Wykryto: {system}", "metric": "Metryczny", "us": "Amerykański" },
+  "measurementSystem": {
+    "label": "System miar",
+    "detected": "Wykryto: {system}",
+    "metric": "Metryczny",
+    "us": "Amerykański"
+  },
   "timeInputs": { "prep": "Przygot.", "cook": "Gotowanie", "total": "Łącznie" },
-  "stepInput": { "stepPlaceholder": "Krok {number}: Opisz krok...", "stepPlaceholderShort": "Krok {number}" },
+  "stepInput": {
+    "stepPlaceholder": "Krok {number}: Opisz krok...",
+    "stepPlaceholderShort": "Krok {number}"
+  },
   "ingredientInput": { "placeholder": "np. 2 szklanki mąki" },
   "wakeLock": {
     "keepScreenOn": "Utrzymaj ekran włączony",
@@ -139,9 +238,16 @@
     "failedDescription": "Coś poszło nie tak. Sprawdź konsolę przeglądarki.",
     "batchImported": "Przepisy zaimportowane",
     "batchImportedDescription": "{count} przepisów zaimportowanych z archiwum",
-    "view": "Zobacz", "open": "Otwórz"
+    "view": "Zobacz",
+    "open": "Otwórz"
   },
-  "tags": { "panel": { "editTitle": "Edytuj tag", "editPlaceholder": "Wpisz nazwę tagu...", "duplicateTag": "Ten tag już istnieje" } },
+  "tags": {
+    "panel": {
+      "editTitle": "Edytuj tag",
+      "editPlaceholder": "Wpisz nazwę tagu...",
+      "duplicateTag": "Ten tag już istnieje"
+    }
+  },
   "cookMode": {
     "steps": "Kroki",
     "ingredients": "Składniki",
