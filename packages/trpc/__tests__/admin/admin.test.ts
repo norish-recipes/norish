@@ -182,6 +182,8 @@ describe("admin procedures", () => {
         autoTagAllergies: true,
         alwaysUseAI: false,
         autoTaggingMode: "disabled" as const,
+        provenanceEnabled: false,
+        provenanceAutoNew: false,
       };
 
       // Current config has enabled: false
@@ -232,6 +234,8 @@ describe("admin procedures", () => {
         autoTagAllergies: true,
         alwaysUseAI: false,
         autoTaggingMode: "disabled" as const,
+        provenanceEnabled: false,
+        provenanceAutoNew: false,
       };
 
       // Current config also has enabled: false

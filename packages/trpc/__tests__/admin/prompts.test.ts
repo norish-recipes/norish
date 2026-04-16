@@ -30,6 +30,7 @@ vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
     unitConversion: "Default unit conversion prompt",
     nutritionEstimation: "Default nutrition estimation prompt",
     autoTagging: "Default auto tagging prompt",
+    provenanceInference: "Default provenance inference prompt",
   }),
 }));
 
@@ -75,6 +76,7 @@ describe("prompts procedures", () => {
         unitConversion: "Custom conversion prompt",
         nutritionEstimation: "Custom nutrition estimation prompt",
         autoTagging: "Custom auto tagging prompt",
+        provenanceInference: "Custom provenance inference prompt",
         isOverridden: true,
       };
 
@@ -104,6 +106,7 @@ describe("prompts procedures", () => {
         unitConversion: "Default unit conversion prompt",
         nutritionEstimation: "Default nutrition estimation prompt",
         autoTagging: "Default auto tagging prompt",
+        provenanceInference: "Default provenance inference prompt",
       };
 
       getConfig.mockResolvedValue(null);
@@ -149,6 +152,7 @@ describe("prompts procedures", () => {
         unitConversion: "Updated conversion prompt",
         nutritionEstimation: "Updated nutrition estimation prompt",
         autoTagging: "Updated auto tagging prompt",
+        provenanceInference: "Updated provenance inference prompt",
       };
 
       setConfig.mockResolvedValue(undefined);
@@ -187,6 +191,7 @@ describe("prompts procedures", () => {
         unitConversion: "Updated conversion prompt",
         nutritionEstimation: "Updated nutrition estimation prompt",
         autoTagging: "Updated auto tagging prompt",
+        provenanceInference: "Updated provenance inference prompt",
       };
 
       const testRouter = t.router({
@@ -244,6 +249,7 @@ describe("prompts procedures", () => {
         unitConversion: "Default unit conversion prompt",
         nutritionEstimation: "Default nutrition estimation prompt",
         autoTagging: "Default auto tagging prompt",
+        provenanceInference: "Default provenance inference prompt",
       };
 
       (loadDefaultPrompts as any).mockReturnValue(defaultPrompts);

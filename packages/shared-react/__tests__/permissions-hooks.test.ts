@@ -15,6 +15,7 @@ describe("permissions hooks selectors", () => {
         delete: "owner",
       },
       isAIEnabled: false,
+      isProvenanceEnabled: false,
       householdUserIds: null,
       isServerAdmin: false,
       autoTaggingMode: "disabled",

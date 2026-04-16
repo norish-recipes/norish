@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
@@ -12,15 +11,13 @@ export function useProvenanceInferenceSubscriptions(
   onCompleted?: () => void
 ) {
   const trpc = useTRPC();
-  const [isInferring, setIsInferring] = useState(false);
 
   useSubscription(
     trpc.recipes.onProvenanceInferenceStarted.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (data) => {
+      onData: (data: any) => {
         if (data.recipeId === recipeId) {
-          setIsInferring(true);
-          onStarted?.();
+          if (onStarted) onStarted();
         }
       },
     })
@@ -29,17 +26,12 @@ export function useProvenanceInferenceSubscriptions(
   useSubscription(
     trpc.recipes.onProvenanceInferenceCompleted.subscriptionOptions(undefined, {
       enabled: !!recipeId,
-      onData: (data) => {
+      onData: (data: any) => {
         if (data.recipeId === recipeId) {
-          setIsInferring(false);
-          onCompleted?.();
+          if (onCompleted) onCompleted();
         }
       },
     })
   );
-
-  return {
-    isInferring,
-    setIsInferring,
-  };
 }
+
