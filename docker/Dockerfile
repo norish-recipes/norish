@@ -36,6 +36,7 @@ ENV SHARP_IGNORE_GLOBAL_LIBVIPS=0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json .npmrc ./
 COPY apps/web/package.json ./apps/web/package.json
+COPY apps/mobile/package.json ./apps/mobile/package.json
 COPY apps/parser-api/pyproject.toml ./apps/parser-api/pyproject.toml
 COPY apps/parser-api/uv.lock ./apps/parser-api/uv.lock
 
