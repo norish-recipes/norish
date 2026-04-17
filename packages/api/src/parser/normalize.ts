@@ -14,6 +14,7 @@ import type { RecipeCategory } from "@norish/shared/contracts";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { getUnits } from "@norish/config/server-config-loader";
 import { parserLogger } from "@norish/shared-server/logger";
+import { isUrl } from "@norish/shared/lib/helpers";
 
 import {
   extractNutrition,
@@ -88,6 +89,31 @@ export function parseCategories(recipeCategory: unknown): RecipeCategory[] {
   return Array.from(mapped);
 }
 
+function getCandidateUrl(value: unknown): string | null {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+
+    return trimmed.length > 0 && isUrl(trimmed) ? trimmed : null;
+  }
+
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+
+    return getCandidateUrl(record.url ?? record["@id"] ?? record.id);
+  }
+
+  return null;
+}
+
+function getSourceUrl(json: Record<string, unknown>): string | null {
+  return (
+    getCandidateUrl(json.url) ??
+    getCandidateUrl(json.mainEntityOfPage) ??
+    getCandidateUrl(json["@id"]) ??
+    null
+  );
+}
+
 /**
  * Normalize a JSON-LD Recipe node into a FullRecipeInsertDTO.
  *
@@ -151,7 +177,7 @@ export async function normalizeRecipeFromJson(
     name: metadata.name,
     description: metadata.description,
     notes: metadata.notes,
-    url: "",
+    url: getSourceUrl(jsonObj),
     image: primaryImage,
     servings: metadata.servings,
     prepMinutes: metadata.prepMinutes,

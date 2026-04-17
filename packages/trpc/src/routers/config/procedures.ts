@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
+import { getDatabaseHealth } from "@norish/db/drizzle";
 import {
   getLocaleConfig,
   getRecurrenceConfig,
@@ -11,7 +12,7 @@ import {
   isTimersEnabled,
 } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@norish/db/repositories/tags";
-import { trpcLogger as log } from "@norish/shared-server/logger";
+import { getAppVersions, trpcLogger as log } from "@norish/shared-server";
 
 import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
@@ -19,49 +20,71 @@ import { healthyResponseSchema, parserHealthSchema } from "./config-openapi-type
 
 export async function getServiceHealth() {
   const parserHealthUrl = buildInternalParserApiUrl("/health");
+  const [databaseHealth, parserHealth, appVersions] = await Promise.all([
+    getDatabaseHealth(),
+    (async () => {
+      try {
+        const response = await fetch(parserHealthUrl, {
+          signal: AbortSignal.timeout(SERVER_CONFIG.PARSER_API_TIMEOUT_MS),
+        });
 
-  try {
-    const response = await fetch(parserHealthUrl, {
-      signal: AbortSignal.timeout(SERVER_CONFIG.PARSER_API_TIMEOUT_MS),
-    });
+        if (!response.ok) {
+          return {
+            status: "error" as const,
+            statusCode: response.status,
+          };
+        }
 
-    if (!response.ok) {
-      return {
-        status: "degraded" as const,
-        parser: {
-          status: "error",
-          statusCode: response.status,
-        },
-      };
-    }
+        const parsedHealth = parserHealthSchema.parse(await response.json());
 
-    const parserHealth = parserHealthSchema.parse(await response.json());
+        if (parsedHealth.status !== "ok") {
+          return {
+            status: parsedHealth.status ?? "unknown",
+            recipeScrapersVersion: parsedHealth.recipeScrapersVersion,
+          };
+        }
 
-    if (parserHealth.status !== "ok") {
-      return {
-        status: "degraded" as const,
-        parser: {
-          status: parserHealth.status ?? "unknown",
-          recipeScrapersVersion: parserHealth.recipeScrapersVersion,
-        },
-      };
-    }
+        return {
+          status: "ok" as const,
+          recipeScrapersVersion: parsedHealth.recipeScrapersVersion,
+        };
+      } catch {
+        return {
+          status: "unreachable" as const,
+        };
+      }
+    })(),
+    getAppVersions(),
+  ]);
 
-    return {
-      status: "ok" as const,
-      parser: {
-        status: "ok" as const,
-        recipeScrapersVersion: parserHealth.recipeScrapersVersion,
-      },
-    };
-  } catch {
+  if (databaseHealth.status !== "ok") {
     return {
       status: "degraded" as const,
-      parser: {
-        status: "unreachable",
-      },
+      db: databaseHealth,
+      parser: parserHealth,
     };
   }
+
+  if (parserHealth.status !== "ok") {
+    return {
+      status: "degraded" as const,
+      db: databaseHealth,
+      parser: parserHealth,
+    };
+  }
+
+  return {
+    status: "ok" as const,
+    db: databaseHealth,
+    versions: {
+      ...appVersions,
+      scraper: parserHealth.recipeScrapersVersion,
+    },
+    parser: {
+      status: "ok" as const,
+      recipeScrapersVersion: parserHealth.recipeScrapersVersion,
+    },
+  };
 }
 
 /**
@@ -174,10 +197,10 @@ export const health = publicProcedure
       tags: ["Health"],
       summary: "Check API health",
       description:
-        "Reports API availability and verifies the internal parser service is reachable and healthy.",
-      successDescription: "The API and parser service are healthy.",
+        "Reports API availability and verifies both the database connection and internal parser service are healthy.",
+      successDescription: "The API, database, and parser service are healthy.",
       errorResponses: {
-        503: "The API is up but the parser service is unhealthy or unreachable",
+        503: "The API is up but the database or parser service is unhealthy or unreachable",
       },
     },
   })
@@ -188,7 +211,10 @@ export const health = publicProcedure
     if (health.status !== "ok") {
       throw new TRPCError({
         code: "SERVICE_UNAVAILABLE",
-        message: `Parser service is ${health.parser.status}`,
+        message:
+          health.db.status !== "ok"
+            ? `Database is ${health.db.status}`
+            : `Parser service is ${health.parser.status}`,
       });
     }
 

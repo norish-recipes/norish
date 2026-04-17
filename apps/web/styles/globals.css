@@ -28,3 +28,12 @@
 @utility fade-in-slow {
   animation: fade-in 500ms ease-in;
 }
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

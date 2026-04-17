@@ -337,6 +337,42 @@ describe("normalizeRecipeFromJson - HTML Entity Decoding", () => {
   });
 });
 
+describe("normalizeRecipeFromJson - Source URL", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("preserves a valid recipe url from JSON-LD", async () => {
+    const result = await normalizeRecipeFromJson(
+      {
+        name: "Linked Recipe",
+        url: "https://example.com/linked-recipe",
+        recipeIngredient: ["1 egg"],
+        recipeInstructions: ["Mix"],
+      },
+      "recipe-123"
+    );
+
+    expect(result?.url).toBe("https://example.com/linked-recipe");
+  });
+
+  it("falls back to mainEntityOfPage when url is missing", async () => {
+    const result = await normalizeRecipeFromJson(
+      {
+        name: "Linked Recipe",
+        mainEntityOfPage: {
+          "@id": "https://example.com/linked-recipe",
+        },
+        recipeIngredient: ["1 egg"],
+        recipeInstructions: ["Mix"],
+      },
+      "recipe-123"
+    );
+
+    expect(result?.url).toBe("https://example.com/linked-recipe");
+  });
+});
+
 describe("normalizeRecipeFromJson - HowToSection Heading Extraction", () => {
   beforeEach(() => {
     vi.clearAllMocks();

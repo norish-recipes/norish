@@ -8,6 +8,8 @@ import {
   getWeekDays,
   getWeekEnd,
   getWeekStart,
+  hasRecipeName,
+  hasRecipeNameIngredientsAndSteps,
   isAvatarFilenameForUser,
   parseIngredientWithDefaults,
   parseIsoDuration,
@@ -59,6 +61,38 @@ describe("formatMinutesHM", () => {
 
   it("returns undefined for negative", () => {
     expect(formatMinutesHM(-5)).toBeUndefined();
+  });
+});
+
+describe("recipe name helpers", () => {
+  it("accepts recipes with only a name", () => {
+    expect(
+      hasRecipeName({
+        name: "Fennel Tart",
+        recipeIngredients: [],
+        steps: [],
+      } as any)
+    ).toBe(true);
+  });
+
+  it("rejects recipes without a name", () => {
+    expect(
+      hasRecipeName({
+        name: "   ",
+        recipeIngredients: [{ description: "1 fennel bulb" }],
+        steps: [{ text: "Bake until golden." }],
+      } as any)
+    ).toBe(false);
+  });
+
+  it("keeps the stricter helper requiring both ingredients and steps", () => {
+    expect(
+      hasRecipeNameIngredientsAndSteps({
+        name: "Fennel Tart",
+        recipeIngredients: [{ description: "1 fennel bulb" }],
+        steps: [],
+      } as any)
+    ).toBe(false);
   });
 });
 

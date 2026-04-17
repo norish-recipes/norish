@@ -4,6 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 process.env.NODE_ENV = "development";
 
+const dbExecuteMock = vi.hoisted(() => vi.fn());
+const dbInsertValuesMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const dbInsertMock = vi.hoisted(() => vi.fn().mockReturnValue({ values: dbInsertValuesMock }));
+const getDatabaseHealthMock = vi.hoisted(() => vi.fn());
+
 vi.mock("@norish/auth/providers", () => ({
   getAvailableProviders: vi.fn().mockResolvedValue([]),
   isPasswordAuthEnabled: vi.fn().mockResolvedValue(false),
@@ -23,6 +28,14 @@ vi.mock("@norish/config/server-config-loader", () => ({
 
 vi.mock("@norish/db/repositories/tags", () => ({
   listAllTagNames: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("@norish/db/drizzle", () => ({
+  db: {
+    execute: dbExecuteMock,
+    insert: dbInsertMock,
+  },
+  getDatabaseHealth: getDatabaseHealthMock,
 }));
 
 vi.mock("@norish/config/env-config-server", async (importOriginal) => {
@@ -53,6 +66,24 @@ describe("openapi health endpoint", () => {
   beforeEach(() => {
     vi.resetModules();
     getSessionMock.mockReset();
+    dbExecuteMock.mockReset();
+    dbExecuteMock.mockResolvedValue([]);
+    getDatabaseHealthMock.mockReset();
+    getDatabaseHealthMock.mockImplementation(async () => {
+      try {
+        await dbExecuteMock();
+
+        return {
+          status: "ok",
+        } as const;
+      } catch {
+        return {
+          status: "error",
+        } as const;
+      }
+    });
+    dbInsertMock.mockClear();
+    dbInsertValuesMock.mockClear();
   });
 
   afterEach(() => {
@@ -82,6 +113,15 @@ describe("openapi health endpoint", () => {
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({
         status: "ok",
+        db: {
+          status: "ok",
+        },
+        versions: {
+          app: "0.18.1-beta",
+          web: "0.18.1-beta",
+          mobile: "0.0.1-beta",
+          scraper: "15.10.0",
+        },
         parser: {
           status: "ok",
           recipeScrapersVersion: "15.10.0",
@@ -106,6 +146,31 @@ describe("openapi health endpoint", () => {
       expect.objectContaining({
         code: "SERVICE_UNAVAILABLE",
         message: "Parser service is error",
+      })
+    );
+  });
+
+  it("returns 503 for anonymous callers when the database is unhealthy", async () => {
+    getSessionMock.mockResolvedValue(null);
+    dbExecuteMock.mockRejectedValueOnce(new Error("db down"));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ status: "ok", recipeScrapersVersion: "15.10.0" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+    );
+
+    const { handleOpenApiRequest } = await import("../../src/openapi");
+    const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual(
+      expect.objectContaining({
+        code: "SERVICE_UNAVAILABLE",
+        message: "Database is error",
       })
     );
   });
@@ -142,6 +207,10 @@ describe("openapi health endpoint", () => {
     );
     expect(document.paths["/health"]?.get?.security).toBeUndefined();
     expect(document.paths["/recipes/search"]?.post?.security).toEqual([
+      { ApiKeyAuth: [] },
+      { BearerAuth: [] },
+    ]);
+    expect(document.paths["/recipes"]?.post?.security).toEqual([
       { ApiKeyAuth: [] },
       { BearerAuth: [] },
     ]);

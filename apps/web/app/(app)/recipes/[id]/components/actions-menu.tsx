@@ -255,7 +255,14 @@ export default function ActionsMenu({ id }: Props) {
           </Button>
         </DropdownTrigger>
 
-        <DropdownMenu aria-label={t("actionsLabel")} items={menuItems}>
+        <DropdownMenu
+          aria-label={t("actionsLabel")}
+          classNames={{
+            base: "max-h-[min(24rem,calc(100vh-6rem))] overflow-y-auto scrollbar-hide",
+            list: "gap-1",
+          }}
+          items={menuItems}
+        >
           {(item: MenuItem) => (
             <DropdownItem
               key={item.key}

@@ -15,7 +15,7 @@ import {
 } from "@norish/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
+import { hasRecipeName } from "@norish/shared/lib/helpers";
 
 const parserEnvConfig = SERVER_CONFIG as typeof SERVER_CONFIG & {
   LEGACY_RECIPE_PARSER_ROLLBACK: boolean;
@@ -132,7 +132,7 @@ async function tryPythonStructuredParser(
 
     const adapted = await adaptRecipeScrapersResponse(response, recipeId, url);
 
-    if (hasRecipeNameIngredientsAndSteps(adapted)) {
+    if (hasRecipeName(adapted)) {
       return { recipe: adapted, failure: null };
     }
 
@@ -140,7 +140,7 @@ async function tryPythonStructuredParser(
       recipe: null,
       failure: {
         code: "InvalidRecipeData",
-        message: "Python parser returned incomplete recipe data",
+        message: "Python parser returned recipe data without a valid title",
       },
     };
   } catch (error: unknown) {

@@ -8,7 +8,7 @@ const mockNormalizeRecipeFromJson = vi.fn(
     name: String(node.name ?? "Recipe"),
     description: null,
     notes: null,
-    url: null,
+    url: typeof node.url === "string" ? node.url : null,
     image: null,
     servings: 1,
     prepMinutes: null,
@@ -130,6 +130,23 @@ describe("preparePasteImport", () => {
     expect(mockNormalizeRecipeFromJson.mock.calls[1]?.[1]).toBe(
       result.structuredRecipes?.[1]?.recipeId
     );
+  });
+
+  it("preserves source URL from pasted JSON-LD", async () => {
+    const { preparePasteImport } = await import("../../src/paste-import/parser");
+
+    const result = await preparePasteImport(
+      JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Recipe",
+        name: "Linked Recipe",
+        url: "https://example.com/linked-recipe",
+        recipeIngredient: ["1 egg"],
+        recipeInstructions: ["Mix"],
+      })
+    );
+
+    expect(result.structuredRecipes?.[0]?.recipe.url).toBe("https://example.com/linked-recipe");
   });
 
   it("normalizes YAML aliases, tags, and source URL", async () => {

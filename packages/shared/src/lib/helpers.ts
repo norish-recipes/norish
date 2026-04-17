@@ -117,6 +117,12 @@ export function hasRecipeNameIngredientsAndSteps(
   );
 }
 
+export function hasRecipeName(
+  recipe: FullRecipeInsertDTO | null | undefined
+): recipe is FullRecipeInsertDTO {
+  return Boolean(recipe?.name?.trim());
+}
+
 export const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number = 300) => {
   let timeout: ReturnType<typeof setTimeout> | null = null;
 

@@ -8,6 +8,7 @@ import { parseSteps } from "@norish/api/parser/parsers/steps";
 import { parseVideos } from "@norish/api/parser/parsers/videos";
 import { getUnits } from "@norish/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
+import { hasRecipeName } from "@norish/shared/lib/helpers";
 
 import type { RecipeScrapersParserSuccess } from "./contract";
 
@@ -174,13 +175,7 @@ function buildNutrition(recipe: ScraperRecipe) {
 }
 
 function hasRequiredRecipeFields(recipe: FullRecipeInsertDTO): boolean {
-  return Boolean(
-    recipe.name?.trim() &&
-    Array.isArray(recipe.recipeIngredients) &&
-    recipe.recipeIngredients.length > 0 &&
-    Array.isArray(recipe.steps) &&
-    recipe.steps.length > 0
-  );
+  return hasRecipeName(recipe);
 }
 
 export async function adaptRecipeScrapersResponse(
@@ -248,7 +243,7 @@ export async function adaptRecipeScrapersResponse(
         stepCount: steps.length,
         title: dto.name,
       },
-      "Recipe parser result did not meet Norish minimum recipe requirements"
+      "Recipe parser result did not include a valid title"
     );
 
     return null;

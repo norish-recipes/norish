@@ -352,10 +352,6 @@ async function parseStructuredJson(text: string): Promise<StructuredPasteImportR
     async (node, recipeId) => {
       const recipe = await normalizeRecipeFromJson(node, recipeId);
 
-      if (recipe) {
-        recipe.url = null;
-      }
-
       return { recipe, importedRating: extractJsonLdRating(node) };
     }
   );

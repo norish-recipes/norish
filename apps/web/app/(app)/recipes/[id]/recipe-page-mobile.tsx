@@ -120,7 +120,6 @@ export default function RecipePageMobile() {
           </div>
 
           <ReadonlyRecipeSummary
-            actions={<ActionsMenu id={recipe.id} />}
             allergies={allergies}
             allergySet={allergySet}
             recipe={recipe}
