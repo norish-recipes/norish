@@ -47,8 +47,7 @@ packages/shared-server/dist
 packages/ui/dist
 tooling/**/dist
 
-# Mobile app
-apps/mobile/
+# Mobile app skipped (removed to allow Turborepo workspace resolution)
 
 # OpenSpec artifacts — not needed in Docker build
 openspec/
