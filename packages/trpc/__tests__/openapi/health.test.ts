@@ -117,7 +117,7 @@ describe("openapi health endpoint", () => {
           status: "ok",
         },
         versions: {
-          app: "0.18.1-beta",
+          app: "0.17.3-beta",
           web: "0.18.1-beta",
           mobile: "0.0.1-beta",
           scraper: "15.10.0",
