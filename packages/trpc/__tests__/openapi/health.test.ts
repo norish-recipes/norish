@@ -120,7 +120,7 @@ describe("openapi health endpoint", () => {
       );
 
       const [appVersion, webVersion, mobileVersion] = await Promise.all([
-        readVersion("package.json"),
+        readVersion("packages/trpc/package.json"),
         readVersion("apps/web/package.json"),
         readVersion("apps/mobile/package.json"),
       ]);
