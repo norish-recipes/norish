@@ -1,0 +1,68 @@
+=== Norish Production GCP Deployment ===
+Target: norish-server (us-central1-a) in norish-family-recipes
+Image: norishapp/norish:v0.18.1-beta-provenance (amd64 Architecture)
+
+Step 1/5: Building Docker image for linux/amd64 locally...
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 10.60kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22-alpine3.21
+#2 DONE 0.5s
+
+#3 [internal] load metadata for ghcr.io/astral-sh/uv:0.11.4
+#3 DONE 1.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 866B done
+#4 DONE 0.0s
+
+#5 FROM ghcr.io/astral-sh/uv:0.11.4@sha256:5164bf84e7b4e2e08ce0b4c66b4a8c996a286e6959f72ac5c6e0a3c80e8cb04a
+#5 resolve ghcr.io/astral-sh/uv:0.11.4@sha256:5164bf84e7b4e2e08ce0b4c66b4a8c996a286e6959f72ac5c6e0a3c80e8cb04a 0.0s done
+#5 DONE 0.0s
+
+#6 [base 1/3] FROM docker.io/library/node:22-alpine3.21@sha256:af8023ec879993821f6d5b21382ed915622a1b0f1cc03dbeb6804afaf01f8885
+#6 resolve docker.io/library/node:22-alpine3.21@sha256:af8023ec879993821f6d5b21382ed915622a1b0f1cc03dbeb6804afaf01f8885 0.0s done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 8.94MB 0.2s done
+#7 DONE 0.3s
+
+#8 [deps  2/23] COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json .npmrc ./
+#8 CACHED
+
+#9 [deps  3/23] COPY apps/web/package.json ./apps/web/package.json
+#9 CACHED
+
+#10 [base 2/3] RUN apk upgrade --no-cache &&     apk add --no-cache ca-certificates libc6-compat
+#10 CACHED
+
+#11 [base 3/3] WORKDIR /app
+#11 CACHED
+
+#12 [builder-base 1/2] RUN npm install -g pnpm@10.30.1
+#12 CACHED
+
+#13 [builder-base 2/2] COPY --from=ghcr.io/astral-sh/uv:0.11.4 /uv /uvx /bin/
+#13 CACHED
+
+#14 [deps  1/23] RUN apk add --no-cache python3 make g++ pkgconfig libpq-dev vips-dev
+#14 CACHED
+
+#15 [deps  4/23] COPY apps/mobile/package.json ./apps/mobile/package.json
+#15 ERROR: failed to calculate checksum of ref uvs78w2lmv80mu2x9wnktw96n::w145op2mlsn34844hldarjfnc: "/apps/mobile/package.json": not found
+------
+ > [deps  4/23] COPY apps/mobile/package.json ./apps/mobile/package.json:
+------
+Dockerfile:39
+--------------------
+  37 |     COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json .npmrc ./
+  38 |     COPY apps/web/package.json ./apps/web/package.json
+  39 | >>> COPY apps/mobile/package.json ./apps/mobile/package.json
+  40 |     COPY apps/parser-api/pyproject.toml ./apps/parser-api/pyproject.toml
+  41 |     COPY apps/parser-api/uv.lock ./apps/parser-api/uv.lock
+--------------------
+ERROR: failed to build: failed to solve: failed to compute cache key: failed to calculate checksum of ref uvs78w2lmv80mu2x9wnktw96n::w145op2mlsn34844hldarjfnc: "/apps/mobile/package.json": not found

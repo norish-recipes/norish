@@ -156,7 +156,7 @@ export async function getAllConfigs(
   const result: Record<string, unknown> = {};
 
   for (const config of configs) {
-    const raw = getStoredConfigValue(config, includeSecrets, config.key);
+    const raw = getStoredConfigValue(config, includeSecrets, config.key as ServerConfigKey);
 
     result[config.key] = raw?.value ?? null;
   }

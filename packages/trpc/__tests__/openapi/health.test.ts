@@ -1,5 +1,8 @@
 // @vitest-environment node
 
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 process.env.NODE_ENV = "development";
@@ -54,6 +57,15 @@ vi.mock("@norish/config/env-config-server", async (importOriginal) => {
 
 const getSessionMock = vi.hoisted(() => vi.fn());
 
+async function readVersion(relativePathFromRepoRoot: string) {
+  const packageJson = await readFile(
+    path.resolve(process.cwd(), "../..", relativePathFromRepoRoot),
+    "utf8"
+  );
+
+  return (JSON.parse(packageJson) as { version: string }).version;
+}
+
 vi.mock("@norish/auth/auth", () => ({
   auth: {
     api: {
@@ -107,6 +119,12 @@ describe("openapi health endpoint", () => {
         )
       );
 
+      const [appVersion, webVersion, mobileVersion] = await Promise.all([
+        readVersion("package.json"),
+        readVersion("apps/web/package.json"),
+        readVersion("apps/mobile/package.json"),
+      ]);
+
       const { handleOpenApiRequest } = await import("../../src/openapi");
       const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
 
@@ -117,9 +135,9 @@ describe("openapi health endpoint", () => {
           status: "ok",
         },
         versions: {
-          app: "0.17.3-beta",
-          web: "0.18.1-beta",
-          mobile: "0.0.1-beta",
+          app: appVersion,
+          web: webVersion,
+          mobile: mobileVersion,
           scraper: "15.10.0",
         },
         parser: {
