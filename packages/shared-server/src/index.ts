@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 export * from "./logger";
-import { resolveExistingWorkspacePath } from "./lib/workspace-paths";
+import { resolveWorkspaceRootPath } from "./lib/workspace-paths";
 
 type PackageVersionManifest = {
   version: string;
@@ -15,7 +15,7 @@ export type AppVersions = {
 
 async function readPackageVersion(relativePath: string, fallbackVersion?: string) {
   try {
-    const packageJsonPath = resolveExistingWorkspacePath(relativePath);
+    const packageJsonPath = resolveWorkspaceRootPath(relativePath);
     const packageJson = await readFile(packageJsonPath, "utf8");
 
     return (JSON.parse(packageJson) as PackageVersionManifest).version;
