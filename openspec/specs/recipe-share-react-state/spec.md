@@ -22,6 +22,12 @@ The system SHALL provide shared-react hooks for authenticated recipe-share manag
 - **THEN** the system SHALL wait for the server response before treating the share as created in client state
 - **AND** the initiating client SHALL refresh or update share queries from confirmed server data
 
+#### Scenario: Share creation can return the created share payload to the caller
+
+- **WHEN** an authenticated shared-react consumer creates a share link and needs to use the created public URL immediately
+- **THEN** the shared-react create-share contract SHALL expose the confirmed server response for that newly created share
+- **AND** the response SHALL remain consistent with shared-react cache invalidation and server-backed mutation state
+
 ### Requirement: Shared-react can resolve public shared recipes
 
 The system SHALL provide a shared-react query hook for resolving the public shared recipe contract by token without requiring app-specific data wiring.
