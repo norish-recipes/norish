@@ -1,6 +1,6 @@
 {
   "name": "@norish/i18n",
-  "version": "0.17.3-beta",
+  "version": "0.18.1-beta",
   "private": true,
   "type": "module",
   "scripts": {
