@@ -1,8 +1,10 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, Linking, Share } from "react-native";
 import { ShellMenu } from "@/components/shell/menu";
+import { shareRecipeFromMenu } from "@/components/recipe-detail/recipe-share";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
+import { getCurrentBaseUrl } from "@/providers/trpc-provider";
 import { Button as UIButton, Divider as UIDivider } from "@expo/ui/swift-ui";
 import * as KeepAwake from "expo-keep-awake";
 import { useRouter } from "expo-router";
@@ -40,6 +42,8 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
     estimateNutrition,
     startConversion,
     allergies,
+    createShare,
+    isCreatingShare,
   } = ctx;
 
   const { deleteRecipe } = useRecipesContext();
@@ -65,17 +69,22 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
 
   // --- Share ---
   const handleShare = useCallback(async () => {
-    if (!recipe) return;
+    if (!recipe || isCreatingShare) return;
+
     try {
-      await Share.share({
-        message: recipe.url ? `${recipe.name}\n${recipe.url}` : recipe.name,
-        title: recipe.name,
-        url: recipe.url ?? undefined,
+      await shareRecipeFromMenu({
+        recipeName: recipe.name,
+        baseUrl: getCurrentBaseUrl(),
+        createShare,
+        nativeShare: Share.share,
       });
     } catch {
-      // User cancelled or share failed – silently ignore
+      Alert.alert(
+        intl.formatMessage({ id: "auth.errors.default.title" }),
+        intl.formatMessage({ id: "common.errors.operationFailed" })
+      );
     }
-  }, [recipe]);
+  }, [createShare, intl, isCreatingShare, recipe]);
 
   // --- Visit Original ---
   const handleVisitOriginal = useCallback(async () => {
@@ -162,7 +171,11 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
         onPress={() => Alert.alert("Groceries", "Add to groceries coming soon!")}
       />
       <UIButton
-        label={intl.formatMessage({ id: "recipes.actions.share" })}
+        label={
+          isCreatingShare
+            ? `${intl.formatMessage({ id: "recipes.actions.share" })}…`
+            : intl.formatMessage({ id: "recipes.actions.share" })
+        }
         systemImage="square.and.arrow.up"
         onPress={handleShare}
       />

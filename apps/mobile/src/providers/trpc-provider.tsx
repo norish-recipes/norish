@@ -58,6 +58,10 @@ function toWsUrl(baseUrl: string): string {
 
 let currentBaseUrl = "";
 
+export function getCurrentBaseUrl(): string {
+  return currentBaseUrl;
+}
+
 function createMobileWebSocket(): typeof WebSocket | undefined {
   const NativeWebSocket = globalThis.WebSocket as HeaderCapableWebSocket | undefined;
 
