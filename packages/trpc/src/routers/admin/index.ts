@@ -4,6 +4,7 @@ import { authProvidersProcedures } from "./auth-providers";
 import { adminConfigProcedures } from "./config";
 import { contentConfigProcedures } from "./content-config";
 import { generalProcedures } from "./general";
+import { jobsProcedures } from "./jobs";
 import { permissionsProcedures } from "./permissions";
 import { systemProcedures } from "./system";
 
@@ -28,4 +29,7 @@ export const adminRouter = router({
 
   // System (scheduler, restart, restore)
   ...systemProcedures._def.procedures,
+
+  // Jobs (viewable job queue)
+  jobs: jobsProcedures,
 });
