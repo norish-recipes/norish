@@ -13,7 +13,7 @@ import {
 } from "@norish/config/env-config-server";
 import { parserLogger as log } from "@norish/shared-server/logger";
 
-const EMBEDDED_PARSER_STARTUP_TIMEOUT_MS = 15_000;
+const EMBEDDED_PARSER_STARTUP_TIMEOUT_MS = 60_000;
 const EMBEDDED_PARSER_HEALTHCHECK_TIMEOUT_MS = 1_000;
 const EMBEDDED_PARSER_SHUTDOWN_TIMEOUT_MS = 10_000;
 const EMBEDDED_PARSER_POLL_INTERVAL_MS = 250;

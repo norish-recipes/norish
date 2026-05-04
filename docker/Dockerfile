@@ -219,6 +219,7 @@ COPY --from=build --chown=${UID}:${GID} /app/apps/web/next.config.js ./apps/web/
 COPY --from=build --chown=${UID}:${GID} /app/apps/web/config/next-intl-request-config-path.js ./apps/web/config/next-intl-request-config-path.js
 # Root package.json needed by next.config.js (reads version from ../../package.json)
 COPY --from=build --chown=${UID}:${GID} /app/package.json ./package.json
+COPY --from=build --chown=${UID}:${GID} /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 # --- Production node_modules from pnpm deploy (complete runtime deps) ---
 COPY --from=build --chown=${UID}:${GID} /app/deploy/node_modules/ ./node_modules/
