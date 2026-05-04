@@ -7,6 +7,7 @@ import AIProcessingCard from "./ai-processing-card";
 import { AuthProvidersCard } from "./auth-providers";
 import ContentDetectionCard from "./content-detection-card";
 import GeneralCard from "./general-card";
+import JobsCard from "./jobs-card";
 import PermissionPolicyCard from "./permission-policy-card";
 import AdminShareLinksCard from "./share-links-card";
 import SystemCard from "./system-card";
@@ -26,6 +27,7 @@ function AdminSettingsContent() {
       <AuthProvidersCard />
       <ContentDetectionCard />
       <AIProcessingCard />
+      <JobsCard />
       <SystemCard />
     </div>
   );
