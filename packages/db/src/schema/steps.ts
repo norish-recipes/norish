@@ -19,6 +19,6 @@ export const steps = pgTable(
   },
   (t) => [
     index("idx_steps_recipe_id").on(t.recipeId),
-    uniqueIndex("unique_recipe_step_system").on(t.recipeId, t.step, t.systemUsed),
+    uniqueIndex("unique_recipe_step_system").on(t.recipeId, t.step, t.systemUsed, t.order),
   ]
 );

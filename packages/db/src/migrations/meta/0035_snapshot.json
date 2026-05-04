@@ -1,6 +1,6 @@
 {
-  "id": "0bb4a4c4-12c1-44ac-ae68-5c48a31d478e",
-  "prevId": "627d2038-3451-4a3c-a167-0d800805e7a9",
+  "id": "2674552e-6193-47f3-9cc1-06415f4db2dd",
+  "prevId": "0bb4a4c4-12c1-44ac-ae68-5c48a31d478e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1658,6 +1658,32 @@
         "protein": {
           "name": "protein",
           "type": "numeric(6, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origin": {
+          "name": "origin",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origin_sub_region": {
+          "name": "origin_sub_region",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cuisines": {
+          "name": "cuisines",
+          "type": "cuisine_enum[]",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "origin_reason": {
+          "name": "origin_reason",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -3902,6 +3928,31 @@
         "synced",
         "failed",
         "removed"
+      ]
+    },
+    "public.cuisine_enum": {
+      "name": "cuisine_enum",
+      "schema": "public",
+      "values": [
+        "American",
+        "British",
+        "Caribbean",
+        "Chinese",
+        "French",
+        "Greek",
+        "Indian",
+        "Italian",
+        "Japanese",
+        "Korean",
+        "Latin American",
+        "Lebanese",
+        "Mediterranean",
+        "Mexican",
+        "Middle Eastern",
+        "Spanish",
+        "Thai",
+        "Vietnamese",
+        "Other"
       ]
     },
     "public.measurement_system": {

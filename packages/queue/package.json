@@ -1,6 +1,6 @@
 {
   "name": "@norish/queue",
-  "version": "0.18.1-beta",
+  "version": "0.18.2-beta",
   "private": true,
   "type": "module",
   "exports": {

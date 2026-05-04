@@ -1,4 +1,5 @@
 import type { Mock } from "vitest";
+import { QueryClient } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -254,6 +255,58 @@ describe("useRecipeId", () => {
       await waitFor(() => {
         expect(mockReserveId).toHaveBeenCalledTimes(1);
       });
+    });
+
+    it("fetches a fresh reservation when the create page is mounted again", async () => {
+      queryClient = new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: false,
+            staleTime: 1000 * 60 * 5,
+            gcTime: Infinity,
+          },
+        },
+      });
+
+      mockReserveId
+        .mockResolvedValueOnce({ recipeId: "first-reserved-id" })
+        .mockResolvedValueOnce({ recipeId: "second-reserved-id" });
+
+      vi.doMock("@/app/providers/trpc-provider", () => ({
+        useTRPC: () => ({
+          recipes: {
+            reserveId: {
+              queryOptions: (_input?: undefined, options?: Record<string, unknown>) => ({
+                queryKey: ["recipes", "reserveId"],
+                queryFn: () => mockReserveId(),
+                ...options,
+              }),
+            },
+          },
+        }),
+      }));
+
+      const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
+      const first = renderHook(() => useRecipeId("create"), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await waitFor(() => {
+        expect(first.result.current.recipeId).toBe("first-reserved-id");
+      });
+
+      first.unmount();
+
+      const second = renderHook(() => useRecipeId("create"), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await waitFor(() => {
+        expect(second.result.current.recipeId).toBe("second-reserved-id");
+      });
+
+      expect(mockReserveId).toHaveBeenCalledTimes(2);
+      expect(queryClient.getQueryData(["recipes", "reserveId"])).toBeUndefined();
     });
   });
 

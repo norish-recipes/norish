@@ -23,8 +23,13 @@ export function createUseRecipeId({ useTRPC }: CreateRecipeHooksOptions) {
 
     useEffect(() => {
       if (mode === "create" && !recipeId) {
+        const reserveIdOptions = trpc.recipes.reserveId.queryOptions(undefined, {
+          staleTime: 0,
+          gcTime: 0,
+        });
+
         queryClient
-          .fetchQuery(trpc.recipes.reserveId.queryOptions())
+          .fetchQuery(reserveIdOptions)
           .then(({ recipeId: id }) => {
             setRecipeId(id);
             log.debug({ recipeId: id }, "Reserved recipe ID from backend");
@@ -33,7 +38,10 @@ export function createUseRecipeId({ useTRPC }: CreateRecipeHooksOptions) {
             log.error({ err }, "Failed to reserve recipe ID");
             setError("Failed to initialize form. Please refresh the page.");
           })
-          .finally(() => setIsLoading(false));
+          .finally(() => {
+            queryClient.removeQueries({ queryKey: reserveIdOptions.queryKey, exact: true });
+            setIsLoading(false);
+          });
       }
     }, [mode, recipeId, trpc.recipes.reserveId, queryClient]);
 

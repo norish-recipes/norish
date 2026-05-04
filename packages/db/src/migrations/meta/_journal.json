@@ -243,8 +243,15 @@
     {
       "idx": 34,
       "version": "7",
-      "when": 1776370381822,
-      "tag": "0034_sharp_lady_vermin",
+      "when": 1777204800000,
+      "tag": "0034_loosen_step_order_constraint",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1777918789219,
+      "tag": "0035_green_excalibur",
       "breakpoints": true
     }
   ]

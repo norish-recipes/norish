@@ -886,14 +886,17 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
           version: true,
         },
         with: { ingredient: { columns: { name: true } } },
+        orderBy: (ingredients, { asc }) => [asc(ingredients.order)],
       },
       steps: {
         columns: { step: true, systemUsed: true, order: true, version: true },
         with: {
           images: {
             columns: { id: true, image: true, order: true, version: true },
+            orderBy: (images, { asc }) => [asc(images.order)],
           },
         },
+        orderBy: (steps, { asc }) => [asc(steps.order)],
       },
       images: {
         columns: { id: true, image: true, order: true, version: true },

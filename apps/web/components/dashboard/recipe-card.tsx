@@ -31,7 +31,7 @@ type RecipeCardProps = {
   isFavorite: boolean;
   allergies: string[];
   onToggleFavorite: (recipeId: string) => void;
-  onDelete: (recipeId: string) => void;
+  onDelete: (recipeId: string, version: number) => void;
 };
 
 function RecipeCardComponent({
@@ -98,9 +98,9 @@ function RecipeCardComponent({
     onDeleteModalClose();
     // Trigger the delete animation, then delete the recipe
     rowRef.current?.triggerDeleteAnimation(() => {
-      onDelete(recipe.id);
+      onDelete(recipe.id, recipe.version);
     });
-  }, [onDelete, recipe.id, onDeleteModalClose]);
+  }, [onDelete, recipe.id, recipe.version, onDeleteModalClose]);
 
   // Check if user can delete this recipe
   // Recipes without owner don not have restrictions
