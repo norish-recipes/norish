@@ -25,6 +25,7 @@ import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { JobLogger } from "../job-logger";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:image-import");
@@ -38,6 +39,17 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   log.info({ jobId: job.id, recipeId, fileCount: files.length }, "Processing image import job");
 
+  // Create job logger
+  const jobLogger = await JobLogger.create({
+    jobId: job.id!,
+    queueName: QUEUE_NAMES.IMAGE_IMPORT,
+    userId,
+    recipeId,
+    description: `${files.length} image(s)`,
+    input: { fileCount: files.length, filenames: files.map((f) => f.filename) },
+    steps: ["fetch_allergies", "ai_extraction", "save_recipe", "save_image", "emit_result"],
+  });
+
   const policy = await getRecipePermissionPolicy();
   const viewPolicy = policy.view;
   const ctx: PolicyEmitContext = { userId, householdKey };
@@ -48,7 +60,8 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
     url: `[${files.length} image(s)]`,
   });
 
-  // Fetch household allergies for targeted allergy detection
+  // Step 1: Fetch household allergies
+  await jobLogger.startStep("fetch_allergies");
   const aiConfig = await getAIConfig();
   let allergyNames: string[] | undefined;
 
@@ -60,63 +73,80 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
       { allergyCount: allergyNames.length },
       "Fetched household allergies for image import"
     );
+    await jobLogger.completeStep("fetch_allergies", { allergyCount: allergyNames.length });
+  } else {
+    await jobLogger.skipStep("fetch_allergies", "autoTagAllergies disabled");
   }
 
-  // Extract recipe from images using AI vision
+  // Step 2: AI extraction from images
+  await jobLogger.startStep("ai_extraction");
+  if (aiConfig?.model) {
+    await jobLogger.setAiModel(aiConfig.model);
+  }
+
   const result = await extractRecipeFromImages(recipeId, files, allergyNames);
 
   if (!result.success) {
-    throw new Error(
-      result.error ||
-        "Failed to extract recipe from images. The images may not contain a valid recipe."
-    );
+    const errorMsg = result.error || "Failed to extract recipe from images.";
+    await jobLogger.failStep("ai_extraction", errorMsg);
+    await jobLogger.fail(errorMsg);
+    throw new Error(errorMsg);
   }
 
   const parsedRecipe = result.data;
+  await jobLogger.completeStep("ai_extraction", { title: parsedRecipe.title });
 
-  // Save the recipe
+  // Step 3: Save the recipe
+  await jobLogger.startStep("save_recipe");
   const createdId = await createRecipeWithRefs(recipeId, userId, parsedRecipe);
 
   if (!createdId) {
+    await jobLogger.failStep("save_recipe", "Failed to save imported recipe");
+    await jobLogger.fail("Failed to save imported recipe");
     throw new Error("Failed to save imported recipe");
   }
+  await jobLogger.completeStep("save_recipe", { createdRecipeId: createdId });
 
-  // Save the first uploaded image as the recipe image
+  // Step 4: Save uploaded image as recipe image
+  await jobLogger.startStep("save_image");
   if (files.length > 0) {
     const firstFile = files[0];
 
-    if (!firstFile) {
-      return;
-    }
+    if (firstFile) {
+      try {
+        const imageBytes = Buffer.from(firstFile.data, "base64");
+        const imagePath = await saveImageBytes(imageBytes, recipeId);
 
-    try {
-      const imageBytes = Buffer.from(firstFile.data, "base64");
-      const imagePath = await saveImageBytes(imageBytes, recipeId);
-
-      await addRecipeImages(createdId, [{ image: imagePath, order: 0 }]);
-      log.debug({ recipeId: createdId }, "Saved first uploaded image as recipe image");
-    } catch (imageError) {
-      // Log but don't fail the import if image saving fails
-      log.warn({ err: imageError, recipeId: createdId }, "Failed to save uploaded image");
+        await addRecipeImages(createdId, [{ image: imagePath, order: 0 }]);
+        log.debug({ recipeId: createdId }, "Saved first uploaded image as recipe image");
+        await jobLogger.completeStep("save_image", { imagePath });
+      } catch (imageError) {
+        log.warn({ err: imageError, recipeId: createdId }, "Failed to save uploaded image");
+        await jobLogger.failStep("save_image", "Failed to save uploaded image (non-fatal)");
+      }
+    } else {
+      await jobLogger.skipStep("save_image", "No valid file");
     }
+  } else {
+    await jobLogger.skipStep("save_image", "No files provided");
   }
 
+  // Step 5: Emit result
+  await jobLogger.startStep("emit_result");
   const dashboardDto = await dashboardRecipe(createdId);
 
   if (dashboardDto) {
     log.info({ jobId: job.id, recipeId: createdId }, "Image recipe imported successfully");
 
-    // Emit imported event (replaces skeleton with actual recipe)
-    // Image import is always AI-based, so no processing will follow - show imported toast
     emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
       recipe: dashboardDto,
       pendingRecipeId: recipeId,
       toast: "imported",
     });
-
-    // Note: No auto-tagging job queued - image import is always AI-based,
-    // and AI extraction prompts already include auto-tagging instructions
   }
+
+  await jobLogger.completeStep("emit_result");
+  await jobLogger.complete({ recipeId: createdId, title: parsedRecipe.title });
 }
 
 /**
