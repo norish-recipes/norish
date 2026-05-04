@@ -21,6 +21,7 @@ export {
 // Helpers
 export { generateJobId, isJobInQueue } from "./helpers";
 export { createOperationAwareQueue } from "./operation-aware-queue";
+export { JobLogger } from "./job-logger";
 
 // Registry - centralized lifecycle
 export { initializeQueues, getQueues, closeAllQueues } from "./registry";
