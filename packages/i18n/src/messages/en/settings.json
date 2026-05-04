@@ -624,6 +624,75 @@
       "invalidJson": "Invalid JSON format",
       "failedToSave": "Failed to save",
       "failedToRestore": "Failed to restore defaults"
+    },
+    "jobs": {
+      "title": "Job Queue",
+      "description": "Monitor background processing jobs",
+      "empty": "No jobs found",
+      "filters": {
+        "allQueues": "All Queues",
+        "allStatuses": "All Statuses"
+      },
+      "status": {
+        "queued": "Queued",
+        "active": "In Progress",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "stepStatus": {
+        "pending": "Pending",
+        "active": "Running",
+        "completed": "Done",
+        "failed": "Failed",
+        "skipped": "Skipped"
+      },
+      "queues": {
+        "recipe-import": "Recipe Import",
+        "image-recipe-import": "Image Import",
+        "paste-recipe-import": "Paste Import",
+        "caldav-sync": "CalDAV Sync",
+        "scheduled-tasks": "Scheduled Tasks",
+        "nutrition-estimation": "Nutrition",
+        "auto-tagging": "Auto Tagging",
+        "auto-categorization": "Auto Categorization",
+        "allergy-detection": "Allergy Detection"
+      },
+      "detail": {
+        "title": "Job Details",
+        "jobId": "Job ID",
+        "queue": "Queue",
+        "status": "Status",
+        "user": "User",
+        "recipe": "Recipe",
+        "description": "Description",
+        "aiModel": "AI Model",
+        "startedAt": "Started",
+        "completedAt": "Finished",
+        "createdAt": "Created",
+        "duration": "Duration",
+        "error": "Error",
+        "steps": "Pipeline Steps",
+        "input": "Input",
+        "result": "Result"
+      },
+      "stats": {
+        "total": "Total",
+        "active": "Active",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "actions": {
+        "purge": "Purge Old Jobs",
+        "purgeConfirm": "Delete jobs older than {days} days?",
+        "purged": "Deleted {count} old job(s)",
+        "refresh": "Refresh",
+        "viewDetails": "View Details"
+      },
+      "pagination": {
+        "showing": "Showing {from}-{to} of {total}",
+        "next": "Next",
+        "previous": "Previous"
+      }
     }
   }
 }
