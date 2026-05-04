@@ -35,6 +35,7 @@ import { emitByPolicy } from "@norish/trpc/helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { JobLogger } from "../job-logger";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:paste-import");
@@ -156,6 +157,26 @@ export async function processPasteImportJob(
     "Processing paste import job"
   );
 
+  const isStructured = structuredRecipes && structuredRecipes.length > 0;
+
+  // Create job logger
+  const jobLogger = await JobLogger.create({
+    jobId: job.id!,
+    queueName: QUEUE_NAMES.PASTE_IMPORT,
+    userId,
+    recipeId: recipeIds[0],
+    description: isStructured
+      ? `${structuredRecipes.length} structured recipe(s)`
+      : "[pasted text]",
+    input: {
+      recipeCount: recipeIds.length,
+      isStructured,
+      textLength: text?.length ?? 0,
+      forceAI: forceAI ?? false,
+    },
+    steps: ["fetch_allergies", "parse_recipes", "save_recipes", "post_processing"],
+  });
+
   const policy = await getRecipePermissionPolicy();
   const viewPolicy = policy.view;
   const ctx: PolicyEmitContext = { userId, householdKey };
@@ -167,6 +188,8 @@ export async function processPasteImportJob(
     });
   });
 
+  // Step 1: Fetch allergies
+  await jobLogger.startStep("fetch_allergies");
   const aiConfig = await getAIConfig();
   let allergyNames: string[] | undefined;
 
@@ -174,15 +197,20 @@ export async function processPasteImportJob(
     const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
 
     allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
-    log.debug(
-      { allergyCount: allergyNames.length },
-      "Fetched household allergies for paste import"
-    );
+    await jobLogger.completeStep("fetch_allergies", { allergyCount: allergyNames.length });
+  } else {
+    await jobLogger.skipStep("fetch_allergies", "autoTagAllergies disabled");
   }
 
+  // Step 2: Parse recipes
+  await jobLogger.startStep("parse_recipes");
   const createdRecipeIds: string[] = [];
 
-  if (structuredRecipes && structuredRecipes.length > 0) {
+  if (isStructured) {
+    // Step 3: Save structured recipes
+    await jobLogger.completeStep("parse_recipes", { mode: "structured", count: structuredRecipes.length });
+    await jobLogger.startStep("save_recipes");
+
     for (const structuredRecipe of structuredRecipes) {
       const createdId = await createStructuredRecipe(structuredRecipe, userId, householdKey);
 
@@ -194,25 +222,44 @@ export async function processPasteImportJob(
     }
 
     if (createdRecipeIds.length === 0) {
+      await jobLogger.failStep("save_recipes", "No valid recipes found in structured paste input.");
+      await jobLogger.fail("No valid recipes found in structured paste input.");
       throw new Error("No valid recipes found in structured paste input.");
     }
+
+    await jobLogger.completeStep("save_recipes", { createdCount: createdRecipeIds.length });
   } else {
     const recipeId = recipeIds[0];
 
     if (!recipeId) {
+      await jobLogger.failStep("parse_recipes", "Missing recipe ID");
+      await jobLogger.fail("Missing recipe ID for paste import.");
       throw new Error("Missing recipe ID for paste import.");
     }
 
+    if (aiConfig?.model) {
+      await jobLogger.setAiModel(aiConfig.model);
+    }
+
     const parseResult = await parseFromPastedText(text, recipeId, allergyNames, forceAI);
+    await jobLogger.completeStep("parse_recipes", { mode: "ai", title: parseResult.recipe.title });
+
+    // Step 3: Save recipe
+    await jobLogger.startStep("save_recipes");
     const createdId = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
 
     if (!createdId) {
+      await jobLogger.failStep("save_recipes", "Failed to save imported recipe");
+      await jobLogger.fail("Failed to save imported recipe");
       throw new Error("Failed to save imported recipe");
     }
 
     createdRecipeIds.push(createdId);
+    await jobLogger.completeStep("save_recipes", { createdRecipeId: createdId });
   }
 
+  // Step 4: Post-processing
+  await jobLogger.startStep("post_processing");
   const queues = getQueues();
 
   for (const createdId of createdRecipeIds) {
@@ -222,7 +269,7 @@ export async function processPasteImportJob(
       continue;
     }
 
-    const usedAI = !structuredRecipes || structuredRecipes.length === 0;
+    const usedAI = !isStructured;
 
     log.info({ jobId: job.id, recipeId: createdId, usedAI }, "Pasted recipe imported successfully");
 
@@ -246,6 +293,9 @@ export async function processPasteImportJob(
       });
     }
   }
+
+  await jobLogger.completeStep("post_processing", { recipeCount: createdRecipeIds.length });
+  await jobLogger.complete({ recipeIds: createdRecipeIds });
 
   return { recipeIds: createdRecipeIds };
 }
