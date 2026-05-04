@@ -1,6 +1,7 @@
 import type { Job } from "bullmq";
 import { Worker } from "bullmq";
 
+import { deleteOldJobLogs } from "@norish/db/repositories/job-logs";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
@@ -17,7 +18,8 @@ type ScheduledTaskType =
   | "media-cleanup"
   | "calendar-cleanup"
   | "groceries-cleanup"
-  | "video-temp-cleanup";
+  | "video-temp-cleanup"
+  | "job-logs-cleanup";
 
 interface ScheduledTaskJobData {
   taskType: ScheduledTaskType;
@@ -86,6 +88,17 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
     case "video-temp-cleanup": {
       await cleanupOldTempFiles();
       log.info("Video temp cleanup completed");
+      break;
+    }
+
+    case "job-logs-cleanup": {
+      // Delete job logs older than 30 days
+      const cutoff = new Date();
+
+      cutoff.setDate(cutoff.getDate() - 30);
+      const deleted = await deleteOldJobLogs(cutoff);
+
+      log.info({ deleted }, "Job logs cleanup completed");
       break;
     }
 
