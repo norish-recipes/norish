@@ -36,6 +36,7 @@ import {
   WORKER_CONCURRENCY,
 } from "../config";
 import { withTimeout } from "../helpers";
+import { JobLogger } from "../job-logger";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:recipe-import");
@@ -53,6 +54,17 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     "Processing recipe import job"
   );
 
+  // Create job logger for step tracking
+  const jobLogger = await JobLogger.create({
+    jobId: job.id!,
+    queueName: QUEUE_NAMES.RECIPE_IMPORT,
+    userId,
+    recipeId,
+    description: url,
+    input: { url, forceAI: job.data.forceAI ?? false },
+    steps: ["check_existing", "fetch_allergies", "parse_recipe", "save_recipe", "post_processing"],
+  });
+
   const policy = await getRecipePermissionPolicy();
   const viewPolicy = policy.view;
   const ctx: PolicyEmitContext = { userId, householdKey };
@@ -60,7 +72,8 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   // Emit import started event
   emitByPolicy(recipeEmitter, viewPolicy, ctx, "importStarted", { recipeId, url });
 
-  // Check if recipe already exists (policy-aware)
+  // Step 1: Check if recipe already exists (policy-aware)
+  await jobLogger.startStep("check_existing");
   const existingCheck = await recipeExistsByUrlForPolicy(url, userId, householdUserIds, viewPolicy);
 
   if (existingCheck.exists && existingCheck.existingRecipeId) {
@@ -72,8 +85,6 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
         "Recipe already exists, returning existing"
       );
 
-      // Include pendingRecipeId so client can remove the skeleton
-      // Show imported toast since no processing will follow for existing recipes
       emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
         recipe: dashboardDto,
         pendingRecipeId: recipeId,
@@ -81,10 +92,19 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       });
     }
 
+    await jobLogger.completeStep("check_existing", {
+      alreadyExists: true,
+      existingRecipeId: existingCheck.existingRecipeId,
+    });
+    await jobLogger.complete({ result: "already_exists", existingRecipeId: existingCheck.existingRecipeId });
+
     return;
   }
 
-  // Fetch household allergies for targeted allergy detection (only if autoTagAllergies is enabled)
+  await jobLogger.completeStep("check_existing", { alreadyExists: false });
+
+  // Step 2: Fetch household allergies
+  await jobLogger.startStep("fetch_allergies");
   const aiConfig = await getAIConfig();
   let allergyNames: string[] | undefined;
 
@@ -96,11 +116,14 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       { allergyCount: allergyNames.length, allergies: allergyNames },
       "Fetched household allergies"
     );
+    await jobLogger.completeStep("fetch_allergies", { allergyCount: allergyNames.length, allergies: allergyNames });
   } else {
     log.debug("Auto-tag allergies disabled, skipping allergy detection");
+    await jobLogger.skipStep("fetch_allergies", "autoTagAllergies disabled");
   }
 
-  // Parse and create recipe
+  // Step 3: Parse recipe from URL
+  await jobLogger.startStep("parse_recipe");
   const userTokens = await getDecryptedTokensByUserId(userId);
   const parseResult = await withTimeout(
     () =>
@@ -117,15 +140,34 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
 
   log.debug({ parseResult }, "Recipe parse result");
   if (!parseResult.recipe) {
+    await jobLogger.failStep("parse_recipe", "Failed to parse recipe from URL");
+    await jobLogger.fail("Failed to parse recipe from URL");
     throw new Error("Failed to parse recipe from URL");
   }
 
+  if (parseResult.usedAI && aiConfig?.model) {
+    await jobLogger.setAiModel(aiConfig.model);
+  }
+
+  await jobLogger.completeStep("parse_recipe", {
+    usedAI: parseResult.usedAI,
+    title: parseResult.recipe.title,
+  });
+
+  // Step 4: Save recipe to database
+  await jobLogger.startStep("save_recipe");
   const createdId = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
 
   if (!createdId) {
+    await jobLogger.failStep("save_recipe", "Failed to save imported recipe");
+    await jobLogger.fail("Failed to save imported recipe");
     throw new Error("Failed to save imported recipe");
   }
 
+  await jobLogger.completeStep("save_recipe", { createdRecipeId: createdId });
+
+  // Step 5: Post-processing (emit events, trigger follow-up jobs)
+  await jobLogger.startStep("post_processing");
   const dashboardDto = await dashboardRecipe(createdId);
 
   if (dashboardDto) {
@@ -134,8 +176,6 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       "Recipe imported successfully"
     );
 
-    // If AI was used, no processing will follow - show imported toast
-    // If AI was NOT used, auto-tagging/allergy detection will follow - no toast needed
     emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
       recipe: dashboardDto,
       pendingRecipeId: recipeId,
@@ -143,7 +183,6 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     });
 
     // Trigger auto-tagging only if AI was NOT used for extraction
-    // (AI extraction already includes auto-tagging instructions in the prompt)
     if (!parseResult.usedAI) {
       const queues = getQueues();
 
@@ -153,16 +192,12 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
         householdKey,
       });
 
-      // Trigger allergy detection for structured imports
-      // (AI extraction already handles allergy detection inline)
       await addAllergyDetectionJob(queues.allergyDetection, {
         recipeId: createdId,
         userId,
         householdKey,
       });
 
-      // Trigger auto-categorization for structured imports without categories
-      // (AI extraction already includes categorization in the prompt)
       if (!parseResult.recipe.categories?.length) {
         await addAutoCategorizationJob(queues.autoCategorization, {
           recipeId: createdId,
@@ -172,6 +207,15 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       }
     }
   }
+
+  await jobLogger.completeStep("post_processing", {
+    triggeredFollowUp: !parseResult.usedAI,
+  });
+  await jobLogger.complete({
+    recipeId: createdId,
+    title: parseResult.recipe.title,
+    usedAI: parseResult.usedAI,
+  });
 }
 
 /**
@@ -200,6 +244,18 @@ async function handleJobFailed(
     },
     "Recipe import job failed"
   );
+
+  // Log failure to job_logs (find existing log by jobId)
+  if (isFinalFailure) {
+    const { findJobLogByJobId, markJobFailed: markFailed } = await import(
+      "@norish/db/repositories/job-logs"
+    );
+    const existingLog = await findJobLogByJobId(job.id!, QUEUE_NAMES.RECIPE_IMPORT);
+
+    if (existingLog) {
+      await markFailed(existingLog.id, error.message || "Unknown error");
+    }
+  }
 
   await deleteRecipeImagesDir(recipeId);
 
