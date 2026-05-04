@@ -48,6 +48,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
     description: `${files.length} image(s)`,
     input: { fileCount: files.length, filenames: files.map((f) => f.filename) },
     steps: ["fetch_allergies", "ai_extraction", "save_recipe", "save_image", "emit_result"],
+    attempt: job.attemptsMade + 1,
   });
 
   const policy = await getRecipePermissionPolicy();

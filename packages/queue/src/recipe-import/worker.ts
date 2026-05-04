@@ -63,6 +63,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     description: url,
     input: { url, forceAI: job.data.forceAI ?? false },
     steps: ["check_existing", "fetch_allergies", "parse_recipe", "save_recipe", "post_processing"],
+    attempt: job.attemptsMade + 1,
   });
 
   const policy = await getRecipePermissionPolicy();

@@ -175,6 +175,7 @@ export async function processPasteImportJob(
       forceAI: forceAI ?? false,
     },
     steps: ["fetch_allergies", "parse_recipes", "save_recipes", "post_processing"],
+    attempt: job.attemptsMade + 1,
   });
 
   const policy = await getRecipePermissionPolicy();

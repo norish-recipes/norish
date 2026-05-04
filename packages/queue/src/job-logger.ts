@@ -67,15 +67,35 @@ export class JobLogger {
   }
 
   /**
-   * Create a new job log and mark it as active.
+   * Create a new job log (or reuse existing one for retried jobs) and mark it as active.
    */
-  static async create(options: JobLoggerOptions): Promise<JobLogger> {
+  static async create(options: JobLoggerOptions & { attempt?: number }): Promise<JobLogger> {
     const steps: JobStepRecord[] = options.steps.map((name) => ({
       name,
       status: "pending",
     }));
 
     try {
+      // For retried jobs (attempt > 1), find and reuse the existing log entry
+      if (options.attempt && options.attempt > 1) {
+        const { findJobLogByJobId, markJobActive: reactivate, updateJobSteps: resetSteps } =
+          await import("@norish/db/repositories/job-logs");
+        const existing = await findJobLogByJobId(options.jobId, options.queueName);
+
+        if (existing) {
+          // Reset the log for the new attempt
+          await reactivate(existing.id);
+          await resetSteps(existing.id, steps);
+
+          log.debug(
+            { logId: existing.id, queueName: options.queueName, attempt: options.attempt },
+            "Reusing existing job log for retry"
+          );
+
+          return new JobLogger(existing.id, steps, options.queueName);
+        }
+      }
+
       const logId = await createJobLog({
         jobId: options.jobId,
         queueName: options.queueName,
