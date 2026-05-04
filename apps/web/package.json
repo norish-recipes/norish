@@ -84,6 +84,7 @@
     "tailwindcss": "catalog:",
     "tsdown": "^0.21.0",
     "tsx": "4.21.0",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"
