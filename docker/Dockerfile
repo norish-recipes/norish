@@ -56,6 +56,11 @@ COPY packages/ui/package.json ./packages/ui/package.json
 COPY tooling/eslint/package.json ./tooling/eslint/package.json
 COPY tooling/prettier/package.json ./tooling/prettier/package.json
 COPY tooling/tailwind/package.json ./tooling/tailwind/package.json
+COPY tooling/tailwind/hero.ts ./tooling/tailwind/hero.ts
+COPY tooling/tailwind/native-theme.css ./tooling/tailwind/native-theme.css
+COPY tooling/tailwind/native-theme.js ./tooling/tailwind/native-theme.js
+COPY tooling/tailwind/postcss-config.js ./tooling/tailwind/postcss-config.js
+COPY tooling/tailwind/theme.css ./tooling/tailwind/theme.css
 COPY tooling/typescript/package.json ./tooling/typescript/package.json
 
 # patches (required for patchedDependencies in pnpm-workspace.yaml)
