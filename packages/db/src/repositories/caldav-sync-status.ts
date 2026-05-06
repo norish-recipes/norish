@@ -1,5 +1,3 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
-
 import type {
   CaldavSyncStatus,
   CaldavSyncStatusDto,
@@ -7,6 +5,8 @@ import type {
   CaldavSyncStatusUpdateDto,
   CaldavSyncStatusViewDto,
 } from "@norish/shared/contracts/dto/caldav-sync-status";
+
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@norish/db/drizzle";
 import { caldavSyncStatus, plannedItems } from "@norish/db/schema";
 import {

@@ -1,8 +1,8 @@
 "use client";
 
+import type { AIConfig, AutoTaggingMode } from "@norish/config/zod/server-config";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
-import SecretInput from "@/components/shared/secret-input";
-import { useAvailableModelsQuery } from "@/hooks/admin";
 import { BeakerIcon, CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import {
   Autocomplete,
@@ -15,11 +15,12 @@ import {
   Switch,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import type { AIConfig, AutoTaggingMode } from "@norish/config/zod/server-config";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
+
+import { useAvailableModelsQuery } from "@/hooks/admin";
+import SecretInput from "@/components/shared/secret-input";
 
 interface AIConfigFormProps {
   onDirtyChange?: (isDirty: boolean) => void;

@@ -1,14 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
-import AIActionButton from "@/components/shared/ai-action-button";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { BeakerIcon, BoltIcon, CubeIcon, FireIcon } from "@heroicons/react/16/solid";
 import { Card, CardBody, Divider, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import NutritionPortionControl from "./nutrition-portion-control";
+
+import { usePermissionsContext } from "@/context/permissions-context";
+import AIActionButton from "@/components/shared/ai-action-button";
+import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
 
 type NutritionRecipeLike = {
   calories: number | null;

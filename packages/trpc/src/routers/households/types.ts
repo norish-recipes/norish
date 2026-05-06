@@ -1,9 +1,9 @@
 import type { z } from "zod";
-
 import type {
   HouseholdAdminSettingsDto,
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
+
 import {
   HouseholdAdminTransferredEventSchema,
   HouseholdAllergiesUpdatedEventSchema,

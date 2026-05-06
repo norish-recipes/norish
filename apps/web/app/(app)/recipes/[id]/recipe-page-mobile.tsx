@@ -1,3 +1,15 @@
+import { ArrowLeftIcon } from "@heroicons/react/16/solid";
+import { Card, CardBody, Divider, Link } from "@heroui/react";
+import { useTranslations } from "next-intl";
+import {
+  getShowFavoritesPreference,
+  getShowRatingsPreference,
+} from "@norish/shared/lib/user-preferences";
+import StarRating from "@norish/ui/star-rating";
+
+import AuthorChip from "./components/author-chip";
+import { useRecipeContextRequired } from "./context";
+
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
 import AmountDisplayToggle from "@/app/(app)/recipes/[id]/components/amount-display-toggle";
@@ -18,18 +30,7 @@ import HeartButton from "@/components/shared/heart-button";
 import { useUserContext } from "@/context/user-context";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
-import { ArrowLeftIcon } from "@heroicons/react/16/solid";
-import { Card, CardBody, Divider, Link } from "@heroui/react";
-import { useTranslations } from "next-intl";
 
-import {
-  getShowFavoritesPreference,
-  getShowRatingsPreference,
-} from "@norish/shared/lib/user-preferences";
-import StarRating from "@norish/ui/star-rating";
-
-import AuthorChip from "./components/author-chip";
-import { useRecipeContextRequired } from "./context";
 
 export default function RecipePageMobile() {
   const {

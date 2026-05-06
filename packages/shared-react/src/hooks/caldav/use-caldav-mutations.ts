@@ -1,5 +1,3 @@
-import { useMutation } from "@tanstack/react-query";
-
 import type {
   CaldavConfigQueryResult,
   CaldavMutationsResult,
@@ -10,6 +8,9 @@ import type {
   SaveCaldavConfigInput,
   TestConnectionInput,
 } from "./types";
+
+import { useMutation } from "@tanstack/react-query";
+
 
 export function resolveCaldavConfigVersion(
   inputVersion?: number,

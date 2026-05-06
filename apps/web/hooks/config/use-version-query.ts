@@ -2,6 +2,8 @@
 
 import { createUseVersionQuery } from "@norish/shared-react/hooks";
 
+import { env } from "~/env";
+
 export const useVersionQuery = createUseVersionQuery({
-  getCurrentVersion: () => process.env.NEXT_PUBLIC_APP_VERSION,
+  getCurrentVersion: () => env.NEXT_PUBLIC_APP_VERSION,
 });

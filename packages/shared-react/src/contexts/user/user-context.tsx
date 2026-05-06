@@ -1,6 +1,7 @@
+import type { User } from "@norish/shared/contracts";
+
 import { createContext, useContext, useMemo } from "react";
 
-import type { User } from "@norish/shared/contracts";
 
 export type UserContextValue = {
   user: User | null;

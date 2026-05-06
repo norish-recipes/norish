@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const logger = createClientLogger("wake-lock");

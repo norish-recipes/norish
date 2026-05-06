@@ -1,12 +1,14 @@
 "use client";
 
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+
 import { memo } from "react";
-import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
-import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Checkbox } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { RecurrencePill } from "@/app/(app)/groceries/components/recurrence-pill";
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
+
 
 interface GroceryItemProps {
   grocery: GroceryDto;

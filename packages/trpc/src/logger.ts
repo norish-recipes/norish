@@ -1,4 +1,5 @@
 import type { NewApiLog } from "@norish/db/schema/api-logs";
+
 import { db } from "@norish/db/drizzle";
 import { apiLogs } from "@norish/db/schema/api-logs";
 import { trpcLogger as log } from "@norish/shared-server/logger";

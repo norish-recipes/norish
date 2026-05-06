@@ -10,10 +10,6 @@
  */
 
 // Import defaults for fallback when DB has no value
-import { getConfig } from "@norish/db/repositories/server-config";
-import { DEFAULT_LOCALE } from "@norish/i18n/config";
-import { getBundledLocales } from "@norish/i18n/locales";
-
 import type {
   AIConfig,
   AutoTaggingMode,
@@ -26,6 +22,11 @@ import type {
   UnitsMap,
   VideoConfig,
 } from "./zod/server-config";
+
+import { getConfig } from "@norish/db/repositories/server-config";
+import { DEFAULT_LOCALE } from "@norish/i18n/config";
+import { getBundledLocales } from "@norish/i18n/locales";
+
 import defaultContentIndicators from "./content-indicators.default.json";
 import { SERVER_CONFIG } from "./env-config-server";
 import defaultRecurrenceConfig from "./recurrence-config.default.json";

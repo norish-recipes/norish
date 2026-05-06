@@ -1,6 +1,6 @@
-import { z } from "zod";
-
 import type { ServerConfigKey } from "@norish/config/zod/server-config";
+
+import { z } from "zod";
 import {
   testGitHubProvider,
   testGoogleProvider,

@@ -1,5 +1,8 @@
 "use client";
 
+import { TRPCClientError } from "@trpc/client";
+import { createRecipeDetailContext } from "@norish/shared-react/hooks";
+
 import { useRecipesContext } from "@/context/recipes-context";
 import { useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
@@ -19,9 +22,7 @@ import {
 } from "@/hooks/recipes";
 import { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks";
 import { useActiveAllergies } from "@/hooks/user";
-import { TRPCClientError } from "@trpc/client";
 
-import { createRecipeDetailContext } from "@norish/shared-react/hooks";
 
 const {
   RecipeDetailProvider: RecipeContextProvider,

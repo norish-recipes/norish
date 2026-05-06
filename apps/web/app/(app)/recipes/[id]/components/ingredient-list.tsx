@@ -1,17 +1,18 @@
 "use client";
 
+import type { UnitsMap } from "@norish/config/zod/server-config";
+
 import { useState } from "react";
-import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
-import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { CheckIcon } from "@heroicons/react/20/solid";
 import { useLocale } from "next-intl";
-
-import type { UnitsMap } from "@norish/config/zod/server-config";
 import { useUnitFormatter as useSharedUnitFormatter } from "@norish/shared-react/hooks";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 
 import { useRecipeContextRequired } from "../context";
+
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
+import { useAmountDisplayPreference } from "@/hooks/use-amount-display-preference";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 
 type IngredientLike = {
   ingredientName: string;

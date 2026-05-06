@@ -1,8 +1,8 @@
-import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
-
 import type { CreateHouseholdHooksOptions, HouseholdCacheHelpers } from "./types";
+
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 export type HouseholdSubscriptionToastAdapter = {
   showKickedToast: () => void;

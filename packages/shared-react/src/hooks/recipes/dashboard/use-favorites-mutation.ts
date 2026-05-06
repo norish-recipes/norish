@@ -1,6 +1,7 @@
+import type { CreateRecipeHooksOptions } from "../types";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { CreateRecipeHooksOptions } from "../types";
 import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../../optimistic-updates";
 
 export type FavoritesMutationResult = {

@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiltersPanel } from "@/components/Panel/consumers";
-import { useRecipesContext } from "@/context/recipes-context";
-import { useAutoHide } from "@/hooks/auto-hide";
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
+
+import { FiltersPanel } from "@/components/Panel/consumers";
+import { useRecipesContext } from "@/context/recipes-context";
+import { useAutoHide } from "@/hooks/auto-hide";
 
 export default function FloatingRecipeChip() {
   const { total, isLoading } = useRecipesContext();

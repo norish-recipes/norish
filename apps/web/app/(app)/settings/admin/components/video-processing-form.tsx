@@ -1,8 +1,8 @@
 "use client";
 
+import type { TranscriptionProvider } from "@norish/config/zod/server-config";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
-import SecretInput from "@/components/shared/secret-input";
-import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
 import { CheckIcon } from "@heroicons/react/16/solid";
 import {
   Autocomplete,
@@ -15,8 +15,6 @@ import {
   Switch,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import {
   isCloudTranscriptionProvider,
   ServerConfigKeys,
@@ -25,6 +23,9 @@ import {
 } from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
+
+import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
+import SecretInput from "@/components/shared/secret-input";
 
 interface VideoProcessingFormProps {
   onDirtyChange?: (isDirty: boolean) => void;

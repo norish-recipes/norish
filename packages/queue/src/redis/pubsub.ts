@@ -5,10 +5,11 @@
  * All subscriptions use createSubscription() with async iterators.
  */
 
-import { on } from "node:events";
-import superjson from "superjson";
-
 import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime-envelope";
+
+import { on } from "node:events";
+
+import superjson from "superjson";
 import { getCurrentOperationId } from "@norish/shared-server/lib/operation-context";
 import { redisLogger } from "@norish/shared-server/logger";
 import { ENVELOPE_VERSION } from "@norish/shared/contracts/realtime-envelope";

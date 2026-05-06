@@ -1,7 +1,8 @@
-import dns from "dns/promises";
 import type { Browser } from "playwright-core";
-import { chromium } from "playwright-core";
 
+import dns from "dns/promises";
+
+import { chromium } from "playwright-core";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { serverLogger as log } from "@norish/shared-server/logger";
 

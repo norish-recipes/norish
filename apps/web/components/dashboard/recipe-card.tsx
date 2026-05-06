@@ -2,16 +2,9 @@
 
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
-import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
-import { usePermissionsContext } from "@/context/permissions-context";
-import { useUserContext } from "@/context/user-context";
-import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
-import { useAppStore } from "@/stores/useAppStore";
 import { CalendarDaysIcon, ShoppingBagIcon, TrashIcon } from "@heroicons/react/20/solid";
 import { Card, CardBody, useDisclosure } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { formatMinutesHM } from "@norish/shared/lib/helpers";
 import {
@@ -23,8 +16,16 @@ import { DeleteRecipeModal } from "../shared/delete-recipe-modal";
 import DoubleTapContainer from "../shared/double-tap-container";
 import FallbackImage from "../shared/fallback-image";
 import SwipeableRow, { SwipeableRowRef, SwipeAction } from "../shared/swipable-row";
+
 import RecipeMetadata from "./recipe-metadata";
 import RecipeTags from "./recipe-tags";
+
+import { useAppStore } from "@/stores/useAppStore";
+import { useRecipePrefetch } from "@/hooks/recipes/use-recipe-prefetch";
+import { useUserContext } from "@/context/user-context";
+import { usePermissionsContext } from "@/context/permissions-context";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
 
 type RecipeCardProps = {
   recipe: RecipeDashboardDTO;

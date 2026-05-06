@@ -1,7 +1,8 @@
-import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipeQueryResult } from "./use-recipe-query";
+
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 export type RecipeSubscriptionCallbacks = {
   onConverted?: (payload: unknown) => void;

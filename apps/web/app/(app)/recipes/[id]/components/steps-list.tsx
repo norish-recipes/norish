@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { SmartInstruction } from "@/components/recipe/smart-instruction";
-import ImageLightbox from "@/components/shared/image-lightbox";
-import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { CheckIcon } from "@heroicons/react/16/solid";
 
 import { useRecipeContext } from "../context";
+
+import { SmartInstruction } from "@/components/recipe/smart-instruction";
+import ImageLightbox from "@/components/shared/image-lightbox";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
+
 
 type StepLike = {
   step: string;

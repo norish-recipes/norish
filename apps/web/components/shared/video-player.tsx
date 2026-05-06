@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import VideoPlayerSkeleton from "@/components/skeleton/video-player-skeleton";
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
@@ -12,12 +11,13 @@ import {
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-
 import {
   hasDocumentFullscreenApi,
   hasNativeVideoFullscreen,
   isFullscreenControlSupported,
 } from "@norish/shared/lib/video-fullscreen";
+
+import VideoPlayerSkeleton from "@/components/skeleton/video-player-skeleton";
 
 export interface VideoPlayerProps {
   src: string;

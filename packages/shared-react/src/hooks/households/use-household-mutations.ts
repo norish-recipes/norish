@@ -1,12 +1,12 @@
-import { useMutation } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
-
 import type {
   CreateHouseholdHooksOptions,
   HouseholdMutationsResult,
   HouseholdQueryResult,
 } from "./types";
+
+import { useMutation } from "@tanstack/react-query";
 
 type CreateUseHouseholdMutationsOptions = CreateHouseholdHooksOptions & {
   useHouseholdQuery: () => HouseholdQueryResult;

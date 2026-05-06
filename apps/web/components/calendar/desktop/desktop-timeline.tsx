@@ -2,10 +2,8 @@
 
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
-import { SLOT_ORDER } from "@/components/calendar/mobile/types";
-import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
+import type { Slot } from "@norish/shared/contracts";
+
 import {
   DndContext,
   DragOverlay,
@@ -18,14 +16,18 @@ import {
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
-
-import type { Slot } from "@norish/shared/contracts";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { dateKey, eachDayOfInterval } from "@norish/shared/lib/helpers";
 
 import { usePrependAnchorRestore } from "../use-prepend-anchor-restore";
+
 import { DesktopDayCard } from "./desktop-day-card";
 import { DesktopDragOverlay } from "./desktop-drag-overlay";
 import { DesktopScrollToToday } from "./desktop-scroll-to-today";
+
+import { CalendarSkeletonDesktop } from "@/components/skeleton/calendar-skeleton";
+import { SLOT_ORDER } from "@/components/calendar/mobile/types";
+import { useCalendarContext } from "@/app/(app)/calendar/context";
 
 function startOfDay(date: Date): Date {
   const d = new Date(date);

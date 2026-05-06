@@ -1,5 +1,4 @@
 import type { AutoTaggingMode, RecipePermissionPolicy } from "@norish/config/zod/server-config";
-
 import type { NormalizedPermissionsData, PermissionAccessInput, PermissionsData } from "./types";
 
 const DEFAULT_RECIPE_POLICY: RecipePermissionPolicy = {

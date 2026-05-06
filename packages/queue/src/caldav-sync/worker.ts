@@ -1,9 +1,9 @@
 import type { Job } from "bullmq";
-
 import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 import type { Slot } from "@norish/shared/contracts";
 import type { CaldavSyncStatusInsertDto } from "@norish/shared/contracts/dto/caldav-sync-status";
 import type { CaldavSubscriptionEvents } from "@norish/trpc";
+
 import {
   createCaldavSyncStatus,
   getCaldavSyncStatusByItemId,

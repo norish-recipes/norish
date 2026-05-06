@@ -2,7 +2,6 @@ import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { RecipeCategory, Slot } from "@norish/shared/contracts";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-
 import type { ImageImportFile } from "./contracts/job-types";
 
 export interface QueueParseRecipeResult {

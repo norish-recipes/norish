@@ -2,10 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAutoHide } from "@/hooks/auto-hide";
-import { useTimersEnabledQuery } from "@/hooks/config";
-import { useNotificationPermission } from "@/hooks/use-notification-permission";
-import { useTimerStore } from "@/stores/timers";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -19,9 +15,13 @@ import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import useSound from "use-sound";
-
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
+
+import { useTimerStore } from "@/stores/timers";
+import { useNotificationPermission } from "@/hooks/use-notification-permission";
+import { useTimersEnabledQuery } from "@/hooks/config";
+import { useAutoHide } from "@/hooks/auto-hide";
 
 const logger = createClientLogger("timer-dock");
 

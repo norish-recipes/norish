@@ -1,4 +1,5 @@
 import type { RatingSubscriptionEvents } from "./types";
+
 import { createTypedEmitter, TypedEmitter } from "../../emitter";
 
 declare global {

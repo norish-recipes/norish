@@ -6,8 +6,8 @@
  */
 
 import type { Queue } from "bullmq";
-
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
+
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import { QUEUE_NAMES, recipeImportJobOptions } from "../config";

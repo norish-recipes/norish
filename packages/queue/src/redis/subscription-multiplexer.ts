@@ -12,10 +12,11 @@
  * - Automatic cleanup when all listeners unsubscribe
  */
 
-import { EventEmitter } from "node:events";
 import type Redis from "ioredis";
-import superjson from "superjson";
 
+import { EventEmitter } from "node:events";
+
+import superjson from "superjson";
 import { redisLogger as log } from "@norish/shared-server/logger";
 
 import { createSubscriberClient } from "./client";

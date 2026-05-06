@@ -5,9 +5,10 @@
  * Extracts section headings as `# Section Name` format for frontend rendering.
  */
 
+import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
+
 import { decode } from "html-entities";
 
-import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
 
 export interface ParsedStep {
   step: string;

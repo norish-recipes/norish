@@ -1,10 +1,10 @@
-import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { CaldavSyncStatus, CaldavSyncStatusViewDto } from "@norish/shared/contracts";
 import type { CaldavSubscriptionEvents } from "@norish/trpc";
-import { createClientLogger } from "@norish/shared/lib/logger";
-
 import type { CaldavCacheHelpers, CreateCaldavHooksOptions } from "./types";
+
+import { createClientLogger } from "@norish/shared/lib/logger";
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 const log = createClientLogger("CaldavSubscription");
 

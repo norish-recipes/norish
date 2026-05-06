@@ -1,6 +1,7 @@
+import type { CreateRecipeHooksOptions } from "../types";
+
 import { useQuery } from "@tanstack/react-query";
 
-import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseRecipeAutocomplete({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRecipeAutocomplete(query: string, enabled: boolean) {

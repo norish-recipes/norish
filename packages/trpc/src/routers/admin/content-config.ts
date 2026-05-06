@@ -1,6 +1,6 @@
-import { z } from "zod";
-
 import type { PromptsConfig, TimerKeywordsConfig } from "@norish/config/zod/server-config";
+
+import { z } from "zod";
 import {
   ContentIndicatorsSchema,
   PromptsConfigInputSchema,

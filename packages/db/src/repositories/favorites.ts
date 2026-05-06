@@ -1,8 +1,10 @@
+import type { MutationOutcome } from "./mutation-outcomes";
+
 import { and, eq, inArray } from "drizzle-orm";
 
-import type { MutationOutcome } from "./mutation-outcomes";
 import { db } from "../drizzle";
 import { recipeFavorites } from "../schema";
+
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 export async function addFavorite(userId: string, recipeId: string): Promise<void> {

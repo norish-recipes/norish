@@ -1,8 +1,9 @@
-import { on } from "node:events";
 import type Redis from "ioredis";
 import type { WebSocket } from "ws";
-import superjson from "superjson";
 
+import { on } from "node:events";
+
+import superjson from "superjson";
 import { createSubscriberClient, getPublisherClient } from "@norish/queue/redis/client";
 import { closeMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
 import { trpcLogger as log } from "@norish/shared-server/logger";

@@ -1,9 +1,10 @@
 "use client";
 
+import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
+
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
 
 type Props = {
   status: RecipeShareSummaryDto["status"];

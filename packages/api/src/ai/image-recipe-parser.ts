@@ -1,8 +1,9 @@
-import { generateText, Output } from "ai";
-
 import type { ImageImportFile } from "@norish/queue/contracts/job-types";
 import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+import type { RecipeExtractionOutput } from "./schemas/recipe.schema";
+
+import { generateText, Output } from "ai";
 import { isAIEnabled } from "@norish/config/server-config-loader";
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
 import {
@@ -13,7 +14,7 @@ import {
 } from "@norish/shared-server/ai/types/result";
 import { aiLogger } from "@norish/shared-server/logger";
 
-import type { RecipeExtractionOutput } from "./schemas/recipe.schema";
+
 import {
   getExtractionLogContext,
   normalizeExtractionOutput,

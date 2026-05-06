@@ -1,6 +1,7 @@
+import type { CreateRecipeHooksOptions } from "../types";
+
 import { useMutation } from "@tanstack/react-query";
 
-import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseNutritionMutation({ useTRPC }: CreateRecipeHooksOptions) {
   return function useNutritionMutation(recipeId: string) {

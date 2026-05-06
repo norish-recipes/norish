@@ -1,11 +1,12 @@
 "use client";
 
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+
 import { useMemo } from "react";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 
 import { RecipeSection } from "./recipe-section";
 

@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FiltersPanel } from "@/components/Panel/consumers";
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
 import { FunnelIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
-
 import { cssGlassBackdrop } from "@norish/web/config/css-tokens";
+
+import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
+import { FiltersPanel } from "@/components/Panel/consumers";
 
 type FiltersProps = {
   isGlass: boolean;

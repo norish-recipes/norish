@@ -1,7 +1,8 @@
+import type { CreateHouseholdHooksOptions, HouseholdCacheHelpers, HouseholdData } from "./types";
+
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { CreateHouseholdHooksOptions, HouseholdCacheHelpers, HouseholdData } from "./types";
 
 export function createUseHouseholdCache({ useTRPC }: CreateHouseholdHooksOptions) {
   return function useHouseholdCacheHelpers(): HouseholdCacheHelpers {

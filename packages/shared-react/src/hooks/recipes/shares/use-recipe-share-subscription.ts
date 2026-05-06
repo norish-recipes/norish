@@ -1,9 +1,9 @@
-import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { RecipeShareLifecycleEventDto } from "@norish/shared/contracts";
-
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipeShareCacheHelpers } from "./use-recipe-share-cache";
+
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 export type RecipeShareSubscriptionCallbacks = {
   onEvent?: (payload: RecipeShareLifecycleEventDto) => void;

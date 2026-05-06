@@ -1,10 +1,9 @@
 "use client";
 
 import type { DragEndEvent } from "@dnd-kit/core";
+
 import React, { useCallback, useRef, useState } from "react";
 import NextImage from "next/image";
-import { useRecipeImages, useRecipeVideos } from "@/hooks/recipes";
-import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import {
   closestCenter,
   DndContext,
@@ -31,10 +30,12 @@ import {
   XMarkIcon,
 } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
-
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod/recipe-videos";
 import { createClientLogger } from "@norish/shared/lib/logger";
+
+import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
+import { useRecipeImages, useRecipeVideos } from "@/hooks/recipes";
 
 const log = createClientLogger("MediaGalleryInput");
 

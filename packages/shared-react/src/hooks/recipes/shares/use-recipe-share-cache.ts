@@ -1,7 +1,8 @@
+import type { CreateRecipeHooksOptions } from "../types";
+
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { CreateRecipeHooksOptions } from "../types";
 
 export type RecipeShareCacheHelpers = {
   invalidateRecipeShares: (recipeId: string) => void;

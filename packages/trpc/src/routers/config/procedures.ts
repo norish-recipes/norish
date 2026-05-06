@@ -1,8 +1,6 @@
 import { TRPCError } from "@trpc/server";
-
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
-import { getDatabaseHealth } from "@norish/db/drizzle";
 import {
   getLocaleConfig,
   getRecurrenceConfig,
@@ -11,11 +9,13 @@ import {
   isRegistrationEnabled,
   isTimersEnabled,
 } from "@norish/config/server-config-loader";
+import { getDatabaseHealth } from "@norish/db/drizzle";
 import { listAllTagNames } from "@norish/db/repositories/tags";
 import { getAppVersions, trpcLogger as log } from "@norish/shared-server";
 
 import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
+
 import { healthyResponseSchema, parserHealthSchema } from "./config-openapi-types";
 
 export async function getServiceHealth() {

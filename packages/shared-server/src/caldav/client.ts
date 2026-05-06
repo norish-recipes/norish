@@ -1,6 +1,3 @@
-import { DAVCalendar, DAVClient } from "tsdav";
-import { v4 as uuidv4 } from "uuid";
-
 import type {
   CalDavCalendarInfo,
   CalDavClientOptions,
@@ -8,6 +5,9 @@ import type {
   CreatedEvent,
   CreateEventInput,
 } from "@norish/shared/contracts/dto/caldav";
+
+import { DAVCalendar, DAVClient } from "tsdav";
+import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "@norish/shared-server/logger";
 
 import { buildIcs } from "./ics-helpers";

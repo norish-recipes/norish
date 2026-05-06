@@ -1,6 +1,7 @@
+import type { CreateHouseholdHooksOptions, HouseholdData, HouseholdQueryResult } from "./types";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { CreateHouseholdHooksOptions, HouseholdData, HouseholdQueryResult } from "./types";
 
 export function createUseHouseholdQuery({ useTRPC }: CreateHouseholdHooksOptions) {
   return function useHouseholdQuery(): HouseholdQueryResult {

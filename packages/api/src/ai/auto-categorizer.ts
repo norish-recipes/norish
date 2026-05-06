@@ -1,8 +1,8 @@
-import { generateText, Output } from "ai";
-import { z } from "zod";
-
 import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { RecipeCategory } from "@norish/shared/contracts";
+
+import { generateText, Output } from "ai";
+import { z } from "zod";
 import { isAIEnabled } from "@norish/config/server-config-loader";
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
 import {

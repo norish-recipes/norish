@@ -3,7 +3,6 @@
  */
 
 import type { LanguageModel } from "ai";
-
 import type { AIConfig } from "@norish/config/zod/server-config";
 
 /**
