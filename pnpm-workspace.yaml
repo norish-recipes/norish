@@ -5,7 +5,9 @@ packages:
 
 catalog:
   "@better-auth/api-key": 1.6.9
+  "@better-auth/core": 1.6.9
   "@better-auth/expo": 1.6.9
+  "@better-auth/utils": 0.4.0
   "@eslint/js": ^9.39.4
   "@heroicons/react": 2.2.0
   "@heroui/react": ^2.8.10
@@ -41,7 +43,7 @@ catalog:
   tailwindcss: ^4.2.4
   trpc-to-openapi: ^3.2.0
   turbo: ^2.9.8
-  typescript: 6.0.3
+  typescript: 5.9.3
   vite: ^7.3.1
   vitest: ^4.1.5
   ws: 8.20.0
@@ -59,6 +61,13 @@ onlyBuiltDependencies:
   - ffmpeg-static
   - sharp
   - unrs-resolver
+
+overrides:
+  "@better-auth/api-key": 1.6.9
+  "@better-auth/core": 1.6.9
+  "@better-auth/expo": 1.6.9
+  "@better-auth/utils": 0.4.0
+  drizzle-orm: 0.45.2
 
 patchedDependencies:
   expo-widgets@55.0.7: patches/expo-widgets@55.0.7.patch

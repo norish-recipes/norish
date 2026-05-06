@@ -29,6 +29,8 @@
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
     "@better-auth/api-key": "catalog:",
+    "@better-auth/core": "catalog:",
+    "@better-auth/utils": "catalog:",
     "better-auth": "catalog:",
     "date-fns": "catalog:",
     "drizzle-zod": "0.8.3",

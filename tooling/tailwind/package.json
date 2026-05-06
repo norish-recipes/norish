@@ -22,7 +22,7 @@
     "tailwindcss": "catalog:"
   },
   "peerDependencies": {
-    "@heroui/react": "catalog:"
+    "@heroui/react": "^2.8.10"
   },
   "peerDependenciesMeta": {
     "@heroui/react": {

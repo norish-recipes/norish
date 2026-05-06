@@ -13,7 +13,9 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
+    "@better-auth/core": "catalog:",
     "@better-auth/expo": "catalog:",
+    "@better-auth/utils": "catalog:",
     "@expo/ui": "~55.0.5",
     "@expo/vector-icons": "^15.1.1",
     "@gorhom/bottom-sheet": "^5.2.13",

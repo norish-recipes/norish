@@ -19,7 +19,9 @@
   },
   "dependencies": {
     "@better-auth/api-key": "catalog:",
+    "@better-auth/core": "catalog:",
     "@better-auth/expo": "catalog:",
+    "@better-auth/utils": "catalog:",
     "@norish/config": "workspace:*",
     "@norish/db": "workspace:*",
     "@norish/queue": "workspace:*",
