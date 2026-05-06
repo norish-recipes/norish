@@ -2,8 +2,8 @@
 
 import { createUseVersionQuery } from "@norish/shared-react/hooks";
 
-import { env } from "~/env";
-
 export const useVersionQuery = createUseVersionQuery({
-  getCurrentVersion: () => env.NEXT_PUBLIC_APP_VERSION,
+  // NEXT_PUBLIC values are intentionally exposed to the browser by Next.js.
+  // eslint-disable-next-line no-restricted-properties
+  getCurrentVersion: () => process.env.NEXT_PUBLIC_APP_VERSION,
 });
