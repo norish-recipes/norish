@@ -62,13 +62,6 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
 
-overrides:
-  "@better-auth/api-key": 1.6.9
-  "@better-auth/core": 1.6.9
-  "@better-auth/expo": 1.6.9
-  "@better-auth/utils": 0.4.0
-  drizzle-orm: 0.45.2
-
 patchedDependencies:
   expo-widgets@55.0.7: patches/expo-widgets@55.0.7.patch
 

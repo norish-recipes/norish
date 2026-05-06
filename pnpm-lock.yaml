@@ -7,6 +7,18 @@ settings:
 
 catalogs:
   default:
+    '@better-auth/api-key':
+      specifier: 1.6.9
+      version: 1.6.9
+    '@better-auth/core':
+      specifier: 1.6.9
+      version: 1.6.9
+    '@better-auth/expo':
+      specifier: 1.6.9
+      version: 1.6.9
+    '@better-auth/utils':
+      specifier: 0.4.0
+      version: 0.4.0
     '@eslint/js':
       specifier: ^9.39.4
       version: 9.39.4
@@ -58,6 +70,9 @@ catalogs:
     date-fns:
       specifier: ^4.1.0
       version: 4.1.0
+    drizzle-orm:
+      specifier: 0.45.2
+      version: 0.45.2
     eslint:
       specifier: 9.39.1
       version: 9.39.1
@@ -128,13 +143,6 @@ catalogs:
       specifier: ^5.4.2
       version: 5.4.6
 
-overrides:
-  '@better-auth/api-key': 1.6.9
-  '@better-auth/core': 1.6.9
-  '@better-auth/expo': 1.6.9
-  '@better-auth/utils': 0.4.0
-  drizzle-orm: 0.45.2
-
 patchedDependencies:
   expo-widgets@55.0.7:
     hash: df30fccd39d5145c4f93a9f76b49c7cf588cceee1f18eab77b7878a482238337
@@ -157,13 +165,13 @@ importers:
   apps/mobile:
     dependencies:
       '@better-auth/core':
-        specifier: 1.6.9
+        specifier: 'catalog:'
         version: 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.3.6))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
       '@better-auth/expo':
-        specifier: 1.6.9
+        specifier: 'catalog:'
         version: 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.3.6))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(better-auth@1.6.9(bc2fc0567851f88f615d777858a177eb))(expo-constants@55.0.9)(expo-linking@55.0.8)(expo-network@55.0.9(expo@55.0.8)(react@19.2.4))(expo-web-browser@55.0.10(expo@55.0.8)(react-native@0.85.2(@babel/core@7.29.0)(@react-native/metro-config@0.85.2(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)))
       '@better-auth/utils':
-        specifier: 0.4.0
+        specifier: 'catalog:'
         version: 0.4.0
       '@expo/ui':
         specifier: ~55.0.5
@@ -364,13 +372,13 @@ importers:
   apps/web:
     dependencies:
       '@better-auth/api-key':
-        specifier: 1.6.9
+        specifier: 'catalog:'
         version: 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.6.9(bc2fc0567851f88f615d777858a177eb))
       '@better-auth/core':
-        specifier: 1.6.9
+        specifier: 'catalog:'
         version: 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
       '@better-auth/utils':
-        specifier: 0.4.0
+        specifier: 'catalog:'
         version: 0.4.0
       '@dnd-kit/core':
         specifier: ^6.3.1
@@ -611,7 +619,7 @@ importers:
         specifier: 1.2.0
         version: 1.2.0
       drizzle-orm:
-        specifier: 0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))
       ffmpeg-static:
         specifier: ^5.3.0
@@ -669,16 +677,16 @@ importers:
   packages/auth:
     dependencies:
       '@better-auth/api-key':
-        specifier: 1.6.9
+        specifier: 'catalog:'
         version: 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.6.9(bc2fc0567851f88f615d777858a177eb))
       '@better-auth/core':
-        specifier: 1.6.9
+        specifier: 'catalog:'
         version: 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
       '@better-auth/expo':
-        specifier: 1.6.9
+        specifier: 'catalog:'
         version: 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(better-auth@1.6.9(bc2fc0567851f88f615d777858a177eb))(expo-constants@55.0.9)(expo-linking@55.0.8)(expo-network@55.0.9(expo@55.0.8)(react@19.2.4))(expo-web-browser@55.0.10(expo@55.0.8)(react-native@0.85.2(@babel/core@7.29.0)(@react-native/metro-config@0.85.2(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)))
       '@better-auth/utils':
-        specifier: 0.4.0
+        specifier: 'catalog:'
         version: 0.4.0
       '@norish/config':
         specifier: workspace:*
@@ -764,7 +772,7 @@ importers:
   packages/db:
     dependencies:
       drizzle-orm:
-        specifier: 0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))
       fuse.js:
         specifier: 'catalog:'
@@ -849,7 +857,7 @@ importers:
         specifier: 'catalog:'
         version: 4.1.0
       drizzle-orm:
-        specifier: 0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.20.0)(kysely@0.28.14)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))
       ioredis:
         specifier: 'catalog:'
@@ -883,13 +891,13 @@ importers:
   packages/shared:
     dependencies:
       '@better-auth/api-key':
-        specifier: 1.6.9
+        specifier: 'catalog:'
         version: 1.6.9(@better-auth/core@1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0))(@better-auth/utils@0.4.0)(better-auth@1.6.9(773e3babf3c00411f74e5721ca5c119c))
       '@better-auth/core':
-        specifier: 1.6.9
+        specifier: 'catalog:'
         version: 1.6.9(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.0)(better-call@1.3.5(zod@4.4.2))(jose@6.2.2)(kysely@0.28.14)(nanostores@1.2.0)
       '@better-auth/utils':
-        specifier: 0.4.0
+        specifier: 'catalog:'
         version: 0.4.0
       '@norish/config':
         specifier: workspace:*
@@ -1894,7 +1902,7 @@ packages:
   '@better-auth/api-key@1.6.9':
     resolution: {integrity: sha512-MPDNmvcCwDpix911kFYRn9XCebJjaCNuj16OA//difNCJoPRn2kD6KQ/3+B3rlSWl46x098SgN7Y3e8kU8nIwg==}
     peerDependencies:
-      '@better-auth/core': 1.6.9
+      '@better-auth/core': ^1.6.9
       '@better-auth/utils': 0.4.0
       better-auth: ^1.6.9
 
@@ -1918,9 +1926,9 @@ packages:
   '@better-auth/drizzle-adapter@1.6.9':
     resolution: {integrity: sha512-Lcco5hOGrMgc4XKAkvB6x72eQm4wCcya8IevMg4wBHY9W9GVg8pu23rpRX6VsVQSO4Ux13S7lFwUWtF7/r9aKw==}
     peerDependencies:
-      '@better-auth/core': 1.6.9
+      '@better-auth/core': ^1.6.9
       '@better-auth/utils': 0.4.0
-      drizzle-orm: 0.45.2
+      drizzle-orm: ^0.45.2
     peerDependenciesMeta:
       drizzle-orm:
         optional: true
@@ -1928,7 +1936,7 @@ packages:
   '@better-auth/expo@1.6.9':
     resolution: {integrity: sha512-ch8DRTAWvnn4k1mFvLxi5h9+pg/KWYXJEZ2XANXtdPp84H3qA0mxzFQ//OIuKxm0Ohuubc7WNQD1IsVlKP4/ew==}
     peerDependencies:
-      '@better-auth/core': 1.6.9
+      '@better-auth/core': ^1.6.9
       better-auth: ^1.6.9
       expo-constants: '>=17.0.0'
       expo-linking: '>=7.0.0'
@@ -1947,7 +1955,7 @@ packages:
   '@better-auth/kysely-adapter@1.6.9':
     resolution: {integrity: sha512-gyjuuxJtZ4o9G9z9q4kqn24X2kvMSp7F+KHogYxF03SnXY/2WleAcuj57iC4wP3e9mGDbjPOrnM5K6Kr3Ktdpw==}
     peerDependencies:
-      '@better-auth/core': 1.6.9
+      '@better-auth/core': ^1.6.9
       '@better-auth/utils': 0.4.0
       kysely: ^0.28.14
     peerDependenciesMeta:
@@ -1957,13 +1965,13 @@ packages:
   '@better-auth/memory-adapter@1.6.9':
     resolution: {integrity: sha512-XmIG4tUnOXZ+KEcWjHUjOI9Z5donD09dC2t/AQTXifAUIqx7cySg86w0KTM09ArzAxRx1fCqO36Wkt5nULnrkQ==}
     peerDependencies:
-      '@better-auth/core': 1.6.9
+      '@better-auth/core': ^1.6.9
       '@better-auth/utils': 0.4.0
 
   '@better-auth/mongo-adapter@1.6.9':
     resolution: {integrity: sha512-h+AiRJ/TsBSi+ZDjySASBpbJ/9QCXBre34PSKgCz7QmTHrFM9Cg2EM4AM7LjR5lPXipEE+2rWPBc9wfnUBjhcw==}
     peerDependencies:
-      '@better-auth/core': 1.6.9
+      '@better-auth/core': ^1.6.9
       '@better-auth/utils': 0.4.0
       mongodb: ^6.0.0 || ^7.0.0
     peerDependenciesMeta:
@@ -1973,7 +1981,7 @@ packages:
   '@better-auth/prisma-adapter@1.6.9':
     resolution: {integrity: sha512-XHks01ntK20orqK/jICq8wmEbJ/zT6dct49Fk8zTQKN9QNGDc+Ix5+7z/Kvui0DXGFf790GfvRozquzaLtXa8Q==}
     peerDependencies:
-      '@better-auth/core': 1.6.9
+      '@better-auth/core': ^1.6.9
       '@better-auth/utils': 0.4.0
       '@prisma/client': ^5.0.0 || ^6.0.0 || ^7.0.0
       prisma: ^5.0.0 || ^6.0.0 || ^7.0.0
@@ -1986,7 +1994,7 @@ packages:
   '@better-auth/telemetry@1.6.9':
     resolution: {integrity: sha512-0u5zkhSCAQFoN3DHvUkLHOF6MBbVTDAa6mU8mhPwiysdz1x21vMzhzfaAKN/ZGWaQ09v91/F+2qu42G/bhUV4A==}
     peerDependencies:
-      '@better-auth/core': 1.6.9
+      '@better-auth/core': ^1.6.9
       '@better-auth/utils': 0.4.0
       '@better-fetch/fetch': 1.1.21
 
@@ -6351,7 +6359,7 @@ packages:
       '@tanstack/solid-start': ^1.0.0
       better-sqlite3: ^12.0.0
       drizzle-kit: '>=0.31.4'
-      drizzle-orm: 0.45.2
+      drizzle-orm: ^0.45.2
       mongodb: ^6.0.0 || ^7.0.0
       mysql2: ^3.0.0
       next: ^14.0.0 || ^15.0.0 || ^16.0.0
@@ -7086,7 +7094,7 @@ packages:
   drizzle-zod@0.8.3:
     resolution: {integrity: sha512-66yVOuvGhKJnTdiqj1/Xaaz9/qzOdRJADpDa68enqS6g3t0kpNkwNYjUuaeXgZfO/UWuIM9HIhSlJ6C5ZraMww==}
     peerDependencies:
-      drizzle-orm: 0.45.2
+      drizzle-orm: '>=0.36.0'
       zod: ^3.25.0 || ^4.0.0
 
   dts-resolver@2.1.3:
