@@ -126,18 +126,28 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   // Step 3: Parse recipe from URL
   await jobLogger.startStep("parse_recipe");
   const userTokens = await getDecryptedTokensByUserId(userId);
-  const parseResult = await withTimeout(
-    () =>
-      parseRecipeFromUrl(
-        url,
-        recipeId,
-        allergyNames,
-        job.data.forceAI,
-        userTokens.length > 0 ? userTokens : undefined
-      ),
-    RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
-    "Recipe import parsing"
-  );
+  let parseResult: Awaited<ReturnType<typeof parseRecipeFromUrl>>;
+
+  try {
+    parseResult = await withTimeout(
+      () =>
+        parseRecipeFromUrl(
+          url,
+          recipeId,
+          allergyNames,
+          job.data.forceAI,
+          userTokens.length > 0 ? userTokens : undefined
+        ),
+      RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
+      "Recipe import parsing"
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to parse recipe from URL";
+
+    await jobLogger.failStep("parse_recipe", msg);
+    await jobLogger.fail(msg);
+    throw err;
+  }
 
   log.debug({ parseResult }, "Recipe parse result");
   if (!parseResult.recipe) {

@@ -242,7 +242,15 @@ export async function processPasteImportJob(
       await jobLogger.setAiModel(aiConfig.model);
     }
 
-    const parseResult = await parseFromPastedText(text, recipeId, allergyNames, forceAI);
+    const parseResult = await parseFromPastedText(text, recipeId, allergyNames, forceAI).catch(
+      async (err) => {
+        const msg = err instanceof Error ? err.message : "Failed to parse pasted recipe";
+
+        await jobLogger.failStep("parse_recipes", msg);
+        await jobLogger.fail(msg);
+        throw err;
+      }
+    );
     await jobLogger.completeStep("parse_recipes", { mode: "ai", title: parseResult.recipe.title });
 
     // Step 3: Save recipe
