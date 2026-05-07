@@ -81,7 +81,7 @@ export default function NavbarJobsDropdown() {
           <Divider />
 
           {/* Job list */}
-          <div className="max-h-[320px] overflow-y-auto">
+          <div className="max-h-[320px] w-full overflow-y-auto overflow-x-hidden">
             {isLoading ? (
               <div className="flex justify-center py-6">
                 <Spinner size="sm" />
@@ -94,7 +94,7 @@ export default function NavbarJobsDropdown() {
               jobs.map((job) => (
                 <button
                   key={job.id}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-default-50"
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-default-50 min-w-0"
                   type="button"
                   onClick={() => {
                     setIsOpen(false);
