@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
+import NavbarJobsDropdown from "@/components/navbar/navbar-jobs-dropdown";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { useUserContext } from "@/context/user-context";
 import { useAutoHide } from "@/hooks/auto-hide";
@@ -116,6 +117,13 @@ export const MobileNav = () => {
                 );
               })}
             </ul>
+          </div>
+
+          {/* Jobs dropdown (admin only) */}
+          <div
+            className={`flex h-13 w-13 shrink-0 items-center justify-center rounded-full ${cssGlassBackdrop}`}
+          >
+            <NavbarJobsDropdown />
           </div>
 
           {/* User menu */}

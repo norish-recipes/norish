@@ -46,5 +46,11 @@
     "skipped": "{count} skipped",
     "errors": "{count} errors",
     "ofTotal": "{current} of {total}"
+  },
+  "jobs": {
+    "title": "Jobs",
+    "empty": "No recent jobs",
+    "viewAll": "View all jobs",
+    "active": "{count} active"
   }
 }

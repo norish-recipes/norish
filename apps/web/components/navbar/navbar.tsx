@@ -4,6 +4,7 @@ import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import MobileNav from "@/components/navbar/mobile-nav";
+import NavbarJobsDropdown from "@/components/navbar/navbar-jobs-dropdown";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { useAutoHide } from "@/hooks/auto-hide";
 import { Navbar as HeroUINavbar, NavbarBrand, NavbarContent, NavbarItem } from "@heroui/navbar";
@@ -94,6 +95,9 @@ export const Navbar = () => {
 
           {/* Right */}
           <NavbarContent className="items-center" justify="end">
+            <NavbarItem className="flex items-center">
+              <NavbarJobsDropdown />
+            </NavbarItem>
             <NavbarItem className="flex items-center">
               <NavbarUserMenu />
             </NavbarItem>
