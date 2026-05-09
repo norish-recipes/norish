@@ -168,7 +168,8 @@
     "uploading": "Wird hochgeladen...",
     "clickToUpload": "Zum Hochladen klicken oder Drag & Drop",
     "pasteToUpload": "zum Einfügen",
-    "imageFormats": "PNG, JPG, WEBP bis zu 5MB"
+    "imageFormats": "PNG, JPG, WEBP bis zu 5MB",
+    "discardChangesConfirm": "Du hast ungespeicherte Änderungen. Verwerfen und diese Seite verlassen?"
   },
   "gallery": {
     "addImage": "Bild hinzufügen",

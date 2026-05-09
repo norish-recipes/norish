@@ -168,7 +168,8 @@
     "uploading": "Uploading...",
     "clickToUpload": "Click to upload or drag and drop",
     "pasteToUpload": "to paste",
-    "imageFormats": "PNG, JPG, WEBP up to 5MB"
+    "imageFormats": "PNG, JPG, WEBP up to 5MB",
+    "discardChangesConfirm": "You have unsaved changes. Discard them and leave this page?"
   },
   "gallery": {
     "addImage": "Add image",

@@ -168,7 +168,8 @@
     "uploading": "업로드 중...",
     "clickToUpload": "클릭하여 업로드하거나 드래그 앤 드롭하세요.",
     "pasteToUpload": "붙여넣기",
-    "imageFormats": "최대 5MB의 PNG, JPG, WEBP"
+    "imageFormats": "최대 5MB의 PNG, JPG, WEBP",
+    "discardChangesConfirm": "저장하지 않은 변경사항이 있습니다. 변경사항을 버리고 이 페이지를 떠나시겠어요?"
   },
   "gallery": {
     "addImage": "이미지 추가",

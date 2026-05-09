@@ -168,7 +168,8 @@
     "uploading": "Bezig met uploaden...",
     "clickToUpload": "Klik om te uploaden of sleep en zet neer",
     "pasteToUpload": "om te plakken",
-    "imageFormats": "PNG, JPG, WEBP tot 5MB"
+    "imageFormats": "PNG, JPG, WEBP tot 5MB",
+    "discardChangesConfirm": "Je hebt niet-opgeslagen wijzigingen. Ze verwijderen en deze pagina verlaten?"
   },
   "gallery": {
     "addImage": "Afbeelding toevoegen",

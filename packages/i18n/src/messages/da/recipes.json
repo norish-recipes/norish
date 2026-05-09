@@ -168,7 +168,8 @@
     "uploading": "Uploader...",
     "clickToUpload": "Klik for at uploade eller træk og slip",
     "pasteToUpload": "for at indsætte",
-    "imageFormats": "PNG, JPG, WEBP op til 5 MB"
+    "imageFormats": "PNG, JPG, WEBP op til 5 MB",
+    "discardChangesConfirm": "Du har ændringer, der ikke er gemt. Vil du kassere dem og forlade siden?"
   },
   "gallery": {
     "addImage": "Tilføj billede",

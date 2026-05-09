@@ -168,7 +168,8 @@
     "uploading": "Загрузка...",
     "clickToUpload": "Нажмите, чтобы загрузить, или перетащите файл",
     "pasteToUpload": "для вставки",
-    "imageFormats": "PNG, JPG, WEBP до 5 МБ"
+    "imageFormats": "PNG, JPG, WEBP до 5 МБ",
+    "discardChangesConfirm": "У вас есть несохранённые изменения. Отменить их и покинуть эту страницу?"
   },
   "gallery": {
     "addImage": "Добавить изображение",
