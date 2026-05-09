@@ -7,7 +7,7 @@
 
 services:
   norish:
-    image: norish:local
+    image: norishapp/norish:rc-v0.18.3-beta
     container_name: norish-app-test
     restart: unless-stopped
     ports:
@@ -24,6 +24,12 @@ services:
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000
       PASSWORD_AUTH_ENABLED: "true"
       LOG_LEVEL: debug
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:3000/api/v1/health'', r => process.exit(r.statusCode===200?0:1))"',
+        ]
     depends_on:
       db:
         condition: service_healthy
