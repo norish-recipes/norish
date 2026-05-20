@@ -1,8 +1,9 @@
 "use client";
 
-import { useVersionQuery } from "@/hooks/config/use-version-query";
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { useVersionQuery } from "@/hooks/config/use-version-query";
 
 function getMinorVersion(version: string | undefined) {
   if (!version) return null;

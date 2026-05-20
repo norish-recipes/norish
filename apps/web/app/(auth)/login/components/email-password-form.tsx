@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { Button, Input, Link } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
 import { signIn } from "@norish/shared/lib/auth/client";
 
 interface EmailPasswordFormProps {

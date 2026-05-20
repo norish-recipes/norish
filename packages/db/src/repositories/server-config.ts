@@ -1,9 +1,9 @@
-import { eq, sql } from "drizzle-orm";
+import type { ServerConfigKey, ServerConfigMetadata } from "../zodSchemas/server-config";
 
+import { eq, sql } from "drizzle-orm";
 import { decrypt, encrypt } from "@norish/auth/crypto";
 import { dbLogger } from "@norish/db/logger";
 
-import type { ServerConfigKey, ServerConfigMetadata } from "../zodSchemas/server-config";
 import { db } from "../drizzle";
 import { serverConfig } from "../schema/server-config";
 import {
@@ -290,7 +290,7 @@ function normalizeForComparison(value: unknown): string {
 function getStoredConfigValue(
   config: typeof serverConfig.$inferSelect,
   includeSecrets: boolean,
-  key: ServerConfigKey
+  key: string
 ): { value: unknown } | null {
   if (config.isSensitive && config.valueEnc) {
     if (includeSecrets) {

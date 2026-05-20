@@ -1,7 +1,8 @@
+import type { CreateStoresHooksOptions, StoresCacheHelpers, StoresData } from "./types";
+
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { CreateStoresHooksOptions, StoresCacheHelpers, StoresData } from "./types";
 
 export function createUseStoresCache({ useTRPC }: CreateStoresHooksOptions) {
   return function useStoresCacheHelpers(): StoresCacheHelpers {

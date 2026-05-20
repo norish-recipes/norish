@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 import {
   CollisionDetection,
   DragEndEvent,
@@ -13,8 +12,9 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-
 import { CalendarItemViewDto, Slot } from "@norish/shared/contracts";
+
+import { useCalendarContext } from "@/app/(app)/calendar/context";
 
 export type CalendarContainerId = string;
 export type CalendarItemsState = Record<CalendarContainerId, string[]>;

@@ -9,7 +9,10 @@ import type {
   DragOverEvent,
   DragStartEvent,
 } from "@dnd-kit/core";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { createMultiContainerCollisionDetection } from "@/components/groceries/dnd/collision-detection";
 import {
   buildGroupItemsState,
@@ -17,7 +20,6 @@ import {
   findContainerForGroup,
 } from "@/components/groceries/dnd/utils";
 
-import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 interface UseGroupedGroceryDndResult {
   // State

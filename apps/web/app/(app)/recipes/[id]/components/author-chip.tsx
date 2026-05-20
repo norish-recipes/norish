@@ -1,7 +1,6 @@
 "use client";
 
 import { Avatar } from "@heroui/react";
-
 import { useUserAvatar } from "@norish/shared-react/hooks";
 
 type Props = {

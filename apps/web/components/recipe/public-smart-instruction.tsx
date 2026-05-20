@@ -9,12 +9,12 @@
  * the same visual output.
  */
 import React, { useMemo } from "react";
-import { TimerChip } from "@/components/recipe/timer-chip";
-import { useSharePublicConfigQuery } from "@/hooks/recipes/use-share-public-config-query";
 import ReactMarkdown from "react-markdown";
-
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { parseTimerDurations } from "@norish/shared/lib/timer-parser";
+
+import { useSharePublicConfigQuery } from "@/hooks/recipes/use-share-public-config-query";
+import { TimerChip } from "@/components/recipe/timer-chip";
 
 const logger = createClientLogger("public-smart-instruction");
 

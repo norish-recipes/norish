@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 
-import { DOWNLOAD_VIDEO_FORMAT_SELECTOR } from "@norish/api/video/yt-dlp";
+import {
+  DOWNLOAD_VIDEO_FORMAT_SELECTOR,
+  TRANSCRIPTION_AUDIO_FALLBACKS,
+  TRANSCRIPTION_AUDIO_FORMAT,
+  TRANSCRIPTION_AUDIO_QUALITY,
+} from "@norish/api/video/yt-dlp";
 
 describe("download video format selector", () => {
   it("prioritizes progressive mp4 before DASH-only variants", () => {
@@ -18,5 +23,20 @@ describe("download video format selector", () => {
     expect(parts[2]).toBe("bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]");
     expect(parts[3]).toBe("best[ext=mp4]");
     expect(parts[4]).toBe("best");
+  });
+});
+
+describe("transcription audio extraction settings", () => {
+  it("uses compressed audio instead of WAV for transcription uploads", () => {
+    expect(TRANSCRIPTION_AUDIO_FORMAT).toBe("mp3");
+    expect(TRANSCRIPTION_AUDIO_QUALITY).toBe("64K");
+  });
+
+  it("keeps a safe fallback chain for audio post-processing", () => {
+    expect(TRANSCRIPTION_AUDIO_FALLBACKS).toEqual([
+      { format: "mp3", quality: "64K" },
+      { format: "m4a", quality: "64K" },
+      { format: "wav", quality: "0" },
+    ]);
   });
 });

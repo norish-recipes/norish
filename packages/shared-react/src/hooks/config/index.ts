@@ -1,4 +1,5 @@
 import type { CreateConfigHooksOptions } from "./types";
+
 import { createUseLocaleConfigQuery } from "./use-locale-config-query";
 import { createUseRecurrenceConfigQuery } from "./use-recurrence-config-query";
 import { createUseTagsQuery } from "./use-tags-query";

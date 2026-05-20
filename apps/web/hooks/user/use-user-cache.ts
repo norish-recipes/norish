@@ -1,10 +1,12 @@
 "use client";
 
+import type { UserSettingsDto } from "@norish/trpc";
+
 import { useCallback } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { UserSettingsDto } from "@norish/trpc";
+import { useTRPC } from "@/app/providers/trpc-provider";
+
 
 export type UserAllergiesData = {
   allergies: string[];

@@ -1,3 +1,5 @@
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+
 import {
   addDays,
   addMonths,
@@ -11,7 +13,6 @@ import {
   startOfDay,
 } from "date-fns";
 
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 /**
  * Calculate the next occurrence date based on a recurrence pattern.

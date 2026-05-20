@@ -4,12 +4,14 @@
  * Real-time WebSocket subscriptions for CalDAV sync status updates.
  */
 
+import type { CaldavSubscriptionEvents } from "./types";
+
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
-import type { CaldavSubscriptionEvents } from "./types";
 import { createSubscriptionIterable, mergeAsyncIterables } from "../../helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+
 import { caldavEmitter } from "./emitter";
 
 /**

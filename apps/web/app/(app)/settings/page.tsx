@@ -3,8 +3,6 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
-import { useUserRoleQuery } from "@/hooks/admin";
 import {
   HomeIcon as HomeIconSolid,
   ServerIcon as ServerIconSolid,
@@ -19,6 +17,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { Tab, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { useUserRoleQuery } from "@/hooks/admin";
+import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
 
 const UserSettingsTab = dynamic(() => import("./user/components/user-settings-content"), {
   loading: () => <SettingsSkeleton />,

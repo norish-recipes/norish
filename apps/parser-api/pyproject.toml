@@ -10,9 +10,9 @@ readme = "README.md"
 requires-python = ">=3.14,<3.15"
 dependencies = [
   "beautifulsoup4==4.14.3",
-  "fastapi==0.116.1",
-  "recipe-scrapers==15.10.0",
-  "uvicorn==0.35.0",
+  "fastapi==0.136.1",
+  "recipe-scrapers==15.11.0",
+  "uvicorn==0.46.0",
 ]
 
 [tool.setuptools]

@@ -7,9 +7,9 @@
  */
 
 import type { Job } from "bullmq";
-
 import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/trpc/helpers";
+
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getRecipeFull } from "@norish/db";
 import { db } from "@norish/db/drizzle";

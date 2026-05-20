@@ -1,6 +1,7 @@
+import type { CreateGroceriesHooksOptions, GroceriesCacheHelpers } from "./types";
+
 import { useSubscription } from "@trpc/tanstack-react-query";
 
-import type { CreateGroceriesHooksOptions, GroceriesCacheHelpers } from "./types";
 
 export type GroceriesSubscriptionErrorAdapter = {
   showErrorToast: (reason: string) => void;

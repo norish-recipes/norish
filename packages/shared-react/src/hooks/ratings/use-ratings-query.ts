@@ -1,6 +1,7 @@
+import type { CreateRatingsHooksOptions } from "./types";
+
 import { useQuery } from "@tanstack/react-query";
 
-import type { CreateRatingsHooksOptions } from "./types";
 
 export function createUseRatingQuery({ useTRPC }: CreateRatingsHooksOptions) {
   return function useRatingQuery(recipeId: string) {

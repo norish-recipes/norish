@@ -1,9 +1,9 @@
 {
   "name": "norish",
-  "version": "0.18.2-beta",
+  "version": "0.18.3-beta",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.30.1",
+  "packageManager": "pnpm@10.33.2",
   "scripts": {
     "dev": "turbo watch dev --filter=@norish/web... --continue",
     "dev:tui": "turbo watch dev --ui=tui --filter=@norish/web... --continue",
@@ -18,7 +18,7 @@
     "db:push": "pnpm --filter @norish/db exec drizzle-kit push --config ./src/drizzle.config.ts",
     "db:generate": "pnpm --filter @norish/db exec drizzle-kit generate --config ./src/drizzle.config.ts",
     "migrate": "pnpm --filter @norish/db exec drizzle-kit push --config ./src/drizzle.config.ts",
-    "docker:build": "docker build -f docker/Dockerfile -t norish:local .",
+    "docker:build": "docker build -f docker/Dockerfile -t norish:local --build-arg NORISH_VERSION_REPORT_JSON=\"$(node tooling/monorepo/scripts/print-package-versions.mjs)\" .",
     "docker:up": "docker compose -f docker/compose.base.yaml -f docker/compose.local.yaml up -d",
     "docker:down": "docker compose -f docker/compose.base.yaml -f docker/compose.local.yaml down",
     "docker:test": "docker compose -f docker/docker-compose.test.yml up",

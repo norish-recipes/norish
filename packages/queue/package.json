@@ -1,6 +1,6 @@
 {
   "name": "@norish/queue",
-  "version": "0.18.2-beta",
+  "version": "0.18.3-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -28,7 +28,7 @@
     "drizzle-orm": "catalog:",
     "ioredis": "catalog:",
     "superjson": "catalog:",
-    "yaml": "^2.8.3"
+    "yaml": "^2.8.4"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",

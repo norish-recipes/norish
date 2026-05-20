@@ -1,10 +1,11 @@
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
-
 import type {
   HouseholdAdminSettingsDto,
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
+import type { HouseholdUserInfo } from "./types";
+
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   addUserToHousehold,
@@ -32,11 +33,12 @@ import {
 } from "@norish/shared/contracts/zod";
 import { HouseholdNameSchema, JoinCodeSchema } from "@norish/shared/lib/validation/schemas";
 
-import type { HouseholdUserInfo } from "./types";
+
 import { emitConnectionInvalidation } from "../../connection-manager";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { permissionsEmitter } from "../permissions/emitter";
+
 import { householdEmitter } from "./emitter";
 
 /**

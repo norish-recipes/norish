@@ -1,13 +1,14 @@
-import { generateText, Output } from "ai";
+import type { AIResult } from "./core/types";
+import type { RecipeForTagging } from "./prompts/builder";
+import type { AutoTaggingOutput } from "./schemas/auto-tagging.schema";
 
+import { generateText, Output } from "ai";
 import { getAutoTaggingMode, isAIEnabled } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@norish/db/repositories/tags";
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
 import { aiLogger } from "@norish/shared-server/logger";
 
-import type { AIResult } from "./core/types";
-import type { RecipeForTagging } from "./prompts/builder";
-import type { AutoTaggingOutput } from "./schemas/auto-tagging.schema";
+
 import { aiError, aiSuccess, getErrorMessage, mapErrorToCode } from "./core/types";
 import { buildAutoTaggingPrompt } from "./prompts/builder";
 import { autoTaggingSchema } from "./schemas/auto-tagging.schema";

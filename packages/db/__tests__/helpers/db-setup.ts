@@ -18,6 +18,7 @@ import { dbLogger } from "@norish/db/logger";
 const { Client } = pg;
 
 let _container: StartedPostgreSqlContainer | null = null;
+let _containerPromise: Promise<StartedPostgreSqlContainer> | null = null;
 
 /**
  * Get or create PostgreSQL connection details
@@ -32,32 +33,8 @@ async function getPostgresConnection(): Promise<{
 }> {
   // Start a PostgreSQL container if not already running
   if (!_container) {
-    dbLogger.info("Starting PostgreSQL container for tests...");
-
-    try {
-      _container = await new PostgreSqlContainer("postgres:15-alpine")
-        .withExposedPorts(5432)
-        .withUsername("test")
-        .withPassword("test")
-        .withDatabase("postgres")
-        .withReuse() // Reuse container across test runs
-        .start();
-
-      dbLogger.info(
-        {
-          host: _container.getHost(),
-          port: _container.getPort(),
-          database: _container.getDatabase(),
-        },
-        "PostgreSQL container started"
-      );
-    } catch (error) {
-      dbLogger.error({ error }, "Failed to start PostgreSQL container");
-      throw new Error(
-        "Failed to start PostgreSQL container. Is Docker running?\n" +
-          "Run 'docker ps' to verify Docker is running."
-      );
-    }
+    _containerPromise ??= startPostgresContainer();
+    _container = await _containerPromise;
   }
 
   return {
@@ -67,6 +44,38 @@ async function getPostgresConnection(): Promise<{
     port: _container.getPort(),
     database: _container.getDatabase(),
   };
+}
+
+async function startPostgresContainer(): Promise<StartedPostgreSqlContainer> {
+  dbLogger.info("Starting PostgreSQL container for tests...");
+
+  try {
+    const container = await new PostgreSqlContainer("postgres:15-alpine")
+      .withExposedPorts(5432)
+      .withUsername("test")
+      .withPassword("test")
+      .withDatabase("postgres")
+      .withReuse() // Reuse container across test runs
+      .start();
+
+    dbLogger.info(
+      {
+        host: container.getHost(),
+        port: container.getPort(),
+        database: container.getDatabase(),
+      },
+      "PostgreSQL container started"
+    );
+
+    return container;
+  } catch (error) {
+    _containerPromise = null;
+    dbLogger.error({ error }, "Failed to start PostgreSQL container");
+    throw new Error(
+      "Failed to start PostgreSQL container. Is Docker running?\n" +
+        "Run 'docker ps' to verify Docker is running."
+    );
+  }
 }
 
 /**
@@ -197,6 +206,7 @@ export async function stopPostgresContainer() {
     dbLogger.info("Stopping PostgreSQL container...");
     await _container.stop();
     _container = null;
+    _containerPromise = null;
     dbLogger.info("PostgreSQL container stopped");
   }
 }

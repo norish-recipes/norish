@@ -1,7 +1,8 @@
+import type { CreateGroceriesHooksOptions, GroceriesCacheHelpers, GroceriesData } from "./types";
+
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { CreateGroceriesHooksOptions, GroceriesCacheHelpers, GroceriesData } from "./types";
 
 export function createUseGroceriesCache({ useTRPC }: CreateGroceriesHooksOptions) {
   return function useGroceriesCacheHelpers(): GroceriesCacheHelpers {

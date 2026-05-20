@@ -168,7 +168,8 @@
     "uploading": "Téléversement...",
     "clickToUpload": "Cliquez pour téléverser ou glissez-déposez",
     "pasteToUpload": "pour coller",
-    "imageFormats": "PNG, JPG, WEBP jusqu’à 5 Mo"
+    "imageFormats": "PNG, JPG, WEBP jusqu’à 5 Mo",
+    "discardChangesConfirm": "Vous avez des modifications non enregistrées. Les ignorer et quitter cette page ?"
   },
   "gallery": {
     "addImage": "Ajouter une image",

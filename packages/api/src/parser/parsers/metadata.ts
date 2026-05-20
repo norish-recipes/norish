@@ -5,7 +5,6 @@
  */
 
 import { decode } from "html-entities";
-
 import { parseIsoDuration } from "@norish/shared/lib/helpers";
 
 export interface ParsedMetadata {

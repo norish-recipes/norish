@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC } from "@/app/providers/trpc-provider";
 
 /**
  * Automatically prefetch recipe data when element comes into view.

@@ -1,7 +1,8 @@
 "use client";
 
+import type { CalDavCalendarInfo } from "@norish/shared/contracts";
+
 import { useCallback, useEffect, useRef, useState } from "react";
-import SecretInput from "@/components/shared/secret-input";
 import { ServerIcon } from "@heroicons/react/24/outline";
 import {
   Accordion,
@@ -19,9 +20,10 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { CalDavCalendarInfo } from "@norish/shared/contracts";
 
 import { useCalDavSettingsContext } from "../context";
+
+import SecretInput from "@/components/shared/secret-input";
 
 interface CalDavConfigEditModalProps {
   isOpen: boolean;

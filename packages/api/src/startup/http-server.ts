@@ -1,8 +1,8 @@
 import http from "node:http";
 import { join } from "node:path";
 import { parse } from "node:url";
-import next from "next";
 
+import next from "next";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
 import { serverLogger } from "@norish/shared-server/logger";

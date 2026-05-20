@@ -1,6 +1,6 @@
 {
   "name": "@norish/web",
-  "version": "0.18.2-beta",
+  "version": "0.18.3-beta",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,6 +20,8 @@
   },
   "dependencies": {
     "@better-auth/api-key": "catalog:",
+    "@better-auth/core": "catalog:",
+    "@better-auth/utils": "catalog:",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -32,7 +34,7 @@
     "@heroui/theme": "^2.4.26",
     "@heroui/toast": "^2.0.22",
     "@iconify/react": "^6.0.2",
-    "@internationalized/date": "^3.12.0",
+    "@internationalized/date": "^3.12.1",
     "@norish/api": "workspace:*",
     "@norish/auth": "workspace:*",
     "@norish/config": "workspace:*",
@@ -46,15 +48,15 @@
     "@norish/ui": "workspace:*",
     "@scalar/nextjs-api-reference": "catalog:",
     "@tanstack/react-query": "catalog:",
-    "@tanstack/react-virtual": "^3.13.23",
+    "@tanstack/react-virtual": "^3.13.24",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
     "better-auth": "catalog:",
     "date-fns": "catalog:",
-    "motion": "12.34.2",
+    "motion": "12.38.0",
     "next": "catalog:",
-    "next-intl": "^4.8.3",
+    "next-intl": "^4.11.0",
     "next-themes": "0.4.6",
     "react": "catalog:",
     "react-dom": "catalog:",
@@ -63,7 +65,7 @@
     "use-sound": "^5.0.0",
     "usehooks-ts": "^3.1.1",
     "ws": "catalog:",
-    "zustand": "5.0.11"
+    "zustand": "5.0.12"
   },
   "devDependencies": {
     "@norish/eslint-config": "workspace:*",
@@ -82,8 +84,9 @@
     "postcss": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
-    "tsdown": "^0.20.3",
+    "tsdown": "^0.21.0",
     "tsx": "4.21.0",
+    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "prettier": "@norish/prettier-config"

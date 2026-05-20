@@ -1,7 +1,7 @@
+import type { TagDto } from "@norish/shared/contracts/dto/tag";
+
 import { asc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
-
-import type { TagDto } from "@norish/shared/contracts/dto/tag";
 import { db } from "@norish/db/drizzle";
 import { recipeTags, tags } from "@norish/db/schema";
 import { TagSelectBaseSchema } from "@norish/shared/contracts/zod";
@@ -121,6 +121,20 @@ export async function getOrCreateManyTagsTx(tx: any, names: string[]): Promise<T
   return parsed.data;
 }
 
+export async function deleteOrphanedTagsTx(tx: any): Promise<void> {
+  // Find tags that have no associated recipes (LEFT JOIN antipattern)
+  const orphanedTagIds = await tx
+    .select({ id: tags.id })
+    .from(tags)
+    .leftJoin(recipeTags, eq(tags.id, recipeTags.tagId))
+    .where(sql`${recipeTags.tagId} IS NULL`)
+    .then((rows: any[]) => rows.map((r) => r.id));
+
+  if (orphanedTagIds.length === 0) return;
+
+  await tx.delete(tags).where(inArray(tags.id, orphanedTagIds));
+}
+
 export async function attachTagsToRecipeTx(
   tx: any,
   recipeId: string,
@@ -146,7 +160,11 @@ export async function attachTagsToRecipeByInputTx(
   // Delete existing tags for this recipe first
   await tx.delete(recipeTags).where(eq(recipeTags.recipeId, recipeId));
 
-  if (!tagNames.length) return;
+  if (!tagNames.length) {
+    // Clean up any orphaned tags created by removing all tags from this recipe
+    await deleteOrphanedTagsTx(tx);
+    return;
+  }
 
   const created = await getOrCreateManyTagsTx(tx, tagNames);
 
@@ -171,6 +189,9 @@ export async function attachTagsToRecipeByInputTx(
   if (rows.length > 0) {
     await tx.insert(recipeTags).values(rows).onConflictDoNothing();
   }
+
+  // Clean up any orphaned tags (tags that were removed from all recipes)
+  await deleteOrphanedTagsTx(tx);
 }
 
 export async function getRecipeTagNames(recipeId: string): Promise<string[]> {

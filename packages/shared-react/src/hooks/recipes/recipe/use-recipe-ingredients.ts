@@ -1,5 +1,4 @@
 import type { RecipeIngredientsDto } from "@norish/shared/contracts";
-
 import type { RecipeQueryResult } from "./use-recipe-query";
 
 export function createUseRecipeIngredients(

@@ -1,5 +1,4 @@
 import JSZip from "jszip";
-
 import { getUnits } from "@norish/config/server-config-loader";
 import { FullRecipeInsertSchema } from "@norish/db";
 import { serverLogger as log } from "@norish/shared-server/logger";
@@ -8,6 +7,7 @@ import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-s
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 import { saveImageBytes } from "../media/storage";
+
 import { parseHumanDurationToMinutes } from "./parser-helpers";
 
 export type MealieDatabase = {
@@ -255,7 +255,7 @@ export async function parseMealieDatabase(databaseJson: string): Promise<MealieD
       recipe_nutrition: data.recipe_nutrition || [],
     };
   } catch (e: any) {
-    throw new Error(`Failed to parse database.json: ${e?.message || e}`);
+    throw new Error(`Failed to parse database.json: ${e?.message || e}`, { cause: e });
   }
 }
 

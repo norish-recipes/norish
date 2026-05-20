@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
-import { eq, like, or } from "drizzle-orm";
 
+import { eq, like, or } from "drizzle-orm";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { db } from "@norish/db/drizzle";
 import { recipeImages, recipes } from "@norish/db/schema";
@@ -20,6 +20,7 @@ interface MigrationStats {
   thumbnailsMoved: number;
   galleryMoved: number;
   dbRecordsUpdated: number;
+  dbRecordsSkippedMissingFiles: number;
   directoriesCleaned: number;
   errors: string[];
 }
@@ -52,6 +53,7 @@ export async function migrateGalleryImages(): Promise<void> {
     thumbnailsMoved: 0,
     galleryMoved: 0,
     dbRecordsUpdated: 0,
+    dbRecordsSkippedMissingFiles: 0,
     directoriesCleaned: 0,
     errors: [],
   };
@@ -72,7 +74,11 @@ export async function migrateGalleryImages(): Promise<void> {
     // Log results
     const totalMoved = stats.thumbnailsMoved + stats.galleryMoved;
 
-    if (totalMoved === 0 && stats.dbRecordsUpdated === 0) {
+    if (
+      totalMoved === 0 &&
+      stats.dbRecordsUpdated === 0 &&
+      stats.dbRecordsSkippedMissingFiles === 0
+    ) {
       log.info("Recipe image migration: No migration needed (already up to date)");
     } else {
       log.info(
@@ -80,6 +86,7 @@ export async function migrateGalleryImages(): Promise<void> {
           thumbnailsMoved: stats.thumbnailsMoved,
           galleryMoved: stats.galleryMoved,
           dbRecordsUpdated: stats.dbRecordsUpdated,
+          dbRecordsSkippedMissingFiles: stats.dbRecordsSkippedMissingFiles,
           directoriesCleaned: stats.directoriesCleaned,
           errorCount: stats.errors.length,
         },
@@ -90,10 +97,42 @@ export async function migrateGalleryImages(): Promise<void> {
     if (stats.errors.length > 0) {
       log.warn({ errors: stats.errors }, "Recipe image migration completed with errors");
     }
+
+    if (stats.dbRecordsSkippedMissingFiles > 0) {
+      log.warn(
+        { skipped: stats.dbRecordsSkippedMissingFiles, uploadsDir: SERVER_CONFIG.UPLOADS_DIR },
+        "Recipe image migration skipped database URL updates because referenced files are missing"
+      );
+    }
   } catch (err) {
     log.error({ err }, "Recipe image migration failed");
     throw err;
   }
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  return fs
+    .access(filePath)
+    .then(() => true)
+    .catch(() => false);
+}
+
+async function canRewriteThumbnailUrl(recipeId: string, filename: string): Promise<boolean> {
+  return (
+    (await fileExists(path.join(RECIPES_DIR, filename))) ||
+    (await fileExists(path.join(RECIPES_DIR, recipeId, filename)))
+  );
+}
+
+async function canRewriteGalleryUrl(
+  recipeId: string,
+  filename: string,
+  oldRecipeId: string
+): Promise<boolean> {
+  return (
+    (await fileExists(path.join(RECIPES_DIR, oldRecipeId, "gallery", filename))) ||
+    (await fileExists(path.join(RECIPES_DIR, recipeId, filename)))
+  );
 }
 
 /**
@@ -284,9 +323,19 @@ async function updateDatabaseUrls(stats: MigrationStats): Promise<void> {
 
     const match = record.image.match(OLD_THUMBNAIL_URL_PATTERN);
 
-    if (match) {
-      const filename = match[1];
+    const filename = match?.[1];
+
+    if (filename) {
       const newUrl = `/recipes/${record.id}/${filename}`;
+
+      if (!(await canRewriteThumbnailUrl(record.id, filename))) {
+        stats.dbRecordsSkippedMissingFiles++;
+        log.warn(
+          { recipeId: record.id, oldUrl: record.image, expectedFilename: filename },
+          "Skipping thumbnail URL migration because the image file was not found on disk"
+        );
+        continue;
+      }
 
       try {
         await db.update(recipes).set({ image: newUrl }).where(eq(recipes.id, record.id));
@@ -309,24 +358,52 @@ async function updateDatabaseUrls(stats: MigrationStats): Promise<void> {
 
   for (const record of galleryImages) {
     let newUrl: string | null = null;
+    let filename: string | null = null;
+    let oldRecipeId = record.recipeId;
+    let isFlatThumbnailUrl = false;
 
     // Check for /recipes/images/{filename}
     const thumbnailMatch = record.image.match(OLD_THUMBNAIL_URL_PATTERN);
 
-    if (thumbnailMatch) {
-      newUrl = `/recipes/${record.recipeId}/${thumbnailMatch[1]}`;
+    const thumbnailFilename = thumbnailMatch?.[1];
+
+    if (thumbnailFilename) {
+      isFlatThumbnailUrl = true;
+      filename = thumbnailFilename;
+      newUrl = `/recipes/${record.recipeId}/${filename}`;
     }
 
     // Check for /recipes/{recipeId}/gallery/{filename}
     const galleryMatch = record.image.match(OLD_GALLERY_URL_PATTERN);
 
-    if (galleryMatch) {
-      const [, _recipeId, filename] = galleryMatch;
+    const galleryRecipeId = galleryMatch?.[1];
+    const galleryFilename = galleryMatch?.[2];
 
+    if (galleryRecipeId && galleryFilename) {
+      oldRecipeId = galleryRecipeId;
+      filename = galleryFilename;
       newUrl = `/recipes/${record.recipeId}/${filename}`;
     }
 
-    if (newUrl) {
+    if (newUrl && filename) {
+      const hasMediaFile = isFlatThumbnailUrl
+        ? await canRewriteThumbnailUrl(record.recipeId, filename)
+        : await canRewriteGalleryUrl(record.recipeId, filename, oldRecipeId);
+
+      if (!hasMediaFile) {
+        stats.dbRecordsSkippedMissingFiles++;
+        log.warn(
+          {
+            imageId: record.id,
+            recipeId: record.recipeId,
+            oldUrl: record.image,
+            expectedFilename: filename,
+          },
+          "Skipping recipe image URL migration because the image file was not found on disk"
+        );
+        continue;
+      }
+
       try {
         await db.update(recipeImages).set({ image: newUrl }).where(eq(recipeImages.id, record.id));
         stats.dbRecordsUpdated++;

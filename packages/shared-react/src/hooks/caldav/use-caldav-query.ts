@@ -1,11 +1,12 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-
 import type {
   CaldavConfigQueryResult,
   CaldavSummaryQueryResult,
   CaldavSyncStatusQueryResult,
   CreateCaldavHooksOptions,
 } from "./types";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 
 export function createUseCaldavQuery({ useTRPC }: CreateCaldavHooksOptions) {
   function useCaldavConfigQuery(): CaldavConfigQueryResult {

@@ -1,12 +1,25 @@
 "use client";
 
+import type { ParsedIngredient } from "@/components/recipes/ingredient-input";
 import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import type { Step } from "@/components/recipes/step-input";
+import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import IngredientInput, { ParsedIngredient } from "@/components/recipes/ingredient-input";
+import { Button, Chip, Input } from "@heroui/react";
+import { useLocale, useTranslations } from "next-intl";
+import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { createClientLogger } from "@norish/shared/lib/logger";
+import { formatUnit } from "@norish/shared/lib/unit-localization";
+
+import { useRecipeFormDirtyState } from "./use-recipe-form-dirty-state";
+
+import IngredientInput from "@/components/recipes/ingredient-input";
 import MeasurementSystemSelector from "@/components/recipes/measurement-system-selector";
 import MediaGalleryInput from "@/components/recipes/media-gallery-input";
-import StepInput, { Step } from "@/components/recipes/step-input";
+import StepInput from "@/components/recipes/step-input";
 import TimeInputs from "@/components/recipes/time-inputs";
 import SmartInputHelp from "@/components/shared/smart-input-help";
 import SmartTextInput from "@/components/shared/smart-text-input";
@@ -15,14 +28,7 @@ import EditRecipeSkeleton from "@/components/skeleton/edit-recipe-skeleton";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useUnitsQuery } from "@/hooks/config";
 import { useRecipeId } from "@/hooks/recipes";
-import { Button, Chip, Input } from "@heroui/react";
-import { useLocale, useTranslations } from "next-intl";
-
-import { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
-import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
-import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
-import { createClientLogger } from "@norish/shared/lib/logger";
-import { formatUnit } from "@norish/shared/lib/unit-localization";
+import { useUnsavedNavigationGuard } from "@/hooks/use-unsaved-navigation-guard";
 
 const log = createClientLogger("RecipeForm");
 
@@ -123,6 +129,76 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const [protein, setProtein] = useState<number | null>(
     initialData?.protein != null ? Number(initialData.protein) : null
   );
+
+  const currentFormState = useMemo(
+    () => ({
+      name,
+      description,
+      notes,
+      url,
+      servings,
+      prepMinutes,
+      cookMinutes,
+      totalMinutes,
+      tags,
+      categories,
+      ingredients,
+      steps,
+      systemUsed,
+      media,
+      calories,
+      fat,
+      carbs,
+      protein,
+    }),
+    [
+      name,
+      description,
+      notes,
+      url,
+      servings,
+      prepMinutes,
+      cookMinutes,
+      totalMinutes,
+      tags,
+      categories,
+      ingredients,
+      steps,
+      systemUsed,
+      media,
+      calories,
+      fat,
+      carbs,
+      protein,
+    ]
+  );
+
+  const hasUnsavedChanges = useRecipeFormDirtyState({
+    current: currentFormState,
+    initialData,
+    initializedRecipeId: initializedRecipeIdRef.current,
+    locale,
+    mode,
+    units,
+  });
+
+  const navigateBack = useCallback(() => router.back(), [router]);
+  const {
+    allowNavigation,
+    confirmNavigation: confirmDiscardChanges,
+    disallowNavigation,
+  } = useUnsavedNavigationGuard({
+    hasUnsavedChanges,
+    confirmationMessage: t("discardChangesConfirm"),
+    onConfirmLeave: navigateBack,
+  });
+
+  const handleCancel = useCallback(() => {
+    if (!confirmDiscardChanges()) return;
+
+    allowNavigation();
+    navigateBack();
+  }, [allowNavigation, confirmDiscardChanges, navigateBack]);
 
   // Show recipe ID error if reservation failed
   useEffect(() => {
@@ -291,18 +367,22 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
 
       if (mode === "create") {
         try {
+          allowNavigation();
           await createRecipe({ ...recipeData, id: recipeId! });
         } catch (err) {
+          disallowNavigation();
           log.error({ err }, "Failed to create recipe");
           throw err;
         }
       } else if (mode === "edit" && initialData) {
+        allowNavigation();
         await updateRecipe(initialData.id, {
           ...recipeData,
           version: initialData.version,
         });
       }
     } catch (err) {
+      disallowNavigation();
       setErrors({ submit: (err as Error).message });
     } finally {
       setIsSubmitting(false);
@@ -332,6 +412,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     carbs,
     protein,
     notes,
+    allowNavigation,
+    disallowNavigation,
   ]);
 
   const handleTimeChange = useCallback(
@@ -663,7 +745,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
 
         {/* Submit */}
         <div className="flex justify-end gap-3 border-t pt-6">
-          <Button isDisabled={isSubmitting} size="lg" variant="flat" onPress={() => router.back()}>
+          <Button isDisabled={isSubmitting} size="lg" variant="flat" onPress={handleCancel}>
             {tCommon("cancel")}
           </Button>
           <Button

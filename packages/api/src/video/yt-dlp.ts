@@ -1,17 +1,18 @@
+import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import type { VideoMetadata } from "./types";
+
 import { execFile, execSync } from "node:child_process";
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import YTDlpWrapModule from "yt-dlp-wrap";
 
-import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import YTDlpWrapModule from "yt-dlp-wrap";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getVideoConfig } from "@norish/config/server-config-loader";
 import { videoLogger as log } from "@norish/shared-server/logger";
 
-import type { VideoMetadata } from "./types";
 
 // Handle CJS/ESM interop - the module may be wrapped in a default property
 const YTDlpWrap =
@@ -107,6 +108,14 @@ const ytDlpFilename = process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp";
 
 export const DOWNLOAD_VIDEO_FORMAT_SELECTOR =
   "best[vcodec^=avc1][ext=mp4]/bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[ext=mp4]/best";
+
+export const TRANSCRIPTION_AUDIO_FORMAT = "mp3";
+export const TRANSCRIPTION_AUDIO_QUALITY = "64K";
+export const TRANSCRIPTION_AUDIO_FALLBACKS = [
+  { format: TRANSCRIPTION_AUDIO_FORMAT, quality: TRANSCRIPTION_AUDIO_QUALITY },
+  { format: "m4a", quality: TRANSCRIPTION_AUDIO_QUALITY },
+  { format: "wav", quality: "0" },
+] as const;
 
 // In production (Docker), binary is pre-downloaded during build to /app/bin
 // In development, download to the configured runtime bin directory on first use
@@ -319,53 +328,79 @@ export async function downloadVideoAudio(
 
   const timestamp = Date.now();
   const randomId = Math.random().toString(36).substring(7);
-  const outputFilename = `audio-${timestamp}-${randomId}.wav`;
-  const outputFile = path.join(outputDir, outputFilename);
+  const outputBase = `audio-${timestamp}-${randomId}`;
+  const outputFiles = TRANSCRIPTION_AUDIO_FALLBACKS.map(({ format }) =>
+    path.join(outputDir, `${outputBase}.${format}`)
+  );
 
   const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
 
   try {
-    // Download video and extract audio as WAV format
+    // Download video and extract compressed speech audio for transcription.
     const ffmpegBinary = getFfmpegPath();
     const ffmpegDir = ffmpegBinary ? path.dirname(ffmpegBinary) : undefined;
 
     log.debug({ ffmpegDir, ffmpegBinary }, "Using ffmpeg for audio extraction");
     const proxyArgs = await getProxyArgs();
 
-    const args = [
-      url,
-      "-x", // Extract audio
-      "--audio-format",
-      "wav", // Convert to WAV
-      "--audio-quality",
-      "0", // Best quality
-      "-o",
-      outputFilename, // Output file, relative to outputDir
-      "--extractor-args",
-      "youtube:player_client=default", // Suppress JS runtime warning
-      ...(auth?.args ?? []),
-      ...proxyArgs,
-    ];
+    let lastError: unknown = null;
 
-    // Add ffmpeg location if available
-    if (ffmpegDir) {
-      args.push("--ffmpeg-location", ffmpegDir);
+    for (const [index, attempt] of TRANSCRIPTION_AUDIO_FALLBACKS.entries()) {
+      const outputFilename = `${outputBase}.${attempt.format}`;
+      const outputFile = path.join(outputDir, outputFilename);
+      const args = [
+        url,
+        "-x", // Extract audio
+        "--audio-format",
+        attempt.format,
+        "--audio-quality",
+        attempt.quality,
+        "-o",
+        outputFilename, // Output file, relative to outputDir
+        "--extractor-args",
+        "youtube:player_client=default", // Suppress JS runtime warning
+        ...(auth?.args ?? []),
+        ...proxyArgs,
+      ];
+
+      // Add ffmpeg location if available
+      if (ffmpegDir) {
+        args.push("--ffmpeg-location", ffmpegDir);
+      }
+
+      try {
+        await execYtDlp(args, outputDir);
+
+        const stats = await fs.stat(outputFile);
+
+        log.info(
+          { outputFile, size: stats.size, audioFormat: attempt.format, attempt: index + 1 },
+          "Audio extracted for transcription"
+        );
+
+        return outputFile;
+      } catch (error: unknown) {
+        lastError = error;
+        await fs.unlink(outputFile).catch(() => {});
+
+        if (index < TRANSCRIPTION_AUDIO_FALLBACKS.length - 1) {
+          const nextAttempt = TRANSCRIPTION_AUDIO_FALLBACKS[index + 1];
+
+          log.warn(
+            { err: error, audioFormat: attempt.format, nextFormat: nextAttempt?.format },
+            "Audio extraction format failed, trying fallback"
+          );
+        }
+      }
     }
 
-    await execYtDlp(args, outputDir);
-    try {
-      await fs.stat(outputFile);
-    } catch {
-      throw new Error("Could not create audio file.");
-    }
-
-    return outputFile;
+    throw lastError instanceof Error ? lastError : new Error("Could not create audio file.");
   } catch (error: any) {
     log.error({ err: error }, "Failed to download video audio");
 
     // Cleanup on failure
     try {
-      await fs.unlink(outputFile).catch(() => {});
+      await Promise.all(outputFiles.map((outputFile) => fs.unlink(outputFile).catch(() => {})));
     } catch (cleanupErr) {
       log.error({ err: cleanupErr }, "Failed to cleanup temp file");
     }

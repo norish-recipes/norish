@@ -1,6 +1,6 @@
 {
   "name": "@norish/config",
-  "version": "0.18.2-beta",
+  "version": "0.18.3-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -24,7 +24,7 @@
   "dependencies": {
     "@norish/db": "workspace:*",
     "@norish/i18n": "workspace:*",
-    "dotenv": "17.3.1",
+    "dotenv": "17.4.2",
     "server-only": "catalog:",
     "zod": "catalog:"
   },

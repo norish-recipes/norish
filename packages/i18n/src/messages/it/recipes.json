@@ -168,7 +168,8 @@
     "uploading": "Caricamento...",
     "clickToUpload": "Clicca per caricare o trascina e rilascia",
     "pasteToUpload": "per incollare",
-    "imageFormats": "PNG, JPG, WEBP fino a 5MB"
+    "imageFormats": "PNG, JPG, WEBP fino a 5MB",
+    "discardChangesConfirm": "Hai modifiche non salvate. Scartarle e lasciare questa pagina?"
   },
   "gallery": {
     "addImage": "Aggiungi immagine",

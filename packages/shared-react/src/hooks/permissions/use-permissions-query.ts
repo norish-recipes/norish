@@ -1,8 +1,9 @@
+import type { CreatePermissionsHooksOptions, PermissionsData } from "./types";
+
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
-import type { CreatePermissionsHooksOptions, PermissionsData } from "./types";
 
 type SubscriptionOptions = Parameters<typeof useSubscription>[0];
 

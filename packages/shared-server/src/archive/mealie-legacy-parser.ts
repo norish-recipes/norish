@@ -1,8 +1,3 @@
-import JSZip from "jszip";
-
-import { serverLogger as log } from "@norish/shared-server/logger";
-import { FullRecipeInsertDTO, IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
-
 import type {
   MealieFood,
   MealieIngredient,
@@ -12,6 +7,11 @@ import type {
   MealieRecipe,
   MealieUnit,
 } from "./mealie-parser";
+
+import JSZip from "jszip";
+import { serverLogger as log } from "@norish/shared-server/logger";
+import { FullRecipeInsertDTO, IMAGE_MIME_TO_EXTENSION } from "@norish/shared/contracts";
+
 import { parseMealieRecipeToDTO } from "./mealie-parser";
 
 // ─── Legacy Mealie types (folder-per-recipe, inline JSON) ─────────────────────

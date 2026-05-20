@@ -1,6 +1,7 @@
+import type { CreateRecipeHooksOptions } from "../types";
+
 import { useMutation } from "@tanstack/react-query";
 
-import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseRecipeVideos({ useTRPC }: CreateRecipeHooksOptions) {
   return function useRecipeVideos() {

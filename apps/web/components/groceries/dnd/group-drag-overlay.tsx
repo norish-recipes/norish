@@ -1,11 +1,13 @@
 "use client";
 
-import { useUnitFormatter } from "@/hooks/use-unit-formatter";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
+
 import { Bars3Icon, Square2StackIcon } from "@heroicons/react/16/solid";
 import { Checkbox } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
+
 
 interface GroupDragOverlayProps {
   group: GroceryGroup;

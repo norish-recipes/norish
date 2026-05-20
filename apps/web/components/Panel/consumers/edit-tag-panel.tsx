@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Panel, { PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
 import { Button, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import Panel, { PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
 
 type EditTagPanelProps = {
   open: boolean;

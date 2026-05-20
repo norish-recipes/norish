@@ -1,5 +1,8 @@
 "use client";
 
+import type { Slot } from "@norish/shared/contracts";
+import type { PlannedItemDisplay } from "./types";
+
 import { memo, useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
@@ -15,9 +18,8 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { Slot } from "@norish/shared/contracts";
 
-import type { PlannedItemDisplay } from "./types";
+
 import { TimelineSlotContainer } from "./timeline-slot-container";
 import { SLOTS } from "./types";
 

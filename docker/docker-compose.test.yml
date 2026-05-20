@@ -1,13 +1,13 @@
 # Test the locally-built Docker image with full infrastructure.
 # Usage:
-#   1. Build the image first:  docker build -f docker/Dockerfile -t norish:local .
+#   1. Build the image first:  pnpm run docker:build
 #   2. Run everything:         docker compose -f docker/docker-compose.test.yml up
 #   3. Open:                   http://localhost:3000
 #   4. Stop:                   docker compose -f docker/docker-compose.test.yml down
 
 services:
   norish:
-    image: norish:local
+    image: norishapp/norish:rc-v0.18.3-beta
     container_name: norish-app-test
     restart: unless-stopped
     ports:
@@ -24,6 +24,12 @@ services:
       CHROME_WS_ENDPOINT: ws://chrome-headless:3000
       PASSWORD_AUTH_ENABLED: "true"
       LOG_LEVEL: debug
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:3000/api/v1/health'', r => process.exit(r.statusCode===200?0:1))"',
+        ]
     depends_on:
       db:
         condition: service_healthy
@@ -67,7 +73,7 @@ services:
 
   # Redis for real-time events
   redis:
-    image: redis:8.6.0
+    image: redis:8.6.2
     container_name: norish-redis-test
     restart: unless-stopped
     volumes:

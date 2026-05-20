@@ -1,7 +1,8 @@
 "use client";
 
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useTranslations } from "next-intl";
+
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export function useGroceriesErrorAdapter() {
   const tErrors = useTranslations("common.errors");

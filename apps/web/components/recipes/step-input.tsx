@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import SmartTextInput from "@/components/shared/smart-text-input";
-import { useRecipeImages } from "@/hooks/recipes";
 import { Bars3Icon, PhotoIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Image } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
-
 import { MeasurementSystem } from "@norish/shared/contracts";
+
+import { useRecipeImages } from "@/hooks/recipes";
+import SmartTextInput from "@/components/shared/smart-text-input";
 
 export interface StepImage {
   id?: string;

@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-
 import { getRecipeFull } from "@norish/db";
 
 import RecipeForm from "../components/recipe-form";

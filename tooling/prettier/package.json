@@ -13,7 +13,7 @@
   "dependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "prettier": "catalog:",
-    "prettier-plugin-tailwindcss": "^0.7.2"
+    "prettier-plugin-tailwindcss": "^0.8.0"
   },
   "devDependencies": {
     "@norish/tsconfig": "workspace:*",

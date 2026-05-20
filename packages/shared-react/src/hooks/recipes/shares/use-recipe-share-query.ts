@@ -1,10 +1,11 @@
 import type { QueryKey } from "@tanstack/react-query";
+import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
+import type { CreateRecipeHooksOptions } from "../types";
+
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
 
-import type { CreateRecipeHooksOptions } from "../types";
 
 export type RecipeShareQueryResult = {
   share: RecipeShareSummaryDto | null;

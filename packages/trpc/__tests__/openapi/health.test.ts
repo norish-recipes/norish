@@ -1,8 +1,6 @@
 // @vitest-environment node
 
-import { readFile } from "node:fs/promises";
 import path from "node:path";
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 process.env.NODE_ENV = "development";
@@ -57,15 +55,6 @@ vi.mock("@norish/config/env-config-server", async (importOriginal) => {
 
 const getSessionMock = vi.hoisted(() => vi.fn());
 
-async function readVersion(relativePathFromRepoRoot: string) {
-  const packageJson = await readFile(
-    path.resolve(process.cwd(), "../..", relativePathFromRepoRoot),
-    "utf8"
-  );
-
-  return (JSON.parse(packageJson) as { version: string }).version;
-}
-
 vi.mock("@norish/auth/auth", () => ({
   auth: {
     api: {
@@ -77,6 +66,27 @@ vi.mock("@norish/auth/auth", () => ({
 describe("openapi health endpoint", () => {
   beforeEach(() => {
     vi.resetModules();
+    process.env.NORISH_VERSION_REPORT_JSON = JSON.stringify({
+      root: "1.2.3",
+      apps: {
+        mobile: "7.8.9",
+        "parser-api": "8.9.10",
+        web: "4.5.6",
+      },
+      packages: {
+        api: "1.0.0",
+        auth: "1.0.0",
+        config: "1.0.0",
+        db: "1.0.0",
+        i18n: "1.0.0",
+        queue: "1.0.0",
+        shared: "1.0.0",
+        "shared-react": "1.0.0",
+        "shared-server": "1.0.0",
+        trpc: "1.0.0",
+        ui: "1.0.0",
+      },
+    });
     getSessionMock.mockReset();
     dbExecuteMock.mockReset();
     dbExecuteMock.mockResolvedValue([]);
@@ -100,6 +110,7 @@ describe("openapi health endpoint", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    delete process.env.NORISH_VERSION_REPORT_JSON;
     vi.restoreAllMocks();
     vi.clearAllMocks();
   });
@@ -119,25 +130,37 @@ describe("openapi health endpoint", () => {
         )
       );
 
-      const [appVersion, webVersion, mobileVersion] = await Promise.all([
-        readVersion("packages/trpc/package.json"),
-        readVersion("apps/web/package.json"),
-        readVersion("apps/mobile/package.json"),
-      ]);
 
       const { handleOpenApiRequest } = await import("../../src/openapi");
       const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
+      const responseJson = await response.json();
 
       expect(response.status).toBe(200);
-      await expect(response.json()).resolves.toEqual({
+      expect(responseJson).toEqual({
         status: "ok",
         db: {
           status: "ok",
         },
         versions: {
-          app: appVersion,
-          web: webVersion,
-          mobile: mobileVersion,
+          root: "1.2.3",
+          apps: {
+            mobile: "7.8.9",
+            "parser-api": "8.9.10",
+            web: "4.5.6",
+          },
+          packages: {
+            api: "1.0.0",
+            auth: "1.0.0",
+            config: "1.0.0",
+            db: "1.0.0",
+            i18n: "1.0.0",
+            queue: "1.0.0",
+            shared: "1.0.0",
+            "shared-react": "1.0.0",
+            "shared-server": "1.0.0",
+            trpc: "1.0.0",
+            ui: "1.0.0",
+          },
           scraper: "15.10.0",
         },
         parser: {

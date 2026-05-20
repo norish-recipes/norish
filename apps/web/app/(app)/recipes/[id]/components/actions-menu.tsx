@@ -2,11 +2,6 @@
 
 import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
-import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
-import { usePermissionsContext } from "@/context/permissions-context";
-import { useRecipesContext } from "@/context/recipes-context";
-import { useActiveAllergies } from "@/hooks/user";
 import {
   CalendarDaysIcon,
   DevicePhoneMobileIcon,
@@ -26,12 +21,18 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
 import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 import { useRecipeContextRequired } from "../context";
+
 import RecipeSharePanel from "./recipe-share-panel";
 import { useWakeLockContext } from "./wake-lock-context";
+
+import { useActiveAllergies } from "@/hooks/user";
+import { useRecipesContext } from "@/context/recipes-context";
+import { usePermissionsContext } from "@/context/permissions-context";
+import { DeleteRecipeModal } from "@/components/shared/delete-recipe-modal";
+import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
 
 type Props = { id: string };
 

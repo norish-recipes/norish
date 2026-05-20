@@ -1,8 +1,9 @@
+import type { RecipeListContext } from "@norish/db";
+
 import { randomUUID } from "node:crypto";
+
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-
-import type { RecipeListContext } from "@norish/db";
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
 import {
   getRecipePermissionPolicy,
@@ -50,6 +51,7 @@ import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contrac
 import { emitByPolicy } from "../../helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+
 import { recipeEmitter } from "./emitter";
 import { assertRecipeAccess, findRecipeForViewer, handleRecipeError } from "./helpers";
 import {
@@ -161,7 +163,8 @@ export const createRecipeProcedure = authedProcedure
       protect: true,
       tags: ["Recipes"],
       summary: "Create a recipe",
-      description: "Creates a recipe directly from structured recipe data without parser transformation.",
+      description:
+        "Creates a recipe directly from structured recipe data without parser transformation.",
       errorResponses: {
         401: "Missing or invalid API credentials",
       },

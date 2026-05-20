@@ -1,6 +1,6 @@
 {
   "name": "@norish/db",
-  "version": "0.18.2-beta",
+  "version": "0.18.3-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -34,8 +34,8 @@
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
     "@testcontainers/postgresql": "catalog:",
-    "@types/pg": "8.16.0",
-    "drizzle-kit": "0.31.9",
+    "@types/pg": "8.20.0",
+    "drizzle-kit": "0.31.10",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "vitest": "catalog:"

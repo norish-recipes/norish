@@ -11,9 +11,9 @@ export const healthyResponseSchema = z.object({
     status: z.literal("ok"),
   }),
   versions: z.object({
-    app: z.string(),
-    web: z.string(),
-    mobile: z.string(),
+    root: z.string(),
+    apps: z.record(z.string(), z.string()),
+    packages: z.record(z.string(), z.string()),
     scraper: z.string().optional(),
   }),
   parser: z.object({

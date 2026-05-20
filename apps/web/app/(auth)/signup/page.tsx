@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-
 import { isPasswordAuthEnabled } from "@norish/auth/providers";
 import { isRegistrationEnabled } from "@norish/config/server-config-loader";
 

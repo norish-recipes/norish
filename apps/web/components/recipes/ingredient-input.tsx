@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import SmartTextInput from "@/components/shared/smart-text-input";
-import { useUnitsQuery } from "@/hooks/config";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
-
 import { MeasurementSystem } from "@norish/shared/contracts";
 import { debounce, parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+
+import { useUnitsQuery } from "@/hooks/config";
+import SmartTextInput from "@/components/shared/smart-text-input";
 
 export interface ParsedIngredient {
   id?: string;

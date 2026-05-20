@@ -1,11 +1,11 @@
 "use client";
 
-import { useUserContext } from "@/context/user-context";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { addToast } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
 import { useUser } from "@norish/shared-react/hooks/use-user";
+
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { useUserContext } from "@/context/user-context";
 
 export function useCurrentHouseholdUserId() {
   const { user } = useUser();

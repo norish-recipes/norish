@@ -1,11 +1,8 @@
 "use client";
 
+import type { StoreColor, StoreDto } from "@norish/shared/contracts";
+
 import { useRef, useState } from "react";
-import { DynamicHeroIcon, STORE_ICON_NAMES } from "@/components/groceries/dynamic-hero-icon";
-import { getStoreColorClasses, STORE_COLOR_OPTIONS } from "@/components/groceries/store-colors";
-import Panel, { PANEL_HEIGHT_LARGE } from "@/components/Panel/Panel";
-import { useGroceriesQuery } from "@/hooks/groceries";
-import { useStoresMutations } from "@/hooks/stores";
 import {
   Bars3Icon,
   CheckIcon,
@@ -18,9 +15,15 @@ import { Button, Input } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import type { StoreColor, StoreDto } from "@norish/shared/contracts";
-
 import { DeleteStoreModal } from "./delete-store-modal";
+
+import { DynamicHeroIcon, STORE_ICON_NAMES } from "@/components/groceries/dynamic-hero-icon";
+import { getStoreColorClasses, STORE_COLOR_OPTIONS } from "@/components/groceries/store-colors";
+import Panel, { PANEL_HEIGHT_LARGE } from "@/components/Panel/Panel";
+import { useGroceriesQuery } from "@/hooks/groceries";
+import { useStoresMutations } from "@/hooks/stores";
+
+
 
 interface StoreManagerPanelProps {
   open: boolean;

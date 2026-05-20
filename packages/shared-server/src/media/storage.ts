@@ -2,10 +2,10 @@ import { spawn } from "child_process";
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
+
 import convert from "heic-convert";
 import sharp from "sharp";
 import { v5 as uuidv5 } from "uuid";
-
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getMaxVideoFileSize } from "@norish/config/server-config-loader";
 import { serverLogger as log } from "@norish/shared-server/logger";
@@ -223,7 +223,7 @@ async function convertToJpeg(buffer: Buffer, sourceExt: string): Promise<Buffer>
     const errorMsg = e instanceof Error ? e.message : String(e);
 
     log.error({ err: e, sourceExt }, "Conversion failed");
-    throw new Error(`Failed to convert ${sourceExt} to JPEG: ${errorMsg}`);
+    throw new Error(`Failed to convert ${sourceExt} to JPEG: ${errorMsg}`, { cause: e });
   }
 }
 
@@ -241,7 +241,7 @@ async function fetchWithTimeout(url: string, timeoutMs: number = FETCH_TIMEOUT):
   } catch (e) {
     clearTimeout(timeoutId);
     if (e instanceof Error && e.name === "AbortError") {
-      throw new Error(`Request timeout after ${timeoutMs}ms`);
+      throw new Error(`Request timeout after ${timeoutMs}ms`, { cause: e });
     }
     throw e;
   }

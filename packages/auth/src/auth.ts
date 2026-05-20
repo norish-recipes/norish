@@ -1,5 +1,7 @@
 import type { BetterAuthOptions, Where } from "better-auth";
 import type { DBAdapter } from "better-auth/adapters";
+import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
+
 import { apiKey } from "@better-auth/api-key";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
@@ -7,8 +9,6 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
-
-import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
 import { AUTH_SECRET, encrypt, hmacIndex, safeDecrypt } from "@norish/auth/crypto";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { isRegistrationEnabled } from "@norish/config/server-config-loader";
@@ -188,7 +188,7 @@ function buildEmailAndPasswordConfig() {
   };
 }
 
-function createAuth() {
+function createBetterAuth() {
   const emailAndPasswordConfig = buildEmailAndPasswordConfig();
 
   // Create base drizzle adapter factory
@@ -464,8 +464,14 @@ function createAuth() {
   });
 }
 
-// Type for the auth instance including plugins
-type AuthInstance = ReturnType<typeof createAuth>;
+// Type for the auth instance including plugin API methods used by this package.
+type AuthInstance = ReturnType<typeof betterAuth> & {
+  api: ReturnType<typeof betterAuth>["api"] & ApiKeyAuthService;
+};
+
+function createAuth(): AuthInstance {
+  return createBetterAuth() as AuthInstance;
+}
 
 // Lazy-initialized auth instance
 let _auth: AuthInstance | null = null;

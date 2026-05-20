@@ -4,48 +4,50 @@ packages:
   - tooling/*
 
 catalog:
-  "@better-auth/api-key": 1.5.4
-  "@better-auth/expo": 1.5.4
+  "@better-auth/api-key": 1.6.9
+  "@better-auth/core": 1.6.9
+  "@better-auth/expo": 1.6.9
+  "@better-auth/utils": 0.4.0
   "@eslint/js": ^9.39.4
   "@heroicons/react": 2.2.0
   "@heroui/react": ^2.8.10
-  "@scalar/nextjs-api-reference": ^0.10.6
-  "@tailwindcss/postcss": ^4.2.2
-  "@tanstack/react-query": ^5.95.2
-  "@testcontainers/postgresql": ^11.13.0
-  "@trpc/client": ^11.15.1
-  "@trpc/server": ^11.15.1
-  "@trpc/tanstack-react-query": ^11.15.1
-  "@types/node": ^25.5.0
+  "@scalar/nextjs-api-reference": ^0.10.13
+  "@tailwindcss/postcss": ^4.2.4
+  "@tanstack/react-query": ^5.100.8
+  "@testcontainers/postgresql": ^11.14.0
+  "@trpc/client": ^11.17.0
+  "@trpc/server": ^11.17.0
+  "@trpc/tanstack-react-query": ^11.17.0
+  "@types/node": ^25.6.0
   "@types/react": 19.2.14
   "@types/react-dom": 19.2.3
-  "@vitejs/plugin-react": ^5.2.0
-  better-auth: 1.5.4
-  bullmq: ^5.71.1
+  "@vitejs/plugin-react": ^5.1.3
+  better-auth: 1.6.9
+  bullmq: ^5.76.5
   date-fns: ^4.1.0
-  drizzle-orm: 0.45.1
+  drizzle-orm: 0.45.2
   eslint: 9.39.1
-  fuse.js: ^7.1.0
+  fuse.js: ^7.3.0
   html-entities: ^2.6.0
   ioredis: ^5.10.1
-  jsdom: ^28.1.0
+  jsdom: ^29.0.0
   jszip: 3.10.1
-  next: 16.1.6
-  pg: 8.18.0
-  postcss: ^8.5.8
-  prettier: ^3.8.1
+  next: 16.2.4
+  pg: 8.20.0
+  postcss: ^8.5.13
+  prettier: ^3.8.3
   react: 19.2.4
   react-dom: 19.2.4
   server-only: ^0.0.1
   superjson: ^2.2.6
-  tailwindcss: ^4.2.2
+  tailwindcss: ^4.2.4
   trpc-to-openapi: ^3.2.0
-  turbo: ^2.8.20
+  turbo: ^2.9.8
   typescript: 5.9.3
-  vite: ^7.1.12
-  vitest: ^4.1.2
-  ws: 8.19.0
-  zod: 4.3.6
+  vite: ^7.3.1
+  vitest: ^4.1.5
+  ws: 8.20.0
+  zod: 4.4.2
   zod-openapi: ^5.4.2
 
 injectWorkspacePackages: true

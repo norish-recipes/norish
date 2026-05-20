@@ -168,7 +168,8 @@
     "uploading": "Przesyłanie...",
     "clickToUpload": "Kliknij lub przeciągnij i upuść",
     "pasteToUpload": "aby wkleić",
-    "imageFormats": "PNG, JPG, WEBP do 5MB"
+    "imageFormats": "PNG, JPG, WEBP do 5MB",
+    "discardChangesConfirm": "Masz niezapisane zmiany. Odrzucić je i opuścić tę stronę?"
   },
   "gallery": {
     "addImage": "Dodaj obraz",

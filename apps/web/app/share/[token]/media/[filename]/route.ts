@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { serveRecipeMedia } from "@/lib/recipe-media";
 import {
   getSharedRecipeByToken,

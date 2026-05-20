@@ -6,8 +6,8 @@
  */
 
 import type { Queue } from "bullmq";
-
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
+
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import { imageImportJobOptions, QUEUE_NAMES } from "../config";

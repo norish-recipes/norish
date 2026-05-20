@@ -1,7 +1,8 @@
+import type { CreateRecipeHooksOptions } from "../types";
+
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseAutoTaggingQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useAutoTaggingQuery() {

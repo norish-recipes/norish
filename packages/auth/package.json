@@ -1,6 +1,6 @@
 {
   "name": "@norish/auth",
-  "version": "0.18.2-beta",
+  "version": "0.18.3-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -19,7 +19,9 @@
   },
   "dependencies": {
     "@better-auth/api-key": "catalog:",
+    "@better-auth/core": "catalog:",
     "@better-auth/expo": "catalog:",
+    "@better-auth/utils": "catalog:",
     "@norish/config": "workspace:*",
     "@norish/db": "workspace:*",
     "@norish/queue": "workspace:*",

@@ -1,6 +1,6 @@
 import { defineConfig } from "eslint/config";
 
-import { baseConfig } from "@norish/eslint-config/base";
+import { baseConfig } from "../../tooling/eslint/base.ts";
 
 export default defineConfig(
   {

@@ -1,36 +1,81 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 afterEach(() => {
+  delete process.env.NORISH_VERSION_REPORT_JSON;
   vi.resetModules();
   vi.restoreAllMocks();
 });
 
 describe("getAppVersions", () => {
-  it("falls back when the mobile workspace is not present", async () => {
-    vi.doMock("node:fs/promises", () => ({
-      readFile: vi.fn(async (filePath: string) => {
-        if (filePath.endsWith("/apps/web/package.json")) {
-          return JSON.stringify({ version: "4.5.6" });
-        }
+  it("returns unavailable metadata when deployment version metadata is absent", async () => {
+    const { getAppVersions } = await import("../src/index.ts");
 
-        if (filePath.endsWith("/apps/mobile/package.json")) {
-          throw new Error("missing mobile package");
-        }
+    expect(getAppVersions()).toEqual({
+      root: "unavailable",
+      apps: {},
+      packages: {},
+    });
+  });
 
-        if (filePath.endsWith("/package.json")) {
-          return JSON.stringify({ version: "1.2.3" });
-        }
-
-        throw new Error(`unexpected path: ${filePath}`);
-      }),
-    }));
+  it("reads explicit deployment version metadata for every app and package", async () => {
+    process.env.NORISH_VERSION_REPORT_JSON = JSON.stringify({
+      root: "1.2.3",
+      apps: {
+        mobile: "7.8.9",
+        "parser-api": "8.9.10",
+        web: "4.5.6",
+      },
+      packages: {
+        api: "1.0.0",
+        trpc: "2.0.0",
+      },
+    });
 
     const { getAppVersions } = await import("../src/index.ts");
 
-    await expect(getAppVersions()).resolves.toEqual({
-      app: "1.2.3",
-      web: "4.5.6",
-      mobile: "unavailable",
+    expect(getAppVersions()).toEqual({
+      root: "1.2.3",
+      apps: {
+        mobile: "7.8.9",
+        "parser-api": "8.9.10",
+        web: "4.5.6",
+      },
+      packages: {
+        api: "1.0.0",
+        trpc: "2.0.0",
+      },
+    });
+  });
+
+  it("falls back partial invalid metadata without reading package manifests", async () => {
+    process.env.NORISH_VERSION_REPORT_JSON = JSON.stringify({
+      root: "1.2.3",
+      apps: ["web"],
+      packages: {
+        api: "1.0.0",
+      },
+    });
+
+    const { getAppVersions } = await import("../src/index.ts");
+
+    expect(getAppVersions()).toEqual({
+      root: "1.2.3",
+      apps: {},
+      packages: {
+        api: "1.0.0",
+      },
+    });
+  });
+
+  it("returns unavailable metadata when deployment version metadata is malformed", async () => {
+    process.env.NORISH_VERSION_REPORT_JSON = "not-json";
+
+    const { getAppVersions } = await import("../src/index.ts");
+
+    expect(getAppVersions()).toEqual({
+      root: "unavailable",
+      apps: {},
+      packages: {},
     });
   });
 });

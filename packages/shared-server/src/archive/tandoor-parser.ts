@@ -1,6 +1,5 @@
 import JSZip from "jszip";
 import { z } from "zod";
-
 import { FullRecipeInsertSchema } from "@norish/db";
 import { matchCategory } from "@norish/shared-server/ai/utils/category-matcher";
 import { saveImageBytes } from "@norish/shared-server/media/storage";
@@ -307,7 +306,7 @@ export async function extractTandoorRecipes(
         fileName: zipFile.name,
       });
     } catch (e: any) {
-      throw new Error(`Failed to parse ${zipFile.name}: ${e?.message || e}`);
+      throw new Error(`Failed to parse ${zipFile.name}: ${e?.message || e}`, { cause: e });
     }
   }
 

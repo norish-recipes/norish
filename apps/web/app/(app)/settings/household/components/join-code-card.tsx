@@ -1,7 +1,8 @@
 "use client";
 
+import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
+
 import { useEffect, useState } from "react";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import {
   ArrowPathIcon,
   ClipboardDocumentIcon as ClipboardDocumentIconSolid,
@@ -10,9 +11,10 @@ import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicon
 import { addToast, Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 
 import { useHouseholdSettingsContext } from "../context";
+
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
 export default function JoinCodeCard() {
   const t = useTranslations("settings.household.joinCode");
