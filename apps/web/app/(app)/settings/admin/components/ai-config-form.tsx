@@ -468,7 +468,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
           })}
         </p>
 
-        <label className="flex items-center justify-between cursor-pointer w-full">
+        <div className="flex items-center justify-between w-full">
           <div className="flex flex-col gap-1">
             <span className="font-medium">{t("provenanceEnabled", { fallback: "Enable Provenance Features" })}</span>
             <span className="text-default-500 text-sm">
@@ -478,14 +478,15 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
             </span>
           </div>
           <Switch
+            aria-label={t("provenanceEnabled", { fallback: "Enable Provenance Features" })}
             color="success"
             isDisabled={!enabled}
             isSelected={provenanceEnabled}
             onValueChange={setProvenanceEnabled}
           />
-        </label>
+        </div>
 
-        <label className="flex items-center justify-between cursor-pointer w-full">
+        <div className="flex items-center justify-between w-full">
           <div className="flex flex-col gap-1">
             <span className="font-medium">{t("provenanceAutoNew", { fallback: "Auto-Infer on Import" })}</span>
             <span className="text-default-500 text-sm">
@@ -495,12 +496,13 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
             </span>
           </div>
           <Switch
+            aria-label={t("provenanceAutoNew", { fallback: "Auto-Infer on Import" })}
             color="success"
             isDisabled={!enabled || !provenanceEnabled}
             isSelected={provenanceAutoNew}
             onValueChange={setProvenanceAutoNew}
           />
-        </label>
+        </div>
 
         <div className="border-default-200 flex items-center justify-between border-t pt-4">
           <div className="flex flex-col gap-1">
