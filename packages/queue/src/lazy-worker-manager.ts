@@ -274,7 +274,10 @@ async function createWorkerInstance<T>(state: LazyWorkerState<T>): Promise<void>
 
   // Start processing
   try {
-    await worker.run();
+    void worker.run().catch((err) => {
+      log.error({ err, queueName }, "Lazy worker run loop failed");
+      state.isRunning = false;
+    });
     state.isRunning = true;
     log.info({ queueName }, "Lazy worker started");
   } catch (err) {
