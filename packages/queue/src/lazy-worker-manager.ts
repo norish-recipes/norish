@@ -154,16 +154,18 @@ async function initializeQueueEvents<T>(state: LazyWorkerState<T>): Promise<void
 
   state.queueEvents = queueEvents;
 
-  // CRITICAL: Check for existing waiting jobs BEFORE attaching event listeners
+  // CRITICAL: Check for existing waiting or active jobs BEFORE attaching event listeners
   // This eliminates the race condition where jobs could be added between
-  // waitUntilReady() and the 'waiting' event listener attachment
-  const initialCounts = await queue.getJobCounts("waiting");
+  // waitUntilReady() and the 'waiting' event listener attachment. Checking active jobs
+  // ensures we start the worker to trigger stalled checks on orphaned/stuck jobs.
+  const initialCounts = await queue.getJobCounts("waiting", "active");
   const initialWaiting = initialCounts.waiting ?? 0;
+  const initialActive = initialCounts.active ?? 0;
 
-  if (initialWaiting > 0) {
+  if (initialWaiting > 0 || initialActive > 0) {
     log.info(
-      { queueName, waiting: initialWaiting },
-      "Found existing waiting jobs during init, starting worker"
+      { queueName, waiting: initialWaiting, active: initialActive },
+      "Found existing waiting or active jobs during init, starting worker"
     );
     await ensureWorkerRunning(state);
   }
