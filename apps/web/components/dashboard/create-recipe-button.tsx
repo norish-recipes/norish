@@ -65,22 +65,15 @@ export default function CreateRecipeButton() {
     <>
       <Dropdown placement="bottom-end">
         <DropdownTrigger>
-          <div className="flex items-center">
-            {/* Desktop Button Content */}
-            <Button
-              className="hidden font-medium md:flex"
-              color="primary"
-              radius="full"
-              size="md"
-              startContent={<PlusIcon className="h-5 w-5" />}
-            >
-              {t("addRecipe")}
-            </Button>
-            {/* Mobile Button Content (Icon only) */}
-            <Button isIconOnly className="mx-2 md:hidden" color="primary" radius="full" size="md">
-              <PlusIcon className="h-5 w-5" />
-            </Button>
-          </div>
+          <Button
+            className="mx-2 font-medium min-w-10 w-10 h-10 px-0 md:mx-0 md:w-auto md:px-4"
+            color="primary"
+            radius="full"
+            size="md"
+          >
+            <PlusIcon className="h-5 w-5 shrink-0" />
+            <span className="hidden md:inline md:ml-1.5">{t("addRecipe")}</span>
+          </Button>
         </DropdownTrigger>
         <DropdownMenu aria-label="Add recipe options">{menuItems}</DropdownMenu>
       </Dropdown>

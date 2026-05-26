@@ -8,7 +8,7 @@ import type {
 
 import { createContext, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { addToast } from "@heroui/react";
+import { addToast, Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { createScopedMessageTranslator } from "@norish/i18n";
 import { createRecipesContext } from "@norish/shared-react/contexts";
@@ -65,8 +65,18 @@ const sharedRecipesContext = createRecipesContext({
           description,
           shouldShowTimeoutProgress: true,
           radius: "full",
-          actionLabel,
-          onActionPress,
+          endContent:
+            actionLabel && onActionPress ? (
+              <Button
+                color="primary"
+                radius="full"
+                size="sm"
+                variant="solid"
+                onPress={onActionPress}
+              >
+                {actionLabel}
+              </Button>
+            ) : undefined,
         }),
       translate: createScopedMessageTranslator({
         common: (messageKey) => tCommon(messageKey as Parameters<typeof tCommon>[0]),
