@@ -1,9 +1,10 @@
 import type Redis from "ioredis";
+import superjson from "superjson";
+
 import type { Slot } from "@norish/shared/contracts";
+import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime-envelope";
 import type { CalendarSubscriptionEvents } from "@norish/trpc/routers/calendar/types";
 import type { RecipeSubscriptionEvents } from "@norish/trpc/routers/recipes/types";
-
-import superjson from "superjson";
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import { getCaldavSyncStatusByItemId } from "@norish/db/repositories/caldav-sync-status";
 import { addCaldavSyncJob } from "@norish/queue/caldav-sync/producer";
@@ -11,6 +12,29 @@ import { createSubscriberClient } from "@norish/queue/redis/client";
 import { getQueues } from "@norish/queue/registry";
 import { createLogger } from "@norish/shared-server/logger";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
+
+/**
+ * Unwrap a RealtimeEventEnvelope to its inner payload.
+ *
+ * The Redis emitter (packages/queue/src/redis/pubsub.ts) wraps published
+ * messages in `{ meta, payload }` for any channel matching the standard
+ * `norish:<namespace>:<scope>:...` shape — which includes every
+ * `norish:calendar:household:*:*` event this listener consumes.
+ *
+ * The pmessage handler below uses `subscriber.psubscribe()` directly
+ * (rather than the envelope-aware `createSubscription()` helper, which
+ * does not support pattern-subscribe), so we must unwrap here.
+ *
+ * Backward-compatible: legacy non-enveloped messages pass through.
+ * Exported for unit testing.
+ */
+export function unwrapRealtimeEventEnvelope(data: unknown): unknown {
+  if (data !== null && typeof data === "object" && "meta" in data && "payload" in data) {
+    return (data as RealtimeEventEnvelope).payload;
+  }
+
+  return data;
+}
 
 const log = createLogger("caldav-sync");
 
@@ -152,7 +176,7 @@ async function startCalendarSubscriptions(signal: AbortSignal): Promise<void> {
       let data: unknown;
 
       try {
-        data = superjson.parse(message);
+        data = unwrapRealtimeEventEnvelope(superjson.parse(message));
       } catch (err) {
         log.error({ err, channel }, "Failed to parse calendar event message");
 
