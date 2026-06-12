@@ -1,6 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { Tabs } from "@heroui/react";
+
+import { createIngredientLinkCandidates } from "@norish/shared-react/text";
 
 import type { CookingModeDialogProps, CookingModeTab } from "./types";
 import { CookingIngredientsView } from "./cooking-ingredients-view";
@@ -21,12 +24,20 @@ export function CookingModeTabs({
   recipeSystemUsed,
   showIngredientsTitle,
   steps,
+  highlightedIngredientKey,
+  ingredientListRef,
   onClose,
+  onIngredientPress,
   onPointerDown,
   onPointerUp,
   onStepChange,
   onTabChange,
 }: CookingModeTabsProps) {
+  const ingredientCandidates = useMemo(
+    () => createIngredientLinkCandidates(displayIngredients, recipeSystemUsed),
+    [displayIngredients, recipeSystemUsed]
+  );
+
   return (
     <Tabs
       className="flex h-full min-h-0 flex-1 flex-col"
@@ -48,15 +59,19 @@ export function CookingModeTabs({
       >
         <CookingStepView
           activeStep={activeStep}
+          ingredientCandidates={ingredientCandidates}
           recipeId={recipeId}
           recipeName={recipeName}
           steps={steps}
+          onIngredientPress={onIngredientPress}
           onStepChange={onStepChange}
         />
       </Tabs.Panel>
 
       <CookingIngredientsView
         displayIngredients={displayIngredients}
+        highlightedIngredientKey={highlightedIngredientKey}
+        ingredientListRef={ingredientListRef}
         recipeServings={recipeServings}
         recipeSystemUsed={recipeSystemUsed}
         showTitle={showIngredientsTitle}

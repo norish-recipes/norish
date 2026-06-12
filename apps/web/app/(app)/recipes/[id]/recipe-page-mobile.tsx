@@ -18,6 +18,7 @@ import HeartButton from "@/components/shared/heart-button";
 import { useUserContext } from "@/context/user-context";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import { useIngredientLinkHighlight } from "@/hooks/use-ingredient-link-highlight";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card, Link, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -46,6 +47,8 @@ export default function RecipePageMobile() {
   const t = useTranslations("recipes.detail");
   const showRatings = getShowRatingsPreference(user);
   const showFavorites = getShowFavoritesPreference(user);
+  const { highlightedIngredientKey, highlightIngredient, ingredientListRef } =
+    useIngredientLinkHighlight();
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -70,18 +73,6 @@ export default function RecipePageMobile() {
         >
           <ReadonlyRecipeMedia
             aspectRatio="4/3"
-            topRightContent={
-              showFavorites ? (
-                <div className="mt-[calc(2.75rem+env(safe-area-inset-top))]">
-                  <HeartButton
-                    showBackground
-                    isFavorite={isFavorite}
-                    size="lg"
-                    onToggle={handleToggleFavorite}
-                  />
-                </div>
-              ) : null
-            }
             className="h-full rounded-none shadow-none"
             recipe={recipe}
             rounded={false}
@@ -92,6 +83,18 @@ export default function RecipePageMobile() {
                     image={recipe.author.image}
                     name={recipe.author.name}
                     userId={recipe.author.id}
+                  />
+                </div>
+              ) : null
+            }
+            topRightContent={
+              showFavorites ? (
+                <div className="mt-[calc(2.75rem+env(safe-area-inset-top))]">
+                  <HeartButton
+                    showBackground
+                    isFavorite={isFavorite}
+                    size="lg"
+                    onToggle={handleToggleFavorite}
                   />
                 </div>
               ) : null
@@ -141,7 +144,10 @@ export default function RecipePageMobile() {
               </div>
             </div>
 
-            <IngredientsList />
+            <IngredientsList
+              highlightedIngredientKey={highlightedIngredientKey}
+              ingredientListRef={ingredientListRef}
+            />
 
             {/* Add to groceries button - below ingredients */}
             <AddToGroceries recipeId={recipe.id} />
@@ -171,7 +177,7 @@ export default function RecipePageMobile() {
             </div>
 
             <div className="text-left">
-              <StepsList />
+              <StepsList onIngredientPress={highlightIngredient} />
             </div>
 
             {/* Rating Section */}

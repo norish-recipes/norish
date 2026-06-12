@@ -554,6 +554,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               <SmartInputHelp />
             </p>
             <StepInput
+              ingredients={ingredients}
               recipeId={recipeId ?? undefined}
               steps={steps}
               systemUsed={systemUsed}

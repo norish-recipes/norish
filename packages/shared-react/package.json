@@ -13,6 +13,7 @@
     "./hooks/recipes/dashboard": "./src/hooks/recipes/dashboard/index.ts",
     "./hooks/recipes/recipe": "./src/hooks/recipes/recipe/index.ts",
     "./hooks/use-user": "./src/hooks/use-user.ts",
+    "./text": "./src/text/index.ts",
     "./contexts": "./src/contexts/index.ts",
     "./providers": "./src/providers/index.ts"
   },

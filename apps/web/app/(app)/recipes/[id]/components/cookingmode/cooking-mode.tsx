@@ -4,6 +4,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWakeLockContext } from "@/app/(app)/recipes/[id]/components/wake-lock-context";
 import { TimerDock } from "@/components/timer-dock";
+import { useIngredientLinkHighlight } from "@/hooks/use-ingredient-link-highlight";
 import { FireIcon } from "@heroicons/react/20/solid";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -126,6 +127,7 @@ export default function CookingMode({ className = "", fullWidth = false }: Cooki
     // bubble through the React tree even for portals, but the DOM target won't be
     // inside the handler's DOM element
     const target = event.nativeEvent.target as Node | null;
+
     if (target && event.currentTarget && !event.currentTarget.contains(target)) {
       return;
     }
@@ -138,6 +140,7 @@ export default function CookingMode({ className = "", fullWidth = false }: Cooki
   const handlePointerUp = useCallback(
     (event: ReactPointerEvent) => {
       const start = swipeStartRef.current;
+
       swipeStartRef.current = null;
 
       if (!start || event.pointerType === "mouse") {
@@ -151,6 +154,7 @@ export default function CookingMode({ className = "", fullWidth = false }: Cooki
 
       if (absX > absY && absX > SWIPE_THRESHOLD) {
         setActiveTab(deltaX < 0 ? "ingredients" : "steps");
+
         return;
       }
 
@@ -160,6 +164,10 @@ export default function CookingMode({ className = "", fullWidth = false }: Cooki
     },
     [activeTab, steps.length]
   );
+  const { highlightedIngredientKey, highlightIngredient, ingredientListRef } =
+    useIngredientLinkHighlight({
+      onBeforeHighlight: () => setActiveTab("ingredients"),
+    });
 
   const dialogProps = {
     activeStep: currentStep,
@@ -170,7 +178,10 @@ export default function CookingMode({ className = "", fullWidth = false }: Cooki
     recipeServings: recipe.servings,
     recipeSystemUsed: recipe.systemUsed ?? "metric",
     steps,
+    highlightedIngredientKey,
+    ingredientListRef,
     onClose: close,
+    onIngredientPress: highlightIngredient,
     onPointerDown: handlePointerDown,
     onPointerUp: handlePointerUp,
     onStepChange: setActiveStep,
@@ -193,26 +204,22 @@ export default function CookingMode({ className = "", fullWidth = false }: Cooki
       </Button>
 
       <Modal.Backdrop
+        className="bg-background/75 z-[1099]"
         isOpen={isOpen}
-        className="z-[1099] bg-background/75"
         variant="blur"
         onOpenChange={(open) => {
           if (!open) setIsOpen(false);
         }}
       >
         <Modal.Container
-          className={
-            isDesktop
-              ? "z-[1100] items-center justify-center md:p-8"
-              : "z-[1100] p-0"
-          }
+          className={isDesktop ? "z-[1100] items-center justify-center md:p-8" : "z-[1100] p-0"}
           size={isDesktop ? "cover" : "full"}
         >
           <Modal.Dialog
             className={
               isDesktop
-                ? "flex items-center justify-center bg-transparent p-0 shadow-none rounded-none"
-                : "flex h-[100dvh] w-[100dvw] flex-col overflow-hidden bg-background p-0 shadow-none"
+                ? "flex items-center justify-center rounded-none bg-transparent p-0 shadow-none"
+                : "bg-background flex h-[100dvh] w-[100dvw] flex-col overflow-hidden p-0 shadow-none"
             }
           >
             <>

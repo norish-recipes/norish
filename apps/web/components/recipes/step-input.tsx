@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { SmartTextInputIngredientSuggestion } from "@/components/shared/smart-text-input";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SmartTextInput from "@/components/shared/smart-text-input";
 import { useRecipeImages } from "@/hooks/recipes";
 import { Bars3Icon, PhotoIcon, XMarkIcon } from "@heroicons/react/16/solid";
@@ -8,6 +9,11 @@ import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import {
+  createIngredientLinkCandidates,
+  formatIngredientLinkAmount,
+  formatIngredientLinkToken,
+} from "@norish/shared-react/text";
 import { MeasurementSystem } from "@norish/shared/contracts";
 
 export interface StepImage {
@@ -23,11 +29,19 @@ export interface Step {
   version?: number;
   images?: StepImage[];
 }
+export interface StepInputIngredient {
+  ingredientName: string;
+  amount: number | null;
+  unit: string | null;
+  systemUsed: MeasurementSystem;
+  order: number;
+}
 export interface StepInputProps {
   steps: Step[];
   onChange: (steps: Step[]) => void;
   systemUsed?: MeasurementSystem;
   recipeId?: string; // Required for image uploads
+  ingredients?: StepInputIngredient[];
 }
 
 // Internal type with stable IDs for reordering
@@ -51,6 +65,7 @@ export default function StepInput({
   onChange,
   systemUsed = "metric",
   recipeId,
+  ingredients = [],
 }: StepInputProps) {
   const t = useTranslations("recipes.stepInput");
   const [items, setItems] = useState<StepItem[]>([createStepItem("", [])]);
@@ -59,6 +74,20 @@ export default function StepInput({
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const dragConstraintsRef = useRef<HTMLUListElement>(null);
   const { uploadStepImage, deleteStepImage } = useRecipeImages();
+  const ingredientSuggestions = useMemo(
+    () =>
+      createIngredientLinkCandidates(ingredients, systemUsed).map(
+        (candidate): SmartTextInputIngredientSuggestion => ({
+          key: candidate.key,
+          label: candidate.ingredientName,
+          token: formatIngredientLinkToken(
+            candidate.ingredientName,
+            formatIngredientLinkAmount(candidate)
+          ),
+        })
+      ),
+    [ingredients, systemUsed]
+  );
 
   // Initialize from steps prop
   useEffect(() => {
@@ -251,6 +280,7 @@ export default function StepInput({
           index={index}
           isLast={index === items.length - 1}
           item={item}
+          ingredientSuggestions={ingredientSuggestions}
           recipeId={recipeId}
           showRemove={items.length > 1 && (!!item.text || item.images.length > 0)}
           stepNumber={getStepNumber(index)}
@@ -294,6 +324,7 @@ interface StepRowProps {
   dragConstraintsRef: React.RefObject<HTMLUListElement | null>;
   stepPlaceholder: string;
   stepPlaceholderShort: string;
+  ingredientSuggestions: SmartTextInputIngredientSuggestion[];
   onValueChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onBlur: () => void;
@@ -314,6 +345,7 @@ function StepRow({
   dragConstraintsRef,
   stepPlaceholder,
   stepPlaceholderShort,
+  ingredientSuggestions,
   onValueChange,
   onKeyDown,
   onBlur,
@@ -359,6 +391,7 @@ function StepRow({
 
         <div className="flex flex-1 flex-col gap-2">
           <SmartTextInput
+            ingredientSuggestions={ingredientSuggestions}
             minRows={2}
             placeholder={index === 0 ? stepPlaceholder : stepPlaceholderShort}
             value={item.text}

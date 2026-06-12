@@ -5,6 +5,8 @@ import { BookOpenIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/2
 import { Button, Chip, Meter, ScrollShadow, Surface, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { IngredientLinkCandidate } from "@norish/shared-react/text";
+
 import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
 import { StepImages } from "./step-images";
 import { clampStep } from "./utils";
@@ -14,6 +16,8 @@ type CookingStepViewProps = {
   recipeId: string;
   recipeName: string;
   steps: ResolvedCookingModeStep[];
+  ingredientCandidates: IngredientLinkCandidate[];
+  onIngredientPress?: (candidate: IngredientLinkCandidate) => void;
   onStepChange: (step: number) => void;
 };
 
@@ -22,6 +26,8 @@ export function CookingStepView({
   recipeId,
   recipeName,
   steps,
+  ingredientCandidates,
+  onIngredientPress,
   onStepChange,
 }: CookingStepViewProps) {
   const tCookMode = useTranslations("recipes.cookMode");
@@ -69,6 +75,8 @@ export function CookingStepView({
                 recipeName={recipeName}
                 stepIndex={step.originalIndex}
                 text={step.text}
+                ingredientCandidates={ingredientCandidates}
+                onIngredientPress={onIngredientPress}
               />
             </div>
 
@@ -78,7 +86,7 @@ export function CookingStepView({
       </div>
 
       {/* Fixed bottom navigation */}
-      <div className="border-border shrink-0 border-t px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 md:px-6 md:pb-4 md:pt-4">
+      <div className="border-border shrink-0 border-t px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:px-6 md:pt-4 md:pb-4">
         <Meter
           aria-label={tCookMode("stepCounter", {
             current: activeStep + 1,
