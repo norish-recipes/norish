@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./rating-stars": "./src/rating-stars.tsx",
     "./star-rating": "./src/star-rating.tsx"
   },
   "scripts": {

@@ -1,6 +1,6 @@
 "use client";
 
-import { ReadonlyIngredientsList } from "@/app/(app)/recipes/[id]/components/ingredient-list";
+import { ReadonlyIngredientsList } from "@/components/recipes/readonly-ingredients-list";
 
 import { usePublicRecipeContext } from "../public/public-recipe-context";
 

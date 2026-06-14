@@ -1,6 +1,6 @@
 "use client";
 
-import { ReadonlyStepsList } from "@/app/(app)/recipes/[id]/components/readonly-steps-list";
+import { ReadonlyStepsList } from "@/components/recipes/readonly-steps-list";
 import { PublicSmartInstruction } from "@/components/recipe/public-smart-instruction";
 
 import { usePublicRecipeContext } from "../public/public-recipe-context";

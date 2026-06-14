@@ -1,6 +1,6 @@
 "use client";
 
-import { ReadonlyNutritionCard } from "@/components/recipes/nutrition-card";
+import { ReadonlyNutritionCard } from "@/components/recipes/readonly-nutrition";
 import {
   ReadonlyRecipeMedia,
   ReadonlyRecipeNotes,

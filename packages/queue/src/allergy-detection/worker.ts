@@ -12,8 +12,7 @@ import type { PolicyEmitContext } from "@norish/trpc/helpers";
 
 import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import { getAllergiesForUsers, getHouseholdMemberIds, getRecipeFull } from "@norish/db";
-import { db } from "@norish/db/drizzle";
-import { attachTagsToRecipeByInputTx, getRecipeTagNamesTx } from "@norish/db/repositories/tags";
+import { mergeTagsIntoRecipe } from "@norish/db/repositories/tags";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { createLogger } from "@norish/shared-server/logger";
@@ -111,23 +110,13 @@ async function processAllergyDetectionJob(job: Job<AllergyDetectionJobData>): Pr
     return;
   }
 
-  // Update recipe tags in database (within transaction to avoid race conditions)
-  await db.transaction(async (tx) => {
-    // Get existing tags to merge (preserve any manually added tags)
-    const existingTags = await getRecipeTagNamesTx(tx, recipeId);
+  // Merge detected allergens with existing tags (preserves manually added tags)
+  const { newTags, allTags } = await mergeTagsIntoRecipe(recipeId, detectedAllergens);
 
-    // Merge tags: detected allergens + existing tags (deduplicated, lowercase comparison)
-    const existingLower = new Set(existingTags.map((t: string) => t.toLowerCase()));
-    const newTags = detectedAllergens.filter((t) => !existingLower.has(t.toLowerCase()));
-    const allTags = [...existingTags, ...newTags];
-
-    await attachTagsToRecipeByInputTx(tx, recipeId, allTags);
-
-    log.info(
-      { jobId: job.id, recipeId, newTags, totalTags: allTags.length },
-      "Allergy detection completed and saved"
-    );
-  });
+  log.info(
+    { jobId: job.id, recipeId, newTags, totalTags: allTags.length },
+    "Allergy detection completed and saved"
+  );
 
   // Fetch updated recipe and emit events
   const updatedRecipe = await getRecipeFull(recipeId);

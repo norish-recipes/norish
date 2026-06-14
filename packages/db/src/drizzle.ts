@@ -32,6 +32,18 @@ export const db = new Proxy({} as NodePgDatabase<typeof schema>, {
   },
 });
 
+export type DbTransaction = Parameters<
+  Parameters<NodePgDatabase<typeof schema>["transaction"]>[0]
+>[0];
+
+/**
+ * Run repository operations inside a single database transaction without
+ * exposing the raw client to callers outside the db package.
+ */
+export async function withTransaction<T>(fn: (tx: DbTransaction) => Promise<T>): Promise<T> {
+  return await db.transaction(fn);
+}
+
 /**
  * Reset the database connection pool
  * This is primarily for testing - allows switching databases at runtime

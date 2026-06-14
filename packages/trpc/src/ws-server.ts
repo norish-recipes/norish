@@ -25,10 +25,19 @@ declare module "node:http" {
 }
 
 // ws exports differ between ESM (named exports) and CJS (default export with Server)
-const WsServer =
-  (wsModule as any).WebSocketServer ??
-  (wsModule as any).Server ??
-  (wsModule as any).default?.Server;
+const wsInterop = wsModule as unknown as {
+  WebSocketServer?: typeof wsModule.WebSocketServer;
+  Server?: typeof wsModule.WebSocketServer;
+  default?: { Server?: typeof wsModule.WebSocketServer };
+};
+const resolvedWsServer =
+  wsInterop.WebSocketServer ?? wsInterop.Server ?? wsInterop.default?.Server;
+
+if (!resolvedWsServer) {
+  throw new Error("ws module does not export a WebSocket server constructor");
+}
+
+const WsServer = resolvedWsServer;
 
 type WsServerType = InstanceType<typeof WsServer>;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import AuthorChip from "@/app/(app)/recipes/[id]/components/author-chip";
+import AuthorChip from "@/components/recipes/author-chip";
 import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import {

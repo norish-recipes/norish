@@ -56,6 +56,7 @@ export function TimerChip({
         as="button"
         className="mx-1 translate-y-[1px] rounded-full pr-1.5 pl-2.5 align-baseline text-base"
         color="default"
+        type="button"
         variant="secondary"
         onClick={handleClick}
       >
@@ -83,6 +84,7 @@ export function TimerChip({
       className="mx-1 translate-y-[1px] rounded-full pr-1.5 pl-2.5 align-baseline text-base"
       color={isCompleted ? "danger" : isRunning ? "accent" : "warning"}
       size="md"
+      type="button"
       variant="secondary"
       onClick={handleClick}
     >

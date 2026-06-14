@@ -90,7 +90,7 @@ export async function getHouseholdForUser(
         },
       },
     },
-  })) as any;
+  }));
 
   if (!rows?.household) return null;
 
@@ -151,7 +151,7 @@ export async function addUserToHousehold(input: HouseholdUserInsertDto): Promise
 
   const [row] = await db
     .insert(householdUsers)
-    .values(parsed.data as any)
+    .values(parsed.data)
     .onConflictDoNothing()
     .returning();
 
@@ -220,7 +220,7 @@ export async function findHouseholdByJoinCode(code: string): Promise<HouseholdDt
   const rows = await db
     .select()
     .from(households)
-    .where(eq(households.joinCode as any, code))
+    .where(eq(households.joinCode, code))
     .limit(1);
   const parsed = HouseholdSelectBaseSchema.safeParse(rows[0]);
 
@@ -422,7 +422,7 @@ async function generateUniqueJoinCode(): Promise<string> {
     const existing = await db
       .select({ id: households.id })
       .from(households)
-      .where(eq(households.joinCode as any, code))
+      .where(eq(households.joinCode, code))
       .limit(1);
 
     if (existing.length === 0) return code;

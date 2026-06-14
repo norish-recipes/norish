@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
-import AuthorChip from "@/app/(app)/recipes/[id]/components/author-chip";
+import AuthorChip from "@/components/recipes/author-chip";
 
 let mockCurrentUser: { id: string } | null = { id: "user-1" };
 

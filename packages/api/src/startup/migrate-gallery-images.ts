@@ -1,10 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
 
-import { eq, like, or } from "drizzle-orm";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { db } from "@norish/db/drizzle";
-import { recipeImages, recipes } from "@norish/db/schema";
+import {
+  listGalleryImagesWithLegacyUrls,
+  listRecipeIdsAndImages,
+  listRecipesWithLegacyImageUrls,
+  updateGalleryImageUrl,
+  updateRecipeImageUrl,
+} from "@norish/db/repositories/recipes";
 import { dbLogger as log } from "@norish/shared-server/logger";
 
 const RECIPES_DIR = path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes");
@@ -168,7 +172,7 @@ async function migrateThumbnails(stats: MigrationStats): Promise<void> {
 
   // Query database to build filename -> recipeId mapping
   // Check both old URL pattern and new URL pattern (in case DB was partially migrated)
-  const allRecipes = await db.select({ id: recipes.id, image: recipes.image }).from(recipes);
+  const allRecipes = await listRecipeIdsAndImages();
 
   const filenameToRecipeId = new Map<string, string>();
 
@@ -313,10 +317,7 @@ async function migrateGalleryFiles(stats: MigrationStats): Promise<void> {
  */
 async function updateDatabaseUrls(stats: MigrationStats): Promise<void> {
   // Update recipes.image (thumbnails)
-  const recipesWithOldUrls = await db
-    .select({ id: recipes.id, image: recipes.image })
-    .from(recipes)
-    .where(like(recipes.image, "/recipes/images/%"));
+  const recipesWithOldUrls = await listRecipesWithLegacyImageUrls("/recipes/images/");
 
   for (const record of recipesWithOldUrls) {
     if (!record.image) continue;
@@ -338,7 +339,7 @@ async function updateDatabaseUrls(stats: MigrationStats): Promise<void> {
       }
 
       try {
-        await db.update(recipes).set({ image: newUrl }).where(eq(recipes.id, record.id));
+        await updateRecipeImageUrl(record.id, newUrl);
         stats.dbRecordsUpdated++;
         log.debug({ recipeId: record.id, oldUrl: record.image, newUrl }, "Updated thumbnail URL");
       } catch (err) {
@@ -349,12 +350,7 @@ async function updateDatabaseUrls(stats: MigrationStats): Promise<void> {
   }
 
   // Update recipe_images.image (gallery) - check both old patterns
-  const galleryImages = await db
-    .select({ id: recipeImages.id, recipeId: recipeImages.recipeId, image: recipeImages.image })
-    .from(recipeImages)
-    .where(
-      or(like(recipeImages.image, "/recipes/images/%"), like(recipeImages.image, "%/gallery/%"))
-    );
+  const galleryImages = await listGalleryImagesWithLegacyUrls();
 
   for (const record of galleryImages) {
     let newUrl: string | null = null;
@@ -405,7 +401,7 @@ async function updateDatabaseUrls(stats: MigrationStats): Promise<void> {
       }
 
       try {
-        await db.update(recipeImages).set({ image: newUrl }).where(eq(recipeImages.id, record.id));
+        await updateGalleryImageUrl(record.id, newUrl);
         stats.dbRecordsUpdated++;
         log.debug(
           { imageId: record.id, oldUrl: record.image, newUrl },

@@ -585,8 +585,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                   return (
                     <Chip
                       key={category}
+                      as="button"
+                      aria-pressed={active}
                       className="h-8 cursor-pointer rounded-full px-3 text-sm"
                       color={active ? "accent" : "default"}
+                      type="button"
                       variant={active ? "primary" : "soft"}
                       onClick={() => toggleCategory(category)}
                     >

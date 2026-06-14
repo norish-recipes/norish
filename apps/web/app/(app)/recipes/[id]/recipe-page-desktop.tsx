@@ -7,7 +7,7 @@ import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
-import NutritionCard from "@/components/recipes/nutrition-card";
+import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
 import {
   ReadonlyRecipeMedia,
   ReadonlyRecipeNotes,
@@ -29,8 +29,8 @@ import {
 } from "@norish/shared/lib/user-preferences";
 import StarRating from "@norish/ui/star-rating";
 
-import AmountDisplayToggle from "./components/amount-display-toggle";
-import AuthorChip from "./components/author-chip";
+import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
+import AuthorChip from "@/components/recipes/author-chip";
 import ServingsControl from "./components/servings-control";
 import { useRecipeContextRequired } from "./context";
 

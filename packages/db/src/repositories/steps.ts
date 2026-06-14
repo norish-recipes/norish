@@ -2,6 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
 import type { StepDto, StepInsertDto } from "@norish/shared/contracts/dto/steps";
+import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
 import { stepImages, steps } from "@norish/db/schema";
 import { StepSelectBaseSchema } from "@norish/shared/contracts/zod/steps";
@@ -134,4 +135,14 @@ export async function createManyRecipeStepsTx(
   }
 
   return allSteps;
+}
+
+/**
+ * List all step image URLs stored in the database. Used by startup media
+ * cleanup to detect orphaned step image files on disk.
+ */
+export async function listAllStepImageUrls(): Promise<string[]> {
+  const rows = await db.select({ image: stepImages.image }).from(stepImages);
+
+  return rows.map((row) => row.image);
 }

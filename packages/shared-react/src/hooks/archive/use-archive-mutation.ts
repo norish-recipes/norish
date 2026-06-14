@@ -34,7 +34,10 @@ export function createUseArchiveMutation({
 
       formData.append("file", file);
 
-      startMutation.mutate(formData as any, {
+      // The router input schema is z.instanceof(FormData) evaluated under Node
+      // types (undici), which TS treats as a different type than DOM FormData
+      // even though they are runtime-compatible.
+      startMutation.mutate(formData as unknown as Parameters<typeof startMutation.mutate>[0], {
         onSuccess: (result) => {
           if (result.success) {
             setImportState(() => ({

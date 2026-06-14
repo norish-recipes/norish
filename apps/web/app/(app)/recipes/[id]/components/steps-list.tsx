@@ -1,6 +1,6 @@
 "use client";
 
-import { ReadonlyStepsList } from "@/app/(app)/recipes/[id]/components/readonly-steps-list";
+import { ReadonlyStepsList } from "@/components/recipes/readonly-steps-list";
 
 import type { IngredientLinkCandidate } from "@norish/shared-react/text";
 

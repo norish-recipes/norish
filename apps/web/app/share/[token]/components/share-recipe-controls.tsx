@@ -1,6 +1,6 @@
 "use client";
 
-import AmountDisplayToggle from "@/app/(app)/recipes/[id]/components/amount-display-toggle";
+import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
 
 import { usePublicRecipeContext } from "../public/public-recipe-context";
 import { ShareServingsControl } from "./share-servings-control";

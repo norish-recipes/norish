@@ -1,8 +1,8 @@
 "use client";
 
-import AuthorChip from "@/app/(app)/recipes/[id]/components/author-chip";
-import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/app/(app)/recipes/[id]/recipe-layout-constants";
-import { ReadonlyNutritionSection } from "@/components/recipes/nutrition-card";
+import AuthorChip from "@/components/recipes/author-chip";
+import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/components/recipes/recipe-layout-constants";
+import { ReadonlyNutritionSection } from "@/components/recipes/readonly-nutrition";
 import {
   ReadonlyRecipeMedia,
   ReadonlyRecipeNotes,

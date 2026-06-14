@@ -24,7 +24,7 @@ import {
   getShowFavoritesPreference,
   getShowRatingsPreference,
 } from "@norish/shared/lib/user-preferences";
-import RatingStars from "@norish/ui/rating-stars";
+import StarRating from "@norish/ui/star-rating";
 
 const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const COOKING_TIME_OPTIONS: Array<{
@@ -318,7 +318,15 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
                   </Button>
                 )}
 
-                {showRatings && <RatingStars value={localMinRating} onChange={setLocalMinRating} />}
+                {showRatings && (
+                  <StarRating
+                    allowClear
+                    showValueSuffix
+                    size="sm"
+                    value={localMinRating}
+                    onChange={setLocalMinRating}
+                  />
+                )}
               </div>
             </section>
           )}

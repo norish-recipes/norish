@@ -24,6 +24,7 @@ import {
   DeleteUserAvatarInputSchema,
   UpdateUserNameInputSchema,
   UpdateUserPreferencesInputSchema,
+  UserPreferencesSchema,
 } from "@norish/shared/contracts/zod";
 import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-allergies";
 import { buildAvatarFilename, isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
@@ -42,6 +43,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
   const freshUser = await getUserById(ctx.user.id);
   const apiKeys = await getApiKeysForUser(ctx.user.id);
   const preferences = await getUserPreferences(ctx.user.id);
+  const parsedPreferences = UserPreferencesSchema.safeParse(preferences);
 
   // completed DB reads
 
@@ -52,7 +54,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
       name: freshUser?.name ?? ctx.user.name,
       image: freshUser?.image ?? ctx.user.image,
       version: freshUser?.version ?? 1,
-      preferences: preferences as any,
+      preferences: parsedPreferences.success ? parsedPreferences.data : {},
     },
     apiKeys: apiKeys.map((k) => ({
       id: k.id,

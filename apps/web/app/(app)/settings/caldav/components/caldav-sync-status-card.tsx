@@ -92,37 +92,49 @@ export default function CalDavSyncStatusCard() {
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap gap-2">
               <Chip
+                as="button"
+                aria-pressed={syncStatusFilter === "synced"}
                 className="cursor-pointer transition-all"
                 color="success"
                 size="sm"
                 variant={syncStatusFilter === "synced" ? "primary" : "soft"}
+                type="button"
                 onClick={() => handleFilterClick("synced")}
               >
                 {t("statuses.synced")}: {syncStatusSummary.synced}
               </Chip>
               <Chip
+                as="button"
+                aria-pressed={syncStatusFilter === "pending"}
                 className="cursor-pointer transition-all"
                 color="warning"
                 size="sm"
                 variant={syncStatusFilter === "pending" ? "primary" : "soft"}
+                type="button"
                 onClick={() => handleFilterClick("pending")}
               >
                 {t("statuses.pending")}: {syncStatusSummary.pending}
               </Chip>
               <Chip
+                as="button"
+                aria-pressed={syncStatusFilter === "failed"}
                 className="cursor-pointer transition-all"
                 color="danger"
                 size="sm"
                 variant={syncStatusFilter === "failed" ? "primary" : "soft"}
+                type="button"
                 onClick={() => handleFilterClick("failed")}
               >
                 {t("statuses.failed")}: {syncStatusSummary.failed}
               </Chip>
               <Chip
+                as="button"
+                aria-pressed={syncStatusFilter === "removed"}
                 className="cursor-pointer transition-all"
                 color="default"
                 size="sm"
                 variant={syncStatusFilter === "removed" ? "primary" : "soft"}
+                type="button"
                 onClick={() => handleFilterClick("removed")}
               >
                 {t("statuses.removed")}: {syncStatusSummary.removed}

@@ -259,6 +259,12 @@ export async function deletePlannedItem(
   });
 }
 
+export async function deletePlannedItemsBefore(beforeDate: string): Promise<number> {
+  const result = await db.delete(plannedItems).where(lte(plannedItems.date, beforeDate));
+
+  return result.rowCount ?? 0;
+}
+
 export async function moveItem(
   itemId: string,
   targetDate: string,

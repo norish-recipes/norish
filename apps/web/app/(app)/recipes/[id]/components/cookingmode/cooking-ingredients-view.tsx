@@ -1,8 +1,8 @@
 "use client";
 
 import type { Ref } from "react";
-import AmountDisplayToggle from "@/app/(app)/recipes/[id]/components/amount-display-toggle";
-import { ReadonlyIngredientsList } from "@/app/(app)/recipes/[id]/components/ingredient-list";
+import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
+import { ReadonlyIngredientsList } from "@/components/recipes/readonly-ingredients-list";
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import { ScrollShadow, Separator, Tabs } from "@heroui/react";
