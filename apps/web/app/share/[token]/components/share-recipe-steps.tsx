@@ -1,7 +1,7 @@
 "use client";
 
-import { ReadonlyStepsList } from "@/components/recipes/readonly-steps-list";
 import { PublicSmartInstruction } from "@/components/recipe/public-smart-instruction";
+import { ReadonlyStepsList } from "@/components/recipes/readonly-steps-list";
 
 import { usePublicRecipeContext } from "../public/public-recipe-context";
 

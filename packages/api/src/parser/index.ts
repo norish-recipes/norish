@@ -1,5 +1,4 @@
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import { isVideoUrl } from "@norish/api/helpers";
 import { fetchViaPlaywright } from "@norish/api/parser/fetch";
@@ -13,7 +12,7 @@ import {
   isAIEnabled,
   isVideoParsingEnabled,
   shouldAlwaysUseAI,
-} from "@norish/config/server-config-loader";
+} from "@norish/shared-server/config/server-config-loader";
 import { parserLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { hasRecipeName } from "@norish/shared/lib/helpers";

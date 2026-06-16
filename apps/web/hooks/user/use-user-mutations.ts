@@ -1,16 +1,14 @@
 "use client";
 
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { useMutation } from "@tanstack/react-query";
 
 import type { User } from "@norish/shared/contracts";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
-
-import { useMutation } from "@tanstack/react-query";
 import { getUserPreferences } from "@norish/shared/lib/user-preferences";
 
 import { useUserCacheHelpers } from "./use-user-cache";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type UserMutationsResult = {
   // Profile updates

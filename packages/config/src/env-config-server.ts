@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-
 import { config } from "dotenv";
 import { z } from "zod";
 

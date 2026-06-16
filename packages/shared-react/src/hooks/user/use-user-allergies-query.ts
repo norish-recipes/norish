@@ -1,7 +1,6 @@
-import type { CreateUserHooksOptions } from "./types";
-
 import { useQuery } from "@tanstack/react-query";
 
+import type { CreateUserHooksOptions } from "./types";
 
 export function createUseUserAllergiesQuery({ useTRPC }: CreateUserHooksOptions) {
   return function useUserAllergiesQuery() {

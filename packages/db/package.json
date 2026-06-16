@@ -22,9 +22,8 @@
     "clean": "git clean -xdf .cache .turbo node_modules dist"
   },
   "dependencies": {
-    "@norish/auth": "workspace:*",
     "@norish/config": "workspace:*",
-    "@norish/queue": "workspace:*",
+    "@norish/db-schema": "workspace:*",
     "@norish/shared": "workspace:*",
     "drizzle-orm": "catalog:",
     "fuse.js": "catalog:",

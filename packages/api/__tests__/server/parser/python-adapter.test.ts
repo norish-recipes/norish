@@ -8,7 +8,7 @@ const mockParseSteps = vi.fn();
 const mockParseImages = vi.fn();
 const mockParseVideos = vi.fn();
 
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getUnits: mockGetUnits,
 }));
 

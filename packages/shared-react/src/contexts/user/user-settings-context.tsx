@@ -1,9 +1,8 @@
+import { createContext, useCallback, useContext } from "react";
 
 import type { User } from "@norish/shared/contracts";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
-
-import { createContext, useCallback, useContext } from "react";
 
 export type UserSettingsContextValue = {
   user: User | null;

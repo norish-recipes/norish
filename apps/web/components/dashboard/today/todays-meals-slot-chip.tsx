@@ -1,11 +1,9 @@
 "use client";
 
-import type { Slot } from "@norish/shared/contracts";
-
+import { MealIcon } from "@/lib/meal-icon";
 import { Chip } from "@heroui/react";
 
-import { MealIcon } from "@/lib/meal-icon";
-
+import type { Slot } from "@norish/shared/contracts";
 
 type TodaysMealsSlotChipProps = {
   slot: Slot;

@@ -1,5 +1,5 @@
-import { getUnits } from "@norish/config/server-config-loader";
 import { FullRecipeInsertSchema } from "@norish/db";
+import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { saveImageBytes } from "@norish/shared-server/media/storage";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";

@@ -1,12 +1,10 @@
-import type { ChildProcess } from "node:child_process";
-import type { ServerConfig } from "@norish/config/env-config-server";
-
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline";
+import type { ChildProcess } from "node:child_process";
 
-
+import type { ServerConfig } from "@norish/config/env-config-server";
 import {
   buildInternalParserApiUrl,
   INTERNAL_PARSER_API_HOST,

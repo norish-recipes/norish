@@ -32,10 +32,7 @@ function CalendarPageContent() {
 
   useEffect(() => {
     return () => {
-      if (
-        typeof window !== "undefined" &&
-        restoreMiniRecipesScrollTimerRef.current !== null
-      ) {
+      if (typeof window !== "undefined" && restoreMiniRecipesScrollTimerRef.current !== null) {
         window.clearTimeout(restoreMiniRecipesScrollTimerRef.current);
       }
     };

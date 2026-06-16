@@ -1,1 +1,1 @@
-export * from "./recipe-shares";
+export * from "@norish/db-schema/schema/recipe-share-links";

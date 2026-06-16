@@ -1,7 +1,5 @@
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
-import type { VideoMetadata, VideoProcessorContext } from "../types";
-
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import { transcribeAudio } from "@norish/api/ai/transcriber";
 import { fetchViaPlaywright } from "@norish/api/parser/fetch";
@@ -9,6 +7,7 @@ import { extractRecipeFromVideo } from "@norish/api/video/normalizer";
 import { videoLogger as log } from "@norish/shared-server/logger";
 import { downloadImage } from "@norish/shared-server/media/storage";
 
+import type { VideoMetadata, VideoProcessorContext } from "../types";
 import { BaseVideoProcessor } from "../base-processor";
 
 /**

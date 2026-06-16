@@ -15,7 +15,7 @@ vi.mock("@norish/auth/providers", () => ({
   isPasswordAuthEnabled: vi.fn().mockResolvedValue(false),
 }));
 
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getLocaleConfig: vi.fn().mockResolvedValue({
     defaultLocale: "en",
     locales: { en: { enabled: true, name: "English" } },

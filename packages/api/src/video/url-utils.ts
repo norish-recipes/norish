@@ -1,7 +1,6 @@
-import type { VideoPlatform } from "./types";
-
 import { z } from "zod";
 
+import type { VideoPlatform } from "./types";
 
 const urlSchema = z.url();
 

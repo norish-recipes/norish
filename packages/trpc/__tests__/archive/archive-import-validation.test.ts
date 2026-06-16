@@ -30,11 +30,11 @@ vi.mock("@norish/shared-server/logger", async (importOriginal) => {
   };
 });
 
-vi.mock("@norish/db/cached-household", () => ({
+vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock("@norish/queue/redis/subscription-multiplexer", () => ({
+vi.mock("@norish/shared-server/redis/subscription-multiplexer", () => ({
   getOrCreateMultiplexer: vi.fn(),
 }));
 

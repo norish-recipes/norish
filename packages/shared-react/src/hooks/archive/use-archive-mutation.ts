@@ -1,11 +1,10 @@
+import { useMutation } from "@tanstack/react-query";
+
 import type {
   ArchiveImportMutationResult,
   ArchiveImportQueryResult,
   CreateArchiveHooksOptions,
 } from "./types";
-
-import { useMutation } from "@tanstack/react-query";
-
 
 export type ArchiveMutationToastAdapter = {
   showStartToast: (total: number) => void;
@@ -34,9 +33,8 @@ export function createUseArchiveMutation({
 
       formData.append("file", file);
 
-      // The router input schema is z.instanceof(FormData) evaluated under Node
-      // types (undici), which TS treats as a different type than DOM FormData
-      // even though they are runtime-compatible.
+      // The router validates FormData at runtime but exposes a portable
+      // structural upload input type for declaration emit.
       startMutation.mutate(formData as unknown as Parameters<typeof startMutation.mutate>[0], {
         onSuccess: (result) => {
           if (result.success) {

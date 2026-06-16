@@ -4,10 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 import { isPageLikelyRecipe } from "@norish/api/parser";
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 
-vi.mock("@norish/config/server-config-loader", async () => {
-  const actual = await vi.importActual<typeof import("@norish/config/server-config-loader")>(
-    "@norish/config/server-config-loader"
-  );
+vi.mock("@norish/shared-server/config/server-config-loader", async () => {
+  const actual = await vi.importActual<
+    typeof import("@norish/shared-server/config/server-config-loader")
+  >("@norish/shared-server/config/server-config-loader");
 
   return {
     ...actual,

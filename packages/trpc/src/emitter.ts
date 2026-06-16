@@ -33,4 +33,7 @@
  * ```
  */
 
-export { TypedRedisEmitter as TypedEmitter, createTypedEmitter } from "@norish/queue/redis/pubsub";
+export {
+  TypedRedisEmitter as TypedEmitter,
+  createTypedEmitter,
+} from "@norish/shared-server/redis/pubsub";

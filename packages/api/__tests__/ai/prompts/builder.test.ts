@@ -10,12 +10,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildAutoTaggingPrompt } from "@norish/api/ai/prompts/builder";
-import { getAutoTaggingMode } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@norish/db/repositories/tags";
 import { loadPrompt } from "@norish/shared-server/ai/prompts/loader";
+import { getAutoTaggingMode } from "@norish/shared-server/config/server-config-loader";
 
 // Mock dependencies before imports
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getAutoTaggingMode: vi.fn(),
 }));
 

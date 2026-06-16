@@ -2,7 +2,6 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockInfo = vi.fn();
@@ -52,6 +51,7 @@ describe("migrateGalleryImages", () => {
 
     vi.doMock("@norish/config/env-config-server", () => ({
       SERVER_CONFIG: {
+        MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
         UPLOADS_DIR: uploadsDir,
       },
     }));

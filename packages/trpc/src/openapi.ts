@@ -1,6 +1,6 @@
-import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
-
 import { createOpenApiFetchHandler, generateOpenApiDocument } from "trpc-to-openapi";
+
+import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
 import { isOperationId } from "@norish/shared/lib/operation-helpers";
 
 import { createHttpContextFromHeaders } from "./context";

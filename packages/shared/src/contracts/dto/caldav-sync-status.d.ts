@@ -1,10 +1,12 @@
 import type { z } from "zod";
+
 import type {
   CaldavSyncStatusInsertSchema,
   CaldavSyncStatusSelectSchema,
   CaldavSyncStatusUpdateSchema,
   CaldavSyncStatusViewSchema,
 } from "@norish/shared/contracts/zod/caldav-sync-status";
+
 import type { caldavItemTypes, caldavSyncStatuses } from "../constants/caldav";
 
 export type CaldavSyncStatusDto = z.output<typeof CaldavSyncStatusSelectSchema>;

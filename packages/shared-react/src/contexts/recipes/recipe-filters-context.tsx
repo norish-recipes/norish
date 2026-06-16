@@ -1,10 +1,9 @@
-import type { RecipeFiltersStorageAdapter } from "../../hooks/recipes/dashboard/recipe-filters-storage-adapter";
-import type { CanonicalRecipeFilters } from "./filter-contract";
-
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+
 import { DEFAULT_SEARCH_FIELDS, SearchField } from "@norish/shared/contracts";
 
-
+import type { RecipeFiltersStorageAdapter } from "../../hooks/recipes/dashboard/recipe-filters-storage-adapter";
+import type { CanonicalRecipeFilters } from "./filter-contract";
 import { DEFAULT_RECIPE_FILTERS, normalizePersistedRecipeFilters } from "./filter-contract";
 
 type RecipeFiltersContextValue = {

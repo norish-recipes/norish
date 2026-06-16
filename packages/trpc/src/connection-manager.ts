@@ -3,9 +3,14 @@ import type Redis from "ioredis";
 import type { WebSocket } from "ws";
 import superjson from "superjson";
 
-import { createSubscriberClient, getPublisherClient } from "@norish/queue/redis/client";
-import { closeMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
+import type { ConnectionInvalidationMessage } from "@norish/shared-server/realtime/connection-invalidation";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import {
+  CONNECTION_INVALIDATION_CHANNEL,
+  emitConnectionInvalidation,
+} from "@norish/shared-server/realtime/connection-invalidation";
+import { createSubscriberClient } from "@norish/shared-server/redis/client";
+import { closeMultiplexer } from "@norish/shared-server/redis/subscription-multiplexer";
 
 // Use globalThis to survive HMR in development
 const globalForConnectionManager = globalThis as unknown as {
@@ -79,21 +84,7 @@ export function terminateUserConnections(userId: string, reason: string): void {
   }
 }
 
-// Redis channel for cross-process connection invalidation
-const INVALIDATION_CHANNEL = "norish:connection:invalidate";
-
-type InvalidationMessage = {
-  userId: string;
-  reason: string;
-};
-
-export async function emitConnectionInvalidation(userId: string, reason: string): Promise<void> {
-  const client = await getPublisherClient();
-  const message: InvalidationMessage = { userId, reason };
-
-  await client.publish(INVALIDATION_CHANNEL, superjson.stringify(message));
-  log.debug({ userId, reason }, "Emitted connection invalidation");
-}
+export { emitConnectionInvalidation };
 
 export async function startInvalidationListener(): Promise<void> {
   // Prevent duplicate listeners
@@ -112,15 +103,15 @@ export async function startInvalidationListener(): Promise<void> {
   invalidationSubscriber = subscriber;
   globalForConnectionManager.invalidationSubscriber = subscriber;
 
-  await subscriber.subscribe(INVALIDATION_CHANNEL);
+  await subscriber.subscribe(CONNECTION_INVALIDATION_CHANNEL);
 
   log.info("Started connection invalidation listener");
 
   try {
     for await (const [channel, message] of on(subscriber, "message", { signal })) {
-      if (channel === INVALIDATION_CHANNEL) {
+      if (channel === CONNECTION_INVALIDATION_CHANNEL) {
         try {
-          const { userId, reason } = superjson.parse<InvalidationMessage>(message);
+          const { userId, reason } = superjson.parse<ConnectionInvalidationMessage>(message);
 
           terminateUserConnections(userId, reason);
         } catch (err) {

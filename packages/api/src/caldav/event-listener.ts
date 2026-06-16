@@ -7,9 +7,9 @@ import type { RecipeSubscriptionEvents } from "@norish/trpc/routers/recipes/type
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import { getCaldavSyncStatusByItemId } from "@norish/db/repositories/caldav-sync-status";
 import { addCaldavSyncJob } from "@norish/queue/caldav-sync/producer";
-import { createSubscriberClient } from "@norish/queue/redis/client";
 import { getQueues } from "@norish/queue/registry";
 import { createLogger } from "@norish/shared-server/logger";
+import { createSubscriberClient } from "@norish/shared-server/redis/client";
 import { unwrapPayload } from "@norish/shared/lib/operation-helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 

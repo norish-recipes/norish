@@ -2,12 +2,12 @@
  * AI Provider Listing - List available models from providers.
  */
 
-import type { TranscriptionProvider } from "@norish/config/zod/server-config";
-import type { AIProvider, AvailableModel } from "./types";
-
 import { Ollama } from "ollama";
+
+import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import { aiLogger } from "@norish/shared-server/logger";
 
+import type { AIProvider, AvailableModel } from "./types";
 
 // ============================================================================
 // Constants

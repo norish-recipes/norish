@@ -1,5 +1,6 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
-import { ingredients } from "@norish/db/schema";
+
+import { ingredients } from "@norish/db-schema/schema";
 
 export const IngredientSelectBaseSchema = createSelectSchema(ingredients);
 export const IngredientInsertBaseSchema = createInsertSchema(ingredients).omit({

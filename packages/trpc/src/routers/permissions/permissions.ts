@@ -1,11 +1,10 @@
 import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
-
+import { isUserServerAdmin } from "@norish/db";
 import {
   getAutoTaggingMode,
   getRecipePermissionPolicy,
   isAIEnabled,
-} from "@norish/config/server-config-loader";
-import { isUserServerAdmin } from "@norish/db";
+} from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { authedProcedure } from "../../middleware";

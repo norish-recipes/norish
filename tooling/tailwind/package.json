@@ -12,7 +12,7 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "typecheck": "pnpm exec tsc --noEmit"
+    "typecheck": "pnpm exec tsc --noEmit --allowJs --checkJs false"
   },
   "dependencies": {
     "@tailwindcss/postcss": "catalog:",

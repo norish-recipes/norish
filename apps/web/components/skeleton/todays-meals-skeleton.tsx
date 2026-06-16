@@ -1,8 +1,7 @@
 "use client";
 
-import { Card, Skeleton } from "@heroui/react";
-
 import { TODAY_MEAL_SLOTS } from "@/components/dashboard/today/todays-meals-constants";
+import { Card, Skeleton } from "@heroui/react";
 
 function TodayMealSlotSkeleton() {
   return (

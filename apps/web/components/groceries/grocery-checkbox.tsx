@@ -84,7 +84,7 @@ export function GroceryCheckbox({
       onChange={handleChange}
     >
       <Checkbox.Control
-        className={`${controlSize} rounded-full before:rounded-full data-[indeterminate=true]:border-accent data-[indeterminate=true]:bg-accent data-[selected=true]:border-accent data-[selected=true]:bg-accent`}
+        className={`${controlSize} data-[indeterminate=true]:border-accent data-[indeterminate=true]:bg-accent data-[selected=true]:border-accent data-[selected=true]:bg-accent rounded-full before:rounded-full`}
       >
         <Checkbox.Indicator className="text-accent-foreground" />
       </Checkbox.Control>

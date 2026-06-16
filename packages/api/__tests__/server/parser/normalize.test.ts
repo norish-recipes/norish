@@ -8,7 +8,7 @@ vi.mock("@norish/shared-server/media/storage", () => ({
   downloadAllImagesFromJsonLd: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getUnits: vi.fn().mockResolvedValue({}),
 }));
 

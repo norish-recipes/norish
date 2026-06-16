@@ -1,5 +1,4 @@
 import type { CreateRecipeHooksOptions } from "../types";
-
 import { createUseAllergyDetectionQuery } from "./use-allergy-detection-query";
 import {
   createUseAllergyDetection,

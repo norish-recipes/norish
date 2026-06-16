@@ -1,13 +1,12 @@
+import { useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
 import type {
   CaldavSyncStatusViewDto,
   UserCaldavConfigWithoutPasswordDto,
 } from "@norish/shared/contracts";
+
 import type { CaldavCacheHelpers, CreateCaldavHooksOptions } from "./types";
-
-import { useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-
-
 
 export function createUseCaldavCache({ useTRPC }: CreateCaldavHooksOptions) {
   return function useCaldavCacheHelpers(): CaldavCacheHelpers {

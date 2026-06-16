@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { AIConfig, TimerKeywordsConfig } from "@norish/config/zod/server-config";
-import { decrypt, encrypt } from "@norish/auth/crypto";
+import { decrypt, encrypt } from "@norish/config/crypto";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getConfig, normalizeAndBackfillConfig } from "@norish/db/repositories/server-config";
 import { serverConfig } from "@norish/db/schema";

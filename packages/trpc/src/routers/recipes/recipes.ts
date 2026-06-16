@@ -4,7 +4,6 @@ import { z } from "zod";
 
 import type { RecipeListContext } from "@norish/db";
 import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   addStepsAndIngredientsToRecipeByInput,
   createRecipeWithRefs,
@@ -36,12 +35,14 @@ import {
   preparePasteImport,
 } from "@norish/queue";
 import { getQueues } from "@norish/queue/registry";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
 import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
 import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
 
+import { formDataInputSchema, isUploadedFile } from "../../form-data";
 import { emitByPolicy } from "../../helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
@@ -144,6 +145,25 @@ export const getProcedure = authedProcedure
 
       throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
     }
+
+    return recipe;
+  });
+
+export const getEditableProcedure = authedProcedure
+  .input(RecipeGetInputSchema)
+  .output(FullRecipeSchema)
+  .query(async ({ ctx, input }) => {
+    log.debug({ userId: ctx.user.id, recipeId: input.id }, "Getting editable recipe");
+
+    const recipe = await getRecipeFull(input.id);
+
+    if (!recipe) {
+      log.warn({ userId: ctx.user.id, recipeId: input.id }, "Editable recipe not found");
+
+      throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
+    }
+
+    await assertRecipeAccess(ctx, input.id, "edit");
 
     return recipe;
   });
@@ -551,7 +571,7 @@ const getRandomRecipe = authedProcedure
   });
 
 const importFromImagesProcedure = authedProcedure
-  .input(z.instanceof(FormData))
+  .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
     const files: Array<{ data: string; mimeType: string; filename: string }> = [];
 
@@ -559,7 +579,7 @@ const importFromImagesProcedure = authedProcedure
     const filePromises: Promise<void>[] = [];
 
     input.forEach((value, key) => {
-      if (!key.startsWith("file") || !(value instanceof File)) {
+      if (!key.startsWith("file") || !isUploadedFile(value)) {
         return;
       }
 
@@ -912,6 +932,7 @@ const triggerAllergyDetection = authedProcedure
 export const recipesProcedures = router({
   list: listProcedure,
   get: getProcedure,
+  getEditable: getEditableProcedure,
   create: createRecipeProcedure,
   update,
   delete: deleteProcedure,

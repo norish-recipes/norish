@@ -3,7 +3,6 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { CreateApiKeyInputSchema, DeleteApiKeyInputSchema, ToggleApiKeyInputSchema } from "./types";
 
 /**

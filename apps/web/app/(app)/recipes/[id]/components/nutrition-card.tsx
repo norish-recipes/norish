@@ -2,13 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
+import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 import { getNutritionData, MACROS } from "@/components/recipes/readonly-nutrition";
 import AIActionButton from "@/components/shared/ai-action-button";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { Card, Separator, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 
 function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
   const { recipe, isEstimatingNutrition, estimateNutrition } = useRecipeContext();

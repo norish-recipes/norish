@@ -1,13 +1,13 @@
 "use client";
 
 import AuthorChip from "@/components/recipes/author-chip";
-import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/components/recipes/recipe-layout-constants";
 import { ReadonlyNutritionSection } from "@/components/recipes/readonly-nutrition";
 import {
   ReadonlyRecipeMedia,
   ReadonlyRecipeNotes,
   ReadonlyRecipeSummary,
 } from "@/components/recipes/readonly-recipe-sections";
+import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/components/recipes/recipe-layout-constants";
 import AuthLanguageSelector from "@/components/shared/auth-language-selector";
 import { Card, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";

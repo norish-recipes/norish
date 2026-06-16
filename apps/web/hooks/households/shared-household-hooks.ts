@@ -1,5 +1,6 @@
 "use client";
 
+import { useTRPC } from "@/app/providers/trpc-provider";
 
 import { createHouseholdHooks } from "@norish/shared-react/hooks";
 
@@ -8,8 +9,6 @@ import {
   useCurrentHouseholdUserName,
   useHouseholdToastAdapter,
 } from "./adapters";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export const sharedHouseholdHooks = createHouseholdHooks({
   useTRPC,

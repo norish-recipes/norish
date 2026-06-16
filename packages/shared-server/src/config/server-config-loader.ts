@@ -21,23 +21,21 @@ import type {
   TimerKeywordsConfig,
   UnitsMap,
   VideoConfig,
-} from "./zod/server-config";
-
-import { getConfig } from "@norish/db/repositories/server-config";
-import { DEFAULT_LOCALE } from "@norish/i18n/config";
-import { getBundledLocales } from "@norish/i18n/locales";
-
-import defaultContentIndicators from "./content-indicators.default.json";
-import { SERVER_CONFIG } from "./env-config-server";
-import defaultRecurrenceConfig from "./recurrence-config.default.json";
-import defaultTimerKeywords from "./timer-keywords.default.json";
-import defaultUnits from "./units.default.json";
+} from "@norish/config/zod/server-config";
+import defaultContentIndicators from "@norish/config/content-indicators.default.json";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
+import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
+import defaultUnits from "@norish/config/units.default.json";
 import {
   DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
   UnitsConfigSchema,
   UnitsMapSchema,
-} from "./zod/server-config";
+} from "@norish/config/zod/server-config";
+import { getConfig } from "@norish/db/repositories/server-config";
+import { DEFAULT_LOCALE } from "@norish/i18n/config";
+import { getBundledLocales } from "@norish/i18n/locales";
 
 // ============================================================================
 // Configuration Getters - Each call queries the database

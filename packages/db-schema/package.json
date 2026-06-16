@@ -1,0 +1,30 @@
+{
+  "name": "@norish/db-schema",
+  "version": "0.19.0-beta",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/schema/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./schema/*": "./src/schema/*.ts"
+  },
+  "scripts": {
+    "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "pnpm exec tsc --noEmit",
+    "clean": "git clean -xdf .cache .turbo node_modules dist"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:"
+  },
+  "devDependencies": {
+    "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
+    "@norish/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:"
+  },
+  "prettier": "@norish/prettier-config"
+}

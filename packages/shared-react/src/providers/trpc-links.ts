@@ -1,6 +1,5 @@
 import type { HTTPHeaders, TRPCLink } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
-
 import {
   createWSClient,
   httpBatchLink,

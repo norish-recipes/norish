@@ -4,13 +4,13 @@ import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-// Import mocks for assertions
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   AIConfigSchema,
   RecipePermissionPolicySchema,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
+// Import mocks for assertions
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 
 import { testAIEndpoint } from "../mocks/connection-tests";
 import { permissionsEmitter } from "../mocks/permissions-emitter";
@@ -35,7 +35,7 @@ vi.mock("@norish/db/repositories/server-config", () => import("../mocks/server-c
 vi.mock("@norish/db/repositories/users", () => import("../mocks/users"));
 vi.mock("@norish/auth/connection-tests", () => import("../mocks/connection-tests"));
 vi.mock("@norish/trpc/routers/permissions/emitter", () => import("../mocks/permissions-emitter"));
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({
     view: "everyone",
     edit: "household",

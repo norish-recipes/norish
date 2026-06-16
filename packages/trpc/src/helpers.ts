@@ -1,7 +1,7 @@
 import type { TRPCSubscriptionProcedure } from "@trpc/server";
 
-import type { PermissionLevel } from "@norish/config/zod/server-config";
-import type { SubscriptionMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
+import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
+import type { SubscriptionMultiplexer } from "@norish/shared-server/redis/subscription-multiplexer";
 import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime-envelope";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { assertEventEnvelope, unwrapPayload } from "@norish/shared/lib/operation-helpers";
@@ -42,13 +42,8 @@ export async function waitForAbort(signal?: AbortSignal): Promise<void> {
   });
 }
 
-/**
- * Context for policy-based event emission.
- */
-export interface PolicyEmitContext {
-  userId: string;
-  householdKey: string;
-}
+export type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
+export { emitByPolicy } from "@norish/shared-server/realtime/policy";
 
 /**
  * Extended context for subscriptions that includes the multiplexer.
@@ -116,48 +111,6 @@ async function* assertEnvelopeSubscriptionIterable<T>(
     }
 
     yield data;
-  }
-}
-
-/**
- * Emit events based on the view policy.
- * - "everyone" => broadcast to all users
- * - "household" => emit to household only
- * - "owner" => emit to the owner only
- *
- * @example
- * ```ts
- * emitByPolicy(recipeEmitter, viewPolicy, ctx, "created", { recipe });
- * ```
- */
-export function emitByPolicy<
-  TEvents extends Record<string, unknown>,
-  K extends keyof TEvents & string,
->(
-  emitter: TypedEmitter<TEvents>,
-  viewPolicy: PermissionLevel,
-  ctx: PolicyEmitContext,
-  event: K,
-  data: TEvents[K]
-): void {
-  log.debug(
-    { event, viewPolicy, householdKey: ctx.householdKey, userId: ctx.userId },
-    `Emitting event via policy`
-  );
-
-  switch (viewPolicy) {
-    case "everyone":
-      emitter.broadcast(event, data);
-      log.debug({ event }, "Broadcast event emitted");
-      break;
-    case "household":
-      emitter.emitToHousehold(ctx.householdKey, event, data);
-      log.debug({ event, householdKey: ctx.householdKey }, "Household event emitted");
-      break;
-    case "owner":
-      emitter.emitToUser(ctx.userId, event, data);
-      log.debug({ event, userId: ctx.userId }, "User event emitted");
-      break;
   }
 }
 

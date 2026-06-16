@@ -5,9 +5,11 @@ import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
+import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
-import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
+import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
+import AuthorChip from "@/components/recipes/author-chip";
 import {
   ReadonlyRecipeMedia,
   ReadonlyRecipeNotes,
@@ -29,8 +31,6 @@ import {
 } from "@norish/shared/lib/user-preferences";
 import StarRating from "@norish/ui/star-rating";
 
-import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
-import AuthorChip from "@/components/recipes/author-chip";
 import ServingsControl from "./components/servings-control";
 import { useRecipeContextRequired } from "./context";
 

@@ -1,9 +1,8 @@
-import type { Server } from "node:http";
-
 import { randomUUID } from "node:crypto";
-
+import type { Server } from "node:http";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import * as wsModule from "ws";
+
 import { auth } from "@norish/auth/auth";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { trpcLogger } from "@norish/shared-server/logger";
@@ -30,8 +29,7 @@ const wsInterop = wsModule as unknown as {
   Server?: typeof wsModule.WebSocketServer;
   default?: { Server?: typeof wsModule.WebSocketServer };
 };
-const resolvedWsServer =
-  wsInterop.WebSocketServer ?? wsInterop.Server ?? wsInterop.default?.Server;
+const resolvedWsServer = wsInterop.WebSocketServer ?? wsInterop.Server ?? wsInterop.default?.Server;
 
 if (!resolvedWsServer) {
   throw new Error("ws module does not export a WebSocket server constructor");

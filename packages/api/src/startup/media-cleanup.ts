@@ -1,7 +1,6 @@
-import type { Dirent } from "node:fs";
-
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { Dirent } from "node:fs";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getAllUserAvatars } from "@norish/db/repositories";

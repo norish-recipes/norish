@@ -1,8 +1,7 @@
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
+import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseNutritionQuery({ useTRPC }: CreateRecipeHooksOptions) {
   return function useNutritionQuery(recipeId: string) {

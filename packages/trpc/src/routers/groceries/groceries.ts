@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import type { GroceryUpdateDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
-import { getUnits } from "@norish/config/server-config-loader";
 import {
   deleteDoneInStore,
   getGroceriesByIds,
@@ -23,6 +22,7 @@ import {
   normalizeIngredientName,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
+import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   AssignGroceryToStoreInputSchema,

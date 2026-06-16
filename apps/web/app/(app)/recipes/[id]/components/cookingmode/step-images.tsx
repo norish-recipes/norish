@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import ImageLightbox from "@/components/shared/image-lightbox";
 import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
+import ImageLightbox from "@/components/shared/image-lightbox";
 import { Carousel } from "@heroui-pro/react";
 import { Button } from "@heroui/react";
 
@@ -96,8 +96,8 @@ export function StepImages({ className = "", step }: StepImagesProps) {
                 </Carousel.Item>
               ))}
             </Carousel.Content>
-            <Carousel.Previous className="!left-2 bg-background/70 backdrop-blur-md" />
-            <Carousel.Next className="!right-2 bg-background/70 backdrop-blur-md" />
+            <Carousel.Previous className="bg-background/70 !left-2 backdrop-blur-md" />
+            <Carousel.Next className="bg-background/70 !right-2 backdrop-blur-md" />
             <Carousel.Dots className="mt-3" />
           </Carousel>
         </div>

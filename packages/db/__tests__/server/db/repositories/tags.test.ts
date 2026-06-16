@@ -1,15 +1,16 @@
 // @vitest-environment node
 
-import { describe, expect, it, beforeAll, beforeEach, afterAll } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { db } from "@norish/db/drizzle";
 import {
   attachTagsToRecipeByInputTx,
-  listAllTagNames,
   getRecipeTagNames,
+  listAllTagNames,
 } from "@norish/db/repositories/tags";
-import { RepositoryTestBase } from "../../../helpers/repository-test-base";
+
 import { createTestRecipe, createTestUser } from "../../../helpers/db-test-helpers";
+import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("test_tags");
 let testRecipe: Awaited<ReturnType<typeof createTestRecipe>>;

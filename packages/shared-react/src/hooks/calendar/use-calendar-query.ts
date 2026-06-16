@@ -1,10 +1,9 @@
-import type { PlannedItemFromQuery } from "@norish/shared/contracts";
-import type { CalendarData, CalendarQueryResult, CreateCalendarHooksOptions } from "./types";
-
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
+import type { CalendarData, CalendarQueryResult, CreateCalendarHooksOptions } from "./types";
 
 function groupItemsByDate(items: PlannedItemFromQuery[]): CalendarData {
   const grouped: CalendarData = {};

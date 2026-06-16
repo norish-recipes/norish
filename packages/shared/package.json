@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@norish/config": "workspace:*",
-    "@norish/db": "workspace:*",
+    "@norish/db-schema": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",

@@ -1,8 +1,7 @@
-import type { AIConfig, VideoConfig } from "@norish/config/zod/server-config";
-
 import { z } from "zod";
+
+import type { AIConfig, VideoConfig } from "@norish/config/zod/server-config";
 import { testAIEndpoint as testAIEndpointFn } from "@norish/auth/connection-tests";
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
 import {
   AIConfigSchema,
   ServerConfigKeys,
@@ -14,6 +13,7 @@ import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
 import { getQueues } from "@norish/queue/registry";
 import { listModels, listTranscriptionModels } from "@norish/shared-server/ai/providers";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";

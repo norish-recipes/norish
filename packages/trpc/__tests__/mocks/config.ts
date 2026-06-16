@@ -1,5 +1,5 @@
 /**
- * Mock for @norish/config/server-config-loader
+ * Mock for @norish/shared-server/config/server-config-loader
  */
 import { vi } from "vitest";
 

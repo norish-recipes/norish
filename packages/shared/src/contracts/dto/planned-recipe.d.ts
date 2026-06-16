@@ -1,4 +1,5 @@
 import type z from "zod";
+
 import type {
   PlannedRecipeCreateSchema,
   PlannedRecipeDeleteSchema,
@@ -10,6 +11,7 @@ import type {
   plannedRecipeViewSchema,
   slots,
 } from "@norish/shared/contracts/zod";
+
 import type { NoteViewDto } from "./notes";
 
 export type Slot = (typeof slots)[number];

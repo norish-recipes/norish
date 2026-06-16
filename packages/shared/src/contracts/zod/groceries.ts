@@ -1,6 +1,7 @@
 import { createSelectSchema } from "drizzle-zod";
 import z from "zod";
-import { groceries } from "@norish/db/schema";
+
+import { groceries } from "@norish/db-schema/schema";
 
 export const GrocerySelectBaseSchema = createSelectSchema(groceries)
   .omit({

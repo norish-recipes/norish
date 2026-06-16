@@ -1,5 +1,4 @@
 import type { NewApiLog } from "@norish/db/schema/api-logs";
-
 import { insertApiLog } from "@norish/db/repositories/api-logs";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 

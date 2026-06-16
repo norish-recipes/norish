@@ -1,7 +1,7 @@
 import { mkdir, readdir, writeFile } from "fs/promises";
 import path from "path";
-
 import { z } from "zod";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
@@ -30,6 +30,7 @@ import { UpdateUserAllergiesSchema } from "@norish/shared/contracts/zod/user-all
 import { buildAvatarFilename, isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
 
 import { emitConnectionInvalidation } from "../../connection-manager";
+import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { householdEmitter } from "../households/emitter";
@@ -143,89 +144,87 @@ const updateName = authedProcedure
 /**
  * Upload user avatar (FormData input)
  */
-const uploadAvatar = authedProcedure
-  .input(z.instanceof(FormData))
-  .mutation(async ({ ctx, input }) => {
-    log.debug({ userId: ctx.user.id }, "Uploading avatar");
+const uploadAvatar = authedProcedure.input(formDataInputSchema).mutation(async ({ ctx, input }) => {
+  log.debug({ userId: ctx.user.id }, "Uploading avatar");
 
-    const file = input.get("file") as File | null;
-    const version = Number(input.get("version"));
+  const file = getUploadedFile(input, "file");
+  const version = Number(input.get("version"));
 
-    if (!file) {
-      return { success: false, error: "No file provided" };
-    }
+  if (!file) {
+    return { success: false, error: "No file provided" };
+  }
 
-    if (!Number.isInteger(version) || version < 1) {
-      return { success: false, error: "Current user version is required" };
-    }
+  if (!Number.isInteger(version) || version < 1) {
+    return { success: false, error: "Current user version is required" };
+  }
 
-    // Validate mime type
-    const ext = IMAGE_MIME_TO_EXTENSION[file.type];
+  // Validate mime type
+  const ext = IMAGE_MIME_TO_EXTENSION[file.type];
 
-    if (!ext) {
-      return {
-        success: false,
-        error: "Invalid file type. Only JPEG, PNG, and WebP images are allowed.",
-      };
-    }
-
-    // Get file buffer
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    // Validate file size
-    if (buffer.length > SERVER_CONFIG.MAX_AVATAR_FILE_SIZE) {
-      return { success: false, error: "File too large. Maximum size is 5MB." };
-    }
-
-    // Create avatars directory
-    const avatarDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
-
-    await mkdir(avatarDir, { recursive: true });
-
-    // Delete all previous avatars for this user (they might have different extensions)
-    try {
-      const existingFiles = await readdir(avatarDir);
-      const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
-
-      for (const oldAvatar of userAvatars) {
-        await deleteAvatarByFilename(oldAvatar);
-      }
-    } catch {
-      // Ignore errors if directory doesn't exist or files can't be read
-    }
-
-    // Use user ID as filename
-    const filename = buildAvatarFilename(ctx.user.id, ext);
-    const filepath = path.join(avatarDir, filename);
-
-    await writeFile(filepath, buffer);
-
-    // Use auth-protected URL pattern
-    const protectedPath = `/avatars/${filename}`;
-
-    // Update database
-    const result = await updateUserAvatar(ctx.user.id, protectedPath, version);
-
-    if (result.stale) {
-      await deleteAvatarByFilename(filename);
-      log.info({ userId: ctx.user.id, version }, "Ignoring stale user avatar upload");
-
-      return { success: true, stale: true };
-    }
-
-    const updatedUser = await getUserById(ctx.user.id);
-
-    if (!updatedUser) {
-      return { success: false, error: "User not found" };
-    }
-
-    log.info({ userId: ctx.user.id, path: protectedPath }, "Avatar uploaded");
-
+  if (!ext) {
     return {
-      success: true,
-      user: updatedUser,
+      success: false,
+      error: "Invalid file type. Only JPEG, PNG, and WebP images are allowed.",
     };
-  });
+  }
+
+  // Get file buffer
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  // Validate file size
+  if (buffer.length > SERVER_CONFIG.MAX_AVATAR_FILE_SIZE) {
+    return { success: false, error: "File too large. Maximum size is 5MB." };
+  }
+
+  // Create avatars directory
+  const avatarDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "avatars");
+
+  await mkdir(avatarDir, { recursive: true });
+
+  // Delete all previous avatars for this user (they might have different extensions)
+  try {
+    const existingFiles = await readdir(avatarDir);
+    const userAvatars = existingFiles.filter((f) => isAvatarFilenameForUser(f, ctx.user.id));
+
+    for (const oldAvatar of userAvatars) {
+      await deleteAvatarByFilename(oldAvatar);
+    }
+  } catch {
+    // Ignore errors if directory doesn't exist or files can't be read
+  }
+
+  // Use user ID as filename
+  const filename = buildAvatarFilename(ctx.user.id, ext);
+  const filepath = path.join(avatarDir, filename);
+
+  await writeFile(filepath, buffer);
+
+  // Use auth-protected URL pattern
+  const protectedPath = `/avatars/${filename}`;
+
+  // Update database
+  const result = await updateUserAvatar(ctx.user.id, protectedPath, version);
+
+  if (result.stale) {
+    await deleteAvatarByFilename(filename);
+    log.info({ userId: ctx.user.id, version }, "Ignoring stale user avatar upload");
+
+    return { success: true, stale: true };
+  }
+
+  const updatedUser = await getUserById(ctx.user.id);
+
+  if (!updatedUser) {
+    return { success: false, error: "User not found" };
+  }
+
+  log.info({ userId: ctx.user.id, path: protectedPath }, "Avatar uploaded");
+
+  return {
+    success: true,
+    user: updatedUser,
+  };
+});
 
 /**
  * Delete user avatar

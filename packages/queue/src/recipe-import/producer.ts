@@ -6,10 +6,10 @@
  */
 
 import type { Queue } from "bullmq";
-import type { AddImportJobResult, RecipeImportJobData } from "@norish/queue/contracts/job-types";
 
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
+import type { AddImportJobResult, RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import { recipeExistsByUrlForPolicy } from "@norish/db";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 
 import { generateJobId, isJobInQueue } from "../helpers";

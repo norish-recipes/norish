@@ -24,7 +24,6 @@
     "@better-auth/utils": "catalog:",
     "@norish/config": "workspace:*",
     "@norish/db": "workspace:*",
-    "@norish/queue": "workspace:*",
     "@norish/shared": "workspace:*",
     "@norish/shared-server": "workspace:*",
     "better-auth": "catalog:",

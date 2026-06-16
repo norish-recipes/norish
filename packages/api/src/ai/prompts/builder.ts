@@ -4,9 +4,9 @@
  * Provides helpers for building AI prompts from templates and fragments.
  */
 
-import { getAutoTaggingMode } from "@norish/config/server-config-loader";
 import { listAllTagNames } from "@norish/db/repositories/tags";
 import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
+import { getAutoTaggingMode } from "@norish/shared-server/config/server-config-loader";
 
 import { buildAllergyInstruction } from "./fragments/allergies";
 

@@ -21,6 +21,10 @@
       "types": "./dist/helpers.d.ts",
       "default": "./src/helpers.ts"
     },
+    "./form-data": {
+      "types": "./dist/form-data.d.ts",
+      "default": "./src/form-data.ts"
+    },
     "./connection-manager": {
       "types": "./dist/connection-manager.d.ts",
       "default": "./src/connection-manager.ts"
@@ -67,6 +71,7 @@
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
     "@norish/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "@types/ws": "8.18.1",
     "eslint": "catalog:",
     "prettier": "catalog:",

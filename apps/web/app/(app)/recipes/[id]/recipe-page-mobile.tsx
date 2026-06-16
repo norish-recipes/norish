@@ -1,18 +1,19 @@
 import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
-import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
+import { NutritionSection } from "@/app/(app)/recipes/[id]/components/nutrition-card";
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
-import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/components/recipes/recipe-layout-constants";
-import { NutritionSection } from "@/app/(app)/recipes/[id]/components/nutrition-card";
+import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
+import AuthorChip from "@/components/recipes/author-chip";
 import {
   ReadonlyRecipeMedia,
   ReadonlyRecipeNotes,
   ReadonlyRecipeSummary,
 } from "@/components/recipes/readonly-recipe-sections";
+import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/components/recipes/recipe-layout-constants";
 import DoubleTapContainer from "@/components/shared/double-tap-container";
 import HeartButton from "@/components/shared/heart-button";
 import { useUserContext } from "@/context/user-context";
@@ -29,7 +30,6 @@ import {
 } from "@norish/shared/lib/user-preferences";
 import StarRating from "@norish/ui/star-rating";
 
-import AuthorChip from "@/components/recipes/author-chip";
 import { useRecipeContextRequired } from "./context";
 
 export default function RecipePageMobile() {

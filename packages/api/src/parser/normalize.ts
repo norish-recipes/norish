@@ -12,8 +12,7 @@
 
 import type { RecipeCategory } from "@norish/shared/contracts";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
-
-import { getUnits } from "@norish/config/server-config-loader";
+import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger } from "@norish/shared-server/logger";
 import { isUrl } from "@norish/shared/lib/helpers";
 

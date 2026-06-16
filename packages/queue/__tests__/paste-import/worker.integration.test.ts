@@ -16,7 +16,7 @@ const mocked = vi.hoisted(() => ({
   emitByPolicy: vi.fn(),
 }));
 
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getAIConfig: vi.fn().mockResolvedValue({ autoTagAllergies: false }),
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "everyone" }),
   isAIEnabled: vi.fn().mockResolvedValue(true),
@@ -34,11 +34,11 @@ vi.mock("@norish/queue/allergy-detection/producer", () => ({
   addAllergyDetectionJob: mocked.addAllergyDetectionJob,
 }));
 
-vi.mock("@norish/trpc/helpers", () => ({
+vi.mock("@norish/shared-server/realtime/policy", () => ({
   emitByPolicy: mocked.emitByPolicy,
 }));
 
-vi.mock("@norish/trpc/routers/recipes/emitter", () => ({
+vi.mock("@norish/shared-server/realtime/recipes", () => ({
   recipeEmitter: {},
 }));
 
