@@ -20,12 +20,12 @@ import {
   DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
+import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { MutationOutcome } from "./mutation-outcomes";
-import { db } from "../drizzle";
 import {
   ingredients,
   recipeImages,

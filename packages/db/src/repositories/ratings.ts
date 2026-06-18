@@ -1,6 +1,7 @@
 import { and, avg, count, eq, sql } from "drizzle-orm";
 
-import { db } from "../drizzle";
+import { db } from "@norish/db/drizzle";
+
 import { recipeRatings } from "../schema";
 
 export interface RatingStats {
