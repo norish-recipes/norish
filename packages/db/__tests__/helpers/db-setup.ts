@@ -20,7 +20,7 @@ const { Client } = pg;
 let _container: StartedPostgreSqlContainer | null = null;
 let _containerPromise: Promise<StartedPostgreSqlContainer> | null = null;
 
-const CONNECTION_DRAIN_TIMEOUT_MS = 1_000;
+const CONNECTION_DRAIN_TIMEOUT_MS = 10_000;
 const CONNECTION_DRAIN_POLL_MS = 25;
 
 function quoteIdentifier(identifier: string): string {
