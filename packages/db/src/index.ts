@@ -8,4 +8,4 @@ export * from "@norish/db/schema";
 export * from "@norish/shared/contracts/zod";
 
 // export all drizzle orm
-export * from "./drizzle";
+export * from "@norish/db/drizzle";
