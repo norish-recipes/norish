@@ -313,9 +313,9 @@ function MiniCalendarContent({
 }
 export default function MiniCalendar({ open, onOpenChange, recipeId }: MiniCalendarProps) {
   const t = useTranslations("calendar.panel");
+
   return (
     <Panel
-      backdropVariant="transparent"
       open={open}
       panelClassName="h-[80dvh]"
       title={t("addToCalendar")}

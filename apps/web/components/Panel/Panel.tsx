@@ -45,7 +45,7 @@ type PanelTriggerProps = {
   onClick?: (event: unknown) => void;
 };
 
-const PANEL_MAX_HEIGHT_CLASS = "max-h-[95vh]";
+const PANEL_MAX_HEIGHT_CLASS = "max-h-[80dvh]";
 
 function getClassName(element: ReactElement<PanelSectionProps>) {
   return element.props.className ?? "";
@@ -68,7 +68,7 @@ const PanelRoot: React.FC<PanelProps> = ({
   className = "",
   contentClassName = "",
   panelClassName = "",
-  backdropVariant = "opaque",
+  backdropVariant = "blur",
   title = "",
   nested = false,
   children,
