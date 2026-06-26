@@ -64,9 +64,6 @@ COPY tooling/tailwind/heroui-theme.js ./tooling/tailwind/heroui-theme.js
 COPY tooling/tailwind/postcss-config.js ./tooling/tailwind/postcss-config.js
 COPY tooling/typescript/package.json ./tooling/typescript/package.json
 
-# patches (required for patchedDependencies in pnpm-workspace.yaml)
-COPY patches/ ./patches/
-
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
   --mount=type=secret,id=HEROUI_AUTH_TOKEN \
   HEROUI_AUTH_TOKEN="$(cat /run/secrets/HEROUI_AUTH_TOKEN 2>/dev/null || true)" \
