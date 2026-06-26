@@ -34,6 +34,9 @@ jobs:
 
       - name: Setup toolchain and install dependencies
         uses: ./tooling/github/setup
+        with:
+          # Only install the landing app and its workspace deps, not the whole monorepo.
+          install-filter: "@norish/landing..."
 
       - name: Build
         run: pnpm --filter @norish/landing run build
