@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "landing",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@norish/landing", "exec", "next", "dev", "--port", "4321"],
+      "port": 4321
+    }
+  ]
+}

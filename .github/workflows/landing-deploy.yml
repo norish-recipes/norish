@@ -1,0 +1,59 @@
+name: Deploy Landing
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/landing/**"
+      - ".github/workflows/landing-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time; let the newest win.
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build static export
+    runs-on: ubuntu-latest
+    env:
+      # Custom domain (norish.dev) serves from the root, so no basePath.
+      # For a project-page subpath deploy, set this to e.g. "/norish".
+      NEXT_PUBLIC_BASE_PATH: ""
+      # The shared install fetches the private @heroui-pro/react used by apps/web.
+      HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
+
+      - name: Build
+        run: pnpm --filter @norish/landing run build
+
+      - name: Disable Jekyll (serve /_next/* assets)
+        run: touch apps/landing/out/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/landing/out
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

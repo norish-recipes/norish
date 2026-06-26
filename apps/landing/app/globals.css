@@ -1,0 +1,56 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@heroui/styles";
+@import "@heroui-pro/react/css";
+@import "@norish/tailwind-config/heroui-theme";
+@source "../../../node_modules/@heroui/styles/dist/**/*.{css,js,ts,jsx,tsx}";
+
+@custom-variant light (&:is(:root, .light *, [data-theme="light"] *));
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
+
+@layer theme {
+  :root {
+    --font-inter: "Inter Variable", system-ui, sans-serif;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Subtle vertical float for ambient accents. */
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@utility animate-float {
+  animation: float-y 7s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float {
+    animation: none;
+  }
+}
