@@ -14,7 +14,7 @@ const navLinks = [
   { label: "Features", href: "#features" },
   { label: "Showcase", href: "#showcase" },
   { label: "How it works", href: "#how" },
-  { label: "Self-host", href: "#self-host" },
+  { label: "Get started", href: "#self-host" },
 ];
 
 export function Navbar() {

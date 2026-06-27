@@ -1,54 +1,12 @@
 import { ArrowTopRightOnSquareIcon, ScaleIcon, ServerStackIcon } from "@heroicons/react/24/outline";
 
-import { CopyCommand } from "../copy-command";
 import { CTAButton } from "../cta-button";
 import { DockerIcon, GitHubIcon } from "../icons";
 import { Reveal } from "../motion/reveal";
 
+import { SelfHostCompose } from "./self-host-compose";
+
 import { links } from "@/lib/css-tokens";
-
-const compose = `services:
-  norish:
-    image: norishapp/norish:latest
-    restart: always
-    ports: ["3000:3000"]
-    volumes:
-      - norish_data:/app/uploads
-    environment:
-      AUTH_URL: http://localhost:3000
-      DATABASE_URL: postgres://postgres:norish@db:5432/norish
-      MASTER_KEY: <openssl rand -base64 32>
-      REDIS_URL: redis://redis:6379
-      CHROME_WS_ENDPOINT: ws://chrome-headless:3000
-    depends_on: [db, redis, chrome-headless]
-
-  db:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_PASSWORD: norish
-      POSTGRES_DB: norish
-    volumes:
-      - db_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:8.6.2
-    volumes:
-      - redis_data:/data
-
-  # Headless Chrome, used to scrape recipes from the web
-  chrome-headless:
-    image: zenika/alpine-chrome:latest
-    command:
-      - --no-sandbox
-      - --remote-debugging-address=0.0.0.0
-      - --remote-debugging-port=3000
-      - --headless
-    shm_size: 256m
-
-volumes:
-  db_data:
-  norish_data:
-  redis_data:`;
 
 const badges = [
   { icon: ScaleIcon, label: "AGPL-3.0 licensed" },
@@ -68,7 +26,7 @@ export function SelfHost() {
           />
 
           <div className="grid items-start gap-12 lg:grid-cols-2">
-            <Reveal>
+            <Reveal className="min-w-0">
               <p className="text-accent text-sm font-semibold tracking-wide uppercase">
                 Open source &amp; self-hosted
               </p>
@@ -111,13 +69,7 @@ export function SelfHost() {
               </div>
             </Reveal>
 
-            <Reveal delay={0.1}>
-              <CopyCommand collapsible code={compose} />
-              <p className="text-muted mt-3 text-center font-mono text-xs">
-                then <span className="text-foreground">docker compose up -d</span>, and you&apos;re
-                cooking.
-              </p>
-            </Reveal>
+            <SelfHostCompose />
           </div>
         </div>
       </div>

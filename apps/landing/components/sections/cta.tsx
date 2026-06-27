@@ -11,7 +11,7 @@ export function CTA() {
     <section className="px-4 py-24 sm:py-32">
       <Reveal className="mx-auto max-w-2xl text-center">
         <h2 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-          <span className="text-accent">Nourish</span> every meal.
+          <span className="text-accent">Norish</span> every meal.
         </h2>
         <p className="text-muted mx-auto mt-5 max-w-lg text-pretty">
           Spin up your own Norish in minutes and give everyone you cook for one calm, beautiful

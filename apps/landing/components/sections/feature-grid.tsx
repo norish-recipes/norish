@@ -24,9 +24,9 @@ type Feature = {
 const features: Feature[] = [
   {
     icon: SparklesIcon,
-    title: "Import in seconds",
+    title: "Import from anywhere",
     description:
-      "Paste a link and Norish pulls the recipe in clean and structured. Add an AI provider to import from photos, screenshots and TikTok, Reel or YouTube videos.",
+      "Paste a link from any website, blog or app and Norish pulls the recipe in clean and structured, no retyping.",
   },
   {
     icon: ChartPieIcon,

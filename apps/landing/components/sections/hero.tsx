@@ -53,8 +53,8 @@ export function Hero() {
           initial={enter}
           variants={fadeUp}
         >
-          Your kitchen,
-          <br className="hidden sm:block" /> <span className="text-accent">perfectly in sync.</span>
+          Any <span className="text-accent">recipe</span>,
+          <br className="hidden sm:block" /> from <span className="text-accent">anywhere.</span>
         </motion.h1>
 
         <motion.p
@@ -64,9 +64,8 @@ export function Hero() {
           initial={enter}
           variants={fadeUp}
         >
-          Norish is the open-source recipe app for families &amp; friends. Import recipes from any
-          link, plan your meals together, and keep your grocery lists in sync with the people you
-          cook for.
+          Paste a link from any website, blog or app, even a TikTok or YouTube video, and Norish
+          imports it clean and structured in seconds.
         </motion.p>
 
         <motion.div

@@ -16,7 +16,7 @@ const steps: Step[] = [
     icon: SparklesIcon,
     title: "Import",
     description:
-      "Paste a recipe link and it's imported in seconds, no retyping. Add AI to pull from photos and videos too.",
+      "Paste a link from any website or app and it's imported in seconds, no retyping. Add AI to pull from photos and videos too.",
   },
   {
     icon: CalendarDaysIcon,
