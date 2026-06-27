@@ -19,9 +19,19 @@ const navLinks = [
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    let lastY = window.scrollY;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+
+      setScrolled(y > 12);
+      // Hide when scrolling down past the hero, reveal on any upward scroll.
+      setHidden(y > 120 && y > lastY);
+      lastY = y;
+    };
 
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -30,7 +40,11 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-3 sm:pt-4">
+    <header
+      className={`fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-3 transition-transform duration-300 ease-out sm:pt-4 ${
+        hidden ? "-translate-y-[150%]" : "translate-y-0"
+      }`}
+    >
       <nav
         className={`flex w-full max-w-5xl items-center justify-between gap-3 rounded-full border px-3 py-2 transition-all duration-300 sm:px-4 ${
           scrolled

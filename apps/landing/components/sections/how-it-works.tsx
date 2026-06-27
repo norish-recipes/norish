@@ -22,7 +22,7 @@ const steps: Step[] = [
     icon: CalendarDaysIcon,
     title: "Plan",
     description:
-      "Schedule meals on the shared calendar and your grocery list fills itself in automatically.",
+      "Drop meals onto a calendar your whole household shares, and build a grocery list everyone keeps in sync.",
   },
   {
     icon: FireIcon,

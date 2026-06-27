@@ -6,6 +6,8 @@ import { LockClosedIcon } from "@heroicons/react/24/outline";
 import { CopyCommand } from "../copy-command";
 import { Reveal } from "../motion/reveal";
 
+import { links } from "@/lib/css-tokens";
+
 const PLACEHOLDER = "<openssl rand -base64 32>";
 
 function buildCompose(masterKey: string) {
@@ -79,12 +81,21 @@ export function SelfHostCompose() {
   return (
     <Reveal className="min-w-0" delay={0.1}>
       <CopyCommand collapsible code={buildCompose(masterKey)} />
-      <p className="text-muted mt-3 flex items-center justify-center gap-1.5 text-center text-xs">
+      <p className="text-muted mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-balance">
         <LockClosedIcon className="text-accent size-3.5 shrink-0" />
         {ready ? (
           <span>
             A unique <span className="text-foreground font-mono">MASTER_KEY</span>{" "}
-            was generated right here in your browser — copy, paste, and you&apos;re cooking.
+            was generated right here in your browser. No data is saved.{" "}
+            <a
+              className="hover:text-foreground underline underline-offset-2 transition-colors"
+              href={links.keyGen}
+              rel="noreferrer"
+              target="_blank"
+            >
+              View the code
+            </a>
+            .
           </span>
         ) : (
           <span>Generating a unique secret key in your browser…</span>
