@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="https://norish.dev"><img src="https://img.shields.io/badge/Website-norish.dev-22c55e?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Website" /></a>
   <a href="https://github.com/norish-recipes/Norish/blob/main/LICENSE"><img src="https://img.shields.io/github/license/norish-recipes/Norish?style=for-the-badge" alt="License" /></a>
   <a href="https://github.com/norish-recipes/Norish/actions"><img src="https://img.shields.io/github/actions/workflow/status/norish-recipes/Norish/release-build.yml?style=for-the-badge&logo=github" alt="Build Status" /></a>
   <a href="https://hub.docker.com/r/norishapp/norish"><img src="https://img.shields.io/docker/pulls/norishapp/norish?style=for-the-badge&logo=docker" alt="Docker Pulls" /></a>
@@ -15,6 +16,8 @@
 # Norish
 
 Norish is a real-time, household-first recipe app for planning meals, sharing groceries, and cooking together.
+
+Check out the website at [norish.dev](https://norish.dev).
 
 ## Table of Contents
 
