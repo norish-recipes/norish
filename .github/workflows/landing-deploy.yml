@@ -10,21 +10,19 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-# Only one Pages deploy at a time; let the newest win.
+# Only one landing deploy at a time; let the newest win.
 concurrency:
-  group: "pages"
+  group: "landing-deploy"
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build static export
+  deploy:
+    name: Build and deploy to Cloudflare Pages
     runs-on: ubuntu-latest
     env:
-      # Custom domain (norish.dev) serves from the root, so no basePath.
-      # For a project-page subpath deploy, set this to e.g. "/norish".
+      # norish.dev serves from the root, so no basePath.
+      # For a subpath deploy (e.g. a *.pages.dev preview path), set this to e.g. "/norish".
       NEXT_PUBLIC_BASE_PATH: ""
       # The shared install fetches the private @heroui-pro/react used by apps/web.
       HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
@@ -38,25 +36,14 @@ jobs:
           # Only install the landing app and its workspace deps, not the whole monorepo.
           install-filter: "@norish/landing..."
 
-      - name: Build
+      - name: Build static export
         run: pnpm --filter @norish/landing run build
 
-      - name: Disable Jekyll (serve /_next/* assets)
-        run: touch apps/landing/out/.nojekyll
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
         with:
-          path: apps/landing/out
-
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # --branch=main marks this as a production deploy (matches the project's
+          # production branch), so it publishes to norish.dev.
+          command: pages deploy apps/landing/out --project-name=norish --branch=main
