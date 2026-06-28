@@ -39,7 +39,7 @@ jobs:
       tag_exists: ${{ steps.check_tag.outputs.exists }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
