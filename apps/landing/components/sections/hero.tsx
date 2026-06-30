@@ -41,7 +41,7 @@ export function Hero() {
             variants={fadeUp}
           >
             Any <span className="text-accent">recipe</span>,
-            <br className="hidden sm:block" /> any <span className="text-accent">source.</span>
+            <br className="hidden sm:block" /> any <span className="text-accent">source</span>
           </motion.h1>
 
           <motion.p

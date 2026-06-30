@@ -6,6 +6,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@norish/landing", "exec", "next", "dev", "--port", "4321"],
       "port": 4321
+    },
+    {
+      "name": "docs",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["-C", "apps/docs", "exec", "docusaurus", "start", "--port", "4322", "--no-open"],
+      "port": 4322
     }
   ]
 }

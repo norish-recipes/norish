@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from "next";
 
 import { Providers } from "./providers";
 
-const title = "Norish: Nourish every meal.";
+const title = "Norish: any recipe any source.";
 const description =
   "The open-source recipe app for families & friends. Import recipes from any link, plan your meals together, and keep your grocery lists in sync when shopping together. Free, open source and self-hostable.";
 
