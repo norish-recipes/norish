@@ -1,9 +1,8 @@
 // Canonical product links surfaced across the landing page.
 export const links = {
   github: "https://github.com/norish-recipes/norish",
-  docs: "https://github.com/norish-recipes/norish#readme",
-  selfHost: "https://github.com/norish-recipes/norish#deploying",
-  keyGen:
-    "https://github.com/norish-recipes/norish/blob/main/apps/landing/components/sections/self-host-compose.tsx",
+  docs: "https://docs.norish.dev",
+  selfHost: "https://docs.norish.dev/quick-start",
+  keyGen: "https://docs.norish.dev/quick-start",
   license: "https://github.com/norish-recipes/norish/blob/main/LICENSE",
 } as const;
