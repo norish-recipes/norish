@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Calendário"
+  },
+  "mobile": {
+    "today": "Hoje",
+    "scrollToToday": "Ir para hoje"
+  },
+  "editNote": {
+    "title": "Editar nota",
+    "noteLabel": "Nota",
+    "notePlaceholder": "Insira uma nota...",
+    "date": "Data",
+    "slot": "Horário"
+  },
+  "navigation": {
+    "previousMonth": "Mês anterior",
+    "nextMonth": "Próximo mês",
+    "prev": "Anterior",
+    "next": "Próximo"
+  },
+  "weekdays": {
+    "mon": "seg",
+    "tue": "ter",
+    "wed": "qua",
+    "thu": "qui",
+    "fri": "sex",
+    "sat": "sáb",
+    "sun": "dom"
+  },
+  "timeline": {
+    "noItems": "Nenhum item planejado",
+    "goToRecipe": "Ir para receita",
+    "addItem": "Adicionar item",
+    "untitled": "Sem título",
+    "serving": "porção",
+    "servings": "porções",
+    "noImage": "Sem imagem",
+    "recipe": "Receita",
+    "note": "Nota"
+  },
+  "editPlannedRecipe": {
+    "title": "Editar receita planejada",
+    "date": "Data",
+    "slot": "Horário"
+  },
+  "panel": {
+    "addToCalendar": "Adicionar ao calendário",
+    "addRecipe": "Adicionar receita",
+    "noDaysAvailable": "Nenhum dia disponível.",
+    "searchPlaceholder": "Buscar receitas ou adicionar notas...",
+    "addNote": "Adicionar nota: {input}",
+    "randomRecipe": "Receita aleatória",
+    "noRecipesFound": "Nenhuma receita encontrada.",
+    "failedToLoadRecipes": "Falha ao carregar receitas."
+  }
+}

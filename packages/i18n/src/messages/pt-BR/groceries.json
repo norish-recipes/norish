@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Compras",
+    "addItem": "Adicionar item",
+    "addItems": "Adicionar itens",
+    "viewByStore": "Por loja",
+    "viewByRecipe": "Por receita",
+    "viewMode": "Modo de visualização",
+    "manageStores": "Gerenciar lojas",
+    "storeViewOptions": "Opções de visualização por loja",
+    "groupIngredients": "Agrupar ingredientes"
+  },
+  "empty": {
+    "title": "Sua lista de compras espera por você",
+    "description": "Adicione itens usando o botão \"Adicionar item\" acima para começar.",
+    "manual": "Itens manuais"
+  },
+  "item": {
+    "unnamedItem": "Item sem nome",
+    "fromRecipes": "De {count, plural, one {# receita} other {# receitas}}",
+    "items": "{count, plural, one {# item} other {# itens}}"
+  },
+  "store": {
+    "unsorted": "Sem classificação",
+    "noItems": "Nenhum item nesta loja",
+    "storeActions": "Ações da loja",
+    "markAllDone": "Marcar tudo como concluído",
+    "deleteDone": "Excluir concluídos",
+    "done": "{count} concluído(s)"
+  },
+  "storeManager": {
+    "title": "Gerenciar lojas",
+    "addStore": "Adicionar loja",
+    "editStore": "Editar loja",
+    "deleteStore": "Excluir loja",
+    "storeName": "Nome da loja",
+    "storeNamePlaceholder": "ex.: Supermercado",
+    "storeColor": "Cor",
+    "storeIcon": "Ícone",
+    "confirmDelete": "Tem certeza de que deseja excluir {storeName}?",
+    "deleteWarning": "Os itens desta loja serão movidos para Sem classificação.",
+    "noStoresYet": "Ainda não há lojas",
+    "createStoreHint": "Crie uma loja para organizar suas compras",
+    "hasItems": "Esta loja tem {count} item de compra.",
+    "hasItemsPlural": "Esta loja tem {count} itens de compra.",
+    "whatToDo": "O que você gostaria de fazer com eles?",
+    "keepItems": "Manter itens",
+    "keepItemsDescription": "Mover itens para Sem classificação",
+    "deleteItems": "Excluir itens",
+    "deleteItemsDescription": "Remover todos os itens desta loja",
+    "noItems": "Esta loja não tem itens.",
+    "create": "Criar"
+  },
+  "panel": {
+    "addTitle": "Adicionar item",
+    "editTitle": "Editar item",
+    "itemName": "Nome do item",
+    "itemNamePlaceholder": "ex.: Leite, ovos, pão...",
+    "selectStore": "Selecionar loja",
+    "noStore": "Sem loja",
+    "recurrence": "Recorrência",
+    "savePreference": "Lembrar loja para este item",
+    "addAnother": "Adicionar outro",
+    "addRepeat": "Toque para configurar",
+    "recurrenceEnabled": "Recorrente",
+    "recurrenceSheet": {
+      "title": "Recorrência",
+      "subtitle": "Readicione automaticamente este item à sua lista de compras",
+      "enable": "Ativar recorrência",
+      "disable": "Desativar recorrência",
+      "frequency": "Frequência",
+      "weekly": "Semanal",
+      "biweekly": "A cada 2 semanas",
+      "monthly": "Mensal",
+      "confirm": "Confirmar"
+    },
+    "storeOptional": "Loja (opcional)",
+    "autoDetectFromHistory": "Detectar automaticamente pelo histórico",
+    "autoDetectOrSelect": "Detectar automaticamente ou selecionar",
+    "placeholder": "ex.: 2 kg de peito de frango",
+    "editPlaceholder": "ex.: leite toda semana",
+    "servings": "Porções",
+    "loadingIngredients": "Carregando ingredientes...",
+    "noIngredients": "Nenhum ingrediente.",
+    "addSelectedToGroceries": "Adicionar à lista de compras",
+    "ingredientsAdded": "Ingredientes adicionados à lista de compras.",
+    "ingredientsFailed": "Falha ao adicionar ingredientes à lista de compras.",
+    "addToGroceries": "Adicionar à lista de compras"
+  }
+}
