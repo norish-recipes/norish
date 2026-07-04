@@ -426,7 +426,7 @@ export function createUseGroceriesMutations({
       );
     };
 
-    const updateGrocery = (id: string, raw: string) => {
+    const updateGrocery = (id: string, raw: string, storeId?: string | null) => {
       const parsed = parseIngredientWithDefaults(raw, units)[0]!;
 
       setGroceriesData((prev) => {
@@ -438,6 +438,7 @@ export function createUseGroceriesMutations({
                 amount: parsed.quantity,
                 unit: parsed.unitOfMeasure,
                 name: parsed.description,
+                ...(storeId !== undefined ? { storeId } : {}),
               }
             : g
         );
@@ -445,10 +446,23 @@ export function createUseGroceriesMutations({
         return { ...prev, groceries: updated };
       });
 
-      updateMutation.mutate(
-        { groceryId: id, raw, version: getGroceryVersion(id) },
-        { onError: () => invalidate() }
-      );
+      const mutationPayload: {
+        groceryId: string;
+        raw: string;
+        version: number;
+        storeId?: string | null;
+      } = {
+        groceryId: id,
+        raw,
+        version: getGroceryVersion(id),
+      };
+
+      // Only include storeId when explicitly provided (null = unsorted)
+      if (storeId !== undefined) {
+        mutationPayload.storeId = storeId;
+      }
+
+      updateMutation.mutate(mutationPayload, { onError: () => invalidate() });
     };
 
     const updateRecurringGrocery = (

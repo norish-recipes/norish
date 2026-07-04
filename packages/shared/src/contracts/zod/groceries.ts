@@ -73,6 +73,7 @@ export const GroceryUpdateInputSchema = z.object({
   groceryId: z.string(),
   raw: z.string(),
   version: z.number().int().positive(),
+  storeId: z.string().uuid().nullable().optional(),
 });
 
 export const GroceryToggleSchema = z.object({

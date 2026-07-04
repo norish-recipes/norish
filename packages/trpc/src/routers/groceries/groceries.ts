@@ -73,7 +73,7 @@ const create = authedProcedure
   });
 
 const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, input }) => {
-  const { groceryId, raw, version } = input;
+  const { groceryId, raw, version, storeId } = input;
 
   log.debug({ userId: ctx.user.id, groceryId }, "Updating grocery");
 
@@ -107,6 +107,12 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
         amount: parsedIngredient.quantity,
         unit: parsedIngredient.unitOfMeasure,
       };
+
+      // When storeId is explicitly provided, include it in the update
+      // (null means "unsorted", undefined means "don't change")
+      if (storeId !== undefined) {
+        updateData.storeId = storeId;
+      }
 
       const parsed = GroceryUpdateBaseSchema.safeParse(updateData);
 

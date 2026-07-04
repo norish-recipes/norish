@@ -21,7 +21,7 @@ type EditGroceryPanelProps = {
   grocery: GroceryDto;
   recurringGrocery: RecurringGroceryDto | null;
   stores: StoreDto[];
-  onSave: (itemName: string, pattern: RecurrencePattern | null) => void;
+  onSave: (itemName: string, pattern: RecurrencePattern | null, storeId?: string | null) => void;
   onAssignToStore: (storeId: string | null, savePreference?: boolean) => void;
   onDelete: () => void;
 };
@@ -81,12 +81,12 @@ export default function EditGroceryPanel({
   const handleSubmit = () => {
     const trimmed = itemName.trim();
     if (!trimmed) return;
-    onSave(trimmed, confirmedPattern);
 
-    // If store changed, save that too (with preference)
-    if (hasStoreChanged) {
-      onAssignToStore(selectedStoreId, true);
-    }
+    // Fold the store change into the single save call so both the name/unit
+    // update and the store assignment happen in one atomic mutation (avoiding
+    // a version-conflict race between two separate mutations).
+    onSave(trimmed, confirmedPattern, hasStoreChanged ? selectedStoreId : undefined);
+
     onOpenChange(false);
   };
   const handleRecurrenceSave = (pattern: RecurrencePattern | null) => {

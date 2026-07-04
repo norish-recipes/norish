@@ -71,7 +71,11 @@ export function GroceriesPage() {
   const editingRecurringGrocery = editingGrocery
     ? getRecurringGroceryForGrocery(editingGrocery.id)
     : null;
-  const handleEditSave = (itemName: string, pattern: RecurrencePattern | null) => {
+  const handleEditSave = (
+    itemName: string,
+    pattern: RecurrencePattern | null,
+    storeId?: string | null
+  ) => {
     if (!editingGrocery) return;
     if (editingRecurringGrocery) {
       // Already recurring - update the recurring grocery
@@ -82,7 +86,7 @@ export function GroceriesPage() {
       deleteGroceries([editingGrocery.id]);
     } else {
       // Simple update
-      updateGrocery(editingGrocery.id, itemName);
+      updateGrocery(editingGrocery.id, itemName, storeId);
     }
   };
   const handleEditAssignToStore = (storeId: string | null, savePreference?: boolean) => {
