@@ -119,6 +119,10 @@
         "title": "재료 단위 변환 버튼 표시",
         "description": "레시피 페이지에 측정 시스템 변환 버튼을 표시합니다"
       },
+      "todaySection": {
+        "title": "오늘 섹션 표시",
+        "description": "홈 화면에 오늘의 식사 계획 섹션을 표시합니다"
+      },
       "ratings": {
         "title": "평점 표시",
         "description": "레시피 카드와 상세 페이지에 별점 평가를 표시합니다"

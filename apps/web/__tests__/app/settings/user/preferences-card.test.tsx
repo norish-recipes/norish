@@ -5,8 +5,13 @@ import "@testing-library/jest-dom";
 
 import PreferencesCard from "@/app/(app)/settings/user/components/preferences-card";
 
+import type { User } from "@norish/shared/contracts";
+
+type PreferenceTestUser = Pick<User, "preferences">;
+type TimersConfigMock = { timersEnabled: boolean; globalEnabled: boolean };
+
 const mockContext = vi.hoisted(() => ({
-  user: { preferences: { timersEnabled: true } },
+  user: { preferences: { timersEnabled: true } } as PreferenceTestUser,
   updatePreferences: vi.fn().mockResolvedValue(undefined),
   isUpdatingPreferences: false,
 }));
@@ -25,7 +30,7 @@ vi.mock("@/app/(app)/settings/user/context", () => ({
   useUserSettingsContext: () => ({ ...mockContext, user: mockContext.user }),
 }));
 
-let timersMock = { timersEnabled: true, globalEnabled: true } as any;
+let timersMock: TimersConfigMock = { timersEnabled: true, globalEnabled: true };
 
 vi.mock("@/hooks/config", () => ({
   useTimersEnabledQuery: () => timersMock,
@@ -92,9 +97,9 @@ describe("PreferencesCard", () => {
   });
 
   it("shows enabled when user preference is true and no global disable", async () => {
-    mockContext.user = { preferences: { timersEnabled: true } } as any;
+    mockContext.user = { preferences: { timersEnabled: true } };
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = { timersEnabled: true, globalEnabled: true };
 
     render(<PreferencesCard />);
 
@@ -111,9 +116,9 @@ describe("PreferencesCard", () => {
   });
 
   it("shows disabled (user-level) when user preference is false and global enabled", async () => {
-    mockContext.user = { preferences: { timersEnabled: false } } as any;
+    mockContext.user = { preferences: { timersEnabled: false } };
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = { timersEnabled: true, globalEnabled: true };
 
     render(<PreferencesCard />);
 
@@ -132,7 +137,7 @@ describe("PreferencesCard", () => {
 
   it("hides the timer toggle when globally disabled", async () => {
     // Set global disabled
-    timersMock = { timersEnabled: false, globalEnabled: false } as any;
+    timersMock = { timersEnabled: false, globalEnabled: false };
 
     render(<PreferencesCard />);
 
@@ -147,9 +152,9 @@ describe("PreferencesCard", () => {
   });
 
   it("toggles showConversionButton preference", async () => {
-    mockContext.user = { preferences: { timersEnabled: true, showConversionButton: true } } as any;
+    mockContext.user = { preferences: { timersEnabled: true, showConversionButton: true } };
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = { timersEnabled: true, globalEnabled: true };
 
     render(<PreferencesCard />);
 
@@ -167,15 +172,35 @@ describe("PreferencesCard", () => {
     });
   });
 
-  it("toggles showRatings preference", async () => {
-    mockContext.user = { preferences: { timersEnabled: true, showRatings: true } } as any;
+  it("toggles showTodaySection preference", async () => {
+    mockContext.user = { preferences: { timersEnabled: true, showTodaySection: true } };
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = { timersEnabled: true, globalEnabled: true };
 
     render(<PreferencesCard />);
 
     const toggles = screen.getAllByRole("button", { name: /toggle/i });
-    const ratingsToggle = toggles[2];
+    const todaySectionToggle = toggles[2];
+
+    expect(todaySectionToggle).toHaveAttribute("aria-pressed", "true");
+    expect(todaySectionToggle).not.toBeDisabled();
+
+    fireEvent.click(todaySectionToggle);
+
+    await waitFor(() => {
+      expect(mockContext.updatePreferences).toHaveBeenCalledWith({ showTodaySection: false });
+    });
+  });
+
+  it("toggles showRatings preference", async () => {
+    mockContext.user = { preferences: { timersEnabled: true, showRatings: true } };
+
+    timersMock = { timersEnabled: true, globalEnabled: true };
+
+    render(<PreferencesCard />);
+
+    const toggles = screen.getAllByRole("button", { name: /toggle/i });
+    const ratingsToggle = toggles[3];
 
     expect(ratingsToggle).toHaveAttribute("aria-pressed", "true");
     expect(ratingsToggle).not.toBeDisabled();
@@ -188,14 +213,14 @@ describe("PreferencesCard", () => {
   });
 
   it("toggles showFavorites preference", async () => {
-    mockContext.user = { preferences: { timersEnabled: true, showFavorites: true } } as any;
+    mockContext.user = { preferences: { timersEnabled: true, showFavorites: true } };
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = { timersEnabled: true, globalEnabled: true };
 
     render(<PreferencesCard />);
 
     const toggles = screen.getAllByRole("button", { name: /toggle/i });
-    const favoritesToggle = toggles[3];
+    const favoritesToggle = toggles[4];
 
     expect(favoritesToggle).toHaveAttribute("aria-pressed", "true");
     expect(favoritesToggle).not.toBeDisabled();
@@ -208,9 +233,9 @@ describe("PreferencesCard", () => {
   });
 
   it("renders language dropdown with current locale", () => {
-    mockContext.user = { preferences: { timersEnabled: true, locale: "en" } } as any;
+    mockContext.user = { preferences: { timersEnabled: true, locale: "en" } };
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = { timersEnabled: true, globalEnabled: true };
 
     render(<PreferencesCard />);
 
@@ -225,9 +250,9 @@ describe("PreferencesCard", () => {
   });
 
   it("calls updatePreferences with locale when language is changed", async () => {
-    mockContext.user = { preferences: { timersEnabled: true, locale: "en" } } as any;
+    mockContext.user = { preferences: { timersEnabled: true, locale: "en" } };
 
-    timersMock = { timersEnabled: true, globalEnabled: true } as any;
+    timersMock = { timersEnabled: true, globalEnabled: true };
 
     render(<PreferencesCard />);
 

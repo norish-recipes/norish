@@ -1,6 +1,7 @@
 export interface UserPreferences {
   timersEnabled?: boolean;
   showConversionButton?: boolean;
+  showTodaySection?: boolean;
   showRatings?: boolean;
   showFavorites?: boolean;
   locale?: string | null;

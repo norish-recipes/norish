@@ -119,6 +119,10 @@
         "title": "Afficher le bouton de conversion",
         "description": "Afficher un bouton sur les pages de recettes pour convertir entre les systèmes de mesure"
       },
+      "todaySection": {
+        "title": "Afficher la section Aujourd’hui",
+        "description": "Afficher la section de planification des repas d’aujourd’hui sur la page d’accueil"
+      },
       "ratings": {
         "title": "Afficher les notes",
         "description": "Afficher les notes par étoiles sur les cartes de recettes et les pages de détail"

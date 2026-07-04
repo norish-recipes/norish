@@ -119,6 +119,10 @@
         "title": "Mostra pulsante conversione ingredienti",
         "description": "Visualizza un pulsante nelle pagine delle ricette per convertire tra sistemi di misura"
       },
+      "todaySection": {
+        "title": "Mostra sezione Oggi",
+        "description": "Visualizza la sezione di pianificazione dei pasti di oggi nella home page"
+      },
       "ratings": {
         "title": "Mostra valutazioni",
         "description": "Visualizza le valutazioni a stelle sulle schede ricette e nelle pagine di dettaglio"

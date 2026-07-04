@@ -7,6 +7,7 @@ import { dateKey } from "@norish/shared/lib/helpers";
 
 const pushMock = vi.fn();
 const useCalendarContextMock = vi.fn();
+const userPreferencesState = { showTodaySection: true };
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -39,6 +40,14 @@ vi.mock("next-intl", () => ({
 vi.mock("@/app/(app)/calendar/context", () => ({
   CalendarContextProvider: ({ children }: any) => <>{children}</>,
   useCalendarContext: () => useCalendarContextMock(),
+}));
+
+vi.mock("@/context/user-context", () => ({
+  useUserContext: () => ({
+    user: { preferences: userPreferencesState },
+    isLoading: false,
+    signOut: vi.fn(),
+  }),
 }));
 
 vi.mock("@/components/Panel/consumers/mini-recipes", () => ({
@@ -92,6 +101,16 @@ describe("TodaysMeals", () => {
   beforeEach(() => {
     pushMock.mockReset();
     useCalendarContextMock.mockReset();
+    userPreferencesState.showTodaySection = true;
+  });
+
+  it("hides the section when the user preference is disabled", () => {
+    userPreferencesState.showTodaySection = false;
+
+    render(<TodaysMeals />);
+
+    expect(screen.queryByRole("heading", { name: "Today" })).not.toBeInTheDocument();
+    expect(useCalendarContextMock).not.toHaveBeenCalled();
   });
 
   it("renders all meal slots and today's planned recipe", () => {

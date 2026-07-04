@@ -119,6 +119,10 @@
         "title": "Konvertier-Button anzeigen",
         "description": "Zeige auf Rezeptseiten einen Button, um zwischen Maßsystemen umzurechnen"
       },
+      "todaySection": {
+        "title": "Bereich „Heute“ anzeigen",
+        "description": "Den Bereich „Heute“ für die Essensplanung auf der Startseite anzeigen"
+      },
       "ratings": {
         "title": "Bewertungen anzeigen",
         "description": "Sternebewertungen auf Rezeptkarten und Detailseiten anzeigen"

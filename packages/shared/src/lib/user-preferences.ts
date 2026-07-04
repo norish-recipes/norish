@@ -25,6 +25,15 @@ export function getShowConversionButtonPreference(
   return typeof value === "boolean" ? value : fallback;
 }
 
+export function getShowTodaySectionPreference(
+  user: Pick<User, "preferences"> | null | undefined,
+  fallback = true
+): boolean {
+  const value = getUserPreferences(user).showTodaySection;
+
+  return typeof value === "boolean" ? value : fallback;
+}
+
 export function getShowRatingsPreference(
   user: Pick<User, "preferences"> | null | undefined,
   fallback = true

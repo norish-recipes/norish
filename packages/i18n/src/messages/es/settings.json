@@ -119,6 +119,10 @@
         "title": "Mostrar botón de conversión",
         "description": "Mostrar un botón en las páginas de recetas para convertir entre sistemas de medida"
       },
+      "todaySection": {
+        "title": "Mostrar sección Hoy",
+        "description": "Muestra la sección de planificación de comidas de Hoy en la página de inicio"
+      },
       "ratings": {
         "title": "Mostrar valoraciones",
         "description": "Mostrar valoraciones con estrellas en las tarjetas de recetas y páginas de detalle"

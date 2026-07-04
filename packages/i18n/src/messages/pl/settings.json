@@ -119,6 +119,10 @@
         "title": "Pokaż przycisk konwersji składników",
         "description": "Wyświetlaj przycisk na stronach przepisów do konwersji między systemami miar"
       },
+      "todaySection": {
+        "title": "Pokaż sekcję Dzisiaj",
+        "description": "Wyświetlaj sekcję planowania posiłków Dzisiaj na stronie głównej"
+      },
       "ratings": {
         "title": "Pokaż oceny",
         "description": "Wyświetlaj oceny w postaci gwiazdek na kartach przepisów i stronach szczegółów"

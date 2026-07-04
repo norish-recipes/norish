@@ -120,6 +120,10 @@
         "title": "Toon conversieknop",
         "description": "Toon de converteer knop op de recept pagina's"
       },
+      "todaySection": {
+        "title": "Vandaag-sectie tonen",
+        "description": "Toon de maaltijdplanningssectie Vandaag op de startpagina"
+      },
       "ratings": {
         "title": "Beoordelingen tonen",
         "description": "Sterbeoordelingen op receptkaarten en detailpagina's weergeven"

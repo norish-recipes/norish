@@ -119,6 +119,10 @@
         "title": "Show Ingredient Conversion Button",
         "description": "Display a button on recipe pages to convert between measurement systems"
       },
+      "todaySection": {
+        "title": "Show Today Section",
+        "description": "Display the Today meal-planning section on the home page"
+      },
       "ratings": {
         "title": "Show Ratings",
         "description": "Display star ratings on recipe cards and detail pages"

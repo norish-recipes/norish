@@ -13,6 +13,7 @@ import {
   getShowConversionButtonPreference,
   getShowFavoritesPreference,
   getShowRatingsPreference,
+  getShowTodaySectionPreference,
   getTimersEnabledPreference,
 } from "@norish/shared/lib/user-preferences";
 
@@ -45,12 +46,20 @@ export default function PreferencesCard() {
   );
 
   const conversionEffective = getShowConversionButtonPreference(user);
+  const todaySectionEffective = getShowTodaySectionPreference(user);
   const ratingsEffective = getShowRatingsPreference(user);
   const favoritesEffective = getShowFavoritesPreference(user);
 
   const handleConversionToggle = useCallback(
     async (value: boolean) => {
       await updatePreferences({ showConversionButton: value });
+    },
+    [updatePreferences]
+  );
+
+  const handleTodaySectionToggle = useCallback(
+    async (value: boolean) => {
+      await updatePreferences({ showTodaySection: value });
     },
     [updatePreferences]
   );
@@ -151,6 +160,20 @@ export default function PreferencesCard() {
               isDisabled={isUpdatingPreferences}
               isSelected={conversionEffective}
               onValueChange={(v) => handleConversionToggle(v)}
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-foreground font-medium">{t("todaySection.title")}</div>
+            <div className="text-muted text-sm">{t("todaySection.description")}</div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <SettingsSwitch
+              isDisabled={isUpdatingPreferences}
+              isSelected={todaySectionEffective}
+              onValueChange={(v) => handleTodaySectionToggle(v)}
             />
           </div>
         </div>

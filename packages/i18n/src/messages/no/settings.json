@@ -119,6 +119,10 @@
         "title": "Vis knapp for ingredienskonvertering",
         "description": "Vis en knapp på oppskriftsider for å konvertere mellom målesystemer"
       },
+      "todaySection": {
+        "title": "Vis I dag-seksjonen",
+        "description": "Vis måltidsplanleggingsseksjonen I dag på hjemmesiden"
+      },
       "ratings": {
         "title": "Vis vurderinger",
         "description": "Vis stjernervurderinger på oppskriftkort og detaljsider"

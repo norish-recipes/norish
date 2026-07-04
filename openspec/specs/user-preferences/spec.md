@@ -50,15 +50,42 @@ The system SHALL store a `showFavorites` boolean in the user's `preferences` JSO
 - **THEN** all favorite UI elements are displayed again
 - **AND** the favorites-only toggle reappears in the filters panel
 
-### Requirement: Rating and favorites visibility toggles in settings
+### Requirement: Home Today section visibility preference
 
-The PreferencesCard in user settings SHALL include toggle switches for `showRatings` and `showFavorites`, allowing users to control visibility of these features.
+The system SHALL store a `showTodaySection` boolean in the user's `preferences` JSONB column that controls visibility of the Today meal-planning section on the home dashboard. The preference SHALL default to `true` when unset.
+
+#### Scenario: Today section visible by default
+
+- **WHEN** a user has never set the `showTodaySection` preference
+- **THEN** the system treats `showTodaySection` as `true`
+- **AND** the Today meal-planning section is displayed on the home dashboard
+
+#### Scenario: User hides the Today section
+
+- **WHEN** a user sets `showTodaySection` to `false` via `updatePreferences({ showTodaySection: false })`
+- **THEN** the Today meal-planning section is hidden from the home dashboard
+
+#### Scenario: User re-enables the Today section
+
+- **WHEN** a user sets `showTodaySection` to `true` via `updatePreferences({ showTodaySection: true })`
+- **THEN** the Today meal-planning section is displayed on the home dashboard again
+
+### Requirement: Visibility toggles in settings
+
+The PreferencesCard in user settings SHALL include toggle switches for `showTodaySection`, `showRatings`, and `showFavorites`, allowing users to control visibility of these features.
 
 #### Scenario: Toggle switches display current state
 
 - **WHEN** an authenticated user views the PreferencesCard on the settings page
-- **THEN** a toggle for "Show Ratings" is displayed, reflecting the current `showRatings` value (defaulting to enabled)
+- **THEN** a toggle for "Show Today Section" is displayed, reflecting the current `showTodaySection` value (defaulting to enabled)
+- **AND** a toggle for "Show Ratings" is displayed, reflecting the current `showRatings` value (defaulting to enabled)
 - **AND** a toggle for "Show Favorites" is displayed, reflecting the current `showFavorites` value (defaulting to enabled)
+
+#### Scenario: User disables Today section from settings
+
+- **WHEN** the user toggles the "Show Today Section" switch off
+- **THEN** `updatePreferences({ showTodaySection: false })` is called
+- **AND** the toggle reflects the disabled state
 
 #### Scenario: User disables ratings from settings
 
