@@ -8,6 +8,9 @@ import TodaysMeals from "@/components/dashboard/today/todays-meals";
 import { getTranslations } from "next-intl/server";
 
 import { auth } from "@norish/auth/auth";
+import { getUserPreferences as getStoredUserPreferences } from "@norish/db";
+import { UserPreferencesSchema } from "@norish/shared/contracts/zod/user";
+import { getShowTodaySectionPreference } from "@norish/shared/lib/user-preferences";
 
 export default async function Home() {
   const session = await auth.api.getSession({
@@ -17,9 +20,15 @@ export default async function Home() {
 
   if (!session?.user) return null; // This should never happen due to proxy
 
+  const storedPreferences = await getStoredUserPreferences(session.user.id);
+  const parsedPreferences = UserPreferencesSchema.safeParse(storedPreferences);
+  const showTodaySection = getShowTodaySectionPreference({
+    preferences: parsedPreferences.success ? parsedPreferences.data : {},
+  });
+
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col gap-8">
-      <TodaysMeals />
+      {showTodaySection ? <TodaysMeals /> : null}
 
       <section
         aria-labelledby="recipe-library-heading"
