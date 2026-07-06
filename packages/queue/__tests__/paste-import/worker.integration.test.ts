@@ -3,12 +3,13 @@
 import type { Job } from "bullmq";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getRecipeFull } from "@norish/db";
-import { getAverageRating, getUserRatingWithVersion } from "@norish/db/repositories/ratings";
-
 import type { PasteImportJobData } from "../../src/contracts/job-types";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
-import { processPasteImportJob } from "../../src/paste-import/worker";
+
+let processPasteImportJob: typeof import("../../src/paste-import/worker").processPasteImportJob;
+let getRecipeFull: typeof import("@norish/db").getRecipeFull;
+let getAverageRating: typeof import("@norish/db/repositories/ratings").getAverageRating;
+let getUserRatingWithVersion: typeof import("@norish/db/repositories/ratings").getUserRatingWithVersion;
 
 const mocked = vi.hoisted(() => ({
   addAutoTaggingJob: vi.fn(),
@@ -16,7 +17,7 @@ const mocked = vi.hoisted(() => ({
   emitByPolicy: vi.fn(),
 }));
 
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getAIConfig: vi.fn().mockResolvedValue({ autoTagAllergies: false }),
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "everyone" }),
   isAIEnabled: vi.fn().mockResolvedValue(true),
@@ -34,11 +35,11 @@ vi.mock("@norish/queue/allergy-detection/producer", () => ({
   addAllergyDetectionJob: mocked.addAllergyDetectionJob,
 }));
 
-vi.mock("@norish/trpc/helpers", () => ({
+vi.mock("@norish/shared-server/realtime/policy", () => ({
   emitByPolicy: mocked.emitByPolicy,
 }));
 
-vi.mock("@norish/trpc/routers/recipes/emitter", () => ({
+vi.mock("@norish/shared-server/realtime/recipes", () => ({
   recipeEmitter: {},
 }));
 
@@ -56,6 +57,15 @@ describe("processPasteImportJob integration", () => {
 
   beforeAll(async () => {
     await testBase.setup();
+
+    const { resetDbConnection } = await import("@norish/db/drizzle");
+
+    await resetDbConnection();
+
+    ({ processPasteImportJob } = await import("../../src/paste-import/worker"));
+    ({ getRecipeFull } = await import("@norish/db"));
+    ({ getAverageRating, getUserRatingWithVersion } =
+      await import("@norish/db/repositories/ratings"));
   });
 
   beforeEach(async () => {

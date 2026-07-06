@@ -15,7 +15,7 @@ vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() }),
   videoLogger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getVideoConfig: vi.fn().mockReturnValue({ ytDlpVersion: "latest" }),
 }));
 

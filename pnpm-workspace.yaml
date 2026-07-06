@@ -1,5 +1,7 @@
 packages:
   - apps/*
+  - "!apps/quick-import-extension"
+  - "!apps/docs"
   - packages/*
   - tooling/*
 
@@ -10,10 +12,10 @@ catalog:
   "@better-auth/utils": 0.4.0
   "@eslint/js": ^9.39.4
   "@heroicons/react": 2.2.0
-  "@heroui/react": ^2.8.10
-  "@scalar/nextjs-api-reference": ^0.10.13
+  "@heroui/react": ^3.0.4
+  "@scalar/nextjs-api-reference": ^0.10.16
   "@tailwindcss/postcss": ^4.2.4
-  "@tanstack/react-query": ^5.100.8
+  "@tanstack/react-query": ^5.100.11
   "@testcontainers/postgresql": ^11.14.0
   "@trpc/client": ^11.17.0
   "@trpc/server": ^11.17.0
@@ -36,8 +38,8 @@ catalog:
   pg: 8.20.0
   postcss: ^8.5.13
   prettier: ^3.8.3
-  react: 19.2.4
-  react-dom: 19.2.4
+  react: 19.2.3
+  react-dom: 19.2.3
   server-only: ^0.0.1
   superjson: ^2.2.6
   tailwindcss: ^4.2.4
@@ -54,6 +56,12 @@ injectWorkspacePackages: true
 
 nodeLinker: hoisted
 
+overrides:
+  "@tanstack/react-query": 5.100.11
+  "@trpc/client": 11.17.0
+  "@trpc/server": 11.17.0
+  "@trpc/tanstack-react-query": 11.17.0
+
 onlyBuiltDependencies:
   - "@tailwindcss/oxide"
   - "@heroui/shared-utils"
@@ -61,9 +69,6 @@ onlyBuiltDependencies:
   - ffmpeg-static
   - sharp
   - unrs-resolver
-
-patchedDependencies:
-  expo-widgets@55.0.7: patches/expo-widgets@55.0.7.patch
 
 syncInjectedDepsAfterScripts:
   - build

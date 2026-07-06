@@ -1,7 +1,3 @@
-import { APP_MAIN_HORIZONTAL_PADDING_CLASS } from "@norish/web/config/css-tokens";
-
-import { AuthProviders } from "../providers/auth-providers";
-
 import { Navbar } from "@/components/navbar/navbar";
 import { TimerDock } from "@/components/timer-dock";
 import { ArchiveImportProvider } from "@/context/archive-import-context";
@@ -11,7 +7,9 @@ import { RecipesContextProvider } from "@/context/recipes-context";
 import { RecipesFiltersProvider } from "@/context/recipes-filters-context";
 import { UserProvider } from "@/context/user-context";
 
+import { APP_MAIN_HORIZONTAL_PADDING_CLASS } from "@norish/web/config/css-tokens";
 
+import { AuthProviders } from "../providers/auth-providers";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (

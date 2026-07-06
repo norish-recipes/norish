@@ -10,6 +10,7 @@ export const DEFAULT_TARGETS = [
   "packages/auth",
   "packages/config",
   "packages/db",
+  "packages/db-schema",
   "packages/i18n",
   "packages/queue",
   "packages/shared",

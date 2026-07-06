@@ -7,18 +7,17 @@
  */
 
 import type { Job } from "bullmq";
-import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
-import type { PolicyEmitContext } from "@norish/trpc/helpers";
 
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
+import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
+import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import { getRecipeFull } from "@norish/db";
-import { db } from "@norish/db/drizzle";
-import { attachTagsToRecipeByInputTx, getRecipeTagNamesTx } from "@norish/db/repositories/tags";
+import { mergeTagsIntoRecipe } from "@norish/db/repositories/tags";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
-import { emitByPolicy } from "@norish/trpc/helpers";
-import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
+import { emitByPolicy } from "@norish/shared-server/realtime/policy";
+import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
@@ -92,23 +91,13 @@ async function processAutoTaggingJob(job: Job<AutoTaggingJobData>): Promise<void
     return;
   }
 
-  // Update recipe tags in database (within transaction to avoid race conditions)
-  await db.transaction(async (tx) => {
-    // Get existing tags to merge (preserve any manually added tags)
-    const existingTags = await getRecipeTagNamesTx(tx, recipeId);
+  // Merge AI tags with existing tags (preserves manually added tags)
+  const { newTags, allTags } = await mergeTagsIntoRecipe(recipeId, generatedTags);
 
-    // Merge tags: AI tags + existing tags (deduplicated, lowercase comparison)
-    const existingLower = new Set(existingTags.map((t: string) => t.toLowerCase()));
-    const newTags = generatedTags.filter((t) => !existingLower.has(t.toLowerCase()));
-    const allTags = [...existingTags, ...newTags];
-
-    await attachTagsToRecipeByInputTx(tx, recipeId, allTags);
-
-    log.info(
-      { jobId: job.id, recipeId, newTags, totalTags: allTags.length },
-      "Auto-tagging completed and saved"
-    );
-  });
+  log.info(
+    { jobId: job.id, recipeId, newTags, totalTags: allTags.length },
+    "Auto-tagging completed and saved"
+  );
 
   // Fetch updated recipe and emit events
   const updatedRecipe = await getRecipeFull(recipeId);

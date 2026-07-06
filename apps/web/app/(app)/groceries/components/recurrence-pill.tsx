@@ -1,11 +1,11 @@
 "use client";
 
-import type { RecurringGroceryDto } from "@norish/shared/contracts";
-import type { RecurrenceTranslations } from "@norish/shared/lib/recurrence/formatter";
-
 import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
+
+import type { RecurringGroceryDto } from "@norish/shared/contracts";
+import type { RecurrenceTranslations } from "@norish/shared/lib/recurrence/formatter";
 import { isOverdue } from "@norish/shared/lib/recurrence/calculator";
 import {
   formatNextOccurrence,
@@ -69,8 +69,8 @@ export function RecurrencePill({
   const bgColor = overdue
     ? "bg-danger/10 text-danger border border-danger/20"
     : subtle
-      ? "bg-default-100 text-default-600 dark:bg-default-50"
-      : "bg-primary/10 text-primary";
+      ? "bg-surface-secondary text-muted dark:bg-surface-secondary"
+      : "bg-accent/10 text-accent";
 
   const PillComponent = onClick ? motion.button : motion.div;
 
@@ -96,13 +96,13 @@ export function RecurrencePill({
       {nextText && (
         <>
           <span className="text-[0.7rem] font-medium opacity-50">•</span>
-          <span className="text-default-500 text-[0.7rem] font-medium italic">{nextText}</span>
+          <span className="text-muted text-[0.7rem] font-medium italic">{nextText}</span>
         </>
       )}
       {showRemove && onRemove && (
         <span
           aria-label="Remove recurrence"
-          className="hover:bg-default-200/50 ml-0.5 cursor-pointer rounded-full p-0.5 transition-colors"
+          className="hover:bg-surface-tertiary/50 ml-0.5 cursor-pointer rounded-full p-0.5 transition-colors"
           role="button"
           tabIndex={0}
           onClick={(e) => {

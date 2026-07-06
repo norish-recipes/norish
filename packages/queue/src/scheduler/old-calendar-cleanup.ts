@@ -1,8 +1,7 @@
 import { format, startOfMonth, subMonths } from "date-fns";
-import { lte } from "drizzle-orm";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { db } from "@norish/db/drizzle";
-import { plannedItems } from "@norish/db/schema";
+import { deletePlannedItemsBefore } from "@norish/db/repositories/planned-items";
 import { schedulerLogger } from "@norish/shared-server/logger";
 
 export async function cleanupOldCalendarData(): Promise<{
@@ -19,9 +18,7 @@ export async function cleanupOldCalendarData(): Promise<{
       "Deleting old calendar data"
     );
 
-    const result = await db.delete(plannedItems).where(lte(plannedItems.date, cutoffDateString));
-
-    const plannedItemsDeleted = result.rowCount ?? 0;
+    const plannedItemsDeleted = await deletePlannedItemsBefore(cutoffDateString);
 
     schedulerLogger.info({ deleted: plannedItemsDeleted }, "Old calendar cleanup complete");
 

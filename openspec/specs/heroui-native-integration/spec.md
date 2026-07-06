@@ -18,10 +18,10 @@ The mobile application SHALL install and configure HeroUI Native RC3 with all re
 
 ### Requirement: HeroUI uses existing native theme tokens
 
-The integration SHALL consume the existing token definitions from `tooling/tailwind/native-theme.js` as the source for mobile theme styling.
+The integration SHALL consume the existing token definitions from `tooling/tailwind/heroui-theme.css` as the source for mobile theme styling.
 
 #### Scenario: HeroUI card reflects repository theme tokens
 
 - **WHEN** a HeroUI `Card` is rendered on the start screen
-- **THEN** visual tokens (such as spacing, radius, color, and typography) SHALL align with values derived from `tooling/tailwind/native-theme.js`
+- **THEN** visual tokens (such as spacing, radius, color, and typography) SHALL align with values derived from `tooling/tailwind/heroui-theme.css`
 - **AND** the implementation SHALL NOT introduce a separate conflicting token source for the same concerns

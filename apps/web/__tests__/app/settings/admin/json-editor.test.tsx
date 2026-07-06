@@ -11,7 +11,7 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  Textarea: ({ value, onChange, placeholder }: any) => (
+  TextArea: ({ value, onChange, placeholder }: any) => (
     <textarea aria-label="json" placeholder={placeholder} value={value} onChange={onChange} />
   ),
   Button: ({ children, onPress, isDisabled }: any) => (

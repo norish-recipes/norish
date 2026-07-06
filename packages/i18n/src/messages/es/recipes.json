@@ -14,6 +14,11 @@
       "ingredients": "Ingredientes",
       "steps": "Pasos",
       "tags": "Etiquetas"
+    },
+    "viewMode": {
+      "label": "Vista de recetas",
+      "grid": "Cuadrícula",
+      "list": "Lista"
     }
   },
   "empty": {
@@ -26,7 +31,8 @@
     "noImage": "No hay imagen disponible",
     "viewGroceries": "Ver lista de la compra",
     "addToCalendar": "Añadir al calendario",
-    "deleteRecipe": "Eliminar receta"
+    "deleteRecipe": "Eliminar receta",
+    "recipeOptions": "Opciones de receta"
   },
   "detail": {
     "backToRecipes": "Volver a las recetas",
@@ -255,7 +261,6 @@
       "duplicateTag": "Esta etiqueta ya existe"
     }
   },
-
   "cookMode": {
     "steps": "Pasos",
     "ingredients": "Ingredientes",

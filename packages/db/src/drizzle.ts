@@ -1,8 +1,8 @@
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
 import * as schema from "./schema";
@@ -31,6 +31,18 @@ export const db = new Proxy({} as NodePgDatabase<typeof schema>, {
     return typeof value === "function" ? value.bind(instance) : value;
   },
 });
+
+export type DbTransaction = Parameters<
+  Parameters<NodePgDatabase<typeof schema>["transaction"]>[0]
+>[0];
+
+/**
+ * Run repository operations inside a single database transaction without
+ * exposing the raw client to callers outside the db package.
+ */
+export async function withTransaction<T>(fn: (tx: DbTransaction) => Promise<T>): Promise<T> {
+  return await db.transaction(fn);
+}
 
 /**
  * Reset the database connection pool

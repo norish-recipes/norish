@@ -14,6 +14,11 @@
       "ingredients": "Ingrediënten",
       "steps": "Stappen",
       "tags": "Tags"
+    },
+    "viewMode": {
+      "label": "Receptweergave",
+      "grid": "Raster",
+      "list": "Lijst"
     }
   },
   "empty": {
@@ -26,7 +31,8 @@
     "noImage": "Geen afbeelding beschikbaar",
     "viewGroceries": "Bekijk boodschappen",
     "addToCalendar": "Toevoegen aan agenda",
-    "deleteRecipe": "Recept verwijderen"
+    "deleteRecipe": "Recept verwijderen",
+    "recipeOptions": "Receptopties"
   },
   "detail": {
     "backToRecipes": "Terug naar recepten",
@@ -255,7 +261,6 @@
       "duplicateTag": "Deze tag bestaat al"
     }
   },
-
   "cookMode": {
     "steps": "Stappen",
     "ingredients": "Ingrediënten",

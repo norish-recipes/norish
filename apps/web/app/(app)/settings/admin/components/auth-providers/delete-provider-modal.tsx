@@ -1,7 +1,7 @@
 "use client";
 
 import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
-import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@heroui/react";
+import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface DeleteProviderModalProps {
@@ -10,7 +10,6 @@ interface DeleteProviderModalProps {
   onConfirm: () => void;
   providerName: string;
 }
-
 export function DeleteProviderModal({
   isOpen,
   onClose,
@@ -19,30 +18,29 @@ export function DeleteProviderModal({
 }: DeleteProviderModalProps) {
   const t = useTranslations("settings.admin.authProviders.form");
   const tActions = useTranslations("common.actions");
-
   return (
-    <Modal
-      classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
-      isOpen={isOpen}
-      onClose={onClose}
-    >
-      <ModalContent>
-        <ModalHeader className="flex items-center gap-2">
-          <ExclamationTriangleIcon className="text-danger h-5 w-5" />
-          {t("removeTitle", { provider: providerName })}
-        </ModalHeader>
-        <ModalBody>
-          <p>{t("removeConfirm")}</p>
-        </ModalBody>
-        <ModalFooter>
-          <Button variant="flat" onPress={onClose}>
-            {tActions("cancel")}
-          </Button>
-          <Button color="danger" onPress={onConfirm}>
-            {tActions("remove")}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
+      <Modal.Container className="z-[1100]">
+        <Modal.Dialog>
+          <Modal.Header className="flex items-center gap-2">
+            <ExclamationTriangleIcon className="text-danger h-5 w-5" />
+            {t("removeTitle", {
+              provider: providerName,
+            })}
+          </Modal.Header>
+          <Modal.Body>
+            <p>{t("removeConfirm")}</p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onPress={onClose} variant="tertiary">
+              {tActions("cancel")}
+            </Button>
+            <Button onPress={onConfirm} variant="danger">
+              {tActions("remove")}
+            </Button>
+          </Modal.Footer>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   addRecipeImages,
@@ -17,21 +18,23 @@ import {
 import { ALLOWED_IMAGE_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeImageInputSchema, MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod";
 
+import type { FormDataInput, UploadedFile } from "../../form-data";
+import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 
 // --- Shared Helpers ---
 
 type ImageValidationResult =
-  | { success: true; file: File; bytes: Buffer }
+  | { success: true; file: UploadedFile; bytes: Buffer }
   | { success: false; error: string };
 
 /**
  * Extract and validate image file from FormData.
  * Consolidates all the repetitive validation logic.
  */
-async function extractAndValidateImage(formData: FormData): Promise<ImageValidationResult> {
-  const file = formData.get("image") as File | null;
+async function extractAndValidateImage(formData: FormDataInput): Promise<ImageValidationResult> {
+  const file = getUploadedFile(formData, "image");
 
   if (!file) {
     return { success: false, error: "No image file provided" };
@@ -59,37 +62,35 @@ async function extractAndValidateImage(formData: FormData): Promise<ImageValidat
  * Upload a recipe image (FormData input)
  * Requires recipeId to save to: uploads/recipes/{recipeId}/{hash}.jpg
  */
-const uploadImage = authedProcedure
-  .input(z.instanceof(FormData))
-  .mutation(async ({ ctx, input }) => {
-    const recipeId = input.get("recipeId") as string | null;
+const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({ ctx, input }) => {
+  const recipeId = input.get("recipeId") as string | null;
 
-    log.debug({ userId: ctx.user.id, recipeId }, "Uploading recipe image");
+  log.debug({ userId: ctx.user.id, recipeId }, "Uploading recipe image");
 
-    if (!recipeId) {
-      return { success: false, error: "Recipe ID is required" };
-    }
+  if (!recipeId) {
+    return { success: false, error: "Recipe ID is required" };
+  }
 
-    const validation = await extractAndValidateImage(input);
+  const validation = await extractAndValidateImage(input);
 
-    if (!validation.success) {
-      return validation;
-    }
+  if (!validation.success) {
+    return validation;
+  }
 
-    try {
-      const url = await saveImageBytes(validation.bytes, recipeId);
+  try {
+    const url = await saveImageBytes(validation.bytes, recipeId);
 
-      log.info({ userId: ctx.user.id, recipeId, url }, "Recipe image uploaded");
+    log.info({ userId: ctx.user.id, recipeId, url }, "Recipe image uploaded");
 
-      return { success: true, url };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to upload image";
+    return { success: true, url };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to upload image";
 
-      log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload recipe image");
+    log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload recipe image");
 
-      return { success: false, error: message };
-    }
-  });
+    return { success: false, error: message };
+  }
+});
 
 /**
  * Delete a recipe image by URL
@@ -125,7 +126,7 @@ const deleteImage = authedProcedure
  * Images are stored in: uploads/recipes/{recipeId}/steps/{hash}.jpg
  */
 const uploadStepImage = authedProcedure
-  .input(z.instanceof(FormData))
+  .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
     const recipeId = input.get("recipeId") as string | null;
 
@@ -184,7 +185,7 @@ const deleteStepImage = authedProcedure
  * Also adds entry to recipe_images table
  */
 const uploadGalleryImage = authedProcedure
-  .input(z.instanceof(FormData))
+  .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
     const recipeId = input.get("recipeId") as string | null;
     const orderStr = input.get("order") as string | null;

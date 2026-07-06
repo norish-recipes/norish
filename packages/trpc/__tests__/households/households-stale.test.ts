@@ -43,11 +43,11 @@ const connectionManager = vi.hoisted(() => ({
 }));
 
 vi.mock("@norish/db", () => householdDb);
-vi.mock("@norish/db/cached-household", () => householdCache);
+vi.mock("@norish/shared-server/cache/household", () => householdCache);
 vi.mock("@norish/trpc/routers/households/emitter", () => ({ householdEmitter }));
 vi.mock("@norish/trpc/routers/permissions/emitter", () => ({ permissionsEmitter }));
 vi.mock("@norish/trpc/connection-manager", () => connectionManager);
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "household" }),
 }));
 vi.mock("@norish/shared-server/logger", () => ({

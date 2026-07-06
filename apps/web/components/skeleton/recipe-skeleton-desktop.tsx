@@ -13,7 +13,7 @@ export default function RecipeSkeletonDesktop() {
         {/* LEFT column: Info Card + Ingredients Card */}
         <div className="col-span-2 flex flex-col gap-6">
           {/* Info Card */}
-          <div className="bg-content1 space-y-4 rounded-2xl p-6 shadow-md">
+          <div className="bg-surface space-y-4 rounded-2xl p-6 shadow-md">
             {/* Title and Actions */}
             <div className="flex items-start justify-between">
               <Skeleton className="h-8 w-3/4 rounded-lg" />
@@ -42,7 +42,7 @@ export default function RecipeSkeletonDesktop() {
           </div>
 
           {/* Ingredients Card */}
-          <div className="bg-content1 space-y-4 rounded-2xl p-6 shadow-md">
+          <div className="bg-surface space-y-4 rounded-2xl p-6 shadow-md">
             <div className="flex items-center justify-between">
               <Skeleton className="h-6 w-28 rounded-lg" />
               <div className="flex items-center gap-2">
@@ -59,7 +59,7 @@ export default function RecipeSkeletonDesktop() {
           </div>
 
           {/* Nutrition Card */}
-          <div className="bg-content1 space-y-3 rounded-2xl p-5 shadow-md">
+          <div className="bg-surface space-y-3 rounded-2xl p-5 shadow-md">
             <Skeleton className="h-6 w-24 rounded-lg" />
             <div className="space-y-1">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -81,7 +81,7 @@ export default function RecipeSkeletonDesktop() {
           <Skeleton className="min-h-[400px] w-full rounded-2xl" />
 
           {/* Steps Card */}
-          <div className="bg-content1 rounded-2xl shadow-md">
+          <div className="bg-surface rounded-2xl shadow-md">
             <div className="flex items-center justify-between px-6 pt-6">
               <Skeleton className="h-6 w-16 rounded-lg" />
               <Skeleton className="h-8 w-8 rounded-lg" />
@@ -99,7 +99,7 @@ export default function RecipeSkeletonDesktop() {
             </div>
 
             {/* Rating Section */}
-            <div className="bg-default-100 mx-3 mt-4 mb-3 flex flex-col items-center gap-4 rounded-xl py-6">
+            <div className="bg-surface-secondary mx-3 mt-4 mb-3 flex flex-col items-center gap-4 rounded-xl py-6">
               <Skeleton className="h-5 w-48 rounded-md" />
               <div className="flex gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (

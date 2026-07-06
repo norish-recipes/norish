@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 ##############################
 # Base image (minimal, no pnpm needed at runtime)
 ##############################
@@ -45,6 +47,7 @@ COPY packages/api/package.json ./packages/api/package.json
 COPY packages/auth/package.json ./packages/auth/package.json
 COPY packages/config/package.json ./packages/config/package.json
 COPY packages/db/package.json ./packages/db/package.json
+COPY packages/db-schema/package.json ./packages/db-schema/package.json
 COPY packages/i18n/package.json ./packages/i18n/package.json
 COPY packages/queue/package.json ./packages/queue/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
@@ -57,15 +60,10 @@ COPY packages/ui/package.json ./packages/ui/package.json
 COPY tooling/eslint/package.json ./tooling/eslint/package.json
 COPY tooling/prettier/package.json ./tooling/prettier/package.json
 COPY tooling/tailwind/package.json ./tooling/tailwind/package.json
-COPY tooling/tailwind/hero.ts ./tooling/tailwind/hero.ts
-COPY tooling/tailwind/native-theme.css ./tooling/tailwind/native-theme.css
-COPY tooling/tailwind/native-theme.js ./tooling/tailwind/native-theme.js
+COPY tooling/tailwind/heroui-theme.css ./tooling/tailwind/heroui-theme.css
+COPY tooling/tailwind/heroui-theme.js ./tooling/tailwind/heroui-theme.js
 COPY tooling/tailwind/postcss-config.js ./tooling/tailwind/postcss-config.js
-COPY tooling/tailwind/theme.css ./tooling/tailwind/theme.css
 COPY tooling/typescript/package.json ./tooling/typescript/package.json
-
-# patches (required for patchedDependencies in pnpm-workspace.yaml)
-COPY patches/ ./patches/
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
   SKIP_PARSER_API_INSTALL=1 pnpm install --frozen-lockfile

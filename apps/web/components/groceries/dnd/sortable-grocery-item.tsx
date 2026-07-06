@@ -1,12 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { GroceryDto } from "@norish/shared/contracts";
-
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Bars3Icon } from "@heroicons/react/16/solid";
 
+import type { GroceryDto } from "@norish/shared/contracts";
 
 interface SortableGroceryItemProps {
   grocery: GroceryDto;
@@ -43,7 +42,7 @@ export function SortableGroceryItem({ grocery, children }: SortableGroceryItemPr
         {...attributes}
         {...listeners}
       >
-        <Bars3Icon className="text-default-400 h-5 w-5" />
+        <Bars3Icon className="text-muted h-5 w-5" />
       </button>
 
       {/* The actual grocery item content */}

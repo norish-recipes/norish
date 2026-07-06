@@ -1,25 +1,24 @@
 "use client";
 
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
-import type { Slot } from "@norish/shared/contracts";
-
-import { useState } from "react";
-import { useWindowSize } from "usehooks-ts";
-
-import { CalendarContextProvider } from "./context";
-
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DesktopTimeline } from "@/components/calendar/desktop";
 import { MobileTimeline } from "@/components/calendar/mobile";
 import { EditNotePanel } from "@/components/Panel/consumers/edit-note-panel";
 import { EditPlannedRecipePanel } from "@/components/Panel/consumers/edit-planned-recipe-panel";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
+import { useWindowSize } from "usehooks-ts";
 
+import type { Slot } from "@norish/shared/contracts";
 
+import { CalendarContextProvider } from "./context";
 
 function CalendarPageContent() {
   const [miniRecipesOpen, setMiniRecipesOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedSlot, setSelectedSlot] = useState<Slot | undefined>(undefined);
+  const pendingMiniRecipesScrollYRef = useRef<number | null>(null);
+  const restoreMiniRecipesScrollTimerRef = useRef<number | null>(null);
 
   // Note editing state
   const [editingNote, setEditingNote] = useState<PlannedItemDisplay | null>(null);
@@ -31,7 +30,53 @@ function CalendarPageContent() {
   const { width = 768 } = useWindowSize();
   const isDesktop = width >= 768;
 
-  const handleAddItem = (dateKey: string, slot: Slot) => {
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && restoreMiniRecipesScrollTimerRef.current !== null) {
+        window.clearTimeout(restoreMiniRecipesScrollTimerRef.current);
+      }
+    };
+  }, []);
+
+  const restoreMiniRecipesScroll = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const scrollY = pendingMiniRecipesScrollYRef.current;
+
+    if (scrollY === null) return;
+
+    pendingMiniRecipesScrollYRef.current = null;
+
+    const restore = () => {
+      window.scrollTo({
+        top: scrollY,
+        behavior: "auto",
+      });
+    };
+
+    if (restoreMiniRecipesScrollTimerRef.current !== null) {
+      window.clearTimeout(restoreMiniRecipesScrollTimerRef.current);
+    }
+
+    requestAnimationFrame(restore);
+    restoreMiniRecipesScrollTimerRef.current = window.setTimeout(() => {
+      restore();
+      restoreMiniRecipesScrollTimerRef.current = null;
+    }, 550);
+  }, []);
+
+  const handleMiniRecipesOpenChange = useCallback(
+    (open: boolean) => {
+      setMiniRecipesOpen(open);
+
+      if (!open) {
+        restoreMiniRecipesScroll();
+      }
+    },
+    [restoreMiniRecipesScroll]
+  );
+
+  const handleAddItem = useCallback((dateKey: string, slot: Slot) => {
     // Parse the dateKey (YYYY-MM-DD format) into a Date
     const [year, month, day] = dateKey.split("-").map(Number);
 
@@ -39,10 +84,19 @@ function CalendarPageContent() {
       return;
     }
 
+    if (typeof window !== "undefined") {
+      if (restoreMiniRecipesScrollTimerRef.current !== null) {
+        window.clearTimeout(restoreMiniRecipesScrollTimerRef.current);
+        restoreMiniRecipesScrollTimerRef.current = null;
+      }
+
+      pendingMiniRecipesScrollYRef.current = window.scrollY;
+    }
+
     setSelectedDate(new Date(year, month - 1, day));
     setSelectedSlot(slot);
     setMiniRecipesOpen(true);
-  };
+  }, []);
 
   const handleNoteClick = (item: PlannedItemDisplay) => {
     setEditingNote(item);
@@ -67,7 +121,7 @@ function CalendarPageContent() {
         date={selectedDate}
         open={miniRecipesOpen}
         slot={selectedSlot}
-        onOpenChange={setMiniRecipesOpen}
+        onOpenChange={handleMiniRecipesOpenChange}
       />
 
       {/* Edit note panel */}

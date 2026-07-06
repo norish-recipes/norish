@@ -1,12 +1,12 @@
 {
   "name": "@norish/config",
-  "version": "0.18.3-beta",
+  "version": "0.19.0-beta",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./crypto": "./src/crypto.ts",
     "./env-config-server": "./src/env-config-server.ts",
-    "./server-config-loader": "./src/server-config-loader.ts",
     "./zod/server-config": "./src/zod/server-config.ts",
     "./content-indicators.default.json": "./src/content-indicators.default.json",
     "./recurrence-config.default.json": "./src/recurrence-config.default.json",
@@ -22,8 +22,6 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
-    "@norish/db": "workspace:*",
-    "@norish/i18n": "workspace:*",
     "dotenv": "17.4.2",
     "server-only": "catalog:",
     "zod": "catalog:"

@@ -6,6 +6,7 @@
  */
 
 import { Queue } from "bullmq";
+
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import { QUEUE_NAMES, scheduledTasksJobOptions } from "../config";

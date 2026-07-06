@@ -50,7 +50,7 @@ vi.mock("@norish/api/video/processor", () => ({
   processVideoRecipe: mockProcessVideoRecipe,
 }));
 
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getContentIndicators: mockGetContentIndicators,
   isAIEnabled: mockIsAIEnabled,
   isVideoParsingEnabled: mockIsVideoParsingEnabled,

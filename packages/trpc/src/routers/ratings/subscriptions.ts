@@ -1,6 +1,5 @@
 import { createEnvelopeAwareSubscription } from "../../helpers";
 import { router } from "../../trpc";
-
 import { ratingsEmitter } from "./emitter";
 
 const onRatingUpdated = createEnvelopeAwareSubscription(

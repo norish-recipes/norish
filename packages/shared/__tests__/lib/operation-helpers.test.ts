@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime-envelope";
 import { ENVELOPE_VERSION } from "@norish/shared/contracts/realtime-envelope";
 import {
+  assertEventEnvelope,
   extractMeta,
   generateOperationId,
   isEventEnvelope,
@@ -87,6 +88,45 @@ describe("isEventEnvelope", () => {
 
   it("rejects objects with meta missing version", () => {
     expect(isEventEnvelope({ meta: { eventId: "1" }, payload: {} })).toBe(false);
+  });
+
+  it("rejects malformed envelope metadata", () => {
+    expect(
+      isEventEnvelope({
+        meta: {
+          version: ENVELOPE_VERSION,
+          eventId: "evt-1",
+          namespace: "recipes",
+          scope: "broadcast",
+          channel: "c",
+          occurredAt: "2024-01-01T00:00:00Z",
+        },
+        payload: {},
+      })
+    ).toBe(false);
+  });
+});
+
+describe("assertEventEnvelope", () => {
+  it("allows valid envelopes", () => {
+    const envelope: RealtimeEventEnvelope<{ id: string }> = {
+      meta: {
+        version: ENVELOPE_VERSION,
+        eventId: "evt-1",
+        eventName: "created",
+        namespace: "recipes",
+        scope: "broadcast",
+        channel: "norish:recipes:broadcast:created",
+        occurredAt: "2024-01-01T00:00:00Z",
+      },
+      payload: { id: "abc" },
+    };
+
+    expect(() => assertEventEnvelope(envelope)).not.toThrow();
+  });
+
+  it("rejects raw payloads", () => {
+    expect(() => assertEventEnvelope({ id: "abc" })).toThrow("Expected realtime event envelope");
   });
 });
 

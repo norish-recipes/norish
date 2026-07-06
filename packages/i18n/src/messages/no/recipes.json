@@ -1,0 +1,274 @@
+{
+  "dashboard": {
+    "title": "Alle oppskrifter",
+    "searchPlaceholder": "Søk eller legg til oppskrift...",
+    "searchRecipesPlaceholder": "Søk oppskrifter...",
+    "recipeCount": "{count, plural, one {# oppskrift} other {# oppskrifter}}",
+    "addRecipe": "Legg til oppskrift",
+    "importFromUrl": "URL",
+    "importFromPaste": "Lim inn",
+    "importFromImage": "Bilde",
+    "searchFields": {
+      "title": "Tittel",
+      "description": "Beskrivelse",
+      "ingredients": "Ingredienser",
+      "steps": "Trinn",
+      "tags": "Tags"
+    },
+    "viewMode": {
+      "label": "Oppskriftsvisning",
+      "grid": "Rutenett",
+      "list": "Liste"
+    }
+  },
+  "empty": {
+    "title": "Oppskriftsamlingen din venter",
+    "description": "Lim inn en oppskrift-URL i søkefeltet ovenfor, og la magien skje.",
+    "noResults": "Ingen oppskrifter funnet",
+    "noResultsHint": "Prøv å justere eller tømme filtrene."
+  },
+  "card": {
+    "noImage": "Ingen bilde tilgjengelig",
+    "viewGroceries": "Se handleliste",
+    "addToCalendar": "Legg til i kalender",
+    "deleteRecipe": "Slett oppskrift",
+    "recipeOptions": "Oppskriftsvalg"
+  },
+  "detail": {
+    "backToRecipes": "Tilbake til oppskrifter",
+    "viewOriginal": "Se original oppskrift",
+    "ingredients": "Ingredienser",
+    "steps": "Fremgangsmåte",
+    "notes": "Notater",
+    "addToGroceries": "Legg til i handleliste",
+    "ratingPrompt": "Hva synes du om denne oppskriften?",
+    "notFound": "Oppskrift ikke funnet",
+    "notFoundMessage": "Denne oppskriften eksisterer ikke, eller du har ikke tilgang til å se den.",
+    "prep": "forberedelse",
+    "total": "totalt",
+    "planMeal": "Planlegg måltid",
+    "recipeActions": "Oppskrifthandlinger",
+    "instructions": "Fremgangsmåte",
+    "cook": "Tilbered",
+    "switchToDecimal": "Vis desimaler",
+    "switchToFraction": "Vis brøker"
+  },
+  "actions": {
+    "plan": "Planlegg",
+    "groceries": "Handleliste",
+    "edit": "Rediger",
+    "delete": "Slett",
+    "share": "Del",
+    "visitOriginal": "Besøk original oppskrift",
+    "addToCalendar": "Legg til i kalender",
+    "autoTag": "Auto-tag",
+    "autoTagging": "Genererer tags...",
+    "autoCategorize": "Kategoriser automatisk",
+    "detectAllergies": "Registrer allergener",
+    "detectingAllergies": "Registrerer allergener...",
+    "estimateNutrition": "Estimér næring",
+    "estimatingNutrition": "Estimerer næring...",
+    "screenOn": "Skjerm på",
+    "keepScreenOn": "Hold skjermen på",
+    "actionsLabel": "Handlinger"
+  },
+  "sharePanel": {
+    "title": "Del oppskrift",
+    "description": "Opprett og administrer offentlige lenker til {recipeName}.",
+    "expiryLabel": "Lenkeutløp",
+    "createLink": "Opprett lenke",
+    "latestLink": "Siste lenke",
+    "currentLinks": "Aktuelle lenker",
+    "empty": "Ingen delelenker ennå.",
+    "createSuccess": "Delelenke opprettet",
+    "copySuccess": "Lenke kopiert",
+    "copyLink": "Kopier",
+    "openLink": "Åpne",
+    "createdAt": "Opprettet: {value}",
+    "expiresAt": "Utløper: {value}",
+    "lastAccessedAt": "Sist åpnet: {value}",
+    "never": "Aldri",
+    "expiryOptions": {
+      "1day": "1 dag",
+      "1week": "1 uke",
+      "1month": "1 måned",
+      "1year": "1 år",
+      "forever": "Aldri"
+    },
+    "status": {
+      "active": "Aktiv",
+      "expired": "Utløpt",
+      "revoked": "Tilbakekalt"
+    },
+    "revokeModal": {
+      "title": "Tilbakekall lenke",
+      "message": "Denne lenken til {recipeName} slutter å virke inntil du gjenaktiverer den.",
+      "confirm": "Tilbakekall"
+    },
+    "reactivateModal": {
+      "title": "Gjenaktiver lenke",
+      "message": "Denne lenken til {recipeName} blir aktiv igjen.",
+      "confirm": "Gjenaktiver"
+    },
+    "deleteModal": {
+      "title": "Slett lenke",
+      "message": "Slett denne delelenken til {recipeName}? Dette kan ikke angres.",
+      "confirm": "Slett lenke"
+    }
+  },
+  "convert": {
+    "ariaLabel": "Konverter målesystem",
+    "toMetric": "Konverter til metrisk",
+    "toUS": "Konverter til amerikansk"
+  },
+  "deleteModal": {
+    "title": "Slett oppskrift",
+    "confirmMessage": "Er du sikker på at du vil slette \"{recipeName}\"?",
+    "warning": "Denne handlingen kan ikke angres."
+  },
+  "form": {
+    "createTitle": "Opprett oppskrift",
+    "editTitle": "Rediger oppskrift",
+    "createDescription": "Legg til en ny oppskrift i samlingen din",
+    "editDescription": "Oppdater oppskriftinformasjonen din",
+    "initializingForm": "Initialiserer skjema...",
+    "photo": "Bilde",
+    "basicInfo": "Grunnleggende informasjon",
+    "ingredients": "Ingredienser",
+    "instructions": "Fremgangsmåte",
+    "tags": "Tags",
+    "nutrition": "Næring",
+    "nutritionPerServing": "(per porsjon, valgfritt)",
+    "details": "Detaljer",
+    "additionalInfo": "Tilleggsinformasjon",
+    "recipeName": "Oppskriftnavn",
+    "recipeNamePlaceholder": "f.eks. Sjokoladekake",
+    "description": "Beskrivelse",
+    "descriptionPlaceholder": "En kort beskrivelse av hva som gjør denne oppskriften spesiell...",
+    "notes": "Notater",
+    "notesPlaceholder": "Legg til forberedelsesnotater, justeringer eller serveringstips til denne oppskriften...",
+    "ingredientsHelp": "Skriv ingredienser som \"2 dl mel\" – vi analyserer automatisk mengder og enheter.",
+    "instructionsHelp": "Skriv klare trinn-for-trinn-instruksjoner. Trykk Enter for å gå til neste trinn.",
+    "tagsHelp": "Skriv tags og klikk på forslag for å legge til. Valgte tags er blå, nye tags har stiplet kant.",
+    "tagsAndCategories": "Tags og kategorier",
+    "categoriesHelp": "Velg måltidskategorier for denne oppskriften.",
+    "category": {
+      "breakfast": "Frokost",
+      "lunch": "Lunsj",
+      "dinner": "Middag",
+      "snack": "Snacks"
+    },
+    "calories": "Kalorier",
+    "fat": "Fett (g)",
+    "carbs": "Karbohydrater (g)",
+    "protein": "Protein (g)",
+    "servings": "Porsjoner",
+    "cookingTimes": "Tilberedningstider",
+    "optional": "(valgfritt)",
+    "sourceUrl": "Kilde-URL",
+    "sourceUrlPlaceholder": "https://eksempel.no/oppskrift",
+    "measurementSystemNote": "Vi registrerer automatisk målesystemet fra ingrediensene dine, men du kan overstyre det her.",
+    "measurementSystemEditNote": " Merk: Dette oppdaterer systemlabelen, men konverterer ikke enheter. Bruk handlingen Konverter etter lagring.",
+    "createRecipe": "Opprett oppskrift",
+    "saveChanges": "Lagre endringer",
+    "uploading": "Laster opp...",
+    "clickToUpload": "Klikk for å laste opp eller dra og slipp",
+    "pasteToUpload": "for å lime inn",
+    "imageFormats": "PNG, JPG, WEBP opp til 5 MB",
+    "discardChangesConfirm": "Du har ulagrede endringer. Vil du forkaste dem og forlate siden?"
+  },
+  "gallery": {
+    "addImage": "Legg til bilde",
+    "uploading": "Laster opp...",
+    "uploadFailed": "Opplasting mislyktes",
+    "dragToReorder": "Dra for å omorganisere",
+    "maxImagesReached": "Maks. {max} bilder er tillatt",
+    "maxVideosReached": "Maks. {max} videoer er tillatt",
+    "invalidFileType": "Ugyldig filtype"
+  },
+  "carousel": {
+    "noImageAvailable": "Ingen bilde tilgjengelig",
+    "noMediaAvailable": "Ingen medier tilgjengelig",
+    "videoPlayer": {
+      "mute": "Slå av lyd",
+      "unmute": "Slå på lyd",
+      "fullscreen": "Gå til fullskjerm",
+      "exitFullscreen": "Forlat fullskjerm"
+    }
+  },
+  "validation": {
+    "nameRequired": "Oppskriftnavn er påkrevd",
+    "ingredientsRequired": "Minst én ingrediens er påkrevd",
+    "stepsRequired": "Minst ett trinn er påkrevd",
+    "servingsMin": "Porsjoner må være minst 1"
+  },
+  "nutrition": {
+    "title": "Næring",
+    "calories": "Kalorier",
+    "fat": "Fett",
+    "carbs": "Karbohydrater",
+    "protein": "Protein",
+    "showingPortions": "Viser verdier for {count} {count, plural, one {porsjon} other {porsjoner}}",
+    "noInfo": "Ingen næringsinformasjon tilgjengelig",
+    "estimateWithAI": "Estimér med AI"
+  },
+  "measurementSystem": {
+    "label": "Målesystem",
+    "detected": "Registrert: {system}",
+    "metric": "Metrisk",
+    "us": "Amerikansk"
+  },
+  "timeInputs": {
+    "prep": "Forberedelse",
+    "cook": "Tilberedning",
+    "total": "Totalt"
+  },
+  "stepInput": {
+    "stepPlaceholder": "Trinn {number}: Beskriv trinnet...",
+    "stepPlaceholderShort": "Trinn {number}"
+  },
+  "ingredientInput": {
+    "placeholder": "f.eks. 2 dl mel"
+  },
+  "wakeLock": {
+    "keepScreenOn": "Hold skjermen på",
+    "notSupported": "Hold skjermen på støttes ikke i denne nettleseren",
+    "activeTooltip": "Skjermen forblir på under matlaging",
+    "inactiveTooltip": "Hold skjermen på mens du følger trinnene",
+    "ariaLabel": "Hold skjermen på"
+  },
+  "toasts": {
+    "processingBoth": "Behandler tags og allergener",
+    "processingTags": "Genererer tags",
+    "processingAllergies": "Registrerer allergener",
+    "bothComplete": "Tags og allergener oppdatert",
+    "tagsComplete": "Tags generert",
+    "allergiesComplete": "Allergener registrert",
+    "imported": "Oppskrift importert",
+    "converted": "Mål konvertert",
+    "convertedDescription": "Oppskrift konvertert til {system}-enheter",
+    "failed": "Oppskrifthandling mislyktes",
+    "failedDescription": "Noe gikk galt under behandling av oppskriften din. Sjekk nettleserkonsollen for tekniske detaljer.",
+    "batchImported": "Oppskrifter importert",
+    "batchImportedDescription": "{count} oppskrifter importert fra arkiv",
+    "view": "Se",
+    "open": "Åpne"
+  },
+  "tags": {
+    "panel": {
+      "editTitle": "Rediger tag",
+      "editPlaceholder": "Skriv inn tagnavn...",
+      "duplicateTag": "Denne taggen eksisterer allerede"
+    }
+  },
+  "cookMode": {
+    "steps": "Trinn",
+    "ingredients": "Ingredienser",
+    "servings": "Porsjoner",
+    "serving": "{count, plural, one {# porsjon} other {# porsjoner}}",
+    "stepCounter": "{current} / {total}",
+    "swipeSteps": "Sveip for å navigere mellom trinn",
+    "swipeIngredients": "Sveip til venstre for ingredienser",
+    "swipeBackToSteps": "Sveip til høyre for trinn"
+  }
+}

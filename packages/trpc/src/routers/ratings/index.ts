@@ -1,5 +1,4 @@
 import { router } from "../../trpc";
-
 import { ratingsProcedures } from "./ratings";
 import { ratingsSubscriptions } from "./subscriptions";
 

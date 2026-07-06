@@ -22,16 +22,37 @@ vi.mock("@/context/permissions-context", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  Modal: (props: any) => {
-    modalMock(props);
+  Modal: Object.assign(({ children }: any) => <>{children}</>, {
+    Backdrop: ({ children, isOpen, ...props }: any) =>
+      isOpen ? <div {...props}>{children}</div> : null,
+    Container: (props: any) => {
+      modalMock(props);
 
-    return props.isOpen ? <div>{props.children}</div> : null;
+      return <div>{props.children}</div>;
+    },
+    Dialog: ({ children }: any) =>
+      typeof children === "function" ? <div>{children(vi.fn())}</div> : <div>{children}</div>,
+    CloseTrigger: () => <button aria-label="Close" type="button" />,
+    Header: ({ children }: any) => <div>{children}</div>,
+    Body: ({ children }: any) => <div>{children}</div>,
+    Footer: ({ children }: any) => <div>{children}</div>,
+  }),
+  TextField: ({ children, value, onChange, type }: any) => {
+    const childrenArray = Array.isArray(children) ? children : [children];
+    const label = childrenArray.find((child) => child?.type?.name === "Label")?.props?.children;
+    const input = childrenArray.find((child) => child?.type?.name === "Input");
+
+    return (
+      <input
+        aria-label={label}
+        placeholder={input?.props?.placeholder}
+        type={type}
+        value={value}
+        onChange={(event) => onChange?.(event.target.value)}
+      />
+    );
   },
-  ModalContent: ({ children }: any) =>
-    typeof children === "function" ? <div>{children(vi.fn())}</div> : <div>{children}</div>,
-  ModalHeader: ({ children }: any) => <div>{children}</div>,
-  ModalBody: ({ children }: any) => <div>{children}</div>,
-  ModalFooter: ({ children }: any) => <div>{children}</div>,
+  Label: ({ children }: any) => <span>{children}</span>,
   Input: ({ value, onChange, label, placeholder, type }: any) => (
     <input
       aria-label={label}
@@ -46,7 +67,7 @@ vi.mock("@heroui/react", () => ({
       {children}
     </button>
   ),
-  addToast: vi.fn(),
+  toast: vi.fn(),
 }));
 
 describe("ImportRecipeModal", () => {
@@ -59,10 +80,7 @@ describe("ImportRecipeModal", () => {
 
     expect(modalMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        classNames: {
-          wrapper: "z-[1100]",
-          backdrop: "z-[1099]",
-        },
+        className: "z-[1100]",
       })
     );
   });

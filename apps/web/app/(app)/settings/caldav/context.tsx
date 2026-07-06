@@ -1,16 +1,6 @@
 "use client";
 
-import type {
-  CalDavCalendarInfo,
-  ConnectionTestResult,
-  UserCaldavConfigWithoutPasswordDto,
-} from "@norish/shared/contracts";
-import type { CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
-
 import { createContext, ReactNode, useCallback, useContext, useState } from "react";
-import { addToast } from "@heroui/react";
-import { useTranslations } from "next-intl";
-
 import {
   useCaldavConfigQuery,
   useCaldavConnectionQuery,
@@ -21,7 +11,15 @@ import {
   useCaldavSyncStatusQuery,
 } from "@/hooks/caldav";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { toast } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
+import type {
+  CalDavCalendarInfo,
+  ConnectionTestResult,
+  UserCaldavConfigWithoutPasswordDto,
+} from "@norish/shared/contracts";
+import type { CaldavSyncStatus } from "@norish/shared/contracts/dto/caldav-sync-status";
 
 type SaveCaldavConfigInput = {
   serverUrl: string;
@@ -127,12 +125,9 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
     async (configInput: SaveCaldavConfigInput) => {
       try {
         await saveConfigMutation(configInput);
-        addToast({
-          title: "Configuration saved",
+        toast("Configuration saved", {
           description: "Your CalDAV settings have been saved successfully.",
-          color: "success",
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+          variant: "success",
         });
       } catch (error) {
         showSafeErrorToast({
@@ -193,12 +188,9 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
     async (deleteEvents: boolean) => {
       try {
         await deleteConfigMutation(deleteEvents);
-        addToast({
-          title: "Configuration deleted",
+        toast("Configuration deleted", {
           description: "Your CalDAV settings have been removed.",
-          color: "success",
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+          variant: "success",
         });
       } catch (error) {
         showSafeErrorToast({
@@ -217,12 +209,9 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
   const triggerManualSync = useCallback(async () => {
     try {
       await triggerSync();
-      addToast({
-        title: "Sync started",
+      toast("Sync started", {
         description: "Retrying pending and failed items...",
-        color: "primary",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        variant: "accent",
       });
     } catch (error) {
       showSafeErrorToast({
@@ -239,12 +228,9 @@ export function CalDavSettingsProvider({ children }: { children: ReactNode }) {
   const syncAll = useCallback(async () => {
     try {
       await syncAllMutation();
-      addToast({
-        title: "Full sync started",
+      toast("Full sync started", {
         description: "Syncing all future items to CalDAV...",
-        color: "primary",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        variant: "accent",
       });
     } catch (error) {
       showSafeErrorToast({

@@ -6,16 +6,16 @@
  */
 
 import type { Job } from "bullmq";
-import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
-import type { PolicyEmitContext } from "@norish/trpc/helpers";
 
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
+import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
+import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import { getRecipeFull, updateRecipeWithRefs } from "@norish/db";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
-import { emitByPolicy } from "@norish/trpc/helpers";
-import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
+import { emitByPolicy } from "@norish/shared-server/realtime/policy";
+import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";

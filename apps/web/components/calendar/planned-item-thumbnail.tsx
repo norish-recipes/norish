@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useState } from "react";
-import { Image } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 type Size = "sm" | "md";
@@ -44,8 +43,7 @@ export const PlannedItemThumbnail = memo(function PlannedItemThumbnail({
   if (imageSrc) {
     return (
       <div className={`relative ${dim} shrink-0 overflow-hidden rounded-lg`}>
-        <Image
-          removeWrapper
+        <img
           alt={alt}
           className="h-full w-full object-cover"
           src={imageSrc}
@@ -57,7 +55,7 @@ export const PlannedItemThumbnail = memo(function PlannedItemThumbnail({
 
   return (
     <div
-      className={`bg-default-100 text-default-400 flex ${dim} shrink-0 items-center justify-center rounded-lg`}
+      className={`bg-surface-secondary text-muted flex ${dim} shrink-0 items-center justify-center rounded-lg`}
     >
       <span className="text-xs font-medium">{isRecipe ? t("recipe") : t("note")}</span>
     </div>

@@ -5,7 +5,7 @@ import { QUEUE_NAMES, provenanceInferenceJobOptions } from "../config";
 
 // import { getQueues } from "@norish/queue/registry";
 import { createLogger } from "@norish/shared-server/logger";
-import { isAIEnabled } from "@norish/config/server-config-loader";
+import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 
 const log = createLogger("queue:provenance-inference:producer");
 
@@ -20,7 +20,7 @@ export async function addProvenanceInferenceJob(
 ): Promise<AddProvenanceInferenceJobResult> {
   const [aiEnabled, provenanceEnabled] = await Promise.all([
     isAIEnabled(),
-    import("@norish/config/server-config-loader").then((m) => m.isProvenanceEnabled()),
+    import("@norish/shared-server/config/server-config-loader").then((m) => m.isProvenanceEnabled()),
   ]);
 
   if (!aiEnabled || !provenanceEnabled) {

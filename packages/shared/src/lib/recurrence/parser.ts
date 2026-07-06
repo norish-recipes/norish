@@ -50,20 +50,16 @@ function findWeekdayIndex(input: string, weekdayWords: Record<string, number>): 
 export function parseRecurrence(text: string, config: RecurrenceConfig): ParseResult {
   const trimmedText = text.trim();
 
-  // console.log('[parseRecurrence] Parsing text:', trimmedText);
-
   // Try all locales
   for (const [localeKey, localeConfig] of Object.entries(config.locales)) {
     const result = parseWithLocale(trimmedText, localeConfig, localeKey);
 
     if (result.recurrence) {
-      // console.log('[parseRecurrence] Match found:', result);
       return result;
     }
   }
 
   // No match found
-  // console.log('[parseRecurrence] No match found');
   return {
     recurrence: null,
     cleanText: trimmedText,

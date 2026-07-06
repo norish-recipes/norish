@@ -7,6 +7,7 @@ export const LOCALE_CATALOG = {
   es: { name: "Español" },
   ru: { name: "Русский" },
   ko: { name: "한국어" },
+  no: { name: "Norsk" },
   pl: { name: "Polski" },
   da: { name: "Dansk" },
   it: { name: "Italiano" },

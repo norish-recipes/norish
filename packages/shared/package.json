@@ -1,6 +1,6 @@
 {
   "name": "@norish/shared",
-  "version": "0.18.3-beta",
+  "version": "0.19.0-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@norish/config": "workspace:*",
-    "@norish/db": "workspace:*",
+    "@norish/db-schema": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",

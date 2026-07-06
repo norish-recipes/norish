@@ -1,5 +1,4 @@
 import type { CreatePermissionsHooksOptions } from "./types";
-
 import { createUsePermissionsQuery } from "./use-permissions-query";
 import { createUseServerSettingsQuery } from "./use-server-settings-query";
 

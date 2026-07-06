@@ -1,4 +1,6 @@
 import { z } from "zod";
+
+import type { User, UserPreferences } from "@norish/shared/contracts";
 import {
   UpdateUserNameInputSchema,
   UpdateUserPreferencesInputSchema,
@@ -16,17 +18,30 @@ export const ApiKeyMetadataSchema = z.object({
 });
 
 export type ApiKeyMetadataDto = z.infer<typeof ApiKeyMetadataSchema>;
+export type UserSettingsDto = {
+  user: User;
+  apiKeys: ApiKeyMetadataDto[];
+};
+
+type UpdateNameInput = {
+  name: string;
+  version: number;
+};
+
+type UpdatePreferencesInput = {
+  version: number;
+  preferences: Partial<UserPreferences>;
+};
 
 // User settings response (user + api keys)
-export const UserSettingsSchema = z.object({
+export const UserSettingsSchema: z.ZodType<UserSettingsDto> = z.object({
   user: UserDtoSchema,
   apiKeys: z.array(ApiKeyMetadataSchema),
 });
 
-export type UserSettingsDto = z.infer<typeof UserSettingsSchema>;
-
 // Input schemas
-export const UpdateNameInputSchema = UpdateUserNameInputSchema;
+export const UpdateNameInputSchema: z.ZodType<UpdateNameInput, UpdateNameInput> =
+  UpdateUserNameInputSchema;
 
 export const CreateApiKeyInputSchema = z.object({
   name: z.string().optional(),
@@ -42,4 +57,7 @@ export const ToggleApiKeyInputSchema = z.object({
 });
 
 // Preferences
-export const UpdatePreferencesInputSchema = UpdateUserPreferencesInputSchema;
+export const UpdatePreferencesInputSchema: z.ZodType<
+  UpdatePreferencesInput,
+  UpdatePreferencesInput
+> = UpdateUserPreferencesInputSchema;

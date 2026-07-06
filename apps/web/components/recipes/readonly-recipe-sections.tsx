@@ -1,7 +1,8 @@
 "use client";
 
-import type { RecipeCategory } from "@norish/shared/contracts";
-
+import AuthorChip from "@/components/recipes/author-chip";
+import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
+import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import {
   ArrowTopRightOnSquareIcon,
   CakeIcon,
@@ -11,17 +12,15 @@ import {
   SunIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/16/solid";
-import { Chip } from "@heroui/react";
+import { Chip, Link } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import type { RecipeCategory } from "@norish/shared/contracts";
 import {
   formatMinutesHM,
   isAllergenTag,
   sortTagsWithAllergyPriority,
 } from "@norish/shared/lib/helpers";
-
-import AuthorChip from "@/app/(app)/recipes/[id]/components/author-chip";
-import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
-import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 
 type RecipeTagLike = { name: string };
 
@@ -62,6 +61,7 @@ type ReadonlyRecipeMediaProps = {
   };
   aspectRatio?: "video" | "square" | "4/3";
   className?: string;
+  mediaClassName?: string;
   rounded?: boolean;
   topLeftContent?: React.ReactNode;
   topRightContent?: React.ReactNode;
@@ -79,6 +79,7 @@ export function ReadonlyRecipeMedia({
   recipe,
   aspectRatio = "video",
   className = "",
+  mediaClassName = "",
   rounded = false,
   topLeftContent,
   topRightContent,
@@ -87,10 +88,10 @@ export function ReadonlyRecipeMedia({
   const mediaItems = buildMediaItems(recipe);
 
   return (
-    <div className={`relative overflow-hidden rounded-[1.75rem] shadow-md ${className}`}>
+    <div className={`relative overflow-hidden rounded-2xl ${className}`}>
       <MediaCarousel
         aspectRatio={aspectRatio}
-        className="h-full min-h-[400px] w-full"
+        className={`h-full w-full ${mediaClassName}`}
         items={mediaItems}
         rounded={rounded}
       />
@@ -131,15 +132,15 @@ export function ReadonlyRecipeSummary({
           <h1 className="text-2xl leading-tight font-bold">
             {recipe.name}
             {recipe.url && (
-              <a
+              <Link
                 className="ml-2 inline-block align-middle"
                 href={recipe.url}
                 rel="noopener noreferrer"
                 target="_blank"
                 title={t("viewOriginal")}
               >
-                <ArrowTopRightOnSquareIcon className="text-default-400 hover:text-primary inline h-4 w-4" />
-              </a>
+                <ArrowTopRightOnSquareIcon className="text-muted hover:text-accent inline h-4 w-4" />
+              </Link>
             )}
           </h1>
         </div>
@@ -154,7 +155,7 @@ export function ReadonlyRecipeSummary({
       )}
 
       {recipe.categories.length > 0 && (
-        <div className="text-default-500 flex flex-wrap items-center gap-x-4 gap-y-2 text-base">
+        <div className="text-muted flex flex-wrap items-center gap-x-4 gap-y-2 text-base">
           {recipe.categories.map((category) => {
             const IconComponent = categoryIcons[category] ?? SunIcon;
 
@@ -169,7 +170,7 @@ export function ReadonlyRecipeSummary({
       )}
 
       {(recipe.prepMinutes || recipe.cookMinutes || recipe.totalMinutes) && (
-        <div className="text-default-500 flex flex-wrap items-center gap-x-4 gap-y-2 text-base">
+        <div className="text-muted flex flex-wrap items-center gap-x-4 gap-y-2 text-base">
           {recipe.prepMinutes && recipe.prepMinutes > 0 && (
             <span className="flex items-center gap-1">
               <WrenchScrewdriverIcon className="h-4 w-4" />
@@ -204,7 +205,7 @@ export function ReadonlyRecipeSummary({
                 key={tag.name}
                 className={isAllergen ? "bg-warning text-warning-foreground" : ""}
                 size="sm"
-                variant="flat"
+                variant="soft"
               >
                 {tag.name}
               </Chip>

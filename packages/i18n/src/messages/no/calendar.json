@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Kalender"
+  },
+  "mobile": {
+    "today": "I dag",
+    "scrollToToday": "Gå til i dag"
+  },
+  "editNote": {
+    "title": "Rediger notat",
+    "noteLabel": "Notat",
+    "notePlaceholder": "Skriv notat...",
+    "date": "Dato",
+    "slot": "Tidsluke"
+  },
+  "navigation": {
+    "previousMonth": "Forrige måned",
+    "nextMonth": "Neste måned",
+    "prev": "Forrige",
+    "next": "Neste"
+  },
+  "weekdays": {
+    "mon": "Man",
+    "tue": "Tir",
+    "wed": "Ons",
+    "thu": "Tor",
+    "fri": "Fre",
+    "sat": "Lør",
+    "sun": "Søn"
+  },
+  "timeline": {
+    "noItems": "Ingen elementer planlagt",
+    "goToRecipe": "Gå til oppskrift",
+    "addItem": "Legg til element",
+    "untitled": "Uten tittel",
+    "serving": "porsjon",
+    "servings": "porsjoner",
+    "noImage": "Ingen bilde",
+    "recipe": "Oppskrift",
+    "note": "Notat"
+  },
+  "editPlannedRecipe": {
+    "title": "Rediger planlagt oppskrift",
+    "date": "Dato",
+    "slot": "Tidsluke"
+  },
+  "panel": {
+    "addToCalendar": "Legg til i kalender",
+    "addRecipe": "Legg til oppskrift",
+    "noDaysAvailable": "Ingen tilgjengelige dager.",
+    "searchPlaceholder": "Søk oppskrifter eller legg til notater...",
+    "addNote": "Legg til notat: {input}",
+    "randomRecipe": "Tilfeldig oppskrift",
+    "noRecipesFound": "Ingen oppskrifter funnet.",
+    "failedToLoadRecipes": "Kunne ikke laste oppskrifter."
+  }
+}

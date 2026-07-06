@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Progress } from "@heroui/react";
-import { useTranslations } from "next-intl";
-
 import { useArchiveImportContext } from "@/context/archive-import-context";
 import { useArchiveImportMutation } from "@/hooks/archive";
+import { ProgressBar } from "@heroui/react";
+import { useTranslations } from "next-intl";
 
 export default function ArchiveImporter() {
   const t = useTranslations("navbar.archiveImporter");
@@ -114,7 +113,7 @@ export default function ArchiveImporter() {
         aria-label="Upload a recipe archive file"
         className={[
           "mt-2 flex justify-center rounded-lg border border-dashed px-6 py-10 transition-colors",
-          dragActive ? "border-primary/60 bg-primary/5" : "border-default-200",
+          dragActive ? "border-accent/60 bg-accent/5" : "border-border",
         ].join(" ")}
         role="button"
         tabIndex={0}
@@ -132,7 +131,7 @@ export default function ArchiveImporter() {
         <div className="text-center">
           <svg
             aria-hidden="true"
-            className="text-default-400 mx-auto size-12"
+            className="text-muted mx-auto size-12"
             fill="currentColor"
             viewBox="0 0 24 24"
           >
@@ -142,9 +141,9 @@ export default function ArchiveImporter() {
               fillRule="evenodd"
             />
           </svg>
-          <div className="text-default-500 mt-4 flex items-center justify-center gap-1 text-sm">
+          <div className="text-muted mt-4 flex items-center justify-center gap-1 text-sm">
             <label
-              className="text-primary focus-within:outline-primary hover:text-primary-400 relative cursor-pointer rounded-md bg-transparent font-semibold focus-within:outline-2 focus-within:outline-offset-2"
+              className="text-accent focus-within:outline-primary hover:text-accent relative cursor-pointer rounded-md bg-transparent font-semibold focus-within:outline-2 focus-within:outline-offset-2"
               htmlFor="archive-file-upload"
             >
               <span>{isUploading ? t("uploading") : t("uploadFile")}</span>
@@ -162,29 +161,29 @@ export default function ArchiveImporter() {
             </label>
             <p className="pl-1">{t("dragDrop")}</p>
           </div>
-          <p className="text-default-500 text-xs">{t("formats")}</p>
+          <p className="text-muted text-xs">{t("formats")}</p>
         </div>
       </div>
 
       <div className="mt-3 space-y-2">
-        {/* Progress bar when importing or just completed */}
+        {/* ProgressBar bar when importing or just completed */}
         {(isImporting || isComplete) && total > 0 && (
-          <Progress
+          <ProgressBar
             aria-label="Import progress"
             className="w-full"
-            color={isComplete ? (progressErrors.length > 0 ? "warning" : "success") : "primary"}
+            color={isComplete ? (progressErrors.length > 0 ? "warning" : "success") : "accent"}
             size="sm"
             value={(current / total) * 100}
           />
         )}
 
-        {status && <div className="text-default-600 text-base">{status}</div>}
+        {status && <div className="text-muted text-base">{status}</div>}
 
         {/* Show skipped recipes with toggle */}
         {isComplete && skippedItems.length > 0 && (
-          <div className="text-default-500 text-sm">
+          <div className="text-muted text-sm">
             <button
-              className="hover:text-default-700 underline underline-offset-2"
+              className="hover:text-foreground underline underline-offset-2"
               type="button"
               onClick={() => setShowSkipped(!showSkipped)}
             >

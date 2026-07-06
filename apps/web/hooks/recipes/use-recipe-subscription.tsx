@@ -1,15 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { addToast } from "@heroui/react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import {
   createUseRecipeQuery,
   createUseRecipeSubscription,
 } from "@norish/shared-react/hooks/recipes/recipe";
-
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 const useRecipeQuery = createUseRecipeQuery({ useTRPC });
 const useSharedRecipeSubscription = createUseRecipeSubscription({ useTRPC }, { useRecipeQuery });
@@ -22,22 +22,13 @@ export function useRecipeSubscription(recipeId: string | null) {
     onConverted: (rawPayload) => {
       const payload = rawPayload as { recipe: { systemUsed: string } };
 
-      addToast({
-        severity: "success",
-        title: "Measurements converted",
+      toast("Measurements converted", {
         description: `Recipe converted to ${payload.recipe.systemUsed} units`,
-        shouldShowTimeoutProgress: true,
-        radius: "full",
+        variant: "success",
       });
     },
     onDeleted: () => {
-      addToast({
-        severity: "warning",
-        title: "Recipe deleted",
-        description: "This recipe has been removed.",
-        shouldShowTimeoutProgress: true,
-        radius: "full",
-      });
+      toast("Recipe deleted", { description: "This recipe has been removed.", variant: "warning" });
 
       router.push("/");
     },

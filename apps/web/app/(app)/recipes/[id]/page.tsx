@@ -1,15 +1,14 @@
 "use client";
 
 import { use, useEffect } from "react";
+import { NotFoundView } from "@/components/shared/not-found-view";
+import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { useTranslations } from "next-intl";
 
 import { WakeLockProvider } from "./components/wake-lock-context";
 import { RecipeContextProvider, useRecipeContext } from "./context";
 import RecipePageDesktop from "./recipe-page-desktop";
 import RecipePageMobile from "./recipe-page-mobile";
-
-import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
-import { NotFoundView } from "@/components/shared/not-found-view";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -30,8 +29,12 @@ function RecipePageContent() {
   }
 
   // Recipe not found or no access - show 404
-  if (isNotFound || !recipe) {
+  if (!recipe && isNotFound) {
     return <NotFoundView message={t("notFoundMessage")} title={t("notFound")} />;
+  }
+
+  if (!recipe) {
+    return <RecipeSkeleton />;
   }
 
   return (

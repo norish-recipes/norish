@@ -1,6 +1,7 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { z } from "zod";
-import { households, householdUsers } from "@norish/db/schema";
+
+import { households, householdUsers } from "@norish/db-schema/schema";
 
 export const HouseholdSelectBaseSchema = createSelectSchema(households);
 export const HouseholdInsertBaseSchema = createInsertSchema(households).omit({

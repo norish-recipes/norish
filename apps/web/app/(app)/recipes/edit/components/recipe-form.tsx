@@ -3,19 +3,8 @@
 import type { ParsedIngredient } from "@/components/recipes/ingredient-input";
 import type { RecipeGalleryMedia } from "@/components/recipes/media-gallery-input";
 import type { Step } from "@/components/recipes/step-input";
-import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Chip, Input } from "@heroui/react";
-import { useLocale, useTranslations } from "next-intl";
-import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
-import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
-import { createClientLogger } from "@norish/shared/lib/logger";
-import { formatUnit } from "@norish/shared/lib/unit-localization";
-
-import { useRecipeFormDirtyState } from "./use-recipe-form-dirty-state";
-
 import IngredientInput from "@/components/recipes/ingredient-input";
 import MeasurementSystemSelector from "@/components/recipes/measurement-system-selector";
 import MediaGalleryInput from "@/components/recipes/media-gallery-input";
@@ -29,16 +18,23 @@ import { useRecipesContext } from "@/context/recipes-context";
 import { useUnitsQuery } from "@/hooks/config";
 import { useRecipeId } from "@/hooks/recipes";
 import { useUnsavedNavigationGuard } from "@/hooks/use-unsaved-navigation-guard";
+import { Button, Chip, FieldError, Input, Label, TextField } from "@heroui/react";
+import { useLocale, useTranslations } from "next-intl";
+
+import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
+import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { createClientLogger } from "@norish/shared/lib/logger";
+import { formatUnit } from "@norish/shared/lib/unit-localization";
+
+import { useRecipeFormDirtyState } from "./use-recipe-form-dirty-state";
 
 const log = createClientLogger("RecipeForm");
-
 const ALL_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
-
 export interface RecipeFormProps {
   mode: "create" | "edit";
   initialData?: FullRecipeDTO;
 }
-
 export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const router = useRouter();
   const { createRecipe, updateRecipe } = useRecipesContext();
@@ -96,7 +92,11 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       });
     } else if (initialData?.image) {
       // Fallback to legacy single image field
-      items.push({ type: "image", src: initialData.image, order: 0 });
+      items.push({
+        type: "image",
+        src: initialData.image,
+        order: 0,
+      });
     }
 
     // Add videos from initialData
@@ -129,7 +129,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const [protein, setProtein] = useState<number | null>(
     initialData?.protein != null ? Number(initialData.protein) : null
   );
-
   const currentFormState = useMemo(
     () => ({
       name,
@@ -172,7 +171,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       protein,
     ]
   );
-
   const hasUnsavedChanges = useRecipeFormDirtyState({
     current: currentFormState,
     initialData,
@@ -181,7 +179,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     mode,
     units,
   });
-
   const navigateBack = useCallback(() => router.back(), [router]);
   const {
     allowNavigation,
@@ -192,10 +189,8 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     confirmationMessage: t("discardChangesConfirm"),
     onConfirmLeave: navigateBack,
   });
-
   const handleCancel = useCallback(() => {
     if (!confirmDiscardChanges()) return;
-
     allowNavigation();
     navigateBack();
   }, [allowNavigation, confirmDiscardChanges, navigateBack]);
@@ -203,7 +198,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   // Show recipe ID error if reservation failed
   useEffect(() => {
     if (recipeIdError) {
-      setErrors((prev) => ({ ...prev, general: recipeIdError }));
+      setErrors((prev) => ({
+        ...prev,
+        general: recipeIdError,
+      }));
     }
   }, [recipeIdError]);
 
@@ -217,7 +215,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     const filteredIngredients = initialData.recipeIngredients.filter(
       (ing) => ing.systemUsed === initialData.systemUsed
     );
-
     const initIngredients: ParsedIngredient[] = filteredIngredients.map((ing) => ({
       id: ing.id,
       version: ing.version,
@@ -227,12 +224,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       order: ing.order,
       systemUsed: ing.systemUsed,
     }));
-
     setIngredients(initIngredients);
 
     // Filter steps by the recipe's measurement system
     const filteredSteps = initialData.steps.filter((s) => s.systemUsed === initialData.systemUsed);
-
     const initSteps: Step[] = filteredSteps.map((s) => ({
       step: s.step,
       order: s.order,
@@ -240,64 +235,69 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       version: s.version,
       images: s.images || [],
     }));
-
     setSteps(initSteps);
     initializedRecipeIdRef.current = initialData.id;
   }, [initialData, isLoadingUnits, locale, mode, units]);
 
-  // Detect measurement system from ingredients and auto-select
+  // Detect measurement system from ingredients and auto-select for new recipes only.
+  // Existing recipes already have an explicit active system, and re-detection can flip it on save.
   useEffect(() => {
-    if (ingredients.length > 0 && !manuallySetSystem) {
-      const ingredientLines = ingredients.map((ing) =>
-        `${ing.amount ?? ""} ${ing.unit ?? ""} ${ing.ingredientName}`.trim()
+    if (mode !== "create" || ingredients.length === 0 || manuallySetSystem) return;
+
+    const ingredientLines = ingredients.map((ing) =>
+      `${ing.amount ?? ""} ${ing.unit ?? ""} ${ing.ingredientName}`.trim()
+    );
+    const parsed = parseIngredientWithDefaults(ingredientLines, units);
+
+    if (parsed.length > 0) {
+      const detected = inferSystemUsedFromParsed(parsed);
+
+      setDetectedSystem(detected);
+      setSystemUsed(detected);
+      setIngredients((prev) =>
+        prev.some((ing) => ing.systemUsed !== detected)
+          ? prev.map((ing) => ({
+              ...ing,
+              systemUsed: detected,
+            }))
+          : prev
       );
-      const parsed = parseIngredientWithDefaults(ingredientLines, units);
-
-      if (parsed.length > 0) {
-        const detected = inferSystemUsedFromParsed(parsed);
-
-        setDetectedSystem(detected);
-        setSystemUsed(detected);
-      }
+      setSteps((prev) =>
+        prev.some((step) => step.systemUsed !== detected)
+          ? prev.map((step) => ({
+              ...step,
+              systemUsed: detected,
+            }))
+          : prev
+      );
     }
-  }, [ingredients, manuallySetSystem, units]);
-
+  }, [ingredients, manuallySetSystem, mode, units]);
   const toggleCategory = useCallback((category: RecipeCategory) => {
     setCategories((prev) =>
       prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
   }, []);
-
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
-
     if (!name.trim()) {
       newErrors.name = tValidation("nameRequired");
     }
-
     if (ingredients.length === 0) {
       newErrors.ingredients = tValidation("ingredientsRequired");
     }
-
     if (steps.length === 0) {
       newErrors.steps = tValidation("stepsRequired");
     }
-
     if (servings < 1) {
       newErrors.servings = tValidation("servingsMin");
     }
-
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   }, [name, ingredients, steps, servings, tValidation]);
-
   const handleSubmit = useCallback(async () => {
     if (!validate()) return;
-
     setIsSubmitting(true);
     setErrors({});
-
     try {
       // Extract images from unified media state, preserving their order
       const images = media
@@ -324,13 +324,13 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           order: vid.order,
           version: vid.version,
         }));
-
       const recipeData = {
         name: name.trim(),
         description: description.trim() || null,
         notes: notes.trim() || null,
         url: url.trim() || null,
-        image: primaryImage, // Legacy field - first image
+        image: primaryImage,
+        // Legacy field - first image
         servings,
         prepMinutes: prepMinutes ?? undefined,
         cookMinutes: cookMinutes ?? undefined,
@@ -340,7 +340,9 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         carbs: carbs != null ? carbs.toString() : null,
         protein: protein != null ? protein.toString() : null,
         systemUsed,
-        tags: tags.map((t) => ({ name: t })),
+        tags: tags.map((t) => ({
+          name: t,
+        })),
         categories,
         recipeIngredients: ingredients.map((ing, idx) => ({
           id: ing.id,
@@ -364,14 +366,21 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         // Videos array field
         videos,
       };
-
       if (mode === "create") {
         try {
           allowNavigation();
-          await createRecipe({ ...recipeData, id: recipeId! });
+          await createRecipe({
+            ...recipeData,
+            id: recipeId!,
+          });
         } catch (err) {
           disallowNavigation();
-          log.error({ err }, "Failed to create recipe");
+          log.error(
+            {
+              err,
+            },
+            "Failed to create recipe"
+          );
           throw err;
         }
       } else if (mode === "edit" && initialData) {
@@ -383,7 +392,9 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       }
     } catch (err) {
       disallowNavigation();
-      setErrors({ submit: (err as Error).message });
+      setErrors({
+        submit: (err as Error).message,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -415,7 +426,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     allowNavigation,
     disallowNavigation,
   ]);
-
   const handleTimeChange = useCallback(
     (field: "prepMinutes" | "cookMinutes" | "totalMinutes", value: number | null) => {
       if (field === "prepMinutes") setPrepMinutes(value);
@@ -429,7 +439,6 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
   if (isLoadingRecipeId) {
     return <EditRecipeSkeleton />;
   }
-
   return (
     <div className="mx-auto w-full max-w-3xl overflow-hidden px-4 py-6 md:py-8">
       {/* Header */}
@@ -439,14 +448,14 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
               {mode === "create" ? t("createTitle") : t("editTitle")}
             </h1>
-            <p className="text-default-500 mt-2">
+            <p className="text-muted mt-2">
               {mode === "create" ? t("createDescription") : t("editDescription")}
             </p>
           </div>
         </div>
 
         {errors.submit && (
-          <div className="bg-danger-50 dark:bg-danger-100/10 border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 mt-4 rounded-lg border p-4">
+          <div className="bg-danger/10 dark:bg-danger/10 border-danger/30 dark:border-danger/30 text-danger dark:text-danger mt-4 rounded-lg border p-4">
             {errors.submit}
           </div>
         )}
@@ -456,7 +465,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         {/* 1. Photos */}
         <section className="min-w-0">
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
+            <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               1
             </span>
             {t("photo")}
@@ -465,33 +474,30 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
             {recipeId && (
               <MediaGalleryInput media={media} recipeId={recipeId} onChange={setMedia} />
             )}
-            {errors.image && <p className="text-danger-600 mt-2 text-base">{errors.image}</p>}
+            {errors.image && <p className="text-danger mt-2 text-base">{errors.image}</p>}
           </div>
         </section>
 
         {/* 2. Basic Information */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
+            <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               2
             </span>
             {t("basicInfo")}
           </h2>
           <div className="ml-0 space-y-4 md:ml-9">
-            <Input
+            <TextField
               isRequired
-              classNames={{
-                label: "font-medium text-base",
-                input: "text-lg",
-              }}
-              errorMessage={errors.name}
+              className="text-lg"
               isInvalid={!!errors.name}
-              label={t("recipeName")}
-              placeholder={t("recipeNamePlaceholder")}
-              size="lg"
               value={name}
-              onValueChange={setName}
-            />
+              onChange={setName}
+            >
+              <Label>{t("recipeName")}</Label>
+              <Input placeholder={t("recipeNamePlaceholder")} />
+              {errors.name && <FieldError>{errors.name}</FieldError>}
+            </TextField>
 
             <div>
               <div className="mb-1.5 flex items-center gap-1">
@@ -511,14 +517,14 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         {/* 3. Ingredients */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
+            <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               3
             </span>
             {t("ingredients")}
-            <span className="text-danger-500 text-lg">*</span>
+            <span className="text-danger text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-default-500 mb-3 flex items-center gap-1 text-base">
+            <p className="text-muted mb-3 flex items-center gap-1 text-base">
               {t("ingredientsHelp")}
               <SmartInputHelp />
             </p>
@@ -528,7 +534,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               onChange={setIngredients}
             />
             {errors.ingredients && (
-              <p className="text-danger-600 mt-2 text-base">{errors.ingredients}</p>
+              <p className="text-danger mt-2 text-base">{errors.ingredients}</p>
             )}
           </div>
         </section>
@@ -536,53 +542,55 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         {/* 4. Instructions */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
+            <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               4
             </span>
             {t("instructions")}
-            <span className="text-danger-500 text-lg">*</span>
+            <span className="text-danger text-lg">*</span>
           </h2>
           <div className="ml-0 md:ml-9">
-            <p className="text-default-500 mb-3 flex items-center gap-1 text-base">
+            <p className="text-muted mb-3 flex items-center gap-1 text-base">
               {t("instructionsHelp")}
               <SmartInputHelp />
             </p>
             <StepInput
+              ingredients={ingredients}
               recipeId={recipeId ?? undefined}
               steps={steps}
               systemUsed={systemUsed}
               onChange={setSteps}
             />
-            {errors.steps && <p className="text-danger-600 mt-2 text-base">{errors.steps}</p>}
+            {errors.steps && <p className="text-danger mt-2 text-base">{errors.steps}</p>}
           </div>
         </section>
 
         {/* 5. Tags & Categories */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
+            <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               5
             </span>
             {t("tagsAndCategories")}
           </h2>
           <div className="ml-0 space-y-6 md:ml-9">
             <div>
-              <p className="text-default-500 mb-3 text-base">{t("tagsHelp")}</p>
+              <p className="text-muted mb-3 text-base">{t("tagsHelp")}</p>
               <TagInput value={tags} onChange={setTags} />
             </div>
             <div>
-              <p className="text-default-500 mb-3 text-base">{t("categoriesHelp")}</p>
+              <p className="text-muted mb-3 text-base">{t("categoriesHelp")}</p>
               <div className="flex flex-wrap gap-2">
                 {ALL_CATEGORIES.map((category) => {
                   const active = categories.includes(category);
-
                   return (
                     <Chip
                       key={category}
-                      className="h-8 cursor-pointer px-3 text-sm"
-                      color={active ? "primary" : "default"}
-                      radius="full"
-                      variant={active ? "solid" : "flat"}
+                      as="button"
+                      aria-pressed={active}
+                      className="h-8 cursor-pointer rounded-full px-3 text-sm"
+                      color={active ? "accent" : "default"}
+                      type="button"
+                      variant={active ? "primary" : "soft"}
                       onClick={() => toggleCategory(category)}
                     >
                       {t(`category.${category.toLowerCase()}`)}
@@ -597,53 +605,50 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         {/* 6. Nutrition */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
+            <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               6
             </span>
             {t("nutrition")}
-            <span className="text-default-400 text-sm font-normal">{t("nutritionPerServing")}</span>
+            <span className="text-muted text-sm font-normal">{t("nutritionPerServing")}</span>
           </h2>
           <div className="ml-0 md:ml-9">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <Input
-                classNames={{ label: "font-medium text-base" }}
-                label={t("calories")}
-                min={0}
-                placeholder="—"
+              <TextField
+                className="w-full"
                 type="number"
                 value={calories != null ? calories.toString() : ""}
-                onValueChange={(v) => setCalories(v ? parseInt(v, 10) || null : null)}
-              />
-              <Input
-                classNames={{ label: "font-medium text-base" }}
-                label={t("fat")}
-                min={0}
-                placeholder="—"
-                step={0.1}
+                onChange={(value) => setCalories(value ? parseInt(value, 10) || null : null)}
+              >
+                <Label>{t("calories")}</Label>
+                <Input min={0} placeholder="-" />
+              </TextField>
+              <TextField
+                className="w-full"
                 type="number"
                 value={fat != null ? fat.toString() : ""}
-                onValueChange={(v) => setFat(v ? parseFloat(v) || null : null)}
-              />
-              <Input
-                classNames={{ label: "font-medium text-base" }}
-                label={t("carbs")}
-                min={0}
-                placeholder="—"
-                step={0.1}
+                onChange={(value) => setFat(value ? parseFloat(value) || null : null)}
+              >
+                <Label>{t("fat")}</Label>
+                <Input min={0} placeholder="-" step={0.1} />
+              </TextField>
+              <TextField
+                className="w-full"
                 type="number"
                 value={carbs != null ? carbs.toString() : ""}
-                onValueChange={(v) => setCarbs(v ? parseFloat(v) || null : null)}
-              />
-              <Input
-                classNames={{ label: "font-medium text-base" }}
-                label={t("protein")}
-                min={0}
-                placeholder="—"
-                step={0.1}
+                onChange={(value) => setCarbs(value ? parseFloat(value) || null : null)}
+              >
+                <Label>{t("carbs")}</Label>
+                <Input min={0} placeholder="-" step={0.1} />
+              </TextField>
+              <TextField
+                className="w-full"
                 type="number"
                 value={protein != null ? protein.toString() : ""}
-                onValueChange={(v) => setProtein(v ? parseFloat(v) || null : null)}
-              />
+                onChange={(value) => setProtein(value ? parseFloat(value) || null : null)}
+              >
+                <Label>{t("protein")}</Label>
+                <Input min={0} placeholder="-" step={0.1} />
+              </TextField>
             </div>
           </div>
         </section>
@@ -651,34 +656,31 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         {/* 7. Details */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
+            <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               7
             </span>
             {t("details")}
           </h2>
           <div className="ml-0 space-y-4 md:ml-9">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Input
-                classNames={{
-                  label: "font-medium text-base",
-                }}
-                errorMessage={errors.servings}
+              <TextField
+                className="w-full"
                 isInvalid={!!errors.servings}
-                label={t("servings")}
-                min={1}
-                placeholder="1"
                 type="number"
                 value={servings.toString()}
-                onValueChange={(v) => setServings(parseInt(v, 10) || 1)}
-              />
+                onChange={(value) => setServings(parseInt(value, 10) || 1)}
+              >
+                <Label>{t("servings")}</Label>
+                <Input min={1} placeholder="1" />
+                {errors.servings && <FieldError>{errors.servings}</FieldError>}
+              </TextField>
             </div>
             <div>
               <span
-                className="text-default-700 mb-3 block text-base font-medium"
+                className="text-foreground mb-3 block text-base font-medium"
                 id="cooking-times-label"
               >
-                {t("cookingTimes")}{" "}
-                <span className="text-default-400 font-normal">{t("optional")}</span>
+                {t("cookingTimes")} <span className="text-muted font-normal">{t("optional")}</span>
               </span>
               <TimeInputs
                 cookMinutes={cookMinutes}
@@ -693,7 +695,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         {/* 8. Additional Information */}
         <section>
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <span className="bg-primary text-primary-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
+            <span className="bg-accent text-accent-foreground flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold">
               8
             </span>
             {t("additionalInfo")}
@@ -712,15 +714,10 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
               />
             </div>
 
-            <Input
-              classNames={{
-                label: "font-medium text-base",
-              }}
-              label={t("sourceUrl")}
-              placeholder={t("sourceUrlPlaceholder")}
-              value={url}
-              onValueChange={setUrl}
-            />
+            <TextField className="w-full" value={url} onChange={setUrl}>
+              <Label>{t("sourceUrl")}</Label>
+              <Input placeholder={t("sourceUrlPlaceholder")} />
+            </TextField>
 
             <div>
               <MeasurementSystemSelector
@@ -731,11 +728,21 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
                   setManuallySetSystem(true);
 
                   // Update systemUsed on all ingredients and steps
-                  setIngredients((prev) => prev.map((ing) => ({ ...ing, systemUsed: sys })));
-                  setSteps((prev) => prev.map((step) => ({ ...step, systemUsed: sys })));
+                  setIngredients((prev) =>
+                    prev.map((ing) => ({
+                      ...ing,
+                      systemUsed: sys,
+                    }))
+                  );
+                  setSteps((prev) =>
+                    prev.map((step) => ({
+                      ...step,
+                      systemUsed: sys,
+                    }))
+                  );
                 }}
               />
-              <p className="text-default-400 mt-2 text-xs">
+              <p className="text-muted mt-2 text-xs">
                 {t("measurementSystemNote")}
                 {mode === "edit" && t("measurementSystemEditNote")}
               </p>
@@ -745,15 +752,22 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
 
         {/* Submit */}
         <div className="flex justify-end gap-3 border-t pt-6">
-          <Button isDisabled={isSubmitting} size="lg" variant="flat" onPress={handleCancel}>
+          <Button
+            isDisabled={isSubmitting}
+            size="lg"
+            onPress={handleCancel}
+            variant="tertiary"
+            className="min-w-24"
+          >
             {tCommon("cancel")}
           </Button>
           <Button
-            color="primary"
             isDisabled={isSubmitting}
-            isLoading={isSubmitting}
             size="lg"
             onPress={handleSubmit}
+            variant="primary"
+            isPending={isSubmitting}
+            className="min-w-24"
           >
             {mode === "create" ? t("createRecipe") : t("saveChanges")}
           </Button>

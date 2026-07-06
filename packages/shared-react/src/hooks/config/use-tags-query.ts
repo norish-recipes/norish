@@ -1,7 +1,6 @@
-import type { CreateConfigHooksOptions } from "./types";
-
 import { useQuery } from "@tanstack/react-query";
 
+import type { CreateConfigHooksOptions } from "./types";
 
 export function createUseTagsQuery({ useTRPC }: CreateConfigHooksOptions) {
   return function useTagsQuery() {

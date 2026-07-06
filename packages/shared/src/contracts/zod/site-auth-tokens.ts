@@ -1,6 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
-import { siteAuthTokens } from "@norish/db/schema";
+
+import { siteAuthTokens } from "@norish/db-schema/schema";
 
 export const SiteAuthTokenSelectSchema = createSelectSchema(siteAuthTokens);
 

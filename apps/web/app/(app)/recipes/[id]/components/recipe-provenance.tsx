@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Card, CardBody, CardHeader, Divider, Skeleton } from "@heroui/react";
+import { Card, Skeleton } from "@heroui/react";
 import { useTranslations, useLocale } from "next-intl";
 import { SparklesIcon } from "@heroicons/react/16/solid";
 
@@ -55,7 +55,7 @@ export function RecipeProvenance({ variant = "card" }: { variant?: "card" | "sec
           <Skeleton className="h-6 w-24 rounded-lg" />
         </div>
       </div>
-      <Divider className="bg-default-100" />
+      <hr className="border-t border-default-100" />
       <Skeleton className="h-4 w-3/4 rounded-lg mt-2" />
     </div>
   ) : (
@@ -98,7 +98,7 @@ export function RecipeProvenance({ variant = "card" }: { variant?: "card" | "sec
 
       {recipe.provenanceNote && (
         <>
-          <Divider className="bg-default-100" />
+          <hr className="border-t border-default-100" />
           <div className="mt-2 flex flex-col gap-1.5">
             <p className="text-default-600 text-sm leading-relaxed italic">
               &quot;{recipe.provenanceNote}&quot;
@@ -121,7 +121,7 @@ export function RecipeProvenance({ variant = "card" }: { variant?: "card" | "sec
   if (variant === "section") {
     return (
       <>
-        <Divider />
+        <hr className="border-t border-default-100" />
         <div className="space-y-4">
           {header}
           <div className="-mx-1 px-1">{content}</div>
@@ -132,8 +132,8 @@ export function RecipeProvenance({ variant = "card" }: { variant?: "card" | "sec
 
   return (
     <Card className="bg-content1 border-primary/20 rounded-2xl border-1 shadow-md">
-      <CardHeader className="flex items-center justify-between px-6 pt-6 pb-2">{header}</CardHeader>
-      <CardBody className="p-6 pt-2">{content}</CardBody>
+      <Card.Header className="flex items-center justify-between px-6 pt-6 pb-2">{header}</Card.Header>
+      <Card.Content className="p-6 pt-2">{content}</Card.Content>
     </Card>
   );
 }

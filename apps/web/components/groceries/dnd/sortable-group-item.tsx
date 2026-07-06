@@ -1,13 +1,12 @@
 "use client";
 
-import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-import type { GroupDragHandle } from "./types";
-
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Bars3Icon } from "@heroicons/react/16/solid";
 
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
+import type { GroupDragHandle } from "./types";
 
 interface SortableGroupItemProps {
   group: GroceryGroup;
@@ -41,7 +40,7 @@ export function SortableGroupItem({ group, children }: SortableGroupItemProps) {
   const dragHandle = (
     <button
       ref={setActivatorNodeRef}
-      className="text-default-400 flex h-8 w-8 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+      className="text-muted flex h-8 w-8 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
       type="button"
       {...attributes}
       {...listeners}

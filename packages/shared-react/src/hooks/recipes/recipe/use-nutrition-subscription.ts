@@ -1,7 +1,6 @@
-import type { CreateRecipeHooksOptions } from "../types";
-
 import { useSubscription } from "@trpc/tanstack-react-query";
 
+import type { CreateRecipeHooksOptions } from "../types";
 
 export function createUseNutritionSubscription({ useTRPC }: CreateRecipeHooksOptions) {
   return function useNutritionSubscription(

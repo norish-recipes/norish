@@ -1,6 +1,12 @@
 name: "Setup and install"
 description: "Common setup steps for Actions"
 
+inputs:
+  install-filter:
+    description: "Optional pnpm --filter selector to scope the install (e.g. '@norish/landing...'). Empty installs the whole workspace."
+    required: false
+    default: ""
+
 runs:
   using: composite
   steps:
@@ -15,7 +21,7 @@ runs:
       run: echo "path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
 
     - name: Cache pnpm store
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: ${{ steps.pnpm-store.outputs.path }}
         key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
@@ -26,4 +32,10 @@ runs:
       shell: bash
       env:
         SKIP_PARSER_API_INSTALL: "1"
-      run: pnpm install --frozen-lockfile
+        INSTALL_FILTER: ${{ inputs.install-filter }}
+      run: |
+        if [ -n "$INSTALL_FILTER" ]; then
+          pnpm install --frozen-lockfile --filter "$INSTALL_FILTER"
+        else
+          pnpm install --frozen-lockfile
+        fi

@@ -60,12 +60,19 @@
               "name": "TimerActivity",
               "displayName": "Cooking Timer",
               "description": "Shows your active cooking timer on the Lock Screen and Dynamic Island",
-              "supportedFamilies": ["systemSmall", "systemMedium"]
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium"
+              ]
             }
           ]
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

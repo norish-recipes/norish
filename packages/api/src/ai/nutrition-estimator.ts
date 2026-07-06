@@ -1,8 +1,6 @@
-import type { AIResult } from "@norish/shared-server/ai/types/result";
-import type { NutritionEstimate } from "./schemas/nutrition.schema";
-
 import { generateText, Output } from "ai";
-import { isAIEnabled } from "@norish/config/server-config-loader";
+
+import type { AIResult } from "@norish/shared-server/ai/types/result";
 import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
 import {
@@ -11,9 +9,10 @@ import {
   getErrorMessage,
   mapErrorToCode,
 } from "@norish/shared-server/ai/types/result";
+import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
-
+import type { NutritionEstimate } from "./schemas/nutrition.schema";
 import { nutritionEstimationSchema } from "./schemas/nutrition.schema";
 
 // Re-export type for consumers

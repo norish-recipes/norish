@@ -16,7 +16,7 @@ function DaySkeletonItem() {
 
 function DaySectionSkeleton() {
   return (
-    <div className="border-default-100 border-b px-4 py-4">
+    <div className="border-border border-b px-4 py-4">
       {/* Day header */}
       <div className="mb-3 flex items-center justify-between">
         <Skeleton className="h-5 w-32 rounded" />
@@ -46,7 +46,7 @@ export function CalendarSkeletonMobile() {
 
 function DesktopDayCardSkeleton() {
   return (
-    <div className="bg-content1 flex h-[400px] flex-col gap-2 rounded-xl p-4 shadow-sm">
+    <div className="bg-surface flex h-[400px] flex-col gap-2 rounded-xl p-4 shadow-sm">
       {/* Day header */}
       <div className="flex shrink-0 items-start justify-between">
         <div className="flex flex-col gap-1">

@@ -12,7 +12,19 @@ import type {
   OperationId,
   RealtimeEventEnvelope,
   RealtimeEventMeta,
+  RealtimeEventScope,
 } from "@norish/shared/contracts/realtime-envelope";
+import { ENVELOPE_VERSION } from "@norish/shared/contracts/realtime-envelope";
+
+const REALTIME_EVENT_SCOPES: readonly string[] = ["broadcast", "household", "user", "global"];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === "object";
+}
+
+function isRealtimeEventScope(value: unknown): value is RealtimeEventScope {
+  return typeof value === "string" && REALTIME_EVENT_SCOPES.includes(value);
+}
 
 /**
  * Generate a new operationId.
@@ -45,23 +57,43 @@ export function isOperationId(value: unknown): value is OperationId {
 }
 
 /**
- * Determine if the given data looks like a RealtimeEventEnvelope.
+ * Determine if the given data is a valid RealtimeEventEnvelope.
  *
- * Checks for the presence of `meta.version` and `payload` to distinguish
+ * Checks for required transport metadata and `payload` to distinguish
  * enveloped data from raw domain payloads.
  */
 export function isEventEnvelope<T = unknown>(data: unknown): data is RealtimeEventEnvelope<T> {
-  if (data == null || typeof data !== "object") return false;
+  if (!isRecord(data)) return false;
 
-  const candidate = data as Record<string, unknown>;
+  if (!("meta" in data && "payload" in data)) return false;
 
-  if (!("meta" in candidate && "payload" in candidate)) return false;
+  const meta = data.meta;
 
-  const meta = candidate.meta;
+  if (!isRecord(meta)) return false;
 
-  if (meta == null || typeof meta !== "object") return false;
+  return (
+    meta.version === ENVELOPE_VERSION &&
+    typeof meta.eventId === "string" &&
+    typeof meta.eventName === "string" &&
+    typeof meta.namespace === "string" &&
+    isRealtimeEventScope(meta.scope) &&
+    typeof meta.channel === "string" &&
+    typeof meta.occurredAt === "string" &&
+    (!("operationId" in meta) || isOperationId(meta.operationId))
+  );
+}
 
-  return "version" in (meta as Record<string, unknown>);
+/**
+ * Assert that subscription data is a full realtime event envelope.
+ * Use this for envelope-aware consumers that should reject legacy raw payloads.
+ */
+export function assertEventEnvelope<T = unknown>(
+  data: unknown,
+  message = "Expected realtime event envelope"
+): asserts data is RealtimeEventEnvelope<T> {
+  if (!isEventEnvelope<T>(data)) {
+    throw new TypeError(message);
+  }
 }
 
 /**

@@ -62,6 +62,18 @@
     "savePreference": "Ricorda il negozio per questo articolo",
     "addAnother": "Aggiungi un altro",
     "addRepeat": "+ Aggiungi ripetizione",
+    "recurrenceEnabled": "Ricorrente",
+    "recurrenceSheet": {
+      "title": "Ripetizione",
+      "subtitle": "Aggiungi automaticamente di nuovo questo articolo alla lista della spesa",
+      "enable": "Attiva ripetizione",
+      "disable": "Disattiva ripetizione",
+      "frequency": "Frequenza",
+      "weekly": "Settimanale",
+      "biweekly": "Ogni 2 settimane",
+      "monthly": "Mensile",
+      "confirm": "Conferma"
+    },
     "storeOptional": "Negozio (opzionale)",
     "autoDetectFromHistory": "Rileva automaticamente dalla cronologia",
     "autoDetectOrSelect": "Rileva automaticamente o seleziona",

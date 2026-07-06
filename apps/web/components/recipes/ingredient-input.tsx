@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import SmartTextInput from "@/components/shared/smart-text-input";
+import { useUnitsQuery } from "@/hooks/config";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
+
 import { MeasurementSystem } from "@norish/shared/contracts";
 import { debounce, parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
-
-import { useUnitsQuery } from "@/hooks/config";
-import SmartTextInput from "@/components/shared/smart-text-input";
 
 export interface ParsedIngredient {
   id?: string;
@@ -20,7 +20,6 @@ export interface ParsedIngredient {
   order: number;
   systemUsed: MeasurementSystem;
 }
-
 export interface IngredientInputProps {
   ingredients: ParsedIngredient[];
   onChange: (ingredients: ParsedIngredient[]) => void;
@@ -35,16 +34,17 @@ interface IngredientItem {
   recipeIngredientId?: string;
   version?: number;
 }
-
 let nextId = 0;
-
 function createItem(
   text: string,
   meta?: Pick<IngredientItem, "recipeIngredientId" | "version">
 ): IngredientItem {
-  return { id: `ing-${nextId++}`, text, ...meta };
+  return {
+    id: `ing-${nextId++}`,
+    text,
+    ...meta,
+  };
 }
-
 export default function IngredientInput({
   ingredients,
   onChange,
@@ -62,30 +62,23 @@ export default function IngredientInput({
     if (ingredients.length > 0 && items.length === 1 && items[0].text === "") {
       const formatted = ingredients.map((ing) => {
         const parts: string[] = [];
-
         if (ing.amount !== null) parts.push(String(ing.amount));
         if (ing.unit) parts.push(ing.unit);
         if (ing.ingredientName) parts.push(ing.ingredientName);
-
         return createItem(parts.join(" "), {
           recipeIngredientId: ing.id,
           version: ing.version,
         });
       });
-
       setItems([...formatted, createItem("")]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ingredients.length]);
-
   const parseIngredient = useCallback(
     (item: IngredientItem, order: number): ParsedIngredient | null => {
       const trimmed = item.text.trim();
-
       if (!trimmed) return null;
-
       const parsed = parseIngredientWithDefaults(trimmed, units);
-
       if (!parsed || parsed.length === 0) {
         // Fallback: treat entire text as ingredient name
         return {
@@ -98,9 +91,7 @@ export default function IngredientInput({
           systemUsed,
         };
       }
-
       const first = parsed[0];
-
       return {
         id: item.recipeIngredientId,
         version: item.version,
@@ -113,39 +104,35 @@ export default function IngredientInput({
     },
     [systemUsed, units]
   );
-
   const debouncedParse = useCallback(
     (updatedItems: IngredientItem[]) => {
       const doUpdate = debounce((items: IngredientItem[]) => {
         const parsed = items
           .map((item, idx) => parseIngredient(item, idx))
           .filter((ing): ing is ParsedIngredient => ing !== null);
-
         onChange(parsed);
       }, 300);
-
       doUpdate(updatedItems);
     },
     [parseIngredient, onChange]
   );
-
   const handleInputChange = useCallback(
     (index: number, value: string) => {
       const updated = [...items];
-
-      updated[index] = { ...updated[index], text: value };
+      updated[index] = {
+        ...updated[index],
+        text: value,
+      };
 
       // Auto-add empty line at the end
       if (index === items.length - 1 && value.trim()) {
         updated.push(createItem(""));
       }
-
       setItems(updated);
       debouncedParse(updated);
     },
     [items, debouncedParse]
   );
-
   const handleKeyDown = useCallback(
     (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -155,7 +142,6 @@ export default function IngredientInput({
           textareaRefs.current[index + 1]?.focus();
         } else {
           const updated = [...items, createItem("")];
-
           setItems(updated);
           setTimeout(() => {
             textareaRefs.current[items.length]?.focus();
@@ -164,7 +150,6 @@ export default function IngredientInput({
       } else if (e.key === "Backspace" && !items[index].text && index > 0) {
         e.preventDefault();
         const updated = items.filter((_, i) => i !== index);
-
         setItems(updated);
         debouncedParse(updated);
         setTimeout(() => {
@@ -174,13 +159,11 @@ export default function IngredientInput({
     },
     [items, debouncedParse]
   );
-
   const handleBlur = useCallback(
     (index: number) => {
       // Auto-remove empty rows on blur (except the last one)
       if (!items[index].text.trim() && index < items.length - 1) {
         const updated = items.filter((_, i) => i !== index);
-
         if (updated.length === 0) updated.push(createItem(""));
         setItems(updated);
         debouncedParse(updated);
@@ -188,22 +171,18 @@ export default function IngredientInput({
     },
     [items, debouncedParse]
   );
-
   const handleRemove = useCallback(
     (index: number) => {
       const updated = items.filter((_, i) => i !== index);
-
       if (updated.length === 0) updated.push(createItem(""));
       setItems(updated);
       debouncedParse(updated);
     },
     [items, debouncedParse]
   );
-
   const handleReorder = useCallback(
     (newOrder: IngredientItem[]) => {
       const normalized = normalizeIngredientItems(newOrder);
-
       setItems(normalized);
       debouncedParse(normalized);
     },
@@ -213,17 +192,13 @@ export default function IngredientInput({
   // Calculate ingredient numbers (excluding headings)
   const getIngredientNumber = (index: number): number | null => {
     let num = 0;
-
     for (let i = 0; i <= index; i++) {
       const isHeading = items[i].text.trim().startsWith("#");
-
       if (!isHeading) num++;
     }
     const isCurrentHeading = items[index].text.trim().startsWith("#");
-
     return isCurrentHeading ? null : num;
   };
-
   return (
     <Reorder.Group
       ref={dragConstraintsRef}
@@ -253,11 +228,9 @@ export default function IngredientInput({
     </Reorder.Group>
   );
 }
-
 function normalizeIngredientItems(next: IngredientItem[]): IngredientItem[] {
   const withoutTrailingEmpty = next.filter((it) => it.text.trim().length > 0);
   const normalized = [...withoutTrailingEmpty, createItem("")];
-
   return normalized.length ? normalized : [createItem("")];
 }
 
@@ -275,7 +248,6 @@ interface IngredientRowProps {
   onBlur: () => void;
   onRemove: () => void;
 }
-
 function IngredientRow({
   item,
   index,
@@ -291,7 +263,6 @@ function IngredientRow({
 }: IngredientRowProps) {
   const controls = useDragControls();
   const canDrag = !isLast && !!item.text.trim();
-
   return (
     <Reorder.Item
       className="flex items-start gap-2"
@@ -301,25 +272,25 @@ function IngredientRow({
       dragElastic={0}
       dragListener={false}
       dragMomentum={false}
-      style={{ position: "relative" }}
+      style={{
+        position: "relative",
+      }}
       value={item}
     >
       {/* Drag handle - only show for non-empty, non-last items */}
       <div
-        className={`flex h-10 w-6 flex-shrink-0 touch-none items-center justify-center ${
-          !isLast && item.text ? "cursor-grab active:cursor-grabbing" : ""
-        }`}
+        className={`flex h-10 w-6 flex-shrink-0 touch-none items-center justify-center ${!isLast && item.text ? "cursor-grab active:cursor-grabbing" : ""}`}
         onPointerDown={(e) => {
           if (canDrag) {
             controls.start(e);
           }
         }}
       >
-        {canDrag ? <Bars3Icon className="text-default-400 h-4 w-4" /> : null}
+        {canDrag ? <Bars3Icon className="text-muted h-4 w-4" /> : null}
       </div>
 
       {/* Ingredient number */}
-      <div className="text-default-500 flex h-10 w-6 flex-shrink-0 items-center justify-center font-medium">
+      <div className="text-muted flex h-10 w-6 flex-shrink-0 items-center justify-center font-medium">
         {ingredientNumber !== null ? `${ingredientNumber}.` : ""}
       </div>
 
@@ -338,7 +309,13 @@ function IngredientRow({
       {/* Remove button */}
       <div className="mt-1 h-8 w-8 min-w-8 flex-shrink-0">
         {showRemove && (
-          <Button isIconOnly className="h-full w-full" size="sm" variant="light" onPress={onRemove}>
+          <Button
+            isIconOnly
+            className="h-full w-full"
+            size="sm"
+            onPress={onRemove}
+            variant="tertiary"
+          >
             <XMarkIcon className="h-4 w-4" />
           </Button>
         )}

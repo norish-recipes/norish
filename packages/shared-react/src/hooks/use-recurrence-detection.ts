@@ -1,6 +1,6 @@
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-
 import { useEffect, useState, useTransition } from "react";
+
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { parseRecurrence } from "@norish/shared/lib/recurrence/parser";
 

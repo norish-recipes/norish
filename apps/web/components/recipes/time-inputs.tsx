@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { Input } from "@heroui/react";
+import { Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 export interface TimeInputsProps {
@@ -66,51 +66,48 @@ export default function TimeInputs({
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      <Input
-        classNames={{
-          input: "text-base",
-          inputWrapper: "border-default-200 dark:border-default-800",
-        }}
-        inputMode="numeric"
-        label={t("prep")}
-        pattern="[0-9]*"
-        placeholder="0"
-        size="md"
+      <TextField
         type="text"
         value={prepMinutes?.toString() ?? ""}
-        onKeyDown={handleKeyDown}
-        onValueChange={(v) => handleChange("prepMinutes", v)}
-      />
-      <Input
-        classNames={{
-          input: "text-base",
-          inputWrapper: "border-default-200 dark:border-default-800",
-        }}
-        inputMode="numeric"
-        label={t("cook")}
-        pattern="[0-9]*"
-        placeholder="0"
-        size="md"
+        onChange={(value) => handleChange("prepMinutes", value)}
+      >
+        <Label>{t("prep")}</Label>
+        <Input
+          className="border-border dark:border-border-tertiary w-full text-base"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          placeholder="0"
+          onKeyDown={handleKeyDown}
+        />
+      </TextField>
+      <TextField
         type="text"
         value={cookMinutes?.toString() ?? ""}
-        onKeyDown={handleKeyDown}
-        onValueChange={(v) => handleChange("cookMinutes", v)}
-      />
-      <Input
-        classNames={{
-          input: "text-base",
-          inputWrapper: "border-default-200 dark:border-default-800",
-        }}
-        inputMode="numeric"
-        label={t("total")}
-        pattern="[0-9]*"
-        placeholder="0"
-        size="md"
+        onChange={(value) => handleChange("cookMinutes", value)}
+      >
+        <Label>{t("cook")}</Label>
+        <Input
+          className="border-border dark:border-border-tertiary w-full text-base"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          placeholder="0"
+          onKeyDown={handleKeyDown}
+        />
+      </TextField>
+      <TextField
         type="text"
         value={totalMinutes?.toString() ?? ""}
-        onKeyDown={handleKeyDown}
-        onValueChange={(v) => handleChange("totalMinutes", v)}
-      />
+        onChange={(value) => handleChange("totalMinutes", value)}
+      >
+        <Label>{t("total")}</Label>
+        <Input
+          className="border-border dark:border-border-tertiary w-full text-base"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          placeholder="0"
+          onKeyDown={handleKeyDown}
+        />
+      </TextField>
     </div>
   );
 }

@@ -6,10 +6,9 @@
  */
 
 import type { Job } from "bullmq";
-import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
-import type { PolicyEmitContext } from "@norish/trpc/helpers";
 
-import { getAIConfig, getRecipePermissionPolicy } from "@norish/config/server-config-loader";
+import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
+import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import {
   createRecipeWithRefs,
   dashboardRecipe,
@@ -23,10 +22,14 @@ import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/prod
 import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getQueues } from "@norish/queue/registry";
+import {
+  getAIConfig,
+  getRecipePermissionPolicy,
+} from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
-import { emitByPolicy } from "@norish/trpc/helpers";
-import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
+import { emitByPolicy } from "@norish/shared-server/realtime/policy";
+import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
 import {
   baseWorkerOptions,

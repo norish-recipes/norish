@@ -11,7 +11,7 @@ import { createLogger } from "@norish/shared-server/logger";
 import { getRecipeFull, db } from "@norish/db";
 import { recipes } from "@norish/db/schema";
 import { inferProvenanceForRecipe } from "@norish/api/ai/origin-inferrer";
-import { isProvenanceEnabled, getRecipePermissionPolicy } from "@norish/config/server-config-loader";
+import { isProvenanceEnabled, getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 import { emitByPolicy } from "@norish/trpc/helpers";
 

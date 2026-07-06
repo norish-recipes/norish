@@ -144,6 +144,16 @@ describe("parseIngredients", () => {
 
       expect(result.systemUsed).toBe("us");
     });
+
+    it("does not infer US units from spoon measurements alone", () => {
+      const json = {
+        recipeIngredient: ["2 tablespoons olive oil", "1 teaspoon salt"],
+      };
+
+      const result = parseIngredients(json, emptyUnits);
+
+      expect(result.systemUsed).toBe("metric");
+    });
   });
 
   describe("unit normalization to canonical IDs", () => {

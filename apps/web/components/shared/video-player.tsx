@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import VideoPlayerSkeleton from "@/components/skeleton/video-player-skeleton";
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
@@ -11,13 +12,12 @@ import {
 import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
+
 import {
   hasDocumentFullscreenApi,
   hasNativeVideoFullscreen,
   isFullscreenControlSupported,
 } from "@norish/shared/lib/video-fullscreen";
-
-import VideoPlayerSkeleton from "@/components/skeleton/video-player-skeleton";
 
 export interface VideoPlayerProps {
   src: string;
@@ -26,7 +26,6 @@ export interface VideoPlayerProps {
   className?: string;
   onControlsVisibilityChange?: (visible: boolean) => void;
 }
-
 export default function VideoPlayer({
   src,
   duration,
@@ -37,9 +36,7 @@ export default function VideoPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchControlsHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const t = useTranslations("recipes.carousel.videoPlayer");
-
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -53,17 +50,14 @@ export default function VideoPlayer({
   useEffect(() => {
     if (typeof document === "undefined") {
       setFullscreenSupported(false);
-
       return;
     }
-
     setFullscreenSupported(isFullscreenControlSupported(document, videoRef.current));
   }, []);
 
   // Handle fullscreen change events (user exits via native controls or Escape)
   useEffect(() => {
     const video = videoRef.current;
-
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!(
         document.fullscreenElement ||
@@ -71,32 +65,25 @@ export default function VideoPlayer({
         (document as any).mozFullScreenElement ||
         (document as any).msFullscreenElement
       );
-
       setIsFullscreen(isCurrentlyFullscreen);
     };
-
     const handleVideoFullscreenStart = () => {
       setIsFullscreen(true);
     };
-
     const handleVideoFullscreenEnd = () => {
       setIsFullscreen(false);
     };
-
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
     document.addEventListener("mozfullscreenchange", handleFullscreenChange);
     document.addEventListener("MSFullscreenChange", handleFullscreenChange);
-
     video?.addEventListener("webkitbeginfullscreen", handleVideoFullscreenStart as EventListener);
     video?.addEventListener("webkitendfullscreen", handleVideoFullscreenEnd as EventListener);
-
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
       document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
       document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
-
       video?.removeEventListener(
         "webkitbeginfullscreen",
         handleVideoFullscreenStart as EventListener
@@ -104,17 +91,13 @@ export default function VideoPlayer({
       video?.removeEventListener("webkitendfullscreen", handleVideoFullscreenEnd as EventListener);
     };
   }, []);
-
   const toggleFullscreen = useCallback(
     async (e: React.MouseEvent | React.TouchEvent | any) => {
       e?.stopPropagation?.();
       const container = containerRef.current;
-
       if (!container) return;
-
       try {
         const hasDocumentApi = hasDocumentFullscreenApi(document);
-
         if (!isFullscreen && hasDocumentApi) {
           if (container.requestFullscreen) {
             await container.requestFullscreen();
@@ -125,10 +108,8 @@ export default function VideoPlayer({
           } else if ((container as any).msRequestFullscreen) {
             await (container as any).msRequestFullscreen();
           }
-
           return;
         }
-
         if (isFullscreen && hasDocumentApi) {
           if (document.exitFullscreen) {
             await document.exitFullscreen();
@@ -139,16 +120,13 @@ export default function VideoPlayer({
           } else if ((document as any).msExitFullscreen) {
             await (document as any).msExitFullscreen();
           }
-
           return;
         }
-
         const video = videoRef.current as
           | (HTMLVideoElement & {
               webkitEnterFullscreen?: () => Promise<void> | void;
             })
           | null;
-
         if (!isFullscreen && hasNativeVideoFullscreen(videoRef.current)) {
           video?.webkitEnterFullscreen?.();
         }
@@ -163,16 +141,13 @@ export default function VideoPlayer({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   // Autoplay observer
   useEffect(() => {
     const video = videoRef.current;
-
     if (!video) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -190,11 +165,11 @@ export default function VideoPlayer({
           }
         });
       },
-      { threshold: 0.6 } // Start playing when 60% visible
+      {
+        threshold: 0.6,
+      } // Start playing when 60% visible
     );
-
     observer.observe(video);
-
     return () => {
       observer.disconnect();
     };
@@ -205,14 +180,12 @@ export default function VideoPlayer({
     if (videoRef.current) {
       const current = videoRef.current.currentTime;
       const total = videoRef.current.duration || duration || 0;
-
       setCurrentTime(current);
       if (total > 0) {
         setProgress((current / total) * 100);
       }
     }
   };
-
   const togglePlay = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (videoRef.current) {
@@ -224,28 +197,23 @@ export default function VideoPlayer({
       setIsPlaying(!isPlaying);
     }
   };
-
   const toggleMute = (e: any) => {
     // HeroUI Button onPress/onClick handling
     if (e?.stopPropagation) e.stopPropagation();
-
     if (videoRef.current) {
       videoRef.current.muted = !isMuted;
       setIsMuted(!isMuted);
     }
   };
-
   const handleLoadedData = () => {
     setIsLoading(false);
   };
-
   const clearTouchControlsHideTimer = useCallback(() => {
     if (touchControlsHideTimerRef.current) {
       clearTimeout(touchControlsHideTimerRef.current);
       touchControlsHideTimerRef.current = null;
     }
   }, []);
-
   const handleTouchStart = () => {
     clearTouchControlsHideTimer();
     setShowControls(true);
@@ -260,19 +228,15 @@ export default function VideoPlayer({
   const handleTap = (_e: React.MouseEvent | React.TouchEvent) => {
     togglePlay();
   };
-
   const areControlsVisible = showControls || !isPlaying;
-
   useEffect(() => {
     onControlsVisibilityChange?.(areControlsVisible);
   }, [areControlsVisible, onControlsVisibilityChange]);
-
   useEffect(() => {
     return () => {
       clearTouchControlsHideTimer();
     };
   }, [clearTouchControlsHideTimer]);
-
   return (
     <div
       ref={containerRef}
@@ -322,26 +286,41 @@ export default function VideoPlayer({
       <AnimatePresence>
         {areControlsVisible && (
           <motion.div
-            animate={{ opacity: 1 }}
+            animate={{
+              opacity: 1,
+            }}
             className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"
-            exit={{ opacity: 0 }}
-            initial={{ opacity: 0 }}
+            exit={{
+              opacity: 0,
+            }}
+            initial={{
+              opacity: 0,
+            }}
           >
             {/* Center: Play/Pause Big Icon */}
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               {!isPlaying && (
                 <motion.div
-                  animate={{ scale: 1, opacity: 1 }}
+                  animate={{
+                    scale: 1,
+                    opacity: 1,
+                  }}
                   className="rounded-full bg-black/40 p-4 backdrop-blur-sm"
-                  exit={{ scale: 0.5, opacity: 0 }}
-                  initial={{ scale: 0.5, opacity: 0 }}
+                  exit={{
+                    scale: 0.5,
+                    opacity: 0,
+                  }}
+                  initial={{
+                    scale: 0.5,
+                    opacity: 0,
+                  }}
                 >
                   <PlayIcon className="h-8 w-8 text-white" />
                 </motion.div>
               )}
             </div>
 
-            {/* Bottom: Mute, Progress & Time */}
+            {/* Bottom: Mute, ProgressBar & Time */}
             <div className="pointer-events-auto absolute right-0 bottom-0 left-0 space-y-2 p-4">
               <div className="flex items-center justify-between px-1 text-xs font-medium text-white/90">
                 <div className="flex items-center gap-2">
@@ -350,8 +329,8 @@ export default function VideoPlayer({
                     aria-label={isMuted ? t("unmute") : t("mute")}
                     className="rounded-full text-white/90 backdrop-blur-md hover:bg-white/20 hover:text-white"
                     size="sm"
-                    variant="light"
                     onPress={toggleMute}
+                    variant="tertiary"
                   >
                     {isMuted ? (
                       <SpeakerXMarkIcon className="h-5 w-5" />
@@ -369,8 +348,8 @@ export default function VideoPlayer({
                       aria-label={isFullscreen ? t("exitFullscreen") : t("fullscreen")}
                       className="rounded-full text-white/90 backdrop-blur-md hover:bg-white/20 hover:text-white"
                       size="sm"
-                      variant="light"
                       onPress={toggleFullscreen}
+                      variant="tertiary"
                     >
                       {isFullscreen ? (
                         <ArrowsPointingInIcon className="h-5 w-5" />
@@ -382,9 +361,9 @@ export default function VideoPlayer({
                 </div>
               </div>
 
-              {/* Progress Bar */}
+              {/* ProgressBar Bar */}
               <div
-                aria-label="Video Progress"
+                aria-label="Video ProgressBar"
                 aria-valuemax={100}
                 aria-valuemin={0}
                 aria-valuenow={progress}
@@ -398,7 +377,6 @@ export default function VideoPlayer({
                   const x = e.clientX - rect.left;
                   const percent = x / rect.width;
                   const newTime = percent * (duration || videoRef.current.duration || 0);
-
                   videoRef.current.currentTime = newTime;
                 }}
                 onKeyDown={(e) => {
@@ -406,7 +384,6 @@ export default function VideoPlayer({
                   const total = videoRef.current.duration || duration || 0;
                   const current = videoRef.current.currentTime;
                   let newTime = current;
-
                   if (e.key === "ArrowRight") {
                     newTime = Math.min(total, current + 5);
                   } else if (e.key === "ArrowLeft") {
@@ -414,7 +391,6 @@ export default function VideoPlayer({
                   } else {
                     return;
                   }
-
                   e.preventDefault();
                   videoRef.current.currentTime = newTime;
                 }}
@@ -422,7 +398,9 @@ export default function VideoPlayer({
                 <motion.div
                   className="absolute top-0 left-0 h-full rounded-full bg-white"
                   layoutId="progress"
-                  style={{ width: `${progress}%` }}
+                  style={{
+                    width: `${progress}%`,
+                  }}
                 />
                 <div className="absolute inset-0 bg-white/0 transition-colors group-hover/progress:bg-white/10" />
               </div>

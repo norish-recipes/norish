@@ -1,9 +1,9 @@
-import type { MutationOutcome } from "./mutation-outcomes";
-
 import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+
 import { db } from "@norish/db/drizzle";
 import { plannedItems, recipes } from "@norish/db/schema";
 
+import type { MutationOutcome } from "./mutation-outcomes";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 type PlannedItem = typeof plannedItems.$inferSelect;
@@ -257,6 +257,12 @@ export async function deletePlannedItem(
 
     return appliedOutcome({ deletedItem, reindexedItems: updated });
   });
+}
+
+export async function deletePlannedItemsBefore(beforeDate: string): Promise<number> {
+  const result = await db.delete(plannedItems).where(lte(plannedItems.date, beforeDate));
+
+  return result.rowCount ?? 0;
 }
 
 export async function moveItem(

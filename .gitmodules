@@ -1,0 +1,3 @@
+[submodule "apps/quick-import-extension"]
+	path = apps/quick-import-extension
+	url = https://github.com/AfoxDesignz/Norish-Quick-Import-Extension.git

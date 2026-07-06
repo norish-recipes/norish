@@ -11,7 +11,7 @@ import type { Queue } from "bullmq";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
-import { getAutoTaggingMode } from "@norish/config/server-config-loader";
+import { getAutoTaggingMode } from "@norish/shared-server/config/server-config-loader";
 
 // Mock BullMQ
 const mockAdd = vi.fn();
@@ -34,7 +34,7 @@ vi.mock("bullmq", () => {
 });
 
 // Mock config loader
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getAutoTaggingMode: vi.fn(),
 }));
 

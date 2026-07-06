@@ -1,7 +1,6 @@
 import path from "path";
-
 import { z } from "zod";
-import { getMaxVideoFileSize } from "@norish/config/server-config-loader";
+
 import {
   addRecipeVideos,
   countRecipeVideos,
@@ -9,25 +8,28 @@ import {
   getRecipeOwnerId,
   getRecipeVideoById,
 } from "@norish/db/repositories/recipes";
+import { getMaxVideoFileSize } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { deleteVideoByUrl, saveVideoBytes } from "@norish/shared-server/media/storage";
 import { ALLOWED_VIDEO_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeVideoInputSchema, MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
 
+import type { FormDataInput, UploadedFile } from "../../form-data";
+import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 
 // --- Shared Helpers ---
 
 type VideoValidationResult =
-  | { success: true; file: File; bytes: Buffer; ext: string }
+  | { success: true; file: UploadedFile; bytes: Buffer; ext: string }
   | { success: false; error: string };
 
 /**
  * Extract and validate video file from FormData.
  */
-async function extractAndValidateVideo(formData: FormData): Promise<VideoValidationResult> {
-  const file = formData.get("video") as File | null;
+async function extractAndValidateVideo(formData: FormDataInput): Promise<VideoValidationResult> {
+  const file = getUploadedFile(formData, "video");
 
   if (!file) {
     return { success: false, error: "No video file provided" };
@@ -62,7 +64,7 @@ async function extractAndValidateVideo(formData: FormData): Promise<VideoValidat
  * Also adds entry to recipe_videos table
  */
 const uploadGalleryVideo = authedProcedure
-  .input(z.instanceof(FormData))
+  .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
     const recipeId = input.get("recipeId") as string | null;
     const orderStr = input.get("order") as string | null;

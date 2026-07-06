@@ -16,7 +16,7 @@ vi.mock("@norish/api/parser/normalize", () => ({
   normalizeRecipeFromJson: vi.fn(),
 }));
 
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getUnits: vi.fn().mockResolvedValue([]),
 }));
 

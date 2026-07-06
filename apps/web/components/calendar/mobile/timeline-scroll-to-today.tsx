@@ -10,34 +10,42 @@ type TimelineScrollToTodayProps = {
   direction: "up" | "down";
   onClick: () => void;
 };
-
 export function TimelineScrollToToday({
   isVisible,
   direction,
   onClick,
 }: TimelineScrollToTodayProps) {
   const t = useTranslations("calendar.mobile");
-
   const Icon = direction === "up" ? ChevronUpIcon : ChevronDownIcon;
-
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          animate={{ opacity: 1, scale: 1 }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+          }}
           className="fixed z-50"
-          exit={{ opacity: 0, scale: 0.8 }}
-          initial={{ opacity: 0, scale: 0.8 }}
+          exit={{
+            opacity: 0,
+            scale: 0.8,
+          }}
+          initial={{
+            opacity: 0,
+            scale: 0.8,
+          }}
           style={{
             right: "calc(20px + 6px)",
             bottom: "calc(env(safe-area-inset-bottom, 0px) + 76px)",
           }}
-          transition={{ duration: 0.15 }}
+          transition={{
+            duration: 0.15,
+          }}
         >
           <Button
             isIconOnly
             aria-label={t("scrollToToday")}
-            className="bg-primary text-primary-foreground h-10 w-10 rounded-full shadow-lg transition-transform active:scale-95"
+            className="bg-accent text-accent-foreground h-10 w-10 rounded-full shadow-lg transition-transform active:scale-95"
             onPress={onClick}
           >
             <Icon className="h-5 w-5" />

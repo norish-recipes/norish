@@ -1,7 +1,6 @@
-import type { CreateConfigHooksOptions } from "./types";
-
 import { useQuery } from "@tanstack/react-query";
 
+import type { CreateConfigHooksOptions } from "./types";
 
 const DEFAULT_UPLOAD_LIMITS = {
   maxAvatarSize: 5 * 1024 * 1024,

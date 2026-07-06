@@ -62,6 +62,18 @@
     "savePreference": "Onthoud winkel voor dit item",
     "addAnother": "Voeg nog een toe",
     "addRepeat": "+ Herhaling toevoegen",
+    "recurrenceEnabled": "Terugkerend",
+    "recurrenceSheet": {
+      "title": "Herhaling",
+      "subtitle": "Voeg dit item automatisch opnieuw toe aan je boodschappenlijst",
+      "enable": "Herhaling inschakelen",
+      "disable": "Herhaling uitschakelen",
+      "frequency": "Frequentie",
+      "weekly": "Wekelijks",
+      "biweekly": "Elke 2 weken",
+      "monthly": "Maandelijks",
+      "confirm": "Bevestigen"
+    },
     "storeOptional": "Winkel (optioneel)",
     "autoDetectFromHistory": "Automatisch detecteren uit geschiedenis",
     "autoDetectOrSelect": "Automatisch detecteren of selecteren",

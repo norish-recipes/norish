@@ -1,13 +1,12 @@
 "use client";
 
-import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-
+import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Bars3Icon, Square2StackIcon } from "@heroicons/react/16/solid";
-import { Checkbox } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useUnitFormatter } from "@/hooks/use-unit-formatter";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
+import { GroceryCheckbox } from "../grocery-checkbox";
 
 interface GroupDragOverlayProps {
   group: GroceryGroup;
@@ -20,8 +19,8 @@ export function GroupDragOverlay({ group }: GroupDragOverlayProps) {
   const hasMultipleSources = group.sources.length > 1;
   const aggregatedDisplay = formatAmountUnit(group.totalAmount, group.displayUnit);
   const containerClass =
-    "bg-content1 ring-primary/20 flex items-center gap-3 rounded-lg px-4 py-3 shadow-xl ring-2";
-  const iconWrapClass = "text-default-400 flex h-8 w-8 items-center justify-center";
+    "bg-surface ring-accent/20 flex items-center gap-3 rounded-lg px-4 py-3 shadow-xl ring-2";
+  const iconWrapClass = "text-muted flex h-8 w-8 items-center justify-center";
   const contentClass = "flex min-w-0 flex-1 flex-col items-start gap-0.5";
   const rowClass = "flex w-full items-baseline gap-1.5";
 
@@ -31,11 +30,11 @@ export function GroupDragOverlay({ group }: GroupDragOverlayProps) {
         <Bars3Icon className="h-5 w-5" />
       </div>
 
-      <Checkbox
+      <GroceryCheckbox
+        aria-label={group.displayName || t("unnamedItem")}
         isDisabled
         isIndeterminate={group.anyDone && !group.allDone}
         isSelected={group.allDone}
-        radius="full"
         size="lg"
       />
 
@@ -43,16 +42,14 @@ export function GroupDragOverlay({ group }: GroupDragOverlayProps) {
         <div className={rowClass}>
           {aggregatedDisplay && (
             <span
-              className={`shrink-0 font-medium ${
-                group.allDone ? "text-default-400" : "text-primary"
-              }`}
+              className={`shrink-0 font-medium ${group.allDone ? "text-muted" : "text-accent"}`}
             >
               {aggregatedDisplay}
             </span>
           )}
           <span
             className={`truncate text-base ${
-              group.allDone ? "text-default-400 line-through" : "text-foreground"
+              group.allDone ? "text-muted line-through" : "text-foreground"
             }`}
           >
             {group.displayName || t("unnamedItem")}
@@ -60,7 +57,7 @@ export function GroupDragOverlay({ group }: GroupDragOverlayProps) {
         </div>
 
         {hasMultipleSources && (
-          <div className="text-default-400 mt-0.5 flex items-center gap-1 text-xs">
+          <div className="text-muted mt-0.5 flex items-center gap-1 text-xs">
             <Square2StackIcon className="h-3.5 w-3.5" />
             <span>{t("items", { count: group.sources.length })}</span>
           </div>

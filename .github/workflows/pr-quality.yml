@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup toolchain and install dependencies
         uses: ./tooling/github/setup
@@ -37,6 +37,7 @@ jobs:
   quality:
     name: Quality Checks
     uses: ./.github/workflows/_node-ci.yml
+    secrets: inherit
     with:
       run-build: true
       run-tests: true

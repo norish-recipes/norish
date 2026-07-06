@@ -1,22 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { KeyIcon } from "@heroicons/react/24/outline";
-import {
-  Accordion,
-  AccordionItem,
-  Card,
-  CardBody,
-  CardHeader,
-  Divider,
-  Switch,
-} from "@heroui/react";
+import { Accordion, Card, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useAdminSettingsContext } from "../../context";
 import { RestartRequiredChip } from "../restart-required-chip";
 import { UnsavedChangesChip } from "../unsaved-changes-chip";
-
 import { AuthProviderForm } from "./auth-provider-form";
 import { EnvManagedBadge } from "./env-managed-badge";
 import { OIDCProviderForm } from "./oidc-provider-form";
@@ -46,26 +38,26 @@ export function AuthProvidersCard() {
 
   return (
     <Card>
-      <CardHeader>
+      <Card.Header>
         <div className="flex items-center gap-2">
           <KeyIcon className="h-5 w-5" />
           <h2 className="text-lg font-semibold">{t("title")}</h2>
           <RestartRequiredChip />
         </div>
-      </CardHeader>
-      <CardBody className="flex flex-col gap-4">
-        <p className="text-default-500 text-base">{t("description")}</p>
+      </Card.Header>
+      <Card.Content className="flex flex-col gap-4">
+        <p className="text-muted text-base">{t("description")}</p>
 
         {/* Password Auth Toggle */}
-        <div className="bg-default-50 rounded-lg p-4">
+        <div className="bg-surface-secondary rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-0.5">
                 <span className="font-medium">{t("passwordAuth.title")}</span>
-                <span className="text-default-500 text-base">{t("passwordAuth.description")}</span>
+                <span className="text-muted text-base">{t("passwordAuth.description")}</span>
               </div>
             </div>
-            <Switch
+            <SettingsSwitch
               color="success"
               isDisabled={isLoading}
               isSelected={passwordAuthEnabled ?? false}
@@ -74,79 +66,101 @@ export function AuthProvidersCard() {
           </div>
         </div>
 
-        <Divider />
+        <Separator />
 
-        <p className="text-default-500 text-base">{t("oauthDescription")}</p>
+        <p className="text-muted text-base">{t("oauthDescription")}</p>
 
         {/* OAuth Providers Accordion */}
-        <Accordion selectionMode="multiple" variant="bordered">
-          <AccordionItem
-            key="oidc"
-            subtitle={t("oidc.subtitle")}
-            title={
-              <span className="flex items-center gap-2">
-                {t("oidc.title")} <EnvManagedBadge isOverridden={authProviderOIDC?.isOverridden} />
-                {dirtySections.oidc && <UnsavedChangesChip />}
-              </span>
-            }
-          >
-            <OIDCProviderForm
-              config={authProviderOIDC as Record<string, unknown> | undefined}
-              onDirtyChange={updateDirtySection("oidc")}
-            />
-          </AccordionItem>
+        <Accordion allowsMultipleExpanded variant="surface">
+          <Accordion.Item id="oidc">
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                <div className="flex flex-col items-start gap-1">
+                  <span className="flex items-center gap-2">
+                    {t("oidc.title")}{" "}
+                    <EnvManagedBadge isOverridden={authProviderOIDC?.isOverridden} />
+                    {dirtySections.oidc && <UnsavedChangesChip />}
+                  </span>
+                  <span className="text-muted text-sm">{t("oidc.subtitle")}</span>
+                </div>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <OIDCProviderForm
+                  config={authProviderOIDC as Record<string, unknown> | undefined}
+                  onDirtyChange={updateDirtySection("oidc")}
+                />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
 
-          <AccordionItem
-            key="github"
-            subtitle={t("github.subtitle")}
-            title={
-              <span className="flex items-center gap-2">
-                {t("github.title")}{" "}
-                <EnvManagedBadge isOverridden={authProviderGitHub?.isOverridden} />
-                {dirtySections.github && <UnsavedChangesChip />}
-              </span>
-            }
-          >
-            <AuthProviderForm
-              config={authProviderGitHub as Record<string, unknown> | undefined}
-              fields={[
-                { key: "clientId", label: tGithub("clientId") },
-                { key: "clientSecret", label: tGithub("clientSecret"), secret: true },
-              ]}
-              providerKey="github"
-              providerName={t("github.title")}
-              onDirtyChange={updateDirtySection("github")}
-            />
-          </AccordionItem>
+          <Accordion.Item id="github">
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                <div className="flex flex-col items-start gap-1">
+                  <span className="flex items-center gap-2">
+                    {t("github.title")}{" "}
+                    <EnvManagedBadge isOverridden={authProviderGitHub?.isOverridden} />
+                    {dirtySections.github && <UnsavedChangesChip />}
+                  </span>
+                  <span className="text-muted text-sm">{t("github.subtitle")}</span>
+                </div>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <AuthProviderForm
+                  config={authProviderGitHub as Record<string, unknown> | undefined}
+                  fields={[
+                    { key: "clientId", label: tGithub("clientId") },
+                    { key: "clientSecret", label: tGithub("clientSecret"), secret: true },
+                  ]}
+                  providerKey="github"
+                  providerName={t("github.title")}
+                  onDirtyChange={updateDirtySection("github")}
+                />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
 
-          <AccordionItem
-            key="google"
-            subtitle={t("google.subtitle")}
-            title={
-              <span className="flex items-center gap-2">
-                {t("google.title")}{" "}
-                <EnvManagedBadge isOverridden={authProviderGoogle?.isOverridden} />
-                {dirtySections.google && <UnsavedChangesChip />}
-              </span>
-            }
-          >
-            <AuthProviderForm
-              config={authProviderGoogle as Record<string, unknown> | undefined}
-              fields={[
-                {
-                  key: "clientId",
-                  label: tGoogle("clientId"),
-                  placeholder: tGoogle("clientIdPlaceholder"),
-                },
-                { key: "clientSecret", label: tGoogle("clientSecret"), secret: true },
-              ]}
-              providerKey="google"
-              providerName={t("google.title")}
-              onDirtyChange={updateDirtySection("google")}
-            />
-          </AccordionItem>
+          <Accordion.Item id="google">
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                <div className="flex flex-col items-start gap-1">
+                  <span className="flex items-center gap-2">
+                    {t("google.title")}{" "}
+                    <EnvManagedBadge isOverridden={authProviderGoogle?.isOverridden} />
+                    {dirtySections.google && <UnsavedChangesChip />}
+                  </span>
+                  <span className="text-muted text-sm">{t("google.subtitle")}</span>
+                </div>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <AuthProviderForm
+                  config={authProviderGoogle as Record<string, unknown> | undefined}
+                  fields={[
+                    {
+                      key: "clientId",
+                      label: tGoogle("clientId"),
+                      placeholder: tGoogle("clientIdPlaceholder"),
+                    },
+                    { key: "clientSecret", label: tGoogle("clientSecret"), secret: true },
+                  ]}
+                  providerKey="google"
+                  providerName={t("google.title")}
+                  onDirtyChange={updateDirtySection("google")}
+                />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
         </Accordion>
-      </CardBody>
+      </Card.Content>
     </Card>
   );
 }

@@ -33,4 +33,4 @@ export { siteAuthTokens } from "./schema/site-auth-tokens";
 export * from "@norish/shared/contracts/zod";
 
 // export all drizzle orm
-export * from "./drizzle";
+export * from "@norish/db/drizzle";

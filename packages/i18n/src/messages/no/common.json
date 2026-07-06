@@ -1,0 +1,217 @@
+{
+  "actions": {
+    "save": "Lagre",
+    "cancel": "Avbryt",
+    "delete": "Slett",
+    "duplicate": "Dupliser",
+    "edit": "Rediger",
+    "create": "Opprett",
+    "add": "Legg til",
+    "remove": "Fjern",
+    "close": "Lukk",
+    "apply": "Bruk",
+    "reset": "Tilbakestill",
+    "clear": "Tøm",
+    "confirm": "Bekreft",
+    "back": "Tilbake",
+    "next": "Neste",
+    "done": "Ferdig",
+    "retry": "Prøv igjen",
+    "submit": "Send",
+    "search": "Søk",
+    "filter": "Filtrer",
+    "sort": "Sorter",
+    "import": "Importer",
+    "aiImport": "AI-import",
+    "importWithAI": "Importer med AI",
+    "goHome": "Gå til forsiden",
+    "test": "Test",
+    "format": "Formater",
+    "restoreDefaults": "Gjenopprett standardinnstillinger",
+    "saveChanges": "Lagre endringer",
+    "revealSecret": "Vis hemmelighet",
+    "hideSecret": "Skjul hemmelighet",
+    "enterNewValue": "Skriv inn ny verdi",
+    "cancelEditing": "Avbryt redigering"
+  },
+  "status": {
+    "loading": "Laster...",
+    "saving": "Lagrer...",
+    "deleting": "Sletter...",
+    "error": "Feil",
+    "success": "Vellykket",
+    "noResults": "Ingen resultater funnet",
+    "changing": "Endrer…"
+  },
+  "filters": {
+    "title": "Filtre",
+    "search": "Søk",
+    "sort": "Sorter",
+    "mode": "Modus",
+    "modeAll": "Alle",
+    "modeAny": "Hvilken som helst",
+    "tags": "Tags",
+    "searchTags": "Søk tags",
+    "favoritesAndRating": "Favoritter og vurdering",
+    "favorites": "Favoritter",
+    "cookingTime": "Tilberedningstid",
+    "cookingTimeUnder15": "<15 min",
+    "cookingTimeUnder30": "<30 min",
+    "cookingTimeUnder60": "<60 min",
+    "cookingTimeUnder120": "<120 min",
+    "categories": "Kategorier",
+    "category": {
+      "breakfast": "Frokost",
+      "lunch": "Lunsj",
+      "dinner": "Middag",
+      "snack": "Snacks"
+    },
+    "sortByTitle": "Tittel",
+    "sortByDate": "Dato",
+    "clearFilters": "Tøm filtre"
+  },
+  "time": {
+    "minutes": "min",
+    "hours": "t"
+  },
+  "validation": {
+    "required": "Dette feltet er påkrevd",
+    "invalidUrl": "Skriv inn en gyldig URL"
+  },
+  "errors": {
+    "operationFailed": "Handlingen mislyktes",
+    "nameCannotBeEmpty": "Navn kan ikke være tomt",
+    "technicalDetails": "Noe gikk galt. Sjekk nettleserkonsollen for tekniske detaljer."
+  },
+  "slots": {
+    "breakfast": "Frokost",
+    "lunch": "Lunsj",
+    "dinner": "Middag",
+    "snack": "Snacks",
+    "chooseSlot": "Velg tidsluke"
+  },
+  "connection": {
+    "connecting": "Kobler til Norish...",
+    "syncing": "Synkroniserer, vennligst vent...",
+    "checkInternet": "Sjekk internettforbindelsen din",
+    "gettingUpdates": "Et øyeblikk mens vi henter de siste oppdateringene",
+    "offlineBanner": "Du er frakoblet og ser bufrede data",
+    "serverUnreachableBanner": "Norish-serveren er ikke tilgjengelig, viser bufrede data"
+  },
+  "language": {
+    "title": "Språk"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Siden ble ikke funnet",
+    "message": "Ups! Nora kunne ikke finne det du leter etter.\nSiden kan ha blitt flyttet eller eksisterer ikke."
+  },
+  "import": {
+    "url": {
+      "title": "Importer oppskrift",
+      "label": "Oppskrift-URL",
+      "placeholder": "https://eksempel.no/din-oppskrift",
+      "failed": "Kunne ikke importere oppskrift",
+      "failedWithAI": "Kunne ikke importere oppskrift med AI"
+    },
+    "paste": {
+      "title": "Importer fra liming",
+      "label": "Oppskrifttekst eller JSON-LD",
+      "placeholder": "Lim inn en oppskrift (fritekst) eller JSON-LD her...",
+      "characters": "{count} / {max} tegn",
+      "tooLarge": "Innlimingen er for stor",
+      "maxCharacters": "Maks. {max} tegn per oppskrift",
+      "importing": "Importerer oppskrift...",
+      "importingWithAI": "Importerer oppskrift med AI...",
+      "inProgress": "Importering pågår, vennligst vent...",
+      "failed": "Import mislyktes"
+    },
+    "image": {
+      "title": "Importer fra bilde",
+      "dropzone": "Slipp bilder her eller klikk for å bla",
+      "paste": "for å lime inn",
+      "formats": "Støtter JPG, PNG, WebP. Maks. 10 MB per fil.",
+      "invalidType": "Ugyldig filtype",
+      "notSupported": "{name} er ikke et støttet bildeformat",
+      "tooLarge": "Filen er for stor",
+      "exceeds": "{name} overskrider grensen på 10 MB",
+      "tooMany": "For mange filer",
+      "maxFiles": "Maks. {max} filer er tillatt",
+      "importing": "Importerer oppskrift fra bilder...",
+      "analyzing": "Analyserer bildene dine, vennligst vent...",
+      "failed": "Import mislyktes",
+      "selectedCount": "{count} bilder valgt – de kombineres til én oppskrift",
+      "library": "Bibliotek",
+      "takePhoto": "Ta bilde",
+      "counter": "{count} / {max} bilder",
+      "importFromCount": "Importer fra {count, plural, one {# bilde} other {# bilder}}"
+    },
+    "menu": {
+      "description": "Importer fra en URL, skann et bilde eller start fra bunnen av."
+    }
+  },
+  "formatting": {
+    "title": "Formateringstips",
+    "heading": "Start en linje med <strong>#</strong> for en overskrift",
+    "bold": "Omgi med <strong>**doble stjerner**</strong> for fet skrift",
+    "recipeLink": "Skriv <strong>/oppskriftnavn</strong> for å lenke til en annen oppskrift",
+    "helpAriaLabel": "Hjelp til formatering"
+  },
+  "tagInput": {
+    "placeholder": "Skriv tags adskilt av mellomrom..."
+  },
+  "recurrence": {
+    "title": "Gjenta",
+    "frequency": "Hyppighet",
+    "interval": "Intervall",
+    "onDay": "På dag",
+    "daily": "Daglig",
+    "weekly": "Ukentlig",
+    "monthly": "Månedlig",
+    "day": "dag",
+    "days": "dager",
+    "week": "uke",
+    "weeks": "uker",
+    "month": "måned",
+    "months": "måneder",
+    "next": "Neste:",
+    "every": "Hver",
+    "everyOther": "Annenhver",
+    "on": "på",
+    "today": "i dag",
+    "tomorrow": "i morgen",
+    "weekdays": {
+      "sun": "Søn",
+      "mon": "Man",
+      "tue": "Tir",
+      "wed": "Ons",
+      "thu": "Tor",
+      "fri": "Fre",
+      "sat": "Lør"
+    },
+    "weekdaysFull": {
+      "0": "Mandag",
+      "1": "Tirsdag",
+      "2": "Onsdag",
+      "3": "Torsdag",
+      "4": "Fredag",
+      "5": "Lørdag",
+      "6": "Søndag"
+    }
+  },
+  "badges": {
+    "new": "Ny"
+  },
+  "timer": {
+    "done": "Ferdig",
+    "done_action": "Ferdig",
+    "one": "Timer",
+    "other": "Timere",
+    "label_one": "1 timer",
+    "label_other": "{count} timere",
+    "notification_title": "Timer ferdig",
+    "notification_body": "{label} er ferdig!",
+    "notifications_disabled": "Varsler er deaktivert",
+    "notifications_disabled_hint": "Aktiver varsler i nettleserinnstillingene for å motta alarmer når timere avsluttes i bakgrunnen."
+  }
+}

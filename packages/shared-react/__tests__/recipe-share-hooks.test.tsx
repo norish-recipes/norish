@@ -4,7 +4,7 @@ import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
+import type { RecipeShareCreatedDto, RecipeShareSummaryDto } from "@norish/shared/contracts";
 import {
   createRecipeDetailContext,
   createRecipeHooks,
@@ -172,9 +172,14 @@ describe("recipe share hooks", () => {
     const recipe = createMockRecipe();
     const shares = [createMockShare({ recipeId: recipe.id })];
     const refreshShares = vi.fn();
-    const createShare = vi.fn();
+    const createdShare: RecipeShareCreatedDto = {
+      ...createMockShare({ recipeId: recipe.id }),
+      url: "/share/test-token",
+    };
+    const createShare = vi.fn(async () => createdShare);
     const updateShare = vi.fn();
     const revokeShare = vi.fn();
+    const reactivateShare = vi.fn();
     const deleteShare = vi.fn();
 
     const { RecipeDetailProvider, useRecipeContext } = createRecipeDetailContext({
@@ -196,10 +201,12 @@ describe("recipe share hooks", () => {
         createShare,
         updateShare,
         revokeShare,
+        reactivateShare,
         deleteShare,
         isCreating: false,
         isUpdating: true,
         isRevoking: false,
+        isReactivating: false,
         isDeleting: false,
       }),
       useNutritionQuery: () => ({ isEstimating: false, setIsEstimating: vi.fn() }),
@@ -251,25 +258,30 @@ describe("recipe share hooks", () => {
     expect(capturedContext.current?.isLoadingShares).toBe(false);
     expect(capturedContext.current?.isUpdatingShare).toBe(true);
 
-    capturedContext.current?.refreshShares();
-    capturedContext.current?.createShare("1week");
-    capturedContext.current?.updateShare({
-      id: shares[0]!.id,
-      version: shares[0]!.version,
-      expiresIn: "1month",
-    });
-    capturedContext.current?.revokeShare(shares[0]!.id, shares[0]!.version);
-    capturedContext.current?.deleteShare(shares[0]!.id, shares[0]!.version);
+    return (async () => {
+      capturedContext.current?.refreshShares();
+      const createResult = await capturedContext.current?.createShare("1week");
+      capturedContext.current?.updateShare({
+        id: shares[0]!.id,
+        version: shares[0]!.version,
+        expiresIn: "1month",
+      });
+      capturedContext.current?.revokeShare(shares[0]!.id, shares[0]!.version);
+      capturedContext.current?.reactivateShare(shares[0]!.id, shares[0]!.version);
+      capturedContext.current?.deleteShare(shares[0]!.id, shares[0]!.version);
 
-    expect(refreshShares).toHaveBeenCalledTimes(1);
-    expect(createShare).toHaveBeenCalledWith("1week");
-    expect(updateShare).toHaveBeenCalledWith({
-      id: shares[0]!.id,
-      version: shares[0]!.version,
-      expiresIn: "1month",
-    });
-    expect(revokeShare).toHaveBeenCalledWith(shares[0]!.id, shares[0]!.version);
-    expect(deleteShare).toHaveBeenCalledWith(shares[0]!.id, shares[0]!.version);
+      expect(refreshShares).toHaveBeenCalledTimes(1);
+      expect(createResult).toEqual(createdShare);
+      expect(createShare).toHaveBeenCalledWith("1week");
+      expect(updateShare).toHaveBeenCalledWith({
+        id: shares[0]!.id,
+        version: shares[0]!.version,
+        expiresIn: "1month",
+      });
+      expect(revokeShare).toHaveBeenCalledWith(shares[0]!.id, shares[0]!.version);
+      expect(reactivateShare).toHaveBeenCalledWith(shares[0]!.id, shares[0]!.version);
+      expect(deleteShare).toHaveBeenCalledWith(shares[0]!.id, shares[0]!.version);
+    })();
   });
 
   it("invalidates recipe share queries when share lifecycle events arrive", () => {

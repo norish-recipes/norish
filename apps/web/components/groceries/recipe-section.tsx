@@ -1,8 +1,6 @@
 "use client";
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
-
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   closestCenter,
@@ -24,6 +22,7 @@ import { BookOpenIcon, ChevronDownIcon, TagIcon } from "@heroicons/react/16/soli
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 
 import { GroceryDragOverlay, SortableGroceryItem } from "./dnd";
 import { GroceryItem } from "./grocery-item";
@@ -251,7 +250,7 @@ function RecipeSectionComponent({
         {/* Header */}
         <div
           className={`flex w-full items-center gap-3 px-4 py-3 ${
-            recipeId ? "bg-primary-100 dark:bg-primary-900/30" : "bg-default-100"
+            recipeId ? "bg-accent-soft dark:bg-accent/30" : "bg-surface-secondary"
           }`}
         >
           <button
@@ -260,9 +259,7 @@ function RecipeSectionComponent({
           >
             {/* Icon */}
             <div
-              className={`shrink-0 rounded-full p-1.5 ${
-                recipeId ? "bg-primary-500" : "bg-default-400"
-              }`}
+              className={`shrink-0 rounded-full p-1.5 ${recipeId ? "bg-accent-soft0" : "bg-muted"}`}
             >
               {recipeId ? (
                 <BookOpenIcon className="h-4 w-4 text-white" />
@@ -274,10 +271,10 @@ function RecipeSectionComponent({
             {/* Name and count */}
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <span className="truncate font-semibold">{recipeName}</span>
-              <span className="text-default-400 shrink-0 text-sm">
+              <span className="text-muted shrink-0 text-sm">
                 {activeCount > 0 && <span>{activeCount}</span>}
                 {doneCount > 0 && (
-                  <span className="text-default-300 ml-1">({t("done", { count: doneCount })})</span>
+                  <span className="text-muted ml-1">({t("done", { count: doneCount })})</span>
                 )}
               </span>
             </div>
@@ -285,7 +282,7 @@ function RecipeSectionComponent({
             {/* Expand/collapse chevron */}
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}
-              className="text-default-400 shrink-0"
+              className="text-muted shrink-0"
               transition={{ duration: 0.2 }}
             >
               <ChevronDownIcon className="h-5 w-5" />
@@ -302,7 +299,7 @@ function RecipeSectionComponent({
             onDragEnd={handleDragEnd}
             onDragStart={handleDragStart}
           >
-            <div className="divide-default-100 divide-y">
+            <div className="divide-border divide-y">
               {/* Active (not done) items - sortable */}
               <SortableContext items={orderedIds} strategy={verticalListSortingStrategy}>
                 {orderedActiveGroceries.map((grocery, index) => {
@@ -357,7 +354,7 @@ function RecipeSectionComponent({
               })}
 
               {groceries.length === 0 && (
-                <div className="text-default-400 px-4 py-6 text-center text-sm">{t("noItems")}</div>
+                <div className="text-muted px-4 py-6 text-center text-sm">{t("noItems")}</div>
               )}
             </div>
 

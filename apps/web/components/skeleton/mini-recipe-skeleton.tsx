@@ -4,13 +4,13 @@ import { Skeleton } from "@heroui/react";
 
 export default function MiniRecipeSkeleton() {
   return (
-    <div aria-busy className="divide-default-200 flex flex-col divide-y">
+    <div aria-busy className="divide-border flex flex-col divide-y">
       {Array.from({ length: 20 }).map((_, i) => (
         <div
           key={i}
-          className="focus-visible:ring-primary flex gap-3 rounded-md py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          className="focus-visible:ring-accent flex gap-3 rounded-md py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >
-          <div className="bg-default-200 relative h-20 w-20 shrink-0 overflow-hidden rounded-md">
+          <div className="bg-surface-tertiary relative h-20 w-20 shrink-0 overflow-hidden rounded-md">
             <Skeleton className="absolute inset-0 h-full w-full" />
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-2 py-1">

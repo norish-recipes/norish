@@ -1,8 +1,9 @@
 "use client";
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import EditTagPanel from "@/components/Panel/consumers/edit-tag-panel";
+import { useTagsQuery } from "@/hooks/config";
 import {
   closestCenter,
   DndContext,
@@ -24,9 +25,6 @@ import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { useTagsQuery } from "@/hooks/config";
-import EditTagPanel from "@/components/Panel/consumers/edit-tag-panel";
-
 interface SortableTagItemProps {
   tag: string;
   onEdit: (tag: string) => void;
@@ -46,7 +44,7 @@ function SortableTagItem({ tag, onEdit }: SortableTagItemProps) {
   return (
     <button
       ref={setNodeRef}
-      className="bg-primary/10 text-primary hover:bg-primary/20 inline-flex cursor-grab touch-none items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors active:cursor-grabbing"
+      className="bg-accent/10 text-accent hover:bg-accent/20 inline-flex cursor-grab touch-none items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors active:cursor-grabbing"
       style={style}
       type="button"
       onClick={(e) => {
@@ -260,7 +258,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
   return (
     <div className={className}>
       {/* Input area with inline tags */}
-      <div className="group bg-default-100 hover:bg-default-200 transition-background data-[focus=true]:bg-default-100 flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl px-3 py-2">
+      <div className="group bg-surface-secondary hover:bg-surface-tertiary transition-background data-[focus=true]:bg-surface-secondary flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl px-3 py-2">
         <DndContext
           collisionDetection={closestCenter}
           sensors={sensors}
@@ -277,7 +275,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
           {/* Drag overlay - shows the tag following the cursor */}
           <DragOverlay>
             {activeId ? (
-              <div className="bg-primary/20 text-primary inline-flex cursor-grabbing items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-lg">
+              <div className="bg-accent/20 text-accent inline-flex cursor-grabbing items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-lg">
                 <span>{activeId}</span>
               </div>
             ) : null}
@@ -286,7 +284,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
 
         <input
           ref={inputRef}
-          className="text-small text-default-foreground placeholder:text-default-500 min-w-[120px] flex-1 border-none bg-transparent outline-none"
+          className="text-foreground placeholder:text-muted min-w-[120px] flex-1 border-none bg-transparent text-sm outline-none"
           placeholder={value.length === 0 && typedWords.length === 0 ? defaultPlaceholder : ""}
           style={{ fontSize: "16px" }}
           type="text"
@@ -315,7 +313,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
                 <motion.button
                   key={`new-tag-${word}-${idx}`}
                   animate={{ opacity: 1, scale: 1, x: 0 }}
-                  className="bg-default-100 text-default-600 dark:bg-default-50 dark:text-default-700 border-default-300 inline-flex items-center rounded-full border-2 border-dashed px-2.5 py-1 text-xs font-medium opacity-70 transition-opacity hover:opacity-100"
+                  className="bg-surface-secondary text-muted dark:bg-surface-secondary dark:text-foreground border-border-secondary inline-flex items-center rounded-full border-2 border-dashed px-2.5 py-1 text-xs font-medium opacity-70 transition-opacity hover:opacity-100"
                   exit={{ opacity: 0, scale: 0.9, x: -10 }}
                   initial={{ opacity: 0, scale: 0.9, x: -10 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -332,7 +330,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
               <motion.button
                 key={`suggestion-${tag}`}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
-                className="bg-default-100 text-default-600 dark:bg-default-50 dark:text-default-700 border-default-300 inline-flex items-center rounded-full border-2 border-dashed px-2.5 py-1 text-xs font-medium opacity-70 transition-opacity hover:opacity-100"
+                className="bg-surface-secondary text-muted dark:bg-surface-secondary dark:text-foreground border-border-secondary inline-flex items-center rounded-full border-2 border-dashed px-2.5 py-1 text-xs font-medium opacity-70 transition-opacity hover:opacity-100"
                 exit={{ opacity: 0, scale: 0.9, x: -10 }}
                 initial={{ opacity: 0, scale: 0.9, x: -10 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}

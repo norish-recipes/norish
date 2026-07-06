@@ -1,9 +1,8 @@
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { shouldBypassAuthProxy } from "@/lib/recipe-share-access";
+
 import { auth } from "@norish/auth/auth";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-
-import { shouldBypassAuthProxy } from "@/lib/recipe-share-access";
 
 export async function proxy(request: NextRequest) {
   // WebSocket upgrade requests should not be redirected - they'll be handled at the app level
@@ -20,7 +19,7 @@ export async function proxy(request: NextRequest) {
   }
 
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: request.headers,
   });
 
   if (session?.user) {

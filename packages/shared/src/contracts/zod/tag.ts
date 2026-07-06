@@ -1,6 +1,7 @@
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { z } from "zod";
-import { tags } from "@norish/db/schema";
+
+import { tags } from "@norish/db-schema/schema";
 
 export const TagSelectBaseSchema = createSelectSchema(tags);
 export const TagInsertBaseSchema = createInsertSchema(tags).omit({

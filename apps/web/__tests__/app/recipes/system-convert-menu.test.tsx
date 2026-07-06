@@ -27,10 +27,12 @@ vi.mock("@/context/permissions-context", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  Dropdown: ({ children }: any) => <div>{children}</div>,
-  DropdownTrigger: ({ children }: any) => <div>{children}</div>,
-  DropdownMenu: ({ children }: any) => <div>{children}</div>,
-  DropdownItem: ({ children }: any) => <div>{children}</div>,
+  Dropdown: Object.assign(({ children }: any) => <div>{children}</div>, {
+    Trigger: ({ children }: any) => <div>{children}</div>,
+    Popover: ({ children }: any) => <div>{children}</div>,
+    Menu: ({ children }: any) => <div>{children}</div>,
+    Item: ({ children }: any) => <div>{children}</div>,
+  }),
   Button: ({ children }: any) => <button>{children}</button>,
   Spinner: () => <span />,
 }));

@@ -8,8 +8,8 @@
  */
 
 import type { Job, Processor } from "bullmq";
-import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
 
+import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
 import {
   getCurrentOperationId,
   runWithOperationContext,

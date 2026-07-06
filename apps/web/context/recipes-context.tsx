@@ -1,23 +1,23 @@
 "use client";
 
+import { createContext, useContext, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
+import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
+import { useRecipesMutations, useRecipesQuery } from "@/hooks/recipes";
+import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
+import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
+import { toast } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
 import type {
   FullRecipeInsertDTO,
   FullRecipeUpdateDTO,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
 
-import { createContext, useContext, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { addToast, Button } from "@heroui/react";
-import { useTranslations } from "next-intl";
 import { createScopedMessageTranslator } from "@norish/i18n";
 import { createRecipesContext } from "@norish/shared-react/contexts";
-
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
-import { useRecipesMutations, useRecipesQuery } from "@/hooks/recipes";
-import { sharedDashboardRecipeHooks } from "@/hooks/recipes/shared-recipe-hooks";
-import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
 
 type Ctx = {
   recipes: RecipeDashboardDTO[];
@@ -58,26 +58,21 @@ const sharedRecipesContext = createRecipesContext({
     const tRecipes = useTranslations("recipes");
 
     return {
-      show: ({ severity, title, description, actionLabel, onActionPress }) =>
-        addToast({
-          severity,
-          title,
+      show: ({ severity, title, description, actionLabel, onActionPress }) => {
+        const variant = severity === "primary" || severity === "secondary" ? "accent" : severity;
+        const actionProps = actionLabel
+          ? {
+              children: actionLabel,
+              onPress: onActionPress,
+            }
+          : undefined;
+
+        toast(title, {
           description,
-          shouldShowTimeoutProgress: true,
-          radius: "full",
-          endContent:
-            actionLabel && onActionPress ? (
-              <Button
-                color="primary"
-                radius="full"
-                size="sm"
-                variant="solid"
-                onPress={onActionPress}
-              >
-                {actionLabel}
-              </Button>
-            ) : undefined,
-        }),
+          variant,
+          ...(actionProps ? { actionProps } : {}),
+        });
+      },
       translate: createScopedMessageTranslator({
         common: (messageKey) => tCommon(messageKey as Parameters<typeof tCommon>[0]),
         recipes: (messageKey) => tRecipes(messageKey as Parameters<typeof tRecipes>[0]),

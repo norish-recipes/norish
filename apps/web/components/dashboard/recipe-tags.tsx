@@ -3,13 +3,30 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Chip } from "@heroui/react";
 import { motion, useMotionValue } from "motion/react";
+
 import { isAllergenTag, sortTagsWithAllergyPriority } from "@norish/shared/lib/helpers";
-import { cssGlassBackdropChip } from "@norish/web/config/css-tokens";
 
 interface RecipeTagsProps {
   tags: { name: string }[];
   /** List of allergy tag names - these will be styled as warnings and sorted first */
   allergies?: string[];
+}
+
+function dedupeTagsByName(tags: { name: string }[]) {
+  const seen = new Set<string>();
+  const deduped: { name: string }[] = [];
+
+  for (const tag of tags) {
+    const name = tag.name.trim();
+    const key = name.toLowerCase();
+
+    if (!name || seen.has(key)) continue;
+
+    seen.add(key);
+    deduped.push({ name });
+  }
+
+  return deduped;
 }
 
 export default function RecipeTags({ tags, allergies = [] }: RecipeTagsProps) {
@@ -22,7 +39,7 @@ export default function RecipeTags({ tags, allergies = [] }: RecipeTagsProps) {
 
   // Sort tags: allergens first, then rest alphabetically
   const sortedTags = useMemo(() => {
-    return sortTagsWithAllergyPriority(tags, allergies);
+    return sortTagsWithAllergyPriority(dedupeTagsByName(tags), allergies);
   }, [tags, allergies]);
 
   useEffect(() => {
@@ -54,19 +71,19 @@ export default function RecipeTags({ tags, allergies = [] }: RecipeTagsProps) {
         dragElastic={0.1}
         style={{ x }}
       >
-        {sortedTags.map((t, i) => {
+        {sortedTags.map((t) => {
           const isAllergen = isAllergenTag(t.name, allergySet);
 
           return (
             <Chip
-              key={i}
+              key={t.name.toLowerCase()}
               className={`shrink-0 ${
                 isAllergen
-                  ? "bg-warning/80 text-warning-foreground backdrop-blur-md"
-                  : `text-white ${cssGlassBackdropChip}`
+                  ? "bg-warning/90 text-warning-foreground ring-warning/30 shadow-sm ring-1 backdrop-blur-md"
+                  : "bg-surface/90 text-foreground shadow-sm ring-1 ring-black/10 backdrop-blur-md dark:ring-white/15"
               }`}
               size="sm"
-              variant="flat"
+              variant="soft"
             >
               {t.name}
             </Chip>

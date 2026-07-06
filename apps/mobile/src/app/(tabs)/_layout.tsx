@@ -1,10 +1,16 @@
 import React, { useCallback, useState } from "react";
 import { Platform } from "react-native";
+import type { GroceryEditorFormValue } from "@/components/shell/sheet/grocery-editor-sheet";
+import { GroceryEditorSheet } from "@/components/shell/sheet/grocery-editor-sheet";
 import { AddRecipeSheet } from "@/components/shell/sheet/add-recipe-sheet";
 import { TabAccessoryContent } from "@/components/shell/tab-bottom-accessory";
+import { useGroceriesContext } from "@/context/groceries-context";
+import { useStoresContext } from "@/context/stores-context";
 import { useSegments } from "expo-router";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { useThemeColor } from "heroui-native";
+
+// TODO: This file needs cleanup.
 
 /**
  * Detect whether the device is running iOS 26+ so we can let the system
@@ -35,10 +41,12 @@ function useActiveTab(): { tab: ActiveTab; isRecipeDetail: boolean } {
 
 export default function TabsLayout() {
   const [isAddRecipeOpen, setIsAddRecipeOpen] = useState(false);
+  const [isAddGroceryOpen, setIsAddGroceryOpen] = useState(false);
   const [tintColor, backgroundColor] = useThemeColor(["accent", "background"] as const);
 
   const { tab: activeTab, isRecipeDetail } = useActiveTab();
-
+  const { createGrocery, createRecurringGrocery } = useGroceriesContext();
+  const { stores } = useStoresContext();
   // Hide the bottom accessory on recipe detail pages
   const accessoryMode: "recipe" | "grocery" | "hidden" = isRecipeDetail
     ? "hidden"
@@ -50,10 +58,22 @@ export default function TabsLayout() {
 
   const openAddRecipeSheet = useCallback(() => setIsAddRecipeOpen(true), []);
 
-  // Grocery add — placeholder, wired to a no-op until the groceries feature is built
   const openAddGrocerySheet = useCallback(() => {
-    // TODO: open add-grocery flow
+    setIsAddGroceryOpen(true);
   }, []);
+
+  const handleCreateGrocery = useCallback(
+    (value: GroceryEditorFormValue) => {
+      const { itemText, storeId, recurrence } = value;
+
+      if (recurrence.enabled) {
+        createRecurringGrocery(itemText, recurrence.pattern, storeId);
+      } else {
+        createGrocery(itemText, storeId);
+      }
+    },
+    [createRecurringGrocery, createGrocery]
+  );
 
   // On iOS 26+ the tab bar background adapts automatically (Liquid Glass).
   const tabBarBackgroundColor = isIOS26OrLater() ? undefined : backgroundColor;
@@ -121,6 +141,13 @@ export default function TabsLayout() {
 
       {/* Add Recipe sheet — sibling of NativeTabs so it overlays the tab bar */}
       <AddRecipeSheet isPresented={isAddRecipeOpen} onIsPresentedChange={setIsAddRecipeOpen} />
+      <GroceryEditorSheet
+        isPresented={isAddGroceryOpen}
+        mode="create"
+        stores={stores}
+        onIsPresentedChange={setIsAddGroceryOpen}
+        onSubmit={handleCreateGrocery}
+      />
     </>
   );
 }

@@ -8,11 +8,6 @@ interface VideoPlayerSkeletonProps {
 
 export default function VideoPlayerSkeleton({ className = "" }: VideoPlayerSkeletonProps) {
   return (
-    <Skeleton
-      className={`aspect-[9/16] w-full sm:aspect-video ${className}`}
-      classNames={{
-        base: "bg-default-200",
-      }}
-    />
+    <Skeleton className={`bg-surface-tertiary aspect-[9/16] w-full sm:aspect-video ${className}`} />
   );
 }

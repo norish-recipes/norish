@@ -1,10 +1,9 @@
 "use client";
 
-import { createPermissionsContext } from "@norish/shared-react/contexts";
-
 import { useUserContext } from "@/context/user-context";
 import { usePermissionsQuery } from "@/hooks/permissions";
 
+import { createPermissionsContext } from "@norish/shared-react/contexts";
 
 export type { PermissionsContextValue } from "@norish/shared-react/contexts";
 

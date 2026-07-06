@@ -44,7 +44,7 @@ export function ProviderIcon({ icon, providerName, width = 20 }: ProviderIconPro
 
     return (
       <div
-        className="bg-primary-500 flex items-center justify-center rounded-md font-semibold text-white"
+        className="bg-accent-soft0 flex items-center justify-center rounded-md font-semibold text-white"
         style={{ width, height: width }}
       >
         <span style={{ fontSize: width * 0.5 }}>{initials}</span>

@@ -1,16 +1,16 @@
 import "server-only";
 
-import type { Locale } from "@norish/i18n";
-
 import { cookies, headers } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
+
+import type { Locale } from "@norish/i18n";
 import { auth } from "@norish/auth/auth";
+import { getUserPreferences } from "@norish/db/repositories/users";
+import { DEFAULT_LOCALE, isValidLocale, loadLocaleMessages } from "@norish/i18n";
 import {
   getDefaultLocale as getConfigDefaultLocale,
   isValidEnabledLocale,
-} from "@norish/config/server-config-loader";
-import { getUserPreferences } from "@norish/db/repositories/users";
-import { DEFAULT_LOCALE, isValidLocale, loadLocaleMessages } from "@norish/i18n";
+} from "@norish/shared-server/config/server-config-loader";
 
 const LOCALE_COOKIE_NAME = "NEXT_LOCALE";
 

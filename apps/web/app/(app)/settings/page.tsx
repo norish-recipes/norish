@@ -3,6 +3,8 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
+import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
+import { useUserRoleQuery } from "@/hooks/admin";
 import {
   HomeIcon as HomeIconSolid,
   ServerIcon as ServerIconSolid,
@@ -15,11 +17,8 @@ import {
   ShieldCheckIcon as ShieldCheckIconOutline,
   UserCircleIcon as UserCircleIconOutline,
 } from "@heroicons/react/24/outline";
-import { Tab, Tabs } from "@heroui/react";
+import { Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import { useUserRoleQuery } from "@/hooks/admin";
-import SettingsSkeleton from "@/components/skeleton/settings-skeleton";
 
 const UserSettingsTab = dynamic(() => import("./user/components/user-settings-content"), {
   loading: () => <SettingsSkeleton />,
@@ -44,8 +43,46 @@ function SettingsContent() {
   const t = useTranslations("settings");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentTab = searchParams.get("tab") || "user";
   const { isServerAdmin, isLoading: isLoadingRole } = useUserRoleQuery();
+  const showAdminTab = !isLoadingRole && isServerAdmin;
+  const requestedTab = searchParams.get("tab") || "user";
+  const currentTab =
+    requestedTab === "user" ||
+    requestedTab === "household" ||
+    requestedTab === "caldav" ||
+    (requestedTab === "admin" && showAdminTab)
+      ? requestedTab
+      : "user";
+  const tabs = [
+    {
+      id: "user",
+      label: t("tabs.user"),
+      activeIcon: UserCircleIconSolid,
+      inactiveIcon: UserCircleIconOutline,
+    },
+    {
+      id: "household",
+      label: t("tabs.household"),
+      activeIcon: HomeIconSolid,
+      inactiveIcon: HomeIconOutline,
+    },
+    {
+      id: "caldav",
+      label: t("tabs.caldav"),
+      activeIcon: ServerIconSolid,
+      inactiveIcon: ServerIconOutline,
+    },
+    ...(showAdminTab
+      ? [
+          {
+            id: "admin",
+            label: t("tabs.admin"),
+            activeIcon: ShieldCheckIconSolid,
+            inactiveIcon: ShieldCheckIconOutline,
+          },
+        ]
+      : []),
+  ];
 
   const handleTabChange = (key: React.Key) => {
     router.push(`/settings?tab=${String(key)}`);
@@ -57,87 +94,45 @@ function SettingsContent() {
 
       <Tabs
         aria-label={t("page.ariaLabel")}
-        classNames={{
-          tabList: "overflow-x-auto",
-          tab: "h-12",
-        }}
+        className="w-full"
         selectedKey={currentTab}
         onSelectionChange={handleTabChange}
       >
-        <Tab
-          key="user"
-          title={
-            <div className="flex items-center gap-2">
-              {currentTab === "user" ? (
-                <UserCircleIconSolid className="h-5 w-5" />
-              ) : (
-                <UserCircleIconOutline className="h-5 w-5" />
-              )}
-              <span>{t("tabs.user")}</span>
-            </div>
-          }
-        >
-          <div className="py-4">
-            <UserSettingsTab />
-          </div>
-        </Tab>
+        <Tabs.ListContainer className="overflow-x-auto">
+          <Tabs.List aria-label={t("page.ariaLabel")} className="w-max">
+            {tabs.map((tab) => {
+              const Icon = currentTab === tab.id ? tab.activeIcon : tab.inactiveIcon;
 
-        <Tab
-          key="household"
-          title={
-            <div className="flex items-center gap-2">
-              {currentTab === "household" ? (
-                <HomeIconSolid className="h-5 w-5" />
-              ) : (
-                <HomeIconOutline className="h-5 w-5" />
-              )}
-              <span>{t("tabs.household")}</span>
-            </div>
-          }
-        >
-          <div className="py-4">
-            <HouseholdSettingsTab />
-          </div>
-        </Tab>
+              return (
+                <Tabs.Tab key={tab.id} id={tab.id} className="h-12">
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-5 w-5" />
+                    <span>{tab.label}</span>
+                  </div>
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+              );
+            })}
+          </Tabs.List>
+        </Tabs.ListContainer>
 
-        <Tab
-          key="caldav"
-          title={
-            <div className="flex items-center gap-2">
-              {currentTab === "caldav" ? (
-                <ServerIconSolid className="h-5 w-5" />
-              ) : (
-                <ServerIconOutline className="h-5 w-5" />
-              )}
-              <span>{t("tabs.caldav")}</span>
-            </div>
-          }
-        >
-          <div className="py-4">
-            <CalDavSettingsTab />
-          </div>
-        </Tab>
+        <Tabs.Panel id="user" className="py-4">
+          <UserSettingsTab />
+        </Tabs.Panel>
 
-        {/* Admin tab - only visible to server admins */}
-        {!isLoadingRole && isServerAdmin && (
-          <Tab
-            key="admin"
-            title={
-              <div className="flex items-center gap-2">
-                {currentTab === "admin" ? (
-                  <ShieldCheckIconSolid className="h-5 w-5" />
-                ) : (
-                  <ShieldCheckIconOutline className="h-5 w-5" />
-                )}
-                <span>{t("tabs.admin")}</span>
-              </div>
-            }
-          >
-            <div className="py-4">
-              <AdminSettingsTab />
-            </div>
-          </Tab>
-        )}
+        <Tabs.Panel id="household" className="py-4">
+          <HouseholdSettingsTab />
+        </Tabs.Panel>
+
+        <Tabs.Panel id="caldav" className="py-4">
+          <CalDavSettingsTab />
+        </Tabs.Panel>
+
+        {showAdminTab ? (
+          <Tabs.Panel id="admin" className="py-4">
+            <AdminSettingsTab />
+          </Tabs.Panel>
+        ) : null}
       </Tabs>
     </div>
   );

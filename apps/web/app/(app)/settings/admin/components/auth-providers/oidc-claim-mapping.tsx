@@ -1,7 +1,8 @@
 "use client";
 
+import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { ExclamationTriangleIcon, UserGroupIcon } from "@heroicons/react/16/solid";
-import { Divider, Input, Switch } from "@heroui/react";
+import { Description, Input, Label, Separator, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { RestartRequiredChip } from "../restart-required-chip";
@@ -33,61 +34,65 @@ export function OIDCClaimMapping({ values, onChange, isDirty = false }: OIDCClai
 
   return (
     <>
-      <Divider className="my-2" />
+      <Separator className="my-2" />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <UserGroupIcon className="text-default-500 h-4 w-4" />
-          <span className="text-default-700 font-medium">{tClaimMapping("title")}</span>
+          <UserGroupIcon className="text-muted h-4 w-4" />
+          <span className="text-foreground font-medium">{tClaimMapping("title")}</span>
           {isDirty && <UnsavedChangesChip />}
           <RestartRequiredChip />
         </div>
-        <Switch
+        <SettingsSwitch
           color="success"
           isSelected={values.enabled}
           onValueChange={(enabled) => updateField("enabled", enabled)}
         />
       </div>
-      <p className="text-default-500 text-sm">{tClaimMapping("description")}</p>
+      <p className="text-muted text-sm">{tClaimMapping("description")}</p>
 
       {values.enabled && (
-        <div className="bg-warning-50 border-warning-200 text-warning-700 flex items-start gap-2 rounded-lg border p-3">
+        <div className="bg-warning/10 border-warning/30 text-warning flex items-start gap-2 rounded-lg border p-3">
           <ExclamationTriangleIcon className="mt-0.5 h-4 w-4 flex-shrink-0" />
           <p className="text-sm">{tClaimMapping("securityWarning")}</p>
         </div>
       )}
 
-      <Input
-        description={tClaimMapping("scopesDescription")}
+      <TextField
         isDisabled={!values.enabled}
-        label={tClaimMapping("scopes")}
-        placeholder={tClaimMapping("scopesPlaceholder")}
         value={values.scopes}
-        onValueChange={(v) => updateField("scopes", v)}
-      />
-      <Input
-        description={tClaimMapping("groupsClaimDescription")}
+        onChange={(value) => updateField("scopes", value)}
+      >
+        <Label>{tClaimMapping("scopes")}</Label>
+        <Input variant="secondary" placeholder={tClaimMapping("scopesPlaceholder")} />
+        <Description>{tClaimMapping("scopesDescription")}</Description>
+      </TextField>
+      <TextField
         isDisabled={!values.enabled}
-        label={tClaimMapping("groupsClaim")}
-        placeholder="groups"
         value={values.groupsClaim}
-        onValueChange={(v) => updateField("groupsClaim", v)}
-      />
-      <Input
-        description={tClaimMapping("adminGroupDescription")}
+        onChange={(value) => updateField("groupsClaim", value)}
+      >
+        <Label>{tClaimMapping("groupsClaim")}</Label>
+        <Input variant="secondary" placeholder="groups" />
+        <Description>{tClaimMapping("groupsClaimDescription")}</Description>
+      </TextField>
+      <TextField
         isDisabled={!values.enabled}
-        label={tClaimMapping("adminGroup")}
-        placeholder="norish_admin"
         value={values.adminGroup}
-        onValueChange={(v) => updateField("adminGroup", v)}
-      />
-      <Input
-        description={tClaimMapping("householdPrefixDescription")}
+        onChange={(value) => updateField("adminGroup", value)}
+      >
+        <Label>{tClaimMapping("adminGroup")}</Label>
+        <Input variant="secondary" placeholder="norish_admin" />
+        <Description>{tClaimMapping("adminGroupDescription")}</Description>
+      </TextField>
+      <TextField
         isDisabled={!values.enabled}
-        label={tClaimMapping("householdPrefix")}
-        placeholder="norish_household_"
         value={values.householdPrefix}
-        onValueChange={(v) => updateField("householdPrefix", v)}
-      />
+        onChange={(value) => updateField("householdPrefix", value)}
+      >
+        <Label>{tClaimMapping("householdPrefix")}</Label>
+        <Input variant="secondary" placeholder="norish_household_" />
+        <Description>{tClaimMapping("householdPrefixDescription")}</Description>
+      </TextField>
     </>
   );
 }

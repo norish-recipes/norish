@@ -1,7 +1,18 @@
-import type { CreateGroceriesHooksOptions, GroceriesCacheHelpers } from "./types";
-
 import { useSubscription } from "@trpc/tanstack-react-query";
 
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+
+import type { CreateGroceriesHooksOptions, GroceriesCacheHelpers } from "./types";
+
+type GrocerySubscriptionEventPayloads = {
+  created: { groceries: GroceryDto[] };
+  updated: { changedGroceries: GroceryDto[] };
+  deleted: { groceryIds: string[] };
+  recurringCreated: { recurringGrocery: RecurringGroceryDto; grocery: GroceryDto };
+  recurringUpdated: { recurringGrocery: RecurringGroceryDto; grocery: GroceryDto };
+  recurringDeleted: { recurringGroceryId: string };
+  failed: { reason: string };
+};
 
 export type GroceriesSubscriptionErrorAdapter = {
   showErrorToast: (reason: string) => void;
@@ -11,6 +22,35 @@ type CreateUseGroceriesSubscriptionOptions = CreateGroceriesHooksOptions & {
   useGroceriesCacheHelpers: () => GroceriesCacheHelpers;
   useErrorAdapter: () => GroceriesSubscriptionErrorAdapter;
 };
+
+function getStoreKey(storeId: string | null) {
+  return storeId ?? "__no_store__";
+}
+
+function applyCreatedGroceriesToCache(groceries: GroceryDto[], createdGroceries: GroceryDto[]) {
+  if (createdGroceries.length === 0) return groceries;
+
+  const createdIds = new Set(createdGroceries.map((grocery) => grocery.id));
+  const createdCountByStore = new Map<string, number>();
+
+  for (const grocery of createdGroceries) {
+    if (grocery.isDone) continue;
+
+    const storeKey = getStoreKey(grocery.storeId);
+
+    createdCountByStore.set(storeKey, (createdCountByStore.get(storeKey) ?? 0) + 1);
+  }
+
+  const shifted = groceries.map((grocery) => {
+    if (grocery.isDone || createdIds.has(grocery.id)) return grocery;
+
+    const createdCount = createdCountByStore.get(getStoreKey(grocery.storeId)) ?? 0;
+
+    return createdCount > 0 ? { ...grocery, sortOrder: grocery.sortOrder + createdCount } : grocery;
+  });
+
+  return [...createdGroceries, ...shifted.filter((grocery) => !createdIds.has(grocery.id))];
+}
 
 export function createUseGroceriesSubscription({
   useTRPC,
@@ -25,19 +65,20 @@ export function createUseGroceriesSubscription({
     // onCreated
     useSubscription(
       trpc.groceries.onCreated.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
+        onData: (payload: GrocerySubscriptionEventPayloads["created"]) => {
           setGroceriesData((prev) => {
             if (!prev) return prev;
 
             const existing = prev.groceries ?? [];
             const incoming = payload.groceries;
-            const newGroceries = incoming.filter(
-              (g: any) => !existing.some((eg) => eg.id === g.id)
-            );
+            const newGroceries = incoming.filter((g) => !existing.some((eg) => eg.id === g.id));
 
             if (newGroceries.length === 0) return prev;
 
-            return { ...prev, groceries: [...newGroceries, ...existing] };
+            return {
+              ...prev,
+              groceries: applyCreatedGroceriesToCache(existing, newGroceries),
+            };
           });
         },
       })
@@ -46,13 +87,13 @@ export function createUseGroceriesSubscription({
     // onUpdated
     useSubscription(
       trpc.groceries.onUpdated.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
+        onData: (payload: GrocerySubscriptionEventPayloads["updated"]) => {
           setGroceriesData((prev) => {
             if (!prev) return prev;
 
             const updated = payload.changedGroceries;
             const updatedList = prev.groceries.map((e) => {
-              const match = updated.find((i: any) => i.id === e.id);
+              const match = updated.find((i) => i.id === e.id);
 
               return match ? { ...e, ...match } : e;
             });
@@ -66,7 +107,7 @@ export function createUseGroceriesSubscription({
     // onDeleted
     useSubscription(
       trpc.groceries.onDeleted.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
+        onData: (payload: GrocerySubscriptionEventPayloads["deleted"]) => {
           setGroceriesData((prev) => {
             if (!prev) return prev;
 
@@ -83,7 +124,7 @@ export function createUseGroceriesSubscription({
     // onRecurringCreated
     useSubscription(
       trpc.groceries.onRecurringCreated.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
+        onData: (payload: GrocerySubscriptionEventPayloads["recurringCreated"]) => {
           setGroceriesData((prev) => {
             if (!prev) return prev;
 
@@ -91,7 +132,7 @@ export function createUseGroceriesSubscription({
 
             const groceries = prev.groceries.some((g) => g.id === newGrocery.id)
               ? prev.groceries.map((g) => (g.id === newGrocery.id ? newGrocery : g))
-              : [newGrocery, ...prev.groceries];
+              : applyCreatedGroceriesToCache(prev.groceries, [newGrocery]);
 
             const recurringGroceries = prev.recurringGroceries.some((r) => r.id === newRecurring.id)
               ? prev.recurringGroceries.map((r) => (r.id === newRecurring.id ? newRecurring : r))
@@ -106,7 +147,7 @@ export function createUseGroceriesSubscription({
     // onRecurringUpdated
     useSubscription(
       trpc.groceries.onRecurringUpdated.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
+        onData: (payload: GrocerySubscriptionEventPayloads["recurringUpdated"]) => {
           setGroceriesData((prev) => {
             if (!prev) return prev;
 
@@ -129,7 +170,7 @@ export function createUseGroceriesSubscription({
     // onRecurringDeleted
     useSubscription(
       trpc.groceries.onRecurringDeleted.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
+        onData: (payload: GrocerySubscriptionEventPayloads["recurringDeleted"]) => {
           setGroceriesData((prev) => {
             if (!prev) return prev;
 
@@ -150,7 +191,7 @@ export function createUseGroceriesSubscription({
     // onFailed
     useSubscription(
       trpc.groceries.onFailed.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
+        onData: (payload: GrocerySubscriptionEventPayloads["failed"]) => {
           errorAdapter.showErrorToast(payload.reason);
           invalidate();
         },

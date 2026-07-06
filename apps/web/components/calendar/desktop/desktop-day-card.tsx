@@ -1,26 +1,15 @@
 "use client";
 
 import type { PlannedItemDisplay } from "@/components/calendar/mobile/types";
-import type { Slot } from "@norish/shared/contracts";
-
 import { memo, useMemo } from "react";
+import { TimelineSlotContainer } from "@/components/calendar/mobile/timeline-slot-container";
+import { SLOTS } from "@/components/calendar/mobile/types";
 import { useDroppable } from "@dnd-kit/core";
 import { PlusIcon } from "@heroicons/react/16/solid";
-import {
-  Button,
-  Card,
-  CardBody,
-  Divider,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
+import { Button, Card, Dropdown, Label, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { SLOTS } from "@/components/calendar/mobile/types";
-import { TimelineSlotContainer } from "@/components/calendar/mobile/timeline-slot-container";
-
+import type { Slot } from "@norish/shared/contracts";
 
 type DesktopDayCardProps = {
   date: Date;
@@ -34,9 +23,7 @@ type DesktopDayCardProps = {
   onNoteClick?: (item: PlannedItemDisplay) => void;
   onRecipeClick?: (item: PlannedItemDisplay) => void;
 };
-
 const CARD_HEIGHT = 400;
-
 export const DesktopDayCard = memo(function DesktopDayCard({
   date,
   dateKey,
@@ -61,7 +48,6 @@ export const DesktopDayCard = memo(function DesktopDayCard({
       dateKey,
     },
   });
-
   const slotLabels: Record<Slot, string> = useMemo(
     () => ({
       Breakfast: tSlots("breakfast"),
@@ -80,10 +66,8 @@ export const DesktopDayCard = memo(function DesktopDayCard({
       Dinner: [],
       Snack: [],
     };
-
     for (const item of items) {
       const slotItems = grouped[item.slot as Slot];
-
       if (slotItems) {
         slotItems.push(item);
       }
@@ -93,29 +77,26 @@ export const DesktopDayCard = memo(function DesktopDayCard({
     for (const slot of SLOTS) {
       grouped[slot]?.sort((a, b) => a.sortOrder - b.sortOrder);
     }
-
     return grouped;
   }, [items]);
-
   const hasItems = items.length > 0;
-
   const showDragHighlight = isDragOver || isOver;
-
   return (
     <Card
       ref={setNodeRef}
-      className={`transition-all duration-200 ${showDragHighlight ? "ring-primary ring-2" : ""} ${isToday ? "ring-primary/50 shadow-md ring-2" : ""}`}
-      shadow={isToday ? "md" : "sm"}
-      style={{ height: CARD_HEIGHT }}
+      className={`shadow-sm transition-all duration-200 ${showDragHighlight ? "ring-accent ring-2" : ""} ${isToday ? "ring-accent/50 shadow-md ring-2" : ""}`}
+      style={{
+        height: CARD_HEIGHT,
+      }}
     >
-      <CardBody className="flex flex-col gap-2 overflow-hidden px-4 py-3">
+      <Card.Content className="flex flex-col gap-2 overflow-hidden px-4 py-3">
         {/* Day header - fixed */}
         <div className="flex shrink-0 items-start justify-between gap-3">
           <div className="flex flex-col">
             {isToday ? (
               <>
-                <span className="text-primary text-lg font-bold">{tMobile("today")}</span>
-                <span className="text-default-500 text-sm">
+                <span className="text-accent text-lg font-bold">{tMobile("today")}</span>
+                <span className="text-muted text-sm">
                   {weekdayFormatter.format(date)}, {monthFormatter.format(date)} {date.getDate()}
                 </span>
               </>
@@ -124,36 +105,44 @@ export const DesktopDayCard = memo(function DesktopDayCard({
                 <span className="text-foreground text-base font-semibold">
                   {monthFormatter.format(date)} {date.getDate()}
                 </span>
-                <span className="text-default-400 text-sm">{weekdayFormatter.format(date)}</span>
+                <span className="text-muted text-sm">{weekdayFormatter.format(date)}</span>
               </>
             )}
           </div>
 
           <Dropdown>
-            <DropdownTrigger>
-              <Button
-                isIconOnly
-                aria-label={t("addItem")}
-                className="bg-default-100 text-default-500 hover:text-primary h-8 min-w-8 rounded-full shadow-sm transition-transform active:scale-95"
-                size="sm"
-                variant="flat"
-              >
-                <PlusIcon className="h-4 w-4" />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label={tSlots("chooseSlot")}
-              onAction={(slot) => onAddItem(dateKey, slot as Slot)}
+            <Button
+              isIconOnly
+              aria-label={t("addItem")}
+              className="bg-surface-secondary text-muted hover:text-accent h-8 min-w-8 rounded-full shadow-sm transition-transform active:scale-95"
+              size="sm"
+              variant="tertiary"
             >
-              <DropdownItem key="Breakfast">{slotLabels.Breakfast}</DropdownItem>
-              <DropdownItem key="Lunch">{slotLabels.Lunch}</DropdownItem>
-              <DropdownItem key="Dinner">{slotLabels.Dinner}</DropdownItem>
-              <DropdownItem key="Snack">{slotLabels.Snack}</DropdownItem>
-            </DropdownMenu>
+              <PlusIcon className="h-4 w-4" />
+            </Button>
+            <Dropdown.Popover className="bg-overlay">
+              <Dropdown.Menu
+                aria-label={tSlots("chooseSlot")}
+                onAction={(slot) => onAddItem(dateKey, slot as Slot)}
+              >
+                <Dropdown.Item key="Breakfast" id="Breakfast" textValue="Breakfast">
+                  <Label>{slotLabels.Breakfast}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item key="Lunch" id="Lunch" textValue="Lunch">
+                  <Label>{slotLabels.Lunch}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item key="Dinner" id="Dinner" textValue="Dinner">
+                  <Label>{slotLabels.Dinner}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item key="Snack" id="Snack" textValue="Snack">
+                  <Label>{slotLabels.Snack}</Label>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
           </Dropdown>
         </div>
 
-        <Divider className="shrink-0" />
+        <Separator className="shrink-0" />
 
         {/* Scrollable content area */}
         <div className="min-h-0 flex-1 overflow-y-auto">
@@ -161,9 +150,7 @@ export const DesktopDayCard = memo(function DesktopDayCard({
             <div className="flex flex-col">
               {SLOTS.map((slot) => {
                 const slotItems = itemsBySlot[slot];
-
                 if (!slotItems || slotItems.length === 0) return null;
-
                 return (
                   <TimelineSlotContainer
                     key={slot}
@@ -178,10 +165,10 @@ export const DesktopDayCard = memo(function DesktopDayCard({
               })}
             </div>
           ) : (
-            <span className="text-default-400 py-1 text-xs italic">{t("noItems")}</span>
+            <span className="text-muted py-1 text-xs italic">{t("noItems")}</span>
           )}
         </div>
-      </CardBody>
+      </Card.Content>
     </Card>
   );
 });

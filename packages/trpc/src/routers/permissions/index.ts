@@ -1,5 +1,4 @@
 import { router } from "../../trpc";
-
 import { permissionsProcedures } from "./permissions";
 import { permissionsSubscriptions } from "./subscriptions";
 

@@ -24,12 +24,12 @@ describe("UnsavedChangesChip", () => {
     expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
   });
 
-  it("uses warning flat small chip style", () => {
+  it("uses warning soft small chip style", () => {
     const { container } = render(<UnsavedChangesChip />);
     const chip = container.firstElementChild;
 
     expect(chip).toHaveAttribute("data-color", "warning");
     expect(chip).toHaveAttribute("data-size", "sm");
-    expect(chip).toHaveAttribute("data-variant", "flat");
+    expect(chip).toHaveAttribute("data-variant", "soft");
   });
 });

@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+
 import { auth } from "@norish/auth/auth";
 import { getOpenApiDocument } from "@norish/trpc/server";
 

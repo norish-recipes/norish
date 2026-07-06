@@ -15,6 +15,7 @@ import {
   createUseAutoTaggingMutation,
 } from "./use-auto-tagging-subscription";
 import { createUseConvertMutation } from "./use-convert-mutation";
+import { createUseLinkedRecipeIngredients } from "./use-linked-recipe-ingredients";
 import { createUseNutritionMutation } from "./use-nutrition-mutation";
 import { createUseNutritionQuery } from "./use-nutrition-query";
 import { createUseNutritionSubscription } from "./use-nutrition-subscription";
@@ -49,6 +50,7 @@ export {
   createUseRecipeImages,
   createUseRecipeVideos,
   createUseRecipeIngredients,
+  createUseLinkedRecipeIngredients,
 };
 
 export function createRecipeFamilyHooks(options: CreateRecipeHooksOptions) {
@@ -75,5 +77,6 @@ export function createRecipeFamilyHooks(options: CreateRecipeHooksOptions) {
     useNutritionSubscription: createUseNutritionSubscription(options),
     useNutritionMutation: createUseNutritionMutation(options),
     useRecipeIngredients: createUseRecipeIngredients(useRecipeQuery),
+    useLinkedRecipeIngredients: createUseLinkedRecipeIngredients(options),
   };
 }

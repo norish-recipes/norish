@@ -1,12 +1,12 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
   AIConfig,
   ServerConfigKey,
   TranscriptionProvider,
 } from "@norish/config/zod/server-config";
-import type { CreateAdminHooksOptions } from "./types";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CreateAdminHooksOptions } from "./types";
 
 export type AdminConfigsData = Record<ServerConfigKey, unknown>;
 

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import UiSwitch from "@/components/shared/ui-switch";
 import { DevicePhoneMobileIcon } from "@heroicons/react/20/solid";
-import { Switch, Tooltip } from "@heroui/react";
+import { Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useWakeLockContext } from "./wake-lock-context";
@@ -34,7 +35,7 @@ export default function WakeLockToggle() {
     <Tooltip content={isActive ? t("activeTooltip") : t("inactiveTooltip")}>
       <div className="flex items-center gap-2">
         <DevicePhoneMobileIcon className="h-5 w-5" />
-        <Switch
+        <UiSwitch
           aria-label={t("ariaLabel")}
           color="success"
           isSelected={isActive}

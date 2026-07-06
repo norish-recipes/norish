@@ -62,6 +62,18 @@
     "savePreference": "Geschäft für diesen Eintrag merken",
     "addAnother": "Weiteren hinzufügen",
     "addRepeat": "+ Wiederholung hinzufügen",
+    "recurrenceEnabled": "Wiederkehrend",
+    "recurrenceSheet": {
+      "title": "Wiederholung",
+      "subtitle": "Diesen Eintrag automatisch erneut zur Einkaufsliste hinzufügen",
+      "enable": "Wiederholung aktivieren",
+      "disable": "Wiederholung deaktivieren",
+      "frequency": "Häufigkeit",
+      "weekly": "Wöchentlich",
+      "biweekly": "Alle 2 Wochen",
+      "monthly": "Monatlich",
+      "confirm": "Bestätigen"
+    },
     "storeOptional": "Geschäft (optional)",
     "autoDetectFromHistory": "Aus Verlauf erkennen",
     "autoDetectOrSelect": "Erkennen oder auswählen",

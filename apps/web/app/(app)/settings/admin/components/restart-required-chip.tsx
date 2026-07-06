@@ -11,7 +11,7 @@ export function RestartRequiredChip() {
   const t = useTranslations("settings.admin.authProviders");
 
   return (
-    <Chip color="warning" size="sm" variant="flat">
+    <Chip color="warning" size="sm" variant="soft">
       {t("requiresRestart")}
     </Chip>
   );

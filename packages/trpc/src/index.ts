@@ -1,5 +1,10 @@
 export { appRouter, type AppRouter } from "./router";
-export { createContext, createWsContext, type Context } from "./context";
+export {
+  createContext,
+  createHttpContextFromHeaders,
+  createWsContext,
+  type Context,
+} from "./context";
 export { getOpenApiDocument, handleOpenApiRequest } from "./openapi";
 export { router, publicProcedure, middleware, mergeRouters } from "./trpc";
 export {

@@ -35,11 +35,11 @@ vi.mock("@norish/trpc/connection-manager", () => ({
   emitConnectionInvalidation: vi.fn(),
 }));
 
-vi.mock("@norish/db/cached-household", () => ({
+vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: vi.fn(),
 }));
 
-vi.mock("@norish/queue/redis/subscription-multiplexer", () => ({
+vi.mock("@norish/shared-server/redis/subscription-multiplexer", () => ({
   getOrCreateMultiplexer: vi.fn(),
 }));
 

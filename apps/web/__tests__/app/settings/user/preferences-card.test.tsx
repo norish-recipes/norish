@@ -39,40 +39,50 @@ vi.mock("@/hooks/config", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  Card: ({ children }: any) => <div>{children}</div>,
-  CardHeader: ({ children }: any) => <div>{children}</div>,
-  CardBody: ({ children }: any) => <div>{children}</div>,
-  Switch: ({ isSelected, isDisabled, onValueChange }: any) => (
-    <button
-      aria-pressed={isSelected}
-      disabled={isDisabled}
-      type="button"
-      onClick={() => onValueChange?.(!isSelected)}
-    >
-      toggle
-    </button>
+  Card: Object.assign(({ children }: any) => <div>{children}</div>, {
+    Header: ({ children }: any) => <div>{children}</div>,
+    Content: ({ children }: any) => <div>{children}</div>,
+  }),
+  Switch: Object.assign(
+    ({ isSelected, isDisabled, onChange, onValueChange, children }: any) => (
+      <button
+        aria-pressed={isSelected}
+        disabled={isDisabled}
+        type="button"
+        onClick={() => (onChange ?? onValueChange)?.(!isSelected)}
+      >
+        {children ?? "toggle"}
+      </button>
+    ),
+    {
+      Control: ({ children }: any) => <>{children}</>,
+      Content: ({ children }: any) => <>{children}</>,
+      Thumb: () => <>toggle</>,
+    }
   ),
   Chip: ({ children }: any) => <span>{children}</span>,
-  Select: ({
-    children,
-    "aria-label": ariaLabel,
-    selectedKeys,
-    onSelectionChange,
-    isDisabled,
-  }: any) => (
-    <select
-      aria-label={ariaLabel}
-      disabled={isDisabled}
-      value={selectedKeys?.[0] ?? ""}
-      onChange={(e) => onSelectionChange?.(new Set([e.target.value]))}
-    >
-      {children}
-    </select>
-  ),
-  SelectItem: ({ children, ...props }: any) => (
-    <option value={props.id ?? props["data-key"]} {...props}>
-      {children}
-    </option>
+  Label: () => null,
+  ListBox: Object.assign(({ children }: any) => <>{children}</>, {
+    Item: ({ children, id, textValue }: any) => <option value={id}>{textValue ?? children}</option>,
+    ItemIndicator: () => null,
+  }),
+  Select: Object.assign(
+    ({ children, "aria-label": ariaLabel, value, onChange, isDisabled }: any) => (
+      <select
+        aria-label={ariaLabel}
+        disabled={isDisabled}
+        value={value ?? ""}
+        onChange={(e) => onChange?.(e.target.value)}
+      >
+        {children}
+      </select>
+    ),
+    {
+      Trigger: () => null,
+      Value: () => null,
+      Indicator: () => null,
+      Popover: ({ children }: any) => <>{children}</>,
+    }
   ),
 }));
 

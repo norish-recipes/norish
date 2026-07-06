@@ -1,11 +1,13 @@
 {
   "name": "@norish/shared-server",
-  "version": "0.18.3-beta",
+  "version": "0.19.0-beta",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./logger": "./src/logger.ts",
+    "./cache/household": "./src/cache/household.ts",
+    "./config/server-config-loader": "./src/config/server-config-loader.ts",
     "./media/storage": "./src/media/storage.ts",
     "./media/avatar-cleanup": "./src/media/avatar-cleanup.ts",
     "./recipes/randomizer": "./src/recipes/randomizer.ts",
@@ -31,7 +33,16 @@
     "./ai/utils/category-matcher": "./src/ai/utils/category-matcher.ts",
     "./caldav/ics-helpers": "./src/caldav/ics-helpers.ts",
     "./lib/workspace-paths": "./src/lib/workspace-paths.ts",
-    "./lib/operation-context": "./src/lib/operation-context.ts"
+    "./lib/operation-context": "./src/lib/operation-context.ts",
+    "./realtime/caldav": "./src/realtime/caldav.ts",
+    "./realtime/connection-invalidation": "./src/realtime/connection-invalidation.ts",
+    "./realtime/groceries": "./src/realtime/groceries.ts",
+    "./realtime/households": "./src/realtime/households.ts",
+    "./realtime/policy": "./src/realtime/policy.ts",
+    "./realtime/recipes": "./src/realtime/recipes.ts",
+    "./redis/client": "./src/redis/client.ts",
+    "./redis/pubsub": "./src/redis/pubsub.ts",
+    "./redis/subscription-multiplexer": "./src/redis/subscription-multiplexer.ts"
   },
   "scripts": {
     "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",
@@ -60,11 +71,13 @@
     "cheerio": "1.2.0",
     "fuse.js": "catalog:",
     "heic-convert": "^2.1.0",
+    "ioredis": "catalog:",
     "jszip": "catalog:",
     "ollama": "^0.6.3",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",
     "sharp": "^0.34.5",
+    "superjson": "catalog:",
     "tsdav": "^2.2.0",
     "uuid": "14.0.0",
     "zod": "catalog:"

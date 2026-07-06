@@ -93,11 +93,11 @@ vi.mock("@norish/queue/api-handlers", () => ({
   ),
 }));
 
-vi.mock("@norish/queue/redis/subscription-multiplexer", () => ({
+vi.mock("@norish/shared-server/redis/subscription-multiplexer", () => ({
   SubscriptionMultiplexer: vi.fn(),
 }));
 
-vi.mock("@norish/trpc/routers/recipes/emitter", () => ({
+vi.mock("@norish/shared-server/realtime/recipes", () => ({
   recipeEmitter: {
     emitToHousehold: vi.fn(),
     emitToUser: vi.fn(),
@@ -109,12 +109,13 @@ vi.mock("@norish/queue/redis/socket", () => ({
   emitToHousehold: vi.fn(),
 }));
 
-vi.mock("@norish/trpc/helpers", () => ({
+vi.mock("@norish/shared-server/realtime/policy", () => ({
   emitByPolicy: vi.fn(),
 }));
 
-vi.mock("@norish/config/server-config-loader", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@norish/config/server-config-loader")>();
+vi.mock("@norish/shared-server/config/server-config-loader", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@norish/shared-server/config/server-config-loader")>();
 
   return {
     ...actual,
@@ -161,7 +162,7 @@ describe("Auto-Categorization Queue", () => {
     };
 
     it("skips job when AI is disabled", async () => {
-      const { isAIEnabled } = await import("@norish/config/server-config-loader");
+      const { isAIEnabled } = await import("@norish/shared-server/config/server-config-loader");
 
       vi.mocked(isAIEnabled).mockResolvedValue(false);
 
@@ -178,7 +179,7 @@ describe("Auto-Categorization Queue", () => {
     });
 
     it("adds job successfully when AI is enabled", async () => {
-      const { isAIEnabled } = await import("@norish/config/server-config-loader");
+      const { isAIEnabled } = await import("@norish/shared-server/config/server-config-loader");
       const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isAIEnabled).mockResolvedValue(true);
@@ -204,7 +205,8 @@ describe("Auto-Categorization Queue", () => {
   describe("processAutoCategorizationJob", () => {
     it("does not overwrite existing categories", async () => {
       const { getRecipeFull, updateRecipeCategories } = await import("@norish/db");
-      const { getRecipePermissionPolicy } = await import("@norish/config/server-config-loader");
+      const { getRecipePermissionPolicy } =
+        await import("@norish/shared-server/config/server-config-loader");
       const { startAutoCategorizationWorker } =
         await import("@norish/queue/auto-categorization/worker");
 

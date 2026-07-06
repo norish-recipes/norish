@@ -1,0 +1,50 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Ny oppskrift",
+      "description": "Skriv din egen oppskrift"
+    },
+    "importUrl": {
+      "title": "Importer fra URL",
+      "description": "Lim inn en oppskriftlenke"
+    },
+    "settings": {
+      "title": "Innstillinger",
+      "description": "Administrer kontoen din"
+    },
+    "logout": "Logg ut",
+    "version": {
+      "updateAvailable": "v{version} tilgjengelig"
+    }
+  },
+  "theme": {
+    "title": "Tema",
+    "loading": "Laster…",
+    "light": "Lyst tema",
+    "dark": "Mørkt tema",
+    "system": "Systemstandard"
+  },
+  "nav": {
+    "home": "Oppskrifter",
+    "calendar": "Kalender",
+    "groceries": "Handleliste"
+  },
+  "mobile": {
+    "searchPlaceholder": "Søk oppskrifter...",
+    "toggleSearch": "Slå søking på/av",
+    "goBack": "Gå tilbake"
+  },
+  "archiveImporter": {
+    "uploading": "Laster opp…",
+    "uploadFile": "Last opp en fil",
+    "dragDrop": "eller dra og slipp",
+    "formats": ".melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "uploadingFile": "Laster opp fil…",
+    "processing": "Behandler: {details}",
+    "complete": "Ferdig: {details}",
+    "imported": "{count} importert",
+    "skipped": "{count} hoppet over",
+    "errors": "{count} feil",
+    "ofTotal": "{current} av {total}"
+  }
+}

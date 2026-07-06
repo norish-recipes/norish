@@ -9,6 +9,17 @@ export const styles = StyleSheet.create({
     gap: 12,
     flexDirection: "row",
   },
+  slotWrapper: {
+    width: 150,
+    gap: 6,
+  },
+  slotHeader: {
+    fontSize: 10,
+    fontWeight: "600",
+    lineHeight: 14,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
   slotCard: {
     width: 150,
     borderRadius: 12,
@@ -23,15 +34,7 @@ export const styles = StyleSheet.create({
   },
   slotBody: {
     paddingHorizontal: 10,
-    paddingVertical: 8,
-    gap: 2,
-  },
-  slotLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    lineHeight: 14,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    paddingVertical: 10,
   },
   slotTitle: {
     fontSize: 13,

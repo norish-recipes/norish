@@ -1,11 +1,11 @@
+import { and, asc, eq, inArray, isNull, lte, sql } from "drizzle-orm";
+import z from "zod";
+
 import type {
   GroceryDto,
   GroceryInsertDto,
   GroceryUpdateDto,
 } from "@norish/shared/contracts/dto/groceries";
-
-import { and, asc, eq, inArray, isNull, lte, sql } from "drizzle-orm";
-import z from "zod";
 import { db } from "@norish/db/drizzle";
 import { groceries, householdUsers, recipeIngredients, recipes } from "@norish/db/schema";
 import {
@@ -147,11 +147,20 @@ export async function createGroceries(
         );
     }
 
-    // Insert new groceries with sortOrder: 0, 1, 2... (first item at top)
-    const valuesToInsert = prepared.map((p, index) => ({
-      ...(p as any),
-      sortOrder: index,
-    }));
+    const nextSortOrderByStore = new Map<string | null, number>();
+
+    // Insert new groceries with sortOrder: 0, 1, 2... inside each store group.
+    const valuesToInsert = prepared.map((p) => {
+      const storeKey = p.storeId ?? null;
+      const sortOrder = nextSortOrderByStore.get(storeKey) ?? 0;
+
+      nextSortOrderByStore.set(storeKey, sortOrder + 1);
+
+      return {
+        ...(p as any),
+        sortOrder,
+      };
+    });
 
     const inserted = await trx.insert(groceries).values(valuesToInsert).returning();
 

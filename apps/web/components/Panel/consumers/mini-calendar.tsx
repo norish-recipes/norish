@@ -1,17 +1,15 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
+import Panel from "@/components/Panel/Panel";
+import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
+import { useRecipeQuery } from "@/hooks/recipes";
 import { ExclamationTriangleIcon, PlusIcon } from "@heroicons/react/16/solid";
-import {
-  Button,
-  Divider,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
+import { Button, Dropdown, Label, Separator } from "@heroui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
+
 import { Slot } from "@norish/shared/contracts";
 import {
   addMonths,
@@ -21,19 +19,12 @@ import {
   startOfMonth,
 } from "@norish/shared/lib/helpers";
 
-import { useRecipeQuery } from "@/hooks/recipes";
-import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
-import Panel from "@/components/Panel/Panel";
-import { PlannedItemThumbnail } from "@/components/calendar/planned-item-thumbnail";
-
 const ESTIMATED_DAY_HEIGHT = 180;
-
 type MiniCalendarProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipeId: string;
 };
-
 type PlannedItemDisplay = {
   slot: Slot;
   itemType: string;
@@ -42,7 +33,6 @@ type PlannedItemDisplay = {
   title?: string | null;
   allergyWarnings?: string[] | null;
 };
-
 const DayRow = memo(function DayRow({
   date,
   dateKeyStr,
@@ -67,42 +57,50 @@ const DayRow = memo(function DayRow({
   addItemLabel: string;
 }) {
   return (
-    <div className="border-default-100 border-b last:border-none">
-      <div className="bg-background hover:bg-default-50/50 flex flex-col gap-3 px-4 py-4 transition-colors">
+    <div className="border-border border-b last:border-none">
+      <div className="flex flex-col gap-3 px-4 py-4">
         <div className="flex items-center justify-between gap-3">
-          <div className={`text-sm font-semibold ${isToday ? "text-primary" : "text-foreground"}`}>
+          <div className={`text-sm font-semibold ${isToday ? "text-accent" : "text-foreground"}`}>
             {weekdayLong.format(date)}, {monthLong.format(date)} {date.getDate()}
           </div>
 
           <Dropdown>
-            <DropdownTrigger>
-              <Button
-                isIconOnly
-                aria-label={addItemLabel}
-                className="bg-default-100 text-default-500 hover:text-primary h-8 min-w-8 rounded-full shadow-sm transition-transform active:scale-95"
-                size="sm"
-                variant="flat"
-              >
-                <PlusIcon className="h-4 w-4" />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Choose slot"
-              onAction={(slot) => onPlan(dateKeyStr, slot as Slot)}
+            <Button
+              isIconOnly
+              aria-label={addItemLabel}
+              className="bg-surface-secondary text-muted hover:text-accent h-8 min-w-8 rounded-full shadow-sm transition-transform active:scale-95"
+              size="sm"
+              variant="tertiary"
             >
-              <DropdownItem key="Breakfast">{slotLabels.Breakfast}</DropdownItem>
-              <DropdownItem key="Lunch">{slotLabels.Lunch}</DropdownItem>
-              <DropdownItem key="Dinner">{slotLabels.Dinner}</DropdownItem>
-              <DropdownItem key="Snack">{slotLabels.Snack}</DropdownItem>
-            </DropdownMenu>
+              <PlusIcon className="h-4 w-4" />
+            </Button>
+            <Dropdown.Popover className="bg-overlay">
+              <Dropdown.Menu
+                aria-label="Choose slot"
+                onAction={(slot) => onPlan(dateKeyStr, slot as Slot)}
+              >
+                <Dropdown.Item key="Breakfast" id="Breakfast" textValue="Breakfast">
+                  <Label>{slotLabels.Breakfast}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item key="Lunch" id="Lunch" textValue="Lunch">
+                  <Label>{slotLabels.Lunch}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item key="Dinner" id="Dinner" textValue="Dinner">
+                  <Label>{slotLabels.Dinner}</Label>
+                </Dropdown.Item>
+                <Dropdown.Item key="Snack" id="Snack" textValue="Snack">
+                  <Label>{slotLabels.Snack}</Label>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
           </Dropdown>
         </div>
 
-        <Divider className="my-2" />
+        <Separator className="my-2" />
 
         <div className="flex w-full flex-col gap-2">
           {items.length === 0 ? (
-            <span className="text-default-400 text-xs italic">{noItemsLabel}</span>
+            <span className="text-muted text-xs italic">{noItemsLabel}</span>
           ) : (
             items.map((it) => (
               <div
@@ -118,7 +116,7 @@ const DayRow = memo(function DayRow({
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`flex-1 truncate text-sm font-medium ${it.itemType === "note" ? "text-default-500 italic" : "text-foreground"}`}
+                      className={`flex-1 truncate text-sm font-medium ${it.itemType === "note" ? "text-muted italic" : "text-foreground"}`}
                       title={it.itemType === "recipe" ? (it.recipeName ?? "") : (it.title ?? "")}
                     >
                       {it.itemType === "recipe" ? it.recipeName : it.title}
@@ -127,7 +125,7 @@ const DayRow = memo(function DayRow({
                       <ExclamationTriangleIcon className="text-warning h-4 w-4 shrink-0" />
                     )}
                   </div>
-                  <span className="text-default-400 text-xs">{slotLabels[it.slot]}</span>
+                  <span className="text-muted text-xs">{slotLabels[it.slot]}</span>
                 </div>
               </div>
             ))
@@ -137,7 +135,6 @@ const DayRow = memo(function DayRow({
     </div>
   );
 });
-
 function MiniCalendarContent({
   recipeId,
   onOpenChange,
@@ -152,32 +149,37 @@ function MiniCalendarContent({
   const today = useMemo(() => new Date(), []);
   const rangeStart = useMemo(() => startOfMonth(addMonths(today, -1)), [today]);
   const rangeEnd = useMemo(() => endOfMonth(addMonths(today, 1)), [today]);
-
   const startISO = dateKey(rangeStart);
   const endISO = dateKey(rangeEnd);
-
   const { recipe } = useRecipeQuery(recipeId);
   const { calendarData, isLoading } = useCalendarQuery(startISO, endISO);
   const { createItem } = useCalendarMutations(startISO, endISO);
-
   useCalendarSubscription(startISO, endISO);
-
   const allDays = useMemo(() => eachDayOfInterval(rangeStart, rangeEnd), [rangeStart, rangeEnd]);
-
-  const weekdayLong = useMemo(() => new Intl.DateTimeFormat(locale, { weekday: "long" }), [locale]);
-  const monthLong = useMemo(() => new Intl.DateTimeFormat(locale, { month: "long" }), [locale]);
+  const weekdayLong = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        weekday: "long",
+      }),
+    [locale]
+  );
+  const monthLong = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        month: "long",
+      }),
+    [locale]
+  );
   const todayKey = useMemo(() => dateKey(today), [today]);
   const todayIndex = useMemo(
     () => allDays.findIndex((d) => dateKey(d) === todayKey),
     [allDays, todayKey]
   );
-
   const parentRef = useRef<HTMLDivElement>(null);
   const [hasScrolledToToday, setHasScrolledToToday] = useState(false);
 
   // Calculate initial offset to start at today
   const initialOffset = todayIndex >= 0 ? todayIndex * ESTIMATED_DAY_HEIGHT : 0;
-
   const virtualizer = useVirtualizer({
     count: allDays.length,
     getScrollElement: () => parentRef.current,
@@ -185,7 +187,6 @@ function MiniCalendarContent({
     overscan: 3,
     getItemKey: (index) => {
       const day = allDays[index];
-
       return day ? dateKey(day) : `missing-${index}`;
     },
     initialOffset,
@@ -194,19 +195,21 @@ function MiniCalendarContent({
   // Scroll to today after first render
   useEffect(() => {
     if (hasScrolledToToday || todayIndex < 0 || !parentRef.current) return;
-
     const timeoutId = setTimeout(() => {
-      virtualizer.scrollToIndex(todayIndex, { align: "start" });
+      virtualizer.scrollToIndex(todayIndex, {
+        align: "start",
+      });
       setHasScrolledToToday(true);
     }, 50);
-
     return () => clearTimeout(timeoutId);
   }, [todayIndex, hasScrolledToToday, virtualizer]);
-
   const virtualItems = virtualizer.getVirtualItems();
-
-  const slotOrder: Record<Slot, number> = { Breakfast: 0, Lunch: 1, Dinner: 2, Snack: 3 };
-
+  const slotOrder: Record<Slot, number> = {
+    Breakfast: 0,
+    Lunch: 1,
+    Dinner: 2,
+    Snack: 3,
+  };
   const slotLabels: Record<Slot, string> = useMemo(
     () => ({
       Breakfast: tSlots("breakfast"),
@@ -216,32 +219,26 @@ function MiniCalendarContent({
     }),
     [tSlots]
   );
-
   const noItemsLabel = tTimeline("noItems");
   const addItemLabel = tTimeline("addItem");
-
   const handlePlan = useCallback(
     (dayKey: string, slot: Slot) => {
       if (!recipe) return;
-
       createItem(dayKey, slot, "recipe", recipe.id, undefined);
       onOpenChange(false);
     },
     [recipe, onOpenChange, createItem]
   );
-
   if (isLoading) {
     return <>Loading...</>;
   }
-
   if (allDays.length === 0) {
     return (
-      <div className="text-default-500 flex items-center justify-center p-4 text-sm">
+      <div className="text-muted flex items-center justify-center p-4 text-sm">
         {t("noDaysAvailable")}
       </div>
     );
   }
-
   return (
     <div className="relative min-h-0 flex-1">
       <div ref={parentRef} className="absolute inset-0 overflow-auto">
@@ -254,24 +251,33 @@ function MiniCalendarContent({
         >
           {virtualItems.map((virtualItem) => {
             const d = allDays[virtualItem.index];
-
             if (!d) {
               return null;
             }
-
             const key = dateKey(d);
             const items = (calendarData[key] ?? [])
               .sort((a, b) => (slotOrder[a.slot] ?? 0) - (slotOrder[b.slot] ?? 0))
               .map((it) => ({
                 slot: it.slot,
                 itemType: it.itemType,
-                recipeName: (it as { recipeName?: string | null }).recipeName,
-                recipeImage: (it as { recipeImage?: string | null }).recipeImage,
+                recipeName: (
+                  it as {
+                    recipeName?: string | null;
+                  }
+                ).recipeName,
+                recipeImage: (
+                  it as {
+                    recipeImage?: string | null;
+                  }
+                ).recipeImage,
                 title: it.title,
-                allergyWarnings: (it as { allergyWarnings?: string[] | null }).allergyWarnings,
+                allergyWarnings: (
+                  it as {
+                    allergyWarnings?: string[] | null;
+                  }
+                ).allergyWarnings,
               }));
             const isToday = key === todayKey;
-
             return (
               <div
                 key={virtualItem.key}
@@ -305,15 +311,19 @@ function MiniCalendarContent({
     </div>
   );
 }
-
 export default function MiniCalendar({ open, onOpenChange, recipeId }: MiniCalendarProps) {
   const t = useTranslations("calendar.panel");
 
   return (
-    <Panel open={open} title={t("addToCalendar")} onOpenChange={onOpenChange}>
-      <div className="flex min-h-0 flex-1 flex-col">
+    <Panel
+      open={open}
+      panelClassName="h-[80dvh]"
+      title={t("addToCalendar")}
+      onOpenChange={onOpenChange}
+    >
+      <Panel.Body className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {open && <MiniCalendarContent recipeId={recipeId} onOpenChange={onOpenChange} />}
-      </div>
+      </Panel.Body>
     </Panel>
   );
 }

@@ -1,6 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import z from "zod";
-import { recurringGroceries } from "@norish/db/schema";
+
+import { recurringGroceries } from "@norish/db-schema/schema";
 
 export const RecurringGrocerySelectBaseSchema = createSelectSchema(recurringGroceries)
   .omit({

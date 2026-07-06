@@ -1,33 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { PlusIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/react/24/outline";
 import {
   Button,
   Card,
-  CardBody,
-  CardHeader,
   Chip,
   Input,
+  Label,
+  ListBox,
   Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
   Select,
-  SelectItem,
   Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
+  TextField,
 } from "@heroui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");
@@ -54,18 +44,19 @@ export default function SiteAuthTokensCard() {
   // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [tokenToDelete, setTokenToDelete] = useState<string | null>(null);
-
   const handleCreate = async () => {
     if (!domain.trim() || !name.trim() || !value.trim()) return;
-
     setIsCreating(true);
     try {
-      const newToken = await createMutation.mutateAsync({ domain, name, value, type });
-
+      const newToken = await createMutation.mutateAsync({
+        domain,
+        name,
+        value,
+        type,
+      });
       queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
         prev ? [...prev, newToken] : [newToken]
       );
-
       setDomain("");
       setName("");
       setValue("");
@@ -82,13 +73,13 @@ export default function SiteAuthTokensCard() {
       setIsCreating(false);
     }
   };
-
   const handleDelete = async (tokenId: string) => {
     try {
       const tokenVersion = tokens.find((token) => token.id === tokenId)?.version ?? 1;
-
-      await removeMutation.mutateAsync({ id: tokenId, version: tokenVersion });
-
+      await removeMutation.mutateAsync({
+        id: tokenId,
+        version: tokenVersion,
+      });
       queryClient.setQueryData(listQueryOptions.queryKey, (prev: typeof tokens | undefined) =>
         prev ? prev.filter((t) => t.id !== tokenId) : prev
       );
@@ -105,72 +96,70 @@ export default function SiteAuthTokensCard() {
       setTokenToDelete(null);
     }
   };
-
   const isFormValid = domain.trim() && name.trim() && value.trim();
-
   return (
     <>
       <Card>
-        <CardHeader>
+        <Card.Header>
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <ShieldCheckIcon className="h-5 w-5" />
             {t("title")}
           </h2>
-        </CardHeader>
-        <CardBody className="gap-4">
-          <p className="text-default-600 text-base">{t("description")}</p>
+        </Card.Header>
+        <Card.Content className="gap-4">
+          <p className="text-muted text-base">{t("description")}</p>
 
           {/* Create form */}
           <div className="flex flex-col gap-3">
-            <div className="flex items-end gap-2">
-              <Input
-                className="flex-1"
-                label={t("domain")}
-                placeholder={t("domainPlaceholder")}
-                size="sm"
-                value={domain}
-                onValueChange={setDomain}
-              />
-              <Input
-                className="flex-1"
-                label={t("name")}
-                placeholder={t("namePlaceholder")}
-                size="sm"
-                value={name}
-                onValueChange={setName}
-              />
-              <Input
-                className="flex-1"
-                label={t("value")}
-                placeholder={t("valuePlaceholder")}
-                size="sm"
-                type="password"
-                value={value}
-                onValueChange={setValue}
-              />
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_9rem] lg:items-end">
+              <TextField className="min-w-0" value={domain} onChange={setDomain}>
+                <Label>{t("domain")}</Label>
+                <Input variant="secondary" placeholder={t("domainPlaceholder")} />
+              </TextField>
+              <TextField className="min-w-0" value={name} onChange={setName}>
+                <Label>{t("name")}</Label>
+                <Input variant="secondary" placeholder={t("namePlaceholder")} />
+              </TextField>
+              <TextField className="min-w-0" type="password" value={value} onChange={setValue}>
+                <Label>{t("value")}</Label>
+                <Input variant="secondary" placeholder={t("valuePlaceholder")} />
+              </TextField>
               <Select
-                className="w-36 shrink-0"
-                label={t("type")}
-                selectedKeys={[type]}
-                size="sm"
-                onSelectionChange={(keys) => {
-                  const selected = Array.from(keys)[0] as "header" | "cookie";
-
-                  if (selected) setType(selected);
+                variant="secondary"
+                className="min-w-0"
+                placeholder={t("type")}
+                value={type}
+                onChange={(selected) => {
+                  if (selected === "header" || selected === "cookie") {
+                    setType(selected);
+                  }
                 }}
               >
-                <SelectItem key="header">{t("typeHeader")}</SelectItem>
-                <SelectItem key="cookie">{t("typeCookie")}</SelectItem>
+                <Label>{t("type")}</Label>
+                <Select.Trigger className="min-h-10">
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                  <ListBox>
+                    <ListBox.Item id="header" textValue={t("typeHeader")}>
+                      {t("typeHeader")}
+                    </ListBox.Item>
+                    <ListBox.Item id="cookie" textValue={t("typeCookie")}>
+                      {t("typeCookie")}
+                    </ListBox.Item>
+                  </ListBox>
+                </Select.Popover>
               </Select>
             </div>
             <div className="flex justify-end">
               <Button
-                color="primary"
                 isDisabled={!isFormValid}
-                isLoading={isCreating}
-                startContent={<PlusIcon className="h-4 w-4" />}
                 onPress={handleCreate}
+                variant="primary"
+                isPending={isCreating}
               >
+                {<PlusIcon className="h-4 w-4" />}
                 {t("addButton")}
               </Button>
             </div>
@@ -179,90 +168,95 @@ export default function SiteAuthTokensCard() {
           {/* Token list */}
           {tokens.length > 0 && (
             <div className="mt-4">
-              <Table aria-label={t("title")}>
-                <TableHeader>
-                  <TableColumn>{t("tableHeaders.domain")}</TableColumn>
-                  <TableColumn>{t("tableHeaders.name")}</TableColumn>
-                  <TableColumn>{t("tableHeaders.type")}</TableColumn>
-                  <TableColumn>{t("tableHeaders.created")}</TableColumn>
-                  <TableColumn>{t("tableHeaders.actions")}</TableColumn>
-                </TableHeader>
-                <TableBody>
-                  {tokens.map((token) => (
-                    <TableRow key={token.id}>
-                      <TableCell>
-                        <code className="bg-default-100 rounded px-2 py-1 text-xs">
-                          {token.domain}
-                        </code>
-                      </TableCell>
-                      <TableCell>{token.name}</TableCell>
-                      <TableCell>
-                        <Chip
-                          color={token.type === "header" ? "primary" : "warning"}
-                          size="sm"
-                          variant="flat"
-                        >
-                          {token.type === "header" ? t("typeHeader") : t("typeCookie")}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>{new Date(token.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Button
-                          isIconOnly
-                          color="danger"
-                          size="sm"
-                          title={t("deleteModal.confirmButton")}
-                          variant="light"
-                          onPress={() => {
-                            setTokenToDelete(token.id);
-                            setShowDeleteModal(true);
-                          }}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+              <Table>
+                <Table.ScrollContainer>
+                  <Table.Content aria-label={t("title")}>
+                    <Table.Header>
+                      <Table.Column id="domain" isRowHeader>
+                        {t("tableHeaders.domain")}
+                      </Table.Column>
+                      <Table.Column id="name">{t("tableHeaders.name")}</Table.Column>
+                      <Table.Column id="type">{t("tableHeaders.type")}</Table.Column>
+                      <Table.Column id="created">{t("tableHeaders.created")}</Table.Column>
+                      <Table.Column id="actions">{t("tableHeaders.actions")}</Table.Column>
+                    </Table.Header>
+                    <Table.Body>
+                      {tokens.map((token) => (
+                        <Table.Row key={token.id} id={token.id}>
+                          <Table.Cell>
+                            <code className="bg-surface-secondary rounded px-2 py-1 text-xs">
+                              {token.domain}
+                            </code>
+                          </Table.Cell>
+                          <Table.Cell>{token.name}</Table.Cell>
+                          <Table.Cell>
+                            <Chip
+                              color={token.type === "header" ? "accent" : "warning"}
+                              size="sm"
+                              variant="soft"
+                            >
+                              {token.type === "header" ? t("typeHeader") : t("typeCookie")}
+                            </Chip>
+                          </Table.Cell>
+                          <Table.Cell>{new Date(token.createdAt).toLocaleDateString()}</Table.Cell>
+                          <Table.Cell>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              title={t("deleteModal.confirmButton")}
+                              onPress={() => {
+                                setTokenToDelete(token.id);
+                                setShowDeleteModal(true);
+                              }}
+                              variant="danger-soft"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </Button>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table.Content>
+                </Table.ScrollContainer>
               </Table>
             </div>
           )}
 
-          {tokens.length === 0 && (
-            <p className="text-default-500 py-4 text-base">{t("noTokens")}</p>
-          )}
-        </CardBody>
+          {tokens.length === 0 && <p className="text-muted py-4 text-base">{t("noTokens")}</p>}
+        </Card.Content>
       </Card>
 
       {/* Delete Confirmation Modal */}
-      <Modal
-        classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
+      <Modal.Backdrop
+        className="z-[1099]"
         isOpen={showDeleteModal}
         onOpenChange={setShowDeleteModal}
       >
-        <ModalContent>
-          {(onClose: () => void) => (
-            <>
-              <ModalHeader>{t("deleteModal.title")}</ModalHeader>
-              <ModalBody>
-                <p>{t("deleteModal.message")}</p>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="flat" onPress={onClose}>
-                  {tActions("cancel")}
-                </Button>
-                <Button
-                  color="danger"
-                  isLoading={removeMutation.isPending}
-                  onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
-                >
-                  {t("deleteModal.confirmButton")}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+        <Modal.Container className="z-[1100]">
+          <Modal.Dialog>
+            {({ close: onClose }) => (
+              <>
+                <Modal.Header>{t("deleteModal.title")}</Modal.Header>
+                <Modal.Body>
+                  <p>{t("deleteModal.message")}</p>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button onPress={onClose} variant="tertiary">
+                    {tActions("cancel")}
+                  </Button>
+                  <Button
+                    onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
+                    variant="danger"
+                    isPending={removeMutation.isPending}
+                  >
+                    {t("deleteModal.confirmButton")}
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </>
   );
 }

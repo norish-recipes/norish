@@ -1,15 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import NextImage from "next/image";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
-import { Button } from "@heroui/react";
-import { AnimatePresence, motion } from "motion/react";
-import { useTranslations } from "next-intl";
-
-import VideoPlayer from "@/components/shared/video-player";
-import ImageLightbox from "@/components/shared/image-lightbox";
 import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
+import ImageLightbox from "@/components/shared/image-lightbox";
+import VideoPlayer from "@/components/shared/video-player";
+import { Carousel, useCarousel } from "@/components/ui/carousel";
+import { useTranslations } from "next-intl";
 
 export interface MediaItem {
   type: "image" | "video";
@@ -29,7 +26,11 @@ interface RecipeMedia {
     duration?: number | null;
     order: number;
   }>;
-  images?: Array<{ id?: string; image: string; order?: number }>;
+  images?: Array<{
+    id?: string;
+    image: string;
+    order?: number;
+  }>;
   image?: string | null;
 }
 
@@ -68,12 +69,14 @@ export function buildMediaItems(recipe: RecipeMedia): MediaItem[] {
 
   // Fallback to legacy recipe.image if no images array
   if ((!recipe.images || recipe.images.length === 0) && recipe.image) {
-    items.push({ type: "image" as const, src: recipe.image, order: 999 });
+    items.push({
+      type: "image" as const,
+      src: recipe.image,
+      order: 999,
+    });
   }
-
   return items;
 }
-
 export interface MediaCarouselProps {
   items: MediaItem[];
   onImageClick?: (index: number) => void;
@@ -82,6 +85,87 @@ export interface MediaCarouselProps {
   className?: string;
   aspectRatio?: "video" | "square" | "4/3";
   rounded?: boolean;
+}
+
+type MediaCarouselSlidesProps = {
+  handleImageError: (src: string) => void;
+  hasError: (src: string) => boolean;
+  mediaBoxClassName: string;
+  onActiveItemChange?: (item: MediaItem, index: number) => void;
+  onActiveVideoControlsVisibilityChange?: (visible: boolean) => void;
+  onImageClick: (item: MediaItem, itemIndex: number) => void;
+  sortedItems: MediaItem[];
+};
+
+function MediaCarouselSlides({
+  handleImageError,
+  hasError,
+  mediaBoxClassName,
+  onActiveItemChange,
+  onActiveVideoControlsVisibilityChange,
+  onImageClick,
+  sortedItems,
+}: MediaCarouselSlidesProps) {
+  const { selectedIndex } = useCarousel();
+  const safeIndex = Math.min(selectedIndex, sortedItems.length - 1);
+
+  useEffect(() => {
+    const activeItem = sortedItems[safeIndex];
+    if (!activeItem) return;
+
+    onActiveItemChange?.(activeItem, safeIndex);
+
+    if (activeItem.type !== "video") {
+      onActiveVideoControlsVisibilityChange?.(false);
+    }
+  }, [onActiveItemChange, onActiveVideoControlsVisibilityChange, safeIndex, sortedItems]);
+
+  return (
+    <Carousel.Content className="h-full">
+      {sortedItems.map((item, index) => (
+        <Carousel.Item key={`${item.id ?? item.src}-${index}`} className="h-full">
+          <div className={mediaBoxClassName}>
+            {item.type === "video" ? (
+              <VideoPlayer
+                className="h-full w-full"
+                duration={item.duration}
+                poster={item.thumbnail || undefined}
+                src={item.src}
+                onControlsVisibilityChange={
+                  index === safeIndex ? onActiveVideoControlsVisibilityChange : undefined
+                }
+              />
+            ) : hasError(item.src) ? (
+              <FallbackPlaceholder />
+            ) : (
+              <div
+                className="group relative h-full w-full cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onClick={() => onImageClick(item, index)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onImageClick(item, index);
+                  }
+                }}
+              >
+                <NextImage
+                  fill
+                  unoptimized
+                  alt={`Recipe media ${index + 1}`}
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(min-width: 1024px) 60vw, (min-width: 768px) 50vw, 100vw"
+                  src={item.src}
+                  onError={() => handleImageError(item.src)}
+                />
+              </div>
+            )}
+          </div>
+        </Carousel.Item>
+      ))}
+    </Carousel.Content>
+  );
 }
 
 export default function MediaCarousel({
@@ -93,16 +177,10 @@ export default function MediaCarousel({
   aspectRatio = "video",
   rounded = true,
 }: MediaCarouselProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const { handleImageError, hasError } = useImageErrors();
-  const lightboxOpenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Touch handling state
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const t = useTranslations("recipes.carousel");
 
   // Sort items: order ascending, then videos before images
@@ -110,7 +188,6 @@ export default function MediaCarousel({
     return [...items].sort((a, b) => {
       if (a.order !== b.order) return a.order - b.order;
       if (a.type !== b.type) return a.type === "video" ? -1 : 1;
-
       return 0;
     });
   }, [items]);
@@ -125,72 +202,22 @@ export default function MediaCarousel({
       }));
   }, [sortedItems]);
 
-  const clearPendingLightboxOpen = useCallback(() => {
-    if (lightboxOpenTimeoutRef.current) {
-      clearTimeout(lightboxOpenTimeoutRef.current);
-      lightboxOpenTimeoutRef.current = null;
-    }
-  }, []);
-
   useEffect(() => {
-    return () => {
-      clearPendingLightboxOpen();
-    };
-  }, [clearPendingLightboxOpen]);
+    if (sortedItems.length !== 1) return;
 
-  useEffect(() => {
-    if (!sortedItems.length) return;
-    const safeIndex = Math.min(currentIndex, sortedItems.length - 1);
-    const activeItem = sortedItems[safeIndex];
+    const activeItem = sortedItems[0];
+    onActiveItemChange?.(activeItem, 0);
 
-    if (!activeItem) return;
-    onActiveItemChange?.(activeItem, safeIndex);
-  }, [currentIndex, onActiveItemChange, sortedItems]);
-
-  useEffect(() => {
-    if (!sortedItems.length) return;
-    if (currentIndex <= sortedItems.length - 1) return;
-    setCurrentIndex(sortedItems.length - 1);
-  }, [currentIndex, sortedItems.length]);
-
-  const handleNext = useCallback(() => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev + 1 === sortedItems.length ? 0 : prev + 1));
-  }, [sortedItems.length]);
-
-  const handlePrev = useCallback(() => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev === 0 ? sortedItems.length - 1 : prev - 1));
-  }, [sortedItems.length]);
-
-  // Swipe handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      handleNext();
+    if (activeItem.type !== "video") {
+      onActiveVideoControlsVisibilityChange?.(false);
     }
-    if (isRightSwipe) {
-      handlePrev();
-    }
-  };
+  }, [onActiveItemChange, onActiveVideoControlsVisibilityChange, sortedItems]);
 
   const openLightboxForItem = useCallback(
     (item: MediaItem, itemIndex: number) => {
-      const imgIndex = lightboxImages.findIndex((img) => img.src === item.src);
+      if (item.type !== "image") return;
 
+      const imgIndex = lightboxImages.findIndex((img) => img.src === item.src);
       if (imgIndex !== -1) {
         setLightboxIndex(imgIndex);
         setLightboxOpen(true);
@@ -200,54 +227,28 @@ export default function MediaCarousel({
     [lightboxImages, onImageClick]
   );
 
-  const handleItemClick = (item: MediaItem, itemIndex: number, clickDetail: number) => {
-    if (item.type !== "image") {
-      return;
-    }
-
-    if (clickDetail > 1 || lightboxOpenTimeoutRef.current) {
-      clearPendingLightboxOpen();
-
-      return;
-    }
-
-    clearPendingLightboxOpen();
-    lightboxOpenTimeoutRef.current = setTimeout(() => {
-      openLightboxForItem(item, itemIndex);
-      lightboxOpenTimeoutRef.current = null;
-    }, 250);
-  };
-
   const aspectRatioClass = {
     video: "aspect-video",
     square: "aspect-square",
     "4/3": "aspect-[4/3]",
   }[aspectRatio];
-
   const roundedClass = rounded ? "rounded-2xl" : "";
-
-  const slideVariants = {
-    enter: (dir: number) => ({
-      x: dir !== 0 ? (dir > 0 ? "100%" : "-100%") : 0,
-      opacity: 0, // Fade out while sliding for smoother effect
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (dir: number) => ({
-      x: dir !== 0 ? (dir < 0 ? "100%" : "-100%") : 0,
-      opacity: 0,
-    }),
-  };
+  const mediaBoxClassName = `bg-surface-tertiary relative w-full overflow-hidden ${roundedClass} ${aspectRatioClass} ${className}`;
+  const carouselClassName = [
+    "relative w-full [--carousel-gap:0px]",
+    "[&_[data-slot=carousel-viewport-wrapper]]:h-full [&_[data-slot=carousel-viewport]]:h-full",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   // Case 0: No items
   if (!sortedItems || sortedItems.length === 0) {
     return (
       <div
-        className={`bg-default-200 relative w-full overflow-hidden ${roundedClass} ${aspectRatioClass} ${className} flex items-center justify-center`}
+        className={`bg-surface-tertiary relative w-full overflow-hidden ${roundedClass} ${aspectRatioClass} ${className} flex items-center justify-center`}
       >
-        <span className="text-default-500 font-medium">{t("noMediaAvailable")}</span>
+        <span className="text-muted font-medium">{t("noMediaAvailable")}</span>
       </div>
     );
   }
@@ -255,7 +256,6 @@ export default function MediaCarousel({
   // Case 1: Single item (no carousel controls)
   if (sortedItems.length === 1) {
     const item = sortedItems[0];
-
     return (
       <>
         <div
@@ -276,7 +276,7 @@ export default function MediaCarousel({
               className="group relative h-full w-full cursor-pointer"
               role="button"
               tabIndex={0}
-              onClick={(e) => handleItemClick(item, 0, e.detail)}
+              onClick={() => openLightboxForItem(item, 0)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
@@ -289,6 +289,7 @@ export default function MediaCarousel({
                 unoptimized
                 alt="Recipe image"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(min-width: 1024px) 60vw, (min-width: 768px) 50vw, 100vw"
                 src={item.src}
                 onError={() => handleImageError(item.src)}
               />
@@ -308,102 +309,20 @@ export default function MediaCarousel({
   // Case 2+: Carousel
   return (
     <>
-      <div
-        className={`bg-default-200 relative w-full overflow-hidden ${roundedClass} ${aspectRatioClass} ${className} group touch-pan-y`}
-        onTouchEnd={handleTouchEnd}
-        onTouchMove={handleTouchMove}
-        onTouchStart={handleTouchStart}
-      >
-        <AnimatePresence custom={direction} initial={false} mode="popLayout">
-          <motion.div
-            key={currentIndex}
-            animate="center"
-            className="absolute inset-0 h-full w-full"
-            custom={direction}
-            exit="exit"
-            initial="enter"
-            transition={{
-              x: { type: "spring", stiffness: 300, damping: 30 },
-              opacity: { duration: 0.2 },
-            }}
-            variants={slideVariants}
-          >
-            {sortedItems[currentIndex].type === "video" ? (
-              <VideoPlayer
-                className="h-full w-full"
-                duration={sortedItems[currentIndex].duration}
-                poster={sortedItems[currentIndex].thumbnail || undefined}
-                src={sortedItems[currentIndex].src}
-                onControlsVisibilityChange={onActiveVideoControlsVisibilityChange}
-              />
-            ) : hasError(sortedItems[currentIndex].src) ? (
-              <FallbackPlaceholder />
-            ) : (
-              <div
-                className="relative h-full w-full cursor-pointer"
-                role="button"
-                tabIndex={0}
-                onClick={(e) => handleItemClick(sortedItems[currentIndex], currentIndex, e.detail)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    openLightboxForItem(sortedItems[currentIndex], currentIndex);
-                  }
-                }}
-              >
-                <NextImage
-                  fill
-                  unoptimized
-                  alt={`Recipe media ${currentIndex + 1}`}
-                  className="object-cover"
-                  src={sortedItems[currentIndex].src}
-                  onError={() => handleImageError(sortedItems[currentIndex].src)}
-                />
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Navigation Arrows (Desktop Only - appear on hover) */}
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-between px-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:px-4">
-          <Button
-            isIconOnly
-            className="pointer-events-auto bg-black/30 text-white backdrop-blur-sm hover:bg-black/50"
-            radius="full"
-            size="sm"
-            onPress={handlePrev}
-          >
-            <ChevronLeftIcon className="h-5 w-5" />
-          </Button>
-          <Button
-            isIconOnly
-            className="pointer-events-auto bg-black/30 text-white backdrop-blur-sm hover:bg-black/50"
-            radius="full"
-            size="sm"
-            onPress={handleNext}
-          >
-            <ChevronRightIcon className="h-5 w-5" />
-          </Button>
-        </div>
-
-        {/* Dot Indicators */}
-        <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
-          {sortedItems.map((item, idx) => (
-            <button
-              key={`${item.id || idx}`}
-              aria-label={`Go to slide ${idx + 1}`}
-              className={`h-2 rounded-full transition-all ${
-                idx === currentIndex ? "w-4 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
-              }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setDirection(idx > currentIndex ? 1 : -1);
-                setCurrentIndex(idx);
-              }}
-            />
-          ))}
-        </div>
-      </div>
+      <Carousel className={carouselClassName} opts={{ loop: true }}>
+        <MediaCarouselSlides
+          handleImageError={handleImageError}
+          hasError={hasError}
+          mediaBoxClassName={mediaBoxClassName}
+          sortedItems={sortedItems}
+          onActiveItemChange={onActiveItemChange}
+          onActiveVideoControlsVisibilityChange={onActiveVideoControlsVisibilityChange}
+          onImageClick={openLightboxForItem}
+        />
+        <Carousel.Previous className="bg-background/70 text-foreground backdrop-blur-md" />
+        <Carousel.Next className="bg-background/70 text-foreground backdrop-blur-md" />
+        <Carousel.Dots className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/20 px-2 py-1 backdrop-blur-sm" />
+      </Carousel>
 
       <ImageLightbox
         images={lightboxImages}

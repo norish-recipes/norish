@@ -17,7 +17,7 @@ vi.mock("@norish/shared-server/ai/prompts/loader", () => ({
 }));
 
 // Mock server config
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   isAIEnabled: vi.fn().mockResolvedValue(true),
   getAIConfig: vi.fn().mockResolvedValue({
     enabled: true,
@@ -46,7 +46,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 describe("inferOriginForRecipe", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
-    const { isAIEnabled } = await import("@norish/config/server-config-loader");
+    const { isAIEnabled } = await import("@norish/shared-server/config/server-config-loader");
 
     vi.mocked(isAIEnabled).mockResolvedValue(true);
   });
@@ -83,7 +83,7 @@ describe("inferOriginForRecipe", () => {
   });
 
   it("returns an error when AI is disabled", async () => {
-    const { isAIEnabled } = await import("@norish/config/server-config-loader");
+    const { isAIEnabled } = await import("@norish/shared-server/config/server-config-loader");
 
     vi.mocked(isAIEnabled).mockResolvedValue(false);
 

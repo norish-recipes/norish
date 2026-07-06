@@ -1,5 +1,6 @@
 "use client";
 
+import HeartButton from "@/components/shared/heart-button";
 import {
   ClockIcon,
   EllipsisHorizontalIcon,
@@ -7,9 +8,8 @@ import {
   UserGroupIcon,
 } from "@heroicons/react/20/solid";
 import { Button, Chip } from "@heroui/react";
-import { cssGlassBackdropChip } from "@norish/web/config/css-tokens";
 
-import HeartButton from "@/components/shared/heart-button";
+import { cssGlassBackdropChip } from "@norish/web/config/css-tokens";
 
 interface RecipeMetadataProps {
   timeLabel?: string | null;
@@ -19,7 +19,6 @@ interface RecipeMetadataProps {
   onToggleFavorite?: () => void;
   averageRating?: number | null;
 }
-
 export default function RecipeMetadata({
   timeLabel,
   servings,
@@ -47,50 +46,48 @@ export default function RecipeMetadata({
       <div className="pointer-events-auto absolute top-2 right-2 z-20 flex items-center gap-2">
         {typeof averageRating === "number" && averageRating > 0 && (
           <Chip
-            className={`px-2 text-[11px] text-white ${cssGlassBackdropChip}`}
-            radius="full"
+            className={`rounded-full px-2 text-[11px] text-white ${cssGlassBackdropChip}`}
             size="sm"
-            startContent={<StarIcon className="text-warning h-4 w-4" />}
-            variant="flat"
+            variant="soft"
           >
-            {Math.round(averageRating)}
+            <StarIcon className="text-warning h-4 w-4" />
+            <Chip.Label>{Math.round(averageRating)}</Chip.Label>
           </Chip>
         )}
 
         {timeLabel && (
           <Chip
-            className={`px-2 text-[11px] text-white ${cssGlassBackdropChip}`}
-            radius="full"
+            className={`rounded-full px-2 text-[11px] text-white ${cssGlassBackdropChip}`}
             size="sm"
-            startContent={<ClockIcon className="h-4 w-4" />}
-            variant="flat"
+            variant="soft"
           >
-            {timeLabel}
+            <ClockIcon className="h-4 w-4" />
+            <Chip.Label>{timeLabel}</Chip.Label>
           </Chip>
         )}
 
         {typeof servings === "number" && servings > 0 && (
           <Chip
-            className={`px-2 text-[11px] text-white ${cssGlassBackdropChip}`}
-            radius="full"
+            className={`rounded-full px-2 text-[11px] text-white ${cssGlassBackdropChip}`}
             size="sm"
-            startContent={<UserGroupIcon className="h-4 w-4" />}
-            variant="flat"
+            variant="soft"
           >
-            {servings}
+            <UserGroupIcon className="h-4 w-4" />
+            <Chip.Label>{servings}</Chip.Label>
           </Chip>
         )}
 
-        <Button
-          isIconOnly
-          className={`text-white ${cssGlassBackdropChip} h-6 w-6 min-w-0 p-0`}
-          radius="full"
-          size="sm"
-          variant="flat"
-          onPress={onOptionsPress}
-        >
-          <EllipsisHorizontalIcon className="h-4 w-4" />
-        </Button>
+        {onOptionsPress && (
+          <Button
+            isIconOnly
+            className={`hidden text-white md:flex ${cssGlassBackdropChip} h-6 w-6 min-w-0 p-0`}
+            size="sm"
+            onPress={onOptionsPress}
+            variant="tertiary"
+          >
+            <EllipsisHorizontalIcon className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </>
   );

@@ -2,19 +2,24 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ArrowPathIcon, CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
-import { Button, Textarea } from "@heroui/react";
+import { Button, TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface JsonEditorProps {
   value: unknown;
   label?: string;
   description: string;
-  onSave: (jsonString: string) => Promise<{ success: boolean; error?: string }>;
-  onRestoreDefaults?: () => Promise<{ success: boolean; error?: string }>;
+  onSave: (jsonString: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  onRestoreDefaults?: () => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
   disabled?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
 }
-
 export default function JsonEditor({
   value,
   onSave,
@@ -37,19 +42,15 @@ export default function JsonEditor({
       setText("");
       setIsDirty(false);
       setError(null);
-
       return;
     }
-
     setText(JSON.stringify(value, null, 2));
     setIsDirty(false);
     setError(null);
   }, [value]);
-
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
-
   const handleTextChange = useCallback(
     (newText: string) => {
       setText(newText);
@@ -65,14 +66,11 @@ export default function JsonEditor({
     },
     [t]
   );
-
   const handleSave = useCallback(async () => {
     if (error) return;
-
     setSaving(true);
     try {
       const result = await onSave(text);
-
       if (result.success) {
         setIsDirty(false);
       } else if (result.error) {
@@ -84,14 +82,11 @@ export default function JsonEditor({
       setSaving(false);
     }
   }, [text, error, onSave, t]);
-
   const handleRestoreDefaults = useCallback(async () => {
     if (!onRestoreDefaults) return;
-
     setSaving(true);
     try {
       const result = await onRestoreDefaults();
-
       if (!result.success && result.error) {
         setError(result.error);
       }
@@ -101,18 +96,15 @@ export default function JsonEditor({
       setSaving(false);
     }
   }, [onRestoreDefaults, t]);
-
   const handleFormat = useCallback(() => {
     try {
       const parsed = JSON.parse(text);
-
       setText(JSON.stringify(parsed, null, 2));
       setError(null);
     } catch {
       // Keep error state
     }
   }, [text]);
-
   return (
     <div className="flex flex-col gap-3">
       {label && (
@@ -121,12 +113,11 @@ export default function JsonEditor({
         </div>
       )}
 
-      {description && <p className="text-default-500 text-base">{description}</p>}
+      {description && <p className="text-muted text-base">{description}</p>}
 
-      <Textarea
-        classNames={{
-          input: "font-mono text-sm",
-        }}
+      <TextArea
+        variant="secondary"
+        className="font-mono text-sm"
         errorMessage={error || undefined}
         isDisabled={disabled}
         isInvalid={!!error && text !== ""}
@@ -147,31 +138,26 @@ export default function JsonEditor({
         <Button
           className="hidden sm:inline-flex"
           isDisabled={disabled || saving}
-          variant="flat"
           onPress={handleFormat}
+          variant="tertiary"
         >
           {tActions("format")}
         </Button>
 
         {onRestoreDefaults && (
-          <Button
-            color="warning"
-            isDisabled={saving}
-            startContent={<ArrowPathIcon className="h-5 w-5" />}
-            variant="flat"
-            onPress={handleRestoreDefaults}
-          >
+          <Button isDisabled={saving} onPress={handleRestoreDefaults} variant="tertiary">
+            {<ArrowPathIcon className="h-5 w-5" />}
             {tActions("restoreDefaults")}
           </Button>
         )}
 
         <Button
-          color="primary"
           isDisabled={disabled || !!error || !isDirty}
-          isLoading={saving}
-          startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}
+          variant="primary"
+          isPending={saving}
         >
+          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

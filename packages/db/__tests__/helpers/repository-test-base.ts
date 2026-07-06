@@ -39,6 +39,7 @@ export class RepositoryTestBase {
   protected testDbName: string;
   protected testDbUrl: string;
   protected originalDatabaseUrl: string;
+  protected originalEnvDatabaseUrl: string | undefined;
   private dbNamePrefix: string;
 
   constructor(dbNamePrefix: string) {
@@ -46,6 +47,7 @@ export class RepositoryTestBase {
     this.testDbName = "";
     this.testDbUrl = "";
     this.originalDatabaseUrl = "";
+    this.originalEnvDatabaseUrl = undefined;
   }
 
   /**
@@ -54,6 +56,7 @@ export class RepositoryTestBase {
   async setup(): Promise<void> {
     // Save original DATABASE_URL
     this.originalDatabaseUrl = SERVER_CONFIG.DATABASE_URL;
+    this.originalEnvDatabaseUrl = process.env.DATABASE_URL;
 
     // Generate unique database name for this test suite
     this.testDbName = generateTestDbName(this.dbNamePrefix);
@@ -62,7 +65,8 @@ export class RepositoryTestBase {
     this.testDbUrl = await setupTestDatabase(this.testDbName);
 
     // Update SERVER_CONFIG to point to test database
-    (SERVER_CONFIG as any).DATABASE_URL = this.testDbUrl;
+    SERVER_CONFIG.DATABASE_URL = this.testDbUrl;
+    process.env.DATABASE_URL = this.testDbUrl;
 
     // Reset the global db connection to pick up the new SERVER_CONFIG.DATABASE_URL
     await resetDbConnection();
@@ -101,7 +105,12 @@ export class RepositoryTestBase {
     await teardownTestDatabase(this.testDbName);
 
     // Restore original DATABASE_URL
-    (SERVER_CONFIG as any).DATABASE_URL = this.originalDatabaseUrl;
+    SERVER_CONFIG.DATABASE_URL = this.originalDatabaseUrl;
+    if (this.originalEnvDatabaseUrl === undefined) {
+      delete process.env.DATABASE_URL;
+    } else {
+      process.env.DATABASE_URL = this.originalEnvDatabaseUrl;
+    }
 
     // Reset connection back to original
     await resetDbConnection();

@@ -1,12 +1,5 @@
 "use client";
 
-import type {
-  GroceryDto,
-  RecurringGroceryDto,
-  StoreColor,
-  StoreDto,
-} from "@norish/shared/contracts";
-
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckIcon,
@@ -14,10 +7,16 @@ import {
   EllipsisVerticalIcon,
   TrashIcon,
 } from "@heroicons/react/16/solid";
-import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
+import { Button, Dropdown, Label } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import type {
+  GroceryDto,
+  RecurringGroceryDto,
+  StoreColor,
+  StoreDto,
+} from "@norish/shared/contracts";
 
 import {
   SortableGroceryItem,
@@ -47,7 +46,6 @@ interface StoreSectionProps {
 
 // Delay before reordering after toggle (ms)
 const REORDER_DELAY = 600;
-
 function StoreSectionComponent({
   store,
   groceries,
@@ -78,7 +76,6 @@ function StoreSectionComponent({
   // Cleanup timeouts on unmount
   useEffect(() => {
     const timeouts = timeoutRefs.current;
-
     return () => {
       timeouts.forEach((timeout) => clearTimeout(timeout));
     };
@@ -96,37 +93,31 @@ function StoreSectionComponent({
 
         // Clear any existing timeout for this id
         const existingTimeout = timeoutRefs.current.get(id);
-
         if (existingTimeout) clearTimeout(existingTimeout);
 
         // Remove from transitioning after delay
         const timeout = setTimeout(() => {
           setTransitioningIds((prev) => {
             const next = new Set(prev);
-
             next.delete(id);
-
             return next;
           });
           timeoutRefs.current.delete(id);
         }, REORDER_DELAY);
-
         timeoutRefs.current.set(id, timeout);
       }
     },
     [onToggle]
   );
-
   const colorClasses = store
     ? getStoreColorClasses(store.color as StoreColor)
     : {
-        bg: "bg-default-400",
-        bgLight: "bg-default-100",
-        text: "text-default-500",
-        border: "border-default-300",
-        ring: "ring-default-400",
+        bg: "bg-muted",
+        bgLight: "bg-surface-secondary",
+        text: "text-muted",
+        border: "border-border-secondary",
+        ring: "ring-border",
       };
-
   const activeCount = groceries.filter((g) => !g.isDone).length;
   const doneCount = groceries.filter((g) => g.isDone).length;
 
@@ -137,11 +128,9 @@ function StoreSectionComponent({
   // render items that are dragged from other stores during drag operations
   const groceryMap = useMemo(() => {
     const map = new Map<string, GroceryDto>();
-
     for (const g of allGroceries) {
       map.set(g.id, g);
     }
-
     return map;
   }, [allGroceries]);
 
@@ -149,7 +138,6 @@ function StoreSectionComponent({
   const activeGroceries = useMemo(() => {
     // Use DnD context order
     const ordered: GroceryDto[] = [];
-
     for (const id of orderedItemIds) {
       const grocery = groceryMap.get(id);
 
@@ -158,7 +146,6 @@ function StoreSectionComponent({
         ordered.push(grocery);
       }
     }
-
     return ordered;
   }, [orderedItemIds, groceryMap, transitioningIds]);
 
@@ -191,19 +178,29 @@ function StoreSectionComponent({
         {/* Name and count */}
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <span className="truncate font-semibold">{store?.name ?? t("unsorted")}</span>
-          <span className="text-default-400 shrink-0 text-sm">
+          <span className="text-muted shrink-0 text-sm">
             {activeCount > 0 && <span>{activeCount}</span>}
             {doneCount > 0 && (
-              <span className="text-default-300 ml-1">({t("done", { count: doneCount })})</span>
+              <span className="text-muted ml-1">
+                (
+                {t("done", {
+                  count: doneCount,
+                })}
+                )
+              </span>
             )}
           </span>
         </div>
 
         {/* Expand/collapse chevron */}
         <motion.div
-          animate={{ rotate: isExpanded ? 180 : 0 }}
-          className="text-default-400 shrink-0"
-          transition={{ duration: 0.2 }}
+          animate={{
+            rotate: isExpanded ? 180 : 0,
+          }}
+          className="text-muted shrink-0"
+          transition={{
+            duration: 0.2,
+          }}
         >
           <ChevronDownIcon className="h-5 w-5" />
         </motion.div>
@@ -212,34 +209,37 @@ function StoreSectionComponent({
       {/* Bulk actions dropdown */}
       {groceries.length > 0 && (
         <Dropdown>
-          <DropdownTrigger>
-            <Button isIconOnly className="shrink-0" size="sm" variant="light">
-              <EllipsisVerticalIcon className="h-5 w-5" />
-            </Button>
-          </DropdownTrigger>
-          <DropdownMenu aria-label={t("storeActions")}>
-            <DropdownItem
-              key="mark-done"
-              startContent={<CheckIcon className="h-4 w-4" />}
-              onPress={() => onMarkAllDone?.()}
-            >
-              {t("markAllDone")}
-            </DropdownItem>
-            <DropdownItem
-              key="delete-done"
-              className="text-danger"
-              color="danger"
-              startContent={<TrashIcon className="h-4 w-4" />}
-              onPress={() => onDeleteDone?.()}
-            >
-              {t("deleteDone")}
-            </DropdownItem>
-          </DropdownMenu>
+          <Button isIconOnly className="shrink-0" size="sm" variant="tertiary">
+            <EllipsisVerticalIcon className="h-5 w-5" />
+          </Button>
+          <Dropdown.Popover className="bg-overlay">
+            <Dropdown.Menu aria-label={t("storeActions")}>
+              <Dropdown.Item
+                id="mark-done"
+                key="mark-done"
+                textValue={t("markAllDone")}
+                onPress={() => onMarkAllDone?.()}
+              >
+                {<CheckIcon className="h-4 w-4" />}
+                <Label>{t("markAllDone")}</Label>
+              </Dropdown.Item>
+              <Dropdown.Item
+                id="delete-done"
+                key="delete-done"
+                className="text-danger"
+                textValue={t("deleteDone")}
+                onPress={() => onDeleteDone?.()}
+                variant="danger"
+              >
+                {<TrashIcon className="h-4 w-4" />}
+                <Label>{t("deleteDone")}</Label>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
         </Dropdown>
       )}
     </div>
   );
-
   return (
     <motion.div ref={sectionRef} className="relative" data-store-id={store?.id ?? "unsorted"}>
       {/* Entire section wrapped in SortableStoreContainer - header + items are droppable */}
@@ -250,7 +250,7 @@ function StoreSectionComponent({
       >
         {/* Items area - only shown when expanded */}
         {isExpanded ? (
-          <div className="divide-default-100 divide-y">
+          <div className="divide-border divide-y">
             {/* Active (not done) items - sortable */}
             {activeGroceries.map((grocery, index) => {
               const recurringGrocery = grocery.recurringGroceryId
@@ -258,7 +258,6 @@ function StoreSectionComponent({
                 : null;
               const isFirst = index === 0;
               const isLast = index === activeGroceries.length - 1 && doneGroceries.length === 0;
-
               return (
                 <SortableGroceryItem key={grocery.id} grocery={grocery}>
                   <GroceryItem
@@ -283,7 +282,6 @@ function StoreSectionComponent({
                 : null;
               const isFirst = index === 0 && activeGroceries.length === 0;
               const isLast = index === doneGroceries.length - 1;
-
               return (
                 <div key={grocery.id}>
                   <GroceryItem
@@ -303,7 +301,7 @@ function StoreSectionComponent({
 
             {/* Empty state - only show when no items AND no items being dragged here */}
             {activeGroceries.length === 0 && doneGroceries.length === 0 && (
-              <div className="text-default-400 px-4 py-6 text-center text-sm">{t("noItems")}</div>
+              <div className="text-muted px-4 py-6 text-center text-sm">{t("noItems")}</div>
             )}
           </div>
         ) : null}
@@ -311,5 +309,4 @@ function StoreSectionComponent({
     </motion.div>
   );
 }
-
 export const StoreSection = memo(StoreSectionComponent);

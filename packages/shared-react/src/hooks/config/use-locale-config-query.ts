@@ -1,7 +1,6 @@
-import type { CreateConfigHooksOptions } from "./types";
-
 import { useQuery } from "@tanstack/react-query";
 
+import type { CreateConfigHooksOptions } from "./types";
 import { normalizeLocaleConfig } from "./normalize-locale-config";
 
 export function createUseLocaleConfigQuery({ useTRPC }: CreateConfigHooksOptions) {

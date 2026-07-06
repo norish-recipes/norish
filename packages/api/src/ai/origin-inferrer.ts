@@ -5,7 +5,7 @@ import { provenanceInferenceSchema, type ProvenanceInferenceOutput } from "./sch
 import { loadPrompt } from "@norish/shared-server/ai/prompts/loader";
 import { aiSuccess, aiError, mapErrorToCode, getErrorMessage, type AIResult } from "./core/types";
 
-import { isAIEnabled } from "@norish/config/server-config-loader";
+import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
 export interface RecipeForProvenanceInference {

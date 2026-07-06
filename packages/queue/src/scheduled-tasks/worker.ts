@@ -1,6 +1,6 @@
 import type { Job } from "bullmq";
-
 import { Worker } from "bullmq";
+
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";

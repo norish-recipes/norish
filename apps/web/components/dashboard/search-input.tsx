@@ -1,18 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import { useRecipesContext } from "@/context/recipes-context";
+import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
+import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
+
 import { isUrl } from "@norish/shared/lib/helpers";
 
 import Filters from "../shared/filters";
-
 import SearchFieldToggles from "./search-field-toggles";
-
-import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
-import { useRecipesContext } from "@/context/recipes-context";
 
 export default function SearchInput() {
   const t = useTranslations("recipes.dashboard");
@@ -102,31 +101,43 @@ export default function SearchInput() {
   return (
     <div className="flex w-full flex-col gap-2">
       <div className="flex w-full items-center gap-2">
-        <Input
-          isClearable
-          classNames={{
-            inputWrapper: "h-12",
-            input: "text-[15px]",
-          }}
-          id="search-input"
-          placeholder={t("searchPlaceholder")}
-          radius="full"
-          startContent={
-            <MagnifyingGlassIcon
-              className={`h-5 w-5 ${hasFilters ? "text-primary animate-pulse" : "text-default-400"}`}
-            />
-          }
-          style={{ fontSize: "16px" }}
-          value={inputValue}
-          variant="flat"
-          onBlur={handleBlur}
-          onChange={handleChange}
-          onClear={() => {
-            setInputValue("");
-            setFilters({ rawInput: "" });
-          }}
-          onFocus={handleFocus}
-        />
+        <div className="relative min-w-0 flex-1">
+          <MagnifyingGlassIcon
+            className={`pointer-events-none absolute top-1/2 left-4 z-10 h-5 w-5 -translate-y-1/2 ${
+              hasFilters ? "text-accent animate-pulse" : "text-muted"
+            }`}
+          />
+          <Input
+            fullWidth
+            className="bg-field shadow-field focus-visible:border-accent/60 focus-visible:ring-accent/20 h-12 rounded-full border border-transparent px-11 text-[15px] transition-colors outline-none focus-visible:ring-2"
+            id="search-input"
+            placeholder={t("searchPlaceholder")}
+            style={{
+              fontSize: "16px",
+              paddingLeft: "2.75rem",
+              paddingRight: inputValue.length > 0 ? "2.75rem" : "1rem",
+            }}
+            value={inputValue}
+            variant="primary"
+            onBlur={handleBlur}
+            onChange={handleChange}
+            onFocus={handleFocus}
+          />
+          {inputValue.length > 0 && (
+            <button
+              aria-label="Clear search"
+              className="text-muted hover:bg-surface-secondary hover:text-foreground absolute top-1/2 right-2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full transition-colors"
+              type="button"
+              onClick={() => {
+                setInputValue("");
+                setFilters({ rawInput: "" });
+              }}
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              <XMarkIcon className="h-4 w-4" />
+            </button>
+          )}
+        </div>
         <Filters isGlass={false} />
       </div>
       {/* Use grid for height animation - avoids layout thrashing on desktop */}

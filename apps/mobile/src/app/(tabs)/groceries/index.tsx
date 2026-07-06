@@ -1,12 +1,6 @@
 import React from "react";
-import { SimpleTabScreen } from "@/components/shell/simple-tab-screen";
+import { GroceriesScreen as GroceriesTabScreen } from "@/components/groceries";
 
 export default function GroceriesScreen() {
-  return (
-    <SimpleTabScreen
-      title="Groceries"
-      subtitle="Plan your next store run quickly."
-      body="Track store lists and prep ingredients here."
-    />
-  );
+  return <GroceriesTabScreen />;
 }

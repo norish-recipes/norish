@@ -1,3 +1,5 @@
+import { and, eq, sql } from "drizzle-orm";
+
 import type {
   HouseholdDto,
   HouseholdInsertDto,
@@ -5,9 +7,6 @@ import type {
   HouseholdUserInsertDto,
   HouseholdWithUsersNamesDto,
 } from "@norish/shared/contracts/dto/household";
-import type { MutationOutcome } from "./mutation-outcomes";
-
-import { and, eq, sql } from "drizzle-orm";
 import { db } from "@norish/db/drizzle";
 import { households, householdUsers } from "@norish/db/schema";
 import {
@@ -18,7 +17,7 @@ import {
   HouseholdWithUsersNamesSchema,
 } from "@norish/shared/contracts/zod/household";
 
-
+import type { MutationOutcome } from "./mutation-outcomes";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { getUsersByIds } from "./users";
 
@@ -68,7 +67,7 @@ export async function getHouseholdById(id: string): Promise<HouseholdDto | null>
 export async function getHouseholdForUser(
   userId: string
 ): Promise<HouseholdWithUsersNamesDto | null> {
-  const rows = (await db.query.householdUsers.findFirst({
+  const rows = await db.query.householdUsers.findFirst({
     where: eq(householdUsers.userId, userId),
     columns: { householdId: true },
     with: {
@@ -90,7 +89,7 @@ export async function getHouseholdForUser(
         },
       },
     },
-  })) as any;
+  });
 
   if (!rows?.household) return null;
 
@@ -151,7 +150,7 @@ export async function addUserToHousehold(input: HouseholdUserInsertDto): Promise
 
   const [row] = await db
     .insert(householdUsers)
-    .values(parsed.data as any)
+    .values(parsed.data)
     .onConflictDoNothing()
     .returning();
 
@@ -217,11 +216,7 @@ export async function removeUserFromHousehold(
 }
 
 export async function findHouseholdByJoinCode(code: string): Promise<HouseholdDto | null> {
-  const rows = await db
-    .select()
-    .from(households)
-    .where(eq(households.joinCode as any, code))
-    .limit(1);
+  const rows = await db.select().from(households).where(eq(households.joinCode, code)).limit(1);
   const parsed = HouseholdSelectBaseSchema.safeParse(rows[0]);
 
   return parsed.success ? parsed.data : null;
@@ -422,7 +417,7 @@ async function generateUniqueJoinCode(): Promise<string> {
     const existing = await db
       .select({ id: households.id })
       .from(households)
-      .where(eq(households.joinCode as any, code))
+      .where(eq(households.joinCode, code))
       .limit(1);
 
     if (existing.length === 0) return code;

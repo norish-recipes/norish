@@ -1,6 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
-import { recipeImages } from "@norish/db/schema";
+
+import { recipeImages } from "@norish/db-schema/schema";
 
 export const RecipeImageSelectSchema = createSelectSchema(recipeImages);
 export const RecipeImageInsertSchema = createInsertSchema(recipeImages).omit({

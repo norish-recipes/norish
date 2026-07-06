@@ -14,6 +14,11 @@
       "ingredients": "Ingredients",
       "steps": "Steps",
       "tags": "Tags"
+    },
+    "viewMode": {
+      "label": "Recipe view",
+      "grid": "Grid",
+      "list": "List"
     }
   },
   "empty": {
@@ -26,7 +31,8 @@
     "noImage": "No image available",
     "viewGroceries": "View groceries",
     "addToCalendar": "Add to calendar",
-    "deleteRecipe": "Delete recipe"
+    "deleteRecipe": "Delete recipe",
+    "recipeOptions": "Recipe options"
   },
   "detail": {
     "backToRecipes": "Back to recipes",

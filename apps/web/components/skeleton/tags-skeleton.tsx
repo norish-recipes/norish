@@ -33,9 +33,9 @@ export default function TagsSkeleton({ glass = false }: TagsSkeletonProps) {
   // For non-glass mode, use simple skeleton styling
   return (
     <div className="flex flex-wrap gap-1">
-      <div className="bg-default-200 h-6 w-16 animate-pulse rounded-full" />
-      <div className="bg-default-200 h-6 w-20 animate-pulse rounded-full" />
-      <div className="bg-default-200 h-6 w-14 animate-pulse rounded-full" />
+      <div className="bg-surface-tertiary h-6 w-16 animate-pulse rounded-full" />
+      <div className="bg-surface-tertiary h-6 w-20 animate-pulse rounded-full" />
+      <div className="bg-surface-tertiary h-6 w-14 animate-pulse rounded-full" />
     </div>
   );
 }

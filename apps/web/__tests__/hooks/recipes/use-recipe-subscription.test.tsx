@@ -69,7 +69,7 @@ vi.mock("@trpc/tanstack-react-query", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  addToast: vi.fn(),
+  toast: vi.fn(),
 }));
 
 vi.mock("next-intl", () => ({
@@ -102,7 +102,7 @@ describe("useRecipeSubscription", () => {
 
   it("shows a generic failure toast instead of backend details", async () => {
     const { useRecipeSubscription } = await import("@/hooks/recipes/use-recipe-subscription");
-    const { addToast } = await import("@heroui/react");
+    const { toast } = await import("@heroui/react");
 
     renderHook(() => useRecipeSubscription("recipe-1"), {
       wrapper: createTestWrapper(queryClient),
@@ -117,10 +117,11 @@ describe("useRecipeSubscription", () => {
       );
     });
 
-    expect(addToast).toHaveBeenCalledWith(
+    expect(toast).toHaveBeenCalledWith(
+      "operationFailed",
       expect.objectContaining({
-        title: "operationFailed",
         description: "technicalDetails",
+        variant: "danger",
       })
     );
   });

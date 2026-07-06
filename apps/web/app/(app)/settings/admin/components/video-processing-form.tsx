@@ -1,20 +1,26 @@
 "use client";
 
-import type { TranscriptionProvider } from "@norish/config/zod/server-config";
-
 import { useCallback, useEffect, useMemo, useState } from "react";
+import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
+import SecretInput from "@/components/shared/secret-input";
+import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
 import { CheckIcon } from "@heroicons/react/16/solid";
 import {
-  Autocomplete,
-  AutocompleteItem,
   Button,
-  Divider,
+  ComboBox,
+  Description,
   Input,
+  InputGroup,
+  Label,
+  ListBox,
   Select,
-  SelectItem,
-  Switch,
+  Separator,
+  Spinner,
+  TextField,
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import type { TranscriptionProvider } from "@norish/config/zod/server-config";
 import {
   isCloudTranscriptionProvider,
   ServerConfigKeys,
@@ -24,23 +30,25 @@ import {
 
 import { useAdminSettingsContext } from "../context";
 
-import { useAvailableTranscriptionModelsQuery } from "@/hooks/admin";
-import SecretInput from "@/components/shared/secret-input";
-
 interface VideoProcessingFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
 }
-
 type TranscriptionModel = {
   id: string;
   name: string;
 };
-
 type TranscriptionModelOption = {
   value: string;
   label: string;
 };
-
+const TRANSCRIPTION_PROVIDER_OPTIONS: TranscriptionProvider[] = [
+  "disabled",
+  "openai",
+  "groq",
+  "azure",
+  "ollama",
+  "generic-openai",
+];
 export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFormProps) {
   const t = useTranslations("settings.admin.videoConfig");
   const tActions = useTranslations("common.actions");
@@ -64,9 +72,7 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   const [transcriptionModel, setTranscriptionModel] = useState(
     videoConfig?.transcriptionModel ?? ""
   );
-
   const [saving, setSaving] = useState(false);
-
   useEffect(() => {
     if (videoConfig) {
       setEnabled(videoConfig.enabled);
@@ -79,7 +85,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       setTranscriptionModel(videoConfig.transcriptionModel);
     }
   }, [videoConfig]);
-
   const transcriptionEnabled = transcriptionProvider !== "disabled";
   const needsTranscriptionEndpoint = transcriptionProviderNeedsEndpoint(transcriptionProvider);
   // API key only required for cloud providers, not for local models (generic-openai, ollama)
@@ -110,7 +115,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     (needsTranscriptionApiKey
       ? transcriptionApiKey || isTranscriptionApiKeyConfigured || isAIApiKeyConfigured
       : transcriptionEndpoint);
-
   const { models: availableTranscriptionModels, isLoading: isLoadingTranscriptionModels } =
     useAvailableTranscriptionModelsQuery({
       provider: transcriptionProvider,
@@ -131,9 +135,11 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       transcriptionModel &&
       !options.some((o: TranscriptionModelOption) => o.value === transcriptionModel)
     ) {
-      options.unshift({ value: transcriptionModel, label: transcriptionModel });
+      options.unshift({
+        value: transcriptionModel,
+        label: transcriptionModel,
+      });
     }
-
     return options;
   }, [availableTranscriptionModels, transcriptionModel]);
 
@@ -145,7 +151,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       !isLoadingTranscriptionModels
     ) {
       const firstModel = (availableTranscriptionModels as TranscriptionModel[])[0];
-
       if (firstModel) {
         setTranscriptionModel(firstModel.id);
       }
@@ -155,7 +160,6 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
   // Clear transcription config when provider changes - will auto-select first available model
   const handleTranscriptionProviderChange = (newProvider: TranscriptionProvider) => {
     if (newProvider === transcriptionProvider) return;
-
     setTranscriptionProvider(newProvider);
     // Clear API key and model when switching providers
     setTranscriptionApiKey("");
@@ -176,14 +180,12 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       (transcriptionApiKey ?? "").trim() !== "" ||
       isTranscriptionApiKeyConfigured ||
       isAIApiKeyConfigured);
-
   const canEnable = !enabled || hasValidTranscription;
   const showValidationWarning = enabled && !hasValidTranscription;
   const isVideoUiDisabled = !enabled || !isAIEnabled;
   const showAiDisabledWarning = !isAIEnabled;
   const hasChanges = useMemo(() => {
     if (!videoConfig) return false;
-
     return (
       enabled !== videoConfig.enabled ||
       maxLengthSeconds !== videoConfig.maxLengthSeconds ||
@@ -207,24 +209,21 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
     transcriptionModel,
     transcriptionApiKey,
   ]);
-
   useEffect(() => {
     onDirtyChange?.(hasChanges);
   }, [hasChanges, onDirtyChange]);
-
   const handleRevealTranscriptionApiKey = useCallback(async () => {
     return await fetchConfigSecret(ServerConfigKeys.VIDEO_CONFIG, "transcriptionApiKey");
   }, [fetchConfigSecret]);
-
   const handleSave = async () => {
     if (enabled && !hasValidTranscription) return;
-
     setSaving(true);
     try {
       await updateVideoConfig({
         enabled,
         maxLengthSeconds,
-        maxVideoFileSize: maxVideoFileSizeMB * 1024 * 1024, // Convert MB to bytes
+        maxVideoFileSize: maxVideoFileSizeMB * 1024 * 1024,
+        // Convert MB to bytes
         ytDlpVersion,
         ytDlpProxy: ytDlpProxy || undefined,
         transcriptionProvider,
@@ -236,16 +235,15 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
       setSaving(false);
     }
   };
-
   return (
     <div className="flex flex-col gap-4 p-2">
       {/* Video Processing Section */}
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <span className="font-medium">{t("enableVideo")}</span>
-          <span className="text-default-500 text-base">{t("enableVideoDescription")}</span>
+          <span className="text-muted text-base">{t("enableVideoDescription")}</span>
         </div>
-        <Switch
+        <SettingsSwitch
           color="success"
           isDisabled={!isAIEnabled}
           isSelected={enabled}
@@ -265,85 +263,109 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
         </div>
       )}
 
-      <Input
-        description={t("maxLengthDescription")}
+      <TextField
         isDisabled={isVideoUiDisabled}
-        label={t("maxLength")}
         type="number"
         value={maxLengthSeconds.toString()}
-        onValueChange={(v) => setMaxLengthSeconds(parseInt(v) || 120)}
-      />
+        onChange={(value) => setMaxLengthSeconds(parseInt(value) || 120)}
+      >
+        <Label>{t("maxLength")}</Label>
+        <Input variant="secondary" />
+        <Description>{t("maxLengthDescription")}</Description>
+      </TextField>
 
-      <Input
-        description={t("maxFileSizeDescription")}
-        endContent={<span className="text-default-400 text-sm">MB</span>}
+      <TextField
         isDisabled={isVideoUiDisabled}
-        label={t("maxFileSize")}
-        min={1}
         type="number"
         value={maxVideoFileSizeMB.toString()}
-        onValueChange={(v) => setMaxVideoFileSizeMB(parseInt(v) || 100)}
-      />
+        onChange={(value) => setMaxVideoFileSizeMB(parseInt(value) || 100)}
+      >
+        <Label>{t("maxFileSize")}</Label>
+        <InputGroup variant="secondary">
+          <InputGroup.Input min={1} />
+          <InputGroup.Suffix>
+            <span className="text-muted text-sm">MB</span>
+          </InputGroup.Suffix>
+        </InputGroup>
+        <Description>{t("maxFileSizeDescription")}</Description>
+      </TextField>
 
-      <Input
-        description={t("ytDlpVersionDescription")}
-        isDisabled={isVideoUiDisabled}
-        label={t("ytDlpVersion")}
-        value={ytDlpVersion}
-        onValueChange={setYtDlpVersion}
-      />
+      <TextField isDisabled={isVideoUiDisabled} value={ytDlpVersion} onChange={setYtDlpVersion}>
+        <Label>{t("ytDlpVersion")}</Label>
+        <Input variant="secondary" />
+        <Description>{t("ytDlpVersionDescription")}</Description>
+      </TextField>
 
-      <Input
-        description={t("ytDlpProxyDescription")}
-        isDisabled={isVideoUiDisabled}
-        label={t("ytDlpProxy")}
-        placeholder="socks5://127.0.0.1:1080"
-        value={ytDlpProxy}
-        onValueChange={setYtDlpProxy}
-      />
+      <TextField isDisabled={isVideoUiDisabled} value={ytDlpProxy} onChange={setYtDlpProxy}>
+        <Label>{t("ytDlpProxy")}</Label>
+        <Input variant="secondary" placeholder="socks5://127.0.0.1:1080" />
+        <Description>{t("ytDlpProxyDescription")}</Description>
+      </TextField>
 
-      <Divider className="my-2" />
+      <Separator className="my-2" />
 
       {/* Transcription Section */}
       <div className="flex flex-col gap-1">
         <span className="font-medium">{t("transcription")}</span>
-        <span className="text-default-500 text-base">{t("transcriptionDescription")}</span>
+        <span className="text-muted text-base">{t("transcriptionDescription")}</span>
       </div>
 
       <Select
-        description={t("transcriptionProviderDescription")}
+        variant="secondary"
         isDisabled={isVideoUiDisabled}
-        label={t("transcriptionProvider")}
-        selectedKeys={[transcriptionProvider]}
-        onSelectionChange={(keys) =>
-          handleTranscriptionProviderChange(Array.from(keys)[0] as TranscriptionProvider)
-        }
+        placeholder={t("transcriptionProvider")}
+        value={transcriptionProvider}
+        onChange={(selected) => {
+          if (typeof selected === "string") {
+            handleTranscriptionProviderChange(selected as TranscriptionProvider);
+          }
+        }}
       >
-        <SelectItem key="disabled">{t("transcriptionProviders.disabled")}</SelectItem>
-        <SelectItem key="openai">{t("transcriptionProviders.openai")}</SelectItem>
-        <SelectItem key="groq">{t("transcriptionProviders.groq")}</SelectItem>
-        <SelectItem key="azure">{t("transcriptionProviders.azure")}</SelectItem>
-        <SelectItem key="ollama">{t("transcriptionProviders.ollama")}</SelectItem>
-        <SelectItem key="generic-openai">{t("transcriptionProviders.genericOpenai")}</SelectItem>
+        <Label>{t("transcriptionProvider")}</Label>
+        <Select.Trigger>
+          <Select.Value />
+          <Select.Indicator />
+        </Select.Trigger>
+        <span className="text-muted px-1 text-xs">{t("transcriptionProviderDescription")}</span>
+        <Select.Popover>
+          <ListBox>
+            {TRANSCRIPTION_PROVIDER_OPTIONS.map((option) => {
+              const label =
+                option === "generic-openai"
+                  ? t("transcriptionProviders.genericOpenai")
+                  : t(`transcriptionProviders.${option}` as Parameters<typeof t>[0]);
+
+              return (
+                <ListBox.Item key={option} id={option} textValue={label}>
+                  {label}
+                </ListBox.Item>
+              );
+            })}
+          </ListBox>
+        </Select.Popover>
       </Select>
 
       {transcriptionEnabled && (
         <>
           {needsTranscriptionEndpoint && (
-            <Input
-              description={t("transcriptionEndpointDescription")}
+            <TextField
               isDisabled={isVideoUiDisabled}
-              label={t("transcriptionEndpoint")}
-              placeholder={
-                transcriptionProvider === "ollama"
-                  ? "http://localhost:11434"
-                  : transcriptionProvider === "generic-openai"
-                    ? "http://localhost:8000 (faster-whisper-server) or http://localhost:8080 (LocalAI)"
-                    : "https://api.example.com/v1"
-              }
               value={transcriptionEndpoint}
-              onValueChange={setTranscriptionEndpoint}
-            />
+              onChange={setTranscriptionEndpoint}
+            >
+              <Label>{t("transcriptionEndpoint")}</Label>
+              <Input
+                variant="secondary"
+                placeholder={
+                  transcriptionProvider === "ollama"
+                    ? "http://localhost:11434"
+                    : transcriptionProvider === "generic-openai"
+                      ? "http://localhost:8000 (faster-whisper-server) or http://localhost:8080 (LocalAI)"
+                      : "https://api.example.com/v1"
+                }
+              />
+              <Description>{t("transcriptionEndpointDescription")}</Description>
+            </TextField>
           )}
 
           {needsTranscriptionApiKey && (
@@ -373,49 +395,63 @@ export default function VideoProcessingForm({ onDirtyChange }: VideoProcessingFo
           )}
 
           {needsTranscriptionModel && supportsModelListing && (
-            <Autocomplete
+            <ComboBox
               allowsCustomValue
-              defaultItems={transcriptionModelOptions}
-              description={t("transcriptionModelDescription")}
               inputValue={transcriptionModel}
               isDisabled={
                 isVideoUiDisabled || (!transcriptionApiKey && !isTranscriptionApiKeyConfigured)
               }
-              isLoading={isLoadingTranscriptionModels}
-              label={t("transcriptionModel")}
-              placeholder={t("transcriptionModelPlaceholder")}
               onInputChange={setTranscriptionModel}
               onSelectionChange={(key) => key && setTranscriptionModel(key as string)}
             >
-              {(item: TranscriptionModelOption) => (
-                <AutocompleteItem key={item.value} textValue={item.label}>
-                  {item.label}
-                </AutocompleteItem>
-              )}
-            </Autocomplete>
+              <Label>{t("transcriptionModel")}</Label>
+              <ComboBox.InputGroup>
+                <Input variant="secondary" placeholder={t("transcriptionModelPlaceholder")} />
+                <ComboBox.Trigger />
+              </ComboBox.InputGroup>
+              <Description>{t("transcriptionModelDescription")}</Description>
+              <ComboBox.Popover>
+                <ListBox
+                  renderEmptyState={() =>
+                    isLoadingTranscriptionModels ? (
+                      <div className="flex justify-center py-2">
+                        <Spinner size="sm" />
+                      </div>
+                    ) : null
+                  }
+                >
+                  {transcriptionModelOptions.map((item) => (
+                    <ListBox.Item key={item.value} id={item.value} textValue={item.label}>
+                      {item.label}
+                    </ListBox.Item>
+                  ))}
+                </ListBox>
+              </ComboBox.Popover>
+            </ComboBox>
           )}
 
           {needsTranscriptionModel && !supportsModelListing && (
-            <Input
-              description={t("transcriptionModelDescription")}
+            <TextField
               isDisabled={isVideoUiDisabled}
-              label={t("transcriptionModel")}
-              placeholder={t("transcriptionModelPlaceholder")}
               value={transcriptionModel}
-              onValueChange={setTranscriptionModel}
-            />
+              onChange={setTranscriptionModel}
+            >
+              <Label>{t("transcriptionModel")}</Label>
+              <Input variant="secondary" placeholder={t("transcriptionModelPlaceholder")} />
+              <Description>{t("transcriptionModelDescription")}</Description>
+            </TextField>
           )}
         </>
       )}
 
       <div className="flex items-center justify-end pt-2">
         <Button
-          color="primary"
           isDisabled={!canEnable || !hasChanges}
-          isLoading={saving}
-          startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}
+          variant="primary"
+          isPending={saving}
         >
+          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

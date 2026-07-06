@@ -2,6 +2,10 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAutoHide } from "@/hooks/auto-hide";
+import { useTimersEnabledQuery } from "@/hooks/config";
+import { useNotificationPermission } from "@/hooks/use-notification-permission";
+import { useTimerStore } from "@/stores/timers";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -15,13 +19,9 @@ import { Button } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import useSound from "use-sound";
+
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
-
-import { useTimerStore } from "@/stores/timers";
-import { useNotificationPermission } from "@/hooks/use-notification-permission";
-import { useTimersEnabledQuery } from "@/hooks/config";
-import { useAutoHide } from "@/hooks/auto-hide";
 
 const logger = createClientLogger("timer-dock");
 
@@ -32,35 +32,28 @@ export function TimerTicker() {
 
   // Check if there are any running timers
   const hasRunningTimers = timers.some((t) => t.status === "running");
-
   useEffect(() => {
     // Only start interval if there are running timers
     if (!hasRunningTimers) {
       return;
     }
-
     const interval = setInterval(() => {
       tick();
     }, 1000);
-
     return () => clearInterval(interval);
   }, [tick, hasRunningTimers]);
-
   return null;
 }
-
-export function TimerDock() {
+export function TimerDock({ className = "" }: { className?: string }) {
   const { timersEnabled } = useTimersEnabledQuery();
   const timers = useTimerStore((state) => state.timers);
   const clearAll = useTimerStore((state) => state.clearAll);
   const runningTimers = timers.filter((t) => t.status === "running");
   const pausedTimers = timers.filter((t) => t.status === "paused");
   const completedTimers = timers.filter((t) => t.status === "completed");
-
   const allActiveOrPaused = [...runningTimers, ...pausedTimers, ...completedTimers];
   const t = useTranslations("common");
   const router = useRouter();
-
   const [isExpanded, setIsExpanded] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -71,16 +64,16 @@ export function TimerDock() {
     useNotificationPermission();
 
   // Auto-hide with nav (disabled when expanded to keep it visible)
-  const { isVisible } = useAutoHide({ disabled: isExpanded });
+  const { isVisible } = useAutoHide({
+    disabled: isExpanded,
+  });
 
   // Hydration fix and mobile detection
   useEffect(() => {
     setIsClient(true);
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
-
     checkMobile();
     window.addEventListener("resize", checkMobile);
-
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
@@ -98,10 +91,8 @@ export function TimerDock() {
     loop: true,
     interrupt: false,
   });
-
   const hasCompletedTimers = completedTimers.length > 0;
   const [isPlaying, setIsPlaying] = useState(false);
-
   useEffect(() => {
     if (hasCompletedTimers) {
       if (!isPlaying) {
@@ -115,13 +106,11 @@ export function TimerDock() {
       }
     }
   }, [hasCompletedTimers, isPlaying, play, stop]);
-
   useEffect(() => {
     return () => {
       stop();
     };
   }, [stop]);
-
   const hasTimers = allActiveOrPaused.length > 0;
 
   // Reset to collapsed when all timers are removed
@@ -131,17 +120,14 @@ export function TimerDock() {
       hasExpandedRef.current = false;
     }
   }, [hasTimers]);
-
   if (!isClient || !timersEnabled) return null;
 
   // Sort: completed first (to alert), then active by remaining time
   const sortedTimers = [...allActiveOrPaused].sort((a, b) => {
     if (a.status === "completed" && b.status !== "completed") return -1;
     if (b.status === "completed" && a.status !== "completed") return 1;
-
     return a.remainingMs - b.remainingMs;
   });
-
   const topTimer = sortedTimers[0];
   const timerCount = allActiveOrPaused.length;
 
@@ -149,7 +135,6 @@ export function TimerDock() {
   const bottomWhenNavVisible = "calc(max(env(safe-area-inset-bottom), 1rem) + 4.5rem)";
   const bottomWhenNavHidden = "calc(max(env(safe-area-inset-bottom), 1rem) + 1rem)";
   const desktopBottom = "1rem";
-
   return (
     <>
       <TimerTicker />
@@ -164,46 +149,69 @@ export function TimerDock() {
                     scale: 1,
                     bottom: isVisible ? bottomWhenNavVisible : bottomWhenNavHidden,
                   }
-                : { opacity: 1, y: 0, scale: 1 }
+                : {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                  }
             }
-            className="fixed right-4 z-50 flex flex-col items-end space-y-2"
-            exit={{ opacity: 0, y: 8, scale: 0.94 }}
-            initial={{ opacity: 0, y: 16 }}
+            className={`fixed right-4 flex flex-col items-end space-y-2 ${className || "z-50"}`}
+            exit={{
+              opacity: 0,
+              y: 8,
+              scale: 0.94,
+            }}
+            initial={{
+              opacity: 0,
+              y: 16,
+            }}
             style={{
               bottom: isMobile ? bottomWhenNavVisible : desktopBottom,
             }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{
+              duration: 0.3,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
           >
             {/* Morphing Container */}
             <motion.div
               layout
-              className={`overflow-hidden shadow-xl ring-1 ring-black/5 backdrop-blur-sm ${
-                isExpanded
-                  ? "bg-content1 w-80 rounded-2xl dark:ring-white/10"
-                  : "bg-content1/90 rounded-full dark:ring-white/10"
-              }`}
-              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className={`overflow-hidden shadow-xl ring-1 ring-black/5 backdrop-blur-sm ${isExpanded ? "bg-surface w-80 rounded-2xl dark:ring-white/10" : "bg-surface/90 rounded-full dark:ring-white/10"}`}
+              transition={{
+                duration: 0.25,
+                ease: [0.4, 0, 0.2, 1],
+              }}
             >
               {isExpanded ? (
                 <motion.div
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  initial={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                  }}
+                  initial={{
+                    opacity: 0,
+                  }}
+                  transition={{
+                    duration: 0.15,
+                  }}
                 >
                   {/* Header */}
                   <button
                     aria-label="Close timer summary"
-                    className="border-default-100 flex w-full cursor-pointer items-center justify-between border-b p-4"
+                    className="border-border flex w-full cursor-pointer items-center justify-between border-b p-4"
                     type="button"
                     onClick={() => setIsExpanded(false)}
                   >
                     <h3 className="text-foreground text-sm font-semibold">
                       {timerCount === 1
                         ? t("timer.label_one")
-                        : t("timer.label_other", { count: timerCount })}
+                        : t("timer.label_other", {
+                            count: timerCount,
+                          })}
                     </h3>
-                    <ChevronDownIcon className="text-default-500 h-4 w-4" />
+                    <ChevronDownIcon className="text-muted h-4 w-4" />
                   </button>
 
                   {/* Timer List */}
@@ -221,18 +229,33 @@ export function TimerDock() {
 
                   {/* Notifications disabled hint */}
                   {notificationsSupported && notificationsDenied && (
-                    <div className="border-default-200 text-default-500 border-t px-4 py-2 text-xs">
+                    <div className="border-border text-muted border-t px-4 py-2 text-xs">
                       {t("timer.notifications_disabled_hint")}
                     </div>
                   )}
                 </motion.div>
               ) : (
                 <motion.button
-                  animate={{ opacity: 1 }}
+                  animate={{
+                    opacity: 1,
+                  }}
                   className={`group text-foreground flex items-center gap-3 px-4 py-3 transition-all hover:shadow-xl`}
-                  initial={hasExpandedRef.current ? { opacity: 0 } : false}
+                  initial={
+                    hasExpandedRef.current
+                      ? {
+                          opacity: 0,
+                        }
+                      : false
+                  }
                   transition={
-                    hasExpandedRef.current ? { duration: 0.1, delay: 0.12 } : { duration: 0 }
+                    hasExpandedRef.current
+                      ? {
+                          duration: 0.1,
+                          delay: 0.12,
+                        }
+                      : {
+                          duration: 0,
+                        }
                   }
                   type="button"
                   onClick={() => {
@@ -244,12 +267,12 @@ export function TimerDock() {
                     <span className="mb-1 max-w-[120px] truncate text-xs leading-none font-medium opacity-75">
                       {timerCount === 1
                         ? topTimer.label
-                        : t("timer.label_other", { count: timerCount })}
+                        : t("timer.label_other", {
+                            count: timerCount,
+                          })}
                     </span>
                     <span
-                      className={`font-mono text-lg leading-none font-bold tabular-nums ${
-                        topTimer.status === "completed" ? "text-danger" : ""
-                      }`}
+                      className={`font-mono text-lg leading-none font-bold tabular-nums ${topTimer.status === "completed" ? "text-danger" : ""}`}
                     >
                       {formatTimerMs(topTimer.remainingMs)}
                     </span>
@@ -269,13 +292,11 @@ export function TimerDock() {
 // Helper for smart increment
 function getSmartIncrement(originalDurationMs: number): number {
   const minutes = originalDurationMs / 1000 / 60;
-
   if (minutes < 5) return 10 * 1000; // 10s
   if (minutes < 20) return 60 * 1000; // 1m
 
   return 5 * 60 * 1000; // 5m
 }
-
 function TimerRow({
   timer,
   t,
@@ -291,21 +312,15 @@ function TimerRow({
   const startTimer = useTimerStore((state) => state.startTimer);
   const removeTimer = useTimerStore((state) => state.removeTimer);
   const adjustTimer = useTimerStore((state) => state.adjustTimer);
-
   const isCompleted = timer.status === "completed";
   const isRunning = timer.status === "running";
-
   const smartIncrement = getSmartIncrement(timer.originalDurationMs);
-
   const handleTimerClick = () => {
     router.push(`/recipes/${timer.recipeId}`);
   };
-
   return (
     <div
-      className={`flex items-center gap-4 p-4 ${
-        !isLast ? "border-default-100 border-b" : ""
-      } hover:bg-default-100/50 transition-colors`}
+      className={`flex items-center gap-4 p-4 ${!isLast ? "border-border border-b" : ""} hover:bg-surface-secondary/50 transition-colors`}
     >
       {/* Timer Info - Clickable */}
       <button
@@ -320,12 +335,10 @@ function TimerRow({
           {timer.label}
         </h4>
         {timer.recipeName && (
-          <p className="text-default-500 mb-1.5 truncate text-xs">{timer.recipeName}</p>
+          <p className="text-muted mb-1.5 truncate text-xs">{timer.recipeName}</p>
         )}
         <div
-          className={`font-mono text-xl font-semibold ${
-            isCompleted ? "text-danger" : "text-foreground"
-          }`}
+          className={`font-mono text-xl font-semibold ${isCompleted ? "text-danger" : "text-foreground"}`}
         >
           {formatTimerMs(timer.remainingMs)}
         </div>
@@ -339,8 +352,8 @@ function TimerRow({
             aria-label={`Decrease time by ${formatTimerMs(smartIncrement)}`}
             size="sm"
             title={`-${formatTimerMs(smartIncrement)}`}
-            variant="light"
             onPress={() => adjustTimer(timer.id, -smartIncrement)}
+            variant="tertiary"
           >
             <MinusIcon className="h-4 w-4" />
           </Button>
@@ -350,22 +363,22 @@ function TimerRow({
             aria-label={`Increase time by ${formatTimerMs(smartIncrement)}`}
             size="sm"
             title={`+${formatTimerMs(smartIncrement)}`}
-            variant="light"
             onPress={() => adjustTimer(timer.id, smartIncrement)}
+            variant="tertiary"
           >
             <PlusIcon className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="bg-default-200 h-8 w-px" />
+        <div className="bg-surface-tertiary h-8 w-px" />
 
         {isCompleted ? (
           <Button
             aria-label="Dismiss completed timer"
-            color="danger"
             size="sm"
-            variant="flat"
             onPress={() => removeTimer(timer.id)}
+            variant="danger-soft"
+            className="min-w-16"
           >
             {t("timer.done_action")}
           </Button>
@@ -375,8 +388,8 @@ function TimerRow({
               isIconOnly
               aria-label={isRunning ? "Pause timer" : "Start timer"}
               size="sm"
-              variant="light"
               onPress={() => (isRunning ? pauseTimer(timer.id) : startTimer(timer.id))}
+              variant="tertiary"
             >
               {isRunning ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
             </Button>
@@ -384,10 +397,9 @@ function TimerRow({
             <Button
               isIconOnly
               aria-label="Dismiss timer"
-              color="danger"
               size="sm"
-              variant="light"
               onPress={() => removeTimer(timer.id)}
+              variant="danger-soft"
             >
               <XMarkIcon className="h-4 w-4" />
             </Button>

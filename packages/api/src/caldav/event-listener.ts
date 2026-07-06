@@ -1,15 +1,16 @@
 import type Redis from "ioredis";
+import superjson from "superjson";
+
 import type { Slot } from "@norish/shared/contracts";
 import type { CalendarSubscriptionEvents } from "@norish/trpc/routers/calendar/types";
 import type { RecipeSubscriptionEvents } from "@norish/trpc/routers/recipes/types";
-
-import superjson from "superjson";
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import { getCaldavSyncStatusByItemId } from "@norish/db/repositories/caldav-sync-status";
 import { addCaldavSyncJob } from "@norish/queue/caldav-sync/producer";
-import { createSubscriberClient } from "@norish/queue/redis/client";
 import { getQueues } from "@norish/queue/registry";
 import { createLogger } from "@norish/shared-server/logger";
+import { createSubscriberClient } from "@norish/shared-server/redis/client";
+import { unwrapPayload } from "@norish/shared/lib/operation-helpers";
 import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
 const log = createLogger("caldav-sync");
@@ -191,7 +192,7 @@ async function handleCalendarEvent(eventName: string, data: unknown): Promise<vo
   try {
     switch (eventName) {
       case "itemCreated": {
-        const { item } = data as CalendarSubscriptionEvents["itemCreated"];
+        const { item } = unwrapPayload<CalendarSubscriptionEvents["itemCreated"]>(data);
         const title =
           item.itemType === "recipe" ? (item.recipeName ?? "Recipe") : (item.title ?? "Note");
 
@@ -213,7 +214,7 @@ async function handleCalendarEvent(eventName: string, data: unknown): Promise<vo
       }
 
       case "itemDeleted": {
-        const { itemId } = data as CalendarSubscriptionEvents["itemDeleted"];
+        const { itemId } = unwrapPayload<CalendarSubscriptionEvents["itemDeleted"]>(data);
 
         log.debug({ itemId }, "Item deleted - queuing CalDAV delete for all synced users");
         await queueDeleteJobByItemId(itemId);
@@ -221,7 +222,7 @@ async function handleCalendarEvent(eventName: string, data: unknown): Promise<vo
       }
 
       case "itemMoved": {
-        const { item } = data as CalendarSubscriptionEvents["itemMoved"];
+        const { item } = unwrapPayload<CalendarSubscriptionEvents["itemMoved"]>(data);
         const title =
           item.itemType === "recipe" ? (item.recipeName ?? "Recipe") : (item.title ?? "Note");
 
@@ -255,7 +256,7 @@ async function handleCalendarEvent(eventName: string, data: unknown): Promise<vo
       }
 
       case "itemUpdated": {
-        const { item } = data as CalendarSubscriptionEvents["itemUpdated"];
+        const { item } = unwrapPayload<CalendarSubscriptionEvents["itemUpdated"]>(data);
         const title =
           item.itemType === "recipe" ? (item.recipeName ?? "Recipe") : (item.title ?? "Note");
 
@@ -313,7 +314,7 @@ async function startRecipeSubscriptions(signal: AbortSignal): Promise<void> {
 
   try {
     for await (const data of recipeEmitter.createSubscription(channel, signal)) {
-      const typedData = data as RecipeSubscriptionEvents["updated"];
+      const typedData = unwrapPayload<RecipeSubscriptionEvents["updated"]>(data);
       const { recipe } = typedData;
 
       if (!recipe || !recipe.name) continue;

@@ -1,12 +1,11 @@
-import type { Dirent } from "node:fs";
-
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { Dirent } from "node:fs";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { db } from "@norish/db/drizzle";
 import { getAllUserAvatars } from "@norish/db/repositories";
-import { recipeImages, recipes, recipeVideos, stepImages } from "@norish/db/schema";
+import { listAllRecipeMediaReferences } from "@norish/db/repositories/recipes";
+import { listAllStepImageUrls } from "@norish/db/repositories/steps";
 import { schedulerLogger } from "@norish/shared-server/logger";
 import { isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
 
@@ -117,25 +116,21 @@ export async function cleanupOrphanedImages(): Promise<{ deleted: number; errors
       return { deleted: 0, errors: 0 };
     }
 
-    const [allRecipes, allGalleryImages, allRecipeVideos] = await Promise.all([
-      db.select({ id: recipes.id, image: recipes.image }).from(recipes),
-      db.select({ image: recipeImages.image }).from(recipeImages),
-      db.select({ video: recipeVideos.video }).from(recipeVideos),
-    ]);
+    const mediaReferences = await listAllRecipeMediaReferences();
 
-    const existingRecipeIds = new Set(allRecipes.map((recipe) => recipe.id));
+    const existingRecipeIds = new Set(mediaReferences.recipes.map((recipe) => recipe.id));
     const referencedRootFiles = new Map<string, Set<string>>();
 
-    for (const recipe of allRecipes) {
+    for (const recipe of mediaReferences.recipes) {
       registerRootMediaReference(referencedRootFiles, recipe.image);
     }
 
-    for (const image of allGalleryImages) {
-      registerRootMediaReference(referencedRootFiles, image.image);
+    for (const imageUrl of mediaReferences.galleryImageUrls) {
+      registerRootMediaReference(referencedRootFiles, imageUrl);
     }
 
-    for (const video of allRecipeVideos) {
-      registerRootMediaReference(referencedRootFiles, video.video);
+    for (const videoUrl of mediaReferences.videoUrls) {
+      registerRootMediaReference(referencedRootFiles, videoUrl);
     }
 
     let deletedRecipeDirs = 0;
@@ -369,11 +364,11 @@ export async function cleanupOrphanedStepImages(): Promise<{ deleted: number; er
       return { deleted: 0, errors: 0 };
     }
 
-    const allStepImageRows = await db.select({ image: stepImages.image }).from(stepImages);
+    const allStepImageUrls = await listAllStepImageUrls();
     const referencedStepFiles = new Map<string, Set<string>>();
 
-    for (const row of allStepImageRows) {
-      registerStepImageReference(referencedStepFiles, row.image);
+    for (const imageUrl of allStepImageUrls) {
+      registerStepImageReference(referencedStepFiles, imageUrl);
     }
 
     for (const dir of recipeDirs) {

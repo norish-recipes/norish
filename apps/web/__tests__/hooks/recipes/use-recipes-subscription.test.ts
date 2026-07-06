@@ -149,7 +149,7 @@ vi.mock("@trpc/tanstack-react-query", () => ({
 
 // Mock HeroUI toast
 vi.mock("@heroui/react", () => ({
-  addToast: vi.fn(),
+  toast: vi.fn(),
   Button: () => null,
 }));
 
@@ -332,12 +332,13 @@ describe("useRecipesSubscription", () => {
         })
       );
 
-      const { addToast } = await import("@heroui/react");
+      const { toast } = await import("@heroui/react");
 
-      expect(addToast).toHaveBeenCalledWith(
+      expect(toast).toHaveBeenCalledWith(
+        "failed",
         expect.objectContaining({
-          title: "failed",
           description: "failedDescription",
+          variant: "danger",
         })
       );
     });

@@ -1,9 +1,8 @@
 "use client";
 
+import { useVersionQuery } from "@/hooks/config/use-version-query";
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import { useVersionQuery } from "@/hooks/config/use-version-query";
 
 function getMinorVersion(version: string | undefined) {
   if (!version) return null;
@@ -31,11 +30,9 @@ export default function NewFeatureChip({ showOnVersion }: NewFeatureChipProps) {
 
   return (
     <Chip
-      classNames={{
-        base: "bg-linear-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
-      }}
+      className="border border-white/50 bg-linear-to-br from-indigo-500 to-pink-500 text-white shadow-md shadow-pink-500/30"
       size="sm"
-      variant="shadow"
+      variant="primary"
     >
       {tCommon("badges.new")}
     </Chip>

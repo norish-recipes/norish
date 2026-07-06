@@ -13,19 +13,19 @@ export const STORE_COLORS: Record<
   }
 > = {
   primary: {
-    bg: "bg-primary",
-    bgLight: "bg-primary/10",
-    text: "text-primary",
-    border: "border-primary",
-    ring: "ring-primary",
+    bg: "bg-accent",
+    bgLight: "bg-accent-soft",
+    text: "text-accent",
+    border: "border-accent",
+    ring: "ring-accent",
     label: "Blue",
   },
   secondary: {
-    bg: "bg-secondary",
-    bgLight: "bg-secondary/10",
-    text: "text-secondary",
-    border: "border-secondary",
-    ring: "ring-secondary",
+    bg: "bg-default",
+    bgLight: "bg-surface-secondary",
+    text: "text-foreground",
+    border: "border-default",
+    ring: "ring-default",
     label: "Purple",
   },
   success: {

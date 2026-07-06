@@ -62,6 +62,18 @@
     "savePreference": "이 항목의 매장 기억",
     "addAnother": "하나 더 추가",
     "addRepeat": "+ 반복 추가",
+    "recurrenceEnabled": "반복",
+    "recurrenceSheet": {
+      "title": "반복",
+      "subtitle": "이 항목을 장보기 목록에 자동으로 다시 추가합니다",
+      "enable": "반복 켜기",
+      "disable": "반복 끄기",
+      "frequency": "빈도",
+      "weekly": "매주",
+      "biweekly": "2주마다",
+      "monthly": "매월",
+      "confirm": "확인"
+    },
     "storeOptional": "매장(선택사항)",
     "autoDetectFromHistory": "기록에서 자동 감지",
     "autoDetectOrSelect": "자동 감지 또는 선택",

@@ -1,10 +1,20 @@
 @import "tailwindcss";
-@plugin "@norish/tailwind-config/hero";
-@source "../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
-@custom-variant dark (&:is(.dark *));
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/fira-code";
+@import "@heroui/styles";
+@import "@norish/tailwind-config/heroui-theme";
+@source "../../../node_modules/@heroui/styles/dist/**/*.{css,js,ts,jsx,tsx}";
 
-/* Import our custom theme colors */
-@import "@norish/tailwind-config/theme";
+@custom-variant light (&:is(:root, .light *, [data-theme="light"] *));
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
+
+@layer theme {
+  :root {
+    --font-inter: "Inter Variable", system-ui, sans-serif;
+    --font-mono:
+      "Fira Code Variable", ui-monospace, "SFMono-Regular", "Menlo", "Monaco", "Consolas", monospace;
+  }
+}
 
 /* Custom fade-in animation */
 @keyframes fade-in {
@@ -35,5 +45,61 @@
 
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Free @heroui/styles makes tertiary chips transparent; give unselected
+   filter/tag chips a visible background like the previous design. */
+.chip--tertiary {
+  --chip-bg: var(--default);
+}
+
+/* React Aria renders each form control's real <input> in a visually-hidden
+   absolutely-positioned span. Without a positioned ancestor on the control
+   itself, that input anchors to the nearest positioned container (e.g. a
+   panel dialog), so clicking a row focuses an input hundreds of pixels away
+   and the browser scroll-jumps the list to it. Anchor it to the control. */
+.checkbox,
+.radio,
+.switch,
+.slider {
+  position: relative;
+}
+
+@layer components {
+  .dropdown__popover {
+    min-width: min(14rem, calc(100svw - 2rem));
+    max-width: min(22rem, calc(100svw - 2rem));
+    background: var(--overlay);
+    box-shadow: var(--overlay-shadow);
+    border: 1px solid var(--border);
+    z-index: 70;
+  }
+
+  .dropdown__menu {
+    padding: 0.375rem;
+  }
+
+  .menu-item {
+    min-height: 2.5rem;
+    border-radius: 9999px;
+  }
+
+  .textfield,
+  .input,
+  .textarea,
+  .input-group,
+  .select,
+  .autocomplete {
+    width: 100%;
+  }
+
+  .input {
+    border-radius: 9999px;
+  }
+
+  .textarea {
+    width: 100%;
+    border-radius: var(--radius-2xl);
   }
 }

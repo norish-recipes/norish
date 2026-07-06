@@ -1,11 +1,10 @@
 "use client";
 
-
-import type { Slot } from "@norish/shared/contracts";
-import type { PlannedItemDisplay } from "./types";
-
 import { memo } from "react";
 
+import type { Slot } from "@norish/shared/contracts";
+
+import type { PlannedItemDisplay } from "./types";
 import { TimelinePlannedItem } from "./timeline-planned-item";
 
 type TimelineSlotContainerProps = {
@@ -25,7 +24,7 @@ export const TimelineSlotContainer = memo(function TimelineSlotContainer({
 }: TimelineSlotContainerProps) {
   return (
     <div className="flex flex-col gap-1 py-2">
-      <span className="text-default-500 text-xs font-medium">{slotLabel}</span>
+      <span className="text-muted text-xs font-medium">{slotLabel}</span>
       <div className="flex flex-col gap-1">
         {items.map((item) => (
           <TimelinePlannedItem

@@ -1,20 +1,202 @@
+import { useMutation } from "@tanstack/react-query";
+
 import type { UnitsMap } from "@norish/config/zod/server-config";
-import type { RecurringGroceryDto } from "@norish/shared/contracts";
+import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { createClientLogger } from "@norish/shared/lib/logger";
+import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
+
 import type {
   CreateGroceriesHooksOptions,
+  GroceriesData,
   GroceriesMutationsResult,
   GroceriesQueryResult,
   GroceryCreateData,
 } from "./types";
 
-import { useMutation } from "@tanstack/react-query";
-import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
-import { createClientLogger } from "@norish/shared/lib/logger";
-import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
-
-
 const log = createClientLogger("GroceriesMutations");
+
+type CreateGroceriesResult =
+  | string[]
+  | {
+      ids: string[];
+      returnedGroceries?: GroceryDto[];
+      createdGroceries?: GroceryDto[];
+      updatedGroceries?: GroceryDto[];
+    };
+
+type CreateRecurringResult = {
+  recurringGrocery: RecurringGroceryDto;
+  grocery: GroceryDto;
+};
+
+function createOptimisticId() {
+  return globalThis.crypto?.randomUUID?.() ?? `optimistic-${Date.now()}-${Math.random()}`;
+}
+
+function createOptimisticGrocery({
+  id,
+  name,
+  amount,
+  unit,
+  isDone,
+  storeId,
+  recipeIngredientId = null,
+}: {
+  id: string;
+  name: string | null;
+  amount: number | null;
+  unit: string | null;
+  isDone: boolean;
+  storeId: string | null;
+  recipeIngredientId?: string | null;
+}): GroceryDto {
+  return {
+    id,
+    version: 1,
+    name,
+    amount,
+    unit,
+    isDone,
+    recipeIngredientId,
+    recurringGroceryId: null,
+    storeId,
+    sortOrder: 0,
+  };
+}
+
+function normalizeCreateResult(result: CreateGroceriesResult) {
+  if (Array.isArray(result)) {
+    return {
+      ids: result,
+      returnedGroceries: [] as GroceryDto[],
+      createdGroceries: [] as GroceryDto[],
+      updatedGroceries: [] as GroceryDto[],
+    };
+  }
+
+  const createdGroceries = result.createdGroceries ?? [];
+  const updatedGroceries = result.updatedGroceries ?? [];
+
+  return {
+    ids: result.ids,
+    returnedGroceries: result.returnedGroceries ?? [...updatedGroceries, ...createdGroceries],
+    createdGroceries,
+    updatedGroceries,
+  };
+}
+
+function getStoreKey(storeId: string | null) {
+  return storeId ?? "__no_store__";
+}
+
+function getGroceryNameKey(name: string | null | undefined) {
+  return name?.trim().toLocaleLowerCase() ?? "";
+}
+
+function findCachedStoreIdForName(name: string | null | undefined, groceries: GroceryDto[]) {
+  const nameKey = getGroceryNameKey(name);
+
+  if (!nameKey) return null;
+
+  const match = groceries.find(
+    (grocery) => !grocery.isDone && grocery.storeId && getGroceryNameKey(grocery.name) === nameKey
+  );
+
+  return match?.storeId ?? null;
+}
+
+function applyCreatedGroceriesToCache(groceries: GroceryDto[], createdGroceries: GroceryDto[]) {
+  if (createdGroceries.length === 0) return groceries;
+
+  const createdIds = new Set(createdGroceries.map((grocery) => grocery.id));
+  const createdCountByStore = new Map<string, number>();
+
+  for (const grocery of createdGroceries) {
+    if (grocery.isDone) continue;
+
+    const storeKey = getStoreKey(grocery.storeId);
+
+    createdCountByStore.set(storeKey, (createdCountByStore.get(storeKey) ?? 0) + 1);
+  }
+
+  const shifted = groceries.map((grocery) => {
+    if (grocery.isDone || createdIds.has(grocery.id)) return grocery;
+
+    const createdCount = createdCountByStore.get(getStoreKey(grocery.storeId)) ?? 0;
+
+    return createdCount > 0 ? { ...grocery, sortOrder: grocery.sortOrder + createdCount } : grocery;
+  });
+
+  return [...createdGroceries, ...shifted.filter((grocery) => !createdIds.has(grocery.id))];
+}
+
+function reconcileCreatedGroceries(
+  prev: GroceriesData,
+  optimisticIds: string[],
+  result: CreateGroceriesResult,
+  optimisticGroceries: GroceryDto[]
+) {
+  const { ids, returnedGroceries, createdGroceries, updatedGroceries } =
+    normalizeCreateResult(result);
+  const returnedById = new Map(returnedGroceries.map((grocery) => [grocery.id, grocery]));
+  const createdById = new Map(createdGroceries.map((grocery) => [grocery.id, grocery]));
+  const updatedById = new Map(updatedGroceries.map((grocery) => [grocery.id, grocery]));
+  let groceries = prev.groceries
+    .filter((grocery) => !optimisticIds.includes(grocery.id))
+    .map((grocery) => {
+      const updated = updatedById.get(grocery.id);
+
+      return updated ? { ...grocery, ...updated } : grocery;
+    });
+
+  const createdToInsert: GroceryDto[] = [];
+
+  ids.forEach((id, index) => {
+    const optimistic = optimisticGroceries[index];
+    if (!optimistic) return;
+
+    const grocery = returnedById.get(id) ?? { ...optimistic, id };
+    const created = createdById.get(id);
+    const existingIndex = groceries.findIndex((existing) => existing.id === id);
+
+    if (created) {
+      createdToInsert.push(created);
+    } else if (existingIndex >= 0) {
+      groceries = groceries.map((existing, currentIndex) =>
+        currentIndex === existingIndex ? { ...existing, ...grocery } : existing
+      );
+    } else if (!updatedById.has(id)) {
+      createdToInsert.push(grocery);
+    }
+  });
+
+  return {
+    ...prev,
+    groceries: applyCreatedGroceriesToCache(groceries, createdToInsert),
+  };
+}
+
+function applyRecurringCreatedToCache(prev: GroceriesData, result: CreateRecurringResult) {
+  const { grocery, recurringGrocery } = result;
+  const existingGrocery = prev.groceries.some((existing) => existing.id === grocery.id);
+  const existingRecurring = prev.recurringGroceries.some(
+    (existing) => existing.id === recurringGrocery.id
+  );
+
+  return {
+    ...prev,
+    groceries: existingGrocery
+      ? prev.groceries.map((existing) => (existing.id === grocery.id ? grocery : existing))
+      : applyCreatedGroceriesToCache(prev.groceries, [grocery]),
+    recurringGroceries: existingRecurring
+      ? prev.recurringGroceries.map((existing) =>
+          existing.id === recurringGrocery.id ? recurringGrocery : existing
+        )
+      : [recurringGrocery, ...prev.recurringGroceries],
+  };
+}
 
 type CreateUseGroceriesMutationsOptions = CreateGroceriesHooksOptions & {
   useGroceriesQuery: () => GroceriesQueryResult;
@@ -53,15 +235,43 @@ export function createUseGroceriesMutations({
 
     const createGrocery = (raw: string, storeId?: string | null) => {
       const parsed = parseIngredientWithDefaults(raw, units)[0]!;
+      const optimisticId = createOptimisticId();
+      const requestedStoreId = storeId ?? null;
       const groceryData = {
         name: parsed.description,
         amount: parsed.quantity,
         unit: parsed.unitOfMeasure,
         isDone: false,
-        storeId: storeId ?? null,
+        storeId: requestedStoreId,
       };
+      const optimisticStoreId =
+        requestedStoreId ?? findCachedStoreIdForName(groceryData.name, groceries);
+      const optimisticGrocery = createOptimisticGrocery({
+        id: optimisticId,
+        name: groceryData.name,
+        amount: groceryData.amount ?? null,
+        unit: groceryData.unit ?? null,
+        isDone: groceryData.isDone,
+        storeId: optimisticStoreId,
+      });
+
+      setGroceriesData((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          groceries: applyCreatedGroceriesToCache(prev.groceries, [optimisticGrocery]),
+        };
+      });
 
       createMutation.mutate([groceryData], {
+        onSuccess: (result: CreateGroceriesResult) => {
+          setGroceriesData((prev) =>
+            prev
+              ? reconcileCreatedGroceries(prev, [optimisticId], result, [optimisticGrocery])
+              : prev
+          );
+        },
         onError: () => invalidate(),
       });
     };
@@ -74,10 +284,38 @@ export function createUseGroceriesMutations({
         isDone: g.isDone ?? false,
         recipeIngredientId: g.recipeIngredientId ?? null,
       }));
+      const optimisticGroceries = groceriesToCreate.map((grocery) =>
+        createOptimisticGrocery({
+          id: createOptimisticId(),
+          name: grocery.name,
+          amount: grocery.amount,
+          unit: grocery.unit,
+          isDone: grocery.isDone,
+          storeId: null,
+          recipeIngredientId: grocery.recipeIngredientId,
+        })
+      );
+      const optimisticIds = optimisticGroceries.map((grocery) => grocery.id);
+
+      setGroceriesData((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          groceries: [...optimisticGroceries, ...prev.groceries],
+        };
+      });
 
       return new Promise((resolve, reject) => {
         createMutation.mutate(groceriesToCreate, {
-          onSuccess: (ids) => {
+          onSuccess: (result: CreateGroceriesResult) => {
+            const { ids } = normalizeCreateResult(result);
+
+            setGroceriesData((prev) =>
+              prev
+                ? reconcileCreatedGroceries(prev, optimisticIds, result, optimisticGroceries)
+                : prev
+            );
             resolve(ids);
           },
           onError: (error) => {
@@ -109,6 +347,9 @@ export function createUseGroceriesMutations({
           storeId: storeId ?? null,
         },
         {
+          onSuccess: (result: CreateRecurringResult) => {
+            setGroceriesData((prev) => (prev ? applyRecurringCreatedToCache(prev, result) : prev));
+          },
           onError: () => invalidate(),
         }
       );

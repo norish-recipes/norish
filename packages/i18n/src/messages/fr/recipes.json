@@ -14,6 +14,11 @@
       "ingredients": "Ingrédients",
       "steps": "Étapes",
       "tags": "Tags"
+    },
+    "viewMode": {
+      "label": "Vue des recettes",
+      "grid": "Grille",
+      "list": "Liste"
     }
   },
   "empty": {
@@ -26,7 +31,8 @@
     "noImage": "Aucune image disponible",
     "viewGroceries": "Voir les courses",
     "addToCalendar": "Ajouter au calendrier",
-    "deleteRecipe": "Supprimer la recette"
+    "deleteRecipe": "Supprimer la recette",
+    "recipeOptions": "Options de recette"
   },
   "detail": {
     "backToRecipes": "Retour aux recettes",
@@ -255,7 +261,6 @@
       "duplicateTag": "Ce tag existe déjà"
     }
   },
-
   "cookMode": {
     "steps": "Étapes",
     "ingredients": "Ingrédients",

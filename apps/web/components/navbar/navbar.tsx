@@ -2,15 +2,14 @@
 
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
-import { Navbar as HeroUINavbar, NavbarBrand, NavbarContent, NavbarItem } from "@heroui/navbar";
-import { motion } from "motion/react";
-import { useTranslations } from "next-intl";
-import { siteConfig } from "@norish/web/config/site";
-
 import { BrandLogo } from "@/components/brand/brand-logo";
 import MobileNav from "@/components/navbar/mobile-nav";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { useAutoHide } from "@/hooks/auto-hide";
+import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
+
+import { siteConfig } from "@norish/web/config/site";
 
 // Map hrefs to translation keys
 const navLabelKeys: Record<string, "home" | "calendar" | "groceries"> = {
@@ -43,15 +42,13 @@ export const Navbar = () => {
         onMouseEnter={onHoverStart}
         onMouseLeave={onHoverEnd}
       >
-        <HeroUINavbar
-          className="bg-content1 rounded-[40px] shadow-[0_8px_28px_-10px_rgba(0,0,0,0.3)] transition-all"
-          isBordered={false}
-          maxWidth="xl"
-          position="static"
+        <nav
+          className="bg-surface mx-auto flex h-16 w-full items-center justify-between gap-4 rounded-[40px] px-4 shadow-[0_8px_28px_-10px_rgba(0,0,0,0.3)] transition-all"
+          aria-label="Main navigation"
         >
           {/* Left */}
-          <NavbarContent justify="start">
-            <NavbarBrand className="max-w-fit gap-3">
+          <div className="flex min-w-0 items-center justify-start">
+            <div className="max-w-fit">
               <NextLink
                 aria-label="Go to home"
                 className="flex items-center"
@@ -65,11 +62,11 @@ export const Navbar = () => {
               >
                 <BrandLogo priority height={30} width={120} />
               </NextLink>
-            </NavbarBrand>
-          </NavbarContent>
+            </div>
+          </div>
 
           {/* Center */}
-          <NavbarContent justify="center">
+          <div className="flex min-w-0 flex-1 justify-center">
             <ul className="ml-2 flex justify-start gap-3">
               {siteConfig.navItems.map((item) => {
                 const isActive =
@@ -77,28 +74,26 @@ export const Navbar = () => {
                   (item.href !== "/" && pathname?.startsWith(item.href + "/"));
 
                 return (
-                  <NavbarItem key={item.href}>
+                  <li key={item.href}>
                     <NextLink
-                      className={`hover:text-primary rounded-md px-3 py-1.5 font-medium transition-colors ${
-                        isActive ? "text-primary font-semibold" : "text-foreground/80"
+                      className={`hover:text-accent rounded-md px-3 py-1.5 font-medium transition-colors ${
+                        isActive ? "text-accent font-semibold" : "text-foreground/80"
                       }`}
                       href={item.href}
                     >
                       {t(navLabelKeys[item.href] ?? "home")}
                     </NextLink>
-                  </NavbarItem>
+                  </li>
                 );
               })}
             </ul>
-          </NavbarContent>
+          </div>
 
           {/* Right */}
-          <NavbarContent className="items-center" justify="end">
-            <NavbarItem className="flex items-center">
-              <NavbarUserMenu />
-            </NavbarItem>
-          </NavbarContent>
-        </HeroUINavbar>
+          <div className="flex items-center justify-end">
+            <NavbarUserMenu />
+          </div>
+        </nav>
       </motion.div>
 
       {/* Mobile navbar */}

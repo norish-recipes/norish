@@ -1,5 +1,3 @@
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-
 import {
   addDays,
   addMonths,
@@ -13,6 +11,7 @@ import {
   startOfDay,
 } from "date-fns";
 
+import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 /**
  * Calculate the next occurrence date based on a recurrence pattern.
@@ -44,10 +43,8 @@ export function calculateNextOccurrence(
       // For checked items, add interval from the check date (fromDate)
       if (isNewItem) {
         nextDate = today;
-        // // console.log('[calculateNextOccurrence] Daily new item: starting today');
       } else {
         nextDate = addDays(baseDate, pattern.interval);
-        // // console.log(`[calculateNextOccurrence] Daily existing: adding ${pattern.interval} days to ${format(baseDate, 'yyyy-MM-dd')} = ${format(nextDate, 'yyyy-MM-dd')}`);
       }
       // Advance by full intervals until not in the past
       while (isBefore(nextDate, today)) {

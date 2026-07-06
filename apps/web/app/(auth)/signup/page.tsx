@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
+
 import { isPasswordAuthEnabled } from "@norish/auth/providers";
-import { isRegistrationEnabled } from "@norish/config/server-config-loader";
+import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
 
 import { SignupClient } from "./components/signup-client";
 

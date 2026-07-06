@@ -1,12 +1,89 @@
+import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
-import type { CalendarCacheHelpers, CreateCalendarHooksOptions } from "./types";
+import type {
+  PlannedItemWithRecipePayload,
+  SlotItemSortUpdate,
+} from "@norish/shared/contracts/zod";
 
-import { useSubscription } from "@trpc/tanstack-react-query";
+import type { CalendarCacheHelpers, CreateCalendarHooksOptions } from "./types";
 
 type CreateUseCalendarSubscriptionOptions = CreateCalendarHooksOptions & {
   useCalendarCacheHelpers: (startISO: string, endISO: string) => CalendarCacheHelpers;
 };
+
+type SubscriptionEnvelope<TPayload> = {
+  payload: TPayload;
+};
+
+type ItemPayload = {
+  item: PlannedItemWithRecipePayload;
+};
+
+type ItemDeletedPayload = {
+  itemId: string;
+};
+
+type ItemMovedPayload = ItemPayload & {
+  targetSlotItems: SlotItemSortUpdate[];
+  sourceSlotItems: SlotItemSortUpdate[] | null;
+};
+
+function isDateInRange(date: string, startISO: string, endISO: string) {
+  return date >= startISO && date <= endISO;
+}
+
+function sortCalendarItems(items: PlannedItemFromQuery[]) {
+  return [...items].sort((a, b) => {
+    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    if (a.slot !== b.slot) return a.slot.localeCompare(b.slot);
+
+    return a.sortOrder - b.sortOrder;
+  });
+}
+
+function toPlannedItemFromPayload(
+  item: PlannedItemWithRecipePayload,
+  existing?: PlannedItemFromQuery
+): PlannedItemFromQuery {
+  return {
+    id: item.id,
+    userId: item.userId,
+    date: item.date,
+    slot: item.slot,
+    sortOrder: item.sortOrder,
+    itemType: item.itemType,
+    recipeId: item.recipeId,
+    title: item.title,
+    recipeName: item.recipeName,
+    recipeImage: item.recipeImage,
+    servings: item.servings,
+    calories: item.calories,
+    version: item.version ?? existing?.version ?? 1,
+    createdAt: existing?.createdAt ?? new Date(),
+    updatedAt: new Date(),
+  };
+}
+
+function upsertItemInRange(
+  prev: PlannedItemFromQuery[],
+  item: PlannedItemWithRecipePayload,
+  startISO: string,
+  endISO: string
+) {
+  const existing = prev.find((current) => current.id === item.id);
+
+  if (!isDateInRange(item.date, startISO, endISO)) {
+    return prev.filter((current) => current.id !== item.id);
+  }
+
+  const nextItem = toPlannedItemFromPayload(item, existing);
+  const next = existing
+    ? prev.map((current) => (current.id === item.id ? nextItem : current))
+    : [...prev, nextItem];
+
+  return sortCalendarItems(next);
+}
 
 export function createUseCalendarSubscription({
   useTRPC,
@@ -22,44 +99,15 @@ export function createUseCalendarSubscription({
 
     useSubscription(
       trpc.calendar.onItemCreated.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          setItems((prev) => {
-            const exists = prev.some((item) => item.id === payload.item.id);
-
-            if (exists) return prev;
-
-            const newItem: PlannedItemFromQuery = {
-              id: payload.item.id,
-              userId: payload.item.userId,
-              date: payload.item.date,
-              slot: payload.item.slot,
-              sortOrder: payload.item.sortOrder,
-              itemType: payload.item.itemType,
-              recipeId: payload.item.recipeId,
-              title: payload.item.title,
-              recipeName: payload.item.recipeName,
-              recipeImage: payload.item.recipeImage,
-              servings: payload.item.servings,
-              calories: payload.item.calories,
-              version: payload.item.version ?? 1,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            };
-
-            return [...prev, newItem].sort((a, b) => {
-              if (a.date !== b.date) return a.date.localeCompare(b.date);
-              if (a.slot !== b.slot) return a.slot.localeCompare(b.slot);
-
-              return a.sortOrder - b.sortOrder;
-            });
-          });
+        onData: ({ payload }: SubscriptionEnvelope<ItemPayload>) => {
+          setItems((prev) => upsertItemInRange(prev, payload.item, startISO, endISO));
         },
       })
     );
 
     useSubscription(
       trpc.calendar.onItemDeleted.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
+        onData: ({ payload }: SubscriptionEnvelope<ItemDeletedPayload>) => {
           setItems((prev) => prev.filter((item) => item.id !== payload.itemId));
         },
       })
@@ -67,50 +115,45 @@ export function createUseCalendarSubscription({
 
     useSubscription(
       trpc.calendar.onItemMoved.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
+        onData: ({ payload }: SubscriptionEnvelope<ItemMovedPayload>) => {
           setItems((prev) => {
+            const itemIsInRange = isDateInRange(payload.item.date, startISO, endISO);
             const targetSortMap = new Map(
-              payload.targetSlotItems.map((i: any) => [i.id, i.sortOrder])
+              payload.targetSlotItems.map((item) => [item.id, item.sortOrder])
             );
             const sourceSortMap = payload.sourceSlotItems
-              ? new Map(payload.sourceSlotItems.map((i: any) => [i.id, i.sortOrder]))
+              ? new Map(payload.sourceSlotItems.map((item) => [item.id, item.sortOrder]))
               : null;
 
-            const updated = prev.map((item) => {
-              if (item.id === payload.item.id) {
-                return {
-                  ...item,
-                  date: payload.item.date,
-                  slot: payload.item.slot,
-                  sortOrder: payload.item.sortOrder,
-                  version: payload.item.version ?? item.version,
-                  updatedAt: new Date(),
-                };
-              }
+            const updated = prev
+              .filter((item) => item.id !== payload.item.id || itemIsInRange)
+              .map((item) => {
+                if (item.id === payload.item.id) {
+                  return toPlannedItemFromPayload(payload.item, item);
+                }
 
-              if (targetSortMap.has(item.id)) {
-                return {
-                  ...item,
-                  sortOrder: targetSortMap.get(item.id)!,
-                };
-              }
+                if (targetSortMap.has(item.id)) {
+                  return {
+                    ...item,
+                    sortOrder: targetSortMap.get(item.id)!,
+                  };
+                }
 
-              if (sourceSortMap?.has(item.id)) {
-                return {
-                  ...item,
-                  sortOrder: sourceSortMap.get(item.id)!,
-                };
-              }
+                if (sourceSortMap?.has(item.id)) {
+                  return {
+                    ...item,
+                    sortOrder: sourceSortMap.get(item.id)!,
+                  };
+                }
 
-              return item;
-            });
+                return item;
+              });
 
-            return updated.sort((a, b) => {
-              if (a.date !== b.date) return a.date.localeCompare(b.date);
-              if (a.slot !== b.slot) return a.slot.localeCompare(b.slot);
+            if (!itemIsInRange || updated.some((item) => item.id === payload.item.id)) {
+              return sortCalendarItems(updated);
+            }
 
-              return a.sortOrder - b.sortOrder;
-            });
+            return sortCalendarItems([...updated, toPlannedItemFromPayload(payload.item)]);
           });
         },
       })
@@ -118,31 +161,8 @@ export function createUseCalendarSubscription({
 
     useSubscription(
       trpc.calendar.onItemUpdated.subscriptionOptions(undefined, {
-        onData: ({ payload }: any) => {
-          setItems((prev) =>
-            prev.map((item) => {
-              if (item.id === payload.item.id) {
-                return {
-                  ...item,
-                  userId: payload.item.userId,
-                  date: payload.item.date,
-                  slot: payload.item.slot,
-                  sortOrder: payload.item.sortOrder,
-                  itemType: payload.item.itemType,
-                  recipeId: payload.item.recipeId,
-                  title: payload.item.title,
-                  recipeName: payload.item.recipeName,
-                  recipeImage: payload.item.recipeImage,
-                  servings: payload.item.servings,
-                  calories: payload.item.calories,
-                  version: payload.item.version ?? item.version,
-                  updatedAt: new Date(),
-                };
-              }
-
-              return item;
-            })
-          );
+        onData: ({ payload }: SubscriptionEnvelope<ItemPayload>) => {
+          setItems((prev) => upsertItemInRange(prev, payload.item, startISO, endISO));
         },
       })
     );

@@ -1,13 +1,11 @@
 "use client";
 
-import type { ProviderInfo } from "@norish/shared/contracts";
-
-import { Divider } from "@heroui/react";
+import { Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { ProviderInfo } from "@norish/shared/contracts";
 
 import { AuthCard } from "../../components/auth-card";
-
 import { AutoSignIn } from "./auto-sign-in";
 import { EmailPasswordForm } from "./email-password-form";
 import { ProviderButton } from "./provider-button";
@@ -44,7 +42,7 @@ export function LoginClient({
       footer={
         hasOAuth &&
         !hasCredential && (
-          <p className="text-small text-default-500 mt-6 text-center">{t("redirectMessage")}</p>
+          <p className="text-muted mt-6 text-center text-sm">{t("redirectMessage")}</p>
         )
       }
       subtitle={t("subtitle")}
@@ -55,12 +53,12 @@ export function LoginClient({
         <EmailPasswordForm callbackUrl={callbackUrl} registrationEnabled={registrationEnabled} />
       )}
 
-      {/* Divider between form and OAuth */}
+      {/* Separator between form and OAuth */}
       {hasCredential && hasOAuth && (
         <div className="flex items-center gap-4">
-          <Divider className="flex-1" />
-          <span className="text-small text-default-400">{t("divider")}</span>
-          <Divider className="flex-1" />
+          <Separator className="flex-1" />
+          <span className="text-muted text-sm">{t("divider")}</span>
+          <Separator className="flex-1" />
         </div>
       )}
 
@@ -82,8 +80,8 @@ export function LoginClient({
       {/* No providers message */}
       {!hasCredential && !hasOAuth && (
         <div className="py-4 text-center">
-          <p className="text-small text-danger">{t("noProviders.title")}</p>
-          <p className="text-tiny text-default-500 mt-2">{t("noProviders.contactAdmin")}</p>
+          <p className="text-danger text-sm">{t("noProviders.title")}</p>
+          <p className="text-muted mt-2 text-xs">{t("noProviders.contactAdmin")}</p>
         </div>
       )}
     </AuthCard>

@@ -1,15 +1,18 @@
+import { useMutation } from "@tanstack/react-query";
 
 import type {
   CreateRecipeShareInputDto,
+  RecipeShareCreatedDto,
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts";
+
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipeShareCacheHelpers } from "./use-recipe-share-cache";
 
-import { useMutation } from "@tanstack/react-query";
-
 export type RecipeShareMutationsResult = {
-  createShare: (expiresIn?: CreateRecipeShareInputDto["expiresIn"]) => void;
+  createShare: (
+    expiresIn?: CreateRecipeShareInputDto["expiresIn"]
+  ) => Promise<RecipeShareCreatedDto | null>;
   updateShare: (input: UpdateRecipeShareInputDto) => void;
   revokeShare: (id: string, version: number) => void;
   reactivateShare: (id: string, version: number) => void;
@@ -94,12 +97,12 @@ export function createUseRecipeShareMutations(
     );
 
     return {
-      createShare: (expiresIn = "forever") => {
+      createShare: async (expiresIn = "forever") => {
         if (!recipeId) {
-          return;
+          return null;
         }
 
-        createMutation.mutate({ recipeId, expiresIn });
+        return createMutation.mutateAsync({ recipeId, expiresIn });
       },
       updateShare: (input) => {
         updateMutation.mutate(input);

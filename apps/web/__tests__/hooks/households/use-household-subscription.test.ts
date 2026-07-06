@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createMockHouseholdAdminSettings,
@@ -111,15 +111,25 @@ vi.mock("@trpc/tanstack-react-query", () => ({
 
 // Mock HeroUI toast
 vi.mock("@heroui/react", () => ({
-  addToast: vi.fn(),
+  toast: vi.fn(),
 }));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
+let useHouseholdSubscription: (typeof import("@/hooks/households/use-household-subscription"))["useHouseholdSubscription"];
+let useHouseholdQuery: (typeof import("@/hooks/households/use-household-query"))["useHouseholdQuery"];
+let useSubscription: (typeof import("@trpc/tanstack-react-query"))["useSubscription"];
+
 describe("useHouseholdSubscription", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
+
+  beforeAll(async () => {
+    ({ useHouseholdSubscription } = await import("@/hooks/households/use-household-subscription"));
+    ({ useHouseholdQuery } = await import("@/hooks/households/use-household-query"));
+    ({ useSubscription } = await import("@trpc/tanstack-react-query"));
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -136,16 +146,11 @@ describe("useHouseholdSubscription", () => {
 
       queryClient.setQueryData(householdQueryKey, initialData);
 
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       // The hook should call useSubscription for each event type
-      const { useSubscription } = await import("@trpc/tanstack-react-query");
-
       expect(useSubscription).toHaveBeenCalled();
     });
   });
@@ -155,10 +160,6 @@ describe("useHouseholdSubscription", () => {
       const initialData = createMockHouseholdData(null, "current-user");
 
       queryClient.setQueryData(householdQueryKey, initialData);
-
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-      const { useHouseholdQuery } = await import("@/hooks/households/use-household-query");
 
       // Render subscription hook to set up handlers
       renderHook(() => useHouseholdSubscription(), {
@@ -186,10 +187,6 @@ describe("useHouseholdSubscription", () => {
 
       queryClient.setQueryData(householdQueryKey, initialData);
 
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-      const { useHouseholdQuery } = await import("@/hooks/households/use-household-query");
-
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -215,10 +212,6 @@ describe("useHouseholdSubscription", () => {
 
       queryClient.setQueryData(householdQueryKey, initialData);
 
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-      const { useHouseholdQuery } = await import("@/hooks/households/use-household-query");
-
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
       });
@@ -238,10 +231,6 @@ describe("useHouseholdSubscription", () => {
       const initialData = createMockHouseholdData(initialHousehold, "current-user");
 
       queryClient.setQueryData(householdQueryKey, initialData);
-
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-      const { useHouseholdQuery } = await import("@/hooks/households/use-household-query");
 
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
@@ -263,9 +252,7 @@ describe("useHouseholdSubscription", () => {
 
       queryClient.setQueryData(householdQueryKey, initialData);
 
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
-      const { addToast } = await import("@heroui/react");
+      const { toast } = await import("@heroui/react");
 
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
@@ -279,11 +266,11 @@ describe("useHouseholdSubscription", () => {
         });
       });
 
-      expect(addToast).toHaveBeenCalledWith(
+      expect(toast).toHaveBeenCalledWith(
+        "operationFailed",
         expect.objectContaining({
-          title: "operationFailed",
           description: "technicalDetails",
-          color: "danger",
+          variant: "danger",
         })
       );
     });
@@ -295,9 +282,6 @@ describe("useHouseholdSubscription", () => {
       const initialData = createMockHouseholdData(initialHousehold, "current-user");
 
       queryClient.setQueryData(householdQueryKey, initialData);
-
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
 
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),
@@ -333,9 +317,6 @@ describe("useHouseholdSubscription", () => {
       const initialData = createMockHouseholdData(initialHousehold, "user-1");
 
       queryClient.setQueryData(householdQueryKey, initialData);
-
-      const { useHouseholdSubscription } =
-        await import("@/hooks/households/use-household-subscription");
 
       renderHook(() => useHouseholdSubscription(), {
         wrapper: createTestWrapper(queryClient),

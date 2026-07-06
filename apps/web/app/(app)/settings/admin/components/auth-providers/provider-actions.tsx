@@ -13,7 +13,6 @@ interface ProviderActionsProps {
   onSave: () => void;
   onDeleteClick: () => void;
 }
-
 export function ProviderActions({
   hasConfig,
   hasChanges,
@@ -24,35 +23,21 @@ export function ProviderActions({
   onDeleteClick,
 }: ProviderActionsProps) {
   const tActions = useTranslations("common.actions");
-
   return (
     <div className="flex items-center justify-between pt-2">
       {hasConfig && (
-        <Button
-          color="danger"
-          startContent={<TrashIcon className="h-5 w-5" />}
-          variant="flat"
-          onPress={onDeleteClick}
-        >
+        <Button onPress={onDeleteClick} variant="danger-soft">
+          {<TrashIcon className="h-5 w-5" />}
           {tActions("remove")}
         </Button>
       )}
       <div className="ml-auto flex gap-2">
-        <Button
-          isLoading={testing}
-          startContent={<BeakerIcon className="h-5 w-5" />}
-          variant="flat"
-          onPress={onTest}
-        >
+        <Button onPress={onTest} variant="tertiary" isPending={testing}>
+          {<BeakerIcon className="h-5 w-5" />}
           {tActions("test")}
         </Button>
-        <Button
-          color="primary"
-          isDisabled={!hasChanges}
-          isLoading={saving}
-          startContent={<CheckIcon className="h-5 w-5" />}
-          onPress={onSave}
-        >
+        <Button isDisabled={!hasChanges} onPress={onSave} variant="primary" isPending={saving}>
+          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

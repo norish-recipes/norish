@@ -12,7 +12,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // eslint-disable-next-line import/order -- Type imports must come after mocks are set up in test files
 import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
-import { getRecipePermissionPolicy } from "@norish/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 
 // Mock BullMQ
 const mockAdd = vi.fn();
@@ -42,7 +42,7 @@ vi.mock("bullmq", () => {
 });
 
 // Mock config loader
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn(),
 }));
 

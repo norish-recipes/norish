@@ -19,5 +19,6 @@ permissions:
 jobs:
   docker-build:
     uses: ./.github/workflows/_docker-build.yml
+    secrets: inherit
     with:
       image-tags: norish:test

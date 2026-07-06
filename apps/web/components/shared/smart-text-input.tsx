@@ -1,38 +1,73 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Listbox, ListboxItem, Spinner, Textarea, User } from "@heroui/react";
+import { useRecipeAutocomplete } from "@/hooks/recipes";
+import { Avatar, ListBox, Spinner, TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useRecipeAutocomplete } from "@/hooks/recipes";
+export interface SmartTextInputIngredientSuggestion {
+  key: string;
+  label: string;
+  token: string;
+}
 
 interface SmartTextInputProps {
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
   minRows?: number;
+  ingredientSuggestions?: SmartTextInputIngredientSuggestion[];
   onBlur?: () => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
 }
+
+type AutocompleteState =
+  | {
+      type: "recipe";
+      query: string;
+      triggerStart: number;
+      cursorPosition: number;
+    }
+  | {
+      type: "ingredient";
+      query: string;
+      triggerStart: number;
+      cursorPosition: number;
+    }
+  | null;
 
 export default function SmartTextInput({
   value,
   onValueChange,
   placeholder,
   minRows = 1,
+  ingredientSuggestions = [],
   onBlur,
   onKeyDown,
 }: SmartTextInputProps) {
-  const [showAutocomplete, setShowAutocomplete] = useState(false);
-  const [autocompleteQuery, setAutocompleteQuery] = useState("");
-  const [cursorPosition, setCursorPosition] = useState(0);
-  const [slashPosition, setSlashPosition] = useState(-1);
+  const [autocomplete, setAutocomplete] = useState<AutocompleteState>(null);
   const [openAbove, setOpenAbove] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const t = useTranslations("recipes.empty");
 
-  const { suggestions, isLoading } = useRecipeAutocomplete(autocompleteQuery, showAutocomplete);
+  const recipeAutocompleteOpen = autocomplete?.type === "recipe";
+  const autocompleteQuery = autocomplete?.query ?? "";
+  const { suggestions, isLoading } = useRecipeAutocomplete(
+    autocompleteQuery,
+    recipeAutocompleteOpen
+  );
+  const ingredientMatches =
+    autocomplete?.type === "ingredient"
+      ? ingredientSuggestions
+          .filter((suggestion) =>
+            suggestion.label.toLowerCase().includes(autocomplete.query.trim().toLowerCase())
+          )
+          .slice(0, 8)
+      : [];
+  const showAutocomplete =
+    autocomplete?.type === "recipe" ||
+    (autocomplete?.type === "ingredient" && ingredientMatches.length > 0);
 
   useEffect(() => {
     if (showAutocomplete && containerRef.current) {
@@ -50,68 +85,89 @@ export default function SmartTextInput({
 
       const cursorPos = textareaRef.current?.selectionStart ?? newValue.length;
 
-      setCursorPosition(cursorPos);
+      const recipeMatch = getRecipeTriggerMatch(newValue, cursorPos);
+      const ingredientMatch = getIngredientTriggerMatch(newValue, cursorPos);
 
-      const textBeforeCursor = newValue.slice(0, cursorPos);
-      const lastSlashIndex = textBeforeCursor.lastIndexOf("/");
+      if (
+        ingredientMatch &&
+        ingredientSuggestions.length > 0 &&
+        (!recipeMatch || ingredientMatch.triggerStart > recipeMatch.triggerStart)
+      ) {
+        setAutocomplete({
+          type: "ingredient",
+          ...ingredientMatch,
+        });
 
-      if (lastSlashIndex !== -1) {
-        const charBeforeSlash = lastSlashIndex > 0 ? textBeforeCursor[lastSlashIndex - 1] : " ";
-        const isValidSlash =
-          charBeforeSlash === " " || charBeforeSlash === "\n" || lastSlashIndex === 0;
-
-        if (isValidSlash) {
-          const query = textBeforeCursor.slice(lastSlashIndex + 1);
-
-          if (query.length >= 1 && !query.includes("\n")) {
-            setSlashPosition(lastSlashIndex);
-            setAutocompleteQuery(query);
-            setShowAutocomplete(true);
-
-            return;
-          }
-        }
+        return;
       }
 
-      setShowAutocomplete(false);
-      setAutocompleteQuery("");
+      if (recipeMatch) {
+        setAutocomplete({
+          type: "recipe",
+          ...recipeMatch,
+        });
+
+        return;
+      }
+
+      setAutocomplete(null);
     },
-    [onValueChange]
+    [ingredientSuggestions.length, onValueChange]
   );
 
   const handleSelect = useCallback(
     (recipeId: string, recipeName: string) => {
-      if (slashPosition === -1) return;
+      if (autocomplete?.type !== "recipe") return;
 
-      const before = value.slice(0, slashPosition);
-      const after = value.slice(cursorPosition);
+      const before = value.slice(0, autocomplete.triggerStart);
+      const after = value.slice(autocomplete.cursorPosition);
       const newValue = `${before}[${recipeName}](id:${recipeId})${after}`;
 
       onValueChange(newValue);
-      setShowAutocomplete(false);
-      setAutocompleteQuery("");
+      setAutocomplete(null);
 
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
-          const newCursorPos = slashPosition + recipeName.length + recipeId.length + 7;
+          const newCursorPos = autocomplete.triggerStart + recipeName.length + recipeId.length + 7;
 
           textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
         }
       }, 0);
     },
-    [value, slashPosition, cursorPosition, onValueChange]
+    [autocomplete, value, onValueChange]
+  );
+  const handleIngredientSelect = useCallback(
+    (suggestion: SmartTextInputIngredientSuggestion) => {
+      if (autocomplete?.type !== "ingredient") return;
+
+      const before = value.slice(0, autocomplete.triggerStart);
+      const after = value.slice(autocomplete.cursorPosition);
+      const newValue = `${before}${suggestion.token}${after}`;
+      const newCursorPos = before.length + suggestion.token.length;
+
+      onValueChange(newValue);
+      setAutocomplete(null);
+
+      setTimeout(() => {
+        if (!textareaRef.current) return;
+
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    },
+    [autocomplete, onValueChange, value]
   );
 
   const handleBlur = useCallback(() => {
-    setTimeout(() => setShowAutocomplete(false), 200);
+    setTimeout(() => setAutocomplete(null), 200);
     onBlur?.();
   }, [onBlur]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setShowAutocomplete(false);
+        setAutocomplete(null);
       }
     };
 
@@ -122,36 +178,31 @@ export default function SmartTextInput({
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <Textarea
+      <TextArea
         ref={textareaRef}
-        classNames={{
-          base: "w-full",
-          input: "text-base",
-          inputWrapper: "border-default-200 dark:border-default-800",
-        }}
-        minRows={minRows}
+        className="border-border dark:border-border-tertiary w-full text-base"
         placeholder={placeholder}
+        rows={minRows}
         value={value}
         onBlur={handleBlur}
+        onChange={(event) => handleChange(event.target.value)}
         onKeyDown={onKeyDown}
-        onValueChange={handleChange}
       />
 
       {showAutocomplete && (
         <div
-          className={`bg-content1 absolute right-0 left-0 z-50 max-h-64 overflow-auto rounded-xl shadow-lg ${
+          className={`bg-surface absolute right-0 left-0 z-50 max-h-64 overflow-auto rounded-xl shadow-lg ${
             openAbove ? "bottom-full mb-1" : "top-full mt-1"
           }`}
         >
-          {isLoading ? (
+          {autocomplete?.type === "recipe" && isLoading ? (
             <div className="flex items-center justify-center py-6">
               <Spinner size="sm" />
             </div>
-          ) : suggestions.length > 0 ? (
-            <Listbox
+          ) : autocomplete?.type === "recipe" && suggestions.length > 0 ? (
+            <ListBox
               aria-label="Recipe suggestions"
               items={suggestions}
-              variant="flat"
               onAction={(key) => {
                 const recipe = suggestions.find((r) => r.id === key);
 
@@ -159,24 +210,89 @@ export default function SmartTextInput({
               }}
             >
               {(recipe) => (
-                <ListboxItem key={recipe.id} textValue={recipe.name}>
-                  <User
-                    avatarProps={{
-                      src: recipe.image || undefined,
-                      size: "sm",
-                      radius: "md",
-                      fallback: <span className="text-default-400 text-xs">🍽</span>,
-                    }}
-                    name={recipe.name}
-                  />
-                </ListboxItem>
+                <ListBox.Item key={recipe.id} id={recipe.id} textValue={recipe.name}>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar className="size-8 rounded-md">
+                      {recipe.image ? (
+                        <Avatar.Image alt="" className="object-cover" src={recipe.image} />
+                      ) : null}
+                      <Avatar.Fallback className="text-muted text-xs">R</Avatar.Fallback>
+                    </Avatar>
+                    <span className="truncate text-sm font-medium">{recipe.name}</span>
+                  </div>
+                </ListBox.Item>
               )}
-            </Listbox>
-          ) : autocompleteQuery.length >= 1 ? (
-            <div className="text-default-500 px-4 py-3 text-sm">{t("noResults")}</div>
+            </ListBox>
+          ) : autocomplete?.type === "ingredient" && ingredientMatches.length > 0 ? (
+            <ListBox
+              aria-label="Ingredient suggestions"
+              items={ingredientMatches}
+              onAction={(key) => {
+                const suggestion = ingredientMatches.find((item) => item.key === key);
+
+                if (suggestion) handleIngredientSelect(suggestion);
+              }}
+            >
+              {(suggestion) => (
+                <ListBox.Item key={suggestion.key} id={suggestion.key} textValue={suggestion.label}>
+                  <span className="truncate text-sm font-medium">{suggestion.label}</span>
+                </ListBox.Item>
+              )}
+            </ListBox>
+          ) : autocomplete?.type === "recipe" && autocompleteQuery.length >= 1 ? (
+            <div className="text-muted px-4 py-3 text-sm">{t("noResults")}</div>
           ) : null}
         </div>
       )}
     </div>
   );
+}
+
+function getRecipeTriggerMatch(
+  value: string,
+  cursorPosition: number
+): { query: string; triggerStart: number; cursorPosition: number } | null {
+  const textBeforeCursor = value.slice(0, cursorPosition);
+  const triggerStart = textBeforeCursor.lastIndexOf("/");
+
+  if (triggerStart === -1) return null;
+
+  const previousChar = triggerStart > 0 ? textBeforeCursor[triggerStart - 1] : " ";
+  const isValidTrigger = previousChar === " " || previousChar === "\n" || triggerStart === 0;
+
+  if (!isValidTrigger) return null;
+
+  const query = textBeforeCursor.slice(triggerStart + 1);
+
+  if (query.length < 1 || query.includes("\n")) return null;
+
+  return {
+    query,
+    triggerStart,
+    cursorPosition,
+  };
+}
+
+function getIngredientTriggerMatch(
+  value: string,
+  cursorPosition: number
+): { query: string; triggerStart: number; cursorPosition: number } | null {
+  const textBeforeCursor = value.slice(0, cursorPosition);
+  const triggerStart = textBeforeCursor.lastIndexOf("@");
+
+  if (triggerStart === -1) return null;
+
+  const previousChar = triggerStart > 0 ? textBeforeCursor[triggerStart - 1] : "";
+
+  if (/[A-Za-z0-9_]/.test(previousChar)) return null;
+
+  const query = textBeforeCursor.slice(triggerStart + 1);
+
+  if (query.includes("\n") || query.includes("{") || query.includes("}")) return null;
+
+  return {
+    query,
+    triggerStart,
+    cursorPosition,
+  };
 }

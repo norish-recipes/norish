@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
+import { useNotificationPermission } from "@/hooks/use-notification-permission";
+import { useTimerStore } from "@/stores/timers";
 import { ArrowPathIcon, ClockIcon, PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { Chip } from "@heroui/react";
-import { formatTimerMs } from "@norish/shared/lib/helpers";
 
-import { useTimerStore } from "@/stores/timers";
-import { useNotificationPermission } from "@/hooks/use-notification-permission";
+import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 interface TimerChipProps {
   id: string;
@@ -54,14 +54,14 @@ export function TimerChip({
     return (
       <Chip
         as="button"
-        className="mx-1 translate-y-[1px] pr-1.5 pl-2.5 align-baseline text-base"
+        className="mx-1 translate-y-[1px] rounded-full pr-1.5 pl-2.5 align-baseline text-base"
         color="default"
-        radius="full"
-        startContent={<ClockIcon className="h-4 w-4" />}
-        variant="bordered"
+        type="button"
+        variant="secondary"
         onClick={handleClick}
       >
-        {originalText}
+        <ClockIcon className="h-4 w-4" />
+        <Chip.Label>{originalText}</Chip.Label>
       </Chip>
     );
   }
@@ -81,15 +81,15 @@ export function TimerChip({
   return (
     <Chip
       as="button"
-      className="mx-1 translate-y-[1px] pr-1.5 pl-2.5 align-baseline text-base"
-      color={isCompleted ? "danger" : isRunning ? "primary" : "warning"}
-      radius="full"
+      className="mx-1 translate-y-[1px] rounded-full pr-1.5 pl-2.5 align-baseline text-base"
+      color={isCompleted ? "danger" : isRunning ? "accent" : "warning"}
       size="md"
-      startContent={icon}
-      variant="bordered"
+      type="button"
+      variant="secondary"
       onClick={handleClick}
     >
-      {formatTimerMs(timer.remainingMs)}
+      {icon}
+      <Chip.Label>{formatTimerMs(timer.remainingMs)}</Chip.Label>
     </Chip>
   );
 }

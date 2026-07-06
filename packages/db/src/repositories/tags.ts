@@ -1,9 +1,9 @@
-import type { TagDto } from "@norish/shared/contracts/dto/tag";
-
 import { asc, eq, inArray, sql } from "drizzle-orm";
 import z from "zod";
+
+import type { TagDto } from "@norish/shared/contracts/dto/tag";
 import { db } from "@norish/db/drizzle";
-import { recipeTags, tags } from "@norish/db/schema";
+import { recipes, recipeTags, tags } from "@norish/db/schema";
 import { TagSelectBaseSchema } from "@norish/shared/contracts/zod";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
@@ -17,6 +17,25 @@ export async function listAllTagNames(): Promise<string[]> {
     .selectDistinct({ name: tags.name, lowerName })
     .from(tags)
     .innerJoin(recipeTags, eq(tags.id, recipeTags.tagId))
+    .orderBy(lowerName);
+
+  return rows.map((r) => r.name).filter(Boolean);
+}
+
+/**
+ * List tag names used by recipes owned by the given users (typically the
+ * requesting user plus their household members).
+ */
+export async function listTagNamesForUsers(userIds: string[]): Promise<string[]> {
+  if (!userIds.length) return [];
+
+  const lowerName = sql<string>`lower(${tags.name})`.as("lower_name");
+  const rows = await db
+    .selectDistinct({ name: tags.name, lowerName })
+    .from(tags)
+    .innerJoin(recipeTags, eq(tags.id, recipeTags.tagId))
+    .innerJoin(recipes, eq(recipeTags.recipeId, recipes.id))
+    .where(inArray(recipes.userId, userIds))
     .orderBy(lowerName);
 
   return rows.map((r) => r.name).filter(Boolean);
@@ -293,4 +312,26 @@ export async function removeTagFromRecipe(recipeId: string, tagName: string): Pr
     .where(sql`${recipeTags.recipeId} = ${recipeId} AND ${recipeTags.tagId} = ${tag.id}`);
 
   return (result.rowCount ?? 0) > 0;
+}
+
+/**
+ * Merge new tag names into a recipe's existing tags inside a single
+ * transaction (preserves manually added tags, deduplicates case-insensitively).
+ * Returns the tags that were actually added and the resulting full tag list.
+ */
+export async function mergeTagsIntoRecipe(
+  recipeId: string,
+  incomingTagNames: string[]
+): Promise<{ newTags: string[]; allTags: string[] }> {
+  return await db.transaction(async (tx) => {
+    const existingTags = await getRecipeTagNamesTx(tx, recipeId);
+
+    const existingLower = new Set(existingTags.map((t) => t.toLowerCase()));
+    const newTags = incomingTagNames.filter((t) => !existingLower.has(t.toLowerCase()));
+    const allTags = [...existingTags, ...newTags];
+
+    await attachTagsToRecipeByInputTx(tx, recipeId, allTags);
+
+    return { newTags, allTags };
+  });
 }

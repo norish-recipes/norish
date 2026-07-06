@@ -1,5 +1,7 @@
+import { createContext, useCallback, useContext, useMemo } from "react";
 
 import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
+
 import type {
   FavoritesMutationResult,
   FavoritesQueryResult,
@@ -10,9 +12,6 @@ import type {
   RecipesSubscriptionCallbacks,
 } from "../../hooks/recipes/dashboard";
 import type { RecipeToastAdapter } from "./recipe-toast-adapter";
-
-import { createContext, useCallback, useContext, useMemo } from "react";
-
 import {
   hasAppliedRecipeFilters,
   serializeRecipeFilters,
@@ -169,7 +168,7 @@ export function createRecipesContext({
     const wrappedCreateRecipe = useCallback(
       (input: FullRecipeInsertDTO) => {
         createRecipe(input);
-        navigation.toHome();
+        input.id ? navigation.toRecipe(input.id) : navigation.toHome();
       },
       [createRecipe, navigation]
     );

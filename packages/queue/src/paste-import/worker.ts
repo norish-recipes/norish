@@ -6,19 +6,14 @@
  */
 
 import type { Job } from "bullmq";
+
 import type {
   PasteImportJobData,
   PasteImportJobResult,
   StructuredPasteImportRecipe,
 } from "@norish/queue/contracts/job-types";
+import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
-import type { PolicyEmitContext } from "@norish/trpc/helpers";
-
-import {
-  getAIConfig,
-  getRecipePermissionPolicy,
-  isAIEnabled,
-} from "@norish/config/server-config-loader";
 import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@norish/db";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
@@ -26,13 +21,18 @@ import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getQueues } from "@norish/queue/registry";
+import {
+  getAIConfig,
+  getRecipePermissionPolicy,
+  isAIEnabled,
+} from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
+import { emitByPolicy } from "@norish/shared-server/realtime/policy";
+import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
-import { emitByPolicy } from "@norish/trpc/helpers";
-import { recipeEmitter } from "@norish/trpc/routers/recipes/emitter";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";

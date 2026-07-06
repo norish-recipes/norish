@@ -9,7 +9,7 @@ export default function RecipeSkeletonMobile() {
       <Skeleton className="h-72 w-full rounded-none" />
 
       {/* Unified Content Card */}
-      <div className="bg-content1 relative z-10 -mt-6 overflow-visible rounded-t-3xl shadow-sm">
+      <div className="bg-surface relative z-10 -mt-6 overflow-visible rounded-t-3xl shadow-sm">
         <div className="space-y-6 px-4 py-5">
           {/* Back link and Actions */}
           <div className="flex items-center justify-between">
@@ -39,8 +39,8 @@ export default function RecipeSkeletonMobile() {
             <Skeleton className="h-6 w-14 rounded-full" />
           </div>
 
-          {/* Divider */}
-          <div className="bg-default-200 h-px w-full" />
+          {/* Separator */}
+          <div className="bg-surface-tertiary h-px w-full" />
 
           {/* Ingredients Section */}
           <div className="space-y-4">
@@ -59,8 +59,8 @@ export default function RecipeSkeletonMobile() {
             <Skeleton className="h-10 w-full rounded-lg" />
           </div>
 
-          {/* Divider */}
-          <div className="bg-default-200 h-px w-full" />
+          {/* Separator */}
+          <div className="bg-surface-tertiary h-px w-full" />
 
           {/* Steps Section */}
           <div className="space-y-4">
@@ -81,7 +81,7 @@ export default function RecipeSkeletonMobile() {
             </div>
 
             {/* Rating Section */}
-            <div className="bg-default-100 -mx-1 flex flex-col items-center gap-4 rounded-xl py-6">
+            <div className="bg-surface-secondary -mx-1 flex flex-col items-center gap-4 rounded-xl py-6">
               <Skeleton className="h-5 w-48 rounded-md" />
               <div className="flex gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -91,8 +91,8 @@ export default function RecipeSkeletonMobile() {
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="bg-default-200 h-px w-full" />
+          {/* Separator */}
+          <div className="bg-surface-tertiary h-px w-full" />
 
           {/* Nutrition Section */}
           <div className="space-y-2">

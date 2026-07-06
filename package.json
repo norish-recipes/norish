@@ -1,6 +1,6 @@
 {
   "name": "norish",
-  "version": "0.18.3-beta",
+  "version": "0.19.0-beta",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.33.2",
@@ -10,11 +10,11 @@
     "dev:mobile": "pnpm --filter @norish/mobile run start",
     "build:web": "pnpm --filter @norish/web run build:web",
     "build": "turbo run build",
+    "docs_update": "pnpm -C apps/docs run docs_update",
     "build:server": "turbo run build:server -F @norish/web...",
     "update-sw": "turbo run update-sw -F @norish/web...",
     "clean:install": "pnpm install --frozen-lockfile",
     "build:prod": "pnpm run clean:install && NODE_ENV=production pnpm run build",
-    "db:ensure": "node -e \"console.log('drizzle-kit handles database validation during push/generate')\"",
     "db:push": "pnpm --filter @norish/db exec drizzle-kit push --config ./src/drizzle.config.ts",
     "db:generate": "pnpm --filter @norish/db exec drizzle-kit generate --config ./src/drizzle.config.ts",
     "migrate": "pnpm --filter @norish/db exec drizzle-kit push --config ./src/drizzle.config.ts",
@@ -37,7 +37,7 @@
     "typecheck:web": "pnpm --filter @norish/web run typecheck",
     "format": "turbo run format -- --write",
     "format:check": "turbo run format",
-    "deps:cycles": "node tooling/monorepo/scripts/check-circular-deps.mjs",
+    "deps:cycles": "node tooling/monorepo/scripts/check-circular-deps.mjs && node tooling/monorepo/scripts/check-workspace-imports.mjs",
     "i18n:check": "pnpm --filter @norish/i18n run check:locale-keys"
   },
   "devDependencies": {

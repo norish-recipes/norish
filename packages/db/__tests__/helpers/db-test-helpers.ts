@@ -12,7 +12,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
 import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
-import { encrypt, hashToken } from "@norish/auth/crypto";
+import { encrypt, hashToken } from "@norish/config/crypto";
 import { getRecipeFull } from "@norish/db";
 import * as schema from "@norish/db/schema";
 

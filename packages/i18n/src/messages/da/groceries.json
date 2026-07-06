@@ -62,6 +62,18 @@
     "savePreference": "Husk butik for denne vare",
     "addAnother": "Tilføj endnu en",
     "addRepeat": "+ Tilføj gentagelse",
+    "recurrenceEnabled": "Gentages",
+    "recurrenceSheet": {
+      "title": "Gentagelse",
+      "subtitle": "Føj automatisk denne vare til indkøbslisten igen",
+      "enable": "Aktivér gentagelse",
+      "disable": "Deaktivér gentagelse",
+      "frequency": "Hyppighed",
+      "weekly": "Ugentligt",
+      "biweekly": "Hver 2. uge",
+      "monthly": "Månedligt",
+      "confirm": "Bekræft"
+    },
     "storeOptional": "Butik (valgfrit)",
     "autoDetectFromHistory": "Registrér automatisk fra historik",
     "autoDetectOrSelect": "Registrér automatisk eller vælg",

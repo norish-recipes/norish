@@ -1,17 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
+import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
+import { useAutoHide } from "@/hooks/auto-hide";
 import { CalendarDaysIcon, ClipboardDocumentListIcon, HomeIcon } from "@heroicons/react/20/solid";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
+
 import { cssGlassBackdrop } from "@norish/web/config/css-tokens";
 import { siteConfig } from "@norish/web/config/site";
-
-import { useAutoHide } from "@/hooks/auto-hide";
-import { useUserContext } from "@/context/user-context";
-import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 
 // Map hrefs to translation keys (same as navbar.tsx)
 const navLabelKeys: Record<string, "home" | "calendar" | "groceries"> = {
@@ -23,7 +22,7 @@ const navLabelKeys: Record<string, "home" | "calendar" | "groceries"> = {
 export const MobileNav = () => {
   const tNav = useTranslations("navbar.nav");
   const pathname = usePathname();
-  const { userMenuOpen, setUserMenuOpen } = useUserContext();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -96,8 +95,8 @@ export const MobileNav = () => {
                     <NextLink
                       className={`flex flex-col items-center justify-center gap-1 rounded-full px-4 py-2 transition-colors ${
                         isActive
-                          ? "text-primary font-semibold"
-                          : "text-default-600 hover:text-foreground hover:bg-default-100/70"
+                          ? "text-accent font-semibold"
+                          : "text-muted hover:text-foreground hover:bg-surface-secondary/70"
                       }`}
                       href={item.href}
                       onClick={(e) => {
@@ -122,7 +121,7 @@ export const MobileNav = () => {
           <div
             className={`flex h-13 w-13 shrink-0 items-center justify-center rounded-full ${cssGlassBackdrop}`}
           >
-            <NavbarUserMenu />
+            <NavbarUserMenu isOpen={userMenuOpen} onOpenChange={setUserMenuOpen} />
           </div>
         </div>
       </motion.div>

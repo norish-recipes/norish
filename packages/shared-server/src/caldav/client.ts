@@ -1,3 +1,7 @@
+import type { DAVCalendar, DAVClient as DAVClientType } from "tsdav";
+import tsdav from "tsdav";
+import { v4 as uuidv4 } from "uuid";
+
 import type {
   CalDavCalendarInfo,
   CalDavClientOptions,
@@ -6,10 +10,6 @@ import type {
   CreateEventInput,
 } from "@norish/shared/contracts/dto/caldav";
 
-import type { DAVCalendar } from "tsdav";
-import tsdav from "tsdav";
-const { DAVClient } = tsdav;
-import { v4 as uuidv4 } from "uuid";
 import { createLogger } from "@norish/shared-server/logger";
 
 import { buildIcs } from "./ics-helpers";
@@ -17,13 +17,14 @@ import { buildIcs } from "./ics-helpers";
 export type { CreateEventInput, CreatedEvent, CalDavClientOptions, ConnectionTestResult };
 
 const log = createLogger("caldav-client");
+const { DAVClient } = tsdav;
 
 export class CalDavClient {
   private serverUrl: string;
   private calendarUrl: string | undefined;
   private username: string;
   private password: string;
-  private client: DAVClient;
+  private client: DAVClientType;
   private _calendars: DAVCalendar[] | null = null;
 
   constructor(opts: CalDavClientOptions) {

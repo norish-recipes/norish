@@ -1,6 +1,5 @@
 import type { CreateEventInput } from "@norish/shared-server/caldav/client";
 import type { Slot } from "@norish/shared/contracts";
-
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import {
   getCaldavSyncStatusByItemId,

@@ -1,0 +1,629 @@
+{
+  "page": {
+    "title": "Innstillinger",
+    "loading": "Laster...",
+    "ariaLabel": "Innstillingsfaner"
+  },
+  "tabs": {
+    "user": "Bruker",
+    "household": "Husstand",
+    "caldav": "CalDAV",
+    "admin": "Admin"
+  },
+  "user": {
+    "profile": {
+      "title": "Profil",
+      "nameLabel": "Navn",
+      "namePlaceholder": "Ditt navn",
+      "emailLabel": "E-post",
+      "avatarHint": "Klikk på avataren din for å bytte bilde",
+      "deleteAvatar": "Slett profilbilde",
+      "saveChanges": "Lagre endringer"
+    },
+    "allergies": {
+      "title": "Allergier",
+      "description": "Legg til matallergiene dine for å motta advarsler når du planlegger oppskrifter som inneholder allergener. Denne informasjonen brukes til å advare deg når en planlagt oppskrift inneholder ingredienser som samsvarer med allergiene dine.",
+      "placeholder": "Skriv allergier (f.eks. gluten, nøtter, meieriprodukter)...",
+      "saveButton": "Lagre allergier"
+    },
+    "apiKeys": {
+      "title": "API-nøkler",
+      "description": "API-nøkler gir programmatisk tilgang til Norish API. Bruk dem til integrasjoner, snarveier og automatisering.",
+      "docsLink": "Åpne API-dokumentasjon",
+      "keyNameLabel": "Nøkkelnavn (valgfritt)",
+      "keyNamePlaceholder": "f.eks. iOS-snarvei",
+      "createKey": "Opprett nøkkel",
+      "yourKeys": "Dine API-nøkler",
+      "noKeys": "Ingen API-nøkler ennå. Opprett en for å komme i gang.",
+      "tableHeaders": {
+        "name": "NAVN",
+        "keyPrefix": "NØKKELPREFIKS",
+        "created": "OPPRETTET",
+        "status": "STATUS",
+        "actions": "HANDLINGER"
+      },
+      "unnamed": "Navnløs",
+      "active": "Aktiv",
+      "disabled": "Deaktivert",
+      "disableKey": "Deaktiver nøkkel",
+      "enableKey": "Aktiver nøkkel",
+      "deleteKey": "Slett nøkkel",
+      "generatedModal": {
+        "title": "API-nøkkel generert",
+        "warning": "Lagre denne nøkkelen nå! Du vil ikke kunne se den igjen. Vi lagrer bare en hash og kan ikke gjenopprette denne nøkkelen.",
+        "hint": "Bruk denne nøkkelen i <code>x-api-key</code>-headeren når du sender API-forespørsler.",
+        "confirmButton": "Jeg har lagret den"
+      },
+      "deleteModal": {
+        "title": "Slett API-nøkkel",
+        "message": "Er du sikker på at du vil slette denne API-nøkkelen? Alle applikasjoner som bruker den, mister umiddelbart tilgang. Dette kan ikke angres.",
+        "confirmButton": "Slett nøkkel"
+      }
+    },
+    "archiveImport": {
+      "title": "Importer oppskriftarkiv",
+      "description": "Importer oppskrifter fra Mela (.melarecipes), Paprika (.paprikarecipes) eller Mealie/Tandoor (.zip)-eksporter"
+    },
+    "siteAuthTokens": {
+      "title": "Nettstedsautentiseringstokens",
+      "description": "Legg til headere eller informasjonskapsler som sendes ved import av oppskrifter fra bestemte nettsteder. Nyttig for nettsteder som krever innlogging (f.eks. Instagram, Facebook).",
+      "domain": "Domene",
+      "domainPlaceholder": "f.eks. instagram.com",
+      "name": "Navn",
+      "namePlaceholder": "f.eks. Cookie eller Authorization",
+      "value": "Verdi",
+      "valuePlaceholder": "Token- eller informasjonskapselverdi",
+      "type": "Type",
+      "typeHeader": "Header",
+      "typeCookie": "Informasjonskapsel",
+      "addButton": "Legg til token",
+      "noTokens": "Ingen nettstedsautentiseringstokens konfigurert.",
+      "tableHeaders": {
+        "domain": "DOMENE",
+        "name": "NAVN",
+        "type": "TYPE",
+        "created": "OPPRETTET",
+        "actions": "HANDLINGER"
+      },
+      "deleteModal": {
+        "title": "Slett token",
+        "message": "Er du sikker på at du vil slette dette autentiseringstokenet? Import fra dette nettstedet kan slutte å fungere.",
+        "confirmButton": "Slett token"
+      }
+    },
+    "dangerZone": {
+      "title": "Faresone",
+      "description": "Når du sletter kontoen din, er det ingen vei tilbake. Vær sikker.",
+      "deleteButton": "Slett kontoen min",
+      "deleteModal": {
+        "title": "Slett konto",
+        "permanentWarning": "Denne handlingen er permanent og kan ikke angres!",
+        "dataWarning": "De personlige dataene dine inkludert handlelister, kalenderhendelser og notater slettes permanent.",
+        "recipesNote": "Oppskrifter du har opprettet, beholdes, men vil ikke lenger være knyttet til kontoen din.",
+        "adminNote": "Hvis du er administrator for en husstand med andre medlemmer, må du overføre administratorrettigheter først.",
+        "confirmButton": "Slett kontoen min"
+      }
+    },
+    "preferences": {
+      "title": "Preferanser",
+      "description": "Tilpass opplevelsen din.",
+      "language": {
+        "title": "Språk",
+        "description": "Velg foretrukket språk"
+      },
+      "timers": {
+        "title": "Aktiver oppskrifttimere",
+        "description": "Vis interaktive timere i oppskriftinstruksjoner"
+      },
+      "conversion": {
+        "title": "Vis knapp for ingredienskonvertering",
+        "description": "Vis en knapp på oppskriftsider for å konvertere mellom målesystemer"
+      },
+      "ratings": {
+        "title": "Vis vurderinger",
+        "description": "Vis stjernervurderinger på oppskriftkort og detaljsider"
+      },
+      "favorites": {
+        "title": "Vis favoritter",
+        "description": "Vis favoritt/hjerte-ikoner på oppskriftkort og detaljsider"
+      },
+      "applyError": "Kunne ikke bruke preferanse"
+    },
+    "shareLinks": {
+      "title": "Oppskriftdelelenker",
+      "description": "Bla gjennom og administrer alle offentlige oppskriftlenker du har opprettet.",
+      "empty": "Ingen delelenker funnet.",
+      "table": {
+        "recipe": "OPPSKRIFT",
+        "status": "STATUS",
+        "created": "OPPRETTET",
+        "expires": "UTLØPER",
+        "actions": "HANDLINGER"
+      },
+      "revokeModal": {
+        "title": "Tilbakekall lenke",
+        "message": "Denne lenken til {recipeName} slutter å virke inntil du gjenaktiverer den.",
+        "confirm": "Tilbakekall"
+      },
+      "reactivateModal": {
+        "title": "Gjenaktiver lenke",
+        "message": "Denne lenken til {recipeName} blir aktiv igjen.",
+        "confirm": "Gjenaktiver"
+      },
+      "deleteModal": {
+        "title": "Slett lenke",
+        "message": "Slett denne delelenken til {recipeName}? Dette kan ikke angres.",
+        "confirm": "Slett lenke"
+      }
+    }
+  },
+  "household": {
+    "pageTitle": "Husstandsinnstillinger",
+    "info": {
+      "yourRole": "Din rolle",
+      "admin": "Administrator",
+      "member": "Medlem",
+      "members": "Medlemmer",
+      "leaveButton": "Forlat husstand",
+      "leaveModal": {
+        "title": "Forlat husstand",
+        "confirmMessage": "Er du sikker på at du vil forlate {name}?",
+        "adminWarning": "Du er administrator. Du må overføre administratorrettigheter før du forlater.",
+        "confirmButton": "Forlat husstand"
+      }
+    },
+    "members": {
+      "title": "Medlemmer",
+      "tableHeaders": {
+        "name": "NAVN",
+        "role": "ROLLE",
+        "actions": "HANDLINGER"
+      },
+      "you": "Deg",
+      "kickButton": "Fjern",
+      "makeAdminButton": "Gjør til administrator",
+      "kickModal": {
+        "title": "Fjern bruker",
+        "confirmMessage": "Er du sikker på at du vil fjerne {name} fra husstanden?",
+        "warning": "De mister tilgang til alle delte oppskrifter, handlelister og kalenderhendelser.",
+        "confirmButton": "Fjern bruker"
+      },
+      "transferModal": {
+        "title": "Overfør administratorrettigheter",
+        "confirmMessage": "Er du sikker på at du vil overføre administratorrettigheter til {name}?",
+        "warning": "Du blir et vanlig medlem og vil ikke lenger kunne fjerne brukere eller administrere invitasjonskoder.",
+        "confirmButton": "Overfør administrator"
+      },
+      "toasts": {
+        "kickFailed": "Kunne ikke fjerne brukeren",
+        "transferSuccess": "Overførte administrator til {name}",
+        "transferFailed": "Kunne ikke overføre administrator"
+      }
+    },
+    "joinCode": {
+      "title": "Invitasjonskode",
+      "shareDescription": "Del denne koden med andre for å invitere dem til husstanden din.",
+      "expiresIn": "Utløper om:",
+      "regenerateButton": "Generer ny",
+      "expired": "Utløpt",
+      "noCodeDescription": "Ingen aktiv invitasjonskode. Generer én for å invitere nye medlemmer.",
+      "generateButton": "Generer invitasjonskode",
+      "copySuccess": "Invitasjonskode kopiert",
+      "copyFailed": "Kunne ikke kopiere invitasjonskoden"
+    },
+    "create": {
+      "title": "Opprett husstand",
+      "description": "Opprett en ny husstand for å dele oppskrifter og handlelister med familie eller venner.",
+      "nameLabel": "Husstandsnavn",
+      "namePlaceholder": "f.eks. Familien Hansen",
+      "submitButton": "Opprett husstand"
+    },
+    "join": {
+      "title": "Bli med i husstand",
+      "description": "Skriv inn en invitasjonskode for å bli med i en eksisterende husstand.",
+      "codeLabel": "Invitasjonskode",
+      "codePlaceholder": "8-tegns kode",
+      "submitButton": "Bli med i husstand"
+    }
+  },
+  "caldav": {
+    "setup": {
+      "title": "Sett opp CalDAV-synkronisering",
+      "description": "Koble til CalDAV-kompatibel kalender for automatisk å synkronisere måltidsplanene dine",
+      "gettingStarted": "Kom i gang med CalDAV",
+      "providerDescription": "Du trenger en CalDAV-kompatibel kalendertjeneste. Populære leverandører inkluderer:",
+      "serverUrlLabel": "Server-URL",
+      "serverUrlDescription": "Basis-URL for CalDAV-serveren din (f.eks. https://dav.eksempel.no)",
+      "serverUrlPlaceholder": "https://dav.eksempel.no",
+      "usernameLabel": "Brukernavn",
+      "usernamePlaceholder": "brukernavn",
+      "passwordLabel": "Passord",
+      "passwordPlaceholder": "Skriv inn passord",
+      "calendarLabel": "Kalender",
+      "calendarPlaceholder": "Velg en kalender",
+      "calendarPlaceholderDisabled": "Test tilkoblingen først",
+      "calendarDescription": "Velg hvilken kalender som skal synkroniseres med måltidsplaner",
+      "calendarDescriptionDisabled": "Test tilkoblingen for å laste tilgjengelige kalendere",
+      "timeFormat": "Format: TT:MM-TT:MM",
+      "timeFormatError": "Format må være TT:MM-TT:MM",
+      "breakfastTime": "Frokosttidspunkt",
+      "lunchTime": "Lunsjtidspunkt",
+      "dinnerTime": "Middagstidspunkt",
+      "snackTime": "Snackstidspunkt",
+      "testConnection": "Test tilkobling",
+      "saveConfiguration": "Lagre konfigurasjon"
+    },
+    "config": {
+      "title": "CalDAV-konfigurasjon",
+      "editTitle": "Rediger CalDAV-konfigurasjon",
+      "serverUrl": "Server-URL",
+      "enabled": "Aktivert",
+      "disabled": "Deaktivert",
+      "editButton": "Rediger",
+      "deleteButton": "Slett",
+      "saveChanges": "Lagre endringer",
+      "advancedSettings": "Avanserte innstillinger",
+      "timezone": "Tidssone: {timezone}",
+      "connectionStatus": {
+        "connected": "Tilkoblet",
+        "checking": "Sjekker...",
+        "disconnected": "Ikke tilkoblet",
+        "unknown": "Ukjent"
+      }
+    },
+    "deleteModal": {
+      "title": "Slett CalDAV-konfigurasjon",
+      "confirmMessage": "Er du sikker på at du vil slette CalDAV-konfigurasjonen din?",
+      "deleteEventsLabel": "Slett synkroniserte hendelser",
+      "deleteEventsDescription": "Fjern alle hendelser som ble opprettet i CalDAV-kalenderen din",
+      "confirmButton": "Slett"
+    },
+    "syncStatus": {
+      "title": "Synkroniseringsstatus",
+      "syncNow": "Synkroniser nå",
+      "clearFilter": "Tøm filter",
+      "clickToFilter": "Klikk på en merkelapp for å filtrere",
+      "showingItems": "Viser {start}-{end} av {total} elementer",
+      "tableHeaders": {
+        "item": "ELEMENT",
+        "type": "TYPE",
+        "date": "DATO",
+        "meal": "MÅLTID",
+        "status": "STATUS",
+        "lastSync": "SISTE SYNK.",
+        "error": "FEIL"
+      },
+      "statuses": {
+        "synced": "Synkronisert",
+        "pending": "Venter",
+        "failed": "Mislyktes",
+        "removed": "Fjernet"
+      },
+      "emptyFiltered": "Ingen {status}-elementer funnet",
+      "emptyDefault": "Ingen synkroniseringsposter funnet",
+      "errorDetails": "Feildetaljer"
+    }
+  },
+  "admin": {
+    "shareLinks": {
+      "title": "Moderering av oppskriftdeling",
+      "description": "Bla gjennom offentlige oppskriftlenker på tvers av instansen og moderer livssyklusen deres.",
+      "empty": "Ingen delelenker funnet.",
+      "table": {
+        "recipe": "OPPSKRIFT",
+        "owner": "EIER",
+        "status": "STATUS",
+        "created": "OPPRETTET",
+        "expires": "UTLØPER",
+        "actions": "HANDLINGER"
+      },
+      "revokeModal": {
+        "title": "Tilbakekall lenke",
+        "message": "Denne lenken til {recipeName} slutter å virke inntil den gjenaktiveres.",
+        "confirm": "Tilbakekall"
+      },
+      "reactivateModal": {
+        "title": "Gjenaktiver lenke",
+        "message": "Denne lenken til {recipeName} blir aktiv igjen.",
+        "confirm": "Gjenaktiver"
+      },
+      "deleteModal": {
+        "title": "Slett lenke",
+        "message": "Slett denne delelenken til {recipeName}? Dette kan ikke angres.",
+        "confirm": "Slett lenke"
+      }
+    },
+    "general": {
+      "title": "Generelt",
+      "allowRegistration": "Tillat ny brukerregistrering",
+      "registrationDescription": "Når deaktivert, kan bare eksisterende brukere logge inn",
+      "locales": "Aktiverte språk",
+      "localesDescription": "Velg hvilke språk brukere kan velge mellom",
+      "defaultLocale": "Standardspråk",
+      "defaultLocaleDescription": "Språk brukt for nye brukere og som reserve",
+      "saveLocales": "Lagre språkinnstillinger",
+      "localesSaved": "Språkinnstillinger lagret",
+      "localesError": "Kunne ikke lagre språkinnstillinger",
+      "atLeastOneLocale": "Minst ett språk må være aktivert"
+    },
+    "registration": {
+      "title": "Registrering",
+      "allowRegistration": "Tillat ny brukerregistrering",
+      "description": "Når deaktivert, kan bare eksisterende brukere logge inn"
+    },
+    "permissions": {
+      "title": "Oppskrifttillatelser",
+      "description": "Kontroller hvem som kan se, redigere og slette oppskrifter. Serveradministratorer har alltid full tilgang.",
+      "viewRecipes": "Se oppskrifter",
+      "viewDescription": "Hvem kan se oppskrifter i oversikten",
+      "editRecipes": "Rediger oppskrifter",
+      "editDescription": "Hvem kan endre oppskriftinformasjon",
+      "deleteRecipes": "Slett oppskrifter",
+      "deleteDescription": "Hvem kan fjerne oppskrifter",
+      "levels": {
+        "everyone": "Alle",
+        "everyoneDescription": "Alle godkjente brukere",
+        "household": "Husstand",
+        "householdDescription": "Oppskriftens eier og husstandsmedlemmene deres",
+        "owner": "Bare eieren",
+        "ownerDescription": "Bare oppskriftens eier"
+      },
+      "note": "Merk: Handlelister og kalenderhendelser følger husstandsregler automatisk; husstandsmedlemmer kan alltid redigere/slette elementer som tilhører hvem som helst i samme husstand."
+    },
+    "system": {
+      "title": "Systeminnstillinger",
+      "cleanup": {
+        "title": "Oppryddingsplanlegger",
+        "label": "Oppryddingsmåneder",
+        "description": "Slett planlagte måltider som er eldre enn dette antallet måneder"
+      },
+      "server": {
+        "title": "Serveradministrasjon",
+        "restartLabel": "Start server på nytt",
+        "restartDescription": "Bruk konfigurasjonsendringer som krever en omstart",
+        "restartButton": "Start server på nytt"
+      }
+    },
+    "restart": {
+      "title": "Start server på nytt",
+      "confirmMessage": "Er du sikker på at du vil starte serveren på nytt?",
+      "importantTitle": "Viktig:",
+      "warning1": "Alle aktive tilkoblinger vil bli avbrutt",
+      "warning2": "Serveren vil være utilgjengelig i noen sekunder",
+      "warning3": "Sørg for at oppsettet ditt har <code>restart: always</code> konfigurert, ellers vil ikke serveren komme online igjen automatisk",
+      "confirmButton": "Start på nytt nå"
+    },
+    "authProviders": {
+      "title": "Autentiseringsleverandører",
+      "requiresRestart": "Krever omstart",
+      "description": "Konfigurer autentiseringsmetoder. Endringer krever en serveromstart for å tre i kraft.",
+      "passwordAuth": {
+        "title": "E-post og passord",
+        "description": "Tillat brukere å logge inn med e-post og passord"
+      },
+      "oauthDescription": "Konfigurer OAuth-leverandører for SSO-autentisering.",
+      "oidc": {
+        "title": "OIDC-leverandør",
+        "subtitle": "Generisk OpenID Connect",
+        "fields": {
+          "name": "Leverandørnavn",
+          "namePlaceholder": "f.eks. Authentik, Keycloak",
+          "issuer": "Utsteders URL",
+          "issuerPlaceholder": "https://din-idp.no",
+          "clientId": "Klient-ID",
+          "clientSecret": "Klienthemmelighet",
+          "wellknown": "Well-known URL (valgfritt)",
+          "wellknownPlaceholder": "Utledes automatisk fra utsteder hvis ikke angitt"
+        },
+        "claimMapping": {
+          "title": "Krav-mapping",
+          "description": "Tildel automatisk roller og husstander basert på OIDC-krav. Brukere med administratorgruppen får serveradministratorrettigheter. Brukere med en husstandsgruppe meldes automatisk inn i den husstanden.",
+          "securityWarning": "Advarsel: Aktivering av krav-mapping gir identitetsleverandøren din kontroll over administratorrettigheter og husstandsmedlemskap. Aktiver dette bare hvis du fullt ut stoler på OIDC-leverandøren din og har konfigurert gruppekravene riktig.",
+          "scopes": "Ytterligere scopes",
+          "scopesPlaceholder": "groups, roles",
+          "scopesDescription": "Kommaseparert liste over ytterligere OAuth-scopes å be om (f.eks. groups for Keycloak)",
+          "groupsClaim": "Gruppekrav",
+          "groupsClaimDescription": "Navn på kravet som inneholder brukergrupper/roller",
+          "adminGroup": "Administratorgruppe",
+          "adminGroupDescription": "Gruppenavn som tildeler serveradministratorrollen (ikke skriftstørrelsesavhengig)",
+          "householdPrefix": "Husstandsprefiks",
+          "householdPrefixDescription": "Prefiks for husstandsgruppenavn (f.eks. norish_household_family => husstand 'family')"
+        }
+      },
+      "github": {
+        "title": "GitHub",
+        "subtitle": "GitHub OAuth",
+        "fields": {
+          "clientId": "Klient-ID",
+          "clientSecret": "Klienthemmelighet"
+        }
+      },
+      "google": {
+        "title": "Google",
+        "subtitle": "Google OAuth",
+        "fields": {
+          "clientId": "Klient-ID",
+          "clientIdPlaceholder": "*.apps.googleusercontent.com",
+          "clientSecret": "Klienthemmelighet"
+        }
+      },
+      "form": {
+        "testSuccess": "Tilkobling vellykket",
+        "removeTitle": "Fjern {provider}",
+        "removeConfirm": "Er du sikker på at du vil fjerne denne leverandøren?"
+      },
+      "envBadge": {
+        "db": "Administrert av DB",
+        "env": "Administrert av env"
+      }
+    },
+    "contentDetection": {
+      "title": "Innholdsregistrering",
+      "description": "Konfigurer hvordan oppskrifter registreres og analyseres fra nettsider.",
+      "contentIndicators": {
+        "title": "Innholdsindikatorer",
+        "subtitle": "Nøkkelord som identifiserer oppskriftsider",
+        "description": "Skemaindikatorer registrerer strukturerte oppskriftdata (JSON-LD, mikrodata). Innholdsindikatorer er nøkkelord som tyder på at en side inneholder en oppskrift.",
+        "timersEnabled": {
+          "title": "Aktiver oppskrifttimere",
+          "description": "Registrer og vis interaktive timere i oppskrifter"
+        }
+      },
+      "units": {
+        "title": "Måleenheter",
+        "subtitle": "Definisjoner av måleenheter for analyse",
+        "description": "Definer måleenheter med kortform, flertall og alternative stavemåter. Brukes ved analyse av ingrediensmengder."
+      },
+      "recurrence": {
+        "title": "Gjentakelsesmønstre",
+        "subtitle": "Mønstre i naturlig språk for tilbakevendende elementer",
+        "description": "Definer språkspesifikke mønstre for analyse av gjentakelsesregler fra naturlig språk (f.eks. 'hver uke', 'hver dag')."
+      },
+      "timerKeywords": {
+        "title": "Timer-nøkkelord",
+        "subtitle": "Tidsenhetsnøkkelord for timerregistrering",
+        "description": "Konfigurer nøkkelord som brukes til å registrere timere i oppskriftinstruksjoner. Støtter flere språk.",
+        "enableToggle": "Aktiver timerregistrering",
+        "hoursLabel": "Time-nøkkelord",
+        "hoursPlaceholder": "time, timer, t",
+        "hoursHelp": "Nøkkelord for timer (f.eks. time, stunde, heure, uur)",
+        "minutesLabel": "Minutt-nøkkelord",
+        "minutesPlaceholder": "minutt, minutter, min",
+        "minutesHelp": "Nøkkelord for minutter (f.eks. minute, minuten, minuut)",
+        "secondsLabel": "Sekund-nøkkelord",
+        "secondsPlaceholder": "sekund, sekunder, sek",
+        "secondsHelp": "Nøkkelord for sekunder (f.eks. second, sekunde, seconde)",
+        "unsavedChanges": "Ulagrede endringer"
+      }
+    },
+    "aiProcessing": {
+      "title": "AI og behandling",
+      "description": "Konfigurer AI-drevne funksjoner for oppskriftuttrekking og videobehandling.",
+      "aiConfig": {
+        "title": "AI-konfigurasjon",
+        "subtitle": "Oppskriftanalyse og -uttrekking"
+      },
+      "video": {
+        "title": "Videobehandling",
+        "subtitle": "Uttrekking og transkripsjon fra sosiale medier"
+      },
+      "prompts": {
+        "title": "Prompt-tekster",
+        "subtitle": "Tilpass AI-instruksjoner for oppskriftbehandling"
+      },
+      "bulkCategorization": {
+        "title": "Massekategorisering",
+        "subtitle": "Kategoriser ukategoriserte oppskrifter med AI",
+        "description": "Sett alle ukategoriserte oppskrifter i kø for AI-basert kategoriregistrering. Kategorier inkluderer Frokost, Lunsj, Middag og Snacks.",
+        "button": "Kategoriser alle oppskrifter",
+        "queued": "{count, plural, =0 {Ingen oppskrifter å kategorisere} one {# oppskrift i kø} other {# oppskrifter i kø}}",
+        "success": "Kategorisering startet",
+        "error": "Kunne ikke starte kategorisering"
+      }
+    },
+    "aiConfig": {
+      "enableAI": "Aktiver AI-funksjoner",
+      "enableAIDescription": "Bruk AI til å trekke ut oppskrifter fra ustrukturert innhold",
+      "configureWarning": "Konfigurer AI-leverandørinnstillingene nedenfor for å aktivere AI-funksjoner.",
+      "provider": "AI-leverandør",
+      "providers": {
+        "openai": "OpenAI",
+        "azure": "Azure OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google AI",
+        "mistral": "Mistral AI",
+        "deepseek": "DeepSeek",
+        "perplexity": "Perplexity",
+        "groq": "Groq",
+        "ollama": "Ollama (Lokal)",
+        "lmStudio": "LM Studio (Lokal)",
+        "genericOpenai": "Generisk OpenAI-kompatibel"
+      },
+      "endpointUrl": "Endpoint-URL",
+      "azureEndpoint": "Azure-ressurs-URL (valgfritt)",
+      "azureEndpointDescription": "Tilpasset Azure OpenAI-endpoint. La stå tomt for standard.",
+      "model": "Modell",
+      "visionModel": "Visjonsspråkmodell (valgfritt)",
+      "visionModelDescription": "Valgfritt: Bruk en annen modell for bilde-/visjonsoppgaver. La stå tomt for å bruke modellen ovenfor.",
+      "apiKey": "API-nøkkel",
+      "apiKeyPlaceholder": "Skriv inn API-nøkkel",
+      "temperature": "Temperatur: {value}",
+      "temperatureHint": "Lavere = mer fokusert, Høyere = mer kreativ",
+      "maxTokens": "Maks. tokens",
+      "requestTimeout": "Tidsavbrudd for forespørsel (ms)",
+      "autoTagAllergies": "Registrer allergentags automatisk",
+      "autoTagAllergiesDescription": "Legg automatisk til allergenrelaterte tags ved import av oppskrifter",
+      "alwaysUseAI": "Bruk alltid AI-import",
+      "alwaysUseAIDescription": "Hopp over strukturerte analysatorer og trekk ut oppskrifter med AI alene",
+      "autoTaggingMode": "Auto-tagmodus",
+      "autoTaggingModeDescription": "Tildel automatisk tags/nøkkelord til importerte oppskrifter med AI",
+      "autoTaggingModes": {
+        "disabled": "Deaktivert",
+        "predefined": "Bare forhåndsdefinerte tags",
+        "predefinedDb": "Forhåndsdefinerte + eksisterende tags",
+        "freeform": "AI kan opprette nye tags"
+      },
+      "connectionSuccess": "Tilkobling vellykket",
+      "testConnection": "Test tilkobling",
+      "vision": "visjon"
+    },
+    "videoConfig": {
+      "enableVideo": "Aktiver videoanalyse",
+      "enableVideoDescription": "Trekk ut oppskrifter fra TikTok, Instagram, YouTube Shorts eller Facebook",
+      "configureWarning": "Konfigurer en transskripsjonsleverandør nedenfor for å aktivere videobehandling.",
+      "aiDisabledWarning": "Aktiver AI-konfigurasjon før du slår på videobehandling.",
+      "maxLength": "Maks. videolengde (sekunder)",
+      "maxLengthDescription": "Lengre videoer tar mer tid og ressurser å behandle",
+      "maxFileSize": "Maks. videofilstørrelse",
+      "maxFileSizeDescription": "Maksimal størrelse for nedlastede videofiler",
+      "ytDlpVersion": "yt-dlp-versjon",
+      "ytDlpVersionDescription": "Versjon av yt-dlp som brukes ved videoopplasting",
+      "ytDlpProxy": "yt-dlp Proxy",
+      "ytDlpProxyDescription": "HTTP/SOCKS5-proxy for yt-dlp",
+      "transcription": "Transkripsjon",
+      "transcriptionDescription": "Konverter videoens lyd til tekst for oppskriftuttrekking",
+      "transcriptionProvider": "Transskripsjonsleverandør",
+      "transcriptionProviderDescription": "Bare OpenAI og OpenAI-kompatible endpoints støtter Whisper-transkripsjon",
+      "transcriptionProviders": {
+        "disabled": "Deaktivert",
+        "openai": "OpenAI Whisper",
+        "groq": "Groq Whisper",
+        "azure": "Azure OpenAI Whisper",
+        "ollama": "Ollama",
+        "genericOpenai": "Generisk OpenAI-kompatibel"
+      },
+      "transcriptionEndpoint": "Endpoint-URL",
+      "transcriptionEndpointDescription": "OpenAI-kompatibelt endpoint med Whisper-støtte, eller Ollama-endpoint",
+      "transcriptionModel": "Modell",
+      "transcriptionModelDescription": "Whisper-modell som brukes ved transkripsjon",
+      "transcriptionModelPlaceholder": "Velg eller skriv inn modellnavn",
+      "transcriptionApiKey": "API-nøkkel",
+      "transcriptionApiKeyDescription": "Faller tilbake på AI-konfigurasjonens API-nøkkel hvis ikke angitt",
+      "transcriptionApiKeyPlaceholder": "La stå tomt for å bruke AI-konfigurasjonsnøkkel",
+      "transcriptionApiKeyOptional": "API-nøkkel (valgfritt)",
+      "transcriptionApiKeyOptionalDescription": "De fleste lokale Whisper-servere krever ikke en API-nøkkel",
+      "transcriptionApiKeyOptionalPlaceholder": "La stå tomt for lokale servere"
+    },
+    "promptsConfig": {
+      "recipeExtraction": "Prompt for oppskriftuttrekking",
+      "recipeExtractionDescription": "Denne prompten brukes ved uttrekking av oppskriftdata fra nettsider eller videotransskripsjoner.",
+      "recipeExtractionPlaceholder": "Skriv inn prompt for oppskriftuttrekking...",
+      "unitConversion": "Prompt for enhetskonvertering",
+      "unitConversionDescription": "Denne prompten brukes ved konvertering av oppskriftmål mellom metriske og amerikanske systemer. Tilgjengelige variabler: sourceSystem, targetSystem, units",
+      "unitConversionPlaceholder": "Skriv inn prompt for enhetskonvertering...",
+      "nutritionEstimation": "Prompt for næringsestimering",
+      "nutritionEstimationDescription": "Denne prompten brukes ved estimering av næringsinformasjon for en oppskrift. Tilgjengelige variabler: recipeName, servings, ingredients",
+      "nutritionEstimationPlaceholder": "Skriv inn prompt for næringsestimering...",
+      "autoTagging": "Prompt for auto-tagging",
+      "autoTaggingDescription": "Denne prompten brukes til å generere tags for importerte oppskrifter. Definer taggregler og liste over forhåndsdefinerte tags.",
+      "autoTaggingPlaceholder": "Skriv inn prompt for auto-tagging..."
+    },
+    "unsavedChanges": "Ulagrede endringer",
+    "jsonEditor": {
+      "placeholder": "Skriv inn JSON-konfigurasjon...",
+      "invalidJson": "Ugyldig JSON-format",
+      "failedToSave": "Kunne ikke lagre",
+      "failedToRestore": "Kunne ikke gjenopprette standardinnstillinger"
+    }
+  }
+}

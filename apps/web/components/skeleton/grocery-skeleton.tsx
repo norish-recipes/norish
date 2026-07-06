@@ -8,20 +8,20 @@ export default function GrocerySkeleton() {
       <div className="flex flex-col gap-3 p-1">
         {Array.from({ length: 3 }).map((_, storeIndex) => (
           <div key={storeIndex} className="overflow-hidden rounded-xl">
-            <div className="bg-default-100 flex items-center gap-3 px-4 py-3">
+            <div className="bg-surface-secondary flex items-center gap-3 px-4 py-3">
               <Skeleton className="h-7 w-7 shrink-0 rounded-full" />
-              <Skeleton className="rounded-medium h-5 w-32" />
-              <Skeleton className="rounded-medium ml-auto h-5 w-5" />
-              <Skeleton className="rounded-medium h-8 w-8 shrink-0" />
+              <Skeleton className="h-5 w-32 rounded-md" />
+              <Skeleton className="ml-auto h-5 w-5 rounded-md" />
+              <Skeleton className="h-8 w-8 shrink-0 rounded-md" />
             </div>
 
-            <div className="divide-default-100 bg-content1 flex flex-col gap-2 divide-y px-2 py-2">
+            <div className="divide-border bg-surface flex flex-col gap-2 divide-y px-2 py-2">
               {Array.from({ length: storeIndex === 0 ? 4 : 3 }).map((_, itemIndex) => (
                 <div
                   key={itemIndex}
-                  className="bg-content1 flex min-h-14 items-center gap-3 rounded-lg px-4 py-3"
+                  className="bg-surface flex min-h-14 items-center gap-3 rounded-lg px-4 py-3"
                 >
-                  <Skeleton className="rounded-medium h-4 max-w-xs flex-1" />
+                  <Skeleton className="h-4 max-w-xs flex-1 rounded-md" />
                 </div>
               ))}
             </div>

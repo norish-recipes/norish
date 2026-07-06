@@ -1,7 +1,5 @@
 import type { NewApiLog } from "@norish/db/schema/api-logs";
-
-import { db } from "@norish/db/drizzle";
-import { apiLogs } from "@norish/db/schema/api-logs";
+import { insertApiLog } from "@norish/db/repositories/api-logs";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
@@ -83,7 +81,7 @@ class TrpcLogger {
       meta: entry.meta ?? null,
     };
 
-    await db.insert(apiLogs).values(record);
+    await insertApiLog(record);
   }
 
   success(

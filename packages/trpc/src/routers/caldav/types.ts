@@ -1,4 +1,6 @@
 import { z } from "zod";
+
+import type { SaveCaldavConfigInputDto } from "@norish/shared/contracts";
 import {
   CaldavConfigSavedEventSchema,
   CaldavInitialSyncCompleteEventSchema,
@@ -22,7 +24,24 @@ export type CaldavSubscriptionEvents = {
   initialSyncComplete: z.infer<typeof CaldavInitialSyncCompleteEventSchema>;
 };
 
-export const SaveCaldavConfigInputSchema = SharedSaveCaldavConfigInputSchema.extend({
+type SaveCaldavConfigInputValue = Omit<SaveCaldavConfigInputDto, "password"> & {
+  password?: string;
+};
+
+type DeleteCaldavConfigInputValue = {
+  version?: number;
+  deleteEvents?: boolean;
+};
+
+type DeleteCaldavConfigOutputValue = {
+  version?: number;
+  deleteEvents: boolean;
+};
+
+export const SaveCaldavConfigInputSchema: z.ZodType<
+  SaveCaldavConfigInputValue,
+  SaveCaldavConfigInputValue
+> = SharedSaveCaldavConfigInputSchema.extend({
   password: z.string().optional(),
 });
 
@@ -32,7 +51,10 @@ export const TestCaldavConnectionInputSchema = z.object({
   password: z.string().min(1),
 });
 
-export const DeleteCaldavConfigInputSchema = SharedDeleteCaldavConfigInputSchema;
+export const DeleteCaldavConfigInputSchema: z.ZodType<
+  DeleteCaldavConfigOutputValue,
+  DeleteCaldavConfigInputValue
+> = SharedDeleteCaldavConfigInputSchema;
 
 export const GetSyncStatusInputSchema = z.object({
   page: z.number().int().min(1).default(1),

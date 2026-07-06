@@ -14,6 +14,11 @@
       "ingredients": "재료",
       "steps": "단계",
       "tags": "태그"
+    },
+    "viewMode": {
+      "label": "레시피 보기",
+      "grid": "그리드",
+      "list": "목록"
     }
   },
   "empty": {
@@ -26,7 +31,8 @@
     "noImage": "이미지가 없습니다.",
     "viewGroceries": "장보기 보기",
     "addToCalendar": "캘린더에 추가",
-    "deleteRecipe": "레시피 삭제"
+    "deleteRecipe": "레시피 삭제",
+    "recipeOptions": "레시피 옵션"
   },
   "detail": {
     "backToRecipes": "레시피로 돌아가기",
@@ -255,7 +261,6 @@
       "duplicateTag": "이 태그는 이미 존재합니다."
     }
   },
-
   "cookMode": {
     "steps": "단계",
     "ingredients": "재료",

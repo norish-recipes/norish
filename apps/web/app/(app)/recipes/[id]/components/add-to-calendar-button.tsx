@@ -1,31 +1,28 @@
 "use client";
 
 import React, { useState } from "react";
+import { MiniCalendar } from "@/components/Panel/consumers";
+import { useRecipeQuery } from "@/hooks/recipes";
 import { CalendarDaysIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useRecipeQuery } from "@/hooks/recipes";
-import { MiniCalendar } from "@/components/Panel/consumers";
-
 type Props = {
   recipeId: string;
 };
-
 export default function AddToCalendarButton({ recipeId }: Props) {
   const { recipe } = useRecipeQuery(recipeId);
   const [open, setOpen] = useState(false);
   const t = useTranslations("recipes.detail");
-
   return (
     <>
       <Button
         isIconOnly
-        className="text-default-500"
+        className="text-muted"
         size="sm"
         title={t("planMeal")}
-        variant="light"
         onPress={() => setOpen(true)}
+        variant="tertiary"
       >
         <CalendarDaysIcon className="h-5 w-5" />
       </Button>

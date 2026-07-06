@@ -13,7 +13,7 @@ export function EnvManagedBadge({ isOverridden }: EnvManagedBadgeProps) {
   if (isOverridden === undefined) return null;
 
   return (
-    <Chip color={isOverridden ? "success" : "warning"} size="sm" variant="flat">
+    <Chip color={isOverridden ? "success" : "warning"} size="sm" variant="soft">
       {isOverridden ? t("db") : t("env")}
     </Chip>
   );

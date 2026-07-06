@@ -10,7 +10,7 @@ import {
 import { wrapTrpcProxy } from "./trpc-provider";
 
 describe("createTRPCProviderBundle", () => {
-  it("normalizes subscription onData values to meta and payload", () => {
+  it("exposes envelope payloads both at the top level and under payload", () => {
     const onDataInput: unknown[] = [];
     const onData = vi.fn();
     const trpc = wrapTrpcProxy(
@@ -49,7 +49,41 @@ describe("createTRPCProviderBundle", () => {
     options.onData(envelope);
 
     expect(onData).toHaveBeenCalledOnce();
-    expect(onDataInput[0]).toEqual(envelope);
+    expect(onDataInput[0]).toMatchObject(envelope.payload);
+    expect((onDataInput[0] as any).payload).toEqual(envelope.payload);
+  });
+
+  it("exposes raw subscription payloads both at the top level and under payload", () => {
+    const onDataInput: unknown[] = [];
+    const onData = vi.fn();
+    const trpc = wrapTrpcProxy(
+      {
+        groceries: {
+          onRecurringCreated: {
+            subscriptionOptions: (_input: unknown, options: unknown) => options,
+          },
+        },
+      },
+      new WeakMap()
+    ) as any;
+
+    const options = trpc.groceries.onRecurringCreated.subscriptionOptions(undefined, {
+      onData,
+    }) as any;
+
+    const payload = {
+      recurringGrocery: { id: "rg-1" },
+    };
+
+    onData.mockImplementation((value) => {
+      onDataInput.push(value);
+    });
+
+    options.onData(payload);
+
+    expect(onData).toHaveBeenCalledOnce();
+    expect(onDataInput[0]).toMatchObject(payload);
+    expect((onDataInput[0] as any).payload).toEqual(payload);
   });
 
   it("detects unauthorized WebSocket close reasons from React Native events", () => {

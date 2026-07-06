@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Button, ButtonGroup } from "@heroui/react";
+import { ToggleButton, ToggleButtonGroup } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import { MeasurementSystem } from "@norish/shared/contracts";
 
 export interface MeasurementSystemSelectorProps {
@@ -11,7 +12,6 @@ export interface MeasurementSystemSelectorProps {
   detected?: MeasurementSystem;
   className?: string;
 }
-
 export default function MeasurementSystemSelector({
   value,
   onChange,
@@ -20,35 +20,43 @@ export default function MeasurementSystemSelector({
 }: MeasurementSystemSelectorProps) {
   const t = useTranslations("recipes.measurementSystem");
   const systems: MeasurementSystem[] = ["metric", "us"];
-
   const systemLabels: Record<MeasurementSystem, string> = {
     metric: t("metric"),
     us: t("us"),
   };
-
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
       <div className="flex items-center justify-between">
-        <span className="text-default-700 text-sm font-medium">{t("label")}</span>
+        <span className="text-foreground text-sm font-medium">{t("label")}</span>
         {detected && detected !== value && (
-          <span className="text-default-500 text-xs">
-            {t("detected", { system: systemLabels[detected] })}
+          <span className="text-muted text-xs">
+            {t("detected", {
+              system: systemLabels[detected],
+            })}
           </span>
         )}
       </div>
-      <ButtonGroup className="w-full" size="md">
+      <ToggleButtonGroup
+        disallowEmptySelection
+        fullWidth
+        selectedKeys={[value]}
+        selectionMode="single"
+        size="md"
+        onSelectionChange={(keys) => {
+          const [system] = Array.from(keys);
+
+          if (system === "metric" || system === "us") {
+            onChange(system);
+          }
+        }}
+      >
         {systems.map((system) => (
-          <Button
-            key={system}
-            className="flex-1"
-            color={value === system ? "primary" : "default"}
-            variant={value === system ? "solid" : "flat"}
-            onPress={() => onChange(system)}
-          >
+          <ToggleButton key={system} className="flex-1" id={system}>
+            {system === "us" && <ToggleButtonGroup.Separator />}
             {systemLabels[system]}
-          </Button>
+          </ToggleButton>
         ))}
-      </ButtonGroup>
+      </ToggleButtonGroup>
     </div>
   );
 }

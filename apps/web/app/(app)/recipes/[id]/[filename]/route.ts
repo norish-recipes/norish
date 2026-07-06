@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import { serveRecipeMedia } from "@/lib/recipe-media";
 
 const VALID_UUID_PATTERN = /^[a-f0-9-]{36}$/i;

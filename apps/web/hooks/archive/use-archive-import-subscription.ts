@@ -1,12 +1,12 @@
 "use client";
 
-import { addToast } from "@heroui/react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { toast } from "@heroui/react";
 import { useSubscription } from "@trpc/tanstack-react-query";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import { useArchiveImportCacheHelpers } from "./use-archive-cache";
-
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 const log = createClientLogger("ArchiveImportSubscription");
 
@@ -93,12 +93,9 @@ export function useArchiveImportSubscription(): void {
           description = `Imported ${payload.imported} recipes`;
         }
 
-        addToast({
-          severity: hasErrors ? "warning" : "success",
-          title: "Recipe import complete",
-          description,
-          shouldShowTimeoutProgress: true,
-          radius: "full",
+        toast("Recipe import complete", {
+          description: description,
+          variant: hasErrors ? "warning" : "success",
         });
       },
     })

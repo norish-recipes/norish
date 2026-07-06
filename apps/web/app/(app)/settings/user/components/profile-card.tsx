@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import UserAvatar from "@/components/shared/user-avatar";
 import { TrashIcon } from "@heroicons/react/16/solid";
 import { PencilIcon } from "@heroicons/react/20/solid";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
-import { Avatar, Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
+import { Button, Card, Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
-import { useUserAvatar } from "@norish/shared-react/hooks";
 
 import { useUserSettingsContext } from "../context";
 
@@ -25,22 +25,17 @@ export default function ProfileCard() {
       setName(user.name);
     }
   }, [user?.name]);
-
   const handleSaveProfile = async () => {
     const hasNameChanges = name !== user?.name;
     const hasImageChanges = pendingImageFile !== null;
-
     if (!hasNameChanges && !hasImageChanges) {
       return;
     }
-
     setSaving(true);
-
     try {
       if (hasNameChanges) {
         await updateName(name);
       }
-
       if (pendingImageFile) {
         await updateImage(pendingImageFile);
         setImagePreview(null);
@@ -50,10 +45,8 @@ export default function ProfileCard() {
       setSaving(false);
     }
   };
-
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
     if (!file) {
       return;
     }
@@ -70,47 +63,44 @@ export default function ProfileCard() {
 
     // Create preview
     const reader = new FileReader();
-
     reader.onload = (event) => {
       setImagePreview(event.target?.result as string);
     };
     reader.readAsDataURL(file);
-
     setPendingImageFile(file);
   };
-
   const handleDeleteImage = async () => {
     setImagePreview(null);
     setPendingImageFile(null);
     await deleteImage();
   };
-
   const hasPendingChanges = name !== user?.name || pendingImageFile !== null;
   const hasImage = imagePreview || user?.image;
-  const { avatarSrc, fallbackStyle } = useUserAvatar({
-    image: imagePreview || user?.image,
-    fallbackSeed: user?.id || user?.email || user?.name || "U",
-  });
-
   return (
     <Card>
-      <CardHeader>
+      <Card.Header>
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <UserCircleIcon className="h-5 w-5" />
           {t("title")}
         </h2>
-      </CardHeader>
-      <CardBody className="gap-4">
+      </Card.Header>
+      <Card.Content className="gap-4">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Avatar
-              isBordered
-              className={`h-24 w-24 cursor-pointer border border-black/30 text-2xl font-semibold transition-opacity hover:opacity-80 dark:border-white/25 ${avatarSrc ? "bg-white dark:bg-black" : ""}`}
-              name={user?.name?.[0]?.toUpperCase() || "U"}
-              src={avatarSrc}
-              style={avatarSrc ? undefined : fallbackStyle}
+            <button
+              aria-label={t("avatarHint")}
+              className="rounded-full"
+              type="button"
               onClick={() => fileInputRef.current?.click()}
-            />
+            >
+              <UserAvatar
+                className="size-24 cursor-pointer text-2xl transition-opacity hover:opacity-80"
+                email={user?.email}
+                image={imagePreview || user?.image}
+                name={user?.name}
+                userId={user?.id}
+              />
+            </button>
             <input
               ref={fileInputRef}
               accept="image/*"
@@ -122,13 +112,11 @@ export default function ProfileCard() {
               <Button
                 isIconOnly
                 aria-label={t("deleteAvatar")}
-                className="absolute -bottom-1 -left-1 h-7 w-7 min-w-0"
-                color="danger"
-                isLoading={isDeletingAvatar}
-                radius="full"
+                className="absolute -bottom-1 -left-1 h-7 w-7 min-w-0 rounded-full"
                 size="sm"
-                variant="solid"
                 onPress={handleDeleteImage}
+                variant="danger"
+                isPending={isDeletingAvatar}
               >
                 <TrashIcon className="h-3.5 w-3.5" />
               </Button>
@@ -136,38 +124,37 @@ export default function ProfileCard() {
             <Button
               isIconOnly
               aria-label={t("avatarHint")}
-              className="absolute -right-1 -bottom-1 h-7 w-7 min-w-0"
-              color="primary"
-              radius="full"
+              className="absolute right-0 bottom-0 h-6 w-6 min-w-0 rounded-full"
               size="sm"
-              variant="solid"
               onPress={() => fileInputRef.current?.click()}
+              variant="primary"
             >
-              <PencilIcon className="h-3.5 w-3.5" />
+              <PencilIcon className="!size-3" />
             </Button>
           </div>
           <div className="flex flex-1 flex-col gap-2">
-            <Input
-              label={t("nameLabel")}
-              placeholder={t("namePlaceholder")}
-              value={name}
-              onValueChange={setName}
-            />
-            <p className="text-default-500 text-xs">{t("avatarHint")}</p>
+            <TextField value={name} onChange={setName}>
+              <Label>{t("nameLabel")}</Label>
+              <Input variant="secondary" placeholder={t("namePlaceholder")} />
+            </TextField>
+            <p className="text-muted text-xs">{t("avatarHint")}</p>
           </div>
         </div>
-        <Input isDisabled isReadOnly label={t("emailLabel")} value={user?.email || ""} />
+        <TextField isDisabled isReadOnly value={user?.email || ""}>
+          <Label>{t("emailLabel")}</Label>
+          <Input variant="secondary" />
+        </TextField>
         <div className="flex justify-end">
           <Button
-            color="primary"
             isDisabled={!hasPendingChanges}
-            isLoading={saving}
             onPress={handleSaveProfile}
+            variant="primary"
+            isPending={saving}
           >
             {t("saveChanges")}
           </Button>
         </div>
-      </CardBody>
+      </Card.Content>
     </Card>
   );
 }

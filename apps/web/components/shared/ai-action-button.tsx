@@ -3,6 +3,7 @@
 import React from "react";
 import { SparklesIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
+
 import { cssAIGradientBg } from "@norish/web/config/css-tokens";
 
 interface AIActionButtonProps {
@@ -30,12 +31,12 @@ export default function AIActionButton({
 }: AIActionButtonProps) {
   return (
     <Button
-      className={`${cssAIGradientBg} shadow-md transition-all duration-200 data-[hover=true]:opacity-85 data-[hover=true]:shadow-lg data-[pressed=true]:scale-[0.98] ${className}`}
+      className={`${cssAIGradientBg} shadow-md transition-all duration-200 data-[hovered=true]:opacity-85 data-[hovered=true]:shadow-lg data-[pressed=true]:scale-[0.98] ${className}`}
       isDisabled={isDisabled || isLoading}
       size={size}
-      startContent={<SparklesIcon className="h-4 w-4" />}
       onPress={onPress}
     >
+      {<SparklesIcon className="h-4 w-4" />}
       {isLoading && loadingLabel ? loadingLabel : label}
     </Button>
   );

@@ -1,12 +1,11 @@
 "use client";
 
-import { createRecipeFiltersContext } from "@norish/shared-react/contexts";
-
 import {
   RECIPE_FILTERS_STORAGE_KEY,
   webRecipeFiltersStorageAdapter,
 } from "@/hooks/recipes/recipe-filters-storage-adapter";
 
+import { createRecipeFiltersContext } from "@norish/shared-react/contexts";
 
 const sharedRecipeFiltersContext = createRecipeFiltersContext({
   storageAdapter: webRecipeFiltersStorageAdapter,

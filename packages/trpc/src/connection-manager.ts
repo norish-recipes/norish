@@ -1,12 +1,16 @@
+import { on } from "node:events";
 import type Redis from "ioredis";
 import type { WebSocket } from "ws";
-
-import { on } from "node:events";
-
 import superjson from "superjson";
-import { createSubscriberClient, getPublisherClient } from "@norish/queue/redis/client";
-import { closeMultiplexer } from "@norish/queue/redis/subscription-multiplexer";
+
+import type { ConnectionInvalidationMessage } from "@norish/shared-server/realtime/connection-invalidation";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import {
+  CONNECTION_INVALIDATION_CHANNEL,
+  emitConnectionInvalidation,
+} from "@norish/shared-server/realtime/connection-invalidation";
+import { createSubscriberClient } from "@norish/shared-server/redis/client";
+import { closeMultiplexer } from "@norish/shared-server/redis/subscription-multiplexer";
 
 // Use globalThis to survive HMR in development
 const globalForConnectionManager = globalThis as unknown as {
@@ -80,21 +84,7 @@ export function terminateUserConnections(userId: string, reason: string): void {
   }
 }
 
-// Redis channel for cross-process connection invalidation
-const INVALIDATION_CHANNEL = "norish:connection:invalidate";
-
-type InvalidationMessage = {
-  userId: string;
-  reason: string;
-};
-
-export async function emitConnectionInvalidation(userId: string, reason: string): Promise<void> {
-  const client = await getPublisherClient();
-  const message: InvalidationMessage = { userId, reason };
-
-  await client.publish(INVALIDATION_CHANNEL, superjson.stringify(message));
-  log.debug({ userId, reason }, "Emitted connection invalidation");
-}
+export { emitConnectionInvalidation };
 
 export async function startInvalidationListener(): Promise<void> {
   // Prevent duplicate listeners
@@ -108,18 +98,20 @@ export async function startInvalidationListener(): Promise<void> {
   globalForConnectionManager.invalidationAbortController = invalidationAbortController;
   const signal = invalidationAbortController.signal;
 
-  invalidationSubscriber = await createSubscriberClient();
-  globalForConnectionManager.invalidationSubscriber = invalidationSubscriber;
+  const subscriber = await createSubscriberClient();
 
-  await invalidationSubscriber.subscribe(INVALIDATION_CHANNEL);
+  invalidationSubscriber = subscriber;
+  globalForConnectionManager.invalidationSubscriber = subscriber;
+
+  await subscriber.subscribe(CONNECTION_INVALIDATION_CHANNEL);
 
   log.info("Started connection invalidation listener");
 
   try {
-    for await (const [channel, message] of on(invalidationSubscriber, "message", { signal })) {
-      if (channel === INVALIDATION_CHANNEL) {
+    for await (const [channel, message] of on(subscriber, "message", { signal })) {
+      if (channel === CONNECTION_INVALIDATION_CHANNEL) {
         try {
-          const { userId, reason } = superjson.parse<InvalidationMessage>(message);
+          const { userId, reason } = superjson.parse<ConnectionInvalidationMessage>(message);
 
           terminateUserConnections(userId, reason);
         } catch (err) {
@@ -134,16 +126,18 @@ export async function startInvalidationListener(): Promise<void> {
     }
   } finally {
     // Always cleanup Redis subscriber
-    if (invalidationSubscriber) {
-      try {
-        await invalidationSubscriber.unsubscribe(INVALIDATION_CHANNEL);
-        await invalidationSubscriber.quit();
-      } catch (err) {
-        log.debug({ err }, "Error during invalidation listener cleanup");
-      }
+    try {
+      await subscriber.unsubscribe(INVALIDATION_CHANNEL);
+      await subscriber.quit();
+    } catch (err) {
+      log.debug({ err }, "Error during invalidation listener cleanup");
+    }
+
+    if (invalidationSubscriber === subscriber) {
       invalidationSubscriber = null;
       globalForConnectionManager.invalidationSubscriber = null;
     }
+
     invalidationAbortController = null;
     globalForConnectionManager.invalidationAbortController = null;
     log.info("Stopped connection invalidation listener");

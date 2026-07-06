@@ -1,13 +1,12 @@
 "use client";
 
-import { addToast } from "@heroui/react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
+import { toast } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { useArchiveImportQuery } from "./use-archive-import-query";
-
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
-import { useTRPC } from "@/app/providers/trpc-provider";
 
 export type ArchiveImportMutationResult = {
   startImport: (file: File) => void;
@@ -45,12 +44,9 @@ export function useArchiveImportMutation(): ArchiveImportMutationResult {
             errors: [],
           }));
 
-          addToast({
-            severity: "default",
-            title: "Recipe import started",
+          toast("Recipe import started", {
             description: `Importing ${result.total} recipes...`,
-            shouldShowTimeoutProgress: true,
-            radius: "full",
+            variant: "default",
           });
         } else {
           showSafeErrorToast({

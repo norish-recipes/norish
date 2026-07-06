@@ -21,7 +21,7 @@ vi.mock("@norish/shared-server/media/storage", () => ({
 }));
 
 // Mock getUnits to avoid database calls
-vi.mock("@norish/config/server-config-loader", () => ({
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getUnits: vi.fn().mockResolvedValue({}),
 }));
 

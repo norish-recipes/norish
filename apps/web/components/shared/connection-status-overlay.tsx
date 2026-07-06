@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useConnectionStatus } from "@/app/providers/trpc-provider";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-
-import { useConnectionStatus } from "@/app/providers/trpc-provider";
 
 export function ConnectionStatusOverlay() {
   const t = useTranslations("common.connection");
@@ -41,7 +40,7 @@ export function ConnectionStatusOverlay() {
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
         >
-          <div className="bg-content1 border-default-100 flex flex-col items-center gap-4 rounded-2xl border p-6 shadow-lg">
+          <div className="bg-surface border-border flex flex-col items-center gap-4 rounded-2xl border p-6 shadow-lg">
             <div className="relative h-12 w-12">
               <motion.div
                 animate={{ rotate: 360 }}
@@ -53,7 +52,7 @@ export function ConnectionStatusOverlay() {
               <h3 className="text-lg font-semibold">
                 {!isConnected ? t("connecting") : t("syncing")}
               </h3>
-              <p className="text-default-500 text-sm">
+              <p className="text-muted text-sm">
                 {!isConnected ? t("checkInternet") : t("gettingUpdates")}
               </p>
             </div>

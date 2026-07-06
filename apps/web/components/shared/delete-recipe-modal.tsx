@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@heroui/react";
+import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface DeleteRecipeModalProps {
@@ -9,7 +9,6 @@ interface DeleteRecipeModalProps {
   onClose: () => void;
   onConfirm: () => void;
 }
-
 export function DeleteRecipeModal({
   isOpen,
   recipeName,
@@ -18,32 +17,33 @@ export function DeleteRecipeModal({
 }: DeleteRecipeModalProps) {
   const t = useTranslations("recipes.deleteModal");
   const tActions = useTranslations("common.actions");
-
   return (
-    <Modal
-      classNames={{ wrapper: "z-[1100]", backdrop: "z-[1099]" }}
-      isOpen={isOpen}
-      onOpenChange={onClose}
-    >
-      <ModalContent>
-        {(onCloseCallback) => (
-          <>
-            <ModalHeader className="text-danger">{t("title")}</ModalHeader>
-            <ModalBody>
-              <p className="text-danger mb-2 font-semibold">{t("warning")}</p>
-              <p>{t("confirmMessage", { recipeName })}</p>
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="flat" onPress={onCloseCallback}>
-                {tActions("cancel")}
-              </Button>
-              <Button color="danger" onPress={onConfirm}>
-                {tActions("delete")}
-              </Button>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
+      <Modal.Container className="z-[1100]">
+        <Modal.Dialog>
+          {({ close: onCloseCallback }) => (
+            <>
+              <Modal.Header className="text-danger">{t("title")}</Modal.Header>
+              <Modal.Body>
+                <p className="text-danger mb-2 font-semibold">{t("warning")}</p>
+                <p>
+                  {t("confirmMessage", {
+                    recipeName,
+                  })}
+                </p>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button onPress={onCloseCallback} variant="tertiary">
+                  {tActions("cancel")}
+                </Button>
+                <Button onPress={onConfirm} variant="danger">
+                  {tActions("delete")}
+                </Button>
+              </Modal.Footer>
+            </>
+          )}
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }

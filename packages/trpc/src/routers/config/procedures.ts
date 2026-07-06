@@ -1,21 +1,22 @@
 import { TRPCError } from "@trpc/server";
+
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
+import { getDatabaseHealth } from "@norish/db/drizzle";
+import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
+import { getAppVersions, trpcLogger as log } from "@norish/shared-server";
 import {
   getLocaleConfig,
+  getRecipePermissionPolicy,
   getRecurrenceConfig,
   getTimerKeywords,
   getUnits,
   isRegistrationEnabled,
   isTimersEnabled,
-} from "@norish/config/server-config-loader";
-import { getDatabaseHealth } from "@norish/db/drizzle";
-import { listAllTagNames } from "@norish/db/repositories/tags";
-import { getAppVersions, trpcLogger as log } from "@norish/shared-server";
+} from "@norish/shared-server/config/server-config-loader";
 
 import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
-
 import { healthyResponseSchema, parserHealthSchema } from "./config-openapi-types";
 
 export async function getServiceHealth() {
@@ -108,12 +109,18 @@ const localeConfig = publicProcedure.query(async () => {
 });
 
 /**
- * Get all unique tag names for the authenticated user's household
+ * Get all unique tag names visible to the authenticated user. Scoped to the
+ * user's household unless the recipe view policy (or server admin role)
+ * grants access to all recipes.
  */
 const tags = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting tags");
 
-  const tagNames = await listAllTagNames();
+  const policy = await getRecipePermissionPolicy();
+  const tagNames =
+    policy.view === "everyone" || ctx.isServerAdmin
+      ? await listAllTagNames()
+      : await listTagNamesForUsers(ctx.userIds);
 
   return { tags: tagNames };
 });

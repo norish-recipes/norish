@@ -1,55 +1,48 @@
 "use client";
 
-import type { StoreColor, StoreDto } from "@norish/shared/contracts";
-
 import { useRef, useState } from "react";
+import { DynamicHeroIcon, STORE_ICON_NAMES } from "@/components/groceries/dynamic-hero-icon";
+import { getStoreColorClasses, STORE_COLOR_OPTIONS } from "@/components/groceries/store-colors";
+import Panel from "@/components/Panel/Panel";
 import {
-  Bars3Icon,
-  CheckIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid";
-import { Button, Input } from "@heroui/react";
+  ActionButton,
+  ActionButtonGroup,
+  IconActionButton,
+} from "@/components/shared/action-button";
+import { useGroceriesQuery } from "@/hooks/groceries";
+import { useStoresMutations } from "@/hooks/stores";
+import { Bars3Icon } from "@heroicons/react/24/solid";
+import { Input, Label, TextField } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import type { StoreColor, StoreDto } from "@norish/shared/contracts";
+
 import { DeleteStoreModal } from "./delete-store-modal";
-
-import { DynamicHeroIcon, STORE_ICON_NAMES } from "@/components/groceries/dynamic-hero-icon";
-import { getStoreColorClasses, STORE_COLOR_OPTIONS } from "@/components/groceries/store-colors";
-import Panel, { PANEL_HEIGHT_LARGE } from "@/components/Panel/Panel";
-import { useGroceriesQuery } from "@/hooks/groceries";
-import { useStoresMutations } from "@/hooks/stores";
-
-
 
 interface StoreManagerPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   stores: StoreDto[];
 }
-
 type EditingStore = {
   id: string | null; // null = new store
   name: string;
   color: StoreColor;
   icon: string;
 };
-
 export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPanelProps) {
   const { createStore, updateStore, deleteStore, reorderStores } = useStoresMutations();
   const { groceries } = useGroceriesQuery();
   const t = useTranslations("groceries.storeManager");
   const tActions = useTranslations("common.actions");
-
   const [editingStore, setEditingStore] = useState<EditingStore | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [storeToDelete, setStoreToDelete] = useState<{ id: string; name: string } | null>(null);
-
+  const [storeToDelete, setStoreToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const dragConstraintsRef = useRef<HTMLDivElement>(null);
-
   const handleStartCreate = () => {
     setEditingStore({
       id: null,
@@ -58,7 +51,6 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
       icon: "ShoppingBagIcon",
     });
   };
-
   const handleStartEdit = (store: StoreDto) => {
     setEditingStore({
       id: store.id,
@@ -67,10 +59,8 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
       icon: store.icon,
     });
   };
-
   const handleSave = async () => {
     if (!editingStore || !editingStore.name.trim()) return;
-
     if (editingStore.id) {
       // Update existing store
       updateStore({
@@ -87,42 +77,40 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
         icon: editingStore.icon,
       });
     }
-
     setEditingStore(null);
   };
-
   const handleCancel = () => {
     setEditingStore(null);
   };
-
   const handleDeleteClick = (store: StoreDto) => {
-    setStoreToDelete({ id: store.id, name: store.name });
+    setStoreToDelete({
+      id: store.id,
+      name: store.name,
+    });
     setDeleteModalOpen(true);
   };
-
   const handleDeleteConfirm = (storeId: string, deleteGroceries: boolean) => {
     const grocerySnapshot = groceries
       .filter((grocery) => grocery.storeId === storeId)
-      .map((grocery) => ({ id: grocery.id, version: grocery.version }));
-
+      .map((grocery) => ({
+        id: grocery.id,
+        version: grocery.version,
+      }));
     deleteStore(storeId, deleteGroceries, grocerySnapshot);
     setStoreToDelete(null);
   };
-
   const handleReorder = (newOrder: StoreDto[]) => {
     const storeIds = newOrder.map((s) => s.id);
-
     reorderStores(storeIds);
   };
-
   return (
     <>
-      <Panel height={PANEL_HEIGHT_LARGE} open={open} title={t("title")} onOpenChange={onOpenChange}>
-        <div className="flex h-full flex-col gap-4">
+      <Panel open={open} title={t("title")} onOpenChange={onOpenChange}>
+        <Panel.Body>
           {/* Store list */}
-          <div ref={dragConstraintsRef} className="flex-1 overflow-y-auto">
+          <div ref={dragConstraintsRef} className="min-h-0 flex-1">
             {stores.length === 0 && !editingStore && (
-              <div className="text-default-400 py-8 text-center">
+              <div className="text-muted py-8 text-center">
                 <p>{t("noStoresYet")}</p>
                 <p className="text-sm">{t("createStoreHint")}</p>
               </div>
@@ -140,6 +128,10 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
                   dragConstraintsRef={dragConstraintsRef}
                   isEditing={editingStore?.id === store.id}
                   store={store}
+                  translations={{
+                    deleteLabel: tActions("delete"),
+                    editLabel: tActions("edit"),
+                  }}
                   onDelete={() => handleDeleteClick(store)}
                   onEdit={() => handleStartEdit(store)}
                 />
@@ -151,7 +143,10 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
               <div className="mt-2">
                 <StoreEditForm
                   editing={editingStore}
-                  translations={{ t, tActions }}
+                  translations={{
+                    t,
+                    tActions,
+                  }}
                   onCancel={handleCancel}
                   onChange={setEditingStore}
                   onSave={handleSave}
@@ -162,30 +157,29 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
 
           {/* Edit form when editing existing store */}
           {editingStore && editingStore.id !== null && (
-            <div className="border-default-200 border-t pt-4">
+            <div className="border-border border-t pt-4">
               <StoreEditForm
                 editing={editingStore}
-                translations={{ t, tActions }}
+                translations={{
+                  t,
+                  tActions,
+                }}
                 onCancel={handleCancel}
                 onChange={setEditingStore}
                 onSave={handleSave}
               />
             </div>
           )}
-
-          {/* Add store button */}
-          {!editingStore && (
-            <Button
-              className="shrink-0"
-              color="primary"
-              startContent={<PlusIcon className="h-5 w-5" />}
-              variant="solid"
-              onPress={handleStartCreate}
-            >
-              {t("addStore")}
-            </Button>
-          )}
-        </div>
+        </Panel.Body>
+        {!editingStore && (
+          <Panel.Footer>
+            <ActionButtonGroup>
+              <ActionButton action="add" onPress={handleStartCreate}>
+                {t("addStore")}
+              </ActionButton>
+            </ActionButtonGroup>
+          </Panel.Footer>
+        )}
       </Panel>
 
       <DeleteStoreModal
@@ -207,39 +201,43 @@ interface StoreListItemProps {
   store: StoreDto;
   isEditing: boolean;
   dragConstraintsRef: React.RefObject<HTMLDivElement | null>;
+  translations: {
+    deleteLabel: string;
+    editLabel: string;
+  };
   onEdit: () => void;
   onDelete: () => void;
 }
-
 function StoreListItem({
   store,
   isEditing,
   dragConstraintsRef,
+  translations,
   onEdit,
   onDelete,
 }: StoreListItemProps) {
   const controls = useDragControls();
   const colorClasses = getStoreColorClasses(store.color as StoreColor);
-
   if (isEditing) {
     return null; // Hide when editing (form shows below)
   }
-
   return (
     <Reorder.Item
-      className="bg-content1 flex items-center gap-3 rounded-lg p-3"
+      className="bg-surface flex items-center gap-3 rounded-lg p-3"
       drag="y"
       dragConstraints={dragConstraintsRef}
       dragControls={controls}
       dragElastic={0}
       dragListener={false}
       dragMomentum={false}
-      style={{ position: "relative" }}
+      style={{
+        position: "relative",
+      }}
       value={store}
     >
       {/* Drag handle */}
       <div
-        className="text-default-400 shrink-0 cursor-grab touch-none active:cursor-grabbing"
+        className="text-muted shrink-0 cursor-grab touch-none active:cursor-grabbing"
         onPointerDown={(e) => controls.start(e)}
       >
         <Bars3Icon className="h-5 w-5" />
@@ -255,12 +253,13 @@ function StoreListItem({
 
       {/* Actions */}
       <div className="flex shrink-0 gap-1">
-        <Button isIconOnly size="sm" variant="light" onPress={onEdit}>
-          <PencilIcon className="h-4 w-4" />
-        </Button>
-        <Button isIconOnly color="danger" size="sm" variant="light" onPress={onDelete}>
-          <TrashIcon className="h-4 w-4" />
-        </Button>
+        <IconActionButton action="edit" label={translations.editLabel} size="sm" onPress={onEdit} />
+        <IconActionButton
+          action="delete"
+          label={translations.deleteLabel}
+          size="sm"
+          onPress={onDelete}
+        />
       </div>
     </Reorder.Item>
   );
@@ -277,45 +276,53 @@ interface StoreEditFormProps {
     tActions: ReturnType<typeof useTranslations<"common.actions">>;
   };
 }
-
 function StoreEditForm({ editing, onChange, onSave, onCancel, translations }: StoreEditFormProps) {
   const { t, tActions } = translations;
-
   return (
-    <div className="bg-content2 flex flex-col gap-4 rounded-lg p-4">
+    <div className="bg-surface-secondary flex flex-col gap-4 rounded-lg p-4">
       {/* Name input - autoFocus is intentional UX for edit form */}
-      <Input
+      <TextField
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
-        label={t("storeName")}
-        placeholder={t("storeNamePlaceholder")}
-        size="sm"
         value={editing.name}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            onSave();
-          }
-        }}
-        onValueChange={(v) => onChange({ ...editing, name: v })}
-      />
+        onChange={(value) =>
+          onChange({
+            ...editing,
+            name: value,
+          })
+        }
+      >
+        <Label>{t("storeName")}</Label>
+        <Input
+          variant="secondary"
+          placeholder={t("storeNamePlaceholder")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onSave();
+            }
+          }}
+        />
+      </TextField>
 
       {/* Color picker */}
       <div>
-        <p className="text-default-600 mb-2 text-sm font-medium">{t("storeColor")}</p>
+        <p className="text-muted mb-2 text-sm font-medium">{t("storeColor")}</p>
         <div className="flex flex-wrap gap-2">
           {STORE_COLOR_OPTIONS.map((color) => {
             const colorClasses = getStoreColorClasses(color);
             const isSelected = editing.color === color;
-
             return (
               <button
                 key={color}
-                className={`h-8 w-8 rounded-full transition-transform ${colorClasses.bg} ${
-                  isSelected ? "scale-110 ring-2 ring-offset-2" : ""
-                } ${colorClasses.ring}`}
+                className={`h-8 w-8 rounded-full transition-transform ${colorClasses.bg} ${isSelected ? "scale-110 ring-2 ring-offset-2" : ""} ${colorClasses.ring}`}
                 type="button"
-                onClick={() => onChange({ ...editing, color })}
+                onClick={() =>
+                  onChange({
+                    ...editing,
+                    color,
+                  })
+                }
               />
             );
           })}
@@ -324,22 +331,22 @@ function StoreEditForm({ editing, onChange, onSave, onCancel, translations }: St
 
       {/* Icon picker */}
       <div>
-        <p className="text-default-600 mb-2 text-sm font-medium">{t("storeIcon")}</p>
+        <p className="text-muted mb-2 text-sm font-medium">{t("storeIcon")}</p>
         <div className="flex flex-wrap gap-2">
           {STORE_ICON_NAMES.map((iconName) => {
             const isSelected = editing.icon === iconName;
             const colorClasses = getStoreColorClasses(editing.color);
-
             return (
               <button
                 key={iconName}
-                className={`rounded-lg p-2 transition-colors ${
-                  isSelected
-                    ? `${colorClasses.bgLight} ${colorClasses.text}`
-                    : "bg-default-100 text-default-600 hover:bg-default-200"
-                }`}
+                className={`rounded-lg p-2 transition-colors ${isSelected ? `${colorClasses.bgLight} ${colorClasses.text}` : "bg-surface text-muted hover:bg-surface-tertiary"}`}
                 type="button"
-                onClick={() => onChange({ ...editing, icon: iconName })}
+                onClick={() =>
+                  onChange({
+                    ...editing,
+                    icon: iconName,
+                  })
+                }
               >
                 <DynamicHeroIcon className="h-5 w-5" iconName={iconName} />
               </button>
@@ -349,16 +356,18 @@ function StoreEditForm({ editing, onChange, onSave, onCancel, translations }: St
       </div>
 
       {/* Action buttons */}
-      <div className="flex justify-end gap-2">
-        <Button size="sm" variant="flat" onPress={onCancel}>
-          <XMarkIcon className="h-4 w-4" />
+      <ActionButtonGroup>
+        <ActionButton action="cancel" onPress={onCancel}>
           {tActions("cancel")}
-        </Button>
-        <Button color="primary" isDisabled={!editing.name.trim()} size="sm" onPress={onSave}>
-          <CheckIcon className="h-4 w-4" />
+        </ActionButton>
+        <ActionButton
+          action={editing.id ? "save" : "create"}
+          isDisabled={!editing.name.trim()}
+          onPress={onSave}
+        >
           {editing.id ? tActions("save") : t("create")}
-        </Button>
-      </div>
+        </ActionButton>
+      </ActionButtonGroup>
     </div>
   );
 }

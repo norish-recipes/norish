@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { SparklesIcon } from "@heroicons/react/24/outline";
-import { Accordion, AccordionItem, Card, CardBody, CardHeader } from "@heroui/react";
+import { Accordion, Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import AIConfigForm from "./ai-config-form";
@@ -26,63 +26,93 @@ export default function AIProcessingCard() {
 
   return (
     <Card>
-      <CardHeader>
+      <Card.Header>
         <div className="flex items-center gap-2">
           <SparklesIcon className="h-5 w-5" />
           <h2 className="text-lg font-semibold">{t("title")}</h2>
         </div>
-      </CardHeader>
-      <CardBody>
-        <p className="text-default-500 mb-4 text-base">{t("description")}</p>
-        <Accordion selectionMode="multiple" variant="bordered">
-          <AccordionItem
-            key="ai"
-            subtitle={t("aiConfig.subtitle")}
-            title={
-              <div className="flex items-center gap-2">
-                {t("aiConfig.title")}
-                {dirtySections.ai && <UnsavedChangesChip />}
-              </div>
-            }
-          >
-            <AIConfigForm onDirtyChange={updateDirtySection("ai")} />
-          </AccordionItem>
+      </Card.Header>
+      <Card.Content>
+        <p className="text-muted mb-4 text-base">{t("description")}</p>
+        <Accordion allowsMultipleExpanded variant="surface">
+          <Accordion.Item id="ai">
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-2">
+                    {t("aiConfig.title")}
+                    {dirtySections.ai && <UnsavedChangesChip />}
+                  </div>
+                  <span className="text-muted text-sm">{t("aiConfig.subtitle")}</span>
+                </div>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <AIConfigForm onDirtyChange={updateDirtySection("ai")} />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
 
-          <AccordionItem
-            key="video"
-            subtitle={t("video.subtitle")}
-            title={
-              <div className="flex items-center gap-2">
-                {t("video.title")}
-                {dirtySections.video && <UnsavedChangesChip />}
-              </div>
-            }
-          >
-            <VideoProcessingForm onDirtyChange={updateDirtySection("video")} />
-          </AccordionItem>
+          <Accordion.Item id="video">
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-2">
+                    {t("video.title")}
+                    {dirtySections.video && <UnsavedChangesChip />}
+                  </div>
+                  <span className="text-muted text-sm">{t("video.subtitle")}</span>
+                </div>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <VideoProcessingForm onDirtyChange={updateDirtySection("video")} />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
 
-          <AccordionItem
-            key="prompts"
-            subtitle={t("prompts.subtitle")}
-            title={
-              <div className="flex items-center gap-2">
-                {t("prompts.title")}
-                {dirtySections.prompts && <UnsavedChangesChip />}
-              </div>
-            }
-          >
-            <PromptsForm onDirtyChange={updateDirtySection("prompts")} />
-          </AccordionItem>
+          <Accordion.Item id="prompts">
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-2">
+                    {t("prompts.title")}
+                    {dirtySections.prompts && <UnsavedChangesChip />}
+                  </div>
+                  <span className="text-muted text-sm">{t("prompts.subtitle")}</span>
+                </div>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <PromptsForm onDirtyChange={updateDirtySection("prompts")} />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
 
-          <AccordionItem
-            key="bulkCategorization"
-            subtitle={t("bulkCategorization.subtitle")}
-            title={<div className="flex items-center gap-2">{t("bulkCategorization.title")}</div>}
-          >
-            <BulkCategorizationForm />
-          </AccordionItem>
+          <Accordion.Item id="bulkCategorization">
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-2">{t("bulkCategorization.title")}</div>
+                  <span className="text-muted text-sm">{t("bulkCategorization.subtitle")}</span>
+                </div>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <BulkCategorizationForm />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
         </Accordion>
-      </CardBody>
+      </Card.Content>
     </Card>
   );
 }

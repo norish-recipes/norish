@@ -9,12 +9,16 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@heroui/react", () => ({
-  Modal: (props: any) => modalMock(props),
-  ModalContent: ({ children }: any) =>
-    typeof children === "function" ? <div>{children(vi.fn())}</div> : <div>{children}</div>,
-  ModalHeader: ({ children }: any) => <div>{children}</div>,
-  ModalBody: ({ children }: any) => <div>{children}</div>,
-  ModalFooter: ({ children }: any) => <div>{children}</div>,
+  Modal: Object.assign(({ children }: any) => <>{children}</>, {
+    Backdrop: ({ children, isOpen, ...props }: any) =>
+      isOpen ? <div {...props}>{children}</div> : null,
+    Container: (props: any) => modalMock(props),
+    Dialog: ({ children }: any) =>
+      typeof children === "function" ? <div>{children(vi.fn())}</div> : <div>{children}</div>,
+    Header: ({ children }: any) => <div>{children}</div>,
+    Body: ({ children }: any) => <div>{children}</div>,
+    Footer: ({ children }: any) => <div>{children}</div>,
+  }),
   Button: ({ children }: any) => <button type="button">{children}</button>,
 }));
 
@@ -24,10 +28,7 @@ describe("DeleteRecipeModal", () => {
 
     expect(modalMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        classNames: {
-          wrapper: "z-[1100]",
-          backdrop: "z-[1099]",
-        },
+        className: "z-[1100]",
       })
     );
   });

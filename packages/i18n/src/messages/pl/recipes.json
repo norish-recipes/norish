@@ -14,6 +14,11 @@
       "ingredients": "Składniki",
       "steps": "Kroki",
       "tags": "Tagi"
+    },
+    "viewMode": {
+      "label": "Widok przepisów",
+      "grid": "Siatka",
+      "list": "Lista"
     }
   },
   "empty": {
@@ -26,7 +31,8 @@
     "noImage": "Brak obrazu",
     "viewGroceries": "Zobacz zakupy",
     "addToCalendar": "Dodaj do kalendarza",
-    "deleteRecipe": "Usuń przepis"
+    "deleteRecipe": "Usuń przepis",
+    "recipeOptions": "Opcje przepisu"
   },
   "detail": {
     "backToRecipes": "Powrót do przepisów",
@@ -212,12 +218,18 @@
     "metric": "Metryczny",
     "us": "Amerykański"
   },
-  "timeInputs": { "prep": "Przygot.", "cook": "Gotowanie", "total": "Łącznie" },
+  "timeInputs": {
+    "prep": "Przygot.",
+    "cook": "Gotowanie",
+    "total": "Łącznie"
+  },
   "stepInput": {
     "stepPlaceholder": "Krok {number}: Opisz krok...",
     "stepPlaceholderShort": "Krok {number}"
   },
-  "ingredientInput": { "placeholder": "np. 2 szklanki mąki" },
+  "ingredientInput": {
+    "placeholder": "np. 2 szklanki mąki"
+  },
   "wakeLock": {
     "keepScreenOn": "Utrzymaj ekran włączony",
     "notSupported": "Utrzymywanie ekranu nie jest obsługiwane w tej przeglądarce",

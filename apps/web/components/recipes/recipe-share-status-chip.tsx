@@ -1,10 +1,9 @@
 "use client";
 
-import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
-
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { RecipeShareSummaryDto } from "@norish/shared/contracts";
 
 type Props = {
   status: RecipeShareSummaryDto["status"];
@@ -20,7 +19,7 @@ export function RecipeShareStatusChip({ status }: Props) {
   const t = useTranslations("recipes.sharePanel.status");
 
   return (
-    <Chip color={statusColors[status]} size="sm" variant="flat">
+    <Chip color={statusColors[status]} size="sm" variant="soft">
       {t(status)}
     </Chip>
   );

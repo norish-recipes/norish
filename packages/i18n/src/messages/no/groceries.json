@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Handleliste",
+    "addItem": "Legg til vare",
+    "addItems": "Legg til varer",
+    "viewByStore": "Per butikk",
+    "viewByRecipe": "Per oppskrift",
+    "viewMode": "Visningsmodus",
+    "manageStores": "Administrer butikker",
+    "storeViewOptions": "Butikkvisningsinnstillinger",
+    "groupIngredients": "Grupper ingredienser"
+  },
+  "empty": {
+    "title": "Handlelisten din venter",
+    "description": "Legg til varer ved å bruke knappen \"Legg til vare\" ovenfor for å komme i gang.",
+    "manual": "Manuelle varer"
+  },
+  "item": {
+    "unnamedItem": "Navnløs vare",
+    "fromRecipes": "Fra {count, plural, one {# oppskrift} other {# oppskrifter}}",
+    "items": "{count, plural, one {# vare} other {# varer}}"
+  },
+  "store": {
+    "unsorted": "Usortert",
+    "noItems": "Ingen varer i denne butikken",
+    "storeActions": "Butikkhandlinger",
+    "markAllDone": "Merk alle som ferdige",
+    "deleteDone": "Slett ferdige",
+    "done": "{count} ferdige"
+  },
+  "storeManager": {
+    "title": "Administrer butikker",
+    "addStore": "Legg til butikk",
+    "editStore": "Rediger butikk",
+    "deleteStore": "Slett butikk",
+    "storeName": "Butikknavn",
+    "storeNamePlaceholder": "f.eks. Supermarked",
+    "storeColor": "Farge",
+    "storeIcon": "Ikon",
+    "confirmDelete": "Er du sikker på at du vil slette {storeName}?",
+    "deleteWarning": "Varer i denne butikken flyttes til Usortert.",
+    "noStoresYet": "Ingen butikker ennå",
+    "createStoreHint": "Opprett en butikk for å organisere handleturene dine",
+    "hasItems": "Denne butikken har {count} handlevare.",
+    "hasItemsPlural": "Denne butikken har {count} handlevarer.",
+    "whatToDo": "Hva vil du gjøre med dem?",
+    "keepItems": "Behold varer",
+    "keepItemsDescription": "Flytt varer til Usortert",
+    "deleteItems": "Slett varer",
+    "deleteItemsDescription": "Fjern alle varer i denne butikken",
+    "noItems": "Denne butikken har ingen varer.",
+    "create": "Opprett"
+  },
+  "panel": {
+    "addTitle": "Legg til handlevare",
+    "editTitle": "Rediger handlevare",
+    "itemName": "Varenavn",
+    "itemNamePlaceholder": "f.eks. Melk, Egg, Brød...",
+    "selectStore": "Velg butikk",
+    "noStore": "Ingen butikk",
+    "recurrence": "Gjentakelse",
+    "savePreference": "Husk butikk for denne varen",
+    "addAnother": "Legg til enda en",
+    "addRepeat": "+ Legg til gjentakelse",
+    "recurrenceEnabled": "Gjentakende",
+    "recurrenceSheet": {
+      "title": "Gjentakelse",
+      "subtitle": "Legg automatisk denne varen til handlelisten igjen",
+      "enable": "Aktiver gjentakelse",
+      "disable": "Deaktiver gjentakelse",
+      "frequency": "Hyppighet",
+      "weekly": "Ukentlig",
+      "biweekly": "Hver 2. uke",
+      "monthly": "Månedlig",
+      "confirm": "Bekreft"
+    },
+    "storeOptional": "Butikk (valgfritt)",
+    "autoDetectFromHistory": "Registrer automatisk fra historikk",
+    "autoDetectOrSelect": "Registrer automatisk eller velg",
+    "placeholder": "f.eks. 1 kg kyllingbryst",
+    "editPlaceholder": "f.eks. melk hver uke",
+    "servings": "Porsjoner",
+    "loadingIngredients": "Laster ingredienser...",
+    "noIngredients": "Ingen ingredienser.",
+    "addSelectedToGroceries": "Legg til i handleliste",
+    "ingredientsAdded": "Ingredienser lagt til i handlelisten.",
+    "ingredientsFailed": "Kunne ikke legge til ingredienser i handlelisten.",
+    "addToGroceries": "Legg til i handleliste"
+  }
+}

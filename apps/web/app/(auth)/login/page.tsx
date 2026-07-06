@@ -1,5 +1,5 @@
 import { getAvailableProviders } from "@norish/auth/providers";
-import { isRegistrationEnabled } from "@norish/config/server-config-loader";
+import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
 
 import { LoginClient } from "./components/login-client";
 

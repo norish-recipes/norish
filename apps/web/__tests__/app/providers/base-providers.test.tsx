@@ -14,15 +14,13 @@ vi.mock("next-themes", () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock("@heroui/system", () => ({
-  HeroUIProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
+vi.mock("@heroui/react", () => ({
+  Toast: {
+    Provider: (props: unknown) => {
+      toastProviderMock(props);
 
-vi.mock("@heroui/toast", () => ({
-  ToastProvider: (props: unknown) => {
-    toastProviderMock(props);
-
-    return null;
+      return null;
+    },
   },
 }));
 
@@ -35,7 +33,7 @@ vi.mock("@/components/timer-dock", () => ({
 }));
 
 describe("BaseProviders", () => {
-  it("uses top-right placement so mobile can collapse to top-center", () => {
+  it("mounts the v3 toast provider at the top edge", () => {
     render(
       <BaseProviders>
         <div>content</div>
@@ -44,14 +42,13 @@ describe("BaseProviders", () => {
 
     expect(toastProviderMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        placement: "top-right",
-        toastOffset: 48,
+        placement: "top",
         maxVisibleToasts: 1,
       })
     );
   });
 
-  it("keeps toast animations enabled to avoid hover glitches", () => {
+  it("does not disable toast animations", () => {
     render(
       <BaseProviders>
         <div>content</div>

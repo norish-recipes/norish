@@ -53,7 +53,7 @@ vi.mock(
 );
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/trpc/routers/groceries/emitter", () => import("../mocks/grocery-emitter"));
-vi.mock("@norish/config/server-config-loader", () => import("../mocks/config"));
+vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 vi.mock("@norish/shared/lib/helpers", () => import("../mocks/helpers"));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },

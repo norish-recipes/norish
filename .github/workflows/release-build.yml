@@ -23,6 +23,7 @@ jobs:
   quality:
     name: Release Quality Checks
     uses: ./.github/workflows/_node-ci.yml
+    secrets: inherit
     with:
       run-build: true
       run-tests: true
@@ -37,7 +38,7 @@ jobs:
       tag_exists: ${{ steps.check_tag.outputs.exists }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 

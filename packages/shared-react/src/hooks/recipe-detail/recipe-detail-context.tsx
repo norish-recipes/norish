@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+
 import type {
   CreateRecipeShareInputDto,
   FullRecipeDTO,
   MeasurementSystem,
   RecipeIngredientsDto,
+  RecipeShareCreatedDto,
   RecipeShareSummaryDto,
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts";
-
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-
 
 import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
 
@@ -24,7 +24,9 @@ export type RecipeDetailContextValue = {
   isLoadingShares: boolean;
   shareError: Error | null;
   refreshShares: () => void;
-  createShare: (expiresIn?: CreateRecipeShareInputDto["expiresIn"]) => void;
+  createShare: (
+    expiresIn?: CreateRecipeShareInputDto["expiresIn"]
+  ) => Promise<RecipeShareCreatedDto | null>;
   updateShare: (input: UpdateRecipeShareInputDto) => void;
   revokeShare: (id: string, version: number) => void;
   reactivateShare: (id: string, version: number) => void;
@@ -81,7 +83,9 @@ export type RecipeDetailAdapters = {
   };
   useRecipeShareSubscription?: (recipeId: string | null) => void;
   useRecipeShareMutations?: (recipeId: string | null) => {
-    createShare: (expiresIn?: CreateRecipeShareInputDto["expiresIn"]) => void;
+    createShare: (
+      expiresIn?: CreateRecipeShareInputDto["expiresIn"]
+    ) => Promise<RecipeShareCreatedDto | null>;
     updateShare: (input: UpdateRecipeShareInputDto) => void;
     revokeShare: (id: string, version: number) => void;
     reactivateShare: (id: string, version: number) => void;
@@ -139,6 +143,10 @@ const EMPTY_RECIPE_SHARES: RecipeShareSummaryDto[] = [];
 
 function noop() {}
 
+async function noopAsync<T>(): Promise<T | null> {
+  return null;
+}
+
 function useDefaultRecipeSharesQuery(): RecipeSharesQueryAdapterResult {
   return {
     shares: EMPTY_RECIPE_SHARES,
@@ -152,7 +160,7 @@ function useDefaultRecipeShareSubscription() {}
 
 function useDefaultRecipeShareMutations(): RecipeShareMutationsAdapterResult {
   return {
-    createShare: noop,
+    createShare: noopAsync,
     updateShare: noop,
     revokeShare: noop,
     reactivateShare: noop,
@@ -478,10 +486,12 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         createShare,
         updateShare,
         revokeShare,
+        reactivateShare,
         deleteShare,
         isCreatingShare,
         isUpdatingShare,
         isRevokingShare,
+        isReactivatingShare,
         isDeletingShare,
         convertingTo,
         adjustedIngredients,

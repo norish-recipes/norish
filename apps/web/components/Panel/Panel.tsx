@@ -1,34 +1,28 @@
 "use client";
 
-import type { PanInfo } from "motion/react";
-
 import React, {
   createContext,
   ReactElement,
   ReactNode,
   useCallback,
   useContext,
-  useEffect,
-  useRef,
+  useMemo,
   useState,
 } from "react";
-import { XMarkIcon } from "@heroicons/react/16/solid";
-import { Button } from "@heroui/react";
-import { AnimatePresence, motion, useDragControls } from "motion/react";
-import { createPortal } from "react-dom";
-
-export const PANEL_HEIGHT_COMPACT = 40;
-export const PANEL_HEIGHT_MEDIUM = 60;
-export const PANEL_HEIGHT_LARGE = 85; // Default height when none is specified
+import { CloseButton } from "@heroui/react";
+import { twMerge } from "tailwind-merge";
+import { Drawer } from "vaul";
 
 export interface PanelProps {
   className?: string;
+  contentClassName?: string;
   panelClassName?: string;
+  backdropVariant?: "opaque" | "blur" | "transparent";
   title?: string;
   children: ReactNode;
   trigger?: ReactElement;
   open?: boolean;
-  height?: number;
+  nested?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
@@ -42,18 +36,55 @@ export function usePanel() {
   return useContext(PanelContext);
 }
 
-export const Panel: React.FC<PanelProps> = ({
+type PanelSectionProps = {
+  children: ReactNode;
+  className?: string;
+};
+
+type PanelTriggerProps = {
+  "aria-expanded"?: boolean;
+  "aria-haspopup"?: "dialog";
+  onClick?: (event: unknown) => void;
+};
+
+const PANEL_MAX_HEIGHT_CLASS = "max-h-[80dvh]";
+
+const BACKDROP_VARIANT_CLASSES: Record<NonNullable<PanelProps["backdropVariant"]>, string> = {
+  blur: "bg-(--background)/1 backdrop-blur-sm",
+  opaque: "bg-(--backdrop)",
+  transparent: "bg-transparent",
+};
+
+function getClassName(element: ReactElement<PanelSectionProps>) {
+  return element.props.className ?? "";
+}
+
+export function PanelBody({ children }: PanelSectionProps) {
+  return <>{children}</>;
+}
+
+export function PanelFooter({ children }: PanelSectionProps) {
+  return <>{children}</>;
+}
+
+type PanelComponent = React.FC<PanelProps> & {
+  Body: typeof PanelBody;
+  Footer: typeof PanelFooter;
+};
+
+const PanelRoot: React.FC<PanelProps> = ({
   className = "",
+  contentClassName = "",
   panelClassName = "",
+  backdropVariant = "blur",
   title = "",
-  height = PANEL_HEIGHT_LARGE,
+  nested = false,
   children,
   trigger,
   open: controlledOpen,
   onOpenChange,
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
 
@@ -67,118 +98,142 @@ export const Panel: React.FC<PanelProps> = ({
 
   const close = useCallback(() => setOpen(false), [setOpen]);
   const toggle = useCallback(() => setOpen(!open), [open, setOpen]);
-  const controls = useDragControls();
-  const ref = useRef<HTMLDivElement>(null);
+  const { bodyChildren, bodyClassName, footerChildren, footerClassName } = useMemo(() => {
+    const body: ReactNode[] = [];
+    const bodyClasses: string[] = [];
+    const footer: ReactNode[] = [];
+    const footerClasses: string[] = [];
 
-  useEffect(() => setMounted(true), []);
+    React.Children.forEach(children, (child) => {
+      if (React.isValidElement(child) && child.type === PanelFooter) {
+        const element = child as ReactElement<PanelSectionProps>;
 
-  // Close on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && open) {
-        close();
+        footer.push(element.props.children);
+        footerClasses.push(getClassName(element));
+      } else if (React.isValidElement(child) && child.type === PanelBody) {
+        const element = child as ReactElement<PanelSectionProps>;
+
+        body.push(element.props.children);
+        bodyClasses.push(getClassName(element));
+      } else {
+        body.push(child);
       }
+    });
+
+    return {
+      bodyChildren: body,
+      bodyClassName: bodyClasses.filter(Boolean).join(" "),
+      footerChildren: footer,
+      footerClassName: footerClasses.filter(Boolean).join(" "),
     };
+  }, [children]);
+  const hasFooter = footerChildren.length > 0;
+  const contentClasses = twMerge(
+    "mx-auto w-full max-w-[420px]",
+    PANEL_MAX_HEIGHT_CLASS,
+    contentClassName
+  );
+  const dialogClasses = twMerge("min-h-0", PANEL_MAX_HEIGHT_CLASS, panelClassName);
+  const bodyClasses = twMerge("flex min-h-0 flex-1 flex-col", bodyClassName);
+  const footerClasses = twMerge("shrink-0", footerClassName);
 
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, close]);
-
+  const panelTrigger = trigger as ReactElement<PanelTriggerProps> | undefined;
   const triggerElement =
-    trigger &&
-    React.cloneElement(trigger as ReactElement<any>, {
+    panelTrigger &&
+    React.cloneElement(panelTrigger, {
       "aria-haspopup": "dialog",
       "aria-expanded": open,
-      onClick: (e: any) => {
-        const original = (trigger as any).props?.onClick;
+      onClick: (event: unknown) => {
+        const original = panelTrigger.props.onClick;
 
-        if (typeof original === "function") original(e);
+        if (typeof original === "function") original(event);
         toggle();
       },
     });
+  const Root = nested ? Drawer.NestedRoot : Drawer.Root;
 
   return (
     <div data-panel className={className}>
       {trigger && <span className="inline-flex">{triggerElement}</span>}
 
       <PanelContext.Provider value={{ open, close, toggle }}>
-        {mounted &&
-          createPortal(
-            <AnimatePresence>
-              {open && (
-                <div className="fixed inset-0 z-[1000]">
-                  {/* Overlay */}
-                  <button
-                    aria-label="Close overlay"
-                    className="absolute inset-0 bg-black/40"
-                    onClick={close}
-                  />
-
-                  <motion.div
-                    key="panel"
-                    ref={ref}
-                    animate={{
-                      y: 0,
-                      opacity: 1,
-                      transition: { type: "spring", stiffness: 280, damping: 30 },
-                    }}
-                    aria-label={title || "Panel"}
-                    className={`bg-background absolute bottom-0 left-1/2 flex w-full -translate-x-1/2 flex-col overflow-hidden rounded-t-2xl md:max-w-md ${panelClassName} `}
-                    drag="y"
-                    dragConstraints={{ top: 0, bottom: 0 }}
-                    dragControls={controls}
-                    dragElastic={0.08}
-                    dragListener={false}
-                    exit={{ y: "100%", opacity: 1, transition: { duration: 0.2 } }}
-                    initial={{ y: "100%", opacity: 1 }}
-                    role="dialog"
-                    style={{
-                      height: `${height}dvh`,
-                    }}
-                    onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
-                    onDragEnd={(_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-                      if (info.offset.y > 60) close();
-                    }}
-                  >
-                    {/* Header */}
-                    <div
-                      className="border-default-100 relative flex shrink-0 items-center justify-between border-b p-4 select-none"
-                      onPointerDown={(e) => controls.start(e)}
-                    >
-                      <Button
-                        isIconOnly
-                        aria-label="Close panel"
-                        color="primary"
-                        radius="full"
-                        size="md"
-                        variant="solid"
-                        onPress={close}
-                      >
-                        <XMarkIcon className="h-5 w-5" />
-                      </Button>
-
-                      <h2 className="pointer-events-none flex-1 text-center text-lg font-semibold">
-                        {title}
-                      </h2>
-
-                      {/* Spacer keeps title centered */}
-                      <div className="h-8 w-8" />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
-                      {children}
-                    </div>
-                  </motion.div>
-                </div>
+        {/* repositionInputs resizes the sheet and force-scrolls the focused field to
+            the top of its scroll container on iOS, which throws a scrolled panel body
+            out of view; Radix's RemoveScroll still locks the page behind the sheet. */}
+        <Root handleOnly open={open} repositionInputs={false} onOpenChange={setOpen}>
+          <Drawer.Portal>
+            <Drawer.Overlay
+              className={twMerge(
+                "fixed inset-0 z-[1000]",
+                BACKDROP_VARIANT_CLASSES[backdropVariant]
               )}
-            </AnimatePresence>,
-            document.body
-          )}
+              data-variant={backdropVariant}
+            />
+            <Drawer.Content
+              aria-describedby={undefined}
+              aria-label={title || "Panel"}
+              className={twMerge(
+                "fixed inset-x-0 bottom-0 z-[1001] flex flex-col outline-none",
+                contentClasses
+              )}
+            >
+              <div
+                className={twMerge(
+                  "relative flex min-h-0 flex-col overflow-hidden rounded-t-[calc(var(--radius)*2)] bg-(--overlay) text-(--overlay-foreground) shadow-(--overlay-shadow)",
+                  dialogClasses
+                )}
+                data-slot="panel-dialog"
+              >
+                <div
+                  className="relative z-10 flex shrink-0 items-center justify-center py-3"
+                  data-slot="panel-handle"
+                >
+                  <Drawer.Handle className="cursor-grab !bg-(--default) active:cursor-grabbing" />
+                </div>
+                <CloseButton
+                  aria-label="Close panel"
+                  className="absolute top-3 right-3 z-30"
+                  onPress={close}
+                />
+
+                <header className="flex shrink-0 flex-col gap-1 px-5 pb-2" data-slot="panel-header">
+                  <Drawer.Title
+                    className={title ? "text-lg font-semibold" : "sr-only"}
+                    data-slot="panel-heading"
+                  >
+                    {title || "Panel"}
+                  </Drawer.Title>
+                </header>
+
+                <div
+                  className={twMerge("overflow-y-auto overscroll-contain px-5 py-2", bodyClasses)}
+                  data-slot="panel-body"
+                >
+                  {bodyChildren}
+                </div>
+                {hasFooter && (
+                  <footer
+                    className={twMerge(
+                      "flex items-center justify-end gap-2 px-5 pt-2 pb-4",
+                      footerClasses
+                    )}
+                    data-slot="panel-footer"
+                  >
+                    {footerChildren}
+                  </footer>
+                )}
+              </div>
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Root>
       </PanelContext.Provider>
     </div>
   );
 };
+
+export const Panel = Object.assign(PanelRoot, {
+  Body: PanelBody,
+  Footer: PanelFooter,
+}) satisfies PanelComponent;
 
 export default Panel;

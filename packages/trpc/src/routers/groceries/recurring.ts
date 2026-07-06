@@ -1,7 +1,7 @@
-import type { GroceryInsertDto } from "@norish/shared/contracts";
-
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+
+import type { GroceryInsertDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import { createGrocery, updateGrocery } from "@norish/db";
 import {
@@ -16,7 +16,6 @@ import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recu
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-
 import { groceryEmitter } from "./emitter";
 
 const createRecurring = authedProcedure
@@ -53,38 +52,41 @@ const createRecurring = authedProcedure
       lastCheckedDate: null,
     };
 
-    createRecurringGrocery(recurringData)
-      .then(async (created) => {
-        const groceryData: GroceryInsertDto = {
-          userId: ctx.user.id,
-          name: created.name,
-          unit: created.unit || null,
-          amount: created.amount,
-          isDone: false,
-          recurringGroceryId: created.id,
-          recipeIngredientId: null,
-          storeId: input.storeId ?? null,
-        };
+    try {
+      const created = await createRecurringGrocery(recurringData);
+      const groceryData: GroceryInsertDto = {
+        userId: ctx.user.id,
+        name: created.name,
+        unit: created.unit || null,
+        amount: created.amount,
+        isDone: false,
+        recurringGroceryId: created.id,
+        recipeIngredientId: null,
+        storeId: input.storeId ?? null,
+      };
 
-        const grocery = await createGrocery(id, groceryData, ctx.userIds);
+      const grocery = await createGrocery(id, groceryData, ctx.userIds);
 
-        log.info(
-          { userId: ctx.user.id, recurringId: created.id, groceryId: id },
-          "Recurring grocery created"
-        );
-        groceryEmitter.emitToHousehold(ctx.householdKey, "recurringCreated", {
-          recurringGrocery: created,
-          grocery,
-        });
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to create recurring grocery");
-        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
-          reason: "Failed to create recurring grocery",
-        });
+      log.info(
+        { userId: ctx.user.id, recurringId: created.id, groceryId: id },
+        "Recurring grocery created"
+      );
+      groceryEmitter.emitToHousehold(ctx.householdKey, "recurringCreated", {
+        recurringGrocery: created,
+        grocery,
       });
 
-    return id;
+      return { recurringGrocery: created, grocery };
+    } catch (err) {
+      log.error({ err, userId: ctx.user.id }, "Failed to create recurring grocery");
+      groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+        reason: "Failed to create recurring grocery",
+      });
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to create recurring grocery",
+      });
+    }
   });
 
 const updateRecurring = authedProcedure

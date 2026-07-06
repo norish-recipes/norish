@@ -1,13 +1,5 @@
 "use client";
 
-import type {
-  GroceryDto,
-  RecurringGroceryDto,
-  StoreColor,
-  StoreDto,
-} from "@norish/shared/contracts";
-import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-
 import { memo, useMemo, useState } from "react";
 import {
   CheckIcon,
@@ -15,10 +7,17 @@ import {
   EllipsisVerticalIcon,
   TrashIcon,
 } from "@heroicons/react/16/solid";
-import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
+import { Button, Dropdown, Label } from "@heroui/react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import type {
+  GroceryDto,
+  RecurringGroceryDto,
+  StoreColor,
+  StoreDto,
+} from "@norish/shared/contracts";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 
 import {
   SortableGroupedStoreContainer,
@@ -72,15 +71,14 @@ function GroupedStoreSectionComponent({
 
   // Get container ID for this store
   const containerId = store?.id ?? "unsorted";
-
   const colorClasses = store
     ? getStoreColorClasses(store.color as StoreColor)
     : {
-        bg: "bg-default-400",
-        bgLight: "bg-default-100",
-        text: "text-default-500",
-        border: "border-default-300",
-        ring: "ring-default-400",
+        bg: "bg-muted",
+        bgLight: "bg-surface-secondary",
+        text: "text-muted",
+        border: "border-border-secondary",
+        ring: "ring-border",
       };
 
   // Calculate counts from original groceries
@@ -91,13 +89,11 @@ function GroupedStoreSectionComponent({
   // render groups that are dragged from other stores during drag operations
   const groupMap = useMemo(() => {
     const map = new Map<string, GroceryGroup>();
-
     for (const storeGroups of allGroups.values()) {
       for (const group of storeGroups) {
         map.set(group.groupKey, group);
       }
     }
-
     return map;
   }, [allGroups]);
 
@@ -107,7 +103,6 @@ function GroupedStoreSectionComponent({
   // Active groups in DnD-ordered sequence (not done)
   const activeGroups = useMemo(() => {
     const ordered: GroceryGroup[] = [];
-
     for (const groupKey of orderedGroupKeys) {
       const group = groupMap.get(groupKey);
 
@@ -116,7 +111,6 @@ function GroupedStoreSectionComponent({
         ordered.push(group);
       }
     }
-
     return ordered;
   }, [orderedGroupKeys, groupMap]);
 
@@ -147,19 +141,29 @@ function GroupedStoreSectionComponent({
         {/* Name and count */}
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <span className="truncate font-semibold">{store?.name ?? t("unsorted")}</span>
-          <span className="text-default-400 shrink-0 text-sm">
+          <span className="text-muted shrink-0 text-sm">
             {activeCount > 0 && <span>{activeCount}</span>}
             {doneCount > 0 && (
-              <span className="text-default-300 ml-1">({t("done", { count: doneCount })})</span>
+              <span className="text-muted ml-1">
+                (
+                {t("done", {
+                  count: doneCount,
+                })}
+                )
+              </span>
             )}
           </span>
         </div>
 
         {/* Expand/collapse chevron */}
         <motion.div
-          animate={{ rotate: isExpanded ? 180 : 0 }}
-          className="text-default-400 shrink-0"
-          transition={{ duration: 0.2 }}
+          animate={{
+            rotate: isExpanded ? 180 : 0,
+          }}
+          className="text-muted shrink-0"
+          transition={{
+            duration: 0.2,
+          }}
         >
           <ChevronDownIcon className="h-5 w-5" />
         </motion.div>
@@ -168,34 +172,37 @@ function GroupedStoreSectionComponent({
       {/* Bulk actions dropdown */}
       {groceries.length > 0 && (
         <Dropdown>
-          <DropdownTrigger>
-            <Button isIconOnly className="shrink-0" size="sm" variant="light">
-              <EllipsisVerticalIcon className="h-5 w-5" />
-            </Button>
-          </DropdownTrigger>
-          <DropdownMenu aria-label={t("storeActions")}>
-            <DropdownItem
-              key="mark-done"
-              startContent={<CheckIcon className="h-4 w-4" />}
-              onPress={() => onMarkAllDone?.()}
-            >
-              {t("markAllDone")}
-            </DropdownItem>
-            <DropdownItem
-              key="delete-done"
-              className="text-danger"
-              color="danger"
-              startContent={<TrashIcon className="h-4 w-4" />}
-              onPress={() => onDeleteDone?.()}
-            >
-              {t("deleteDone")}
-            </DropdownItem>
-          </DropdownMenu>
+          <Button isIconOnly className="shrink-0" size="sm" variant="tertiary">
+            <EllipsisVerticalIcon className="h-5 w-5" />
+          </Button>
+          <Dropdown.Popover className="bg-overlay">
+            <Dropdown.Menu aria-label={t("storeActions")}>
+              <Dropdown.Item
+                id="mark-done"
+                key="mark-done"
+                textValue={t("markAllDone")}
+                onPress={() => onMarkAllDone?.()}
+              >
+                {<CheckIcon className="h-4 w-4" />}
+                <Label>{t("markAllDone")}</Label>
+              </Dropdown.Item>
+              <Dropdown.Item
+                id="delete-done"
+                key="delete-done"
+                className="text-danger"
+                textValue={t("deleteDone")}
+                onPress={() => onDeleteDone?.()}
+                variant="danger"
+              >
+                {<TrashIcon className="h-4 w-4" />}
+                <Label>{t("deleteDone")}</Label>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
         </Dropdown>
       )}
     </div>
   );
-
   return (
     <motion.div className="relative" data-store-id={store?.id ?? "unsorted"}>
       {/* Entire section wrapped in SortableGroupedStoreContainer - header + groups are droppable */}
@@ -206,12 +213,11 @@ function GroupedStoreSectionComponent({
       >
         {/* Groups area - only shown when expanded */}
         {isExpanded ? (
-          <div className="divide-default-100 divide-y">
+          <div className="divide-border divide-y">
             {/* Active (not done) groups - sortable */}
             {activeGroups.map((group, index) => {
               const isFirst = index === 0;
               const isLast = index === activeGroups.length - 1 && doneGroups.length === 0;
-
               return (
                 <SortableGroupItem key={group.groupKey} group={group}>
                   {({ dragHandle }) => (
@@ -234,7 +240,6 @@ function GroupedStoreSectionComponent({
             {doneGroups.map((group, index) => {
               const isFirst = index === 0 && activeGroups.length === 0;
               const isLast = index === doneGroups.length - 1;
-
               return (
                 <div key={group.groupKey}>
                   <GroupedGroceryItem
@@ -252,7 +257,7 @@ function GroupedStoreSectionComponent({
 
             {/* Empty state */}
             {activeGroups.length === 0 && doneGroups.length === 0 && (
-              <div className="text-default-400 px-4 py-6 text-center text-sm">{t("noItems")}</div>
+              <div className="text-muted px-4 py-6 text-center text-sm">{t("noItems")}</div>
             )}
           </div>
         ) : null}
@@ -260,5 +265,4 @@ function GroupedStoreSectionComponent({
     </motion.div>
   );
 }
-
 export const GroupedStoreSection = memo(GroupedStoreSectionComponent);

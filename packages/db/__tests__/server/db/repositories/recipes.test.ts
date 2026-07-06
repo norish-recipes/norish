@@ -8,7 +8,7 @@
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { updateRecipeWithRefs } from "@norish/db/repositories/recipes";
+import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
 
 import {
   createTestIngredient,
@@ -158,6 +158,69 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
 
       expect(metricSteps).toHaveLength(1);
       expect(metricSteps[0].step).toBe("Mix 300g flour with 150g sugar");
+    });
+
+    it("should use the top-level system when edited child rows carry stale system values", async () => {
+      const flour = await createTestIngredient({ name: "Flour" });
+
+      await createTestRecipeIngredients(testRecipeId, flour.id, "metric", {
+        amount: "250",
+        unit: "g",
+        order: "0",
+      });
+      await createTestRecipeIngredients(testRecipeId, flour.id, "us", {
+        amount: "2",
+        unit: "cup",
+        order: "0",
+      });
+      await createTestRecipeStep(testRecipeId, "metric", {
+        step: "Mix 250g flour",
+        order: "0",
+      });
+      await createTestRecipeStep(testRecipeId, "us", {
+        step: "Mix 2 cups flour",
+        order: "0",
+      });
+
+      await updateRecipeWithRefs(testRecipeId, testUserId, {
+        systemUsed: "us",
+        recipeIngredients: [
+          {
+            ingredientId: flour.id,
+            amount: "2.5",
+            unit: "cup",
+            order: 0,
+            systemUsed: "metric",
+          },
+        ],
+        steps: [
+          {
+            step: "Mix 2.5 cups flour",
+            order: 0,
+            systemUsed: "metric",
+          },
+        ],
+      });
+
+      const ingredients = await getRecipeIngredients(testRecipeId);
+      const metricIngredients = ingredients.filter(
+        (ingredient) => ingredient.systemUsed === "metric"
+      );
+      const usIngredients = ingredients.filter((ingredient) => ingredient.systemUsed === "us");
+
+      expect(metricIngredients).toHaveLength(1);
+      expect(metricIngredients[0].amount).toBe("250.000");
+      expect(usIngredients).toHaveLength(1);
+      expect(usIngredients[0].amount).toBe("2.500");
+
+      const steps = await getRecipeSteps(testRecipeId);
+      const metricSteps = steps.filter((step) => step.systemUsed === "metric");
+      const usSteps = steps.filter((step) => step.systemUsed === "us");
+
+      expect(metricSteps).toHaveLength(1);
+      expect(metricSteps[0].step).toBe("Mix 250g flour");
+      expect(usSteps).toHaveLength(1);
+      expect(usSteps[0].step).toBe("Mix 2.5 cups flour");
     });
 
     it("should preserve metric data when updating only recipe image", async () => {
@@ -487,6 +550,35 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
       // But with different amounts
       expect(metricSugar!.amount).toBe("200.000");
       expect(usSugar!.amount).toBe("1.000");
+    });
+  });
+
+  describe("Step creation", () => {
+    it("should preserve repeated step text at different orders", async () => {
+      const recipeId = crypto.randomUUID();
+
+      await createRecipeWithRefs(recipeId, testUserId, {
+        name: "Repeated Step Recipe",
+        systemUsed: "metric",
+        steps: [
+          {
+            step: "Stir well",
+            order: 0,
+            systemUsed: "metric",
+          },
+          {
+            step: "Stir well",
+            order: 1,
+            systemUsed: "metric",
+          },
+        ],
+      });
+
+      const createdSteps = await getRecipeSteps(recipeId);
+
+      expect(createdSteps).toHaveLength(2);
+      expect(createdSteps.map((step) => Number(step.order)).sort()).toEqual([0, 1]);
+      expect(createdSteps.every((step) => step.step === "Stir well")).toBe(true);
     });
   });
 });

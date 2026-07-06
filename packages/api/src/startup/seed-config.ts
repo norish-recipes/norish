@@ -7,15 +7,10 @@ import type {
   ServerConfigKey,
   TimerKeywordsConfig,
 } from "@norish/db/zodSchemas/server-config";
-
 import { setAuthProviderCache } from "@norish/auth/provider-cache";
 import defaultContentIndicators from "@norish/config/content-indicators.default.json";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.json";
-import {
-  buildLocaleConfigFromEnv,
-  DEFAULT_LOCALE_CONFIG,
-} from "@norish/config/server-config-loader";
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
 import {
@@ -32,6 +27,10 @@ import {
   UnitsMapSchema,
 } from "@norish/db/zodSchemas/server-config";
 import { loadDefaultPrompts } from "@norish/shared-server/ai/prompts/loader";
+import {
+  buildLocaleConfigFromEnv,
+  DEFAULT_LOCALE_CONFIG,
+} from "@norish/shared-server/config/server-config-loader";
 import { serverLogger } from "@norish/shared-server/logger";
 
 /**

@@ -1,21 +1,25 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { useState } from "react";
 import NextImage, { ImageProps as NextImageProps } from "next/image";
-import { Image as HeroImage, ImageProps as HeroImageProps } from "@heroui/react";
+import { PhotoIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
-interface FallbackPlaceholderProps {
+interface FallbackPlaceholderProps extends ComponentProps<"div"> {
   className?: string;
   message?: string;
 }
 
-function FallbackPlaceholder({ className = "", message }: FallbackPlaceholderProps) {
+function FallbackPlaceholder({ className = "", message, ...props }: FallbackPlaceholderProps) {
   const t = useTranslations("recipes.carousel");
 
   return (
-    <div className={`bg-default-200 flex h-full w-full items-center justify-center ${className}`}>
-      <span className="text-default-500 font-medium">{message || t("noImageAvailable")}</span>
+    <div
+      {...props}
+      className={`bg-surface-tertiary flex h-full w-full items-center justify-center ${className}`}
+    >
+      <PhotoIcon aria-label={message || t("noImageAvailable")} className="text-muted h-12 w-12" />
     </div>
   );
 }
@@ -28,7 +32,7 @@ type NextFallbackImageProps = Omit<NextImageProps, "onError"> & {
 };
 
 // Props for HeroUI Image variant
-type HeroFallbackImageProps = Omit<HeroImageProps, "onError"> & {
+type HeroFallbackImageProps = Omit<ComponentProps<"img">, "onError"> & {
   variant: "hero";
   fallbackClassName?: string;
   fallbackMessage?: string;
@@ -50,10 +54,11 @@ export default function FallbackImage(props: FallbackImageProps) {
       variant: _variant,
       fallbackClassName: _fallbackClassName,
       fallbackMessage: _fallbackMessage,
+      alt,
       ...imageProps
     } = props;
 
-    return <HeroImage {...imageProps} onError={() => setHasError(true)} />;
+    return <img alt={alt ?? ""} {...imageProps} onError={() => setHasError(true)} />;
   }
 
   const {

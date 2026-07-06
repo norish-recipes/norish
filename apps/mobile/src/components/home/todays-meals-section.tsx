@@ -30,7 +30,6 @@ function MealSlotCard({ meal, onPress }: MealSlotCardProps) {
           />
         </View>
         <View style={styles.slotBody}>
-          <Text style={[styles.slotLabel, { color: mutedColor }]}>{meal.slot}</Text>
           <Text style={[styles.slotTitle, { color: textColor }]} numberOfLines={1}>
             {meal.recipeTitle}
           </Text>
@@ -44,7 +43,7 @@ function MealSlotCard({ meal, onPress }: MealSlotCardProps) {
       <PressableFeedback.Ripple />
       <View style={styles.emptyBody}>
         <Text style={[styles.addIcon, { color: mutedColor }]}>+</Text>
-        <Text style={[styles.emptyLabel, { color: mutedColor }]}>{meal.slot}</Text>
+        <Text style={[styles.emptyLabel, { color: mutedColor }]}>Add</Text>
       </View>
     </PressableFeedback>
   );
@@ -55,6 +54,8 @@ type TodaysMealsSectionProps = {
 };
 
 export function TodaysMealsSection({ meals }: TodaysMealsSectionProps) {
+  const [mutedColor] = useThemeColor(["muted"] as const);
+
   return (
     <View style={styles.section}>
       <ScrollView
@@ -64,13 +65,15 @@ export function TodaysMealsSection({ meals }: TodaysMealsSectionProps) {
         contentContainerStyle={styles.scrollContent}
       >
         {meals.map((meal) => (
-          <MealSlotCard
-            key={meal.slot}
-            meal={meal}
-            onPress={() => {
-              // TODO: navigate to meal slot detail / recipe
-            }}
-          />
+          <View key={meal.slot} style={styles.slotWrapper}>
+            <Text style={[styles.slotHeader, { color: mutedColor }]}>{meal.slot}</Text>
+            <MealSlotCard
+              meal={meal}
+              onPress={() => {
+                // TODO: navigate to meal slot detail / recipe
+              }}
+            />
+          </View>
         ))}
       </ScrollView>
     </View>

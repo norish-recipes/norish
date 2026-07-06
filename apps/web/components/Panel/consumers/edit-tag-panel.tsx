@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, Input } from "@heroui/react";
+import Panel from "@/components/Panel/Panel";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { FieldError, Input, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
-
-import Panel, { PANEL_HEIGHT_COMPACT } from "@/components/Panel/Panel";
 
 type EditTagPanelProps = {
   open: boolean;
@@ -14,7 +14,6 @@ type EditTagPanelProps = {
   onSave: (newName: string) => void;
   onDelete: () => void;
 };
-
 export default function EditTagPanel({
   open,
   onOpenChange,
@@ -40,7 +39,6 @@ export default function EditTagPanel({
   // Exclude the current tag being edited from the check
   const isDuplicate = useMemo(() => {
     const trimmed = tagName.trim().toLowerCase();
-
     if (!trimmed) return false;
     if (trimmed === tag.toLowerCase()) return false; // Same as original is OK
 
@@ -48,80 +46,49 @@ export default function EditTagPanel({
       (t) => t.toLowerCase() === trimmed && t.toLowerCase() !== tag.toLowerCase()
     );
   }, [tagName, tag, existingTags]);
-
   const canSave = tagName.trim().length > 0 && !isDuplicate;
-
   const handleSubmit = () => {
     if (!canSave) return;
-
     onSave(tagName.trim());
     onOpenChange(false);
   };
-
   const handleDelete = () => {
     onDelete();
     onOpenChange(false);
   };
-
   return (
-    <Panel
-      height={PANEL_HEIGHT_COMPACT}
-      open={open}
-      title={t("editTitle")}
-      onOpenChange={onOpenChange}
-    >
-      <div className="flex flex-col gap-4">
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-        >
-          <div className="space-y-3">
+    <Panel open={open} title={t("editTitle")} onOpenChange={onOpenChange}>
+      <Panel.Body>
+        <div className="space-y-3">
+          <TextField isInvalid={isDuplicate} value={tagName} onChange={setTagName}>
             <Input
-              classNames={{
-                input: "text-lg font-medium",
-                inputWrapper: "border-primary-200 dark:border-primary-800",
-              }}
-              errorMessage={isDuplicate ? t("duplicateTag") : undefined}
-              isInvalid={isDuplicate}
+              className="h-12 text-base font-medium"
+              variant="secondary"
               placeholder={t("editPlaceholder")}
-              size="lg"
-              style={{ fontSize: "16px" }}
-              value={tagName}
+              style={{
+                fontSize: "16px",
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   handleSubmit();
                 }
               }}
-              onValueChange={setTagName}
             />
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button
-              className="min-w-16"
-              color="danger"
-              size="sm"
-              variant="flat"
-              onPress={handleDelete}
-            >
-              {tActions("delete")}
-            </Button>
-            <Button
-              className="min-w-16"
-              color="primary"
-              isDisabled={!canSave}
-              size="sm"
-              onPress={handleSubmit}
-            >
-              {tActions("save")}
-            </Button>
-          </div>
-        </form>
-      </div>
+            {isDuplicate && <FieldError>{t("duplicateTag")}</FieldError>}
+          </TextField>
+        </div>
+      </Panel.Body>
+      <Panel.Footer>
+        <ActionButtonGroup>
+          <ActionButton action="delete" onPress={handleDelete}>
+            {tActions("delete")}
+          </ActionButton>
+          <ActionButton action="save" isDisabled={!canSave} onPress={handleSubmit}>
+            {tActions("save")}
+          </ActionButton>
+        </ActionButtonGroup>
+      </Panel.Footer>
     </Panel>
   );
 }

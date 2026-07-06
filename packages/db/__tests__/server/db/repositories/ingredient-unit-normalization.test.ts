@@ -85,6 +85,33 @@ describe("Unit Normalization - Create/Edit Recipes", () => {
       expect(ingredients[0].unit).toBe("splash");
     });
 
+    it("should apply the recipe measurement system to ingredients that omit systemUsed", async () => {
+      const newRecipeId = crypto.randomUUID();
+
+      await createRecipeWithRefs(newRecipeId, testUserId, {
+        name: "Metric API Recipe",
+        systemUsed: "metric",
+        recipeIngredients: [
+          {
+            ingredientId: null,
+            ingredientName: "chickpeas",
+            amount: 400,
+            unit: "gram",
+            order: 0,
+          },
+        ],
+        steps: [],
+        tags: [],
+      });
+
+      const ingredients = await getRecipeIngredients(newRecipeId);
+
+      expect(ingredients).toHaveLength(1);
+      expect(ingredients[0].systemUsed).toBe("metric");
+      expect(ingredients[0].amount).toBe("400.000");
+      expect(ingredients[0].unit).toBe("gram");
+    });
+
     it("should normalize Dutch 'gram' to canonical 'gr'", async () => {
       const newRecipeId = crypto.randomUUID();
 

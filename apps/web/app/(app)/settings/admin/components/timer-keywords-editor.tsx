@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { ArrowPathIcon, CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
-import { Button, Switch, Textarea } from "@heroui/react";
+import { Button, Description, Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface TimerKeywordsEditorProps {
@@ -15,11 +16,16 @@ interface TimerKeywordsEditorProps {
     hours: string[];
     minutes: string[];
     seconds: string[];
-  }) => Promise<{ success: boolean; error?: string }>;
-  onRestoreDefaults: () => Promise<{ success: boolean; error?: string }>;
+  }) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  onRestoreDefaults: () => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
   onDirtyChange?: (isDirty: boolean) => void;
 }
-
 export default function TimerKeywordsEditor({
   enabled,
   hours,
@@ -31,7 +37,6 @@ export default function TimerKeywordsEditor({
 }: TimerKeywordsEditorProps) {
   const t = useTranslations("settings.admin.contentDetection.timerKeywords");
   const tActions = useTranslations("common.actions");
-
   const [isEnabled, setIsEnabled] = useState(enabled);
   const [hoursText, setHoursText] = useState("");
   const [minutesText, setMinutesText] = useState("");
@@ -49,16 +54,13 @@ export default function TimerKeywordsEditor({
     setIsDirty(false);
     setError(null);
   }, [enabled, hours, minutes, seconds]);
-
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
-
   const handleEnabledChange = useCallback((newEnabled: boolean) => {
     setIsEnabled(newEnabled);
     setIsDirty(true);
   }, []);
-
   const handleTextChange = useCallback(
     (field: "hours" | "minutes" | "seconds", newText: string) => {
       if (field === "hours") setHoursText(newText);
@@ -72,7 +74,6 @@ export default function TimerKeywordsEditor({
         const hasHours = field === "hours" ? newText.trim() !== "" : hoursText.trim() !== "";
         const hasMinutes = field === "minutes" ? newText.trim() !== "" : minutesText.trim() !== "";
         const hasSeconds = field === "seconds" ? newText.trim() !== "" : secondsText.trim() !== "";
-
         if (!hasHours && !hasMinutes && !hasSeconds) {
           setError("At least one keyword required in hours, minutes, or seconds");
         }
@@ -80,7 +81,6 @@ export default function TimerKeywordsEditor({
     },
     [isEnabled, hoursText, minutesText, secondsText]
   );
-
   const handleSave = useCallback(async () => {
     if (error) return;
 
@@ -106,10 +106,8 @@ export default function TimerKeywordsEditor({
       parsedSeconds.length === 0
     ) {
       setError("At least one keyword required in hours, minutes, or seconds");
-
       return;
     }
-
     setSaving(true);
     try {
       const result = await onUpdate({
@@ -118,7 +116,6 @@ export default function TimerKeywordsEditor({
         minutes: parsedMinutes,
         seconds: parsedSeconds,
       });
-
       if (result.success) {
         setIsDirty(false);
       } else if (result.error) {
@@ -130,12 +127,10 @@ export default function TimerKeywordsEditor({
       setSaving(false);
     }
   }, [hoursText, minutesText, secondsText, isEnabled, error, onUpdate]);
-
   const handleRestoreDefaults = useCallback(async () => {
     setSaving(true);
     try {
       const result = await onRestoreDefaults();
-
       if (!result.success && result.error) {
         setError(result.error);
       }
@@ -145,57 +140,62 @@ export default function TimerKeywordsEditor({
       setSaving(false);
     }
   }, [onRestoreDefaults]);
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium">{t("enableToggle")}</span>
-        <Switch isSelected={isEnabled} onValueChange={handleEnabledChange} />
+        <SettingsSwitch isSelected={isEnabled} onValueChange={handleEnabledChange} />
       </div>
 
-      <p className="text-default-500 text-sm">{t("description")}</p>
+      <p className="text-muted text-sm">{t("description")}</p>
 
       {/* Hours Field */}
-      <Textarea
-        classNames={{
-          input: "font-mono text-sm",
-        }}
-        description={t("hoursHelp")}
+      <TextField
         isDisabled={!isEnabled || saving}
-        label={t("hoursLabel")}
-        minRows={2}
-        placeholder={t("hoursPlaceholder")}
         value={hoursText}
-        onChange={(e) => handleTextChange("hours", e.target.value)}
-      />
+        onChange={(value) => handleTextChange("hours", value)}
+      >
+        <Label>{t("hoursLabel")}</Label>
+        <TextArea
+          variant="secondary"
+          className="font-mono text-sm"
+          minRows={2}
+          placeholder={t("hoursPlaceholder")}
+        />
+        <Description>{t("hoursHelp")}</Description>
+      </TextField>
 
       {/* Minutes Field */}
-      <Textarea
-        classNames={{
-          input: "font-mono text-sm",
-        }}
-        description={t("minutesHelp")}
+      <TextField
         isDisabled={!isEnabled || saving}
-        label={t("minutesLabel")}
-        minRows={2}
-        placeholder={t("minutesPlaceholder")}
         value={minutesText}
-        onChange={(e) => handleTextChange("minutes", e.target.value)}
-      />
+        onChange={(value) => handleTextChange("minutes", value)}
+      >
+        <Label>{t("minutesLabel")}</Label>
+        <TextArea
+          variant="secondary"
+          className="font-mono text-sm"
+          minRows={2}
+          placeholder={t("minutesPlaceholder")}
+        />
+        <Description>{t("minutesHelp")}</Description>
+      </TextField>
 
       {/* Seconds Field */}
-      <Textarea
-        classNames={{
-          input: "font-mono text-sm",
-        }}
-        description={t("secondsHelp")}
+      <TextField
         isDisabled={!isEnabled || saving}
-        label={t("secondsLabel")}
-        minRows={2}
-        placeholder={t("secondsPlaceholder")}
         value={secondsText}
-        onChange={(e) => handleTextChange("seconds", e.target.value)}
-      />
+        onChange={(value) => handleTextChange("seconds", value)}
+      >
+        <Label>{t("secondsLabel")}</Label>
+        <TextArea
+          variant="secondary"
+          className="font-mono text-sm"
+          minRows={2}
+          placeholder={t("secondsPlaceholder")}
+        />
+        <Description>{t("secondsHelp")}</Description>
+      </TextField>
 
       {error && (
         <div className="text-danger flex items-center gap-2 text-sm">
@@ -205,23 +205,18 @@ export default function TimerKeywordsEditor({
       )}
 
       <div className="flex items-center justify-end gap-2">
-        <Button
-          color="warning"
-          isDisabled={saving}
-          startContent={<ArrowPathIcon className="h-5 w-5" />}
-          variant="flat"
-          onPress={handleRestoreDefaults}
-        >
+        <Button isDisabled={saving} onPress={handleRestoreDefaults} variant="tertiary">
+          {<ArrowPathIcon className="h-5 w-5" />}
           {tActions("restoreDefaults")}
         </Button>
 
         <Button
-          color="primary"
           isDisabled={!!error || !isDirty}
-          isLoading={saving}
-          startContent={<CheckIcon className="h-5 w-5" />}
           onPress={handleSave}
+          variant="primary"
+          isPending={saving}
         >
+          {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>
       </div>

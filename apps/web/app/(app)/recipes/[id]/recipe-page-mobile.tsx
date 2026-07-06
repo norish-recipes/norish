@@ -1,35 +1,37 @@
 import { RecipeProvenance } from "./components/recipe-provenance";
+import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
+import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
+import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
+import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
+import { NutritionSection } from "@/app/(app)/recipes/[id]/components/nutrition-card";
+import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
+import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
+import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
+import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
+import AuthorChip from "@/components/recipes/author-chip";
+import {
+  ReadonlyRecipeMedia,
+  ReadonlyRecipeNotes,
+  ReadonlyRecipeSummary,
+} from "@/components/recipes/readonly-recipe-sections";
+import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/components/recipes/recipe-layout-constants";
+import DoubleTapContainer from "@/components/shared/double-tap-container";
+import HeartButton from "@/components/shared/heart-button";
+import { useUserContext } from "@/context/user-context";
+import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
+import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
+import { useIngredientLinkHighlight } from "@/hooks/use-ingredient-link-highlight";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
-import { Card, CardBody, Divider, Link } from "@heroui/react";
+import { Card, Link, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import {
   getShowFavoritesPreference,
   getShowRatingsPreference,
 } from "@norish/shared/lib/user-preferences";
 import StarRating from "@norish/ui/star-rating";
 
-import AuthorChip from "./components/author-chip";
 import { useRecipeContextRequired } from "./context";
-import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
-import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
-import AmountDisplayToggle from "@/app/(app)/recipes/[id]/components/amount-display-toggle";
-import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
-import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
-import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
-import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
-import WakeLockToggle from "@/app/(app)/recipes/[id]/components/wake-lock-toggle";
-import { MOBILE_RECIPE_MEDIA_HEIGHT_STYLE } from "@/app/(app)/recipes/[id]/recipe-layout-constants";
-import { NutritionSection } from "@/components/recipes/nutrition-card";
-import {
-  ReadonlyRecipeMedia,
-  ReadonlyRecipeNotes,
-  ReadonlyRecipeSummary,
-} from "@/components/recipes/readonly-recipe-sections";
-import DoubleTapContainer from "@/components/shared/double-tap-container";
-import HeartButton from "@/components/shared/heart-button";
-import { useUserContext } from "@/context/user-context";
-import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
-import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 
 
 export default function RecipePageMobile() {
@@ -47,6 +49,8 @@ export default function RecipePageMobile() {
   const t = useTranslations("recipes.detail");
   const showRatings = getShowRatingsPreference(user);
   const showFavorites = getShowFavoritesPreference(user);
+  const { highlightedIngredientKey, highlightIngredient, ingredientListRef } =
+    useIngredientLinkHighlight();
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -71,16 +75,6 @@ export default function RecipePageMobile() {
         >
           <ReadonlyRecipeMedia
             aspectRatio="4/3"
-            bottomRightContent={
-              showFavorites ? (
-                <HeartButton
-                  showBackground
-                  isFavorite={isFavorite}
-                  size="lg"
-                  onToggle={handleToggleFavorite}
-                />
-              ) : null
-            }
             className="h-full rounded-none shadow-none"
             recipe={recipe}
             rounded={false}
@@ -95,21 +89,32 @@ export default function RecipePageMobile() {
                 </div>
               ) : null
             }
+            topRightContent={
+              showFavorites ? (
+                <div className="mt-[calc(2.75rem+env(safe-area-inset-top))]">
+                  <HeartButton
+                    showBackground
+                    isFavorite={isFavorite}
+                    size="lg"
+                    onToggle={handleToggleFavorite}
+                  />
+                </div>
+              ) : null
+            }
           />
         </DoubleTapContainer>
       </div>
 
       {/* Unified Content Card - contains all sections */}
-      <Card
-        className="bg-content1 relative z-10 -mt-6 overflow-visible rounded-t-3xl"
-        radius="none"
-        shadow="sm"
-      >
-        <CardBody className="space-y-6 px-4 py-5">
+      <Card className="relative z-10 -mt-6 overflow-visible rounded-t-3xl rounded-b-none border-0 shadow-none">
+        <Card.Content className="space-y-6 px-4 py-5">
           {/* Back link and Actions */}
           <div className="flex items-center justify-between">
-            <div className="w-fit hover:underline">
-              <Link className="text-default-500 flex items-center gap-1 text-base" href="/">
+            <div className="w-fit">
+              <Link
+                className="text-muted hover:text-foreground flex items-center gap-1 text-base no-underline"
+                href="/"
+              >
                 <ArrowLeftIcon className="h-4 w-4" />
                 {t("backToRecipes")}
               </Link>
@@ -128,28 +133,33 @@ export default function RecipePageMobile() {
 
           <RecipeProvenance variant="section" />
 
-          <Divider />
+          <Separator />
+
+          <CookingMode fullWidth />
+
+          <Separator />
 
           {/* Ingredients Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">{t("ingredients")}</h2>
-              <div className="flex items-center gap-2">
-                <AmountDisplayToggle />
-                <ServingsControl />
-                {recipe.systemUsed && <SystemConvertMenu />}
+              <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5 overflow-x-auto">
+                <AmountDisplayToggle compact />
+                {recipe.servings ? <ServingsControl compact /> : null}
+                {recipe.systemUsed && <SystemConvertMenu compact />}
               </div>
             </div>
 
-            <div className="-mx-1">
-              <IngredientsList />
-            </div>
+            <IngredientsList
+              highlightedIngredientKey={highlightedIngredientKey}
+              ingredientListRef={ingredientListRef}
+            />
 
             {/* Add to groceries button - below ingredients */}
             <AddToGroceries recipeId={recipe.id} />
           </div>
 
-          <Divider />
+          <Separator />
 
           {/* Notes */}
           {recipe.notes && (
@@ -162,25 +172,24 @@ export default function RecipePageMobile() {
                   <ReadonlyRecipeNotes notes={recipe.notes} />
                 </div>
               </div>
-              <Divider />
+              <Separator />
             </>
           )}
 
           {/* Steps Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-row items-center justify-between text-left">
               <h2 className="text-lg font-semibold">{t("steps")}</h2>
-              <WakeLockToggle />
             </div>
 
-            <div className="-mx-1">
-              <StepsList />
+            <div className="text-left">
+              <StepsList onIngredientPress={highlightIngredient} />
             </div>
 
             {/* Rating Section */}
             {showRatings && (
-              <div className="bg-default-100 -mx-1 flex flex-col items-center gap-4 rounded-xl py-6">
-                <p className="text-default-600 font-medium">{t("ratingPrompt")}</p>
+              <div className="bg-surface-secondary flex flex-col items-center gap-4 rounded-xl py-6">
+                <p className="text-muted font-medium">{t("ratingPrompt")}</p>
                 <StarRating
                   isLoading={isRating || isRatingLoading}
                   value={userRating ?? averageRating}
@@ -192,7 +201,7 @@ export default function RecipePageMobile() {
 
           {/* Nutrition Section */}
           <NutritionSection />
-        </CardBody>
+        </Card.Content>
       </Card>
 
       <div className="pb-5" />

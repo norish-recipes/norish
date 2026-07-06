@@ -1,8 +1,9 @@
 import type { UniqueIdentifier } from "@dnd-kit/core";
+
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-import type { ContainerId, GroupItemsState, ItemsState } from "./types";
 
+import type { ContainerId, GroupItemsState, ItemsState } from "./types";
 import { UNSORTED_CONTAINER } from "./types";
 
 /** Maps grocery.storeId to container ID (null => UNSORTED_CONTAINER) */

@@ -1,12 +1,10 @@
 import "@/styles/globals.css";
 
+import RegisterServiceWorker from "@/components/register-service-worker";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import { fontSans } from "@norish/web/config/fonts";
 
 import { appMetadata, appViewport } from "./metadata";
-
-import RegisterServiceWorker from "@/components/register-service-worker";
 
 export const metadata = appMetadata;
 export const viewport = appViewport;
@@ -22,7 +20,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body
         suppressHydrationWarning
-        className={`bg-background text-foreground min-h-dvh font-sans antialiased ${fontSans.variable}`}
+        className="bg-background text-foreground min-h-dvh font-sans antialiased"
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}

@@ -1,10 +1,7 @@
 "use client";
 
-import type { CalendarData } from "@/hooks/calendar";
-
 import {
   createContext,
-  ReactNode,
   useCallback,
   useContext,
   useEffect,
@@ -12,75 +9,25 @@ import {
   useRef,
   useState,
 } from "react";
-import { Slot } from "@norish/shared/contracts";
-import { addWeeks, dateKey, getWeekEnd, getWeekStart } from "@norish/shared/lib/helpers";
-
 import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
 
-type PlannedItem = {
-  id: string;
-  userId: string;
-  date: string;
-  slot: Slot;
-  sortOrder: number;
-  itemType: "recipe" | "note";
-  recipeId: string | null;
-  title: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
+import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import { dateKey } from "@norish/shared/lib/helpers";
 
-type DateRange = {
-  start: Date;
-  end: Date;
-};
+import type {
+  CalendarContextProviderProps,
+  CalendarContextValue,
+  CalendarDateRange,
+} from "./context-types";
+import { getInitialDateRange } from "./context-helpers";
 
-type Ctx = {
-  plannedItemsByDate: CalendarData;
-  isLoading: boolean;
-  isLoadingMore: boolean;
-  dateRange: DateRange;
-  planMeal: (date: string, slot: Slot, recipeId: string) => void;
-  planNote: (date: string, slot: Slot, title: string) => void;
-  deletePlanned: (id: string) => void;
-  moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex: number) => void;
-  updateItem: (itemId: string, title: string) => void;
-  getItemsForSlot: (date: string, slot: Slot) => PlannedItem[];
-  expandRange: (direction: "past" | "future") => void;
-  isDateInRange: (date: Date) => boolean;
-};
-
-const CalendarContext = createContext<Ctx | null>(null);
-
-type CalendarContextProviderProps = {
-  children: ReactNode;
-  /** Initial range mode - desktop loads current week, mobile loads ±2 weeks */
-  mode?: "desktop" | "mobile";
-};
-
-function getInitialDateRange(mode: "desktop" | "mobile"): DateRange {
-  const now = new Date();
-
-  if (mode === "desktop") {
-    // Desktop: load current week only initially
-    return {
-      start: getWeekStart(now),
-      end: getWeekEnd(now),
-    };
-  }
-
-  // Mobile: load ±2 weeks from today
-  return {
-    start: getWeekStart(addWeeks(now, -2)),
-    end: getWeekEnd(addWeeks(now, 2)),
-  };
-}
+const CalendarContext = createContext<CalendarContextValue | null>(null);
 
 export function CalendarContextProvider({
   children,
   mode = "mobile",
 }: CalendarContextProviderProps) {
-  const [dateRange, setDateRange] = useState<DateRange>(() => getInitialDateRange(mode));
+  const [dateRange, setDateRange] = useState<CalendarDateRange>(() => getInitialDateRange(mode));
   const [isExpandingRange, setIsExpandingRange] = useState(false);
 
   const startISO = dateKey(dateRange.start);
@@ -170,7 +117,7 @@ export function CalendarContextProvider({
   );
 
   const getItemsForSlot = useCallback(
-    (date: string, slot: Slot): PlannedItem[] => {
+    (date: string, slot: Slot): PlannedItemFromQuery[] => {
       const items = calendarData[date] ?? [];
 
       return items.filter((item) => item.slot === slot).sort((a, b) => a.sortOrder - b.sortOrder);
@@ -178,7 +125,7 @@ export function CalendarContextProvider({
     [calendarData]
   );
 
-  const value = useMemo<Ctx>(
+  const value = useMemo<CalendarContextValue>(
     () => ({
       plannedItemsByDate: calendarData,
       isLoading: isInitialLoading,

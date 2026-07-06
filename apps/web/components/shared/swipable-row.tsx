@@ -13,6 +13,7 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
+
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("SwipeableRow");
@@ -49,29 +50,29 @@ function calculateActionsWidth(actionCount: number, buttonSize: number): number 
 const COLOR_MAP = {
   danger: {
     bg: "bg-danger",
-    hoverBg: "hover:bg-danger-600",
+    hoverBg: "hover:bg-danger/90",
     text: "text-danger-foreground",
   },
-  blue: {
-    bg: "bg-info-500",
-    hoverBg: "hover:bg-info-600",
-    text: "text-info-foreground",
-  },
-  yellow: {
-    bg: "bg-accent-500",
-    hoverBg: "hover:bg-accent-600",
+  accent: {
+    bg: "bg-accent",
+    hoverBg: "hover:bg-accent/90",
     text: "text-accent-foreground",
+  },
+  warning: {
+    bg: "bg-warning",
+    hoverBg: "hover:bg-warning/90",
+    text: "text-warning-foreground",
   },
 };
 
 function getActionColors(action: SwipeAction) {
-  return COLOR_MAP[action.color] || COLOR_MAP.blue;
+  return COLOR_MAP[action.color] || COLOR_MAP.accent;
 }
 
 export type SwipeAction = {
   key: string;
   icon: React.ElementType;
-  color: "blue" | "yellow" | "danger";
+  color: "accent" | "warning" | "danger";
   onPress: () => void;
   primary?: boolean;
   label?: string;
@@ -395,7 +396,9 @@ const SwipeableRow = forwardRef<SwipeableRowRef, Props>(
                 transform: "translateY(-50%)",
               }}
             >
-              {PrimaryIcon ? <PrimaryIcon className="h-5 w-5 text-white opacity-90" /> : null}
+              {PrimaryIcon ? (
+                <PrimaryIcon className={`h-5 w-5 opacity-90 ${committingColors.text}`} />
+              ) : null}
             </motion.div>
           )}
 

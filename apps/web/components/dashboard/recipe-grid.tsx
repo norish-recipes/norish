@@ -1,24 +1,29 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRecipesContext } from "@/context/recipes-context";
+import { useContainerColumns } from "@/hooks/use-container-columns";
+import { useRecipeDashboardViewMode } from "@/hooks/use-recipe-dashboard-view-mode";
 import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
+
 import { useScrollRestoration } from "@norish/shared-react/hooks";
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import RecipeCardSkeleton from "../skeleton/recipe-card-skeleton";
 import RecipeGridSkeleton from "../skeleton/recipe-grid-skeleton";
-
 import NoRecipeResults from "./no-recipe-results";
 import NoRecipesText from "./no-recipes-text";
 import RecipeCard from "./recipe-card";
 
-import { useContainerColumns } from "@/hooks/use-container-columns";
-import { useRecipesContext } from "@/context/recipes-context";
-
 // Estimated row height (card height + gap)
-const ESTIMATED_ROW_HEIGHT = 380;
+const ESTIMATED_GRID_ROW_HEIGHT = 356;
+const ESTIMATED_LIST_ROW_HEIGHT = 144;
+const GRID_ROW_OVERSCAN = 3;
+const LIST_ROW_OVERSCAN = 12;
+const GRID_LOAD_MORE_ROW_THRESHOLD = 2;
+const LIST_LOAD_MORE_ROW_THRESHOLD = 6;
 
 export default function RecipeGrid() {
   const {
@@ -41,11 +46,16 @@ export default function RecipeGrid() {
 
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [isLoadedOnce, setIsLoadedOnce] = useState(false);
+  const [viewMode] = useRecipeDashboardViewMode();
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTriggeredLoadMoreRef = useRef(false);
 
   // Responsive column count from CSS variable
   const columnCount = useContainerColumns();
+  const effectiveColumnCount = viewMode === "list" ? 1 : columnCount;
+  const rowOverscan = viewMode === "list" ? LIST_ROW_OVERSCAN : GRID_ROW_OVERSCAN;
+  const loadMoreRowThreshold =
+    viewMode === "list" ? LIST_LOAD_MORE_ROW_THRESHOLD : GRID_LOAD_MORE_ROW_THRESHOLD;
 
   // Track window size to recalculate scrollMargin on resize
   const { height: _windowHeight } = useWindowSize();
@@ -71,8 +81,8 @@ export default function RecipeGrid() {
 
   // Calculate row count for virtualization
   const rowCount = useMemo(() => {
-    return Math.ceil(displayData.length / columnCount);
-  }, [displayData.length, columnCount]);
+    return Math.ceil(displayData.length / effectiveColumnCount);
+  }, [displayData.length, effectiveColumnCount]);
 
   // Get saved scroll state for initialization
   const savedState = getScrollState();
@@ -80,8 +90,9 @@ export default function RecipeGrid() {
   // Window virtualizer for row-based virtualization
   const virtualizer = useWindowVirtualizer({
     count: rowCount,
-    estimateSize: () => ESTIMATED_ROW_HEIGHT,
-    overscan: 2,
+    estimateSize: () =>
+      viewMode === "list" ? ESTIMATED_LIST_ROW_HEIGHT : ESTIMATED_GRID_ROW_HEIGHT,
+    overscan: rowOverscan,
     scrollMargin,
     initialOffset: savedState?.scrollOffset,
     initialMeasurementsCache: savedState?.measurementsCache,
@@ -95,6 +106,10 @@ export default function RecipeGrid() {
 
   const virtualRows = virtualizer.getVirtualItems();
 
+  useEffect(() => {
+    virtualizer.measure();
+  }, [effectiveColumnCount, viewMode, virtualizer]);
+
   // Infinite scroll: trigger loadMore when near the end
   useEffect(() => {
     if (virtualRows.length === 0) return;
@@ -103,8 +118,7 @@ export default function RecipeGrid() {
 
     if (!lastRow) return;
 
-    // Check if we're within 2 rows of the end
-    const isNearEnd = lastRow.index >= rowCount - 2;
+    const isNearEnd = lastRow.index >= rowCount - loadMoreRowThreshold;
 
     if (isNearEnd && !isFetchingMore && !hasTriggeredLoadMoreRef.current) {
       hasTriggeredLoadMoreRef.current = true;
@@ -115,7 +129,7 @@ export default function RecipeGrid() {
     if (!isNearEnd) {
       hasTriggeredLoadMoreRef.current = false;
     }
-  }, [virtualRows, rowCount, isFetchingMore, loadMore]);
+  }, [virtualRows, rowCount, loadMoreRowThreshold, isFetchingMore, loadMore]);
 
   // Show skeleton loading state logic
   useEffect(() => {
@@ -145,7 +159,7 @@ export default function RecipeGrid() {
   const renderItem = useCallback(
     (item: (typeof displayData)[number]) => {
       if ("isLoading" in item && item.isLoading) {
-        return <RecipeCardSkeleton key={`skeleton-${item.id}`} />;
+        return <RecipeCardSkeleton key={`skeleton-${item.id}`} variant={viewMode} />;
       }
 
       const recipe = item as RecipeDashboardDTO;
@@ -156,16 +170,17 @@ export default function RecipeGrid() {
           allergies={allergies}
           isFavorite={isFavorite(recipe.id)}
           recipe={recipe}
+          variant={viewMode}
           onDelete={deleteRecipe}
           onToggleFavorite={toggleFavorite}
         />
       );
     },
-    [allergies, isFavorite, deleteRecipe, toggleFavorite]
+    [allergies, isFavorite, deleteRecipe, toggleFavorite, viewMode]
   );
 
   // Show skeleton during initial load
-  if (showSkeleton) return <RecipeGridSkeleton />;
+  if (showSkeleton) return <RecipeGridSkeleton variant={viewMode} />;
 
   return (
     <div
@@ -190,13 +205,14 @@ export default function RecipeGrid() {
           >
             {virtualRows.map((virtualRow) => {
               // Calculate which items belong to this row
-              const startIndex = virtualRow.index * columnCount;
-              const rowItems = displayData.slice(startIndex, startIndex + columnCount);
+              const startIndex = virtualRow.index * effectiveColumnCount;
+              const rowItems = displayData.slice(startIndex, startIndex + effectiveColumnCount);
 
               return (
                 <div
                   key={virtualRow.key}
                   ref={virtualizer.measureElement}
+                  className="pb-4"
                   data-index={virtualRow.index}
                   style={{
                     position: "absolute",
@@ -207,15 +223,16 @@ export default function RecipeGrid() {
                   }}
                 >
                   <div
-                    className="grid gap-4"
+                    className={viewMode === "list" ? "flex flex-col gap-4" : "grid gap-4"}
                     style={{
-                      gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+                      gridTemplateColumns:
+                        viewMode === "list"
+                          ? undefined
+                          : `repeat(${effectiveColumnCount}, minmax(0, 1fr))`,
                     }}
                   >
                     {rowItems.map((item) => (
-                      <div key={item.id} className="p-2">
-                        {renderItem(item)}
-                      </div>
+                      <div key={item.id}>{renderItem(item)}</div>
                     ))}
                   </div>
                 </div>
@@ -225,7 +242,7 @@ export default function RecipeGrid() {
 
           {isFetchingMore && (
             <div className="flex justify-center py-8">
-              <Spinner color="primary" size="lg" />
+              <Spinner color="accent" size="lg" />
             </div>
           )}
         </>

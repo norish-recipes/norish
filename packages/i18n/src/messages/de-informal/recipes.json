@@ -14,6 +14,11 @@
       "ingredients": "Zutaten",
       "steps": "Schritte",
       "tags": "Tags"
+    },
+    "viewMode": {
+      "label": "Rezeptansicht",
+      "grid": "Raster",
+      "list": "Liste"
     }
   },
   "empty": {
@@ -26,7 +31,8 @@
     "noImage": "Kein Bild verfügbar",
     "viewGroceries": "Einkaufsliste anzeigen",
     "addToCalendar": "Zum Kalender hinzufügen",
-    "deleteRecipe": "Rezept löschen"
+    "deleteRecipe": "Rezept löschen",
+    "recipeOptions": "Rezeptoptionen"
   },
   "detail": {
     "backToRecipes": "Zurück zu Rezepten",
@@ -285,7 +291,6 @@
       "duplicateTag": "Dieser Tag existiert bereits"
     }
   },
-
   "cookMode": {
     "steps": "Schritte",
     "ingredients": "Zutaten",

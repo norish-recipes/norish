@@ -1,4 +1,5 @@
 import { Ingredient } from "parse-ingredient";
+
 import { MeasurementSystem } from "@norish/shared/contracts";
 
 const METRIC_UNITS = new Set([
@@ -31,12 +32,6 @@ const METRIC_UNITS = new Set([
 ]);
 
 const US_UNITS = new Set([
-  "tsp",
-  "teaspoon",
-  "teaspoons",
-  "tbsp",
-  "tablespoon",
-  "tablespoons",
   "cup",
   "cups",
   "pint",
@@ -60,6 +55,12 @@ const US_UNITS = new Set([
 ]);
 
 const NEUTRAL_UNITS = new Set([
+  "tsp",
+  "teaspoon",
+  "teaspoons",
+  "tbsp",
+  "tablespoon",
+  "tablespoons",
   "pinch",
   "dash",
   "dashes",

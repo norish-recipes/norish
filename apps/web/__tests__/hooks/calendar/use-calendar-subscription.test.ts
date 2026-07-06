@@ -241,6 +241,37 @@ describe("useCalendarSubscription", () => {
       expect(data![1].slot).toBe("Breakfast");
       expect(data![2].slot).toBe("Lunch");
     });
+
+    it("ignores created items outside the subscribed date range", () => {
+      queryClient.setQueryData(getQueryKey(), []);
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onItemCreated"];
+
+      callback({
+        payload: {
+          item: {
+            id: "tomorrow-item",
+            userId: "user-1",
+            date: "2025-02-01",
+            slot: "Dinner",
+            sortOrder: 0,
+            itemType: "recipe",
+            recipeId: "recipe-456",
+            title: null,
+            recipeName: "Tomorrow Recipe",
+            recipeImage: null,
+            servings: 2,
+            calories: 300,
+            version: 1,
+          },
+        },
+      });
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toEqual([]);
+    });
   });
 
   describe("onItemDeleted subscription", () => {
@@ -471,6 +502,88 @@ describe("useCalendarSubscription", () => {
 
       expect(sorted[0].id).toBe("item-2");
       expect(sorted[1].id).toBe("item-1");
+    });
+
+    it("adds items moved into the subscribed date range", () => {
+      queryClient.setQueryData(getQueryKey(), []);
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onItemMoved"];
+
+      callback({
+        payload: {
+          item: {
+            id: "moved-into-range",
+            userId: "user-1",
+            date: "2025-01-20",
+            slot: "Dinner",
+            sortOrder: 0,
+            itemType: "recipe",
+            recipeId: "recipe-123",
+            title: null,
+            recipeName: "Moved Recipe",
+            recipeImage: null,
+            servings: 4,
+            calories: 500,
+            version: 2,
+          },
+          targetSlotItems: [{ id: "moved-into-range", sortOrder: 0 }],
+          sourceSlotItems: null,
+          oldDate: "2025-02-01",
+          oldSlot: "Dinner",
+          oldSortOrder: 0,
+        },
+      });
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toHaveLength(1);
+      expect(data![0]).toMatchObject({
+        id: "moved-into-range",
+        date: "2025-01-20",
+        recipeName: "Moved Recipe",
+      });
+    });
+
+    it("removes items moved outside the subscribed date range", () => {
+      const item = createMockPlannedItem({
+        id: "moved-out-of-range",
+        date: "2025-01-20",
+      });
+
+      queryClient.setQueryData(getQueryKey(), [item]);
+      renderSubscriptionHook();
+
+      const callback = subscriptionCallbacks["onItemMoved"];
+
+      callback({
+        payload: {
+          item: {
+            id: "moved-out-of-range",
+            userId: "user-1",
+            date: "2025-02-01",
+            slot: "Dinner",
+            sortOrder: 0,
+            itemType: "recipe",
+            recipeId: "recipe-123",
+            title: null,
+            recipeName: "Moved Recipe",
+            recipeImage: null,
+            servings: 4,
+            calories: 500,
+            version: 2,
+          },
+          targetSlotItems: [{ id: "moved-out-of-range", sortOrder: 0 }],
+          sourceSlotItems: null,
+          oldDate: "2025-01-20",
+          oldSlot: "Breakfast",
+          oldSortOrder: 0,
+        },
+      });
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+
+      expect(data).toEqual([]);
     });
   });
 

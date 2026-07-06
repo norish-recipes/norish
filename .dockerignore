@@ -49,6 +49,9 @@ tooling/**/dist
 
 # Mobile app skipped (removed to allow Turborepo workspace resolution)
 
+# Community app references
+apps/quick-import-extension/**
+
 # OpenSpec artifacts — not needed in Docker build
 openspec/
 docs/

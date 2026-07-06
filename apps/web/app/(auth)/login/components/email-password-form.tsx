@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
-import { Button, Input, Link } from "@heroui/react";
+import { Button, FieldError, InputGroup, Label, Link, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
 import { signIn } from "@norish/shared/lib/auth/client";
 
 interface EmailPasswordFormProps {
   callbackUrl?: string;
   registrationEnabled?: boolean;
 }
-
 export function EmailPasswordForm({
   callbackUrl = "/",
   registrationEnabled = false,
@@ -22,19 +22,16 @@ export function EmailPasswordForm({
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-
     try {
       const result = await signIn.email({
         email,
         password,
         callbackURL: callbackUrl,
       });
-
       if (result.error) {
         setError(result.error.message || t("errors.invalidCredentials"));
       } else {
@@ -46,54 +43,73 @@ export function EmailPasswordForm({
       setIsLoading(false);
     }
   };
-
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-      <Input
+      <TextField
+        fullWidth
         isRequired
-        autoComplete="email"
-        label={t("email")}
-        placeholder={t("emailPlaceholder")}
-        startContent={<EnvelopeIcon className="text-default-400 h-4 w-4" />}
+        name="email"
         type="email"
+        variant="secondary"
         value={email}
-        onValueChange={(value) => {
+        onChange={(value) => {
           setEmail(value);
           setError(null);
         }}
-      />
+      >
+        <Label>{t("email")}</Label>
+        <InputGroup fullWidth variant="secondary">
+          <InputGroup.Prefix>
+            <EnvelopeIcon className="text-muted h-4 w-4" />
+          </InputGroup.Prefix>
+          <InputGroup.Input autoComplete="email" placeholder={t("emailPlaceholder")} />
+        </InputGroup>
+        <FieldError />
+      </TextField>
 
-      <Input
+      <TextField
+        fullWidth
         isRequired
-        autoComplete="current-password"
-        label={t("password")}
-        placeholder={t("passwordPlaceholder")}
-        startContent={<LockClosedIcon className="text-default-400 h-4 w-4" />}
+        name="password"
         type="password"
+        variant="secondary"
         value={password}
-        onValueChange={(value) => {
+        onChange={(value) => {
           setPassword(value);
           setError(null);
         }}
-      />
+      >
+        <Label>{t("password")}</Label>
+        <InputGroup fullWidth variant="secondary">
+          <InputGroup.Prefix>
+            <LockClosedIcon className="text-muted h-4 w-4" />
+          </InputGroup.Prefix>
+          <InputGroup.Input
+            autoComplete="current-password"
+            placeholder={t("passwordPlaceholder")}
+          />
+        </InputGroup>
+        <FieldError />
+      </TextField>
 
-      {error && <p className="text-small text-danger text-center">{error}</p>}
+      {error && <p className="text-danger text-center text-sm">{error}</p>}
 
       <Button
-        className="mt-2"
-        color="primary"
+        fullWidth
+        className="mt-2 h-11"
         isDisabled={!email || !password}
-        isLoading={isLoading}
+        isPending={isLoading}
         type="submit"
+        variant="primary"
       >
         {t("signIn")}
       </Button>
 
       {registrationEnabled && (
-        <p className="text-small text-default-500 text-center">
+        <p className="text-muted text-center text-sm">
           {t("noAccount")}{" "}
           <Link
-            className="text-small"
+            className="text-sm"
             href={`/signup${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
           >
             {t("signUp")}

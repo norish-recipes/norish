@@ -14,6 +14,11 @@
       "ingredients": "Ingredienser",
       "steps": "Trin",
       "tags": "Tags"
+    },
+    "viewMode": {
+      "label": "Opskriftsvisning",
+      "grid": "Gitter",
+      "list": "Liste"
     }
   },
   "empty": {
@@ -26,7 +31,8 @@
     "noImage": "Intet billede tilgængeligt",
     "viewGroceries": "Se indkøbsliste",
     "addToCalendar": "Tilføj til kalender",
-    "deleteRecipe": "Slet opskrift"
+    "deleteRecipe": "Slet opskrift",
+    "recipeOptions": "Opskriftsindstillinger"
   },
   "detail": {
     "backToRecipes": "Tilbage til opskrifter",

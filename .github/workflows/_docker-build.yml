@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Free up disk space
         run: |
@@ -53,7 +53,8 @@ jobs:
       - name: Read package versions
         id: versions
         run: |
-          echo "report=$(node tooling/monorepo/scripts/print-package-versions.mjs)" >> "$GITHUB_OUTPUT"
+          report="$(node tooling/monorepo/scripts/print-package-versions.mjs)"
+          echo "report=${report}" >> "$GITHUB_OUTPUT"
 
       - name: Build Docker images (multi-arch)
         uses: docker/build-push-action@v7

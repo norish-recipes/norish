@@ -1,33 +1,24 @@
 "use client";
 
 import React, { useState } from "react";
-import { PlusIcon } from "@heroicons/react/16/solid";
-import { Button } from "@heroui/react";
+import { MiniGroceries } from "@/components/Panel/consumers";
+import { ActionButton } from "@/components/shared/action-button";
 import { useTranslations } from "next-intl";
 
 import { useRecipeContextRequired } from "../context";
 
-import { MiniGroceries } from "@/components/Panel/consumers";
-
 type Props = {
   recipeId: string;
 };
-
 export default function AddToGroceries({ recipeId }: Props) {
   const [open, setOpen] = useState(false);
   const { currentServings, recipe } = useRecipeContextRequired();
-  const t = useTranslations("recipes.detail");
-
+  const tActions = useTranslations("common.actions");
   return (
     <>
-      <Button
-        className="w-full"
-        color="primary"
-        startContent={<PlusIcon className="h-5 w-5" />}
-        onPress={() => setOpen(true)}
-      >
-        {t("addToGroceries")}
-      </Button>
+      <ActionButton fullWidth action="add" onPress={() => setOpen(true)}>
+        {tActions("add")}
+      </ActionButton>
       <MiniGroceries
         initialServings={currentServings}
         open={open}
