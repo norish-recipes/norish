@@ -127,6 +127,15 @@
         "title": "Show Favorites",
         "description": "Display favorite/heart icons on recipe cards and detail pages"
       },
+      "todaySection": {
+        "title": "Today Section",
+        "description": "Choose how the Today section on the dashboard is shown on this device",
+        "options": {
+          "always": "Always visible",
+          "planned": "Only planned meals",
+          "hidden": "Hidden"
+        }
+      },
       "applyError": "Failed to apply preference"
     },
     "shareLinks": {

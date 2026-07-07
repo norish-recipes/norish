@@ -127,6 +127,15 @@
       "favorites": {
         "title": "Favorieten tonen",
         "description": "Favoriet-/hartpictogrammen op receptkaarten en detailpagina's weergeven"
+      },
+      "todaySection": {
+        "title": "Vandaag-sectie",
+        "description": "Kies hoe de Vandaag-sectie op het dashboard op dit apparaat wordt weergegeven",
+        "options": {
+          "always": "Altijd zichtbaar",
+          "planned": "Alleen geplande maaltijden",
+          "hidden": "Verborgen"
+        }
       }
     },
     "shareLinks": {

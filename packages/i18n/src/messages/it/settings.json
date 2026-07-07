@@ -127,6 +127,15 @@
         "title": "Mostra preferiti",
         "description": "Visualizza le icone preferiti/cuore sulle schede ricette e nelle pagine di dettaglio"
       },
+      "todaySection": {
+        "title": "Sezione Oggi",
+        "description": "Scegli come viene mostrata la sezione Oggi nella dashboard su questo dispositivo",
+        "options": {
+          "always": "Sempre visibile",
+          "planned": "Solo pasti pianificati",
+          "hidden": "Nascosta"
+        }
+      },
       "applyError": "Applicazione della preferenza non riuscita"
     },
     "shareLinks": {

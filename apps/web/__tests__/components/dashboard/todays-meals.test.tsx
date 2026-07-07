@@ -1,3 +1,4 @@
+import type { TodaySectionVisibility } from "@/hooks/use-today-section-visibility";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,11 +8,18 @@ import { dateKey } from "@norish/shared/lib/helpers";
 
 const pushMock = vi.fn();
 const useCalendarContextMock = vi.fn();
+const setVisibilityMock = vi.fn();
+
+let visibilityMock: TodaySectionVisibility = "always";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: pushMock,
   }),
+}));
+
+vi.mock("@/hooks/use-today-section-visibility", () => ({
+  useTodaySectionVisibility: () => [visibilityMock, setVisibilityMock, vi.fn()],
 }));
 
 vi.mock("next-intl", () => ({
@@ -92,6 +100,7 @@ describe("TodaysMeals", () => {
   beforeEach(() => {
     pushMock.mockReset();
     useCalendarContextMock.mockReset();
+    visibilityMock = "always";
   });
 
   it("renders all meal slots and today's planned recipe", () => {
@@ -139,5 +148,55 @@ describe("TodaysMeals", () => {
     fireEvent.click(emptyBreakfastButton);
     expect(pushMock).not.toHaveBeenCalledWith("/calendar");
     expect(screen.getByRole("dialog")).toHaveTextContent("Mini recipes Breakfast");
+  });
+
+  it("shows only slots with planned items in planned mode", () => {
+    visibilityMock = "planned";
+    const todayKey = dateKey(new Date());
+
+    useCalendarContextMock.mockReturnValue({
+      plannedItemsByDate: {
+        [todayKey]: [createPlannedItem(todayKey, { slot: "Dinner" })],
+      },
+      isLoading: false,
+    });
+
+    render(<TodaysMeals />);
+
+    expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
+    expect(screen.getAllByText("Dinner")).not.toHaveLength(0);
+    expect(screen.queryByText("Breakfast")).not.toBeInTheDocument();
+    expect(screen.queryByText("Lunch")).not.toBeInTheDocument();
+    expect(screen.queryByText("Snack")).not.toBeInTheDocument();
+  });
+
+  it("renders nothing in planned mode when nothing is planned", () => {
+    visibilityMock = "planned";
+
+    useCalendarContextMock.mockReturnValue({
+      plannedItemsByDate: {},
+      isLoading: false,
+    });
+
+    render(<TodaysMeals />);
+
+    expect(screen.queryByRole("heading", { name: "Today" })).not.toBeInTheDocument();
+  });
+
+  it("renders nothing when hidden", () => {
+    visibilityMock = "hidden";
+    const todayKey = dateKey(new Date());
+
+    useCalendarContextMock.mockReturnValue({
+      plannedItemsByDate: {
+        [todayKey]: [createPlannedItem(todayKey)],
+      },
+      isLoading: false,
+    });
+
+    render(<TodaysMeals />);
+
+    expect(screen.queryByRole("heading", { name: "Today" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Pasta Night")).not.toBeInTheDocument();
   });
 });

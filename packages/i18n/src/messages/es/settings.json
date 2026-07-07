@@ -127,6 +127,15 @@
         "title": "Mostrar favoritos",
         "description": "Mostrar iconos de favoritos/corazón en las tarjetas de recetas y páginas de detalle"
       },
+      "todaySection": {
+        "title": "Sección de hoy",
+        "description": "Elige cómo se muestra la sección de hoy en el panel en este dispositivo",
+        "options": {
+          "always": "Siempre visible",
+          "planned": "Solo comidas planificadas",
+          "hidden": "Oculta"
+        }
+      },
       "applyError": "No se pudo aplicar la preferencia"
     },
     "shareLinks": {

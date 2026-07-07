@@ -127,6 +127,15 @@
         "title": "Pokaż ulubione",
         "description": "Wyświetlaj ikony ulubionych/serca na kartach przepisów i stronach szczegółów"
       },
+      "todaySection": {
+        "title": "Sekcja Dzisiaj",
+        "description": "Wybierz, jak sekcja Dzisiaj na pulpicie jest wyświetlana na tym urządzeniu",
+        "options": {
+          "always": "Zawsze widoczna",
+          "planned": "Tylko zaplanowane posiłki",
+          "hidden": "Ukryta"
+        }
+      },
       "applyError": "Nie udało się zastosować preferencji"
     },
     "shareLinks": {

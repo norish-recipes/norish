@@ -127,6 +127,15 @@
         "title": "Afficher les favoris",
         "description": "Afficher les icônes de favoris/cœur sur les cartes de recettes et les pages de détail"
       },
+      "todaySection": {
+        "title": "Section Aujourd'hui",
+        "description": "Choisissez comment la section Aujourd'hui du tableau de bord s'affiche sur cet appareil",
+        "options": {
+          "always": "Toujours visible",
+          "planned": "Repas planifiés uniquement",
+          "hidden": "Masquée"
+        }
+      },
       "applyError": "Échec de l'application du paramètre"
     },
     "shareLinks": {

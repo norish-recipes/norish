@@ -127,6 +127,15 @@
         "title": "Vis favoritter",
         "description": "Vis favorit/hjerte-ikoner på opskriftskort og detaljesider"
       },
+      "todaySection": {
+        "title": "I dag-sektion",
+        "description": "Vælg hvordan I dag-sektionen på forsiden vises på denne enhed",
+        "options": {
+          "always": "Altid synlig",
+          "planned": "Kun planlagte måltider",
+          "hidden": "Skjult"
+        }
+      },
       "applyError": "Kunne ikke anvende præference"
     },
     "shareLinks": {

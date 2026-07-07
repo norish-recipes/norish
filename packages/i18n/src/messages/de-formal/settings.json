@@ -127,6 +127,15 @@
         "title": "Favoriten anzeigen",
         "description": "Favoriten-/Herzsymbole auf Rezeptkarten und Detailseiten anzeigen"
       },
+      "todaySection": {
+        "title": "Heute-Bereich",
+        "description": "Wählen Sie, wie der Heute-Bereich auf dem Dashboard auf diesem Gerät angezeigt wird",
+        "options": {
+          "always": "Immer sichtbar",
+          "planned": "Nur geplante Mahlzeiten",
+          "hidden": "Ausgeblendet"
+        }
+      },
       "applyError": "Einstellung konnte nicht angewendet werden"
     },
     "shareLinks": {

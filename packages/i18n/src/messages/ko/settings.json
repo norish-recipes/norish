@@ -127,6 +127,15 @@
         "title": "즐겨찾기 표시",
         "description": "레시피 카드와 상세 페이지에 즐겨찾기/하트 아이콘을 표시합니다"
       },
+      "todaySection": {
+        "title": "오늘 섹션",
+        "description": "이 기기에서 대시보드의 오늘 섹션 표시 방식을 선택합니다",
+        "options": {
+          "always": "항상 표시",
+          "planned": "계획된 식사만 표시",
+          "hidden": "숨기기"
+        }
+      },
       "applyError": "환경설정을 적용하지 못했습니다"
     },
     "shareLinks": {

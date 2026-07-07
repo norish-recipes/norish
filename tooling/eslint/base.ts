@@ -123,29 +123,9 @@ export const baseConfig = defineConfig(
           caughtErrorsIgnorePattern: "^_.*?$",
         },
       ],
-      "import/order": [
-        "warn",
-        {
-          groups: [
-            "type",
-            "builtin",
-            "object",
-            "external",
-            "internal",
-            "parent",
-            "sibling",
-            "index",
-          ],
-          pathGroups: [
-            {
-              pattern: "~/**",
-              group: "external",
-              position: "after",
-            },
-          ],
-          "newlines-between": "always",
-        },
-      ],
+      // Import ordering is owned by @ianvs/prettier-plugin-sort-imports (see tooling/prettier);
+      // this rule's grouping is incompatible with it, so every prettier-formatted file warned.
+      "import/order": "off",
       "padding-line-between-statements": [
         "warn",
         {

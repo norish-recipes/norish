@@ -127,6 +127,15 @@
         "title": "Vis favoritter",
         "description": "Vis favoritt/hjerte-ikoner på oppskriftkort og detaljsider"
       },
+      "todaySection": {
+        "title": "I dag-seksjon",
+        "description": "Velg hvordan I dag-seksjonen på dashbordet vises på denne enheten",
+        "options": {
+          "always": "Alltid synlig",
+          "planned": "Kun planlagte måltider",
+          "hidden": "Skjult"
+        }
+      },
       "applyError": "Kunne ikke bruke preferanse"
     },
     "shareLinks": {
