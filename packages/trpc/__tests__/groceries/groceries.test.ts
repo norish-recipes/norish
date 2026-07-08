@@ -406,7 +406,7 @@ describe("stale grocery updates", () => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
   });
 
-  it("logs stale grocery row updates as no-ops", async () => {
+  it("drops stale grocery row updates and asks clients to refresh", async () => {
     const groceryId = crypto.randomUUID();
 
     getGroceryOwnerIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
@@ -422,12 +422,38 @@ describe("stale grocery updates", () => {
     expect(result).toEqual({ success: true });
     expect(trpcLogger.info).toHaveBeenCalledWith(
       { userId: ctx.user.id, groceryId, version: 4 },
-      "Ignoring stale grocery update mutation"
+      "Stale grocery update; requesting client refresh"
     );
     expect(groceryEmitter.emitToHousehold).not.toHaveBeenCalledWith(
       ctx.householdKey,
       "updated",
       expect.anything()
+    );
+    expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "stale", {
+      reason: expect.any(String),
+    });
+  });
+
+  it("saves the ingredient store preference when the update carries a store change", async () => {
+    const groceryId = crypto.randomUUID();
+    const storeId = crypto.randomUUID();
+
+    getGroceryOwnerIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
+    assertHouseholdAccess.mockResolvedValue(undefined);
+    updateGroceries.mockResolvedValue([
+      createMockGrocery({ id: groceryId, name: "Oat Milk", storeId }),
+    ]);
+
+    const caller = groceriesProcedures.createCaller({ ...ctx, multiplexer: null } as any);
+
+    await caller.update({ groceryId, raw: "Oat milk", version: 4, storeId });
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(storesRepository.upsertIngredientStorePreference).toHaveBeenCalledWith(
+      ctx.user.id,
+      "oat milk",
+      storeId
     );
   });
 

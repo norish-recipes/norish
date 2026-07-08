@@ -181,6 +181,31 @@ const onFailed = authedProcedure.subscription(async function* ({ ctx, signal }) 
   }
 });
 
+const onStale = authedProcedure.subscription(async function* ({ ctx, signal }) {
+  const eventName = groceryEmitter.householdEvent(ctx.householdKey, "stale");
+
+  log.trace(
+    { userId: ctx.user.id, householdKey: ctx.householdKey },
+    "Subscribed to grocery stale events"
+  );
+
+  try {
+    for await (const data of createSubscriptionIterable(
+      groceryEmitter,
+      ctx.multiplexer,
+      eventName,
+      signal
+    )) {
+      yield data as GrocerySubscriptionEvents["stale"];
+    }
+  } finally {
+    log.trace(
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "Unsubscribed from grocery stale events"
+    );
+  }
+});
+
 export const groceriesSubscriptions = router({
   onCreated,
   onUpdated,
@@ -189,4 +214,5 @@ export const groceriesSubscriptions = router({
   onRecurringUpdated,
   onRecurringDeleted,
   onFailed,
+  onStale,
 });

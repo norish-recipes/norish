@@ -128,10 +128,21 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       if (updatedGroceries.length === 0) {
         log.info(
           { userId: ctx.user.id, groceryId, version },
-          "Ignoring stale grocery update mutation"
+          "Stale grocery update; requesting client refresh"
         );
+        groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+          reason: "Grocery was updated elsewhere",
+        });
 
         return;
+      }
+
+      // Editing the store through the panel implies "remember this store for
+      // this ingredient", matching the previous assignToStore behaviour.
+      if (storeId && updatedGroceries[0]?.name) {
+        const normalized = normalizeIngredientName(updatedGroceries[0].name);
+
+        await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
       }
 
       log.debug({ userId: ctx.user.id, groceryId }, "Grocery updated");
@@ -465,9 +476,12 @@ const reorderInStore = authedProcedure
               updatedCount: updated.length,
             },
             updated.length === 0
-              ? "Ignoring stale grocery reorder mutation"
-              : "Grocery reorder partially applied due to stale versions"
+              ? "Stale grocery reorder; requesting client refresh"
+              : "Grocery reorder partially applied due to stale versions; requesting client refresh"
           );
+          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+            reason: "Groceries were updated elsewhere",
+          });
         }
 
         log.info({ userId: ctx.user.id, count: updated.length }, "Groceries reordered");
@@ -527,8 +541,11 @@ const markAllDone = authedProcedure
         if (updated.length < groceries.length) {
           log.info(
             { userId: ctx.user.id, requested: groceries.length, applied: updated.length },
-            "Ignored stale grocery mark-all-done mutations"
+            "Stale grocery mark-all-done mutations; requesting client refresh"
           );
+          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+            reason: "Groceries were updated elsewhere",
+          });
         }
 
         if (updated.length > 0) {
@@ -560,8 +577,11 @@ const deleteDone = authedProcedure
         if (deletedIds.length < groceries.length) {
           log.info(
             { userId: ctx.user.id, requested: groceries.length, applied: deletedIds.length },
-            "Ignored stale grocery delete-done mutations"
+            "Stale grocery delete-done mutations; requesting client refresh"
           );
+          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+            reason: "Groceries were updated elsewhere",
+          });
         }
 
         if (deletedIds.length > 0) {

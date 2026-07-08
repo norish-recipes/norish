@@ -22,7 +22,6 @@ type EditGroceryPanelProps = {
   recurringGrocery: RecurringGroceryDto | null;
   stores: StoreDto[];
   onSave: (itemName: string, pattern: RecurrencePattern | null, storeId?: string | null) => void;
-  onAssignToStore: (storeId: string | null, savePreference?: boolean) => void;
   onDelete: () => void;
 };
 export default function EditGroceryPanel({
@@ -32,7 +31,6 @@ export default function EditGroceryPanel({
   recurringGrocery,
   stores,
   onSave,
-  onAssignToStore,
   onDelete,
 }: EditGroceryPanelProps) {
   const t = useTranslations("groceries.panel");

@@ -40,7 +40,6 @@ export function GroceriesScreen() {
     createRecurringGrocery,
     updateGrocery,
     updateRecurringGrocery,
-    assignGroceryToStore,
   } = useGroceriesContext();
   const [viewMode, setViewMode] = useState<GroceryViewMode>("store");
   const [frozenIds, setFrozenIds] = useState<ReadonlySet<string>>(new Set());
@@ -140,29 +139,26 @@ export function GroceriesScreen() {
       if (!editingItemId || !editingItem) return;
 
       const { itemText, storeId, recurrence } = value;
+      const storeChanged = (editingItem.storeId ?? null) !== storeId;
 
       if (editingItem.recurringGroceryId) {
-        // Recurring item — route through updateRecurringGrocery.
-        // Pass pattern when recurrence stays enabled, null to disable it.
+        // Recurring item — route through updateRecurringGrocery. The store
+        // change rides along in the same mutation so it can't lose a version
+        // race against a separate assignGroceryToStore call.
         updateRecurringGrocery(
           editingItem.recurringGroceryId,
           editingItemId,
           itemText,
-          recurrence.enabled ? recurrence.pattern : null
+          recurrence.enabled ? recurrence.pattern : null,
+          storeChanged ? storeId : undefined
         );
       } else if (recurrence.enabled) {
         // Was one-off, user enabled recurrence → delete old one-off, create recurring.
         deleteGroceries([editingItemId]);
         createRecurringGrocery(itemText, recurrence.pattern, storeId);
       } else {
-        // One-off item — update text and store separately.
-        updateGrocery(editingItemId, itemText);
-      }
-
-      // Handle store assignment for non-conversion cases.
-      const storeChanged = (editingItem.storeId ?? null) !== storeId;
-      if (storeChanged && !(editingItem.recurringGroceryId == null && recurrence.enabled)) {
-        assignGroceryToStore(editingItemId, storeId);
+        // One-off item — text and store change commit as one mutation.
+        updateGrocery(editingItemId, itemText, storeChanged ? storeId : undefined);
       }
 
       setEditingItemId(null);
@@ -174,7 +170,6 @@ export function GroceriesScreen() {
       deleteGroceries,
       createRecurringGrocery,
       updateGrocery,
-      assignGroceryToStore,
     ]
   );
 

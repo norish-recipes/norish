@@ -12,6 +12,7 @@ type GrocerySubscriptionEventPayloads = {
   recurringUpdated: { recurringGrocery: RecurringGroceryDto; grocery: GroceryDto };
   recurringDeleted: { recurringGroceryId: string };
   failed: { reason: string };
+  stale: { reason: string };
 };
 
 export type GroceriesSubscriptionErrorAdapter = {
@@ -168,6 +169,10 @@ export function createUseGroceriesSubscription({
     );
 
     // onRecurringDeleted
+    // Only the recurring definition is removed here. When linked groceries are
+    // deleted along with it, the server emits a separate "deleted" event; when
+    // the recurring is merely detached, the groceries live on and arrive via
+    // "updated" with recurringGroceryId cleared.
     useSubscription(
       trpc.groceries.onRecurringDeleted.subscriptionOptions(undefined, {
         onData: (payload: GrocerySubscriptionEventPayloads["recurringDeleted"]) => {
@@ -176,9 +181,6 @@ export function createUseGroceriesSubscription({
 
             return {
               ...prev,
-              groceries: prev.groceries.filter(
-                (g) => g.recurringGroceryId !== payload.recurringGroceryId
-              ),
               recurringGroceries: prev.recurringGroceries.filter(
                 (r) => r.id !== payload.recurringGroceryId
               ),
@@ -193,6 +195,16 @@ export function createUseGroceriesSubscription({
       trpc.groceries.onFailed.subscriptionOptions(undefined, {
         onData: (payload: GrocerySubscriptionEventPayloads["failed"]) => {
           errorAdapter.showErrorToast(payload.reason);
+          invalidate();
+        },
+      })
+    );
+
+    // onStale: a version-guarded write lost a race and was dropped. Silently
+    // refetch so any optimistic state converges to the DB — no error toast.
+    useSubscription(
+      trpc.groceries.onStale.subscriptionOptions(undefined, {
+        onData: () => {
           invalidate();
         },
       })

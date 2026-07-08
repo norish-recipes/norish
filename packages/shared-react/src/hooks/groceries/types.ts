@@ -65,7 +65,8 @@ export type GroceriesMutationsResult = {
     recurringGroceryId: string,
     groceryId: string,
     raw: string,
-    pattern: RecurrencePattern | null
+    pattern: RecurrencePattern | null,
+    storeId?: string | null
   ) => void;
   deleteGroceries: (ids: string[]) => void;
   deleteRecurringGrocery: (recurringGroceryId: string) => void;
