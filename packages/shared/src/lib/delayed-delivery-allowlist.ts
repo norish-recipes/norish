@@ -9,6 +9,7 @@ export const delayedDeliveryEligibleMutations = [
   "groceries.markAllDone",
   "groceries.deleteDone",
   "recurringGroceries.updateRecurring",
+  "recurringGroceries.detachRecurring",
   "recurringGroceries.deleteRecurring",
   "recurringGroceries.checkRecurring",
   "stores.update",
