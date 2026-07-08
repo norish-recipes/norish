@@ -54,6 +54,23 @@
   --chip-bg: var(--default);
 }
 
+/* Blue "info" chip (active jobs) — HeroUI ships no blue color variant. */
+.chip--info {
+  --info: oklch(58.82% 0.1533 253.28);
+  --chip-bg: color-mix(in oklab, var(--info) 15%, transparent);
+  --chip-fg: color-mix(in oklab, var(--info) 80%, var(--foreground) 70%);
+}
+
+.dark .chip--info,
+[data-theme="dark"] .chip--info {
+  --chip-fg: color-mix(in oklab, var(--info) 80%, var(--foreground) 30%);
+}
+
+.chip--info.chip--primary {
+  --chip-bg: var(--info);
+  --chip-fg: oklch(99.11% 0 0);
+}
+
 /* React Aria renders each form control's real <input> in a visually-hidden
    absolutely-positioned span. Without a positioned ancestor on the control
    itself, that input anchors to the nearest positioned container (e.g. a

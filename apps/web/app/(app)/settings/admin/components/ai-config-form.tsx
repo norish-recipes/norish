@@ -308,7 +308,9 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
               const label =
                 option === "lm-studio"
                   ? t("providers.lmStudio")
-                  : t(`providers.${option}` as Parameters<typeof t>[0]);
+                  : option === "generic-openai"
+                    ? t("providers.genericOpenai")
+                    : t(`providers.${option}` as Parameters<typeof t>[0]);
 
               return (
                 <ListBox.Item key={option} id={option} textValue={label}>

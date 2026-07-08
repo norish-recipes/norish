@@ -10,6 +10,7 @@ import type { Queue } from "bullmq";
 import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
+import type { QueueRemovalOptions } from "../config";
 import { caldavSyncJobOptions, QUEUE_NAMES } from "../config";
 import { createOperationAwareQueue } from "../operation-aware-queue";
 
@@ -17,9 +18,11 @@ import { createOperationAwareQueue } from "../operation-aware-queue";
  * Create a CalDAV sync queue instance.
  * One queue instance per process is expected.
  */
-export function createCaldavSyncQueue(): Queue<CaldavSyncJobData> {
+export function createCaldavSyncQueue(
+  removalOptions?: QueueRemovalOptions
+): Queue<CaldavSyncJobData> {
   return createOperationAwareQueue<CaldavSyncJobData>(QUEUE_NAMES.CALDAV_SYNC, {
     connection: getBullClient(),
-    defaultJobOptions: caldavSyncJobOptions,
+    defaultJobOptions: { ...caldavSyncJobOptions, ...removalOptions },
   });
 }

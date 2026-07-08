@@ -35,6 +35,7 @@ import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { completeStep, reportStep } from "../job-steps";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:paste-import");
@@ -183,7 +184,11 @@ export async function processPasteImportJob(
   const createdRecipeIds: string[] = [];
 
   if (structuredRecipes && structuredRecipes.length > 0) {
+    let index = 0;
+
     for (const structuredRecipe of structuredRecipes) {
+      index++;
+      await reportStep(job, `creating-recipes:${index}/${structuredRecipes.length}`);
       const createdId = await createStructuredRecipe(structuredRecipe, userId, householdKey);
 
       if (!createdId) {
@@ -203,7 +208,10 @@ export async function processPasteImportJob(
       throw new Error("Missing recipe ID for paste import.");
     }
 
+    await reportStep(job, "parsing-text");
     const parseResult = await parseFromPastedText(text, recipeId, allergyNames, forceAI);
+
+    await reportStep(job, "saving");
     const createdId = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
 
     if (!createdId) {
@@ -212,6 +220,9 @@ export async function processPasteImportJob(
 
     createdRecipeIds.push(createdId);
   }
+
+  await completeStep(job, { createdCount: createdRecipeIds.length });
+  await reportStep(job, "post-processing");
 
   const queues = getQueues();
 

@@ -11,6 +11,7 @@ import { emitByPolicy } from "@norish/shared-server/realtime/policy";
 import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { reportStep } from "../job-steps";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:auto-categorization");
@@ -55,6 +56,7 @@ async function processAutoCategorizationJob(job: Job<AutoCategorizationJobData>)
     ingredients: recipe.recipeIngredients.map((ri) => ri.ingredientName),
   };
 
+  await reportStep(job, "ai-request");
   const result = await categorizeRecipe(recipeForCategorization);
 
   if (!result.success) {
@@ -70,6 +72,7 @@ async function processAutoCategorizationJob(job: Job<AutoCategorizationJobData>)
     return;
   }
 
+  await reportStep(job, "saving");
   await updateRecipeCategories(recipeId, categories);
 
   log.info(

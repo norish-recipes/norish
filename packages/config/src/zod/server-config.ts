@@ -16,6 +16,7 @@ export const ServerConfigKeys = {
   AI_CONFIG: "ai_config",
   VIDEO_CONFIG: "video_config",
   SCHEDULER_CLEANUP_MONTHS: "scheduler_cleanup_months",
+  JOB_RETENTION: "job_retention",
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
   PROMPTS: "prompts",
   LOCALE_CONFIG: "locale_config",
@@ -342,6 +343,24 @@ export type VideoConfig = z.infer<typeof VideoConfigSchema>;
 export const SchedulerCleanupMonthsSchema = z.number().int().min(1).max(24);
 
 // ============================================================================
+// Job Retention Schema (BullMQ removeOnComplete/removeOnFail)
+// ============================================================================
+
+export const JobRetentionConfigSchema = z.object({
+  keepCompleted: z.number().int().min(10).max(5000).default(100),
+  keepFailed: z.number().int().min(10).max(5000).default(100),
+  maxAgeDays: z.number().int().min(1).max(90).default(7),
+});
+
+export type JobRetentionConfig = z.infer<typeof JobRetentionConfigSchema>;
+
+export const DEFAULT_JOB_RETENTION: JobRetentionConfig = {
+  keepCompleted: 100,
+  keepFailed: 100,
+  maxAgeDays: 7,
+};
+
+// ============================================================================
 // Recipe Permission Policy Schema
 // ============================================================================
 
@@ -465,6 +484,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return VideoConfigSchema;
     case ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS:
       return SchedulerCleanupMonthsSchema;
+    case ServerConfigKeys.JOB_RETENTION:
+      return JobRetentionConfigSchema;
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return RecipePermissionPolicySchema;
     case ServerConfigKeys.PROMPTS:
@@ -518,4 +539,6 @@ export const RESTART_REQUIRED_KEYS: ServerConfigKey[] = [
   ServerConfigKeys.AUTH_PROVIDER_OIDC,
   ServerConfigKeys.AUTH_PROVIDER_GITHUB,
   ServerConfigKeys.AUTH_PROVIDER_GOOGLE,
+  // Retention is read once at queue initialization
+  ServerConfigKeys.JOB_RETENTION,
 ];

@@ -42,6 +42,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
         unitConversion !== prompts.unitConversion ||
         nutritionEstimation !== prompts.nutritionEstimation ||
         autoTagging !== prompts.autoTagging;
+
       setHasChanges(changed);
     }
   }, [recipeExtraction, unitConversion, nutritionEstimation, autoTagging, prompts]);
@@ -65,6 +66,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
       setRestoring(false);
     });
   };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -72,16 +74,16 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
       </div>
     );
   }
+
   return (
     <div className="flex flex-col gap-6 p-2">
       <div className="flex flex-col gap-2">
         <TextField value={recipeExtraction} onChange={setRecipeExtraction}>
           <Label>{t("recipeExtraction")}</Label>
           <TextArea
-            variant="secondary"
-            maxRows={15}
-            minRows={6}
             placeholder={t("recipeExtractionPlaceholder")}
+            rows={6}
+            variant="secondary"
           />
           <Description>{t("recipeExtractionDescription")}</Description>
         </TextField>
@@ -91,10 +93,9 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
         <TextField value={unitConversion} onChange={setUnitConversion}>
           <Label>{t("unitConversion")}</Label>
           <TextArea
-            variant="secondary"
-            maxRows={10}
-            minRows={4}
             placeholder={t("unitConversionPlaceholder")}
+            rows={4}
+            variant="secondary"
           />
           <Description>{t("unitConversionDescription")}</Description>
         </TextField>
@@ -104,10 +105,9 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
         <TextField value={nutritionEstimation} onChange={setNutritionEstimation}>
           <Label>{t("nutritionEstimation")}</Label>
           <TextArea
-            variant="secondary"
-            maxRows={15}
-            minRows={6}
             placeholder={t("nutritionEstimationPlaceholder")}
+            rows={6}
+            variant="secondary"
           />
           <Description>{t("nutritionEstimationDescription")}</Description>
         </TextField>
@@ -117,21 +117,20 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
         <TextField value={autoTagging} onChange={setAutoTagging}>
           <Label>{t("autoTagging")}</Label>
           <TextArea
-            variant="secondary"
-            maxRows={15}
-            minRows={6}
             placeholder={t("autoTaggingPlaceholder")}
+            rows={6}
+            variant="secondary"
           />
           <Description>{t("autoTaggingDescription")}</Description>
         </TextField>
       </div>
 
       <div className="flex items-center justify-between">
-        <Button onPress={handleRestoreDefaults} variant="tertiary" isPending={restoring}>
+        <Button isPending={restoring} variant="tertiary" onPress={handleRestoreDefaults}>
           {!restoring && <ArrowPathIcon className="h-5 w-5" />}
           {tActions("restoreDefaults")}
         </Button>
-        <Button isDisabled={!hasChanges} onPress={handleSave} variant="primary" isPending={saving}>
+        <Button isDisabled={!hasChanges} isPending={saving} variant="primary" onPress={handleSave}>
           {<CheckIcon className="h-5 w-5" />}
           {tActions("save")}
         </Button>

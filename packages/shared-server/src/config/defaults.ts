@@ -5,6 +5,7 @@ import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.js
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
 import {
+  DEFAULT_JOB_RETENTION,
   DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
 } from "@norish/db/zodSchemas/server-config";
@@ -24,6 +25,8 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       return defaultRecurrenceConfig;
     case ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS:
       return 3;
+    case ServerConfigKeys.JOB_RETENTION:
+      return DEFAULT_JOB_RETENTION;
     case ServerConfigKeys.AI_CONFIG:
       return {
         enabled: false,

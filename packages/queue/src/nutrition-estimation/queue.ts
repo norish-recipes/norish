@@ -10,6 +10,7 @@ import type { Queue } from "bullmq";
 import type { NutritionEstimationJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
+import type { QueueRemovalOptions } from "../config";
 import { nutritionEstimationJobOptions, QUEUE_NAMES } from "../config";
 import { createOperationAwareQueue } from "../operation-aware-queue";
 
@@ -17,9 +18,11 @@ import { createOperationAwareQueue } from "../operation-aware-queue";
  * Create a nutrition estimation queue instance.
  * One queue instance per process is expected.
  */
-export function createNutritionEstimationQueue(): Queue<NutritionEstimationJobData> {
+export function createNutritionEstimationQueue(
+  removalOptions?: QueueRemovalOptions
+): Queue<NutritionEstimationJobData> {
   return createOperationAwareQueue<NutritionEstimationJobData>(QUEUE_NAMES.NUTRITION_ESTIMATION, {
     connection: getBullClient(),
-    defaultJobOptions: nutritionEstimationJobOptions,
+    defaultJobOptions: { ...nutritionEstimationJobOptions, ...removalOptions },
   });
 }
