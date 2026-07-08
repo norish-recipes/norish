@@ -48,6 +48,11 @@ export function createUseCalendarMutations({
 
           return { previousItems };
         },
+        onSuccess: (result) => {
+          // The server drops version-stale writes; refetch so the optimistic
+          // update converges back to the DB state.
+          if ("stale" in result && result.stale) invalidate();
+        },
         onError: (_err, _vars, context) => {
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);
@@ -118,6 +123,9 @@ export function createUseCalendarMutations({
 
           return { previousItems };
         },
+        onSuccess: (result) => {
+          if ("stale" in result && result.stale) invalidate();
+        },
         onError: (_err, _vars, context) => {
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);
@@ -141,6 +149,9 @@ export function createUseCalendarMutations({
           });
 
           return { previousItems };
+        },
+        onSuccess: (result) => {
+          if ("stale" in result && result.stale) invalidate();
         },
         onError: (_err, _vars, context) => {
           if (context?.previousItems) {

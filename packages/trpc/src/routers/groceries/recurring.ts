@@ -3,15 +3,24 @@ import { z } from "zod";
 
 import type { GroceryInsertDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
-import { createGrocery, updateGrocery } from "@norish/db";
+import { createGrocery } from "@norish/db";
 import {
+  checkRecurringGrocery,
   createRecurringGrocery,
   deleteRecurringGroceryById,
+  detachRecurringGrocery,
   getRecurringGroceryById,
   getRecurringGroceryOwnerId,
-  updateRecurringGrocery,
+  updateRecurringGroceryWithGrocery,
 } from "@norish/db/repositories/recurring-groceries";
+import {
+  normalizeIngredientName,
+  upsertIngredientStorePreference,
+} from "@norish/db/repositories/stores";
+import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { DetachRecurringGroceryInputSchema } from "@norish/shared/contracts/zod";
+import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
 import { authedProcedure } from "../../middleware";
@@ -96,6 +105,7 @@ const updateRecurring = authedProcedure
       recurringVersion: z.number().int().positive(),
       groceryId: z.string(),
       groceryVersion: z.number().int().positive(),
+      storeId: z.string().uuid().nullable().optional(),
       data: z.object({
         name: z.string().optional(),
         amount: z.number().nullable().optional(),
@@ -108,7 +118,8 @@ const updateRecurring = authedProcedure
     })
   )
   .mutation(({ ctx, input }) => {
-    const { recurringGroceryId, recurringVersion, groceryId, groceryVersion, data } = input;
+    const { recurringGroceryId, recurringVersion, groceryId, groceryVersion, storeId, data } =
+      input;
 
     log.debug({ userId: ctx.user.id, recurringGroceryId, groceryId }, "Updating recurring grocery");
 
@@ -123,37 +134,37 @@ const updateRecurring = authedProcedure
 
         await assertHouseholdAccess(ctx.user.id, ownerId);
 
-        const updated = await updateRecurringGrocery({
-          id: recurringGroceryId,
-          version: recurringVersion,
-          ...data,
-        });
+        const outcome = await updateRecurringGroceryWithGrocery(
+          { id: recurringGroceryId, version: recurringVersion, ...data },
+          { id: groceryId, version: groceryVersion, storeId }
+        );
 
-        if (!updated) {
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "Recurring grocery was updated elsewhere. Refresh and try again.",
-          });
-        }
-
-        const grocery = await updateGrocery({
-          id: groceryId,
-          version: groceryVersion,
-          name: updated.name,
-          unit: updated.unit || null,
-          amount: updated.amount,
-        });
-
-        if (grocery) {
-          log.debug(
+        if (outcome.stale) {
+          log.info(
             { userId: ctx.user.id, recurringGroceryId, groceryId },
-            "Recurring grocery updated"
+            "Stale recurring grocery update; requesting client refresh"
           );
-          groceryEmitter.emitToHousehold(ctx.householdKey, "recurringUpdated", {
-            recurringGrocery: updated,
-            grocery,
+          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+            reason: "Recurring grocery was updated elsewhere",
           });
+
+          return;
         }
+
+        if (storeId && outcome.value.grocery.name) {
+          const normalized = normalizeIngredientName(outcome.value.grocery.name);
+
+          await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
+        }
+
+        log.debug(
+          { userId: ctx.user.id, recurringGroceryId, groceryId },
+          "Recurring grocery updated"
+        );
+        groceryEmitter.emitToHousehold(ctx.householdKey, "recurringUpdated", {
+          recurringGrocery: outcome.value.recurringGrocery,
+          grocery: outcome.value.grocery,
+        });
       })
       .catch((err) => {
         log.error(
@@ -162,6 +173,93 @@ const updateRecurring = authedProcedure
         );
         groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
           reason: err.message || "Failed to update recurring grocery",
+        });
+      });
+
+    return { success: true };
+  });
+
+const detachRecurring = authedProcedure
+  .input(DetachRecurringGroceryInputSchema)
+  .mutation(({ ctx, input }) => {
+    const { recurringGroceryId, recurringVersion, groceryId, groceryVersion, raw, storeId } =
+      input;
+
+    log.info(
+      { userId: ctx.user.id, recurringGroceryId, groceryId },
+      "Detaching recurring grocery"
+    );
+
+    getRecurringGroceryOwnerId(recurringGroceryId)
+      .then(async (ownerId) => {
+        if (!ownerId) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Recurring grocery not found",
+          });
+        }
+
+        await assertHouseholdAccess(ctx.user.id, ownerId);
+
+        const units = await getUnits();
+        const parsedIngredient = parseIngredientWithDefaults(raw, units)[0];
+
+        if (!parsedIngredient) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid grocery data",
+          });
+        }
+
+        const outcome = await detachRecurringGrocery({
+          recurringGroceryId,
+          recurringVersion,
+          grocery: {
+            id: groceryId,
+            version: groceryVersion,
+            name: parsedIngredient.description,
+            unit: parsedIngredient.unitOfMeasure,
+            amount: parsedIngredient.quantity ?? null,
+            ...(storeId !== undefined ? { storeId } : {}),
+          },
+        });
+
+        if (outcome.stale) {
+          log.info(
+            { userId: ctx.user.id, recurringGroceryId, groceryId },
+            "Stale recurring grocery detach; requesting client refresh"
+          );
+          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+            reason: "Grocery was updated elsewhere",
+          });
+
+          return;
+        }
+
+        if (storeId && outcome.value.name) {
+          const normalized = normalizeIngredientName(outcome.value.name);
+
+          await upsertIngredientStorePreference(ctx.user.id, normalized, storeId);
+        }
+
+        log.info(
+          { userId: ctx.user.id, recurringGroceryId, groceryId },
+          "Recurring grocery detached"
+        );
+        groceryEmitter.emitToHousehold(ctx.householdKey, "recurringDeleted", {
+          recurringGroceryId,
+        });
+        groceryEmitter.emitToHousehold(ctx.householdKey, "updated", {
+          changedGroceries: [outcome.value],
+        });
+      })
+      .catch((err) => {
+        log.error(
+          { err, userId: ctx.user.id, recurringGroceryId },
+          "Failed to detach recurring grocery"
+        );
+        groceryEmitter.emitToHousehold(ctx.householdKey, "failed", {
+          reason: err.message || "Failed to detach recurring grocery",
         });
       });
 
@@ -195,13 +293,23 @@ const deleteRecurring = authedProcedure
         if (result.stale) {
           log.info(
             { userId: ctx.user.id, recurringGroceryId, version },
-            "Ignoring stale recurring grocery delete mutation"
+            "Stale recurring grocery delete; requesting client refresh"
           );
+          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+            reason: "Recurring grocery was updated elsewhere",
+          });
 
           return;
         }
 
         log.info({ userId: ctx.user.id, recurringGroceryId }, "Recurring grocery deleted");
+
+        if (result.deletedGroceryIds.length > 0) {
+          groceryEmitter.emitToHousehold(ctx.householdKey, "deleted", {
+            groceryIds: result.deletedGroceryIds,
+          });
+        }
+
         groceryEmitter.emitToHousehold(ctx.householdKey, "recurringDeleted", {
           recurringGroceryId,
         });
@@ -258,14 +366,12 @@ const checkRecurring = authedProcedure
           });
         }
 
-        const updated = await updateGrocery({ id: groceryId, version: groceryVersion, isDone });
-
-        if (!updated) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Grocery not found",
-          });
-        }
+        let recurringUpdate: {
+          id: string;
+          version: number;
+          lastCheckedDate: string;
+          nextPlannedFor: string;
+        } | null = null;
 
         if (isDone) {
           const pattern = {
@@ -280,34 +386,41 @@ const checkRecurring = authedProcedure
             recurringGrocery.nextPlannedFor
           );
 
-          const updatedRecurring = await updateRecurringGrocery({
+          recurringUpdate = {
             id: recurringGroceryId,
             version: recurringVersion,
             lastCheckedDate: checkedDate,
             nextPlannedFor: nextDate,
-          });
-
-          if (!updatedRecurring) {
-            throw new TRPCError({
-              code: "CONFLICT",
-              message: "Recurring grocery was updated elsewhere. Refresh and try again.",
-            });
-          }
-
-          log.debug(
-            { userId: ctx.user.id, recurringGroceryId, nextDate },
-            "Recurring grocery checked, next date calculated"
-          );
-          groceryEmitter.emitToHousehold(ctx.householdKey, "recurringUpdated", {
-            recurringGrocery: updatedRecurring,
-            grocery: updated,
-          });
-        } else {
-          groceryEmitter.emitToHousehold(ctx.householdKey, "recurringUpdated", {
-            recurringGrocery,
-            grocery: updated,
-          });
+          };
         }
+
+        const outcome = await checkRecurringGrocery({
+          groceryId,
+          groceryVersion,
+          isDone,
+          recurringUpdate,
+        });
+
+        if (outcome.stale) {
+          log.info(
+            { userId: ctx.user.id, recurringGroceryId, groceryId },
+            "Stale recurring grocery check; requesting client refresh"
+          );
+          groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+            reason: "Grocery was updated elsewhere",
+          });
+
+          return;
+        }
+
+        log.debug(
+          { userId: ctx.user.id, recurringGroceryId, isDone },
+          "Recurring grocery checked"
+        );
+        groceryEmitter.emitToHousehold(ctx.householdKey, "recurringUpdated", {
+          recurringGrocery: outcome.value.recurringGrocery ?? recurringGrocery,
+          grocery: outcome.value.grocery,
+        });
       })
       .catch((err) => {
         log.error(
@@ -325,6 +438,7 @@ const checkRecurring = authedProcedure
 export const recurringGroceriesProcedures = router({
   createRecurring,
   updateRecurring,
+  detachRecurring,
   deleteRecurring,
   checkRecurring,
 });

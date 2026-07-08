@@ -272,9 +272,12 @@ export async function toggleGroceriesData(
         updatedCount: updated.length,
       },
       updated.length === 0
-        ? "Ignoring stale grocery toggle mutation"
-        : "Grocery toggle partially applied due to stale versions"
+        ? "Stale grocery toggle; requesting client refresh"
+        : "Grocery toggle partially applied due to stale versions; requesting client refresh"
     );
+    groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+      reason: "Groceries were updated elsewhere",
+    });
   }
 
   log.debug({ userId: ctx.user.id, count: updated.length, isDone }, "Groceries toggled");
@@ -311,8 +314,11 @@ export async function deleteGroceriesData(
   if (result.staleIds.length > 0) {
     log.info(
       { userId: ctx.user.id, staleGroceryIds: result.staleIds },
-      "Ignoring stale grocery delete mutations"
+      "Stale grocery delete mutations; requesting client refresh"
     );
+    groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+      reason: "Groceries were updated elsewhere",
+    });
   }
 
   if (result.deletedIds.length > 0) {
@@ -361,8 +367,11 @@ export async function assignGroceryToStoreData(
   if (!updated) {
     log.info(
       { userId: ctx.user.id, groceryId, storeId, version },
-      "Ignoring stale grocery assign-to-store mutation"
+      "Stale grocery assign-to-store; requesting client refresh"
     );
+    groceryEmitter.emitToHousehold(ctx.householdKey, "stale", {
+      reason: "Grocery was updated elsewhere",
+    });
 
     return null;
   }

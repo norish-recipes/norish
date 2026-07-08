@@ -18,6 +18,7 @@ const _mockMutations = {
   createRecurring: vi.fn(),
   updateRecurring: vi.fn(),
   deleteRecurring: vi.fn(),
+  detachRecurring: vi.fn(),
   checkRecurring: vi.fn(),
   assignToStore: vi.fn(),
   reorderInStore: vi.fn(),
@@ -64,6 +65,9 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       },
       deleteRecurring: {
         mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.deleteRecurring })),
+      },
+      detachRecurring: {
+        mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.detachRecurring })),
       },
       checkRecurring: {
         mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.checkRecurring })),
