@@ -10,6 +10,7 @@
 
 import type { Queue } from "bullmq";
 
+import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 import type {
   AllergyDetectionJobData,
   AutoCategorizationJobData,
@@ -20,13 +21,17 @@ import type {
   PasteImportJobData,
   RecipeImportJobData,
 } from "@norish/queue/contracts/job-types";
+import { DEFAULT_JOB_RETENTION, ServerConfigKeys } from "@norish/config/zod/server-config";
+import { getConfig } from "@norish/db/repositories/server-config";
 import { createLogger } from "@norish/shared-server/logger";
 
+import type { QueueName } from "./config";
 import type { ScheduledTaskJobData } from "./scheduled-tasks/queue";
 import { createAllergyDetectionQueue } from "./allergy-detection/queue";
 import { createAutoCategorizationQueue } from "./auto-categorization/queue";
 import { createAutoTaggingQueue } from "./auto-tagging/queue";
 import { createCaldavSyncQueue } from "./caldav-sync/queue";
+import { buildRemovalOptions, QUEUE_NAMES } from "./config";
 import { createImageImportQueue } from "./image-import/queue";
 import { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
 import { createPasteImportQueue } from "./paste-import/queue";
@@ -57,36 +62,68 @@ interface QueueRegistry {
 
 let registry: QueueRegistry | null = globalForRegistry.queueRegistry ?? null;
 
+let initializing: Promise<QueueRegistry> | null = null;
+
+async function loadJobRetention(): Promise<JobRetentionConfig> {
+  try {
+    const retention = await getConfig<JobRetentionConfig>(ServerConfigKeys.JOB_RETENTION);
+
+    return retention ?? DEFAULT_JOB_RETENTION;
+  } catch (err) {
+    log.warn({ err }, "Failed to load job retention config, using defaults");
+
+    return DEFAULT_JOB_RETENTION;
+  }
+}
+
 /**
  * Initialize all queues. Call once at server startup.
  * Idempotent - safe to call multiple times (returns existing registry).
+ *
+ * Reads the admin-configured job retention once; changing the retention
+ * config requires a server restart to take effect.
  */
-export function initializeQueues(): QueueRegistry {
+export async function initializeQueues(): Promise<QueueRegistry> {
   if (registry) {
     log.debug("Queue registry already initialized");
 
     return registry;
   }
 
-  log.info("Initializing queue registry...");
+  if (initializing) {
+    return initializing;
+  }
 
-  registry = {
-    recipeImport: createRecipeImportQueue(),
-    imageImport: createImageImportQueue(),
-    pasteImport: createPasteImportQueue(),
-    nutritionEstimation: createNutritionEstimationQueue(),
-    autoTagging: createAutoTaggingQueue(),
-    autoCategorization: createAutoCategorizationQueue(),
-    allergyDetection: createAllergyDetectionQueue(),
-    caldavSync: createCaldavSyncQueue(),
-    scheduledTasks: createScheduledTasksQueue(),
-  };
+  initializing = (async () => {
+    log.info("Initializing queue registry...");
 
-  globalForRegistry.queueRegistry = registry;
+    const retention = await loadJobRetention();
+    const removalOptions = buildRemovalOptions(retention);
 
-  log.info("Queue registry initialized");
+    registry = {
+      recipeImport: createRecipeImportQueue(removalOptions),
+      imageImport: createImageImportQueue(removalOptions),
+      pasteImport: createPasteImportQueue(removalOptions),
+      nutritionEstimation: createNutritionEstimationQueue(removalOptions),
+      autoTagging: createAutoTaggingQueue(removalOptions),
+      autoCategorization: createAutoCategorizationQueue(removalOptions),
+      allergyDetection: createAllergyDetectionQueue(removalOptions),
+      caldavSync: createCaldavSyncQueue(removalOptions),
+      scheduledTasks: createScheduledTasksQueue(removalOptions),
+    };
 
-  return registry;
+    globalForRegistry.queueRegistry = registry;
+
+    log.info({ retention }, "Queue registry initialized");
+
+    return registry;
+  })();
+
+  try {
+    return await initializing;
+  } finally {
+    initializing = null;
+  }
 }
 
 /**
@@ -99,6 +136,35 @@ export function getQueues(): QueueRegistry {
   }
 
   return registry;
+}
+
+/**
+ * Get a single queue by its BullMQ queue name. Throws if not initialized.
+ */
+export function getQueueByName(name: QueueName): Queue {
+  const byName: Record<QueueName, Queue> = {
+    [QUEUE_NAMES.RECIPE_IMPORT]: getQueues().recipeImport,
+    [QUEUE_NAMES.IMAGE_IMPORT]: getQueues().imageImport,
+    [QUEUE_NAMES.PASTE_IMPORT]: getQueues().pasteImport,
+    [QUEUE_NAMES.NUTRITION_ESTIMATION]: getQueues().nutritionEstimation,
+    [QUEUE_NAMES.AUTO_TAGGING]: getQueues().autoTagging,
+    [QUEUE_NAMES.AUTO_CATEGORIZATION]: getQueues().autoCategorization,
+    [QUEUE_NAMES.ALLERGY_DETECTION]: getQueues().allergyDetection,
+    [QUEUE_NAMES.CALDAV_SYNC]: getQueues().caldavSync,
+    [QUEUE_NAMES.SCHEDULED_TASKS]: getQueues().scheduledTasks,
+  };
+
+  return byName[name];
+}
+
+/**
+ * Get all queues with their BullMQ names. Throws if not initialized.
+ */
+export function getAllQueueEntries(): { name: QueueName; queue: Queue }[] {
+  return (Object.values(QUEUE_NAMES) as QueueName[]).map((name) => ({
+    name,
+    queue: getQueueByName(name),
+  }));
 }
 
 /**

@@ -310,7 +310,8 @@
       },
       "emptyFiltered": "Элементы со статусом «{status}» не найдены",
       "emptyDefault": "Записи синхронизации не найдены",
-      "errorDetails": "Подробности ошибки"
+      "errorDetails": "Подробности ошибки",
+      "pagination": "Page {current} of {total}"
     }
   },
   "admin": {
@@ -633,6 +634,112 @@
       "invalidJson": "Некорректный формат JSON",
       "failedToSave": "Не удалось сохранить",
       "failedToRestore": "Не удалось восстановить значения по умолчанию"
+    },
+    "jobQueue": {
+      "title": "Job Queues",
+      "description": "Monitor background jobs across all queues: status, current step, duration, and failures.",
+      "empty": "No jobs found",
+      "filters": {
+        "queue": "Queue",
+        "allQueues": "All queues"
+      },
+      "status": {
+        "waiting": "Waiting",
+        "active": "Active",
+        "delayed": "Delayed",
+        "completed": "Completed",
+        "failed": "Failed",
+        "paused": "Paused",
+        "prioritized": "Prioritized",
+        "unknown": "Unknown",
+        "hanging": "Hanging"
+      },
+      "stepStatus": {
+        "done": "Done",
+        "failed": "Failed",
+        "running": "Running",
+        "skipped": "Skipped",
+        "pending": "Pending"
+      },
+      "steps": {
+        "dedupe-check": "Check existing",
+        "fetch-allergies": "Fetch allergies",
+        "parsing": "Parse recipe",
+        "saving": "Save recipe",
+        "post-processing": "Post processing",
+        "preparing-images": "Prepare images",
+        "ai-extraction": "AI extraction",
+        "parsing-text": "Parse pasted text",
+        "creating-recipes": "Create recipes",
+        "ai-request": "AI request",
+        "syncing-event": "Sync calendar event",
+        "deleting-event": "Delete calendar event",
+        "running": "Run task"
+      },
+      "queues": {
+        "recipe-import": "Recipe import",
+        "image-recipe-import": "Image import",
+        "paste-recipe-import": "Paste import",
+        "nutrition-estimation": "Nutrition estimation",
+        "auto-tagging": "Auto-tagging",
+        "auto-categorization": "Auto-categorization",
+        "allergy-detection": "Allergy detection",
+        "caldav-sync": "CalDAV sync",
+        "scheduled-tasks": "Scheduled tasks"
+      },
+      "summary": {
+        "failed": "{count} failed"
+      },
+      "table": {
+        "job": "Job",
+        "status": "Status",
+        "step": "Step",
+        "duration": "Duration",
+        "created": "Created",
+        "runsAt": "Runs {time}"
+      },
+      "detail": {
+        "title": "Job Details",
+        "notFound": "Job not found. It may have been cleaned up.",
+        "sections": {
+          "error": "Error",
+          "pipelineSteps": "Pipeline Steps",
+          "input": "Input",
+          "logs": "Logs",
+          "errors": "Errors"
+        },
+        "fields": {
+          "queue": "Queue",
+          "jobId": "Job ID",
+          "description": "Description",
+          "recipe": "Recipe",
+          "created": "Created",
+          "started": "Started",
+          "finished": "Finished",
+          "duration": "Duration",
+          "attempts": "Attempts",
+          "runsAt": "Runs at",
+          "nextRun": "Next run"
+        },
+        "attempt": "Attempt {number}",
+        "stackTrace": "Stack trace"
+      },
+      "actions": {
+        "retry": "Retry",
+        "remove": "Remove"
+      },
+      "removeModal": {
+        "message": "Permanently remove this job?",
+        "confirm": "Remove job"
+      },
+      "retention": {
+        "title": "Job Retention",
+        "keepCompleted": "Keep completed jobs",
+        "keepFailed": "Keep failed jobs",
+        "maxAgeDays": "Max age (days)",
+        "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
+      },
+      "pagination": "Page {current} of {total}"
     }
   }
 }

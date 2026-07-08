@@ -118,10 +118,9 @@ export default function JsonEditor({
       <TextArea
         variant="secondary"
         className="font-mono text-sm"
-        errorMessage={error || undefined}
-        isDisabled={disabled}
-        isInvalid={!!error && text !== ""}
-        minRows={10}
+        aria-invalid={!!error && text !== ""}
+        disabled={disabled}
+        rows={10}
         placeholder={t("placeholder")}
         value={text}
         onChange={(e) => handleTextChange(e.target.value)}

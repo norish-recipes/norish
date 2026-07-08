@@ -9,6 +9,7 @@ import { Queue } from "bullmq";
 
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
+import type { QueueRemovalOptions } from "../config";
 import { QUEUE_NAMES, scheduledTasksJobOptions } from "../config";
 
 export type ScheduledTaskType =
@@ -26,9 +27,11 @@ export interface ScheduledTaskJobData {
  * Create a scheduled tasks queue instance.
  * One queue instance per process is expected.
  */
-export function createScheduledTasksQueue(): Queue<ScheduledTaskJobData> {
+export function createScheduledTasksQueue(
+  removalOptions?: QueueRemovalOptions
+): Queue<ScheduledTaskJobData> {
   return new Queue<ScheduledTaskJobData>(QUEUE_NAMES.SCHEDULED_TASKS, {
     connection: getBullClient(),
-    defaultJobOptions: scheduledTasksJobOptions,
+    defaultJobOptions: { ...scheduledTasksJobOptions, ...removalOptions },
   });
 }

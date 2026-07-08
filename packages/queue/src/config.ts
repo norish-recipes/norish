@@ -7,6 +7,8 @@
 
 import type { DefaultJobOptions, WorkerOptions } from "bullmq";
 
+import type { JobRetentionConfig } from "@norish/config/zod/server-config";
+
 /**
  * Queue names for all background job queues
  */
@@ -72,14 +74,51 @@ export const WORKER_CONCURRENCY = {
 
 export const RECIPE_IMPORT_PROCESSING_TIMEOUT_MS = 30 * 60 * 1000;
 
+/**
+ * Active jobs running longer than this are flagged as "hanging" in the
+ * admin job monitor. Imports have a 30-min hard timeout, so 10 min already
+ * signals something is off before BullMQ gives up.
+ */
+export const HANGING_THRESHOLD_MS: Record<QueueName, number> = {
+  [QUEUE_NAMES.RECIPE_IMPORT]: 10 * 60_000,
+  [QUEUE_NAMES.IMAGE_IMPORT]: 10 * 60_000,
+  [QUEUE_NAMES.PASTE_IMPORT]: 10 * 60_000,
+  [QUEUE_NAMES.CALDAV_SYNC]: 15 * 60_000,
+  [QUEUE_NAMES.SCHEDULED_TASKS]: 60 * 60_000,
+  [QUEUE_NAMES.NUTRITION_ESTIMATION]: 15 * 60_000,
+  [QUEUE_NAMES.AUTO_TAGGING]: 15 * 60_000,
+  [QUEUE_NAMES.AUTO_CATEGORIZATION]: 15 * 60_000,
+  [QUEUE_NAMES.ALLERGY_DETECTION]: 15 * 60_000,
+};
+
+export type QueueRemovalOptions = Pick<DefaultJobOptions, "removeOnComplete" | "removeOnFail">;
+
+/**
+ * Build removeOnComplete/removeOnFail options from the admin-configured
+ * job retention. Applied to all queues at initialization; jobs keep the
+ * options they were enqueued with, so changes require a restart and only
+ * affect new jobs.
+ */
+export function buildRemovalOptions(retention: JobRetentionConfig): QueueRemovalOptions {
+  const age = retention.maxAgeDays * 86_400;
+
+  return {
+    removeOnComplete: { count: retention.keepCompleted, age },
+    removeOnFail: { count: retention.keepFailed, age },
+  };
+}
+
+/** Fallback retention when the config cannot be read: keep 100 jobs / 7 days. */
+const FALLBACK_REMOVAL = { count: 100, age: 604_800 } as const;
+
 export const recipeImportJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {
     type: "exponential",
     delay: 2000, // 2s, 4s, 8s
   },
-  removeOnComplete: true,
-  removeOnFail: true,
+  removeOnComplete: FALLBACK_REMOVAL,
+  removeOnFail: FALLBACK_REMOVAL,
 };
 
 export const imageImportJobOptions: DefaultJobOptions = {
@@ -92,7 +131,7 @@ export const imageImportJobOptions: DefaultJobOptions = {
     age: 3600,
     count: 500,
   },
-  removeOnFail: true,
+  removeOnFail: FALLBACK_REMOVAL,
 };
 
 export const pasteImportJobOptions: DefaultJobOptions = {
@@ -105,7 +144,7 @@ export const pasteImportJobOptions: DefaultJobOptions = {
     age: 3600,
     count: 1000,
   },
-  removeOnFail: true,
+  removeOnFail: FALLBACK_REMOVAL,
 };
 
 export const caldavSyncJobOptions: DefaultJobOptions = {
@@ -150,7 +189,7 @@ export const nutritionEstimationJobOptions: DefaultJobOptions = {
     age: 3600,
     count: 500,
   },
-  removeOnFail: true,
+  removeOnFail: FALLBACK_REMOVAL,
 };
 
 export const autoTaggingJobOptions: DefaultJobOptions = {
@@ -163,7 +202,7 @@ export const autoTaggingJobOptions: DefaultJobOptions = {
     age: 3600,
     count: 500,
   },
-  removeOnFail: true,
+  removeOnFail: FALLBACK_REMOVAL,
 };
 
 export const autoCategorizationJobOptions: DefaultJobOptions = {
@@ -176,7 +215,7 @@ export const autoCategorizationJobOptions: DefaultJobOptions = {
     age: 3600,
     count: 500,
   },
-  removeOnFail: true,
+  removeOnFail: FALLBACK_REMOVAL,
 };
 
 export const allergyDetectionJobOptions: DefaultJobOptions = {
@@ -189,5 +228,5 @@ export const allergyDetectionJobOptions: DefaultJobOptions = {
     age: 3600,
     count: 500,
   },
-  removeOnFail: true,
+  removeOnFail: FALLBACK_REMOVAL,
 };
