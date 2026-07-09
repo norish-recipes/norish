@@ -11,7 +11,7 @@ describe("delayed-delivery allowlist", () => {
   it("keeps create-style and repeat-work mutations immediate-only", () => {
     expect(delayedDeliveryImmediateOnlyMutations).toEqual([
       "groceries.create",
-      "recurringGroceries.createRecurring",
+      "groceries.createRecurring",
       "stores.create",
       "households.create",
       "households.join",

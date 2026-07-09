@@ -8,10 +8,10 @@ export const delayedDeliveryEligibleMutations = [
   "groceries.reorderInStore",
   "groceries.markAllDone",
   "groceries.deleteDone",
-  "recurringGroceries.updateRecurring",
-  "recurringGroceries.detachRecurring",
-  "recurringGroceries.deleteRecurring",
-  "recurringGroceries.checkRecurring",
+  "groceries.updateRecurring",
+  "groceries.detachRecurring",
+  "groceries.deleteRecurring",
+  "groceries.checkRecurring",
   "stores.update",
   "stores.delete",
   "stores.reorder",
@@ -41,7 +41,7 @@ export const delayedDeliveryEligibleMutations = [
 
 export const delayedDeliveryImmediateOnlyMutations = [
   "groceries.create",
-  "recurringGroceries.createRecurring",
+  "groceries.createRecurring",
   "stores.create",
   "households.create",
   "households.join",
