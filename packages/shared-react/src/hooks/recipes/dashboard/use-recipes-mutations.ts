@@ -437,6 +437,14 @@ export function createUseRecipesMutations(
 
           return { detailQueryKey, previousDetail };
         },
+        onSuccess: (result, { id }) => {
+          if (!result.stale) {
+            return;
+          }
+
+          queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
+          invalidate();
+        },
       })
     );
     const deleteMutation = useMutation(
@@ -463,6 +471,14 @@ export function createUseRecipesMutations(
             previousRecipeLists,
           };
         },
+        onSuccess: (result, { id }) => {
+          if (!result.stale) {
+            return;
+          }
+
+          queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
+          invalidate();
+        },
         onError: (error, _variables, context) => {
           onError?.(error, "delete");
 
@@ -479,7 +495,15 @@ export function createUseRecipesMutations(
         },
       })
     );
-    const convertMutation = useMutation(trpc.recipes.convertMeasurements.mutationOptions());
+    const convertMutation = useMutation(
+      trpc.recipes.convertMeasurements.mutationOptions({
+        onSuccess: (result) => {
+          if ("stale" in result && result.stale === true) {
+            invalidate();
+          }
+        },
+      })
+    );
 
     const restoreDeletedRecipe = (context: DeleteMutationContext | undefined): void => {
       if (!context) {

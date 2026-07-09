@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-import type { GroceryDto } from "@norish/shared/contracts";
+import type { GroceryDto, MutationAckWith } from "@norish/shared/contracts";
 import { GrocerySelectBaseSchema } from "@norish/db";
+import { mutationAckSchema } from "@norish/shared/contracts";
 
 export const createGroceryApiInputSchema = z.object({
   name: z.string().nullable(),
@@ -16,20 +17,16 @@ export const groceryIdVersionSchema = z.object({
   version: z.number().int().positive(),
 });
 
-export const deleteGroceryOutputSchema = z.object({
-  success: z.boolean(),
-  stale: z.boolean(),
-});
+export const deleteGroceryOutputSchema = mutationAckSchema;
 
-type GroceryMutationOutput = {
+export type GroceryMutationOutput = MutationAckWith<{
   grocery: GroceryDto | null;
-  stale: boolean;
-};
+}>;
 
-export const groceryMutationOutputSchema: z.ZodType<GroceryMutationOutput> = z.object({
-  grocery: GrocerySelectBaseSchema.nullable(),
-  stale: z.boolean(),
-});
+export const groceryMutationOutputSchema: z.ZodType<GroceryMutationOutput> =
+  mutationAckSchema.extend({
+    grocery: GrocerySelectBaseSchema.nullable(),
+  });
 
 export const assignGroceryToStoreApiInputSchema = z.object({
   id: z.string().uuid(),

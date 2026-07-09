@@ -4,10 +4,11 @@ import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { recipesRouter } from "../../src/routers/recipes";
-import { canAccessResource } from "../mocks/permissions";
+import { canAccessResource, isAIEnabled } from "../mocks/permissions";
 import { recipeEmitter } from "../mocks/recipe-emitter";
 // Import mocks for assertions
 import {
+  addConvertedRecipeDataAndSetActiveSystem,
   createRecipeWithRefs,
   dashboardRecipe,
   deleteRecipeById,
@@ -15,6 +16,7 @@ import {
   getRecipeOwnerId,
   getRecipesWithoutCategories,
   listRecipes,
+  setActiveSystemForRecipe,
   updateRecipeCategories,
 } from "../mocks/recipes-repository";
 // Import test utilities
@@ -33,7 +35,7 @@ vi.mock("@norish/db", async (importOriginal) => {
 
   return {
     ...actual,
-    addStepsAndIngredientsToRecipeByInput: vi.fn(),
+    addConvertedRecipeDataAndSetActiveSystem: recipes.addConvertedRecipeDataAndSetActiveSystem,
     createRecipeWithRefs: recipes.createRecipeWithRefs,
     dashboardRecipe: recipes.dashboardRecipe,
     deleteRecipeById: recipes.deleteRecipeById,
@@ -45,6 +47,7 @@ vi.mock("@norish/db", async (importOriginal) => {
     getRecipesWithoutCategories: recipes.getRecipesWithoutCategories,
     listRecipes: recipes.listRecipes,
     recipeExistsByUrlForPolicy: vi.fn(),
+    setActiveSystemForRecipe: recipes.setActiveSystemForRecipe,
     updateRecipeCategories: recipes.updateRecipeCategories,
     updateRecipeWithRefs: recipes.updateRecipeWithRefs,
   };
@@ -53,6 +56,9 @@ vi.mock("@norish/db/repositories/recipes", () => import("../mocks/recipes-reposi
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/trpc/routers/recipes/emitter", () => import("../mocks/recipe-emitter"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
+vi.mock("@norish/shared-server/ai/unit-converter", () => ({
+  convertRecipeDataWithAI: vi.fn(),
+}));
 
 // Create a test tRPC instance
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
@@ -618,6 +624,86 @@ describe("recipes procedures", () => {
 
       expect(getRecipesWithoutCategories).toHaveBeenCalled();
       expect(result).toEqual(expected);
+    });
+  });
+
+  describe("convertMeasurements", () => {
+    it("returns a stale acknowledgement without emitting when the active-system CAS conflicts", async () => {
+      const recipe = createValidFullRecipe({
+        id: crypto.randomUUID(),
+        version: 4,
+        recipeIngredients: [
+          {
+            id: crypto.randomUUID(),
+            ingredientId: crypto.randomUUID(),
+            ingredientName: "Flour",
+            amount: 200,
+            unit: "g",
+            systemUsed: "us",
+            order: 0,
+            version: 1,
+          },
+        ],
+      });
+
+      isAIEnabled.mockResolvedValue(true);
+      canAccessResource.mockResolvedValue(true);
+      getRecipeFull.mockResolvedValue(recipe);
+      setActiveSystemForRecipe.mockResolvedValue({ stale: true });
+
+      const caller = recipesRouter.createCaller({
+        ...ctx,
+        connectionId: null,
+        multiplexer: null,
+        operationId: null,
+      });
+      const result = await caller.convertMeasurements({
+        recipeId: recipe.id,
+        targetSystem: "us",
+        version: 4,
+      });
+
+      expect(result).toEqual({ success: true, applied: false, stale: true });
+      expect(setActiveSystemForRecipe).toHaveBeenCalledWith(recipe.id, "us", 4);
+      expect(recipeEmitter.emitToHousehold).not.toHaveBeenCalled();
+    });
+
+    it("uses one transactional repository operation for AI-converted rows", async () => {
+      const recipe = createValidFullRecipe({ id: crypto.randomUUID(), version: 4 });
+
+      isAIEnabled.mockResolvedValue(true);
+      canAccessResource.mockResolvedValue(true);
+      getRecipeFull.mockResolvedValue(recipe);
+      addConvertedRecipeDataAndSetActiveSystem.mockResolvedValue({ stale: true });
+
+      const { convertRecipeDataWithAI } = await import("@norish/shared-server/ai/unit-converter");
+
+      vi.mocked(convertRecipeDataWithAI).mockResolvedValue({
+        success: true,
+        data: { steps: [], ingredients: [] },
+      });
+
+      const caller = recipesRouter.createCaller({
+        ...ctx,
+        connectionId: null,
+        multiplexer: null,
+        operationId: null,
+      });
+      const result = await caller.convertMeasurements({
+        recipeId: recipe.id,
+        targetSystem: "us",
+        version: 4,
+      });
+
+      expect(result).toEqual({ success: true, applied: false, stale: true });
+      expect(addConvertedRecipeDataAndSetActiveSystem).toHaveBeenCalledWith(
+        recipe.id,
+        "us",
+        4,
+        [],
+        []
+      );
+      expect(recipeEmitter.emitToHousehold).not.toHaveBeenCalled();
     });
   });
 

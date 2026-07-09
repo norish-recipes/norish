@@ -50,10 +50,6 @@ vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
-// The recurring procedures return { success: true } before their DB work runs;
-// yield a macrotask so the fire-and-forget promise chain settles.
-const flushAsync = () => new Promise((resolve) => setTimeout(resolve, 0));
-
 describe("recurring groceries procedures", () => {
   const mockUser = createMockUser();
   const mockHousehold = createMockHousehold();
@@ -196,9 +192,7 @@ describe("recurring groceries procedures", () => {
         version: 4,
       });
 
-      await flushAsync();
-
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, applied: true });
       expect(deleteRecurringGroceryById).toHaveBeenCalledWith("r1", 4);
       expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "deleted", {
         groceryIds: ["g1", "g2"],
@@ -223,9 +217,7 @@ describe("recurring groceries procedures", () => {
         version: 4,
       });
 
-      expect(result).toEqual({ success: true });
-      await flushAsync();
-
+      expect(result).toEqual({ success: true, applied: false, stale: true });
       expect(deleteRecurringGroceryById).toHaveBeenCalledWith("r1", 4);
       expect(groceryEmitter.emitToHousehold).not.toHaveBeenCalledWith(
         ctx.householdKey,
@@ -262,9 +254,7 @@ describe("recurring groceries procedures", () => {
         data: { name: "Oat milk" },
       });
 
-      await flushAsync();
-
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, applied: true });
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
         { id: "r1", version: 2, name: "Oat milk" },
         { id: "g1", version: 3, storeId: undefined }
@@ -301,8 +291,6 @@ describe("recurring groceries procedures", () => {
         data: { name: "Oat Milk" },
       });
 
-      await flushAsync();
-
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
         { id: "r1", version: 2, name: "Oat Milk" },
         { id: "g1", version: 3, storeId }
@@ -330,9 +318,7 @@ describe("recurring groceries procedures", () => {
         data: { name: "Oat milk" },
       });
 
-      await flushAsync();
-
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, applied: false, stale: true });
       expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "stale", {
         reason: expect.any(String),
       });
@@ -365,9 +351,7 @@ describe("recurring groceries procedures", () => {
         raw: "Oat milk",
       });
 
-      await flushAsync();
-
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, applied: true });
       // Parsed ingredient comes from the mocked parseIngredientWithDefaults
       expect(detachRecurringGrocery).toHaveBeenCalledWith({
         recurringGroceryId,
@@ -411,8 +395,6 @@ describe("recurring groceries procedures", () => {
         storeId,
       });
 
-      await flushAsync();
-
       expect(detachRecurringGrocery).toHaveBeenCalledWith({
         recurringGroceryId,
         recurringVersion: 2,
@@ -444,9 +426,7 @@ describe("recurring groceries procedures", () => {
         raw: "Oat milk",
       });
 
-      await flushAsync();
-
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, applied: false, stale: true });
       expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "stale", {
         reason: expect.any(String),
       });
@@ -498,9 +478,7 @@ describe("recurring groceries procedures", () => {
         isDone: true,
       });
 
-      await flushAsync();
-
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, applied: true });
       expect(checkRecurringGrocery).toHaveBeenCalledWith({
         groceryId: "g1",
         groceryVersion: 3,
@@ -543,8 +521,6 @@ describe("recurring groceries procedures", () => {
         isDone: false,
       });
 
-      await flushAsync();
-
       expect(checkRecurringGrocery).toHaveBeenCalledWith({
         groceryId: "g1",
         groceryVersion: 3,
@@ -578,9 +554,7 @@ describe("recurring groceries procedures", () => {
         isDone: true,
       });
 
-      await flushAsync();
-
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, applied: false, stale: true });
       expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "stale", {
         reason: expect.any(String),
       });

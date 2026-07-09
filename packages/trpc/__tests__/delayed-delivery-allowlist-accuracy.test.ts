@@ -1,8 +1,9 @@
+import { describe, expect, it } from "vitest";
+
 import {
   delayedDeliveryEligibleMutations,
   delayedDeliveryImmediateOnlyMutations,
 } from "@norish/shared/lib/delayed-delivery-allowlist";
-import { describe, expect, it } from "vitest";
 
 import { appRouter } from "../src/router";
 
@@ -95,7 +96,6 @@ const versionContracts: Record<string, VersionContract> = {
   "recipes.update": { kind: "top-level" },
   "recipes.updateCategories": { kind: "top-level" },
   "recipes.delete": { kind: "top-level" },
-  "recipes.convertMeasurements": { kind: "top-level" },
   "recipes.deleteGalleryImage": { kind: "top-level" },
   "recipes.deleteGalleryVideo": { kind: "top-level" },
   "user.updatePreferences": { kind: "top-level" },
@@ -127,28 +127,28 @@ type AckClass = "awaited" | "fire-and-forget" | "enqueue";
 const ackClassification: Record<string, AckClass> = {
   // groceries
   "groceries.create": "awaited",
-  "groceries.update": "fire-and-forget",
+  "groceries.update": "awaited",
   "groceries.toggle": "awaited",
   "groceries.delete": "awaited",
   "groceries.assignToStore": "awaited",
-  "groceries.reorderInStore": "fire-and-forget",
-  "groceries.markAllDone": "fire-and-forget",
-  "groceries.deleteDone": "fire-and-forget",
+  "groceries.reorderInStore": "awaited",
+  "groceries.markAllDone": "awaited",
+  "groceries.deleteDone": "awaited",
   "groceries.createRecurring": "awaited",
-  "groceries.updateRecurring": "fire-and-forget",
-  "groceries.detachRecurring": "fire-and-forget",
-  "groceries.deleteRecurring": "fire-and-forget",
-  "groceries.checkRecurring": "fire-and-forget",
+  "groceries.updateRecurring": "awaited",
+  "groceries.detachRecurring": "awaited",
+  "groceries.deleteRecurring": "awaited",
+  "groceries.checkRecurring": "awaited",
   // calendar
   "calendar.createItem": "awaited",
   "calendar.moveItem": "awaited",
   "calendar.updateItem": "awaited",
   "calendar.deleteItem": "awaited",
   // recipes
-  "recipes.create": "fire-and-forget",
-  "recipes.update": "fire-and-forget",
-  "recipes.delete": "fire-and-forget",
-  "recipes.convertMeasurements": "fire-and-forget",
+  "recipes.create": "awaited",
+  "recipes.update": "awaited",
+  "recipes.delete": "awaited",
+  "recipes.convertMeasurements": "awaited",
   "recipes.updateCategories": "awaited",
   "recipes.importFromUrl": "enqueue",
   "recipes.importFromImages": "enqueue",
@@ -171,20 +171,20 @@ const ackClassification: Record<string, AckClass> = {
   "recipes.uploadGalleryVideo": "awaited",
   "recipes.deleteGalleryVideo": "awaited",
   // households
-  "households.create": "fire-and-forget",
-  "households.join": "fire-and-forget",
-  "households.leave": "fire-and-forget",
-  "households.kick": "fire-and-forget",
-  "households.regenerateCode": "fire-and-forget",
-  "households.transferAdmin": "fire-and-forget",
+  "households.create": "awaited",
+  "households.join": "awaited",
+  "households.leave": "awaited",
+  "households.kick": "awaited",
+  "households.regenerateCode": "awaited",
+  "households.transferAdmin": "awaited",
   // stores
   "stores.create": "awaited",
   "stores.update": "awaited",
-  "stores.delete": "fire-and-forget",
+  "stores.delete": "awaited",
   "stores.reorder": "awaited",
   // favorites / ratings
   "favorites.toggle": "awaited",
-  "ratings.rate": "fire-and-forget",
+  "ratings.rate": "awaited",
   // user
   "user.updateName": "awaited",
   "user.uploadAvatar": "awaited",
@@ -260,40 +260,43 @@ describe("delayed-delivery allowlist accuracy", () => {
     );
   });
 
-  it.each(Object.entries(versionContracts))("%s satisfies its version contract", (path, contract) => {
-    const shape = inputShape(path);
+  it.each(Object.entries(versionContracts))(
+    "%s satisfies its version contract",
+    (path, contract) => {
+      const shape = inputShape(path);
 
-    switch (contract.kind) {
-      case "top-level": {
-        expect(shape, `${path} should have an introspectable object input`).not.toBeNull();
-        expect(Object.keys(shape ?? {}), `${path} input must carry a version field`).toContain(
-          "version"
-        );
-        break;
-      }
-      case "snapshot": {
-        const arraySchema = asSchema(shape?.[contract.arrayKey]);
-        const elementShape = arraySchema?.element?.shape;
+      switch (contract.kind) {
+        case "top-level": {
+          expect(shape, `${path} should have an introspectable object input`).not.toBeNull();
+          expect(Object.keys(shape ?? {}), `${path} input must carry a version field`).toContain(
+            "version"
+          );
+          break;
+        }
+        case "snapshot": {
+          const arraySchema = asSchema(shape?.[contract.arrayKey]);
+          const elementShape = arraySchema?.element?.shape;
 
-        expect(
-          elementShape ? Object.keys(elementShape) : null,
-          `${path} input.${contract.arrayKey}[] must carry id + version snapshot rows`
-        ).toEqual(expect.arrayContaining(["id", "version"]));
-        break;
-      }
-      case "dual": {
-        const keys = Object.keys(shape ?? {});
+          expect(
+            elementShape ? Object.keys(elementShape) : null,
+            `${path} input.${contract.arrayKey}[] must carry id + version snapshot rows`
+          ).toEqual(expect.arrayContaining(["id", "version"]));
+          break;
+        }
+        case "dual": {
+          const keys = Object.keys(shape ?? {});
 
-        expect(keys, `${path} must carry recurringVersion`).toContain("recurringVersion");
-        expect(keys, `${path} must carry groceryVersion`).toContain("groceryVersion");
-        break;
-      }
-      case "opaque": {
-        expect(contract.reason.length).toBeGreaterThan(0);
-        break;
+          expect(keys, `${path} must carry recurringVersion`).toContain("recurringVersion");
+          expect(keys, `${path} must carry groceryVersion`).toContain("groceryVersion");
+          break;
+        }
+        case "opaque": {
+          expect(contract.reason.length).toBeGreaterThan(0);
+          break;
+        }
       }
     }
-  });
+  );
 });
 
 describe("mutation acknowledgement audit matrix", () => {
@@ -318,27 +321,6 @@ describe("mutation acknowledgement audit matrix", () => {
     // Conversion targets for openspec/changes/make-mutation-acks-truthful. Entries may
     // move to "awaited" as routers are converted; adding a NEW fire-and-forget mutation
     // is never acceptable.
-    expect(fireAndForget).toEqual([
-      "groceries.checkRecurring",
-      "groceries.deleteDone",
-      "groceries.deleteRecurring",
-      "groceries.detachRecurring",
-      "groceries.markAllDone",
-      "groceries.reorderInStore",
-      "groceries.update",
-      "groceries.updateRecurring",
-      "households.create",
-      "households.join",
-      "households.kick",
-      "households.leave",
-      "households.regenerateCode",
-      "households.transferAdmin",
-      "ratings.rate",
-      "recipes.convertMeasurements",
-      "recipes.create",
-      "recipes.delete",
-      "recipes.update",
-      "stores.delete",
-    ]);
+    expect(fireAndForget).toEqual([]);
   });
 });

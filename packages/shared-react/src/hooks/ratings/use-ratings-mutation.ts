@@ -49,6 +49,19 @@ export function createUseRatingsMutation({
             queryClient.setQueryData(context.userRatingQueryKey, context.previousUserRating);
           }
         },
+        onSuccess: (result, _variables, context) => {
+          if (!result.stale) {
+            return;
+          }
+
+          if (context?.userRatingQueryKey) {
+            queryClient.invalidateQueries({ queryKey: context.userRatingQueryKey });
+          }
+
+          if (context?.averageRatingQueryKey) {
+            queryClient.invalidateQueries({ queryKey: context.averageRatingQueryKey });
+          }
+        },
         onSettled: (_data, error, variables, context) => {
           if (error && preserveOptimisticUpdate(error, shouldPreserveOptimisticUpdate)) {
             return;

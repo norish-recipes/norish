@@ -10,6 +10,7 @@ import {
   listPlannedItemsByUserAndDateRange,
 } from "@norish/db/repositories/planned-items";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { appliedAck, staleAck } from "@norish/shared/contracts";
 import { PlannedItemDeleteInputSchema } from "@norish/shared/contracts/zod";
 
 import type { CreateItemInput, PlannedRecipeListItem } from "./planned-items-openapi-types";
@@ -162,7 +163,7 @@ export async function createCalendarItem(ctx: CalendarProcedureContext, input: C
     item: itemPayload,
   });
 
-  return { id: newItem.id };
+  return appliedAck({ id: newItem.id });
 }
 
 export async function deleteCalendarItem(
@@ -186,7 +187,7 @@ export async function deleteCalendarItem(
   if (deleteResult.stale) {
     log.info({ userId: ctx.user.id, itemId, version }, "Ignoring stale calendar delete mutation");
 
-    return { success: true, stale: true };
+    return staleAck();
   }
 
   calendarEmitter.emitToHousehold(ctx.householdKey, "itemDeleted", {
@@ -195,5 +196,5 @@ export async function deleteCalendarItem(
     slot: item.slot,
   });
 
-  return { success: true, stale: false };
+  return appliedAck();
 }

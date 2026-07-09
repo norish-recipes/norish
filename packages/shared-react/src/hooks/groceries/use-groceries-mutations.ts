@@ -155,6 +155,7 @@ function reconcileCreatedGroceries(
 
   ids.forEach((id, index) => {
     const optimistic = optimisticGroceries[index];
+
     if (!optimistic) return;
 
     const grocery = returnedById.get(id) ?? { ...optimistic, id };
@@ -221,6 +222,12 @@ export function createUseGroceriesMutations({
 
     const mapGroceriesWithVersions = (ids: string[]) =>
       ids.map((id) => ({ id, version: getGroceryVersion(id) }));
+
+    const invalidateIfStale = (result: { stale?: true }) => {
+      if (result.stale) {
+        invalidate();
+      }
+    };
 
     const createMutation = useMutation(trpc.groceries.create.mutationOptions());
     const toggleMutation = useMutation(trpc.groceries.toggle.mutationOptions());
@@ -427,7 +434,7 @@ export function createUseGroceriesMutations({
           groceryVersion: getGroceryVersion(groceryId),
           isDone,
         },
-        { onError: () => invalidate() }
+        { onSuccess: invalidateIfStale, onError: () => invalidate() }
       );
     };
 
@@ -468,7 +475,10 @@ export function createUseGroceriesMutations({
         mutationPayload.storeId = storeId;
       }
 
-      updateMutation.mutate(mutationPayload, { onError: () => invalidate() });
+      updateMutation.mutate(mutationPayload, {
+        onSuccess: invalidateIfStale,
+        onError: () => invalidate(),
+      });
     };
 
     const updateRecurringGrocery = (
@@ -536,7 +546,7 @@ export function createUseGroceriesMutations({
               nextPlannedFor: nextDate,
             },
           },
-          { onError: () => invalidate() }
+          { onSuccess: invalidateIfStale, onError: () => invalidate() }
         );
       } else {
         setGroceriesData((prev) => {
@@ -573,7 +583,7 @@ export function createUseGroceriesMutations({
             raw,
             ...(storeId !== undefined ? { storeId } : {}),
           },
-          { onError: () => invalidate() }
+          { onSuccess: invalidateIfStale, onError: () => invalidate() }
         );
       }
     };
@@ -592,7 +602,7 @@ export function createUseGroceriesMutations({
 
       deleteMutation.mutate(
         { groceries: mapGroceriesWithVersions(ids) },
-        { onError: () => invalidate() }
+        { onSuccess: invalidateIfStale, onError: () => invalidate() }
       );
     };
 
@@ -609,7 +619,7 @@ export function createUseGroceriesMutations({
 
       deleteRecurringMutation.mutate(
         { recurringGroceryId, version: getRecurringVersion(recurringGroceryId) },
-        { onError: () => invalidate() }
+        { onSuccess: invalidateIfStale, onError: () => invalidate() }
       );
     };
 
@@ -644,6 +654,7 @@ export function createUseGroceriesMutations({
       assignToStoreMutation.mutate(
         { groceryId, version: getGroceryVersion(groceryId), storeId, savePreference },
         {
+          onSuccess: invalidateIfStale,
           onError: (error) => {
             log.error({ error, groceryId, storeId }, "Failed to assign grocery to store");
             invalidate();
@@ -695,6 +706,7 @@ export function createUseGroceriesMutations({
           savePreference: true,
         },
         {
+          onSuccess: invalidateIfStale,
           onError: (error) => {
             log.error({ error, updateCount: updates.length }, "Failed to reorder groceries");
             invalidate();
@@ -729,6 +741,7 @@ export function createUseGroceriesMutations({
             .map((grocery) => ({ id: grocery.id, version: grocery.version })),
         },
         {
+          onSuccess: invalidateIfStale,
           onError: (error) => {
             log.error({ error, storeId }, "Failed to mark groceries as done");
             invalidate();
@@ -757,6 +770,7 @@ export function createUseGroceriesMutations({
             .map((grocery) => ({ id: grocery.id, version: grocery.version })),
         },
         {
+          onSuccess: invalidateIfStale,
           onError: (error) => {
             log.error({ error, storeId }, "Failed to delete done groceries");
             invalidate();

@@ -202,7 +202,7 @@ describe("groceries openapi procedures", () => {
     const caller = openApiGroceriesRouter.createCaller({ ...ctx, multiplexer: null } as any);
     const result = await caller.markGroceryDone({ id: groceryId, version: 2 });
 
-    expect(result).toEqual({ grocery: updated, stale: false });
+    expect(result).toEqual({ success: true, applied: true, grocery: updated });
   });
 
   it("deletes a grocery and reports stale state", async () => {
@@ -215,7 +215,7 @@ describe("groceries openapi procedures", () => {
     const caller = openApiGroceriesRouter.createCaller({ ...ctx, multiplexer: null } as any);
     const result = await caller.deleteGrocery({ id: groceryId, version: 3 });
 
-    expect(result).toEqual({ success: true, stale: true });
+    expect(result).toEqual({ success: true, applied: false, stale: true });
   });
 
   it("marks a grocery as undone and returns the updated grocery", async () => {
@@ -232,7 +232,7 @@ describe("groceries openapi procedures", () => {
     const caller = openApiGroceriesRouter.createCaller({ ...ctx, multiplexer: null } as any);
     const result = await caller.markGroceryUndone({ id: groceryId, version: 4 });
 
-    expect(result).toEqual({ grocery: updated, stale: false });
+    expect(result).toEqual({ success: true, applied: true, grocery: updated });
   });
 
   it("assigns a grocery to a store and returns the updated grocery", async () => {
@@ -251,7 +251,7 @@ describe("groceries openapi procedures", () => {
     const result = await caller.assignGroceryToStore({ id: groceryId, version: 2, storeId });
 
     expect(assignGroceryToStore).toHaveBeenCalledWith(groceryId, storeId, ctx.userIds, 2);
-    expect(result).toEqual({ grocery: updated, stale: false });
+    expect(result).toEqual({ success: true, applied: true, grocery: updated });
   });
 });
 
@@ -419,7 +419,7 @@ describe("stale grocery updates", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, applied: false, stale: true });
     expect(trpcLogger.info).toHaveBeenCalledWith(
       { userId: ctx.user.id, groceryId, version: 4 },
       "Stale grocery update; requesting client refresh"
@@ -477,7 +477,7 @@ describe("stale grocery updates", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, applied: true });
 
     // Verify storeId was included in the update data passed to the DB layer
     const updates = updateGroceries.mock.calls[0][0] as Array<{ storeId: unknown }>;
@@ -505,7 +505,7 @@ describe("stale grocery updates", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, applied: true });
 
     // Verify storeId=null was passed to the DB layer (setting item to unsorted)
     const updates = updateGroceries.mock.calls[0][0] as Array<{ storeId: unknown }>;
@@ -530,7 +530,7 @@ describe("stale grocery updates", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, applied: true });
 
     // Verify storeId was not set on the update data
     const updates = updateGroceries.mock.calls[0][0] as Array<Record<string, unknown>>;

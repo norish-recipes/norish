@@ -80,7 +80,7 @@ describe("calendar planned items stale handling", () => {
     const caller = plannedItemsProcedures.createCaller({ ...ctx, multiplexer: null } as any);
     const result = await caller.deleteItem({ itemId: item.id, version: item.version });
 
-    expect(result).toEqual({ success: true, stale: true });
+    expect(result).toEqual({ success: true, applied: false, stale: true });
     expect(trpcLogger.info).toHaveBeenCalledWith(
       { userId: ctx.user.id, itemId: item.id, version: item.version },
       "Ignoring stale calendar delete mutation"

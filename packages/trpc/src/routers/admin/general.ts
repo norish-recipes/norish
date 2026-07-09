@@ -33,9 +33,10 @@ const updatePasswordAuth = adminProcedure.input(z.boolean()).mutation(async ({ i
       ServerConfigKeys.AUTH_PROVIDER_GOOGLE,
     ];
 
-    const hasOAuthProvider = await Promise.all(oauthProviderKeys.map((k) => configExists(k))).then(
-      (results) => results.some(Boolean)
+    const oauthProviderResults = await Promise.all(
+      oauthProviderKeys.map((key) => configExists(key))
     );
+    const hasOAuthProvider = oauthProviderResults.some(Boolean);
 
     if (!hasOAuthProvider) {
       log.info(

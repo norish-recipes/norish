@@ -176,7 +176,7 @@ describe("ratings procedures", () => {
 
       await Promise.resolve();
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, applied: false, stale: true });
       expect(rateRecipe).toHaveBeenCalledWith(ctx.user.id, recipeId, 2, 7);
       expect(trpcLogger.info).toHaveBeenCalledWith(
         { userId: ctx.user.id, recipeId, version: 7 },

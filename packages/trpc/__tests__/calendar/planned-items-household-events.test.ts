@@ -86,7 +86,7 @@ describe("calendar planned items household events", () => {
       recipeId: "11111111-1111-4111-8111-111111111111",
     });
 
-    expect(result).toEqual({ id: item.id });
+    expect(result).toEqual({ success: true, applied: true, id: item.id });
     expect(createPlannedItem).toHaveBeenCalledWith({
       userId: ctx.user.id,
       date: "2026-05-22",

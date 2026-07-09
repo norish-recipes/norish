@@ -56,6 +56,11 @@ injectWorkspacePackages: true
 
 nodeLinker: hoisted
 
+# Do not mutate node_modules implicitly when a script runs. This is especially
+# important for non-interactive environments; dependency installation remains
+# an explicit operation and pnpm reports any mismatch as a warning.
+verifyDepsBeforeRun: warn
+
 overrides:
   "@tanstack/react-query": 5.100.11
   "@trpc/client": 11.17.0

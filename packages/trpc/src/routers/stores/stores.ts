@@ -1,5 +1,7 @@
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
+import type { MutationAckWith } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   checkStoreNameExistsInHousehold,
@@ -10,6 +12,7 @@ import {
   updateStore,
 } from "@norish/db/repositories/stores";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { appliedAck, mutationAckSchema, staleAck } from "@norish/shared/contracts";
 import {
   StoreCreateSchema,
   StoreDeleteSchema,
@@ -27,6 +30,12 @@ import {
   listStoresOutputSchema,
   storeIdInputSchema,
 } from "./stores-openapi-types";
+
+export type StoreDeleteMutationOutput = MutationAckWith<{ storeId: string }>;
+
+const storeDeleteAckSchema: z.ZodType<StoreDeleteMutationOutput> = mutationAckSchema.extend({
+  storeId: z.string().uuid(),
+});
 
 const list = authedProcedure.query(async ({ ctx }) => {
   return listStoresData(ctx);
@@ -123,28 +132,37 @@ const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ c
   return input.id;
 });
 
-const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, input }) => {
-  const { storeId, version, deleteGroceries, grocerySnapshot } = input;
+const remove = authedProcedure
+  .input(StoreDeleteSchema)
+  .output(storeDeleteAckSchema)
+  .mutation(async ({ ctx, input }) => {
+    const { storeId, version, deleteGroceries, grocerySnapshot } = input;
 
-  log.info(
-    { userId: ctx.user.id, storeId, deleteGroceries, hasSnapshot: !!grocerySnapshot },
-    "Deleting store"
-  );
+    log.info(
+      { userId: ctx.user.id, storeId, deleteGroceries, hasSnapshot: !!grocerySnapshot },
+      "Deleting store"
+    );
 
-  // Check ownership
-  const ownerId = await getStoreOwnerId(storeId);
+    // Check ownership
+    const ownerId = await getStoreOwnerId(storeId);
 
-  if (!ownerId) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
-  }
-  await assertHouseholdAccess(ctx.user.id, ownerId);
+    if (!ownerId) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
+    }
+    await assertHouseholdAccess(ctx.user.id, ownerId);
 
-  deleteStore(storeId, version, deleteGroceries, grocerySnapshot)
-    .then(({ deletedGroceryIds, storeDeleted, stale }) => {
+    try {
+      const { deletedGroceryIds, storeDeleted, stale } = await deleteStore(
+        storeId,
+        version,
+        deleteGroceries,
+        grocerySnapshot
+      );
+
       if (stale) {
         log.info({ userId: ctx.user.id, storeId, version }, "Ignoring stale store delete mutation");
 
-        return;
+        return staleAck({ storeId });
       }
 
       log.info(
@@ -158,26 +176,24 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
       );
 
       if (storeDeleted) {
-        // Emit store deleted event
-        storeEmitter.emitToHousehold(ctx.householdKey, "deleted", {
+        await storeEmitter.emitToHousehold(ctx.householdKey, "deleted", {
           storeId,
           deletedGroceryIds,
         });
       }
 
-      // If groceries were deleted, also emit grocery deleted event
       if (deletedGroceryIds.length > 0) {
-        groceryEmitter.emitToHousehold(ctx.householdKey, "deleted", {
+        await groceryEmitter.emitToHousehold(ctx.householdKey, "deleted", {
           groceryIds: deletedGroceryIds,
         });
       }
-    })
-    .catch((err) => {
-      log.error({ err, userId: ctx.user.id, storeId }, "Failed to delete store");
-    });
 
-  return storeId;
-});
+      return appliedAck({ storeId });
+    } catch (err) {
+      log.error({ err, userId: ctx.user.id, storeId }, "Failed to delete store");
+      throw err;
+    }
+  });
 
 const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx, input }) => {
   const storeUpdates = input.stores;

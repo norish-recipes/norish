@@ -100,12 +100,11 @@ const deleteProvider = adminProcedure
       .filter(([k]) => k !== input)
       .map(([, v]) => v);
 
-    const [hasOtherOAuthProvider, passwordAuthEnabled] = await Promise.all([
-      Promise.all(otherProviderKeys.map((k) => configExists(k))).then((results) =>
-        results.some(Boolean)
-      ),
+    const [otherProviderResults, passwordAuthEnabled] = await Promise.all([
+      Promise.all(otherProviderKeys.map((key) => configExists(key))),
       getConfig<boolean>(ServerConfigKeys.PASSWORD_AUTH_ENABLED),
     ]);
+    const hasOtherOAuthProvider = otherProviderResults.some(Boolean);
 
     const hasOtherAuthMethod = hasOtherOAuthProvider || passwordAuthEnabled === true;
 

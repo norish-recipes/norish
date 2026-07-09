@@ -7,6 +7,8 @@ export const listRecipes = vi.fn();
 export const getRecipeFull = vi.fn();
 export const getRecipeOwnerId = vi.fn();
 export const createRecipeWithRefs = vi.fn();
+export const addConvertedRecipeDataAndSetActiveSystem = vi.fn();
+export const setActiveSystemForRecipe = vi.fn();
 export const updateRecipeWithRefs = vi.fn();
 export const updateRecipeCategories = vi.fn();
 export const getRecipesWithoutCategories = vi.fn();
@@ -19,6 +21,8 @@ export function resetRecipesMocks() {
   getRecipeFull.mockReset();
   getRecipeOwnerId.mockReset();
   createRecipeWithRefs.mockReset();
+  addConvertedRecipeDataAndSetActiveSystem.mockReset();
+  setActiveSystemForRecipe.mockReset();
   updateRecipeWithRefs.mockReset();
   updateRecipeCategories.mockReset();
   getRecipesWithoutCategories.mockReset();

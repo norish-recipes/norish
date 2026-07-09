@@ -319,7 +319,7 @@ describe("calendar planned recipe openapi procedures", () => {
       recipeId,
       title: null,
     });
-    expect(result).toEqual({ id: itemId });
+    expect(result).toEqual({ success: true, applied: true, id: itemId });
   });
 
   it("deletes a planned recipe item", async () => {
@@ -342,7 +342,7 @@ describe("calendar planned recipe openapi procedures", () => {
     const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
     const result = await caller.deletePlannedRecipe({ itemId, version: 2 });
 
-    expect(result).toEqual({ success: true, stale: false });
+    expect(result).toEqual({ success: true, applied: true });
   });
 });
 

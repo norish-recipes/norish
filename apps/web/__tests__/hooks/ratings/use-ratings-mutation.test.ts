@@ -153,6 +153,30 @@ describe("useRatingsMutation", () => {
       expect(cachedData?.version).toBe(10);
     });
 
+    it("rolls the optimistic rating back for a handled mutation error", async () => {
+      queryClient.setQueryData(userRatingQueryKey, createMockUserRatingData(testRecipeId, 3, 9));
+
+      const { renderHook, act } = require("@testing-library/react");
+      const { result: _result } = renderHook(() => useRatingsMutation(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      const mutationOpts = mockMutationOptions.mock.calls[0][0];
+      const context = await mutationOpts.onMutate({ recipeId: testRecipeId, rating: 5 });
+
+      act(() => {
+        mutationOpts.onError(
+          new Error("Request failed"),
+          { recipeId: testRecipeId, rating: 5 },
+          context
+        );
+      });
+
+      expect(queryClient.getQueryData(userRatingQueryKey)).toEqual(
+        createMockUserRatingData(testRecipeId, 3, 9)
+      );
+    });
+
     it("sends the cached version with the explicit final rating", async () => {
       queryClient.setQueryData(userRatingQueryKey, createMockUserRatingData(testRecipeId, 3, 9));
 
@@ -166,6 +190,47 @@ describe("useRatingsMutation", () => {
       });
 
       expect(mockMutate).toHaveBeenCalledWith({ recipeId: testRecipeId, rating: 4, version: 9 });
+    });
+  });
+
+  describe("acknowledgement reconciliation", () => {
+    it("invalidates only rating queries after a stale acknowledgement", () => {
+      const { renderHook } = require("@testing-library/react");
+      const { result: _result } = renderHook(() => useRatingsMutation(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+      const averageRatingQueryKey = [
+        ["ratings", "getAverage"],
+        { input: { recipeId: testRecipeId }, type: "query" },
+      ];
+      const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+      const mutationOpts = mockMutationOptions.mock.calls[0][0];
+
+      mutationOpts.onSuccess(
+        { success: true, applied: false, stale: true },
+        { recipeId: testRecipeId, rating: 5 },
+        { userRatingQueryKey, averageRatingQueryKey }
+      );
+
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: userRatingQueryKey });
+      expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: averageRatingQueryKey });
+    });
+
+    it("does not refetch after an applied acknowledgement", () => {
+      const { renderHook } = require("@testing-library/react");
+      const { result: _result } = renderHook(() => useRatingsMutation(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+      const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+      const mutationOpts = mockMutationOptions.mock.calls[0][0];
+
+      mutationOpts.onSuccess(
+        { success: true, applied: true },
+        { recipeId: testRecipeId, rating: 5 },
+        { userRatingQueryKey, averageRatingQueryKey: [] }
+      );
+
+      expect(invalidateQueries).not.toHaveBeenCalled();
     });
   });
 

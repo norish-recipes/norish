@@ -99,7 +99,13 @@ export function createUseHouseholdMutations({
       leaveMutation.mutate(
         { householdId, version: currentMembershipVersion },
         {
-          onSuccess: () => {
+          onSuccess: (result) => {
+            if (result.stale) {
+              invalidate();
+
+              return;
+            }
+
             // Clear household from cache
             setHouseholdData((prev) => ({
               household: null,
@@ -120,7 +126,13 @@ export function createUseHouseholdMutations({
       kickMutation.mutate(
         { householdId, userId, version: memberVersion },
         {
-          onSuccess: () => {
+          onSuccess: (result) => {
+            if (result.stale) {
+              invalidate();
+
+              return;
+            }
+
             // Optimistically remove the user from the list
             setHouseholdData((prev) => {
               if (!prev?.household) return prev;
@@ -143,6 +155,11 @@ export function createUseHouseholdMutations({
       regenerateCodeMutation.mutate(
         { householdId, version: getHouseholdVersion(householdId) },
         {
+          onSuccess: (result) => {
+            if (result.stale) {
+              invalidate();
+            }
+          },
           // The new join code will come from the subscription
           onError: () => invalidate(),
         }
@@ -153,7 +170,13 @@ export function createUseHouseholdMutations({
       transferAdminMutation.mutate(
         { householdId, newAdminId, version: getHouseholdVersion(householdId) },
         {
-          onSuccess: () => {
+          onSuccess: (result) => {
+            if (result.stale) {
+              invalidate();
+
+              return;
+            }
+
             // Optimistically update admin status
             setHouseholdData((prev) => {
               if (!prev?.household) return prev;

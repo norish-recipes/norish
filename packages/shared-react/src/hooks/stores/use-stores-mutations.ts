@@ -97,6 +97,11 @@ export function createUseStoresMutations({
       };
 
       deleteMutation.mutate(input, {
+        onSuccess: (result) => {
+          if (result.stale) {
+            invalidate();
+          }
+        },
         onError: () => invalidate(),
       });
     };

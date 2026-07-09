@@ -87,7 +87,7 @@ describe("household stale mutation handling", () => {
     const caller = householdsRouter.createCaller({ ...ctx, multiplexer: null } as any);
     const result = await caller.leave({ householdId: household.id, version: 3 });
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, applied: false, stale: true });
     await Promise.resolve();
 
     expect(trpcLogger.info).toHaveBeenCalledWith(

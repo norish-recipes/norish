@@ -982,6 +982,41 @@ export async function addStepsAndIngredientsToRecipeByInput(
   });
 }
 
+/**
+ * Atomically stores AI-converted recipe rows and activates their measurement system.
+ * The version check is inside the transaction so a stale conversion cannot leave
+ * converted rows behind without changing the recipe's active system.
+ */
+export async function addConvertedRecipeDataAndSetActiveSystem(
+  recipeId: string,
+  targetSystem: MeasurementSystem,
+  version: number,
+  steps: StepInsertDto[],
+  ingredients: RecipeIngredientInsertDto[]
+): Promise<MutationOutcome<void>> {
+  return db.transaction(async (tx) => {
+    const updated = await tx
+      .update(recipes)
+      .set({ systemUsed: targetSystem, version: sql`${recipes.version} + 1` })
+      .where(and(eq(recipes.id, recipeId), eq(recipes.version, version)))
+      .returning({ id: recipes.id });
+
+    if (updated.length === 0) {
+      return staleOutcome();
+    }
+
+    if (steps.length > 0) {
+      await createManyRecipeStepsTx(tx, steps);
+    }
+
+    if (ingredients.length > 0) {
+      await attachIngredientsToRecipeByInputTx(tx, ingredients);
+    }
+
+    return appliedOutcome(undefined);
+  });
+}
+
 async function resolveRecipeIngredientIdsTx(
   tx: any,
   inputs: NonNullable<FullRecipeUpdateDTO["recipeIngredients"]>

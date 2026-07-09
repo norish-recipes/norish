@@ -66,6 +66,11 @@ export function createUseConvertMutation({
             didSwitchLocally,
           } satisfies ConvertMutationContext;
         },
+        onSuccess: (result, _variables, context) => {
+          if ("stale" in result && result.stale === true) {
+            queryClient.invalidateQueries({ queryKey: context?.detailQueryKey ?? detailQueryKey });
+          }
+        },
         onError: (error, _variables, context) => {
           if (preserveOptimisticUpdate(error, shouldPreserveOptimisticUpdate)) {
             return;

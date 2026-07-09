@@ -66,17 +66,7 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
-const flushAsync = () => new Promise((resolve) => setTimeout(resolve, 0));
-
-/**
- * CHARACTERIZATION — documents the current fire-and-forget acknowledgement of
- * `households.leave` (audit matrix: openspec/changes/make-mutation-acks-truthful).
- *
- * Pins today's untruthful behavior as the regression baseline. After conversion,
- * rewrite to assert: success only after the membership write AND cache invalidation
- * completed, errors thrown, connection termination still deferred post-response.
- */
-describe("households.leave acknowledgement characterization", () => {
+describe("households.leave acknowledgement", () => {
   const user = createMockUser({ id: crypto.randomUUID() });
   const adminUserId = crypto.randomUUID();
   const memberId = crypto.randomUUID();
@@ -99,7 +89,7 @@ describe("households.leave acknowledgement characterization", () => {
     });
   });
 
-  it("returns success while the membership write and cache invalidation are still pending", async () => {
+  it("waits for membership removal and cache invalidation before acknowledging", async () => {
     const removal = deferred<{ stale: boolean }>();
 
     householdDb.removeUserFromHousehold.mockReturnValue(removal.promise);
@@ -107,50 +97,41 @@ describe("households.leave acknowledgement characterization", () => {
     connectionManager.emitConnectionInvalidation.mockResolvedValue(undefined);
 
     const caller = householdsRouter.createCaller({ ...ctx, multiplexer: null } as any);
-    const result = await caller.leave({ householdId: household.id, version: 3 });
+    const resultPromise = caller.leave({ householdId: household.id, version: 3 });
 
-    // Success acknowledged while the removal has not settled: cache is still stale,
-    // so an immediate client refetch would show pre-leave membership.
-    expect(result).toEqual({ success: true });
+    await Promise.resolve();
     expect(householdCache.invalidateHouseholdCacheForUsers).not.toHaveBeenCalled();
-    expect(connectionManager.emitConnectionInvalidation).not.toHaveBeenCalled();
 
     removal.resolve({ stale: false });
-    await flushAsync();
 
-    // Eventually the chain completes: cache invalidated for leaver + remaining
-    // members, connection terminated, remaining members notified.
+    await expect(resultPromise).resolves.toEqual({ success: true, applied: true });
+
     expect(householdCache.invalidateHouseholdCacheForUsers).toHaveBeenCalledWith([
       user.id,
       memberId,
     ]);
-    expect(connectionManager.emitConnectionInvalidation).toHaveBeenCalledWith(
-      user.id,
-      "household-left"
-    );
     expect(householdEmitter.emitToUser).toHaveBeenCalledWith(memberId, "userLeft", {
       userId: user.id,
     });
   });
 
-  it("returns success even when the membership write fails, retracting via the failed event", async () => {
+  it("throws membership failures without a failed realtime event", async () => {
     householdDb.removeUserFromHousehold.mockRejectedValue(new Error("connection lost"));
 
     const caller = householdsRouter.createCaller({ ...ctx, multiplexer: null } as any);
-    const result = await caller.leave({ householdId: household.id, version: 3 });
-
-    // The caller was told the leave succeeded although the write failed.
-    expect(result).toEqual({ success: true });
-
-    await flushAsync();
+    await expect(caller.leave({ householdId: household.id, version: 3 })).rejects.toThrow(
+      "connection lost"
+    );
 
     expect(trpcLogger.error).toHaveBeenCalledWith(
       expect.objectContaining({ userId: user.id }),
       "Failed to leave household"
     );
-    expect(householdEmitter.emitToUser).toHaveBeenCalledWith(user.id, "failed", {
-      reason: "Failed to leave household",
-    });
+    expect(householdEmitter.emitToUser).not.toHaveBeenCalledWith(
+      user.id,
+      "failed",
+      expect.anything()
+    );
     expect(householdCache.invalidateHouseholdCacheForUsers).not.toHaveBeenCalled();
     expect(connectionManager.emitConnectionInvalidation).not.toHaveBeenCalled();
   });

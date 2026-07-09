@@ -42,18 +42,7 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
-const flushAsync = () => new Promise((resolve) => setTimeout(resolve, 0));
-
-/**
- * CHARACTERIZATION — documents the current fire-and-forget acknowledgement of
- * `groceries.update` (audit matrix: openspec/changes/make-mutation-acks-truthful).
- *
- * These tests pin today's untruthful behavior as the regression baseline for the
- * conversion. When `groceries.update` is converted to await its write, they should
- * be REWRITTEN to assert the opposite: success only after the write, thrown errors,
- * and no `failed` event.
- */
-describe("groceries.update acknowledgement characterization", () => {
+describe("groceries.update acknowledgement", () => {
   const mockUser = createMockUser();
   const mockHousehold = createMockHousehold();
   let ctx: ReturnType<typeof createMockAuthedContext>;
@@ -63,7 +52,7 @@ describe("groceries.update acknowledgement characterization", () => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
   });
 
-  it("returns success before the authoritative write has even started", async () => {
+  it("waits for the authoritative write and reports a stale outcome", async () => {
     const groceryId = crypto.randomUUID();
     const ownerLookup = deferred<Map<string, string>>();
 
@@ -72,20 +61,18 @@ describe("groceries.update acknowledgement characterization", () => {
     updateGroceries.mockResolvedValue([]);
 
     const caller = groceriesProcedures.createCaller({ ...ctx, multiplexer: null } as any);
-    const result = await caller.update({ groceryId, raw: "Oat milk", version: 4 });
+    const resultPromise = caller.update({ groceryId, raw: "Oat milk", version: 4 });
 
-    // The mutation acknowledged success while the owner lookup is still pending —
-    // the DB write has not run yet.
-    expect(result).toEqual({ success: true });
+    await Promise.resolve();
     expect(updateGroceries).not.toHaveBeenCalled();
 
-    // Let the floating chain finish so it cannot leak into other tests.
     ownerLookup.resolve(new Map([[groceryId, ctx.user.id]]));
-    await flushAsync();
+
+    await expect(resultPromise).resolves.toEqual({ success: true, applied: false, stale: true });
     expect(updateGroceries).toHaveBeenCalled();
   });
 
-  it("returns success even when the write fails, retracting via the failed event", async () => {
+  it("throws write failures instead of retracting success through a failed event", async () => {
     const groceryId = crypto.randomUUID();
 
     getGroceryOwnerIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
@@ -93,24 +80,17 @@ describe("groceries.update acknowledgement characterization", () => {
     updateGroceries.mockRejectedValue(new Error("connection lost"));
 
     const caller = groceriesProcedures.createCaller({ ...ctx, multiplexer: null } as any);
-    const result = await caller.update({ groceryId, raw: "Oat milk", version: 4 });
+    await expect(caller.update({ groceryId, raw: "Oat milk", version: 4 })).rejects.toThrow(
+      "connection lost"
+    );
 
-    // The caller was told the update succeeded although the write is about to fail.
-    expect(result).toEqual({ success: true });
-
-    await flushAsync();
-
-    // The failure only surfaces through the side-channel `failed` event + log.
     expect(trpcLogger.error).toHaveBeenCalledWith(
       expect.objectContaining({ userId: ctx.user.id, groceryId }),
       "Failed to update grocery"
     );
-    expect(groceryEmitter.emitToHousehold).toHaveBeenCalledWith(ctx.householdKey, "failed", {
-      reason: expect.any(String),
-    });
     expect(groceryEmitter.emitToHousehold).not.toHaveBeenCalledWith(
       ctx.householdKey,
-      "updated",
+      "failed",
       expect.anything()
     );
   });

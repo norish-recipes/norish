@@ -32,6 +32,41 @@ import {
 
 const log = createLogger("caldav-procedures");
 
+/**
+ * Named background sync task. Configuration and enqueue acknowledgements stay
+ * responsive while the long-running CalDAV work reports completion by event.
+ */
+async function runInitialSync(
+  userId: string,
+  reason: "enabled" | "manual" | "full"
+): Promise<void> {
+  try {
+    if (reason === "manual") {
+      const result = await retryFailedSyncs(userId);
+
+      log.info({ userId, ...result }, "CalDAV sync completed");
+      await caldavEmitter.emitToUser(userId, "initialSyncComplete", {
+        timestamp: new Date().toISOString(),
+        totalSynced: result.totalRetried,
+        totalFailed: result.totalFailed,
+      });
+
+      return;
+    }
+
+    const result = await syncAllFutureItems(userId);
+
+    log.info({ userId, ...result }, "CalDAV sync completed");
+    await caldavEmitter.emitToUser(userId, "initialSyncComplete", {
+      timestamp: new Date().toISOString(),
+      totalSynced: result.totalSynced,
+      totalFailed: result.totalFailed,
+    });
+  } catch (err) {
+    log.error({ err, userId, reason }, "CalDAV sync failed");
+  }
+}
+
 export const caldavRouter = router({
   /**
    * Get CalDAV configuration for the current user (without password).
@@ -129,19 +164,7 @@ export const caldavRouter = router({
       if (input.enabled) {
         log.info({ userId }, "CalDAV enabled - starting initial sync");
 
-        // Run sync in background, don't wait
-        syncAllFutureItems(userId)
-          .then((result) => {
-            log.info({ userId, ...result }, "Initial CalDAV sync completed");
-            caldavEmitter.emitToUser(userId, "initialSyncComplete", {
-              timestamp: new Date().toISOString(),
-              totalSynced: result.totalSynced,
-              totalFailed: result.totalFailed,
-            });
-          })
-          .catch((err) => {
-            log.error({ err, userId }, "Initial CalDAV sync failed");
-          });
+        void runInitialSync(userId, "enabled");
       }
 
       return configWithoutPassword;
@@ -265,19 +288,7 @@ export const caldavRouter = router({
       timestamp: new Date().toISOString(),
     });
 
-    // Run retry in background
-    retryFailedSyncs(userId)
-      .then((result) => {
-        log.info({ userId, ...result }, "Manual CalDAV sync completed");
-        caldavEmitter.emitToUser(userId, "initialSyncComplete", {
-          timestamp: new Date().toISOString(),
-          totalSynced: result.totalRetried,
-          totalFailed: result.totalFailed,
-        });
-      })
-      .catch((err) => {
-        log.error({ err, userId }, "Manual CalDAV sync failed");
-      });
+    void runInitialSync(userId, "manual");
 
     return { started: true };
   }),
@@ -292,19 +303,7 @@ export const caldavRouter = router({
       timestamp: new Date().toISOString(),
     });
 
-    // Run sync in background
-    syncAllFutureItems(userId)
-      .then((result) => {
-        log.info({ userId, ...result }, "Full CalDAV sync completed");
-        caldavEmitter.emitToUser(userId, "initialSyncComplete", {
-          timestamp: new Date().toISOString(),
-          totalSynced: result.totalSynced,
-          totalFailed: result.totalFailed,
-        });
-      })
-      .catch((err) => {
-        log.error({ err, userId }, "Full CalDAV sync failed");
-      });
+    void runInitialSync(userId, "full");
 
     return { started: true };
   }),

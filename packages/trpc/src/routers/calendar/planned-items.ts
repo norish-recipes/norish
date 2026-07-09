@@ -247,12 +247,14 @@ export const plannedItemsProcedures = router({
     return { success: true, moved: true, stale: false };
   }),
 
-  createItem: authedProcedure.input(createItemInput).mutation(async ({ ctx, input }) => {
-    return createCalendarItem(ctx, input);
-  }),
+  createItem: authedProcedure
+    .input(createItemInput)
+    .output(plannedRecipeMutationOutputSchema)
+    .mutation(async ({ ctx, input }) => createCalendarItem(ctx, input)),
 
   deleteItem: authedProcedure
     .input(PlannedItemDeleteInputSchema)
+    .output(deletePlannedRecipeOutputSchema)
     .mutation(async ({ ctx, input }) => {
       return deleteCalendarItem(ctx, input);
     }),
