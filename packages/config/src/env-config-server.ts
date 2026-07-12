@@ -174,7 +174,7 @@ const ServerConfigSchema = z.object({
     .default(false),
   VIDEO_MAX_LENGTH_SECONDS: z.coerce.number().default(120),
   YT_DLP_PROXY: z.string().optional(),
-  YT_DLP_VERSION: z.string().default("2025.11.12"),
+  YT_DLP_VERSION: z.string().default("2026.07.04"),
   YT_DLP_BIN_DIR: z.string().default(defaultYtDlpBinDir),
 
   // Transcription Configuration (separate from AI_PROVIDER)

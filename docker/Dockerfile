@@ -159,7 +159,7 @@ RUN find /app/packages -type d -name '__tests__' -exec rm -rf {} + 2>/dev/null; 
 ##############################
 FROM base AS ytdlp
 
-ARG YT_DLP_VERSION=2026.03.17
+ARG YT_DLP_VERSION=2026.07.04
 ARG TARGETARCH
 
 RUN apk add --no-cache curl
