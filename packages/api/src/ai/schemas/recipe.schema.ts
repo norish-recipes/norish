@@ -8,8 +8,8 @@ import { nutritionEstimationSchema } from "./nutrition.schema";
  */
 export const recipeExtractionSchema = z
   .object({
-    "@context": z.literal("https://schema.org").describe("Schema.org context"),
-    "@type": z.literal("Recipe").describe("Schema.org type"),
+    // No "@context"/"@type" schema.org keys here: Anthropic rejects tool
+    // input_schema property keys that don't match ^[a-zA-Z0-9_.-]{1,64}$
     name: z.string().describe("Recipe name/title"),
     description: z.string().nullable().describe("Brief recipe description"),
     notes: z
