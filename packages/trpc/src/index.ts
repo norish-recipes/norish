@@ -15,6 +15,7 @@ export {
 } from "./middleware";
 export { type PermissionAction } from "@norish/auth/permissions";
 export { initTrpcWebSocket } from "./ws-server";
+export { getReceiptMetrics, recordReceiptMetric } from "./receipts";
 export { TypedEmitter, createTypedEmitter } from "./emitter";
 export type { ApiKeyMetadataDto, UserSettingsDto } from "./routers/user/types";
 export type { CaldavSubscriptionEvents } from "./routers/caldav/types";

@@ -192,7 +192,11 @@ export async function completeStep(job: Job, detail?: unknown): Promise<void> {
       last.detail = detail;
     }
 
-    await job.updateProgress({ step: prev.step, updatedAt: now, attempts } satisfies JobStepProgress);
+    await job.updateProgress({
+      step: prev.step,
+      updatedAt: now,
+      attempts,
+    } satisfies JobStepProgress);
   } catch (err) {
     log.debug({ err, jobId: job.id }, "Failed to complete job step");
   }

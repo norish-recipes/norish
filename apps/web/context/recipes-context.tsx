@@ -10,6 +10,7 @@ import { useActiveAllergies, useUserAllergiesQuery } from "@/hooks/user";
 import { toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { RecipeDeliveryCallbacks } from "@norish/shared-react/hooks";
 import type {
   FullRecipeInsertDTO,
   FullRecipeUpdateDTO,
@@ -38,7 +39,7 @@ type Ctx = {
   importRecipeWithAI: (url: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
-  deleteRecipe: (id: string, version: number) => void;
+  deleteRecipe: (id: string, version: number, callbacks?: RecipeDeliveryCallbacks) => void;
   invalidate: () => void;
   openRecipe: (id: string) => void;
 };

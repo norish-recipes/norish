@@ -13,7 +13,7 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { isJobInQueue } from "../helpers";
+import { isJobInQueue, operationJobId } from "../helpers";
 
 const log = createLogger("queue:image-import");
 
@@ -29,7 +29,7 @@ export async function addImageImportJob(
   queue: Queue<ImageImportJobData>,
   data: ImageImportJobData
 ): Promise<AddImageImportJobResult> {
-  const jobId = generateImageJobId(data.recipeId);
+  const jobId = operationJobId(generateImageJobId(data.recipeId));
 
   log.debug(
     { recipeId: data.recipeId, jobId, fileCount: data.files.length },

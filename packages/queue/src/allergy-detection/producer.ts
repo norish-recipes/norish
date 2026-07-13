@@ -15,7 +15,7 @@ import { getAllergiesForUsers, getHouseholdMemberIds } from "@norish/db";
 import { getAIConfig, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { isJobInQueue } from "../helpers";
+import { isJobInQueue, operationJobId } from "../helpers";
 
 const log = createLogger("queue:allergy-detection");
 
@@ -52,7 +52,7 @@ export async function addAllergyDetectionJob(
     return { status: "skipped", reason: "no_allergies" };
   }
 
-  const jobId = `allergy-detect-${data.recipeId}`;
+  const jobId = operationJobId(`allergy-detect-${data.recipeId}`);
 
   log.debug({ recipeId: data.recipeId, jobId }, "Attempting to add allergy detection job");
 

@@ -14,7 +14,7 @@ import type {
 import { getAutoTaggingMode } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { isJobInQueue } from "../helpers";
+import { isJobInQueue, operationJobId } from "../helpers";
 
 const log = createLogger("queue:auto-tagging");
 
@@ -34,7 +34,7 @@ export async function addAutoTaggingJob(
     return { status: "skipped", reason: "disabled" };
   }
 
-  const jobId = `auto-tag-${data.recipeId}`;
+  const jobId = operationJobId(`auto-tag-${data.recipeId}`);
 
   log.debug({ recipeId: data.recipeId, jobId }, "Attempting to add auto-tagging job");
 

@@ -21,6 +21,7 @@ export * from "./caldav-config";
 export * from "./caldav-sync-status";
 export * from "./server-config";
 export * from "./api-logs";
+export * from "./mutation-receipts";
 export * from "./recipe-favorites";
 export * from "./recipe-ratings";
 export * from "./recipe-shares";

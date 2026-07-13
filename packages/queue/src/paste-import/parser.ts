@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import YAML from "yaml";
 
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
@@ -20,6 +20,15 @@ import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 import type { PasteImportJobData, StructuredPasteImportRecipe } from "../contracts/job-types";
 
 export const MAX_STRUCTURED_PASTE_RECIPES = 25;
+
+function deterministicUuid(seed: string): string {
+  const hash = createHash("sha256").update(seed).digest("hex");
+
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-5${hash.slice(13, 16)}-${(
+    8 +
+    (Number.parseInt(hash[16]!, 16) % 4)
+  ).toString(16)}${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+}
 
 type StructuredRecipeNormalization = {
   recipeId: ReturnType<typeof randomUUID>;
@@ -284,13 +293,14 @@ async function normalizeStructuredRecipes(
   normalizer: (
     node: Record<string, unknown>,
     recipeId: string
-  ) => Promise<{ recipe: FullRecipeInsertDTO | null; importedRating: number | null }>
+  ) => Promise<{ recipe: FullRecipeInsertDTO | null; importedRating: number | null }>,
+  recipeIdForIndex: (index: number) => string = () => randomUUID()
 ): Promise<StructuredPasteImportRecipe[]> {
   // Structured paste is an entry point for recipe creation, so each recipe gets
   // exactly one ID here and that same ID must flow through normalization and persistence.
   const normalized: StructuredRecipeNormalization[] = await Promise.all(
-    rawRecipes.map(async ({ node }) => {
-      const recipeId = randomUUID();
+    rawRecipes.map(async ({ node }, index) => {
+      const recipeId = recipeIdForIndex(index);
       const entry = await normalizer(node, recipeId);
 
       return {
@@ -323,7 +333,10 @@ async function normalizeStructuredRecipes(
     });
 }
 
-async function parseStructuredJson(text: string): Promise<StructuredPasteImportRecipe[] | null> {
+async function parseStructuredJson(
+  text: string,
+  recipeIdForIndex?: (index: number) => string
+): Promise<StructuredPasteImportRecipe[] | null> {
   const extractRecipeNodesFromJsonValue = requireQueueApiHandler("extractRecipeNodesFromJsonValue");
   const normalizeRecipeFromJson = requireQueueApiHandler("normalizeRecipeFromJson");
 
@@ -353,11 +366,15 @@ async function parseStructuredJson(text: string): Promise<StructuredPasteImportR
       const recipe = await normalizeRecipeFromJson(node, recipeId);
 
       return { recipe, importedRating: extractJsonLdRating(node) };
-    }
+    },
+    recipeIdForIndex
   );
 }
 
-async function parseStructuredYaml(text: string): Promise<StructuredPasteImportRecipe[] | null> {
+async function parseStructuredYaml(
+  text: string,
+  recipeIdForIndex?: (index: number) => string
+): Promise<StructuredPasteImportRecipe[] | null> {
   let parsedYaml: unknown;
 
   try {
@@ -384,15 +401,19 @@ async function parseStructuredYaml(text: string): Promise<StructuredPasteImportR
 
   return normalizeStructuredRecipes(
     recipeMappings.map((node) => ({ node, importedRating: extractStructuredRating(node.rating) })),
-    normalizeRecipeFromYamlValue
+    normalizeRecipeFromYamlValue,
+    recipeIdForIndex
   );
 }
 
 export async function preparePasteImport(
   text: string,
-  forceAI?: boolean
+  forceAI?: boolean,
+  operationId?: string
 ): Promise<PreparedPasteImport> {
   const trimmed = text.trim();
+  const stableId = (suffix: string) =>
+    operationId ? deterministicUuid(`paste-import:${operationId}:${suffix}`) : randomUUID();
 
   if (!trimmed) {
     throw new Error("No text provided");
@@ -403,18 +424,20 @@ export async function preparePasteImport(
       throw new Error(`Paste is too large (max ${MAX_RECIPE_PASTE_CHARS} characters per recipe)`);
     }
 
-    const recipeId = randomUUID();
+    const recipeId = stableId("recipe:0");
 
     return {
-      batchId: randomUUID(),
+      batchId: stableId("batch"),
       recipeIds: [recipeId],
       text: trimmed,
       forceAI: true,
     };
   }
 
-  const structuredRecipes = await parseStructuredJson(trimmed);
-  const yamlRecipes = structuredRecipes === null ? await parseStructuredYaml(trimmed) : null;
+  const stableRecipeId = (index: number) => stableId(`recipe:${index}`);
+  const structuredRecipes = await parseStructuredJson(trimmed, stableRecipeId);
+  const yamlRecipes =
+    structuredRecipes === null ? await parseStructuredYaml(trimmed, stableRecipeId) : null;
   const preparedStructuredRecipes = structuredRecipes ?? yamlRecipes;
 
   if (preparedStructuredRecipes && preparedStructuredRecipes.length === 0) {
@@ -423,7 +446,7 @@ export async function preparePasteImport(
 
   if (preparedStructuredRecipes) {
     return {
-      batchId: randomUUID(),
+      batchId: stableId("batch"),
       recipeIds: preparedStructuredRecipes.map((recipe) => recipe.recipeId),
       text: trimmed,
       forceAI: false,
@@ -435,10 +458,10 @@ export async function preparePasteImport(
     throw new Error(`Paste is too large (max ${MAX_RECIPE_PASTE_CHARS} characters per recipe)`);
   }
 
-  const recipeId = randomUUID();
+  const recipeId = stableId("recipe:0");
 
   return {
-    batchId: randomUUID(),
+    batchId: stableId("batch"),
     recipeIds: [recipeId],
     text: trimmed,
     forceAI: false,

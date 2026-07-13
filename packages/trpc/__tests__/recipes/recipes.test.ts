@@ -510,6 +510,38 @@ describe("recipes procedures", () => {
   });
 
   describe("create", () => {
+    it("uses the stable operation UUID when the input does not provide an ID", async () => {
+      const operationId = "123e4567-e89b-42d3-a456-426614174010";
+      const caller = recipesRouter.createCaller({
+        ...ctx,
+        connectionId: null,
+        multiplexer: null,
+        operationId,
+        enforceMutationReceipts: false,
+      });
+
+      createRecipeWithRefs.mockResolvedValue(operationId);
+      dashboardRecipe.mockResolvedValue(null);
+
+      await expect(
+        caller.create({
+          name: "New Recipe",
+          systemUsed: "metric",
+          tags: [],
+          recipeIngredients: [],
+          steps: [],
+          images: [],
+          videos: [],
+          categories: [],
+        })
+      ).resolves.toBe(operationId);
+      expect(createRecipeWithRefs).toHaveBeenCalledWith(
+        operationId,
+        ctx.user.id,
+        expect.objectContaining({ name: "New Recipe" })
+      );
+    });
+
     it("returns recipe ID and emits created event on success", async () => {
       const mockDashboard = createMockRecipeDashboard({ name: "New Recipe" });
 

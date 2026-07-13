@@ -136,6 +136,7 @@ export const RecipeDeleteInputSchema = z.object({
 });
 
 export const RecipeImportInputSchema = z.object({
+  id: z.uuid().optional(),
   url: z.url(),
 });
 

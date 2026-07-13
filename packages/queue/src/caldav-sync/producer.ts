@@ -10,7 +10,7 @@ import type { Job, Queue } from "bullmq";
 import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { sanitizeUrlForJobId } from "../helpers";
+import { operationJobId, sanitizeUrlForJobId } from "../helpers";
 
 const log = createLogger("queue:caldav-sync");
 
@@ -34,7 +34,7 @@ export async function addCaldavSyncJob(
   queue: Queue<CaldavSyncJobData>,
   data: CaldavSyncJobData
 ): Promise<Job<CaldavSyncJobData>> {
-  const jobId = generateCaldavJobId(data.caldavServerUrl, data.itemId);
+  const jobId = operationJobId(generateCaldavJobId(data.caldavServerUrl, data.itemId));
 
   // Supersede any existing job for this item (only sync latest state)
   const existingJob = await queue.getJob(jobId);

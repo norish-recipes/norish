@@ -11,7 +11,11 @@ import { CreateApiKeyInputSchema, DeleteApiKeyInputSchema, ToggleApiKeyInputSche
 const create = authedProcedure.input(CreateApiKeyInputSchema).mutation(async ({ ctx, input }) => {
   log.debug({ userId: ctx.user.id }, "Creating API key");
 
-  const { key, metadata } = await createApiKey(ctx.user.id, input.name);
+  const { key, metadata } = await createApiKey(
+    ctx.user.id,
+    input.name,
+    ctx.operationId ?? undefined
+  );
 
   log.info({ userId: ctx.user.id, keyId: metadata.id }, "API key created");
 

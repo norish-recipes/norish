@@ -13,6 +13,7 @@ import { getOrCreateMultiplexer } from "@norish/shared-server/redis/subscription
 import { ResolveSharedRecipeInputSchema } from "@norish/shared/contracts/zod/recipe-shares";
 
 import type { Context } from "./context";
+import { mutationReceiptMiddleware } from "./receipts";
 import { middleware, publicProcedure } from "./trpc";
 
 /**
@@ -70,7 +71,7 @@ const withAuth = middleware(async ({ ctx, next }) => {
  * - Household context available (ctx.household, ctx.householdKey, ctx.userIds)
  * - Use canAccessResource from @norish/auth/permissions for permission checks
  */
-export const authedProcedure = publicProcedure.use(withAuth);
+export const authedProcedure = publicProcedure.use(withAuth).use(mutationReceiptMiddleware);
 
 export type SharedRecipeProcedureContext = Context & {
   sharedRecipe: {
@@ -141,12 +142,16 @@ const withServerAdmin = middleware(async ({ ctx, next }) => {
     });
   }
 
-  return next({
-    ctx: {
-      ...ctx,
-      user,
-    },
-  });
+  const operationId = ctx.operationId ?? undefined;
+
+  return runWithOperationContext({ operationId }, () =>
+    next({
+      ctx: {
+        ...ctx,
+        user,
+      },
+    })
+  );
 });
 
 /**
@@ -154,7 +159,7 @@ const withServerAdmin = middleware(async ({ ctx, next }) => {
  * - User must be logged in
  * - User must be a server admin (owner or admin role)
  */
-export const adminProcedure = publicProcedure.use(withServerAdmin);
+export const adminProcedure = publicProcedure.use(withServerAdmin).use(mutationReceiptMiddleware);
 
 export type AdminProcedureContext = Context & {
   user: User;

@@ -8,21 +8,11 @@ import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-clean
 import { checkRecurringGroceries } from "@norish/queue/scheduler/recurring-grocery-check";
 import { createLogger } from "@norish/shared-server/logger";
 
+import type { ScheduledTaskJobData } from "./queue";
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
 import { reportStep } from "../job-steps";
 
 const log = createLogger("worker:scheduled-tasks");
-
-type ScheduledTaskType =
-  | "recurring-grocery-check"
-  | "media-cleanup"
-  | "calendar-cleanup"
-  | "groceries-cleanup"
-  | "video-temp-cleanup";
-
-interface ScheduledTaskJobData {
-  taskType: ScheduledTaskType;
-}
 
 // Use globalThis to survive HMR in development
 const globalForWorker = globalThis as unknown as {
@@ -31,11 +21,7 @@ const globalForWorker = globalThis as unknown as {
 
 let worker: Worker<ScheduledTaskJobData> | null = globalForWorker.scheduledTasksWorker ?? null;
 
-async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<void> {
-  const cleanupOrphanedImages = requireQueueApiHandler("cleanupOrphanedImages");
-  const cleanupOrphanedAvatars = requireQueueApiHandler("cleanupOrphanedAvatars");
-  const cleanupOrphanedStepImages = requireQueueApiHandler("cleanupOrphanedStepImages");
-  const cleanupOldTempFiles = requireQueueApiHandler("cleanupOldTempFiles");
+export async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<void> {
   const { taskType } = job.data;
 
   log.info({ jobId: job.id, taskType }, "Processing scheduled task");
@@ -50,6 +36,9 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
     }
 
     case "media-cleanup": {
+      const cleanupOrphanedImages = requireQueueApiHandler("cleanupOrphanedImages");
+      const cleanupOrphanedAvatars = requireQueueApiHandler("cleanupOrphanedAvatars");
+      const cleanupOrphanedStepImages = requireQueueApiHandler("cleanupOrphanedStepImages");
       const recipeResult = await cleanupOrphanedImages();
       const avatarResult = await cleanupOrphanedAvatars();
       const stepResult = await cleanupOrphanedStepImages();
@@ -86,8 +75,20 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
     }
 
     case "video-temp-cleanup": {
+      const cleanupOldTempFiles = requireQueueApiHandler("cleanupOldTempFiles");
+
       await cleanupOldTempFiles();
       log.info("Video temp cleanup completed");
+      break;
+    }
+
+    case "mutation-receipts-cleanup": {
+      const cleanupExpiredMutationReceipts = requireQueueApiHandler(
+        "cleanupExpiredMutationReceipts"
+      );
+      const deleted = await cleanupExpiredMutationReceipts();
+
+      log.info({ deleted }, "Mutation receipt cleanup completed");
       break;
     }
 

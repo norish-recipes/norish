@@ -108,7 +108,10 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     log.debug("Auto-tag allergies disabled, skipping allergy detection");
   }
 
-  await completeStep(job, { allergies: allergyNames ?? [], allergyCount: allergyNames?.length ?? 0 });
+  await completeStep(job, {
+    allergies: allergyNames ?? [],
+    allergyCount: allergyNames?.length ?? 0,
+  });
 
   // Parse and create recipe
   await reportStep(job, "parsing");

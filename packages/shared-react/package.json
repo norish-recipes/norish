@@ -15,7 +15,8 @@
     "./hooks/use-user": "./src/hooks/use-user.ts",
     "./text": "./src/text/index.ts",
     "./contexts": "./src/contexts/index.ts",
-    "./providers": "./src/providers/index.ts"
+    "./providers": "./src/providers/index.ts",
+    "./outbox": "./src/outbox/index.ts"
   },
   "scripts": {
     "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json --noCheck",
@@ -44,6 +45,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "eslint": "catalog:",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "catalog:",
     "prettier": "catalog:",
     "vitest": "catalog:"

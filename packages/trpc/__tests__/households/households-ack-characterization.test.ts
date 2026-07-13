@@ -14,6 +14,7 @@ const householdDb = vi.hoisted(() => ({
   addUserToHousehold: vi.fn(),
   createHousehold: vi.fn(),
   findHouseholdByJoinCode: vi.fn(),
+  getHouseholdById: vi.fn(),
   getAllergiesForUsers: vi.fn(),
   getHouseholdForUser: vi.fn(),
   getUsersByHouseholdId: vi.fn(),
@@ -25,6 +26,7 @@ const householdDb = vi.hoisted(() => ({
 }));
 
 const householdCache = vi.hoisted(() => ({
+  getCachedHouseholdForUser: vi.fn().mockResolvedValue(null),
   invalidateHouseholdCache: vi.fn(),
   invalidateHouseholdCacheForUsers: vi.fn(),
 }));
@@ -134,5 +136,18 @@ describe("households.leave acknowledgement", () => {
     );
     expect(householdCache.invalidateHouseholdCacheForUsers).not.toHaveBeenCalled();
     expect(connectionManager.emitConnectionInvalidation).not.toHaveBeenCalled();
+  });
+
+  it("refuses delayed joins without an immutable household target", async () => {
+    householdDb.getHouseholdForUser.mockResolvedValue(null);
+    const caller = householdsRouter.createCaller({
+      ...createMockAuthedContext(user, null),
+      replayOrigin: "web-outbox",
+    } as any);
+
+    await expect(caller.join({ code: "123456" })).rejects.toMatchObject({
+      code: "PRECONDITION_FAILED",
+    });
+    expect(householdDb.findHouseholdByJoinCode).not.toHaveBeenCalled();
   });
 });

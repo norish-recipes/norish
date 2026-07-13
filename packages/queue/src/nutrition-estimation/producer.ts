@@ -13,7 +13,7 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { isJobInQueue } from "../helpers";
+import { isJobInQueue, operationJobId } from "../helpers";
 
 const log = createLogger("queue:nutrition-estimation");
 
@@ -29,7 +29,7 @@ export async function addNutritionEstimationJob(
   queue: Queue<NutritionEstimationJobData>,
   data: NutritionEstimationJobData
 ): Promise<AddNutritionEstimationJobResult> {
-  const jobId = generateNutritionJobId(data.recipeId);
+  const jobId = operationJobId(generateNutritionJobId(data.recipeId));
 
   log.debug({ recipeId: data.recipeId, jobId }, "Attempting to add nutrition estimation job");
 

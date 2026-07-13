@@ -13,6 +13,7 @@ export const SiteAuthTokenInsertSchema = createInsertSchema(siteAuthTokens).omit
 
 // Input for creating a token (before encryption)
 export const CreateSiteAuthTokenInputSchema = z.object({
+  id: z.uuid().optional(),
   domain: z
     .string()
     .min(1)

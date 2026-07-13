@@ -156,7 +156,12 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
     setIsSubmitting(true);
     try {
       // Pass raw File objects - FormData conversion happens in mutation
-      importRecipeFromImages(files.map((f) => f.file));
+      importRecipeFromImages(
+        files.map((f) => f.file),
+        {
+          onDelivered: () => router.push("/"),
+        }
+      );
       toast(t("importing"), {
         description: t("analyzing"),
         variant: "default",
@@ -168,7 +173,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
       });
       setFiles([]);
       onOpenChange(false);
-      router.push("/");
     } catch (error) {
       showSafeErrorToast({
         title: t("failed"),

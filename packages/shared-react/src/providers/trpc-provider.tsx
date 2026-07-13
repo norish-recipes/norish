@@ -11,6 +11,12 @@ import { unwrapPayload } from "@norish/shared/lib/operation-helpers";
 
 import type { CreateTRPCProviderBundleOptions } from "./trpc-links";
 import {
+  createWebOutboxLink,
+  replayWebOutboxEntry,
+  WebOutboxReplayCoordinator,
+  WebOutboxRepository,
+} from "../outbox";
+import {
   createTRPCClientLinks,
   defaultGetBaseUrl,
   defaultGetHeaders,
@@ -29,6 +35,12 @@ type TRPCClientContextValue = object | null;
 
 type SubscriptionObserverOptions = {
   onData?: (data: unknown) => void;
+};
+
+export type WebOutboxProviderOptions = {
+  getUserId: () => Promise<string | null>;
+  getBackendOrigin: () => string;
+  enabled?: () => boolean;
 };
 
 function withPayloadCompatibility(data: unknown): unknown {
@@ -138,7 +150,8 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   mutationLink,
   extraLinks = [],
   invalidateOnReconnect = true,
-}: CreateTRPCProviderBundleOptions) {
+  webOutbox,
+}: CreateTRPCProviderBundleOptions & { webOutbox?: WebOutboxProviderOptions }) {
   const { TRPCProvider, useTRPC: useRawTRPC } = createTRPCContext<TRouter>();
   const useTRPC = createNormalizedUseTRPC(useRawTRPC);
   const ConnectionContext = createContext<ConnectionContextValue>({
@@ -160,6 +173,11 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
     const previousStatusRef = useRef<ConnectionStatus>("idle");
     const queryClientRef = useRef<QueryClient | null>(null);
     const webSocketClientRef = useRef<{ close: () => Promise<void> } | null>(null);
+    const outboxCoordinatorRef = useRef<WebOutboxReplayCoordinator | null>(null);
+    const outboxClientRef = useRef<object | null>(null);
+    const outboxRepositoryRef = useRef<WebOutboxRepository | null>(
+      webOutbox ? new WebOutboxRepository() : null
+    );
 
     const [{ queryClient, trpcClient }] = useState(() => {
       const qc = externalGetQueryClient
@@ -210,12 +228,75 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
           onWebSocketUnauthorized,
           onUnauthorized,
           mutationLink,
-          extraLinks,
+          extraLinks: [
+            ...extraLinks,
+            ...(webOutbox && outboxRepositoryRef.current
+              ? [
+                  createWebOutboxLink({
+                    repository: outboxRepositoryRef.current,
+                    getUserId: webOutbox.getUserId,
+                    getBackendOrigin: webOutbox.getBackendOrigin,
+                    enabled: webOutbox.enabled,
+                  }),
+                ]
+              : []),
+          ],
         }),
       });
 
+      outboxClientRef.current = tc as object;
+
+      if (webOutbox && outboxRepositoryRef.current) {
+        outboxCoordinatorRef.current = new WebOutboxReplayCoordinator({
+          repository: outboxRepositoryRef.current,
+          getScope: async () => {
+            const userId = await webOutbox.getUserId();
+
+            return userId ? { backendOrigin: webOutbox.getBackendOrigin(), userId } : null;
+          },
+          deliver: (entry, input) => {
+            if (!outboxClientRef.current) {
+              throw new Error("tRPC client is not ready for web outbox replay");
+            }
+
+            return replayWebOutboxEntry(outboxClientRef.current, entry, input);
+          },
+          refetch: async () => {
+            await queryClientRef.current?.refetchQueries({ type: "active" });
+          },
+        });
+      }
+
       return { queryClient: qc, trpcClient: tc };
     });
+
+    useEffect(() => {
+      const coordinator = outboxCoordinatorRef.current;
+
+      if (!coordinator) return;
+
+      const run = () => {
+        void coordinator.start();
+      };
+
+      run();
+
+      if (typeof window === "undefined") return;
+
+      window.addEventListener("online", run);
+      const authReadyPoll = window.setInterval(run, 5_000);
+
+      return () => {
+        window.removeEventListener("online", run);
+        window.clearInterval(authReadyPoll);
+      };
+    }, []);
+
+    useEffect(() => {
+      if (status === "connected") {
+        void outboxCoordinatorRef.current?.start();
+      }
+    }, [status]);
 
     useEffect(() => {
       return () => {

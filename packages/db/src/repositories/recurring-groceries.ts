@@ -113,6 +113,22 @@ export async function listDueRecurringGroceries(
 export async function createRecurringGrocery(
   data: RecurringGroceryInsertDto
 ): Promise<RecurringGroceryDto> {
+  if (data.id) {
+    const existing = await db
+      .select()
+      .from(recurringGroceries)
+      .where(and(eq(recurringGroceries.id, data.id), eq(recurringGroceries.userId, data.userId)))
+      .limit(1);
+
+    if (existing[0]) {
+      const parsed = RecurringGrocerySelectBaseSchema.safeParse(existing[0]);
+
+      if (!parsed.success) throw new Error("Failed to parse existing recurring grocery");
+
+      return parsed.data;
+    }
+  }
+
   const insertData = {
     ...data,
     amount: data.amount != null ? String(data.amount) : null,
@@ -271,7 +287,9 @@ export async function detachRecurringGrocery(input: {
       const [row] = await trx
         .update(groceries)
         .set({ ...(groceryUpdate.data as any), version: sql`${groceries.version} + 1` })
-        .where(and(eq(groceries.id, input.grocery.id), eq(groceries.version, input.grocery.version)))
+        .where(
+          and(eq(groceries.id, input.grocery.id), eq(groceries.version, input.grocery.version))
+        )
         .returning();
 
       if (!row) throw new StaleWriteError();
@@ -300,7 +318,9 @@ export async function checkRecurringGrocery(input: {
     lastCheckedDate: string;
     nextPlannedFor: string;
   } | null;
-}): Promise<MutationOutcome<{ grocery: GroceryDto; recurringGrocery: RecurringGroceryDto | null }>> {
+}): Promise<
+  MutationOutcome<{ grocery: GroceryDto; recurringGrocery: RecurringGroceryDto | null }>
+> {
   try {
     const result = await db.transaction(async (trx) => {
       const [groceryRow] = await trx

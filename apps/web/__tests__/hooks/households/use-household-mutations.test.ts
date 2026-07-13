@@ -10,6 +10,7 @@ import {
 } from "./test-utils";
 
 const mockLeaveMutate = vi.fn();
+const mockJoinMutate = vi.fn();
 const mockKickMutate = vi.fn();
 const mockRegenerateMutate = vi.fn();
 const mockTransferMutate = vi.fn();
@@ -37,8 +38,14 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           queryFn: async () => createMockHouseholdData(),
         }),
       },
+      resolveJoinCode: {
+        queryOptions: vi.fn(() => ({
+          queryKey: ["households", "resolveJoinCode"],
+          queryFn: async () => ({ householdId: "household-1" }),
+        })),
+      },
       create: { mutationOptions: vi.fn() },
-      join: { mutationOptions: vi.fn() },
+      join: { mutationOptions: vi.fn(() => ({ mutationFn: mockJoinMutate })) },
       leave: { mutationOptions: vi.fn(() => ({ mutationFn: mockLeaveMutate })) },
       kick: { mutationOptions: vi.fn(() => ({ mutationFn: mockKickMutate })) },
       regenerateCode: { mutationOptions: vi.fn(() => ({ mutationFn: mockRegenerateMutate })) },
@@ -60,6 +67,7 @@ describe("useHouseholdMutations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLeaveMutate.mockReset();
+    mockJoinMutate.mockReset();
     mockKickMutate.mockReset();
     mockRegenerateMutate.mockReset();
     mockTransferMutate.mockReset();
@@ -153,6 +161,25 @@ describe("useHouseholdMutations", () => {
       });
 
       expect(() => result.current.joinHousehold("123456")).toThrow("User ID not available");
+    });
+
+    it("resolves and persists the immutable household target before joining", async () => {
+      queryClient.setQueryData(["households", "get"], {
+        household: null,
+        currentUserId: "current-user",
+      });
+
+      const { useHouseholdMutations } = await import("@/hooks/households/use-household-mutations");
+      const { result } = renderHook(() => useHouseholdMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await result.current.joinHousehold("123456");
+
+      expect(mockJoinMutate).toHaveBeenCalledWith(
+        { code: "123456", householdId: "household-1" },
+        expect.any(Object)
+      );
     });
   });
 

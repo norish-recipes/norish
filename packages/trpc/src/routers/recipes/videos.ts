@@ -12,6 +12,7 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 import { deleteVideoByUrl, saveVideoBytes } from "@norish/shared-server/media/storage";
 import { ALLOWED_VIDEO_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeVideoInputSchema, MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
+import { isUuid } from "@norish/shared/lib/operation-helpers";
 
 import type { FormDataInput, UploadedFile } from "../../form-data";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
@@ -96,7 +97,13 @@ const uploadGalleryVideo = authedProcedure
       const duration = durationStr ? parseFloat(durationStr) : undefined;
 
       // Save video file
-      const savedVideo = await saveVideoBytes(validation.bytes, recipeId, validation.ext, duration);
+      const savedVideo = await saveVideoBytes(
+        validation.bytes,
+        recipeId,
+        validation.ext,
+        duration,
+        isUuid(ctx.operationId) ? ctx.operationId : undefined
+      );
 
       // Parse order, default to current count (append to end)
       const order = orderStr ? parseInt(orderStr, 10) : currentCount;
@@ -108,6 +115,7 @@ const uploadGalleryVideo = authedProcedure
         // Recipe exists, add to database
         const [videoRecord] = await addRecipeVideos(recipeId, [
           {
+            id: isUuid(ctx.operationId) ? ctx.operationId : undefined,
             video: savedVideo.video,
             thumbnail: null, // No thumbnail generation for now
             duration: savedVideo.duration,

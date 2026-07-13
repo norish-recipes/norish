@@ -6,6 +6,8 @@ import { toast } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
+import { isQueuedDeliveryError } from "@norish/shared/lib/queued-delivery";
+
 import { useArchiveImportQuery } from "./use-archive-import-query";
 
 export type ArchiveImportMutationResult = {
@@ -58,12 +60,14 @@ export function useArchiveImportMutation(): ArchiveImportMutationResult {
         }
       },
       onError: (error) => {
-        showSafeErrorToast({
-          title: tErrors("operationFailed"),
-          description: tErrors("technicalDetails"),
-          error,
-          context: "archive-import:start",
-        });
+        if (!isQueuedDeliveryError(error)) {
+          showSafeErrorToast({
+            title: tErrors("operationFailed"),
+            description: tErrors("technicalDetails"),
+            error,
+            context: "archive-import:start",
+          });
+        }
       },
     });
   };

@@ -12,7 +12,7 @@ import { recipeExistsByUrlForPolicy } from "@norish/db";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { generateJobId, isJobInQueue } from "../helpers";
+import { generateJobId, isJobInQueue, operationJobId } from "../helpers";
 
 const log = createLogger("queue:recipe-import");
 
@@ -26,7 +26,9 @@ export async function addImportJob(
   data: RecipeImportJobData
 ): Promise<AddImportJobResult> {
   const policy = await getRecipePermissionPolicy();
-  const jobId = generateJobId(data.url, data.userId, data.householdKey, policy.view);
+  const jobId = operationJobId(
+    generateJobId(data.url, data.userId, data.householdKey, policy.view)
+  );
 
   log.debug({ url: data.url, jobId, policy: policy.view }, "Attempting to add import job");
 

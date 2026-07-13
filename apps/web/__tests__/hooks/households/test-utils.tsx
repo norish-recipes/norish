@@ -39,6 +39,12 @@ export function createMockTrpcClient() {
           queryFn: vi.fn(),
         })),
       },
+      resolveJoinCode: {
+        queryOptions: vi.fn(() => ({
+          queryKey: ["households", "resolveJoinCode"],
+          queryFn: vi.fn(),
+        })),
+      },
       create: {
         mutationOptions: vi.fn(() => ({
           mutationFn: vi.fn(),

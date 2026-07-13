@@ -14,7 +14,7 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { isJobInQueue } from "../helpers";
+import { isJobInQueue, operationJobId } from "../helpers";
 
 const log = createLogger("queue:paste-import");
 
@@ -30,7 +30,7 @@ export async function addPasteImportJob(
   queue: Queue<PasteImportJobData, PasteImportJobResult>,
   data: PasteImportJobData
 ): Promise<AddPasteImportJobResult> {
-  const jobId = generatePasteJobId(data.batchId);
+  const jobId = operationJobId(generatePasteJobId(data.batchId));
 
   log.debug(
     { batchId: data.batchId, recipeIds: data.recipeIds, jobId, textLength: data.text.length },

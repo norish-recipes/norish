@@ -19,6 +19,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
+import { generateOperationId } from "@norish/shared/lib/operation-helpers";
+import { isQueuedDeliveryError } from "@norish/shared/lib/queued-delivery";
 
 import { useRecipeContextRequired } from "../context";
 
@@ -75,13 +77,15 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
         });
       },
       onError: (error) => {
-        showSafeErrorToast({
-          title: tErrors("operationFailed"),
-          description: tErrors("technicalDetails"),
-          color: "danger",
-          context: "recipe-share-panel:create",
-          error,
-        });
+        if (!isQueuedDeliveryError(error)) {
+          showSafeErrorToast({
+            title: tErrors("operationFailed"),
+            description: tErrors("technicalDetails"),
+            color: "danger",
+            context: "recipe-share-panel:create",
+            error,
+          });
+        }
       },
     })
   );
@@ -143,6 +147,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
               <Button
                 onPress={() =>
                   createShareMutation.mutate({
+                    id: generateOperationId(),
                     recipeId: recipe.id,
                     expiresIn,
                   })

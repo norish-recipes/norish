@@ -1,6 +1,6 @@
-import { themes as prismThemes } from "prism-react-renderer";
-import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
+import type { Config } from "@docusaurus/types";
+import { themes as prismThemes } from "prism-react-renderer";
 
 // Norish documentation site — https://docs.norish.dev
 // Hosted on Cloudflare Pages, isolated from the monorepo workspace.
@@ -20,10 +20,13 @@ const config: Config = {
   onBrokenAnchors: "throw",
 
   markdown: {
+    mermaid: true,
     hooks: {
       onBrokenMarkdownLinks: "warn",
     },
   },
+
+  themes: ["@docusaurus/theme-mermaid"],
 
   i18n: {
     defaultLocale: "en",
@@ -38,15 +41,14 @@ const config: Config = {
           // Docs are the whole site; norish.dev is the marketing front.
           routeBasePath: "/",
           sidebarPath: "./sidebars.ts",
-          editUrl:
-            "https://github.com/norish-recipes/Norish/edit/main/apps/docs/",
+          editUrl: "https://github.com/norish-recipes/Norish/edit/main/apps/docs/",
           // The editable `docs/` IS the live version, labeled with the current
           // release below. To cut a new release run `pnpm docs_update`: it
           // freezes the current docs under this label and bumps it to the next
           // version (don't hand-edit the label — let the script do it).
           lastVersion: "current",
           versions: {
-            current: { label: "0.19.0-beta" },
+            current: { label: "0.20.0-beta" },
           },
         },
         blog: false,

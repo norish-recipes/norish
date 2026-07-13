@@ -86,6 +86,7 @@ export interface QueueApiHandlers {
   cleanupOrphanedAvatars(): Promise<QueueMediaCleanupResult>;
   cleanupOrphanedStepImages(): Promise<QueueMediaCleanupResult>;
   cleanupOldTempFiles(maxAgeMs?: number): Promise<void>;
+  cleanupExpiredMutationReceipts(): Promise<number>;
 }
 
 const globalForQueueApiHandlers = globalThis as typeof globalThis & {

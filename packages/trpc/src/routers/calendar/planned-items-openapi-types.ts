@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { MutationAckWith } from "@norish/shared/contracts";
+import type { MutationAck, MutationAckWith } from "@norish/shared/contracts";
 import { mutationAckSchema } from "@norish/shared/contracts";
 
 export const slotSchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
@@ -13,6 +13,7 @@ export const listItemsInput = z.object({
 
 export const createItemInput = z
   .object({
+    id: z.uuid().optional(),
     date: z.string(),
     slot: slotSchema,
     itemType: itemTypeSchema,
@@ -40,16 +41,18 @@ export const plannedRecipeListItemSchema = z.object({
 });
 
 export const createPlannedRecipeInputSchema = z.object({
+  id: z.uuid().optional(),
   date: z.string(),
   slot: slotSchema,
   recipeId: z.string().uuid(),
 });
 
-export const plannedRecipeMutationOutputSchema = mutationAckSchema.extend({
-  id: z.uuid(),
-});
+export const plannedRecipeMutationOutputSchema: z.ZodType<MutationAckWith<{ id: string }>> =
+  mutationAckSchema.extend({
+    id: z.uuid(),
+  });
 
-export const deletePlannedRecipeOutputSchema = mutationAckSchema;
+export const deletePlannedRecipeOutputSchema: z.ZodType<MutationAck> = mutationAckSchema;
 
 export type CreateItemInput = z.infer<typeof createItemInput>;
 export type PlannedRecipeListItem = z.infer<typeof plannedRecipeListItemSchema>;

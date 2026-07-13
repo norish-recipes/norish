@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { GroceryDto, MutationAckWith } from "@norish/shared/contracts";
+import type { GroceryDto, MutationAck, MutationAckWith } from "@norish/shared/contracts";
 import { GrocerySelectBaseSchema } from "@norish/db";
 import { mutationAckSchema } from "@norish/shared/contracts";
 
@@ -17,7 +17,7 @@ export const groceryIdVersionSchema = z.object({
   version: z.number().int().positive(),
 });
 
-export const deleteGroceryOutputSchema = mutationAckSchema;
+export const deleteGroceryOutputSchema: z.ZodType<MutationAck> = mutationAckSchema;
 
 export type GroceryMutationOutput = MutationAckWith<{
   grocery: GroceryDto | null;

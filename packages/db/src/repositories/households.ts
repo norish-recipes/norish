@@ -34,6 +34,12 @@ export async function createHousehold(input: HouseholdInsertDto): Promise<Househ
 
   if (!parsed.success) throw new Error("Invalid HouseholdInsertDto");
 
+  if (parsed.data.id) {
+    const existing = await getHouseholdById(parsed.data.id);
+
+    if (existing) return existing;
+  }
+
   // generate a unique 6-digit code with 10-minute expiration
   const code = await generateUniqueJoinCode();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -41,7 +47,14 @@ export async function createHousehold(input: HouseholdInsertDto): Promise<Househ
   const [row] = await db
     .insert(households)
     .values({ ...parsed.data, joinCode: code, joinCodeExpiresAt: expiresAt })
+    .onConflictDoNothing({ target: households.id })
     .returning();
+
+  if (!row && parsed.data.id) {
+    const existing = await getHouseholdById(parsed.data.id);
+
+    if (existing) return existing;
+  }
   const validated = HouseholdSelectBaseSchema.safeParse(row);
 
   if (!validated.success) throw new Error("Failed to parse created household");
@@ -145,6 +158,22 @@ export async function addUserToHousehold(input: HouseholdUserInsertDto): Promise
   const existingHousehold = await getHouseholdForUser(parsed.data.userId);
 
   if (existingHousehold) {
+    if (existingHousehold.id === parsed.data.householdId) {
+      const existingMembership = await db
+        .select()
+        .from(householdUsers)
+        .where(
+          and(
+            eq(householdUsers.householdId, parsed.data.householdId),
+            eq(householdUsers.userId, parsed.data.userId)
+          )
+        )
+        .limit(1);
+      const validated = HouseholdUserSelectBaseSchema.safeParse(existingMembership[0]);
+
+      if (validated.success) return validated.data;
+    }
+
     throw new Error("User is already in a household. Leave the current household first.");
   }
 

@@ -59,6 +59,7 @@ const GroceryStoreReorderInputSchema = GroceryVersionInputSchema.extend({
 
 // Create schema without userId (added server-side)
 export const GroceryCreateSchema = z.object({
+  id: z.uuid().optional(),
   name: z.string().nullable(),
   unit: z.string().nullable(),
   amount: z.coerce.number().nullable(),

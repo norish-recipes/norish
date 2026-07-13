@@ -3,6 +3,7 @@ import { TRPCClientError } from "@trpc/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
+import { QueuedDeliveryError } from "@norish/shared/lib/queued-delivery";
 
 import { createMockInfiniteData, createTestQueryClient, createTestWrapper } from "./test-utils";
 
@@ -144,12 +145,12 @@ describe("useRecipesMutations", () => {
       });
 
       // Verify function signatures (they take arguments but return void)
-      expect(result.current.importRecipe.length).toBe(1); // Takes url
-      expect(result.current.importRecipeFromPaste.length).toBe(1); // Takes text
-      expect(result.current.importRecipeFromPasteWithAI.length).toBe(1); // Takes text
-      expect(result.current.createRecipe.length).toBe(1); // Takes input
-      expect(result.current.updateRecipe.length).toBe(2); // Takes id, input
-      expect(result.current.deleteRecipe.length).toBe(2); // Takes id, version
+      expect(result.current.importRecipe.length).toBe(2); // Takes url and delivery callbacks
+      expect(result.current.importRecipeFromPaste.length).toBe(2); // Takes text and callbacks
+      expect(result.current.importRecipeFromPasteWithAI.length).toBe(2); // Takes text and callbacks
+      expect(result.current.createRecipe.length).toBe(2); // Takes input and delivery callbacks
+      expect(result.current.updateRecipe.length).toBe(3); // Takes id, input, callbacks
+      expect(result.current.deleteRecipe.length).toBe(3); // Takes id, version, callbacks
       expect(result.current.convertMeasurements.length).toBe(3); // Takes recipeId, system, version
     });
   });
@@ -166,6 +167,21 @@ describe("useRecipesMutations", () => {
 
       // Verify it's callable (won't actually call due to mock)
       expect(() => result.current.importRecipe).not.toThrow();
+    });
+
+    it("only invokes its delivery callback after acknowledgement", async () => {
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+      const { result } = renderHook(() => useRecipesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+      const onDelivered = vi.fn();
+
+      act(() => result.current.importRecipe("https://example.com/recipe", { onDelivered }));
+
+      expect(onDelivered).not.toHaveBeenCalled();
+      const callbacks = mockMutate.mock.calls[0]?.[1] as { onSuccess: () => void };
+      act(() => callbacks.onSuccess());
+      expect(onDelivered).toHaveBeenCalledOnce();
     });
 
     it("keeps the optimistic pending recipe when the backend is unreachable", async () => {
@@ -239,8 +255,84 @@ describe("useRecipesMutations", () => {
 
       expect(mockMutate).toHaveBeenCalledWith(
         expect.objectContaining({ name: "Metric recipe", systemUsed: "metric" }),
-        expect.objectContaining({ onError: expect.any(Function) })
+        expect.objectContaining({
+          onError: expect.any(Function),
+          onSuccess: expect.any(Function),
+        })
       );
+    });
+
+    it("navigates through the delivery callback only after online acknowledgement", async () => {
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+      const { result } = renderHook(() => useRecipesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+      const onDelivered = vi.fn();
+
+      act(() => {
+        result.current.createRecipe(
+          {
+            id: "11111111-1111-4111-8111-111111111111",
+            name: "Offline recipe",
+            systemUsed: "metric",
+            recipeIngredients: [],
+            steps: [],
+            tags: [],
+          },
+          { onDelivered }
+        );
+      });
+
+      expect(onDelivered).not.toHaveBeenCalled();
+
+      const callbacks = mockMutate.mock.calls[0]?.[1] as {
+        onSuccess: (recipeId: string) => void;
+      };
+
+      act(() => callbacks.onSuccess("11111111-1111-4111-8111-111111111111"));
+
+      expect(onDelivered).toHaveBeenCalledOnce();
+      expect(onDelivered).toHaveBeenCalledWith("11111111-1111-4111-8111-111111111111");
+    });
+
+    it("does not invoke the delivery callback when Firefox queues the create", async () => {
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+      const { result } = renderHook(() => useRecipesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+      const onDelivered = vi.fn();
+
+      act(() => {
+        result.current.createRecipe(
+          {
+            id: "22222222-2222-4222-8222-222222222222",
+            name: "Queued Firefox recipe",
+            systemUsed: "metric",
+            recipeIngredients: [],
+            steps: [],
+            tags: [],
+          },
+          { onDelivered }
+        );
+      });
+
+      const callbacks = mockMutate.mock.calls[0]?.[1] as {
+        onError: (error: unknown, variables: unknown, context: unknown) => void;
+      };
+
+      act(() =>
+        callbacks.onError(
+          new QueuedDeliveryError({
+            operationId: "22222222-2222-4222-8222-222222222222",
+            path: "recipes.create",
+            entryId: "firefox-entry",
+          }),
+          {},
+          undefined
+        )
+      );
+
+      expect(onDelivered).not.toHaveBeenCalled();
     });
 
     it("optimistically seeds the new recipe detail cache when an id is reserved", async () => {

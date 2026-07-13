@@ -11,6 +11,7 @@ import {
   createHousehold,
   findHouseholdByJoinCode,
   getAllergiesForUsers,
+  getHouseholdById,
   getHouseholdForUser,
   getUsersByHouseholdId,
   isUserHouseholdAdmin,
@@ -140,7 +141,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
 });
 
 const create = authedProcedure
-  .input(z.object({ name: HouseholdNameSchema }))
+  .input(z.object({ id: z.uuid().optional(), name: HouseholdNameSchema }))
   .output(householdCreateAckSchema)
   .mutation(async ({ ctx, input }) => {
     const name = (input.name ?? "My Household").trim();
@@ -158,12 +159,9 @@ const create = authedProcedure
     }
 
     try {
-      const household = await createHousehold({ name, adminUserId: ctx.user.id });
+      const household = await createHousehold({ id: input.id, name, adminUserId: ctx.user.id });
 
       await addUserToHousehold({ householdId: household.id, userId: ctx.user.id });
-
-      // Auto-generate join code for new household
-      await regenerateJoinCode(household.id);
 
       log.info({ userId: ctx.user.id, householdId: household.id }, "Household created");
 
@@ -186,8 +184,29 @@ const create = authedProcedure
     }
   });
 
-const join = authedProcedure
+const resolveJoinCode = authedProcedure
   .input(z.object({ code: z.string() }))
+  .output(z.object({ householdId: z.uuid() }))
+  .query(async ({ input }) => {
+    const cleaned = input.code.replace(/\D/g, "").slice(0, 6);
+
+    JoinCodeSchema.parse(cleaned);
+
+    const household = await findHouseholdByJoinCode(cleaned);
+
+    if (!household) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid join code" });
+    }
+
+    if (household.joinCodeExpiresAt && new Date(household.joinCodeExpiresAt) < new Date()) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "This join code has expired" });
+    }
+
+    return { householdId: household.id };
+  });
+
+const join = authedProcedure
+  .input(z.object({ code: z.string(), householdId: z.uuid().optional() }))
   .output(householdJoinAckSchema)
   .mutation(async ({ ctx, input }) => {
     // Clean the code - only digits, max 6
@@ -208,8 +227,25 @@ const join = authedProcedure
       });
     }
 
-    // Find household by code
-    const household = await findHouseholdByJoinCode(cleaned);
+    if (ctx.replayOrigin && !input.householdId) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Delayed household joins require an immutable household target",
+      });
+    }
+
+    // Find by immutable target when replaying; the code remains a capability
+    // check and must still match the target currently stored on the household.
+    const household = input.householdId
+      ? await getHouseholdById(input.householdId)
+      : await findHouseholdByJoinCode(cleaned);
+
+    if (input.householdId && household?.joinCode !== cleaned) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "The household join code no longer matches the requested household",
+      });
+    }
 
     if (!household) {
       throw new TRPCError({
@@ -504,6 +540,7 @@ const transferAdmin = authedProcedure
 export const householdsRouter = router({
   get,
   create,
+  resolveJoinCode,
   join,
   leave,
   kick,

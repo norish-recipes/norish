@@ -205,7 +205,11 @@ const uploadAvatar = authedProcedure.input(formDataInputSchema).mutation(async (
   const result = await updateUserAvatar(ctx.user.id, protectedPath, version);
 
   if (result.stale) {
-    await deleteAvatarByFilename(filename);
+    const currentUser = await getUserById(ctx.user.id);
+
+    if (currentUser?.image !== protectedPath) {
+      await deleteAvatarByFilename(filename);
+    }
     log.info({ userId: ctx.user.id, version }, "Ignoring stale user avatar upload");
 
     return { success: true, stale: true };

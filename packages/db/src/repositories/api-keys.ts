@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 
 import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
+import { decrypt, encrypt } from "@norish/config/crypto";
 import { db } from "@norish/db/drizzle";
 import { apiKeys } from "@norish/db/schema/auth";
 
@@ -18,6 +19,36 @@ function requireApiKeyAuthService(): ApiKeyAuthService {
   return apiKeyAuthService;
 }
 
+type ApiKeyDeliveryMetadata = {
+  operationId: string;
+  encryptedKey: string;
+};
+
+function readDeliveryMetadata(value: string | null): ApiKeyDeliveryMetadata | null {
+  if (!value) return null;
+
+  try {
+    const parsed = JSON.parse(value) as Partial<ApiKeyDeliveryMetadata>;
+
+    return typeof parsed.operationId === "string" && typeof parsed.encryptedKey === "string"
+      ? { operationId: parsed.operationId, encryptedKey: parsed.encryptedKey }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function toApiKeyMetadata(row: typeof apiKeys.$inferSelect): ApiKeyMetadata {
+  return {
+    id: row.id,
+    name: row.name,
+    start: row.start,
+    createdAt: row.createdAt,
+    expiresAt: row.expiresAt,
+    enabled: row.enabled,
+  };
+}
+
 export type ApiKeyMetadata = {
   id: string;
   name: string | null;
@@ -32,9 +63,22 @@ export type ApiKeyMetadata = {
  */
 export async function createApiKey(
   userId: string,
-  name?: string
+  name?: string,
+  operationId?: string
 ): Promise<{ key: string; metadata: ApiKeyMetadata }> {
   const authService = requireApiKeyAuthService();
+
+  if (operationId) {
+    const existingRows = await db.select().from(apiKeys).where(eq(apiKeys.referenceId, userId));
+
+    for (const row of existingRows) {
+      const delivery = readDeliveryMetadata(row.metadata);
+
+      if (delivery?.operationId === operationId) {
+        return { key: decrypt(delivery.encryptedKey), metadata: toApiKeyMetadata(row) };
+      }
+    }
+  }
 
   // Use BetterAuth's API to create the key
   const result = await authService.createApiKey({
@@ -44,6 +88,40 @@ export async function createApiKey(
       userId,
     },
   });
+
+  if (operationId) {
+    const existingMetadata = await db
+      .select({ metadata: apiKeys.metadata })
+      .from(apiKeys)
+      .where(eq(apiKeys.id, result.id))
+      .limit(1);
+    const currentMetadata = existingMetadata[0]?.metadata;
+    let metadata: Record<string, unknown> = {};
+
+    if (currentMetadata) {
+      try {
+        const parsed = JSON.parse(currentMetadata);
+
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          metadata = parsed as Record<string, unknown>;
+        }
+      } catch {
+        // Preserve the API key recovery path even if an older metadata value
+        // was not valid JSON.
+      }
+    }
+
+    await db
+      .update(apiKeys)
+      .set({
+        metadata: JSON.stringify({
+          ...metadata,
+          operationId,
+          encryptedKey: encrypt(result.key),
+        }),
+      })
+      .where(eq(apiKeys.id, result.id));
+  }
 
   return {
     key: result.key,

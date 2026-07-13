@@ -1,7 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { createOpenApiFetchHandler, generateOpenApiDocument } from "trpc-to-openapi";
 
 import type { OperationId } from "@norish/shared/contracts/realtime-envelope";
-import { isOperationId } from "@norish/shared/lib/operation-helpers";
+import { isUuid } from "@norish/shared/lib/operation-helpers";
 
 import { createHttpContextFromHeaders } from "./context";
 import {
@@ -66,9 +67,14 @@ function buildOpenApiHeaders(req: Request) {
   return headers;
 }
 
-async function createOpenApiContext(req: Request) {
+export function resolveOpenApiOperationId(req: Request): OperationId {
   const rawOperationId = req.headers.get("x-operation-id");
-  const operationId = isOperationId(rawOperationId) ? (rawOperationId as OperationId) : null;
+
+  return (isUuid(rawOperationId) ? rawOperationId : randomUUID()) as OperationId;
+}
+
+async function createOpenApiContext(req: Request) {
+  const operationId = resolveOpenApiOperationId(req);
 
   return createHttpContextFromHeaders(buildOpenApiHeaders(req), operationId);
 }
@@ -83,7 +89,7 @@ export function handleOpenApiRequest(req: Request) {
 }
 
 export function getOpenApiDocument(baseUrl: string) {
-  return generateOpenApiDocument(openApiRouter, {
+  const document = generateOpenApiDocument(openApiRouter, {
     title: "Norish Recipe API",
     description: "API access for Norish recipes and imports.",
     version: "1.0.0",
@@ -101,4 +107,47 @@ export function getOpenApiDocument(baseUrl: string) {
       },
     },
   });
+
+  const procedures = (
+    openApiRouter as unknown as {
+      _def?: { procedures?: Record<string, { _def?: { type?: string } }> };
+    }
+  )._def?.procedures;
+
+  for (const pathItem of Object.values(document.paths ?? {})) {
+    for (const operation of Object.values(pathItem)) {
+      if (!operation || typeof operation !== "object" || !("operationId" in operation)) {
+        continue;
+      }
+
+      const operationId = (operation as { operationId?: unknown }).operationId;
+
+      if (typeof operationId !== "string" || procedures?.[operationId]?._def?.type !== "mutation") {
+        continue;
+      }
+
+      const typedOperation = operation as {
+        parameters?: Array<Record<string, unknown>>;
+      };
+
+      typedOperation.parameters = [
+        ...(typedOperation.parameters ?? []),
+        {
+          name: "x-operation-id",
+          in: "header",
+          required: false,
+          description:
+            "Optional UUID for idempotent retries. When omitted, the server generates a new UUID for this request.",
+          schema: {
+            type: "string",
+            format: "uuid",
+          },
+        },
+      ];
+    }
+  }
+
+  document.info.description = `${document.info.description ?? ""} Mutation operation IDs are generated automatically; callers may provide a UUID to make retries idempotent.`;
+
+  return document;
 }

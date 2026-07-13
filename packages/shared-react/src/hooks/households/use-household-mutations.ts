@@ -1,6 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
+import { generateOperationId } from "@norish/shared/lib/operation-helpers";
+import { isQueuedDeliveryError } from "@norish/shared/lib/queued-delivery";
 
 import type {
   CreateHouseholdHooksOptions,
@@ -20,6 +22,7 @@ export function createUseHouseholdMutations({
 }: CreateUseHouseholdMutationsOptions) {
   return function useHouseholdMutations(): HouseholdMutationsResult {
     const trpc = useTRPC();
+    const queryClient = useQueryClient();
     const { household, setHouseholdData, invalidate, currentUserId } = useHouseholdQuery();
     const userName = useCurrentUserName();
 
@@ -43,7 +46,7 @@ export function createUseHouseholdMutations({
       }
 
       createMutation.mutate(
-        { name: name.trim() },
+        { id: generateOperationId(), name: name.trim() },
         {
           onSuccess: ({ id }) => {
             // Optimistically add the household
@@ -67,12 +70,14 @@ export function createUseHouseholdMutations({
               currentUserId: prev?.currentUserId ?? currentUserId,
             }));
           },
-          onError: () => invalidate(),
+          onError: (error) => {
+            if (!isQueuedDeliveryError(error)) invalidate();
+          },
         }
       );
     };
 
-    const joinHousehold = (code: string): void => {
+    const joinHousehold = (code: string, householdId?: string): Promise<void> => {
       if (!code.trim()) {
         throw new Error("Join code cannot be empty");
       }
@@ -81,13 +86,33 @@ export function createUseHouseholdMutations({
         throw new Error("User ID not available");
       }
 
-      joinMutation.mutate(
-        { code: code.trim() },
-        {
-          // Optimistic update will come from the subscription (onCreated)
-          onError: () => invalidate(),
+      return (async () => {
+        let resolvedHouseholdId = householdId;
+
+        if (!resolvedHouseholdId) {
+          try {
+            const resolved = await queryClient.fetchQuery(
+              trpc.households.resolveJoinCode.queryOptions({ code: code.trim() })
+            );
+
+            resolvedHouseholdId = resolved.householdId;
+          } catch (error) {
+            if (!isQueuedDeliveryError(error)) invalidate();
+
+            return;
+          }
         }
-      );
+
+        joinMutation.mutate(
+          { code: code.trim(), householdId: resolvedHouseholdId },
+          {
+            // Optimistic update will come from the subscription (onCreated)
+            onError: (error) => {
+              if (!isQueuedDeliveryError(error)) invalidate();
+            },
+          }
+        );
+      })();
     };
 
     const leaveHousehold = (householdId: string): void => {
@@ -112,7 +137,9 @@ export function createUseHouseholdMutations({
               currentUserId: prev?.currentUserId ?? currentUserId ?? "",
             }));
           },
-          onError: () => invalidate(),
+          onError: (error) => {
+            if (!isQueuedDeliveryError(error)) invalidate();
+          },
         }
       );
     };
@@ -146,7 +173,9 @@ export function createUseHouseholdMutations({
               };
             });
           },
-          onError: () => invalidate(),
+          onError: (error) => {
+            if (!isQueuedDeliveryError(error)) invalidate();
+          },
         }
       );
     };
@@ -161,7 +190,9 @@ export function createUseHouseholdMutations({
             }
           },
           // The new join code will come from the subscription
-          onError: () => invalidate(),
+          onError: (error) => {
+            if (!isQueuedDeliveryError(error)) invalidate();
+          },
         }
       );
     };
@@ -200,7 +231,9 @@ export function createUseHouseholdMutations({
               };
             });
           },
-          onError: () => invalidate(),
+          onError: (error) => {
+            if (!isQueuedDeliveryError(error)) invalidate();
+          },
         }
       );
     };

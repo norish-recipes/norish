@@ -30,14 +30,13 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
     if (!trimmed) return;
     setIsSubmitting(true);
     try {
-      importRecipeFromPaste(trimmed);
+      importRecipeFromPaste(trimmed, { onDelivered: () => router.push("/") });
       toast(t("importing"), {
         description: t("inProgress"),
         variant: "default",
       });
       onOpenChange(false);
       setText("");
-      router.push("/");
     } catch (error) {
       showSafeErrorToast({
         title: t("failed"),
@@ -66,14 +65,13 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
     }
     setIsSubmitting(true);
     try {
-      importRecipeFromPasteWithAI(trimmed);
+      importRecipeFromPasteWithAI(trimmed, { onDelivered: () => router.push("/") });
       toast(t("importingWithAI"), {
         description: t("inProgress"),
         variant: "default",
       });
       onOpenChange(false);
       setText("");
-      router.push("/");
     } catch (error) {
       showSafeErrorToast({
         title: t("failed"),

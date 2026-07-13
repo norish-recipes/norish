@@ -48,6 +48,7 @@ import {
   staleAck,
 } from "@norish/shared/contracts";
 import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
+import { isUuid } from "@norish/shared/lib/operation-helpers";
 
 import type { UploadedFile } from "../../form-data";
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
@@ -194,7 +195,7 @@ export const createRecipeProcedure = authedProcedure
   .input(FullRecipeInsertSchema)
   .output(z.uuid())
   .mutation(async ({ ctx, input }) => {
-    const recipeId = input.id ?? randomUUID();
+    const recipeId = input.id ?? (isUuid(ctx.operationId) ? ctx.operationId : randomUUID());
 
     log.info(
       { userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id },
@@ -377,7 +378,7 @@ export const importFromUrlProcedure = authedProcedure
   .output(z.uuid())
   .mutation(async ({ ctx, input }) => {
     const { url, forceAI } = input;
-    const recipeId = randomUUID();
+    const recipeId = input.id ?? (isUuid(ctx.operationId) ? ctx.operationId : randomUUID());
 
     // Add job to queue - returns conflict status if duplicate in queue
     const queues = getQueues();
@@ -612,7 +613,7 @@ const importFromImagesProcedure = authedProcedure
       });
     }
 
-    const recipeId = randomUUID();
+    const recipeId = isUuid(ctx.operationId) ? ctx.operationId : randomUUID();
 
     log.info(
       { userId: ctx.user.id, fileCount: files.length, recipeId },
@@ -655,7 +656,11 @@ export const importFromPasteProcedure = authedProcedure
   .input(recipeImportPasteInputSchema)
   .output(recipeImportPasteOutputSchema)
   .mutation(async ({ ctx, input }) => {
-    const preparedImport = await preparePasteImport(input.text, input.forceAI);
+    const preparedImport = await preparePasteImport(
+      input.text,
+      input.forceAI,
+      ctx.operationId ?? undefined
+    );
 
     log.info(
       { userId: ctx.user.id, recipeIds: preparedImport.recipeIds, textLength: input.text.length },

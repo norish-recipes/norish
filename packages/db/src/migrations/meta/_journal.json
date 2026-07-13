@@ -246,6 +246,13 @@
       "when": 1777204800000,
       "tag": "0034_loosen_step_order_constraint",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1783671372799,
+      "tag": "0035_curved_the_hood",
+      "breakpoints": true
     }
   ]
 }

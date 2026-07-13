@@ -954,7 +954,8 @@ export interface SavedVideo {
 export async function saveVideoFile(
   sourcePath: string,
   recipeId: string,
-  duration?: number
+  duration?: number,
+  deterministicKey?: string
 ): Promise<SavedVideo> {
   const recipeDir = path.join(RECIPES_BASE_DIR, recipeId);
 
@@ -969,8 +970,8 @@ export async function saveVideoFile(
   }
 
   const ext = path.extname(sourcePath).toLowerCase();
-  const timestamp = Date.now();
-  const fileName = `video-${timestamp}${ext}`;
+  const safeKey = deterministicKey?.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 80);
+  const fileName = safeKey ? `video-${safeKey}${ext}` : `video-${Date.now()}${ext}`;
   const destPath = path.join(recipeDir, fileName);
 
   // Copy file to recipe directory
@@ -1052,7 +1053,8 @@ export async function saveVideoBytes(
   bytes: Buffer,
   recipeId: string,
   originalExt?: string,
-  duration?: number
+  duration?: number,
+  deterministicKey?: string
 ): Promise<SavedVideo> {
   const recipeDir = path.join(RECIPES_BASE_DIR, recipeId);
 
@@ -1081,8 +1083,8 @@ export async function saveVideoBytes(
     ext = ".mp4"; // Default to mp4
   }
 
-  const timestamp = Date.now();
-  const fileName = `video-${timestamp}${ext}`;
+  const safeKey = deterministicKey?.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 80);
+  const fileName = safeKey ? `video-${safeKey}${ext}` : `video-${Date.now()}${ext}`;
   const filePath = path.join(recipeDir, fileName);
 
   await fs.writeFile(filePath, bytes);

@@ -44,6 +44,7 @@ import {
   RevokeRecipeShareInputSchema,
   UpdateRecipeShareInputSchema,
 } from "@norish/shared/contracts/zod/recipe-shares";
+import { isUuid } from "@norish/shared/lib/operation-helpers";
 
 import { emitByPolicy } from "../../helpers";
 import { adminProcedure, authedProcedure, sharedRecipeProcedure } from "../../middleware";
@@ -130,7 +131,10 @@ const create = authedProcedure
 
     log.info({ userId: ctx.user.id, recipeId: input.recipeId }, "Creating recipe share");
 
-    const share = await createRecipeShare(ctx.user.id, input);
+    const share = await createRecipeShare(ctx.user.id, {
+      ...input,
+      id: input.id ?? (isUuid(ctx.operationId) ? ctx.operationId : undefined),
+    });
 
     await emitRecipeShareEvent(ctx, share, "created");
 

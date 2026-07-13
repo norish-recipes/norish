@@ -93,6 +93,20 @@ export async function createStore(id: string, input: StoreInsertDto): Promise<St
 
   if (!parsed.success) throw new Error("Invalid StoreInsertDto");
 
+  const existing = await db
+    .select()
+    .from(stores)
+    .where(and(eq(stores.id, id), eq(stores.userId, input.userId)))
+    .limit(1);
+
+  if (existing[0]) {
+    const validated = StoreSelectBaseSchema.safeParse(existing[0]);
+
+    if (!validated.success) throw new Error("Failed to parse existing store");
+
+    return validated.data;
+  }
+
   // Get max sort order for user's stores
   const [maxOrder] = await db
     .select({ max: sql<number>`COALESCE(MAX(${stores.sortOrder}), -1)` })
@@ -104,7 +118,19 @@ export async function createStore(id: string, input: StoreInsertDto): Promise<St
   const [row] = await db
     .insert(stores)
     .values({ id, ...parsed.data, sortOrder })
+    .onConflictDoNothing({ target: stores.id })
     .returning();
+
+  if (!row) {
+    const concurrent = await db
+      .select()
+      .from(stores)
+      .where(and(eq(stores.id, id), eq(stores.userId, input.userId)))
+      .limit(1);
+    const validated = StoreSelectBaseSchema.safeParse(concurrent[0]);
+
+    if (validated.success) return validated.data;
+  }
 
   const validated = StoreSelectBaseSchema.safeParse(row);
 

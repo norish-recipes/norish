@@ -1,0 +1,9 @@
+{
+  "label": "Technical",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "title": "Technical",
+    "description": "How Norish is designed and how its core systems behave in production."
+  }
+}

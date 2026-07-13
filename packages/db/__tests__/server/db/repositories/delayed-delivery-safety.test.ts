@@ -6,8 +6,19 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { setFavorite } from "@norish/db/repositories/favorites";
 import { deleteDoneInStore, updateGroceries } from "@norish/db/repositories/groceries";
 import { rateRecipe } from "@norish/db/repositories/ratings";
+import { createRecipeShare } from "@norish/db/repositories/recipe-shares";
+import { createRecipeWithRefs } from "@norish/db/repositories/recipes";
+import { createSiteAuthToken } from "@norish/db/repositories/site-auth-tokens";
 import { deleteStore } from "@norish/db/repositories/stores";
-import { groceries, recipeFavorites, recipeRatings, stores } from "@norish/db/schema";
+import {
+  groceries,
+  recipeFavorites,
+  recipeRatings,
+  recipes,
+  recipeShares,
+  siteAuthTokens,
+  stores,
+} from "@norish/db/schema";
 
 import { getTestDb } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
@@ -63,6 +74,62 @@ describe("delayed-delivery repository safety", () => {
     expect(result).toEqual({ rating: 5, isNew: false, stale: true });
     expect(rating?.rating).toBe(3);
     expect(rating?.version).toBe(1);
+  });
+
+  it("resolves concurrent deterministic recipe creates to the original entity", async () => {
+    const id = crypto.randomUUID();
+    const input = {
+      name: "Recovered recipe create",
+      systemUsed: "metric" as const,
+      recipeIngredients: [],
+      tags: [],
+      categories: [],
+      steps: [],
+      images: [],
+      videos: [],
+    };
+
+    const results = await Promise.all([
+      createRecipeWithRefs(id, testUserId, input),
+      createRecipeWithRefs(id, testUserId, input),
+    ]);
+    const rows = await getTestDb().select().from(recipes).where(eq(recipes.id, id));
+
+    expect(results).toEqual([id, id]);
+    expect(rows).toHaveLength(1);
+  });
+
+  it("resolves concurrent deterministic share creates to the original entity", async () => {
+    const id = crypto.randomUUID();
+
+    const results = await Promise.all([
+      createRecipeShare(testUserId, { id, recipeId: testRecipeId, expiresIn: "forever" }),
+      createRecipeShare(testUserId, { id, recipeId: testRecipeId, expiresIn: "forever" }),
+    ]);
+    const rows = await getTestDb().select().from(recipeShares).where(eq(recipeShares.id, id));
+
+    expect(results.map((result) => result.id)).toEqual([id, id]);
+    expect(rows).toHaveLength(1);
+  });
+
+  it("resolves concurrent deterministic site-token creates to the original entity", async () => {
+    const id = crypto.randomUUID();
+    const input = {
+      id,
+      domain: "example.com",
+      name: "Authorization",
+      value: "Bearer secret",
+      type: "header" as const,
+    };
+
+    const results = await Promise.all([
+      createSiteAuthToken(testUserId, input),
+      createSiteAuthToken(testUserId, input),
+    ]);
+    const rows = await getTestDb().select().from(siteAuthTokens).where(eq(siteAuthTokens.id, id));
+
+    expect(results.map((result) => result.id)).toEqual([id, id]);
+    expect(rows).toHaveLength(1);
   });
 
   it("leaves grocery rows unchanged when the supplied version is stale", async () => {

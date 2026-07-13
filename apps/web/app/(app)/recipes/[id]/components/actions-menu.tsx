@@ -74,8 +74,7 @@ export default function ActionsMenu({ id }: Props) {
   }, [onDeleteModalOpen]);
   const handleDeleteConfirm = React.useCallback(() => {
     onDeleteModalClose();
-    deleteRecipe(id, recipe.version);
-    router.push("/");
+    deleteRecipe(id, recipe.version, { onDelivered: () => router.push("/") });
   }, [deleteRecipe, id, recipe.version, router, onDeleteModalClose]);
   const menuItems = useMemo(() => {
     const items: MenuItem[] = [

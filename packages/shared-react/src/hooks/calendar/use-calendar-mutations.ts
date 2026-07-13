@@ -1,12 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import { generateOperationId } from "@norish/shared/lib/operation-helpers";
 
 import type {
   CalendarCacheHelpers,
   CalendarMutationsResult,
   CreateCalendarHooksOptions,
 } from "./types";
+import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
 
 type CreateUseCalendarMutationsOptions = CreateCalendarHooksOptions & {
   useCalendarCacheHelpers: (startISO: string, endISO: string) => CalendarCacheHelpers;
@@ -30,7 +32,9 @@ export function createUseCalendarMutations({
 
     const createMutation = useMutation(
       trpc.calendar.createItem.mutationOptions({
-        onError: () => invalidate(),
+        onError: (error) => {
+          if (!shouldPreserveOptimisticUpdate(error)) invalidate();
+        },
       })
     );
 
@@ -53,8 +57,8 @@ export function createUseCalendarMutations({
           // update converges back to the DB state.
           if ("stale" in result && result.stale) invalidate();
         },
-        onError: (_err, _vars, context) => {
-          if (context?.previousItems) {
+        onError: (error, _vars, context) => {
+          if (!shouldPreserveOptimisticUpdate(error) && context?.previousItems) {
             setCalendarData(() => context.previousItems);
           }
         },
@@ -126,8 +130,8 @@ export function createUseCalendarMutations({
         onSuccess: (result) => {
           if ("stale" in result && result.stale) invalidate();
         },
-        onError: (_err, _vars, context) => {
-          if (context?.previousItems) {
+        onError: (error, _vars, context) => {
+          if (!shouldPreserveOptimisticUpdate(error) && context?.previousItems) {
             setCalendarData(() => context.previousItems);
           }
         },
@@ -153,8 +157,8 @@ export function createUseCalendarMutations({
         onSuccess: (result) => {
           if ("stale" in result && result.stale) invalidate();
         },
-        onError: (_err, _vars, context) => {
-          if (context?.previousItems) {
+        onError: (error, _vars, context) => {
+          if (!shouldPreserveOptimisticUpdate(error) && context?.previousItems) {
             setCalendarData(() => context.previousItems);
           }
         },
@@ -168,7 +172,7 @@ export function createUseCalendarMutations({
       recipeId?: string,
       title?: string
     ) => {
-      createMutation.mutate({ date, slot, itemType, recipeId, title });
+      createMutation.mutate({ id: generateOperationId(), date, slot, itemType, recipeId, title });
     };
 
     const deleteItem = (itemId: string) => {

@@ -254,5 +254,38 @@ describe("openapi health endpoint", () => {
       { ApiKeyAuth: [] },
       { BearerAuth: [] },
     ]);
+    expect(document.paths["/recipes"]?.post?.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "x-operation-id",
+          in: "header",
+          required: false,
+          schema: { type: "string", format: "uuid" },
+        }),
+      ])
+    );
+  });
+
+  it("generates OpenAPI operation IDs while preserving an optional caller UUID", async () => {
+    const { resolveOpenApiOperationId } = await import("../../src/openapi");
+    const supplied = "123e4567-e89b-42d3-a456-426614174000";
+
+    expect(resolveOpenApiOperationId(new Request("http://localhost/api/v1/recipes"))).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    expect(
+      resolveOpenApiOperationId(
+        new Request("http://localhost/api/v1/recipes", {
+          headers: { "x-operation-id": supplied },
+        })
+      )
+    ).toBe(supplied);
+    expect(
+      resolveOpenApiOperationId(
+        new Request("http://localhost/api/v1/recipes", {
+          headers: { "x-operation-id": "not-a-uuid" },
+        })
+      )
+    ).not.toBe("not-a-uuid");
   });
 });

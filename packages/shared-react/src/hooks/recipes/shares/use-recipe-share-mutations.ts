@@ -5,6 +5,7 @@ import type {
   RecipeShareCreatedDto,
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts";
+import { generateOperationId } from "@norish/shared/lib/operation-helpers";
 
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipeShareCacheHelpers } from "./use-recipe-share-cache";
@@ -102,7 +103,7 @@ export function createUseRecipeShareMutations(
           return null;
         }
 
-        return createMutation.mutateAsync({ recipeId, expiresIn });
+        return createMutation.mutateAsync({ id: generateOperationId(), recipeId, expiresIn });
       },
       updateShare: (input) => {
         updateMutation.mutate(input);

@@ -24,9 +24,12 @@ export default function NoHouseholdView() {
   const handleJoinHousehold = async (e: FormEvent) => {
     e.preventDefault();
     setIsJoining(true);
-    joinHousehold(joinCode);
-    setJoinCode("");
-    setIsJoining(false);
+    try {
+      await joinHousehold(joinCode);
+      setJoinCode("");
+    } finally {
+      setIsJoining(false);
+    }
   };
   return (
     <div className="flex w-full flex-col gap-6">

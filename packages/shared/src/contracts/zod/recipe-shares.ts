@@ -49,6 +49,7 @@ export const AdminRecipeShareInventorySchema = RecipeShareInventorySchema.extend
 });
 
 export const CreateRecipeShareInputSchema = z.object({
+  id: z.uuid().optional(),
   recipeId: z.uuid(),
   expiresIn: RecipeShareExpiryPolicySchema.default("forever"),
 });

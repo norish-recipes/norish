@@ -77,6 +77,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 vi.mock("@norish/queue/helpers", () => ({
   isJobInQueue: vi.fn(),
+  operationJobId: (fallback: string) => fallback,
 }));
 
 vi.mock("@norish/db", () => ({

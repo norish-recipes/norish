@@ -10,6 +10,7 @@ import {
   DeleteSiteAuthTokenInputSchema,
   UpdateSiteAuthTokenInputSchema,
 } from "@norish/shared/contracts/zod/site-auth-tokens";
+import { isUuid } from "@norish/shared/lib/operation-helpers";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
@@ -18,7 +19,10 @@ const create = authedProcedure
   .input(CreateSiteAuthTokenInputSchema)
   .mutation(async ({ ctx, input }) => {
     log.debug({ userId: ctx.user.id, domain: input.domain }, "Creating site auth token");
-    const token = await createSiteAuthToken(ctx.user.id, input);
+    const token = await createSiteAuthToken(ctx.user.id, {
+      ...input,
+      id: input.id ?? (isUuid(ctx.operationId) ? ctx.operationId : undefined),
+    });
 
     log.info(
       { userId: ctx.user.id, tokenId: token.id, domain: input.domain },

@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -11,6 +12,7 @@ const { Pool } = pg;
 
 let _pool: pg.Pool | null = null;
 let _db: NodePgDatabase<typeof schema> | null = null;
+const activeTransaction = new AsyncLocalStorage<DbTransaction>();
 
 function getDb(): NodePgDatabase<typeof schema> {
   if (!_db) {
@@ -26,9 +28,18 @@ function getDb(): NodePgDatabase<typeof schema> {
 export const db = new Proxy({} as NodePgDatabase<typeof schema>, {
   get(_target, prop, _receiver) {
     const instance = getDb();
-    const value = instance[prop as keyof typeof instance];
+    const transaction = activeTransaction.getStore();
 
-    return typeof value === "function" ? value.bind(instance) : value;
+    if (transaction && prop === "transaction") {
+      return async <T>(fn: (nestedTransaction: DbTransaction) => Promise<T>) => fn(transaction);
+    }
+
+    const owner = transaction ?? instance;
+    const value = transaction
+      ? transaction[prop as keyof typeof transaction]
+      : instance[prop as keyof typeof instance];
+
+    return typeof value === "function" ? value.bind(owner) : value;
   },
 });
 
@@ -41,7 +52,13 @@ export type DbTransaction = Parameters<
  * exposing the raw client to callers outside the db package.
  */
 export async function withTransaction<T>(fn: (tx: DbTransaction) => Promise<T>): Promise<T> {
-  return await db.transaction(fn);
+  const current = activeTransaction.getStore();
+
+  if (current) {
+    return await fn(current);
+  }
+
+  return await getDb().transaction((tx) => activeTransaction.run(tx, () => fn(tx)));
 }
 
 /**

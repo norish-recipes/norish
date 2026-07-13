@@ -105,7 +105,7 @@ jobs:
         uses: ./tooling/github/setup
 
       - name: Run format check
-        run: pnpm run format
+        run: pnpm run format:check
 
   i18n:
     name: Locale Keys Check

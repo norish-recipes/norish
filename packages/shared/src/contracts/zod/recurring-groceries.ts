@@ -16,6 +16,7 @@ export const RecurringGrocerySelectBaseSchema = createSelectSchema(recurringGroc
 export const RecurringGroceryInsertBaseSchema = createInsertSchema(recurringGroceries)
   .omit({ id: true, createdAt: true, updatedAt: true })
   .extend({
+    id: z.uuid().optional(),
     amount: z.coerce.number().nullable(),
     recurrenceRule: z.enum(["day", "week", "month"]),
   });

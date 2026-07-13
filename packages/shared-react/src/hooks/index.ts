@@ -8,6 +8,7 @@ export * from "./use-user-avatar";
 export * from "./use-user";
 export * from "./use-amount-display-preference";
 export * from "./use-recurrence-detection";
+export * from "./optimistic-updates";
 export * from "./admin/index";
 export * from "./archive/index";
 export * from "./caldav/index";

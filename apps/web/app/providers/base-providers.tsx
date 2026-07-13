@@ -4,6 +4,7 @@ import type { ComponentProps, ComponentType, PropsWithChildren } from "react";
 import { Toast } from "@heroui/react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
+import { WebOutboxStatus } from "../../components/web-outbox-status";
 import { TRPCProviderWrapper } from "./trpc-provider";
 
 export interface BaseProvidersProps {
@@ -27,6 +28,7 @@ export function BaseProviders({ children, themeProps }: BaseProvidersProps) {
       {...themeProps}
     >
       <TRPCProviderWrapper>{children}</TRPCProviderWrapper>
+      <WebOutboxStatus />
       <Toast.Provider maxVisibleToasts={1} placement="top" />
     </ThemeProvider>
   );

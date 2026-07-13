@@ -182,6 +182,20 @@ export async function createGrocery(
   if (!parsed.success) throw new Error("Invalid GroceryInsertDto");
 
   return await db.transaction(async (trx) => {
+    const existing = await trx
+      .select()
+      .from(groceries)
+      .where(and(eq(groceries.id, id), inArray(groceries.userId, householdUserIds)))
+      .limit(1);
+
+    if (existing[0]) {
+      const validated = GrocerySelectBaseSchema.safeParse(existing[0]);
+
+      if (!validated.success) throw new Error("Failed to parse existing grocery");
+
+      return validated.data;
+    }
+
     // Increment sortOrder for all unchecked items in the same store (or null store)
     await trx
       .update(groceries)

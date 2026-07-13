@@ -50,10 +50,24 @@ export function generateOperationId(): OperationId {
 
 /**
  * Check whether a value is a valid operationId string.
- * Accepts any non-empty string — the branded type is enforced at generation.
+ * Operation IDs are opaque, but the transport header must remain a bounded
+ * single-line token so it cannot be used for header injection or unbounded
+ * receipt keys.
  */
 export function isOperationId(value: unknown): value is OperationId {
-  return typeof value === "string" && value.length > 0;
+  return (
+    typeof value === "string" &&
+    value.length >= 1 &&
+    value.length <= 128 &&
+    /^[A-Za-z0-9._:-]+$/.test(value)
+  );
+}
+
+export function isUuid(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+  );
 }
 
 /**

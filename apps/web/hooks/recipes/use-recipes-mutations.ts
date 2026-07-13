@@ -9,6 +9,7 @@ import {
   createUseRecipesCacheHelpers,
   createUseRecipesMutations,
 } from "@norish/shared-react/hooks/recipes/dashboard";
+import { isQueuedDeliveryError } from "@norish/shared/lib/queued-delivery";
 
 const useRecipesCacheHelpers = createUseRecipesCacheHelpers({ useTRPC });
 const useSharedRecipesMutations = createUseRecipesMutations(
@@ -22,6 +23,8 @@ export function useRecipesMutations(): RecipesMutationsResult {
   const tErrors = useTranslations("common.errors");
 
   const showMutationErrorToast = (error: unknown, operation: string): void => {
+    if (isQueuedDeliveryError(error)) return;
+
     showSafeErrorToast({
       title: tErrors("operationFailed"),
       description: tErrors("technicalDetails"),

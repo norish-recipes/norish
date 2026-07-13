@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import DataTable from "@/components/ui/data-table";
 import {
   useAdminConfigsQuery,
   useJobListQuery,
   useJobQueueMutations,
   useQueueSummaryQuery,
 } from "@/hooks/admin";
-import DataTable from "@/components/ui/data-table";
 import {
   CheckIcon,
   ChevronLeftIcon,
@@ -32,11 +32,11 @@ import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 import type { AdminJobRowDTO } from "@norish/shared/contracts";
 import { DEFAULT_JOB_RETENTION, ServerConfigKeys } from "@norish/config/zod/server-config";
 
+import JobDetailModal from "./jobs/job-detail-modal";
+import { formatDuration, formatStep } from "./jobs/job-format";
+import JobStatusChip from "./jobs/job-status-chip";
 import { RestartRequiredChip } from "./restart-required-chip";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
-import JobDetailModal from "./jobs/job-detail-modal";
-import JobStatusChip from "./jobs/job-status-chip";
-import { formatDuration, formatStep } from "./jobs/job-format";
 
 const QUEUE_OPTIONS = [
   "recipe-import",

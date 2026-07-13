@@ -55,17 +55,35 @@ export async function createSiteAuthToken(
   const [row] = await db
     .insert(siteAuthTokens)
     .values({
+      ...(validated.id ? { id: validated.id } : {}),
       userId,
       domain: validated.domain,
       name: validated.name,
       valueEnc: encrypt(validated.value),
       type: validated.type,
     })
+    .onConflictDoNothing({ target: siteAuthTokens.id })
     .returning();
 
-  const parsed = SiteAuthTokenSelectSchema.parse(row);
+  if (row) {
+    return toSafeToken(SiteAuthTokenSelectSchema.parse(row));
+  }
 
-  return toSafeToken(parsed);
+  if (!validated.id) {
+    throw new Error("Failed to create site auth token");
+  }
+
+  const [existing] = await db
+    .select()
+    .from(siteAuthTokens)
+    .where(eq(siteAuthTokens.id, validated.id))
+    .limit(1);
+
+  if (!existing || existing.userId !== userId) {
+    throw new Error("Site auth token ID is already owned by another mutation");
+  }
+
+  return toSafeToken(SiteAuthTokenSelectSchema.parse(existing));
 }
 
 export async function getTokensByUserId(userId: string): Promise<SiteAuthTokenSafeDto[]> {

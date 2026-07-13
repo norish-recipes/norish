@@ -14,7 +14,7 @@ export type UserSettingsContextValue = {
   updateName: (name: string) => Promise<void>;
   updateImage: (file: File) => Promise<void>;
   deleteImage: () => Promise<void>;
-  generateApiKey: (name?: string) => Promise<{ key: string; metadata: ApiKeyMetadataDto }>;
+  generateApiKey: (name?: string) => Promise<{ key: string; metadata: ApiKeyMetadataDto } | null>;
   deleteApiKey: (keyId: string) => void;
   toggleApiKey: (keyId: string, enabled: boolean) => void;
   deleteAccount: () => void;
@@ -38,21 +38,40 @@ type UserSettingsQueryResult = {
 };
 
 type UserMutationsAdapter = {
-  updateName: (name: string) => Promise<{ success: boolean; user?: User; error?: string }>;
-  uploadAvatar: (file: File) => Promise<{ success: boolean; user?: User; error?: string }>;
-  deleteAvatar: () => Promise<{ success: boolean; user?: User; error?: string }>;
-  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
-  createApiKey: (
-    name?: string
-  ) => Promise<{ success: boolean; key?: string; metadata?: ApiKeyMetadataDto; error?: string }>;
-  deleteApiKey: (keyId: string) => Promise<{ success: boolean; error?: string }>;
-  toggleApiKey: (keyId: string, enabled: boolean) => Promise<{ success: boolean; error?: string }>;
+  updateName: (
+    name: string
+  ) => Promise<{ success: boolean; user?: User; error?: string; queued?: boolean }>;
+  uploadAvatar: (
+    file: File
+  ) => Promise<{ success: boolean; user?: User; error?: string; queued?: boolean }>;
+  deleteAvatar: () => Promise<{
+    success: boolean;
+    user?: User;
+    error?: string;
+    queued?: boolean;
+  }>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string; queued?: boolean }>;
+  createApiKey: (name?: string) => Promise<{
+    success: boolean;
+    key?: string;
+    metadata?: ApiKeyMetadataDto;
+    error?: string;
+    queued?: boolean;
+  }>;
+  deleteApiKey: (keyId: string) => Promise<{ success: boolean; error?: string; queued?: boolean }>;
+  toggleApiKey: (
+    keyId: string,
+    enabled: boolean
+  ) => Promise<{ success: boolean; error?: string; queued?: boolean }>;
   setAllergies: (
     allergies: string[]
-  ) => Promise<{ success: boolean; allergies?: string[]; error?: string }>;
-  updatePreferences: (
-    preferences: Partial<UserPreferencesDto>
-  ) => Promise<{ success: boolean; preferences?: UserPreferencesDto; error?: string }>;
+  ) => Promise<{ success: boolean; allergies?: string[]; error?: string; queued?: boolean }>;
+  updatePreferences: (preferences: Partial<UserPreferencesDto>) => Promise<{
+    success: boolean;
+    preferences?: UserPreferencesDto;
+    error?: string;
+    queued?: boolean;
+  }>;
   isUpdatingName: boolean;
   isUploadingAvatar: boolean;
   isDeletingAvatar: boolean;
@@ -102,6 +121,8 @@ export function createUserSettingsContext({
         try {
           const result = await mutations.updateName(name);
 
+          if (result.queued) return;
+
           if (!result.success && result.error) {
             errorHandler.showError(result.error, "user-settings:update-name");
           }
@@ -116,6 +137,8 @@ export function createUserSettingsContext({
       async (file: File) => {
         try {
           const result = await mutations.uploadAvatar(file);
+
+          if (result.queued) return;
 
           if (!result.success && result.error) {
             errorHandler.showError(result.error, "user-settings:upload-avatar");
@@ -133,6 +156,8 @@ export function createUserSettingsContext({
       async (name?: string) => {
         const result = await mutations.createApiKey(name);
 
+        if (result.queued) return null;
+
         if (result.success && result.key && result.metadata) {
           return { key: result.key, metadata: result.metadata };
         } else {
@@ -147,18 +172,32 @@ export function createUserSettingsContext({
 
     const deleteApiKey = useCallback(
       (keyId: string) => {
-        mutations.deleteApiKey(keyId).catch((error) => {
-          errorHandler.showError(error, "user-settings:delete-api-key");
-        });
+        void mutations
+          .deleteApiKey(keyId)
+          .then((result) => {
+            if (!result.queued && !result.success && result.error) {
+              errorHandler.showError(result.error, "user-settings:delete-api-key");
+            }
+          })
+          .catch((error) => {
+            errorHandler.showError(error, "user-settings:delete-api-key");
+          });
       },
       [mutations, errorHandler]
     );
 
     const toggleApiKey = useCallback(
       (keyId: string, enabled: boolean) => {
-        mutations.toggleApiKey(keyId, enabled).catch((error) => {
-          errorHandler.showError(error, "user-settings:toggle-api-key");
-        });
+        void mutations
+          .toggleApiKey(keyId, enabled)
+          .then((result) => {
+            if (!result.queued && !result.success && result.error) {
+              errorHandler.showError(result.error, "user-settings:toggle-api-key");
+            }
+          })
+          .catch((error) => {
+            errorHandler.showError(error, "user-settings:toggle-api-key");
+          });
       },
       [mutations, errorHandler]
     );
@@ -167,6 +206,8 @@ export function createUserSettingsContext({
       mutations
         .deleteAccount()
         .then((result) => {
+          if (result.queued) return;
+
           if (result.success) {
             deleteAccountAdapter.onSuccess();
           } else if (result.error) {
@@ -181,7 +222,9 @@ export function createUserSettingsContext({
     const updateAllergies = useCallback(
       async (newAllergies: string[]) => {
         try {
-          await mutations.setAllergies(newAllergies);
+          const result = await mutations.setAllergies(newAllergies);
+
+          if (result.queued) return;
         } catch (error) {
           errorHandler.showError(error, "user-settings:update-allergies");
         }
@@ -193,6 +236,8 @@ export function createUserSettingsContext({
       async (preferences: Partial<UserPreferencesDto>) => {
         try {
           const result = await mutations.updatePreferences(preferences);
+
+          if (result.queued) return;
 
           if (!result.success && result.error) {
             errorHandler.showError(result.error, "user-settings:update-preferences");
@@ -209,6 +254,8 @@ export function createUserSettingsContext({
     const deleteImage = useCallback(async () => {
       try {
         const result = await mutations.deleteAvatar();
+
+        if (result.queued) return;
 
         if (!result.success && result.error) {
           errorHandler.showError(result.error, "user-settings:delete-avatar");

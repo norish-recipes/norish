@@ -28,6 +28,14 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   TRPCProviderWrapper: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+vi.mock("@/components/web-outbox-status", () => ({
+  WebOutboxStatus: () => null,
+}));
+
+vi.mock("@norish/shared/lib/auth/client", () => ({
+  getSession: vi.fn().mockResolvedValue({ data: null }),
+}));
+
 vi.mock("@/components/timer-dock", () => ({
   TimerDock: () => null,
 }));

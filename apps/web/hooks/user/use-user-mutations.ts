@@ -6,33 +6,60 @@ import { useMutation } from "@tanstack/react-query";
 import type { User } from "@norish/shared/contracts";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
+import { shouldPreserveOptimisticUpdate } from "@norish/shared-react/hooks";
+import { isQueuedDeliveryError } from "@norish/shared/lib/queued-delivery";
 import { getUserPreferences } from "@norish/shared/lib/user-preferences";
 
 import { useUserCacheHelpers } from "./use-user-cache";
 
+type QueuedMutationResult = { queued?: boolean };
+
 export type UserMutationsResult = {
   // Profile updates
-  updateName: (name: string) => Promise<{ success: boolean; user?: User; error?: string }>;
-  uploadAvatar: (file: File) => Promise<{ success: boolean; user?: User; error?: string }>;
-  deleteAvatar: () => Promise<{ success: boolean; user?: User; error?: string }>;
-  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
+  updateName: (
+    name: string
+  ) => Promise<{ success: boolean; user?: User; error?: string } & QueuedMutationResult>;
+  uploadAvatar: (
+    file: File
+  ) => Promise<{ success: boolean; user?: User; error?: string } & QueuedMutationResult>;
+  deleteAvatar: () => Promise<
+    { success: boolean; user?: User; error?: string } & QueuedMutationResult
+  >;
+  deleteAccount: () => Promise<{ success: boolean; error?: string } & QueuedMutationResult>;
 
   // API keys
-  createApiKey: (
-    name?: string
-  ) => Promise<{ success: boolean; key?: string; metadata?: ApiKeyMetadataDto; error?: string }>;
-  deleteApiKey: (keyId: string) => Promise<{ success: boolean; error?: string }>;
-  toggleApiKey: (keyId: string, enabled: boolean) => Promise<{ success: boolean; error?: string }>;
+  createApiKey: (name?: string) => Promise<
+    {
+      success: boolean;
+      key?: string;
+      metadata?: ApiKeyMetadataDto;
+      error?: string;
+    } & QueuedMutationResult
+  >;
+  deleteApiKey: (
+    keyId: string
+  ) => Promise<{ success: boolean; error?: string } & QueuedMutationResult>;
+  toggleApiKey: (
+    keyId: string,
+    enabled: boolean
+  ) => Promise<{ success: boolean; error?: string } & QueuedMutationResult>;
 
   // Allergies
-  setAllergies: (
-    allergies: string[]
-  ) => Promise<{ success: boolean; allergies?: string[]; version?: number; error?: string }>;
+  setAllergies: (allergies: string[]) => Promise<
+    {
+      success: boolean;
+      allergies?: string[];
+      version?: number;
+      error?: string;
+    } & QueuedMutationResult
+  >;
 
   // Preferences
   updatePreferences: (
     preferences: Partial<UserPreferencesDto>
-  ) => Promise<{ success: boolean; preferences?: UserPreferencesDto; error?: string }>;
+  ) => Promise<
+    { success: boolean; preferences?: UserPreferencesDto; error?: string } & QueuedMutationResult
+  >;
 
   // Loading states
   isUpdatingName: boolean;
@@ -45,6 +72,10 @@ export type UserMutationsResult = {
   isUpdatingAllergies: boolean;
   isUpdatingPreferences: boolean;
 };
+
+function queuedMutationResult(error: unknown): (QueuedMutationResult & { success: false }) | null {
+  return isQueuedDeliveryError(error) ? { success: false, queued: true } : null;
+}
 
 /**
  * Mutations hook for user settings.
@@ -60,6 +91,9 @@ export function useUserMutations(): UserMutationsResult {
     invalidate,
   } = useUserCacheHelpers();
   const getCurrentUserVersion = () => getUserSettingsData()?.user.version ?? 1;
+  const reconcileError = (error: unknown) => {
+    if (!shouldPreserveOptimisticUpdate(error)) invalidate();
+  };
 
   // Profile mutations
   const updateNameMutation = useMutation(trpc.user.updateName.mutationOptions());
@@ -93,9 +127,9 @@ export function useUserMutations(): UserMutationsResult {
 
         return result;
       } catch (error) {
-        invalidate();
+        reconcileError(error);
 
-        return { success: false, error: String(error) };
+        return queuedMutationResult(error) ?? { success: false, error: String(error) };
       }
     },
 
@@ -114,9 +148,9 @@ export function useUserMutations(): UserMutationsResult {
 
         return result;
       } catch (error) {
-        invalidate();
+        reconcileError(error);
 
-        return { success: false, error: String(error) };
+        return queuedMutationResult(error) ?? { success: false, error: String(error) };
       }
     },
 
@@ -130,9 +164,9 @@ export function useUserMutations(): UserMutationsResult {
 
         return result;
       } catch (error) {
-        invalidate();
+        reconcileError(error);
 
-        return { success: false, error: String(error) };
+        return queuedMutationResult(error) ?? { success: false, error: String(error) };
       }
     },
 
@@ -142,7 +176,7 @@ export function useUserMutations(): UserMutationsResult {
 
         return result;
       } catch (error) {
-        return { success: false, error: String(error) };
+        return queuedMutationResult(error) ?? { success: false, error: String(error) };
       }
     },
 
@@ -159,9 +193,9 @@ export function useUserMutations(): UserMutationsResult {
 
         return result;
       } catch (error) {
-        invalidate();
+        reconcileError(error);
 
-        return { success: false, error: String(error) };
+        return queuedMutationResult(error) ?? { success: false, error: String(error) };
       }
     },
 
@@ -177,9 +211,9 @@ export function useUserMutations(): UserMutationsResult {
 
         return result;
       } catch (error) {
-        invalidate();
+        reconcileError(error);
 
-        return { success: false, error: String(error) };
+        return queuedMutationResult(error) ?? { success: false, error: String(error) };
       }
     },
 
@@ -200,9 +234,9 @@ export function useUserMutations(): UserMutationsResult {
 
         return result;
       } catch (error) {
-        invalidate();
+        reconcileError(error);
 
-        return { success: false, error: String(error) };
+        return queuedMutationResult(error) ?? { success: false, error: String(error) };
       }
     },
 
@@ -236,7 +270,7 @@ export function useUserMutations(): UserMutationsResult {
 
         return result;
       } catch (error) {
-        return { success: false, error: String(error) };
+        return queuedMutationResult(error) ?? { success: false, error: String(error) };
       }
     },
 
@@ -285,11 +319,13 @@ export function useUserMutations(): UserMutationsResult {
 
         return result;
       } catch (error) {
-        // Rollback on error
-        setUserSettingsData(() => previous);
-        invalidate();
+        if (!shouldPreserveOptimisticUpdate(error)) {
+          // Rollback on an ordinary domain or storage failure.
+          setUserSettingsData(() => previous);
+          invalidate();
+        }
 
-        return { success: false, error: String(error) };
+        return queuedMutationResult(error) ?? { success: false, error: String(error) };
       }
     },
 

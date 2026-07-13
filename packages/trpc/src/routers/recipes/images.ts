@@ -17,6 +17,7 @@ import {
 } from "@norish/shared-server/media/storage";
 import { ALLOWED_IMAGE_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeImageInputSchema, MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod";
+import { isUuid } from "@norish/shared/lib/operation-helpers";
 
 import type { FormDataInput, UploadedFile } from "../../form-data";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
@@ -226,7 +227,9 @@ const uploadGalleryImage = authedProcedure
 
       if (recipeOwner !== null) {
         // Recipe exists, add to database
-        const [imageRecord] = await addRecipeImages(recipeId, [{ image: url, order }]);
+        const [imageRecord] = await addRecipeImages(recipeId, [
+          { id: isUuid(ctx.operationId) ? ctx.operationId : undefined, image: url, order },
+        ]);
 
         if (!imageRecord) {
           return { success: false, error: "Failed to create image record" };

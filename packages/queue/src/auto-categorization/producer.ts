@@ -7,7 +7,7 @@ import type {
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { isJobInQueue } from "../helpers";
+import { isJobInQueue, operationJobId } from "../helpers";
 
 const log = createLogger("queue:auto-categorization");
 
@@ -21,7 +21,7 @@ export async function addAutoCategorizationJob(
     return { status: "skipped", reason: "disabled" };
   }
 
-  const jobId = `auto-categorize-${data.recipeId}`;
+  const jobId = operationJobId(`auto-categorize-${data.recipeId}`);
 
   log.debug({ recipeId: data.recipeId, jobId }, "Attempting to add auto-categorization job");
 

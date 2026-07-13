@@ -110,13 +110,16 @@ describe("useCalendarMutations", () => {
 
       await waitFor(() => {
         expect(mockCreateItemMutate).toHaveBeenCalled();
-        expect(mockCreateItemMutate.mock.calls[0][0]).toEqual({
-          date: "2025-01-15",
-          slot: "Breakfast",
-          itemType: "recipe",
-          recipeId: "recipe-123",
-          title: undefined,
-        });
+        expect(mockCreateItemMutate.mock.calls[0][0]).toEqual(
+          expect.objectContaining({
+            id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+            date: "2025-01-15",
+            slot: "Breakfast",
+            itemType: "recipe",
+            recipeId: "recipe-123",
+            title: undefined,
+          })
+        );
       });
     });
 
@@ -133,13 +136,16 @@ describe("useCalendarMutations", () => {
 
       await waitFor(() => {
         expect(mockCreateItemMutate).toHaveBeenCalled();
-        expect(mockCreateItemMutate.mock.calls[0][0]).toEqual({
-          date: "2025-01-15",
-          slot: "Lunch",
-          itemType: "note",
-          recipeId: undefined,
-          title: "Meal prep",
-        });
+        expect(mockCreateItemMutate.mock.calls[0][0]).toEqual(
+          expect.objectContaining({
+            id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+            date: "2025-01-15",
+            slot: "Lunch",
+            itemType: "note",
+            recipeId: undefined,
+            title: "Meal prep",
+          })
+        );
       });
     });
   });

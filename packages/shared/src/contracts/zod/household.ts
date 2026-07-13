@@ -4,13 +4,15 @@ import { z } from "zod";
 import { households, householdUsers } from "@norish/db-schema/schema";
 
 export const HouseholdSelectBaseSchema = createSelectSchema(households);
-export const HouseholdInsertBaseSchema = createInsertSchema(households).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  joinCode: true,
-  joinCodeExpiresAt: true,
-});
+export const HouseholdInsertBaseSchema = createInsertSchema(households)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+    joinCode: true,
+    joinCodeExpiresAt: true,
+  })
+  .extend({ id: z.uuid().optional() });
 export const HouseholdUpdateBaseSchema = createUpdateSchema(households).omit({
   id: true,
   createdAt: true,

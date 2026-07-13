@@ -34,6 +34,7 @@ export const StoreInsertBaseSchema = z.object({
 
 // Store create schema (tRPC input - no userId)
 export const StoreCreateSchema = z.object({
+  id: z.uuid().optional(),
   name: z.string().min(1, "Store name is required").max(100),
   color: StoreColorSchema.default("primary"),
   icon: z.string().default("ShoppingBagIcon"),

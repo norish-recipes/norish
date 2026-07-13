@@ -8,6 +8,7 @@ import type {
   MeasurementSystem,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
+import { generateOperationId } from "@norish/shared/lib/operation-helpers";
 
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipesCacheHelpers } from "./use-recipes-cache";
@@ -247,15 +248,27 @@ function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboard
 }
 
 export type RecipesMutationsResult = {
-  importRecipe: (url: string) => void;
-  importRecipeWithAI: (url: string) => void;
-  importRecipeFromImages: (files: File[]) => void;
-  importRecipeFromPaste: (text: string) => void;
-  importRecipeFromPasteWithAI: (text: string) => void;
-  createRecipe: (input: FullRecipeInsertDTO) => void;
-  updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
-  deleteRecipe: (id: string, version: number) => void;
+  importRecipe: (url: string, callbacks?: RecipeDeliveryCallbacks) => void;
+  importRecipeWithAI: (url: string, callbacks?: RecipeDeliveryCallbacks) => void;
+  importRecipeFromImages: (files: File[], callbacks?: RecipeDeliveryCallbacks) => void;
+  importRecipeFromPaste: (text: string, callbacks?: RecipeDeliveryCallbacks) => void;
+  importRecipeFromPasteWithAI: (text: string, callbacks?: RecipeDeliveryCallbacks) => void;
+  createRecipe: (input: FullRecipeInsertDTO, callbacks?: RecipeCreateDeliveryCallbacks) => void;
+  updateRecipe: (
+    id: string,
+    input: FullRecipeUpdateDTO,
+    callbacks?: RecipeDeliveryCallbacks
+  ) => void;
+  deleteRecipe: (id: string, version: number, callbacks?: RecipeDeliveryCallbacks) => void;
   convertMeasurements: (recipeId: string, system: MeasurementSystem, version: number) => void;
+};
+
+export type RecipeCreateDeliveryCallbacks = {
+  onDelivered?: (recipeId: string) => void;
+};
+
+export type RecipeDeliveryCallbacks = {
+  onDelivered?: () => void;
 };
 
 export type RecipesMutationErrorHandler = (error: unknown, operation: string) => void;
@@ -535,41 +548,64 @@ export function createUseRecipesMutations(
       invalidate();
     };
 
-    const importRecipe = (url: string): void => {
-      importMutation.mutate({ url });
+    const importRecipe = (url: string, callbacks?: RecipeDeliveryCallbacks): void => {
+      importMutation.mutate(
+        { id: generateOperationId(), url },
+        { onSuccess: () => callbacks?.onDelivered?.() }
+      );
     };
 
-    const importRecipeWithAI = (url: string): void => {
-      importMutation.mutate({ url, forceAI: true });
+    const importRecipeWithAI = (url: string, callbacks?: RecipeDeliveryCallbacks): void => {
+      importMutation.mutate(
+        { id: generateOperationId(), url, forceAI: true },
+        { onSuccess: () => callbacks?.onDelivered?.() }
+      );
     };
 
-    const createRecipe = (input: FullRecipeInsertDTO): void => {
-      createMutation.mutate(input, {
-        onError: (error, _variables, context) => {
-          onError?.(error, "create");
+    const createRecipe = (
+      input: FullRecipeInsertDTO,
+      callbacks?: RecipeCreateDeliveryCallbacks
+    ): void => {
+      createMutation.mutate(
+        { ...input, id: input.id ?? generateOperationId() },
+        {
+          onSuccess: (recipeId) => {
+            callbacks?.onDelivered?.(recipeId);
+          },
+          onError: (error, _variables, context) => {
+            onError?.(error, "create");
 
-          if (!shouldPreserve(error)) {
-            const createContext = context as CreateMutationContext | undefined;
+            if (!shouldPreserve(error)) {
+              const createContext = context as CreateMutationContext | undefined;
 
-            if (createContext?.detailQueryKey) {
-              queryClient.setQueryData(createContext.detailQueryKey, createContext.previousDetail);
-              queryClient.invalidateQueries({ queryKey: createContext.detailQueryKey });
+              if (createContext?.detailQueryKey) {
+                queryClient.setQueryData(
+                  createContext.detailQueryKey,
+                  createContext.previousDetail
+                );
+                queryClient.invalidateQueries({ queryKey: createContext.detailQueryKey });
+              }
+
+              if (createContext?.previousRecipeLists) {
+                restoreRecipeLists(queryClient, createContext.previousRecipeLists);
+              }
+
+              invalidate();
             }
-
-            if (createContext?.previousRecipeLists) {
-              restoreRecipeLists(queryClient, createContext.previousRecipeLists);
-            }
-
-            invalidate();
-          }
-        },
-      });
+          },
+        }
+      );
     };
 
-    const updateRecipe = (id: string, input: FullRecipeUpdateDTO): void => {
+    const updateRecipe = (
+      id: string,
+      input: FullRecipeUpdateDTO,
+      callbacks?: RecipeDeliveryCallbacks
+    ): void => {
       updateMutation.mutate(
         { id, version: input.version ?? 1, data: input },
         {
+          onSuccess: () => callbacks?.onDelivered?.(),
           onError: (error, _variables, context) => {
             onError?.(error, "update");
 
@@ -590,8 +626,12 @@ export function createUseRecipesMutations(
       );
     };
 
-    const deleteRecipe = (id: string, version: number): void => {
-      deleteMutation.mutate({ id, version });
+    const deleteRecipe = (
+      id: string,
+      version: number,
+      callbacks?: RecipeDeliveryCallbacks
+    ): void => {
+      deleteMutation.mutate({ id, version }, { onSuccess: () => callbacks?.onDelivered?.() });
     };
 
     const convertMeasurements = (
@@ -613,7 +653,7 @@ export function createUseRecipesMutations(
       );
     };
 
-    const importRecipeFromImages = (files: File[]): void => {
+    const importRecipeFromImages = (files: File[], callbacks?: RecipeDeliveryCallbacks): void => {
       const formData = new FormData();
 
       files.forEach((file, index) => {
@@ -622,15 +662,23 @@ export function createUseRecipesMutations(
 
       const imageInput = formData as Parameters<typeof imageImportMutation.mutate>[0];
 
-      imageImportMutation.mutate(imageInput);
+      imageImportMutation.mutate(imageInput, {
+        onSuccess: () => callbacks?.onDelivered?.(),
+      });
     };
 
-    const importRecipeFromPaste = (text: string): void => {
-      pasteImportMutation.mutate({ text });
+    const importRecipeFromPaste = (text: string, callbacks?: RecipeDeliveryCallbacks): void => {
+      pasteImportMutation.mutate({ text }, { onSuccess: () => callbacks?.onDelivered?.() });
     };
 
-    const importRecipeFromPasteWithAI = (text: string): void => {
-      pasteImportMutation.mutate({ text, forceAI: true });
+    const importRecipeFromPasteWithAI = (
+      text: string,
+      callbacks?: RecipeDeliveryCallbacks
+    ): void => {
+      pasteImportMutation.mutate(
+        { text, forceAI: true },
+        { onSuccess: () => callbacks?.onDelivered?.() }
+      );
     };
 
     return {

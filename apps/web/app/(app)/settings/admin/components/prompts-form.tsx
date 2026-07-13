@@ -80,11 +80,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
       <div className="flex flex-col gap-2">
         <TextField value={recipeExtraction} onChange={setRecipeExtraction}>
           <Label>{t("recipeExtraction")}</Label>
-          <TextArea
-            placeholder={t("recipeExtractionPlaceholder")}
-            rows={6}
-            variant="secondary"
-          />
+          <TextArea placeholder={t("recipeExtractionPlaceholder")} rows={6} variant="secondary" />
           <Description>{t("recipeExtractionDescription")}</Description>
         </TextField>
       </div>
@@ -92,11 +88,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
       <div className="flex flex-col gap-2">
         <TextField value={unitConversion} onChange={setUnitConversion}>
           <Label>{t("unitConversion")}</Label>
-          <TextArea
-            placeholder={t("unitConversionPlaceholder")}
-            rows={4}
-            variant="secondary"
-          />
+          <TextArea placeholder={t("unitConversionPlaceholder")} rows={4} variant="secondary" />
           <Description>{t("unitConversionDescription")}</Description>
         </TextField>
       </div>
@@ -116,11 +108,7 @@ export default function PromptsForm({ onDirtyChange }: PromptsFormProps) {
       <div className="flex flex-col gap-2">
         <TextField value={autoTagging} onChange={setAutoTagging}>
           <Label>{t("autoTagging")}</Label>
-          <TextArea
-            placeholder={t("autoTaggingPlaceholder")}
-            rows={6}
-            variant="secondary"
-          />
+          <TextArea placeholder={t("autoTaggingPlaceholder")} rows={6} variant="secondary" />
           <Description>{t("autoTaggingDescription")}</Description>
         </TextField>
       </div>

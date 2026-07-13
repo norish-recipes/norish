@@ -169,6 +169,16 @@ export async function getMaxSortOrder(
 }
 
 export async function createPlannedItem(input: PlannedItemInsert): Promise<PlannedItem> {
+  if (input.id) {
+    const existing = await db
+      .select()
+      .from(plannedItems)
+      .where(and(eq(plannedItems.id, input.id), eq(plannedItems.userId, input.userId)))
+      .limit(1);
+
+    if (existing[0]) return existing[0];
+  }
+
   const maxSortOrder = await getMaxSortOrder([input.userId], input.date, input.slot);
   const sortOrder = maxSortOrder + 1;
 

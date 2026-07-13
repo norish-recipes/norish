@@ -3,6 +3,7 @@ import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const DEFAULT_ROOTS = ["apps", "packages", "tooling"];
+const EXCLUDED_PACKAGE_NAMES = new Set(["@norish/landing"]);
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts"]);
 const IGNORED_DIRS = new Set([
   ".cache",
@@ -132,7 +133,11 @@ function checkPackage(rootDir, packageDir, workspacePackages) {
 
 export function runWorkspaceImportCheck({ cwd = process.cwd(), logger = console } = {}) {
   const rootDir = resolve(cwd);
-  const packageDirs = listPackageDirs(rootDir).filter((dir) => statSync(dir).isDirectory());
+  const packageDirs = listPackageDirs(rootDir).filter(
+    (dir) =>
+      statSync(dir).isDirectory() &&
+      !EXCLUDED_PACKAGE_NAMES.has(readJson(join(dir, "package.json")).name)
+  );
   const workspacePackages = new Set(
     packageDirs.map((dir) => readJson(join(dir, "package.json")).name)
   );

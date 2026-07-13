@@ -1,5 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 
+import { isQueuedDeliveryError } from "@norish/shared/lib/queued-delivery";
+
 import type {
   ArchiveImportMutationResult,
   ArchiveImportQueryResult,
@@ -54,7 +56,9 @@ export function createUseArchiveMutation({
           }
         },
         onError: (error) => {
-          toastAdapter.showErrorToast(error);
+          if (!isQueuedDeliveryError(error)) {
+            toastAdapter.showErrorToast(error);
+          }
         },
       });
     };

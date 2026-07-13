@@ -131,9 +131,10 @@ export async function listPlannedRecipesByRange(
 }
 
 export async function createCalendarItem(ctx: CalendarProcedureContext, input: CreateItemInput) {
-  const { date, slot, itemType, recipeId, title } = input;
+  const { id, date, slot, itemType, recipeId, title } = input;
 
   const newItem = await createPlannedItem({
+    id,
     userId: ctx.user.id,
     date,
     slot,

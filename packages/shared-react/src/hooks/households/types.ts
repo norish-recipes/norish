@@ -37,7 +37,7 @@ export type HouseholdCacheHelpers = {
 
 export type HouseholdMutationsResult = {
   createHousehold: (name: string) => void;
-  joinHousehold: (code: string) => void;
+  joinHousehold: (code: string, householdId?: string) => Promise<void>;
   leaveHousehold: (householdId: string) => void;
   kickUser: (householdId: string, userId: string) => void;
   regenerateJoinCode: (householdId: string) => void;

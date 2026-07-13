@@ -17,7 +17,8 @@ export type ScheduledTaskType =
   | "media-cleanup"
   | "calendar-cleanup"
   | "groceries-cleanup"
-  | "video-temp-cleanup";
+  | "video-temp-cleanup"
+  | "mutation-receipts-cleanup";
 
 export interface ScheduledTaskJobData {
   taskType: ScheduledTaskType;

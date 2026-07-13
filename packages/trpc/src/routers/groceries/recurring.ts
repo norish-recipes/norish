@@ -31,6 +31,8 @@ import { groceryEmitter } from "./emitter";
 const createRecurring = authedProcedure
   .input(
     z.object({
+      id: z.uuid().optional(),
+      groceryId: z.uuid().optional(),
       name: z.string(),
       amount: z.number().nullable(),
       unit: z.string().nullable(),
@@ -42,7 +44,7 @@ const createRecurring = authedProcedure
     })
   )
   .mutation(async ({ ctx, input }) => {
-    const id = crypto.randomUUID();
+    const id = input.groceryId ?? crypto.randomUUID();
 
     log.info(
       { userId: ctx.user.id, rule: input.recurrenceRule, interval: input.recurrenceInterval },
@@ -50,7 +52,7 @@ const createRecurring = authedProcedure
     );
 
     const recurringData = {
-      id: crypto.randomUUID(),
+      id: input.id ?? crypto.randomUUID(),
       userId: ctx.user.id,
       name: input.name,
       amount: input.amount,

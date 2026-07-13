@@ -6,6 +6,7 @@ import type {
   FavoritesMutationResult,
   FavoritesQueryResult,
   RatingsSubscriptionCallbacks,
+  RecipeDeliveryCallbacks,
   RecipeFilters,
   RecipesMutationsResult,
   RecipesQueryResult,
@@ -45,7 +46,7 @@ export type SharedRecipesContextValue = {
   importRecipeWithAI: (url: string) => void;
   createRecipe: (input: FullRecipeInsertDTO) => void;
   updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
-  deleteRecipe: (id: string, version: number) => void;
+  deleteRecipe: (id: string, version: number, callbacks?: RecipeDeliveryCallbacks) => void;
   invalidate: () => void;
   openRecipe: (id: string) => void;
 };
@@ -150,8 +151,7 @@ export function createRecipesContext({
     const importRecipe = useCallback(
       (url: string) => {
         importToasts.showImportRecipePending();
-        importRecipeMutation(url);
-        navigation.toHome();
+        importRecipeMutation(url, { onDelivered: navigation.toHome });
       },
       [importRecipeMutation, importToasts, navigation]
     );
@@ -159,24 +159,25 @@ export function createRecipesContext({
     const importRecipeWithAI = useCallback(
       (url: string) => {
         importToasts.showImportRecipeWithAIPending();
-        importRecipeWithAIMutation(url);
-        navigation.toHome();
+        importRecipeWithAIMutation(url, { onDelivered: navigation.toHome });
       },
       [importRecipeWithAIMutation, importToasts, navigation]
     );
 
     const wrappedCreateRecipe = useCallback(
       (input: FullRecipeInsertDTO) => {
-        createRecipe(input);
-        input.id ? navigation.toRecipe(input.id) : navigation.toHome();
+        createRecipe(input, {
+          onDelivered: (recipeId) => navigation.toRecipe(recipeId),
+        });
       },
       [createRecipe, navigation]
     );
 
     const wrappedUpdateRecipe = useCallback(
       (id: string, input: FullRecipeUpdateDTO) => {
-        updateRecipe(id, input);
-        navigation.toRecipe(id);
+        updateRecipe(id, input, {
+          onDelivered: () => navigation.toRecipe(id),
+        });
       },
       [navigation, updateRecipe]
     );

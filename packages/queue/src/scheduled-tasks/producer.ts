@@ -57,5 +57,11 @@ export async function initializeScheduledJobs(queue: Queue<ScheduledTaskJobData>
     { repeat: { pattern: cronMidnight }, jobId: "video-temp-cleanup" }
   );
 
+  await queue.add(
+    "mutation-receipts-cleanup",
+    { taskType: "mutation-receipts-cleanup" },
+    { repeat: { pattern: cronMidnight }, jobId: "mutation-receipts-cleanup" }
+  );
+
   log.info("Repeatable scheduled jobs initialized (daily at midnight)");
 }

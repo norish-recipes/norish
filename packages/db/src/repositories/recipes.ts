@@ -658,20 +658,35 @@ export async function createRecipeWithRefs(
     const [inserted] = await tx
       .insert(recipes)
       .values(toInsert)
-      .onConflictDoNothing({ target: [recipes.url, recipes.userId] })
+      .onConflictDoNothing()
       .returning({ id: recipes.id });
 
     if (!inserted) {
-      const existing = await tx.query.recipes.findFirst({
-        where: and(eq(recipes.url, toInsert.url!), eq(recipes.userId, userId ?? "")),
-        columns: { id: true },
+      const existingById = await tx.query.recipes.findFirst({
+        where: eq(recipes.id, recipeId),
+        columns: { id: true, userId: true },
       });
 
-      if (!existing) {
-        throw new Error("Failed to save recipe");
+      if (existingById) {
+        if (existingById.userId !== (userId ?? null)) {
+          throw new Error("Recipe ID is already owned by another mutation");
+        }
+
+        return existingById.id;
       }
 
-      return existing.id;
+      if (toInsert.url) {
+        const existingByUrl = await tx.query.recipes.findFirst({
+          where: and(eq(recipes.url, toInsert.url), eq(recipes.userId, userId ?? "")),
+          columns: { id: true },
+        });
+
+        if (existingByUrl) {
+          return existingByUrl.id;
+        }
+      }
+
+      throw new Error("Failed to save recipe");
     }
 
     const rid = inserted.id;
@@ -1518,6 +1533,7 @@ export async function searchRecipesByName(
 // --- Recipe Images Management ---
 
 export interface RecipeImageInput {
+  id?: string;
   image: string;
   order: number;
 }
@@ -1531,23 +1547,41 @@ export async function addRecipeImages(
 ): Promise<{ id: string; image: string; order: number; version: number }[]> {
   if (!images.length) return [];
 
-  const inserted = await db
-    .insert(recipeImages)
-    .values(
-      images.map((img) => ({
-        recipeId,
-        image: img.image,
-        order: String(img.order),
-      }))
-    )
-    .returning({
-      id: recipeImages.id,
-      image: recipeImages.image,
-      order: recipeImages.order,
-      version: recipeImages.version,
-    });
+  const providedIds = images.flatMap((image) => (image.id ? [image.id] : []));
+  const existing = providedIds.length
+    ? await db
+        .select({
+          id: recipeImages.id,
+          image: recipeImages.image,
+          order: recipeImages.order,
+          version: recipeImages.version,
+        })
+        .from(recipeImages)
+        .where(and(eq(recipeImages.recipeId, recipeId), inArray(recipeImages.id, providedIds)))
+    : [];
+  const existingIds = new Set(existing.map((image) => image.id));
+  const newImages = images.filter((image) => !image.id || !existingIds.has(image.id));
 
-  return inserted.map((row) => ({
+  const inserted = newImages.length
+    ? await db
+        .insert(recipeImages)
+        .values(
+          newImages.map((img) => ({
+            ...(img.id ? { id: img.id } : {}),
+            recipeId,
+            image: img.image,
+            order: String(img.order),
+          }))
+        )
+        .returning({
+          id: recipeImages.id,
+          image: recipeImages.image,
+          order: recipeImages.order,
+          version: recipeImages.version,
+        })
+    : [];
+
+  return [...existing, ...inserted].map((row) => ({
     id: row.id,
     image: row.image,
     order: Number(row.order) || 0,
@@ -1684,6 +1718,7 @@ export async function countRecipeImages(recipeId: string): Promise<number> {
 // --- Recipe Videos Management ---
 
 export interface RecipeVideoInput {
+  id?: string;
   video: string;
   thumbnail?: string | null;
   duration?: number | null;
@@ -1720,27 +1755,47 @@ export async function addRecipeVideos(
 > {
   if (!videos.length) return [];
 
-  const inserted = await db
-    .insert(recipeVideos)
-    .values(
-      videos.map((v) => ({
-        recipeId,
-        video: v.video,
-        thumbnail: v.thumbnail ?? null,
-        duration: v.duration != null ? String(v.duration) : null,
-        order: String(v.order),
-      }))
-    )
-    .returning({
-      id: recipeVideos.id,
-      video: recipeVideos.video,
-      thumbnail: recipeVideos.thumbnail,
-      duration: recipeVideos.duration,
-      order: recipeVideos.order,
-      version: recipeVideos.version,
-    });
+  const providedIds = videos.flatMap((video) => (video.id ? [video.id] : []));
+  const existing = providedIds.length
+    ? await db
+        .select({
+          id: recipeVideos.id,
+          video: recipeVideos.video,
+          thumbnail: recipeVideos.thumbnail,
+          duration: recipeVideos.duration,
+          order: recipeVideos.order,
+          version: recipeVideos.version,
+        })
+        .from(recipeVideos)
+        .where(and(eq(recipeVideos.recipeId, recipeId), inArray(recipeVideos.id, providedIds)))
+    : [];
+  const existingIds = new Set(existing.map((video) => video.id));
+  const newVideos = videos.filter((video) => !video.id || !existingIds.has(video.id));
 
-  return inserted.map((row) => ({
+  const inserted = newVideos.length
+    ? await db
+        .insert(recipeVideos)
+        .values(
+          newVideos.map((v) => ({
+            ...(v.id ? { id: v.id } : {}),
+            recipeId,
+            video: v.video,
+            thumbnail: v.thumbnail ?? null,
+            duration: v.duration != null ? String(v.duration) : null,
+            order: String(v.order),
+          }))
+        )
+        .returning({
+          id: recipeVideos.id,
+          video: recipeVideos.video,
+          thumbnail: recipeVideos.thumbnail,
+          duration: recipeVideos.duration,
+          order: recipeVideos.order,
+          version: recipeVideos.version,
+        })
+    : [];
+
+  return [...existing, ...inserted].map((row) => ({
     id: row.id,
     video: row.video,
     thumbnail: row.thumbnail,

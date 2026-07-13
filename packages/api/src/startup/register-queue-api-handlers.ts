@@ -17,6 +17,7 @@ import {
   cleanupOrphanedImages,
   cleanupOrphanedStepImages,
 } from "@norish/api/startup/media-cleanup";
+import { runMutationReceiptCleanup } from "@norish/api/startup/mutation-receipts-cleanup";
 import { cleanupOldTempFiles } from "@norish/api/video/cleanup";
 import { registerQueueApiHandlers } from "@norish/queue/api-handlers";
 
@@ -40,5 +41,6 @@ export function registerApiHandlersForQueue(): void {
     cleanupOrphanedAvatars,
     cleanupOrphanedStepImages,
     cleanupOldTempFiles,
+    cleanupExpiredMutationReceipts: runMutationReceiptCleanup,
   });
 }

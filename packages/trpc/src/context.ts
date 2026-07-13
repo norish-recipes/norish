@@ -24,19 +24,33 @@ export type Context = {
   multiplexer: SubscriptionMultiplexer | null;
   /** Client-generated operation ID for mutation correlation */
   operationId: OperationId | null;
+  /** True for authenticated HTTP/OpenAPI mutation boundaries. */
+  enforceMutationReceipts?: boolean;
+  /** Identifies delayed replay so lookup-based mutations can require immutable targets. */
+  replayOrigin?: string | null;
 };
 
 export async function createHttpContextFromHeaders(
   headers: Headers,
   operationId: OperationId | null
 ): Promise<Context> {
+  const replayOrigin = headers.get("x-replay-origin");
+
   try {
     const session = await auth.api.getSession({
       headers,
     });
 
     if (!session?.user?.id) {
-      return { user: null, household: null, connectionId: null, multiplexer: null, operationId };
+      return {
+        user: null,
+        household: null,
+        connectionId: null,
+        multiplexer: null,
+        operationId,
+        enforceMutationReceipts: true,
+        replayOrigin,
+      };
     }
 
     const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
@@ -61,9 +75,25 @@ export async function createHttpContextFromHeaders(
         }
       : null;
 
-    return { user, household, connectionId: null, multiplexer: null, operationId };
+    return {
+      user,
+      household,
+      connectionId: null,
+      multiplexer: null,
+      operationId,
+      enforceMutationReceipts: true,
+      replayOrigin,
+    };
   } catch {
-    return { user: null, household: null, connectionId: null, multiplexer: null, operationId };
+    return {
+      user: null,
+      household: null,
+      connectionId: null,
+      multiplexer: null,
+      operationId,
+      enforceMutationReceipts: true,
+      replayOrigin,
+    };
   }
 }
 
@@ -103,7 +133,15 @@ export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<
     const session = await auth.api.getSession({ headers });
 
     if (!session?.user?.id) {
-      return { user: null, household: null, connectionId, multiplexer: null, operationId: null };
+      return {
+        user: null,
+        household: null,
+        connectionId,
+        multiplexer: null,
+        operationId: null,
+        enforceMutationReceipts: false,
+        replayOrigin: null,
+      };
     }
 
     const sessionUser = session.user as { isServerAdmin?: boolean; isServerOwner?: boolean };
@@ -116,8 +154,24 @@ export async function createWsContext(opts: CreateWSSContextFnOptions): Promise<
       isServerAdmin: sessionUser.isServerOwner || sessionUser.isServerAdmin || false,
     };
 
-    return { user, household: null, connectionId, multiplexer: null, operationId: null };
+    return {
+      user,
+      household: null,
+      connectionId,
+      multiplexer: null,
+      operationId: null,
+      enforceMutationReceipts: false,
+      replayOrigin: null,
+    };
   } catch {
-    return { user: null, household: null, connectionId, multiplexer: null, operationId: null };
+    return {
+      user: null,
+      household: null,
+      connectionId,
+      multiplexer: null,
+      operationId: null,
+      enforceMutationReceipts: false,
+      replayOrigin: null,
+    };
   }
 }

@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 
 import type { StoreCreateDto, StoreDeleteInput, StoreDto } from "@norish/shared/contracts";
+import { generateOperationId } from "@norish/shared/lib/operation-helpers";
 
 import type {
   CreateStoresHooksOptions,
@@ -9,6 +10,7 @@ import type {
   StoresQueryResult,
   StoreUpdateDraft,
 } from "./types";
+import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
 
 type CreateUseStoresMutationsOptions = CreateStoresHooksOptions & {
   useStoresQuery: () => StoresQueryResult;
@@ -31,15 +33,17 @@ export function createUseStoresMutations({
     const reorderMutation = useMutation(trpc.stores.reorder.mutationOptions());
 
     const createStore = (data: StoreCreateDto): Promise<string> => {
+      const stableData = { ...data, id: data.id ?? generateOperationId() };
+
       return new Promise((resolve, reject) => {
-        createMutation.mutate(data, {
+        createMutation.mutate(stableData, {
           onSuccess: (storeId) => {
             const newStore: StoreDto = {
               id: storeId,
               userId: "",
-              name: data.name,
-              color: data.color ?? "primary",
-              icon: data.icon ?? "ShoppingBagIcon",
+              name: stableData.name,
+              color: stableData.color ?? "primary",
+              icon: stableData.icon ?? "ShoppingBagIcon",
               sortOrder: stores.length,
               version: 1,
             };
@@ -56,7 +60,7 @@ export function createUseStoresMutations({
             resolve(storeId);
           },
           onError: (error) => {
-            invalidate();
+            if (!shouldPreserveOptimisticUpdate(error)) invalidate();
             reject(error);
           },
         });
@@ -73,7 +77,9 @@ export function createUseStoresMutations({
       updateMutation.mutate(
         { ...data, version: getStoreVersion(data.id) },
         {
-          onError: () => invalidate(),
+          onError: (error) => {
+            if (!shouldPreserveOptimisticUpdate(error)) invalidate();
+          },
         }
       );
     };
@@ -102,7 +108,9 @@ export function createUseStoresMutations({
             invalidate();
           }
         },
-        onError: () => invalidate(),
+        onError: (error) => {
+          if (!shouldPreserveOptimisticUpdate(error)) invalidate();
+        },
       });
     };
 
@@ -125,7 +133,9 @@ export function createUseStoresMutations({
           stores: storeIds.map((id) => ({ id, version: getStoreVersion(id) })),
         },
         {
-          onError: () => invalidate(),
+          onError: (error) => {
+            if (!shouldPreserveOptimisticUpdate(error)) invalidate();
+          },
         }
       );
     };

@@ -49,6 +49,12 @@ describe("isOperationId", () => {
     expect(isOperationId(123)).toBe(false);
     expect(isOperationId({})).toBe(false);
   });
+
+  it("rejects unsafe or unbounded transport values", () => {
+    expect(isOperationId("contains whitespace")).toBe(false);
+    expect(isOperationId("line\nbreak")).toBe(false);
+    expect(isOperationId("x".repeat(129))).toBe(false);
+  });
 });
 
 describe("isEventEnvelope", () => {

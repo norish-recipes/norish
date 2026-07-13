@@ -7,6 +7,7 @@
 import type { Queue } from "bullmq";
 
 import type { PermissionLevel } from "@norish/config/zod/server-config";
+import { getCurrentOperationId } from "@norish/shared-server/lib/operation-context";
 import { OperationTimeoutError } from "@norish/shared/lib/error-extensions";
 import { normalizeUrl } from "@norish/shared/lib/helpers";
 
@@ -42,6 +43,13 @@ export function generateJobId(
     default:
       return `import_${sanitized}`;
   }
+}
+
+/** Prefer the logical mutation identity when a producer runs inside a request. */
+export function operationJobId(fallback: string): string {
+  const operationId = getCurrentOperationId();
+
+  return operationId ? `operation_${operationId.replace(/[^a-zA-Z0-9_-]/g, "_")}` : fallback;
 }
 
 /**

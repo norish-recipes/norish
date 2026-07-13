@@ -19,6 +19,8 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
+import { generateOperationId } from "@norish/shared/lib/operation-helpers";
+
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");
   const tErrors = useTranslations("common.errors");
@@ -49,6 +51,7 @@ export default function SiteAuthTokensCard() {
     setIsCreating(true);
     try {
       const newToken = await createMutation.mutateAsync({
+        id: generateOperationId(),
         domain,
         name,
         value,

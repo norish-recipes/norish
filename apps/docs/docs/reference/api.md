@@ -30,6 +30,19 @@ Notes:
   parser service are both healthy.
 - All other documented `/api/v1` endpoints require API credentials.
 
+## Idempotent mutation retries
+
+Mutation requests receive a server-generated operation UUID automatically, so
+API clients do not need to send an operation ID. Clients that need idempotent
+transport retries may optionally send an `x-operation-id` UUID and reuse that
+exact UUID only for retries of the same path and request body. Reusing it for a
+different mutation is rejected as a conflict. Query endpoints remain
+receipt-free.
+
+```http
+x-operation-id: 7f8b2c77-9d8d-4a9d-a8e8-1bd5c4c51c87
+```
+
 ## Endpoints
 
 ### Health

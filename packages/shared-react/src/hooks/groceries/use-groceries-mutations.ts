@@ -5,6 +5,7 @@ import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
+import { generateOperationId } from "@norish/shared/lib/operation-helpers";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
 import type {
@@ -14,6 +15,7 @@ import type {
   GroceriesQueryResult,
   GroceryCreateData,
 } from "./types";
+import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
 
 const log = createClientLogger("GroceriesMutations");
 
@@ -30,10 +32,6 @@ type CreateRecurringResult = {
   recurringGrocery: RecurringGroceryDto;
   grocery: GroceryDto;
 };
-
-function createOptimisticId() {
-  return globalThis.crypto?.randomUUID?.() ?? `optimistic-${Date.now()}-${Math.random()}`;
-}
 
 function createOptimisticGrocery({
   id,
@@ -223,8 +221,18 @@ export function createUseGroceriesMutations({
     const mapGroceriesWithVersions = (ids: string[]) =>
       ids.map((id) => ({ id, version: getGroceryVersion(id) }));
 
-    const invalidateIfStale = (result: { stale?: true }) => {
-      if (result.stale) {
+    const invalidateIfStale = (result: unknown) => {
+      if (
+        typeof result === "object" &&
+        result !== null &&
+        (result as { stale?: unknown }).stale === true
+      ) {
+        invalidate();
+      }
+    };
+
+    const reconcileError = (error: unknown) => {
+      if (!shouldPreserveOptimisticUpdate(error)) {
         invalidate();
       }
     };
@@ -243,19 +251,20 @@ export function createUseGroceriesMutations({
 
     const createGrocery = (raw: string, storeId?: string | null) => {
       const parsed = parseIngredientWithDefaults(raw, units)[0]!;
-      const optimisticId = createOptimisticId();
       const requestedStoreId = storeId ?? null;
       const groceryData = {
+        id: generateOperationId(),
         name: parsed.description,
         amount: parsed.quantity,
         unit: parsed.unitOfMeasure,
         isDone: false,
         storeId: requestedStoreId,
       };
+      const stableGroceryId = groceryData.id;
       const optimisticStoreId =
         requestedStoreId ?? findCachedStoreIdForName(groceryData.name, groceries);
       const optimisticGrocery = createOptimisticGrocery({
-        id: optimisticId,
+        id: stableGroceryId,
         name: groceryData.name,
         amount: groceryData.amount ?? null,
         unit: groceryData.unit ?? null,
@@ -276,16 +285,17 @@ export function createUseGroceriesMutations({
         onSuccess: (result: CreateGroceriesResult) => {
           setGroceriesData((prev) =>
             prev
-              ? reconcileCreatedGroceries(prev, [optimisticId], result, [optimisticGrocery])
+              ? reconcileCreatedGroceries(prev, [stableGroceryId], result, [optimisticGrocery])
               : prev
           );
         },
-        onError: () => invalidate(),
+        onError: reconcileError,
       });
     };
 
     const createGroceriesFromData = (groceryDataList: GroceryCreateData[]): Promise<string[]> => {
       const groceriesToCreate = groceryDataList.map((g) => ({
+        id: g.id ?? generateOperationId(),
         name: g.name,
         amount: g.amount ?? null,
         unit: g.unit ?? null,
@@ -294,7 +304,7 @@ export function createUseGroceriesMutations({
       }));
       const optimisticGroceries = groceriesToCreate.map((grocery) =>
         createOptimisticGrocery({
-          id: createOptimisticId(),
+          id: grocery.id!,
           name: grocery.name,
           amount: grocery.amount,
           unit: grocery.unit,
@@ -327,7 +337,7 @@ export function createUseGroceriesMutations({
             resolve(ids);
           },
           onError: (error) => {
-            invalidate();
+            reconcileError(error);
             reject(error);
           },
         });
@@ -345,6 +355,8 @@ export function createUseGroceriesMutations({
 
       createRecurringMutation.mutate(
         {
+          id: generateOperationId(),
+          groceryId: generateOperationId(),
           name: parsed.description,
           amount: parsed.quantity ?? null,
           unit: parsed.unitOfMeasure,
@@ -358,7 +370,7 @@ export function createUseGroceriesMutations({
           onSuccess: (result: CreateRecurringResult) => {
             setGroceriesData((prev) => (prev ? applyRecurringCreatedToCache(prev, result) : prev));
           },
-          onError: () => invalidate(),
+          onError: reconcileError,
         }
       );
     };
@@ -377,7 +389,7 @@ export function createUseGroceriesMutations({
 
       toggleMutation.mutate(
         { groceries: mapGroceriesWithVersions(ids), isDone },
-        { onError: () => invalidate() }
+        { onError: reconcileError }
       );
     };
 
@@ -434,7 +446,7 @@ export function createUseGroceriesMutations({
           groceryVersion: getGroceryVersion(groceryId),
           isDone,
         },
-        { onSuccess: invalidateIfStale, onError: () => invalidate() }
+        { onSuccess: invalidateIfStale, onError: reconcileError }
       );
     };
 
@@ -477,7 +489,7 @@ export function createUseGroceriesMutations({
 
       updateMutation.mutate(mutationPayload, {
         onSuccess: invalidateIfStale,
-        onError: () => invalidate(),
+        onError: reconcileError,
       });
     };
 
@@ -546,7 +558,7 @@ export function createUseGroceriesMutations({
               nextPlannedFor: nextDate,
             },
           },
-          { onSuccess: invalidateIfStale, onError: () => invalidate() }
+          { onSuccess: invalidateIfStale, onError: reconcileError }
         );
       } else {
         setGroceriesData((prev) => {
@@ -583,7 +595,7 @@ export function createUseGroceriesMutations({
             raw,
             ...(storeId !== undefined ? { storeId } : {}),
           },
-          { onSuccess: invalidateIfStale, onError: () => invalidate() }
+          { onSuccess: invalidateIfStale, onError: reconcileError }
         );
       }
     };
@@ -602,7 +614,7 @@ export function createUseGroceriesMutations({
 
       deleteMutation.mutate(
         { groceries: mapGroceriesWithVersions(ids) },
-        { onSuccess: invalidateIfStale, onError: () => invalidate() }
+        { onSuccess: invalidateIfStale, onError: reconcileError }
       );
     };
 
@@ -619,7 +631,7 @@ export function createUseGroceriesMutations({
 
       deleteRecurringMutation.mutate(
         { recurringGroceryId, version: getRecurringVersion(recurringGroceryId) },
-        { onSuccess: invalidateIfStale, onError: () => invalidate() }
+        { onSuccess: invalidateIfStale, onError: reconcileError }
       );
     };
 
@@ -657,7 +669,7 @@ export function createUseGroceriesMutations({
           onSuccess: invalidateIfStale,
           onError: (error) => {
             log.error({ error, groceryId, storeId }, "Failed to assign grocery to store");
-            invalidate();
+            reconcileError(error);
           },
         }
       );
@@ -709,7 +721,7 @@ export function createUseGroceriesMutations({
           onSuccess: invalidateIfStale,
           onError: (error) => {
             log.error({ error, updateCount: updates.length }, "Failed to reorder groceries");
-            invalidate();
+            reconcileError(error);
           },
         }
       );
@@ -744,7 +756,7 @@ export function createUseGroceriesMutations({
           onSuccess: invalidateIfStale,
           onError: (error) => {
             log.error({ error, storeId }, "Failed to mark groceries as done");
-            invalidate();
+            reconcileError(error);
           },
         }
       );
@@ -773,7 +785,7 @@ export function createUseGroceriesMutations({
           onSuccess: invalidateIfStale,
           onError: (error) => {
             log.error({ error, storeId }, "Failed to delete done groceries");
-            invalidate();
+            reconcileError(error);
           },
         }
       );

@@ -85,6 +85,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 // Mock helpers
 vi.mock("@norish/queue/helpers", () => ({
   isJobInQueue: vi.fn(),
+  operationJobId: (fallback: string) => fallback,
 }));
 
 describe("Auto-Tagging Queue", () => {

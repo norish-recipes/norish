@@ -11,7 +11,7 @@ import type {
   RecipeShareSummaryDto,
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
-import { hashToken, safeDecrypt } from "@norish/config/crypto";
+import { hashToken, hmacIndex, safeDecrypt } from "@norish/config/crypto";
 import { db } from "@norish/db/drizzle";
 import { users } from "@norish/db/schema/auth";
 import { recipeShares } from "@norish/db/schema/recipe-shares";
@@ -64,19 +64,35 @@ export async function createRecipeShare(
   input: CreateRecipeShareInputDto
 ): Promise<RecipeShareCreatedDto> {
   const validated = CreateRecipeShareInputSchema.parse(input);
-  const token = crypto.randomBytes(24).toString("base64url");
+  const token = validated.id
+    ? hmacIndex(`recipe-share:${userId}:${validated.id}`)
+    : crypto.randomBytes(24).toString("base64url");
 
   const [row] = await db
     .insert(recipeShares)
     .values({
+      ...(validated.id ? { id: validated.id } : {}),
       userId,
       recipeId: validated.recipeId,
       tokenHash: hashToken(token),
       expiresAt: resolveRecipeShareExpiresAt(validated.expiresIn),
     })
+    .onConflictDoNothing({ target: recipeShares.id })
     .returning();
 
-  const share = RecipeShareSelectSchema.parse(row);
+  const share = row
+    ? RecipeShareSelectSchema.parse(row)
+    : validated.id
+      ? await getRecipeShareById(validated.id)
+      : null;
+
+  if (!share) {
+    throw new Error("Failed to create recipe share");
+  }
+
+  if (share.userId !== userId || share.recipeId !== validated.recipeId) {
+    throw new Error("Recipe share ID is already owned by another mutation");
+  }
 
   return RecipeShareCreatedSchema.parse({
     ...toRecipeShareSummary(share),

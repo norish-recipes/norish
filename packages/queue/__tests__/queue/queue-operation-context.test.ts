@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { runWithOperationContext } from "@norish/shared-server/lib/operation-context";
 import { generateOperationId } from "@norish/shared/lib/operation-helpers";
 
+import { operationJobId } from "../../src/helpers";
 import { createOperationAwareQueue } from "../../src/operation-aware-queue";
 import {
   createContextAwareProcessor,
@@ -37,6 +38,15 @@ vi.mock("bullmq", async (importOriginal) => {
 });
 
 describe("withJobOperationContext", () => {
+  it("derives a stable BullMQ job ID from the active operation", () => {
+    const opId = generateOperationId();
+
+    expect(runWithOperationContext({ operationId: opId }, () => operationJobId("fallback"))).toBe(
+      `operation_${opId}`
+    );
+    expect(operationJobId("fallback")).toBe("fallback");
+  });
+
   it("attaches the current operationId to job data", () => {
     const opId = generateOperationId();
 
