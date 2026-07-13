@@ -20,6 +20,7 @@ import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
 import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
+import { addAutoNutritionEstimationJob } from "@norish/queue/nutrition-estimation/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getQueues } from "@norish/queue/registry";
 import {
@@ -145,11 +146,18 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       toast: parseResult.usedAI ? "imported" : undefined,
     });
 
+    const queues = getQueues();
+
+    await addAutoNutritionEstimationJob(queues.nutritionEstimation, {
+      recipeId: createdId,
+      userId,
+      householdKey,
+      householdUserIds,
+    });
+
     // Trigger auto-tagging only if AI was NOT used for extraction
     // (AI extraction already includes auto-tagging instructions in the prompt)
     if (!parseResult.usedAI) {
-      const queues = getQueues();
-
       await addAutoTaggingJob(queues.autoTagging, {
         recipeId: createdId,
         userId,

@@ -100,8 +100,10 @@ describe("server config normalization", () => {
       model: "gpt-4.1-mini",
       temperature: 0.4,
       maxTokens: 1024,
+      timeoutMs: 300000,
       apiKey: "secret-key",
       autoTagAllergies: true,
+      autoEstimateNutrition: false,
       alwaysUseAI: false,
       autoTaggingMode: "disabled",
     });
@@ -116,8 +118,10 @@ describe("server config normalization", () => {
       model: "gpt-4.1-mini",
       temperature: 0.4,
       maxTokens: 1024,
+      timeoutMs: 300000,
       apiKey: "••••••••",
       autoTagAllergies: true,
+      autoEstimateNutrition: false,
       alwaysUseAI: false,
       autoTaggingMode: "disabled",
     });

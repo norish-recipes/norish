@@ -110,6 +110,7 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
       temperature: SERVER_CONFIG.AI_TEMPERATURE,
       maxTokens: SERVER_CONFIG.AI_MAX_TOKENS,
       timeoutMs: SERVER_CONFIG.AI_TIMEOUT_MS,
+      autoEstimateNutrition: SERVER_CONFIG.AI_AUTO_ESTIMATE_NUTRITION,
     }),
     sensitive: true, // sensitive due to API key
     description: `AI config (${SERVER_CONFIG.AI_ENABLED ? "enabled" : "disabled"})`,
@@ -662,6 +663,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
         temperature: 1.0,
         maxTokens: 10000,
         timeoutMs: 300000,
+        autoEstimateNutrition: false,
       };
     case ServerConfigKeys.VIDEO_CONFIG:
       return {

@@ -31,6 +31,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
         model: "gpt-5-mini",
         temperature: 1.0,
         maxTokens: 10000,
+        autoEstimateNutrition: false,
       };
     case ServerConfigKeys.VIDEO_CONFIG:
       return {

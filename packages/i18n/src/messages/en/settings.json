@@ -553,6 +553,8 @@
       "requestTimeout": "Request Timeout (ms)",
       "autoTagAllergies": "Auto-detect Allergy Tags",
       "autoTagAllergiesDescription": "Automatically add allergy-related tags when importing recipes",
+      "autoEstimateNutrition": "Estimate Nutrition on Import",
+      "autoEstimateNutritionDescription": "Automatically estimate nutrition when imported recipes have ingredients but no nutrition data",
       "alwaysUseAI": "Always Use AI Importing",
       "alwaysUseAIDescription": "Skip structured parsers and extract recipes using AI only",
       "autoTaggingMode": "Auto-Tagging Mode",

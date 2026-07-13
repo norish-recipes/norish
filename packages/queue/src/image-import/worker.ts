@@ -17,7 +17,9 @@ import {
   getAllergiesForUsers,
 } from "@norish/db";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
+import { addAutoNutritionEstimationJob } from "@norish/queue/nutrition-estimation/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
+import { getQueues } from "@norish/queue/registry";
 import {
   getAIConfig,
   getRecipePermissionPolicy,
@@ -115,6 +117,15 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
       recipe: dashboardDto,
       pendingRecipeId: recipeId,
       toast: "imported",
+    });
+
+    const queues = getQueues();
+
+    await addAutoNutritionEstimationJob(queues.nutritionEstimation, {
+      recipeId: createdId,
+      userId,
+      householdKey,
+      householdUserIds,
     });
 
     // Note: No auto-tagging job queued - image import is always AI-based,

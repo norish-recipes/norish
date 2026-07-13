@@ -553,6 +553,8 @@
       "requestTimeout": "요청 제한 시간 (ms)",
       "autoTagAllergies": "알러지 태그 자동 감지",
       "autoTagAllergiesDescription": "레시피를 가져올 때 알러지 관련 태그를 자동으로 추가합니다.",
+      "autoEstimateNutrition": "가져올 때 영양 정보 추정",
+      "autoEstimateNutritionDescription": "가져온 레시피에 재료는 있지만 영양 정보가 없을 때 자동으로 영양 정보를 추정합니다.",
       "alwaysUseAI": "항상 AI 가져오기 사용",
       "alwaysUseAIDescription": "구조화된 파서를 건너뛰고 AI만 사용하여 레시피 추출",
       "autoTaggingMode": "자동 태그 추가 모드",

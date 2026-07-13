@@ -553,6 +553,8 @@
       "requestTimeout": "Limit czasu żądania (ms)",
       "autoTagAllergies": "Automatyczne wykrywanie tagów alergii",
       "autoTagAllergiesDescription": "Automatycznie dodawaj tagi związane z alergiami podczas importowania przepisów",
+      "autoEstimateNutrition": "Szacuj wartości odżywcze przy imporcie",
+      "autoEstimateNutritionDescription": "Automatycznie szacuj wartości odżywcze, gdy importowane przepisy mają składniki, ale nie mają danych odżywczych",
       "alwaysUseAI": "Zawsze używaj AI przy imporcie",
       "alwaysUseAIDescription": "Pomijaj parsowanie ustrukturyzowane i wyciągaj przepisy wyłącznie przez AI",
       "autoTaggingMode": "Tryb automatycznego tagowania",

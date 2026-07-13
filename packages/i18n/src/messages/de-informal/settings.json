@@ -553,6 +553,8 @@
       "requestTimeout": "Zeitüberschreitung der Anforderung (ms)",
       "autoTagAllergies": "Allergene automatisch erkennen",
       "autoTagAllergiesDescription": "Füge automatisch allergiebezogene Tags beim Importieren von Rezepten hinzu",
+      "autoEstimateNutrition": "Nährwerte beim Import automatisch schätzen",
+      "autoEstimateNutritionDescription": "Schätzt Nährwerte automatisch, wenn importierte Rezepte Zutaten, aber keine Nährwertangaben enthalten",
       "alwaysUseAI": "Immer KI-Import verwenden",
       "alwaysUseAIDescription": "Überspringe strukturierte Parser und extrahiere Rezepte nur mit KI",
       "autoTaggingMode": "Auto-Tagging-Modus",

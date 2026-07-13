@@ -14,6 +14,7 @@ let getUserRatingWithVersion: typeof import("@norish/db/repositories/ratings").g
 const mocked = vi.hoisted(() => ({
   addAutoTaggingJob: vi.fn(),
   addAllergyDetectionJob: vi.fn(),
+  addAutoNutritionEstimationJob: vi.fn(),
   emitByPolicy: vi.fn(),
 }));
 
@@ -24,7 +25,15 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
 }));
 
 vi.mock("@norish/queue/registry", () => ({
-  getQueues: vi.fn(() => ({ autoTagging: {}, allergyDetection: {} })),
+  getQueues: vi.fn(() => ({
+    autoTagging: {},
+    allergyDetection: {},
+    nutritionEstimation: {},
+  })),
+}));
+
+vi.mock("@norish/queue/nutrition-estimation/producer", () => ({
+  addAutoNutritionEstimationJob: mocked.addAutoNutritionEstimationJob,
 }));
 
 vi.mock("@norish/queue/auto-tagging/producer", () => ({
@@ -74,6 +83,7 @@ describe("processPasteImportJob integration", () => {
     userId = user.id;
     mocked.addAutoTaggingJob.mockReset();
     mocked.addAllergyDetectionJob.mockReset();
+    mocked.addAutoNutritionEstimationJob.mockReset();
     mocked.emitByPolicy.mockReset();
   });
 
@@ -195,5 +205,6 @@ describe("processPasteImportJob integration", () => {
     expect(secondStats).toEqual({ averageRating: 2, ratingCount: 1 });
     expect(mocked.addAutoTaggingJob).toHaveBeenCalledTimes(2);
     expect(mocked.addAllergyDetectionJob).toHaveBeenCalledTimes(2);
+    expect(mocked.addAutoNutritionEstimationJob).toHaveBeenCalledTimes(2);
   });
 });

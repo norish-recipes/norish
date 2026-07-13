@@ -553,6 +553,8 @@
       "requestTimeout": "Délai d'expiration (ms)",
       "autoTagAllergies": "Détection auto des tags d’allergies",
       "autoTagAllergiesDescription": "Ajoute automatiquement des tags liés aux allergies lors de l’import",
+      "autoEstimateNutrition": "Estimer la nutrition à l’import",
+      "autoEstimateNutritionDescription": "Estime automatiquement la nutrition des recettes importées avec ingrédients mais sans données nutritionnelles",
       "alwaysUseAI": "Toujours utiliser l’import IA",
       "alwaysUseAIDescription": "Ignore les parseurs structurés et utilise uniquement l’IA",
       "autoTaggingMode": "Mode auto‑tag",

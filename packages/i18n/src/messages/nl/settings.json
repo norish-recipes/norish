@@ -553,6 +553,8 @@
       "requestTimeout": "Time-out van aanvraag (ms)",
       "autoTagAllergies": "Allergietags automatisch detecteren",
       "autoTagAllergiesDescription": "Voeg automatisch allergiegerelateerde tags toe bij het importeren van recepten",
+      "autoEstimateNutrition": "Voedingswaarden schatten bij import",
+      "autoEstimateNutritionDescription": "Schat automatisch voedingswaarden wanneer geïmporteerde recepten ingrediënten maar geen voedingsgegevens bevatten",
       "alwaysUseAI": "Altijd AI gebruiken voor import",
       "alwaysUseAIDescription": "Sla gestructureerde parsers over en extraheer recepten alleen met AI",
       "autoTaggingMode": "Auto-tagging Modus",

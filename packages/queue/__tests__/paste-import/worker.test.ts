@@ -9,6 +9,7 @@ const rateRecipe = vi.fn();
 const getAverageRating = vi.fn();
 const addAutoTaggingJob = vi.fn();
 const addAllergyDetectionJob = vi.fn();
+const addAutoNutritionEstimationJob = vi.fn();
 const emitByPolicy = vi.fn();
 
 vi.mock("@norish/db", () => ({
@@ -29,7 +30,15 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
 }));
 
 vi.mock("@norish/queue/registry", () => ({
-  getQueues: vi.fn(() => ({ autoTagging: {}, allergyDetection: {} })),
+  getQueues: vi.fn(() => ({
+    autoTagging: {},
+    allergyDetection: {},
+    nutritionEstimation: {},
+  })),
+}));
+
+vi.mock("@norish/queue/nutrition-estimation/producer", () => ({
+  addAutoNutritionEstimationJob,
 }));
 
 vi.mock("@norish/queue/auto-tagging/producer", () => ({
@@ -184,6 +193,7 @@ describe("processPasteImportJob", () => {
     expect(rateRecipe).toHaveBeenNthCalledWith(2, "user-1", "recipe-2", 5);
     expect(addAutoTaggingJob).toHaveBeenCalledTimes(2);
     expect(addAllergyDetectionJob).toHaveBeenCalledTimes(2);
+    expect(addAutoNutritionEstimationJob).toHaveBeenCalledTimes(2);
   });
 
   it("fails when no valid structured items remain", async () => {

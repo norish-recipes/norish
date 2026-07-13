@@ -9,6 +9,7 @@ const addRecipeImages = vi.fn();
 const emitByPolicy = vi.fn();
 const extractRecipeFromImages = vi.fn();
 const saveImageBytes = vi.fn();
+const addAutoNutritionEstimationJob = vi.fn();
 
 vi.mock("@norish/db", () => ({
   addRecipeImages,
@@ -24,6 +25,14 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
 
 vi.mock("@norish/queue/api-handlers", () => ({
   requireQueueApiHandler: vi.fn(() => extractRecipeFromImages),
+}));
+
+vi.mock("@norish/queue/nutrition-estimation/producer", () => ({
+  addAutoNutritionEstimationJob,
+}));
+
+vi.mock("@norish/queue/registry", () => ({
+  getQueues: vi.fn(() => ({ nutritionEstimation: {} })),
 }));
 
 vi.mock("@norish/shared-server/realtime/policy", () => ({
@@ -123,5 +132,9 @@ describe("processImageImportJob", () => {
     expect(addRecipeImages).toHaveBeenCalledWith("recipe-123", [
       { image: "/recipes/recipe-123/uploaded.jpg", order: 0 },
     ]);
+    expect(addAutoNutritionEstimationJob).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ recipeId: "recipe-123", userId: "user-1" })
+    );
   });
 });

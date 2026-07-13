@@ -19,6 +19,7 @@ import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
+import { addAutoNutritionEstimationJob } from "@norish/queue/nutrition-estimation/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getQueues } from "@norish/queue/registry";
 import {
@@ -230,6 +231,13 @@ export async function processPasteImportJob(
       recipe: dashboardDto,
       pendingRecipeId: createdId,
       toast: usedAI ? "imported" : undefined,
+    });
+
+    await addAutoNutritionEstimationJob(queues.nutritionEstimation, {
+      recipeId: createdId,
+      userId,
+      householdKey,
+      householdUserIds,
     });
 
     if (!usedAI) {

@@ -553,6 +553,8 @@
       "requestTimeout": "Timeout richiesta (ms)",
       "autoTagAllergies": "Rileva automaticamente tag allergie",
       "autoTagAllergiesDescription": "Aggiungi automaticamente tag relativi alle allergie durante l'importazione delle ricette",
+      "autoEstimateNutrition": "Stima i valori nutrizionali all’importazione",
+      "autoEstimateNutritionDescription": "Stima automaticamente i valori nutrizionali quando le ricette importate hanno ingredienti ma nessun dato nutrizionale",
       "alwaysUseAI": "Usa sempre importazione IA",
       "alwaysUseAIDescription": "Salta i parser strutturati ed estrai le ricette usando solo l'IA",
       "autoTaggingMode": "Modalità tag automatici",

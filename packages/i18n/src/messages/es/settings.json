@@ -553,6 +553,8 @@
       "requestTimeout": "Tiempo de espera de la solicitud (ms)",
       "autoTagAllergies": "Detectar etiquetas de alergias automáticamente",
       "autoTagAllergiesDescription": "Añadir etiquetas relacionadas con alergias automáticamente al importar recetas",
+      "autoEstimateNutrition": "Estimar nutrición al importar",
+      "autoEstimateNutritionDescription": "Estimar automáticamente la nutrición cuando las recetas importadas tienen ingredientes pero no datos nutricionales",
       "alwaysUseAI": "Usar siempre IA para importar",
       "alwaysUseAIDescription": "Omitir los analizadores estructurados y extraer recetas solo con IA",
       "autoTaggingMode": "Modo de etiquetado automático",

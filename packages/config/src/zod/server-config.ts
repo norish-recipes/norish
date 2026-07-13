@@ -251,6 +251,7 @@ export const AIConfigSchema = z.object({
   maxTokens: z.number().int().positive(),
   timeoutMs: z.number().int().positive().optional().default(300000),
   autoTagAllergies: z.boolean().default(true),
+  autoEstimateNutrition: z.boolean().default(false),
   alwaysUseAI: z.boolean().default(false),
   autoTaggingMode: AutoTaggingModeSchema.default("disabled"),
 });

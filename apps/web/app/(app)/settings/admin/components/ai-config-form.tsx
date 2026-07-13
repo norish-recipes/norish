@@ -68,6 +68,9 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const [maxTokens, setMaxTokens] = useState(aiConfig?.maxTokens ?? 10000);
   const [timeoutMs, setTimeoutMs] = useState(aiConfig?.timeoutMs ?? 300000);
   const [autoTagAllergies, setAutoTagAllergies] = useState(aiConfig?.autoTagAllergies ?? true);
+  const [autoEstimateNutrition, setAutoEstimateNutrition] = useState(
+    aiConfig?.autoEstimateNutrition ?? false
+  );
   const [alwaysUseAI, setAlwaysUseAI] = useState(aiConfig?.alwaysUseAI ?? false);
   const [autoTaggingMode, setAutoTaggingMode] = useState<AutoTaggingMode>(
     aiConfig?.autoTaggingMode ?? "disabled"
@@ -160,6 +163,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       setMaxTokens(aiConfig.maxTokens);
       setTimeoutMs(aiConfig.timeoutMs ?? 300000);
       setAutoTagAllergies(aiConfig.autoTagAllergies ?? true);
+      setAutoEstimateNutrition(aiConfig.autoEstimateNutrition ?? false);
       setAlwaysUseAI(aiConfig.alwaysUseAI ?? false);
       setAutoTaggingMode(aiConfig.autoTaggingMode ?? "disabled");
     }
@@ -184,6 +188,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       maxTokens !== aiConfig.maxTokens ||
       timeoutMs !== (aiConfig.timeoutMs ?? 300000) ||
       autoTagAllergies !== (aiConfig.autoTagAllergies ?? true) ||
+      autoEstimateNutrition !== (aiConfig.autoEstimateNutrition ?? false) ||
       alwaysUseAI !== (aiConfig.alwaysUseAI ?? false) ||
       autoTaggingMode !== (aiConfig.autoTaggingMode ?? "disabled") ||
       apiKey.trim() !== ""
@@ -199,6 +204,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     maxTokens,
     timeoutMs,
     autoTagAllergies,
+    autoEstimateNutrition,
     alwaysUseAI,
     autoTaggingMode,
     apiKey,
@@ -263,6 +269,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         maxTokens,
         timeoutMs,
         autoTagAllergies,
+        autoEstimateNutrition,
         alwaysUseAI,
         autoTaggingMode: autoTaggingMode as AIConfig["autoTaggingMode"],
       });
@@ -472,6 +479,19 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
           isDisabled={!enabled}
           isSelected={autoTagAllergies}
           onValueChange={setAutoTagAllergies}
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <span className="font-medium">{t("autoEstimateNutrition")}</span>
+          <span className="text-muted text-base">{t("autoEstimateNutritionDescription")}</span>
+        </div>
+        <SettingsSwitch
+          color="success"
+          isDisabled={!enabled}
+          isSelected={autoEstimateNutrition}
+          onValueChange={setAutoEstimateNutrition}
         />
       </div>
 

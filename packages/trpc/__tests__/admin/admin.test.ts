@@ -178,6 +178,7 @@ describe("admin procedures", () => {
         maxTokens: 4096,
         timeoutMs: 300000,
         autoTagAllergies: true,
+        autoEstimateNutrition: false,
         alwaysUseAI: false,
         autoTaggingMode: "disabled" as const,
       };
@@ -229,6 +230,7 @@ describe("admin procedures", () => {
         maxTokens: 4096,
         timeoutMs: 300000,
         autoTagAllergies: true,
+        autoEstimateNutrition: false,
         alwaysUseAI: false,
         autoTaggingMode: "disabled" as const,
       };

@@ -553,6 +553,8 @@
       "requestTimeout": "Tidsavbrudd for forespørsel (ms)",
       "autoTagAllergies": "Registrer allergentags automatisk",
       "autoTagAllergiesDescription": "Legg automatisk til allergenrelaterte tags ved import av oppskrifter",
+      "autoEstimateNutrition": "Estimer næringsinnhold ved import",
+      "autoEstimateNutritionDescription": "Estimer automatisk næringsinnhold når importerte oppskrifter har ingredienser, men ingen næringsdata",
       "alwaysUseAI": "Bruk alltid AI-import",
       "alwaysUseAIDescription": "Hopp over strukturerte analysatorer og trekk ut oppskrifter med AI alene",
       "autoTaggingMode": "Auto-tagmodus",
