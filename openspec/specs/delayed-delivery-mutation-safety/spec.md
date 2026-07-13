@@ -1,33 +1,29 @@
 ## Purpose
 
-Define the safety contract required before a mutation can be delivered later from offline mobile clients without changing the user-intended outcome.
+Define the safety contract required before a mutation can be delivered later from offline clients without changing the user-intended outcome.
 
 ## Requirements
 
 ### Requirement: Delayed-delivery eligibility is explicit
 
-The system SHALL queue a mutation for delayed mobile delivery only after that mutation contract has been classified as delayed-delivery-compatible.
+The system SHALL treat every tRPC mutation as delayed-delivery-compatible without consulting a mutation-path allowlist or immediate-only list. Every mutation SHALL satisfy the deterministic safety contract appropriate to its inputs and side effects before universal delayed delivery is enabled.
 
-#### Scenario: Legacy unsafe mutation remains immediate-only
+#### Scenario: Existing mutation is audited for universal delivery
 
-- **WHEN** a mutation still relies on backend-derived toggle behavior, live container sweeps, ignored version inputs, or mutable live lookups
-- **THEN** the system SHALL NOT classify that mutation as delayed-delivery-compatible
+- **WHEN** the universal delayed-delivery change is enabled
+- **THEN** every existing app-router mutation SHALL be covered by stable operation identity and receipt handling
+- **AND** every mutation SHALL satisfy explicit-state, version, snapshot, deterministic-create, deterministic-file, or idempotent-enqueue requirements as applicable
 
-#### Scenario: Migrated mutation becomes eligible
+#### Scenario: New mutation is added
 
-- **WHEN** a mutation contract carries explicit intent, enforces any required version checks, and scopes destructive work to the original request snapshot or deterministic target
-- **THEN** the system SHALL allow that mutation to be marked delayed-delivery-compatible
+- **WHEN** a new app-router mutation is introduced
+- **THEN** it SHALL inherit delayed-delivery support automatically
+- **AND** router-wide tests SHALL fail unless its deterministic effect contract and receipt coverage are valid
 
-#### Scenario: First rollout excludes create-style mutations
+#### Scenario: Legacy allowlist is removed
 
-- **WHEN** a mutation creates a new entity or resolves membership from a mutable lookup such as a join code
-- **THEN** the system SHALL keep that mutation off the first delayed-delivery allowlist
-- **AND** it SHALL continue to run only as an immediate mutation until a later deterministic contract exists
-
-#### Scenario: Security-sensitive mutation satisfies the same safety contract
-
-- **WHEN** a security-sensitive mutation carries explicit targeting and any required version or snapshot preconditions
-- **THEN** the system SHALL allow that mutation to be classified delayed-delivery-compatible using the same eligibility rules as other mutations
+- **WHEN** universal delayed delivery is implemented
+- **THEN** the delayed-delivery eligible and immediate-only arrays, lookup helpers, and allowlist-specific tests SHALL be removed
 
 ---
 
@@ -84,14 +80,31 @@ Any delayed-delivery-compatible mutation that targets an existing mutable entity
 
 ### Requirement: Delayed create and membership mutations use deterministic targeting
 
-Any delayed-delivery-compatible mutation that creates a new entity or resolves a target by lookup SHALL carry a deterministic identity or target that still refers to the same intended result when delivered later.
+Any delayed mutation that creates a new entity or resolves a target by lookup SHALL carry a deterministic identity or immutable target that still refers to the same intended result when delivered later. A mutable lookup value alone SHALL NOT be sufficient when it can resolve to a different target at replay time.
 
 #### Scenario: Delayed create provides a stable identity
 
-- **WHEN** a delayed create mutation includes a stable client-generated entity identity or equivalent deterministic dedupe key
-- **THEN** the system SHALL use that identity or key so the delayed request does not create an unintended duplicate entity
+- **WHEN** a create mutation is delivered or retried
+- **THEN** it SHALL carry a stable client-generated entity identity or equivalent deterministic dedupe key
+- **AND** the system SHALL resolve retry to the original entity rather than create an unintended duplicate
 
-#### Scenario: Mutable live lookup lacks deterministic targeting
+#### Scenario: Membership action uses a mutable join code
 
-- **WHEN** a create or membership mutation can only resolve its target from mutable live server state at delivery time
-- **THEN** the system SHALL NOT classify that mutation as delayed-delivery-compatible until its contract carries a deterministic target
+- **WHEN** a delayed membership mutation was initiated from a join code or other mutable lookup
+- **THEN** the persisted command SHALL include the immutable intended target resolved when the user initiated the action
+- **AND** replay SHALL NOT silently resolve the old lookup value to a different target
+
+### Requirement: Delayed non-database effects use deterministic operation identity
+
+Any delayed mutation that enqueues work, writes files, calls external systems, or schedules process effects SHALL use the stable operation ID or stable entity identity to prevent duplicate logical effects.
+
+#### Scenario: Delayed enqueue is retried
+
+- **WHEN** a delayed mutation retries after background work was already durably accepted
+- **THEN** the enqueue boundary SHALL resolve the existing operation-derived job
+- **AND** it SHALL NOT create another logical job
+
+#### Scenario: Delayed file mutation is retried
+
+- **WHEN** a delayed media mutation executes more than once during receipt recovery
+- **THEN** every execution SHALL target the same intended final path and state
