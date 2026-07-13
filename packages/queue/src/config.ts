@@ -72,14 +72,22 @@ export const WORKER_CONCURRENCY = {
 
 export const RECIPE_IMPORT_PROCESSING_TIMEOUT_MS = 30 * 60 * 1000;
 
+/**
+ * Deterministic job IDs should only deduplicate jobs while they are in flight.
+ * Removing terminal jobs releases the ID so the same operation can be run again.
+ */
+const rerunnableJobCleanupOptions = {
+  removeOnComplete: true,
+  removeOnFail: true,
+} satisfies Pick<DefaultJobOptions, "removeOnComplete" | "removeOnFail">;
+
 export const recipeImportJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {
     type: "exponential",
     delay: 2000, // 2s, 4s, 8s
   },
-  removeOnComplete: true,
-  removeOnFail: true,
+  ...rerunnableJobCleanupOptions,
 };
 
 export const imageImportJobOptions: DefaultJobOptions = {
@@ -88,11 +96,7 @@ export const imageImportJobOptions: DefaultJobOptions = {
     type: "exponential",
     delay: 5000, // 5s, 10s
   },
-  removeOnComplete: {
-    age: 3600,
-    count: 500,
-  },
-  removeOnFail: true,
+  ...rerunnableJobCleanupOptions,
 };
 
 export const pasteImportJobOptions: DefaultJobOptions = {
@@ -101,11 +105,7 @@ export const pasteImportJobOptions: DefaultJobOptions = {
     type: "exponential",
     delay: 2000,
   },
-  removeOnComplete: {
-    age: 3600,
-    count: 1000,
-  },
-  removeOnFail: true,
+  ...rerunnableJobCleanupOptions,
 };
 
 export const caldavSyncJobOptions: DefaultJobOptions = {
@@ -114,14 +114,7 @@ export const caldavSyncJobOptions: DefaultJobOptions = {
     type: "exponential",
     delay: 60000, // 1m, 2m, 4m, 8m... up to 17h
   },
-  removeOnComplete: {
-    age: 3600,
-    count: 2000,
-  },
-  removeOnFail: {
-    age: 86400, // Failed state also persisted to Postgres
-    count: 1000,
-  },
+  ...rerunnableJobCleanupOptions,
 };
 
 export const scheduledTasksJobOptions: DefaultJobOptions = {
@@ -146,11 +139,7 @@ export const nutritionEstimationJobOptions: DefaultJobOptions = {
     type: "exponential",
     delay: 2000, // 2s, 4s, 8s
   },
-  removeOnComplete: {
-    age: 3600,
-    count: 500,
-  },
-  removeOnFail: true,
+  ...rerunnableJobCleanupOptions,
 };
 
 export const autoTaggingJobOptions: DefaultJobOptions = {
@@ -159,11 +148,7 @@ export const autoTaggingJobOptions: DefaultJobOptions = {
     type: "exponential",
     delay: 2000, // 2s, 4s, 8s
   },
-  removeOnComplete: {
-    age: 3600,
-    count: 500,
-  },
-  removeOnFail: true,
+  ...rerunnableJobCleanupOptions,
 };
 
 export const autoCategorizationJobOptions: DefaultJobOptions = {
@@ -172,11 +157,7 @@ export const autoCategorizationJobOptions: DefaultJobOptions = {
     type: "exponential",
     delay: 2000, // 2s, 4s, 8s
   },
-  removeOnComplete: {
-    age: 3600,
-    count: 500,
-  },
-  removeOnFail: true,
+  ...rerunnableJobCleanupOptions,
 };
 
 export const allergyDetectionJobOptions: DefaultJobOptions = {
@@ -185,9 +166,5 @@ export const allergyDetectionJobOptions: DefaultJobOptions = {
     type: "exponential",
     delay: 2000, // 2s, 4s, 8s
   },
-  removeOnComplete: {
-    age: 3600,
-    count: 500,
-  },
-  removeOnFail: true,
+  ...rerunnableJobCleanupOptions,
 };
