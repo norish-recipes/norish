@@ -22,7 +22,7 @@ import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:nutrition-estimation");
 
-async function processNutritionJob(job: Job<NutritionEstimationJobData>): Promise<void> {
+export async function processNutritionJob(job: Job<NutritionEstimationJobData>): Promise<void> {
   const estimateNutritionFromIngredients = requireQueueApiHandler(
     "estimateNutritionFromIngredients"
   );

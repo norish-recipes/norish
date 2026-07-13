@@ -115,6 +115,28 @@ export async function estimateNutritionFromIngredients(
       return aiError("AI response missing required fields", "VALIDATION_ERROR");
     }
 
+    // A recipe with at least one measured ingredient cannot be all-zero;
+    // models intermittently emit zeros, which must not be persisted.
+    const hasMeasuredIngredient = ingredients.some((i) => i.amount != null);
+    const isAllZero =
+      output.calories === 0 && output.fat === 0 && output.carbs === 0 && output.protein === 0;
+
+    if (hasMeasuredIngredient && isAllZero) {
+      aiLogger.warn(
+        {
+          recipeName,
+          ingredientCount: ingredients.length,
+          calories: output.calories,
+          fat: output.fat,
+          carbs: output.carbs,
+          protein: output.protein,
+        },
+        "Rejecting all-zero nutrition estimate for recipe with measured ingredients"
+      );
+
+      return aiError("Nutrition estimation returned all-zero values", "INVALID_OUTPUT");
+    }
+
     aiLogger.info(
       {
         recipeName,

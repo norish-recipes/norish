@@ -23,6 +23,7 @@ export type AIErrorCode =
   | "NETWORK_ERROR"
   | "TIMEOUT"
   | "INVALID_INPUT"
+  | "INVALID_OUTPUT"
   | "UNKNOWN";
 
 /**
@@ -107,6 +108,8 @@ export function getErrorMessage(code: AIErrorCode, originalMessage?: string): st
       return "AI returned an empty response. Try again or check your prompt.";
     case "INVALID_INPUT":
       return originalMessage || "Invalid input provided.";
+    case "INVALID_OUTPUT":
+      return originalMessage || "AI returned an implausible response.";
     case "PROVIDER_ERROR":
       return originalMessage || "AI provider returned an error.";
     default:
