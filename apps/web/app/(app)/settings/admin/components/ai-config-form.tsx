@@ -438,7 +438,12 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
           step={0.1}
           value={temperature}
           onChange={(v) => setTemperature(v as number)}
-        />
+        >
+          <Slider.Track>
+            <Slider.Fill />
+            <Slider.Thumb />
+          </Slider.Track>
+        </Slider>
         <span className="text-muted text-xs">{t("temperatureHint")}</span>
       </div>
 
