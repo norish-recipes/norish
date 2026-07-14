@@ -114,3 +114,40 @@ The web status surface SHALL expose text or accessible labels for offline, backe
 
 - **WHEN** a keyboard user opens the queue view
 - **THEN** focus SHALL move into the HeroUI v3 overlay and the queue states SHALL be navigable without pointer interaction
+
+### Requirement: Development builds can simulate backend unreachability
+
+Development builds SHALL expose a persistent, clearly labeled control for simulating backend unreachability. The simulator SHALL force the same connectivity status and request-failure classification used by a real backend outage, while production builds SHALL not expose or honor the control.
+
+#### Scenario: The developer enables simulated backend unreachability
+
+- **WHEN** the development-only simulator is enabled
+- **THEN** the avatar SHALL show the backend-unreachable connectivity indicator
+- **AND** HTTP/tRPC requests SHALL fail through the normal reachability error path
+- **AND** queued replay and online hydration SHALL pause
+
+#### Scenario: A destructive mutation runs during simulated backend unreachability
+
+- **WHEN** the developer deletes a recipe, grocery, or calendar item while the simulator is enabled
+- **THEN** the mutation SHALL traverse the existing outbox capture path
+- **AND** it SHALL be durably queued with the same operation identity and optimistic behavior as a real transport failure
+
+#### Scenario: The developer disables simulated backend unreachability
+
+- **WHEN** the simulator is disabled
+- **THEN** the connectivity override SHALL be removed
+- **AND** the client SHALL perform a live recovery check before resuming replay or read-cache hydration
+
+### Requirement: Toast feedback remains above menus and dialogs
+
+The web overlay stack SHALL keep ordinary desktop menus below modal dialogs and SHALL render the global toast region above both layers.
+
+#### Scenario: A toast is emitted while the user menu is open
+
+- **WHEN** a toast notification is emitted while the desktop avatar menu is open
+- **THEN** the toast SHALL remain visually above the menu
+
+#### Scenario: A toast is emitted while a modal is open
+
+- **WHEN** a toast notification is emitted while a modal dialog is open
+- **THEN** the toast SHALL remain visually above the modal and its backdrop
