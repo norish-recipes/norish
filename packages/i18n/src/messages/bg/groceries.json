@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Продукти",
+    "addItem": "Добави продукт",
+    "addItems": "Добави продукти",
+    "viewByStore": "По магазин",
+    "viewByRecipe": "По рецепта",
+    "viewMode": "Изглед",
+    "manageStores": "Управление на магазини",
+    "storeViewOptions": "Опции за изглед по магазин",
+    "groupIngredients": "Групиране на съставките"
+  },
+  "empty": {
+    "title": "Списъкът с продукти те очаква",
+    "description": "Добави продукти чрез бутона „Добави продукт“ по-горе, за да започнеш.",
+    "manual": "Ръчно добавени продукти"
+  },
+  "item": {
+    "unnamedItem": "Продукт без име",
+    "fromRecipes": "От {count, plural, one {# рецепта} other {# рецепти}}",
+    "items": "{count, plural, one {# продукт} other {# продукта}}"
+  },
+  "store": {
+    "unsorted": "Некатегоризирани",
+    "noItems": "Няма продукти в този магазин",
+    "storeActions": "Действия за магазина",
+    "markAllDone": "Маркирай всички като изпълнени",
+    "deleteDone": "Изтрий изпълнените",
+    "done": "{count} изпълнени"
+  },
+  "storeManager": {
+    "title": "Управление на магазини",
+    "addStore": "Добави магазин",
+    "editStore": "Редактирай магазин",
+    "deleteStore": "Изтрий магазин",
+    "storeName": "Име на магазина",
+    "storeNamePlaceholder": "напр. Супермаркет",
+    "storeColor": "Цвят",
+    "storeIcon": "Икона",
+    "confirmDelete": "Наистина ли искаш да изтриеш {storeName}?",
+    "deleteWarning": "Продуктите в този магазин ще бъдат преместени в „Некатегоризирани“.",
+    "noStoresYet": "Все още няма магазини",
+    "createStoreHint": "Създай магазин, за да организираш продуктите си",
+    "hasItems": "Този магазин съдържа {count} продукт.",
+    "hasItemsPlural": "Този магазин съдържа {count} продукта.",
+    "whatToDo": "Какво искаш да направиш с тях?",
+    "keepItems": "Запази продуктите",
+    "keepItemsDescription": "Премести продуктите в „Некатегоризирани“",
+    "deleteItems": "Изтрий продуктите",
+    "deleteItemsDescription": "Премахни всички продукти в този магазин",
+    "noItems": "Този магазин няма продукти.",
+    "create": "Създай"
+  },
+  "panel": {
+    "addTitle": "Добавяне на продукт",
+    "editTitle": "Редактиране на продукт",
+    "itemName": "Име на продукта",
+    "itemNamePlaceholder": "напр. Мляко, Яйца, Хляб...",
+    "selectStore": "Избери магазин",
+    "noStore": "Без магазин",
+    "recurrence": "Повторение",
+    "savePreference": "Запомни магазина за този продукт",
+    "addAnother": "Добави още един",
+    "addRepeat": "Докосни, за да настроиш",
+    "recurrenceEnabled": "Повтарящ се",
+    "recurrenceSheet": {
+      "title": "Повторение",
+      "subtitle": "Автоматично добавяне на този продукт отново в списъка",
+      "enable": "Включи повторението",
+      "disable": "Изключи повторението",
+      "frequency": "Честота",
+      "weekly": "Ежеседмично",
+      "biweekly": "На всеки 2 седмици",
+      "monthly": "Ежемесечно",
+      "confirm": "Потвърди"
+    },
+    "storeOptional": "Магазин (незадължително)",
+    "autoDetectFromHistory": "Автоматично откриване от историята",
+    "autoDetectOrSelect": "Автоматично откриване или избор",
+    "placeholder": "напр. 900 г пилешко филе",
+    "editPlaceholder": "напр. мляко всяка седмица",
+    "servings": "Порции",
+    "loadingIngredients": "Зареждане на съставките...",
+    "noIngredients": "Няма съставки.",
+    "addSelectedToGroceries": "Добави в продуктите",
+    "ingredientsAdded": "Съставките са добавени в списъка с продукти.",
+    "ingredientsFailed": "Добавянето на съставките в списъка с продукти не бе успешно.",
+    "addToGroceries": "Добави в продуктите"
+  }
+}

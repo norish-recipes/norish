@@ -1,0 +1,50 @@
+{
+  "userMenu": {
+    "newRecipe": {
+      "title": "Нова рецепта",
+      "description": "Напиши своя собствена рецепта"
+    },
+    "importUrl": {
+      "title": "Импортиране от URL адрес",
+      "description": "Постави връзка към рецепта"
+    },
+    "settings": {
+      "title": "Настройки",
+      "description": "Управлявай акаунта си"
+    },
+    "logout": "Изход",
+    "version": {
+      "updateAvailable": "Налична е v{version}"
+    }
+  },
+  "theme": {
+    "title": "Тема",
+    "loading": "Зареждане…",
+    "light": "Светъл режим",
+    "dark": "Тъмен режим",
+    "system": "По подразбиране от системата"
+  },
+  "nav": {
+    "home": "Рецепти",
+    "calendar": "Календар",
+    "groceries": "Продукти"
+  },
+  "mobile": {
+    "searchPlaceholder": "Търсене на рецепти...",
+    "toggleSearch": "Превключи търсенето",
+    "goBack": "Назад"
+  },
+  "archiveImporter": {
+    "uploading": "Качване…",
+    "uploadFile": "Качи файл",
+    "dragDrop": "или плъзни и пусни",
+    "formats": ".melarecipes (Mela), .paprikarecipes (Paprika), .zip (Mealie/Tandoor)",
+    "uploadingFile": "Качване на файл…",
+    "processing": "Обработка: {details}",
+    "complete": "Завършено: {details}",
+    "imported": "{count} импортирани",
+    "skipped": "{count} пропуснати",
+    "errors": "{count} грешки",
+    "ofTotal": "{current} от {total}"
+  }
+}

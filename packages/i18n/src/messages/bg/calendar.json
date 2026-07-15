@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Календар"
+  },
+  "mobile": {
+    "today": "Днес",
+    "scrollToToday": "Към днес"
+  },
+  "editNote": {
+    "title": "Редактиране на бележка",
+    "noteLabel": "Бележка",
+    "notePlaceholder": "Въведи бележка...",
+    "date": "Дата",
+    "slot": "Хранене"
+  },
+  "navigation": {
+    "previousMonth": "Предходен месец",
+    "nextMonth": "Следващ месец",
+    "prev": "Назад",
+    "next": "Напред"
+  },
+  "weekdays": {
+    "mon": "Пон",
+    "tue": "Вт",
+    "wed": "Ср",
+    "thu": "Четв",
+    "fri": "Пет",
+    "sat": "Съб",
+    "sun": "Нед"
+  },
+  "timeline": {
+    "noItems": "Няма планирани ястия",
+    "goToRecipe": "Към рецептата",
+    "addItem": "Добавяне на елемент",
+    "untitled": "Без заглавие",
+    "serving": "порция",
+    "servings": "порции",
+    "noImage": "Няма изображение",
+    "recipe": "Рецепта",
+    "note": "Бележка"
+  },
+  "editPlannedRecipe": {
+    "title": "Редактиране на планирана рецепта",
+    "date": "Дата",
+    "slot": "Хранене"
+  },
+  "panel": {
+    "addToCalendar": "Добавяне в календара",
+    "addRecipe": "Добавяне на рецепта",
+    "noDaysAvailable": "Няма налични дни.",
+    "searchPlaceholder": "Търсене на рецепти или добавяне на бележки...",
+    "addNote": "Добавяне на бележка: {input}",
+    "randomRecipe": "Случайна рецепта",
+    "noRecipesFound": "Няма намерени рецепти.",
+    "failedToLoadRecipes": "Зареждането на рецептите не бе успешно."
+  }
+}
