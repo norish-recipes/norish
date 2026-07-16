@@ -16,13 +16,14 @@ export type StepInsertWithImages = StepInsertDto & {
 
 function stepIdentityKey(step: {
   recipeId: string;
-  systemUsed: string;
+  systemUsed?: string | null | undefined;
   step: string;
   order?: unknown;
 }) {
   const order = Number(step.order ?? 0);
+  const systemUsed = step.systemUsed ?? "metric";
 
-  return `${step.recipeId}-${step.systemUsed}-${order}-${step.step.toLowerCase().trim()}`;
+  return `${step.recipeId}-${systemUsed}-${order}-${step.step.toLowerCase().trim()}`;
 }
 
 export async function createManyRecipeStepsTx(
@@ -53,7 +54,7 @@ export async function createManyRecipeStepsTx(
   for (const recipeId of recipeIds) {
     const subset = unique.filter((s) => s.recipeId === recipeId);
     const stepTexts = Array.from(new Set(subset.map((s) => s.step)));
-    const systems = Array.from(new Set(subset.map((s) => s.systemUsed)));
+    const systems = Array.from(new Set(subset.map((s) => s.systemUsed ?? "metric")));
 
     if (stepTexts.length === 0 || systems.length === 0) continue;
 
@@ -95,7 +96,7 @@ export async function createManyRecipeStepsTx(
     const subset = unique.filter((s) => s.recipeId === recipeId);
     const subsetKeys = new Set(subset.map(stepIdentityKey));
     const stepTexts = Array.from(new Set(subset.map((s) => s.step)));
-    const systems = Array.from(new Set(subset.map((s) => s.systemUsed)));
+    const systems = Array.from(new Set(subset.map((s) => s.systemUsed ?? "metric")));
     const rows = (
       await tx
         .select()
