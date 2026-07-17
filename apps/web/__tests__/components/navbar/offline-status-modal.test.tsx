@@ -4,7 +4,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import "@testing-library/jest-dom";
 
-import OfflineStatusModal, { isBackendSimulatorEnabled } from "./offline-status-modal";
+import OfflineStatusModal, {
+  isBackendSimulatorEnabled,
+} from "@/components/navbar/offline-status-modal";
 
 const mocks = vi.hoisted(() => ({
   acknowledge: vi.fn().mockResolvedValue(undefined),

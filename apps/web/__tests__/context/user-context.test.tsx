@@ -15,6 +15,10 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: mockUseTRPC,
 }));
 
+vi.mock("@/context/offline-web-context", () => ({
+  useOfflineRenderUser: () => ({ user: null, isRenderOnly: false }),
+}));
+
 vi.mock("@tanstack/react-query", () => ({
   useQuery: mockUseQuery,
 }));

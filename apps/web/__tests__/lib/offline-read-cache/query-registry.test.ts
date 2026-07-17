@@ -1,6 +1,5 @@
 import type { Query, QueryKey } from "@tanstack/react-query";
-
-import { createOfflineReadCacheRegistry } from "./query-registry";
+import { createOfflineReadCacheRegistry } from "@/lib/offline-read-cache/query-registry";
 
 function key(path: string[], input?: unknown, type = "query"): QueryKey {
   return [path, input === undefined ? { type } : { input, type }];

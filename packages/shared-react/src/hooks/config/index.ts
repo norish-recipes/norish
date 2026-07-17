@@ -18,6 +18,7 @@ export type {
 export { normalizeLocaleConfig } from "./normalize-locale-config";
 export { createUseLocaleConfigQuery } from "./use-locale-config-query";
 export { createUseTagsQuery } from "./use-tags-query";
+export type { TagsQueryOptions } from "./use-tags-query";
 export { createUseUnitsQuery } from "./use-units-query";
 export { createUseRecurrenceConfigQuery } from "./use-recurrence-config-query";
 export { createUseTimerKeywordsQuery } from "./use-timer-keywords-query";

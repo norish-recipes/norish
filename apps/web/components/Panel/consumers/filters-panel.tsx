@@ -126,7 +126,7 @@ export default function FiltersPanel({ open, onOpenChange }: FiltersPanelProps) 
   const [localMaxCookingTime, setLocalMaxCookingTime] = useState<number | null>(
     filters.maxCookingTime ?? null
   );
-  const { tags: allTags, isLoading } = useTagsQuery();
+  const { tags: allTags, isLoading } = useTagsQuery({ enabled: open });
   useEffect(() => {
     setWorkingTags(filters.searchTags);
     setWorkingCategories(filters.categories);

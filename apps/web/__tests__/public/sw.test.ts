@@ -7,7 +7,7 @@ import vm from "node:vm";
 
 const ORIGIN = "https://norish.test";
 const source = fs.readFileSync(
-  path.join(path.dirname(fileURLToPath(import.meta.url)), "sw.js"),
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../public/sw.js"),
   "utf8"
 );
 

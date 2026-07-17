@@ -21,6 +21,13 @@ const userPreferencesState = {
   showFavorites: true,
 };
 
+const useTagsQuery = vi.hoisted(() =>
+  vi.fn(() => ({
+    tags: ["Dinner", "Quick", "Vegetarian", "Soup", "Pasta", "Spicy"],
+    isLoading: false,
+  }))
+);
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
@@ -75,10 +82,7 @@ vi.mock("@/context/user-context", () => ({
 }));
 
 vi.mock("@/hooks/config", () => ({
-  useTagsQuery: () => ({
-    tags: ["Dinner", "Quick", "Vegetarian", "Soup", "Pasta", "Spicy"],
-    isLoading: false,
-  }),
+  useTagsQuery,
 }));
 
 vi.mock("@heroui/react", () => ({
@@ -104,6 +108,16 @@ vi.mock("@heroui/react", () => ({
 }));
 
 describe("FiltersPanel", () => {
+  it("loads tag metadata only while the panel is open", () => {
+    const rendered = render(<FiltersPanel open={false} onOpenChange={vi.fn()} />);
+
+    expect(useTagsQuery).toHaveBeenLastCalledWith({ enabled: false });
+
+    rendered.rerender(<FiltersPanel open onOpenChange={vi.fn()} />);
+
+    expect(useTagsQuery).toHaveBeenLastCalledWith({ enabled: true });
+  });
+
   it("does not crash when sort mode is missing", () => {
     filtersState.sortMode = undefined;
 

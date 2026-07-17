@@ -1,20 +1,22 @@
 import type { QueryKey } from "@tanstack/react-query";
-import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
-
 import {
   openWebReadCacheDatabase,
   requestResult,
   waitForTransaction,
   WEB_READ_CACHE_INDEXES,
   WEB_READ_CACHE_STORES,
-} from "./database";
-import { subscribeToWebReadCacheChanges } from "./events";
-import { toWebReadCachePersistenceWarning, WebReadCacheRepository } from "./repository";
+} from "@/lib/offline-read-cache/database";
+import { subscribeToWebReadCacheChanges } from "@/lib/offline-read-cache/events";
+import {
+  toWebReadCachePersistenceWarning,
+  WebReadCacheRepository,
+} from "@/lib/offline-read-cache/repository";
 import {
   createWebReadCacheScopeKey,
   WEB_READ_CACHE_DATABASE_NAME,
   WEB_READ_CACHE_DATABASE_VERSION,
-} from "./types";
+} from "@/lib/offline-read-cache/types";
+import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
 
 const backendOrigin = "https://norish.test";
 

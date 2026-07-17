@@ -2,14 +2,13 @@ import type { QueryKey } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { TRPCProviderWrapper, useTRPC } from "@/app/providers/trpc-provider";
+import { OfflineWebProvider, useOfflineWeb } from "@/context/offline-web-context";
+import { WebConnectivityRuntime } from "@/lib/connectivity";
+import { WebReadCacheRepository } from "@/lib/offline-read-cache";
+import { createOfflineReadCacheRegistry } from "@/lib/offline-read-cache/query-registry";
 import { useQuery } from "@tanstack/react-query";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
-
-import { WebConnectivityRuntime } from "../lib/connectivity";
-import { WebReadCacheRepository } from "../lib/offline-read-cache";
-import { createOfflineReadCacheRegistry } from "../lib/offline-read-cache/query-registry";
-import { OfflineWebProvider, useOfflineWeb } from "./offline-web-context";
 
 const auth = vi.hoisted(() => ({
   session: {
@@ -32,6 +31,7 @@ vi.mock("@norish/shared/lib/auth/client", () => ({
 type QueryMode = "healthy" | "offline" | "domain-error" | "deferred";
 type Keys = {
   dashboard: QueryKey;
+  inactiveDetail: QueryKey;
   household: QueryKey;
 };
 
@@ -67,7 +67,11 @@ function KeyProbe({ capture }: { capture: (keys: Keys) => void }) {
   const trpc = useTRPC();
   const registry = useMemo(() => createOfflineReadCacheRegistry(trpc), [trpc]);
 
-  capture({ dashboard: registry.dashboardQueryKey, household: registry.householdQueryKey });
+  capture({
+    dashboard: registry.dashboardQueryKey,
+    inactiveDetail: trpc.recipes.get.queryKey({ id: "inactive-recipe" }),
+    household: registry.householdQueryKey,
+  });
 
   return null;
 }
@@ -183,7 +187,11 @@ function state(): HarnessState {
   return JSON.parse(screen.getByTestId("offline-state").textContent ?? "{}") as HarnessState;
 }
 
-async function seedCache(repository: WebReadCacheRepository, keys: Keys) {
+async function seedCache(
+  repository: WebReadCacheRepository,
+  keys: Keys,
+  includeInactiveDetail = false
+) {
   const scope = await repository.confirmScope({
     backendOrigin: window.location.origin,
     userId: USER.id,
@@ -204,6 +212,18 @@ async function seedCache(repository: WebReadCacheRepository, keys: Keys) {
     counts: { recipeSummaries: 1 },
     now: 11,
   });
+
+  if (includeInactiveDetail) {
+    await repository.putRecord({
+      scopeKey: scope.key,
+      kind: "recipe-detail",
+      queryKey: keys.inactiveDetail,
+      data: { id: "inactive-recipe", name: "Inactive cached detail" },
+      dataUpdatedAt: 10,
+      counts: { recipeDetails: 1 },
+      now: 12,
+    });
+  }
 }
 
 describe("OfflineWebProvider", () => {
@@ -413,7 +433,7 @@ describe("OfflineWebProvider", () => {
   it("runs recovery through the replay signal before converging cached data to live", async () => {
     const keys = getKeys();
 
-    await seedCache(repository, keys);
+    await seedCache(repository, keys, true);
     auth.session = { data: null, error: new TypeError("Failed to fetch"), isPending: false };
     let mode: QueryMode = "offline";
 
@@ -440,6 +460,12 @@ describe("OfflineWebProvider", () => {
       await runtime.recover();
     });
 
-    await waitFor(() => expect(state()).toMatchObject({ phase: "live", source: "live-recipe" }));
+    await waitFor(() =>
+      expect(state()).toMatchObject({
+        phase: "live",
+        source: "live-recipe",
+        usingCachedData: false,
+      })
+    );
   });
 });

@@ -318,7 +318,9 @@ describe("web outbox delivery through the provider", () => {
 
     expect(state.effectCount).toBe(1);
     expect(state.receivedOperationIds).toEqual([operationId]);
-    expect(secondQueryClient.getQueryData<Grocery[]>(["groceries"])).toEqual([GROCERY]);
+    await waitFor(() => {
+      expect(secondQueryClient.getQueryData<Grocery[]>(["groceries"])).toEqual([GROCERY]);
+    });
 
     const lostResponseOperationId = "operation-lost-response-e2e";
     const lostResponseEntry = await new WebOutboxRepository().enqueue({

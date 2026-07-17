@@ -512,9 +512,35 @@ export function OfflineWebProvider({
     });
   }, [confirmScopeFromHousehold, connectivityRuntime, persistQuery, queryClient]);
 
+  const pruneInactiveRestoredQueries = useCallback(() => {
+    if (restoredQueryIdentitiesRef.current.size === 0) return;
+
+    const activeRestoredQueries = new Set<string>();
+
+    for (const query of [...queryClient.getQueryCache().getAll()]) {
+      const identity = serializeWebReadCacheQueryKey(query.queryKey);
+
+      if (!restoredQueryIdentitiesRef.current.has(identity)) continue;
+
+      if (query.isActive()) {
+        activeRestoredQueries.add(identity);
+
+        continue;
+      }
+
+      queryClient.removeQueries({ queryKey: query.queryKey, exact: true });
+    }
+
+    restoredQueryIdentitiesRef.current = activeRestoredQueries;
+    setRestoredQueries(activeRestoredQueries);
+  }, [queryClient]);
+
   useEffect(() => {
     const unsubscribe = subscribeToWebReadCacheChanges(() => void refreshInventory());
-    const settled = () => commitPhase("live");
+    const settled = () => {
+      pruneInactiveRestoredQueries();
+      commitPhase("live");
+    };
 
     window.addEventListener(OUTBOX_REPLAY_SETTLED_EVENT, settled);
 
@@ -522,7 +548,7 @@ export function OfflineWebProvider({
       unsubscribe();
       window.removeEventListener(OUTBOX_REPLAY_SETTLED_EVENT, settled);
     };
-  }, [commitPhase, refreshInventory]);
+  }, [commitPhase, pruneInactiveRestoredQueries, refreshInventory]);
 
   useEffect(() => {
     return () => {

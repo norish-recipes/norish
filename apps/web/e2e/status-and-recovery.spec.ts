@@ -70,5 +70,6 @@ test("@critical @development captures an optimistic mutation, diagnoses it, then
     })
     .toBe(true);
   await expect(modal.getByText("No queued changes or retained results.")).toBeVisible();
+  await expect(modal.getByText("Data may be stale")).toHaveCount(0);
   await expect(page.getByText(queuedName, { exact: true })).toBeVisible();
 });

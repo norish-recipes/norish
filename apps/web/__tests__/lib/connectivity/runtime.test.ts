@@ -1,12 +1,11 @@
-import { QueryClient } from "@tanstack/react-query";
-
 import {
   readBackendUnavailableSimulation,
   WEB_BACKEND_SIMULATION_STORAGE_KEY,
   WEB_CONNECTIVITY_RECOVERED_EVENT,
   WebConnectivityRuntime,
-} from "./runtime";
-import { createWebTransportFetch } from "./transport";
+} from "@/lib/connectivity/runtime";
+import { createWebTransportFetch } from "@/lib/connectivity/transport";
+import { QueryClient } from "@tanstack/react-query";
 
 describe("WebConnectivityRuntime", () => {
   beforeEach(() => {

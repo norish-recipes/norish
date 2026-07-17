@@ -22,7 +22,7 @@ export default defineConfig({
     hookTimeout: 60000,
     testTimeout: 15000,
     include: ["**/*.{test,spec}.{ts,tsx}"],
-    exclude: ["node_modules", "**/node_modules/**", "dist-server", ".next"],
+    exclude: ["node_modules", "**/node_modules/**", "dist-server", ".next", "e2e/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "0.19.0-beta";
+const CACHE_VERSION = "0.20.0-beta";
 const CACHE_PREFIX = "norish-web";
 const STATIC_CACHE = `${CACHE_PREFIX}-static-${CACHE_VERSION}`;
 const ROUTE_SHELL_CACHE = `${CACHE_PREFIX}-route-shell-${CACHE_VERSION}`;

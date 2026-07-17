@@ -77,3 +77,11 @@
 - [x] 7.4 Run web/shared-react typecheck, lint, locale-key validation, and format checks and fix all change-related failures.
 - [x] 7.5 Run the production web build and verify the simulator is absent, the service worker is versioned, and online startup remains unchanged.
 - [x] 7.6 Run `openspec validate add-web-offline-read-cache-and-status --strict` and reconcile any implementation/spec/task drift before marking the change complete.
+
+## 8. Post-implementation hardening
+
+- [x] 8.1 Prune inactive restored query copies after recovery so the global status reports stale data only while an active screen still depends on it.
+- [x] 8.2 Prevent closed/remounted filter panels from repeatedly fetching `config.tags` while preserving the tag cache's five-minute freshness policy.
+- [x] 8.3 Move the tests introduced by this change into each workspace's existing test directory structure.
+- [x] 8.4 Bump the active application release to `0.20.0-beta` and verify the frozen `0.19.0-beta` documentation snapshot and new current documentation version.
+- [x] 8.5 Re-run focused tests, typechecks, formatting, the production build, and strict OpenSpec validation.

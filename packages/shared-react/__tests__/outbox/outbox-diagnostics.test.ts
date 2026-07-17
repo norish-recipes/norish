@@ -2,7 +2,7 @@ import {
   notifyWebOutboxChanged,
   subscribeToWebOutboxChanges,
   WEB_OUTBOX_CHANGE_EVENT,
-} from "./outbox-diagnostics";
+} from "../../src/outbox/outbox-diagnostics";
 
 class MockBroadcastChannel {
   static instances: MockBroadcastChannel[] = [];
