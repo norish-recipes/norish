@@ -19,11 +19,11 @@ service in the [Quick start](../quick-start.mdx) compose.
 
 ## Settings
 
-| Variable                        | Description                                     | Default                     |
-| ------------------------------- | ----------------------------------------------- | --------------------------- |
-| `CHROME_WS_ENDPOINT`            | Playwright CDP WebSocket endpoint for scraping  | `ws://chrome-headless:3000` |
-| `PARSER_API_TIMEOUT_MS`         | Parser API timeout in milliseconds              | `15000`                     |
-| `LEGACY_RECIPE_PARSER_ROLLBACK` | Re-enable the deprecated legacy parser          | `false`                     |
+| Variable                        | Description                                    | Default                     |
+| ------------------------------- | ---------------------------------------------- | --------------------------- |
+| `CHROME_WS_ENDPOINT`            | Playwright CDP WebSocket endpoint for scraping | `ws://chrome-headless:3000` |
+| `PARSER_API_TIMEOUT_MS`         | Parser API timeout in milliseconds             | `15000`                     |
+| `LEGACY_RECIPE_PARSER_ROLLBACK` | Re-enable the deprecated legacy parser         | `false`                     |
 
 ## Content detection
 

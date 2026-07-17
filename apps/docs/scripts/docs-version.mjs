@@ -23,7 +23,7 @@ const labelRe = /current:\s*\{\s*label:\s*"([^"]+)"\s*\}/;
 const match = config.match(labelRe);
 if (!match) {
   console.error(
-    "Could not find `versions: { current: { label: \"...\" } }` in docusaurus.config.ts.",
+    'Could not find `versions: { current: { label: "..." } }` in docusaurus.config.ts.'
   );
   process.exit(1);
 }
@@ -34,7 +34,7 @@ async function resolveNextVersion() {
   if (fromArg) return fromArg;
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   const answer = await rl.question(
-    `Current docs version is ${currentVersion}. Next development version? `,
+    `Current docs version is ${currentVersion}. Next development version? `
   );
   rl.close();
   return answer.trim();
@@ -62,14 +62,11 @@ execSync(`pnpm exec docusaurus docs:version ${currentVersion}`, {
 });
 
 console.log(`Bumping the editable docs label ${currentVersion} → ${nextVersion}…`);
-writeFileSync(
-  configPath,
-  config.replace(labelRe, `current: { label: "${nextVersion}" }`),
-);
+writeFileSync(configPath, config.replace(labelRe, `current: { label: "${nextVersion}" }`));
 
 console.log(
   `\n✅ Froze ${currentVersion} and moved the editable docs to ${nextVersion}.` +
     `\n   • ${currentVersion} is now in versioned_docs/ and on the version dropdown.` +
     `\n   • Keep editing docs/ for ${nextVersion}.` +
-    `\n   Run \`pnpm build\` to verify.`,
+    `\n   Run \`pnpm build\` to verify.`
 );

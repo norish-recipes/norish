@@ -1,4 +1,5 @@
 import React from "react";
+
 import ThemedShot from "./ThemedShot";
 
 type BrowserMockupProps = {
@@ -10,11 +11,7 @@ type BrowserMockupProps = {
 
 // macOS-style browser window chrome wrapping a themed screenshot — a CSS port
 // of the landing page's BrowserFrame so the docs hero matches norish.dev.
-export default function BrowserMockup({
-  base,
-  alt,
-  url = "norish.dev",
-}: BrowserMockupProps) {
+export default function BrowserMockup({ base, alt, url = "norish.dev" }: BrowserMockupProps) {
   return (
     <div className="browserMockup">
       <div className="browserMockup__bar">

@@ -12,7 +12,7 @@
     "swizzle": "docusaurus swizzle",
     "docs_update": "node scripts/docs-version.mjs",
     "typecheck": "tsc",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .gitignore",
     "clean": "git clean -xdf build .docusaurus node_modules"
   },
   "dependencies": {
@@ -33,7 +33,11 @@
     "typescript": "~5.9.3"
   },
   "browserslist": {
-    "production": [">0.5%", "not dead", "not op_mini all"],
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
     "development": [
       "last 3 chrome version",
       "last 3 firefox version",
