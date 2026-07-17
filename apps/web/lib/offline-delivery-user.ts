@@ -31,7 +31,7 @@ function writeStoredUserId(userId: string | null): void {
  * the auth endpoint is unreachable. Sign-out and user switches clear/replace
  * the fallback as soon as the auth endpoint responds again.
  */
-export async function getWebOutboxUserId(): Promise<string | null> {
+export async function getWebOutboxCaptureUserId(): Promise<string | null> {
   try {
     const session = await getSession();
 
@@ -46,3 +46,27 @@ export async function getWebOutboxUserId(): Promise<string | null> {
     return readStoredUserId();
   }
 }
+
+/** Replay is authorized only by a currently reachable Better Auth session. */
+export async function getWebOutboxReplayUserId(): Promise<string | null> {
+  try {
+    const session = await getSession();
+
+    if (session.error) return null;
+
+    const userId = session.data?.user.id ?? null;
+
+    writeStoredUserId(userId);
+
+    return userId;
+  } catch {
+    return null;
+  }
+}
+
+export function getLastConfirmedWebOutboxUserId(): string | null {
+  return readStoredUserId();
+}
+
+/** Diagnostics and capture use the last-confirmed label; replay never calls this alias. */
+export const getWebOutboxUserId = getWebOutboxCaptureUserId;

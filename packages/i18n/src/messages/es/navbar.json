@@ -17,6 +17,75 @@
       "updateAvailable": "v{version} disponible"
     }
   },
+  "offline": {
+    "title": "Estado sin conexión",
+    "description": "Conexión, datos guardados y cambios en espera en este navegador.",
+    "footerLabel": "Estado sin conexión: {status}",
+    "connectivity": {
+      "checking": "Comprobando",
+      "online": "En línea",
+      "offline": "Sin conexión",
+      "backend-unreachable": "Servidor no disponible"
+    },
+    "data": {
+      "live": "Datos en directo",
+      "cached": "Datos guardados",
+      "stale": "Los datos pueden estar desactualizados",
+      "unavailable": "Datos no disponibles"
+    },
+    "status": {
+      "title": "Estado actual",
+      "lastLiveSuccess": "Última respuesta en directo",
+      "never": "Todavía no",
+      "retryFailed": "El servidor sigue sin estar disponible."
+    },
+    "actions": {
+      "retry": "Reintentar conexión",
+      "cancel": "Cancelar",
+      "clear": "Borrar datos guardados",
+      "openResult": "Abrir resultado",
+      "acknowledge": "Confirmar y eliminar",
+      "close": "Cerrar"
+    },
+    "cache": {
+      "title": "Datos guardados",
+      "schema": "Esquema {version}",
+      "empty": "Aún no hay datos sin conexión guardados para este hogar.",
+      "persistenceWarning": "No se pudieron guardar algunos datos",
+      "clearConfirm": "¿Borrar los datos guardados del hogar activo en este navegador?"
+    },
+    "warnings": {
+      "blocked": "Otra pestaña bloquea la actualización de la base de datos sin conexión.",
+      "unavailable": "El almacenamiento sin conexión no está disponible en este navegador.",
+      "quota-exceeded": "El almacenamiento del navegador está lleno.",
+      "write-failed": "No se completó el último guardado sin conexión."
+    },
+    "inventory": {
+      "recipeSummaries": "Resúmenes de recetas",
+      "recipeDetails": "Detalles de recetas",
+      "calendarItems": "Elementos del calendario",
+      "groceries": "Ingredientes",
+      "recurringGroceries": "Ingredientes recurrentes",
+      "stores": "Tiendas"
+    },
+    "queue": {
+      "title": "Cambios en espera",
+      "active": "{count} en espera",
+      "attention": "{count} requieren atención",
+      "retrying": "Se reintentarán {count} cambios cuando el servidor esté disponible.",
+      "empty": "No hay cambios en espera ni resultados conservados.",
+      "results": "Resultados completados ({count})"
+    },
+    "simulation": {
+      "title": "Simular servidor no disponible",
+      "description": "Solo desarrollo. Desactivarlo requiere una comprobación en directo correcta.",
+      "disableFailed": "La simulación sigue activa porque falló la comprobación en directo."
+    },
+    "unavailable": {
+      "title": "No disponible sin conexión",
+      "description": "Abre estos datos una vez en línea antes de usarlos durante una interrupción."
+    }
+  },
   "theme": {
     "title": "Tema",
     "loading": "Cargando…",

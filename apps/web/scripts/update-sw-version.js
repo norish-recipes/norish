@@ -15,5 +15,5 @@ if (!fs.existsSync(swPath)) {
 }
 
 let content = fs.readFileSync(swPath, "utf8");
-content = content.replace(/__CACHE_VERSION__/g, version);
+content = content.replace(/const CACHE_VERSION = "[^"]*";/, `const CACHE_VERSION = "${version}";`);
 fs.writeFileSync(swPath, content);

@@ -44,3 +44,62 @@ jobs:
       run-lint: true
       run-format: true
       run-i18n: true
+
+  web-offline-e2e:
+    name: Web Offline E2E
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: norish_e2e
+          POSTGRES_PASSWORD: norish_e2e
+          POSTGRES_USER: norish_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U norish_e2e -d norish_e2e"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+      redis:
+        image: redis:8.6.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      AUTH_URL: http://localhost:3300
+      DATABASE_URL: postgresql://norish_e2e:norish_e2e@127.0.0.1:5432/norish_e2e
+      MASTER_KEY: QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=
+      NORISH_E2E_EXTERNAL_SERVICES: "1"
+      REDIS_URL: redis://127.0.0.1:6379
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
+
+      - name: Install matching Chromium
+        run: pnpm --filter @norish/web exec playwright install --with-deps chromium
+
+      - name: Run critical offline browser suite
+        run: pnpm --filter @norish/web run e2e:critical
+
+      - name: Run development simulator browser scenario
+        run: pnpm --filter @norish/web run e2e:simulator
+
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: web-offline-e2e-artifacts
+          path: |
+            apps/web/test-results/e2e
+            apps/web/playwright-report
+          if-no-files-found: ignore
+          retention-days: 14

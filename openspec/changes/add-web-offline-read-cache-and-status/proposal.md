@@ -1,46 +1,34 @@
 ## Why
 
-Norish already preserves offline mutations in a durable web outbox, but the web application still loses its useful read state across a cold offline PWA launch because the web query cache is memory-only and the service worker has no safe authenticated app-shell strategy. The existing outbox diagnostic surface is also not discoverable or aligned with the HeroUI v3 web UI, while the service worker's generic API GET cache is too broad for personalized offline data.
+The web app keeps queued mutations across reloads, but its useful read data is still memory-only: a fresh load shows no recipes, calendar, or groceries when the backend cannot be reached. Norish needs a truthful live-first startup that keeps the existing skeleton experience while trying the backend, then falls back to compatible IndexedDB data and makes that offline state understandable from the navigation.
 
 ## What Changes
 
-- Add a user- and origin-scoped persisted web read cache for:
-  - the canonical first 100 recipe dashboard summaries;
-  - up to 50 complete recipe details, prioritizing recipes planned in the current week;
-  - dashboard thumbnail images only; when a thumbnail URL is also the recipe's main hero URL, that same cached resource serves both views;
-  - the current local calendar week;
-  - groceries, recurring groceries, recipe-name mappings, and the store records needed to preserve grocery grouping.
-- Restore valid cached read data during offline PWA startup and expose freshness, cache scope, schema version, partial hydration, and storage-quota outcomes.
-- Add a safe offline app-shell/bootstrap path without weakening the server-side authentication proxy or treating cached identity as authorization.
-- Replace the raw, fixed `WebOutboxStatus` diagnostic panel with a discoverable HeroUI v3 avatar indicator and queue view.
-- Show the active offline queue count, retrying work, and terminal/quarantined items requiring attention.
-- Make offline/backend-unreachable status take precedence over the existing update-available dot in the user avatar.
-- Tighten service-worker caching to avoid generic personalized API GET caching; keep only explicitly safe static, shell, and dashboard-thumbnail media behavior.
-- Preserve the completed web mutation outbox as the write-side foundation and keep its replay behavior unchanged.
-- Document closed-PWA/background mutation replay as deferred because browser lifecycle guarantees are unreliable; no service-worker mutation replay is part of this change.
-- Harden offline startup so cached data can render without waiting indefinitely for live auth or household requests, while retaining live validation before replay.
-- Add a development-only backend-unreachable simulation that exercises the same connectivity, cache, and replay pause paths as a real outage.
-- Consolidate the technical documentation into one offline web workflow guide and make the provider/context ownership explicit.
-- Harden cold offline reloads by caching the runtime assets referenced by the confirmed shell, keeping the rendered shell visible while query restoration is paused, and making the development outage simulator traverse the same mutation outbox path as a real transport failure.
-- Align persisted query identities with the real recipe and calendar consumers, keep the primary recipe/calendar/grocery payloads in a durable canonical record that failed background queries cannot replace, and rotate snapshots created with the incompatible identity contract.
-- Define overlay stacking so desktop menus remain below dialogs and toast notifications remain visible above both.
+- Persist an allowlisted, bounded set of successful web reads in a dedicated IndexedDB cache: the default recipe dashboard, recently opened recipe details, calendar ranges used by the app, groceries, recurring groceries, recipe-name mappings, and stores. Keep only the minimal last-confirmed user/household render metadata needed to select that scope and mount the offline chrome; it is never authorization.
+- On every fresh load, make the normal backend requests first and keep the existing recipe, calendar, grocery, and detail skeleton loaders visible while those requests are pending.
+- When that first live attempt fails because the browser is offline or the backend is unreachable, restore a compatible user- and household-scoped snapshot into the exact TanStack Query keys consumed by the current screen. Pause further automatic retries until recovery, then refetch live data and replace the cached view.
+- Support cold PWA navigation with a narrowly scoped application-shell/runtime cache while removing the current service worker's generic API GET and all-image caching behavior. Personalized response data remains in IndexedDB, not Cache Storage.
+- Add a small, always-present connectivity control to the existing user-menu footer beside the version. Do not move status onto the avatar. Clicking the control opens a responsive HeroUI v3 offline-status modal.
+- Show live connectivity, cached-data counts and timestamps, storage/persistence warnings, queued-write diagnostics, retry/clear actions, and a development-only backend-unreachable simulation toggle in the modal.
+- Remove the fixed `WebOutboxStatus` diagnostic panel and fold its useful queue/results information into the modal without changing the existing mutation-outbox delivery contract.
+- Consolidate web-only connectivity, cache-scope, and startup orchestration so lazy WebSocket state and repeated auth polling are not used as the source of backend reachability.
+- Introduce Playwright E2E coverage in `apps/web` for live-first loading, IndexedDB fallback after a fresh reload, service-worker cold start, cache isolation, status-modal behavior, simulation/recovery, and reconnect convergence.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `web-offline-read-cache`: Scoped persisted read snapshots, bounded full-recipe hydration, offline shell/bootstrap, freshness, and storage-pressure behavior for recipes, the current week, and groceries.
-- `web-offline-status`: Connectivity-priority avatar status, HeroUI v3 queue indicator, discoverable queue details, and actionable pending-delivery diagnostics.
+- `web-offline-read-cache`: Live-first persisted web reads, compatible IndexedDB fallback on fresh loads, scoped cache lifecycle, and safe PWA shell behavior.
+- `web-offline-status`: Navigation-footer connectivity control, offline/cache modal, development simulation, and integrated queued-write diagnostics.
 
 ### Modified Capabilities
 
-<!-- Existing mutation-outbox requirements remain unchanged; this change only replaces its web presentation surface. -->
+<!-- The existing web-mutation-outbox delivery requirements remain unchanged. -->
 
 ## Impact
 
-- `apps/web`: service worker, app bootstrap/providers, navbar user menu, offline read-cache integration, translations, and tests.
-- `packages/shared-react`: persisted-query/read-cache support and reusable outbox status/diagnostic hooks where shared ownership is appropriate.
-- `@tanstack/query-persist-client-core` or an equivalent IndexedDB persister may become a web dependency, reusing the mobile persistence precedent without sharing mobile storage code.
-- No new server API or database schema is required for the core read-cache and status behavior.
-- Mobile behavior remains out of scope.
-- IndexedDB encryption is not changed by this follow-up; the existing mutation-outbox encryption decision remains separate.
+- `apps/web`: provider composition, tRPC HTTP reachability observation, user-menu footer, new offline-status modal/context, cache repository and policy, service worker, translations, unit/integration tests, and a new Playwright configuration and E2E suite.
+- `packages/shared-react`: small provider/outbox hook changes only where transport observation or reusable diagnostics already belong; the web read-cache database remains web-owned.
+- `apps/web/package.json` and the lockfile: add `@playwright/test`, browser-test scripts, and Chromium installation/documentation.
+- CI: add a browser E2E job with an isolated test backend and deterministic authenticated fixture data.
+- No server API or database schema is required for the read cache itself. Mobile behavior, arbitrary query persistence, service-worker mutation replay, and closed-PWA background delivery remain out of scope.

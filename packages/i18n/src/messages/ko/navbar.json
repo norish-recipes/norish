@@ -17,6 +17,75 @@
       "updateAvailable": "v{version} 사용 가능"
     }
   },
+  "offline": {
+    "title": "오프라인 상태",
+    "description": "이 브라우저의 연결, 저장된 데이터 및 대기 중인 변경 사항입니다.",
+    "footerLabel": "오프라인 상태: {status}",
+    "connectivity": {
+      "checking": "확인 중",
+      "online": "온라인",
+      "offline": "오프라인",
+      "backend-unreachable": "서버 사용 불가"
+    },
+    "data": {
+      "live": "실시간 데이터",
+      "cached": "저장된 데이터",
+      "stale": "데이터가 오래되었을 수 있음",
+      "unavailable": "데이터 사용 불가"
+    },
+    "status": {
+      "title": "현재 상태",
+      "lastLiveSuccess": "마지막 실시간 응답",
+      "never": "아직 없음",
+      "retryFailed": "서버를 아직 사용할 수 없습니다."
+    },
+    "actions": {
+      "retry": "연결 다시 시도",
+      "cancel": "취소",
+      "clear": "저장된 데이터 지우기",
+      "openResult": "결과 열기",
+      "acknowledge": "확인 후 제거",
+      "close": "닫기"
+    },
+    "cache": {
+      "title": "저장된 데이터",
+      "schema": "스키마 {version}",
+      "empty": "이 가구에 저장된 오프라인 데이터가 아직 없습니다.",
+      "persistenceWarning": "일부 데이터를 저장할 수 없음",
+      "clearConfirm": "이 브라우저에서 현재 가구의 저장된 데이터를 지울까요?"
+    },
+    "warnings": {
+      "blocked": "다른 탭이 오프라인 데이터베이스 업데이트를 차단하고 있습니다.",
+      "unavailable": "이 브라우저에서는 오프라인 저장소를 사용할 수 없습니다.",
+      "quota-exceeded": "브라우저 저장 공간이 가득 찼습니다.",
+      "write-failed": "마지막 오프라인 저장이 완료되지 않았습니다."
+    },
+    "inventory": {
+      "recipeSummaries": "레시피 요약",
+      "recipeDetails": "레시피 상세",
+      "calendarItems": "캘린더 항목",
+      "groceries": "장보기",
+      "recurringGroceries": "반복 장보기",
+      "stores": "상점"
+    },
+    "queue": {
+      "title": "대기 중인 변경 사항",
+      "active": "{count}개 대기 중",
+      "attention": "{count}개 확인 필요",
+      "retrying": "서버를 사용할 수 있을 때 {count}개 변경 사항을 다시 시도합니다.",
+      "empty": "대기 중인 변경 사항이나 보관된 결과가 없습니다.",
+      "results": "완료된 결과 ({count})"
+    },
+    "simulation": {
+      "title": "서버 사용 불가 시뮬레이션",
+      "description": "개발 전용입니다. 끄려면 실시간 연결 확인에 성공해야 합니다.",
+      "disableFailed": "실시간 확인이 실패하여 시뮬레이션이 계속 활성화됩니다."
+    },
+    "unavailable": {
+      "title": "오프라인에서 사용할 수 없음",
+      "description": "중단 중에 사용하려면 먼저 온라인에서 이 데이터를 한 번 여세요."
+    }
+  },
   "theme": {
     "title": "테마",
     "loading": "불러오는 중…",

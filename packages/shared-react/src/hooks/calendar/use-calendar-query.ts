@@ -3,7 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
-import type { CalendarData, CalendarQueryResult, CreateCalendarHooksOptions } from "./types";
+import type {
+  CalendarData,
+  CalendarQueryOptions,
+  CalendarQueryResult,
+  CreateCalendarHooksOptions,
+} from "./types";
 
 function groupItemsByDate(items: PlannedItemFromQuery[]): CalendarData {
   const grouped: CalendarData = {};
@@ -19,7 +24,11 @@ function groupItemsByDate(items: PlannedItemFromQuery[]): CalendarData {
 }
 
 export function createUseCalendarQuery({ useTRPC }: CreateCalendarHooksOptions) {
-  return function useCalendarQuery(startISO: string, endISO: string): CalendarQueryResult {
+  return function useCalendarQuery(
+    startISO: string,
+    endISO: string,
+    options: CalendarQueryOptions = {}
+  ): CalendarQueryResult {
     const trpc = useTRPC();
     const queryClient = useQueryClient();
     const queryKey = trpc.calendar.listItems.queryKey({ startISO, endISO });
@@ -30,6 +39,9 @@ export function createUseCalendarQuery({ useTRPC }: CreateCalendarHooksOptions) 
         {
           staleTime: 1000 * 60 * 5,
           refetchOnWindowFocus: false,
+          meta: {
+            persistOfflineReadCache: options.persistOfflineReadCache === true,
+          },
         }
       )
     );

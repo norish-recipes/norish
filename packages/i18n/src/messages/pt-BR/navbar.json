@@ -17,6 +17,75 @@
       "updateAvailable": "v{version} disponível"
     }
   },
+  "offline": {
+    "title": "Status offline",
+    "description": "Conexão, dados salvos e alterações na fila neste navegador.",
+    "footerLabel": "Status offline: {status}",
+    "connectivity": {
+      "checking": "Verificando",
+      "online": "Online",
+      "offline": "Offline",
+      "backend-unreachable": "Servidor indisponível"
+    },
+    "data": {
+      "live": "Dados ao vivo",
+      "cached": "Dados salvos",
+      "stale": "Os dados podem estar desatualizados",
+      "unavailable": "Dados indisponíveis"
+    },
+    "status": {
+      "title": "Status atual",
+      "lastLiveSuccess": "Última resposta ao vivo",
+      "never": "Ainda não",
+      "retryFailed": "O servidor continua indisponível."
+    },
+    "actions": {
+      "retry": "Tentar conexão novamente",
+      "cancel": "Cancelar",
+      "clear": "Limpar dados salvos",
+      "openResult": "Abrir resultado",
+      "acknowledge": "Confirmar e remover",
+      "close": "Fechar"
+    },
+    "cache": {
+      "title": "Dados salvos",
+      "schema": "Esquema {version}",
+      "empty": "Ainda não há dados offline salvos para esta família.",
+      "persistenceWarning": "Alguns dados não puderam ser salvos",
+      "clearConfirm": "Limpar os dados salvos da família ativa neste navegador?"
+    },
+    "warnings": {
+      "blocked": "Outra aba está bloqueando a atualização do banco offline.",
+      "unavailable": "O armazenamento offline não está disponível neste navegador.",
+      "quota-exceeded": "O armazenamento do navegador está cheio.",
+      "write-failed": "O último salvamento offline não foi concluído."
+    },
+    "inventory": {
+      "recipeSummaries": "Resumos de receitas",
+      "recipeDetails": "Detalhes de receitas",
+      "calendarItems": "Itens do calendário",
+      "groceries": "Compras",
+      "recurringGroceries": "Compras recorrentes",
+      "stores": "Lojas"
+    },
+    "queue": {
+      "title": "Alterações na fila",
+      "active": "{count} aguardando",
+      "attention": "{count} precisam de atenção",
+      "retrying": "Tentando novamente {count} alterações quando o servidor estiver disponível.",
+      "empty": "Nenhuma alteração na fila ou resultado retido.",
+      "results": "Resultados concluídos ({count})"
+    },
+    "simulation": {
+      "title": "Simular servidor indisponível",
+      "description": "Somente desenvolvimento. Desativar exige uma verificação ao vivo bem-sucedida.",
+      "disableFailed": "A simulação continua ativa porque a verificação ao vivo falhou."
+    },
+    "unavailable": {
+      "title": "Indisponível offline",
+      "description": "Abra estes dados online uma vez antes de usá-los durante uma interrupção."
+    }
+  },
   "theme": {
     "title": "Tema",
     "loading": "Carregando…",

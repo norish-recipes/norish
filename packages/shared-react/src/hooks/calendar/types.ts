@@ -26,6 +26,10 @@ export type CalendarQueryResult = {
   invalidate: () => void;
 };
 
+export type CalendarQueryOptions = {
+  persistOfflineReadCache?: boolean;
+};
+
 export type CalendarMutationsResult = {
   createItem: (
     date: string,

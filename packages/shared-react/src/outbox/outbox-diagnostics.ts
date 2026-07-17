@@ -29,6 +29,13 @@ const EMPTY_DIAGNOSTICS: WebOutboxDiagnostics = {
   attention: [],
 };
 
+export const WEB_OUTBOX_CHANGE_EVENT = "norish:web-outbox-changed";
+const WEB_OUTBOX_CHANGE_CHANNEL = "norish-web-outbox";
+const WEB_OUTBOX_TAB_ID =
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `tab-${Math.random().toString(36).slice(2)}`;
+
 export async function readWebOutboxDiagnostics(
   repository: WebOutboxRepository,
   scope: WebOutboxScope | null
@@ -69,7 +76,32 @@ export async function readWebOutboxDiagnostics(
 }
 
 export function notifyWebOutboxChanged(): void {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event("norish:web-outbox-changed"));
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(WEB_OUTBOX_CHANGE_EVENT));
+  if (typeof BroadcastChannel === "undefined") return;
+
+  const channel = new BroadcastChannel(WEB_OUTBOX_CHANGE_CHANNEL);
+
+  channel.postMessage({ sourceId: WEB_OUTBOX_TAB_ID });
+  channel.close();
+}
+
+export function subscribeToWebOutboxChanges(listener: () => void): () => void {
+  if (typeof window === "undefined") return () => undefined;
+
+  const channel =
+    typeof BroadcastChannel === "undefined"
+      ? null
+      : new BroadcastChannel(WEB_OUTBOX_CHANGE_CHANNEL);
+
+  window.addEventListener(WEB_OUTBOX_CHANGE_EVENT, listener);
+  if (channel) {
+    channel.onmessage = (event: MessageEvent<{ sourceId?: string }>) => {
+      if (event.data?.sourceId !== WEB_OUTBOX_TAB_ID) listener();
+    };
   }
+
+  return () => {
+    window.removeEventListener(WEB_OUTBOX_CHANGE_EVENT, listener);
+    channel?.close();
+  };
 }

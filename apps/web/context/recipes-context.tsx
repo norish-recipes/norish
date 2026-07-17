@@ -1,5 +1,6 @@
 "use client";
 
+import type { QueryKey } from "@tanstack/react-query";
 import { createContext, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useRecipesFiltersContext } from "@/context/recipes-filters-context";
@@ -24,6 +25,7 @@ type Ctx = {
   total: number;
   isLoading: boolean;
   isFetchingMore: boolean;
+  queryKey: QueryKey;
   hasMore: boolean;
   pendingRecipeIds: Set<string>;
   autoTaggingRecipeIds: Set<string>;

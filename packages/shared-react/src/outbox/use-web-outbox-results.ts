@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { WebOutboxResult, WebOutboxScope } from "./outbox-types";
+import { subscribeToWebOutboxChanges } from "./outbox-diagnostics";
 import { WebOutboxRepository } from "./outbox-repository";
 
 const repository = new WebOutboxRepository();
@@ -29,9 +30,9 @@ export function useWebOutboxResults(getScope: () => Promise<WebOutboxScope | nul
 
   useEffect(() => {
     void refresh();
-    window.addEventListener("norish:web-outbox-changed", refresh);
+    const unsubscribe = subscribeToWebOutboxChanges(refresh);
 
-    return () => window.removeEventListener("norish:web-outbox-changed", refresh);
+    return unsubscribe;
   }, [refresh]);
 
   const open = useCallback(async (result: WebOutboxResult) => {

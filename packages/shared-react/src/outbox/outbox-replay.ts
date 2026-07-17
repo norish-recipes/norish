@@ -78,121 +78,138 @@ export function classifyReplayError(error: unknown): ReplayOutcome {
 
 export class WebOutboxReplayCoordinator {
   private activePass: Promise<void> | null = null;
+  private refetchRequested = false;
+  private forceRetryRequested = false;
 
   constructor(private readonly options: WebOutboxReplayCoordinatorOptions) {}
 
-  start(): Promise<void> {
+  start(options: { refetchAfterPass?: boolean; forceRetry?: boolean } = {}): Promise<void> {
+    if (options.refetchAfterPass) this.refetchRequested = true;
+    if (options.forceRetry) this.forceRetryRequested = true;
     if (this.activePass) return this.activePass;
 
-    this.activePass = this.run().finally(() => {
-      this.activePass = null;
-    });
+    this.activePass = this.run()
+      .then(async (deliveredOrSettled) => {
+        if (deliveredOrSettled || this.refetchRequested) {
+          await this.options.refetch?.();
+        }
+      })
+      .finally(() => {
+        this.refetchRequested = false;
+        this.forceRetryRequested = false;
+        this.activePass = null;
+      });
 
     return this.activePass;
   }
 
-  private async run(): Promise<void> {
+  private async run(): Promise<boolean> {
     const scope = await this.options.getScope();
 
-    if (!scope) return;
+    if (!scope) return false;
+
+    let deliveredOrSettled = false;
 
     await this.options.repository.quarantineMismatches(scope);
 
-    try {
-      const entries = await this.options.repository.listPending(scope);
+    const entries = await this.options.repository.listPending(scope);
 
-      for (const entry of entries) {
-        if (entry.nextRetryAt !== null && entry.nextRetryAt > Date.now()) {
-          break;
-        }
+    for (const entry of entries) {
+      if (
+        !this.forceRetryRequested &&
+        entry.nextRetryAt !== null &&
+        entry.nextRetryAt > Date.now()
+      ) {
+        break;
+      }
 
-        let input: unknown;
+      let input: unknown;
 
-        try {
-          input = await this.options.repository.decodeInput(entry);
-        } catch (error) {
-          this.options.logger?.warn({ error, entryId: entry.id }, "Unable to decrypt outbox input");
-          await this.options.repository.update(entry.id, {
-            state: "terminal",
-            lastErrorCode: "LOCAL_DECRYPTION_FAILED",
-            lastErrorMessage: "The queued mutation could not be decrypted",
-          });
-          continue;
-        }
+      try {
+        input = await this.options.repository.decodeInput(entry);
+      } catch (error) {
+        this.options.logger?.warn({ error, entryId: entry.id }, "Unable to decrypt outbox input");
+        await this.options.repository.update(entry.id, {
+          state: "terminal",
+          lastErrorCode: "LOCAL_DECRYPTION_FAILED",
+          lastErrorMessage: "The queued mutation could not be decrypted",
+        });
+        deliveredOrSettled = true;
+        continue;
+      }
 
-        try {
-          const response = await this.options.deliver(entry, input);
+      try {
+        const response = await this.options.deliver(entry, input);
 
-          if (isRecord(response) && response.stale === true) {
-            await this.options.repository.update(entry.id, {
-              state: "terminal",
-              nextRetryAt: null,
-              lastErrorCode: "STALE_VERSION",
-              lastErrorMessage: "The queued mutation was based on an older version",
-            });
-            notifyWebOutboxChanged();
-            continue;
-          }
-
-          if (isRecord(response) && response.success === false) {
-            await this.options.repository.update(entry.id, {
-              state: "terminal",
-              nextRetryAt: null,
-              lastErrorCode: "DOMAIN_REJECTED",
-              lastErrorMessage: "The server rejected the queued mutation",
-            });
-            notifyWebOutboxChanged();
-            continue;
-          }
-
-          await this.options.repository.markCompleted(
-            entry,
-            RETAINED_RESULT_PATHS.has(entry.path) ? response : undefined
-          );
-          notifyWebOutboxChanged();
-        } catch (error) {
-          const outcome = classifyReplayError(error);
-
-          if (outcome === "auth") {
-            await this.options.repository.update(entry.id, {
-              state: "quarantined",
-              nextRetryAt: null,
-              lastErrorCode: "UNAUTHORIZED",
-              lastErrorMessage: "Authentication is required before queued delivery can continue",
-            });
-            notifyWebOutboxChanged();
-            break;
-          }
-
-          if (outcome === "retry") {
-            const attempts = entry.attempts + 1;
-
-            await this.options.repository.update(entry.id, {
-              state: "retrying",
-              attempts,
-              nextRetryAt:
-                Date.now() + getRetryDelay(attempts, this.options.maxBackoffMs ?? 60_000),
-              lastErrorCode: "DELIVERY_RETRY",
-              lastErrorMessage: "The backend did not accept the delivery yet",
-            });
-            this.options.logger?.debug(
-              { entryId: entry.id, attempts },
-              "Outbox delivery backed off"
-            );
-            break;
-          }
-
+        if (isRecord(response) && response.stale === true) {
           await this.options.repository.update(entry.id, {
             state: "terminal",
             nextRetryAt: null,
-            lastErrorCode: getTerminalErrorCode(error),
-            lastErrorMessage: error instanceof Error ? error.message : "Queued mutation failed",
+            lastErrorCode: "STALE_VERSION",
+            lastErrorMessage: "The queued mutation was based on an older version",
+          });
+          deliveredOrSettled = true;
+          notifyWebOutboxChanged();
+          continue;
+        }
+
+        if (isRecord(response) && response.success === false) {
+          await this.options.repository.update(entry.id, {
+            state: "terminal",
+            nextRetryAt: null,
+            lastErrorCode: "DOMAIN_REJECTED",
+            lastErrorMessage: "The server rejected the queued mutation",
+          });
+          deliveredOrSettled = true;
+          notifyWebOutboxChanged();
+          continue;
+        }
+
+        await this.options.repository.markCompleted(
+          entry,
+          RETAINED_RESULT_PATHS.has(entry.path) ? response : undefined
+        );
+        deliveredOrSettled = true;
+        notifyWebOutboxChanged();
+      } catch (error) {
+        const outcome = classifyReplayError(error);
+
+        if (outcome === "auth") {
+          await this.options.repository.update(entry.id, {
+            state: "quarantined",
+            nextRetryAt: null,
+            lastErrorCode: "UNAUTHORIZED",
+            lastErrorMessage: "Authentication is required before queued delivery can continue",
           });
           notifyWebOutboxChanged();
+          break;
         }
+
+        if (outcome === "retry") {
+          const attempts = entry.attempts + 1;
+
+          await this.options.repository.update(entry.id, {
+            state: "retrying",
+            attempts,
+            nextRetryAt: Date.now() + getRetryDelay(attempts, this.options.maxBackoffMs ?? 60_000),
+            lastErrorCode: "DELIVERY_RETRY",
+            lastErrorMessage: "The backend did not accept the delivery yet",
+          });
+          this.options.logger?.debug({ entryId: entry.id, attempts }, "Outbox delivery backed off");
+          break;
+        }
+
+        await this.options.repository.update(entry.id, {
+          state: "terminal",
+          nextRetryAt: null,
+          lastErrorCode: getTerminalErrorCode(error),
+          lastErrorMessage: error instanceof Error ? error.message : "Queued mutation failed",
+        });
+        deliveredOrSettled = true;
+        notifyWebOutboxChanged();
       }
-    } finally {
-      await this.options.refetch?.();
     }
+
+    return deliveredOrSettled;
   }
 }

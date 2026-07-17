@@ -17,6 +17,75 @@
       "updateAvailable": "v{version} beschikbaar"
     }
   },
+  "offline": {
+    "title": "Offlinestatus",
+    "description": "Verbinding, opgeslagen gegevens en wachtrijwijzigingen in deze browser.",
+    "footerLabel": "Offlinestatus: {status}",
+    "connectivity": {
+      "checking": "Controleren",
+      "online": "Online",
+      "offline": "Offline",
+      "backend-unreachable": "Server niet beschikbaar"
+    },
+    "data": {
+      "live": "Livegegevens",
+      "cached": "Opgeslagen gegevens",
+      "stale": "Gegevens kunnen verouderd zijn",
+      "unavailable": "Gegevens niet beschikbaar"
+    },
+    "status": {
+      "title": "Huidige status",
+      "lastLiveSuccess": "Laatste liveantwoord",
+      "never": "Nog niet",
+      "retryFailed": "De server is nog steeds niet beschikbaar."
+    },
+    "actions": {
+      "retry": "Verbinding opnieuw proberen",
+      "cancel": "Annuleren",
+      "clear": "Opgeslagen gegevens wissen",
+      "openResult": "Resultaat openen",
+      "acknowledge": "Bevestigen en verwijderen",
+      "close": "Sluiten"
+    },
+    "cache": {
+      "title": "Opgeslagen gegevens",
+      "schema": "Schema {version}",
+      "empty": "Voor dit huishouden zijn nog geen offlinegegevens opgeslagen.",
+      "persistenceWarning": "Sommige gegevens konden niet worden opgeslagen",
+      "clearConfirm": "Opgeslagen gegevens voor het actieve huishouden in deze browser wissen?"
+    },
+    "warnings": {
+      "blocked": "Een ander tabblad blokkeert de update van de offlinedatabase.",
+      "unavailable": "Offlineopslag is niet beschikbaar in deze browser.",
+      "quota-exceeded": "De browseropslag is vol.",
+      "write-failed": "De laatste offlineopslag is niet voltooid."
+    },
+    "inventory": {
+      "recipeSummaries": "Receptoverzichten",
+      "recipeDetails": "Receptdetails",
+      "calendarItems": "Agenda-items",
+      "groceries": "Boodschappen",
+      "recurringGroceries": "Terugkerende boodschappen",
+      "stores": "Winkels"
+    },
+    "queue": {
+      "title": "Wijzigingen in wachtrij",
+      "active": "{count} in wachtrij",
+      "attention": "{count} vereisen aandacht",
+      "retrying": "{count} wijzigingen worden opnieuw geprobeerd zodra de server beschikbaar is.",
+      "empty": "Geen wijzigingen in wachtrij of bewaarde resultaten.",
+      "results": "Voltooide resultaten ({count})"
+    },
+    "simulation": {
+      "title": "Serverstoring simuleren",
+      "description": "Alleen voor ontwikkeling. Uitschakelen vereist een geslaagde livecontrole.",
+      "disableFailed": "De simulatie blijft actief omdat de livecontrole is mislukt."
+    },
+    "unavailable": {
+      "title": "Niet offline beschikbaar",
+      "description": "Open deze gegevens eerst eenmaal online voordat je ze tijdens een storing gebruikt."
+    }
+  },
   "theme": {
     "title": "Thema",
     "loading": "Laden…",

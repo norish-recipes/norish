@@ -17,6 +17,75 @@
       "updateAvailable": "v{version} tilgjengelig"
     }
   },
+  "offline": {
+    "title": "Frakoblet status",
+    "description": "Tilkobling, lagrede data og endringer i kø i denne nettleseren.",
+    "footerLabel": "Frakoblet status: {status}",
+    "connectivity": {
+      "checking": "Sjekker",
+      "online": "Tilkoblet",
+      "offline": "Frakoblet",
+      "backend-unreachable": "Serveren er utilgjengelig"
+    },
+    "data": {
+      "live": "Direktedata",
+      "cached": "Lagrede data",
+      "stale": "Data kan være utdaterte",
+      "unavailable": "Data er utilgjengelige"
+    },
+    "status": {
+      "title": "Nåværende status",
+      "lastLiveSuccess": "Siste direktesvar",
+      "never": "Ikke ennå",
+      "retryFailed": "Serveren er fortsatt utilgjengelig."
+    },
+    "actions": {
+      "retry": "Prøv tilkoblingen igjen",
+      "cancel": "Avbryt",
+      "clear": "Tøm lagrede data",
+      "openResult": "Åpne resultat",
+      "acknowledge": "Bekreft og fjern",
+      "close": "Lukk"
+    },
+    "cache": {
+      "title": "Lagrede data",
+      "schema": "Skjema {version}",
+      "empty": "Ingen frakoblede data er lagret for denne husstanden ennå.",
+      "persistenceWarning": "Noen data kunne ikke lagres",
+      "clearConfirm": "Tømme lagrede data for den aktive husstanden i denne nettleseren?"
+    },
+    "warnings": {
+      "blocked": "En annen fane blokkerer oppdateringen av frakoblet-databasen.",
+      "unavailable": "Frakoblet lagring er ikke tilgjengelig i denne nettleseren.",
+      "quota-exceeded": "Nettleserlagringen er full.",
+      "write-failed": "Den siste frakoblede lagringen ble ikke fullført."
+    },
+    "inventory": {
+      "recipeSummaries": "Oppskriftsoversikter",
+      "recipeDetails": "Oppskriftsdetaljer",
+      "calendarItems": "Kalenderoppføringer",
+      "groceries": "Dagligvarer",
+      "recurringGroceries": "Gjentakende dagligvarer",
+      "stores": "Butikker"
+    },
+    "queue": {
+      "title": "Endringer i kø",
+      "active": "{count} venter",
+      "attention": "{count} krever oppmerksomhet",
+      "retrying": "Prøver {count} endringer igjen når serveren er tilgjengelig.",
+      "empty": "Ingen endringer i kø eller lagrede resultater.",
+      "results": "Fullførte resultater ({count})"
+    },
+    "simulation": {
+      "title": "Simuler utilgjengelig server",
+      "description": "Kun utvikling. Deaktivering krever en vellykket direktekontroll.",
+      "disableFailed": "Simuleringen forblir aktiv fordi direktekontrollen mislyktes."
+    },
+    "unavailable": {
+      "title": "Ikke tilgjengelig frakoblet",
+      "description": "Åpne disse dataene på nett én gang før du bruker dem under et avbrudd."
+    }
+  },
   "theme": {
     "title": "Tema",
     "loading": "Laster…",

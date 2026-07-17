@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { OfflineDataUnavailable } from "@/components/offline-data-unavailable";
+import { useOfflineWeb } from "@/context/offline-web-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useContainerColumns } from "@/hooks/use-container-columns";
 import { useRecipeDashboardViewMode } from "@/hooks/use-recipe-dashboard-view-mode";
@@ -40,7 +42,10 @@ export default function RecipeGrid() {
     toggleFavorite,
     deleteRecipe,
     allergies,
+    queryKey,
   } = useRecipesContext();
+  const { isQueryUnavailable } = useOfflineWeb();
+  const unavailableOffline = isQueryUnavailable(queryKey);
 
   const { saveScrollState, getScrollState } = useScrollRestoration(filterKey);
 
@@ -181,6 +186,7 @@ export default function RecipeGrid() {
 
   // Show skeleton during initial load
   if (showSkeleton) return <RecipeGridSkeleton variant={viewMode} />;
+  if (unavailableOffline) return <OfflineDataUnavailable />;
 
   return (
     <div

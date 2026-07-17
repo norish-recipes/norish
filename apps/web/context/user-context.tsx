@@ -2,6 +2,7 @@
 
 import { createContext, ReactNode, useCallback, useContext } from "react";
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { useOfflineRenderUser } from "@/context/offline-web-context";
 import { useQuery } from "@tanstack/react-query";
 
 import type { UserContextValue } from "@norish/shared-react/contexts";
@@ -13,8 +14,12 @@ import { signOut as betterAuthSignOut } from "@norish/shared/lib/auth/client";
 const shared = createUserContext({
   useSessionUser: () => {
     const { user, isLoading } = useUser();
+    const offline = useOfflineRenderUser();
 
-    return { user, isLoading };
+    return {
+      user: user ?? (offline.isRenderOnly ? offline.user : null),
+      isLoading: isLoading && !offline.isRenderOnly,
+    };
   },
   useSignOut: () => {
     return useCallback(async () => {

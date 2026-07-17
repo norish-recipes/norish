@@ -9,6 +9,7 @@ export type {
   CalendarCacheHelpers,
   CalendarData,
   CalendarMutationsResult,
+  CalendarQueryOptions,
   CalendarQueryResult,
 } from "./types";
 

@@ -28,6 +28,7 @@ const CalendarContext = createContext<CalendarContextValue | null>(null);
 export function CalendarContextProvider({
   children,
   mode = "mobile",
+  persistOfflineReadCache = false,
 }: CalendarContextProviderProps) {
   const [dateRange, setDateRange] = useState<CalendarDateRange>(() => getInitialDateRange(mode));
   const [isExpandingRange, setIsExpandingRange] = useState(false);
@@ -35,7 +36,13 @@ export function CalendarContextProvider({
   const startISO = dateKey(dateRange.start);
   const endISO = dateKey(dateRange.end);
 
-  const { calendarData, isLoading: isQueryLoading } = useCalendarQuery(startISO, endISO);
+  const {
+    calendarData,
+    isLoading: isQueryLoading,
+    queryKey,
+  } = useCalendarQuery(startISO, endISO, {
+    persistOfflineReadCache,
+  });
   const { createItem, deleteItem, moveItem, updateItem } = useCalendarMutations(startISO, endISO);
 
   // Track if initial load has completed (only show skeleton on first load)
@@ -132,6 +139,7 @@ export function CalendarContextProvider({
       plannedItemsByDate: calendarData,
       isLoading: isInitialLoading,
       isLoadingMore: isExpandingRange,
+      queryKey,
       dateRange,
       planMeal,
       planNote,
@@ -146,6 +154,7 @@ export function CalendarContextProvider({
       calendarData,
       isInitialLoading,
       isExpandingRange,
+      queryKey,
       dateRange,
       planMeal,
       planNote,

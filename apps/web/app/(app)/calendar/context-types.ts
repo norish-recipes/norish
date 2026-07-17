@@ -1,4 +1,5 @@
 import type { CalendarData } from "@/hooks/calendar/use-calendar-query";
+import type { QueryKey } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
@@ -12,6 +13,7 @@ export type CalendarContextValue = {
   plannedItemsByDate: CalendarData;
   isLoading: boolean;
   isLoadingMore: boolean;
+  queryKey: QueryKey;
   dateRange: CalendarDateRange;
   planMeal: (date: string, slot: Slot, recipeId: string) => void;
   planNote: (date: string, slot: Slot, title: string) => void;
@@ -27,4 +29,6 @@ export type CalendarContextProviderProps = {
   children: ReactNode;
   /** Initial range mode - desktop loads current week, mobile loads +/-2 weeks */
   mode?: "desktop" | "mobile";
+  /** Marks the full calendar screen's range as eligible for the web offline read cache. */
+  persistOfflineReadCache?: boolean;
 };

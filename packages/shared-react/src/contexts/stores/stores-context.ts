@@ -14,6 +14,7 @@ export type StoresContextValue = {
   // Data
   stores: StoreDto[];
   isLoading: boolean;
+  queryKey: StoresQueryResult["queryKey"];
   createStore: (data: StoreCreateDto) => Promise<string>;
   updateStore: (data: StoreUpdateDraft) => void;
   deleteStore: (
@@ -42,7 +43,7 @@ export function createStoresContext({
 
   function StoresContextProvider({ children }: { children: ReactNode }) {
     // Data hooks
-    const { stores, isLoading } = useStoresQuery();
+    const { stores, isLoading, queryKey } = useStoresQuery();
     const storeMutations = useStoresMutations();
 
     // Subscribe to WebSocket events (updates query cache via internal cache helpers)
@@ -55,11 +56,12 @@ export function createStoresContext({
       () => ({
         stores,
         isLoading,
+        queryKey,
         ...storeMutations,
         storeManagerOpen,
         setStoreManagerOpen,
       }),
-      [stores, isLoading, storeMutations, storeManagerOpen]
+      [stores, isLoading, queryKey, storeMutations, storeManagerOpen]
     );
 
     return createElement(StoresContext.Provider, { value }, children);

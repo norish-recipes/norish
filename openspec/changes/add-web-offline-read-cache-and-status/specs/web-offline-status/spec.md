@@ -1,153 +1,189 @@
 ## ADDED Requirements
 
-### Requirement: Web connectivity status is distinct from lazy WebSocket state
+### Requirement: Connectivity reflects browser and HTTP backend reachability
 
-The web client SHALL expose an application connectivity state with `initializing`, `offline`, `backend-unreachable`, and `online` modes. It SHALL combine browser reachability signals with observed HTTP delivery failures and successful recovery, and SHALL NOT treat a lazy WebSocket `idle` state as proof that the backend is unavailable.
+The web client SHALL expose `checking`, `online`, `offline`, and `backend-unreachable` connectivity states. The state SHALL combine browser online/offline events with observed HTTP/tRPC transport outcomes and explicit recovery checks. Lazy WebSocket `idle`, `connecting`, or `disconnected` state SHALL NOT by itself determine backend reachability.
 
-#### Scenario: The browser reports no network
+#### Scenario: Initial live requests are pending
 
-- **WHEN** the browser reports that it is offline
-- **THEN** the application connectivity state SHALL become `offline`
-- **AND** the user-facing status surface SHALL expose the offline state
+- **WHEN** a fresh application load has not yet produced a successful or failed backend attempt
+- **THEN** connectivity SHALL be `checking`
 
-#### Scenario: HTTP delivery fails while the browser reports online
+#### Scenario: The browser reports offline
 
-- **WHEN** an authenticated HTTP request fails because the backend cannot be reached while browser connectivity remains available
-- **THEN** the application connectivity state SHALL become `backend-unreachable` or an equivalent degraded state
-- **AND** the UI SHALL not claim that the backend is healthy solely because `navigator.onLine` is true
+- **WHEN** the browser reports that network connectivity is unavailable
+- **THEN** connectivity SHALL be `offline`
+- **AND** the client SHALL still allow the in-flight live attempt to fail normally before installing cached fallback data
 
-#### Scenario: Connectivity recovers
+#### Scenario: HTTP fails while the browser reports online
 
-- **WHEN** a backend request succeeds after an offline or backend-unreachable state
-- **THEN** the application connectivity state SHALL return to `online`
-- **AND** queued mutation diagnostics and read-cache revalidation MAY begin through the existing reconnect behavior
+- **WHEN** an HTTP/tRPC request fails with a reachability error or backend-unavailable response while `navigator.onLine` is true
+- **THEN** connectivity SHALL be `backend-unreachable`
 
-### Requirement: Connectivity status takes priority over update status
+#### Scenario: A recovery check succeeds
 
-The avatar status surface SHALL use one explicit priority order: initializing has no indicator; offline or backend-unreachable uses a yellow connectivity dot; online queue attention uses a warning status; active queued writes use a queue count badge; update availability uses the existing accent dot only when no higher-priority state is present; and a clean online state has no indicator.
+- **WHEN** an explicit or automatic lightweight backend recovery check succeeds
+- **THEN** connectivity SHALL become `online`
+- **AND** read revalidation and queued-write replay MAY resume
 
-#### Scenario: Offline and update are both present
+### Requirement: A compact connectivity control lives beside the version footer
 
-- **WHEN** the application is offline or backend-unreachable and a new version is available
-- **THEN** the avatar SHALL show the yellow connectivity indicator instead of the update-available dot
-- **AND** the update information MAY remain available inside the user menu
+For authenticated users, the existing user-menu footer SHALL contain a small connectivity control beside the current-version text on both desktop and mobile navigation. The control SHALL be present in every connectivity state, SHALL show a compact icon and text label, and SHALL open the offline-status modal. Connectivity SHALL NOT be moved onto the user avatar or replace the existing update-available avatar treatment.
 
-#### Scenario: Online with queued writes
+#### Scenario: The user menu is opened while online
 
-- **WHEN** the application is online and one or more mutations are pending or retrying
-- **THEN** the avatar SHALL expose the active queue count
-- **AND** the update dot SHALL not obscure or replace the queue status
+- **WHEN** the user opens the avatar menu and connectivity is online
+- **THEN** the footer SHALL show a compact `Online` control beside the version
 
-### Requirement: The avatar indicator uses the HeroUI v3 status composition
+#### Scenario: The user menu is opened during an outage
 
-The web user menu SHALL render the existing user avatar through HeroUI v3 composition, using `Badge.Anchor` for the connectivity dot and active queue count. The indicator SHALL expose an accessible text label describing the current connectivity and queue state.
+- **WHEN** connectivity is offline or backend-unreachable
+- **THEN** the same footer position SHALL show the corresponding compact status
+- **AND** its accessible name SHALL describe that status
 
-#### Scenario: The user menu renders while offline
+#### Scenario: The connectivity control is activated
 
-- **WHEN** the authenticated navbar renders in an offline or backend-unreachable state
-- **THEN** the existing avatar SHALL be wrapped in a HeroUI v3 badge anchor with a yellow status dot
-- **AND** the trigger SHALL expose an accessible label such as `Offline`
+- **WHEN** the user presses or clicks the footer control
+- **THEN** the user menu SHALL close
+- **AND** the responsive offline-status modal SHALL open
 
-#### Scenario: The user menu renders with queued writes
+### Requirement: The offline-status modal explains connectivity and cached data
 
-- **WHEN** active queued writes exist
-- **THEN** the avatar SHALL expose a numeric HeroUI v3 badge for the active count
-- **AND** the accessible label SHALL include the count
+The modal SHALL use HeroUI v3 compound components and SHALL show the current connectivity state, last successful live contact, whether the visible screen is using cached data, and the active read-cache inventory. It SHALL distinguish stale cached data from current live data and SHALL surface IndexedDB or quota warnings.
 
-### Requirement: The offline queue is discoverable from the user menu
+#### Scenario: Cached fallback is active
 
-The user menu SHALL provide an explicit queue entry that opens a HeroUI v3 queue view on desktop and mobile. The queue view SHALL replace the raw fixed diagnostic panel as the primary presentation surface.
+- **WHEN** the modal opens while one or more screens are using IndexedDB fallback data
+- **THEN** it SHALL identify the data as cached
+- **AND** it SHALL show cache counts and last-updated timestamps by data type
 
-#### Scenario: The user opens the queue view
+#### Scenario: No offline data is available
 
-- **WHEN** the user selects the offline queue entry from the avatar menu
-- **THEN** a keyboard- and screen-reader-accessible HeroUI v3 overlay SHALL open
-- **AND** it SHALL show active queued work, retrying work, and items requiring attention
+- **WHEN** the active scope contains no compatible read snapshots
+- **THEN** the modal SHALL say that no data is currently available offline
+- **AND** it SHALL not claim that empty screens are cached successfully
 
-#### Scenario: No active queue exists
+#### Scenario: Persistence is degraded
 
-- **WHEN** there are no pending or retrying entries and no attention items
-- **THEN** the avatar SHALL not show a queue count
-- **AND** the queue view SHALL remain available from the menu only when there are retained delivery results or diagnostics to inspect, or be omitted when completely clean
+- **WHEN** IndexedDB is blocked, unavailable, or out of quota
+- **THEN** the modal SHALL show a persistence warning and identify which cache update failed when known
 
-### Requirement: Queue counts distinguish waiting work from attention items
+### Requirement: The modal provides safe recovery and cache actions
 
-The queue view SHALL count `pending + retrying` as active queued writes. Quarantined, terminal, and expired entries SHALL be reported separately as items requiring attention and SHALL NOT be counted as automatically deliverable work.
+The modal SHALL provide a `Retry connection` action and a confirmed `Clear cached data` action. Retry SHALL perform a real HTTP recovery check before changing state. Clear SHALL remove only the active read-cache scope and SHALL leave the mutation outbox unchanged.
 
-#### Scenario: Pending and retrying entries exist
+#### Scenario: Retry succeeds
 
-- **WHEN** the outbox contains two pending entries and one retrying entry
-- **THEN** the avatar and queue view SHALL report three active queued writes
-- **AND** the queue view SHALL identify the retrying entry separately
+- **WHEN** the user activates retry and the backend recovery check succeeds
+- **THEN** connectivity SHALL become online
+- **AND** replay/revalidation SHALL resume through their existing coordinators
 
-#### Scenario: A replay requires attention
+#### Scenario: Retry fails
 
-- **WHEN** the outbox contains a quarantined, terminal, or expired entry
-- **THEN** the queue view SHALL report it under an attention state
-- **AND** it SHALL not inflate the automatically deliverable count
+- **WHEN** the user activates retry and the backend remains unreachable
+- **THEN** the current offline or backend-unreachable state SHALL remain
+- **AND** the modal SHALL report the failed check without blocking other interaction
 
-### Requirement: Queue state updates remain visible while the application is interactive
+#### Scenario: Clear is requested
 
-The status and queue view SHALL update after enqueue, replay, retry, quarantine, terminal, expiration, and acknowledgement events without blocking the application or showing a full-screen reconnect overlay.
+- **WHEN** the user activates clear cached data
+- **THEN** the modal SHALL require confirmation before deleting the active read cache
+- **AND** queued changes SHALL not be deleted or acknowledged
 
-#### Scenario: A mutation becomes queued
+### Requirement: Queued-write diagnostics are integrated into the modal
 
-- **WHEN** a mutation is durably captured by the existing web outbox
-- **THEN** the avatar count and queue view SHALL update without requiring a full page reload
+The modal SHALL replace the fixed `WebOutboxStatus` panel as the web presentation for mutation delivery diagnostics. It SHALL count `pending + retrying` as active queued work, report quarantined, terminal, and expired entries separately as requiring attention, and retain access to completed results and acknowledgement actions without changing outbox storage or replay semantics.
 
-#### Scenario: Replay completes or needs attention
+#### Scenario: Writes are pending or retrying
 
-- **WHEN** a queued entry is delivered, retried, quarantined, becomes terminal, expires, or is acknowledged
-- **THEN** the status surface SHALL reflect the new count and state
-- **AND** the application SHALL remain interactive
+- **WHEN** the active outbox scope contains pending or retrying mutations
+- **THEN** the modal SHALL show their active count
+- **AND** retrying entries SHALL be distinguishable from newly pending entries
 
-### Requirement: Status meaning is not conveyed by color alone
+#### Scenario: An entry requires attention
 
-The web status surface SHALL expose text or accessible labels for offline, backend-unreachable, queued, retrying, and attention states. The yellow dot and numeric badge SHALL supplement, not replace, the textual queue view.
+- **WHEN** an outbox entry is quarantined, terminal, or expired
+- **THEN** the modal SHALL show it under an attention section
+- **AND** it SHALL not include it in the automatically replayable count
 
-#### Scenario: A screen reader inspects the avatar
+#### Scenario: A completed result is inspected
 
-- **WHEN** a screen reader focuses the user-menu trigger
-- **THEN** it SHALL receive a label describing the highest-priority connectivity state and active queue count
+- **WHEN** the user opens a retained delivery result in the modal
+- **THEN** the result SHALL be readable and acknowledgeable through the existing outbox result API
 
-#### Scenario: The queue view is opened by keyboard
+#### Scenario: The provider tree renders
 
-- **WHEN** a keyboard user opens the queue view
-- **THEN** focus SHALL move into the HeroUI v3 overlay and the queue states SHALL be navigable without pointer interaction
+- **WHEN** the authenticated or public provider tree mounts
+- **THEN** no fixed bottom-corner outbox diagnostic panel SHALL be rendered
 
 ### Requirement: Development builds can simulate backend unreachability
 
-Development builds SHALL expose a persistent, clearly labeled control for simulating backend unreachability. The simulator SHALL force the same connectivity status and request-failure classification used by a real backend outage, while production builds SHALL not expose or honor the control.
+Development builds SHALL expose a persistent `Simulate backend unavailable` toggle inside the modal. The toggle SHALL use the same HTTP failure classification, connectivity state, read-cache fallback, replay pause, and recovery paths as a real outage. Production builds SHALL neither render nor honor the override.
 
-#### Scenario: The developer enables simulated backend unreachability
+#### Scenario: Simulation is enabled
 
-- **WHEN** the development-only simulator is enabled
-- **THEN** the avatar SHALL show the backend-unreachable connectivity indicator
-- **AND** HTTP/tRPC requests SHALL fail through the normal reachability error path
-- **AND** queued replay and online hydration SHALL pause
+- **WHEN** a developer enables the toggle
+- **THEN** HTTP/tRPC operations SHALL fail through the normal backend-unreachable path
+- **AND** connectivity SHALL become backend-unreachable
+- **AND** cached fallback and outbox capture SHALL behave as they do during a real transport failure
 
-#### Scenario: A destructive mutation runs during simulated backend unreachability
+#### Scenario: A mutation occurs during simulation
 
-- **WHEN** the developer deletes a recipe, grocery, or calendar item while the simulator is enabled
-- **THEN** the mutation SHALL traverse the existing outbox capture path
-- **AND** it SHALL be durably queued with the same operation identity and optimistic behavior as a real transport failure
+- **WHEN** a mutation that the existing outbox supports is performed while simulation is enabled
+- **THEN** it SHALL keep its normal optimistic UI behavior
+- **AND** it SHALL be durably captured by the existing outbox with its operation identity
 
-#### Scenario: The developer disables simulated backend unreachability
+#### Scenario: Simulation is disabled
 
-- **WHEN** the simulator is disabled
-- **THEN** the connectivity override SHALL be removed
-- **AND** the client SHALL perform a live recovery check before resuming replay or read-cache hydration
+- **WHEN** a developer disables the toggle
+- **THEN** the override SHALL be removed
+- **AND** the client SHALL require a successful live recovery check before reporting online or resuming replay
 
-### Requirement: Toast feedback remains above menus and dialogs
+#### Scenario: Production code reads simulation state
 
-The web overlay stack SHALL keep ordinary desktop menus below modal dialogs and SHALL render the global toast region above both layers.
+- **WHEN** the application runs in production
+- **THEN** stored development simulation state SHALL be ignored
 
-#### Scenario: A toast is emitted while the user menu is open
+### Requirement: Status and diagnostics remain current across interaction and tabs
 
-- **WHEN** a toast notification is emitted while the desktop avatar menu is open
-- **THEN** the toast SHALL remain visually above the menu
+Connectivity, cache inventory, and outbox diagnostics SHALL update after relevant HTTP outcomes, cache commits or clears, outbox state changes, browser online/offline events, and changes made by another same-origin tab. Updates SHALL not require a full page reload or a blocking overlay.
 
-#### Scenario: A toast is emitted while a modal is open
+#### Scenario: A cache commit completes
 
-- **WHEN** a toast notification is emitted while a modal dialog is open
-- **THEN** the toast SHALL remain visually above the modal and its backdrop
+- **WHEN** an allowlisted live read is committed to IndexedDB
+- **THEN** an open modal SHALL update its counts and timestamps
+
+#### Scenario: Another tab changes offline state
+
+- **WHEN** another same-origin tab clears cached reads or changes outbox state
+- **THEN** the current tab SHALL refresh the affected inventory or diagnostics through a cross-tab signal
+
+#### Scenario: The app reconnects
+
+- **WHEN** connectivity changes from offline or backend-unreachable to online
+- **THEN** the footer control and an open modal SHALL update without remounting the application shell
+
+### Requirement: Offline status is responsive and accessible
+
+The connectivity control and modal SHALL be keyboard accessible, screen-reader labeled, and usable at desktop and mobile widths. Status meaning SHALL not rely on color alone, focus SHALL move into the modal when it opens and return to the invoking control when it closes, and the modal SHALL not cover global toast feedback.
+
+#### Scenario: A keyboard user opens and closes the modal
+
+- **WHEN** the footer control is activated from the keyboard
+- **THEN** focus SHALL move into the modal
+- **AND** closing it SHALL restore focus to the footer control
+
+#### Scenario: A screen reader inspects connectivity
+
+- **WHEN** assistive technology focuses the footer control
+- **THEN** it SHALL receive the textual connectivity state and whether cached fallback is active
+
+#### Scenario: The modal opens on a narrow viewport
+
+- **WHEN** the modal is opened from mobile navigation
+- **THEN** all status sections and actions SHALL remain reachable without horizontal scrolling
+
+#### Scenario: A toast is emitted while the modal is open
+
+- **WHEN** the application emits delivery or recovery feedback
+- **THEN** the global toast region SHALL remain visible above the modal and its backdrop

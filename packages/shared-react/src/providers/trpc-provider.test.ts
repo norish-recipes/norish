@@ -1,8 +1,11 @@
+import type { AnyTRPCRouter } from "@trpc/server";
+import { createTRPCClient } from "@trpc/client";
 import { describe, expect, it, vi } from "vitest";
 
 import { ENVELOPE_VERSION } from "@norish/shared/contracts/realtime-envelope";
 
 import {
+  createTRPCClientLinks,
   isUnauthorizedTRPCError,
   isUnauthorizedWebSocketClose,
   shouldNotifyWebSocketDisconnect,
@@ -10,6 +13,30 @@ import {
 import { wrapTrpcProxy } from "./trpc-provider";
 
 describe("createTRPCProviderBundle", () => {
+  it("uses an injected fetch adapter for HTTP transport", async () => {
+    const transportFetch = vi.fn(
+      async () =>
+        new Response(JSON.stringify([{ result: { data: { json: { ok: true } } } }]), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        })
+    );
+    const client = createTRPCClient<AnyTRPCRouter>({
+      links: createTRPCClientLinks({
+        logger: { info: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+        getBaseUrl: () => "https://norish.test",
+        includeSubscriptions: false,
+        enableLoggerLink: false,
+        transportFetch,
+      }),
+    });
+
+    await expect(
+      (client as unknown as { status: { query: () => Promise<unknown> } }).status.query()
+    ).resolves.toEqual({ ok: true });
+    expect(transportFetch).toHaveBeenCalledOnce();
+  });
+
   it("exposes envelope payloads both at the top level and under payload", () => {
     const onDataInput: unknown[] = [];
     const onData = vi.fn();

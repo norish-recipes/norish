@@ -1,10 +1,12 @@
 "use client";
 
 import { GroceryList, GroceryListByRecipe, StoreManagerPanel } from "@/components/groceries";
+import { OfflineDataUnavailable } from "@/components/offline-data-unavailable";
 import { AddGroceryPanel } from "@/components/Panel/consumers";
 import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
 import UiSwitch from "@/components/shared/ui-switch";
 import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
+import { useOfflineWeb } from "@/context/offline-web-context";
 import {
   BookOpenIcon,
   BuildingStorefrontIcon,
@@ -40,8 +42,16 @@ export function GroceriesPage() {
     markAllDoneInStore,
     deleteDoneInStore,
     getRecipeNameForGrocery,
+    queryKey,
   } = useGroceriesContext();
-  const { stores, storeManagerOpen, setStoreManagerOpen } = useStoresContext();
+  const {
+    stores,
+    storeManagerOpen,
+    setStoreManagerOpen,
+    queryKey: storesQueryKey,
+  } = useStoresContext();
+  const { isQueryUnavailable } = useOfflineWeb();
+  const unavailableOffline = isQueryUnavailable(queryKey) || isQueryUnavailable(storesQueryKey);
   const {
     addGroceryPanelOpen,
     setAddGroceryPanelOpen,
@@ -109,6 +119,9 @@ export function GroceriesPage() {
   };
   if (isLoading) {
     return <GrocerySkeleton />;
+  }
+  if (unavailableOffline) {
+    return <OfflineDataUnavailable />;
   }
   return (
     <>

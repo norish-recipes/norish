@@ -1,195 +1,195 @@
 ## Context
 
-Norish's web mutation-delivery foundation already provides an encrypted, origin- and user-scoped IndexedDB outbox with stable operation IDs, FIFO replay, authentication rejection, and reconnect refetching. That foundation is the write-side contract and must remain independent from read-cache eviction or hydration.
+The web app currently creates an in-memory `QueryClient` inside `createTRPCProviderBundle`. The recipes, calendar, groceries, stores, user, household, and permissions contexts begin their normal queries as soon as the authenticated layout mounts, and the screens already have suitable skeletons for their first load. This change must preserve that path: a fresh load is live-first, not cache-first.
 
-The web `QueryClient` is currently in memory. The service worker precaches static assets, applies broad GET strategies, ignores non-GET requests, and has no safe offline navigation fallback. The authenticated Next.js proxy expects a live server session for application routes. A cold offline PWA launch therefore needs a cached shell/bootstrap path and an explicitly scoped client read cache rather than an auth-proxy bypass.
+The existing write-side offline foundation is separate. `packages/shared-react/src/outbox` owns an encrypted IndexedDB mutation outbox, optimistic mutations reach it through a tRPC link after a transport failure, and the replay coordinator refetches active queries after replay. Read-cache eviction, inspection, or clearing must never affect that database or alter operation IDs, receipts, replay ordering, or optimistic UI behavior.
 
-The existing `apps/web/components/web-outbox-status.tsx` is mounted from the provider tree, but returns `null` when there is no queue activity and otherwise renders a raw fixed diagnostic panel. It is not a HeroUI v3 surface and is not discoverable from the avatar. The existing navbar user menu already provides the correct integration point for a compact connectivity indicator and a queue view.
+Three current implementation details need cleanup as part of the work:
+
+- `apps/web/public/sw.js` caches all API GET responses and all images under one cache name, but it does not handle document navigations. That is both too broad for personalized data and insufficient for a cold PWA start.
+- `useConnectionStatus` primarily describes a lazy WebSocket. `idle` is normal when no subscription is active, so it is not a backend-health signal.
+- `WebOutboxStatus` is mounted globally from `BaseProviders` and renders a fixed diagnostic panel. The existing `NavbarUserMenu` already has a small footer containing update/version information and is the intended entry point for a unified status modal.
+
+No browser E2E harness exists in `apps/web`. The repository uses Vitest and React Testing Library for component/integration tests, while the only installed Playwright runtime is an unrelated `playwright-core` dependency used by the server-side browser integration. The web workspace therefore needs its own `@playwright/test` setup.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Persist selected successful web read data across reloads and cold offline PWA starts.
-- Scope every persisted read record to backend origin, authenticated user, household context or revision, and cache schema version.
-- Persist the canonical first 100 recipe dashboard summaries, up to 50 complete recipe details, the current local calendar week, and the grocery snapshot.
-- Cache only the thumbnail image used by each cached dashboard recipe. If that thumbnail is the same resource as the recipe's main hero image, cache the single shared resource; do not cache a separate hero, gallery, avatar, video, or other recipe image.
-- Prioritize current-week planned recipes during the bounded full-recipe hydration pass.
-- Restore usable cached data before authenticated query consumers render, then revalidate asynchronously when the backend is reachable.
-- Provide a safe offline app shell/fallback without weakening the server-side authentication proxy.
-- Make the service worker cache boundary explicit and prevent generic personalized API GET caching.
-- Replace the raw outbox panel with HeroUI v3 avatar status, queue count, and accessible queue details.
-- Make offline/backend-unreachable state take precedence over update-available status.
-- Preserve quick optimistic interaction and the existing outbox-first reconnect convergence behavior.
+- Keep every fresh screen load live-first and reuse the current skeleton loaders while the first backend attempt is pending.
+- Fall back to compatible IndexedDB reads promptly after an offline/transport/backend-unavailable outcome or a short reachability deadline.
+- Persist only successful, explicitly allowlisted records and seed the exact query keys already consumed by the screens.
+- Let a previously opened PWA route load enough shell/runtime code to execute the IndexedDB fallback during a cold outage.
+- Provide one web-owned connectivity model based on browser and HTTP outcomes.
+- Put a compact, clickable status control beside the existing version footer and show cache/connectivity/outbox details in one accessible HeroUI v3 modal.
+- Preserve the completed mutation-outbox contract and quick optimistic interaction.
+- Add real Chromium E2E tests for fresh reload, service-worker cold start, IndexedDB isolation, simulator behavior, and reconnect convergence.
 
 **Non-Goals:**
 
-- Do not change the completed web mutation-outbox requirements, receipt semantics, operation IDs, FIFO replay, or retention behavior.
-- Do not implement service-worker Background Sync or any closed-PWA mutation replay. The technical documentation will record this as deferred and unsupported by the current contract; queued mutations replay when the app is open and online or on the next launch.
-- Do not modify mobile offline caching, mobile authentication, or the mobile outbox.
-- Do not persist arbitrary TanStack Query entries, admin data, transient queries, or every active filter/search result.
-- Do not guarantee all recipe media offline. Only cached dashboard thumbnail images are in scope; a distinct full-size hero, gallery, avatar, video, or other image is out of scope.
-- Do not treat cached identity, permissions, or query data as authorization for a server mutation.
-- Do not add a server API, database table, CRDT, or semantic conflict-merging system for this change.
+- Do not hydrate cached reads before trying the backend on a fresh load.
+- Do not persist the whole TanStack Query cache, arbitrary filtered searches, admin data, auth responses, or public/share-route queries.
+- Do not crawl or prefetch recipe details merely to fill offline storage.
+- Do not provide offline recipe/gallery media guarantees. Generic content-image caching is removed from the service worker.
+- Do not use cached user, household, or permission data to authorize a server request.
+- Do not change mutation receipt semantics, add a second mutation queue, or implement service-worker/background replay while the PWA is closed.
+- Do not add mobile behavior, a server database table, or a new backend endpoint.
+- Do not make lazy WebSocket state the connectivity source.
 
 ## Decisions
 
-### D1. Use a separate IndexedDB read-cache database
+### D1. Keep the read cache web-owned and physically separate from the outbox
 
-The read cache will use its own IndexedDB database and schema, separate from `norish-web-mutation-delivery`. This keeps query persistence, hydration, and eviction from interfering with durable mutation intent or its encryption key.
+Add a native IndexedDB repository under `apps/web/lib/offline-read-cache` using a new `norish-web-read-cache` database. Its stores will separate scope metadata from data records:
 
-The implementation may reuse `@tanstack/query-persist-client-core` and the mobile persistence precedent, but the web persister must use a web-appropriate IndexedDB adapter and explicit dehydration rules. Only successful, allowlisted query data may be persisted.
+- `scopes`: origin, confirmed user, confirmed household, schema version, minimal render-only user/household metadata, last live success, and last persistence warning;
+- `records`: scope key, record kind, exact serialized TanStack query key, payload, server/query timestamp, persistence timestamp, last access, and summary counts.
 
-Alternative considered: persist the existing mutation database alongside query snapshots. Rejected because cache eviction and high-volume query writes should never be able to corrupt or delay the write outbox.
+The record kinds are `recipe-dashboard`, `recipe-detail`, `calendar-range`, `groceries`, and `stores`. A transaction replaces one complete record at a time, so an aborted write cannot erase the previous value. Recipe-detail writes enforce a 50-record least-recently-used limit inside the active scope. The summary API calculates the counts and timestamps needed by the modal without exposing raw payloads to UI components.
 
-Alternative considered: persist every QueryClient entry. Rejected because query keys do not encode principal or household scope and broad persistence would capture arbitrary filters, admin data, and transient responses.
+The cache will use small native IndexedDB helpers instead of a general TanStack persister. A generic dehydrated QueryClient blob makes allowlisting, per-record retention, atomic last-good preservation, exact inventory, and targeted clearing harder. It also risks a later failed/partial query-client save replacing an otherwise useful snapshot.
 
-### D2. Make cache identity explicit
+Alternative considered: add read stores to `norish-web-mutation-delivery`. Rejected because cache eviction, quota pressure, clearing, and schema rotation must not share failure modes with durable writes.
 
-Each persisted snapshot will carry backend origin, user ID, household context or membership revision, cache schema version, query identity, data timestamp, and persistence outcome. A user switch, backend-origin switch, household membership change, or cache-schema change must prevent hydration of incompatible records.
+Alternative considered: add `@tanstack/query-persist-client-core` and persist all successful queries. Rejected because query keys do not include principal scope, and broad persistence would capture transient or sensitive responses outside this capability.
 
-The existing cached user ID fallback may help the window select the outbox scope while offline, but it is not an authorization source. Server mutations remain protected by the live authenticated request context. Confirmed sign-out or user switch must clear or isolate the previous user's read cache.
+### D2. Use a single live-first startup state machine
 
-Alternative considered: rely on TanStack Query keys alone. Rejected because current query keys do not include authenticated principal or household membership.
-
-### D3. Persist a deliberately bounded canonical dataset
-
-The canonical read set is:
-
-- the unfiltered default recipe list's first 100 dashboard summaries;
-- the dashboard thumbnail image for each cached recipe summary, with the shared thumbnail/hero URL cached only once;
-- up to 50 full `recipes.get` records;
-- the current local Monday-to-Sunday calendar range;
-- `groceries.list`, including recurring groceries and its recipe mapping, plus `stores.list` so grocery grouping remains intact.
-
-Full recipe hydration will run in small bounded batches after the canonical list and weekly plan are available. Planned recipe IDs receive priority, followed by the remaining canonical list in default date-descending order. A detail is considered offline-ready only after its complete record is persisted successfully. Partial hydration remains visible as partial availability rather than being reported as complete.
-
-Alternative considered: cache only the recipe dashboard DTOs. Rejected because offline cooking requires ingredients and steps, not merely recipe cards.
-
-Alternative considered: hydrate all recipes without a limit. Rejected because browser quota and foreground bandwidth are finite and the product needs predictable offline behavior.
-
-### D4. Restore selected data through a safe offline bootstrap
-
-The service worker will use a network-first navigation strategy with a deterministic cached shell/fallback. The shell contains no server-authoritative authorization decision. The client restores the last compatible render identity and selected read snapshots, marks them as cached/stale, and mounts the authenticated data tree without requiring a successful navigation response.
-
-The server-side auth proxy remains authoritative whenever a request reaches the server. Cached identity is render-only. Mutations remain handled by the existing web outbox and still require a live server session when replayed.
-
-Alternative considered: bypass the auth proxy for offline routes. Rejected because the server cannot safely distinguish an offline request from an unauthenticated request and the bypass would weaken the authenticated route boundary.
-
-### D5. Narrow service-worker caching to explicit safe resources
-
-The generic `/api/` GET network-first cache will be removed or narrowed to an explicit allowlist of non-personalized resources. Personalized recipes, groceries, calendar data, auth/session responses, and other user-scoped data will not use the generic Cache API path. The IndexedDB read cache is the authoritative source for personalized offline data.
-
-Image caching will be treated as an explicit policy rather than an accidental consequence of `request.destination === "image"`. Only thumbnail URLs associated with the cached dashboard recipe summaries may be added to the offline media cache. If a thumbnail URL equals the recipe's main hero URL, the one cached response naturally covers both uses; a distinct hero URL is not fetched or cached for offline use. Gallery images, alternate recipe images, avatars, videos, and other image resources remain out of scope.
-
-Alternative considered: keep the generic API cache because most tRPC reads use POST. Rejected because future and auxiliary GET endpoints can still leak stale personalized responses across user scopes, and the existing cache key has no principal dimension.
-
-### D6. Derive connectivity separately from lazy WebSocket state
-
-The status model will distinguish `initializing`, `offline`, `backend-unreachable`, and `online`. It will combine browser connectivity signals with observed HTTP delivery failures and successful recovery. Lazy WebSocket `idle`/`connecting` state will not be treated as proof that the backend is offline.
-
-The avatar status priority will be:
+Add a web `OfflineWebProvider` inside the existing tRPC/QueryClient provider and outside the app's user/household contexts. It owns these startup phases:
 
 ```text
-initializing                    -> no indicator
-offline/backend-unreachable    -> yellow dot
-online + queue attention        -> warning status
-online + active queued writes  -> queue count badge
-online + update available       -> existing accent update dot
-online + clean                  -> no indicator
+probing-live -> live
+             -> loading-fallback -> cached
+                                -> unavailable
+cached -> recovering -> live
 ```
 
-The connectivity indicator wins over update status. Color will not be the only signal; the queue view and accessible labels will expose the textual state.
+At mount, the provider starts a real session/backend attempt and lets the normal screen queries run immediately. It does not prehydrate payloads. The existing recipes, calendar, groceries, and recipe-detail loading states therefore continue to render their current skeletons.
 
-### D7. Replace the raw diagnostic panel with HeroUI v3 composition
+IndexedDB scope metadata may be opened in parallel to reduce fallback latency, but payloads are withheld. The first qualifying HTTP/tRPC reachability failure transitions to `loading-fallback` immediately. A 2.5-second startup deadline also permits fallback when requests hang; it does not abort a still-useful live request. If that late request succeeds, its result wins and moves the app to `live`.
 
-The outbox data hooks and repository diagnostics remain reusable, but the web surface will be split into an avatar indicator and an on-demand queue view. The avatar will use HeroUI v3 `Badge.Anchor` around the existing `UserAvatar`, using an empty warning badge for offline status and a content badge for active queue count. The user menu will expose an `Offline queue` item, and the detail view will use HeroUI v3 overlay/card/button composition with `onPress` handlers.
+Confirmed authentication, authorization, and validation responses do not trigger fallback. A confirmed anonymous session clears the active render scope and follows the login path. If no compatible record exists, the relevant skeleton resolves to an explicit unavailable-offline state rather than a false empty list.
 
-The active count is `pending + retrying`. Quarantined, terminal, and expired entries are reported separately as items requiring attention. Retained completed results remain accessible but do not inflate the active queue count.
+Alternative considered: restore IndexedDB before mounting query consumers. Rejected because the requested behavior is live-first, and cache-first hydration would flash stale content even when the backend is healthy.
 
-Alternative considered: keep a fixed bottom-right panel. Rejected because it is invisible when clean, disconnected from the user's existing status surface, difficult to discover, and inconsistent with the HeroUI v3 UI system.
+Alternative considered: wait for all initial queries and their default retries. Rejected because a cold outage would keep skeletons up for too long. The single reachability deadline bounds the wait without adding a blocking full-screen restore gate.
 
-### D8. Preserve existing outbox-first convergence
+### D3. Persist and restore through an explicit query registry
 
-On startup or reconnect, the existing mutation replay pass remains responsible for queued writes. Authoritative refetch continues after the replay pass settles so persisted optimistic state is not immediately overwritten by an older read snapshot. Read-cache persistence must not introduce a second mutation queue or change the existing server receipt contract.
+The provider will build an allowlist registry from the real tRPC query helpers exposed by `useTRPC`, rather than comparing hand-written string keys. It will subscribe to QueryCache success updates and map only these identities:
 
-### D9. Defer closed-PWA mutation replay
+- the shared default recipe dashboard query with limit 100 and current default filters;
+- `recipes.get` queries that completed through normal navigation or existing prefetch behavior;
+- the latest successful `calendar.listItems` range used by the calendar screen;
+- `groceries.list`;
+- `stores.list`.
 
-No `sync` event, service-worker outbox coordinator, or background mutation transport will be added. A queued write is durable across reloads and will replay while the app is running and online or on the next app launch. Technical documentation will record that fully closed-PWA replay is deliberately deferred because browser background execution is not a dependable cross-platform contract.
+On a successful allowlisted query, a throttled repository write stores the exact query key and complete data. Errors, pending state, empty partial objects, and aborted transactions do not advance the record. On fallback, `queryClient.setQueryData` seeds those same stored keys. The dashboard and detail contexts then stop showing their existing skeletons naturally because their normal consumers receive data.
 
-### D10. Restore local data before waiting on live reachability
+The scope record also keeps the minimal last-confirmed user and household values needed to mount the offline chrome and select records. `UserProvider` receives a web session hook that prefers the live Better Auth session and uses this render-only value only after live reachability failure. The compatible household query key is seeded from the same metadata. Permissions remain conservative when they were not confirmed; cached identity is never passed as proof of server authorization.
 
-Offline startup will discover the latest compatible origin-scoped snapshot and restore it before awaiting live session or household validation. Live validation will run with a bounded timeout and continue in the background when a cached snapshot exists. A timeout or reachability failure keeps the cached identity render-only and marks the backend as unreachable; a confirmed anonymous session clears private cached data; a confirmed different user or household scope invalidates the previous snapshot before the new scope is used.
+Alternative considered: create parallel offline recipe/calendar/grocery contexts. Rejected because duplicate data paths would drift from the current query keys, subscriptions, skeletons, and optimistic-update logic.
 
-The first resolved live scope must write its metadata record before query persistence or canonical hydration begins. That metadata store is the cold-start discovery index; a persisted query client without its matching metadata is intentionally unusable because its principal and household scope cannot be validated.
+### D4. Observe and simulate reachability at the HTTP transport boundary
 
-The application will not remain on a full-screen restore gate while a throttled auth or household request is pending. If no snapshot exists, the gate has a short bounded wait and then allows the normal authenticated tree to handle its own state.
+Add an injectable fetch adapter to the shared tRPC link factory. The web adapter wraps native `fetch`, reports successful HTTP responses and reachability failures to a small web runtime store, and implements the development simulation at the deepest transport boundary. The outbox link remains upstream of transport, so a simulated mutation error propagates through the same `isBackendUnreachableError` path and is durably captured exactly like a real failure.
 
-### D11. Make replay authentication live without polling aggressively
+The connectivity context exposes `checking`, `online`, `offline`, and `backend-unreachable`:
 
-The mutation capture path may continue using the last confirmed user scope to durably label an offline write. The replay coordinator will use a separate live-session resolver that never falls back to cached identity. Auth probes will be single-flight and the coordinator will avoid probing when no replayable entry exists; the remaining auth-readiness fallback poll will use a conservative interval rather than a five-second request loop.
+- browser `offline` events set the user-facing state but do not suppress the one initial live attempt;
+- fetch rejection and classified 502/503/504 outcomes set `offline` or `backend-unreachable` according to `navigator.onLine`;
+- HTTP success and an explicit session recovery check can confirm `online`;
+- WebSocket callbacks remain available for subscription behavior but do not control this state.
 
-### D12. Add a development-only reachability simulator
+The development toggle is persisted in local storage only when `NODE_ENV` is development. Production code ignores stored override values. Turning the toggle off invokes a single-flight Better Auth session check before online state, outbox replay, or read revalidation resumes.
 
-Development builds will expose a persistent local toggle for `backend-unreachable`. The simulator will force the connectivity state and make HTTP/tRPC requests fail with a reachability error, while allowing the read-cache bootstrap to exercise the cached-data path. Turning it off will clear the override, perform a live session check, and resume normal replay/revalidation. The control and override will not exist in production builds.
+Alternative considered: implement simulation as a tRPC link before the outbox. Rejected because an error produced upstream without calling the next link would bypass outbox capture.
 
-### D13. Keep React context ownership and technical workflow documentation clear
+Alternative considered: use `/api/v1/health` for recovery. Rejected because that endpoint includes parser-service health; parser degradation should not falsely mark all core recipe/grocery reads unreachable. The existing session request is lightweight and also confirms the live principal needed for replay.
 
-The React provider will live under `apps/web/context` as `offline-read-cache-context.tsx`. IndexedDB, persister, hydration, scope, and query-policy modules remain under `apps/web/lib/offline-read-cache`. The technical mutation-delivery and read-cache documents will be merged into one offline web workflow guide; the OpenSpec capability specs remain separate for independent validation.
+### D5. Pause retry churn without globally disabling mutations
 
-### D14. Publish a hydratable offline shell bundle
+The read-cache integration will add connectivity-aware query retry and focus-refetch policies to the web QueryClient and cancel affected in-flight retries when fallback is installed. While state is offline/backend-unreachable, allowlisted reads do not continuously retry; an explicit or browser-triggered recovery check is the gate to refetch.
 
-Confirming an authenticated application route will cache its shell by pathname and also stage the same-origin `/_next/static/` script and stylesheet URLs referenced by that document. Offline document navigation will use only an exact route-shell match rather than substituting the root document for a different App Router page. The service worker will publish the new route shell only after those assets are available, preserving the previous route shell when a refresh is incomplete. Runtime assets loaded before the newly installed worker controls the page therefore remain available to a later cold offline navigation.
+The implementation will not globally set TanStack's `onlineManager` to offline unless mutations are separately guaranteed to use a transport-reaching network mode. Globally pausing the QueryClient can prevent an offline mutation from reaching the existing outbox link, which would break durable optimistic capture. Query retry control therefore remains read-specific, and mutation behavior is covered by integration and Playwright tests.
 
-### D15. Pause query fetching without replacing the application shell
+On recovery, the provider signals the existing replay coordinator first. Active authoritative reads are refetched only after that replay pass settles, preserving the current outbox-first convergence rule. The five-second auth-readiness polling loop can then be removed in favor of startup, outbox-change, browser-online, and explicit-recovery triggers. Capture may use the last confirmed user ID to label an offline entry; replay resolves a fresh live session and never uses render-only identity.
 
-Read-cache initialization will keep authenticated TanStack Query consumers in restoration mode while the application shell remains rendered. A full-screen `Restoring offline data...` document is not a safe cached shell because a missing runtime asset makes that transient server-rendered state permanent. Restore failure still resolves to the normal live tree without claiming cached data.
+Alternative considered: use `onlineManager.setOnline(false)` for the whole app. Rejected because it can pause mutations before the outbox observes a transport failure.
 
-### D16. Keep simulated outages inside the normal outbox and overlay paths
+### D6. Replace broad service-worker caching with confirmed route shells
 
-The web outbox link will wrap reachability simulation and HTTP transport links so a simulated network failure is captured exactly like a real transport failure. This includes destructive mutations such as recipe, grocery, and calendar deletions. Overlay stacking will keep ordinary popovers below modal dialogs and place the global toast region above both so delivery feedback is never hidden.
+Split service-worker caches by responsibility and version:
 
-### D17. Make persisted query identity consumable by the real screens
+- a small install-time static cache for manifest/icons/offline fallback;
+- a route-shell cache keyed by exact same-origin pathname/search policy;
+- a runtime-asset cache limited to same-origin `/_next/static/` scripts and styles referenced by a confirmed shell.
 
-TanStack Query persistence is only useful when a restored query uses the same identity as its consumer. The canonical recipe snapshot will therefore use the shared default dashboard filter contract, including its default search fields and `AND` filter mode, rather than a separately invented `OR` query. The read-cache schema version will rotate so snapshots written under the unusable identity are not advertised as compatible.
+Document navigation is network-first. Once a live user/household scope is confirmed, the client registration component sends the current canonical route and the same-origin Next runtime asset URLs observed for that document to the service worker. The worker stages the route response and required assets, then publishes the new shell only after every required item succeeds. An offline navigation uses only an exact route match; otherwise it returns the deterministic offline fallback.
 
-The calendar intentionally persists the current local week even though the initial responsive calendar view can request a broader range. When that broader query has no data during an offline or backend-unreachable start, the web calendar hook will project the restored current-week items into the visible calendar model. Online data for the requested range remains authoritative and replaces the fallback normally.
+The new worker removes the `/api/` network-first cache branch and the `request.destination === "image"` cache-first branch. API requests go directly to network/tRPC and personalized fallback comes only from the scoped IndexedDB repository. Content images remain online-only under this change. Activation deletes the previous monolithic cache version so old personalized GET/image entries are not retained.
 
-The three primary screen payloads and the grocery store dependency will also be written together to a separate canonical IndexedDB record for the active scope. Startup seeds their exact consumer query keys from that record before subscribing to ongoing QueryClient persistence. This prevents fast failed requests, observer churn, or a partial generic QueryClient save during an outage from replacing the last complete recipe, calendar, grocery, or store snapshot. The generic allowlisted QueryClient record remains useful for bounded recipe details and other compatible entries, but it is not the only durable copy of the canonical screen data.
+Alternative considered: continue precaching `/`. Rejected because installation may occur before authentication and can cache a login/redirect document instead of an authenticated application shell.
+
+Alternative considered: serve the root shell for every offline route. Rejected because Next App Router documents and route assets are not safely interchangeable across arbitrary paths.
+
+### D7. Make the existing user-menu footer the single entry point
+
+`NavbarUserMenu` keeps its current avatar and update-available indicator. Its bottom metadata row becomes two compact items: a connectivity button and `v{currentVersion}`. Activating connectivity closes the dropdown and opens `OfflineStatusModal`, rendered as a sibling so closing the menu does not unmount the dialog. The same component is already used by desktop and mobile navigation, so one integration covers both.
+
+The HeroUI v3 modal is composed from context-backed sections:
+
+- current status, cached/live label, last live success, and retry action;
+- cache inventory by record type, timestamps, schema/persistence warning, and confirmed clear action;
+- active/retrying outbox counts, attention entries, retained results, and acknowledgement;
+- a development-only `Simulate backend unavailable` switch.
+
+The modal reads existing `useWebOutboxDiagnostics` and `useWebOutboxResults` hooks. Those hooks gain cross-tab refresh through `BroadcastChannel` with the current DOM event as a same-tab fallback. The fixed `WebOutboxStatus` component and its `BaseProviders` mount are deleted. Clearing cache calls only the read-cache repository and never the outbox repository.
+
+Alternative considered: put a status badge on the avatar. Rejected because the requested reference is the small version footer, and the avatar already owns update availability.
+
+### D8. Add web-owned Playwright E2E validation
+
+Add `@playwright/test`, `playwright.config.ts`, and `e2e/` under `apps/web`, plus workspace scripts for installing Chromium and running browser tests. Start with one Chromium project because service-worker/IndexedDB correctness is the objective; unit and integration coverage remains browser-independent in Vitest.
+
+The E2E environment uses an isolated PostgreSQL/Redis backend with password authentication and registration enabled. A fixture signs up a unique user through the existing auth surface, seeds deterministic recipe/calendar/grocery data through authenticated application APIs, and saves authenticated storage state. No production test-only authentication bypass or data endpoint is added.
+
+Browser scenarios will:
+
+1. open the real routes online and wait for successful read-cache commits;
+2. reload with tRPC/session requests delayed to prove skeletons appear and cached payloads do not render early;
+3. abort backend requests or use Chromium offline mode, then prove IndexedDB data replaces the skeleton after failure;
+4. close/reopen a page under offline mode to prove the confirmed service-worker route shell hydrates on a cold start;
+5. verify a different browser user/scope cannot see the first user's records;
+6. open the footer control and validate modal inventory, clear confirmation, accessibility, development simulation, queued mutation capture, and recovery;
+7. restore connectivity and prove replay settles before live refetch convergence.
+
+CI gets a dedicated E2E job that installs the matching Chromium binary, provisions the isolated services, starts the web server, preserves traces/screenshots on failure, and runs independently from the existing Vitest job. A production-mode component/build assertion verifies that the development simulator is absent even though simulator behavior is exercised in the development E2E server.
+
+Alternative considered: extend the existing `*.e2e.test.tsx` Vitest file only. Rejected because fake IndexedDB and jsdom cannot prove service-worker document navigation, browser offline mode, fresh process behavior, focus management, or real Cache Storage.
 
 ## Risks / Trade-offs
 
-- [50 full recipe records plus dashboard thumbnails can exceed browser quota] → Persist JSON details separately from media, hydrate in small batches, account for storage outcomes, and mark only successfully persisted records offline-ready.
-- [Cached data is stale] → Store timestamps and scope metadata, show last-synced/stale state, and revalidate asynchronously whenever connectivity returns.
-- [A user changes while cached data exists] → Scope by origin/user/household revision, clear or isolate prior data on confirmed identity changes, and never use cached identity for authorization.
-- [A cold offline navigation has no valid shell] → Return a deterministic offline fallback explaining that the app must first be opened online; do not bypass the auth proxy.
-- [The service worker serves stale private resources] → Remove generic personalized API caching and allow only the explicitly scoped dashboard-thumbnail policy for recipe media.
-- [Hydration competes with foreground activity] → Use bounded concurrency, yield between batches, prioritize planned recipes, and pause on poor reachability or quota pressure.
-- [Multiple tabs disagree about queue count] → Broadcast outbox changes across tabs or refresh diagnostics through a shared event mechanism in addition to the existing same-window event.
-- [A status dot is ambiguous] → Pair the indicator with accessible labels and an explicit queue/status row in the user menu.
-- [Closed-PWA replay remains unavailable] → Make next-launch replay the documented fallback and avoid advertising background delivery.
-- [A throttled backend makes startup appear frozen] → Restore the compatible local snapshot first, bound live validation, and test delayed auth/household responses.
-- [Auth probing triggers rate limits] → Single-flight session reads, skip probes without replayable work, and remove the five-second polling cadence.
-- [A thumbnail refresh fails after clearing the cache] → Populate a replacement media cache first and swap it only after the new thumbnail set has been fetched.
-- [A newly installed service worker has not observed the current page's build requests] → Stage the shell's referenced runtime assets explicitly before publishing the shell document.
-- [A simulated outage short-circuits before mutation capture] → Keep the outbox link outside the reachability-failure link and cover destructive mutations with the same regression test.
-- [Overlay feedback is hidden] → Maintain the explicit popover, modal, then toast stacking order in provider and component tests.
+- [A 2.5-second deadline may show cached data shortly before a slow live response arrives] → Keep the live request running, let a successful live result win, and show a cached/stale label during the brief fallback window.
+- [Cached render identity or household membership is stale] → Scope records to the last confirmed tuple, treat it as render-only, use conservative permissions, and replace/clear it immediately after a contradictory live session.
+- [Exact dynamic calendar ranges reduce offline coverage] → Persist the latest real range instead of inventing projections; the modal makes the available range/count truthful, and broader policy can be added later from evidence.
+- [Native IndexedDB code adds repository logic] → Keep it web-local, use small transaction helpers, test upgrades/aborts/quota behavior with fake IndexedDB, and keep the schema narrower than a general query persister.
+- [Service-worker shell caching can retain stale runtime assets] → Version cache names, stage shell plus assets atomically, use network-first navigation, and delete old cache versions on activation.
+- [A first-ever offline launch has no shell or data] → Return an explicit offline fallback; the feature promises cold starts only after a successful online route/cache fill.
+- [Disabling generic image caching means offline cards can lack images] → Treat text/data correctness as the first milestone and avoid cross-user media leakage; explicit scoped media caching can be a later change.
+- [Connectivity signals can flap across simultaneous requests] → Use a single runtime store, single-flight recovery checks, monotonically tracked last success/failure times, and do not let WebSocket idle state override HTTP success.
+- [E2E infrastructure increases CI time and setup complexity] → Limit the first suite to Chromium, reuse existing auth/application APIs, run it as a separate job, and keep fast deterministic repository/component coverage in Vitest.
 
 ## Migration Plan
 
-1. Add the separate read-cache schema, persister, scope metadata, cache buster, and selected-query dehydration rules without changing the mutation outbox database.
-2. Add cache restore/bootstrap state and the safe offline navigation fallback; verify authenticated route behavior remains unchanged online.
-3. Persist the canonical recipe summaries, bounded full-recipe details, current local week, and grocery snapshot; add freshness, partial hydration, and quota diagnostics.
-4. Remove or narrow generic service-worker API caching and establish explicit static/shell/dashboard-thumbnail cache rules.
-5. Replace the raw `WebOutboxStatus` surface with the HeroUI v3 avatar indicator and queue view; add translations, accessibility labels, and cross-tab refresh behavior.
-6. Harden startup ordering: restore local data first, validate the live scope with a bounded request, replay only with live authentication, then refetch authoritative active queries and asynchronously refresh the read cache.
-7. Add the development reachability simulator, merge the technical workflow documentation, and move the React provider to the descriptive context module.
-8. Roll back by disabling read-cache hydration and restoring the previous static-cache behavior if necessary. Preserve the existing mutation outbox and its pending entries during rollback.
-9. Harden cold offline reload asset capture, remove the visible restore document, align simulated mutation failures with the real outbox path, and define overlay stacking with focused regression tests.
-10. Align persisted query keys with the actual recipe dashboard defaults, persist the three primary payloads in an independent canonical record, project the canonical calendar week into broader offline views, and rotate incompatible read-cache snapshots.
+1. Add the read-cache repository, query registry, connectivity runtime, and tests without enabling service-worker fallback.
+2. Integrate the live-first provider and exact-key persistence/fallback behind the new read-cache schema version; confirm online behavior remains unchanged.
+3. Replace the status panel with the footer control/modal and wire cross-tab inventory/outbox events.
+4. Ship the versioned service worker that deletes the old monolithic cache and begins confirming route shells after live scope resolution.
+5. Add Playwright, the isolated fixture environment, and CI job; require the critical live-first, cold-start, scope-isolation, and reconnect tests before completing the change.
+
+Rollback consists of restoring the previous provider/service-worker code while leaving `norish-web-read-cache` unused. The new database is independent from the outbox and server data, so it can be safely ignored or deleted without migration. Rolling back the worker must use a new cache version so clients do not continue using route shells written by the newer worker.
 
 ## Open Questions
 
-- What freshness/retention windows should be used for recipes, the current week, and groceries before cached data is discarded rather than merely marked stale?
-- Should planned recipes consume slots within the fixed 50-detail budget, or should a small planned-recipe overflow be allowed?
-- Should the queue view support explicit discard actions for terminal/quarantined entries in this change, or remain read-only until a later diagnostics refinement?
+None required before implementation. The 2.5-second fallback deadline and the 50-detail retention cap are explicit initial constants and can be tuned later from E2E timing and real storage telemetry without changing the data-ownership or live-first contracts.

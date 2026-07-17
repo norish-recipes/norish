@@ -17,6 +17,75 @@
       "updateAvailable": "v{version} tilgængelig"
     }
   },
+  "offline": {
+    "title": "Offlinestatus",
+    "description": "Forbindelse, gemte data og ændringer i kø i denne browser.",
+    "footerLabel": "Offlinestatus: {status}",
+    "connectivity": {
+      "checking": "Kontrollerer",
+      "online": "Online",
+      "offline": "Offline",
+      "backend-unreachable": "Serveren er utilgængelig"
+    },
+    "data": {
+      "live": "Live data",
+      "cached": "Gemte data",
+      "stale": "Data kan være forældede",
+      "unavailable": "Data er utilgængelige"
+    },
+    "status": {
+      "title": "Aktuel status",
+      "lastLiveSuccess": "Seneste live svar",
+      "never": "Ikke endnu",
+      "retryFailed": "Serveren er stadig utilgængelig."
+    },
+    "actions": {
+      "retry": "Prøv forbindelsen igen",
+      "cancel": "Annuller",
+      "clear": "Ryd gemte data",
+      "openResult": "Åbn resultat",
+      "acknowledge": "Bekræft og fjern",
+      "close": "Luk"
+    },
+    "cache": {
+      "title": "Gemte data",
+      "schema": "Skema {version}",
+      "empty": "Der er endnu ingen offline data gemt for denne husstand.",
+      "persistenceWarning": "Nogle data kunne ikke gemmes",
+      "clearConfirm": "Ryd gemte data for den aktive husstand i denne browser?"
+    },
+    "warnings": {
+      "blocked": "En anden fane blokerer opdateringen af offline-databasen.",
+      "unavailable": "Offline-lager er ikke tilgængeligt i denne browser.",
+      "quota-exceeded": "Browserens lager er fuldt.",
+      "write-failed": "Den seneste offline-lagring blev ikke fuldført."
+    },
+    "inventory": {
+      "recipeSummaries": "Opskriftsoversigter",
+      "recipeDetails": "Opskriftsdetaljer",
+      "calendarItems": "Kalenderpunkter",
+      "groceries": "Indkøb",
+      "recurringGroceries": "Gentagne indkøb",
+      "stores": "Butikker"
+    },
+    "queue": {
+      "title": "Ændringer i kø",
+      "active": "{count} venter",
+      "attention": "{count} kræver opmærksomhed",
+      "retrying": "Prøver {count} ændringer igen, når serveren er tilgængelig.",
+      "empty": "Ingen ændringer i kø eller gemte resultater.",
+      "results": "Fuldførte resultater ({count})"
+    },
+    "simulation": {
+      "title": "Simuler utilgængelig server",
+      "description": "Kun udvikling. Deaktivering kræver et vellykket live-tjek.",
+      "disableFailed": "Simuleringen forbliver aktiv, fordi live-tjekket mislykkedes."
+    },
+    "unavailable": {
+      "title": "Ikke tilgængelig offline",
+      "description": "Åbn disse data online én gang, før du bruger dem under en afbrydelse."
+    }
+  },
   "theme": {
     "title": "Tema",
     "loading": "Indlæser…",

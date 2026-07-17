@@ -15,6 +15,75 @@
     "logout": "Abmelden",
     "version": { "updateAvailable": "v{version} verfügbar" }
   },
+  "offline": {
+    "title": "Offline-Status",
+    "description": "Verbindung, gespeicherte Daten und ausstehende Änderungen in diesem Browser.",
+    "footerLabel": "Offline-Status: {status}",
+    "connectivity": {
+      "checking": "Wird geprüft",
+      "online": "Online",
+      "offline": "Offline",
+      "backend-unreachable": "Server nicht verfügbar"
+    },
+    "data": {
+      "live": "Live-Daten",
+      "cached": "Gespeicherte Daten",
+      "stale": "Daten möglicherweise veraltet",
+      "unavailable": "Daten nicht verfügbar"
+    },
+    "status": {
+      "title": "Aktueller Status",
+      "lastLiveSuccess": "Letzte Live-Antwort",
+      "never": "Noch nicht",
+      "retryFailed": "Der Server ist weiterhin nicht verfügbar."
+    },
+    "actions": {
+      "retry": "Verbindung erneut versuchen",
+      "cancel": "Abbrechen",
+      "clear": "Gespeicherte Daten löschen",
+      "openResult": "Ergebnis öffnen",
+      "acknowledge": "Bestätigen und entfernen",
+      "close": "Schließen"
+    },
+    "cache": {
+      "title": "Gespeicherte Daten",
+      "schema": "Schema {version}",
+      "empty": "Für diesen Haushalt sind noch keine Offline-Daten gespeichert.",
+      "persistenceWarning": "Einige Daten konnten nicht gespeichert werden",
+      "clearConfirm": "Gespeicherte Daten des aktiven Haushalts in diesem Browser löschen?"
+    },
+    "warnings": {
+      "blocked": "Ein anderer Tab blockiert die Aktualisierung der Offline-Datenbank.",
+      "unavailable": "Offline-Speicher ist in diesem Browser nicht verfügbar.",
+      "quota-exceeded": "Der Browser-Speicher ist voll.",
+      "write-failed": "Das letzte Offline-Speichern wurde nicht abgeschlossen."
+    },
+    "inventory": {
+      "recipeSummaries": "Rezeptübersichten",
+      "recipeDetails": "Rezeptdetails",
+      "calendarItems": "Kalendereinträge",
+      "groceries": "Einkäufe",
+      "recurringGroceries": "Wiederkehrende Einkäufe",
+      "stores": "Geschäfte"
+    },
+    "queue": {
+      "title": "Ausstehende Änderungen",
+      "active": "{count} ausstehend",
+      "attention": "{count} erfordern Aufmerksamkeit",
+      "retrying": "{count} Änderungen werden erneut versucht, sobald der Server verfügbar ist.",
+      "empty": "Keine ausstehenden Änderungen oder gespeicherten Ergebnisse.",
+      "results": "Abgeschlossene Ergebnisse ({count})"
+    },
+    "simulation": {
+      "title": "Serverausfall simulieren",
+      "description": "Nur Entwicklung. Zum Deaktivieren ist eine erfolgreiche Live-Prüfung nötig.",
+      "disableFailed": "Die Simulation bleibt aktiv, weil die Live-Prüfung fehlgeschlagen ist."
+    },
+    "unavailable": {
+      "title": "Offline nicht verfügbar",
+      "description": "Öffne diese Daten einmal online, bevor du sie bei einem Ausfall verwendest."
+    }
+  },
   "theme": {
     "title": "Design",
     "loading": "Wird geladen…",

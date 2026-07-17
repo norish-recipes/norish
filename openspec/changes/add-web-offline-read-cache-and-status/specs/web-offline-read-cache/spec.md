@@ -1,219 +1,197 @@
 ## ADDED Requirements
 
-### Requirement: Persisted web read data is scoped to the authenticated data owner
+### Requirement: The web read cache persists only an explicit bounded dataset
 
-The web read cache SHALL scope every persisted record to the backend origin, authenticated user ID, household context or membership revision, and cache schema version.
+The web client SHALL persist only successful reads needed for the primary offline experience: the first page of the default recipe dashboard with its normal limit of 100, up to 50 most-recently-used complete recipe details, the latest successful calendar range requested by the calendar screen, `groceries.list`, and `stores.list`. The grocery snapshot SHALL include recurring groceries and recipe-name mappings already returned by `groceries.list`. The cache MAY also retain the minimal last-confirmed user and household render metadata needed to select a compatible scope and mount the offline application chrome. The client SHALL NOT issue background requests solely to fill this cache.
 
-#### Scenario: A different user signs in on the same origin
+#### Scenario: An allowlisted read succeeds
 
-- **WHEN** a different user signs in on the same browser origin
-- **THEN** the previous user's recipe, calendar, grocery, and render-identity snapshots SHALL NOT hydrate for the new user
+- **WHEN** an allowlisted recipe, calendar, grocery, or store query completes successfully
+- **THEN** the client SHALL persist its data, exact consumer query identity, data timestamp, and cache-scope metadata
 
-#### Scenario: The backend origin changes
+#### Scenario: Recipe detail retention reaches its limit
 
-- **WHEN** the configured backend origin changes
-- **THEN** persisted snapshots from the previous origin SHALL be ignored
+- **WHEN** a fifty-first complete recipe detail becomes eligible for persistence
+- **THEN** the least-recently-used detail SHALL be evicted
+- **AND** the dashboard, calendar, grocery, and store snapshots SHALL remain intact
 
-#### Scenario: Household membership changes
+#### Scenario: A non-canonical query succeeds
 
-- **WHEN** the authenticated user's household context or membership revision changes
-- **THEN** incompatible household-scoped snapshots SHALL be ignored or invalidated before authenticated query consumers render
+- **WHEN** an admin query, auth response, transient search/filter result, or other non-allowlisted query succeeds
+- **THEN** the read cache SHALL NOT persist that query
 
-### Requirement: The canonical offline dataset is persisted
+#### Scenario: A detail was not opened or prefetched normally
 
-The web client SHALL persist successful canonical snapshots for the first 100 default recipe dashboard summaries, the current local calendar week, and the grocery list including recurring groceries, recipe-name mappings, and the stores needed to preserve grocery grouping.
+- **WHEN** a recipe detail has not been fetched through normal application use
+- **THEN** the read-cache layer SHALL NOT fetch it merely to increase offline coverage
 
-#### Scenario: The default recipe list resolves
+#### Scenario: Offline chrome needs a render identity
 
-- **WHEN** the unfiltered default recipe list resolves successfully
-- **THEN** the cache SHALL persist the first 100 dashboard summaries and their canonical ordering metadata
-- **AND** the persisted query identity SHALL match the shared default dashboard filter contract used by the recipe screen
+- **WHEN** the live session and household endpoints are unreachable during a compatible cached launch
+- **THEN** the client MAY use the last-confirmed minimal user and household metadata to mount the application chrome
+- **AND** it SHALL label that identity as render-only rather than authenticated live state
 
-#### Scenario: A snapshot uses an obsolete query identity
+### Requirement: Persisted reads are isolated by data owner and schema
 
-- **WHEN** a previous read-cache schema persisted canonical data under a query identity that the current screen does not consume
-- **THEN** that snapshot SHALL be treated as incompatible
-- **AND** the next online launch SHALL fill a snapshot using the current consumer identity
+Every read-cache record SHALL be keyed by backend origin, last confirmed user ID, last confirmed household ID or equivalent household scope, and read-cache schema version. Cached identity SHALL select render-only offline data and SHALL NOT authorize any request.
 
-#### Scenario: The current local week resolves
+#### Scenario: The same user starts the app offline
 
-- **WHEN** the explicit Monday-to-Sunday current-week calendar query resolves successfully
-- **THEN** the cache SHALL persist the planned items, week range, scope metadata, and data timestamp
+- **WHEN** live session and household requests are unreachable and a last-confirmed scope has a compatible snapshot
+- **THEN** the client MAY select that snapshot for render-only fallback
+- **AND** it SHALL continue to treat the server session as authoritative for all mutations
 
-#### Scenario: The offline calendar requests a broader initial range
+#### Scenario: A different user is confirmed online
 
-- **WHEN** the calendar screen requests a broader range while offline and the persisted current-week query is compatible
-- **THEN** the restored current-week items SHALL be projected into the calendar's visible data model
-- **AND** an unavailable broader-range query SHALL NOT hide the restored current-week items
+- **WHEN** a live session confirms a user other than the last-confirmed cached user
+- **THEN** the previous user's records SHALL NOT hydrate into the new user's QueryClient
+- **AND** the active cached scope SHALL switch only after the new user's household scope is confirmed
 
-#### Scenario: The grocery list resolves
+#### Scenario: Sign-out is confirmed
 
-- **WHEN** `groceries.list` resolves successfully
-- **THEN** the cache SHALL persist groceries, recurring groceries, recipe-name mappings, stores, scope metadata, and a data timestamp
+- **WHEN** the backend confirms that the session has signed out
+- **THEN** the last-confirmed render scope SHALL be removed
+- **AND** private cached data SHALL NOT render on a later anonymous launch
 
-#### Scenario: Failed background reads occur after a complete canonical fill
+#### Scenario: Origin, household, or schema changes
 
-- **WHEN** recipes, the current local week, and groceries have been persisted successfully and later background reads fail because the backend is unreachable
-- **THEN** the last complete canonical screen snapshot SHALL remain durable independently of the generic query-client record
-- **AND** a cold offline launch SHALL seed the exact recipe, calendar, and grocery consumer query keys from that canonical snapshot
+- **WHEN** the backend origin, confirmed household scope, or read-cache schema version differs from a persisted record
+- **THEN** that record SHALL be ignored as incompatible
 
-### Requirement: Offline recipe media is limited to dashboard thumbnails
+### Requirement: Fresh loads try the backend before showing cached reads
 
-The web client SHALL cache only the thumbnail image associated with each cached dashboard recipe summary. When the thumbnail URL is the same as the recipe's main hero URL, the single cached resource SHALL be reused for both thumbnail and hero rendering. A distinct hero image, gallery image, avatar, video, or other recipe media URL SHALL NOT be fetched or persisted solely for offline use.
+On every fresh application load, the normal TanStack Query consumers SHALL make a live backend attempt before compatible IndexedDB data is shown. Existing route and component skeleton loaders SHALL remain visible during this attempt. IndexedDB metadata MAY be prepared concurrently, but cached payloads SHALL NOT replace a pending live request before the live attempt fails or reaches the bounded reachability deadline.
 
-#### Scenario: A dashboard thumbnail resolves
+#### Scenario: The backend responds on a fresh load
 
-- **WHEN** a cached dashboard recipe summary includes a thumbnail URL and that image resolves successfully
-- **THEN** the thumbnail response SHALL be persisted in the explicit offline media cache
+- **WHEN** the initial live queries complete successfully
+- **THEN** the screens SHALL render the live responses
+- **AND** compatible persisted data SHALL NOT overwrite those responses
+- **AND** the successful responses SHALL refresh the read cache asynchronously
 
-#### Scenario: The thumbnail is also the main hero image
+#### Scenario: The backend is unreachable on a fresh load
 
-- **WHEN** the dashboard thumbnail URL equals the recipe's main hero URL
-- **THEN** the existing cached thumbnail response SHALL satisfy both thumbnail and hero rendering
-- **AND** the client SHALL NOT create a second media-cache entry for the same resource
+- **WHEN** the initial live attempt fails with an offline, transport, or backend-unavailable result, or reaches the bounded reachability deadline
+- **THEN** the client SHALL load the latest compatible snapshot from IndexedDB
+- **AND** it SHALL seed the exact query keys used by the current screen
+- **AND** the existing skeleton SHALL remain visible until either live data or cached data resolves
 
-#### Scenario: A distinct hero or other image URL exists
+#### Scenario: A request returns an authorization or validation error
 
-- **WHEN** a recipe exposes a hero, gallery, avatar, video, or other media URL different from the dashboard thumbnail
-- **THEN** that resource SHALL remain online-only and SHALL NOT be added to the offline media cache
+- **WHEN** the backend responds with a confirmed authentication, authorization, or request-validation error
+- **THEN** the client SHALL follow the normal live error/authentication flow
+- **AND** it SHALL NOT classify that response as an offline-cache fallback condition
 
-### Requirement: Full recipe details are hydrated within a bounded budget
+#### Scenario: No compatible cache exists
 
-The web client SHALL persist up to 50 complete recipe detail records without blocking foreground interaction. Current-week planned recipes SHALL be prioritized before remaining recipes from the canonical dashboard set. A recipe SHALL only be reported as fully available offline after its complete detail record has been persisted successfully.
+- **WHEN** the initial backend attempt is unreachable and no compatible snapshot exists
+- **THEN** the skeleton SHALL resolve to an explicit unavailable-offline state
+- **AND** the screen SHALL NOT present an empty dataset as though it were a successful live response
 
-#### Scenario: A prioritized recipe detail resolves
+### Requirement: Restored data matches the existing screen query contracts
 
-- **WHEN** a planned or otherwise prioritized recipe detail resolves successfully during hydration
-- **THEN** the complete `recipes.get` record SHALL be persisted and marked offline-ready
+The fallback SHALL restore data under the current screen's real TanStack Query identities. The recipe snapshot SHALL use the shared default dashboard filter contract; recipe details SHALL use `recipes.get` identities; calendar data SHALL use the requested range identity stored with the snapshot; and grocery data and stores SHALL use their existing list identities.
 
-#### Scenario: Hydration reaches the detail budget
+#### Scenario: The recipe dashboard falls back
 
-- **WHEN** 50 complete recipe detail records have been persisted
-- **THEN** the hydrator SHALL stop adding lower-priority detail records
-- **AND** the canonical dashboard summaries SHALL remain available independently
+- **WHEN** the default recipe dashboard's live request is unreachable and its compatible snapshot exists
+- **THEN** the first 100 persisted summaries SHALL render through the existing recipes context
+- **AND** the screen SHALL identify them as cached with a last-updated time
 
-#### Scenario: Hydration is interrupted
+#### Scenario: A cached recipe detail is opened
 
-- **WHEN** hydration stops because of connectivity loss, storage pressure, or a terminal recipe error
-- **THEN** already persisted recipe details SHALL remain available
-- **AND** incomplete records SHALL NOT be reported as fully offline-ready
+- **WHEN** `recipes.get` cannot reach the backend and a compatible complete detail exists
+- **THEN** the normal recipe-detail screen SHALL render that detail after its existing skeleton
 
-### Requirement: Selected read cache is restored before authenticated data consumers render
+#### Scenario: An uncached recipe detail is opened offline
 
-The web client SHALL restore a valid scoped read cache before authenticated query consumers begin fetching, while keeping the application shell rendered and responsive during restoration. It SHALL use query restoration state rather than replacing the shell with a full-screen restoration document. When a compatible snapshot exists, restoration SHALL NOT wait indefinitely for a live auth or household request.
+- **WHEN** `recipes.get` cannot reach the backend and no complete persisted detail exists
+- **THEN** the recipe-detail skeleton SHALL resolve to a clear unavailable-offline state
 
-#### Scenario: Cold PWA start with a valid cache and no network
+#### Scenario: Calendar, groceries, or stores fall back
 
-- **WHEN** the installed PWA starts without backend connectivity and a valid scoped cache exists
-- **THEN** recipes, the cached current-week plan, and groceries SHALL render from persisted data
-- **AND** the UI SHALL identify the data as cached rather than server-confirmed current
+- **WHEN** one of those screens cannot reach the backend and its matching compatible snapshot exists
+- **THEN** the existing context SHALL render the cached payload without inventing a second query-key format
 
-#### Scenario: The first online snapshot is persisted
+### Requirement: Failed reads cannot replace the last successful snapshot
 
-- **WHEN** no prior read-cache metadata exists and the live user and household scope resolve
-- **THEN** the client SHALL persist the new scope metadata before saving its query snapshot
-- **AND** a later offline launch SHALL be able to discover and restore that first snapshot
+Only complete successful allowlisted results SHALL advance persisted records. Query errors, aborted requests, retry state, and partial writes SHALL leave the last successful record intact. Persistence failures SHALL be observable without making cached data a prerequisite for normal online use.
 
-#### Scenario: Cold PWA start with network connectivity
+#### Scenario: A refresh fails after a successful cache fill
 
-- **WHEN** the PWA starts with network connectivity and a valid persisted cache exists
-- **THEN** the persisted data SHALL be available before the first authenticated data render
-- **AND** stale snapshots SHALL revalidate asynchronously
+- **WHEN** a later background or foreground refresh fails because the backend is unreachable
+- **THEN** the previous successful snapshot SHALL remain durable
 
-#### Scenario: The live auth request is slow during a cached startup
+#### Scenario: IndexedDB is unavailable or quota is exceeded
 
-- **WHEN** a compatible snapshot exists but the live session or household request exceeds the startup validation budget
-- **THEN** the client SHALL render the compatible cached snapshot as render-only data
-- **AND** the UI SHALL expose backend-unreachable or stale state
-- **AND** the live validation SHALL continue or retry asynchronously without blocking the application indefinitely
+- **WHEN** a cache write fails because IndexedDB is unavailable, blocked, or out of quota
+- **THEN** the live response SHALL remain usable in memory
+- **AND** the affected data SHALL be reported as not available offline
+- **AND** previously committed compatible records SHALL not be deleted by the failed write
 
-#### Scenario: No cached snapshot exists and live validation exceeds the budget
+#### Scenario: A cache write is interrupted
 
-- **WHEN** no compatible snapshot exists and live auth validation exceeds the startup budget
-- **THEN** the restore gate SHALL end with no offline data claimed
-- **AND** the normal authenticated tree SHALL remain responsible for its live loading or authentication state
+- **WHEN** a tab closes or an IndexedDB transaction aborts before commit
+- **THEN** the previous committed record SHALL remain the fallback record
 
-#### Scenario: Read-cache initialization is still pending
+### Requirement: Cached fallback pauses live retries and converges after recovery
 
-- **WHEN** IndexedDB or live scope validation has not completed yet
-- **THEN** authenticated query fetching SHALL remain paused
-- **AND** the rendered application shell SHALL remain visible without a full-screen restoration message
+After fallback data is installed, automatic retries for affected read queries SHALL pause while connectivity is offline or backend-unreachable. When a live recovery check succeeds, the existing mutation outbox SHALL receive the recovery signal before authoritative read refetch completes, and successful live reads SHALL replace the cached view.
 
-### Requirement: Offline bootstrap does not weaken server authentication
+#### Scenario: Cached data is being displayed during an outage
 
-The offline shell MAY restore the last confirmed render identity, but cached identity, permissions, and read data SHALL NOT authorize a server mutation or replace server-side route authentication.
+- **WHEN** the connectivity state remains offline or backend-unreachable
+- **THEN** affected queries SHALL not continuously retry in the background
+- **AND** the cached screen SHALL remain interactive for supported local/queued actions
 
-#### Scenario: Cached identity is available offline
+#### Scenario: Connectivity recovers with queued writes
 
-- **WHEN** the backend is unreachable and a last confirmed render identity exists
-- **THEN** the client MAY render that identity and its compatible cached read data
-- **AND** no cached value SHALL authorize a mutation
+- **WHEN** a live recovery check succeeds while the mutation outbox contains replayable writes
+- **THEN** replay SHALL start through the existing outbox coordinator
+- **AND** authoritative active-query refetch SHALL occur after that replay pass settles
 
-#### Scenario: The live session is missing during replay
+#### Scenario: A recovery refetch succeeds
 
-- **WHEN** an existing queued mutation is replayed without a valid live server session
-- **THEN** the server SHALL reject the mutation through the existing authentication boundary
-- **AND** the existing outbox SHALL quarantine the entry without replaying it under another user
+- **WHEN** an authoritative refetch returns current server data
+- **THEN** that data SHALL replace the cached view
+- **AND** it SHALL refresh the persisted successful snapshot and last-live-success time
 
-### Requirement: Replayed writes require a live session resolver
+### Requirement: Cold PWA navigation can start the client fallback safely
 
-The replay coordinator SHALL use a live session result immediately before selecting a replay scope. A cached identity or last-known user ID MAY label a durably captured entry, but SHALL NOT authorize replay or be used as the replay coordinator's authenticated scope after a live session check fails.
+The service worker SHALL use network-first document navigation and retain only confirmed same-origin application shells and the runtime scripts/styles needed to hydrate them. It SHALL cache an application route only after a successful online response, use an exact matching route shell when available, and otherwise show a deterministic offline fallback. Personalized API responses and generic recipe/user images SHALL not be stored by the service worker.
 
-#### Scenario: Live session validation fails before replay
+#### Scenario: A previously confirmed route is opened cold while offline
 
-- **WHEN** a queued mutation exists but the live session request fails, times out, or returns no authenticated user
-- **THEN** the replay coordinator SHALL not deliver the queued mutation
-- **AND** it SHALL leave the entry available for a later authenticated launch or apply the existing authentication quarantine policy
+- **WHEN** document navigation cannot reach the server and an exact confirmed route shell plus its required runtime assets are cached
+- **THEN** the service worker SHALL return that shell
+- **AND** the client SHALL run the live-first attempt and IndexedDB fallback flow
 
-#### Scenario: No cached application shell exists
+#### Scenario: No confirmed route shell exists
 
-- **WHEN** an application navigation fails offline before a safe shell has been cached
-- **THEN** the service worker SHALL return a deterministic offline fallback explaining that the app must first be opened online
-
-#### Scenario: A newly installed worker confirms the application shell
-
-- **WHEN** the authenticated page loaded its scripts and styles before the service worker controlled those requests
-- **THEN** shell confirmation SHALL also cache the same-origin runtime assets referenced by the shell document
-- **AND** the shell SHALL NOT replace the previous offline shell unless all required referenced assets were staged successfully
-
-#### Scenario: An authenticated application route is confirmed
-
-- **WHEN** the user opens a canonical application route such as recipes, groceries, or calendar while online
-- **THEN** the service worker SHALL cache that route's validated shell under its pathname
-- **AND** an offline document navigation SHALL use only the matching route shell rather than rendering the root route at another pathname
-
-#### Scenario: A confirmed shell is opened in browser offline mode
-
-- **WHEN** a later cold navigation is served from the matching confirmed route shell while browser networking is disabled
-- **THEN** the referenced cached runtime assets SHALL be served so the client can hydrate and restore IndexedDB data
-- **AND** the user SHALL NOT remain stuck on a server-rendered restoration placeholder
-
-### Requirement: Personalized API responses are excluded from generic service-worker caching
-
-The service worker SHALL NOT use a generic API GET cache for personalized recipes, groceries, calendar data, auth/session responses, or other user-scoped responses. Personalized offline reads SHALL come from the scoped IndexedDB read cache.
+- **WHEN** document navigation cannot reach the server and no exact confirmed shell is available
+- **THEN** the service worker SHALL return an offline fallback explaining that the route must first be opened online
 
 #### Scenario: A personalized API GET is requested
 
-- **WHEN** a user-scoped API GET is requested
-- **THEN** the service worker SHALL fetch it without placing it in the generic static/resource cache
+- **WHEN** a same-origin API GET handles auth, recipes, calendar, groceries, stores, or other user data
+- **THEN** the service worker SHALL not put that response into Cache Storage
 
-#### Scenario: A public static resource is requested
+#### Scenario: An arbitrary image is requested
 
-- **WHEN** an explicitly allowlisted static or public resource is requested
-- **THEN** the service worker MAY serve or update its dedicated cache according to its resource policy
+- **WHEN** an avatar, recipe, gallery, or other content image loads
+- **THEN** the service worker SHALL not cache it solely because its request destination is `image`
 
-### Requirement: Cache freshness and persistence failures are visible and truthful
+### Requirement: Users can inspect and clear their active read cache
 
-The web client SHALL record data timestamps, cache schema versions, hydration progress, and storage outcomes. It SHALL NOT claim offline availability for a record or snapshot that failed to persist.
+The read-cache layer SHALL expose a summary for the active scope containing record counts, data timestamps, last successful live contact, schema version, and persistence warnings. Clearing cached reads SHALL require confirmation and SHALL affect only the active read-cache scope, never the mutation outbox.
 
-#### Scenario: A snapshot is stale but retained
+#### Scenario: Cache inventory is requested
 
-- **WHEN** a retained snapshot exceeds its freshness threshold but remains within its retention window
-- **THEN** the UI SHALL render it with a stale or last-synced indication
-- **AND** the client SHALL attempt asynchronous revalidation when possible
+- **WHEN** the offline-status surface requests the active cache summary
+- **THEN** it SHALL receive separate counts and timestamps for recipe summaries, complete recipe details, calendar items, groceries, recurring groceries, and stores
 
-#### Scenario: Storage quota prevents persistence
+#### Scenario: The user clears cached reads
 
-- **WHEN** a snapshot or recipe detail cannot be persisted because browser storage quota is insufficient
-- **THEN** previously persisted data SHALL remain available
-- **AND** the affected snapshot or detail SHALL be reported as unavailable offline rather than falsely successful
+- **WHEN** the user confirms the clear-cache action
+- **THEN** all read-cache records for the active origin/user/household scope SHALL be removed
+- **AND** queued mutations and retained delivery results SHALL remain untouched

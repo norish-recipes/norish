@@ -86,6 +86,46 @@ describe("web outbox replay coordinator", () => {
     );
   });
 
+  it("does not refetch away optimistic state after an unreachable replay", async () => {
+    const repository = fakeRepository([createEntry("first", 1)]);
+    const refetch = vi.fn(async () => undefined);
+
+    await new WebOutboxReplayCoordinator({
+      repository,
+      getScope: async () => ({ backendOrigin: "https://norish.test", userId: "user-1" }),
+      deliver: async () => {
+        throw new TypeError("Failed to fetch");
+      },
+      refetch,
+    }).start();
+
+    expect(refetch).not.toHaveBeenCalled();
+  });
+
+  it("forces backed-off entries on an explicit recovery before refetching", async () => {
+    const entry = createEntry("first", 1);
+    entry.state = "retrying";
+    entry.nextRetryAt = Date.now() + 60_000;
+    const repository = fakeRepository([entry]);
+    const order: string[] = [];
+    const coordinator = new WebOutboxReplayCoordinator({
+      repository,
+      getScope: async () => ({ backendOrigin: "https://norish.test", userId: "user-1" }),
+      deliver: async () => {
+        order.push("replay");
+
+        return { success: true };
+      },
+      refetch: async () => {
+        order.push("refetch");
+      },
+    });
+
+    await coordinator.start({ forceRetry: true, refetchAfterPass: true });
+
+    expect(order).toEqual(["replay", "refetch"]);
+  });
+
   it("caps retry backoff while keeping later entries blocked", async () => {
     const entries = [createEntry("first", 1), createEntry("second", 2)];
     entries[0]!.attempts = 6;

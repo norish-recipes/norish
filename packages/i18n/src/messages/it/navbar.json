@@ -17,6 +17,75 @@
       "updateAvailable": "v{version} disponibile"
     }
   },
+  "offline": {
+    "title": "Stato offline",
+    "description": "Connessione, dati salvati e modifiche in coda in questo browser.",
+    "footerLabel": "Stato offline: {status}",
+    "connectivity": {
+      "checking": "Verifica",
+      "online": "Online",
+      "offline": "Offline",
+      "backend-unreachable": "Server non disponibile"
+    },
+    "data": {
+      "live": "Dati in tempo reale",
+      "cached": "Dati salvati",
+      "stale": "I dati potrebbero non essere aggiornati",
+      "unavailable": "Dati non disponibili"
+    },
+    "status": {
+      "title": "Stato attuale",
+      "lastLiveSuccess": "Ultima risposta in tempo reale",
+      "never": "Non ancora",
+      "retryFailed": "Il server non è ancora disponibile."
+    },
+    "actions": {
+      "retry": "Riprova la connessione",
+      "cancel": "Annulla",
+      "clear": "Cancella dati salvati",
+      "openResult": "Apri risultato",
+      "acknowledge": "Conferma e rimuovi",
+      "close": "Chiudi"
+    },
+    "cache": {
+      "title": "Dati salvati",
+      "schema": "Schema {version}",
+      "empty": "Non sono ancora stati salvati dati offline per questa famiglia.",
+      "persistenceWarning": "Non è stato possibile salvare alcuni dati",
+      "clearConfirm": "Cancellare i dati salvati della famiglia attiva in questo browser?"
+    },
+    "warnings": {
+      "blocked": "Un'altra scheda blocca l'aggiornamento del database offline.",
+      "unavailable": "L'archiviazione offline non è disponibile in questo browser.",
+      "quota-exceeded": "Lo spazio di archiviazione del browser è pieno.",
+      "write-failed": "L'ultimo salvataggio offline non è stato completato."
+    },
+    "inventory": {
+      "recipeSummaries": "Riepiloghi ricette",
+      "recipeDetails": "Dettagli ricette",
+      "calendarItems": "Elementi del calendario",
+      "groceries": "Spesa",
+      "recurringGroceries": "Spesa ricorrente",
+      "stores": "Negozi"
+    },
+    "queue": {
+      "title": "Modifiche in coda",
+      "active": "{count} in attesa",
+      "attention": "{count} richiedono attenzione",
+      "retrying": "Nuovo tentativo per {count} modifiche quando il server sarà disponibile.",
+      "empty": "Nessuna modifica in coda o risultato conservato.",
+      "results": "Risultati completati ({count})"
+    },
+    "simulation": {
+      "title": "Simula server non disponibile",
+      "description": "Solo sviluppo. La disattivazione richiede una verifica live riuscita.",
+      "disableFailed": "La simulazione resta attiva perché la verifica live non è riuscita."
+    },
+    "unavailable": {
+      "title": "Non disponibile offline",
+      "description": "Apri questi dati online una volta prima di usarli durante un'interruzione."
+    }
+  },
   "theme": {
     "title": "Tema",
     "loading": "Caricamento…",

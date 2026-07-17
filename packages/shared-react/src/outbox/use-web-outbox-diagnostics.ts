@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { WebOutboxDiagnostics } from "./outbox-diagnostics";
 import type { WebOutboxScope } from "./outbox-types";
-import { readWebOutboxDiagnostics } from "./outbox-diagnostics";
+import { readWebOutboxDiagnostics, subscribeToWebOutboxChanges } from "./outbox-diagnostics";
 import { WebOutboxRepository } from "./outbox-repository";
 
 const repository = new WebOutboxRepository();
@@ -34,13 +34,11 @@ export function useWebOutboxDiagnostics(
     };
 
     void refresh();
-    window.addEventListener("norish:web-outbox-changed", refresh);
-    const interval = window.setInterval(refresh, 30_000);
+    const unsubscribe = subscribeToWebOutboxChanges(refresh);
 
     return () => {
       cancelled = true;
-      window.removeEventListener("norish:web-outbox-changed", refresh);
-      window.clearInterval(interval);
+      unsubscribe();
     };
   }, [scope]);
 

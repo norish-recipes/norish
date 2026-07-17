@@ -16,6 +16,7 @@ export type GroceriesContextValue = {
   doneGroceries: GroceryDto[];
   pendingGroceries: GroceryDto[];
   isLoading: boolean;
+  queryKey: GroceriesQueryResult["queryKey"];
   recipeMap: RecipeMap;
   getRecipeNameForGrocery: (grocery: GroceryDto) => string | null;
 } & GroceriesMutationsResult;
@@ -34,8 +35,14 @@ export function createGroceriesContext({
   const GroceriesContext = createContext<GroceriesContextValue | null>(null);
 
   function GroceriesProvider({ children }: { children: ReactNode }) {
-    const { groceries, recurringGroceries, recipeMap, isLoading, getRecipeNameForGrocery } =
-      useGroceriesQuery();
+    const {
+      groceries,
+      recurringGroceries,
+      recipeMap,
+      isLoading,
+      queryKey,
+      getRecipeNameForGrocery,
+    } = useGroceriesQuery();
     const groceryMutations = useGroceriesMutations();
 
     // Subscribe to WebSocket events (updates query cache via internal cache helpers)
@@ -72,6 +79,7 @@ export function createGroceriesContext({
         doneGroceries,
         pendingGroceries,
         isLoading,
+        queryKey,
         recipeMap,
         getRecipeNameForGrocery,
         ...groceryMutations,
@@ -82,6 +90,7 @@ export function createGroceriesContext({
         doneGroceries,
         pendingGroceries,
         isLoading,
+        queryKey,
         recipeMap,
         getRecipeNameForGrocery,
         groceryMutations,

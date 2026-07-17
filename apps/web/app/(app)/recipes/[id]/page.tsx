@@ -1,8 +1,11 @@
 "use client";
 
 import { use, useEffect } from "react";
+import { useTRPC } from "@/app/providers/trpc-provider";
+import { OfflineDataUnavailable } from "@/components/offline-data-unavailable";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
+import { useOfflineWeb } from "@/context/offline-web-context";
 import { useTranslations } from "next-intl";
 
 import { WakeLockProvider } from "./components/wake-lock-context";
@@ -14,8 +17,11 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-function RecipePageContent() {
+function RecipePageContent({ recipeId }: { recipeId: string }) {
   const { recipe, isNotFound, isLoading } = useRecipeContext();
+  const trpc = useTRPC();
+  const { isQueryUnavailable } = useOfflineWeb();
+  const unavailableOffline = isQueryUnavailable(trpc.recipes.get.queryKey({ id: recipeId }));
   const t = useTranslations("recipes.detail");
 
   // Scroll to top when recipe page mounts
@@ -31,6 +37,10 @@ function RecipePageContent() {
   // Recipe not found or no access - show 404
   if (!recipe && isNotFound) {
     return <NotFoundView message={t("notFoundMessage")} title={t("notFound")} />;
+  }
+
+  if (!recipe && unavailableOffline) {
+    return <OfflineDataUnavailable />;
   }
 
   if (!recipe) {
@@ -61,7 +71,7 @@ export default function RecipeDetailPage({ params }: Props) {
   return (
     <RecipeContextProvider recipeId={id}>
       <WakeLockProvider>
-        <RecipePageContent />
+        <RecipePageContent recipeId={id} />
       </WakeLockProvider>
     </RecipeContextProvider>
   );

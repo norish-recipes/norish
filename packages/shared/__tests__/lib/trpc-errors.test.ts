@@ -21,6 +21,15 @@ describe("backend reachability classification", () => {
     expect(isBackendUnreachableError(TRPCClientError.from(firefoxNetworkError))).toBe(true);
   });
 
+  it("classifies gateway-unavailable HTTP responses as unreachable", () => {
+    expect(isBackendUnreachableError({ status: 502 })).toBe(true);
+    expect(isBackendUnreachableError({ data: { httpStatus: 503 } })).toBe(true);
+    expect(isBackendUnreachableError({ shape: { data: { httpStatus: 504 } } })).toBe(true);
+    expect(isBackendUnreachableError({ data: { httpStatus: 422, code: "BAD_REQUEST" } })).toBe(
+      false
+    );
+  });
+
   it("does not recursively capture an already queued delivery", () => {
     expect(
       isBackendUnreachableError(

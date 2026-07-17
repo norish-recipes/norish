@@ -8,10 +8,29 @@ export function isBackendUnreachableError(error: unknown): boolean {
   }
 
   if (error instanceof TRPCClientError) {
-    return isNetworkError(error.cause) || (!hasHttpStatus(error) && !hasServerErrorShape(error));
+    return (
+      isNetworkError(error.cause) ||
+      hasBackendUnavailableStatus(error) ||
+      (!hasHttpStatus(error) && !hasServerErrorShape(error))
+    );
   }
 
-  return isNetworkError(error) || isFetchLikeNetworkError(error);
+  return (
+    isNetworkError(error) || isFetchLikeNetworkError(error) || hasBackendUnavailableStatus(error)
+  );
+}
+
+function hasBackendUnavailableStatus(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const value = error as {
+    status?: unknown;
+    data?: { httpStatus?: unknown };
+    shape?: { data?: { httpStatus?: unknown } };
+  };
+  const status = value.status ?? value.data?.httpStatus ?? value.shape?.data?.httpStatus;
+
+  return status === 502 || status === 503 || status === 504;
 }
 
 function isNetworkError(error: unknown): boolean {

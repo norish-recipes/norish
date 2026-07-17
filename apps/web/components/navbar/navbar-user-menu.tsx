@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
@@ -15,11 +15,14 @@ import {
   EllipsisVerticalIcon,
   PlusIcon,
 } from "@heroicons/react/16/solid";
+import { CloudIcon } from "@heroicons/react/24/outline";
 import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
 
+import { useWebConnectivity } from "../../lib/connectivity";
+import OfflineStatusModal from "./offline-status-modal";
 import { ThemeSwitchContent, useThemeSwitch } from "./theme-switch";
 
 type TriggerVariant = "avatar" | "ellipsis";
@@ -34,10 +37,14 @@ export default function NavbarUserMenu({
   trigger = "avatar",
 }: NavbarUserMenuProps) {
   const t = useTranslations("navbar.userMenu");
+  const tOffline = useTranslations("navbar.offline");
   const { user, signOut } = useUserContext();
   const router = useRouter();
   const [localOpen, setLocalOpen] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
+  const [showOfflineStatus, setShowOfflineStatus] = useState(false);
+  const offlineStatusButtonRef = useRef<HTMLButtonElement>(null);
+  const connectivity = useWebConnectivity();
   const themeSwitch = useThemeSwitch();
   const languageSwitch = useLanguageSwitch();
   const { currentVersion, latestVersion, updateAvailable, releaseUrl } = useVersionQuery();
@@ -49,6 +56,22 @@ export default function NavbarUserMenu({
       onOpenChange?.(open);
     },
     [onOpenChange]
+  );
+
+  const openOfflineStatus = useCallback(() => {
+    handleOpenChange(false);
+    window.requestAnimationFrame(() => setShowOfflineStatus(true));
+  }, [handleOpenChange]);
+
+  const handleOfflineStatusOpenChange = useCallback(
+    (open: boolean) => {
+      setShowOfflineStatus(open);
+      if (open) return;
+
+      handleOpenChange(true);
+      window.requestAnimationFrame(() => offlineStatusButtonRef.current?.focus());
+    },
+    [handleOpenChange]
   );
 
   if (!user) return null;
@@ -214,13 +237,34 @@ export default function NavbarUserMenu({
                 })}
               </a>
             )}
-            <span className="shrink-0">v{currentVersion ?? "..."}</span>
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <Button
+                ref={offlineStatusButtonRef}
+                aria-label={tOffline("footerLabel", {
+                  status: tOffline(`connectivity.${connectivity.state}`),
+                })}
+                className="h-7 min-w-0 gap-1.5 rounded-full px-2 text-xs"
+                data-offline-status-trigger
+                size="sm"
+                variant="tertiary"
+                onPress={openOfflineStatus}
+              >
+                <CloudIcon aria-hidden className="size-3.5" />
+                <span>{tOffline(`connectivity.${connectivity.state}`)}</span>
+              </Button>
+              <span>v{currentVersion ?? "..."}</span>
+            </div>
           </div>
         </Dropdown.Popover>
       </Dropdown>
 
       {/* Import from URL Modal */}
       <ImportRecipeModal isOpen={showUrlModal} onOpenChange={setShowUrlModal} />
+      <OfflineStatusModal
+        isOpen={showOfflineStatus}
+        returnFocusRef={offlineStatusButtonRef}
+        onOpenChange={handleOfflineStatusOpenChange}
+      />
     </>
   );
 }

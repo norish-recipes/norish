@@ -1,10 +1,12 @@
 "use client";
 
 import type { ComponentProps, ComponentType, PropsWithChildren } from "react";
+import { Suspense } from "react";
 import { Toast } from "@heroui/react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
-import { WebOutboxStatus } from "../../components/web-outbox-status";
+import RegisterServiceWorker from "../../components/register-service-worker";
+import { OfflineWebProvider } from "../../context/offline-web-context";
 import { TRPCProviderWrapper } from "./trpc-provider";
 
 export interface BaseProvidersProps {
@@ -27,9 +29,15 @@ export function BaseProviders({ children, themeProps }: BaseProvidersProps) {
       themes={["light", "dark"]}
       {...themeProps}
     >
-      <TRPCProviderWrapper>{children}</TRPCProviderWrapper>
-      <WebOutboxStatus />
-      <Toast.Provider maxVisibleToasts={1} placement="top" />
+      <TRPCProviderWrapper>
+        <OfflineWebProvider>
+          {children}
+          <Suspense fallback={null}>
+            <RegisterServiceWorker />
+          </Suspense>
+        </OfflineWebProvider>
+      </TRPCProviderWrapper>
+      <Toast.Provider className="z-[1200]" maxVisibleToasts={1} placement="top" />
     </ThemeProvider>
   );
 }

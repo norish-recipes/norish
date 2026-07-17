@@ -31,6 +31,7 @@ export type CreateTRPCProviderBundleOptions = {
   getBaseUrl?: () => string;
   getWsUrl?: () => string;
   getHeaders?: () => HTTPHeaders;
+  transportFetch?: typeof fetch;
   getWebSocketImpl?: () => typeof WebSocket | undefined;
   wsLazyEnabled?: boolean;
   getWsLazyEnabled?: () => boolean;
@@ -187,22 +188,26 @@ function createUnauthorizedLink<TRouter extends AnyTRPCRouter>(
 
 function createHttpMutationLink(
   getBaseUrl: () => string,
-  getHeaders: () => HTTPHeaders
+  getHeaders: () => HTTPHeaders,
+  transportFetch?: typeof fetch
 ): TRPCLink<any> {
   return httpLink({
     url: `${getBaseUrl()}/api/trpc`,
     headers: createRequestHeadersResolver(getHeaders),
+    ...(transportFetch ? { fetch: transportFetch } : {}),
     transformer: superjson,
   });
 }
 
 function createHttpFormDataMutationLink(
   getBaseUrl: () => string,
-  getHeaders: () => HTTPHeaders
+  getHeaders: () => HTTPHeaders,
+  transportFetch?: typeof fetch
 ): TRPCLink<any> {
   return httpLink({
     url: `${getBaseUrl()}/api/trpc`,
     headers: createRequestHeadersResolver(getHeaders),
+    ...(transportFetch ? { fetch: transportFetch } : {}),
     transformer: {
       serialize: (data: unknown) => data,
       deserialize: superjson.deserialize,
@@ -212,18 +217,20 @@ function createHttpFormDataMutationLink(
 
 function createHttpTransportLink<TRouter extends AnyTRPCRouter>(
   getBaseUrl: () => string,
-  getHeaders: () => HTTPHeaders
+  getHeaders: () => HTTPHeaders,
+  transportFetch?: typeof fetch
 ): TRPCLink<TRouter> {
   return splitLink({
     condition: (op) => op.type === "mutation",
     true: splitLink({
       condition: (op) => isNonJsonSerializable(op.input),
-      true: createHttpFormDataMutationLink(getBaseUrl, getHeaders),
-      false: createHttpMutationLink(getBaseUrl, getHeaders),
+      true: createHttpFormDataMutationLink(getBaseUrl, getHeaders, transportFetch),
+      false: createHttpMutationLink(getBaseUrl, getHeaders, transportFetch),
     }),
     false: httpBatchLink({
       url: `${getBaseUrl()}/api/trpc`,
       headers: createBatchRequestHeadersResolver(getHeaders),
+      ...(transportFetch ? { fetch: transportFetch } : {}),
       transformer: superjson,
     }),
   });
@@ -254,6 +261,7 @@ export function createTRPCClientLinks<TRouter extends AnyTRPCRouter>({
   getBaseUrl = defaultGetBaseUrl,
   getWsUrl = defaultGetWsUrl,
   getHeaders = defaultGetHeaders,
+  transportFetch,
   getWebSocketImpl,
   includeSubscriptions = true,
   wsLazyEnabled = true,
@@ -294,9 +302,9 @@ export function createTRPCClientLinks<TRouter extends AnyTRPCRouter>({
           client: webSocketClient!,
           transformer: superjson,
         }),
-        false: createHttpTransportLink(getBaseUrl, getHeaders),
+        false: createHttpTransportLink(getBaseUrl, getHeaders, transportFetch),
       })
-    : createHttpTransportLink(getBaseUrl, getHeaders);
+    : createHttpTransportLink(getBaseUrl, getHeaders, transportFetch);
 
   return [
     ...(enableLoggerLink

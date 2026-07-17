@@ -10,6 +10,9 @@ import { WebOutboxRepository } from "@norish/shared-react/outbox";
 import { createTRPCProviderBundle } from "@norish/shared-react/providers";
 import { isQueuedDeliveryError } from "@norish/shared/lib/queued-delivery";
 
+import { WebConnectivityRuntime } from "../../lib/connectivity/runtime";
+import { createWebTransportFetch } from "../../lib/connectivity/transport";
+
 const DATABASE_NAME = "norish-web-mutation-delivery";
 const SCOPE = { backendOrigin: "https://norish.test", userId: "user-1" };
 const GROCERY = { id: "grocery-reload", name: "Milk" };
@@ -114,7 +117,11 @@ function installFakeBackend(state: TestState) {
   );
 }
 
-function createTestBundle(state: TestState, queryClient: QueryClient) {
+function createTestBundle(
+  state: TestState,
+  queryClient: QueryClient,
+  options: { transportFetch?: typeof fetch; getReplayUserId?: () => Promise<string | null> } = {}
+) {
   const logger: TrpcLogger = {
     info: vi.fn(),
     warn: vi.fn(),
@@ -126,10 +133,13 @@ function createTestBundle(state: TestState, queryClient: QueryClient) {
     getQueryClient: () => queryClient,
     getBaseUrl: () => SCOPE.backendOrigin,
     getWsUrl: () => "ws://norish.test/trpc",
+    transportFetch: options.transportFetch,
     wsLazyEnabled: true,
     enableLoggerLink: false,
     webOutbox: {
-      getUserId: async () => (state.authenticated ? SCOPE.userId : null),
+      getCaptureUserId: async () => (state.authenticated ? SCOPE.userId : null),
+      getReplayUserId:
+        options.getReplayUserId ?? (async () => (state.authenticated ? SCOPE.userId : null)),
       getBackendOrigin: () => SCOPE.backendOrigin,
     },
   });
@@ -150,7 +160,7 @@ function createDeliveryHarness(useClient: () => object | null) {
       queryKey: ["groceries"],
       queryFn: async () => getServerGroceries(),
       initialData: [] as Grocery[],
-      staleTime: Infinity,
+      staleTime: 0,
     });
     const mutation = useMutation({
       mutationFn: (input: Grocery) => client.groceries.create.mutate(input),
@@ -184,6 +194,45 @@ function createDeliveryHarness(useClient: () => object | null) {
 }
 
 describe("web outbox delivery through the provider", () => {
+  it("keeps the outbox before simulated transport so optimistic mutations are captured", async () => {
+    const state: TestState = {
+      authenticated: true,
+      reachable: true,
+      effectCount: 0,
+      receivedOperationIds: [],
+      effectCountsByOperationId: new Map(),
+      committedOperationIds: new Set(),
+      dropResponseFor: null,
+      serverReadCount: 0,
+      serverGroceries: [],
+    };
+    installFakeBackend(state);
+    const runtime = new WebConnectivityRuntime("development", window.localStorage);
+
+    await runtime.setSimulatedBackendUnavailable(true);
+    const queryClient = new QueryClient();
+    const bundle = createTestBundle(state, queryClient, {
+      transportFetch: createWebTransportFetch(runtime),
+      getReplayUserId: async () => null,
+    });
+    const Harness = createDeliveryHarness(bundle.useTRPCClient);
+    const rendered = render(
+      <bundle.TRPCProviderWrapper>
+        <Harness capture getServerGroceries={() => state.serverGroceries} />
+      </bundle.TRPCProviderWrapper>
+    );
+
+    await waitFor(async () => {
+      expect(await new WebOutboxRepository().listPending(SCOPE)).toHaveLength(1);
+    });
+    expect(queryClient.getQueryData<Grocery[]>(["groceries"])).toEqual([GROCERY]);
+    expect(state.effectCount).toBe(0);
+    expect(runtime.getSnapshot().state).toBe("backend-unreachable");
+
+    rendered.unmount();
+    window.localStorage.clear();
+  });
+
   it("keeps an optimistic mutation across reload and reconnects it once", async () => {
     const state: TestState = {
       authenticated: true,

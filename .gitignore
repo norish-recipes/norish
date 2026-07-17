@@ -17,6 +17,10 @@
 
 # testing
 /coverage
+**/playwright-report/
+**/test-results/
+apps/web/e2e/.auth/
+apps/web/e2e/.tmp/
 
 # next.js
 **/.next/
@@ -92,4 +96,3 @@ docker-compose.yml
 .devcontainer/*/
 !.devcontainer/default/
 !.devcontainer/default/**
-

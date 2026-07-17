@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -8,6 +8,7 @@ import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 const mockSignOut = vi.hoisted(() => vi.fn());
 const mockCycleLocale = vi.hoisted(() => vi.fn());
 const mockCycleTheme = vi.hoisted(() => vi.fn());
+const mockConnectivity = vi.hoisted(() => ({ state: "online" }));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -60,6 +61,35 @@ vi.mock("@/components/shared/user-avatar", () => ({
   default: ({ name }: { name: string }) => <span>{name}</span>,
 }));
 
+vi.mock("@/components/navbar/offline-status-modal", () => ({
+  default: ({
+    isOpen,
+    onOpenChange,
+    returnFocusRef,
+  }: {
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    returnFocusRef: React.RefObject<HTMLButtonElement | null>;
+  }) =>
+    isOpen ? (
+      <div role="dialog">
+        Offline status modal
+        <button
+          onClick={() => {
+            onOpenChange(false);
+            requestAnimationFrame(() => returnFocusRef.current?.focus());
+          }}
+        >
+          Close status
+        </button>
+      </div>
+    ) : null,
+}));
+
+vi.mock("@/lib/connectivity", () => ({
+  useWebConnectivity: () => mockConnectivity,
+}));
+
 vi.mock("@heroui/react", async () => {
   const React = await import("react");
 
@@ -73,22 +103,21 @@ vi.mock("@heroui/react", async () => {
     onOpenChange: () => {},
   });
 
-  function Button({
-    children,
-    onPress,
-    type = "button",
-    ...props
-  }: {
-    children?: React.ReactNode;
-    onPress?: () => void;
-    type?: "button" | "submit" | "reset";
-    [key: string]: unknown;
-  }) {
+  const Button = React.forwardRef<
+    HTMLButtonElement,
+    {
+      children?: React.ReactNode;
+      onPress?: () => void;
+      type?: "button" | "submit" | "reset";
+      [key: string]: unknown;
+    }
+  >(function Button({ children, onPress, type = "button", ...props }, ref) {
     const dropdown = React.useContext(DropdownContext);
     const ariaLabel = props["aria-label"] as string | undefined;
 
     return (
       <button
+        ref={ref}
         aria-label={ariaLabel}
         type={type}
         onClick={() => {
@@ -101,7 +130,7 @@ vi.mock("@heroui/react", async () => {
         {children}
       </button>
     );
-  }
+  });
 
   function DropdownRoot({
     children,
@@ -174,6 +203,10 @@ vi.mock("@heroui/react", async () => {
 });
 
 describe("NavbarUserMenu open state", () => {
+  beforeEach(() => {
+    mockConnectivity.state = "online";
+  });
+
   it("opens only the clicked instance when desktop and mobile menus are both mounted", () => {
     render(
       <>
@@ -188,5 +221,39 @@ describe("NavbarUserMenu open state", () => {
 
     expect(screen.getAllByRole("menu")).toHaveLength(1);
     expect(screen.getAllByRole("menuitem", { name: "logout" })).toHaveLength(1);
+  });
+
+  it.each(["checking", "online", "offline", "backend-unreachable"])(
+    "keeps the %s connectivity control beside the version",
+    (state) => {
+      mockConnectivity.state = state;
+      render(<NavbarUserMenu />);
+
+      fireEvent.click(screen.getByLabelText("Open user menu"));
+      const versionGroup = screen.getByText("v1.2.3").parentElement;
+
+      expect(versionGroup).toContainElement(screen.getByRole("button", { name: "footerLabel" }));
+      expect(screen.getByText(`connectivity.${state}`)).toBeInTheDocument();
+    }
+  );
+
+  it("closes the menu before opening the sibling modal and returns focus", async () => {
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      window.setTimeout(() => callback(0), 0);
+
+      return 1;
+    });
+    render(<NavbarUserMenu />);
+
+    fireEvent.click(screen.getByLabelText("Open user menu"));
+    const statusButton = screen.getByRole("button", { name: "footerLabel" });
+
+    fireEvent.click(statusButton);
+    await screen.findByRole("dialog");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveTextContent("Offline status modal");
+
+    fireEvent.click(screen.getByRole("button", { name: "Close status" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "footerLabel" })).toHaveFocus());
   });
 });

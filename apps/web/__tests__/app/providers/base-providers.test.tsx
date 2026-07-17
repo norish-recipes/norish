@@ -28,8 +28,12 @@ vi.mock("@/app/providers/trpc-provider", () => ({
   TRPCProviderWrapper: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock("@/components/web-outbox-status", () => ({
-  WebOutboxStatus: () => null,
+vi.mock("@/context/offline-web-context", () => ({
+  OfflineWebProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock("@/components/register-service-worker", () => ({
+  default: () => null,
 }));
 
 vi.mock("@norish/shared/lib/auth/client", () => ({
@@ -50,6 +54,7 @@ describe("BaseProviders", () => {
 
     expect(toastProviderMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        className: "z-[1200]",
         placement: "top",
         maxVisibleToasts: 1,
       })

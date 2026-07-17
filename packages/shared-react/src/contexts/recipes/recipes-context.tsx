@@ -30,6 +30,7 @@ export type SharedRecipesContextValue = {
   isLoading: boolean;
   isValidating: boolean;
   error: unknown;
+  queryKey: RecipesQueryResult["queryKey"];
   isFetchingMore: boolean;
   hasMore: boolean;
   pendingRecipeIds: Set<string>;
@@ -110,6 +111,7 @@ export function createRecipesContext({
       isLoading,
       isValidating,
       error,
+      queryKey,
       hasMore,
       pendingRecipeIds,
       autoTaggingRecipeIds,
@@ -191,6 +193,7 @@ export function createRecipesContext({
         isLoading: isLoading || isFavoritesLoading,
         isValidating,
         error,
+        queryKey,
         favoriteIds,
         isFavorite,
         toggleFavorite,
@@ -222,6 +225,7 @@ export function createRecipesContext({
         allergies,
         isValidating,
         error,
+        queryKey,
         hasMore,
         pendingRecipeIds,
         autoTaggingRecipeIds,

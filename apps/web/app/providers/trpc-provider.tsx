@@ -4,15 +4,22 @@ import type { AppRouter } from "@norish/trpc/client";
 import { createTRPCProviderBundle } from "@norish/shared-react/providers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
-import { getWebOutboxUserId } from "../../lib/offline-delivery-user";
+import { createWebQueryClient, webTransportFetch } from "../../lib/connectivity";
+import {
+  getWebOutboxCaptureUserId,
+  getWebOutboxReplayUserId,
+} from "../../lib/offline-delivery-user";
 
 const log = createClientLogger("trpc");
 
 export const { TRPCProvider, TRPCProviderWrapper, useConnectionStatus, useTRPC } =
   createTRPCProviderBundle<AppRouter>({
     logger: log,
+    getQueryClient: createWebQueryClient,
+    transportFetch: webTransportFetch,
     webOutbox: {
-      getUserId: getWebOutboxUserId,
+      getCaptureUserId: getWebOutboxCaptureUserId,
+      getReplayUserId: getWebOutboxReplayUserId,
       getBackendOrigin: () =>
         typeof window === "undefined" ? "" : new URL("", window.location.href).origin,
       // Next.js statically replaces explicitly referenced NEXT_PUBLIC values.

@@ -9,7 +9,7 @@ type RecipeGridSkeletonProps = {
 export default function RecipeGridSkeleton({ variant = "grid" }: RecipeGridSkeletonProps) {
   if (variant === "list") {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4" data-recipe-grid-skeleton>
         {Array.from({ length: 18 }).map((_, i) => (
           <RecipeCardSkeleton key={i} variant="list" />
         ))}
@@ -18,7 +18,7 @@ export default function RecipeGridSkeleton({ variant = "grid" }: RecipeGridSkele
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+    <div data-recipe-grid-skeleton className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
       {Array.from({ length: 50 }).map((_, i) => (
         <RecipeCardSkeleton key={i} />
       ))}

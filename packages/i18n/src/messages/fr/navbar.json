@@ -17,6 +17,75 @@
       "updateAvailable": "v{version} disponible"
     }
   },
+  "offline": {
+    "title": "État hors ligne",
+    "description": "Connexion, données enregistrées et modifications en attente dans ce navigateur.",
+    "footerLabel": "État hors ligne : {status}",
+    "connectivity": {
+      "checking": "Vérification",
+      "online": "En ligne",
+      "offline": "Hors ligne",
+      "backend-unreachable": "Serveur indisponible"
+    },
+    "data": {
+      "live": "Données en direct",
+      "cached": "Données enregistrées",
+      "stale": "Données peut-être obsolètes",
+      "unavailable": "Données indisponibles"
+    },
+    "status": {
+      "title": "État actuel",
+      "lastLiveSuccess": "Dernière réponse en direct",
+      "never": "Pas encore",
+      "retryFailed": "Le serveur est toujours indisponible."
+    },
+    "actions": {
+      "retry": "Réessayer la connexion",
+      "cancel": "Annuler",
+      "clear": "Effacer les données enregistrées",
+      "openResult": "Ouvrir le résultat",
+      "acknowledge": "Confirmer et supprimer",
+      "close": "Fermer"
+    },
+    "cache": {
+      "title": "Données enregistrées",
+      "schema": "Schéma {version}",
+      "empty": "Aucune donnée hors ligne n'est encore enregistrée pour ce foyer.",
+      "persistenceWarning": "Certaines données n'ont pas pu être enregistrées",
+      "clearConfirm": "Effacer les données enregistrées du foyer actif dans ce navigateur ?"
+    },
+    "warnings": {
+      "blocked": "Un autre onglet bloque la mise à jour de la base hors ligne.",
+      "unavailable": "Le stockage hors ligne n'est pas disponible dans ce navigateur.",
+      "quota-exceeded": "Le stockage du navigateur est plein.",
+      "write-failed": "Le dernier enregistrement hors ligne ne s'est pas terminé."
+    },
+    "inventory": {
+      "recipeSummaries": "Résumés de recettes",
+      "recipeDetails": "Détails des recettes",
+      "calendarItems": "Éléments du calendrier",
+      "groceries": "Courses",
+      "recurringGroceries": "Courses récurrentes",
+      "stores": "Magasins"
+    },
+    "queue": {
+      "title": "Modifications en attente",
+      "active": "{count} en attente",
+      "attention": "{count} à vérifier",
+      "retrying": "Nouvelle tentative pour {count} modifications lorsque le serveur sera disponible.",
+      "empty": "Aucune modification en attente ni aucun résultat conservé.",
+      "results": "Résultats terminés ({count})"
+    },
+    "simulation": {
+      "title": "Simuler un serveur indisponible",
+      "description": "Développement uniquement. La désactivation exige une connexion en direct réussie.",
+      "disableFailed": "La simulation reste active car la vérification en direct a échoué."
+    },
+    "unavailable": {
+      "title": "Indisponible hors ligne",
+      "description": "Ouvrez ces données une fois en ligne avant de les utiliser pendant une panne."
+    }
+  },
   "theme": {
     "title": "Thème",
     "loading": "Chargement…",

@@ -13,6 +13,7 @@ import type { CreateTRPCProviderBundleOptions } from "./trpc-links";
 import {
   createWebOutboxLink,
   replayWebOutboxEntry,
+  subscribeToWebOutboxChanges,
   WebOutboxReplayCoordinator,
   WebOutboxRepository,
 } from "../outbox";
@@ -38,7 +39,8 @@ type SubscriptionObserverOptions = {
 };
 
 export type WebOutboxProviderOptions = {
-  getUserId: () => Promise<string | null>;
+  getCaptureUserId: () => Promise<string | null>;
+  getReplayUserId: () => Promise<string | null>;
   getBackendOrigin: () => string;
   enabled?: () => boolean;
 };
@@ -135,6 +137,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   getBaseUrl = defaultGetBaseUrl,
   getWsUrl = defaultGetWsUrl,
   getHeaders = defaultGetHeaders,
+  transportFetch,
   getWebSocketImpl,
   wsLazyEnabled = true,
   getWsLazyEnabled,
@@ -202,6 +205,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
           getBaseUrl,
           getWsUrl,
           getHeaders,
+          transportFetch,
           getWebSocketImpl,
           wsLazyEnabled,
           getWsLazyEnabled,
@@ -234,7 +238,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
               ? [
                   createWebOutboxLink({
                     repository: outboxRepositoryRef.current,
-                    getUserId: webOutbox.getUserId,
+                    getUserId: webOutbox.getCaptureUserId,
                     getBackendOrigin: webOutbox.getBackendOrigin,
                     enabled: webOutbox.enabled,
                   }),
@@ -250,7 +254,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
         outboxCoordinatorRef.current = new WebOutboxReplayCoordinator({
           repository: outboxRepositoryRef.current,
           getScope: async () => {
-            const userId = await webOutbox.getUserId();
+            const userId = await webOutbox.getReplayUserId();
 
             return userId ? { backendOrigin: webOutbox.getBackendOrigin(), userId } : null;
           },
@@ -278,25 +282,29 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
       const run = () => {
         void coordinator.start();
       };
+      const browserOnline = () => {
+        void coordinator.start({ forceRetry: true });
+      };
+      const recover = () => {
+        void coordinator
+          .start({ forceRetry: true, refetchAfterPass: true })
+          .then(() => window.dispatchEvent(new Event("norish:web-outbox-replay-settled")));
+      };
 
       run();
 
       if (typeof window === "undefined") return;
 
-      window.addEventListener("online", run);
-      const authReadyPoll = window.setInterval(run, 5_000);
+      window.addEventListener("online", browserOnline);
+      window.addEventListener("norish:web-connectivity-recovered", recover);
+      const unsubscribeOutbox = subscribeToWebOutboxChanges(run);
 
       return () => {
-        window.removeEventListener("online", run);
-        window.clearInterval(authReadyPoll);
+        window.removeEventListener("online", browserOnline);
+        window.removeEventListener("norish:web-connectivity-recovered", recover);
+        unsubscribeOutbox();
       };
     }, []);
-
-    useEffect(() => {
-      if (status === "connected") {
-        void outboxCoordinatorRef.current?.start();
-      }
-    }, [status]);
 
     useEffect(() => {
       return () => {

@@ -1,0 +1,74 @@
+import { expect, test } from "./fixtures";
+import { openOfflineStatus, warmPrimaryReadCache } from "./support/cache";
+
+test("shows cache inventory in the footer status modal with keyboard focus return", async ({
+  page,
+}) => {
+  await warmPrimaryReadCache(page);
+  await openOfflineStatus(page);
+  const modal = page.getByRole("dialog");
+
+  await expect(modal.locator("[data-development-simulator]")).toHaveCount(0);
+  await expect(modal.getByText("Recipe summaries")).toBeVisible();
+  await expect(modal.getByText("Recipe details")).toBeVisible();
+  await expect(modal.getByText("Calendar items")).toBeVisible();
+  await expect(modal.getByText("Groceries", { exact: true })).toBeVisible();
+  await expect(modal.getByText("Stores")).toBeVisible();
+  await expect(modal.getByText("Schema 1")).toBeVisible();
+
+  await modal.getByText("Close", { exact: true }).click();
+  await expect(page.getByRole("button", { name: /^Offline status:/ })).toBeFocused();
+});
+
+test("@critical @development captures an optimistic mutation, diagnoses it, then replays before refetch", async ({
+  page,
+  api,
+}) => {
+  test.skip(
+    process.env.NORISH_E2E_DEVELOPMENT !== "1",
+    "The backend-unreachable simulator is development-only"
+  );
+
+  await warmPrimaryReadCache(page);
+  await openOfflineStatus(page);
+  let modal = page.getByRole("dialog");
+  const simulation = modal.getByRole("switch", { name: "Simulate server unavailable" });
+  const simulationControl = modal.locator(
+    "[data-development-simulator] [data-slot='switch-control']"
+  );
+
+  await simulationControl.click();
+  await expect(simulation).toBeChecked();
+  await expect(modal.getByText("Server unavailable", { exact: true })).toBeVisible();
+  await modal.getByText("Close", { exact: true }).click();
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("button", { name: "Add Item" }).click();
+  const queuedName = "E2E queued onions";
+
+  await page.getByPlaceholder("e.g., 2 lbs chicken breast").fill(queuedName);
+  await page.getByPlaceholder("e.g., 2 lbs chicken breast").press("Enter");
+  await expect(page.getByText(queuedName, { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Close panel" }).click();
+  await expect(page.getByRole("dialog", { name: "Add Grocery" })).not.toBeVisible();
+
+  await openOfflineStatus(page);
+  modal = page.getByRole("dialog");
+  await expect(modal.getByText("1 waiting")).toBeVisible();
+  await expect(modal.getByText("No queued changes or retained results.")).toHaveCount(0);
+
+  await modal.locator("[data-development-simulator] [data-slot='switch-control']").click();
+  await expect(
+    modal.getByRole("switch", { name: "Simulate server unavailable" })
+  ).not.toBeChecked();
+  await expect(modal.getByText("Online")).toBeVisible();
+  await expect
+    .poll(async () => {
+      const groceries = await api.groceries.list.query();
+
+      return groceries.groceries.some((grocery) => grocery.name === queuedName);
+    })
+    .toBe(true);
+  await expect(modal.getByText("No queued changes or retained results.")).toBeVisible();
+  await expect(page.getByText(queuedName, { exact: true })).toBeVisible();
+});

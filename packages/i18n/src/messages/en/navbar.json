@@ -17,6 +17,75 @@
       "updateAvailable": "v{version} available"
     }
   },
+  "offline": {
+    "title": "Offline status",
+    "description": "Connection, saved data, and queued changes for this browser.",
+    "footerLabel": "Offline status: {status}",
+    "connectivity": {
+      "checking": "Checking",
+      "online": "Online",
+      "offline": "Offline",
+      "backend-unreachable": "Server unavailable"
+    },
+    "data": {
+      "live": "Live data",
+      "cached": "Saved data",
+      "stale": "Data may be stale",
+      "unavailable": "Data unavailable"
+    },
+    "status": {
+      "title": "Current status",
+      "lastLiveSuccess": "Last live response",
+      "never": "Not yet",
+      "retryFailed": "The server is still unavailable."
+    },
+    "actions": {
+      "retry": "Retry connection",
+      "cancel": "Cancel",
+      "clear": "Clear saved data",
+      "openResult": "Open result",
+      "acknowledge": "Acknowledge and remove",
+      "close": "Close"
+    },
+    "cache": {
+      "title": "Saved data",
+      "schema": "Schema {version}",
+      "empty": "No offline data is saved for this household yet.",
+      "persistenceWarning": "Some data could not be saved",
+      "clearConfirm": "Clear saved data for the active household on this browser?"
+    },
+    "warnings": {
+      "blocked": "Another tab is blocking the offline database update.",
+      "unavailable": "Offline storage is not available in this browser.",
+      "quota-exceeded": "Browser storage is full.",
+      "write-failed": "The last offline save did not complete."
+    },
+    "inventory": {
+      "recipeSummaries": "Recipe summaries",
+      "recipeDetails": "Recipe details",
+      "calendarItems": "Calendar items",
+      "groceries": "Groceries",
+      "recurringGroceries": "Recurring groceries",
+      "stores": "Stores"
+    },
+    "queue": {
+      "title": "Queued changes",
+      "active": "{count} waiting",
+      "attention": "{count} need attention",
+      "retrying": "Retrying {count} queued changes when the server is available.",
+      "empty": "No queued changes or retained results.",
+      "results": "Completed results ({count})"
+    },
+    "simulation": {
+      "title": "Simulate server unavailable",
+      "description": "Development only. Disabling requires a successful live connection check.",
+      "disableFailed": "The simulation remains enabled because the live check failed."
+    },
+    "unavailable": {
+      "title": "Not available offline",
+      "description": "Open this data online once before using it during an outage."
+    }
+  },
   "theme": {
     "title": "Theme",
     "loading": "Loading…",

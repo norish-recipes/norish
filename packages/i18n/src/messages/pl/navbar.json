@@ -17,6 +17,75 @@
       "updateAvailable": "wersja{version} dostępna"
     }
   },
+  "offline": {
+    "title": "Stan offline",
+    "description": "Połączenie, zapisane dane i oczekujące zmiany w tej przeglądarce.",
+    "footerLabel": "Stan offline: {status}",
+    "connectivity": {
+      "checking": "Sprawdzanie",
+      "online": "Online",
+      "offline": "Offline",
+      "backend-unreachable": "Serwer niedostępny"
+    },
+    "data": {
+      "live": "Dane na żywo",
+      "cached": "Zapisane dane",
+      "stale": "Dane mogą być nieaktualne",
+      "unavailable": "Dane niedostępne"
+    },
+    "status": {
+      "title": "Bieżący stan",
+      "lastLiveSuccess": "Ostatnia odpowiedź na żywo",
+      "never": "Jeszcze nie",
+      "retryFailed": "Serwer nadal jest niedostępny."
+    },
+    "actions": {
+      "retry": "Ponów połączenie",
+      "cancel": "Anuluj",
+      "clear": "Wyczyść zapisane dane",
+      "openResult": "Otwórz wynik",
+      "acknowledge": "Potwierdź i usuń",
+      "close": "Zamknij"
+    },
+    "cache": {
+      "title": "Zapisane dane",
+      "schema": "Schemat {version}",
+      "empty": "Nie zapisano jeszcze danych offline dla tego gospodarstwa domowego.",
+      "persistenceWarning": "Nie udało się zapisać części danych",
+      "clearConfirm": "Wyczyścić zapisane dane aktywnego gospodarstwa w tej przeglądarce?"
+    },
+    "warnings": {
+      "blocked": "Inna karta blokuje aktualizację bazy offline.",
+      "unavailable": "Pamięć offline nie jest dostępna w tej przeglądarce.",
+      "quota-exceeded": "Pamięć przeglądarki jest pełna.",
+      "write-failed": "Ostatni zapis offline nie został ukończony."
+    },
+    "inventory": {
+      "recipeSummaries": "Podsumowania przepisów",
+      "recipeDetails": "Szczegóły przepisów",
+      "calendarItems": "Pozycje kalendarza",
+      "groceries": "Zakupy",
+      "recurringGroceries": "Zakupy cykliczne",
+      "stores": "Sklepy"
+    },
+    "queue": {
+      "title": "Oczekujące zmiany",
+      "active": "Oczekuje: {count}",
+      "attention": "Wymaga uwagi: {count}",
+      "retrying": "Ponowimy {count} zmian, gdy serwer będzie dostępny.",
+      "empty": "Brak oczekujących zmian i zachowanych wyników.",
+      "results": "Ukończone wyniki ({count})"
+    },
+    "simulation": {
+      "title": "Symuluj niedostępny serwer",
+      "description": "Tylko dla programistów. Wyłączenie wymaga udanej kontroli połączenia.",
+      "disableFailed": "Symulacja pozostaje włączona, ponieważ kontrola połączenia nie powiodła się."
+    },
+    "unavailable": {
+      "title": "Niedostępne offline",
+      "description": "Otwórz te dane raz online, zanim użyjesz ich podczas awarii."
+    }
+  },
   "theme": {
     "title": "Motyw",
     "loading": "Ładowanie…",
