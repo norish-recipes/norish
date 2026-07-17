@@ -20,7 +20,7 @@ You can manage:
 - **System scheduler** and server restart actions.
 
 :::tip
-Settings that can change at runtime live here; settings needed to *boot* the
+Settings that can change at runtime live here; settings needed to _boot_ the
 instance — the [database](./database.md), the encryption key in
 [Server & runtime](./server-runtime.md), and the initial
 [auth provider](./authentication.md) — are environment variables.

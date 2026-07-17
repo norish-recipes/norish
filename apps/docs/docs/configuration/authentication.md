@@ -54,13 +54,13 @@ OIDC_CLIENT_SECRET: <client-secret>
 OIDC_WELLKNOWN: https://auth.example.com/.well-known/openid-configuration
 ```
 
-| Variable             | Description                                          | Default |
-| -------------------- | ---------------------------------------------------- | ------- |
-| `OIDC_NAME`          | Display name for the OIDC provider                   | (empty) |
-| `OIDC_ISSUER`        | OIDC issuer URL                                      | (empty) |
-| `OIDC_CLIENT_ID`     | OIDC client id                                       | (empty) |
-| `OIDC_CLIENT_SECRET` | OIDC client secret                                   | (empty) |
-| `OIDC_WELLKNOWN`     | Well-known URL (derived from the issuer if omitted)  | Derived |
+| Variable             | Description                                         | Default |
+| -------------------- | --------------------------------------------------- | ------- |
+| `OIDC_NAME`          | Display name for the OIDC provider                  | (empty) |
+| `OIDC_ISSUER`        | OIDC issuer URL                                     | (empty) |
+| `OIDC_CLIENT_ID`     | OIDC client id                                      | (empty) |
+| `OIDC_CLIENT_SECRET` | OIDC client secret                                  | (empty) |
+| `OIDC_WELLKNOWN`     | Well-known URL (derived from the issuer if omitted) | Derived |
 
 ### OIDC claim mapping
 
@@ -80,9 +80,9 @@ auto-join. These are only used when claim mapping is enabled.
 Create an OAuth app at **GitHub → Settings → Developer settings → OAuth Apps**
 and use the GitHub callback URL above.
 
-| Variable               | Description             | Default |
-| ---------------------- | ----------------------- | ------- |
-| `GITHUB_CLIENT_ID`     | GitHub OAuth client id  | (empty) |
+| Variable               | Description                | Default |
+| ---------------------- | -------------------------- | ------- |
+| `GITHUB_CLIENT_ID`     | GitHub OAuth client id     | (empty) |
 | `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret | (empty) |
 
 ## Google
@@ -90,9 +90,9 @@ and use the GitHub callback URL above.
 Create an OAuth client in the Google Cloud console and use the Google callback
 URL above.
 
-| Variable               | Description             | Default |
-| ---------------------- | ----------------------- | ------- |
-| `GOOGLE_CLIENT_ID`     | Google OAuth client id  | (empty) |
+| Variable               | Description                | Default |
+| ---------------------- | -------------------------- | ------- |
+| `GOOGLE_CLIENT_ID`     | Google OAuth client id     | (empty) |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | (empty) |
 
 :::info Public URL

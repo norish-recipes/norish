@@ -204,8 +204,6 @@ describe("getExtractionLogContext", () => {
 
   it("handles missing arrays in output gracefully", () => {
     const output = {
-      "@context": "https://schema.org",
-      "@type": "Recipe",
       name: "Test Recipe",
       description: null,
       recipeYield: null,
@@ -238,8 +236,6 @@ describe("getExtractionLogContext", () => {
 
 function createValidOutput(): RecipeExtractionOutput {
   return {
-    "@context": "https://schema.org",
-    "@type": "Recipe",
     name: "Chocolate Cake",
     description: "A delicious chocolate cake",
     recipeIngredient: {
@@ -275,8 +271,6 @@ function createPartialOutput(overrides: Partial<RecipeExtractionOutput>): Recipe
 describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
   it("keeps metric and US systems separated even when base normalizer infers US", async () => {
     const output: RecipeExtractionOutput = {
-      "@context": "https://schema.org",
-      "@type": "Recipe",
       name: "Mapo Tofu Udon",
       description: "Test",
       notes: null,
@@ -346,8 +340,6 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
 
   it("normalizes categories with matcher", async () => {
     const output: RecipeExtractionOutput = {
-      "@context": "https://schema.org",
-      "@type": "Recipe",
       name: "Test Recipe",
       notes: null,
       description: "Test",
@@ -398,8 +390,6 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
 
   it("decodes HTML entities in US ingredients and keeps comments", async () => {
     const output: RecipeExtractionOutput = {
-      "@context": "https://schema.org",
-      "@type": "Recipe",
       name: "Test Recipe",
       description: "Test",
       notes: null,
@@ -468,8 +458,6 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
 
   it("decodes HTML entities in US steps and keeps full text", async () => {
     const output: RecipeExtractionOutput = {
-      "@context": "https://schema.org",
-      "@type": "Recipe",
       name: "Test Recipe",
       description: "Test",
       recipeIngredient: {
@@ -532,8 +520,6 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
 
   it("decodes multiple entity types in US content", async () => {
     const output: RecipeExtractionOutput = {
-      "@context": "https://schema.org",
-      "@type": "Recipe",
       name: "Test Recipe",
       description: "Test",
       recipeIngredient: {
@@ -596,8 +582,6 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
 
   it("handles US ingredients without entities", async () => {
     const output: RecipeExtractionOutput = {
-      "@context": "https://schema.org",
-      "@type": "Recipe",
       name: "Test Recipe",
       description: "Test",
       recipeIngredient: {
@@ -652,8 +636,6 @@ describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
 
   it("maps and decodes notes from AI output", async () => {
     const output: RecipeExtractionOutput = {
-      "@context": "https://schema.org",
-      "@type": "Recipe",
       name: "Test Recipe",
       description: "Test",
       notes: "Let it rest for 10 minutes &#8211; don&#39;t skip this step.",

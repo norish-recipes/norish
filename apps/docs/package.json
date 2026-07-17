@@ -12,7 +12,7 @@
     "swizzle": "docusaurus swizzle",
     "docs_update": "node scripts/docs-version.mjs",
     "typecheck": "tsc",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .gitignore",
     "clean": "git clean -xdf build .docusaurus node_modules"
   },
   "dependencies": {

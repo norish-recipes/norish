@@ -14,7 +14,7 @@ DATABASE_URL: postgres://postgres:norish@db:5432/norish
 ```
 
 | Variable       | Description                  | Example                               |
-| -------------- | --------------------------- | ------------------------------------- |
+| -------------- | ---------------------------- | ------------------------------------- |
 | `DATABASE_URL` | PostgreSQL connection string | `postgres://user:pass@db:5432/norish` |
 
 ## Composing the URL from parts

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./.github/assets/mockup-norish.png" width="100%" alt="Norish mockup" />
+  <img src="./.github/assets/logo.svg" width="100%" alt="Norish Logo" />
 </p>
 
 <p align="center">
@@ -19,12 +19,6 @@
 Norish is a real-time, household-first recipe app for planning meals, sharing groceries, and cooking together.
 
 **For the website and documentation see: [norish.dev](https://norish.dev) and [docs.norish.dev](https://docs.norish.dev)**
-
-## 📚 Documentation
-
-Full documentation lives at **[docs.norish.dev](https://docs.norish.dev)**:
-
-- [Quick start](https://docs.norish.dev/quick-start) — get running with Docker Compose
 
 ## Quick start
 
@@ -101,8 +95,6 @@ volumes:
   norish_data:
   redis_data:
 ```
-
-
 
 ## Contributing
 

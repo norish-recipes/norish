@@ -41,16 +41,8 @@
 
   /* Navigation */
   --ifm-navbar-background-color: oklch(100% 0.0008 150.36);
-  --ifm-menu-color-background-active: color-mix(
-    in oklch,
-    var(--ifm-color-primary) 9%,
-    transparent
-  );
-  --ifm-menu-color-background-hover: color-mix(
-    in oklch,
-    var(--ifm-color-primary) 6%,
-    transparent
-  );
+  --ifm-menu-color-background-active: color-mix(in oklch, var(--ifm-color-primary) 9%, transparent);
+  --ifm-menu-color-background-hover: color-mix(in oklch, var(--ifm-color-primary) 6%, transparent);
 
   --docusaurus-highlighted-code-line-bg: color-mix(
     in oklch,

@@ -8,20 +8,21 @@ description: Set the default locale and which languages are available in Norish.
 
 Norish ships with translations for these languages:
 
-| Flag | Language       | Code          |
-| :--: | -------------- | :-----------: |
-| 🇬🇧 | English        | `en`          |
-| 🇳🇱 | Nederlands     | `nl`          |
-| 🇩🇪 | Deutsch (Sie)  | `de-formal`   |
-| 🇩🇪 | Deutsch (Du)   | `de-informal` |
-| 🇫🇷 | Français       | `fr`          |
-| 🇪🇸 | Español        | `es`          |
-| 🇷🇺 | Русский        | `ru`          |
-| 🇰🇷 | 한국어         | `ko`          |
-| 🇳🇴 | Norsk          | `no`          |
-| 🇵🇱 | Polski         | `pl`          |
-| 🇩🇰 | Dansk          | `da`          |
-| 🇮🇹 | Italiano       | `it`          |
+| Flag | Language           |     Code      |
+| :--: | ------------------ | :-----------: |
+|  🇬🇧  | English            |     `en`      |
+|  🇳🇱  | Nederlands         |     `nl`      |
+|  🇩🇪  | Deutsch (Sie)      |  `de-formal`  |
+|  🇩🇪  | Deutsch (Du)       | `de-informal` |
+|  🇫🇷  | Français           |     `fr`      |
+|  🇪🇸  | Español            |     `es`      |
+|  🇷🇺  | Русский            |     `ru`      |
+|  🇰🇷  | 한국어             |     `ko`      |
+|  🇳🇴  | Norsk              |     `no`      |
+|  🇵🇱  | Polski             |     `pl`      |
+|  🇩🇰  | Dansk              |     `da`      |
+|  🇮🇹  | Italiano           |     `it`      |
+|  🇧🇷  | Português (Brasil) |    `pt-BR`    |
 
 You can set the instance default and restrict which locales are available:
 

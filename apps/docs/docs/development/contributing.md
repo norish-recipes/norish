@@ -90,13 +90,13 @@ Use the Pino logger instead of `console.log`:
 
 ```typescript
 // Server-side
+
+// Client-side
+import { createClientLogger } from "@/lib/logger";
 import { createLogger } from "@/server/logger";
 
 const log = createLogger("my-module");
 log.info("Something happened");
-
-// Client-side
-import { createClientLogger } from "@/lib/logger";
 
 const log = createClientLogger("MyComponent");
 ```

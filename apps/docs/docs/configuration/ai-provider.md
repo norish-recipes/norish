@@ -33,16 +33,16 @@ AI_API_KEY: <your-api-key>
 # AI_ENDPOINT: https://your-endpoint/v1
 ```
 
-| Variable         | Description                              | Default      |
-| ---------------- | ---------------------------------------- | ------------ |
-| `AI_ENABLED`     | Enable AI features globally              | `false`      |
-| `AI_PROVIDER`    | AI provider                              | `openai`     |
-| `AI_ENDPOINT`    | Custom OpenAI-compatible endpoint        | (empty)      |
-| `AI_MODEL`       | Default model                            | `gpt-5-mini` |
-| `AI_API_KEY`     | API key for the provider                 | (empty)      |
-| `AI_TEMPERATURE` | Generation temperature                   | `1.0`        |
-| `AI_MAX_TOKENS`  | Maximum tokens for model responses       | `10000`      |
-| `AI_TIMEOUT_MS`  | Maximum time for an AI response (ms)      | `300000`     |
+| Variable         | Description                          | Default      |
+| ---------------- | ------------------------------------ | ------------ |
+| `AI_ENABLED`     | Enable AI features globally          | `false`      |
+| `AI_PROVIDER`    | AI provider                          | `openai`     |
+| `AI_ENDPOINT`    | Custom OpenAI-compatible endpoint    | (empty)      |
+| `AI_MODEL`       | Default model                        | `gpt-5-mini` |
+| `AI_API_KEY`     | API key for the provider             | (empty)      |
+| `AI_TEMPERATURE` | Generation temperature               | `1.0`        |
+| `AI_MAX_TOKENS`  | Maximum tokens for model responses   | `10000`      |
+| `AI_TIMEOUT_MS`  | Maximum time for an AI response (ms) | `300000`     |
 
 :::note
 AI feature speed and quality vary by provider, model, and region. You can also
@@ -54,21 +54,21 @@ adjust AI settings at runtime in **Settings → Admin**.
 Video import downloads the clip with `yt-dlp`, transcribes the audio, and uses
 the AI provider to extract the recipe. It requires AI to be enabled.
 
-| Variable                   | Description                       | Default                                   |
-| -------------------------- | --------------------------------- | ----------------------------------------- |
-| `VIDEO_PARSING_ENABLED`    | Enable the video parsing pipeline | `false`                                   |
-| `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length     | `120`                                     |
-| `YT_DLP_VERSION`           | yt-dlp version used by downloader | `2025.11.12`                              |
-| `YT_DLP_BIN_DIR`           | Folder containing the yt-dlp binary | `./.runtime/bin` (dev), `/app/bin` (prod) |
-| `YT_DLP_PROXY`             | HTTP/SOCKS proxy URL for yt-dlp downloads | (empty)                           |
+| Variable                   | Description                               | Default                                   |
+| -------------------------- | ----------------------------------------- | ----------------------------------------- |
+| `VIDEO_PARSING_ENABLED`    | Enable the video parsing pipeline         | `false`                                   |
+| `VIDEO_MAX_LENGTH_SECONDS` | Maximum accepted video length             | `120`                                     |
+| `YT_DLP_VERSION`           | yt-dlp version used by downloader         | `2025.11.12`                              |
+| `YT_DLP_BIN_DIR`           | Folder containing the yt-dlp binary       | `./.runtime/bin` (dev), `/app/bin` (prod) |
+| `YT_DLP_PROXY`             | HTTP/SOCKS proxy URL for yt-dlp downloads | (empty)                                   |
 
 ## Transcription
 
 Transcription turns the video's audio into text for the AI step.
 
-| Variable                 | Description                                     | Default      |
-| ------------------------ | ----------------------------------------------- | ------------ |
-| `TRANSCRIPTION_PROVIDER` | Transcription provider                          | `disabled`   |
-| `TRANSCRIPTION_ENDPOINT` | Transcription endpoint (local/custom providers) | (empty)      |
-| `TRANSCRIPTION_API_KEY`  | Transcription API key                           | (empty)      |
-| `TRANSCRIPTION_MODEL`    | Transcription model                             | `whisper-1`  |
+| Variable                 | Description                                     | Default     |
+| ------------------------ | ----------------------------------------------- | ----------- |
+| `TRANSCRIPTION_PROVIDER` | Transcription provider                          | `disabled`  |
+| `TRANSCRIPTION_ENDPOINT` | Transcription endpoint (local/custom providers) | (empty)     |
+| `TRANSCRIPTION_API_KEY`  | Transcription API key                           | (empty)     |
+| `TRANSCRIPTION_MODEL`    | Transcription model                             | `whisper-1` |

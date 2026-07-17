@@ -1,4 +1,5 @@
 import React from "react";
+
 import ThemedShot from "./ThemedShot";
 
 type PhoneMockupProps = {
