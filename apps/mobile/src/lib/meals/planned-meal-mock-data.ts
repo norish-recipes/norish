@@ -1,6 +1,5 @@
 import type { PlannedMeal } from "./planned-meal.types";
 
-// IDs reference entries from recipe-mock-data.ts
 export const TODAYS_MEALS_MOCK: PlannedMeal[] = [
   {
     slot: "Breakfast",

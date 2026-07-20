@@ -313,8 +313,8 @@ export default function JobQueueCard() {
           {totalPages > 1 ? (
             <div className="flex justify-center">
               {/* Pagination is a "dumb" compound component (Root/Previous/
-                  Summary/Next) with no built-in state, unlike HeroUI Pro's
-                  flat page/total/onChange API — wire it up manually. */}
+                  Summary/Next) with no built-in state — no flat
+                  page/total/onChange API, so wire it up manually. */}
               <Pagination aria-label={t("title")} size="sm">
                 <Pagination.Content>
                   <Pagination.Item>
