@@ -69,6 +69,13 @@
   .adr-list a:hover { text-decoration: underline; }
   .adr-list p { margin: .25rem 0 0; font-size: .89rem; color: var(--muted); }
   .callout { border-left: 3px solid var(--warn); background: var(--warn-soft); color: var(--fg); border-radius: 0 8px 8px 0; padding: .7rem 1rem; font-size: .92rem; margin: 1rem 0; }
+  .impl { list-style: none; padding: 0; margin: 1rem 0; counter-reset: s; }
+  .impl > li { border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: .75rem 1rem; margin-bottom: .6rem; counter-increment: s; }
+  .impl > li > b::before { content: counter(s) " · "; color: var(--accent); }
+  .impl .row { font-size: .86rem; margin-top: .3rem; }
+  .impl .row b { font-weight: 650; color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; margin-right: .35rem; }
+  .impl .verify { color: var(--accent); }
+  .dag { font-family: var(--mono); font-size: .88rem; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: .6rem .9rem; overflow-x: auto; white-space: nowrap; }
   .statebox { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
   .state { border: 1.5px solid var(--accent); border-radius: 10px; padding: .6rem 1rem; min-width: 165px; }
   .state.off { border-color: var(--warn); }
@@ -167,6 +174,36 @@
   <li><span class="tag">feat(web)</span>Outbox + Replay + queued-UX on hero hooks</li>
   <li><span class="tag">feat(web)</span>Serwist app shell — <code>update-sw</code> pipeline + <code>sw.js</code> die here</li>
   <li><span class="tag">feat(web)</span>status modal + Offline Toggle</li>
+</ol>
+
+<h2>Implementation order</h2>
+<p>The commit list above is the <em>packaging</em>; this is the <em>build order</em> — what depends on what, and what proves each step done. Commits 3, 4, 5 are mutually independent (build in any order or in parallel); everything else is sequenced. The one hard safety rule: <b>the idempotency middleware (3) and client-minted ids (4) must be merged before Replay (7) ever runs against a real backend</b> — replaying without them risks duplicates and broken chains.</p>
+<p class="dag">1 → 2 → { 3 ∥ 4 ∥ 5 } → 6 → 7 → 9,&nbsp;&nbsp;&nbsp;8 any time after 6 (parallel with 7 is fine)</p>
+<ol class="impl">
+  <li><b>Clear the ground</b> — commits 1–2 (chores)
+    <div class="row"><b>Deps</b> none — pure deletions, shrink the tree before feature work.</div>
+    <div class="row"><b>Verify</b> <span class="verify">typecheck + tests match the known pre-existing baseline; no import of any deleted module remains.</span></div></li>
+  <li><b>Idempotency middleware</b> — commit 3 (server)
+    <div class="row"><b>Deps</b> none. Generic tRPC middleware + Redis TTL claims keyed on <code>x-operation-id</code> (header already sent by every client).</div>
+    <div class="row"><b>Verify</b> <span class="verify">unit test: same operation id twice → handler executes once, second call gets the stored response; mobile replay path unaffected.</span></div></li>
+  <li><b>Client-minted ids</b> — commit 4 (server + hero create hooks)
+    <div class="row"><b>Deps</b> none. Optional client UUID on groceries / recurring / stores / calendar creates (recipes if cheap); hooks send their existing optimistic UUID; reconciliation id-swap simplifies.</div>
+    <div class="row"><b>Verify</b> <span class="verify">create with supplied id → row inserted with that id; existing clients without id unaffected.</span></div></li>
+  <li><b>Connectivity runtime + indicator</b> — commit 5 (web)
+    <div class="row"><b>Deps</b> none client-side. Live/Offline state machine, <code>/api/v1/health</code> probe with backoff, WS-close-as-hint wiring, user-menu status row + avatar badge; blocking overlay deleted.</div>
+    <div class="row"><b>Verify</b> <span class="verify">kill the backend with the app open → indicator flips to Offline, no overlay, app stays interactive; restart backend → flips back unaided.</span></div></li>
+  <li><b>Persisted cache + Warmer</b> — commit 6 (web)
+    <div class="row"><b>Deps</b> 5 (Warmer runs while Live). IndexedDB persister via <code>getQueryClient</code>, per-user scoping + purge-on-switch, 7-day maxAge, version buster; Warmer prefetches the Warm Set (calendar keys via the UI's own range helpers).</div>
+    <div class="row"><b>Verify</b> <span class="verify">browse, kill backend, reload → recipes/groceries/calendar render from cache seamlessly; second user signs in → cache purged.</span></div></li>
+  <li><b>Outbox + Replay + queued UX</b> — commit 7 (web)
+    <div class="row"><b>Deps</b> 3, 4, 5, 6. Outbox mutationLink (structured clone, blobs), Web-Locks replay leader, FIFO + failure taxonomy, Reconnect Sequence (replaces <code>invalidateOnReconnect</code>), Queued-as-tentative-success in hero hooks.</div>
+    <div class="row"><b>Verify</b> <span class="verify">offline: add + tick groceries, move a meal → UI holds; reconnect → server converges, no duplicates on repeated interrupted replays; conflicted entry parks visibly.</span></div></li>
+  <li><b>Serwist app shell</b> — commit 8 (web) — <em>flexible slot: any time after 6</em>
+    <div class="row"><b>Deps</b> 6 for usefulness (a shell without cached data renders empty states). Precache + navigation fallback, health-route cache exclusion, ported notification-click + image caching; <code>update-sw</code> pipeline + <code>sw.js</code> deleted.</div>
+    <div class="row"><b>Verify</b> <span class="verify">backend down, hard reload / fresh tab → app boots from the shell and renders cached data (requirement 1.3 end-to-end).</span></div></li>
+  <li><b>Status modal + Offline Toggle</b> — commit 9 (web)
+    <div class="row"><b>Deps</b> 5, 6, 7 (displays their state). Connection section, one-line cache status, outbox list with retry / discard / sync-now, persisted manual-exit toggle with distinct forced-Offline state.</div>
+    <div class="row"><b>Verify</b> <span class="verify">toggle on → zero network traffic (probes, WS, refetches all silent) and state survives reload; parked entry retry/discard works from the modal.</span></div></li>
 </ol>
 
 <h2>Deferred &amp; rejected</h2>
