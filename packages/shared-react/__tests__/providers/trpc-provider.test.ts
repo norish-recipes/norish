@@ -9,10 +9,36 @@ import {
   isUnauthorizedTRPCError,
   isUnauthorizedWebSocketClose,
   shouldNotifyWebSocketDisconnect,
-} from "./trpc-links";
-import { wrapTrpcProxy } from "./trpc-provider";
+} from "../../src/providers/trpc-links";
+import { runWebOutboxRecovery, wrapTrpcProxy } from "../../src/providers/trpc-provider";
 
 describe("createTRPCProviderBundle", () => {
+  it("settles recovery without replacing optimistic reads when outbox replay rejects", async () => {
+    const replayError = new Error("IndexedDB unavailable");
+    const notifySettled = vi.fn();
+    const logger = {
+      info: vi.fn(),
+      warn: vi.fn(),
+      debug: vi.fn(),
+    };
+
+    await expect(
+      runWebOutboxRecovery({
+        coordinator: {
+          start: vi.fn().mockRejectedValue(replayError),
+        },
+        notifySettled,
+        logger,
+      })
+    ).resolves.toBeUndefined();
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      { error: replayError },
+      "Outbox recovery replay failed; keeping active queries unchanged"
+    );
+    expect(notifySettled).toHaveBeenCalledOnce();
+  });
+
   it("uses an injected fetch adapter for HTTP transport", async () => {
     const transportFetch = vi.fn(
       async () =>

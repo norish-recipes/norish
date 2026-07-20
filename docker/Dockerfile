@@ -78,7 +78,8 @@ RUN apk add --no-cache pkgconfig libpq-dev vips-dev
 
 WORKDIR /app
 
-ENV SHARP_IGNORE_GLOBAL_LIBVIPS=0
+ENV NODE_ENV=production \
+  SHARP_IGNORE_GLOBAL_LIBVIPS=0
 
 COPY --from=deps /app/node_modules ./node_modules
 

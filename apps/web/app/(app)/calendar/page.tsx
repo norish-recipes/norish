@@ -8,7 +8,9 @@ import { OfflineDataUnavailable } from "@/components/offline-data-unavailable";
 import { EditNotePanel } from "@/components/Panel/consumers/edit-note-panel";
 import { EditPlannedRecipePanel } from "@/components/Panel/consumers/edit-planned-recipe-panel";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
+import CalendarSkeleton from "@/components/skeleton/calendar-skeleton";
 import { useOfflineWeb } from "@/context/offline-web-context";
+import { shouldShowOfflineWebLoading } from "@/context/offline-web/shared";
 import { useWindowSize } from "usehooks-ts";
 
 import type { Slot } from "@norish/shared/contracts";
@@ -17,7 +19,10 @@ import { CalendarContextProvider, useCalendarContext } from "./context";
 
 function CalendarPageContent() {
   const { isLoading, queryKey } = useCalendarContext();
-  const { isQueryUnavailable } = useOfflineWeb();
+  const { hasResolvedQueryData, isQueryLoadingFallback, isQueryUnavailable, phase } =
+    useOfflineWeb();
+  const hasResolvedData = hasResolvedQueryData(queryKey);
+  const loadingFallback = isQueryLoadingFallback(queryKey);
   const [miniRecipesOpen, setMiniRecipesOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedSlot, setSelectedSlot] = useState<Slot | undefined>(undefined);
@@ -112,6 +117,10 @@ function CalendarPageContent() {
 
   const TimelineComponent = isDesktop ? DesktopTimeline : MobileTimeline;
 
+  if (shouldShowOfflineWebLoading(phase, isLoading, hasResolvedData, loadingFallback)) {
+    return <CalendarSkeleton />;
+  }
+
   if (!isLoading && isQueryUnavailable(queryKey)) {
     return <OfflineDataUnavailable />;
   }
@@ -166,8 +175,11 @@ function CalendarPageContent() {
 }
 
 export default function CalendarPage() {
+  const { phase } = useOfflineWeb();
+  const allowRangeExpansion = phase === "probing-live" || phase === "live";
+
   return (
-    <CalendarContextProvider persistOfflineReadCache>
+    <CalendarContextProvider persistOfflineReadCache allowRangeExpansion={allowRangeExpansion}>
       <CalendarPageContent />
     </CalendarContextProvider>
   );

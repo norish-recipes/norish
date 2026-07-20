@@ -1,4 +1,4 @@
-import RegisterServiceWorker, { collectRuntimeAssets } from "@/components/register-service-worker";
+import RegisterServiceWorker, { isOfflineShellRoute } from "@/components/register-service-worker";
 import { render, waitFor } from "@testing-library/react";
 
 const offline = vi.hoisted(() => ({
@@ -33,22 +33,32 @@ describe("RegisterServiceWorker", () => {
     document.head.innerHTML = "";
   });
 
-  it("collects only observed same-origin Next script and stylesheet assets", () => {
-    document.head.innerHTML = `
-      <script src="/_next/static/chunks/app.js"></script>
-      <link rel="stylesheet" href="/_next/static/css/app.css" />
-      <link rel="stylesheet" href="/theme.css" />
-      <script src="https://other.test/_next/static/foreign.js"></script>
-    `;
-
-    expect(collectRuntimeAssets()).toEqual([
-      `${window.location.origin}/_next/static/chunks/app.js`,
-      `${window.location.origin}/_next/static/css/app.css`,
-    ]);
+  it("limits cold-start shells to the three offline read surfaces", () => {
+    expect(["/", "/calendar", "/groceries"].every(isOfflineShellRoute)).toBe(true);
+    expect(isOfflineShellRoute("/recipes/one")).toBe(false);
+    expect(isOfflineShellRoute("/settings")).toBe(false);
   });
 
-  it("posts the exact canonical route and assets only for a confirmed live scope", async () => {
-    document.head.innerHTML = '<script src="/_next/static/chunks/app.js"></script>';
+  it("posts the canonical route only for a confirmed live scope", async () => {
+    render(<RegisterServiceWorker />);
+
+    await waitFor(() => expect(register).toHaveBeenCalledWith("/sw.js"));
+    await waitFor(() =>
+      expect(postMessage).toHaveBeenCalledWith({
+        type: "CONFIRM_ROUTE_SHELL",
+        route: "/",
+      })
+    );
+  });
+
+  it("waits for the first active worker before confirming a route after initial install", async () => {
+    const ready = Promise.resolve({ active: { postMessage } });
+
+    register.mockResolvedValue({ active: null });
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: { controller: null, ready, register },
+    });
 
     render(<RegisterServiceWorker />);
 
@@ -57,7 +67,6 @@ describe("RegisterServiceWorker", () => {
       expect(postMessage).toHaveBeenCalledWith({
         type: "CONFIRM_ROUTE_SHELL",
         route: "/",
-        assets: [`${window.location.origin}/_next/static/chunks/app.js`],
       })
     );
   });

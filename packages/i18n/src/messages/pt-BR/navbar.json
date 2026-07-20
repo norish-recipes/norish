@@ -50,9 +50,9 @@
     "cache": {
       "title": "Dados salvos",
       "schema": "Esquema {version}",
-      "empty": "Ainda não há dados offline salvos para esta família.",
+      "empty": "Ainda não há dados offline compatíveis salvos neste navegador.",
       "persistenceWarning": "Alguns dados não puderam ser salvos",
-      "clearConfirm": "Limpar os dados salvos da família ativa neste navegador?"
+      "clearConfirm": "Limpar deste navegador os dados offline disponíveis no momento?"
     },
     "warnings": {
       "blocked": "Outra aba está bloqueando a atualização do banco offline.",
@@ -62,7 +62,6 @@
     },
     "inventory": {
       "recipeSummaries": "Resumos de receitas",
-      "recipeDetails": "Detalhes de receitas",
       "calendarItems": "Itens do calendário",
       "groceries": "Compras",
       "recurringGroceries": "Compras recorrentes",
@@ -79,7 +78,7 @@
     "simulation": {
       "title": "Simular servidor indisponível",
       "description": "Somente desenvolvimento. Desativar exige uma verificação ao vivo bem-sucedida.",
-      "disableFailed": "A simulação continua ativa porque a verificação ao vivo falhou."
+      "disableFailed": "A simulação está desativada, mas a verificação do servidor ao vivo falhou."
     },
     "unavailable": {
       "title": "Indisponível offline",

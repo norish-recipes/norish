@@ -46,8 +46,16 @@ jobs:
       run-i18n: true
 
   web-offline-e2e:
-    name: Web Offline E2E
+    name: Web Offline E2E (${{ matrix.suite }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: critical
+            command: pnpm --filter @norish/web run e2e:critical
+          - suite: simulator
+            command: pnpm --filter @norish/web run e2e:simulator
     services:
       postgres:
         image: postgres:17-alpine
@@ -87,17 +95,14 @@ jobs:
       - name: Install matching Chromium
         run: pnpm --filter @norish/web exec playwright install --with-deps chromium
 
-      - name: Run critical offline browser suite
-        run: pnpm --filter @norish/web run e2e:critical
-
-      - name: Run development simulator browser scenario
-        run: pnpm --filter @norish/web run e2e:simulator
+      - name: Run browser suite
+        run: ${{ matrix.command }}
 
       - name: Upload Playwright failure artifacts
         if: failure()
         uses: actions/upload-artifact@v6
         with:
-          name: web-offline-e2e-artifacts
+          name: web-offline-e2e-artifacts-${{ matrix.suite }}
           path: |
             apps/web/test-results/e2e
             apps/web/playwright-report

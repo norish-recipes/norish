@@ -1,6 +1,7 @@
-import { expect, test } from "./fixtures";
-import { PRIMARY_GROCERY_NAME } from "./support/api";
-import { readBrowserReadCache, warmPrimaryReadCache } from "./support/cache";
+import { expect, test } from "@/e2e/fixtures";
+import { PRIMARY_GROCERY_NAME, PRIMARY_RECIPE_NAME } from "@/e2e/support/api";
+import { PRIMARY_USER } from "@/e2e/support/auth";
+import { readBrowserReadCache, warmPrimaryReadCache } from "@/e2e/support/cache";
 
 test("@critical reopens an exact confirmed shell and rejects an unconfirmed route", async ({
   page,
@@ -22,58 +23,50 @@ test("@critical reopens an exact confirmed shell and rejects an unconfirmed rout
     )
     .toBe(true);
 
-  const shellAssets = await page.evaluate(async () => {
-    const cacheNames = await caches.keys();
-    const routeCacheName = cacheNames.find((name) => name.startsWith("norish-web-route-shell-"));
-    const runtimeCacheName = cacheNames.find((name) => name.startsWith("norish-web-runtime-"));
+  const shellAssets = await page.evaluate(
+    async (personalizedValues) => {
+      const cacheNames = await caches.keys();
+      const routeCacheName = cacheNames.find((name) => name.startsWith("norish-web-route-shell-"));
+      const runtimeCacheName = cacheNames.find((name) => name.startsWith("norish-web-runtime-"));
 
-    if (!routeCacheName || !runtimeCacheName) {
+      if (!routeCacheName || !runtimeCacheName) {
+        return {
+          shellAssets: [],
+          missingAssets: ["required shell cache is missing"],
+          personalizedValues: [],
+        };
+      }
+
+      const routeCache = await caches.open(routeCacheName);
+      const shell = await routeCache.match(location.href);
+      const shellHtml = (await shell?.text()) ?? "";
+      const shellAssets = [
+        ...new Set(
+          [...shellHtml.matchAll(/(?:https?:\/\/[^"'<>\\\s]+)?\/_next\/static\/[^"'<>\\\s]+/gi)]
+            .map((match) => new URL(match[0].replaceAll("&amp;", "&"), location.origin))
+            .filter((url) => /\.(?:css|js)$/i.test(url.pathname))
+            .map((url) => url.href)
+        ),
+      ];
+      const runtimeCache = await caches.open(runtimeCacheName);
+      const missingAssets: string[] = [];
+
+      for (const asset of shellAssets) {
+        if (!(await runtimeCache.match(asset))) missingAssets.push(asset);
+      }
+
       return {
-        manifestAssets: [],
-        embeddedAssets: [],
-        missingAssets: ["required shell cache is missing"],
-        missingFromManifest: [],
+        shellAssets,
+        missingAssets,
+        personalizedValues: personalizedValues.filter((value) => shellHtml.includes(value)),
       };
-    }
+    },
+    [PRIMARY_USER.name, PRIMARY_USER.email, PRIMARY_RECIPE_NAME, PRIMARY_GROCERY_NAME]
+  );
 
-    const manifestUrl = new URL("/__norish/offline-shell-manifest", location.origin);
-
-    manifestUrl.searchParams.set("route", location.href);
-    const routeCache = await caches.open(routeCacheName);
-    const manifestResponse = await routeCache.match(manifestUrl.href);
-    const manifest = manifestResponse
-      ? ((await manifestResponse.json()) as { assetUrls?: string[] })
-      : null;
-    const manifestAssets = manifest?.assetUrls ?? [];
-    const shell = await routeCache.match(location.href);
-    const shellHtml = (await shell?.text()) ?? "";
-    const embeddedAssets = [
-      ...new Set(
-        [...shellHtml.matchAll(/(?:https?:\/\/[^"'<>\\\s]+)?\/_next\/static\/[^"'<>\\\s]+/gi)]
-          .map((match) => new URL(match[0].replaceAll("&amp;", "&"), location.origin))
-          .filter((url) => /\.(?:css|js)$/i.test(url.pathname))
-          .map((url) => url.href)
-      ),
-    ];
-    const runtimeCache = await caches.open(runtimeCacheName);
-    const missingAssets: string[] = [];
-
-    for (const asset of manifestAssets) {
-      if (!(await runtimeCache.match(asset))) missingAssets.push(asset);
-    }
-
-    return {
-      manifestAssets,
-      embeddedAssets,
-      missingAssets,
-      missingFromManifest: embeddedAssets.filter((asset) => !manifestAssets.includes(asset)),
-    };
-  });
-
-  expect(shellAssets.manifestAssets.length).toBeGreaterThan(0);
-  expect(shellAssets.embeddedAssets.length).toBeGreaterThan(0);
-  expect(shellAssets.missingFromManifest).toEqual([]);
+  expect(shellAssets.shellAssets.length).toBeGreaterThan(0);
   expect(shellAssets.missingAssets).toEqual([]);
+  expect(shellAssets.personalizedValues).toEqual([]);
 
   await context.setOffline(true);
   await page.close();

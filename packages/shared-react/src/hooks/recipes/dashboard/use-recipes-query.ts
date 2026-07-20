@@ -6,6 +6,7 @@ import type { RecipeCategory, RecipeDashboardDTO, SearchField } from "@norish/sh
 
 import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipesCacheHelpers } from "./use-recipes-cache";
+import { DEFAULT_RECIPE_LIST_LIMIT } from "../../../contexts/recipes/filter-contract";
 
 export type RecipeFilters = {
   limit?: number;
@@ -73,7 +74,7 @@ export function createUseRecipesQuery(
     const queryClient = useQueryClient();
 
     const {
-      limit = 100,
+      limit = DEFAULT_RECIPE_LIST_LIMIT,
       search,
       searchFields,
       tags,

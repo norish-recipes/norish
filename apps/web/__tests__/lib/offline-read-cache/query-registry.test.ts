@@ -26,7 +26,6 @@ function createRegistry() {
           queryKey: key(["recipes", "list"], input, "infinite"),
         }),
       },
-      get: { queryKey: (input) => key(["recipes", "get"], input) },
     },
     calendar: {
       listItems: { queryKey: (input) => key(["calendar", "listItems"], input) },
@@ -83,12 +82,9 @@ describe("offline read-cache query registry", () => {
     expect(registry.describe(query(filteredKey, { pages: [{ recipes: [] }] }))).toBeNull();
   });
 
-  it("recognizes complete detail, calendar, grocery, and store contracts", () => {
+  it("recognizes the calendar and grocery-screen data contracts", () => {
     const registry = createRegistry();
 
-    expect(
-      registry.describe(query(key(["recipes", "get"], { id: "recipe" }), { id: "recipe" }))
-    ).toMatchObject({ kind: "recipe-detail", counts: { recipeDetails: 1 } });
     expect(
       registry.describe(
         query(
@@ -111,7 +107,7 @@ describe("offline read-cache query registry", () => {
       kind: "groceries",
       counts: { groceries: 1, recurringGroceries: 1, recipeNameMappings: 1 },
     });
-    expect(registry.describe(query(registry.storesQueryKey, [{ id: "store" }]))).toMatchObject({
+    expect(registry.describe(query(key(["stores", "list"]), [{ id: "store" }]))).toMatchObject({
       kind: "stores",
       counts: { stores: 1 },
     });
@@ -134,10 +130,35 @@ describe("offline read-cache query registry", () => {
     const registry = createRegistry();
 
     expect(registry.describe(query(registry.groceriesQueryKey, { groceries: [] }))).toBeNull();
-    expect(registry.describe(query(registry.storesQueryKey, [], "error"))).toBeNull();
+    expect(registry.describe(query(key(["stores", "list"]), [], "error"))).toBeNull();
     expect(registry.describe(query(key(["admin", "users"]), []))).toBeNull();
     expect(registry.describe(query(key(["auth", "session"]), {}))).toBeNull();
     expect(registry.describe(query(key(["recipes", "getShared"], { token: "x" }), {}))).toBeNull();
+    expect(
+      registry.describe(query(key(["recipes", "get"], { id: "recipe" }), { id: "recipe" }))
+    ).toBeNull();
+  });
+
+  it("classifies persistence candidates without requiring successful data", () => {
+    const registry = createRegistry();
+    const pendingDashboard = query(registry.dashboardQueryKey, undefined, "error");
+    const pendingCalendar = query(
+      key(["calendar", "listItems"], { startISO: "a", endISO: "b" }),
+      undefined,
+      "error",
+      { persistOfflineReadCache: true }
+    );
+
+    expect(registry.classifyForPersistence(pendingDashboard)).toBe("recipe-dashboard");
+    expect(registry.classifyForPersistence(pendingCalendar)).toBe("calendar-range");
+    expect(
+      registry.classifyForPersistence(
+        query(key(["recipes", "get"], { id: "recipe" }), undefined, "error")
+      )
+    ).toBeNull();
+    expect(
+      registry.classifyForPersistence(query(key(["admin", "users"]), undefined, "error"))
+    ).toBeNull();
   });
 
   it("uses the real household identity only for scope confirmation", () => {

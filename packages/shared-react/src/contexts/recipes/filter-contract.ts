@@ -28,6 +28,8 @@ export type RecipeFilterPreset = {
   isActive: (filters: CanonicalRecipeFilters) => boolean;
 };
 
+export const DEFAULT_RECIPE_LIST_LIMIT = 100;
+
 const VALID_CATEGORIES: RecipeCategory[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const VALID_SORT_MODES: SortOrder[] = ["titleAsc", "titleDesc", "dateAsc", "dateDesc", "none"];
 const VALID_FILTER_MODES: FilterMode[] = ["AND", "OR"];

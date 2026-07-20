@@ -1,12 +1,11 @@
 import { randomUUID } from "node:crypto";
-
-import { expect, test } from "./fixtures";
-import { PRIMARY_RECIPE_ID, PRIMARY_RECIPE_NAME } from "./support/api";
+import { expect, test } from "@/e2e/fixtures";
+import { PRIMARY_RECIPE_NAME } from "@/e2e/support/api";
 import {
   readBrowserReadCache,
   waitForStableReadCache,
   warmPrimaryReadCache,
-} from "./support/cache";
+} from "@/e2e/support/cache";
 
 test("@critical keeps a fresh load live-first and lets delayed live data win", async ({
   page,
@@ -44,7 +43,7 @@ test("@critical keeps a fresh load live-first and lets delayed live data win", a
   await expect(freshPage.getByText(liveOnlyName, { exact: true })).toBeVisible();
 });
 
-test("@critical restores every allowlisted view only after transport failure", async ({
+test("@critical restores every persisted offline view only after transport failure", async ({
   page,
   context,
 }) => {
@@ -63,10 +62,13 @@ test("@critical restores every allowlisted view only after transport failure", a
 
   await navigation.catch(() => undefined);
   await expect(cachedPage.getByText(PRIMARY_RECIPE_NAME, { exact: true }).first()).toBeVisible();
+  const cachedDashboardStatus = cachedPage.getByRole("status").filter({ hasText: "Saved data" });
 
-  await cachedPage.goto(`/recipes/${PRIMARY_RECIPE_ID}`, { waitUntil: "domcontentloaded" });
-  await expect(cachedPage).toHaveURL(`/recipes/${PRIMARY_RECIPE_ID}`);
-  await expect(cachedPage.getByRole("heading", { name: PRIMARY_RECIPE_NAME })).toBeVisible();
+  await expect(cachedDashboardStatus).toBeVisible();
+  await expect(cachedDashboardStatus.locator("time")).toHaveAttribute(
+    "datetime",
+    /^\d{4}-\d{2}-\d{2}T/
+  );
 
   await cachedPage.goto("/calendar", { waitUntil: "domcontentloaded" });
   await expect(cachedPage).toHaveURL("/calendar");

@@ -50,9 +50,9 @@
     "cache": {
       "title": "Zapisane dane",
       "schema": "Schemat {version}",
-      "empty": "Nie zapisano jeszcze danych offline dla tego gospodarstwa domowego.",
+      "empty": "W tej przeglądarce nie zapisano jeszcze zgodnych danych offline.",
       "persistenceWarning": "Nie udało się zapisać części danych",
-      "clearConfirm": "Wyczyścić zapisane dane aktywnego gospodarstwa w tej przeglądarce?"
+      "clearConfirm": "Usunąć z tej przeglądarki aktualnie dostępne dane offline?"
     },
     "warnings": {
       "blocked": "Inna karta blokuje aktualizację bazy offline.",
@@ -62,7 +62,6 @@
     },
     "inventory": {
       "recipeSummaries": "Podsumowania przepisów",
-      "recipeDetails": "Szczegóły przepisów",
       "calendarItems": "Pozycje kalendarza",
       "groceries": "Zakupy",
       "recurringGroceries": "Zakupy cykliczne",
@@ -79,7 +78,7 @@
     "simulation": {
       "title": "Symuluj niedostępny serwer",
       "description": "Tylko dla programistów. Wyłączenie wymaga udanej kontroli połączenia.",
-      "disableFailed": "Symulacja pozostaje włączona, ponieważ kontrola połączenia nie powiodła się."
+      "disableFailed": "Symulacja jest wyłączona, ale kontrola połączenia z serwerem nie powiodła się."
     },
     "unavailable": {
       "title": "Niedostępne offline",

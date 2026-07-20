@@ -26,6 +26,7 @@ import { getInitialDateRange } from "./context-helpers";
 const CalendarContext = createContext<CalendarContextValue | null>(null);
 
 export function CalendarContextProvider({
+  allowRangeExpansion = true,
   children,
   mode = "mobile",
   persistOfflineReadCache = false,
@@ -61,7 +62,7 @@ export function CalendarContextProvider({
 
   const expandRange = useCallback(
     (direction: "past" | "future") => {
-      if (isExpandingRange) return;
+      if (!allowRangeExpansion || isExpandingRange) return;
 
       setIsExpandingRange(true);
 
@@ -92,7 +93,7 @@ export function CalendarContextProvider({
       // Reset expanding state after a short delay to allow new query to start
       setTimeout(() => setIsExpandingRange(false), 100);
     },
-    [isExpandingRange]
+    [allowRangeExpansion, isExpandingRange]
   );
 
   const isDateInRange = useCallback(

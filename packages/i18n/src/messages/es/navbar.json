@@ -50,9 +50,9 @@
     "cache": {
       "title": "Datos guardados",
       "schema": "Esquema {version}",
-      "empty": "Aún no hay datos sin conexión guardados para este hogar.",
+      "empty": "Aún no hay datos sin conexión compatibles guardados en este navegador.",
       "persistenceWarning": "No se pudieron guardar algunos datos",
-      "clearConfirm": "¿Borrar los datos guardados del hogar activo en este navegador?"
+      "clearConfirm": "¿Borrar de este navegador los datos sin conexión disponibles actualmente?"
     },
     "warnings": {
       "blocked": "Otra pestaña bloquea la actualización de la base de datos sin conexión.",
@@ -62,7 +62,6 @@
     },
     "inventory": {
       "recipeSummaries": "Resúmenes de recetas",
-      "recipeDetails": "Detalles de recetas",
       "calendarItems": "Elementos del calendario",
       "groceries": "Ingredientes",
       "recurringGroceries": "Ingredientes recurrentes",
@@ -79,7 +78,7 @@
     "simulation": {
       "title": "Simular servidor no disponible",
       "description": "Solo desarrollo. Desactivarlo requiere una comprobación en directo correcta.",
-      "disableFailed": "La simulación sigue activa porque falló la comprobación en directo."
+      "disableFailed": "La simulación está desactivada, pero falló la comprobación en directo del servidor."
     },
     "unavailable": {
       "title": "No disponible sin conexión",

@@ -9,6 +9,11 @@ const mockSignOut = vi.hoisted(() => vi.fn());
 const mockCycleLocale = vi.hoisted(() => vi.fn());
 const mockCycleTheme = vi.hoisted(() => vi.fn());
 const mockConnectivity = vi.hoisted(() => ({ state: "online" }));
+const mockOffline = vi.hoisted(() => ({
+  phase: "live",
+  usingCachedData: false,
+  visibleDataUnavailable: false,
+}));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -32,6 +37,10 @@ vi.mock("@/context/user-context", () => ({
       name: "Alice",
     },
   }),
+}));
+
+vi.mock("@/context/offline-web-context", () => ({
+  useOfflineWeb: () => mockOffline,
 }));
 
 vi.mock("@/hooks/config", () => ({
@@ -62,6 +71,7 @@ vi.mock("@/components/shared/user-avatar", () => ({
 }));
 
 vi.mock("@/components/navbar/offline-status-modal", () => ({
+  getOfflineDataState: () => "live",
   default: ({
     isOpen,
     onOpenChange,
@@ -205,6 +215,8 @@ vi.mock("@heroui/react", async () => {
 describe("NavbarUserMenu open state", () => {
   beforeEach(() => {
     mockConnectivity.state = "online";
+    mockOffline.usingCachedData = false;
+    mockOffline.visibleDataUnavailable = false;
   });
 
   it("opens only the clicked instance when desktop and mobile menus are both mounted", () => {

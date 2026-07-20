@@ -48,9 +48,9 @@
     "cache": {
       "title": "Gespeicherte Daten",
       "schema": "Schema {version}",
-      "empty": "Für diesen Haushalt sind noch keine Offline-Daten gespeichert.",
+      "empty": "In diesem Browser sind noch keine kompatiblen Offline-Daten gespeichert.",
       "persistenceWarning": "Einige Daten konnten nicht gespeichert werden",
-      "clearConfirm": "Gespeicherte Daten des aktiven Haushalts in diesem Browser löschen?"
+      "clearConfirm": "Die aktuell verfügbaren Offline-Daten aus diesem Browser löschen?"
     },
     "warnings": {
       "blocked": "Ein anderer Tab blockiert die Aktualisierung der Offline-Datenbank.",
@@ -60,7 +60,6 @@
     },
     "inventory": {
       "recipeSummaries": "Rezeptübersichten",
-      "recipeDetails": "Rezeptdetails",
       "calendarItems": "Kalendereinträge",
       "groceries": "Einkäufe",
       "recurringGroceries": "Wiederkehrende Einkäufe",
@@ -77,7 +76,7 @@
     "simulation": {
       "title": "Serverausfall simulieren",
       "description": "Nur Entwicklung. Zum Deaktivieren ist eine erfolgreiche Live-Prüfung nötig.",
-      "disableFailed": "Die Simulation bleibt aktiv, weil die Live-Prüfung fehlgeschlagen ist."
+      "disableFailed": "Die Simulation ist deaktiviert, aber die Live-Prüfung des Servers ist fehlgeschlagen."
     },
     "unavailable": {
       "title": "Offline nicht verfügbar",

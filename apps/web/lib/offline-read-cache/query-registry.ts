@@ -1,9 +1,15 @@
+import type {
+  WebReadCacheRecordCounts,
+  WebReadCacheRecordKind,
+} from "@/lib/offline-read-cache/types";
 import type { Query, QueryKey } from "@tanstack/react-query";
 import { hashKey } from "@tanstack/react-query";
 
-import { DEFAULT_SEARCH_FIELDS } from "@norish/shared/contracts";
-
-import type { WebReadCacheRecordCounts, WebReadCacheRecordKind } from "./types";
+import {
+  DEFAULT_RECIPE_FILTERS,
+  DEFAULT_RECIPE_LIST_LIMIT,
+  toRecipesQueryFilters,
+} from "@norish/shared-react/contexts";
 
 export type OfflineReadCacheDescriptor = {
   kind: WebReadCacheRecordKind;
@@ -22,7 +28,6 @@ type TrpcQueryRegistryHelpers = {
         queryKey: QueryKey;
       };
     };
-    get: { queryKey: (input: { id: string }) => QueryKey };
   };
   calendar: { listItems: { queryKey: (input: { startISO: string; endISO: string }) => QueryKey } };
   groceries: { list: { queryKey: () => QueryKey } };
@@ -45,7 +50,7 @@ function normalizeDashboard(data: unknown): { data: unknown; recipeCount: number
 
   if (!isRecord(firstPage) || !Array.isArray(firstPage.recipes)) return null;
 
-  const recipes = firstPage.recipes.slice(0, 100);
+  const recipes = firstPage.recipes.slice(0, DEFAULT_RECIPE_LIST_LIMIT);
 
   return {
     data: {
@@ -60,19 +65,11 @@ function normalizeDashboard(data: unknown): { data: unknown; recipeCount: number
 export function createOfflineReadCacheRegistry(trpc: TrpcQueryRegistryHelpers) {
   const dashboardQueryKey = trpc.recipes.list.infiniteQueryOptions(
     {
-      limit: 100,
-      search: undefined,
-      searchFields: [...DEFAULT_SEARCH_FIELDS],
-      tags: undefined,
-      categories: undefined,
-      filterMode: "AND",
-      sortMode: "dateDesc",
-      minRating: undefined,
-      maxCookingTime: undefined,
+      limit: DEFAULT_RECIPE_LIST_LIMIT,
+      ...toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS),
     },
     { getNextPageParam: () => null }
   ).queryKey;
-  const recipeDetailProcedureKey = trpc.recipes.get.queryKey({ id: "" });
   const calendarProcedureKey = trpc.calendar.listItems.queryKey({ startISO: "", endISO: "" });
   const groceriesQueryKey = trpc.groceries.list.queryKey();
   const storesQueryKey = trpc.stores.list.queryKey();
@@ -80,14 +77,33 @@ export function createOfflineReadCacheRegistry(trpc: TrpcQueryRegistryHelpers) {
   const dashboardHash = hashKey(dashboardQueryKey);
   const groceriesHash = hashKey(groceriesQueryKey);
   const storesHash = hashKey(storesQueryKey);
+  const householdHash = hashKey(householdQueryKey);
+
+  function classifyForPersistence(
+    query: Pick<Query, "queryKey" | "meta">
+  ): WebReadCacheRecordKind | null {
+    const queryHash = hashKey(query.queryKey);
+
+    if (queryHash === dashboardHash) return "recipe-dashboard";
+    if (
+      sameProcedure(query.queryKey, calendarProcedureKey) &&
+      query.meta?.persistOfflineReadCache === true
+    ) {
+      return "calendar-range";
+    }
+    if (queryHash === groceriesHash) return "groceries";
+    if (queryHash === storesHash) return "stores";
+
+    return null;
+  }
 
   function describe(query: Query): OfflineReadCacheDescriptor | null {
     if (query.state.status !== "success" || query.state.data === undefined) return null;
 
     const queryKey = query.queryKey;
-    const queryHash = hashKey(queryKey);
+    const kind = classifyForPersistence(query);
 
-    if (queryHash === dashboardHash) {
+    if (kind === "recipe-dashboard") {
       const normalized = normalizeDashboard(query.state.data);
 
       return normalized
@@ -100,21 +116,7 @@ export function createOfflineReadCacheRegistry(trpc: TrpcQueryRegistryHelpers) {
         : null;
     }
 
-    if (sameProcedure(queryKey, recipeDetailProcedureKey)) {
-      return isRecord(query.state.data)
-        ? {
-            kind: "recipe-detail",
-            queryKey,
-            data: query.state.data,
-            counts: { recipeDetails: 1 },
-          }
-        : null;
-    }
-
-    if (
-      sameProcedure(queryKey, calendarProcedureKey) &&
-      query.meta?.persistOfflineReadCache === true
-    ) {
+    if (kind === "calendar-range") {
       return Array.isArray(query.state.data)
         ? {
             kind: "calendar-range",
@@ -126,31 +128,25 @@ export function createOfflineReadCacheRegistry(trpc: TrpcQueryRegistryHelpers) {
     }
 
     if (
-      queryHash === groceriesHash &&
+      kind === "groceries" &&
       isRecord(query.state.data) &&
       Array.isArray(query.state.data.groceries) &&
       Array.isArray(query.state.data.recurringGroceries) &&
       isRecord(query.state.data.recipeMap)
     ) {
-      const groceries = Array.isArray(query.state.data.groceries)
-        ? query.state.data.groceries.length
-        : 0;
-      const recurringGroceries = Array.isArray(query.state.data.recurringGroceries)
-        ? query.state.data.recurringGroceries.length
-        : 0;
-      const recipeNameMappings = isRecord(query.state.data.recipeMap)
-        ? Object.keys(query.state.data.recipeMap).length
-        : 0;
-
       return {
         kind: "groceries",
         queryKey,
         data: query.state.data,
-        counts: { groceries, recurringGroceries, recipeNameMappings },
+        counts: {
+          groceries: query.state.data.groceries.length,
+          recurringGroceries: query.state.data.recurringGroceries.length,
+          recipeNameMappings: Object.keys(query.state.data.recipeMap).length,
+        },
       };
     }
 
-    if (queryHash === storesHash && Array.isArray(query.state.data)) {
+    if (kind === "stores" && Array.isArray(query.state.data)) {
       return {
         kind: "stores",
         queryKey,
@@ -165,9 +161,9 @@ export function createOfflineReadCacheRegistry(trpc: TrpcQueryRegistryHelpers) {
   return {
     dashboardQueryKey,
     groceriesQueryKey,
-    storesQueryKey,
     householdQueryKey,
+    classifyForPersistence,
     describe,
-    isHouseholdQuery: (queryKey: QueryKey) => hashKey(queryKey) === hashKey(householdQueryKey),
+    isHouseholdQuery: (queryKey: QueryKey) => hashKey(queryKey) === householdHash,
   };
 }

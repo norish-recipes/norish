@@ -1,12 +1,6 @@
 import type { Page } from "@playwright/test";
+import { PRIMARY_GROCERY_NAME, PRIMARY_RECIPE_NAME, PRIMARY_STORE_NAME } from "@/e2e/support/api";
 import { expect } from "@playwright/test";
-
-import {
-  PRIMARY_GROCERY_NAME,
-  PRIMARY_RECIPE_ID,
-  PRIMARY_RECIPE_NAME,
-  PRIMARY_STORE_NAME,
-} from "./api";
 
 export type BrowserReadCacheSnapshot = {
   scopes: Array<{
@@ -29,7 +23,7 @@ export type BrowserReadCacheSnapshot = {
 export async function readBrowserReadCache(page: Page): Promise<BrowserReadCacheSnapshot> {
   return page.evaluate(async () => {
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("norish-web-read-cache", 2);
+      const request = indexedDB.open("norish-web-read-cache");
 
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -87,10 +81,6 @@ export async function warmPrimaryReadCache(page: Page) {
   await page.goto("/");
   await expect(page.getByText(PRIMARY_RECIPE_NAME, { exact: true }).first()).toBeVisible();
 
-  await page.getByRole("heading", { name: PRIMARY_RECIPE_NAME, exact: true }).first().click();
-  await expect(page).toHaveURL(`/recipes/${PRIMARY_RECIPE_ID}`);
-  await expect(page.getByRole("heading", { name: PRIMARY_RECIPE_NAME })).toBeVisible();
-
   await page.getByRole("link", { name: "Calendar", exact: true }).click();
   await expect(page).toHaveURL("/calendar");
   await expect(page.getByText(PRIMARY_RECIPE_NAME, { exact: true }).first()).toBeVisible();
@@ -100,13 +90,7 @@ export async function warmPrimaryReadCache(page: Page) {
   await expect(page.getByText(PRIMARY_GROCERY_NAME, { exact: true })).toBeVisible();
   await expect(page.getByText(PRIMARY_STORE_NAME, { exact: true })).toBeVisible();
 
-  await waitForReadCacheKinds(page, [
-    "recipe-dashboard",
-    "recipe-detail",
-    "calendar-range",
-    "groceries",
-    "stores",
-  ]);
+  await waitForReadCacheKinds(page, ["recipe-dashboard", "calendar-range", "groceries", "stores"]);
 }
 
 export async function openOfflineStatus(page: Page) {

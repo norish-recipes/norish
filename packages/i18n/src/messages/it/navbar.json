@@ -50,9 +50,9 @@
     "cache": {
       "title": "Dati salvati",
       "schema": "Schema {version}",
-      "empty": "Non sono ancora stati salvati dati offline per questa famiglia.",
+      "empty": "In questo browser non sono ancora salvati dati offline compatibili.",
       "persistenceWarning": "Non è stato possibile salvare alcuni dati",
-      "clearConfirm": "Cancellare i dati salvati della famiglia attiva in questo browser?"
+      "clearConfirm": "Cancellare da questo browser i dati offline attualmente disponibili?"
     },
     "warnings": {
       "blocked": "Un'altra scheda blocca l'aggiornamento del database offline.",
@@ -62,7 +62,6 @@
     },
     "inventory": {
       "recipeSummaries": "Riepiloghi ricette",
-      "recipeDetails": "Dettagli ricette",
       "calendarItems": "Elementi del calendario",
       "groceries": "Spesa",
       "recurringGroceries": "Spesa ricorrente",
@@ -79,7 +78,7 @@
     "simulation": {
       "title": "Simula server non disponibile",
       "description": "Solo sviluppo. La disattivazione richiede una verifica live riuscita.",
-      "disableFailed": "La simulazione resta attiva perché la verifica live non è riuscita."
+      "disableFailed": "La simulazione è disattivata, ma la verifica live del server non è riuscita."
     },
     "unavailable": {
       "title": "Non disponibile offline",

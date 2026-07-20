@@ -50,9 +50,9 @@
     "cache": {
       "title": "Lagrede data",
       "schema": "Skjema {version}",
-      "empty": "Ingen frakoblede data er lagret for denne husstanden ennå.",
+      "empty": "Ingen kompatible frakoblede data er lagret i denne nettleseren ennå.",
       "persistenceWarning": "Noen data kunne ikke lagres",
-      "clearConfirm": "Tømme lagrede data for den aktive husstanden i denne nettleseren?"
+      "clearConfirm": "Tømme de tilgjengelige frakoblede dataene fra denne nettleseren?"
     },
     "warnings": {
       "blocked": "En annen fane blokkerer oppdateringen av frakoblet-databasen.",
@@ -62,7 +62,6 @@
     },
     "inventory": {
       "recipeSummaries": "Oppskriftsoversikter",
-      "recipeDetails": "Oppskriftsdetaljer",
       "calendarItems": "Kalenderoppføringer",
       "groceries": "Dagligvarer",
       "recurringGroceries": "Gjentakende dagligvarer",
@@ -79,7 +78,7 @@
     "simulation": {
       "title": "Simuler utilgjengelig server",
       "description": "Kun utvikling. Deaktivering krever en vellykket direktekontroll.",
-      "disableFailed": "Simuleringen forblir aktiv fordi direktekontrollen mislyktes."
+      "disableFailed": "Simuleringen er slått av, men direktekontrollen av serveren mislyktes."
     },
     "unavailable": {
       "title": "Ikke tilgjengelig frakoblet",

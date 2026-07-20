@@ -50,9 +50,9 @@
     "cache": {
       "title": "Données enregistrées",
       "schema": "Schéma {version}",
-      "empty": "Aucune donnée hors ligne n'est encore enregistrée pour ce foyer.",
+      "empty": "Aucune donnée hors ligne compatible n'est encore enregistrée dans ce navigateur.",
       "persistenceWarning": "Certaines données n'ont pas pu être enregistrées",
-      "clearConfirm": "Effacer les données enregistrées du foyer actif dans ce navigateur ?"
+      "clearConfirm": "Effacer de ce navigateur les données hors ligne actuellement disponibles ?"
     },
     "warnings": {
       "blocked": "Un autre onglet bloque la mise à jour de la base hors ligne.",
@@ -62,7 +62,6 @@
     },
     "inventory": {
       "recipeSummaries": "Résumés de recettes",
-      "recipeDetails": "Détails des recettes",
       "calendarItems": "Éléments du calendrier",
       "groceries": "Courses",
       "recurringGroceries": "Courses récurrentes",
@@ -79,7 +78,7 @@
     "simulation": {
       "title": "Simuler un serveur indisponible",
       "description": "Développement uniquement. La désactivation exige une connexion en direct réussie.",
-      "disableFailed": "La simulation reste active car la vérification en direct a échoué."
+      "disableFailed": "La simulation est désactivée, mais la vérification en direct du serveur a échoué."
     },
     "unavailable": {
       "title": "Indisponible hors ligne",

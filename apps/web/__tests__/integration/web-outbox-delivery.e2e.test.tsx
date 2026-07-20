@@ -1,5 +1,8 @@
 import type { AnyTRPCRouter } from "@trpc/server";
 import { useEffect, useRef } from "react";
+import { WebRecoveryCoordinator } from "@/lib/connectivity/recovery";
+import { WebConnectivityRuntime } from "@/lib/connectivity/runtime";
+import { createWebTransportFetch } from "@/lib/connectivity/transport";
 import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { act, render, waitFor } from "@testing-library/react";
 import { indexedDB } from "fake-indexeddb";
@@ -9,9 +12,6 @@ import type { TrpcLogger } from "@norish/shared-react/providers";
 import { WebOutboxRepository } from "@norish/shared-react/outbox";
 import { createTRPCProviderBundle } from "@norish/shared-react/providers";
 import { isQueuedDeliveryError } from "@norish/shared/lib/queued-delivery";
-
-import { WebConnectivityRuntime } from "../../lib/connectivity/runtime";
-import { createWebTransportFetch } from "../../lib/connectivity/transport";
 
 const DATABASE_NAME = "norish-web-mutation-delivery";
 const SCOPE = { backendOrigin: "https://norish.test", userId: "user-1" };
@@ -120,7 +120,11 @@ function installFakeBackend(state: TestState) {
 function createTestBundle(
   state: TestState,
   queryClient: QueryClient,
-  options: { transportFetch?: typeof fetch; getReplayUserId?: () => Promise<string | null> } = {}
+  options: {
+    transportFetch?: typeof fetch;
+    getReplayUserId?: () => Promise<string | null>;
+    recovery?: WebRecoveryCoordinator;
+  } = {}
 ) {
   const logger: TrpcLogger = {
     info: vi.fn(),
@@ -141,6 +145,7 @@ function createTestBundle(
       getReplayUserId:
         options.getReplayUserId ?? (async () => (state.authenticated ? SCOPE.userId : null)),
       getBackendOrigin: () => SCOPE.backendOrigin,
+      recovery: options.recovery ?? new WebRecoveryCoordinator(),
     },
   });
 }
@@ -292,7 +297,8 @@ describe("web outbox delivery through the provider", () => {
     state.authenticated = false;
 
     const secondQueryClient = new QueryClient();
-    const secondBundle = createTestBundle(state, secondQueryClient);
+    const recovery = new WebRecoveryCoordinator();
+    const secondBundle = createTestBundle(state, secondQueryClient, { recovery });
     const SecondDeliveryHarness = createDeliveryHarness(secondBundle.useTRPCClient);
     const second = render(
       <secondBundle.TRPCProviderWrapper>
@@ -308,7 +314,7 @@ describe("web outbox delivery through the provider", () => {
     state.reachable = true;
 
     await act(async () => {
-      window.dispatchEvent(new Event("online"));
+      recovery.notifySucceeded();
     });
 
     await waitFor(async () => {
@@ -332,7 +338,7 @@ describe("web outbox delivery through the provider", () => {
     state.dropResponseFor = lostResponseOperationId;
 
     await act(async () => {
-      window.dispatchEvent(new Event("online"));
+      recovery.notifySucceeded();
     });
 
     await waitFor(async () => {
@@ -346,7 +352,7 @@ describe("web outbox delivery through the provider", () => {
     await new WebOutboxRepository().update(lostResponseEntry.id, { nextRetryAt: Date.now() });
 
     await act(async () => {
-      window.dispatchEvent(new Event("online"));
+      recovery.notifySucceeded();
     });
 
     await waitFor(async () => {

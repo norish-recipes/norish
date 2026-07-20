@@ -50,9 +50,9 @@
     "cache": {
       "title": "Gemte data",
       "schema": "Skema {version}",
-      "empty": "Der er endnu ingen offline data gemt for denne husstand.",
+      "empty": "Der er endnu ingen kompatible offline data gemt i denne browser.",
       "persistenceWarning": "Nogle data kunne ikke gemmes",
-      "clearConfirm": "Ryd gemte data for den aktive husstand i denne browser?"
+      "clearConfirm": "Ryd de aktuelt tilgængelige offline data fra denne browser?"
     },
     "warnings": {
       "blocked": "En anden fane blokerer opdateringen af offline-databasen.",
@@ -62,7 +62,6 @@
     },
     "inventory": {
       "recipeSummaries": "Opskriftsoversigter",
-      "recipeDetails": "Opskriftsdetaljer",
       "calendarItems": "Kalenderpunkter",
       "groceries": "Indkøb",
       "recurringGroceries": "Gentagne indkøb",
@@ -79,7 +78,7 @@
     "simulation": {
       "title": "Simuler utilgængelig server",
       "description": "Kun udvikling. Deaktivering kræver et vellykket live-tjek.",
-      "disableFailed": "Simuleringen forbliver aktiv, fordi live-tjekket mislykkedes."
+      "disableFailed": "Simuleringen er slået fra, men live-tjekket af serveren mislykkedes."
     },
     "unavailable": {
       "title": "Ikke tilgængelig offline",

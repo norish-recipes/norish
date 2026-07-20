@@ -8,13 +8,18 @@ import { WebOutboxRepository } from "./outbox-repository";
 
 export type ReplayOutcome = "delivered" | "retry" | "auth" | "terminal";
 
+type ReplayPassResult = {
+  changed: boolean;
+  safeToReconcile: boolean;
+};
+
 const RETAINED_RESULT_PATHS = new Set(["user.apiKeys.create"]);
 
 export type WebOutboxReplayCoordinatorOptions = {
   repository: WebOutboxRepository;
   getScope: () => Promise<WebOutboxScope | null>;
   deliver: (entry: WebOutboxEntry, input: unknown) => Promise<unknown>;
-  refetch?: () => Promise<void> | void;
+  reconcile?: () => Promise<void> | void;
   maxBackoffMs?: number;
   logger?: {
     warn: (meta: unknown, message: string) => void;
@@ -78,49 +83,58 @@ export function classifyReplayError(error: unknown): ReplayOutcome {
 
 export class WebOutboxReplayCoordinator {
   private activePass: Promise<void> | null = null;
-  private refetchRequested = false;
+  private invalidationRequested = false;
   private forceRetryRequested = false;
 
   constructor(private readonly options: WebOutboxReplayCoordinatorOptions) {}
 
-  start(options: { refetchAfterPass?: boolean; forceRetry?: boolean } = {}): Promise<void> {
-    if (options.refetchAfterPass) this.refetchRequested = true;
+  start(options: { invalidateAfterPass?: boolean; forceRetry?: boolean } = {}): Promise<void> {
+    if (options.invalidateAfterPass) this.invalidationRequested = true;
     if (options.forceRetry) this.forceRetryRequested = true;
-    if (this.activePass) return this.activePass;
+    if (this.activePass) {
+      if (!options.invalidateAfterPass && !options.forceRetry) return this.activePass;
 
-    this.activePass = this.run()
-      .then(async (deliveredOrSettled) => {
-        if (deliveredOrSettled || this.refetchRequested) {
-          await this.options.refetch?.();
+      const activePass = this.activePass;
+
+      return activePass.then(() => {
+        if (this.invalidationRequested || this.forceRetryRequested) return this.start();
+
+        return this.activePass ?? undefined;
+      });
+    }
+
+    const invalidateAfterPass = this.invalidationRequested;
+    const forceRetry = this.forceRetryRequested;
+
+    this.invalidationRequested = false;
+    this.forceRetryRequested = false;
+    this.activePass = this.run(forceRetry)
+      .then(async ({ changed, safeToReconcile }) => {
+        if (safeToReconcile && (changed || invalidateAfterPass)) {
+          await this.options.reconcile?.();
         }
       })
       .finally(() => {
-        this.refetchRequested = false;
-        this.forceRetryRequested = false;
         this.activePass = null;
       });
 
     return this.activePass;
   }
 
-  private async run(): Promise<boolean> {
+  private async run(forceRetry: boolean): Promise<ReplayPassResult> {
     const scope = await this.options.getScope();
 
-    if (!scope) return false;
+    if (!scope) return { changed: false, safeToReconcile: false };
 
-    let deliveredOrSettled = false;
+    let changed = false;
 
     await this.options.repository.quarantineMismatches(scope);
 
     const entries = await this.options.repository.listPending(scope);
 
     for (const entry of entries) {
-      if (
-        !this.forceRetryRequested &&
-        entry.nextRetryAt !== null &&
-        entry.nextRetryAt > Date.now()
-      ) {
-        break;
+      if (!forceRetry && entry.nextRetryAt !== null && entry.nextRetryAt > Date.now()) {
+        return { changed, safeToReconcile: false };
       }
 
       let input: unknown;
@@ -134,7 +148,7 @@ export class WebOutboxReplayCoordinator {
           lastErrorCode: "LOCAL_DECRYPTION_FAILED",
           lastErrorMessage: "The queued mutation could not be decrypted",
         });
-        deliveredOrSettled = true;
+        changed = true;
         continue;
       }
 
@@ -148,7 +162,7 @@ export class WebOutboxReplayCoordinator {
             lastErrorCode: "STALE_VERSION",
             lastErrorMessage: "The queued mutation was based on an older version",
           });
-          deliveredOrSettled = true;
+          changed = true;
           notifyWebOutboxChanged();
           continue;
         }
@@ -160,7 +174,7 @@ export class WebOutboxReplayCoordinator {
             lastErrorCode: "DOMAIN_REJECTED",
             lastErrorMessage: "The server rejected the queued mutation",
           });
-          deliveredOrSettled = true;
+          changed = true;
           notifyWebOutboxChanged();
           continue;
         }
@@ -169,7 +183,7 @@ export class WebOutboxReplayCoordinator {
           entry,
           RETAINED_RESULT_PATHS.has(entry.path) ? response : undefined
         );
-        deliveredOrSettled = true;
+        changed = true;
         notifyWebOutboxChanged();
       } catch (error) {
         const outcome = classifyReplayError(error);
@@ -182,7 +196,8 @@ export class WebOutboxReplayCoordinator {
             lastErrorMessage: "Authentication is required before queued delivery can continue",
           });
           notifyWebOutboxChanged();
-          break;
+
+          return { changed, safeToReconcile: false };
         }
 
         if (outcome === "retry") {
@@ -196,7 +211,8 @@ export class WebOutboxReplayCoordinator {
             lastErrorMessage: "The backend did not accept the delivery yet",
           });
           this.options.logger?.debug({ entryId: entry.id, attempts }, "Outbox delivery backed off");
-          break;
+
+          return { changed, safeToReconcile: false };
         }
 
         await this.options.repository.update(entry.id, {
@@ -205,11 +221,11 @@ export class WebOutboxReplayCoordinator {
           lastErrorCode: getTerminalErrorCode(error),
           lastErrorMessage: error instanceof Error ? error.message : "Queued mutation failed",
         });
-        deliveredOrSettled = true;
+        changed = true;
         notifyWebOutboxChanged();
       }
     }
 
-    return deliveredOrSettled;
+    return { changed, safeToReconcile: true };
   }
 }

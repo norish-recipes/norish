@@ -55,6 +55,7 @@ function appEnvironment() {
     GOOGLE_CLIENT_SECRET: "",
     NEXT_TELEMETRY_DISABLED: "1",
     NODE_ENV: nodeEnvironment,
+    NORISH_NEXT_DIST_DIR: process.env.NORISH_NEXT_DIST_DIR ?? `.next/e2e-${nodeEnvironment}`,
     OIDC_CLIENT_ID: "",
     OIDC_CLIENT_SECRET: "",
     OIDC_ISSUER: "",

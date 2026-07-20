@@ -7,6 +7,10 @@ import { appMetadata, appViewport } from "./metadata";
 
 export const metadata = appMetadata;
 export const viewport = appViewport;
+// Locale resolution can read request cookies, the live session, and instance
+// configuration. Treat every document as request-bound instead of attempting
+// static generation without those dependencies.
+export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();

@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { OfflineDataUnavailable } from "@/components/offline-data-unavailable";
+import { Timestamp } from "@/components/timestamp";
 import { useOfflineWeb } from "@/context/offline-web-context";
+import { shouldShowOfflineWebLoading } from "@/context/offline-web/shared";
 import { useRecipesContext } from "@/context/recipes-context";
 import { useContainerColumns } from "@/hooks/use-container-columns";
 import { useRecipeDashboardViewMode } from "@/hooks/use-recipe-dashboard-view-mode";
-import { Spinner } from "@heroui/react";
+import { Chip, Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { useTranslations } from "next-intl";
 import { useWindowSize } from "usehooks-ts";
 
 import { useScrollRestoration } from "@norish/shared-react/hooks";
@@ -44,8 +47,18 @@ export default function RecipeGrid() {
     allergies,
     queryKey,
   } = useRecipesContext();
-  const { isQueryUnavailable } = useOfflineWeb();
+  const {
+    getCachedQueryUpdatedAt,
+    hasResolvedQueryData,
+    isQueryLoadingFallback,
+    isQueryUnavailable,
+    phase,
+  } = useOfflineWeb();
+  const tOffline = useTranslations("navbar.offline");
   const unavailableOffline = isQueryUnavailable(queryKey);
+  const hasResolvedData = hasResolvedQueryData(queryKey);
+  const loadingFallback = isQueryLoadingFallback(queryKey);
+  const cachedUpdatedAt = getCachedQueryUpdatedAt(queryKey);
 
   const { saveScrollState, getScrollState } = useScrollRestoration(filterKey);
 
@@ -185,7 +198,11 @@ export default function RecipeGrid() {
   );
 
   // Show skeleton during initial load
-  if (showSkeleton) return <RecipeGridSkeleton variant={viewMode} />;
+  if (
+    shouldShowOfflineWebLoading(phase, showSkeleton || isLoading, hasResolvedData, loadingFallback)
+  ) {
+    return <RecipeGridSkeleton variant={viewMode} />;
+  }
   if (unavailableOffline) return <OfflineDataUnavailable />;
 
   return (
@@ -194,6 +211,18 @@ export default function RecipeGrid() {
       className="relative flex h-full flex-col"
       style={{ containIntrinsicSize: "0 500px" }}
     >
+      {cachedUpdatedAt !== null ? (
+        <div
+          aria-live="polite"
+          className="mb-3 flex flex-wrap items-center justify-between gap-2"
+          role="status"
+        >
+          <Chip color="warning" size="sm" variant="soft">
+            {tOffline("data.cached")}
+          </Chip>
+          <Timestamp className="text-muted text-xs tabular-nums" value={cachedUpdatedAt} />
+        </div>
+      ) : null}
       {showEmptyState ? (
         hasAppliedFilters ? (
           <NoRecipeResults onClear={clearFilters} />

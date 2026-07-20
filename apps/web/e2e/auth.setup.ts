@@ -1,8 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { BrowserContext, Page } from "@playwright/test";
-import { test as setup } from "@playwright/test";
-
 import {
   createAuthenticatedApi,
   PRIMARY_HOUSEHOLD_ID,
@@ -10,8 +8,9 @@ import {
   SECONDARY_RECIPE_ID,
   SECONDARY_RECIPE_NAME,
   seedPrimaryHousehold,
-} from "./support/api";
-import { PRIMARY_USER, SECONDARY_USER, signUpThroughUi } from "./support/auth";
+} from "@/e2e/support/api";
+import { PRIMARY_USER, SECONDARY_USER, signUpThroughUi } from "@/e2e/support/auth";
+import { test as setup } from "@playwright/test";
 
 const authDirectory = path.resolve("e2e/.auth");
 const primaryStorageState = path.join(authDirectory, "primary.json");

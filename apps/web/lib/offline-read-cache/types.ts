@@ -1,16 +1,11 @@
 import type { QueryKey } from "@tanstack/react-query";
+import { hashKey } from "@tanstack/react-query";
 
 export const WEB_READ_CACHE_DATABASE_NAME = "norish-web-read-cache";
-export const WEB_READ_CACHE_DATABASE_VERSION = 2;
-export const WEB_READ_CACHE_SCHEMA_VERSION = 1;
-export const MAX_RECIPE_DETAIL_RECORDS = 50;
+export const WEB_READ_CACHE_DATABASE_VERSION = 3;
+export const WEB_READ_CACHE_SCHEMA_VERSION = 2;
 
-export type WebReadCacheRecordKind =
-  | "recipe-dashboard"
-  | "recipe-detail"
-  | "calendar-range"
-  | "groceries"
-  | "stores";
+export type WebReadCacheRecordKind = "recipe-dashboard" | "calendar-range" | "groceries" | "stores";
 
 export type WebReadCachePersistenceWarningCode =
   | "blocked"
@@ -36,7 +31,6 @@ export type WebReadCacheRenderUser = {
 export type WebReadCacheRenderHousehold = {
   id: string;
   name: string;
-  [key: string]: unknown;
 };
 
 export type WebReadCacheScopeIdentity = {
@@ -64,7 +58,6 @@ export type WebReadCacheScope = {
 
 export type WebReadCacheRecordCounts = {
   recipeSummaries: number;
-  recipeDetails: number;
   calendarItems: number;
   groceries: number;
   recurringGroceries: number;
@@ -81,7 +74,6 @@ export type WebReadCacheRecord<TData = unknown> = {
   data: TData;
   dataUpdatedAt: number;
   persistedAt: number;
-  lastAccessedAt: number;
   counts: WebReadCacheRecordCounts;
 };
 
@@ -107,13 +99,35 @@ export type WebReadCacheInventory = {
   lastLiveSuccessAt: number | null;
   persistenceWarning: WebReadCachePersistenceWarning | null;
   recipeSummaries: WebReadCacheInventoryItem;
-  recipeDetails: WebReadCacheInventoryItem;
   calendarItems: WebReadCacheInventoryItem;
   groceries: WebReadCacheInventoryItem;
   recurringGroceries: WebReadCacheInventoryItem;
   stores: WebReadCacheInventoryItem;
   totalRecords: number;
 };
+
+export function createEmptyWebReadCacheInventory(
+  scopeKey: string | null = null
+): WebReadCacheInventory {
+  const item = (): WebReadCacheInventoryItem => ({
+    count: 0,
+    dataUpdatedAt: null,
+    persistedAt: null,
+  });
+
+  return {
+    scopeKey,
+    schemaVersion: WEB_READ_CACHE_SCHEMA_VERSION,
+    lastLiveSuccessAt: null,
+    persistenceWarning: null,
+    recipeSummaries: item(),
+    calendarItems: item(),
+    groceries: item(),
+    recurringGroceries: item(),
+    stores: item(),
+    totalRecords: 0,
+  };
+}
 
 export type WebReadCacheChangeType = "commit" | "clear" | "scope" | "warning";
 
@@ -126,7 +140,6 @@ export type WebReadCacheChange = {
 
 export const EMPTY_WEB_READ_CACHE_COUNTS: WebReadCacheRecordCounts = {
   recipeSummaries: 0,
-  recipeDetails: 0,
   calendarItems: 0,
   groceries: 0,
   recurringGroceries: 0,
@@ -146,7 +159,7 @@ export function createWebReadCacheScopeKey(identity: WebReadCacheScopeIdentity):
 }
 
 export function serializeWebReadCacheQueryKey(queryKey: QueryKey): string {
-  return JSON.stringify(queryKey);
+  return hashKey(queryKey);
 }
 
 export function createWebReadCacheRecordId(scopeKey: string, queryKey: QueryKey): string {

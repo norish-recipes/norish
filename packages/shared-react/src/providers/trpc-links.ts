@@ -26,10 +26,12 @@ type ManagedWebSocketClient = {
   close: () => Promise<void>;
 };
 
+type WebSocketUrlResolver = () => string | Promise<string>;
+
 export type CreateTRPCProviderBundleOptions = {
   logger: TrpcLogger;
   getBaseUrl?: () => string;
-  getWsUrl?: () => string;
+  getWsUrl?: WebSocketUrlResolver;
   getHeaders?: () => HTTPHeaders;
   transportFetch?: typeof fetch;
   getWebSocketImpl?: () => typeof WebSocket | undefined;
@@ -325,7 +327,7 @@ export function createTRPCClientLinks<TRouter extends AnyTRPCRouter>({
 }
 
 function createWsClient(
-  getWsUrl: () => string,
+  getWsUrl: WebSocketUrlResolver,
   getWebSocketImpl: (() => typeof WebSocket | undefined) | undefined,
   wsLazyEnabled: boolean,
   wsLazyCloseMs: number,

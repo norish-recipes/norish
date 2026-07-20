@@ -26,6 +26,7 @@ export type CalendarContextValue = {
 };
 
 export type CalendarContextProviderProps = {
+  allowRangeExpansion?: boolean;
   children: ReactNode;
   /** Initial range mode - desktop loads current week, mobile loads +/-2 weeks */
   mode?: "desktop" | "mobile";

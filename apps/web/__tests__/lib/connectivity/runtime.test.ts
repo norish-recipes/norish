@@ -1,10 +1,10 @@
+import { WebRecoveryCoordinator } from "@/lib/connectivity/recovery";
 import {
   readBackendUnavailableSimulation,
   WEB_BACKEND_SIMULATION_STORAGE_KEY,
-  WEB_CONNECTIVITY_RECOVERED_EVENT,
   WebConnectivityRuntime,
 } from "@/lib/connectivity/runtime";
-import { createWebTransportFetch } from "@/lib/connectivity/transport";
+import { checkWebBackendReachability, createWebTransportFetch } from "@/lib/connectivity/transport";
 import { QueryClient } from "@tanstack/react-query";
 
 describe("WebConnectivityRuntime", () => {
@@ -32,11 +32,21 @@ describe("WebConnectivityRuntime", () => {
     });
 
     runtime.reportBrowserOffline();
-    expect(runtime.getSnapshot()).toMatchObject({ state: "offline", lastOutcomeAt: 102 });
+    expect(runtime.getSnapshot()).toMatchObject({
+      state: "offline",
+      lastOutcomeAt: 102,
+      transportFailureConfirmed: false,
+    });
+    runtime.reportHttpFailure();
+    expect(runtime.getSnapshot()).toMatchObject({
+      state: "backend-unreachable",
+      transportFailureConfirmed: true,
+    });
   });
 
   it("runs only one recovery check and emits recovery after a real success", async () => {
-    const runtime = new WebConnectivityRuntime("development", window.localStorage);
+    const recovery = new WebRecoveryCoordinator();
+    const runtime = new WebConnectivityRuntime("development", window.localStorage, recovery);
     let resolveCheck: ((value: boolean) => void) | null = null;
     const check = vi.fn(
       () =>
@@ -47,7 +57,7 @@ describe("WebConnectivityRuntime", () => {
     const recovered = vi.fn();
     const stop = runtime.start(check);
 
-    window.addEventListener(WEB_CONNECTIVITY_RECOVERED_EVENT, recovered);
+    const unsubscribe = recovery.subscribeToSucceeded(recovered);
     const first = runtime.recover();
     const second = runtime.recover();
 
@@ -60,7 +70,21 @@ describe("WebConnectivityRuntime", () => {
     expect(recovered).toHaveBeenCalledOnce();
 
     stop();
-    window.removeEventListener(WEB_CONNECTIVITY_RECOVERED_EVENT, recovered);
+    unsubscribe();
+  });
+
+  it("classifies an initially offline browser without confirming a transport failure", () => {
+    const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    const runtime = new WebConnectivityRuntime("development", window.localStorage);
+    const stop = runtime.start(vi.fn().mockResolvedValue(false));
+
+    expect(runtime.getSnapshot()).toMatchObject({
+      state: "offline",
+      transportFailureConfirmed: false,
+    });
+
+    stop();
+    onLine.mockRestore();
   });
 
   it("persists development simulation but ignores it in production", async () => {
@@ -86,7 +110,7 @@ describe("WebConnectivityRuntime", () => {
     expect(production.getSnapshot().simulatedBackendUnavailable).toBe(false);
   });
 
-  it("keeps simulation enabled when its disabling recovery check fails", async () => {
+  it("disables simulation even when the subsequent live recovery check fails", async () => {
     const runtime = new WebConnectivityRuntime("development", window.localStorage);
 
     runtime.start(vi.fn().mockResolvedValue(false));
@@ -95,9 +119,26 @@ describe("WebConnectivityRuntime", () => {
     await expect(runtime.setSimulatedBackendUnavailable(false)).resolves.toBe(false);
     expect(runtime.getSnapshot()).toMatchObject({
       state: "backend-unreachable",
-      simulatedBackendUnavailable: true,
+      simulatedBackendUnavailable: false,
     });
-    expect(window.localStorage.getItem(WEB_BACKEND_SIMULATION_STORAGE_KEY)).toBe("true");
+    expect(window.localStorage.getItem(WEB_BACKEND_SIMULATION_STORAGE_KEY)).toBeNull();
+  });
+
+  it("uses an uncached live auth request for explicit backend recovery", async () => {
+    const transport = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 200 }))
+      .mockResolvedValueOnce(new Response(null, { status: 503 }))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"));
+
+    await expect(checkWebBackendReachability(transport)).resolves.toBe(true);
+    expect(transport).toHaveBeenNthCalledWith(1, "/api/auth/get-session?disableCookieCache=true", {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { accept: "application/json" },
+    });
+    await expect(checkWebBackendReachability(transport)).resolves.toBe(false);
+    await expect(checkWebBackendReachability(transport)).resolves.toBe(false);
   });
 
   it("observes success, gateway failure, transport failure, and simulated failure at fetch", async () => {
@@ -118,6 +159,20 @@ describe("WebConnectivityRuntime", () => {
     await runtime.setSimulatedBackendUnavailable(true);
     await expect(observedFetch("/api/trpc")).rejects.toThrow("simulated backend unavailable");
     expect(transport).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not classify an intentionally aborted request as a backend outage", async () => {
+    const runtime = new WebConnectivityRuntime("development", window.localStorage);
+    const aborted = new DOMException("The operation was aborted", "AbortError");
+    const observedFetch = createWebTransportFetch(
+      runtime,
+      vi.fn<typeof fetch>().mockRejectedValue(aborted)
+    );
+
+    runtime.reportHttpSuccess();
+
+    await expect(observedFetch("/api/trpc")).rejects.toBe(aborted);
+    expect(runtime.getSnapshot().state).toBe("online");
   });
 
   it("keeps query reads paused while degraded without pausing QueryClient mutations", async () => {

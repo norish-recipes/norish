@@ -37,11 +37,16 @@ function createTestQueryClient() {
   });
 }
 
-function createTestWrapper(queryClient: QueryClient) {
+function createTestWrapper(
+  queryClient: QueryClient,
+  options: { allowRangeExpansion?: boolean } = {}
+) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <CalendarContextProvider>{children}</CalendarContextProvider>
+        <CalendarContextProvider allowRangeExpansion={options.allowRangeExpansion}>
+          {children}
+        </CalendarContextProvider>
       </QueryClientProvider>
     );
   };
@@ -97,6 +102,21 @@ describe("CalendarContext", () => {
   });
 
   describe("expandRange", () => {
+    it("keeps the saved range stable when expansion is disabled", () => {
+      const { result } = renderHook(() => useCalendarContext(), {
+        wrapper: createTestWrapper(queryClient, { allowRangeExpansion: false }),
+      });
+      const initialRange = result.current.dateRange;
+
+      act(() => {
+        result.current.expandRange("past");
+        result.current.expandRange("future");
+      });
+
+      expect(result.current.dateRange).toEqual(initialRange);
+      expect(result.current.isLoadingMore).toBe(false);
+    });
+
     it("expands date range into the past", () => {
       const { result } = renderHook(() => useCalendarContext(), {
         wrapper: createTestWrapper(queryClient),

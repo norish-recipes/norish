@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import CreateRecipeButton from "@/components/dashboard/create-recipe-button";
 import FloatingRecipeChip from "@/components/dashboard/floating-recipe-chip";
 import RecipeGrid from "@/components/dashboard/recipe-grid";
@@ -7,15 +6,8 @@ import SearchInput from "@/components/dashboard/search-input";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@norish/auth/auth";
-
 export default async function Home() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
   const t = await getTranslations("recipes.dashboard");
-
-  if (!session?.user) return null; // This should never happen due to proxy
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col gap-8">
@@ -28,8 +20,8 @@ export default async function Home() {
         <div className="flex shrink-0 flex-col gap-4">
           <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
             <h1
-              id="recipe-library-heading"
               className="text-foreground text-2xl leading-8 font-semibold"
+              id="recipe-library-heading"
             >
               {t("title")}
             </h1>

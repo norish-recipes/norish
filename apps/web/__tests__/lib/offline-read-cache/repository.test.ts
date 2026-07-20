@@ -108,6 +108,56 @@ describe("WebReadCacheRepository", () => {
     upgraded.close();
   });
 
+  it("migrates order-sensitive record identities to TanStack canonical query hashes", async () => {
+    const scopeKey = "legacy-scope";
+    const storedQueryKey = [
+      ["groceries", "list"],
+      { type: "query", input: { category: "Dinner", owner: "user-1" } },
+    ] satisfies QueryKey;
+    const lookupQueryKey = [
+      ["groceries", "list"],
+      { input: { owner: "user-1", category: "Dinner" }, type: "query" },
+    ] satisfies QueryKey;
+    const legacy = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = factory.open(WEB_READ_CACHE_DATABASE_NAME, 2);
+
+      request.onupgradeneeded = () => {
+        request.result.createObjectStore(WEB_READ_CACHE_STORES.scopes, { keyPath: "key" });
+        request.result.createObjectStore(WEB_READ_CACHE_STORES.records, { keyPath: "id" });
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const transaction = legacy.transaction(
+      [WEB_READ_CACHE_STORES.scopes, WEB_READ_CACHE_STORES.records],
+      "readwrite"
+    );
+
+    transaction.objectStore(WEB_READ_CACHE_STORES.scopes).put({ key: scopeKey });
+    transaction.objectStore(WEB_READ_CACHE_STORES.records).put({
+      id: `${scopeKey}:${JSON.stringify(storedQueryKey)}`,
+      scopeKey,
+      kind: "groceries",
+      queryIdentity: JSON.stringify(storedQueryKey),
+      queryKey: storedQueryKey,
+      data: { groceries: [{ id: "grocery-1" }] },
+      dataUpdatedAt: 1,
+      persistedAt: 1,
+      counts: {},
+    });
+    await waitForTransaction(transaction);
+    legacy.close();
+
+    const upgraded = await openWebReadCacheDatabase({ factory });
+
+    upgraded.close();
+    expect(await repository.getRecord(scopeKey, lookupQueryKey)).toMatchObject({
+      data: { groceries: [{ id: "grocery-1" }] },
+      queryKey: storedQueryKey,
+    });
+    expect(await repository.listRecords(scopeKey)).toHaveLength(1);
+  });
+
   it("rejects a blocked upgrade and reports the blocked warning", async () => {
     const legacy = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = factory.open(WEB_READ_CACHE_DATABASE_NAME, 1);
@@ -164,16 +214,13 @@ describe("WebReadCacheRepository", () => {
 
   it("preserves the previous complete record when a replacement transaction aborts", async () => {
     const scope = await repository.confirmScope(scopeInput("user", "house"));
-    const queryKey = [
-      ["recipes", "get"],
-      { input: { id: "recipe" }, type: "query" },
-    ] satisfies QueryKey;
+    const queryKey = [["groceries", "list"], { type: "query" }] satisfies QueryKey;
 
     await repository.putRecord({
       scopeKey: scope.key,
-      kind: "recipe-detail",
+      kind: "groceries",
       queryKey,
-      data: { id: "recipe", title: "last good" },
+      data: { groceries: [{ id: "last-good" }] },
       dataUpdatedAt: 1,
     });
 
@@ -182,14 +229,13 @@ describe("WebReadCacheRepository", () => {
     const store = transaction.objectStore(WEB_READ_CACHE_STORES.records);
     const current = (await requestResult(store.getAll()))[0] as Record<string, unknown>;
 
-    store.put({ ...current, data: { id: "recipe", title: "partial" } });
+    store.put({ ...current, data: { groceries: [{ id: "partial" }] } });
     transaction.abort();
     await expect(waitForTransaction(transaction)).rejects.toThrow();
     database.close();
 
     expect((await repository.getRecord(scope.key, queryKey))?.data).toEqual({
-      id: "recipe",
-      title: "last good",
+      groceries: [{ id: "last-good" }],
     });
   });
 
@@ -220,57 +266,6 @@ describe("WebReadCacheRepository", () => {
     expect(
       toWebReadCachePersistenceWarning(new DOMException("full", "QuotaExceededError"), "stores")
     ).toMatchObject({ code: "quota-exceeded", recordKind: "stores" });
-  });
-
-  it("keeps the 50 most recently accessed recipe details without evicting canonical records", async () => {
-    const scope = await repository.confirmScope(scopeInput("user", "house"));
-    const dashboardKey = [
-      ["recipes", "list"],
-      { input: { limit: 100 }, type: "infinite" },
-    ] satisfies QueryKey;
-
-    await repository.putRecord({
-      scopeKey: scope.key,
-      kind: "recipe-dashboard",
-      queryKey: dashboardKey,
-      data: { pages: [{ recipes: [{ id: "summary" }] }] },
-      dataUpdatedAt: 1,
-      counts: { recipeSummaries: 1 },
-      now: 1,
-    });
-
-    const detailKey = (index: number) =>
-      [["recipes", "get"], { input: { id: `recipe-${index}` }, type: "query" }] satisfies QueryKey;
-
-    for (let index = 0; index < 50; index += 1) {
-      await repository.putRecord({
-        scopeKey: scope.key,
-        kind: "recipe-detail",
-        queryKey: detailKey(index),
-        data: { id: `recipe-${index}` },
-        dataUpdatedAt: index + 2,
-        counts: { recipeDetails: 1 },
-        now: index + 2,
-      });
-    }
-
-    await repository.getRecord(scope.key, detailKey(0), { touch: true, now: 1000 });
-    await repository.putRecord({
-      scopeKey: scope.key,
-      kind: "recipe-detail",
-      queryKey: detailKey(50),
-      data: { id: "recipe-50" },
-      dataUpdatedAt: 1001,
-      counts: { recipeDetails: 1 },
-      now: 1001,
-    });
-
-    const records = await repository.listRecords(scope.key);
-
-    expect(records.filter((record) => record.kind === "recipe-detail")).toHaveLength(50);
-    expect(await repository.getRecord(scope.key, detailKey(0))).not.toBeNull();
-    expect(await repository.getRecord(scope.key, detailKey(1))).toBeNull();
-    expect(await repository.getRecord(scope.key, dashboardKey)).not.toBeNull();
   });
 
   it("aggregates truthful inventory counts and timestamps", async () => {
@@ -361,5 +356,23 @@ describe("WebReadCacheRepository", () => {
     await repository.clearConfirmedRenderScope(backendOrigin, 20);
 
     expect((await repository.selectLastConfirmedScope(backendOrigin))?.key).toBe(replacement.key);
+  });
+
+  it("deactivates only the exact stale confirmation", async () => {
+    const stale = await repository.confirmScope({
+      ...scopeInput("user", "house"),
+      confirmedAt: 10,
+    });
+    const replacement = await repository.confirmScope({
+      ...scopeInput("user", "house"),
+      confirmedAt: 20,
+    });
+
+    await repository.deactivateScope(stale.key, stale.confirmedAt);
+
+    expect(await repository.selectLastConfirmedScope(backendOrigin)).toMatchObject({
+      key: replacement.key,
+      confirmedAt: replacement.confirmedAt,
+    });
   });
 });

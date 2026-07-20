@@ -49,6 +49,7 @@ const workspacePackages = Array.from(
 const withNextIntl = createNextIntlPlugin(getNextIntlRequestConfigPath());
 
 export default withNextIntl({
+  ...(process.env.NORISH_NEXT_DIST_DIR ? { distDir: process.env.NORISH_NEXT_DIST_DIR } : {}),
   output: "standalone",
   transpilePackages: workspacePackages,
   turbopack: {

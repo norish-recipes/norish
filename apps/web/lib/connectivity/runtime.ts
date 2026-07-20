@@ -1,6 +1,8 @@
 "use client";
 
+import type { WebRecoveryCoordinator } from "@/lib/connectivity/recovery";
 import { useSyncExternalStore } from "react";
+import { webRecoveryCoordinator } from "@/lib/connectivity/recovery";
 
 export type WebConnectivityState = "checking" | "online" | "offline" | "backend-unreachable";
 
@@ -9,11 +11,11 @@ export type WebConnectivitySnapshot = {
   lastOutcomeAt: number;
   lastSuccessAt: number | null;
   lastFailureAt: number | null;
+  transportFailureConfirmed: boolean;
   simulatedBackendUnavailable: boolean;
   recoveryInProgress: boolean;
 };
 
-export const WEB_CONNECTIVITY_RECOVERED_EVENT = "norish:web-connectivity-recovered";
 export const WEB_BACKEND_SIMULATION_STORAGE_KEY = "norish-web-simulate-backend-unavailable";
 
 type RecoveryCheck = () => Promise<boolean>;
@@ -24,6 +26,7 @@ const SERVER_CONNECTIVITY_SNAPSHOT: WebConnectivitySnapshot = {
   lastOutcomeAt: 0,
   lastSuccessAt: null,
   lastFailureAt: null,
+  transportFailureConfirmed: false,
   simulatedBackendUnavailable: false,
   recoveryInProgress: false,
 };
@@ -54,13 +57,15 @@ export class WebConnectivityRuntime {
 
   constructor(
     private readonly environment: RuntimeEnvironment,
-    private readonly storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null = null
+    private readonly storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null = null,
+    readonly recovery: WebRecoveryCoordinator = webRecoveryCoordinator
   ) {
     this.snapshot = {
       state: "checking",
       lastOutcomeAt: 0,
       lastSuccessAt: null,
       lastFailureAt: null,
+      transportFailureConfirmed: false,
       simulatedBackendUnavailable: readBackendUnavailableSimulation(storage, environment),
       recoveryInProgress: false,
     };
@@ -71,6 +76,7 @@ export class WebConnectivityRuntime {
         state: "backend-unreachable",
         lastOutcomeAt: this.nextOutcomeAt(),
         lastFailureAt: this.nextOutcomeAt(),
+        transportFailureConfirmed: true,
       };
     }
   }
@@ -100,7 +106,7 @@ export class WebConnectivityRuntime {
     window.addEventListener("offline", onOffline);
     window.addEventListener("online", onOnline);
 
-    if (!navigator.onLine) this.reportBrowserOffline();
+    if (navigator.onLine === false) this.reportBrowserOffline();
 
     return () => {
       window.removeEventListener("offline", onOffline);
@@ -129,11 +135,10 @@ export class WebConnectivityRuntime {
       state: "online",
       lastOutcomeAt: outcomeAt,
       lastSuccessAt: outcomeAt,
+      transportFailureConfirmed: false,
     });
 
-    if (recovered && typeof window !== "undefined") {
-      window.dispatchEvent(new Event(WEB_CONNECTIVITY_RECOVERED_EVENT));
-    }
+    if (recovered) this.recovery.notifySucceeded();
   }
 
   reportHttpFailure(): void {
@@ -142,7 +147,7 @@ export class WebConnectivityRuntime {
         ? "offline"
         : "backend-unreachable";
 
-    this.commitFailure(state);
+    this.commitFailure(state, true);
   }
 
   async recover(): Promise<boolean> {
@@ -156,6 +161,7 @@ export class WebConnectivityRuntime {
 
     this.commit({ ...this.snapshot, recoveryInProgress: true });
     const wasDegraded = this.isDegraded();
+
     this.recoveryPromise = this.recoveryCheck()
       .then((succeeded) => {
         if (!succeeded) {
@@ -165,9 +171,7 @@ export class WebConnectivityRuntime {
         }
 
         this.reportHttpSuccess();
-        if (!wasDegraded && typeof window !== "undefined") {
-          window.dispatchEvent(new Event(WEB_CONNECTIVITY_RECOVERED_EVENT));
-        }
+        if (!wasDegraded) this.recovery.notifySucceeded();
 
         return true;
       })
@@ -200,29 +204,19 @@ export class WebConnectivityRuntime {
     }
 
     this.commit({ ...this.snapshot, simulatedBackendUnavailable: false });
-    const recovered = await this.recover();
-
-    if (!recovered) {
-      try {
-        this.storage?.setItem(WEB_BACKEND_SIMULATION_STORAGE_KEY, "true");
-      } catch {
-        // Keep the override enabled in this tab when persistence is unavailable.
-      }
-      this.commit({ ...this.snapshot, simulatedBackendUnavailable: true });
-
-      return false;
-    }
-
     try {
       this.storage?.removeItem(WEB_BACKEND_SIMULATION_STORAGE_KEY);
     } catch {
-      // The successful live check still safely disables simulation in this tab.
+      // The override is still disabled for the current tab.
     }
 
-    return true;
+    return this.recover();
   }
 
-  private commitFailure(state: "offline" | "backend-unreachable"): void {
+  private commitFailure(
+    state: "offline" | "backend-unreachable",
+    transportFailureConfirmed = this.snapshot.transportFailureConfirmed
+  ): void {
     const outcomeAt = this.nextOutcomeAt();
 
     this.commit({
@@ -230,6 +224,7 @@ export class WebConnectivityRuntime {
       state,
       lastOutcomeAt: outcomeAt,
       lastFailureAt: outcomeAt,
+      transportFailureConfirmed,
     });
   }
 
@@ -257,7 +252,17 @@ function getBrowserStorage(): Storage | null {
 // eslint-disable-next-line no-restricted-properties
 const environment = process.env.NODE_ENV;
 
-export const webConnectivityRuntime = new WebConnectivityRuntime(environment, getBrowserStorage());
+const browserRuntimeGlobal = globalThis as typeof globalThis & {
+  __norishWebConnectivityRuntime?: WebConnectivityRuntime;
+};
+
+export const webConnectivityRuntime =
+  typeof window === "undefined"
+    ? new WebConnectivityRuntime(environment, null)
+    : (browserRuntimeGlobal.__norishWebConnectivityRuntime ??= new WebConnectivityRuntime(
+        environment,
+        getBrowserStorage()
+      ));
 
 export function useWebConnectivity(): WebConnectivitySnapshot {
   return useWebConnectivityRuntime(webConnectivityRuntime);

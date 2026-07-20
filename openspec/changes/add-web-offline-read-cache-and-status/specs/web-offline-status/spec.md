@@ -25,6 +25,7 @@ The web client SHALL expose `checking`, `online`, `offline`, and `backend-unreac
 - **WHEN** an explicit or automatic lightweight backend recovery check succeeds
 - **THEN** connectivity SHALL become `online`
 - **AND** read revalidation and queued-write replay MAY resume
+- **AND** WebSocket reconnection MAY already have started independently while the check was in progress
 
 ### Requirement: A compact connectivity control lives beside the version footer
 
@@ -82,6 +83,7 @@ The modal SHALL provide a `Retry connection` action and a confirmed `Clear cache
 
 - **WHEN** the user activates retry and the backend remains unreachable
 - **THEN** the current offline or backend-unreachable state SHALL remain
+- **AND** any WebSocket transport started for that recovery attempt SHALL be suspended again
 - **AND** the modal SHALL report the failed check without blocking other interaction
 
 #### Scenario: Clear is requested
@@ -125,6 +127,7 @@ Development builds SHALL expose a persistent `Simulate backend unavailable` togg
 - **WHEN** a developer enables the toggle
 - **THEN** HTTP/tRPC operations SHALL fail through the normal backend-unreachable path
 - **AND** connectivity SHALL become backend-unreachable
+- **AND** active WebSocket subscriptions SHALL disconnect and SHALL NOT receive updates while the override remains active
 - **AND** cached fallback and outbox capture SHALL behave as they do during a real transport failure
 
 #### Scenario: A mutation occurs during simulation
@@ -138,6 +141,8 @@ Development builds SHALL expose a persistent `Simulate backend unavailable` togg
 - **WHEN** a developer disables the toggle
 - **THEN** the override SHALL be removed
 - **AND** the client SHALL require a successful live recovery check before reporting online or resuming replay
+- **AND** WebSocket subscriptions MAY reconnect while that HTTP recovery check is in progress
+- **AND** they SHALL be suspended again if the check fails
 
 #### Scenario: Production code reads simulation state
 
@@ -150,7 +155,7 @@ Connectivity, cache inventory, and outbox diagnostics SHALL update after relevan
 
 #### Scenario: A cache commit completes
 
-- **WHEN** an allowlisted live read is committed to IndexedDB
+- **WHEN** a classified live read is committed to IndexedDB
 - **THEN** an open modal SHALL update its counts and timestamps
 
 #### Scenario: Another tab changes offline state

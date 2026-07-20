@@ -1,11 +1,10 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { inferRouterProxyClient } from "@trpc/client";
+import { createAuthenticatedApi } from "@/e2e/support/api";
 import { test as base } from "@playwright/test";
 
 import type { AppRouter } from "@norish/trpc";
-
-import { createAuthenticatedApi } from "./support/api";
 
 type Fixtures = {
   api: inferRouterProxyClient<AppRouter>;

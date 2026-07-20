@@ -7,6 +7,7 @@ import EditGroceryPanel from "@/components/Panel/consumers/edit-grocery-panel";
 import UiSwitch from "@/components/shared/ui-switch";
 import GrocerySkeleton from "@/components/skeleton/grocery-skeleton";
 import { useOfflineWeb } from "@/context/offline-web-context";
+import { shouldShowOfflineWebLoading } from "@/context/offline-web/shared";
 import {
   BookOpenIcon,
   BuildingStorefrontIcon,
@@ -50,8 +51,12 @@ export function GroceriesPage() {
     setStoreManagerOpen,
     queryKey: storesQueryKey,
   } = useStoresContext();
-  const { isQueryUnavailable } = useOfflineWeb();
+  const { hasResolvedQueryData, isQueryLoadingFallback, isQueryUnavailable, phase } =
+    useOfflineWeb();
   const unavailableOffline = isQueryUnavailable(queryKey) || isQueryUnavailable(storesQueryKey);
+  const hasResolvedData = hasResolvedQueryData(queryKey) && hasResolvedQueryData(storesQueryKey);
+  const loadingFallback =
+    isQueryLoadingFallback(queryKey) || isQueryLoadingFallback(storesQueryKey);
   const {
     addGroceryPanelOpen,
     setAddGroceryPanelOpen,
@@ -117,7 +122,7 @@ export function GroceriesPage() {
     }
     setEditingGrocery(null);
   };
-  if (isLoading) {
+  if (shouldShowOfflineWebLoading(phase, isLoading, hasResolvedData, loadingFallback)) {
     return <GrocerySkeleton />;
   }
   if (unavailableOffline) {

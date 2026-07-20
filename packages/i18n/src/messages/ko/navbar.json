@@ -50,9 +50,9 @@
     "cache": {
       "title": "저장된 데이터",
       "schema": "스키마 {version}",
-      "empty": "이 가구에 저장된 오프라인 데이터가 아직 없습니다.",
+      "empty": "이 브라우저에 저장된 호환 가능한 오프라인 데이터가 아직 없습니다.",
       "persistenceWarning": "일부 데이터를 저장할 수 없음",
-      "clearConfirm": "이 브라우저에서 현재 가구의 저장된 데이터를 지울까요?"
+      "clearConfirm": "이 브라우저에서 현재 사용 가능한 오프라인 데이터를 지울까요?"
     },
     "warnings": {
       "blocked": "다른 탭이 오프라인 데이터베이스 업데이트를 차단하고 있습니다.",
@@ -62,7 +62,6 @@
     },
     "inventory": {
       "recipeSummaries": "레시피 요약",
-      "recipeDetails": "레시피 상세",
       "calendarItems": "캘린더 항목",
       "groceries": "장보기",
       "recurringGroceries": "반복 장보기",
@@ -79,7 +78,7 @@
     "simulation": {
       "title": "서버 사용 불가 시뮬레이션",
       "description": "개발 전용입니다. 끄려면 실시간 연결 확인에 성공해야 합니다.",
-      "disableFailed": "실시간 확인이 실패하여 시뮬레이션이 계속 활성화됩니다."
+      "disableFailed": "시뮬레이션은 꺼졌지만 라이브 서버 확인에 실패했습니다."
     },
     "unavailable": {
       "title": "오프라인에서 사용할 수 없음",

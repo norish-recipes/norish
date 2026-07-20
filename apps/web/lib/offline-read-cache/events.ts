@@ -1,4 +1,4 @@
-import type { WebReadCacheChange } from "./types";
+import type { WebReadCacheChange } from "@/lib/offline-read-cache/types";
 
 const CHANGE_EVENT = "norish:web-read-cache-changed";
 const CHANGE_CHANNEL = "norish-web-read-cache";

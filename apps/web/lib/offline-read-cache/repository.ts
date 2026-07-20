@@ -1,4 +1,4 @@
-import type { OpenWebReadCacheDatabaseOptions } from "./database";
+import type { OpenWebReadCacheDatabaseOptions } from "@/lib/offline-read-cache/database";
 import type {
   PutWebReadCacheRecordInput,
   WebReadCacheInventory,
@@ -8,7 +8,7 @@ import type {
   WebReadCacheRecordCounts,
   WebReadCacheScope,
   WebReadCacheScopeIdentity,
-} from "./types";
+} from "@/lib/offline-read-cache/types";
 import {
   openWebReadCacheDatabase,
   requestResult,
@@ -16,17 +16,17 @@ import {
   WEB_READ_CACHE_INDEXES,
   WEB_READ_CACHE_STORES,
   WebReadCacheOpenError,
-} from "./database";
-import { notifyWebReadCacheChanged } from "./events";
+} from "@/lib/offline-read-cache/database";
+import { notifyWebReadCacheChanged } from "@/lib/offline-read-cache/events";
 import {
+  createEmptyWebReadCacheInventory,
   createWebReadCacheRecordId,
   createWebReadCacheScopeKey,
   EMPTY_WEB_READ_CACHE_COUNTS,
   isCompatibleWebReadCacheScope,
-  MAX_RECIPE_DETAIL_RECORDS,
   serializeWebReadCacheQueryKey,
   WEB_READ_CACHE_SCHEMA_VERSION,
-} from "./types";
+} from "@/lib/offline-read-cache/types";
 
 export function toWebReadCachePersistenceWarning(
   error: unknown,
@@ -53,10 +53,6 @@ export function toWebReadCachePersistenceWarning(
     recordKind,
     occurredAt,
   };
-}
-
-function inventoryItem(): WebReadCacheInventoryItem {
-  return { count: 0, dataUpdatedAt: null, persistedAt: null };
 }
 
 function updateInventoryItem(
@@ -205,6 +201,31 @@ export class WebReadCacheRepository {
     notifyWebReadCacheChanged({ type: "scope", scopeKey: null, occurredAt: now });
   }
 
+  async deactivateScope(scopeKey: string, confirmedAt: number): Promise<void> {
+    const database = await openWebReadCacheDatabase(this.databaseOptions);
+    const now = Date.now();
+    let changed = false;
+
+    try {
+      const transaction = database.transaction(WEB_READ_CACHE_STORES.scopes, "readwrite");
+      const store = transaction.objectStore(WEB_READ_CACHE_STORES.scopes);
+      const scope = (await requestResult(store.get(scopeKey))) as WebReadCacheScope | undefined;
+
+      if (scope?.active && scope.confirmedAt === confirmedAt) {
+        store.put({ ...scope, active: false, updatedAt: now });
+        changed = true;
+      }
+
+      await waitForTransaction(transaction);
+    } finally {
+      database.close();
+    }
+
+    if (changed) {
+      notifyWebReadCacheChanged({ type: "scope", scopeKey, occurredAt: now });
+    }
+  }
+
   async putRecord<TData>(
     input: PutWebReadCacheRecordInput<TData>
   ): Promise<WebReadCacheRecord<TData>> {
@@ -222,7 +243,6 @@ export class WebReadCacheRepository {
       data: input.data,
       dataUpdatedAt: input.dataUpdatedAt,
       persistedAt: now,
-      lastAccessedAt: now,
       counts,
     };
 
@@ -251,10 +271,8 @@ export class WebReadCacheRepository {
             .getAll(IDBKeyRange.only([input.scopeKey, input.kind]))
         )) as WebReadCacheRecord[];
 
-        if (input.kind !== "recipe-detail") {
-          for (const previous of recordsOfKind) {
-            if (previous.id !== record.id) recordStore.delete(previous.id);
-          }
+        for (const previous of recordsOfKind) {
+          if (previous.id !== record.id) recordStore.delete(previous.id);
         }
 
         recordStore.put(record);
@@ -264,15 +282,6 @@ export class WebReadCacheRepository {
           lastLiveSuccessAt: Math.max(scope.lastLiveSuccessAt ?? 0, input.dataUpdatedAt),
           persistenceWarning: null,
         });
-
-        if (input.kind === "recipe-detail") {
-          const evictions = recordsOfKind
-            .filter((detail) => detail.id !== record.id)
-            .sort((left, right) => left.lastAccessedAt - right.lastAccessedAt)
-            .slice(0, Math.max(0, recordsOfKind.length + 1 - MAX_RECIPE_DETAIL_RECORDS));
-
-          for (const eviction of evictions) recordStore.delete(eviction.id);
-        }
 
         await waitForTransaction(transaction);
       } finally {
@@ -295,25 +304,15 @@ export class WebReadCacheRepository {
 
   async getRecord<TData = unknown>(
     scopeKey: string,
-    queryKey: readonly unknown[],
-    options: { touch?: boolean; now?: number } = {}
+    queryKey: readonly unknown[]
   ): Promise<WebReadCacheRecord<TData> | null> {
     const database = await openWebReadCacheDatabase(this.databaseOptions);
     const id = createWebReadCacheRecordId(scopeKey, queryKey);
 
     try {
-      const transaction = database.transaction(
-        WEB_READ_CACHE_STORES.records,
-        options.touch ? "readwrite" : "readonly"
-      );
+      const transaction = database.transaction(WEB_READ_CACHE_STORES.records, "readonly");
       const store = transaction.objectStore(WEB_READ_CACHE_STORES.records);
       const record = (await requestResult(store.get(id))) as WebReadCacheRecord<TData> | undefined;
-
-      if (record && options.touch && record.kind === "recipe-detail") {
-        record.lastAccessedAt = options.now ?? Date.now();
-        store.put(record);
-        await waitForTransaction(transaction);
-      }
 
       return record ?? null;
     } finally {
@@ -359,19 +358,7 @@ export class WebReadCacheRepository {
   }
 
   async getInventory(scopeKey: string | null): Promise<WebReadCacheInventory> {
-    const empty = {
-      scopeKey,
-      schemaVersion: WEB_READ_CACHE_SCHEMA_VERSION,
-      lastLiveSuccessAt: null,
-      persistenceWarning: null,
-      recipeSummaries: inventoryItem(),
-      recipeDetails: inventoryItem(),
-      calendarItems: inventoryItem(),
-      groceries: inventoryItem(),
-      recurringGroceries: inventoryItem(),
-      stores: inventoryItem(),
-      totalRecords: 0,
-    } satisfies WebReadCacheInventory;
+    const empty = createEmptyWebReadCacheInventory(scopeKey);
 
     if (!scopeKey) return empty;
 
@@ -388,7 +375,6 @@ export class WebReadCacheRepository {
 
     for (const record of records) {
       updateInventoryItem(inventory.recipeSummaries, record.counts.recipeSummaries, record);
-      updateInventoryItem(inventory.recipeDetails, record.counts.recipeDetails, record);
       updateInventoryItem(inventory.calendarItems, record.counts.calendarItems, record);
       updateInventoryItem(inventory.groceries, record.counts.groceries, record);
       updateInventoryItem(inventory.recurringGroceries, record.counts.recurringGroceries, record);

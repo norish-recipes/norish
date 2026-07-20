@@ -1,9 +1,5 @@
+import { getWebOutboxCaptureUserId, getWebOutboxReplayUserId } from "@/lib/offline-delivery-user";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import {
-  getWebOutboxCaptureUserId,
-  getWebOutboxReplayUserId,
-} from "../../lib/offline-delivery-user";
 
 const getSession = vi.hoisted(() => vi.fn());
 

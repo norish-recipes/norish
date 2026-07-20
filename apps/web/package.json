@@ -19,7 +19,7 @@
     "e2e:install": "playwright install chromium",
     "e2e:services:up": "docker compose -f ./e2e/docker-compose.yml up -d --wait",
     "e2e:services:down": "docker compose -f ./e2e/docker-compose.yml down --volumes --remove-orphans",
-    "e2e:server": "node ./e2e/start-server.mjs",
+    "e2e:server": "node ./scripts/e2e-start-server.mjs",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "typecheck": "pnpm exec tsc --noEmit",

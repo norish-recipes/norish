@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
     lastOutcomeAt: 20,
     lastSuccessAt: 20,
     lastFailureAt: null,
+    transportFailureConfirmed: false,
     simulatedBackendUnavailable: false,
     recoveryInProgress: false,
   },
@@ -51,22 +52,23 @@ const mocks = vi.hoisted(() => ({
     },
     inventory: {
       scopeKey: "scope-1",
-      schemaVersion: 1,
+      schemaVersion: 2,
       lastLiveSuccessAt: 10,
       persistenceWarning: null,
       recipeSummaries: { count: 4, dataUpdatedAt: 10, persistedAt: 11 },
-      recipeDetails: { count: 2, dataUpdatedAt: 10, persistedAt: 11 },
       calendarItems: { count: 3, dataUpdatedAt: 10, persistedAt: 11 },
       groceries: { count: 5, dataUpdatedAt: 10, persistedAt: 11 },
       recurringGroceries: { count: 1, dataUpdatedAt: 10, persistedAt: 11 },
       stores: { count: 2, dataUpdatedAt: 10, persistedAt: 11 },
-      totalRecords: 6,
+      totalRecords: 5,
     },
-    persistenceWarning: null as null | { code: string },
+    persistenceWarning: null as null | { code: string; recordKind?: string },
     renderUser: null,
     renderIdentityOnly: false,
     usingCachedData: false,
+    visibleDataUnavailable: false,
     isQueryUnavailable: vi.fn(),
+    registerVisibleDataUnavailable: vi.fn(),
     retryConnection: vi.fn(),
     clearCachedData: vi.fn(),
   },
@@ -240,6 +242,7 @@ describe("OfflineStatusModal", () => {
     mocks.connectivity.simulatedBackendUnavailable = false;
     mocks.offline.phase = "live";
     mocks.offline.usingCachedData = false;
+    mocks.offline.visibleDataUnavailable = false;
     mocks.offline.persistenceWarning = null;
     mocks.offline.inventory.totalRecords = 6;
     mocks.diagnostics.pending = 0;
@@ -277,8 +280,36 @@ describe("OfflineStatusModal", () => {
     await waitFor(() => expect(mocks.clearCachedData).toHaveBeenCalledOnce());
   });
 
+  it("never labels data live while connectivity is degraded or the screen is unavailable", () => {
+    mocks.connectivity.state = "backend-unreachable";
+    const rendered = render(
+      <OfflineStatusModal isOpen returnFocusRef={{ current: null }} onOpenChange={vi.fn()} />
+    );
+
+    expect(screen.getByText("data.stale")).toBeInTheDocument();
+    expect(screen.queryByText("data.live")).not.toBeInTheDocument();
+
+    mocks.offline.phase = "unavailable";
+    rendered.rerender(
+      <OfflineStatusModal isOpen returnFocusRef={{ current: null }} onOpenChange={vi.fn()} />
+    );
+
+    expect(screen.getByText("data.unavailable")).toBeInTheDocument();
+
+    mocks.offline.phase = "live";
+    mocks.offline.visibleDataUnavailable = true;
+    rendered.rerender(
+      <OfflineStatusModal isOpen returnFocusRef={{ current: null }} onOpenChange={vi.fn()} />
+    );
+
+    expect(screen.getByText("data.unavailable")).toBeInTheDocument();
+  });
+
   it("shows persistence warnings, queue attention, and retained-result controls", async () => {
-    mocks.offline.persistenceWarning = { code: "quota-exceeded" };
+    mocks.offline.persistenceWarning = {
+      code: "quota-exceeded",
+      recordKind: "stores",
+    };
     mocks.diagnostics.pending = 2;
     mocks.diagnostics.retrying = 1;
     mocks.diagnostics.terminal = 1;
@@ -299,7 +330,12 @@ describe("OfflineStatusModal", () => {
 
     render(<OfflineStatusModal isOpen returnFocusRef={{ current: null }} onOpenChange={vi.fn()} />);
 
-    expect(screen.getByText("warnings.quota-exceeded")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_, element) => element?.textContent === "warnings.quota-exceeded — inventory.stores"
+      )
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("inventory.stores")).toHaveLength(2);
     expect(screen.getByText("groceries.create")).toBeInTheDocument();
     expect(screen.getByText(/recipe-1/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /actions.openResult/ }));

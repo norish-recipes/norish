@@ -50,9 +50,9 @@
     "cache": {
       "title": "Saved data",
       "schema": "Schema {version}",
-      "empty": "No offline data is saved for this household yet.",
+      "empty": "No compatible offline data is saved in this browser yet.",
       "persistenceWarning": "Some data could not be saved",
-      "clearConfirm": "Clear saved data for the active household on this browser?"
+      "clearConfirm": "Clear the currently available offline data from this browser?"
     },
     "warnings": {
       "blocked": "Another tab is blocking the offline database update.",
@@ -62,7 +62,6 @@
     },
     "inventory": {
       "recipeSummaries": "Recipe summaries",
-      "recipeDetails": "Recipe details",
       "calendarItems": "Calendar items",
       "groceries": "Groceries",
       "recurringGroceries": "Recurring groceries",
@@ -79,7 +78,7 @@
     "simulation": {
       "title": "Simulate server unavailable",
       "description": "Development only. Disabling requires a successful live connection check.",
-      "disableFailed": "The simulation remains enabled because the live check failed."
+      "disableFailed": "The simulation is off, but the live server check failed."
     },
     "unavailable": {
       "title": "Not available offline",

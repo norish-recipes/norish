@@ -2,12 +2,16 @@
 
 import React, { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import OfflineStatusModal, { getOfflineDataState } from "@/components/navbar/offline-status-modal";
+import { ThemeSwitchContent, useThemeSwitch } from "@/components/navbar/theme-switch";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
 import UserAvatar from "@/components/shared/user-avatar";
+import { useOfflineWeb } from "@/context/offline-web-context";
 import { useUserContext } from "@/context/user-context";
 import { useVersionQuery } from "@/hooks/config";
 import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
+import { useWebConnectivity } from "@/lib/connectivity";
 import {
   ArrowDownTrayIcon,
   ArrowLeftStartOnRectangleIcon,
@@ -20,10 +24,6 @@ import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { cssButtonPill, cssButtonPillDanger } from "@norish/web/config/css-tokens";
-
-import { useWebConnectivity } from "../../lib/connectivity";
-import OfflineStatusModal from "./offline-status-modal";
-import { ThemeSwitchContent, useThemeSwitch } from "./theme-switch";
 
 type TriggerVariant = "avatar" | "ellipsis";
 interface NavbarUserMenuProps {
@@ -45,6 +45,13 @@ export default function NavbarUserMenu({
   const [showOfflineStatus, setShowOfflineStatus] = useState(false);
   const offlineStatusButtonRef = useRef<HTMLButtonElement>(null);
   const connectivity = useWebConnectivity();
+  const offline = useOfflineWeb();
+  const offlineDataState = getOfflineDataState({
+    connectivityState: connectivity.state,
+    phase: offline.phase,
+    usingCachedData: offline.usingCachedData,
+    visibleDataUnavailable: offline.visibleDataUnavailable,
+  });
   const themeSwitch = useThemeSwitch();
   const languageSwitch = useLanguageSwitch();
   const { currentVersion, latestVersion, updateAvailable, releaseUrl } = useVersionQuery();
@@ -240,11 +247,14 @@ export default function NavbarUserMenu({
             <div className="ml-auto flex shrink-0 items-center gap-2">
               <Button
                 ref={offlineStatusButtonRef}
+                data-offline-status-trigger
                 aria-label={tOffline("footerLabel", {
-                  status: tOffline(`connectivity.${connectivity.state}`),
+                  status: [
+                    tOffline(`connectivity.${connectivity.state}`),
+                    tOffline(`data.${offlineDataState}`),
+                  ].join("; "),
                 })}
                 className="h-7 min-w-0 gap-1.5 rounded-full px-2 text-xs"
-                data-offline-status-trigger
                 size="sm"
                 variant="tertiary"
                 onPress={openOfflineStatus}

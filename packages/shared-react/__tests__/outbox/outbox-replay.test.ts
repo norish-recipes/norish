@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { WebOutboxRepository } from "./outbox-repository";
-import type { WebOutboxEntry } from "./outbox-types";
-import { WebOutboxReplayCoordinator } from "./outbox-replay";
-import { WEB_OUTBOX_SCHEMA_VERSION } from "./outbox-types";
+import type { WebOutboxRepository } from "../../src/outbox/outbox-repository";
+import type { WebOutboxEntry } from "../../src/outbox/outbox-types";
+import { WebOutboxReplayCoordinator } from "../../src/outbox/outbox-replay";
+import { WEB_OUTBOX_SCHEMA_VERSION } from "../../src/outbox/outbox-types";
 
 function createEntry(id: string, creationOrder: number): WebOutboxEntry {
   return {
@@ -51,7 +51,7 @@ describe("web outbox replay coordinator", () => {
       repository,
       getScope: async () => ({ backendOrigin: "https://norish.test", userId: "user-1" }),
       deliver,
-      refetch,
+      reconcile: refetch,
     });
 
     const first = coordinator.start();
@@ -96,8 +96,24 @@ describe("web outbox replay coordinator", () => {
       deliver: async () => {
         throw new TypeError("Failed to fetch");
       },
-      refetch,
+      reconcile: refetch,
     }).start();
+
+    expect(refetch).not.toHaveBeenCalled();
+  });
+
+  it("does not refetch away optimistic state when explicit recovery remains unreachable", async () => {
+    const repository = fakeRepository([createEntry("first", 1)]);
+    const refetch = vi.fn(async () => undefined);
+
+    await new WebOutboxReplayCoordinator({
+      repository,
+      getScope: async () => ({ backendOrigin: "https://norish.test", userId: "user-1" }),
+      deliver: async () => {
+        throw new TypeError("Failed to fetch");
+      },
+      reconcile: refetch,
+    }).start({ forceRetry: true, invalidateAfterPass: true });
 
     expect(refetch).not.toHaveBeenCalled();
   });
@@ -108,6 +124,9 @@ describe("web outbox replay coordinator", () => {
     entry.nextRetryAt = Date.now() + 60_000;
     const repository = fakeRepository([entry]);
     const order: string[] = [];
+    const refetch = vi.fn(async () => {
+      order.push("refetch");
+    });
     const coordinator = new WebOutboxReplayCoordinator({
       repository,
       getScope: async () => ({ backendOrigin: "https://norish.test", userId: "user-1" }),
@@ -116,14 +135,48 @@ describe("web outbox replay coordinator", () => {
 
         return { success: true };
       },
-      refetch: async () => {
-        order.push("refetch");
-      },
+      reconcile: refetch,
     });
 
-    await coordinator.start({ forceRetry: true, refetchAfterPass: true });
+    await coordinator.start({ forceRetry: true, invalidateAfterPass: true });
 
     expect(order).toEqual(["replay", "refetch"]);
+    expect(refetch).toHaveBeenCalledOnce();
+  });
+
+  it("runs a dedicated recovery pass when recovery overlaps an unreachable pass", async () => {
+    const entry = createEntry("first", 1);
+    const repository = fakeRepository([entry]);
+    let releaseFirstDelivery!: () => void;
+    const firstDeliveryStarted = new Promise<void>((resolve) => {
+      releaseFirstDelivery = resolve;
+    });
+    let firstDelivery = true;
+    const deliver = vi.fn(async () => {
+      if (firstDelivery) {
+        firstDelivery = false;
+        await firstDeliveryStarted;
+        throw new TypeError("Failed to fetch");
+      }
+
+      return { success: true };
+    });
+    const refetch = vi.fn(async () => undefined);
+    const coordinator = new WebOutboxReplayCoordinator({
+      repository,
+      getScope: async () => ({ backendOrigin: "https://norish.test", userId: "user-1" }),
+      deliver,
+      reconcile: refetch,
+    });
+
+    const unreachablePass = coordinator.start();
+    const recoveryPass = coordinator.start({ forceRetry: true, invalidateAfterPass: true });
+
+    releaseFirstDelivery();
+    await Promise.all([unreachablePass, recoveryPass]);
+
+    expect(deliver).toHaveBeenCalledTimes(2);
+    expect(refetch).toHaveBeenCalledOnce();
   });
 
   it("caps retry backoff while keeping later entries blocked", async () => {
@@ -207,7 +260,7 @@ describe("web outbox replay coordinator", () => {
       repository,
       getScope: async () => ({ backendOrigin: "https://norish.test", userId: "user-1" }),
       deliver,
-      refetch,
+      reconcile: refetch,
     }).start();
 
     expect(deliver).toHaveBeenCalledTimes(2);

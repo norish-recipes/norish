@@ -1,39 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useOfflineWeb } from "@/context/offline-web-context";
 
 import { swLogger as log } from "@norish/shared/lib/logger";
 
-function collectRuntimeAssets(): string[] {
-  const values = new Set<string>();
-  const elements = document.querySelectorAll<HTMLScriptElement | HTMLLinkElement>(
-    'script[src], link[rel="stylesheet"][href], link[rel="preload"][as="script"][href], link[rel="preload"][as="style"][href]'
-  );
+const OFFLINE_SHELL_ROUTES = new Set(["/", "/calendar", "/groceries"]);
 
-  for (const element of elements) {
-    const value = element instanceof HTMLScriptElement ? element.src : element.href;
-
-    if (!value) continue;
-
-    const url = new URL(value, window.location.origin);
-
-    if (url.origin === window.location.origin && url.pathname.startsWith("/_next/static/")) {
-      values.add(url.href);
-    }
-  }
-
-  return [...values];
+function isOfflineShellRoute(pathname: string): boolean {
+  return OFFLINE_SHELL_ROUTES.has(pathname);
 }
 
 export default function RegisterServiceWorker() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { activeScope, phase, renderIdentityOnly } = useOfflineWeb();
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
-  const search = searchParams.toString();
-  const route = useMemo(() => `${pathname}${search ? `?${search}` : ""}`, [pathname, search]);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) {
@@ -57,20 +39,46 @@ export default function RegisterServiceWorker() {
   }, []);
 
   useEffect(() => {
-    if (!registration || !activeScope || renderIdentityOnly || phase !== "live") return;
+    if (
+      !registration ||
+      !activeScope ||
+      renderIdentityOnly ||
+      phase !== "live" ||
+      !isOfflineShellRoute(pathname)
+    ) {
+      return;
+    }
 
-    const worker = navigator.serviceWorker.controller ?? registration.active;
+    let cancelled = false;
 
-    if (!worker) return;
+    void (async () => {
+      let worker = navigator.serviceWorker.controller ?? registration.active;
 
-    worker.postMessage({
-      type: "CONFIRM_ROUTE_SHELL",
-      route,
-      assets: collectRuntimeAssets(),
-    });
-  }, [activeScope, phase, registration, renderIdentityOnly, route]);
+      if (!worker) {
+        try {
+          const readyRegistration = await navigator.serviceWorker.ready;
+
+          if (cancelled) return;
+          worker = navigator.serviceWorker.controller ?? readyRegistration.active;
+        } catch (err) {
+          log.error({ err }, "Service worker did not become ready");
+
+          return;
+        }
+      }
+
+      worker?.postMessage({
+        type: "CONFIRM_ROUTE_SHELL",
+        route: pathname,
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeScope, pathname, phase, registration, renderIdentityOnly]);
 
   return null;
 }
 
-export { collectRuntimeAssets };
+export { isOfflineShellRoute };

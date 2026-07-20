@@ -64,15 +64,14 @@ class MemoryCacheStorage {
 }
 
 type ServiceWorkerInternals = {
-  cacheNames: { static: string; routeShell: string; runtime: string; staging: string };
+  cacheNames: { static: string; routeShell: string; runtime: string };
   canonicalRouteUrl: (value: string) => string | null;
-  isRuntimeAssetUrl: (value: string) => boolean;
   isRuntimeHydrationAssetUrl: (value: string) => boolean;
   runtimeAssetsReferencedByHtml: (html: string) => string[];
   addColdShellBootstrap: (response: Response) => Promise<Response>;
   matchConfirmedRoute: (request: Request) => Promise<Response | null>;
   navigationResponse: (request: Request) => Promise<Response>;
-  stageConfirmedRoute: (message: { route: string; assets: string[] }) => Promise<void>;
+  confirmRouteShell: (message: { route: string }) => Promise<void>;
 };
 
 function createWorker(fetchImplementation: typeof fetch = vi.fn()) {
@@ -147,37 +146,35 @@ describe("service worker offline shell policy", () => {
     expect(worker.worker.skipWaiting).toHaveBeenCalledOnce();
   });
 
-  it("stages only referenced same-origin Next assets and matches route shells exactly", async () => {
+  it("confirms only supported routes and derives their same-origin Next assets", async () => {
     const network = vi.fn<typeof fetch>(async (input) => {
       const url = requestUrl(input);
 
-      return new Response(url.includes("/_next/static/") ? "runtime" : "shell", { status: 200 });
+      return new Response(
+        url.includes("/_next/static/")
+          ? "runtime"
+          : '<html><script src="/_next/static/chunks/app.js"></script></html>',
+        { status: 200 }
+      );
     });
     const worker = createWorker(network);
 
-    await worker.internals.stageConfirmedRoute({
-      route: "/recipes/one?tab=steps",
-      assets: [
-        `${ORIGIN}/_next/static/chunks/app.js`,
-        `${ORIGIN}/api/trpc/recipes.list`,
-        "https://other.test/_next/static/foreign.js",
-        `${ORIGIN}/recipe.jpg`,
-      ],
-    });
+    await worker.internals.confirmRouteShell({ route: "/groceries" });
 
-    const exact = await worker.internals.matchConfirmedRoute(
-      new Request(`${ORIGIN}/recipes/one?tab=steps`)
-    );
+    const exact = await worker.internals.matchConfirmedRoute(new Request(`${ORIGIN}/groceries`));
     const differentSearch = await worker.internals.matchConfirmedRoute(
-      new Request(`${ORIGIN}/recipes/one?tab=ingredients`)
+      new Request(`${ORIGIN}/groceries?view=recipe`)
     );
     const runtimeCache = await worker.caches.open(worker.internals.cacheNames.runtime);
 
-    expect(await exact?.text()).toBe("shell");
+    expect(await exact?.text()).toContain("/_next/static/chunks/app.js");
     expect(differentSearch).toBeNull();
     expect(await runtimeCache.match(`${ORIGIN}/_next/static/chunks/app.js`)).toBeDefined();
     expect(await runtimeCache.match(`${ORIGIN}/api/trpc/recipes.list`)).toBeUndefined();
     expect(await runtimeCache.match(`${ORIGIN}/recipe.jpg`)).toBeUndefined();
+    await expect(worker.internals.confirmRouteShell({ route: "/recipes/one" })).rejects.toThrow(
+      "not supported"
+    );
   });
 
   it("derives required route scripts and styles from the fetched shell HTML", async () => {
@@ -196,7 +193,7 @@ describe("service worker offline shell policy", () => {
     });
     const worker = createWorker(network);
 
-    await worker.internals.stageConfirmedRoute({ route: "/groceries", assets: [] });
+    await worker.internals.confirmRouteShell({ route: "/groceries" });
     const runtimeCache = await worker.caches.open(worker.internals.cacheNames.runtime);
 
     expect(await runtimeCache.match(`${ORIGIN}/_next/static/css/route.css`)).toBeDefined();
@@ -213,19 +210,21 @@ describe("service worker offline shell policy", () => {
 
       if (failAsset && url.includes("broken.js")) return new Response("broken", { status: 503 });
 
-      return new Response(failAsset ? "new shell" : "old shell", { status: 200 });
+      return new Response(
+        failAsset
+          ? '<html><script src="/_next/static/chunks/broken.js"></script></html>'
+          : "old shell",
+        { status: 200 }
+      );
     });
     const worker = createWorker(network);
-    const route = "/recipes/preserved";
+    const route = "/calendar";
 
-    await worker.internals.stageConfirmedRoute({ route, assets: [] });
+    await worker.internals.confirmRouteShell({ route });
     failAsset = true;
-    await expect(
-      worker.internals.stageConfirmedRoute({
-        route,
-        assets: [`${ORIGIN}/_next/static/chunks/broken.js`],
-      })
-    ).rejects.toThrow("staging failed");
+    await expect(worker.internals.confirmRouteShell({ route })).rejects.toThrow(
+      "preparation failed"
+    );
 
     expect(
       await (await worker.internals.matchConfirmedRoute(new Request(`${ORIGIN}${route}`)))?.text()
@@ -242,7 +241,7 @@ describe("service worker offline shell policy", () => {
     const worker = createWorker(network);
 
     await dispatchWaitUntil(worker.listeners.get("install"));
-    await worker.internals.stageConfirmedRoute({ route: "/calendar", assets: [] });
+    await worker.internals.confirmRouteShell({ route: "/calendar" });
     online = false;
 
     expect(
@@ -251,6 +250,32 @@ describe("service worker offline shell policy", () => {
     expect(
       await (
         await worker.internals.navigationResponse(new Request(`${ORIGIN}/never-opened`))
+      ).text()
+    ).toBe("static:/offline.html");
+  });
+
+  it("uses the offline shell policy for backend-unavailable navigation responses", async () => {
+    let backendUnavailable = false;
+    const network = vi.fn<typeof fetch>(async (input) => {
+      if (backendUnavailable) return new Response("upstream unavailable", { status: 503 });
+
+      return new Response(`network:${requestUrl(input)}`, {
+        headers: { "content-type": "text/html; charset=utf-8" },
+        status: 200,
+      });
+    });
+    const worker = createWorker(network);
+
+    await dispatchWaitUntil(worker.listeners.get("install"));
+    await worker.internals.confirmRouteShell({ route: "/" });
+    backendUnavailable = true;
+
+    expect(
+      await (await worker.internals.navigationResponse(new Request(`${ORIGIN}/`))).text()
+    ).toContain("network:https://norish.test/");
+    expect(
+      await (
+        await worker.internals.navigationResponse(new Request(`${ORIGIN}/not-confirmed`))
       ).text()
     ).toBe("static:/offline.html");
   });

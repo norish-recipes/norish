@@ -27,6 +27,26 @@ import {
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "disconnected";
 
+type WebOutboxRecoveryOptions = {
+  coordinator: Pick<WebOutboxReplayCoordinator, "start">;
+  notifySettled: () => void;
+  logger: CreateTRPCProviderBundleOptions["logger"];
+};
+
+export async function runWebOutboxRecovery({
+  coordinator,
+  notifySettled,
+  logger,
+}: WebOutboxRecoveryOptions): Promise<void> {
+  try {
+    await coordinator.start({ forceRetry: true, invalidateAfterPass: true });
+  } catch (error) {
+    logger.warn({ error }, "Outbox recovery replay failed; keeping active queries unchanged");
+  } finally {
+    notifySettled();
+  }
+}
+
 type ConnectionContextValue = {
   status: ConnectionStatus;
   isConnected: boolean;
@@ -42,6 +62,10 @@ export type WebOutboxProviderOptions = {
   getCaptureUserId: () => Promise<string | null>;
   getReplayUserId: () => Promise<string | null>;
   getBackendOrigin: () => string;
+  recovery: {
+    notifyReplaySettled: () => void;
+    subscribeToSucceeded: (listener: () => void) => () => void;
+  };
   enabled?: () => boolean;
 };
 
@@ -174,15 +198,8 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
   function TRPCProviderWrapper({ children }: { children: ReactNode }) {
     const [status, setStatus] = useState<ConnectionStatus>("idle");
     const previousStatusRef = useRef<ConnectionStatus>("idle");
-    const queryClientRef = useRef<QueryClient | null>(null);
-    const webSocketClientRef = useRef<{ close: () => Promise<void> } | null>(null);
-    const outboxCoordinatorRef = useRef<WebOutboxReplayCoordinator | null>(null);
-    const outboxClientRef = useRef<object | null>(null);
-    const outboxRepositoryRef = useRef<WebOutboxRepository | null>(
-      webOutbox ? new WebOutboxRepository() : null
-    );
 
-    const [{ queryClient, trpcClient }] = useState(() => {
+    const [{ queryClient, trpcClient, outboxCoordinator, webSocketClient }] = useState(() => {
       const qc = externalGetQueryClient
         ? externalGetQueryClient()
         : new QueryClient({
@@ -196,8 +213,10 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
               },
             },
           });
-
-      queryClientRef.current = qc;
+      const socketClientHolder: { current: { close: () => Promise<void> } | null } = {
+        current: null,
+      };
+      const outboxRepository = webOutbox ? new WebOutboxRepository() : null;
 
       const tc = createTRPCClient<TRouter>({
         links: createTRPCClientLinks<TRouter>({
@@ -212,7 +231,7 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
           wsLazyCloseMs,
           enableLoggerLink,
           onWebSocketClientCreate: (client) => {
-            webSocketClientRef.current = client;
+            socketClientHolder.current = client;
             onWebSocketClientCreate?.(client);
           },
           onWebSocketOpen: () => {
@@ -234,10 +253,10 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
           mutationLink,
           extraLinks: [
             ...extraLinks,
-            ...(webOutbox && outboxRepositoryRef.current
+            ...(webOutbox && outboxRepository
               ? [
                   createWebOutboxLink({
-                    repository: outboxRepositoryRef.current,
+                    repository: outboxRepository,
                     getUserId: webOutbox.getCaptureUserId,
                     getBackendOrigin: webOutbox.getBackendOrigin,
                     enabled: webOutbox.enabled,
@@ -247,70 +266,60 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
           ],
         }),
       });
+      const coordinator =
+        webOutbox && outboxRepository
+          ? new WebOutboxReplayCoordinator({
+              repository: outboxRepository,
+              getScope: async () => {
+                const userId = await webOutbox.getReplayUserId();
 
-      outboxClientRef.current = tc as object;
+                return userId ? { backendOrigin: webOutbox.getBackendOrigin(), userId } : null;
+              },
+              deliver: (entry, input) => replayWebOutboxEntry(tc as object, entry, input),
+              reconcile: () => qc.invalidateQueries({ type: "active" }),
+            })
+          : null;
 
-      if (webOutbox && outboxRepositoryRef.current) {
-        outboxCoordinatorRef.current = new WebOutboxReplayCoordinator({
-          repository: outboxRepositoryRef.current,
-          getScope: async () => {
-            const userId = await webOutbox.getReplayUserId();
-
-            return userId ? { backendOrigin: webOutbox.getBackendOrigin(), userId } : null;
-          },
-          deliver: (entry, input) => {
-            if (!outboxClientRef.current) {
-              throw new Error("tRPC client is not ready for web outbox replay");
-            }
-
-            return replayWebOutboxEntry(outboxClientRef.current, entry, input);
-          },
-          refetch: async () => {
-            await queryClientRef.current?.refetchQueries({ type: "active" });
-          },
-        });
-      }
-
-      return { queryClient: qc, trpcClient: tc };
+      return {
+        queryClient: qc,
+        trpcClient: tc,
+        outboxCoordinator: coordinator,
+        webSocketClient: socketClientHolder,
+      };
     });
 
     useEffect(() => {
-      const coordinator = outboxCoordinatorRef.current;
-
-      if (!coordinator) return;
+      if (!outboxCoordinator) return;
 
       const run = () => {
-        void coordinator.start();
-      };
-      const browserOnline = () => {
-        void coordinator.start({ forceRetry: true });
+        void outboxCoordinator
+          .start()
+          .catch((error) => logger.warn({ error }, "Outbox replay trigger failed"));
       };
       const recover = () => {
-        void coordinator
-          .start({ forceRetry: true, refetchAfterPass: true })
-          .then(() => window.dispatchEvent(new Event("norish:web-outbox-replay-settled")));
+        void runWebOutboxRecovery({
+          coordinator: outboxCoordinator,
+          notifySettled: webOutbox.recovery.notifyReplaySettled,
+          logger,
+        });
       };
 
       run();
 
-      if (typeof window === "undefined") return;
-
-      window.addEventListener("online", browserOnline);
-      window.addEventListener("norish:web-connectivity-recovered", recover);
+      const unsubscribeRecovery = webOutbox.recovery.subscribeToSucceeded(recover);
       const unsubscribeOutbox = subscribeToWebOutboxChanges(run);
 
       return () => {
-        window.removeEventListener("online", browserOnline);
-        window.removeEventListener("norish:web-connectivity-recovered", recover);
+        unsubscribeRecovery();
         unsubscribeOutbox();
       };
-    }, []);
+    }, [logger, outboxCoordinator, webOutbox]);
 
     useEffect(() => {
       return () => {
-        const client = webSocketClientRef.current;
+        const client = webSocketClient.current;
 
-        webSocketClientRef.current = null;
+        webSocketClient.current = null;
 
         if (!client) {
           return;
@@ -319,23 +328,18 @@ export function createTRPCProviderBundle<TRouter extends AnyTRPCRouter>({
         onWebSocketClientDestroy?.(client);
         void client.close().catch(() => null);
       };
-    }, [onWebSocketClientDestroy]);
+    }, [onWebSocketClientDestroy, webSocketClient]);
 
     useEffect(() => {
       const wasDisconnected = previousStatusRef.current === "disconnected";
 
       previousStatusRef.current = status;
 
-      if (
-        status === "connected" &&
-        wasDisconnected &&
-        queryClientRef.current &&
-        invalidateOnReconnect
-      ) {
+      if (status === "connected" && wasDisconnected && invalidateOnReconnect) {
         logger.info("Connection restored, invalidating queries");
-        queryClientRef.current.invalidateQueries();
+        queryClient.invalidateQueries();
       }
-    }, [logger, status]);
+    }, [logger, queryClient, status]);
 
     const connectionValue: ConnectionContextValue = {
       status,

@@ -2,11 +2,11 @@
 
 import type { ComponentProps, ComponentType, PropsWithChildren } from "react";
 import { Suspense } from "react";
+import RegisterServiceWorker from "@/components/register-service-worker";
+import { OfflineWebProvider } from "@/context/offline-web-context";
 import { Toast } from "@heroui/react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
-import RegisterServiceWorker from "../../components/register-service-worker";
-import { OfflineWebProvider } from "../../context/offline-web-context";
 import { TRPCProviderWrapper } from "./trpc-provider";
 
 export interface BaseProvidersProps {

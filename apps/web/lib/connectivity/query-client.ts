@@ -1,6 +1,5 @@
+import { webConnectivityRuntime } from "@/lib/connectivity/runtime";
 import { QueryClient } from "@tanstack/react-query";
-
-import { webConnectivityRuntime } from "./runtime";
 
 export function createWebQueryClient(): QueryClient {
   return new QueryClient({

@@ -50,9 +50,9 @@
     "cache": {
       "title": "Opgeslagen gegevens",
       "schema": "Schema {version}",
-      "empty": "Voor dit huishouden zijn nog geen offlinegegevens opgeslagen.",
+      "empty": "In deze browser zijn nog geen compatibele offlinegegevens opgeslagen.",
       "persistenceWarning": "Sommige gegevens konden niet worden opgeslagen",
-      "clearConfirm": "Opgeslagen gegevens voor het actieve huishouden in deze browser wissen?"
+      "clearConfirm": "De momenteel beschikbare offlinegegevens uit deze browser wissen?"
     },
     "warnings": {
       "blocked": "Een ander tabblad blokkeert de update van de offlinedatabase.",
@@ -62,7 +62,6 @@
     },
     "inventory": {
       "recipeSummaries": "Receptoverzichten",
-      "recipeDetails": "Receptdetails",
       "calendarItems": "Agenda-items",
       "groceries": "Boodschappen",
       "recurringGroceries": "Terugkerende boodschappen",
@@ -79,7 +78,7 @@
     "simulation": {
       "title": "Serverstoring simuleren",
       "description": "Alleen voor ontwikkeling. Uitschakelen vereist een geslaagde livecontrole.",
-      "disableFailed": "De simulatie blijft actief omdat de livecontrole is mislukt."
+      "disableFailed": "De simulatie is uitgeschakeld, maar de livecontrole van de server is mislukt."
     },
     "unavailable": {
       "title": "Niet offline beschikbaar",

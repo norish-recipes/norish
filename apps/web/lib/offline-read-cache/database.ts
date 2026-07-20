@@ -1,4 +1,9 @@
-import { WEB_READ_CACHE_DATABASE_NAME, WEB_READ_CACHE_DATABASE_VERSION } from "./types";
+import {
+  createWebReadCacheRecordId,
+  serializeWebReadCacheQueryKey,
+  WEB_READ_CACHE_DATABASE_NAME,
+  WEB_READ_CACHE_DATABASE_VERSION,
+} from "@/lib/offline-read-cache/types";
 
 export const WEB_READ_CACHE_STORES = {
   scopes: "scopes",
@@ -43,7 +48,44 @@ export function waitForTransaction(transaction: IDBTransaction): Promise<void> {
   });
 }
 
-function ensureSchema(database: IDBDatabase, transaction: IDBTransaction | null): void {
+function migrateCanonicalRecordIdentities(recordStore: IDBObjectStore): void {
+  const request = recordStore.openCursor();
+
+  request.onsuccess = () => {
+    const cursor = request.result;
+
+    if (!cursor) return;
+
+    const record = cursor.value as {
+      id?: unknown;
+      scopeKey?: unknown;
+      queryIdentity?: unknown;
+      queryKey?: unknown;
+    };
+
+    if (
+      typeof record.id === "string" &&
+      typeof record.scopeKey === "string" &&
+      Array.isArray(record.queryKey)
+    ) {
+      const queryIdentity = serializeWebReadCacheQueryKey(record.queryKey);
+      const id = createWebReadCacheRecordId(record.scopeKey, record.queryKey);
+
+      if (record.id !== id || record.queryIdentity !== queryIdentity) {
+        cursor.delete();
+        recordStore.put({ ...record, id, queryIdentity });
+      }
+    }
+
+    cursor.continue();
+  };
+}
+
+function ensureSchema(
+  database: IDBDatabase,
+  transaction: IDBTransaction | null,
+  oldVersion: number
+): void {
   const scopeStore = database.objectStoreNames.contains(WEB_READ_CACHE_STORES.scopes)
     ? transaction?.objectStore(WEB_READ_CACHE_STORES.scopes)
     : database.createObjectStore(WEB_READ_CACHE_STORES.scopes, { keyPath: "key" });
@@ -69,6 +111,10 @@ function ensureSchema(database: IDBDatabase, transaction: IDBTransaction | null)
       unique: false,
     });
   }
+
+  if (recordStore && oldVersion > 0 && oldVersion < 3) {
+    migrateCanonicalRecordIdentities(recordStore);
+  }
 }
 
 export function openWebReadCacheDatabase(
@@ -86,7 +132,8 @@ export function openWebReadCacheDatabase(
     let settled = false;
     const request = factory.open(WEB_READ_CACHE_DATABASE_NAME, WEB_READ_CACHE_DATABASE_VERSION);
 
-    request.onupgradeneeded = () => ensureSchema(request.result, request.transaction);
+    request.onupgradeneeded = (event) =>
+      ensureSchema(request.result, request.transaction, event.oldVersion);
     request.onblocked = () => {
       options.onBlocked?.();
 
