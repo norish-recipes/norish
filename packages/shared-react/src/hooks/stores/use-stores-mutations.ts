@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 
 import type { StoreCreateDto, StoreDeleteInput, StoreDto } from "@norish/shared/contracts";
+import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type {
   CreateStoresHooksOptions,
@@ -31,8 +32,12 @@ export function createUseStoresMutations({
     const reorderMutation = useMutation(trpc.stores.reorder.mutationOptions());
 
     const createStore = (data: StoreCreateDto): Promise<string> => {
+      // Client-minted id, honoured on insert so a queued offline create stays
+      // addressable by later mutations (ADR-0003).
+      const payload = { ...data, id: createClientId() };
+
       return new Promise((resolve, reject) => {
-        createMutation.mutate(data, {
+        createMutation.mutate(payload, {
           onSuccess: (storeId) => {
             const newStore: StoreDto = {
               id: storeId,

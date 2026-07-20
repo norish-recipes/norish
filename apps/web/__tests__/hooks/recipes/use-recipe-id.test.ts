@@ -1,5 +1,3 @@
-import type { Mock } from "vitest";
-import { QueryClient } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,33 +11,24 @@ vi.mock("@norish/shared/lib/logger", () => ({
   }),
 }));
 
+// The hook now mints recipe ids on the client and no longer touches tRPC
+// (ADR-0003). Stub the provider so the web re-export still imports cleanly.
+vi.mock("@/app/providers/trpc-provider", () => ({
+  useTRPC: () => ({}),
+}));
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 describe("useRecipeId", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
-  let mockReserveId: Mock<() => Promise<{ recipeId: string }>>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.resetModules();
     queryClient = createTestQueryClient();
-    mockReserveId = vi.fn();
   });
 
   describe("edit mode", () => {
-    it("returns existing ID immediately without loading", async () => {
-      // Mock tRPC provider for edit mode
-      vi.doMock("@/app/providers/trpc-provider", () => ({
-        useTRPC: () => ({
-          recipes: {
-            reserveId: {
-              queryOptions: () => ({
-                queryKey: ["recipes", "reserveId"],
-                queryFn: () => mockReserveId(),
-              }),
-            },
-          },
-        }),
-      }));
-
+    it("returns the existing id immediately without loading", async () => {
       const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
       const { result } = renderHook(() => useRecipeId("edit", "existing-id-123"), {
         wrapper: createTestWrapper(queryClient),
@@ -48,252 +37,53 @@ describe("useRecipeId", () => {
       expect(result.current.recipeId).toBe("existing-id-123");
       expect(result.current.isLoading).toBe(false);
       expect(result.current.error).toBe(null);
-      expect(mockReserveId).not.toHaveBeenCalled();
-    });
-
-    it("does not call reserveId for edit mode", async () => {
-      vi.doMock("@/app/providers/trpc-provider", () => ({
-        useTRPC: () => ({
-          recipes: {
-            reserveId: {
-              queryOptions: () => ({
-                queryKey: ["recipes", "reserveId"],
-                queryFn: () => mockReserveId(),
-              }),
-            },
-          },
-        }),
-      }));
-
-      const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
-
-      renderHook(() => useRecipeId("edit", "existing-id-456"), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      await waitFor(() => {
-        expect(mockReserveId).not.toHaveBeenCalled();
-      });
     });
   });
 
   describe("create mode", () => {
-    it("starts with loading state and null recipeId", async () => {
-      mockReserveId.mockResolvedValue({ recipeId: "new-id-789" });
-
-      vi.doMock("@/app/providers/trpc-provider", () => ({
-        useTRPC: () => ({
-          recipes: {
-            reserveId: {
-              queryOptions: () => ({
-                queryKey: ["recipes", "reserveId"],
-                queryFn: () => mockReserveId(),
-              }),
-            },
-          },
-        }),
-      }));
-
-      const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
-      const { result } = renderHook(() => useRecipeId("create"), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      // Initial state
-      expect(result.current.recipeId).toBe(null);
-      expect(result.current.isLoading).toBe(true);
-      expect(result.current.error).toBe(null);
-    });
-
-    it("fetches reserved ID from backend", async () => {
-      const reservedId = "reserved-id-abc";
-
-      mockReserveId.mockResolvedValue({ recipeId: reservedId });
-
-      vi.doMock("@/app/providers/trpc-provider", () => ({
-        useTRPC: () => ({
-          recipes: {
-            reserveId: {
-              queryOptions: () => ({
-                queryKey: ["recipes", "reserveId"],
-                queryFn: () => mockReserveId(),
-              }),
-            },
-          },
-        }),
-      }));
-
+    it("mints a client-side uuid without a backend round-trip", async () => {
       const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
       const { result } = renderHook(() => useRecipeId("create"), {
         wrapper: createTestWrapper(queryClient),
       });
 
       await waitFor(() => {
-        expect(result.current.recipeId).toBe(reservedId);
+        expect(result.current.recipeId).toMatch(UUID_RE);
       });
 
       expect(result.current.isLoading).toBe(false);
       expect(result.current.error).toBe(null);
-      expect(mockReserveId).toHaveBeenCalledTimes(1);
     });
 
-    it("sets error when reservation fails", async () => {
-      const errorMessage = "Network error";
-
-      mockReserveId.mockRejectedValue(new Error(errorMessage));
-
-      vi.doMock("@/app/providers/trpc-provider", () => ({
-        useTRPC: () => ({
-          recipes: {
-            reserveId: {
-              queryOptions: () => ({
-                queryKey: ["recipes", "reserveId"],
-                queryFn: () => mockReserveId(),
-              }),
-            },
-          },
-        }),
-      }));
-
-      const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
-      const { result } = renderHook(() => useRecipeId("create"), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      await waitFor(() => {
-        expect(result.current.error).toBe("Failed to initialize form. Please refresh the page.");
-      });
-
-      expect(result.current.recipeId).toBe(null);
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    it("stops loading after successful reservation", async () => {
-      mockReserveId.mockResolvedValue({ recipeId: "new-id-xyz" });
-
-      vi.doMock("@/app/providers/trpc-provider", () => ({
-        useTRPC: () => ({
-          recipes: {
-            reserveId: {
-              queryOptions: () => ({
-                queryKey: ["recipes", "reserveId"],
-                queryFn: () => mockReserveId(),
-              }),
-            },
-          },
-        }),
-      }));
-
-      const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
-      const { result } = renderHook(() => useRecipeId("create"), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(result.current.recipeId).toBe("new-id-xyz");
-    });
-
-    it("stops loading after failed reservation", async () => {
-      mockReserveId.mockRejectedValue(new Error("Server error"));
-
-      vi.doMock("@/app/providers/trpc-provider", () => ({
-        useTRPC: () => ({
-          recipes: {
-            reserveId: {
-              queryOptions: () => ({
-                queryKey: ["recipes", "reserveId"],
-                queryFn: () => mockReserveId(),
-              }),
-            },
-          },
-        }),
-      }));
-
-      const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
-      const { result } = renderHook(() => useRecipeId("create"), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(result.current.error).not.toBe(null);
-    });
-
-    it("only calls reserveId once", async () => {
-      mockReserveId.mockResolvedValue({ recipeId: "once-id" });
-
-      vi.doMock("@/app/providers/trpc-provider", () => ({
-        useTRPC: () => ({
-          recipes: {
-            reserveId: {
-              queryOptions: () => ({
-                queryKey: ["recipes", "reserveId"],
-                queryFn: () => mockReserveId(),
-              }),
-            },
-          },
-        }),
-      }));
-
+    it("keeps the same id across rerenders", async () => {
       const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
       const { result, rerender } = renderHook(() => useRecipeId("create"), {
         wrapper: createTestWrapper(queryClient),
       });
 
       await waitFor(() => {
-        expect(result.current.recipeId).toBe("once-id");
+        expect(result.current.recipeId).toMatch(UUID_RE);
       });
 
-      // Rerender shouldn't trigger another call
+      const firstId = result.current.recipeId;
+
       rerender();
 
-      await waitFor(() => {
-        expect(mockReserveId).toHaveBeenCalledTimes(1);
-      });
+      expect(result.current.recipeId).toBe(firstId);
     });
 
-    it("fetches a fresh reservation when the create page is mounted again", async () => {
-      queryClient = new QueryClient({
-        defaultOptions: {
-          queries: {
-            retry: false,
-            staleTime: 1000 * 60 * 5,
-            gcTime: Infinity,
-          },
-        },
-      });
-
-      mockReserveId
-        .mockResolvedValueOnce({ recipeId: "first-reserved-id" })
-        .mockResolvedValueOnce({ recipeId: "second-reserved-id" });
-
-      vi.doMock("@/app/providers/trpc-provider", () => ({
-        useTRPC: () => ({
-          recipes: {
-            reserveId: {
-              queryOptions: (_input?: undefined, options?: Record<string, unknown>) => ({
-                queryKey: ["recipes", "reserveId"],
-                queryFn: () => mockReserveId(),
-                ...options,
-              }),
-            },
-          },
-        }),
-      }));
-
+    it("mints a fresh id when the create page is mounted again", async () => {
       const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
+
       const first = renderHook(() => useRecipeId("create"), {
         wrapper: createTestWrapper(queryClient),
       });
 
       await waitFor(() => {
-        expect(first.result.current.recipeId).toBe("first-reserved-id");
+        expect(first.result.current.recipeId).toMatch(UUID_RE);
       });
+
+      const firstId = first.result.current.recipeId;
 
       first.unmount();
 
@@ -302,31 +92,15 @@ describe("useRecipeId", () => {
       });
 
       await waitFor(() => {
-        expect(second.result.current.recipeId).toBe("second-reserved-id");
+        expect(second.result.current.recipeId).toMatch(UUID_RE);
       });
 
-      expect(mockReserveId).toHaveBeenCalledTimes(2);
-      expect(queryClient.getQueryData(["recipes", "reserveId"])).toBeUndefined();
+      expect(second.result.current.recipeId).not.toBe(firstId);
     });
   });
 
   describe("return types", () => {
     it("returns object with correct structure", async () => {
-      mockReserveId.mockResolvedValue({ recipeId: "typed-id" });
-
-      vi.doMock("@/app/providers/trpc-provider", () => ({
-        useTRPC: () => ({
-          recipes: {
-            reserveId: {
-              queryOptions: () => ({
-                queryKey: ["recipes", "reserveId"],
-                queryFn: () => mockReserveId(),
-              }),
-            },
-          },
-        }),
-      }));
-
       const { useRecipeId } = await import("@/hooks/recipes/use-recipe-id");
       const { result } = renderHook(() => useRecipeId("create"), {
         wrapper: createTestWrapper(queryClient),

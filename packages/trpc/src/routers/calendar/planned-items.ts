@@ -123,6 +123,7 @@ export const createPlannedRecipeProcedure = authedProcedure
   .output(plannedRecipeMutationOutputSchema)
   .mutation(async ({ ctx, input }) => {
     return createCalendarItem(ctx, {
+      id: input.id,
       date: input.date,
       slot: input.slot,
       itemType: "recipe",

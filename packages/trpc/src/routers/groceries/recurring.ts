@@ -30,6 +30,8 @@ import { groceryEmitter } from "./emitter";
 const createRecurring = authedProcedure
   .input(
     z.object({
+      // Optional client-minted id for the recurring row, honoured on insert (ADR-0003).
+      id: z.string().uuid().optional(),
       name: z.string(),
       amount: z.number().nullable(),
       unit: z.string().nullable(),
@@ -49,7 +51,7 @@ const createRecurring = authedProcedure
     );
 
     const recurringData = {
-      id: crypto.randomUUID(),
+      id: input.id ?? crypto.randomUUID(),
       userId: ctx.user.id,
       name: input.name,
       amount: input.amount,

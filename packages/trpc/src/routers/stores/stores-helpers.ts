@@ -31,7 +31,7 @@ export async function createStoreData(
   ctx: StoreProcedureContext,
   input: z.infer<typeof StoreCreateSchema>
 ) {
-  const storeId = crypto.randomUUID();
+  const storeId = input.id ?? crypto.randomUUID();
 
   log.info({ userId: ctx.user.id, storeName: input.name }, "Creating store");
 

@@ -322,6 +322,49 @@ describe("calendar planned recipe openapi procedures", () => {
     expect(result).toEqual({ id: itemId });
   });
 
+  it("inserts a planned recipe with the client-minted id when one is supplied", async () => {
+    const clientId = crypto.randomUUID();
+    const recipeId = crypto.randomUUID();
+
+    createPlannedItem.mockResolvedValue({
+      id: clientId,
+      userId: ctx.user.id,
+      date: "2025-01-20",
+      slot: "Dinner",
+      sortOrder: 0,
+      itemType: "recipe",
+      recipeId,
+      title: null,
+      version: 1,
+    });
+    getPlannedItemWithRecipeById.mockResolvedValue({
+      id: clientId,
+      userId: ctx.user.id,
+      date: "2025-01-20",
+      slot: "Dinner",
+      sortOrder: 0,
+      itemType: "recipe",
+      recipeId,
+      title: null,
+      version: 1,
+      recipeName: "Pasta",
+      recipeImage: null,
+      servings: 4,
+      calories: 600,
+    });
+
+    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const result = await caller.createPlannedRecipe({
+      id: clientId,
+      date: "2025-01-20",
+      slot: "Dinner",
+      recipeId,
+    });
+
+    expect(createPlannedItem).toHaveBeenCalledWith(expect.objectContaining({ id: clientId }));
+    expect(result).toEqual({ id: clientId });
+  });
+
   it("deletes a planned recipe item", async () => {
     const itemId = crypto.randomUUID();
 

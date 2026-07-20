@@ -5,6 +5,7 @@ import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
+import { createClientId } from "@norish/shared/lib/operation-helpers";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
 import type {
@@ -32,7 +33,9 @@ type CreateRecurringResult = {
 };
 
 function createOptimisticId() {
-  return globalThis.crypto?.randomUUID?.() ?? `optimistic-${Date.now()}-${Math.random()}`;
+  // A valid UUID even without Web Crypto, since it is now sent to the server as a
+  // client-minted id and must satisfy `z.uuid()` (ADR-0003).
+  return createClientId();
 }
 
 function createOptimisticGrocery({
@@ -239,6 +242,9 @@ export function createUseGroceriesMutations({
       const optimisticId = createOptimisticId();
       const requestedStoreId = storeId ?? null;
       const groceryData = {
+        // Send the optimistic id as the client-minted id so the server inserts the
+        // row with it; a queued create-then-tick chain then stays valid (ADR-0003).
+        id: optimisticId,
         name: parsed.description,
         amount: parsed.quantity,
         unit: parsed.unitOfMeasure,
@@ -278,7 +284,11 @@ export function createUseGroceriesMutations({
     };
 
     const createGroceriesFromData = (groceryDataList: GroceryCreateData[]): Promise<string[]> => {
+      // Mint one client id per item and reuse it for both the sent payload and the
+      // optimistic row, so the server inserts with it and reconciliation is a no-op
+      // for non-merged rows (ADR-0003).
       const groceriesToCreate = groceryDataList.map((g) => ({
+        id: createOptimisticId(),
         name: g.name,
         amount: g.amount ?? null,
         unit: g.unit ?? null,
@@ -287,7 +297,7 @@ export function createUseGroceriesMutations({
       }));
       const optimisticGroceries = groceriesToCreate.map((grocery) =>
         createOptimisticGrocery({
-          id: createOptimisticId(),
+          id: grocery.id,
           name: grocery.name,
           amount: grocery.amount,
           unit: grocery.unit,
@@ -338,6 +348,8 @@ export function createUseGroceriesMutations({
 
       createRecurringMutation.mutate(
         {
+          // Client-minted id for the recurring row, honoured on insert (ADR-0003).
+          id: createOptimisticId(),
           name: parsed.description,
           amount: parsed.quantity ?? null,
           unit: parsed.unitOfMeasure,

@@ -178,4 +178,24 @@ describe("stores procedures", () => {
       })
     );
   });
+
+  it("inserts the store with the client-minted id when one is supplied", async () => {
+    const clientId = crypto.randomUUID();
+
+    storesRepository.checkStoreNameExistsInHousehold.mockResolvedValue(false);
+    storesRepository.createStore.mockImplementation(
+      async (id: string, data: Record<string, unknown>) => ({ id, ...data, version: 1 })
+    );
+
+    const caller = openApiStoresRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const result = await caller.createStore({
+      id: clientId,
+      name: "Market",
+      color: "primary",
+      icon: "ShoppingBagIcon",
+    });
+
+    expect(storesRepository.createStore).toHaveBeenCalledWith(clientId, expect.anything());
+    expect(result).toEqual(expect.objectContaining({ id: clientId }));
+  });
 });

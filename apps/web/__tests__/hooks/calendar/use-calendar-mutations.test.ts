@@ -111,6 +111,8 @@ describe("useCalendarMutations", () => {
       await waitFor(() => {
         expect(mockCreateItemMutate).toHaveBeenCalled();
         expect(mockCreateItemMutate.mock.calls[0][0]).toEqual({
+          // Client-minted id (ADR-0003).
+          id: expect.any(String),
           date: "2025-01-15",
           slot: "Breakfast",
           itemType: "recipe",
@@ -134,6 +136,8 @@ describe("useCalendarMutations", () => {
       await waitFor(() => {
         expect(mockCreateItemMutate).toHaveBeenCalled();
         expect(mockCreateItemMutate.mock.calls[0][0]).toEqual({
+          // Client-minted id (ADR-0003).
+          id: expect.any(String),
           date: "2025-01-15",
           slot: "Lunch",
           itemType: "note",

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { recurringGroceriesProcedures } from "@norish/trpc/routers/groceries/recurring";
 
+import { createGrocery } from "../mocks/db";
 import { groceryEmitter } from "../mocks/grocery-emitter";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { calculateNextOccurrence } from "../mocks/recurrence";
@@ -112,6 +113,35 @@ describe("recurring groceries procedures", () => {
           recurringGrocery: mockRecurring,
           grocery: mockGrocery,
         })
+      );
+    });
+
+    it("inserts the recurring row with the client-minted id when one is supplied", async () => {
+      const clientId = crypto.randomUUID();
+
+      createRecurringGrocery.mockResolvedValue(
+        createMockRecurringGrocery({ id: clientId, name: "Weekly Milk" })
+      );
+      createGrocery.mockResolvedValue(createMockGrocery({ id: crypto.randomUUID() }));
+
+      const caller = recurringGroceriesProcedures.createCaller({
+        ...ctx,
+        multiplexer: null,
+      } as any);
+
+      await caller.createRecurring({
+        id: clientId,
+        name: "Weekly Milk",
+        amount: 2,
+        unit: "liters",
+        recurrenceRule: "week",
+        recurrenceInterval: 1,
+        recurrenceWeekday: null,
+        nextPlannedFor: "2025-12-01",
+      });
+
+      expect(createRecurringGrocery).toHaveBeenCalledWith(
+        expect.objectContaining({ id: clientId })
       );
     });
   });

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type {
   CalendarCacheHelpers,
@@ -168,7 +169,8 @@ export function createUseCalendarMutations({
       recipeId?: string,
       title?: string
     ) => {
-      createMutation.mutate({ date, slot, itemType, recipeId, title });
+      // Client-minted id, honoured on insert (ADR-0003).
+      createMutation.mutate({ id: createClientId(), date, slot, itemType, recipeId, title });
     };
 
     const deleteItem = (itemId: string) => {

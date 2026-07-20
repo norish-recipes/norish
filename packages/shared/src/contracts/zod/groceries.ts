@@ -59,6 +59,9 @@ const GroceryStoreReorderInputSchema = GroceryVersionInputSchema.extend({
 
 // Create schema without userId (added server-side)
 export const GroceryCreateSchema = z.object({
+  // Optional client-minted id: honoured on insert so queued offline create-then-edit
+  // chains stay valid by construction (ADR-0003). Server mints one when absent.
+  id: z.uuid().optional(),
   name: z.string().nullable(),
   unit: z.string().nullable(),
   amount: z.coerce.number().nullable(),

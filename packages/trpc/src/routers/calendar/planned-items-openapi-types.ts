@@ -10,6 +10,8 @@ export const listItemsInput = z.object({
 
 export const createItemInput = z
   .object({
+    // Optional client-minted id, honoured on insert (ADR-0003).
+    id: z.string().uuid().optional(),
     date: z.string(),
     slot: slotSchema,
     itemType: itemTypeSchema,
@@ -37,6 +39,8 @@ export const plannedRecipeListItemSchema = z.object({
 });
 
 export const createPlannedRecipeInputSchema = z.object({
+  // Optional client-minted id, honoured on insert (ADR-0003).
+  id: z.string().uuid().optional(),
   date: z.string(),
   slot: slotSchema,
   recipeId: z.string().uuid(),

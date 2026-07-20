@@ -141,7 +141,7 @@ export async function createGroceriesData(
       continue;
     }
 
-    const id = crypto.randomUUID();
+    const id = grocery.id ?? crypto.randomUUID();
     let storeId: string | null = grocery.storeId ?? null;
 
     if (!storeId && grocery.name) {

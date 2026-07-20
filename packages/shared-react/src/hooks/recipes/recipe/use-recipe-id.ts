@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
+import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type { CreateRecipeHooksOptions } from "../types";
 
@@ -13,37 +13,25 @@ export type RecipeIdResult = {
   error: string | null;
 };
 
-export function createUseRecipeId({ useTRPC }: CreateRecipeHooksOptions) {
+export function createUseRecipeId(_options: CreateRecipeHooksOptions) {
   return function useRecipeId(mode: "create" | "edit", existingId?: string): RecipeIdResult {
-    const trpc = useTRPC();
-    const queryClient = useQueryClient();
     const [recipeId, setRecipeId] = useState<string | null>(existingId ?? null);
     const [isLoading, setIsLoading] = useState(mode === "create" && !existingId);
-    const [error, setError] = useState<string | null>(null);
+    const [error] = useState<string | null>(null);
 
     useEffect(() => {
       if (mode === "create" && !recipeId) {
-        const reserveIdOptions = trpc.recipes.reserveId.queryOptions(undefined, {
-          staleTime: 0,
-          gcTime: 0,
-        });
+        // Mint the recipe id on the client (not via a server round-trip) so recipe
+        // creation works offline and a queued create-then-edit chain stays valid by
+        // construction (ADR-0003). The create procedure honours this id on insert.
+        // Done in an effect (not a lazy initializer) to avoid an SSR/client id mismatch.
+        const id = createClientId();
 
-        queryClient
-          .fetchQuery(reserveIdOptions)
-          .then(({ recipeId: id }) => {
-            setRecipeId(id);
-            log.debug({ recipeId: id }, "Reserved recipe ID from backend");
-          })
-          .catch((err: Error) => {
-            log.error({ err }, "Failed to reserve recipe ID");
-            setError("Failed to initialize form. Please refresh the page.");
-          })
-          .finally(() => {
-            queryClient.removeQueries({ queryKey: reserveIdOptions.queryKey, exact: true });
-            setIsLoading(false);
-          });
+        setRecipeId(id);
+        setIsLoading(false);
+        log.debug({ recipeId: id }, "Minted client-side recipe ID");
       }
-    }, [mode, recipeId, trpc.recipes.reserveId, queryClient]);
+    }, [mode, recipeId]);
 
     return {
       recipeId,
