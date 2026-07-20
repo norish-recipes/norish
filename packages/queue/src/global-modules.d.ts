@@ -9,11 +9,3 @@ declare module "heic-convert" {
 
   export default function convert(input: HeicConvertInput): Promise<ArrayBuffer>;
 }
-
-declare module "microdata-node" {
-  const microdata: {
-    toJson(input: string): unknown;
-  };
-
-  export default microdata;
-}
