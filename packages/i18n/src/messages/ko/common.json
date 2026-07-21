@@ -92,11 +92,11 @@
   },
   "connection": {
     "connecting": "Norish에 연결 중...",
-    "syncing": "동기화 중입니다. 잠시 기다려 주세요...",
     "checkInternet": "인터넷 연결을 확인해주세요",
-    "gettingUpdates": "최신 업데이트를 받는 동안 잠시만 기다려 주세요.",
     "offlineBanner": "오프라인 상태입니다 캐시된 데이터를 표시합니다",
-    "serverUnreachableBanner": "Norish 서버에 연결할 수 없습니다 캐시된 데이터를 표시합니다"
+    "serverUnreachableBanner": "Norish 서버에 연결할 수 없습니다 캐시된 데이터를 표시합니다",
+    "live": "연결됨",
+    "offline": "오프라인"
   },
   "language": {
     "title": "언어"

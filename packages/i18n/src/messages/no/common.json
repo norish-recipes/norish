@@ -92,11 +92,11 @@
   },
   "connection": {
     "connecting": "Kobler til Norish...",
-    "syncing": "Synkroniserer, vennligst vent...",
     "checkInternet": "Sjekk internettforbindelsen din",
-    "gettingUpdates": "Et øyeblikk mens vi henter de siste oppdateringene",
     "offlineBanner": "Du er frakoblet og ser bufrede data",
-    "serverUnreachableBanner": "Norish-serveren er ikke tilgjengelig, viser bufrede data"
+    "serverUnreachableBanner": "Norish-serveren er ikke tilgjengelig, viser bufrede data",
+    "live": "Tilkoblet",
+    "offline": "Frakoblet"
   },
   "language": {
     "title": "Språk"

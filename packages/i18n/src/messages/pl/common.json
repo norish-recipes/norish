@@ -86,11 +86,11 @@
   },
   "connection": {
     "connecting": "Łączenie z Norish...",
-    "syncing": "Synchronizacja, proszę czekać...",
     "checkInternet": "Sprawdź połączenie internetowe",
-    "gettingUpdates": "Chwileczkę, pobieramy najnowsze aktualizacje",
     "offlineBanner": "Jesteś offline, wyświetlane są dane z pamięci podręcznej",
-    "serverUnreachableBanner": "Nie można połączyć się z serwerem Norish, wyświetlane są dane z pamięci podręcznej"
+    "serverUnreachableBanner": "Nie można połączyć się z serwerem Norish, wyświetlane są dane z pamięci podręcznej",
+    "live": "Połączono",
+    "offline": "Offline"
   },
   "language": { "title": "Język" },
   "notFound": {

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useConnectivity } from "@/app/providers/connectivity-provider";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
 import UserAvatar from "@/components/shared/user-avatar";
@@ -34,7 +35,9 @@ export default function NavbarUserMenu({
   trigger = "avatar",
 }: NavbarUserMenuProps) {
   const t = useTranslations("navbar.userMenu");
+  const tc = useTranslations("common.connection");
   const { user, signOut } = useUserContext();
+  const { isOffline } = useConnectivity();
   const router = useRouter();
   const [localOpen, setLocalOpen] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
@@ -70,12 +73,18 @@ export default function NavbarUserMenu({
               name={user.name}
               userId={user.id}
             />
-            {updateAvailable && (
+            {isOffline ? (
+              <span
+                aria-label={tc("offline")}
+                className="border-background bg-warning absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border-2"
+                role="status"
+              />
+            ) : updateAvailable ? (
               <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
                 <span className="bg-accent absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
                 <span className="bg-accent relative inline-flex h-3 w-3 rounded-full" />
               </span>
-            )}
+            ) : null}
           </Button>
         ) : (
           <Button
@@ -200,21 +209,30 @@ export default function NavbarUserMenu({
               <Label className="text-danger text-base font-medium">{t("logout")}</Label>
             </Dropdown.Item>
           </Dropdown.Menu>
-          <div className="border-border text-muted mt-2 flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-1.5 border-t px-4 py-3 text-xs">
-            {updateAvailable && releaseUrl && latestVersion && (
-              <a
-                className="text-accent min-w-0 truncate hover:underline"
-                href={releaseUrl}
-                rel="noopener noreferrer"
-                target="_blank"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {t("version.updateAvailable", {
-                  version: latestVersion,
-                })}
-              </a>
-            )}
-            <span className="shrink-0">v{currentVersion ?? "..."}</span>
+          <div className="border-border text-muted mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 border-t px-4 py-3 text-xs">
+            <span className="flex shrink-0 items-center gap-1.5 font-medium">
+              <span
+                aria-hidden
+                className={`h-2 w-2 rounded-full ${isOffline ? "bg-warning" : "bg-accent"}`}
+              />
+              {isOffline ? tc("offline") : tc("live")}
+            </span>
+            <span className="ml-auto flex min-w-0 items-center gap-x-3">
+              {updateAvailable && releaseUrl && latestVersion && (
+                <a
+                  className="text-accent min-w-0 truncate hover:underline"
+                  href={releaseUrl}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {t("version.updateAvailable", {
+                    version: latestVersion,
+                  })}
+                </a>
+              )}
+              <span className="shrink-0">v{currentVersion ?? "..."}</span>
+            </span>
           </div>
         </Dropdown.Popover>
       </Dropdown>

@@ -1,9 +1,9 @@
 "use client";
 
 import type { ThemeProviderProps } from "next-themes";
-import { ConnectionStatusOverlay } from "@/components/shared/connection-status-overlay";
 
 import { BaseProviders } from "./base-providers";
+import { ConnectivityProvider } from "./connectivity-provider";
 
 export interface AuthProvidersProps {
   children: React.ReactNode;
@@ -13,8 +13,7 @@ export interface AuthProvidersProps {
 export function AuthProviders({ children, themeProps }: AuthProvidersProps) {
   return (
     <BaseProviders themeProps={themeProps}>
-      <ConnectionStatusOverlay />
-      {children}
+      <ConnectivityProvider>{children}</ConnectivityProvider>
     </BaseProviders>
   );
 }

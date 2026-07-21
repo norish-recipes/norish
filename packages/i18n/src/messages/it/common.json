@@ -92,11 +92,11 @@
   },
   "connection": {
     "connecting": "Connessione a Norish...",
-    "syncing": "Sincronizzazione in corso, attendere...",
     "checkInternet": "Controlla la tua connessione internet",
-    "gettingUpdates": "Un momento mentre recuperiamo gli ultimi aggiornamenti",
     "offlineBanner": "Sei offline, visualizzazione dei dati memorizzati nella cache",
-    "serverUnreachableBanner": "Impossibile raggiungere il server Norish, visualizzazione dei dati memorizzati nella cache"
+    "serverUnreachableBanner": "Impossibile raggiungere il server Norish, visualizzazione dei dati memorizzati nella cache",
+    "live": "Connesso",
+    "offline": "Offline"
   },
   "language": {
     "title": "Lingua"
