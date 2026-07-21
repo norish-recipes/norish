@@ -9,6 +9,7 @@ import { createUseRecipesCacheHelpers } from "./use-recipes-cache";
 import { createUseRecipesMutations } from "./use-recipes-mutations";
 import { createUseRecipesQuery } from "./use-recipes-query";
 import { createUseRecipesSubscription } from "./use-recipes-subscription";
+import { promoteRecipeToWarmSet } from "./warm-recipe";
 
 export type { InfiniteRecipeData, RecipesCacheHelpers } from "./use-recipes-cache";
 export type {
@@ -35,6 +36,7 @@ export {
   createUseFavoritesMutation,
   createUseRatingsSubscription,
   createUseRandomRecipe,
+  promoteRecipeToWarmSet,
 };
 
 export function createDashboardRecipeHooks(

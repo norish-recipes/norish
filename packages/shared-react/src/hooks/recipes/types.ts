@@ -50,4 +50,11 @@ export type TrpcHookBinding = ReturnType<TrpcContext["useTRPC"]> & SubscriptionP
 export interface CreateRecipeHooksOptions {
   useTRPC: () => TrpcHookBinding;
   shouldPreserveOptimisticUpdate?: (error: unknown) => boolean;
+  /**
+   * The long "Warm Set" gcTime (ms) to stamp on a freshly-created recipe's
+   * `recipes.get` entry so it is durably offline-available immediately
+   * (ADR-0008). Injected by the web app, whose query-cache layer owns the value;
+   * other clients (mobile) leave it unset.
+   */
+  warmRecipeGcTime?: number;
 }
