@@ -56,6 +56,11 @@ vi.mock("@/components/shared/import-recipe-modal", () => ({
   default: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <div>Import recipe modal</div> : null),
 }));
 
+vi.mock("@/components/navbar/offline-status/offline-status-modal", () => ({
+  OfflineStatusModal: ({ isOpen }: { isOpen: boolean }) =>
+    isOpen ? <div>Offline status modal</div> : null,
+}));
+
 vi.mock("@/components/shared/user-avatar", () => ({
   default: ({ name }: { name: string }) => <span>{name}</span>,
 }));

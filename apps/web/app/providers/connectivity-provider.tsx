@@ -1,33 +1,59 @@
 "use client";
 
+import type { ConnectivitySnapshot, ConnectivityState } from "@/lib/connectivity";
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useConnectionStatus } from "@/app/providers/trpc-provider";
-
 import {
-  type ConnectivitySnapshot,
-  type ConnectivityState,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { useConnectionStatus } from "@/app/providers/trpc-provider";
+import {
   INITIAL_CONNECTIVITY,
+  isOfflineForced,
   nextProbeDelayMs,
   probeBackendReachable,
   reduceProbeResult,
+  subscribeOfflineForced,
 } from "@/lib/connectivity";
 
+/**
+ * The effective connectivity posture: the pure machine state plus the dev-only
+ * forced-Offline override (ADR-0007). `offline-forced` never exists in
+ * production, where the override is always absent and the posture collapses back
+ * to the machine `state`.
+ */
+export type ConnectivityPosture = "live" | "offline" | "offline-forced";
+
 export interface ConnectivityValue {
+  /** The pure reachability-machine state (`live | offline`), override aside. */
   state: ConnectivityState;
+  /** Effective posture, including the dev forced-Offline override. */
+  posture: ConnectivityPosture;
   isLive: boolean;
+  /** True while Offline for any reason — a failed probe *or* the dev override. */
   isOffline: boolean;
+  /** True only under the dev-only forced-Offline override. */
+  isForced: boolean;
 }
 
 const ConnectivityContext = createContext<ConnectivityValue>({
   state: "live",
+  posture: "live",
   isLive: true,
   isOffline: false,
+  isForced: false,
 });
 
 export function useConnectivity(): ConnectivityValue {
   return useContext(ConnectivityContext);
 }
+
+const serverForcedSnapshot = () => false;
 
 /**
  * Owns the Live/Offline runtime: a self-scheduling health-probe loop whose
@@ -40,6 +66,14 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
   const [snapshot, setSnapshot] = useState<ConnectivitySnapshot>(INITIAL_CONNECTIVITY);
   const { status: wsStatus } = useConnectionStatus();
 
+  // The dev-only forced-Offline override (ADR-0007). Always false in production,
+  // where subscribeOfflineForced is a no-op and isOfflineForced folds to false.
+  const forced = useSyncExternalStore(
+    subscribeOfflineForced,
+    isOfflineForced,
+    serverForcedSnapshot
+  );
+
   const snapshotRef = useRef<ConnectivitySnapshot>(snapshot);
 
   snapshotRef.current = snapshot;
@@ -48,6 +82,14 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
   const probeNowRef = useRef<() => void>(() => {});
 
   useEffect(() => {
+    // Radio silence while Offline is forced: no probes are scheduled and
+    // probeNowRef stays a no-op, so the WS/onLine hints below can't wake one
+    // either (ADR-0007). Clearing the override re-runs this effect and the
+    // normal loop resumes — the organic reconnect path.
+    if (forced) {
+      return;
+    }
+
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let inFlight = false;
@@ -122,7 +164,7 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("online", probeNow);
       window.removeEventListener("offline", probeNow);
     };
-  }, []);
+  }, [forced]);
 
   // WebSocket transitions are hints too: a drop or a (re)connect means the
   // backend's reachability likely just changed, so re-probe without waiting.
@@ -140,14 +182,17 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
     }
   }, [wsStatus]);
 
-  const value = useMemo<ConnectivityValue>(
-    () => ({
+  const value = useMemo<ConnectivityValue>(() => {
+    const posture: ConnectivityPosture = forced ? "offline-forced" : snapshot.state;
+
+    return {
       state: snapshot.state,
-      isLive: snapshot.state === "live",
-      isOffline: snapshot.state === "offline",
-    }),
-    [snapshot.state]
-  );
+      posture,
+      isLive: posture === "live",
+      isOffline: posture !== "live",
+      isForced: posture === "offline-forced",
+    };
+  }, [snapshot.state, forced]);
 
   return <ConnectivityContext.Provider value={value}>{children}</ConnectivityContext.Provider>;
 }

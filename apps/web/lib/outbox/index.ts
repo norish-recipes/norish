@@ -1,14 +1,5 @@
-export type {
-  NewOutboxEntry,
-  OutboxEntry,
-  OutboxEntryStatus,
-  ParkedReason,
-} from "./outbox-types";
-export {
-  createOutboxStore,
-  type OutboxStore,
-  outboxStore,
-} from "./outbox-store";
+export type { NewOutboxEntry, OutboxEntry, OutboxEntryStatus, ParkedReason } from "./outbox-types";
+export { createOutboxStore, type OutboxStore, outboxStore } from "./outbox-store";
 export { createOutboxLink } from "./outbox-link";
 export {
   classifyReplayError,
@@ -40,3 +31,4 @@ export {
   subscribeReplayState,
 } from "./replay";
 export { runReconnectSequence, type ReconnectSequenceSteps } from "./reconnect";
+export { discardAllEntries, retryParkedEntries } from "./status-actions";

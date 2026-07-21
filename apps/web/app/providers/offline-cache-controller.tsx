@@ -1,14 +1,13 @@
 "use client";
 
+import type { OutboxMutationClient } from "@/lib/outbox";
+import type { WarmerTRPC } from "@/lib/query-cache";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { useTRPC, useTRPCClient } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
-import { useQueryClient } from "@tanstack/react-query";
-
 import {
-  type OutboxMutationClient,
   outboxStore,
   processQueue,
   replayOutboxEntry,
@@ -17,7 +16,13 @@ import {
   setReplayOwnerResolver,
   setReplaySubmit,
 } from "@/lib/outbox";
-import { activeCacheOwner, resolveCacheOwner, warmCache, type WarmerTRPC } from "@/lib/query-cache";
+import {
+  activeCacheOwner,
+  resolveCacheOwner,
+  warmCache,
+  writeLastWarmedAt,
+} from "@/lib/query-cache";
+import { useQueryClient } from "@tanstack/react-query";
 
 /**
  * Drives the persisted Offline Cache and the Outbox from the two runtime signals
@@ -117,7 +122,19 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
       // persisted cache rather than re-fetching the whole Warm Set concurrently.
       drain: () => processQueue(),
       invalidate: () => (reconnecting ? queryClient.invalidateQueries() : Promise.resolve()),
-      warm: () => runIfLeader(() => warmCache({ trpc: trpc as unknown as WarmerTRPC, queryClient })),
+      warm: () =>
+        runIfLeader(async () => {
+          await warmCache({ trpc: trpc as unknown as WarmerTRPC, queryClient });
+
+          // Stamp when the Warm Set was last topped up so the status modal can
+          // show an Offline-only "data from X ago" line. Leader-only, matching
+          // where warmCache actually runs.
+          const owner = activeCacheOwner();
+
+          if (owner) {
+            await writeLastWarmedAt(owner, Date.now());
+          }
+        }),
     });
   }, [isLive, isOffline, readyOwner, queryClient, trpc]);
 

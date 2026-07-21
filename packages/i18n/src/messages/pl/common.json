@@ -70,8 +70,14 @@
     "sortByDate": "Data",
     "clearFilters": "Wyczyść filtry"
   },
-  "time": { "minutes": "min", "hours": "godz" },
-  "validation": { "required": "To pole jest wymagane", "invalidUrl": "Podaj prawidłowy URL" },
+  "time": {
+    "minutes": "min",
+    "hours": "godz"
+  },
+  "validation": {
+    "required": "To pole jest wymagane",
+    "invalidUrl": "Podaj prawidłowy URL"
+  },
   "errors": {
     "operationFailed": "Operacja nie powiodła się",
     "nameCannotBeEmpty": "Nazwa nie może być pusta",
@@ -90,9 +96,12 @@
     "offlineBanner": "Jesteś offline, wyświetlane są dane z pamięci podręcznej",
     "serverUnreachableBanner": "Nie można połączyć się z serwerem Norish, wyświetlane są dane z pamięci podręcznej",
     "live": "Połączono",
-    "offline": "Offline"
+    "offline": "Offline",
+    "openDetails": "Connection details"
   },
-  "language": { "title": "Język" },
+  "language": {
+    "title": "Język"
+  },
   "notFound": {
     "code": "404",
     "title": "Nie znaleziono strony",
@@ -149,7 +158,9 @@
     "recipeLink": "Wpisz **/nazwa przepisu** aby linkować przepis",
     "helpAriaLabel": "Pomoc formatowania"
   },
-  "tagInput": { "placeholder": "Wpisuj tagi oddzielone spacjami..." },
+  "tagInput": {
+    "placeholder": "Wpisuj tagi oddzielone spacjami..."
+  },
   "recurrence": {
     "title": "Powtarzaj",
     "frequency": "Częstotliwość",
@@ -189,7 +200,9 @@
       "6": "Sobota"
     }
   },
-  "badges": { "new": "Nowe" },
+  "badges": {
+    "new": "Nowe"
+  },
   "timer": {
     "done": "Gotowe",
     "done_action": "Gotowe",
@@ -201,5 +214,56 @@
     "notification_body": "{label} gotowe!",
     "notifications_disabled": "Powiadomienia są wyłączone",
     "notifications_disabled_hint": "Włącz powiadomienia w przeglądarce, aby otrzymywać alerty gdy timer skończy działać w tle."
+  },
+  "offlineStatus": {
+    "title": "Connection & offline",
+    "connection": {
+      "heading": "Connection",
+      "live": "Live",
+      "offline": "Offline",
+      "forced": "Offline (forced)",
+      "liveDescription": "Connected to Norish. Changes sync as you make them.",
+      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
+      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
+      "devBadge": "dev"
+    },
+    "cache": {
+      "heading": "Offline cache",
+      "recipes": "Recipes",
+      "groceries": "Groceries",
+      "stores": "Stores",
+      "planned": "This week",
+      "dataAge": "Data from {when}",
+      "dataAgeUnknown": "Not warmed yet",
+      "wipe": "Clear cached data",
+      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
+      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
+      "wipeConfirm": "Clear",
+      "wipeCancel": "Keep"
+    },
+    "outbox": {
+      "heading": "Queued changes",
+      "empty": "Nothing queued — everything's synced.",
+      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
+      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
+      "syncNow": "Sync now",
+      "retryAll": "Retry all",
+      "discardAll": "Discard all",
+      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
+      "discardConfirm": "Discard",
+      "discardCancel": "Keep",
+      "status": {
+        "pending": "Syncing",
+        "parked": "Needs attention",
+        "conflicted": "Conflict"
+      }
+    },
+    "devToggle": {
+      "heading": "Developer",
+      "force": "Force offline",
+      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
+      "on": "On",
+      "off": "Off"
+    }
   }
 }

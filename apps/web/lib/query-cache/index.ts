@@ -29,3 +29,10 @@ export {
   WARM_FULL_RECIPE_COUNT,
   WARM_RECIPE_LIST_LIMIT,
 } from "./cache-warmer";
+export {
+  type CacheStatusTRPC,
+  getOfflineCacheCounts,
+  type OfflineCacheCounts,
+  wipeReadCache,
+} from "./cache-status";
+export { clearLastWarmedAt, readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";

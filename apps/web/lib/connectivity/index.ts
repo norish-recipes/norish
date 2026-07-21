@@ -15,3 +15,10 @@ export {
   type ProbeOptions,
   probeBackendReachable,
 } from "./probe";
+export {
+  isOfflineForced,
+  OFFLINE_FORCED_AVAILABLE,
+  setOfflineForced,
+  subscribeOfflineForced,
+} from "./forced-offline";
+export { createForcedOfflineLink } from "./forced-offline-link";

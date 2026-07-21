@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
+import { OfflineStatusModal } from "@/components/navbar/offline-status/offline-status-modal";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
 import UserAvatar from "@/components/shared/user-avatar";
@@ -41,6 +42,7 @@ export default function NavbarUserMenu({
   const router = useRouter();
   const [localOpen, setLocalOpen] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
   const themeSwitch = useThemeSwitch();
   const languageSwitch = useLanguageSwitch();
   const { currentVersion, latestVersion, updateAvailable, releaseUrl } = useVersionQuery();
@@ -210,13 +212,22 @@ export default function NavbarUserMenu({
             </Dropdown.Item>
           </Dropdown.Menu>
           <div className="border-border text-muted mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 border-t px-4 py-3 text-xs">
-            <span className="flex shrink-0 items-center gap-1.5 font-medium">
+            <button
+              aria-haspopup="dialog"
+              aria-label={tc("openDetails")}
+              className="hover:text-foreground flex shrink-0 items-center gap-1.5 font-medium"
+              type="button"
+              onClick={() => {
+                handleOpenChange(false);
+                setShowStatusModal(true);
+              }}
+            >
               <span
                 aria-hidden
                 className={`h-2 w-2 rounded-full ${isOffline ? "bg-warning" : "bg-accent"}`}
               />
               {isOffline ? tc("offline") : tc("live")}
-            </span>
+            </button>
             <span className="ml-auto flex min-w-0 items-center gap-x-3">
               {updateAvailable && releaseUrl && latestVersion && (
                 <a
@@ -239,6 +250,9 @@ export default function NavbarUserMenu({
 
       {/* Import from URL Modal */}
       <ImportRecipeModal isOpen={showUrlModal} onOpenChange={setShowUrlModal} />
+
+      {/* Connection & offline status */}
+      <OfflineStatusModal isOpen={showStatusModal} onOpenChange={setShowStatusModal} />
     </>
   );
 }
