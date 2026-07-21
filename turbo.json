@@ -25,10 +25,6 @@
       "dependsOn": ["^build:server"],
       "outputs": []
     },
-    "update-sw": {
-      "dependsOn": ["^update-sw"],
-      "outputs": ["public/sw.js"]
-    },
     "dev": {
       "dependsOn": ["^dev"],
       "cache": false,
