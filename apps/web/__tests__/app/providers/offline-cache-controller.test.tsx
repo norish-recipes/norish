@@ -8,13 +8,32 @@ const resolveCacheOwner = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Prom
 const activeCacheOwner = vi.hoisted(() => vi.fn<() => string | null>(() => null));
 const warmCache = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
 
+const purgeExcept = vi.hoisted(() => vi.fn<() => Promise<number>>(() => Promise.resolve(0)));
+const processQueue = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+const runReconnectSequence = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+const setReplaySubmit = vi.hoisted(() => vi.fn());
+const setReplayOwnerResolver = vi.hoisted(() => vi.fn());
+const replayOutboxEntry = vi.hoisted(() => vi.fn());
+
 let user: { id: string } | null = null;
 let connectivity = { isLive: true, isOffline: false };
 
 vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user }) }));
 vi.mock("@/app/providers/connectivity-provider", () => ({ useConnectivity: () => connectivity }));
-vi.mock("@/app/providers/trpc-provider", () => ({ useTRPC: () => ({}) }));
+vi.mock("@/app/providers/trpc-provider", () => ({
+  useTRPC: () => ({}),
+  useTRPCClient: () => ({}),
+}));
 vi.mock("@/lib/query-cache", () => ({ resolveCacheOwner, activeCacheOwner, warmCache }));
+vi.mock("@/lib/outbox", () => ({
+  outboxStore: { purgeExcept },
+  processQueue,
+  runReconnectSequence,
+  runIfLeader: (task: () => unknown) => task(),
+  setReplaySubmit,
+  setReplayOwnerResolver,
+  replayOutboxEntry,
+}));
 
 import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 
@@ -32,9 +51,18 @@ function renderController() {
 
 describe("OfflineCacheController", () => {
   beforeEach(() => {
-    resolveCacheOwner.mockClear();
+    for (const fn of [
+      resolveCacheOwner,
+      warmCache,
+      purgeExcept,
+      processQueue,
+      runReconnectSequence,
+      setReplaySubmit,
+      setReplayOwnerResolver,
+    ]) {
+      fn.mockClear();
+    }
     activeCacheOwner.mockReset().mockReturnValue(null);
-    warmCache.mockClear();
     user = null;
     connectivity = { isLive: true, isOffline: false };
   });
@@ -52,16 +80,43 @@ describe("OfflineCacheController", () => {
     );
   });
 
-  it("warms the Warm Set once an owner is settled while Live", async () => {
+  it("registers how the Outbox replays and who owns it", async () => {
     user = { id: "u1" };
     activeCacheOwner.mockReturnValue("u1");
 
     renderController();
 
-    await waitFor(() => expect(warmCache).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(setReplaySubmit).toHaveBeenCalled());
+    expect(setReplayOwnerResolver).toHaveBeenCalled();
   });
 
-  it("does not warm while Offline", async () => {
+  it("purges a departed user's queued mutations once an owner is settled", async () => {
+    user = { id: "u1" };
+    activeCacheOwner.mockReturnValue("u1");
+
+    renderController();
+
+    await waitFor(() => expect(purgeExcept).toHaveBeenCalledWith("u1"));
+  });
+
+  it("runs the Reconnect Sequence once an owner is settled while Live", async () => {
+    user = { id: "u1" };
+    activeCacheOwner.mockReturnValue("u1");
+
+    renderController();
+
+    await waitFor(() => expect(runReconnectSequence).toHaveBeenCalledTimes(1));
+    // The sequence is given the drain/refetch/warm steps to run in order.
+    expect(runReconnectSequence).toHaveBeenCalledWith(
+      expect.objectContaining({
+        drain: expect.any(Function),
+        invalidate: expect.any(Function),
+        warm: expect.any(Function),
+      })
+    );
+  });
+
+  it("does not run the Reconnect Sequence while Offline", async () => {
     user = { id: "u1" };
     connectivity = { isLive: false, isOffline: true };
     activeCacheOwner.mockReturnValue("u1");
@@ -71,10 +126,10 @@ describe("OfflineCacheController", () => {
     await waitFor(() =>
       expect(resolveCacheOwner).toHaveBeenCalledWith({ sessionUserId: "u1", isOffline: true })
     );
-    expect(warmCache).not.toHaveBeenCalled();
+    expect(runReconnectSequence).not.toHaveBeenCalled();
   });
 
-  it("does not warm before an owner is known (session unresolved)", async () => {
+  it("does not act before an owner is known (session unresolved)", async () => {
     user = null;
     activeCacheOwner.mockReturnValue(null);
 
@@ -83,6 +138,7 @@ describe("OfflineCacheController", () => {
     await waitFor(() =>
       expect(resolveCacheOwner).toHaveBeenCalledWith({ sessionUserId: null, isOffline: false })
     );
-    expect(warmCache).not.toHaveBeenCalled();
+    expect(runReconnectSequence).not.toHaveBeenCalled();
+    expect(purgeExcept).not.toHaveBeenCalled();
   });
 });

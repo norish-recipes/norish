@@ -3,6 +3,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
+import {
+  invalidateUnlessPreserved,
+  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
+} from "../optimistic-updates";
+
 import type {
   CalendarCacheHelpers,
   CalendarMutationsResult,
@@ -31,7 +36,8 @@ export function createUseCalendarMutations({
 
     const createMutation = useMutation(
       trpc.calendar.createItem.mutationOptions({
-        onError: () => invalidate(),
+        // Queued for Replay when the backend is unreachable — nothing to refetch.
+        onError: invalidateUnlessPreserved(invalidate),
       })
     );
 
@@ -54,7 +60,10 @@ export function createUseCalendarMutations({
           // update converges back to the DB state.
           if ("stale" in result && result.stale) invalidate();
         },
-        onError: (_err, _vars, context) => {
+        onError: (error, _vars, context) => {
+          // Queued: keep the optimistic move/edit; the Outbox will Replay it.
+          if (preserveOptimisticUpdate(error)) return;
+
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);
           }
@@ -127,7 +136,10 @@ export function createUseCalendarMutations({
         onSuccess: (result) => {
           if ("stale" in result && result.stale) invalidate();
         },
-        onError: (_err, _vars, context) => {
+        onError: (error, _vars, context) => {
+          // Queued: keep the optimistic move/edit; the Outbox will Replay it.
+          if (preserveOptimisticUpdate(error)) return;
+
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);
           }
@@ -154,7 +166,10 @@ export function createUseCalendarMutations({
         onSuccess: (result) => {
           if ("stale" in result && result.stale) invalidate();
         },
-        onError: (_err, _vars, context) => {
+        onError: (error, _vars, context) => {
+          // Queued: keep the optimistic move/edit; the Outbox will Replay it.
+          if (preserveOptimisticUpdate(error)) return;
+
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);
           }

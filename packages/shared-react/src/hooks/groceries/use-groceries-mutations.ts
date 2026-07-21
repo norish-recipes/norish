@@ -8,6 +8,11 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
+import {
+  invalidateUnlessPreserved,
+  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
+} from "../optimistic-updates";
+
 import type {
   CreateGroceriesHooksOptions,
   GroceriesData,
@@ -152,6 +157,7 @@ function reconcileCreatedGroceries(
 
   ids.forEach((id, index) => {
     const optimistic = optimisticGroceries[index];
+
     if (!optimistic) return;
 
     const grocery = returnedById.get(id) ?? { ...optimistic, id };
@@ -219,6 +225,10 @@ export function createUseGroceriesMutations({
     const mapGroceriesWithVersions = (ids: string[]) =>
       ids.map((id) => ({ id, version: getGroceryVersion(id) }));
 
+    // Keep an optimistic update when its mutation was Queued for Replay rather
+    // than refetching it away (see invalidateUnlessPreserved).
+    const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate);
+
     const createMutation = useMutation(trpc.groceries.create.mutationOptions());
     const toggleMutation = useMutation(trpc.groceries.toggle.mutationOptions());
     const updateMutation = useMutation(trpc.groceries.update.mutationOptions());
@@ -273,7 +283,7 @@ export function createUseGroceriesMutations({
               : prev
           );
         },
-        onError: () => invalidate(),
+        onError: invalidateUnlessQueued,
       });
     };
 
@@ -324,6 +334,15 @@ export function createUseGroceriesMutations({
             resolve(ids);
           },
           onError: (error) => {
+            if (preserveOptimisticUpdate(error)) {
+              // Queued: the optimistic rows hold and the client-minted ids are
+              // the ids the server will insert on Replay (ADR-0003), so this is
+              // a tentative success — resolve with them rather than reject.
+              resolve(optimisticIds);
+
+              return;
+            }
+
             invalidate();
             reject(error);
           },
@@ -357,7 +376,7 @@ export function createUseGroceriesMutations({
           onSuccess: (result: CreateRecurringResult) => {
             setGroceriesData((prev) => (prev ? applyRecurringCreatedToCache(prev, result) : prev));
           },
-          onError: () => invalidate(),
+          onError: invalidateUnlessQueued,
         }
       );
     };
@@ -376,7 +395,7 @@ export function createUseGroceriesMutations({
 
       toggleMutation.mutate(
         { groceries: mapGroceriesWithVersions(ids), isDone },
-        { onError: () => invalidate() }
+        { onError: invalidateUnlessQueued }
       );
     };
 
@@ -433,7 +452,7 @@ export function createUseGroceriesMutations({
           groceryVersion: getGroceryVersion(groceryId),
           isDone,
         },
-        { onError: () => invalidate() }
+        { onError: invalidateUnlessQueued }
       );
     };
 
@@ -474,7 +493,7 @@ export function createUseGroceriesMutations({
         mutationPayload.storeId = storeId;
       }
 
-      updateMutation.mutate(mutationPayload, { onError: () => invalidate() });
+      updateMutation.mutate(mutationPayload, { onError: invalidateUnlessQueued });
     };
 
     const updateRecurringGrocery = (
@@ -542,7 +561,7 @@ export function createUseGroceriesMutations({
               nextPlannedFor: nextDate,
             },
           },
-          { onError: () => invalidate() }
+          { onError: invalidateUnlessQueued }
         );
       } else {
         setGroceriesData((prev) => {
@@ -579,7 +598,7 @@ export function createUseGroceriesMutations({
             raw,
             ...(storeId !== undefined ? { storeId } : {}),
           },
-          { onError: () => invalidate() }
+          { onError: invalidateUnlessQueued }
         );
       }
     };
@@ -598,7 +617,7 @@ export function createUseGroceriesMutations({
 
       deleteMutation.mutate(
         { groceries: mapGroceriesWithVersions(ids) },
-        { onError: () => invalidate() }
+        { onError: invalidateUnlessQueued }
       );
     };
 
@@ -615,7 +634,7 @@ export function createUseGroceriesMutations({
 
       deleteRecurringMutation.mutate(
         { recurringGroceryId, version: getRecurringVersion(recurringGroceryId) },
-        { onError: () => invalidate() }
+        { onError: invalidateUnlessQueued }
       );
     };
 
@@ -651,6 +670,7 @@ export function createUseGroceriesMutations({
         { groceryId, version: getGroceryVersion(groceryId), storeId, savePreference },
         {
           onError: (error) => {
+            if (preserveOptimisticUpdate(error)) return;
             log.error({ error, groceryId, storeId }, "Failed to assign grocery to store");
             invalidate();
           },
@@ -702,6 +722,7 @@ export function createUseGroceriesMutations({
         },
         {
           onError: (error) => {
+            if (preserveOptimisticUpdate(error)) return;
             log.error({ error, updateCount: updates.length }, "Failed to reorder groceries");
             invalidate();
           },
@@ -736,6 +757,7 @@ export function createUseGroceriesMutations({
         },
         {
           onError: (error) => {
+            if (preserveOptimisticUpdate(error)) return;
             log.error({ error, storeId }, "Failed to mark groceries as done");
             invalidate();
           },
@@ -764,6 +786,7 @@ export function createUseGroceriesMutations({
         },
         {
           onError: (error) => {
+            if (preserveOptimisticUpdate(error)) return;
             log.error({ error, storeId }, "Failed to delete done groceries");
             invalidate();
           },

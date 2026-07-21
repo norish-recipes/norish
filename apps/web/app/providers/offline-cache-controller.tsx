@@ -3,35 +3,47 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
-import { useTRPC } from "@/app/providers/trpc-provider";
+import { useTRPC, useTRPCClient } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
 import { useQueryClient } from "@tanstack/react-query";
 
+import {
+  type OutboxMutationClient,
+  outboxStore,
+  processQueue,
+  replayOutboxEntry,
+  runIfLeader,
+  runReconnectSequence,
+  setReplayOwnerResolver,
+  setReplaySubmit,
+} from "@/lib/outbox";
 import { activeCacheOwner, resolveCacheOwner, warmCache, type WarmerTRPC } from "@/lib/query-cache";
 
 /**
- * Drives the persisted Offline Cache from the two runtime signals it depends on:
- * the authenticated user id (per-user scoping, ADR-0005) and connectivity
- * (the Warmer only runs while Live).
+ * Drives the persisted Offline Cache and the Outbox from the two runtime signals
+ * they depend on: the authenticated user id (per-user scoping, ADR-0005) and
+ * connectivity. It sits below `UserProvider`, `ConnectivityProvider` and
+ * `TRPCProviderWrapper` so it can read all three, and renders children unchanged.
  *
- * It sits below both `UserProvider` and `ConnectivityProvider` so it can read
- * those, and below `TRPCProviderWrapper` so the Warmer prefetches through the
- * same QueryClient the app renders from. It renders its children unchanged.
- *
- * Restore/switch/purge live in the cache manager; this component only feeds it
- * identity + connectivity and kicks off warming once an owner is settled.
+ * Responsibilities:
+ *  - reconcile the cache owner (restore / switch / purge) on identity change;
+ *  - purge a departed user's queued mutations so they never replay as the wrong
+ *    user;
+ *  - register how the Outbox replays (the live tRPC client) and who owns it;
+ *  - run the Reconnect Sequence (drain → refetch → warm) when Live returns, and
+ *    an initial drain + warm on first load.
  */
 export function OfflineCacheController({ children }: { children: ReactNode }) {
   const { user } = useUserContext();
   const { isLive, isOffline } = useConnectivity();
   const trpc = useTRPC();
+  const trpcClient = useTRPCClient();
   const queryClient = useQueryClient();
 
   const sessionUserId = user?.id ?? null;
   const [readyOwner, setReadyOwner] = useState<string | null>(null);
 
-  // Reconcile the persisted cache with the current identity. Idempotent in the
-  // manager, so re-running on every identity/connectivity change is safe.
+  // Reconcile the persisted cache with the current identity (restore/switch/purge).
   useEffect(() => {
     let cancelled = false;
 
@@ -46,19 +58,68 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
     };
   }, [sessionUserId, isOffline]);
 
-  // Warm the Warm Set once per owner while Live. The Reconnect Sequence re-warms
-  // on later reconnects (a subsequent commit); here we just guarantee an initial
-  // warm so an Offline reload has content.
-  const warmedOwners = useRef<Set<string>>(new Set());
-
+  // Purge any departed user's queued mutations so Replay never sends them under
+  // the wrong identity (ADR-0005).
   useEffect(() => {
-    if (!isLive || !readyOwner || warmedOwners.current.has(readyOwner)) {
+    if (readyOwner) {
+      void outboxStore.purgeExcept(readyOwner);
+    }
+  }, [readyOwner]);
+
+  // Teach the Replay engine how to resubmit an entry (through the live client)
+  // and who the current owner is.
+  useEffect(() => {
+    if (!trpcClient) {
       return;
     }
 
-    warmedOwners.current.add(readyOwner);
-    void warmCache({ trpc: trpc as unknown as WarmerTRPC, queryClient });
-  }, [isLive, readyOwner, trpc, queryClient]);
+    setReplaySubmit((entry) => replayOutboxEntry(trpcClient as OutboxMutationClient, entry));
+    setReplayOwnerResolver(() => activeCacheOwner());
+
+    return () => {
+      setReplaySubmit(null);
+      setReplayOwnerResolver(null);
+    };
+  }, [trpcClient]);
+
+  // Reconnect Sequence. On the first Live render for an owner: drain any leftover
+  // Outbox entries, then warm. On an Offline→Live reconnect: drain, then refetch
+  // server truth, then warm — strictly in that order.
+  const wasOffline = useRef(false);
+  const startedForOwner = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (isOffline) {
+      wasOffline.current = true;
+
+      return;
+    }
+
+    if (!isLive || !readyOwner) {
+      return;
+    }
+
+    const reconnecting = wasOffline.current;
+
+    wasOffline.current = false;
+
+    if (!reconnecting && startedForOwner.current === readyOwner) {
+      return;
+    }
+
+    startedForOwner.current = readyOwner;
+
+    void runReconnectSequence({
+      // Drain is leader-gated + FIFO-ordered inside processQueue; a non-leader
+      // tab blocks until the leader's drain completes, so refetch never races
+      // ahead of it. Invalidate is per-tab (each refetches its own view). Warm
+      // runs only in the leader tab (ADR): other tabs pick it up from the shared
+      // persisted cache rather than re-fetching the whole Warm Set concurrently.
+      drain: () => processQueue(),
+      invalidate: () => (reconnecting ? queryClient.invalidateQueries() : Promise.resolve()),
+      warm: () => runIfLeader(() => warmCache({ trpc: trpc as unknown as WarmerTRPC, queryClient })),
+    });
+  }, [isLive, isOffline, readyOwner, queryClient, trpc]);
 
   return <>{children}</>;
 }
