@@ -3,6 +3,8 @@ import z from "zod";
 
 import { ingredientStorePreferences, stores } from "@norish/db-schema/schema";
 
+import { clientMintedId } from "./common";
+
 // Store color options (HeroUI semantic colors + extras)
 export const StoreColorSchema = z.enum([
   "primary",
@@ -34,8 +36,7 @@ export const StoreInsertBaseSchema = z.object({
 
 // Store create schema (tRPC input - no userId)
 export const StoreCreateSchema = z.object({
-  // Optional client-minted id, honoured on insert (ADR-0003).
-  id: z.uuid().optional(),
+  id: clientMintedId,
   name: z.string().min(1, "Store name is required").max(100),
   color: StoreColorSchema.default("primary"),
   icon: z.string().default("ShoppingBagIcon"),

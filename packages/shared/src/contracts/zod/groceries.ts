@@ -3,6 +3,8 @@ import z from "zod";
 
 import { groceries } from "@norish/db-schema/schema";
 
+import { clientMintedId } from "./common";
+
 export const GrocerySelectBaseSchema = createSelectSchema(groceries)
   .omit({
     userId: true,
@@ -13,9 +15,9 @@ export const GrocerySelectBaseSchema = createSelectSchema(groceries)
   })
   .extend({
     amount: z.coerce.number().nullable(),
-    recipeIngredientId: z.string().uuid().nullable(),
-    recurringGroceryId: z.string().uuid().nullable(),
-    storeId: z.string().uuid().nullable(),
+    recipeIngredientId: z.uuid().nullable(),
+    recurringGroceryId: z.uuid().nullable(),
+    storeId: z.uuid().nullable(),
     sortOrder: z.number().int(),
   });
 
@@ -42,9 +44,9 @@ export const GroceryUpdateBaseSchema = z.object({
   isDone: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
   userId: z.string().optional(),
-  recipeIngredientId: z.string().uuid().nullable().optional(),
-  recurringGroceryId: z.string().uuid().nullable().optional(),
-  storeId: z.string().uuid().nullable().optional(),
+  recipeIngredientId: z.uuid().nullable().optional(),
+  recurringGroceryId: z.uuid().nullable().optional(),
+  storeId: z.uuid().nullable().optional(),
 });
 
 const GroceryVersionInputSchema = z.object({
@@ -59,9 +61,7 @@ const GroceryStoreReorderInputSchema = GroceryVersionInputSchema.extend({
 
 // Create schema without userId (added server-side)
 export const GroceryCreateSchema = z.object({
-  // Optional client-minted id: honoured on insert so queued offline create-then-edit
-  // chains stay valid by construction (ADR-0003). Server mints one when absent.
-  id: z.uuid().optional(),
+  id: clientMintedId,
   name: z.string().nullable(),
   unit: z.string().nullable(),
   amount: z.coerce.number().nullable(),
@@ -76,7 +76,7 @@ export const GroceryUpdateInputSchema = z.object({
   groceryId: z.string(),
   raw: z.string(),
   version: z.number().int().positive(),
-  storeId: z.string().uuid().nullable().optional(),
+  storeId: z.uuid().nullable().optional(),
 });
 
 export const DetachRecurringGroceryInputSchema = z.object({
@@ -85,7 +85,7 @@ export const DetachRecurringGroceryInputSchema = z.object({
   groceryId: z.uuid(),
   groceryVersion: z.number().int().positive(),
   raw: z.string(),
-  storeId: z.string().uuid().nullable().optional(),
+  storeId: z.uuid().nullable().optional(),
 });
 
 export const GroceryToggleSchema = z.object({

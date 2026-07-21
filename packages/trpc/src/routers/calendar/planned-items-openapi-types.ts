@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { clientMintedId } from "@norish/shared/contracts/zod";
+
 export const slotSchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
 export const itemTypeSchema = z.enum(["recipe", "note"]);
 
@@ -10,12 +12,11 @@ export const listItemsInput = z.object({
 
 export const createItemInput = z
   .object({
-    // Optional client-minted id, honoured on insert (ADR-0003).
-    id: z.string().uuid().optional(),
+    id: clientMintedId,
     date: z.string(),
     slot: slotSchema,
     itemType: itemTypeSchema,
-    recipeId: z.string().uuid().optional(),
+    recipeId: z.uuid().optional(),
     title: z.string().optional(),
   })
   .refine((data) => data.itemType !== "recipe" || data.recipeId, {
@@ -39,11 +40,10 @@ export const plannedRecipeListItemSchema = z.object({
 });
 
 export const createPlannedRecipeInputSchema = z.object({
-  // Optional client-minted id, honoured on insert (ADR-0003).
-  id: z.string().uuid().optional(),
+  id: clientMintedId,
   date: z.string(),
   slot: slotSchema,
-  recipeId: z.string().uuid(),
+  recipeId: z.uuid(),
 });
 
 export const plannedRecipeMutationOutputSchema = z.object({

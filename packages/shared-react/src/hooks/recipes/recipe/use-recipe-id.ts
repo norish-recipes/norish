@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
-import type { CreateRecipeHooksOptions } from "../types";
-
 const log = createClientLogger("useRecipeId");
 
 export type RecipeIdResult = {
@@ -13,11 +11,10 @@ export type RecipeIdResult = {
   error: string | null;
 };
 
-export function createUseRecipeId(_options: CreateRecipeHooksOptions) {
+export function createUseRecipeId() {
   return function useRecipeId(mode: "create" | "edit", existingId?: string): RecipeIdResult {
     const [recipeId, setRecipeId] = useState<string | null>(existingId ?? null);
     const [isLoading, setIsLoading] = useState(mode === "create" && !existingId);
-    const [error] = useState<string | null>(null);
 
     useEffect(() => {
       if (mode === "create" && !recipeId) {
@@ -36,7 +33,8 @@ export function createUseRecipeId(_options: CreateRecipeHooksOptions) {
     return {
       recipeId,
       isLoading,
-      error,
+      // No failure path once the id is minted client-side; kept for a stable result shape.
+      error: null,
     };
   };
 }

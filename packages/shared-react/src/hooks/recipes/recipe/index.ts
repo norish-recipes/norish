@@ -54,7 +54,7 @@ export {
 };
 
 export function createRecipeFamilyHooks(options: CreateRecipeHooksOptions) {
-  const useRecipeId = createUseRecipeId(options);
+  const useRecipeId = createUseRecipeId();
   const useRecipeQuery = createUseRecipeQuery(options);
   const useRecipeSubscription = createUseRecipeSubscription(options, { useRecipeQuery });
 
