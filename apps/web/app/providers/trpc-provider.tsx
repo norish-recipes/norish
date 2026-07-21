@@ -25,6 +25,12 @@ export const { TRPCProvider, TRPCProviderWrapper, useConnectionStatus, useTRPC, 
     // forced so the offline runtime can be exercised without taking the backend
     // down. Stripped in production — OFFLINE_FORCED_AVAILABLE folds to false, so
     // extraLinks is an empty array and the dev link ships nothing.
+    //
+    // Forced-Offline's WebSocket silence relies on the WS staying lazy (the
+    // bundle default, wsLazyEnabled=true): the dev link leaves subscriptions
+    // pending, so the lazy socket is never asked to connect. Do not pass
+    // wsLazyEnabled:false here without revisiting forced-Offline (an eager socket
+    // would connect despite the dev link).
     extraLinks: OFFLINE_FORCED_AVAILABLE ? [createForcedOfflineLink<AppRouter>()] : [],
     // Reconnect is handled by the explicit Reconnect Sequence (drain → refetch →
     // warm) in OfflineCacheController, not the bundle's blanket invalidation —

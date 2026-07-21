@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { OFFLINE_FORCED_AVAILABLE } from "@/lib/connectivity";
 import {
   ArrowPathIcon,
@@ -16,22 +17,6 @@ import { useFormatter, useTranslations } from "next-intl";
 
 import type { OfflineStatus } from "./use-offline-status";
 import { useOfflineStatus } from "./use-offline-status";
-
-/** Local viewport check (Tailwind `md` = 768px), matching timer-dock. */
-function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-
-    check();
-    window.addEventListener("resize", check);
-
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
-  return isMobile;
-}
 
 interface OfflineStatusModalProps {
   isOpen: boolean;
