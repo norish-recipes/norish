@@ -1,7 +1,7 @@
 "use client";
 
 import type { OutboxEntry } from "@/lib/outbox";
-import type { CacheStatusTRPC, OfflineCacheCounts, WarmerTRPC } from "@/lib/query-cache";
+import type { CacheStatusTRPC, OfflineCacheCounts } from "@/lib/query-cache";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { useTRPC } from "@/app/providers/trpc-provider";
@@ -12,7 +12,6 @@ import {
   outboxStore,
   processQueue,
   retryParkedEntries,
-  runIfLeader,
   runReconnectSequence,
   subscribeReplayState,
 } from "@/lib/outbox";
@@ -20,7 +19,7 @@ import {
   activeCacheOwner,
   getOfflineCacheCounts,
   readLastWarmedAt,
-  warmCache,
+  topUpWarmSet,
   wipeReadCache,
 } from "@/lib/query-cache";
 import { useQueryClient } from "@tanstack/react-query";
@@ -127,10 +126,13 @@ export function useOfflineStatus(): OfflineStatus {
   const counts = getOfflineCacheCounts(queryClient, trpc as unknown as CacheStatusTRPC);
   const outbox = useMemo(() => summarize(entries), [entries]);
 
-  const warm = useCallback(
-    () => runIfLeader(() => warmCache({ trpc: trpc as unknown as WarmerTRPC, queryClient })),
-    [trpc, queryClient]
-  );
+  // Leader-gated warm + last-warmed stamp in one unit, shared with the
+  // reconnect path in offline-cache-controller.
+  const warm = useCallback(() => topUpWarmSet({ trpc, queryClient }), [trpc, queryClient]);
+
+  const refreshLastWarmedAt = useCallback(async () => {
+    setLastWarmedAt(owner ? await readLastWarmedAt(owner) : null);
+  }, [owner]);
 
   const syncNow = useCallback(async () => {
     // The dev override blocks the transport entirely — there is nothing to sync.
@@ -151,10 +153,14 @@ export function useOfflineStatus(): OfflineStatus {
         invalidate: () => queryClient.invalidateQueries(),
         warm,
       });
+
+      // The sequence's warm stamped a fresh last-warmed (in the leader tab);
+      // reflect it in the open modal.
+      await refreshLastWarmedAt();
     } finally {
       setIsSyncing(false);
     }
-  }, [isForced, isOffline, queryClient, warm]);
+  }, [isForced, isOffline, queryClient, warm, refreshLastWarmedAt]);
 
   const retryAll = useCallback(async () => {
     if (owner) {
@@ -181,20 +187,27 @@ export function useOfflineStatus(): OfflineStatus {
     // leaves an empty cache until reconnect.
     if (isLive) {
       await warm();
-
-      if (owner) {
-        setLastWarmedAt(await readLastWarmedAt(owner));
-      }
+      await refreshLastWarmedAt();
     }
-  }, [queryClient, isLive, warm, owner]);
+  }, [queryClient, isLive, warm, refreshLastWarmedAt]);
 
   const setForcedOffline = useCallback((next: boolean) => {
-    // Persist the flag then reload so every transport signal — the parked probe,
-    // the blocked HTTP link, the dormant lazy WebSocket — re-derives cleanly from
-    // the flag (ADR-0007). On exit this is the organic reconnect: a fresh boot
-    // runs the Reconnect Sequence.
     setOfflineForced(next);
-    window.location.reload();
+
+    if (next) {
+      // Entering: persist the flag then reload so every transport signal — the
+      // parked probe, the blocked HTTP link, the already-open WebSocket —
+      // re-derives cleanly from the flag (ADR-0007). The reload is artifact-free
+      // because the dev link blocks mount refetches while forced, so restored
+      // optimistic state holds.
+      window.location.reload();
+    }
+    // Exiting reuses the organic Offline→Live path (ADR-0007): clearing the flag
+    // resumes the probe loop, the dev link forwards its held subscriptions to
+    // the real transport (the WebSocket un-suspends), and the controller's
+    // Offline→Live effect runs the Reconnect Sequence — drain, then refetch,
+    // then warm. A reload here would instead let mount refetches race the drain
+    // and make queued changes visibly vanish and reappear.
   }, []);
 
   return {

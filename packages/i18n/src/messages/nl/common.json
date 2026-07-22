@@ -265,5 +265,11 @@
       "on": "On",
       "off": "Off"
     }
+  },
+  "offlineFallback": {
+    "title": "Je bent offline",
+    "body": "Deze pagina staat niet in de offlinecache. Onlangs bezochte pagina's zijn nog wel beschikbaar.",
+    "retry": "Opnieuw proberen",
+    "home": "Norish openen"
   }
 }

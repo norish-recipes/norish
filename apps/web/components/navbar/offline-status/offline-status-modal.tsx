@@ -79,6 +79,53 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   return <h3 className="text-muted text-xs font-semibold tracking-wide uppercase">{children}</h3>;
 }
 
+interface ConfirmInlineProps {
+  body: string;
+  cancelLabel: string;
+  confirmLabel: string;
+  onCancel: () => void;
+  onConfirm: () => Promise<void>;
+}
+
+/**
+ * Inline confirm box shared by the modal's destructive actions (wipe cache,
+ * discard queued changes): body text plus cancel / danger-confirm, with both
+ * buttons disabled while the confirmed action runs.
+ */
+function ConfirmInline({
+  body,
+  cancelLabel,
+  confirmLabel,
+  onCancel,
+  onConfirm,
+}: ConfirmInlineProps) {
+  const [busy, setBusy] = useState(false);
+
+  const confirm = async () => {
+    setBusy(true);
+
+    try {
+      await onConfirm();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="border-border flex flex-col gap-2 rounded-lg border p-3">
+      <p className="text-sm">{body}</p>
+      <div className="flex justify-end gap-2">
+        <Button isDisabled={busy} size="sm" variant="tertiary" onPress={onCancel}>
+          {cancelLabel}
+        </Button>
+        <Button isDisabled={busy} size="sm" variant="danger" onPress={() => void confirm()}>
+          {confirmLabel}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function ConnectionSection({ status }: { status: OfflineStatus }) {
   const t = useTranslations("common.offlineStatus.connection");
   const key = status.posture === "offline-forced" ? "forced" : status.posture;
@@ -106,7 +153,6 @@ function CacheSection({ status }: { status: OfflineStatus }) {
   const format = useFormatter();
   const { counts } = status;
   const [confirming, setConfirming] = useState(false);
-  const [busy, setBusy] = useState(false);
 
   const items = [
     { icon: BookOpenIcon, label: t("recipes"), value: counts.recipes },
@@ -114,17 +160,6 @@ function CacheSection({ status }: { status: OfflineStatus }) {
     { icon: BuildingStorefrontIcon, label: t("stores"), value: counts.stores },
     { icon: CalendarDaysIcon, label: t("planned"), value: counts.plannedThisWeek },
   ];
-
-  const runWipe = async () => {
-    setBusy(true);
-
-    try {
-      await status.wipeCache();
-      setConfirming(false);
-    } finally {
-      setBusy(false);
-    }
-  };
 
   return (
     <section className="flex flex-col gap-2">
@@ -153,24 +188,16 @@ function CacheSection({ status }: { status: OfflineStatus }) {
       ) : null}
 
       {confirming ? (
-        <div className="border-border flex flex-col gap-2 rounded-lg border p-3">
-          <p className="text-sm">
-            {status.isOffline ? t("wipeConfirmOfflineBody") : t("wipeConfirmBody")}
-          </p>
-          <div className="flex justify-end gap-2">
-            <Button
-              isDisabled={busy}
-              size="sm"
-              variant="tertiary"
-              onPress={() => setConfirming(false)}
-            >
-              {t("wipeCancel")}
-            </Button>
-            <Button isDisabled={busy} size="sm" variant="danger" onPress={runWipe}>
-              {t("wipeConfirm")}
-            </Button>
-          </div>
-        </div>
+        <ConfirmInline
+          body={status.isOffline ? t("wipeConfirmOfflineBody") : t("wipeConfirmBody")}
+          cancelLabel={t("wipeCancel")}
+          confirmLabel={t("wipeConfirm")}
+          onCancel={() => setConfirming(false)}
+          onConfirm={async () => {
+            await status.wipeCache();
+            setConfirming(false);
+          }}
+        />
       ) : (
         <Button
           className="self-start"
@@ -240,24 +267,16 @@ function OutboxSection({ status }: { status: OfflineStatus }) {
       </div>
 
       {confirmingDiscard ? (
-        <div className="border-border flex flex-col gap-2 rounded-lg border p-3">
-          <p className="text-sm">{t("discardConfirmBody", { count: outbox.total })}</p>
-          <div className="flex justify-end gap-2">
-            <Button size="sm" variant="tertiary" onPress={() => setConfirmingDiscard(false)}>
-              {t("discardCancel")}
-            </Button>
-            <Button
-              size="sm"
-              variant="danger"
-              onPress={async () => {
-                await status.discardAll();
-                setConfirmingDiscard(false);
-              }}
-            >
-              {t("discardConfirm")}
-            </Button>
-          </div>
-        </div>
+        <ConfirmInline
+          body={t("discardConfirmBody", { count: outbox.total })}
+          cancelLabel={t("discardCancel")}
+          confirmLabel={t("discardConfirm")}
+          onCancel={() => setConfirmingDiscard(false)}
+          onConfirm={async () => {
+            await status.discardAll();
+            setConfirmingDiscard(false);
+          }}
+        />
       ) : null}
     </section>
   );

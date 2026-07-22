@@ -265,5 +265,11 @@
       "on": "On",
       "off": "Off"
     }
+  },
+  "offlineFallback": {
+    "title": "You're offline",
+    "body": "This page isn't in the offline cache. Pages you've visited recently are still available.",
+    "retry": "Try again",
+    "home": "Open Norish"
   }
 }

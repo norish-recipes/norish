@@ -1,7 +1,6 @@
 "use client";
 
 import type { OutboxMutationClient } from "@/lib/outbox";
-import type { WarmerTRPC } from "@/lib/query-cache";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
@@ -11,17 +10,11 @@ import {
   outboxStore,
   processQueue,
   replayOutboxEntry,
-  runIfLeader,
   runReconnectSequence,
   setReplayOwnerResolver,
   setReplaySubmit,
 } from "@/lib/outbox";
-import {
-  activeCacheOwner,
-  resolveCacheOwner,
-  warmCache,
-  writeLastWarmedAt,
-} from "@/lib/query-cache";
+import { activeCacheOwner, resolveCacheOwner, topUpWarmSet } from "@/lib/query-cache";
 import { useQueryClient } from "@tanstack/react-query";
 
 /**
@@ -118,23 +111,12 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
       // Drain is leader-gated + FIFO-ordered inside processQueue; a non-leader
       // tab blocks until the leader's drain completes, so refetch never races
       // ahead of it. Invalidate is per-tab (each refetches its own view). Warm
-      // runs only in the leader tab (ADR): other tabs pick it up from the shared
-      // persisted cache rather than re-fetching the whole Warm Set concurrently.
+      // is leader-gated inside topUpWarmSet, which also stamps last-warmed:
+      // other tabs pick both up from the shared persisted cache rather than
+      // re-fetching the whole Warm Set concurrently (ADR).
       drain: () => processQueue(),
       invalidate: () => (reconnecting ? queryClient.invalidateQueries() : Promise.resolve()),
-      warm: () =>
-        runIfLeader(async () => {
-          await warmCache({ trpc: trpc as unknown as WarmerTRPC, queryClient });
-
-          // Stamp when the Warm Set was last topped up so the status modal can
-          // show an Offline-only "data from X ago" line. Leader-only, matching
-          // where warmCache actually runs.
-          const owner = activeCacheOwner();
-
-          if (owner) {
-            await writeLastWarmedAt(owner, Date.now());
-          }
-        }),
+      warm: () => topUpWarmSet({ trpc, queryClient }),
     });
   }, [isLive, isOffline, readyOwner, queryClient, trpc]);
 

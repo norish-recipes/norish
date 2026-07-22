@@ -1,12 +1,23 @@
-import { QueryClient } from "@tanstack/react-query";
-import { describe, expect, it, vi } from "vitest";
-
+import type { WarmerTRPC } from "@/lib/query-cache/cache-warmer";
 import {
+  topUpWarmSet,
   warmCache,
   warmCalendarRanges,
   warmRecipeListInput,
-  type WarmerTRPC,
 } from "@/lib/query-cache/cache-warmer";
+import { writeLastWarmedAt } from "@/lib/query-cache/last-warmed";
+import { activeCacheOwner } from "@/lib/query-cache/persisted-query-client";
+import { QueryClient } from "@tanstack/react-query";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/query-cache/last-warmed", () => ({
+  writeLastWarmedAt: vi.fn(async () => {}),
+}));
+
+vi.mock("@/lib/query-cache/persisted-query-client", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  activeCacheOwner: vi.fn(() => "owner-1"),
+}));
 
 describe("warmRecipeListInput", () => {
   it("reproduces the dashboard's default (unfiltered) recipe-list input exactly", () => {
@@ -74,7 +85,9 @@ describe("warmCache", () => {
         },
       },
       groceries: {
-        list: { queryOptions: () => ({ queryKey: ["groceries", "list"], queryFn: async () => ({}) }) },
+        list: {
+          queryOptions: () => ({ queryKey: ["groceries", "list"], queryFn: async () => ({}) }),
+        },
       },
       stores: {
         list: { queryOptions: () => ({ queryKey: ["stores", "list"], queryFn: async () => [] }) },
@@ -130,5 +143,70 @@ describe("warmCache", () => {
     await expect(warmCache({ trpc, queryClient })).resolves.toBeUndefined();
     // The rest still warmed despite the failure.
     expect(queryClient.getQueryData(["groceries", "list"])).toBeDefined();
+  });
+});
+
+describe("topUpWarmSet", () => {
+  // The Warmer's structural surface, warming nothing: enough to exercise the
+  // warm-then-stamp composition without the full fixture above.
+  function makeEmptyTrpc(): WarmerTRPC {
+    return {
+      recipes: {
+        list: {
+          infiniteQueryOptions: (input, opts) => ({
+            queryKey: ["recipes", "list", input],
+            queryFn: async () => ({ recipes: [], total: 0, nextCursor: null }),
+            initialPageParam: 0,
+            getNextPageParam: opts.getNextPageParam,
+          }),
+        },
+        get: {
+          queryOptions: ({ id }) => ({
+            queryKey: ["recipes", "get", id],
+            queryFn: async () => ({ id }),
+          }),
+        },
+      },
+      groceries: {
+        list: {
+          queryOptions: () => ({ queryKey: ["groceries", "list"], queryFn: async () => ({}) }),
+        },
+      },
+      stores: {
+        list: { queryOptions: () => ({ queryKey: ["stores", "list"], queryFn: async () => [] }) },
+      },
+      calendar: {
+        listItems: {
+          queryOptions: (range) => ({
+            queryKey: ["calendar", range.startISO, range.endISO],
+            queryFn: async () => [],
+          }),
+        },
+      },
+    };
+  }
+
+  beforeEach(() => {
+    vi.mocked(writeLastWarmedAt).mockClear();
+    vi.mocked(activeCacheOwner).mockReturnValue("owner-1");
+  });
+
+  it("warms and then stamps last-warmed for the active owner", async () => {
+    const queryClient = new QueryClient();
+
+    await topUpWarmSet({ trpc: makeEmptyTrpc(), queryClient });
+
+    // The warm ran (list landed under the dashboard key)…
+    expect(queryClient.getQueryData(["recipes", "list", warmRecipeListInput()])).toBeDefined();
+    // …and the stamp followed it.
+    expect(writeLastWarmedAt).toHaveBeenCalledWith("owner-1", expect.any(Number));
+  });
+
+  it("skips the stamp when no cache owner is active", async () => {
+    vi.mocked(activeCacheOwner).mockReturnValue(null);
+
+    await topUpWarmSet({ trpc: makeEmptyTrpc(), queryClient: new QueryClient() });
+
+    expect(writeLastWarmedAt).not.toHaveBeenCalled();
   });
 });

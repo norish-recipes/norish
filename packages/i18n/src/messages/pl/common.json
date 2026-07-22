@@ -265,5 +265,11 @@
       "on": "On",
       "off": "Off"
     }
+  },
+  "offlineFallback": {
+    "title": "Jesteś offline",
+    "body": "Tej strony nie ma w pamięci podręcznej offline. Ostatnio odwiedzane strony są nadal dostępne.",
+    "retry": "Spróbuj ponownie",
+    "home": "Otwórz Norish"
   }
 }

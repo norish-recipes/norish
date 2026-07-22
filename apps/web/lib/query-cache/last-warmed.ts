@@ -12,9 +12,9 @@ import type { OfflineIdb } from "@/lib/offline/idb";
 import { KEYVAL_STORE, offlineIdb } from "@/lib/offline/idb";
 
 /** keyval prefix for the per-owner last-warmed timestamp. */
-export const LAST_WARMED_KEY_PREFIX = "last-warmed:";
+const LAST_WARMED_KEY_PREFIX = "last-warmed:";
 
-export function lastWarmedKey(ownerId: string): string {
+function lastWarmedKey(ownerId: string): string {
   return `${LAST_WARMED_KEY_PREFIX}${ownerId}`;
 }
 

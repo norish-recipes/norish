@@ -19,13 +19,15 @@
  */
 
 import type { QueryClient } from "@tanstack/react-query";
-
-import { dateKey } from "@norish/shared/lib/helpers";
-import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "@norish/shared-react/contexts";
-
 import { getInitialDateRange } from "@/app/(app)/calendar/context-helpers";
+// The leaf module, not the outbox barrel, to keep this lib-to-lib edge cycle-free.
+import { runIfLeader } from "@/lib/outbox/leader";
 
-import { CACHE_MAX_AGE_MS } from "./persisted-query-client";
+import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "@norish/shared-react/contexts";
+import { dateKey } from "@norish/shared/lib/helpers";
+
+import { writeLastWarmedAt } from "./last-warmed";
+import { activeCacheOwner, CACHE_MAX_AGE_MS } from "./persisted-query-client";
 
 /** Page size for the recipe-list warm; matches the dashboard hook's default. */
 export const WARM_RECIPE_LIST_LIMIT = 100;
@@ -120,9 +122,7 @@ async function warmRecipes(trpc: WarmerTRPC, queryClient: QueryClient): Promise<
 
   // Fetch (not just prefetch) the list so we can read back the ids of the most
   // recent recipes and warm each in full.
-  const data = await queryClient
-    .fetchInfiniteQuery(listOptions as never)
-    .catch(() => undefined);
+  const data = await queryClient.fetchInfiniteQuery(listOptions as never).catch(() => undefined);
 
   const ids = extractRecipeIds(data);
 
@@ -140,11 +140,44 @@ async function warmLists(trpc: WarmerTRPC, queryClient: QueryClient): Promise<vo
     queryClient.prefetchQuery(withWarmGcTime(trpc.groceries.list.queryOptions()) as never),
     queryClient.prefetchQuery(withWarmGcTime(trpc.stores.list.queryOptions()) as never),
     ...warmCalendarRanges().map((range) =>
-      queryClient.prefetchQuery(withWarmGcTime(trpc.calendar.listItems.queryOptions(range)) as never)
+      queryClient.prefetchQuery(
+        withWarmGcTime(trpc.calendar.listItems.queryOptions(range)) as never
+      )
     ),
   ];
 
   await Promise.allSettled(prefetches);
+}
+
+export interface TopUpWarmSetOptions {
+  /**
+   * The `useTRPC()` proxy. Accepted as `unknown` and narrowed once here, so call
+   * sites don't each repeat the structural cast; tests can pass a fake
+   * satisfying {@link WarmerTRPC} directly.
+   */
+  trpc: unknown;
+  queryClient: QueryClient;
+}
+
+/**
+ * Leader-gated Warm Set top-up plus the last-warmed stamp, as one unit.
+ *
+ * Every warm call site (the reconnect path in `offline-cache-controller`, the
+ * status modal's Sync-now and wipe-then-rewarm) goes through here so the status
+ * modal's "data from X ago" line can never drift from an actual warm: the stamp
+ * is written exactly where warmCache ran — the leader tab. A non-leader tab
+ * skips both and reads the leader's stamp back from the shared IndexedDB store.
+ */
+export async function topUpWarmSet({ trpc, queryClient }: TopUpWarmSetOptions): Promise<void> {
+  await runIfLeader(async () => {
+    await warmCache({ trpc: trpc as WarmerTRPC, queryClient });
+
+    const owner = activeCacheOwner();
+
+    if (owner) {
+      await writeLastWarmedAt(owner, Date.now());
+    }
+  });
 }
 
 function extractRecipeIds(data: unknown): string[] {

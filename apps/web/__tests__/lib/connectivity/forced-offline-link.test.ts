@@ -1,4 +1,4 @@
-import { isOfflineForced } from "@/lib/connectivity/forced-offline";
+import { isOfflineForced, subscribeOfflineForced } from "@/lib/connectivity/forced-offline";
 import { createForcedOfflineLink } from "@/lib/connectivity/forced-offline-link";
 import { observable } from "@trpc/server/observable";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -7,9 +7,11 @@ import { isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
 
 vi.mock("@/lib/connectivity/forced-offline", () => ({
   isOfflineForced: vi.fn(() => false),
+  subscribeOfflineForced: vi.fn(() => () => {}),
 }));
 
 const mockedIsForced = vi.mocked(isOfflineForced);
+const mockedSubscribe = vi.mocked(subscribeOfflineForced);
 
 type FakeOp = { type: "query" | "mutation" | "subscription"; path: string; input: unknown };
 
@@ -47,7 +49,52 @@ function runLink(op: FakeOp, next: () => ReturnType<typeof observable>) {
 
 const succeedWith = (value: unknown) => () => observable((observer) => observer.next(value));
 
-afterEach(() => mockedIsForced.mockReset().mockReturnValue(false));
+afterEach(() => {
+  mockedIsForced.mockReset().mockReturnValue(false);
+  mockedSubscribe.mockReset().mockReturnValue(() => {});
+});
+
+/**
+ * Run a subscription op through the link and keep it open, capturing what
+ * reaches the observer and whether/when the transport (next) is engaged.
+ */
+function openSubscription() {
+  let listener: (() => void) | undefined;
+  const release = vi.fn();
+
+  mockedSubscribe.mockImplementation((fn: () => void) => {
+    listener = fn;
+
+    return release;
+  });
+
+  const link = createForcedOfflineLink()({} as never);
+  const received: unknown[] = [];
+  let nextCalled = false;
+
+  const subscription = link({
+    op: { type: "subscription", path: "realtime.stream", input: {} },
+    next: () => {
+      nextCalled = true;
+
+      return observable((observer) => {
+        observer.next("live-event");
+
+        return () => {};
+      });
+    },
+  } as never).subscribe({
+    next: (value: unknown) => received.push(value),
+  });
+
+  return {
+    subscription,
+    received,
+    release,
+    fireChange: () => listener?.(),
+    wasForwarded: () => nextCalled,
+  };
+}
 
 describe("createForcedOfflineLink", () => {
   it("passes every op straight through when Offline is not forced", async () => {
@@ -98,5 +145,51 @@ describe("createForcedOfflineLink", () => {
     expect(result.value).toBeUndefined();
     expect(result.error).toBeUndefined();
     expect(result.nextCalled).toBe(false);
+  });
+
+  it("forwards a held subscription to the transport when the override clears", () => {
+    mockedIsForced.mockReturnValue(true);
+
+    const held = openSubscription();
+
+    expect(held.wasForwarded()).toBe(false);
+
+    // Exit the toggle: flag cleared, then the change notification fires.
+    mockedIsForced.mockReturnValue(false);
+    held.fireChange();
+
+    // The op reached the real transport and its events flow to the original
+    // observer — the subscription "establishes" without a reload (ADR-0007).
+    expect(held.wasForwarded()).toBe(true);
+    expect(held.received).toEqual(["live-event"]);
+    // One-shot: the change listener released itself on forwarding.
+    expect(held.release).toHaveBeenCalled();
+
+    held.subscription.unsubscribe();
+  });
+
+  it("keeps holding when a change notification fires but the flag is still set", () => {
+    mockedIsForced.mockReturnValue(true);
+
+    const held = openSubscription();
+
+    // e.g. a cross-tab write that left the flag on.
+    held.fireChange();
+
+    expect(held.wasForwarded()).toBe(false);
+    expect(held.received).toEqual([]);
+
+    held.subscription.unsubscribe();
+  });
+
+  it("stops listening when the subscriber goes away before the override clears", () => {
+    mockedIsForced.mockReturnValue(true);
+
+    const held = openSubscription();
+
+    held.subscription.unsubscribe();
+
+    expect(held.release).toHaveBeenCalled();
+    expect(held.wasForwarded()).toBe(false);
   });
 });

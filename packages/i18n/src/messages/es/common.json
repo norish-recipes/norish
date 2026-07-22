@@ -265,5 +265,11 @@
       "on": "On",
       "off": "Off"
     }
+  },
+  "offlineFallback": {
+    "title": "Estás sin conexión",
+    "body": "Esta página no está en la caché sin conexión. Las páginas visitadas recientemente siguen disponibles.",
+    "retry": "Reintentar",
+    "home": "Abrir Norish"
   }
 }

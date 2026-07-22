@@ -27,10 +27,11 @@ export const { TRPCProvider, TRPCProviderWrapper, useConnectionStatus, useTRPC, 
     // extraLinks is an empty array and the dev link ships nothing.
     //
     // Forced-Offline's WebSocket silence relies on the WS staying lazy (the
-    // bundle default, wsLazyEnabled=true): the dev link leaves subscriptions
-    // pending, so the lazy socket is never asked to connect. Do not pass
-    // wsLazyEnabled:false here without revisiting forced-Offline (an eager socket
-    // would connect despite the dev link).
+    // bundle default, wsLazyEnabled=true): the dev link holds subscriptions
+    // pending, so the lazy socket is never asked to connect, and forwards them
+    // to the transport when the override clears (the socket then connects
+    // organically). Do not pass wsLazyEnabled:false here without revisiting
+    // forced-Offline (an eager socket would connect despite the dev link).
     extraLinks: OFFLINE_FORCED_AVAILABLE ? [createForcedOfflineLink<AppRouter>()] : [],
     // Reconnect is handled by the explicit Reconnect Sequence (drain → refetch →
     // warm) in OfflineCacheController, not the bundle's blanket invalidation —

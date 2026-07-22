@@ -1,11 +1,15 @@
+import type { OfflineIdb } from "@/lib/offline/idb";
 import type { PersistedClient } from "@tanstack/query-persist-client-core";
+import { createOfflineIdb, KEYVAL_STORE } from "@/lib/offline/idb";
+import { queryCacheKey } from "@/lib/query-cache/cache-identity";
+import {
+  CACHE_BUSTER,
+  CACHE_MAX_AGE_MS,
+  createCacheManager,
+} from "@/lib/query-cache/persisted-query-client";
 import { dehydrate, QueryClient } from "@tanstack/react-query";
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, it } from "vitest";
-
-import { createOfflineIdb, KEYVAL_STORE, type OfflineIdb } from "@/lib/offline/idb";
-import { queryCacheKey } from "@/lib/query-cache/cache-identity";
-import { CACHE_BUSTER, createCacheManager } from "@/lib/query-cache/persisted-query-client";
 
 /** Build a valid persisted cache blob holding a single successful query. */
 function seedClient(key: unknown[], value: unknown): PersistedClient {
@@ -94,5 +98,21 @@ describe("createCacheManager", () => {
 
     expect(manager.activeOwner()).toBe("u1");
     expect(await idb.get(KEYVAL_STORE, queryCacheKey("u1"))).toBeDefined();
+  });
+
+  it("restores entries at the cache's own maxAge as their gcTime (ADR-0008 durability)", async () => {
+    await seedOwnerCache(idb, "u1", ["recipes", "get", "r1"], { id: "r1" });
+    window.localStorage.setItem("norish.offline.cache-owner", "u1");
+
+    const manager = createCacheManager(idb);
+
+    await manager.resolveOwner({ sessionUserId: "u1", isOffline: false });
+
+    // Dehydration drops per-query gcTime, so without the hydrate-time floor this
+    // would be the 10-minute default — and a warmed entry would be GC'd and fall
+    // out of the next persist, not surviving a second Offline reload.
+    const query = manager.queryClient.getQueryCache().find({ queryKey: ["recipes", "get", "r1"] });
+
+    expect(query?.gcTime).toBe(CACHE_MAX_AGE_MS);
   });
 });

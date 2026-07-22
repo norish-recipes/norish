@@ -265,5 +265,11 @@
       "on": "On",
       "off": "Off"
     }
+  },
+  "offlineFallback": {
+    "title": "Sei offline",
+    "body": "Questa pagina non è nella cache offline. Le pagine visitate di recente sono ancora disponibili.",
+    "retry": "Riprova",
+    "home": "Apri Norish"
   }
 }

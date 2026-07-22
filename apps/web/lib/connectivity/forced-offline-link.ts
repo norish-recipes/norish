@@ -1,9 +1,10 @@
 import type { TRPCLink } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
+import type { Unsubscribable } from "@trpc/server/observable";
 import { TRPCClientError } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
 
-import { isOfflineForced } from "./forced-offline";
+import { isOfflineForced, subscribeOfflineForced } from "./forced-offline";
 
 /**
  * A backend-unreachable error that the Outbox link and the Replay classifier
@@ -27,9 +28,11 @@ function backendUnreachable(): TRPCClientError<AnyTRPCRouter> {
  *  - queries and mutations short-circuit with a backend-unreachable error. The
  *    Outbox link above captures the failing mutation (Queued UX); reads keep
  *    their persisted-cache data;
- *  - subscriptions hang pending and never reach the transport, so the lazy
+ *  - subscriptions are *held* pending and never reach the transport, so the lazy
  *    WebSocket client is never asked to connect — true radio silence, no probes,
- *    no WS, no refetches.
+ *    no WS, no refetches. When the override clears, each held op is forwarded to
+ *    the real transport, so the WebSocket un-suspends organically (the exit half
+ *    of ADR-0007) instead of staying dead until a reload.
  *
  * When Offline is not forced it is a transparent pass-through. In production the
  * caller never adds it (OFFLINE_FORCED_AVAILABLE is false), so it ships nothing.
@@ -43,9 +46,27 @@ export function createForcedOfflineLink<TRouter extends AnyTRPCRouter>(): TRPCLi
 
       return observable((observer) => {
         if (op.type === "subscription") {
-          // Leave it pending, like a socket that never establishes. Crucially we
-          // never call next(op), so the WebSocket transport is never engaged.
-          return () => {};
+          // Hold it pending, like a socket that never establishes — next(op) is
+          // not called, so the WebSocket transport is never engaged. On the
+          // flag clearing (same-tab event or cross-tab storage), forward the op
+          // downstream once, piping the live transport into the original
+          // observer: to the subscription hook the exit is indistinguishable
+          // from a connection finally establishing.
+          let forwarded: Unsubscribable | null = null;
+
+          const release = subscribeOfflineForced(() => {
+            if (isOfflineForced() || forwarded) {
+              return;
+            }
+
+            release();
+            forwarded = next(op).subscribe(observer);
+          });
+
+          return () => {
+            release();
+            forwarded?.unsubscribe();
+          };
         }
 
         observer.error(backendUnreachable());

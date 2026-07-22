@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -60,6 +61,17 @@ const withSerwist = withSerwistInit({
   // rather than Serwist's injected window runtime.
   register: false,
   disable: process.env.NODE_ENV === "development",
+  // Precache the offline navigation-fallback document so the SW's `fallbacks`
+  // can serve it (ADR-0006). Appended via a manifest transform — passing
+  // `additionalPrecacheEntries` instead would *replace* the default public/
+  // folder scan. The revision is per-build: the page's HTML references
+  // content-hashed chunks, so a stale copy would point at pruned assets.
+  manifestTransforms: [
+    async (entries) => ({
+      manifest: [...entries, { url: "/~offline", revision: randomUUID(), size: 0 }],
+      warnings: [],
+    }),
+  ],
 });
 
 export default withSerwist(

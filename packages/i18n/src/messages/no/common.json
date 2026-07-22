@@ -265,5 +265,11 @@
       "on": "On",
       "off": "Off"
     }
+  },
+  "offlineFallback": {
+    "title": "Du er frakoblet",
+    "body": "Denne siden er ikke i frakoblet-cachen. Nylig besøkte sider er fortsatt tilgjengelige.",
+    "retry": "Prøv igjen",
+    "home": "Åpne Norish"
   }
 }

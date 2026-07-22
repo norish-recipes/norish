@@ -265,5 +265,11 @@
       "on": "On",
       "off": "Off"
     }
+  },
+  "offlineFallback": {
+    "title": "Du bist offline",
+    "body": "Diese Seite ist nicht im Offline-Cache. Kürzlich besuchte Seiten sind weiterhin verfügbar.",
+    "retry": "Erneut versuchen",
+    "home": "Norish öffnen"
   }
 }

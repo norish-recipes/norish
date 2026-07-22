@@ -20,6 +20,7 @@
   },
   "include": [".", ".next/types/**/*.ts"],
   // app/sw.ts is a service-worker entry compiled by @serwist/next in a webworker
-  // environment; it is intentionally excluded from the app's DOM-lib type program.
+  // environment; it is excluded from the app's DOM-lib type program and checked
+  // by its own program instead (tsconfig.sw.json, run via `typecheck`).
   "exclude": ["node_modules", "app/sw.ts"]
 }

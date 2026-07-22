@@ -265,5 +265,11 @@
       "on": "On",
       "off": "Off"
     }
+  },
+  "offlineFallback": {
+    "title": "Vous êtes hors ligne",
+    "body": "Cette page n'est pas dans le cache hors ligne. Les pages récemment visitées restent disponibles.",
+    "retry": "Réessayer",
+    "home": "Ouvrir Norish"
   }
 }

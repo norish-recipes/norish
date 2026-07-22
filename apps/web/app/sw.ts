@@ -1,6 +1,6 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { defaultCache } from "@serwist/next/worker";
-import { NetworkOnly, Serwist } from "serwist";
+import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist } from "serwist";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -25,10 +25,43 @@ const serwist = new Serwist({
       matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname === "/api/v1/health",
       handler: new NetworkOnly(),
     },
-    // Everything else keeps Serwist's Next.js-aware defaults: the app-shell navigation
-    // fallback, RSC payloads, static assets, fonts and cache-first images.
+    // Same-origin images (recipe photos via /_next/image included), cache-first
+    // like the hand-rolled sw.js this replaces — but bounded. The old worker
+    // capped nothing; defaultCache's 64-entry image LRUs are below the Warm Set
+    // floor (50 recipes × primary image plus grid thumbnails), so recently-viewed
+    // recipe images would evict each other (ADR-0006 ports the image caching).
+    {
+      matcher: ({ request, sameOrigin }) => sameOrigin && request.destination === "image",
+      handler: new CacheFirst({
+        cacheName: "norish-images",
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 512,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
+            maxAgeFrom: "last-used",
+          }),
+        ],
+      }),
+    },
+    // Everything else keeps Serwist's Next.js-aware defaults: runtime page/RSC
+    // caches for visited routes, static assets and fonts.
     ...defaultCache,
   ],
+  // Document navigations that fail with no cached copy — a deep link or an
+  // unvisited route while Offline — fall back to the precached offline shell
+  // instead of the browser's error page (ADR-0006). Non-document requests never
+  // match, so the health probe (destination "") can never be answered by a
+  // fallback and lied to.
+  fallbacks: {
+    entries: [
+      {
+        url: "/~offline",
+        matcher({ request }) {
+          return request.destination === "document";
+        },
+      },
+    ],
+  },
 });
 
 // Ported from the hand-rolled sw.js: a cooking-timer notification focuses an existing

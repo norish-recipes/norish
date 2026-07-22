@@ -22,6 +22,8 @@ export {
 export { createIdbPersister, type OwnerScopedPersister } from "./idb-persister";
 export {
   type CalendarWarmRange,
+  topUpWarmSet,
+  type TopUpWarmSetOptions,
   warmCache,
   warmCalendarRanges,
   warmRecipeListInput,

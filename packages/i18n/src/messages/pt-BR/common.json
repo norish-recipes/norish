@@ -265,5 +265,11 @@
       "on": "On",
       "off": "Off"
     }
+  },
+  "offlineFallback": {
+    "title": "Você está offline",
+    "body": "Esta página não está no cache offline. As páginas visitadas recentemente continuam disponíveis.",
+    "retry": "Tentar novamente",
+    "home": "Abrir Norish"
   }
 }

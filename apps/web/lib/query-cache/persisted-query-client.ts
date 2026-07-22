@@ -12,17 +12,21 @@
  * app shares the module-level default.
  */
 
+import type { OfflineIdb } from "@/lib/offline/idb";
+import { offlineIdb } from "@/lib/offline/idb";
 import {
   persistQueryClientRestore,
   persistQueryClientSubscribe,
 } from "@tanstack/query-persist-client-core";
 import { QueryClient } from "@tanstack/react-query";
 
-import type { OfflineIdb } from "@/lib/offline/idb";
-import { offlineIdb } from "@/lib/offline/idb";
-
 import type { CacheOwnerInputs } from "./cache-identity";
-import { decideCacheOwner, purgeForeignCaches, readBootOwner, writeBootOwner } from "./cache-identity";
+import {
+  decideCacheOwner,
+  purgeForeignCaches,
+  readBootOwner,
+  writeBootOwner,
+} from "./cache-identity";
 import { createIdbPersister } from "./idb-persister";
 
 /** Discard a restored cache older than this (ADR: 7-day maxAge). */
@@ -95,6 +99,14 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
       persister,
       maxAge: CACHE_MAX_AGE_MS,
       buster: CACHE_BUSTER,
+      // Dehydration drops per-query gcTime, so without a hydrate-time floor every
+      // restored entry — warmed ones included — reverts to the 10-minute default,
+      // is GC'd shortly after boot, and falls out of the next persist snapshot: a
+      // warmed recipe would not survive a second Offline reload (ADR-0008's
+      // durability claim). Restoring at the cache's own maxAge keeps anything
+      // persisted eligible to stay persisted for as long as the on-disk copy is
+      // itself valid; the whole-cache maxAge/buster still bound staleness.
+      hydrateOptions: { defaultOptions: { queries: { gcTime: CACHE_MAX_AGE_MS } } },
     });
 
     unsubscribe?.();
@@ -109,7 +121,9 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
     writeBootOwner(owner);
   }
 
-  async function apply(inputs: Pick<CacheOwnerInputs, "sessionUserId" | "isOffline">): Promise<void> {
+  async function apply(
+    inputs: Pick<CacheOwnerInputs, "sessionUserId" | "isOffline">
+  ): Promise<void> {
     const decision = decideCacheOwner({
       bootOwner: appliedOwner ?? initialBootOwner,
       sessionUserId: inputs.sessionUserId,
