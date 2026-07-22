@@ -11,6 +11,7 @@
     "clear": "docusaurus clear",
     "swizzle": "docusaurus swizzle",
     "docs_update": "node scripts/docs-version.mjs",
+    "test": "node --test scripts/*.test.mjs",
     "typecheck": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .gitignore",
     "clean": "git clean -xdf build .docusaurus node_modules"
