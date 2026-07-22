@@ -1,5 +1,3 @@
-import { describe, expect, it } from "vitest";
-
 import {
   INITIAL_CONNECTIVITY,
   LIVE_PROBE_INTERVAL_MS,
@@ -9,6 +7,7 @@ import {
   OFFLINE_FAILURE_STREAK_CAP,
   reduceProbeResult,
 } from "@/lib/connectivity/connectivity-machine";
+import { describe, expect, it } from "vitest";
 
 describe("reduceProbeResult", () => {
   it("starts Live with no failures", () => {
@@ -63,9 +62,15 @@ describe("nextProbeDelayMs", () => {
 
   it("backs off exponentially while Offline", () => {
     expect(nextProbeDelayMs({ state: "offline", failureStreak: 1 })).toBe(OFFLINE_BACKOFF_MIN_MS);
-    expect(nextProbeDelayMs({ state: "offline", failureStreak: 2 })).toBe(OFFLINE_BACKOFF_MIN_MS * 2);
-    expect(nextProbeDelayMs({ state: "offline", failureStreak: 3 })).toBe(OFFLINE_BACKOFF_MIN_MS * 4);
-    expect(nextProbeDelayMs({ state: "offline", failureStreak: 4 })).toBe(OFFLINE_BACKOFF_MIN_MS * 8);
+    expect(nextProbeDelayMs({ state: "offline", failureStreak: 2 })).toBe(
+      OFFLINE_BACKOFF_MIN_MS * 2
+    );
+    expect(nextProbeDelayMs({ state: "offline", failureStreak: 3 })).toBe(
+      OFFLINE_BACKOFF_MIN_MS * 4
+    );
+    expect(nextProbeDelayMs({ state: "offline", failureStreak: 4 })).toBe(
+      OFFLINE_BACKOFF_MIN_MS * 8
+    );
   });
 
   it("caps the Offline backoff at the maximum", () => {

@@ -1,8 +1,7 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
+import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
 import { defaultCache } from "@serwist/next/worker";
 import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist } from "serwist";
-
-import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {

@@ -11,9 +11,8 @@
  * in-memory cache, never crash a render.
  */
 
-import type { PersistedClient, Persister } from "@tanstack/query-persist-client-core";
-
 import type { OfflineIdb } from "@/lib/offline/idb";
+import type { PersistedClient, Persister } from "@tanstack/query-persist-client-core";
 import { KEYVAL_STORE } from "@/lib/offline/idb";
 
 import { queryCacheKey } from "./cache-identity";

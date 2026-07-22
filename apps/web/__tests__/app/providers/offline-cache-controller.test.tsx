@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
+
 const resolveCacheOwner = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
 const activeCacheOwner = vi.hoisted(() => vi.fn<() => string | null>(() => null));
 const warmCache = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
@@ -36,8 +38,6 @@ vi.mock("@/lib/outbox", () => ({
   setReplaySessionGuard,
   replayOutboxEntry,
 }));
-
-import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 
 function renderController() {
   const queryClient = new QueryClient();

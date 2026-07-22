@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-
 import { HEALTH_PROBE_PATH, probeBackendReachable } from "@/lib/connectivity/probe";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 type FetchArgs = { url: string; init: RequestInit };
 
@@ -57,7 +56,9 @@ describe("probeBackendReachable", () => {
     const hangingFetch = vi.fn(
       (_url: string, init: RequestInit) =>
         new Promise<Response>((_resolve, reject) => {
-          init.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+          init.signal?.addEventListener("abort", () =>
+            reject(new DOMException("Aborted", "AbortError"))
+          );
         })
     );
 

@@ -1,3 +1,10 @@
+import type { OutboxStore } from "@/lib/outbox/outbox-store";
+import type { NewOutboxEntry } from "@/lib/outbox/outbox-types";
+import type { QueryClient } from "@tanstack/react-query";
+import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
+import { createOfflineIdb } from "@/lib/offline/idb";
+import { clearOfflineStateForSignOut, countUnsyncedChanges } from "@/lib/offline/sign-out";
+import { createOutboxStore } from "@/lib/outbox/outbox-store";
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,14 +13,6 @@ const readBootOwner = vi.hoisted(() => vi.fn<() => string | null>(() => null));
 const wipeReadCache = vi.hoisted(() => vi.fn(async () => {}));
 
 vi.mock("@/lib/query-cache", () => ({ activeCacheOwner, readBootOwner, wipeReadCache }));
-
-import type { QueryClient } from "@tanstack/react-query";
-
-import { createOfflineIdb } from "@/lib/offline/idb";
-import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
-import { clearOfflineStateForSignOut, countUnsyncedChanges } from "@/lib/offline/sign-out";
-import { createOutboxStore, type OutboxStore } from "@/lib/outbox/outbox-store";
-import type { NewOutboxEntry } from "@/lib/outbox/outbox-types";
 
 function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
   return {

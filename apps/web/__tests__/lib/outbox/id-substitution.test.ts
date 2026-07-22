@@ -1,8 +1,7 @@
-import { describe, expect, it } from "vitest";
-
-import { encodeOutboxInput } from "@/lib/outbox/input-codec";
-import { substituteEntryIds, substituteIdsInValue } from "@/lib/outbox/id-substitution";
 import type { OutboxEntry } from "@/lib/outbox/outbox-types";
+import { substituteEntryIds, substituteIdsInValue } from "@/lib/outbox/id-substitution";
+import { encodeOutboxInput } from "@/lib/outbox/input-codec";
+import { describe, expect, it } from "vitest";
 
 const clientId = "11111111-1111-4111-8111-111111111111";
 const canonicalId = "22222222-2222-4222-8222-222222222222";

@@ -3,11 +3,6 @@ import { useMutation } from "@tanstack/react-query";
 import type { StoreCreateDto, StoreDeleteInput, StoreDto } from "@norish/shared/contracts";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
-import {
-  invalidateUnlessPreserved,
-  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
-} from "../optimistic-updates";
-
 import type {
   CreateStoresHooksOptions,
   StoreGrocerySnapshot,
@@ -15,6 +10,10 @@ import type {
   StoresQueryResult,
   StoreUpdateDraft,
 } from "./types";
+import {
+  invalidateUnlessPreserved,
+  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
+} from "../optimistic-updates";
 
 type CreateUseStoresMutationsOptions = CreateStoresHooksOptions & {
   useStoresQuery: () => StoresQueryResult;

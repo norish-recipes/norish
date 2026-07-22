@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-
 import { OUTBOX_LEADER_LOCK, runIfLeader, runWithOutboxLock } from "@/lib/outbox/leader";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 type RequestFn = (
   name: string,

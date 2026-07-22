@@ -183,13 +183,9 @@ const updateRecurring = authedProcedure
 const detachRecurring = authedProcedure
   .input(DetachRecurringGroceryInputSchema)
   .mutation(({ ctx, input }) => {
-    const { recurringGroceryId, recurringVersion, groceryId, groceryVersion, raw, storeId } =
-      input;
+    const { recurringGroceryId, recurringVersion, groceryId, groceryVersion, raw, storeId } = input;
 
-    log.info(
-      { userId: ctx.user.id, recurringGroceryId, groceryId },
-      "Detaching recurring grocery"
-    );
+    log.info({ userId: ctx.user.id, recurringGroceryId, groceryId }, "Detaching recurring grocery");
 
     getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
@@ -414,10 +410,7 @@ const checkRecurring = authedProcedure
           return;
         }
 
-        log.debug(
-          { userId: ctx.user.id, recurringGroceryId, isDone },
-          "Recurring grocery checked"
-        );
+        log.debug({ userId: ctx.user.id, recurringGroceryId, isDone }, "Recurring grocery checked");
         groceryEmitter.emitToHousehold(ctx.householdKey, "recurringUpdated", {
           recurringGrocery: outcome.value.recurringGrocery ?? recurringGrocery,
           grocery: outcome.value.grocery,

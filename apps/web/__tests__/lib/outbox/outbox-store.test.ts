@@ -1,9 +1,9 @@
+import type { OutboxStore } from "@/lib/outbox/outbox-store";
+import type { NewOutboxEntry } from "@/lib/outbox/outbox-types";
+import { createOfflineIdb } from "@/lib/offline/idb";
+import { createOutboxStore } from "@/lib/outbox/outbox-store";
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, it } from "vitest";
-
-import { createOfflineIdb } from "@/lib/offline/idb";
-import { createOutboxStore, type OutboxStore } from "@/lib/outbox/outbox-store";
-import type { NewOutboxEntry } from "@/lib/outbox/outbox-types";
 
 function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
   return {

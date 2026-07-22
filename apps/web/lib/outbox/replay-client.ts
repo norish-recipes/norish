@@ -8,9 +8,9 @@
  * (a Conflicted first-writer-wins loss), and thrown errors run through the
  * failure taxonomy.
  */
-
+import type { ReplayOutcome } from "./error-classification";
 import type { OutboxEntry } from "./outbox-types";
-import { classifyReplayError, isStaleResult, type ReplayOutcome } from "./error-classification";
+import { classifyReplayError, isStaleResult } from "./error-classification";
 import { decodeOutboxInput } from "./input-codec";
 
 /** Header stamped on replays so the Outbox link recognises and ignores them. */

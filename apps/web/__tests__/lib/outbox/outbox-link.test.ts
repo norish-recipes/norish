@@ -1,5 +1,10 @@
+import { isEncodedFormData } from "@/lib/outbox/input-codec";
+import { createOutboxLink } from "@/lib/outbox/outbox-link";
+import { OUTBOX_REPLAY_HEADER, OUTBOX_REPLAY_HEADER_VALUE } from "@/lib/outbox/replay-client";
 import { observable } from "@trpc/server/observable";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { hasOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 
 const enqueue = vi.hoisted(() => vi.fn(async () => ({})));
 
@@ -8,12 +13,6 @@ vi.mock("@/lib/query-cache", () => ({
   activeCacheOwner: () => "u1",
   readBootOwner: () => null,
 }));
-
-import { hasOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
-
-import { isEncodedFormData } from "@/lib/outbox/input-codec";
-import { createOutboxLink } from "@/lib/outbox/outbox-link";
-import { OUTBOX_REPLAY_HEADER, OUTBOX_REPLAY_HEADER_VALUE } from "@/lib/outbox/replay-client";
 
 type FakeOp = {
   type: "mutation" | "query";

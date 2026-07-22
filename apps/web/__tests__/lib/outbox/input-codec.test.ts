@@ -1,10 +1,5 @@
+import { decodeOutboxInput, encodeOutboxInput, isEncodedFormData } from "@/lib/outbox/input-codec";
 import { describe, expect, it } from "vitest";
-
-import {
-  decodeOutboxInput,
-  encodeOutboxInput,
-  isEncodedFormData,
-} from "@/lib/outbox/input-codec";
 
 function entriesOf(formData: FormData): Array<[string, FormDataEntryValue]> {
   return [...formData.entries()];

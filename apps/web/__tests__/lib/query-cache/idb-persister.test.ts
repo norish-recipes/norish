@@ -1,10 +1,10 @@
+import type { OfflineIdb } from "@/lib/offline/idb";
 import type { PersistedClient } from "@tanstack/query-persist-client-core";
-import { IDBFactory } from "fake-indexeddb";
-import { beforeEach, describe, expect, it } from "vitest";
-
-import { createOfflineIdb, KEYVAL_STORE, type OfflineIdb } from "@/lib/offline/idb";
+import { createOfflineIdb, KEYVAL_STORE } from "@/lib/offline/idb";
 import { queryCacheKey } from "@/lib/query-cache/cache-identity";
 import { createIdbPersister } from "@/lib/query-cache/idb-persister";
+import { IDBFactory } from "fake-indexeddb";
+import { beforeEach, describe, expect, it } from "vitest";
 
 function fakeClient(marker: string): PersistedClient {
   return {

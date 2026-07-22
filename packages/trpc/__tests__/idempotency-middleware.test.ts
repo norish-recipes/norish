@@ -3,12 +3,8 @@ import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { describe, expect, it } from "vitest";
 
-import {
-  cachedMiddlewareResult,
-  type IdempotencyConfig,
-  type IdempotencyRedis,
-  runWithIdempotency,
-} from "../src/idempotency-middleware";
+import type { IdempotencyConfig, IdempotencyRedis } from "../src/idempotency-middleware";
+import { cachedMiddlewareResult, runWithIdempotency } from "../src/idempotency-middleware";
 
 /**
  * Minimal in-memory Redis honouring the `SET ... NX` semantics the middleware

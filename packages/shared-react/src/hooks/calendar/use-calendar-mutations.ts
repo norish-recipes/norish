@@ -3,16 +3,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
-import {
-  invalidateUnlessPreserved,
-  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
-} from "../optimistic-updates";
-
 import type {
   CalendarCacheHelpers,
   CalendarMutationsResult,
   CreateCalendarHooksOptions,
 } from "./types";
+import {
+  invalidateUnlessPreserved,
+  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
+} from "../optimistic-updates";
 
 type CreateUseCalendarMutationsOptions = CreateCalendarHooksOptions & {
   useCalendarCacheHelpers: (startISO: string, endISO: string) => CalendarCacheHelpers;

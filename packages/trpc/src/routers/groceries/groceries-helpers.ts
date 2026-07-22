@@ -1,7 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import type { GroceryDto, GroceryUpdateDto } from "@norish/shared/contracts";
+import type { GroceryDto, GroceryUpdateDto, IdSubstitution } from "@norish/shared/contracts";
+import type { GroceryMergeCandidate } from "@norish/shared/lib/grocery-merge";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   assignGroceryToStore,
@@ -24,7 +25,6 @@ import {
   normalizeIngredientName,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
-import type { IdSubstitution } from "@norish/shared/contracts";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
 import {
@@ -32,7 +32,6 @@ import {
   buildGroceryMergeIndex,
   findGroceryMergeTarget,
   groceryMergeKey,
-  type GroceryMergeCandidate,
 } from "@norish/shared/lib/grocery-merge";
 
 import { groceryEmitter } from "./emitter";

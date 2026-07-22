@@ -14,11 +14,6 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
-import {
-  invalidateUnlessPreserved,
-  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
-} from "../optimistic-updates";
-
 import type {
   CreateGroceriesHooksOptions,
   GroceriesData,
@@ -26,6 +21,10 @@ import type {
   GroceriesQueryResult,
   GroceryCreateData,
 } from "./types";
+import {
+  invalidateUnlessPreserved,
+  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
+} from "../optimistic-updates";
 
 const log = createClientLogger("GroceriesMutations");
 

@@ -99,3 +99,7 @@ docker-compose.yml
 !.devcontainer/default/
 !.devcontainer/default/**
 
+
+# Playwright e2e artifacts (apps/web/e2e)
+apps/web/e2e/.results/
+apps/web/e2e/.runtime/

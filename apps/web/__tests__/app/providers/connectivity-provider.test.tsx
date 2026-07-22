@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import { ConnectivityProvider, useConnectivity } from "@/app/providers/connectivity-provider";
+
 const probeMock = vi.hoisted(() => vi.fn<() => Promise<boolean>>());
 let wsStatus: "idle" | "connecting" | "connected" | "disconnected" = "idle";
 
@@ -15,8 +17,6 @@ vi.mock("@/lib/connectivity", async (importOriginal) => {
 
   return { ...actual, probeBackendReachable: probeMock };
 });
-
-import { ConnectivityProvider, useConnectivity } from "@/app/providers/connectivity-provider";
 
 function StateProbe() {
   const { state } = useConnectivity();

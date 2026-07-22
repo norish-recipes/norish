@@ -1,6 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-
 import { runReconnectSequence } from "@/lib/outbox/reconnect";
+import { describe, expect, it, vi } from "vitest";
 
 describe("runReconnectSequence", () => {
   it("drains, then refetches, then warms — strictly in that order", async () => {

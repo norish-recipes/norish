@@ -17,16 +17,15 @@
  *                      the loss is visible, never silent.
  */
 
-import { isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
 import { isUnauthorizedTRPCError } from "@norish/shared-react/providers";
+import { isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
 
 export type ReplayFailureClass = "unreachable" | "unauthorized" | "ambiguous" | "deterministic";
 
 export type ReplayOutcome =
   /** `result` carries the mutation response so Replay can read generic
    *  contracts off it (client-to-canonical id substitutions, ADR-0009). */
-  | { kind: "success"; result?: unknown }
-  | { kind: "conflict" | ReplayFailureClass };
+  { kind: "success"; result?: unknown } | { kind: "conflict" | ReplayFailureClass };
 
 /**
  * The HTTP status a tRPC error carries, from `error.data.httpStatus` — the same
@@ -69,8 +68,6 @@ export function classifyReplayError(error: unknown): ReplayFailureClass {
  */
 export function isStaleResult(result: unknown): boolean {
   return (
-    typeof result === "object" &&
-    result !== null &&
-    (result as { stale?: unknown }).stale === true
+    typeof result === "object" && result !== null && (result as { stale?: unknown }).stale === true
   );
 }

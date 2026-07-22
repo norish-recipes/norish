@@ -7,10 +7,9 @@
  * Identity transitions that bypass explicit sign-out never come through
  * here; they retain the outgoing queue dormant under its owner.
  */
-
+import type { OutboxStore } from "@/lib/outbox";
 import type { QueryClient } from "@tanstack/react-query";
-
-import { discardAllEntries, outboxStore, type OutboxStore } from "@/lib/outbox";
+import { discardAllEntries, outboxStore } from "@/lib/outbox";
 import { activeCacheOwner, readBootOwner, wipeReadCache } from "@/lib/query-cache";
 
 import { deleteImageCache } from "./cache-names";

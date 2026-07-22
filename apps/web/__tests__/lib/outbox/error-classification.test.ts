@@ -1,6 +1,5 @@
-import { describe, expect, it } from "vitest";
-
 import { classifyReplayError, isStaleResult } from "@/lib/outbox/error-classification";
+import { describe, expect, it } from "vitest";
 
 describe("classifyReplayError", () => {
   it("classifies a network failure as unreachable (halt, resume on recovery)", () => {

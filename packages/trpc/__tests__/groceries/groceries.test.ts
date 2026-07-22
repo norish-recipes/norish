@@ -16,6 +16,7 @@ import {
 } from "../../src/routers/groceries/groceries";
 import { createGroceriesData } from "../../src/routers/groceries/groceries-helpers";
 import { router } from "../../src/trpc";
+import { createMockCallerContext } from "../calendar/test-utils";
 // Import mocks for assertions
 import {
   assignGroceryToStore,
@@ -27,7 +28,6 @@ import {
   listGroceriesByUsers,
   updateGroceries,
 } from "../mocks/db";
-import { createMockCallerContext } from "../calendar/test-utils";
 import { groceryEmitter } from "../mocks/grocery-emitter";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { listRecurringGroceriesByUsers } from "../mocks/recurring-groceries";

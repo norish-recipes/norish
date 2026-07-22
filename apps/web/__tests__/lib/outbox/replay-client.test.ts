@@ -1,13 +1,12 @@
-import { describe, expect, it, vi } from "vitest";
-
-import { encodeOutboxInput } from "@/lib/outbox/input-codec";
 import type { OutboxEntry } from "@/lib/outbox/outbox-types";
+import { encodeOutboxInput } from "@/lib/outbox/input-codec";
 import {
   isOutboxReplayContext,
   OUTBOX_REPLAY_HEADER,
   OUTBOX_REPLAY_HEADER_VALUE,
   replayOutboxEntry,
 } from "@/lib/outbox/replay-client";
+import { describe, expect, it, vi } from "vitest";
 
 function entry(overrides: Partial<OutboxEntry> = {}): OutboxEntry {
   return {
