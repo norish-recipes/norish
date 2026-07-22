@@ -233,7 +233,9 @@ export const createGroceryProcedure = authedProcedure
     log.info({ userId: ctx.user.id }, "Creating grocery via API");
 
     try {
-      const result = await createGroceriesData(ctx, [input]);
+      // The public REST surface stays id-less; mint here so the shared create
+      // path can require a client id per item (ADR-0009).
+      const result = await createGroceriesData(ctx, [{ ...input, id: crypto.randomUUID() }]);
       const grocery = result.returnedGroceries[0];
 
       if (!grocery) {

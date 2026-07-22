@@ -71,7 +71,10 @@ export function createMockAuthedContext(
  * `router.createCaller`; the auth middleware re-derives the household fields.
  */
 export function createMockCallerContext(
-  ctx: ReturnType<typeof createMockAuthedContext> = createMockAuthedContext()
+  ctx: {
+    user: User;
+    household: HouseholdWithUsersNamesDto | null;
+  } = createMockAuthedContext()
 ): Context {
   return {
     user: ctx.user,

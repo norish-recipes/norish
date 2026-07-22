@@ -24,8 +24,16 @@ import {
   normalizeIngredientName,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
+import type { IdSubstitution } from "@norish/shared/contracts";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
+import {
+  accumulateGroceryAmounts,
+  buildGroceryMergeIndex,
+  findGroceryMergeTarget,
+  groceryMergeKey,
+  type GroceryMergeCandidate,
+} from "@norish/shared/lib/grocery-merge";
 
 import { groceryEmitter } from "./emitter";
 
@@ -34,22 +42,6 @@ export type GroceryProcedureContext = {
   userIds: string[];
   householdKey: string;
 };
-
-type GroceryMergeCandidate = {
-  id: string;
-  name: string | null;
-  unit: string | null;
-  amount: number | null;
-  isDone: boolean;
-  recipeIngredientId: string | null;
-  recurringGroceryId: string | null;
-  storeId: string | null;
-  sortOrder: number;
-};
-
-function normalizeGroceryName(name: string | null): string {
-  return (name ?? "").toLowerCase().trim();
-}
 
 export async function listGroceriesData(ctx: GroceryProcedureContext) {
   log.debug({ userId: ctx.user.id }, "Listing groceries");
@@ -88,21 +80,10 @@ export async function createGroceriesData(
   input: Array<z.infer<typeof GroceryCreateSchema>>
 ) {
   const existingGroceries = await listGroceriesByUsers(ctx.userIds, { includeDone: false });
-  const existingByKey = new Map<string, GroceryMergeCandidate>();
-
-  for (const grocery of existingGroceries) {
-    const normalizedName = normalizeGroceryName(grocery.name);
-
-    if (normalizedName && !grocery.isDone) {
-      const recipeKey = grocery.recipeIngredientId ?? "manual";
-      const recurringKey = grocery.recurringGroceryId ?? "none";
-      const key = `${normalizedName}|${recipeKey}|${recurringKey}`;
-
-      if (!existingByKey.has(key)) {
-        existingByKey.set(key, grocery);
-      }
-    }
-  }
+  // The shared merge rule runs here against authoritative state and inside the
+  // clients' optimistic path against their cached groceries (ADR-0009).
+  const mergeIndex: Map<string, GroceryMergeCandidate> =
+    buildGroceryMergeIndex<GroceryMergeCandidate>(existingGroceries);
 
   const groceriesToCreate: Array<{
     id: string;
@@ -117,31 +98,32 @@ export async function createGroceriesData(
       storeId: string | null;
     };
   }> = [];
-  const groceriesToUpdate: Array<{ id: string; amount: number | null }> = [];
+  const pendingCreateById = new Map<string, (typeof groceriesToCreate)[number]>();
+  const updateAmountById = new Map<string, number>();
   const returnIds: string[] = [];
 
   for (const grocery of input) {
-    const normalizedName = normalizeGroceryName(grocery.name);
-    const recipeKey = grocery.recipeIngredientId ?? "manual";
-    const recurringKey = grocery.recurringGroceryId ?? "none";
-    const lookupKey = normalizedName ? `${normalizedName}|${recipeKey}|${recurringKey}` : null;
-    const existing = lookupKey ? existingByKey.get(lookupKey) : null;
+    const lookupKey = groceryMergeKey(grocery);
+    const existing = findGroceryMergeTarget(mergeIndex, grocery);
 
-    const shouldMerge =
-      existing && (existing.unit === grocery.unit || (!existing.unit && !grocery.unit));
+    if (existing) {
+      const mergedAmount = accumulateGroceryAmounts(existing.amount, grocery.amount);
+      const pendingCreate = pendingCreateById.get(existing.id);
 
-    if (shouldMerge && existing) {
-      const existingAmount = existing.amount ?? 1;
-      const newAmount = grocery.amount ?? 1;
-      const mergedAmount = existingAmount + newAmount;
+      if (pendingCreate) {
+        // The target is an earlier item of this batch: accumulate onto the
+        // pending insert instead of updating a row that does not exist yet.
+        pendingCreate.groceries.amount = mergedAmount;
+      } else {
+        updateAmountById.set(existing.id, mergedAmount);
+      }
 
-      groceriesToUpdate.push({ id: existing.id, amount: mergedAmount });
       returnIds.push(existing.id);
-      existingByKey.set(lookupKey!, { ...existing, amount: mergedAmount });
+      mergeIndex.set(lookupKey!, { ...existing, amount: mergedAmount });
       continue;
     }
 
-    const id = grocery.id ?? crypto.randomUUID();
+    const id = grocery.id;
     let storeId: string | null = grocery.storeId ?? null;
 
     if (!storeId && grocery.name) {
@@ -150,7 +132,7 @@ export async function createGroceriesData(
       storeId = match?.preference.storeId ?? null;
     }
 
-    groceriesToCreate.push({
+    const createEntry = {
       id,
       groceries: {
         userId: ctx.user.id,
@@ -162,23 +144,26 @@ export async function createGroceriesData(
         recurringGroceryId: grocery.recurringGroceryId ?? null,
         storeId,
       },
-    });
+    };
+
+    groceriesToCreate.push(createEntry);
+    pendingCreateById.set(id, createEntry);
     returnIds.push(id);
 
     if (lookupKey) {
-      existingByKey.set(lookupKey, {
+      mergeIndex.set(lookupKey, {
         id,
         name: grocery.name,
         unit: grocery.unit,
         amount: grocery.amount,
         isDone: false,
         recipeIngredientId: grocery.recipeIngredientId ?? null,
-        recurringGroceryId: null,
-        storeId,
-        sortOrder: 0,
+        recurringGroceryId: grocery.recurringGroceryId ?? null,
       });
     }
   }
+
+  const groceriesToUpdate = Array.from(updateAmountById, ([id, amount]) => ({ id, amount }));
 
   let updatedGroceries: GroceryDto[] = [];
 
@@ -216,8 +201,16 @@ export async function createGroceriesData(
     .map((id) => groceriesById.get(id))
     .filter((grocery): grocery is GroceryDto => grocery !== undefined);
 
+  // One client-to-canonical mapping per submitted item, in input order, so
+  // Outbox Replay can rewrite queued dependents generically (ADR-0009).
+  const idSubstitutions: IdSubstitution[] = input.map((grocery, index) => ({
+    clientId: grocery.id,
+    canonicalId: returnIds[index] ?? grocery.id,
+  }));
+
   return {
     ids: returnIds,
+    idSubstitutions,
     createdGroceries,
     updatedGroceries,
     returnedGroceries,
