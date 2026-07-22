@@ -3,12 +3,6 @@ import { useMutation } from "@tanstack/react-query";
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-import {
-  accumulateGroceryAmounts,
-  buildGroceryMergeIndex,
-  findGroceryMergeTarget,
-  groceryMergeKey,
-} from "@norish/shared/lib/grocery-merge";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
@@ -143,8 +137,7 @@ function reconcileCreatedGroceries(
   prev: GroceriesData,
   optimisticIds: string[],
   result: CreateGroceriesResult,
-  optimisticGroceries: GroceryDto[],
-  mergeBaselines?: Map<string, GroceryDto>
+  optimisticGroceries: GroceryDto[]
 ) {
   const { ids, returnedGroceries, createdGroceries, updatedGroceries } =
     normalizeCreateResult(result);
@@ -156,13 +149,7 @@ function reconcileCreatedGroceries(
     .map((grocery) => {
       const updated = updatedById.get(grocery.id);
 
-      if (updated) return { ...grocery, ...updated };
-
-      // The server did not confirm an optimistic merge onto this row (it
-      // merged elsewhere or created a new row): restore the pre-merge state.
-      const baseline = mergeBaselines?.get(grocery.id);
-
-      return baseline ?? grocery;
+      return updated ? { ...grocery, ...updated } : grocery;
     });
 
   const createdToInsert: GroceryDto[] = [];
@@ -175,17 +162,14 @@ function reconcileCreatedGroceries(
     const grocery = returnedById.get(id) ?? { ...optimistic, id };
     const created = createdById.get(id);
     const existingIndex = groceries.findIndex((existing) => existing.id === id);
-    const alreadyInserting = createdToInsert.some((entry) => entry.id === id);
 
     if (created) {
-      if (!alreadyInserting) createdToInsert.push(created);
+      createdToInsert.push(created);
     } else if (existingIndex >= 0) {
       groceries = groceries.map((existing, currentIndex) =>
         currentIndex === existingIndex ? { ...existing, ...grocery } : existing
       );
-    } else if (!alreadyInserting) {
-      // The canonical row is not in the cache (e.g. the server merged into a
-      // row this client had not seen yet): insert the server's row.
+    } else if (!updatedById.has(id)) {
       createdToInsert.push(grocery);
     }
   });
@@ -193,113 +177,6 @@ function reconcileCreatedGroceries(
   return {
     ...prev,
     groceries: applyCreatedGroceriesToCache(groceries, createdToInsert),
-  };
-}
-
-type OptimisticCreateItem = {
-  id: string;
-  name: string | null;
-  unit: string | null;
-  amount: number | null;
-  isDone: boolean;
-  recipeIngredientId?: string | null;
-};
-
-type OptimisticCreatePlan = {
-  /** New optimistic rows for non-merged items, in item order. */
-  inserts: GroceryDto[];
-  /** Ids of those inserted rows (stripped again on reconcile). */
-  insertedIds: string[];
-  /** Cached-row id → accumulated amount for optimistically merged items. */
-  bumpedAmounts: Map<string, number>;
-  /** Pre-merge snapshots of bumped cached rows, for reconcile restore. */
-  baselines: Map<string, GroceryDto>;
-  /** Per item: the id the UI resolves to (canonical for merges). */
-  resolvedIds: string[];
-  /** Per item: the row backing reconcile pairing. */
-  pairingRows: GroceryDto[];
-};
-
-/**
- * Apply the shared grocery merge rule (ADR-0009) against the cached rows: an
- * item matching a known not-done row with a compatible unit accumulates onto
- * that canonical row, later batch items can merge onto earlier inserts, and
- * everything else becomes a new optimistic row with its client-minted id.
- */
-function planOptimisticCreates(
-  cachedGroceries: GroceryDto[],
-  items: OptimisticCreateItem[],
-  resolveInsertStoreId: (item: OptimisticCreateItem) => string | null
-): OptimisticCreatePlan {
-  const mergeIndex = buildGroceryMergeIndex(cachedGroceries);
-  const insertsById = new Map<string, GroceryDto>();
-  const plan: OptimisticCreatePlan = {
-    inserts: [],
-    insertedIds: [],
-    bumpedAmounts: new Map(),
-    baselines: new Map(),
-    resolvedIds: [],
-    pairingRows: [],
-  };
-
-  for (const item of items) {
-    const target = findGroceryMergeTarget(mergeIndex, item);
-
-    if (target) {
-      const mergedAmount = accumulateGroceryAmounts(target.amount, item.amount);
-      const pendingInsert = insertsById.get(target.id);
-
-      if (pendingInsert) {
-        pendingInsert.amount = mergedAmount;
-      } else {
-        if (!plan.baselines.has(target.id)) {
-          plan.baselines.set(target.id, target);
-        }
-        plan.bumpedAmounts.set(target.id, mergedAmount);
-      }
-
-      plan.resolvedIds.push(target.id);
-      plan.pairingRows.push({ ...target, amount: mergedAmount });
-      mergeIndex.set(groceryMergeKey(item)!, { ...target, amount: mergedAmount });
-      continue;
-    }
-
-    const insert = createOptimisticGrocery({
-      id: item.id,
-      name: item.name,
-      amount: item.amount,
-      unit: item.unit,
-      isDone: item.isDone,
-      storeId: resolveInsertStoreId(item),
-      recipeIngredientId: item.recipeIngredientId ?? null,
-    });
-
-    plan.inserts.push(insert);
-    plan.insertedIds.push(insert.id);
-    plan.resolvedIds.push(insert.id);
-    plan.pairingRows.push(insert);
-    insertsById.set(insert.id, insert);
-
-    const key = groceryMergeKey(item);
-
-    if (key) mergeIndex.set(key, insert);
-  }
-
-  return plan;
-}
-
-function applyOptimisticCreatePlan(prev: GroceriesData, plan: OptimisticCreatePlan): GroceriesData {
-  const bumped = prev.groceries.map((grocery) => {
-    const amount = plan.bumpedAmounts.get(grocery.id);
-
-    // Bump the version alongside the amount so a follow-up mutation on the
-    // merged row sends the version the server will have after this write.
-    return amount === undefined ? grocery : { ...grocery, amount, version: grocery.version + 1 };
-  });
-
-  return {
-    ...prev,
-    groceries: applyCreatedGroceriesToCache(bumped, plan.inserts),
   };
 }
 
@@ -377,37 +254,31 @@ export function createUseGroceriesMutations({
         isDone: false,
         storeId: requestedStoreId,
       };
-      // The shared merge rule picks a known canonical row from the cache, so
-      // an offline add of an existing grocery targets that row instead of
-      // inserting a duplicate (ADR-0009).
-      const plan = planOptimisticCreates(
-        groceries,
-        [
-          {
-            id: clientId,
-            name: groceryData.name,
-            amount: groceryData.amount ?? null,
-            unit: groceryData.unit ?? null,
-            isDone: false,
-            recipeIngredientId: null,
-          },
-        ],
-        (item) => requestedStoreId ?? findCachedStoreIdForName(item.name, groceries)
-      );
+      const optimisticStoreId =
+        requestedStoreId ?? findCachedStoreIdForName(groceryData.name, groceries);
+      const optimisticGrocery = createOptimisticGrocery({
+        id: clientId,
+        name: groceryData.name,
+        amount: groceryData.amount ?? null,
+        unit: groceryData.unit ?? null,
+        isDone: groceryData.isDone,
+        storeId: optimisticStoreId,
+      });
 
-      setGroceriesData((prev) => (prev ? applyOptimisticCreatePlan(prev, plan) : prev));
+      setGroceriesData((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          groceries: applyCreatedGroceriesToCache(prev.groceries, [optimisticGrocery]),
+        };
+      });
 
       createMutation.mutate([groceryData], {
         onSuccess: (result: CreateGroceriesResult) => {
           setGroceriesData((prev) =>
             prev
-              ? reconcileCreatedGroceries(
-                  prev,
-                  plan.insertedIds,
-                  result,
-                  plan.pairingRows,
-                  plan.baselines
-                )
+              ? reconcileCreatedGroceries(prev, [clientId], result, [optimisticGrocery])
               : prev
           );
         },
@@ -427,9 +298,27 @@ export function createUseGroceriesMutations({
         isDone: g.isDone ?? false,
         recipeIngredientId: g.recipeIngredientId ?? null,
       }));
-      const plan = planOptimisticCreates(groceries, groceriesToCreate, () => null);
+      const optimisticGroceries = groceriesToCreate.map((grocery) =>
+        createOptimisticGrocery({
+          id: grocery.id,
+          name: grocery.name,
+          amount: grocery.amount,
+          unit: grocery.unit,
+          isDone: grocery.isDone,
+          storeId: null,
+          recipeIngredientId: grocery.recipeIngredientId,
+        })
+      );
+      const optimisticIds = optimisticGroceries.map((grocery) => grocery.id);
 
-      setGroceriesData((prev) => (prev ? applyOptimisticCreatePlan(prev, plan) : prev));
+      setGroceriesData((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          groceries: [...optimisticGroceries, ...prev.groceries],
+        };
+      });
 
       return new Promise((resolve, reject) => {
         createMutation.mutate(groceriesToCreate, {
@@ -438,24 +327,17 @@ export function createUseGroceriesMutations({
 
             setGroceriesData((prev) =>
               prev
-                ? reconcileCreatedGroceries(
-                    prev,
-                    plan.insertedIds,
-                    result,
-                    plan.pairingRows,
-                    plan.baselines
-                  )
+                ? reconcileCreatedGroceries(prev, optimisticIds, result, optimisticGroceries)
                 : prev
             );
             resolve(ids);
           },
           onError: (error) => {
             if (preserveOptimisticUpdate(error)) {
-              // Queued: the optimistic state holds and each item resolved to
-              // the id the UI shows — the canonical row for merged items, the
-              // client-minted id otherwise (ADR-0003/0009) — so this is a
-              // tentative success rather than a rejection.
-              resolve(plan.resolvedIds);
+              // Queued: the optimistic rows hold and the client-minted ids are
+              // the ids the server will insert on Replay (ADR-0003), so this is
+              // a tentative success — resolve with them rather than reject.
+              resolve(optimisticIds);
 
               return;
             }

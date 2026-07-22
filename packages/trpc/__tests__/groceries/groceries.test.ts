@@ -214,7 +214,7 @@ describe("groceries openapi procedures", () => {
     expect(result.ids).toContain(clientId);
   });
 
-  it("mints the id for the id-less public API create (app creates require client ids)", async () => {
+  it("mints a server-side id when the client supplies none (existing clients unaffected)", async () => {
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
     listGroceriesByUsers.mockResolvedValue([]);
@@ -223,73 +223,13 @@ describe("groceries openapi procedures", () => {
         items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name }))
     );
 
-    const caller = openApiGroceriesRouter.createCaller(createMockCallerContext(ctx));
-
-    await caller.createGrocery({ name: "Bananas", unit: null, amount: null, isDone: false });
+    const result = await createGroceriesData(ctx, [
+      { name: "Bananas", unit: null, amount: 1, isDone: false },
+    ]);
 
     const created = createGroceries.mock.calls[0][0] as Array<{ id: string }>;
-
     expect(created[0]?.id).toMatch(UUID_RE);
-  });
-
-  it("returns one client-to-canonical substitution per submitted item in input order", async () => {
-    const existingId = crypto.randomUUID();
-    const clientA = crypto.randomUUID();
-    const clientB = crypto.randomUUID();
-    const existing = createMockGrocery({ id: existingId, name: "Milk", unit: null, amount: 1 });
-
-    listGroceriesByUsers.mockResolvedValue([existing]);
-    updateGroceries.mockImplementation(async (updates: Array<{ id: string; amount: number }>) =>
-      updates.map((update) => ({ ...existing, ...update, version: 2 }))
-    );
-    createGroceries.mockImplementation(
-      async (items: Array<{ id: string; groceries: { name: string | null } }>) =>
-        items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name }))
-    );
-
-    const result = await createGroceriesData(ctx, [
-      { id: clientA, name: "milk", unit: null, amount: 2, isDone: false },
-      { id: clientB, name: "Bread", unit: null, amount: 1, isDone: false },
-    ]);
-
-    expect(result.ids).toEqual([existingId, clientB]);
-    expect(result.idSubstitutions).toEqual([
-      { clientId: clientA, canonicalId: existingId },
-      { clientId: clientB, canonicalId: clientB },
-    ]);
-  });
-
-  it("merges identical batch items onto the first row before insert (many-to-one)", async () => {
-    const clientA = crypto.randomUUID();
-    const clientB = crypto.randomUUID();
-
-    listGroceriesByUsers.mockResolvedValue([]);
-    createGroceries.mockImplementation(
-      async (items: Array<{ id: string; groceries: { name: string | null } }>) =>
-        items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name }))
-    );
-
-    const result = await createGroceriesData(ctx, [
-      { id: clientA, name: "Eggs", unit: null, amount: 2, isDone: false },
-      { id: clientB, name: "eggs ", unit: null, amount: 3, isDone: false },
-    ]);
-
-    // The duplicate accumulates onto the pending insert; no update of a
-    // not-yet-created row is attempted.
-    expect(updateGroceries).not.toHaveBeenCalled();
-    const created = createGroceries.mock.calls[0][0] as Array<{
-      id: string;
-      groceries: { amount: number | null };
-    }>;
-
-    expect(created).toHaveLength(1);
-    expect(created[0]?.id).toBe(clientA);
-    expect(created[0]?.groceries.amount).toBe(5);
-    expect(result.ids).toEqual([clientA, clientA]);
-    expect(result.idSubstitutions).toEqual([
-      { clientId: clientA, canonicalId: clientA },
-      { clientId: clientB, canonicalId: clientA },
-    ]);
+    expect(result.ids[0]).toMatch(UUID_RE);
   });
 
   it("marks a grocery done and returns the updated grocery", async () => {

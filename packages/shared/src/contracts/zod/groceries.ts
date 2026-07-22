@@ -3,6 +3,8 @@ import z from "zod";
 
 import { groceries } from "@norish/db-schema/schema";
 
+import { clientMintedId } from "./common";
+
 export const GrocerySelectBaseSchema = createSelectSchema(groceries)
   .omit({
     userId: true,
@@ -57,12 +59,9 @@ const GroceryStoreReorderInputSchema = GroceryVersionInputSchema.extend({
   storeId: z.uuid().nullable().optional(),
 });
 
-// Create schema without userId (added server-side). Every submitted grocery
-// carries a required client-minted id (ADR-0009); the id-less legacy create
-// path is removed so queued create-then-edit chains and Replay id
-// substitution stay valid end to end.
+// Create schema without userId (added server-side)
 export const GroceryCreateSchema = z.object({
-  id: z.uuid(),
+  id: clientMintedId,
   name: z.string().nullable(),
   unit: z.string().nullable(),
   amount: z.coerce.number().nullable(),
