@@ -173,6 +173,88 @@ describe("runReplayPass", () => {
     expect(submitted).toEqual(["mine"]);
     expect(await store.size("u2")).toBe(1);
   });
+
+  it("applies a learned client-to-canonical substitution to later queued entries", async () => {
+    const clientId = "11111111-1111-4111-8111-111111111111";
+    const canonicalId = "22222222-2222-4222-8222-222222222222";
+
+    await store.enqueue(
+      entry({ id: "create", path: "groceries.create", input: [{ id: clientId }], entityId: clientId })
+    );
+    await store.enqueue(
+      entry({
+        id: "tick",
+        path: "groceries.toggle",
+        input: { groceries: [{ id: clientId, version: 1 }], isDone: true },
+        entityId: clientId,
+      })
+    );
+
+    const inputsSeen: unknown[] = [];
+    const submit = vi.fn(async (e: OutboxEntry): Promise<ReplayOutcome> => {
+      inputsSeen.push(e.input);
+
+      if (e.id === "create") {
+        // The server merged the client-minted row into an existing canonical one.
+        return {
+          kind: "success",
+          result: { ids: [canonicalId], idSubstitutions: [{ clientId, canonicalId }] },
+        };
+      }
+
+      return { kind: "success" };
+    });
+
+    const result = await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(result).toMatchObject({ removed: 2, parked: 0, remaining: 0 });
+    // The dependent toggle was submitted with the canonical id, not the stale
+    // client-minted one.
+    expect(inputsSeen[1]).toEqual({
+      groceries: [{ id: canonicalId, version: 1 }],
+      isDone: true,
+    });
+  });
+
+  it("persists substitution rewrites so a halted queue resumes correct", async () => {
+    const clientId = "11111111-1111-4111-8111-111111111111";
+    const canonicalId = "22222222-2222-4222-8222-222222222222";
+
+    await store.enqueue(
+      entry({ id: "create", path: "groceries.create", input: [{ id: clientId }], entityId: clientId })
+    );
+    await store.enqueue(
+      entry({
+        id: "tick",
+        path: "groceries.toggle",
+        input: { groceries: [{ id: clientId, version: 1 }] },
+        entityId: clientId,
+      })
+    );
+
+    const submit = vi.fn(async (e: OutboxEntry): Promise<ReplayOutcome> => {
+      if (e.id === "create") {
+        return {
+          kind: "success",
+          result: { ids: [canonicalId], idSubstitutions: [{ clientId, canonicalId }] },
+        };
+      }
+
+      // The backend drops away again before the dependent replays.
+      return { kind: "unreachable" };
+    });
+
+    const result = await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(result.halted).toBe("unreachable");
+
+    // The stored entry — input and dependency metadata — was rewritten, so a
+    // later pass (even after reload) targets the canonical id.
+    const [pending] = await store.forOwner("u1", "pending");
+
+    expect(pending?.input).toEqual({ groceries: [{ id: canonicalId, version: 1 }] });
+    expect(pending?.entityId).toBe(canonicalId);
+  });
 });
 
 describe("referencesParkedEntity", () => {

@@ -13,7 +13,10 @@
  * bounded-backoff rescheduling for transient 5xx failures.
  */
 
+import { extractIdSubstitutions } from "@norish/shared/contracts";
+
 import type { ReplayOutcome } from "./error-classification";
+import { substituteEntryIds } from "./id-substitution";
 import { runWithOutboxLock } from "./leader";
 import type { OutboxStore } from "./outbox-store";
 import { outboxStore } from "./outbox-store";
@@ -130,7 +133,14 @@ export async function runReplayPass({
     parked += 1;
   };
 
-  for (const entry of await store.forOwner(ownerId, "pending")) {
+  // Substitutions learned this pass (client-minted id → canonical id). The
+  // stored entries are rewritten durably as they are learned; this in-memory
+  // map covers the already-loaded snapshot the loop iterates.
+  const substitutions = new Map<string, string>();
+
+  for (const loaded of await store.forOwner(ownerId, "pending")) {
+    const entry = substituteEntryIds(loaded, substitutions);
+
     if (referencesParkedEntity(entry.input, parkedEntityIds)) {
       await parkWith(entry, "dependency");
 
@@ -140,10 +150,38 @@ export async function runReplayPass({
     const outcome = await submit(entry);
 
     switch (outcome.kind) {
-      case "success":
+      case "success": {
         await store.remove(entry.seq);
         removed += 1;
+
+        // A create may report that rows merged into canonical ones
+        // (ADR-0009). Learn the mappings and durably rewrite every later
+        // queued entry for this owner, so dependents — even after a halt or
+        // reload — target ids that exist on the server.
+        const learned = extractIdSubstitutions(outcome.result).filter(
+          (substitution) => substitution.clientId !== substitution.canonicalId
+        );
+
+        if (learned.length > 0) {
+          for (const substitution of learned) {
+            substitutions.set(substitution.clientId, substitution.canonicalId);
+          }
+
+          for (const later of await store.forOwner(ownerId)) {
+            if (later.seq <= entry.seq) continue;
+
+            const rewritten = substituteEntryIds(later, substitutions);
+
+            if (rewritten !== later) {
+              await store.update(later.seq, {
+                input: rewritten.input,
+                entityId: rewritten.entityId,
+              });
+            }
+          }
+        }
         break;
+      }
 
       case "conflict":
         await parkWith(entry, "conflict");
