@@ -64,8 +64,6 @@ const serwist = new Serwist({
   },
 });
 
-// Ported from the hand-rolled sw.js: a cooking-timer notification focuses an existing
-// Norish window if one is open, otherwise opens the app.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
