@@ -1,4 +1,5 @@
 import type { WarmerTRPC } from "@/lib/query-cache/cache-warmer";
+import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
 import {
   topUpWarmSet,
   warmCache,
@@ -8,7 +9,7 @@ import {
 import { writeLastWarmedAt } from "@/lib/query-cache/last-warmed";
 import { activeCacheOwner } from "@/lib/query-cache/persisted-query-client";
 import { QueryClient } from "@tanstack/react-query";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/query-cache/last-warmed", () => ({
   writeLastWarmedAt: vi.fn(async () => {}),
@@ -54,57 +55,57 @@ describe("warmCalendarRanges", () => {
   });
 });
 
+function makeTrpc() {
+  const getCalls: string[] = [];
+  const listQueryFn = vi.fn(async () => ({
+    recipes: [{ id: "r1" }, { id: "r2" }, { id: "r3" }],
+    total: 3,
+    nextCursor: null as number | null,
+  }));
+
+  const trpc: WarmerTRPC = {
+    recipes: {
+      list: {
+        infiniteQueryOptions: (input, opts) => ({
+          queryKey: ["recipes", "list", input],
+          queryFn: listQueryFn,
+          initialPageParam: 0,
+          getNextPageParam: opts.getNextPageParam,
+        }),
+      },
+      get: {
+        queryOptions: ({ id }) => ({
+          queryKey: ["recipes", "get", id],
+          queryFn: async () => {
+            getCalls.push(id);
+
+            return { id };
+          },
+        }),
+      },
+    },
+    groceries: {
+      list: {
+        queryOptions: () => ({ queryKey: ["groceries", "list"], queryFn: async () => ({}) }),
+      },
+    },
+    stores: {
+      list: { queryOptions: () => ({ queryKey: ["stores", "list"], queryFn: async () => [] }) },
+    },
+    calendar: {
+      listItems: {
+        queryOptions: (range) => ({
+          queryKey: ["calendar", range.startISO, range.endISO],
+          queryFn: async () => [],
+        }),
+      },
+    },
+  };
+
+  return { trpc, getCalls };
+}
+
 describe("warmCache", () => {
-  function makeTrpc() {
-    const getCalls: string[] = [];
-    const listQueryFn = vi.fn(async () => ({
-      recipes: [{ id: "r1" }, { id: "r2" }, { id: "r3" }],
-      total: 3,
-      nextCursor: null as number | null,
-    }));
-
-    const trpc: WarmerTRPC = {
-      recipes: {
-        list: {
-          infiniteQueryOptions: (input, opts) => ({
-            queryKey: ["recipes", "list", input],
-            queryFn: listQueryFn,
-            initialPageParam: 0,
-            getNextPageParam: opts.getNextPageParam,
-          }),
-        },
-        get: {
-          queryOptions: ({ id }) => ({
-            queryKey: ["recipes", "get", id],
-            queryFn: async () => {
-              getCalls.push(id);
-
-              return { id };
-            },
-          }),
-        },
-      },
-      groceries: {
-        list: {
-          queryOptions: () => ({ queryKey: ["groceries", "list"], queryFn: async () => ({}) }),
-        },
-      },
-      stores: {
-        list: { queryOptions: () => ({ queryKey: ["stores", "list"], queryFn: async () => [] }) },
-      },
-      calendar: {
-        listItems: {
-          queryOptions: (range) => ({
-            queryKey: ["calendar", range.startISO, range.endISO],
-            queryFn: async () => [],
-          }),
-        },
-      },
-    };
-
-    return { trpc, getCalls };
-  }
-
   it("warms the recipe list, each recipe in full, and all lists + calendar ranges", async () => {
     const queryClient = new QueryClient();
     const { trpc, getCalls } = makeTrpc();
@@ -143,6 +144,97 @@ describe("warmCache", () => {
     await expect(warmCache({ trpc, queryClient })).resolves.toBeUndefined();
     // The rest still warmed despite the failure.
     expect(queryClient.getQueryData(["groceries", "list"])).toBeDefined();
+  });
+});
+
+describe("warmCache primary images (ADR-0009)", () => {
+  function makeImageEnv() {
+    const putUrls: string[] = [];
+    const cached = new Set<string>();
+    const cache = {
+      match: vi.fn(async (url: string) => (cached.has(url) ? new Response("hit") : undefined)),
+      put: vi.fn(async (url: string, _response: Response) => {
+        putUrls.push(url);
+      }),
+    };
+    const open = vi.fn(async (name: string) => {
+      expect(name).toBe(IMAGE_CACHE_NAME);
+
+      return cache;
+    });
+
+    vi.stubGlobal("caches", { open });
+
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("broken")) throw new TypeError("Failed to fetch");
+      if (url.includes("missing")) return new Response("nope", { status: 404 });
+
+      return new Response("img", { status: 200 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    return { putUrls, cached, fetchMock };
+  }
+
+  function trpcWithImages(recipes: Array<{ id: string; image?: string | null }>) {
+    const { trpc } = makeTrpc();
+
+    trpc.recipes.list.infiniteQueryOptions = (input, opts) => ({
+      queryKey: ["recipes", "list", input],
+      queryFn: async () => ({ recipes, total: recipes.length, nextCursor: null }),
+      initialPageParam: 0,
+      getNextPageParam: opts.getNextPageParam,
+    });
+
+    return trpc;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("fetches each warmed recipe's primary image into the bounded image cache", async () => {
+    const { putUrls, fetchMock } = makeImageEnv();
+    const trpc = trpcWithImages([
+      { id: "r1", image: "/uploads/r1.jpg" },
+      { id: "r2", image: null },
+      { id: "r3", image: "/uploads/r3.jpg" },
+    ]);
+
+    await warmCache({ trpc, queryClient: new QueryClient() });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(putUrls.map((url) => new URL(url).pathname)).toEqual([
+      "/uploads/r1.jpg",
+      "/uploads/r3.jpg",
+    ]);
+  });
+
+  it("isolates media failures and skips already-cached and cross-origin images", async () => {
+    const { putUrls, cached } = makeImageEnv();
+
+    cached.add(new URL("/uploads/warm.jpg", window.location.href).toString());
+
+    const trpc = trpcWithImages([
+      { id: "r1", image: "/uploads/broken.jpg" },
+      { id: "r2", image: "/uploads/missing.jpg" },
+      { id: "r3", image: "https://elsewhere.example/x.jpg" },
+      { id: "r4", image: "/uploads/warm.jpg" },
+      { id: "r5", image: "/uploads/ok.jpg" },
+    ]);
+
+    await expect(warmCache({ trpc, queryClient: new QueryClient() })).resolves.toBeUndefined();
+
+    // Only the fetchable, uncached, same-origin image lands in the cache.
+    expect(putUrls.map((url) => new URL(url).pathname)).toEqual(["/uploads/ok.jpg"]);
+  });
+
+  it("warms no images when Cache Storage is unavailable", async () => {
+    const trpc = trpcWithImages([{ id: "r1", image: "/uploads/r1.jpg" }]);
+
+    // No `caches` global stubbed — the warm must still complete.
+    await expect(warmCache({ trpc, queryClient: new QueryClient() })).resolves.toBeUndefined();
   });
 });
 

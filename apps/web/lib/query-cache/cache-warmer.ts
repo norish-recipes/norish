@@ -20,6 +20,7 @@
 
 import type { QueryClient } from "@tanstack/react-query";
 import { getInitialDateRange } from "@/app/(app)/calendar/context-helpers";
+import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
 // The leaf module, not the outbox barrel, to keep this lib-to-lib edge cycle-free.
 import { runIfLeader } from "@/lib/outbox/leader";
 
@@ -92,7 +93,8 @@ export interface WarmerTRPC {
   };
 }
 
-type RecipeListPage = { recipes: Array<{ id: string }>; total: number; nextCursor: number | null };
+type RecipeListItem = { id: string; image?: string | null };
+type RecipeListPage = { recipes: RecipeListItem[]; total: number; nextCursor: number | null };
 type RecipeListInfiniteData = { pages: RecipeListPage[] };
 
 export interface WarmCacheOptions {
@@ -124,15 +126,71 @@ async function warmRecipes(trpc: WarmerTRPC, queryClient: QueryClient): Promise<
   // recent recipes and warm each in full.
   const data = await queryClient.fetchInfiniteQuery(listOptions as never).catch(() => undefined);
 
-  const ids = extractRecipeIds(data);
+  const warmSetRecipes = extractRecipeListItems(data).slice(0, WARM_FULL_RECIPE_COUNT);
 
-  await Promise.allSettled(
-    ids
-      .slice(0, WARM_FULL_RECIPE_COUNT)
-      .map((id) =>
-        queryClient.prefetchQuery(withWarmGcTime(trpc.recipes.get.queryOptions({ id })) as never)
-      )
-  );
+  await Promise.allSettled([
+    ...warmSetRecipes.map(({ id }) =>
+      queryClient.prefetchQuery(withWarmGcTime(trpc.recipes.get.queryOptions({ id })) as never)
+    ),
+    warmPrimaryImages(warmSetRecipes),
+  ]);
+}
+
+/**
+ * Fetch each warmed recipe's canonical primary image into the bounded runtime
+ * image cache the service worker reads (ADR-0009), so warmed recipe cards and
+ * details keep their essential visual context on a backend-down load. Only
+ * same-origin images qualify — the worker's image route caches nothing else —
+ * and every media failure is isolated. Gallery, step, and video media stay
+ * best-effort by design.
+ */
+async function warmPrimaryImages(recipes: RecipeListItem[]): Promise<void> {
+  if (typeof caches === "undefined" || typeof fetch !== "function") {
+    return;
+  }
+
+  const urls = recipes
+    .map((recipe) => resolveSameOriginImageUrl(recipe.image))
+    .filter((url): url is string => url !== null);
+
+  if (urls.length === 0) {
+    return;
+  }
+
+  try {
+    const cache = await caches.open(IMAGE_CACHE_NAME);
+
+    await Promise.allSettled(
+      urls.map(async (url) => {
+        if (await cache.match(url)) {
+          return;
+        }
+
+        const response = await fetch(url);
+
+        if (response.ok) {
+          await cache.put(url, response);
+        }
+      })
+    );
+  } catch {
+    // Cache Storage refused entirely (e.g. storage pressure) — the query-layer
+    // Warm Set must still land, so image warming never propagates a failure.
+  }
+}
+
+function resolveSameOriginImageUrl(image: string | null | undefined): string | null {
+  if (!image || typeof location === "undefined") {
+    return null;
+  }
+
+  try {
+    const url = new URL(image, location.href);
+
+    return url.origin === location.origin ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 async function warmLists(trpc: WarmerTRPC, queryClient: QueryClient): Promise<void> {
@@ -180,12 +238,12 @@ export async function topUpWarmSet({ trpc, queryClient }: TopUpWarmSetOptions): 
   });
 }
 
-function extractRecipeIds(data: unknown): string[] {
+function extractRecipeListItems(data: unknown): RecipeListItem[] {
   const infinite = data as RecipeListInfiniteData | undefined;
 
   if (!infinite?.pages) {
     return [];
   }
 
-  return infinite.pages.flatMap((page) => page.recipes.map((recipe) => recipe.id));
+  return infinite.pages.flatMap((page) => page.recipes);
 }

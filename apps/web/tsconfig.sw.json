@@ -7,7 +7,10 @@
   "compilerOptions": {
     "lib": ["ES2022", "WebWorker"],
     "types": [],
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
-  "include": ["app/sw.ts"]
+  "include": ["app/sw.ts", "lib/offline/cache-names.ts"]
 }

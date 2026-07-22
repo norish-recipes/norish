@@ -2,6 +2,8 @@ import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { defaultCache } from "@serwist/next/worker";
 import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist } from "serwist";
 
+import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
+
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
     // Content-hashed precache manifest, injected by @serwist/next at build time.
@@ -33,7 +35,8 @@ const serwist = new Serwist({
     {
       matcher: ({ request, sameOrigin }) => sameOrigin && request.destination === "image",
       handler: new CacheFirst({
-        cacheName: "norish-images",
+        // Shared name: the Cache Warmer writes warmed primary images here (ADR-0009).
+        cacheName: IMAGE_CACHE_NAME,
         plugins: [
           new ExpirationPlugin({
             maxEntries: 512,
