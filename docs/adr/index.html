@@ -1,252 +1,640 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Norish Web Offline — Design Record</title>
-<style>
-  :root {
-    --bg: #ffffff; --fg: #1a1d21; --muted: #5c6470; --line: #e4e7eb;
-    --card: #f7f8fa; --accent: #0d7a5f; --accent-soft: #e6f3ef;
-    --warn: #9a6700; --warn-soft: #fff3d6; --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #16181c; --fg: #e8eaed; --muted: #9aa3ad; --line: #2c3138;
-      --card: #1d2025; --accent: #4cc2a3; --accent-soft: #1c2f2a;
-      --warn: #d4a72c; --warn-soft: #2e2811;
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--fg);
-    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
-  main { max-width: 880px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
-  header { border-bottom: 1px solid var(--line); padding-bottom: 1.5rem; margin-bottom: 2.5rem; }
-  h1 { font-size: 1.7rem; line-height: 1.25; margin: 0 0 .5rem; letter-spacing: -.01em; }
-  h2 { font-size: 1.2rem; margin: 3rem 0 1rem; padding-top: 1.5rem; border-top: 1px solid var(--line); letter-spacing: -.01em; }
-  h3 { font-size: 1rem; margin: 1.5rem 0 .5rem; }
-  p { margin: .6rem 0; }
-  .meta { color: var(--muted); font-size: .9rem; }
-  .meta code { font-family: var(--mono); font-size: .85em; background: var(--card); padding: .1em .4em; border-radius: 4px; }
-  .status-pill {
-    display: inline-block; background: var(--accent-soft); color: var(--accent);
-    font-size: .8rem; font-weight: 600; padding: .15rem .6rem; border-radius: 99px; margin-left: .5rem; vertical-align: middle;
-  }
-  .lede { font-size: 1.05rem; color: var(--muted); max-width: 60ch; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: .8rem; margin: 1.2rem 0; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1rem; }
-  .card h3 { margin: 0 0 .35rem; font-size: .95rem; color: var(--accent); }
-  .card p { margin: 0; font-size: .88rem; color: var(--fg); }
-  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .92rem; }
-  .table-wrap { overflow-x: auto; }
-  th, td { text-align: left; padding: .5rem .7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
-  td:first-child { white-space: nowrap; font-weight: 600; }
-  code, .path { font-family: var(--mono); font-size: .86em; background: var(--card); padding: .1em .35em; border-radius: 4px; }
-  ol.commits { counter-reset: c; list-style: none; padding: 0; margin: 1rem 0; }
-  ol.commits li {
-    counter-increment: c; padding: .55rem .8rem .55rem 2.6rem; position: relative;
-    border: 1px solid var(--line); border-radius: 8px; margin-bottom: .45rem; background: var(--card); font-size: .92rem;
-  }
-  ol.commits li::before {
-    content: counter(c); position: absolute; left: .8rem; top: 50%; transform: translateY(-50%);
-    width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--accent); color: var(--bg);
-    font-size: .78rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
-  }
-  ol.commits .tag { font-family: var(--mono); font-size: .8em; color: var(--accent); margin-right: .4rem; }
-  .seq { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 1rem 0; }
-  .seq .step {
-    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
-    padding: .5rem .9rem; font-size: .9rem; font-weight: 600;
-  }
-  .seq .step small { display: block; font-weight: 400; color: var(--muted); font-size: .78rem; }
-  .seq .arrow { color: var(--muted); font-size: 1.1rem; }
-  .adr-list { list-style: none; padding: 0; margin: 1rem 0; }
-  .adr-list li { border: 1px solid var(--line); border-radius: 10px; padding: .8rem 1rem; margin-bottom: .6rem; }
-  .adr-list a { color: var(--accent); font-weight: 650; text-decoration: none; }
-  .adr-list a:hover { text-decoration: underline; }
-  .adr-list p { margin: .25rem 0 0; font-size: .89rem; color: var(--muted); }
-  .callout { border-left: 3px solid var(--warn); background: var(--warn-soft); color: var(--fg); border-radius: 0 8px 8px 0; padding: .7rem 1rem; font-size: .92rem; margin: 1rem 0; }
-  .impl { list-style: none; padding: 0; margin: 1rem 0; counter-reset: s; }
-  .impl > li { border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: .75rem 1rem; margin-bottom: .6rem; counter-increment: s; }
-  .impl > li > b::before { content: counter(s) " · "; color: var(--accent); }
-  .impl .row { font-size: .86rem; margin-top: .3rem; }
-  .impl .row b { font-weight: 650; color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; margin-right: .35rem; }
-  .impl .verify { color: var(--accent); }
-  .dag { font-family: var(--mono); font-size: .88rem; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: .6rem .9rem; overflow-x: auto; white-space: nowrap; }
-  .statebox { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
-  .state { border: 1.5px solid var(--accent); border-radius: 10px; padding: .6rem 1rem; min-width: 165px; }
-  .state.off { border-color: var(--warn); }
-  .state b { display: block; font-size: .95rem; }
-  .state span { font-size: .8rem; color: var(--muted); }
-  ul.tight { margin: .5rem 0; padding-left: 1.2rem; }
-  ul.tight li { margin: .3rem 0; font-size: .93rem; }
-  footer { margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
-</style>
-</head>
-<body>
-<main>
-<header>
-  <h1>Norish Web Offline — Design Record<span class="status-pill">commits 1–7 shipped · 8, 9 &amp; follow-up remaining</span></h1>
-  <p class="meta">July 20, 2026 (updated July 21) · branch <code>feat/web-offline-safe</code> · decided in grilling sessions with Mike · glossary in <code>CONTEXT.md</code>, decisions in <code>docs/adr/0001–0008</code></p>
-  <p class="lede">The web app keeps working when the backend doesn't: cached reads, queued writes, honest status. Targets flaky connectivity and backend-down page loads — explicitly <em>not</em> multi-day local-first.</p>
-</header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Norish — Architecture Decision Summary</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --fg: #1a1d21;
+        --muted: #5c6470;
+        --line: #e4e7eb;
+        --card: #f7f8fa;
+        --accent: #0d7a5f;
+        --accent-soft: #e6f3ef;
+        --warn: #9a6700;
+        --warn-soft: #fff3d6;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #16181c;
+          --fg: #e8eaed;
+          --muted: #9aa3ad;
+          --line: #2c3138;
+          --card: #1d2025;
+          --accent: #4cc2a3;
+          --accent-soft: #1c2f2a;
+          --warn: #d4a72c;
+          --warn-soft: #2e2811;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          16px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+      }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 5rem;
+      }
+      header {
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2.5rem;
+      }
+      h1 {
+        font-size: 1.75rem;
+        line-height: 1.25;
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.01em;
+      }
+      h2 {
+        font-size: 1.2rem;
+        margin: 3rem 0 1rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--line);
+        letter-spacing: -0.01em;
+      }
+      h3 {
+        font-size: 1rem;
+        margin: 0 0 0.35rem;
+        color: var(--accent);
+      }
+      p {
+        margin: 0.6rem 0;
+      }
+      a {
+        color: var(--accent);
+      }
+      code {
+        font-family: var(--mono);
+        font-size: 0.86em;
+        background: var(--card);
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .lede {
+        font-size: 1.05rem;
+        color: var(--muted);
+        max-width: 68ch;
+      }
+      .status-pill {
+        display: inline-block;
+        background: var(--warn-soft);
+        color: var(--warn);
+        font-size: 0.8rem;
+        font-weight: 650;
+        padding: 0.15rem 0.6rem;
+        border-radius: 99px;
+        margin-left: 0.5rem;
+        vertical-align: middle;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+        gap: 0.8rem;
+        margin: 1.2rem 0;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+      }
+      .card p {
+        margin: 0;
+        font-size: 0.9rem;
+      }
+      .callout {
+        border-left: 3px solid var(--warn);
+        background: var(--warn-soft);
+        border-radius: 0 8px 8px 0;
+        padding: 0.75rem 1rem;
+        font-size: 0.93rem;
+        margin: 1rem 0;
+      }
+      .adr-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+      }
+      .adr-list li {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 0.6rem;
+      }
+      .adr-list a {
+        font-weight: 650;
+        text-decoration: none;
+      }
+      .adr-list a:hover {
+        text-decoration: underline;
+      }
+      .adr-list p {
+        margin: 0.25rem 0 0;
+        font-size: 0.89rem;
+        color: var(--muted);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1rem 0;
+        font-size: 0.92rem;
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.55rem 0.7rem;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 650;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      td:first-child {
+        white-space: nowrap;
+        font-weight: 650;
+      }
+      .seq {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        margin: 1rem 0;
+      }
+      .seq .step {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0.55rem 0.9rem;
+        font-size: 0.9rem;
+        font-weight: 650;
+      }
+      .seq .step small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 400;
+      }
+      .seq .arrow {
+        color: var(--muted);
+        font-size: 1.1rem;
+      }
+      ul.tight {
+        margin: 0.5rem 0;
+        padding-left: 1.2rem;
+      }
+      ul.tight li {
+        margin: 0.35rem 0;
+        font-size: 0.93rem;
+      }
+      footer {
+        margin-top: 4rem;
+        padding-top: 1.2rem;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>
+          Norish Architecture Decisions<span class="status-pill"
+            >follow-up specified · not implemented</span
+          >
+        </h1>
+        <p class="meta">
+          Updated July 22, 2026 · branch <code>feat/web-offline-safe</code> · source decisions in
+          <code>docs/adr/0001–0010</code>
+        </p>
+        <p class="lede">
+          Norish web targets flaky connectivity and backend-down page loads with a persisted Warm
+          Set and a durable mutation Outbox. This summary also records the release-notes checkpoint
+          workflow. It is a design summary, not evidence that the follow-up work has shipped.
+        </p>
+      </header>
 
-<h2>System at a glance</h2>
-<div class="cards">
-  <div class="card"><h3>Reads</h3><p>The TanStack Query cache itself is persisted to IndexedDB via the shared bundle's <code>getQueryClient</code> seam (mobile's proven pattern). A <b>Cache Warmer</b> guarantees the Warm Set while Live; everything else fetched is kept best-effort. 7-day maxAge, busted on app version.</p></div>
-  <div class="card"><h3>Writes</h3><p>Any tRPC mutation failing on unreachability enters the IndexedDB <b>Outbox</b> (structured clone — file uploads included; no whitelist). <b>Queued</b> is a third outcome: optimistic flows keep their state; others toast "saved offline". The Outbox never expires.</p></div>
-  <div class="card"><h3>Replay correctness</h3><p>Strict FIFO. Duplicate-safe via a generic <b>operation-id idempotency middleware</b> (Redis, 7-day TTL). Create-then-edit chains survive via <b>client-minted ids</b> on hero creates. Conflicts: first writer wins, loser parked visibly as Conflicted.</p></div>
-  <div class="card"><h3>Connectivity</h3><p><b>Offline = backend HTTP unreachable</b>, verdict by probing public <code>/api/v1/health</code> (excluded from SW caching so it can't lie). WS state is only a hint. Auto-recovery by backoff probes. The full-screen blocking overlay is removed.</p></div>
-  <div class="card"><h3>UI</h3><p>Status row at the bottom of the user menu + attention badge on the avatar. Modal (production): connection state, a cache breakdown (recipes / groceries / stores / this-week planned) with an Offline-only "data from X ago" line and a wipe-cache button, and a generic outbox list with bulk retry / discard and sync-now. A <b>dev-only Offline Toggle</b> (radio silence, stripped from production) forces Offline to exercise the runtime.</p></div>
-  <div class="card"><h3>Auth posture</h3><p>Device possession = read access. Sign-out disabled offline; cookie expiry halts <em>sync</em>, never reads; Replay resumes after re-login. Cache + Outbox keyed per user id, purged on account switch (warn if outbox non-empty).</p></div>
-  <div class="card"><h3>App Shell</h3><p><b>Serwist</b> owns the service worker: content-hashed precache (kills the rotted <code>update-sw</code> pipeline), navigation fallback to the cached shell, RSC-aware caching. Custom worker code keeps notification-click + image caching.</p></div>
-  <div class="card"><h3>Multi-tab</h3><p>One shared Outbox with transactional appends; Replay + Warmer run in a single Web-Locks-elected leader tab. Cache persistence is last-writer-wins — offline <em>view</em> divergence between tabs accepted; no mutation is ever lost.</p></div>
-</div>
+      <div class="callout">
+        <b>No application implementation is part of this documentation change.</b> ADR-0009
+        formalizes the remaining review findings and their acceptance tests. ADR-0010 formalizes
+        future release-note generation; it does not create the currently missing docs checkpoint or
+        release-note page.
+      </div>
 
-<h2>Connectivity states</h2>
-<div class="statebox">
-  <div class="state"><b>Live</b><span>Backend HTTP reachable. Realtime may still be reconnecting — syncing is what counts.</span></div>
-  <div class="state off"><b>Offline</b><span>Probe failed. Serve cache, queue writes, probe on backoff until recovery.</span></div>
-  <div class="state off"><b>Offline (forced) · dev only</b><span>Dev toggle on: transport blocked — no probes, WS, refetch or Replay. Persists across reloads; stripped from production (ADR-0007).</span></div>
-</div>
+      <h2>Implemented decision record — ADR-0001 through ADR-0008</h2>
+      <div class="cards">
+        <div class="card">
+          <h3>Offline reads</h3>
+          <p>
+            TanStack Query state is persisted to IndexedDB. While Live, the Cache Warmer maintains
+            the Warm Set: 50 recent full recipes, all groceries and recurring groceries, stores, and
+            the calendar's initial window. ADR-0009 records that primary image responses are not yet
+            warmed end to end.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Offline writes</h3>
+          <p>
+            Unreachable tRPC mutations enter a per-user IndexedDB Outbox and Replay FIFO after
+            recovery. The current link attempts a structured clone and starts the IndexedDB write;
+            ADR-0009 specifies the missing durable-admission and <code>FormData</code> guarantees.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Replay safety</h3>
+          <p>
+            Operation ids provide generic duplicate safety. Hero creates accept optional
+            client-minted ids, while ADR-0003 explicitly rejected Replay id rewriting. Grocery
+            merging exposed the follow-up gap captured in ADR-0009.
+          </p>
+        </div>
+        <div class="card">
+          <h3>App Shell</h3>
+          <p>
+            Serwist owns the service worker, its content-hashed precache, runtime image cache, and
+            navigation fallback. The current unseen-route fallback is not the provider-backed Warm
+            Set router specified by ADR-0009.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Conflict policy</h3>
+          <p>
+            Replay remains strict FIFO. Stale successful writes are parked visibly as Conflicted;
+            first writer wins and field-wise force merging remains deferred.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Security posture</h3>
+          <p>
+            Device possession grants Offline read access. ADR-0005 records Offline sign-out as
+            disabled and account switching as a purge operation; ADR-0009 specifies the replacement
+            interaction discovered during review.
+          </p>
+        </div>
+      </div>
 
-<h2>The Reconnect Sequence</h2>
-<div class="seq">
-  <div class="step">1 · Drain Outbox<small>Replay to completion or halt</small></div>
-  <div class="arrow">→</div>
-  <div class="step">2 · Invalidate all queries<small>refetch server truth</small></div>
-  <div class="arrow">→</div>
-  <div class="step">3 · Warm<small>top up the Warm Set</small></div>
-</div>
-<p class="meta">Mandatory ordering — refetching before draining makes queued changes visibly vanish and reappear. The bundle's <code>invalidateOnReconnect</code> is switched off for web and replaced by this sequence.</p>
+      <h2>Accepted follow-up — ADR-0009, not implemented</h2>
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Area</th>
+            <th>Required behaviour</th>
+            <th>Proof</th>
+          </tr>
+          <tr>
+            <td>Outbox admission</td>
+            <td>
+              Encode ordered <code>FormData</code> entries into an IndexedDB-safe value, reconstruct
+              at Replay, and never announce Queued before persistence succeeds.
+            </td>
+            <td>Codec and failure contract tests plus browser Replay coverage.</td>
+          </tr>
+          <tr>
+            <td>Grocery merge</td>
+            <td>
+              Keep the array API for single and batch adds; require client UUIDs; share the merge
+              rule; let the server return canonical substitutions for stale/concurrent cases.
+            </td>
+            <td>
+              A two-client stale merge leaves one row and applies the dependent edit to its
+              canonical id.
+            </td>
+          </tr>
+          <tr>
+            <td>App Shell</td>
+            <td>
+              Use a small provider-backed client bootstrap for unseen Warm Set routes rather than a
+              provider-free error page.
+            </td>
+            <td>Direct production browser navigation with the backend unavailable.</td>
+          </tr>
+          <tr>
+            <td>Warm media</td>
+            <td>
+              Place the canonical primary image for every warmed full recipe in the bounded image
+              cache.
+            </td>
+            <td>Image renders after warming when the backend is unavailable.</td>
+          </tr>
+          <tr>
+            <td>Identity</td>
+            <td>
+              Confirm destructive explicit sign-out; retain bypassed outgoing queues dormant and
+              forbid cross-owner Replay.
+            </td>
+            <td>Cancel, confirmed sign-out, and external transition browser scenarios.</td>
+          </tr>
+          <tr>
+            <td>Standards</td>
+            <td>
+              Use portable tRPC boundary declarations and typed test fixtures; remove the reviewed
+              unsafe casts.
+            </td>
+            <td>Web and tRPC typechecks, focused tests, and production build.</td>
+          </tr>
+        </table>
+      </div>
 
-<h2>Replay failure taxonomy</h2>
-<div class="table-wrap"><table>
-  <tr><th>Failure class</th><th>Action</th><th>Why</th></tr>
-  <tr><td>Backend unreachable</td><td>Halt Replay; entry stays at head; resume on recovery</td><td>Nothing lost, nothing skipped</td></tr>
-  <tr><td>Deterministic rejection</td><td>Park entry as Failed; continue queue</td><td>Re-fails forever; must not block groceries behind it</td></tr>
-  <tr><td><code>UNAUTHORIZED</code></td><td>Halt entire queue; "sign in to sync"</td><td>An expired cookie must not wreck the queue</td></tr>
-  <tr><td>Ambiguous 5xx</td><td>Bounded retry with backoff, then park</td><td>Server mid-restart is transient</td></tr>
-  <tr><td>Response <code>stale: true</code></td><td>Park as Conflicted (informational — write was dropped)</td><td>First writer wins; loss must be visible, never silent</td></tr>
-</table></div>
-<p class="meta">A parked create parks its dependent edits with it — one broken story, shown together.</p>
+      <h2>Planned supersession map</h2>
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Historical implemented record</th>
+            <th>ADR-0009 target after implementation</th>
+          </tr>
+          <tr>
+            <td>ADR-0001 warms query data; primary image responses are not explicitly fetched.</td>
+            <td>Extend the Warm Set end to end with one cached primary image per warmed recipe.</td>
+          </tr>
+          <tr>
+            <td>ADR-0003 accepts optional client ids and rejects Replay id rewriting.</td>
+            <td>
+              Require grocery client ids and add one generic client-to-canonical substitution
+              contract.
+            </td>
+          </tr>
+          <tr>
+            <td>ADR-0005 disables Offline sign-out and purges account-switched Outboxes.</td>
+            <td>
+              Use guided Cancel / Sign out confirmation; retain bypassed outgoing queues dormant.
+            </td>
+          </tr>
+          <tr>
+            <td>ADR-0006 provides Serwist navigation fallback.</td>
+            <td>Add a provider-backed client router for unseen Warm Set surfaces.</td>
+          </tr>
+          <tr>
+            <td>ADR-0002 describes generic idempotency.</td>
+            <td>
+              Leave admin procedures unchanged; the Offline admin surface remains out of scope.
+            </td>
+          </tr>
+        </table>
+      </div>
 
-<h2>Decisions (ADRs)</h2>
-<ul class="adr-list">
-  <li><a href="0001-web-offline-is-a-persisted-query-cache.md">ADR-0001 — Web offline is a persisted query cache, not a domain database</a><p>Persist the query cache + Warmer; rejected the prior 31k-line bespoke IndexedDB domain store. Offline search degraded by design; content guarantees are the Warmer's job.</p></li>
-  <li><a href="0002-replay-idempotency-via-operation-id-middleware.md">ADR-0002 — Replay idempotency via a generic operation-id middleware</a><p>One path-agnostic middleware + Redis TTL claims per <code>x-operation-id</code>. Rejected accept-duplicates and the per-router receipts machinery. Fixes mobile's latent duplicate risk for free.</p></li>
-  <li><a href="0003-client-minted-entity-ids-on-create.md">ADR-0003 — Client-minted entity ids on create</a><p>Hero creates (groceries, recurring, stores, calendar items; recipes if cheap) accept a client UUID so queued chains stay valid. Do not "fix" back to server-minted ids.</p></li>
-  <li><a href="0004-first-writer-wins-on-replay-conflicts.md">ADR-0004 — First-writer-wins on Replay conflicts</a><p>The version guard stands; dropped offline patches park as Conflicted. Field-wise force-apply deliberately deferred — revisit if lost-tick conflicts show up in practice.</p></li>
-  <li><a href="0005-offline-security-posture.md">ADR-0005 — Offline security posture: device possession = read access</a><p>Reads work across cookie expiry; no cache-at-rest encryption; server authority resumes at the sync boundary. Per-user cache scoping is the non-negotiable part.</p></li>
-  <li><a href="0006-serwist-owns-the-service-worker.md">ADR-0006 — Serwist owns the service worker</a><p>Content-hashed precache + maintained App Router recipes; the hand-rolled <code>sw.js</code> and its silently-broken version pipeline are deleted.</p></li>
-  <li><a href="0007-offline-forced-is-a-dev-only-debug-affordance.md">ADR-0007 — Offline-forced is a dev-only debug affordance</a><p>Forcing Offline is a development lever, gated out of production; modelled as an orthogonal override on the pure two-state machine, blocking faithfully at the transport layer. Rejected a user-facing "work offline" toggle — and corrects the earlier docs that described one.</p></li>
-  <li><a href="0008-new-recipes-join-the-warm-set-on-create.md">ADR-0008 — Newly created recipes join the Warm Set on create</a><p>A just-created recipe is promoted into the Warm Set immediately (recipes only; other members are whole-list caches), covering offline creates, so "add a recipe then go Offline" holds without waiting for the next warm.</p></li>
-</ul>
+      <h2>Offline route guarantee</h2>
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Requested path while Offline</th>
+            <th>Guarantee</th>
+          </tr>
+          <tr>
+            <td><code>/</code></td>
+            <td>
+              Boot the provider-backed dashboard from the Warm Set without requiring a prior route
+              visit.
+            </td>
+          </tr>
+          <tr>
+            <td><code>/recipes/:id</code></td>
+            <td>
+              Render a warmed recipe directly. An id outside the Warm Set gets an explicit
+              Offline-unavailable view.
+            </td>
+          </tr>
+          <tr>
+            <td><code>/groceries</code></td>
+            <td>Render the warmed grocery and store data directly.</td>
+          </tr>
+          <tr>
+            <td><code>/calendar</code></td>
+            <td>Render the warmed initial calendar window directly.</td>
+          </tr>
+          <tr>
+            <td>Settings, admin, edit, import, other</td>
+            <td>
+              No unseen-route guarantee. Show Offline-unavailable unless normal visit caching
+              already has a usable response.
+            </td>
+          </tr>
+        </table>
+      </div>
 
-<h2>Glossary (from CONTEXT.md)</h2>
-<div class="table-wrap"><table>
-  <tr><th>Term</th><th>Meaning</th></tr>
-  <tr><td>Offline</td><td>The web client cannot reach the Norish backend (network loss, backend down, or forced). Not "no internet".</td></tr>
-  <tr><td>Live</td><td>Backend reachable; data exchange permitted. Does not require the realtime channel to be up.</td></tr>
-  <tr><td>App Shell</td><td>Static assets needed to boot the app with no backend response.</td></tr>
-  <tr><td>Offline Cache</td><td>Persisted copy of fetched server data, served while Offline. Contains at minimum the Warm Set.</td></tr>
-  <tr><td>Warm Set</td><td>Guaranteed floor: 50 most-recent recipes in full (+ primary image), all groceries/recurring/stores, the calendar's initial view window.</td></tr>
-  <tr><td>Cache Warmer</td><td>Background process topping the cache up to the Warm Set while Live.</td></tr>
-  <tr><td>Outbox</td><td>Persisted queue of mutations that couldn't reach the backend. Admission universal; auth flows excluded by nature.</td></tr>
-  <tr><td>Queued</td><td>Third mutation outcome: held in the Outbox, presented as tentatively applied.</td></tr>
-  <tr><td>Replay</td><td>Re-sending Outbox entries in order once reachable. Idempotent by construction.</td></tr>
-  <tr><td>Parked</td><td>Entry Replay gave up on automatically; visible for manual retry/discard, never silently dropped.</td></tr>
-  <tr><td>Conflicted</td><td>Parked flavour: the backend kept a concurrent first write and dropped this one.</td></tr>
-  <tr><td>Client-Minted Id</td><td>Entity id generated by the creating client and honoured by the backend.</td></tr>
-  <tr><td>Reconnect Sequence</td><td>Drain Outbox → refetch truth → warm. In that order, always.</td></tr>
-  <tr><td>Offline Toggle</td><td>Dev-only debug affordance; faithfully forces Offline (transport blocked); persists; stripped from production (ADR-0007).</td></tr>
-</table></div>
+      <h2>Account-transition outcomes</h2>
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Transition</th>
+            <th>Outbox</th>
+            <th>Reads and images</th>
+          </tr>
+          <tr>
+            <td>Sign out, queue empty</td>
+            <td>No warning needed.</td>
+            <td>Clear the outgoing personalized cache.</td>
+          </tr>
+          <tr>
+            <td>Sign out, queue non-empty → Cancel</td>
+            <td>Preserve all entries and remain signed in.</td>
+            <td>Preserve the current cache.</td>
+          </tr>
+          <tr>
+            <td>Sign out, queue non-empty → Sign out</td>
+            <td>Discard only after confirmation, then complete sign-out.</td>
+            <td>Clear the outgoing personalized cache.</td>
+          </tr>
+          <tr>
+            <td>Identity changes outside dialog</td>
+            <td>Retain outgoing entries dormant by owner; never Replay as the incoming account.</td>
+            <td>Clear outgoing reads and personalized images immediately.</td>
+          </tr>
+        </table>
+      </div>
 
-<h2>Delivery plan — one PR, separate commits</h2>
-<div class="callout"><b>Status · July 21, 2026:</b> commits 1–7 are shipped (HEAD <code>50e93efd</code>). Remaining: 8 (Serwist), 9 (status modal — spec below, now locked), and a follow-up 10 (recipes join the Warm Set on create, ADR-0008). The forced-Offline toggle in 9 is dev-only (ADR-0007).</div>
-<ol class="commits">
-  <li><span class="tag">chore</span>✓ dead code: <code>recipe-mock-data.ts</code>, zod <code>server-config</code> duplicate, <code>use-connection-monitor</code>, empty scaffolding dirs, HeroUI-Pro comment rewording</li>
-  <li><span class="tag">chore</span>✓ remove legacy parser: <code>legacy.ts</code>, <code>microdata.ts</code>, legacy-only <code>jsonld.ts</code> export, <code>LEGACY_RECIPE_PARSER_ROLLBACK</code> flag + helper + turbo passthrough</li>
-  <li><span class="tag">feat(server)</span>✓ operation-id idempotency middleware (Redis TTL 7d)</li>
-  <li><span class="tag">feat(server)</span>✓ client-minted ids on hero creates</li>
-  <li><span class="tag">feat(web)</span>✓ connectivity runtime + indicator/badge — blocking overlay dies here</li>
-  <li><span class="tag">feat(web)</span>✓ persisted query cache + Cache Warmer</li>
-  <li><span class="tag">feat(web)</span>✓ Outbox + Replay + queued-UX on hero hooks</li>
-  <li><span class="tag">feat(web)</span>Serwist app shell — <code>update-sw</code> pipeline + <code>sw.js</code> die here <em>(pending)</em></li>
-  <li><span class="tag">feat(web)</span>status modal + dev-only Offline Toggle — <em>spec locked, next</em></li>
-  <li><span class="tag">feat(web)</span>recipes join the Warm Set on create (ADR-0008) — <em>follow-up, slots after 6</em></li>
-</ol>
+      <h2>Reconnect sequence</h2>
+      <div class="seq">
+        <div class="step">1 · Drain Outbox<small>Replay or halt honestly</small></div>
+        <div class="arrow">→</div>
+        <div class="step">2 · Refetch truth<small>server state after queued intent</small></div>
+        <div class="arrow">→</div>
+        <div class="step">3 · Warm<small>restore the guaranteed floor</small></div>
+      </div>
 
-<h2>Implementation order</h2>
-<p>The commit list above is the <em>packaging</em>; this is the <em>build order</em> — what depends on what, and what proves each step done. Commits 3, 4, 5 are mutually independent (build in any order or in parallel); everything else is sequenced. The one hard safety rule: <b>the idempotency middleware (3) and client-minted ids (4) must be merged before Replay (7) ever runs against a real backend</b> — replaying without them risks duplicates and broken chains.</p>
-<p class="dag">✓ 1 → 2 → { 3 ∥ 4 ∥ 5 } → 6 → 7  (shipped)&nbsp;&nbsp;·&nbsp;&nbsp;next: 9&nbsp;&nbsp;·&nbsp;&nbsp;8 any time after 6&nbsp;&nbsp;·&nbsp;&nbsp;10 (recipe→Warm Set) after 6</p>
-<ol class="impl">
-  <li><b>Clear the ground</b> — commits 1–2 (chores) — <em>✓ shipped</em>
-    <div class="row"><b>Deps</b> none — pure deletions, shrink the tree before feature work.</div>
-    <div class="row"><b>Verify</b> <span class="verify">typecheck + tests match the known pre-existing baseline; no import of any deleted module remains.</span></div></li>
-  <li><b>Idempotency middleware</b> — commit 3 (server) — <em>✓ shipped</em>
-    <div class="row"><b>Deps</b> none. Generic tRPC middleware + Redis TTL claims keyed on <code>x-operation-id</code> (header already sent by every client).</div>
-    <div class="row"><b>Verify</b> <span class="verify">unit test: same operation id twice → handler executes once, second call gets the stored response; mobile replay path unaffected.</span></div></li>
-  <li><b>Client-minted ids</b> — commit 4 (server + hero create hooks) — <em>✓ shipped</em>
-    <div class="row"><b>Deps</b> none. Optional client UUID on groceries / recurring / stores / calendar creates (recipes if cheap); hooks send their existing optimistic UUID; reconciliation id-swap simplifies.</div>
-    <div class="row"><b>Verify</b> <span class="verify">create with supplied id → row inserted with that id; existing clients without id unaffected.</span></div></li>
-  <li><b>Connectivity runtime + indicator</b> — commit 5 (web) — <em>✓ shipped</em>
-    <div class="row"><b>Deps</b> none client-side. Live/Offline state machine, <code>/api/v1/health</code> probe with backoff, WS-close-as-hint wiring, user-menu status row + avatar badge; blocking overlay deleted.</div>
-    <div class="row"><b>Verify</b> <span class="verify">kill the backend with the app open → indicator flips to Offline, no overlay, app stays interactive; restart backend → flips back unaided.</span></div></li>
-  <li><b>Persisted cache + Warmer</b> — commit 6 (web) — <em>✓ shipped</em>
-    <div class="row"><b>Deps</b> 5 (Warmer runs while Live). IndexedDB persister via <code>getQueryClient</code>, per-user scoping + purge-on-switch, 7-day maxAge, version buster; Warmer prefetches the Warm Set (calendar keys via the UI's own range helpers).</div>
-    <div class="row"><b>Verify</b> <span class="verify">browse, kill backend, reload → recipes/groceries/calendar render from cache seamlessly; second user signs in → cache purged.</span></div></li>
-  <li><b>Outbox + Replay + queued UX</b> — commit 7 (web) — <em>✓ shipped</em>
-    <div class="row"><b>Deps</b> 3, 4, 5, 6. Outbox mutationLink (structured clone, blobs), Web-Locks replay leader, FIFO + failure taxonomy, Reconnect Sequence (replaces <code>invalidateOnReconnect</code>), Queued-as-tentative-success in hero hooks.</div>
-    <div class="row"><b>Verify</b> <span class="verify">offline: add + tick groceries, move a meal → UI holds; reconnect → server converges, no duplicates on repeated interrupted replays; conflicted entry parks visibly.</span></div></li>
-  <li><b>Serwist app shell</b> — commit 8 (web) — <em>flexible slot: any time after 6 · pending</em>
-    <div class="row"><b>Deps</b> 6 for usefulness (a shell without cached data renders empty states). Precache + navigation fallback, health-route cache exclusion, ported notification-click + image caching; <code>update-sw</code> pipeline + <code>sw.js</code> deleted.</div>
-    <div class="row"><b>Verify</b> <span class="verify">backend down, hard reload / fresh tab → app boots from the shell and renders cached data (requirement 1.3 end-to-end).</span></div></li>
-  <li><b>Status modal + dev-only Offline Toggle</b> — commit 9 (web) — <em>spec locked (July 21), next up</em>
-    <div class="row"><b>Deps</b> 5, 6, 7 (surfaces their state). Entry: the user-menu footer status row opens the modal (centered on desktop, bottom sheet on mobile); avatar badge stays a passive cue.</div>
-    <div class="row"><b>Connection</b> read-only posture (Live / Offline / Offline-forced·dev) + one-line explanation; realtime/WS sub-status deliberately hidden (WS is only a hint).</div>
-    <div class="row"><b>Cache</b> category counts always shown (recipes openable-offline ≤50, groceries, stores, this-week planned); Offline-only "data from X ago" line via a new persisted <code>lastWarmedAt</code>; no "healthy" verdict word. Wipe-cache button clears the read cache only (never the Outbox) — confirm, Live→re-warm, Offline→confirm-hard.</div>
-    <div class="row"><b>Outbox</b> generic list; <b>Sync now</b> = full Reconnect Sequence (enabled Live, probe-first when Offline, disabled under the toggle); bulk <b>Retry all</b> (un-park → drain) / <b>Discard all</b> (remove + invalidate + confirm + cascade dependents — never a silent phantom); pending shown as an auto-draining count.</div>
-    <div class="row"><b>Toggle</b> dev-only (ADR-0007), stripped from production: an orthogonal persisted override on the two-state machine that faithfully blocks the transport (probe unreachable + dev tRPC link rejects ops + WS suspended + probe loop parked); exit reuses the organic reconnect.</div>
-    <div class="row"><b>Verify</b> <span class="verify">modal reflects live connection/cache/outbox state; wipe clears reads but keeps the Outbox; bulk retry/discard reconcile the cache. Dev build only: toggle on → zero network traffic (probes, WS, refetches all silent), survives reload, exit drains + refetches. Prod build: no toggle present.</span></div></li>
-  <li><b>Recipes join the Warm Set on create</b> — commit 10 (web) — <em>follow-up (ADR-0008), any time after 6</em>
-    <div class="row"><b>Deps</b> 6. On a successful recipe create — and on the optimistic/queued offline create — stamp the warm <code>gcTime</code> on the new <code>recipes.get</code> entry so it is durably offline-available immediately. Recipes only; other Warm Set members are whole-list caches that already include new items.</div>
-    <div class="row"><b>Verify</b> <span class="verify">create a recipe, force Offline (dev) without an intervening warm, reload → the new recipe still opens offline; the floor self-heals to 50 at the next warm.</span></div></li>
-</ol>
+      <h2>Release notes from a checkpoint</h2>
+      <p>
+        ADR-0010 defines a reproducible release-note workflow for the docs app. The current release
+        comes from the canonical release-bearing manifest. If coherent current-release work is not
+        committed, it first becomes a normal checkpoint commit; a clean tree reuses HEAD and never
+        creates an empty commit.
+      </p>
+      <div class="seq">
+        <div class="step">Resolve release<small>verify release-bearing manifests</small></div>
+        <div class="arrow">→</div>
+        <div class="step">
+          Record Git checkpoint<small>previous tag … committed boundary</small>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">
+          Ensure docs checkpoint<small>run the supported version command once</small>
+        </div>
+        <div class="arrow">→</div>
+        <div class="step">Inventory every change<small>published or internal-only</small></div>
+        <div class="arrow">→</div>
+        <div class="step">Write and build notes<small>usual Norish docs style</small></div>
+      </div>
+      <p class="meta">
+        Observed when this record was written: application manifests identify
+        <code>0.20.0-beta</code>, while the editable docs label and latest release-note page
+        identify <code>0.19.1-beta</code>. Applying ADR-0010 must detect and resolve that missing
+        checkpoint; this documentation-only change does not do so.
+      </p>
 
-<h2>Deferred &amp; rejected</h2>
-<ul class="tight">
-  <li><b>Deferred:</b> field-wise force-apply conflict merging (ADR-0004 revisit trigger); cross-tab broadcast cache parity; calendar range bucketing.</li>
-  <li><b>Rejected:</b> multi-day local-first scope; bespoke IndexedDB domain store; per-router receipt machinery; id-rewriting during Replay; keeping the blocking connection overlay.</li>
-</ul>
+      <h2>Decisions (ADRs)</h2>
+      <ul class="adr-list">
+        <li>
+          <a href="0001-web-offline-is-a-persisted-query-cache.md"
+            >ADR-0001 — Web offline is a persisted query cache</a
+          >
+          <p>
+            Persist the TanStack Query cache and use a Cache Warmer; offline search remains degraded
+            by design.
+          </p>
+        </li>
+        <li>
+          <a href="0002-replay-idempotency-via-operation-id-middleware.md"
+            >ADR-0002 — Replay idempotency via operation ids</a
+          >
+          <p>
+            Use one path-agnostic operation-id middleware and Redis TTL claims to make Replay
+            duplicate-safe.
+          </p>
+        </li>
+        <li>
+          <a href="0003-client-minted-entity-ids-on-create.md"
+            >ADR-0003 — Client-minted entity ids on create</a
+          >
+          <p>
+            Hero creates accept optional client UUIDs so queued create-then-edit chains remain
+            valid; Replay id rewriting is rejected in this historical record.
+          </p>
+        </li>
+        <li>
+          <a href="0004-first-writer-wins-on-replay-conflicts.md"
+            >ADR-0004 — First-writer-wins Replay conflicts</a
+          >
+          <p>
+            Stale writes park visibly as Conflicted; field-wise conflict merging remains deferred.
+          </p>
+        </li>
+        <li>
+          <a href="0005-offline-security-posture.md">ADR-0005 — Offline security posture</a>
+          <p>
+            Device possession grants Offline read access; Offline sign-out is disabled and account
+            switches purge scoped cache and Outbox state with a warning.
+          </p>
+        </li>
+        <li>
+          <a href="0006-serwist-owns-the-service-worker.md"
+            >ADR-0006 — Serwist owns the service worker</a
+          >
+          <p>
+            Content-hashed precaching and navigation fallback replace the hand-rolled service worker
+            version pipeline.
+          </p>
+        </li>
+        <li>
+          <a href="0007-offline-forced-is-a-dev-only-debug-affordance.md"
+            >ADR-0007 — Forced Offline is development-only</a
+          >
+          <p>
+            The debug toggle faithfully blocks transport and does not ship as a production user
+            feature.
+          </p>
+        </li>
+        <li>
+          <a href="0008-new-recipes-join-the-warm-set-on-create.md"
+            >ADR-0008 — New recipes join the Warm Set</a
+          >
+          <p>
+            A newly created recipe is durably offline-available without waiting for the next warm
+            pass.
+          </p>
+        </li>
+        <li>
+          <a href="0009-offline-guarantees-are-end-to-end.md"
+            >ADR-0009 — Offline guarantees are end-to-end</a
+          >
+          <p>
+            <b>Accepted, not implemented.</b> Formal follow-up specification with user stories,
+            browser acceptance seams, standards fixes, and explicit supersession rules.
+          </p>
+        </li>
+        <li>
+          <a href="0010-release-notes-use-a-release-checkpoint.md"
+            >ADR-0010 — Release notes use a release checkpoint</a
+          >
+          <p>
+            <b>Accepted, not executed.</b> Formal docs workflow for checkpointing the current
+            release and producing feature-complete, provenance-backed release notes.
+          </p>
+        </li>
+      </ul>
 
-<h2>Handoff — for the implementing session</h2>
-<div class="callout"><b>Where we left off (July 21, 2026):</b> commits 1–7 are shipped on <code>feat/web-offline-safe</code> (HEAD <code>50e93efd</code>); the decisions live in the ADRs (0001–0008), <code>CONTEXT.md</code> and this page. <b>How to continue:</b> commit 9 (status modal + dev-only toggle) is fully specced above and is the next feature; commit 8 (Serwist app shell) can land any time after 6; commit 10 (recipes → Warm Set on create) is an independent follow-up. Do not start a commit without Mike's go-ahead.</div>
-<h3>Key seams &amp; reference points</h3>
-<ul class="tight">
-  <li><span class="path">packages/shared-react/src/providers/trpc-provider.tsx</span> — the bundle exposes every needed seam: <code>getQueryClient</code>, <code>mutationLink</code>, <code>invalidateOnReconnect</code>, WS callbacks. Web currently passes only <code>logger</code> (<span class="path">apps/web/app/providers/trpc-provider.tsx</span>).</li>
-  <li><span class="path">apps/mobile/src/lib/outbox/*</span> + <span class="path">apps/mobile/src/lib/query-cache/*</span> — the working reference implementation (MMKV-based; web swaps storage for IndexedDB and adds blobs, leader election, idempotency awareness).</li>
-  <li><span class="path">packages/shared-react/src/providers/operation-id-link.ts</span> — <code>x-operation-id</code> already attached to every mutation; replays preserve it. The idempotency middleware keys on this.</li>
-  <li><span class="path">packages/shared-react/src/hooks/optimistic-updates.ts</span> — <code>shouldPreserveOptimisticUpdate</code> is the hook point for Queued-as-tentative-success; calendar's rollback in <span class="path">use-calendar-mutations.ts</span> must learn to skip restore on Queued.</li>
-  <li><span class="path">packages/trpc/src/routers/config/procedures.ts</span> — <code>config.health</code> (public, OpenAPI <code>/api/v1/health</code>) is the probe target; must be excluded from SW caching.</li>
-  <li><span class="path">apps/web/components/navbar/navbar-user-menu.tsx</span> — indicator lands in the dropdown footer; avatar already has an update-ping badge pattern to reuse.</li>
-  <li><b>Commit 9 seams:</b> the modal opens from the footer status row in <span class="path">navbar-user-menu.tsx</span>; the dev toggle blocks via <code>getWsLazyEnabled</code> + <code>webSocketClientRef.close()</code> in the shared bundle plus a dev-only tRPC link below the Outbox link; the "data from X ago" line needs a new <code>lastWarmedAt</code> written when <code>warmCache</code> completes (query-cache <code>keyval</code> store).</li>
-  <li>Branch <span class="path">feat/make-web-offline-safe</span> — the abandoned 31k-line prior attempt. Reference only; zero code reuse.</li>
-  <li>Warm calendar keys via the same helpers the UI uses (<span class="path">apps/web/app/(app)/calendar/context-helpers.ts</span>) — never duplicate range math.</li>
-</ul>
-<h3>Watch out for</h3>
-<ul class="tight">
-  <li>The SW currently network-first-caches <code>/api/*</code> GETs — a cached healthy response would lie to the probe. Exclude the health route.</li>
-  <li>Groceries and calendar hooks use different optimistic styles (imperative + reconcile vs snapshot + rollback) — Queued handling differs per style.</li>
-  <li><code>navigator.onLine</code> measures internet, not the backend — never use it as the Offline verdict, only as a hint.</li>
-  <li>Outbox entries must survive app-version cache busting — only the query cache is busted, never queued human intent.</li>
-  <li>Known pre-existing breakage baseline (zod v3/v4 typecheck errors, 3 db test failures) — diff CI results against baseline, don't expect clean output.</li>
-</ul>
+      <h2>Validation policy</h2>
+      <ul class="tight">
+        <li>
+          Browser-level evidence is mandatory for service-worker navigation, IndexedDB, Cache
+          Storage, account transitions, and backend-down behaviour.
+        </li>
+        <li>
+          Focused contract tests pin Outbox serialization, durable admission, grocery merge parity,
+          canonical-id substitution, and image warming.
+        </li>
+        <li>
+          Web and tRPC typechecks, the production web build, the browser suite, formatting, and
+          <code>git diff --check</code> are release gates.
+        </li>
+        <li>
+          Release-note validation inventories every commit in the checkpoint range, then runs docs
+          formatting, link checks, and a production docs build.
+        </li>
+        <li>Results must distinguish passed, failed, and environmentally blocked validation.</li>
+      </ul>
 
-<footer>Generated at the close of the design grilling, July 20, 2026 (updated July 21 with commit 9 spec + ADR-0007/0008). Sources of truth: <code>CONTEXT.md</code> (language) and <code>docs/adr/0001–0008</code> (decisions) — this page is a rendered summary; if they ever disagree, the ADRs win.</footer>
-</main>
-</body>
+      <h2>Explicitly out of scope</h2>
+      <ul class="tight">
+        <li>Admin Offline support or admin-procedure idempotency.</li>
+        <li>ID-less legacy grocery creates.</li>
+        <li>Proactive gallery, step-image, or video warming.</li>
+        <li>Arbitrary unseen routes or multi-day local-first operation.</li>
+        <li>
+          Creating a release tag, publishing a GitHub release, promoting images, or deploying docs
+          as part of ADR-0010.
+        </li>
+      </ul>
+
+      <footer>
+        Updated after the July 22, 2026 review and design grilling. The Markdown ADRs are
+        authoritative; this HTML page is their summary. ADR-0009 and ADR-0010 specify future work
+        and must not be read as implementation-complete claims.
+      </footer>
+    </main>
+  </body>
 </html>
