@@ -11,8 +11,7 @@ import UserAvatar from "@/components/shared/user-avatar";
 import { useUserContext } from "@/context/user-context";
 import { useVersionQuery } from "@/hooks/config";
 import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
-import { clearOfflineStateForSignOut, countUnsyncedChanges } from "@/lib/offline/sign-out";
-import { useQueryClient } from "@tanstack/react-query";
+import { countUnsyncedChanges } from "@/lib/offline/sign-out";
 import {
   ArrowDownTrayIcon,
   ArrowLeftStartOnRectangleIcon,
@@ -43,7 +42,6 @@ export default function NavbarUserMenu({
   const { user, signOut } = useUserContext();
   const { isOffline } = useConnectivity();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [localOpen, setLocalOpen] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -62,8 +60,8 @@ export default function NavbarUserMenu({
   );
 
   // Explicit sign-out (ADR-0009): with unsynced queued changes, open the
-  // guided confirmation instead of signing out; with a clean queue, clear the
-  // outgoing personalized caches and sign out directly.
+  // guided confirmation instead of signing out; with a clean queue, sign out
+  // directly (the sign-out itself clears the personalized caches).
   const handleSignOutPress = useCallback(() => {
     void (async () => {
       const unsynced = await countUnsyncedChanges();
@@ -74,15 +72,13 @@ export default function NavbarUserMenu({
         return;
       }
 
-      await clearOfflineStateForSignOut({ queryClient, discardQueue: false });
       await signOut();
     })();
-  }, [queryClient, signOut]);
+  }, [signOut]);
 
   const handleConfirmedSignOut = useCallback(async () => {
-    await clearOfflineStateForSignOut({ queryClient, discardQueue: true });
-    await signOut();
-  }, [queryClient, signOut]);
+    await signOut({ discardQueue: true });
+  }, [signOut]);
 
   if (!user) return null;
 
