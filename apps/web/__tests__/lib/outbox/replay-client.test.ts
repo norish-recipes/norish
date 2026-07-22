@@ -35,7 +35,7 @@ describe("replayOutboxEntry", () => {
 
     const outcome = await replayOutboxEntry(clientWith(mutate), entry());
 
-    expect(outcome).toEqual({ kind: "success", result: { success: true } });
+    expect(outcome).toEqual({ kind: "success" });
 
     const [input, opts] = mutate.mock.calls[0];
 

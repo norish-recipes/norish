@@ -20,9 +20,14 @@
 
 import type { QueryClient } from "@tanstack/react-query";
 import { getInitialDateRange } from "@/app/(app)/calendar/context-helpers";
-import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
+import {
+  IMAGE_CACHE_MAX_AGE_SECONDS,
+  IMAGE_CACHE_MAX_ENTRIES,
+  IMAGE_CACHE_NAME,
+} from "@/lib/offline/cache-names";
 // The leaf module, not the outbox barrel, to keep this lib-to-lib edge cycle-free.
 import { runIfLeader } from "@/lib/outbox/leader";
+import { CacheExpiration } from "serwist";
 
 import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "@norish/shared-react/contexts";
 import { dateKey } from "@norish/shared/lib/helpers";
@@ -159,10 +164,16 @@ async function warmPrimaryImages(recipes: RecipeListItem[]): Promise<void> {
 
   try {
     const cache = await caches.open(IMAGE_CACHE_NAME);
+    const expiration = new CacheExpiration(IMAGE_CACHE_NAME, {
+      maxEntries: IMAGE_CACHE_MAX_ENTRIES,
+      maxAgeSeconds: IMAGE_CACHE_MAX_AGE_SECONDS,
+    });
 
     await Promise.allSettled(
       urls.map(async (url) => {
         if (await cache.match(url)) {
+          await expiration.updateTimestamp(url);
+
           return;
         }
 
@@ -170,9 +181,11 @@ async function warmPrimaryImages(recipes: RecipeListItem[]): Promise<void> {
 
         if (response.ok) {
           await cache.put(url, response);
+          await expiration.updateTimestamp(url);
         }
       })
     );
+    await expiration.expireEntries();
   } catch {
     // Cache Storage refused entirely (e.g. storage pressure) — the query-layer
     // Warm Set must still land, so image warming never propagates a failure.

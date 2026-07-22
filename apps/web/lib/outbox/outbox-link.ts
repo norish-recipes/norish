@@ -16,6 +16,9 @@
 
 import type { HTTPHeaders, TRPCLink } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
+import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "@/lib/outbox/input-codec";
+import { outboxStore } from "@/lib/outbox/outbox-store";
+import { isOutboxReplayContext } from "@/lib/outbox/replay-client";
 import { activeCacheOwner, readBootOwner } from "@/lib/query-cache";
 import { observable } from "@trpc/server/observable";
 
@@ -25,10 +28,6 @@ import {
   isBackendUnreachableError,
   markOutboxAdmissionFailed,
 } from "@norish/shared/lib/trpc-errors";
-
-import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input-codec";
-import { outboxStore } from "./outbox-store";
-import { isOutboxReplayContext } from "./replay-client";
 
 const log = createClientLogger("OutboxLink");
 

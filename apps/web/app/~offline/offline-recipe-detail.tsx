@@ -2,12 +2,11 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import RecipeDetailPage from "@/app/(app)/recipes/[id]/page";
+import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
 import { isCacheOwnerApplied, subscribeCacheOwnerApplied } from "@/lib/query-cache";
 import { useQueryClient } from "@tanstack/react-query";
-
-import { OfflineUnavailable } from "./offline-unavailable";
 
 /**
  * Warmed-gated recipe detail for the offline bootstrap (ADR-0009): a recipe

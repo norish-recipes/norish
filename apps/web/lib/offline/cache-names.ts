@@ -6,6 +6,8 @@
  * single definition both bundles import.
  */
 export const IMAGE_CACHE_NAME = "norish-images";
+export const IMAGE_CACHE_MAX_ENTRIES = 512;
+export const IMAGE_CACHE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 /**
  * Drop the whole runtime image cache. Cached images are personalized

@@ -8,10 +8,10 @@
  * (a Conflicted first-writer-wins loss), and thrown errors run through the
  * failure taxonomy.
  */
-import type { ReplayOutcome } from "./error-classification";
-import type { OutboxEntry } from "./outbox-types";
-import { classifyReplayError, isStaleResult } from "./error-classification";
-import { decodeOutboxInput } from "./input-codec";
+import type { ReplayOutcome } from "@/lib/outbox/error-classification";
+import type { OutboxEntry } from "@/lib/outbox/outbox-types";
+import { classifyReplayError, isStaleResult } from "@/lib/outbox/error-classification";
+import { decodeOutboxInput } from "@/lib/outbox/input-codec";
 
 /** Header stamped on replays so the Outbox link recognises and ignores them. */
 export const OUTBOX_REPLAY_HEADER = "x-replay-origin";
@@ -87,7 +87,7 @@ export async function replayOutboxEntry(
       context: createReplayContext(entry),
     });
 
-    return isStaleResult(result) ? { kind: "conflict" } : { kind: "success", result };
+    return isStaleResult(result) ? { kind: "conflict" } : { kind: "success" };
   } catch (error) {
     return { kind: classifyReplayError(error) };
   }

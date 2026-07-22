@@ -11,6 +11,28 @@ import { activeCacheOwner } from "@/lib/query-cache/persisted-query-client";
 import { QueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const expirationMetadata = vi.hoisted(() => ({
+  created: vi.fn(),
+  updateTimestamp: vi.fn(async (_url: string) => {}),
+  expireEntries: vi.fn(async () => {}),
+}));
+
+vi.mock("serwist", () => ({
+  CacheExpiration: class {
+    constructor(cacheName: string, options: object) {
+      expirationMetadata.created(cacheName, options);
+    }
+
+    updateTimestamp(url: string) {
+      return expirationMetadata.updateTimestamp(url);
+    }
+
+    expireEntries() {
+      return expirationMetadata.expireEntries();
+    }
+  },
+}));
+
 vi.mock("@/lib/query-cache/last-warmed", () => ({
   writeLastWarmedAt: vi.fn(async () => {}),
 }));
@@ -148,6 +170,12 @@ describe("warmCache", () => {
 });
 
 describe("warmCache primary images (ADR-0009)", () => {
+  beforeEach(() => {
+    expirationMetadata.created.mockClear();
+    expirationMetadata.updateTimestamp.mockClear();
+    expirationMetadata.expireEntries.mockClear();
+  });
+
   function makeImageEnv() {
     const putUrls: string[] = [];
     const cached = new Set<string>();
@@ -209,6 +237,12 @@ describe("warmCache primary images (ADR-0009)", () => {
       "/uploads/r1.jpg",
       "/uploads/r3.jpg",
     ]);
+    expect(expirationMetadata.created).toHaveBeenCalledWith(IMAGE_CACHE_NAME, {
+      maxEntries: 512,
+      maxAgeSeconds: 30 * 24 * 60 * 60,
+    });
+    expect(expirationMetadata.updateTimestamp).toHaveBeenCalledTimes(2);
+    expect(expirationMetadata.expireEntries).toHaveBeenCalledTimes(1);
   });
 
   it("isolates media failures and skips already-cached and cross-origin images", async () => {
@@ -228,6 +262,8 @@ describe("warmCache primary images (ADR-0009)", () => {
 
     // Only the fetchable, uncached, same-origin image lands in the cache.
     expect(putUrls.map((url) => new URL(url).pathname)).toEqual(["/uploads/ok.jpg"]);
+    expect(expirationMetadata.updateTimestamp).toHaveBeenCalledTimes(2);
+    expect(expirationMetadata.expireEntries).toHaveBeenCalledTimes(1);
   });
 
   it("warms no images when Cache Storage is unavailable", async () => {

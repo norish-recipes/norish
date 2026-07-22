@@ -226,7 +226,7 @@
       <header>
         <h1>
           Norish Architecture Decisions<span class="status-pill"
-            >follow-up specified · not implemented</span
+            >ADR-0009 and ADR-0010 implemented</span
           >
         </h1>
         <p class="meta">
@@ -236,50 +236,49 @@
         <p class="lede">
           Norish web targets flaky connectivity and backend-down page loads with a persisted Warm
           Set and a durable mutation Outbox. This summary also records the release-notes checkpoint
-          workflow. It is a design summary, not evidence that the follow-up work has shipped.
+          workflow completed for <code>0.20.0-beta</code>.
         </p>
       </header>
 
       <div class="callout">
-        <b>No application implementation is part of this documentation change.</b> ADR-0009
-        formalizes the remaining review findings and their acceptance tests. ADR-0010 formalizes
-        future release-note generation; it does not create the currently missing docs checkpoint or
-        release-note page.
+        <b>The Offline guarantee is intentionally narrow.</b> It supports short outages and flaky
+        connections, including creating groceries and checking existing groceries off. It is not a
+        general local-first editing model.
       </div>
 
-      <h2>Implemented decision record — ADR-0001 through ADR-0008</h2>
+      <h2>Implemented decision record</h2>
       <div class="cards">
         <div class="card">
           <h3>Offline reads</h3>
           <p>
             TanStack Query state is persisted to IndexedDB. While Live, the Cache Warmer maintains
             the Warm Set: 50 recent full recipes, all groceries and recurring groceries, stores, and
-            the calendar's initial window. ADR-0009 records that primary image responses are not yet
-            warmed end to end.
+            the calendar's initial window. Primary recipe images share Serwist's bounded cache and
+            expiration bookkeeping.
           </p>
         </div>
         <div class="card">
           <h3>Offline writes</h3>
           <p>
             Unreachable tRPC mutations enter a per-user IndexedDB Outbox and Replay FIFO after
-            recovery. The current link attempts a structured clone and starts the IndexedDB write;
-            ADR-0009 specifies the missing durable-admission and <code>FormData</code> guarantees.
+            recovery. Queued is reported only after the write succeeds, and ordered
+            <code>FormData</code> entries are reconstructed for Replay.
           </p>
         </div>
         <div class="card">
           <h3>Replay safety</h3>
           <p>
-            Operation ids provide generic duplicate safety. Hero creates accept optional
-            client-minted ids, while ADR-0003 explicitly rejected Replay id rewriting. Grocery
-            merging exposed the follow-up gap captured in ADR-0009.
+            Operation ids provide generic duplicate safety. Client-minted ids cover the normal
+            create path. Replay id rewriting remains rejected; a server-side grocery merge can make
+            a follow-up change to that still-unsynced create fail.
           </p>
         </div>
         <div class="card">
           <h3>App Shell</h3>
           <p>
             Serwist owns the service worker, its content-hashed precache, runtime image cache, and
-            navigation fallback. The current unseen-route fallback is not the provider-backed Warm
-            Set router specified by ADR-0009.
+            navigation fallback. A provider-backed bootstrap renders unseen Warm Set routes and an
+            explicit Offline-unavailable state elsewhere.
           </p>
         </div>
         <div class="card">
@@ -292,14 +291,13 @@
         <div class="card">
           <h3>Security posture</h3>
           <p>
-            Device possession grants Offline read access. ADR-0005 records Offline sign-out as
-            disabled and account switching as a purge operation; ADR-0009 specifies the replacement
-            interaction discovered during review.
+            Device possession grants Offline read access. Sign-out warns before discarding queued
+            work, while account switches gate rendering until the incoming cache owner is isolated.
           </p>
         </div>
       </div>
 
-      <h2>Accepted follow-up — ADR-0009, not implemented</h2>
+      <h2>ADR-0009 result</h2>
       <div class="table-wrap">
         <table>
           <tr>
@@ -316,15 +314,12 @@
             <td>Codec and failure contract tests plus browser Replay coverage.</td>
           </tr>
           <tr>
-            <td>Grocery merge</td>
+            <td>Groceries</td>
             <td>
-              Keep the array API for single and batch adds; require client UUIDs; share the merge
-              rule; let the server return canonical substitutions for stale/concurrent cases.
+              Queue creates and check-offs of existing groceries. Keep the server's established
+              duplicate merge, without client merge prediction or canonical-id rewriting.
             </td>
-            <td>
-              A two-client stale merge leaves one row and applies the dependent edit to its
-              canonical id.
-            </td>
+            <td>Optimistic admission rollback tests and short-outage browser coverage.</td>
           </tr>
           <tr>
             <td>App Shell</td>
@@ -361,12 +356,12 @@
         </table>
       </div>
 
-      <h2>Planned supersession map</h2>
+      <h2>Supersession map</h2>
       <div class="table-wrap">
         <table>
           <tr>
             <th>Historical implemented record</th>
-            <th>ADR-0009 target after implementation</th>
+            <th>ADR-0009 result</th>
           </tr>
           <tr>
             <td>ADR-0001 warms query data; primary image responses are not explicitly fetched.</td>
@@ -375,8 +370,8 @@
           <tr>
             <td>ADR-0003 accepts optional client ids and rejects Replay id rewriting.</td>
             <td>
-              Require grocery client ids and add one generic client-to-canonical substitution
-              contract.
+              Keep that boundary. Server grocery merging stays authoritative and follow-up changes
+              to a merged still-unsynced create are not guaranteed.
             </td>
           </tr>
           <tr>
@@ -479,31 +474,24 @@
 
       <h2>Release notes from a checkpoint</h2>
       <p>
-        ADR-0010 defines a reproducible release-note workflow for the docs app. The current release
-        comes from the canonical release-bearing manifest. If coherent current-release work is not
-        committed, it first becomes a normal checkpoint commit; a clean tree reuses HEAD and never
-        creates an empty commit.
+        ADR-0010 keeps the docs workflow small: choose a useful Git checkpoint, pass the next docs
+        version to the supported command, write the notes in the established Norish style, and
+        verify the docs build. It is a convenience workflow, not a release-management or provenance
+        framework.
       </p>
       <div class="seq">
-        <div class="step">Resolve release<small>verify release-bearing manifests</small></div>
+        <div class="step">Choose version<small>maintainer-supplied next label</small></div>
         <div class="arrow">→</div>
-        <div class="step">
-          Record Git checkpoint<small>previous tag … committed boundary</small>
-        </div>
+        <div class="step">Choose checkpoint<small>a practical committed boundary</small></div>
         <div class="arrow">→</div>
-        <div class="step">
-          Ensure docs checkpoint<small>run the supported version command once</small>
-        </div>
-        <div class="arrow">→</div>
-        <div class="step">Inventory every change<small>published or internal-only</small></div>
+        <div class="step">Freeze docs<small>run the supported version command</small></div>
         <div class="arrow">→</div>
         <div class="step">Write and build notes<small>usual Norish docs style</small></div>
       </div>
       <p class="meta">
-        Observed when this record was written: application manifests identify
-        <code>0.20.0-beta</code>, while the editable docs label and latest release-note page
-        identify <code>0.19.1-beta</code>. Applying ADR-0010 must detect and resolve that missing
-        checkpoint; this documentation-only change does not do so.
+        Executed July 22, 2026: <code>0.19.1-beta</code> was frozen, the editable docs moved to
+        <code>0.20.0-beta</code>, and notes used checkpoint
+        <code>063429cda9759d7b115f5f222ab18b7740e602c0</code>.
       </p>
 
       <h2>Decisions (ADRs)</h2>
@@ -582,8 +570,8 @@
             >ADR-0009 — Offline guarantees are end-to-end</a
           >
           <p>
-            <b>Accepted, not implemented.</b> Formal follow-up specification with user stories,
-            browser acceptance seams, standards fixes, and explicit supersession rules.
+            <b>Accepted and implemented.</b> Durable admission, provider-backed Offline routes,
+            bounded warm media, identity isolation, and a deliberately narrow grocery guarantee.
           </p>
         </li>
         <li>
@@ -591,8 +579,8 @@
             >ADR-0010 — Release notes use a release checkpoint</a
           >
           <p>
-            <b>Accepted, not executed.</b> Formal docs workflow for checkpointing the current
-            release and producing feature-complete, provenance-backed release notes.
+            <b>Accepted and executed.</b> A thin docs-version command, practical release checkpoint,
+            usual-style notes, and production docs validation.
           </p>
         </li>
       </ul>
@@ -604,16 +592,16 @@
           Storage, account transitions, and backend-down behaviour.
         </li>
         <li>
-          Focused contract tests pin Outbox serialization, durable admission, grocery merge parity,
-          canonical-id substitution, and image warming.
+          Focused contract tests pin Outbox serialization, durable admission, grocery rollback,
+          account isolation, and image-cache expiration bookkeeping.
         </li>
         <li>
           Web and tRPC typechecks, the production web build, the browser suite, formatting, and
           <code>git diff --check</code> are release gates.
         </li>
         <li>
-          Release-note validation inventories every commit in the checkpoint range, then runs docs
-          formatting, link checks, and a production docs build.
+          Release-note validation reviews the generated snapshot, then runs docs formatting, link
+          checks, and a production docs build.
         </li>
         <li>Results must distinguish passed, failed, and environmentally blocked validation.</li>
       </ul>
@@ -621,7 +609,9 @@
       <h2>Explicitly out of scope</h2>
       <ul class="tight">
         <li>Admin Offline support or admin-procedure idempotency.</li>
-        <li>ID-less legacy grocery creates.</li>
+        <li>
+          Canonical grocery-id substitution and guaranteed follow-ups to merged offline creates.
+        </li>
         <li>Proactive gallery, step-image, or video warming.</li>
         <li>Arbitrary unseen routes or multi-day local-first operation.</li>
         <li>
@@ -631,9 +621,8 @@
       </ul>
 
       <footer>
-        Updated after the July 22, 2026 review and design grilling. The Markdown ADRs are
-        authoritative; this HTML page is their summary. ADR-0009 and ADR-0010 specify future work
-        and must not be read as implementation-complete claims.
+        Updated after the July 22, 2026 review and simplification pass. The Markdown ADRs are
+        authoritative; this HTML page is their summary.
       </footer>
     </main>
   </body>

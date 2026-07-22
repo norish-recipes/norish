@@ -1,5 +1,6 @@
 "use client";
 
+import { Alert, Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 /**
@@ -17,28 +18,28 @@ export function OfflineUnavailable() {
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- next/image optimizes through a runtime endpoint the offline shell can't reach; the raw /logo.svg ships in the precached public/ scan, which is the point. */}
       <img aria-hidden alt="" className="size-12 opacity-80" src="/logo.svg" />
-      <h1 className="text-xl font-semibold">{t("title")}</h1>
-      <p className="text-muted max-w-md text-sm">{t("body")}</p>
-      <div className="flex gap-2">
-        <button
-          className="border-border rounded-lg border px-4 py-2 text-sm font-medium"
-          type="button"
-          onClick={() => window.location.reload()}
-        >
-          {t("retry")}
-        </button>
-        <button
-          className="border-border bg-surface-secondary rounded-lg border px-4 py-2 text-sm font-medium"
-          type="button"
-          onClick={() => {
-            // A full navigation, not a client-side route push: offline it lands
-            // on the bootstrap dashboard; Live it loads the real page.
-            window.location.href = "/";
-          }}
-        >
-          {t("home")}
-        </button>
-      </div>
+      <Alert className="max-w-lg text-left" status="warning">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>{t("title")}</Alert.Title>
+          <Alert.Description>{t("body")}</Alert.Description>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button variant="secondary" onPress={() => window.location.reload()}>
+              {t("retry")}
+            </Button>
+            <Button
+              variant="primary"
+              onPress={() => {
+                // A full navigation, not a client-side route push: offline it
+                // lands on the bootstrap dashboard; Live it loads the real page.
+                window.location.href = "/";
+              }}
+            >
+              {t("home")}
+            </Button>
+          </div>
+        </Alert.Content>
+      </Alert>
     </div>
   );
 }

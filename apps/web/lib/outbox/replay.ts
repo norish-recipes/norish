@@ -13,11 +13,11 @@
  * bounded-backoff rescheduling for transient 5xx failures.
  */
 
-import type { ReplayOutcome } from "./error-classification";
-import type { OutboxStore } from "./outbox-store";
-import type { OutboxEntry } from "./outbox-types";
-import { runWithOutboxLock } from "./leader";
-import { outboxStore } from "./outbox-store";
+import type { ReplayOutcome } from "@/lib/outbox/error-classification";
+import type { OutboxStore } from "@/lib/outbox/outbox-store";
+import type { OutboxEntry } from "@/lib/outbox/outbox-types";
+import { runWithOutboxLock } from "@/lib/outbox/leader";
+import { outboxStore } from "@/lib/outbox/outbox-store";
 
 /** Attempts a 5xx entry gets before it is parked as retries-exhausted. */
 export const MAX_AMBIGUOUS_ATTEMPTS = 3;

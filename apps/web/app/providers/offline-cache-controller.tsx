@@ -27,7 +27,8 @@ import { getSession } from "@norish/shared/lib/auth/client";
  *
  * Responsibilities:
  *  - reconcile the cache owner (restore / switch / purge reads) on identity
- *    change; a departed user's queued mutations are retained dormant under
+ *    change; children stay hidden while an authenticated owner switch is
+ *    resolved, and a departed user's queued mutations are retained dormant under
  *    their owner and can only Replay once that owner signs in again — the
  *    owner-scoped resolver below is what enforces it (ADR-0009);
  *  - register how the Outbox replays (the live tRPC client) and who owns it;
@@ -138,6 +139,14 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
       warm: () => topUpWarmSet({ trpc, queryClient }),
     });
   }, [isLive, isOffline, readyOwner, queryClient, trpc]);
+
+  // `resolveCacheOwner` clears the outgoing QueryClient before activating the
+  // incoming owner, but that work crosses an async boundary. Do not let the
+  // incoming account render against the previous owner's still-live cache in
+  // the render between the session change and reconciliation completing.
+  if (sessionUserId !== null && readyOwner !== sessionUserId) {
+    return null;
+  }
 
   return <>{children}</>;
 }

@@ -1,5 +1,9 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
+import {
+  IMAGE_CACHE_MAX_AGE_SECONDS,
+  IMAGE_CACHE_MAX_ENTRIES,
+  IMAGE_CACHE_NAME,
+} from "@/lib/offline/cache-names";
 import { defaultCache } from "@serwist/next/worker";
 import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist } from "serwist";
 
@@ -38,8 +42,8 @@ const serwist = new Serwist({
         cacheName: IMAGE_CACHE_NAME,
         plugins: [
           new ExpirationPlugin({
-            maxEntries: 512,
-            maxAgeSeconds: 30 * 24 * 60 * 60,
+            maxEntries: IMAGE_CACHE_MAX_ENTRIES,
+            maxAgeSeconds: IMAGE_CACHE_MAX_AGE_SECONDS,
             maxAgeFrom: "last-used",
           }),
         ],

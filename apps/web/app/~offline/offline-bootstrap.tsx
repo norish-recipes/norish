@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/app/(app)/app-shell";
 import CalendarPage from "@/app/(app)/calendar/page";
 import GroceriesPage from "@/app/(app)/groceries/page";
+import { OfflineDashboard } from "@/app/~offline/offline-dashboard";
+import { OfflineRecipeDetail } from "@/app/~offline/offline-recipe-detail";
+import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { matchOfflineRoute } from "@/lib/offline/offline-routes";
-
-import { OfflineDashboard } from "./offline-dashboard";
-import { OfflineRecipeDetail } from "./offline-recipe-detail";
-import { OfflineUnavailable } from "./offline-unavailable";
 
 /**
  * The offline bootstrap router (ADR-0009). The service worker serves this

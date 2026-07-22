@@ -1,8 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import type { GroceryDto, GroceryUpdateDto, IdSubstitution } from "@norish/shared/contracts";
-import type { GroceryMergeCandidate } from "@norish/shared/lib/grocery-merge";
+import type { GroceryDto, GroceryUpdateDto } from "@norish/shared/contracts";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   assignGroceryToStore,

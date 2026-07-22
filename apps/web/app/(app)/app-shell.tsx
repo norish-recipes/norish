@@ -1,3 +1,5 @@
+import { AuthProviders } from "@/app/providers/auth-providers";
+import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 import { Navbar } from "@/components/navbar/navbar";
 import { TimerDock } from "@/components/timer-dock";
 import { ArchiveImportProvider } from "@/context/archive-import-context";
@@ -8,9 +10,6 @@ import { RecipesFiltersProvider } from "@/context/recipes-filters-context";
 import { UserProvider } from "@/context/user-context";
 
 import { APP_MAIN_HORIZONTAL_PADDING_CLASS } from "@norish/web/config/css-tokens";
-
-import { AuthProviders } from "../providers/auth-providers";
-import { OfflineCacheController } from "../providers/offline-cache-controller";
 
 /**
  * The full authenticated app chrome: every provider plus navbar and main

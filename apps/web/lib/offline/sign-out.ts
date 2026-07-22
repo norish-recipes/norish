@@ -9,10 +9,9 @@
  */
 import type { OutboxStore } from "@/lib/outbox";
 import type { QueryClient } from "@tanstack/react-query";
+import { deleteImageCache } from "@/lib/offline/cache-names";
 import { discardAllEntries, outboxStore } from "@/lib/outbox";
 import { activeCacheOwner, readBootOwner, wipeReadCache } from "@/lib/query-cache";
-
-import { deleteImageCache } from "./cache-names";
 
 /** The account whose offline state a sign-out would affect. */
 function signOutOwner(): string | null {

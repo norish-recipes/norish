@@ -1,4 +1,4 @@
-import { OfflineBootstrap } from "./offline-bootstrap";
+import { OfflineBootstrap } from "@/app/~offline/offline-bootstrap";
 
 /**
  * The offline navigation fallback (ADR-0006, reworked by ADR-0009): served by

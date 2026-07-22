@@ -1,12 +1,16 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 
-const resolveCacheOwner = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
+const resolveCacheOwner = vi.hoisted(() =>
+  vi.fn<(options: { sessionUserId: string | null; isOffline: boolean }) => Promise<void>>(() =>
+    Promise.resolve()
+  )
+);
 const activeCacheOwner = vi.hoisted(() => vi.fn<() => string | null>(() => null));
 const warmCache = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
 
@@ -42,13 +46,15 @@ vi.mock("@/lib/outbox", () => ({
 function renderController() {
   const queryClient = new QueryClient();
 
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <OfflineCacheController>
         <div>child</div>
       </OfflineCacheController>
     </QueryClientProvider>
   );
+
+  return { ...result, queryClient };
 }
 
 describe("OfflineCacheController", () => {
@@ -79,6 +85,39 @@ describe("OfflineCacheController", () => {
     await waitFor(() =>
       expect(resolveCacheOwner).toHaveBeenCalledWith({ sessionUserId: "u1", isOffline: false })
     );
+  });
+
+  it("hides the outgoing owner's UI until an account switch is isolated", async () => {
+    user = { id: "u1" };
+    activeCacheOwner.mockReturnValue("u1");
+
+    const view = renderController();
+
+    await screen.findByText("child");
+
+    let finishSwitch: (() => void) | undefined;
+
+    resolveCacheOwner.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finishSwitch = resolve;
+        })
+    );
+    user = { id: "u2" };
+    view.rerender(
+      <QueryClientProvider client={view.queryClient}>
+        <OfflineCacheController>
+          <div>child</div>
+        </OfflineCacheController>
+      </QueryClientProvider>
+    );
+
+    expect(screen.queryByText("child")).not.toBeInTheDocument();
+
+    activeCacheOwner.mockReturnValue("u2");
+    finishSwitch?.();
+
+    await screen.findByText("child");
   });
 
   it("registers how the Outbox replays and who owns it", async () => {
