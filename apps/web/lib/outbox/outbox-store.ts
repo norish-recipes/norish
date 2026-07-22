@@ -4,7 +4,9 @@
  * Backed by the auto-incrementing `outbox` object store so entries keep strict
  * FIFO order and appends are atomic across tabs. Inputs are stored by structured
  * clone, so file uploads survive. Entries are scoped per owner: Replay only ever
- * touches the current user's, and a departed user's are purged on switch.
+ * touches the current user's, and a departed user's stay dormant under their
+ * owner until that owner signs in again (ADR-0009); only an explicitly
+ * confirmed sign-out discards a queue.
  *
  * The store is a factory over an injectable {@link OfflineIdb} so it can be
  * tested against `fake-indexeddb`; the app shares the module-level default.
@@ -28,8 +30,6 @@ export interface OutboxStore {
   park(seq: number, reason: ParkedReason): Promise<void>;
   remove(seq: number): Promise<void>;
   size(ownerId?: string): Promise<number>;
-  /** Drop every entry not owned by `keepOwnerId`; returns how many were removed. */
-  purgeExcept(keepOwnerId: string): Promise<number>;
   /** Notified (in-tab and cross-tab) whenever the queue changes. */
   subscribe(listener: () => void): () => void;
 }
@@ -123,21 +123,6 @@ export function createOutboxStore(idb: OfflineIdb): OutboxStore {
     return ownerId ? all.filter((entry) => entry.ownerId === ownerId).length : all.length;
   }
 
-  async function purgeExcept(keepOwnerId: string): Promise<number> {
-    const all = await getAll();
-    const foreign = all.filter((entry) => entry.ownerId !== keepOwnerId);
-
-    for (const entry of foreign) {
-      await idb.transaction(OUTBOX_STORE, "readwrite", (store) => store.delete(entry.seq));
-    }
-
-    if (foreign.length > 0) {
-      notify();
-    }
-
-    return foreign.length;
-  }
-
   function subscribe(listener: () => void): () => void {
     listeners.add(listener);
 
@@ -154,7 +139,6 @@ export function createOutboxStore(idb: OfflineIdb): OutboxStore {
     park,
     remove,
     size,
-    purgeExcept,
     subscribe,
   };
 }

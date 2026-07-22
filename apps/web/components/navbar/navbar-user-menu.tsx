@@ -4,12 +4,15 @@ import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { OfflineStatusModal } from "@/components/navbar/offline-status/offline-status-modal";
+import { SignOutConfirmModal } from "@/components/navbar/sign-out-confirm-modal";
 import ImportRecipeModal from "@/components/shared/import-recipe-modal";
 import { LanguageSwitchContent } from "@/components/shared/language-switch";
 import UserAvatar from "@/components/shared/user-avatar";
 import { useUserContext } from "@/context/user-context";
 import { useVersionQuery } from "@/hooks/config";
 import { useLanguageSwitch } from "@/hooks/user/use-language-switch";
+import { clearOfflineStateForSignOut, countUnsyncedChanges } from "@/lib/offline/sign-out";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDownTrayIcon,
   ArrowLeftStartOnRectangleIcon,
@@ -40,9 +43,11 @@ export default function NavbarUserMenu({
   const { user, signOut } = useUserContext();
   const { isOffline } = useConnectivity();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [localOpen, setLocalOpen] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [signOutUnsyncedCount, setSignOutUnsyncedCount] = useState<number | null>(null);
   const themeSwitch = useThemeSwitch();
   const languageSwitch = useLanguageSwitch();
   const { currentVersion, latestVersion, updateAvailable, releaseUrl } = useVersionQuery();
@@ -55,6 +60,29 @@ export default function NavbarUserMenu({
     },
     [onOpenChange]
   );
+
+  // Explicit sign-out (ADR-0009): with unsynced queued changes, open the
+  // guided confirmation instead of signing out; with a clean queue, clear the
+  // outgoing personalized caches and sign out directly.
+  const handleSignOutPress = useCallback(() => {
+    void (async () => {
+      const unsynced = await countUnsyncedChanges();
+
+      if (unsynced > 0) {
+        setSignOutUnsyncedCount(unsynced);
+
+        return;
+      }
+
+      await clearOfflineStateForSignOut({ queryClient, discardQueue: false });
+      await signOut();
+    })();
+  }, [queryClient, signOut]);
+
+  const handleConfirmedSignOut = useCallback(async () => {
+    await clearOfflineStateForSignOut({ queryClient, discardQueue: true });
+    await signOut();
+  }, [queryClient, signOut]);
 
   if (!user) return null;
 
@@ -202,7 +230,7 @@ export default function NavbarUserMenu({
               variant="danger"
               onPress={() => {
                 handleOpenChange(false);
-                signOut();
+                handleSignOutPress();
               }}
             >
               <span className="text-danger">
@@ -253,6 +281,16 @@ export default function NavbarUserMenu({
 
       {/* Connection & offline status */}
       <OfflineStatusModal isOpen={showStatusModal} onOpenChange={setShowStatusModal} />
+
+      {/* Sign-out with unsynced changes (ADR-0009) */}
+      <SignOutConfirmModal
+        isOpen={signOutUnsyncedCount !== null}
+        unsyncedCount={signOutUnsyncedCount ?? 0}
+        onConfirm={handleConfirmedSignOut}
+        onOpenChange={(open) => {
+          if (!open) setSignOutUnsyncedCount(null);
+        }}
+      />
     </>
   );
 }

@@ -13,6 +13,10 @@
       "description": "Beheer je account"
     },
     "logout": "Uitloggen",
+    "signOutConfirm": {
+      "title": "Niet-gesynchroniseerde wijzigingen verwijderen?",
+      "description": "{count, plural, one {# offline gemaakte wijziging heeft de server nog niet bereikt.} other {# offline gemaakte wijzigingen hebben de server nog niet bereikt.}} Als je uitlogt, wordt dit wachtende werk definitief verwijderd en worden de offline gegevens van je account van dit apparaat gewist."
+    },
     "version": {
       "updateAvailable": "v{version} beschikbaar"
     }

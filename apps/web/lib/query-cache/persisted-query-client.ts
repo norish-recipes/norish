@@ -13,6 +13,7 @@
  */
 
 import type { OfflineIdb } from "@/lib/offline/idb";
+import { deleteImageCache } from "@/lib/offline/cache-names";
 import { offlineIdb } from "@/lib/offline/idb";
 import {
   persistQueryClientRestore,
@@ -144,14 +145,17 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
       return;
     }
 
-    // Account switch: purge the departed user's cache before adopting the new
-    // one, then start the new owner from a clean in-memory client.
+    // Account switch: purge the departed user's reads and personalized images
+    // before adopting the new one, then start the new owner from a clean
+    // in-memory client. The departed user's Outbox is deliberately untouched —
+    // it stays dormant under its owner (ADR-0009).
     if (appliedOwner === decision.to) {
       return;
     }
 
     if (decision.from && decision.from !== decision.to) {
       await purgeForeignCaches(idb, decision.to);
+      await deleteImageCache();
     }
 
     queryClient.clear();

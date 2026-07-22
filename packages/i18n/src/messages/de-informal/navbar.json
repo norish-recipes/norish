@@ -13,7 +13,13 @@
       "description": "Verwalte dein Konto"
     },
     "logout": "Abmelden",
-    "version": { "updateAvailable": "v{version} verfügbar" }
+    "signOutConfirm": {
+      "title": "Nicht synchronisierte Änderungen verwerfen?",
+      "description": "{count, plural, one {# offline vorgenommene Änderung hat den Server noch nicht erreicht.} other {# offline vorgenommene Änderungen haben den Server noch nicht erreicht.}} Beim Abmelden werden diese ausstehenden Änderungen endgültig verworfen und die Offline-Daten deines Kontos von diesem Gerät entfernt."
+    },
+    "version": {
+      "updateAvailable": "v{version} verfügbar"
+    }
   },
   "theme": {
     "title": "Design",

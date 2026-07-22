@@ -13,6 +13,10 @@
       "description": "Manage your account"
     },
     "logout": "Logout",
+    "signOutConfirm": {
+      "title": "Discard unsynced changes?",
+      "description": "{count, plural, one {# change made offline has not reached the server yet.} other {# changes made offline have not reached the server yet.}} Signing out permanently discards this queued work and removes your account's offline data from this device."
+    },
     "version": {
       "updateAvailable": "v{version} available"
     }

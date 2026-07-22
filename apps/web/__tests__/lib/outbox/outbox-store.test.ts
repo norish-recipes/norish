@@ -81,16 +81,16 @@ describe("outbox store", () => {
     expect(await store.size()).toBe(0);
   });
 
-  it("purges every foreign owner's entries and reports the count", async () => {
+  it("keeps every owner's entries isolated — foreign queues stay dormant", async () => {
     await store.enqueue(entry({ ownerId: "u1" }));
     await store.enqueue(entry({ ownerId: "u2" }));
     await store.enqueue(entry({ ownerId: "u2" }));
 
-    const removed = await store.purgeExcept("u1");
-
-    expect(removed).toBe(2);
-    expect(await store.size("u2")).toBe(0);
+    // ADR-0009: there is no bulk foreign-owner purge; a departed user's queue
+    // survives under its owner and is invisible to another owner's Replay.
     expect(await store.size("u1")).toBe(1);
+    expect(await store.size("u2")).toBe(2);
+    expect((await store.forOwner("u1")).every((e) => e.ownerId === "u1")).toBe(true);
   });
 
   it("stores inputs by structured clone, not serialization (a Date survives as a Date)", async () => {

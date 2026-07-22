@@ -13,6 +13,10 @@
       "description": "Administrer din konto"
     },
     "logout": "Log ud",
+    "signOutConfirm": {
+      "title": "Kassér usynkroniserede ændringer?",
+      "description": "{count, plural, one {# ændring foretaget offline har endnu ikke nået serveren.} other {# ændringer foretaget offline har endnu ikke nået serveren.}} Logger du ud, kasseres dette ventende arbejde permanent, og din kontos offlinedata fjernes fra denne enhed."
+    },
     "version": {
       "updateAvailable": "v{version} tilgængelig"
     }

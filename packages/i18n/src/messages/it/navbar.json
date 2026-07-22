@@ -13,6 +13,10 @@
       "description": "Gestisci il tuo account"
     },
     "logout": "Esci",
+    "signOutConfirm": {
+      "title": "Scartare le modifiche non sincronizzate?",
+      "description": "{count, plural, one {# modifica fatta offline non ha ancora raggiunto il server.} other {# modifiche fatte offline non hanno ancora raggiunto il server.}} Uscendo, questo lavoro in attesa verrà scartato definitivamente e i dati offline del tuo account verranno rimossi da questo dispositivo."
+    },
     "version": {
       "updateAvailable": "v{version} disponibile"
     }

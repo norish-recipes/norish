@@ -7,7 +7,6 @@ import { useConnectivity } from "@/app/providers/connectivity-provider";
 import { useTRPC, useTRPCClient } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
 import {
-  outboxStore,
   processQueue,
   replayOutboxEntry,
   runReconnectSequence,
@@ -24,9 +23,10 @@ import { useQueryClient } from "@tanstack/react-query";
  * `TRPCProviderWrapper` so it can read all three, and renders children unchanged.
  *
  * Responsibilities:
- *  - reconcile the cache owner (restore / switch / purge) on identity change;
- *  - purge a departed user's queued mutations so they never replay as the wrong
- *    user;
+ *  - reconcile the cache owner (restore / switch / purge reads) on identity
+ *    change; a departed user's queued mutations are retained dormant under
+ *    their owner and can only Replay once that owner signs in again — the
+ *    owner-scoped resolver below is what enforces it (ADR-0009);
  *  - register how the Outbox replays (the live tRPC client) and who owns it;
  *  - run the Reconnect Sequence (drain → refetch → warm) when Live returns, and
  *    an initial drain + warm on first load.
@@ -56,13 +56,11 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
     };
   }, [sessionUserId, isOffline]);
 
-  // Purge any departed user's queued mutations so Replay never sends them under
-  // the wrong identity (ADR-0005).
-  useEffect(() => {
-    if (readyOwner) {
-      void outboxStore.purgeExcept(readyOwner);
-    }
-  }, [readyOwner]);
+  // A bypassed identity transition retains other owners' queued mutations
+  // dormant (ADR-0009 supersedes ADR-0005's unconditional purge): nothing is
+  // purged here, and the owner-scoped Replay resolver below guarantees a
+  // dormant entry never replays under the incoming account. Explicit sign-out
+  // discards the active queue via its own confirmed path instead.
 
   // Teach the Replay engine how to resubmit an entry (through the live client)
   // and who the current owner is.

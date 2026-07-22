@@ -8,7 +8,7 @@ const resolveCacheOwner = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Prom
 const activeCacheOwner = vi.hoisted(() => vi.fn<() => string | null>(() => null));
 const warmCache = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
 
-const purgeExcept = vi.hoisted(() => vi.fn<() => Promise<number>>(() => Promise.resolve(0)));
+const outboxStoreMock = vi.hoisted(() => ({}) as Record<string, never>);
 const processQueue = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const runReconnectSequence = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const setReplaySubmit = vi.hoisted(() => vi.fn());
@@ -26,7 +26,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
 }));
 vi.mock("@/lib/query-cache", () => ({ resolveCacheOwner, activeCacheOwner, warmCache }));
 vi.mock("@/lib/outbox", () => ({
-  outboxStore: { purgeExcept },
+  outboxStore: outboxStoreMock,
   processQueue,
   runReconnectSequence,
   runIfLeader: (task: () => unknown) => task(),
@@ -54,7 +54,6 @@ describe("OfflineCacheController", () => {
     for (const fn of [
       resolveCacheOwner,
       warmCache,
-      purgeExcept,
       processQueue,
       runReconnectSequence,
       setReplaySubmit,
@@ -90,13 +89,21 @@ describe("OfflineCacheController", () => {
     expect(setReplayOwnerResolver).toHaveBeenCalled();
   });
 
-  it("purges a departed user's queued mutations once an owner is settled", async () => {
+  it("retains other owners' queued mutations dormant (no purge on identity change)", async () => {
     user = { id: "u1" };
     activeCacheOwner.mockReturnValue("u1");
 
     renderController();
 
-    await waitFor(() => expect(purgeExcept).toHaveBeenCalledWith("u1"));
+    // ADR-0009: a bypassed identity transition keeps the outgoing queue under
+    // its owner. The controller never touches the store — the outbox mock has
+    // no methods at all, so any store call here would throw — and Replay stays
+    // owner-scoped via the registered resolver.
+    await waitFor(() => expect(setReplayOwnerResolver).toHaveBeenCalled());
+
+    const resolver = setReplayOwnerResolver.mock.calls.at(-1)?.[0] as () => string | null;
+
+    expect(resolver()).toBe("u1");
   });
 
   it("runs the Reconnect Sequence once an owner is settled while Live", async () => {
@@ -139,6 +146,5 @@ describe("OfflineCacheController", () => {
       expect(resolveCacheOwner).toHaveBeenCalledWith({ sessionUserId: null, isOffline: false })
     );
     expect(runReconnectSequence).not.toHaveBeenCalled();
-    expect(purgeExcept).not.toHaveBeenCalled();
   });
 });
