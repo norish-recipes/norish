@@ -93,37 +93,35 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
   }
 
   return (
-    <Modal>
-      <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={handleOpenChange}>
-        <Modal.Container className="z-[1100]" size="md">
-          <Modal.Dialog>
-            {() => (
-              <>
-                <Modal.CloseTrigger />
-                <Modal.Header className="flex flex-col gap-1">{t("title")}</Modal.Header>
-                <Modal.Body>
-                  <TextField fullWidth type="url" value={importUrl} onChange={setImportUrl}>
-                    <Label>{t("label")}</Label>
-                    <Input fullWidth placeholder={t("placeholder")} variant="secondary" />
-                  </TextField>
-                </Modal.Body>
-                <Modal.Footer>
-                  {isAIEnabled && (
-                    <Button variant="secondary" onPress={handleAIImport}>
-                      {<SparklesIcon className="h-4 w-4" />}
-                      {tActions("aiImport")}
-                    </Button>
-                  )}
-                  <Button variant="primary" onPress={handleImportFromUrl}>
-                    {<ArrowDownTrayIcon className="h-4 w-4" />}
-                    {tActions("import")}
+    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={handleOpenChange}>
+      <Modal.Container className="z-[1100]" size="md">
+        <Modal.Dialog>
+          {() => (
+            <>
+              <Modal.CloseTrigger />
+              <Modal.Header className="flex flex-col gap-1">{t("title")}</Modal.Header>
+              <Modal.Body>
+                <TextField fullWidth type="url" value={importUrl} onChange={setImportUrl}>
+                  <Label>{t("label")}</Label>
+                  <Input fullWidth placeholder={t("placeholder")} variant="secondary" />
+                </TextField>
+              </Modal.Body>
+              <Modal.Footer>
+                {isAIEnabled && (
+                  <Button variant="secondary" onPress={handleAIImport}>
+                    {<SparklesIcon className="h-4 w-4" />}
+                    {tActions("aiImport")}
                   </Button>
-                </Modal.Footer>
-              </>
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+                )}
+                <Button variant="primary" onPress={handleImportFromUrl}>
+                  {<ArrowDownTrayIcon className="h-4 w-4" />}
+                  {tActions("import")}
+                </Button>
+              </Modal.Footer>
+            </>
+          )}
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }

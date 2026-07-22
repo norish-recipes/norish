@@ -13,6 +13,7 @@ import { getOrCreateMultiplexer } from "@norish/shared-server/redis/subscription
 import { ResolveSharedRecipeInputSchema } from "@norish/shared/contracts/zod/recipe-shares";
 
 import type { Context } from "./context";
+import { withIdempotency } from "./idempotency-middleware";
 import { middleware, publicProcedure } from "./trpc";
 
 /**
@@ -69,8 +70,15 @@ const withAuth = middleware(async ({ ctx, next }) => {
  * - User must be logged in
  * - Household context available (ctx.household, ctx.householdKey, ctx.userIds)
  * - Use canAccessResource from @norish/auth/permissions for permission checks
+ *
+ * `withIdempotency` runs first: any mutation carrying an `x-operation-id` is
+ * executed at most once, and a duplicate replay returns the stored response
+ * (ADR-0002). Claims are scoped by the session user id (populated on the base
+ * context before auth), so a cache hit only short-circuits for the same user;
+ * an expired/absent session keys differently and falls through to `withAuth`.
+ * Queries and mutations without the header pass straight through.
  */
-export const authedProcedure = publicProcedure.use(withAuth);
+export const authedProcedure = publicProcedure.use(withIdempotency).use(withAuth);
 
 export type SharedRecipeProcedureContext = Context & {
   sharedRecipe: {

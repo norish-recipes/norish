@@ -8,11 +8,11 @@ export const createGroceryApiInputSchema = z.object({
   unit: z.string().nullable(),
   amount: z.coerce.number().nullable(),
   isDone: z.boolean().default(false),
-  storeId: z.string().uuid().nullable().optional(),
+  storeId: z.uuid().nullable().optional(),
 });
 
 export const groceryIdVersionSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   version: z.number().int().positive(),
 });
 
@@ -32,8 +32,8 @@ export const groceryMutationOutputSchema: z.ZodType<GroceryMutationOutput> = z.o
 });
 
 export const assignGroceryToStoreApiInputSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   version: z.number().int().positive(),
-  storeId: z.string().uuid().nullable(),
+  storeId: z.uuid().nullable(),
   savePreference: z.boolean().default(true),
 });

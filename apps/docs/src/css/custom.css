@@ -1,0 +1,197 @@
+/**
+ * Norish theme for Docusaurus.
+ *
+ * The HeroUI/Tailwind hero theme can't be reused here, so this recreates the
+ * Norish look with plain CSS: the same forest-green brand, Inter Variable font,
+ * and light/dark surfaces. Color values are ported verbatim (OKLch) from
+ * tooling/tailwind/heroui-theme.css so the docs match norish.dev exactly.
+ */
+
+@import "@fontsource-variable/inter";
+
+:root {
+  /* Brand — forest green. Accent stays identical to the app's --accent. */
+  --ifm-color-primary: oklch(46.37% 0.0828 150.36);
+  --ifm-color-primary-dark: oklch(42% 0.0828 150.36);
+  --ifm-color-primary-darker: oklch(39.7% 0.0828 150.36);
+  --ifm-color-primary-darkest: oklch(33.5% 0.0828 150.36);
+  --ifm-color-primary-light: oklch(51% 0.0828 150.36);
+  --ifm-color-primary-lighter: oklch(53.3% 0.0828 150.36);
+  --ifm-color-primary-lightest: oklch(59.5% 0.0828 150.36);
+
+  /* Surfaces & text (light) */
+  --ifm-background-color: oklch(97.02% 0.0015 150.36);
+  --ifm-background-surface-color: oklch(100% 0.0008 150.36);
+  --ifm-font-color-base: oklch(21.03% 0.0015 150.36);
+  --ifm-heading-color: oklch(21.03% 0.0015 150.36);
+  --ifm-color-content-secondary: oklch(55.17% 0.003 150.36);
+  --ifm-toc-border-color: oklch(90% 0.0015 150.36);
+  --ifm-table-border-color: oklch(90% 0.0015 150.36);
+  --ifm-hr-border-color: oklch(92% 0.0015 150.36);
+
+  /* Typography */
+  --ifm-font-family-base:
+    "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ifm-heading-font-weight: 600;
+
+  /* Shape — matches --radius (0.5rem) */
+  --ifm-global-radius: 0.5rem;
+  --ifm-button-border-radius: 0.5rem;
+  --ifm-code-font-size: 90%;
+
+  /* Navigation */
+  --ifm-navbar-background-color: oklch(100% 0.0008 150.36);
+  --ifm-menu-color-background-active: color-mix(in oklch, var(--ifm-color-primary) 9%, transparent);
+  --ifm-menu-color-background-hover: color-mix(in oklch, var(--ifm-color-primary) 6%, transparent);
+
+  --docusaurus-highlighted-code-line-bg: color-mix(
+    in oklch,
+    var(--ifm-color-primary) 12%,
+    transparent
+  );
+}
+
+/* Infima themes dark-mode variables under `html[data-theme='dark']`, so match
+   that specificity (and load later) to win — a plain `[data-theme='dark']`
+   selector loses and the background/surface overrides silently no-op. */
+html[data-theme="dark"] {
+  /* Lift the brand green in dark mode so links/buttons stay legible on the
+     dark charcoal background while keeping the same hue. */
+  --ifm-color-primary: oklch(62% 0.095 150.36);
+  --ifm-color-primary-dark: oklch(57.5% 0.095 150.36);
+  --ifm-color-primary-darker: oklch(55% 0.095 150.36);
+  --ifm-color-primary-darkest: oklch(48% 0.09 150.36);
+  --ifm-color-primary-light: oklch(66% 0.092 150.36);
+  --ifm-color-primary-lighter: oklch(68% 0.09 150.36);
+  --ifm-color-primary-lightest: oklch(74% 0.08 150.36);
+
+  /* Surfaces & text (dark) — ported from the app's dark tokens. */
+  --ifm-background-color: oklch(16.5% 0.0015 150.36);
+  --ifm-background-surface-color: oklch(23.5% 0.003 150.36);
+  --ifm-font-color-base: oklch(99.11% 0.0015 150.36);
+  --ifm-heading-color: oklch(99.11% 0.0015 150.36);
+  --ifm-color-content-secondary: oklch(70.5% 0.003 150.36);
+  --ifm-toc-border-color: oklch(31% 0.0015 150.36);
+  --ifm-table-border-color: oklch(31% 0.0015 150.36);
+  --ifm-hr-border-color: oklch(28% 0.0015 150.36);
+  --ifm-navbar-background-color: oklch(20% 0.0015 150.36);
+  --ifm-card-background-color: oklch(23.5% 0.003 150.36);
+
+  --docusaurus-highlighted-code-line-bg: color-mix(
+    in oklch,
+    var(--ifm-color-primary) 18%,
+    transparent
+  );
+}
+
+/* Subtle accent-tinted divider under the navbar, echoing the landing page. */
+.navbar {
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+}
+
+/* The brand wordmark is a single forest-green; brighten it slightly in dark
+   mode so it reads against the dark navbar. */
+[data-theme="dark"] .navbar__logo img {
+  filter: brightness(1.5) saturate(1.05);
+}
+
+/* Active sidebar item gets the brand color, not just a tint. */
+.menu__link--active:not(.menu__link--sublist) {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+/* Slightly softer, rounded cards/admonitions to match the app's feel. */
+.theme-admonition,
+.card {
+  border-radius: var(--ifm-global-radius);
+}
+
+/* macOS-style browser mockup for the hero screenshot (ports the landing page
+   BrowserFrame). Wraps a themed screenshot that swaps with the color mode. */
+.browserMockup {
+  margin: 1.5rem 0 2rem;
+  overflow: hidden;
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 1rem;
+  background: var(--ifm-background-surface-color);
+  box-shadow: 0 40px 80px -32px rgba(0, 0, 0, 0.45);
+}
+
+.browserMockup__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+  background: color-mix(
+    in oklch,
+    var(--ifm-background-surface-color) 60%,
+    var(--ifm-background-color)
+  );
+}
+
+.browserMockup__dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  display: inline-block;
+  flex: none;
+}
+
+.browserMockup__url {
+  margin: 0 auto;
+  padding: 0.15rem 0.85rem;
+  font-size: 11px;
+  color: var(--ifm-color-content-secondary);
+  background: var(--ifm-background-color);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 9999px;
+}
+
+/* Base sits at single-class specificity so the variant toggle below (also
+   single-class, but later in source) can override it. */
+.themedShot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Light/dark variant toggle, driven by Docusaurus's html[data-theme]. */
+.themedShot--dark {
+  display: none;
+}
+
+[data-theme="dark"] .themedShot--light {
+  display: none;
+}
+
+[data-theme="dark"] .themedShot--dark {
+  display: block;
+}
+
+/* Hero layout: the browser mockup with a small phone mockup overlapping the
+   bottom-right corner, mirroring the landing page hero. */
+.heroMockup {
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+
+.heroMockup .browserMockup {
+  margin: 1.5rem 0 0;
+}
+
+.phoneMockup {
+  overflow: hidden;
+  border: 6px solid var(--ifm-background-surface-color);
+  border-radius: 1.75rem;
+  background: var(--ifm-background-surface-color);
+  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.5);
+}
+
+.heroMockup .phoneMockup {
+  position: absolute;
+  right: -0.5rem;
+  bottom: -1.5rem;
+  width: clamp(96px, 17%, 150px);
+}

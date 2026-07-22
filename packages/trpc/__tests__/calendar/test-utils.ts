@@ -8,6 +8,8 @@ import type {
   User,
 } from "@norish/shared/contracts";
 
+import type { Context } from "../../src/context";
+
 /**
  * Create a mock user for testing
  */
@@ -61,6 +63,22 @@ export function createMockAuthedContext(
     userIds: allUserIds,
     householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
     isServerAdmin: user.isServerAdmin ?? false,
+  };
+}
+
+/**
+ * Lift a mock authed context to the initial tRPC `Context` expected by
+ * `router.createCaller`; the auth middleware re-derives the household fields.
+ */
+export function createMockCallerContext(
+  ctx: ReturnType<typeof createMockAuthedContext> = createMockAuthedContext()
+): Context {
+  return {
+    user: ctx.user,
+    household: ctx.household,
+    connectionId: null,
+    multiplexer: null,
+    operationId: null,
   };
 }
 

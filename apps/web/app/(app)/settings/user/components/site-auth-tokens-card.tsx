@@ -227,38 +227,36 @@ export default function SiteAuthTokensCard() {
       </Card>
 
       {/* Delete Confirmation Modal */}
-      <Modal>
-        <Modal.Backdrop
-          className="z-[1099]"
-          isOpen={showDeleteModal}
-          onOpenChange={setShowDeleteModal}
-        >
-          <Modal.Container className="z-[1100]">
-            <Modal.Dialog>
-              {({ close: onClose }) => (
-                <>
-                  <Modal.Header>{t("deleteModal.title")}</Modal.Header>
-                  <Modal.Body>
-                    <p>{t("deleteModal.message")}</p>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button onPress={onClose} variant="tertiary">
-                      {tActions("cancel")}
-                    </Button>
-                    <Button
-                      onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
-                      variant="danger"
-                      isPending={removeMutation.isPending}
-                    >
-                      {t("deleteModal.confirmButton")}
-                    </Button>
-                  </Modal.Footer>
-                </>
-              )}
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+      <Modal.Backdrop
+        className="z-[1099]"
+        isOpen={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+      >
+        <Modal.Container className="z-[1100]">
+          <Modal.Dialog>
+            {({ close: onClose }) => (
+              <>
+                <Modal.Header>{t("deleteModal.title")}</Modal.Header>
+                <Modal.Body>
+                  <p>{t("deleteModal.message")}</p>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button onPress={onClose} variant="tertiary">
+                    {tActions("cancel")}
+                  </Button>
+                  <Button
+                    onPress={() => tokenToDelete && handleDelete(tokenToDelete)}
+                    variant="danger"
+                    isPending={removeMutation.isPending}
+                  >
+                    {t("deleteModal.confirmButton")}
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </>
   );
 }

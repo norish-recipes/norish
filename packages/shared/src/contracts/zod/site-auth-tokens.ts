@@ -44,7 +44,7 @@ export const DeleteSiteAuthTokenInputSchema = z.object({
 
 // Decrypted token for client display (value is never sent back)
 export const SiteAuthTokenDecryptedSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   userId: z.string(),
   domain: z.string(),
   name: z.string(),
@@ -57,7 +57,7 @@ export const SiteAuthTokenDecryptedSchema = z.object({
 
 // Token for client display (without value)
 export const SiteAuthTokenSafeSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   userId: z.string(),
   domain: z.string(),
   name: z.string(),

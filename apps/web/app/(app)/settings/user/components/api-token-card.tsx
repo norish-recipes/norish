@@ -162,89 +162,84 @@ export default function ApiKeyCard() {
       </Card>
 
       {/* Key Generation Modal */}
-      <Modal>
-        <Modal.Backdrop
-          className="z-[1099]"
-          isDismissable={false}
-          isOpen={showTokenModal}
-          onOpenChange={setShowTokenModal}
-        >
-          <Modal.Container className="z-[1100]">
-            <Modal.Dialog>
-              {({ close: onClose }) => (
-                <>
-                  <Modal.Header>{t("generatedModal.title")}</Modal.Header>
-                  <Modal.Body>
-                    <p className="text-warning mb-4 text-base">{t("generatedModal.warning")}</p>
-                    <div className="flex gap-2">
-                      <Input
-                        variant="secondary"
-                        isReadOnly
-                        className="font-mono text-xs"
-                        value={generatedKey || ""}
-                      />
-                      <Button isIconOnly onPress={handleCopyKey}>
-                        <ClipboardDocumentIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="text-muted mt-2 text-xs">
-                      {t.rich("generatedModal.hint", {
-                        code: (chunks) => (
-                          <code className="bg-surface-secondary rounded px-1">{chunks}</code>
-                        ),
-                      })}
-                    </p>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button
-                      onPress={() => {
-                        setGeneratedKey(null);
-                        onClose();
-                      }}
-                      variant="primary"
-                    >
-                      {t("generatedModal.confirmButton")}
+      <Modal.Backdrop
+        className="z-[1099]"
+        isDismissable={false}
+        isOpen={showTokenModal}
+        onOpenChange={setShowTokenModal}
+      >
+        <Modal.Container className="z-[1100]">
+          <Modal.Dialog>
+            {({ close: onClose }) => (
+              <>
+                <Modal.Header>{t("generatedModal.title")}</Modal.Header>
+                <Modal.Body>
+                  <p className="text-warning mb-4 text-base">{t("generatedModal.warning")}</p>
+                  <div className="flex gap-2">
+                    <Input
+                      variant="secondary"
+                      isReadOnly
+                      className="font-mono text-xs"
+                      value={generatedKey || ""}
+                    />
+                    <Button isIconOnly onPress={handleCopyKey}>
+                      <ClipboardDocumentIcon className="h-4 w-4" />
                     </Button>
-                  </Modal.Footer>
-                </>
-              )}
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
-
+                  </div>
+                  <p className="text-muted mt-2 text-xs">
+                    {t.rich("generatedModal.hint", {
+                      code: (chunks) => (
+                        <code className="bg-surface-secondary rounded px-1">{chunks}</code>
+                      ),
+                    })}
+                  </p>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button
+                    onPress={() => {
+                      setGeneratedKey(null);
+                      onClose();
+                    }}
+                    variant="primary"
+                  >
+                    {t("generatedModal.confirmButton")}
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
       {/* Delete Key Confirmation */}
-      <Modal>
-        <Modal.Backdrop
-          className="z-[1099]"
-          isOpen={showDeleteModal}
-          onOpenChange={setShowDeleteModal}
-        >
-          <Modal.Container className="z-[1100]">
-            <Modal.Dialog>
-              {({ close: onClose }) => (
-                <>
-                  <Modal.Header>{t("deleteModal.title")}</Modal.Header>
-                  <Modal.Body>
-                    <p>{t("deleteModal.message")}</p>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button onPress={onClose} variant="tertiary">
-                      {tActions("cancel")}
-                    </Button>
-                    <Button
-                      onPress={() => keyToDelete && handleDeleteKey(keyToDelete)}
-                      variant="danger"
-                    >
-                      {t("deleteModal.confirmButton")}
-                    </Button>
-                  </Modal.Footer>
-                </>
-              )}
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+      <Modal.Backdrop
+        className="z-[1099]"
+        isOpen={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+      >
+        <Modal.Container className="z-[1100]">
+          <Modal.Dialog>
+            {({ close: onClose }) => (
+              <>
+                <Modal.Header>{t("deleteModal.title")}</Modal.Header>
+                <Modal.Body>
+                  <p>{t("deleteModal.message")}</p>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button onPress={onClose} variant="tertiary">
+                    {tActions("cancel")}
+                  </Button>
+                  <Button
+                    onPress={() => keyToDelete && handleDeleteKey(keyToDelete)}
+                    variant="danger"
+                  >
+                    {t("deleteModal.confirmButton")}
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </>
   );
 }

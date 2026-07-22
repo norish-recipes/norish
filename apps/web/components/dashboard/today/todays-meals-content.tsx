@@ -1,5 +1,6 @@
 "use client";
 
+import type { TodaySectionVisibility } from "@/hooks/use-today-section-visibility";
 import { useMemo, useState } from "react";
 import { useCalendarContext } from "@/app/(app)/calendar/context";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
@@ -14,7 +15,11 @@ import TodayMealSlotCard from "./today-meal-slot-card";
 import { slotTranslationKeys, TODAY_MEAL_SLOTS } from "./todays-meals-constants";
 import { groupTodayItemsBySlot } from "./todays-meals-helpers";
 
-export default function TodaysMealsContent() {
+type TodaysMealsContentProps = {
+  visibility: TodaySectionVisibility;
+};
+
+export default function TodaysMealsContent({ visibility }: TodaysMealsContentProps) {
   const locale = useLocale();
   const tCalendar = useTranslations("calendar");
   const tSlots = useTranslations("common.slots");
@@ -39,15 +44,22 @@ export default function TodaysMealsContent() {
     [plannedItemsByDate, todayKey]
   );
 
+  const visibleSlots =
+    visibility === "planned"
+      ? TODAY_MEAL_SLOTS.filter((slot) => itemsBySlot[slot].length > 0)
+      : TODAY_MEAL_SLOTS;
+
   const openPlanner = (slot: Slot) => {
     setPlanningSlot(slot);
     setPlanningOpen(true);
   };
 
+  if (!isLoading && visibleSlots.length === 0) return null;
+
   return (
-    <section className="flex shrink-0 flex-col gap-4" aria-labelledby="today-meals-heading">
+    <section aria-labelledby="today-meals-heading" className="flex shrink-0 flex-col gap-4">
       <div className="min-w-0">
-        <h2 id="today-meals-heading" className="text-foreground text-2xl leading-8 font-semibold">
+        <h2 className="text-foreground text-2xl leading-8 font-semibold" id="today-meals-heading">
           {tCalendar("mobile.today")}
         </h2>
         <p className="text-muted mt-1 text-sm">{dateLabel}</p>
@@ -62,13 +74,13 @@ export default function TodaysMealsContent() {
           <TodaysMealsSkeleton />
         ) : (
           <div className="flex gap-3">
-            {TODAY_MEAL_SLOTS.map((slot) => (
+            {visibleSlots.map((slot) => (
               <TodayMealSlotCard
                 key={slot}
                 items={itemsBySlot[slot]}
-                onPlan={openPlanner}
                 slot={slot}
                 slotLabel={tSlots(slotTranslationKeys[slot])}
+                onPlan={openPlanner}
               />
             ))}
           </div>

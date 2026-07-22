@@ -1,27 +1,10 @@
 /**
- * @deprecated Legacy rollback parser helpers kept only for `LEGACY_RECIPE_PARSER_ROLLBACK`.
  * JSON-LD helpers: scan HTML, collect structured data, and return Recipe nodes.
  */
 import * as cheerio from "cheerio";
 
-import { normalizeRecipeFromJson } from "@norish/api/parser/normalize";
 import { parserLogger as log } from "@norish/shared-server/logger";
-import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { parseJsonWithRepair } from "@norish/shared/lib/helpers";
-
-import { extractImageCandidates } from "./parsers";
-
-function hasImage(node: unknown): boolean {
-  if (!node || typeof node !== "object") return false;
-
-  const imageField = (node as { image?: unknown }).image;
-
-  if (typeof imageField === "string") return imageField.trim().length > 0;
-  if (Array.isArray(imageField)) return imageField.length > 0;
-  if (imageField && typeof imageField === "object") return true;
-
-  return false;
-}
 
 function isRecipeNode(node: any): boolean {
   if (!node || typeof node !== "object") return false;
@@ -117,30 +100,4 @@ export function extractRecipeNodesFromJsonLd(htmlContent: string) {
   });
 
   return recipeNodes;
-}
-
-export async function tryExtractRecipeFromJsonLd(
-  url: string,
-  htmlContent: string,
-  recipeId: string
-): Promise<FullRecipeInsertDTO | null> {
-  const nodes = extractRecipeNodesFromJsonLd(htmlContent);
-
-  if (!nodes || nodes.length === 0) return null;
-
-  const firstNode = nodes[0] as Record<string, unknown>;
-
-  if (!hasImage(firstNode)) {
-    const candidates = extractImageCandidates(htmlContent, url);
-
-    if (candidates.length > 0) {
-      firstNode.image = candidates;
-    }
-  }
-
-  const parsed = await normalizeRecipeFromJson(firstNode, recipeId);
-
-  parsed && (parsed.url = url);
-
-  return parsed;
 }

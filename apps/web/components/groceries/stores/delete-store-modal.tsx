@@ -46,65 +46,63 @@ export function DeleteStoreModal({
   };
   const itemCount = groceryCount ?? 0;
   return (
-    <Modal>
-      <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
-        <Modal.Container className="z-[1100]">
-          <Modal.Dialog>
-            <Modal.Header>{t("deleteStore")}</Modal.Header>
-            <Modal.Body className="gap-4">
-              <p className="text-muted text-base">
-                {t("confirmDelete", {
-                  storeName,
-                })}
-              </p>
+    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
+      <Modal.Container className="z-[1100]">
+        <Modal.Dialog>
+          <Modal.Header>{t("deleteStore")}</Modal.Header>
+          <Modal.Body className="gap-4">
+            <p className="text-muted text-base">
+              {t("confirmDelete", {
+                storeName,
+              })}
+            </p>
 
-              {itemCount > 0 && (
-                <div>
-                  <p className="text-danger mb-3 text-sm font-medium">
-                    {itemCount === 1
-                      ? t("hasItems", {
-                          count: itemCount,
-                        })
-                      : t("hasItemsPlural", {
-                          count: itemCount,
-                        })}{" "}
-                    {t("whatToDo")}
-                  </p>
+            {itemCount > 0 && (
+              <div>
+                <p className="text-danger mb-3 text-sm font-medium">
+                  {itemCount === 1
+                    ? t("hasItems", {
+                        count: itemCount,
+                      })
+                    : t("hasItemsPlural", {
+                        count: itemCount,
+                      })}{" "}
+                  {t("whatToDo")}
+                </p>
 
-                  <RadioGroup
-                    className="gap-3"
-                    value={deleteOption}
-                    onValueChange={(v) => setDeleteOption(v as "keep" | "delete")}
-                  >
-                    <Radio value="keep">
-                      <div className="ml-1">
-                        <p className="text-base font-medium">{t("keepItems")}</p>
-                        <p className="text-muted text-xs">{t("keepItemsDescription")}</p>
-                      </div>
-                    </Radio>
-                    <Radio value="delete">
-                      <div className="ml-1">
-                        <p className="text-base font-medium">{t("deleteItems")}</p>
-                        <p className="text-muted text-xs">{t("deleteItemsDescription")}</p>
-                      </div>
-                    </Radio>
-                  </RadioGroup>
-                </div>
-              )}
+                <RadioGroup
+                  className="gap-3"
+                  value={deleteOption}
+                  onValueChange={(v) => setDeleteOption(v as "keep" | "delete")}
+                >
+                  <Radio value="keep">
+                    <div className="ml-1">
+                      <p className="text-base font-medium">{t("keepItems")}</p>
+                      <p className="text-muted text-xs">{t("keepItemsDescription")}</p>
+                    </div>
+                  </Radio>
+                  <Radio value="delete">
+                    <div className="ml-1">
+                      <p className="text-base font-medium">{t("deleteItems")}</p>
+                      <p className="text-muted text-xs">{t("deleteItemsDescription")}</p>
+                    </div>
+                  </Radio>
+                </RadioGroup>
+              </div>
+            )}
 
-              {itemCount === 0 && <p className="text-muted text-sm">{t("noItems")}</p>}
-            </Modal.Body>
-            <Modal.Footer>
-              <Button onPress={onClose} variant="tertiary">
-                {tActions("cancel")}
-              </Button>
-              <Button onPress={handleConfirm} variant="danger">
-                {t("deleteStore")}
-              </Button>
-            </Modal.Footer>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+            {itemCount === 0 && <p className="text-muted text-sm">{t("noItems")}</p>}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onPress={onClose} variant="tertiary">
+              {tActions("cancel")}
+            </Button>
+            <Button onPress={handleConfirm} variant="danger">
+              {t("deleteStore")}
+            </Button>
+          </Modal.Footer>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }

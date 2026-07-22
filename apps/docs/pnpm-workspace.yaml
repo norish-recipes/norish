@@ -1,0 +1,8 @@
+# apps/docs is isolated from the monorepo workspace (mirrors apps/quick-import-extension).
+# Having its own pnpm-workspace.yaml makes this directory its own install root, so the
+# Docusaurus dependency tree never touches the root React 19 catalog. Builds/deploys
+# are fully self-contained.
+onlyBuiltDependencies:
+  - "@swc/core"
+  - core-js
+  - core-js-pure

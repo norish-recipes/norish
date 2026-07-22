@@ -26,33 +26,31 @@ export default function DeleteCalDavModal({ isOpen, onClose, onConfirm }: Delete
     }
   };
   return (
-    <Modal>
-      <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
-        <Modal.Container className="z-[1100]">
-          <Modal.Dialog>
-            <Modal.Header>{t("title")}</Modal.Header>
-            <Modal.Body>
-              <p className="text-muted text-base">{t("confirmMessage")}</p>
-              <div className="mt-4">
-                <SettingsSwitch isSelected={deleteEvents} onValueChange={setDeleteEvents}>
-                  <div>
-                    <p className="text-base font-medium">{t("deleteEventsLabel")}</p>
-                    <p className="text-muted text-xs">{t("deleteEventsDescription")}</p>
-                  </div>
-                </SettingsSwitch>
-              </div>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button onPress={onClose} variant="tertiary">
-                {tActions("cancel")}
-              </Button>
-              <Button onPress={handleConfirm} variant="danger" isPending={deleting}>
-                {t("confirmButton")}
-              </Button>
-            </Modal.Footer>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
+      <Modal.Container className="z-[1100]">
+        <Modal.Dialog>
+          <Modal.Header>{t("title")}</Modal.Header>
+          <Modal.Body>
+            <p className="text-muted text-base">{t("confirmMessage")}</p>
+            <div className="mt-4">
+              <SettingsSwitch isSelected={deleteEvents} onValueChange={setDeleteEvents}>
+                <div>
+                  <p className="text-base font-medium">{t("deleteEventsLabel")}</p>
+                  <p className="text-muted text-xs">{t("deleteEventsDescription")}</p>
+                </div>
+              </SettingsSwitch>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onPress={onClose} variant="tertiary">
+              {tActions("cancel")}
+            </Button>
+            <Button onPress={handleConfirm} variant="danger" isPending={deleting}>
+              {t("confirmButton")}
+            </Button>
+          </Modal.Footer>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }

@@ -1,6 +1,6 @@
 {
   "name": "@norish/api",
-  "version": "0.19.0-beta",
+  "version": "0.20.0-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -35,7 +35,6 @@
     "ffmpeg-static": "^5.3.0",
     "html-entities": "catalog:",
     "ioredis": "catalog:",
-    "microdata-node": "2.0.0",
     "mime": "4.1.0",
     "next": "catalog:",
     "openai": "6.35.0",

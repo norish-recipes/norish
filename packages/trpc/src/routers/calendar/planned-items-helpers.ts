@@ -130,9 +130,11 @@ export async function listPlannedRecipesByRange(
 }
 
 export async function createCalendarItem(ctx: CalendarProcedureContext, input: CreateItemInput) {
-  const { date, slot, itemType, recipeId, title } = input;
+  const { id, date, slot, itemType, recipeId, title } = input;
 
   const newItem = await createPlannedItem({
+    // Client-minted id when supplied; drizzle falls back to its default when undefined (ADR-0003).
+    id,
     userId: ctx.user.id,
     date,
     slot,

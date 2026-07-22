@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -54,6 +55,11 @@ vi.mock("@/hooks/user/use-language-switch", () => ({
 
 vi.mock("@/components/shared/import-recipe-modal", () => ({
   default: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <div>Import recipe modal</div> : null),
+}));
+
+vi.mock("@/components/navbar/offline-status/offline-status-modal", () => ({
+  OfflineStatusModal: ({ isOpen }: { isOpen: boolean }) =>
+    isOpen ? <div>Offline status modal</div> : null,
 }));
 
 vi.mock("@/components/shared/user-avatar", () => ({
@@ -166,9 +172,26 @@ vi.mock("@heroui/react", async () => {
     Popover,
   });
 
+  // Minimal Modal stub: renders children only when open (the sign-out confirm
+  // modal is mounted closed alongside the menu).
+  function ModalBackdrop({ children, isOpen }: { children: React.ReactNode; isOpen?: boolean }) {
+    return isOpen ? <div role="dialog">{children}</div> : null;
+  }
+
+  const Modal = {
+    Backdrop: ModalBackdrop,
+    Container: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    Dialog: ({ children }: { children: React.ReactNode | (() => React.ReactNode) }) => (
+      <div>{typeof children === "function" ? children() : children}</div>
+    ),
+    Header: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    Body: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  };
+
   return {
     Button,
     Dropdown,
+    Modal,
     Label: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
   };
 });
@@ -176,10 +199,10 @@ vi.mock("@heroui/react", async () => {
 describe("NavbarUserMenu open state", () => {
   it("opens only the clicked instance when desktop and mobile menus are both mounted", () => {
     render(
-      <>
+      <QueryClientProvider client={new QueryClient()}>
         <NavbarUserMenu />
         <NavbarUserMenu />
-      </>
+      </QueryClientProvider>
     );
 
     const triggers = screen.getAllByLabelText("Open user menu");

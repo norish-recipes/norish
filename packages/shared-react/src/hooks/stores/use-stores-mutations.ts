@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 
 import type { StoreCreateDto, StoreDeleteInput, StoreDto } from "@norish/shared/contracts";
+import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type {
   CreateStoresHooksOptions,
@@ -9,6 +10,10 @@ import type {
   StoresQueryResult,
   StoreUpdateDraft,
 } from "./types";
+import {
+  invalidateUnlessPreserved,
+  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
+} from "../optimistic-updates";
 
 type CreateUseStoresMutationsOptions = CreateStoresHooksOptions & {
   useStoresQuery: () => StoresQueryResult;
@@ -25,37 +30,54 @@ export function createUseStoresMutations({
     const getStoreVersion = (storeId: string): number =>
       stores.find((store) => store.id === storeId)?.version ?? 1;
 
+    // Keep an optimistic update when its mutation was Queued for Replay.
+    const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate);
+
     const createMutation = useMutation(trpc.stores.create.mutationOptions());
     const updateMutation = useMutation(trpc.stores.update.mutationOptions());
     const deleteMutation = useMutation(trpc.stores.delete.mutationOptions());
     const reorderMutation = useMutation(trpc.stores.reorder.mutationOptions());
 
     const createStore = (data: StoreCreateDto): Promise<string> => {
+      // Client-minted id, honoured on insert so a queued offline create stays
+      // addressable by later mutations (ADR-0003).
+      const payload = { ...data, id: createClientId() };
+
+      const insertOptimistic = (storeId: string) => {
+        const newStore: StoreDto = {
+          id: storeId,
+          userId: "",
+          name: data.name,
+          color: data.color ?? "primary",
+          icon: data.icon ?? "ShoppingBagIcon",
+          sortOrder: stores.length,
+          version: 1,
+        };
+
+        setStoresData((prev) => {
+          if (!prev) return [newStore];
+          if (prev.some((s) => s.id === storeId)) return prev;
+
+          return [...prev, newStore];
+        });
+      };
+
       return new Promise((resolve, reject) => {
-        createMutation.mutate(data, {
+        createMutation.mutate(payload, {
           onSuccess: (storeId) => {
-            const newStore: StoreDto = {
-              id: storeId,
-              userId: "",
-              name: data.name,
-              color: data.color ?? "primary",
-              icon: data.icon ?? "ShoppingBagIcon",
-              sortOrder: stores.length,
-              version: 1,
-            };
-
-            setStoresData((prev) => {
-              if (!prev) return [newStore];
-              const exists = prev.some((s) => s.id === storeId);
-
-              if (exists) return prev;
-
-              return [...prev, newStore];
-            });
-
+            insertOptimistic(storeId);
             resolve(storeId);
           },
           onError: (error) => {
+            if (preserveOptimisticUpdate(error)) {
+              // Queued: insert the row with the client-minted id the server will
+              // honour on Replay (ADR-0003); a tentative success, not a failure.
+              insertOptimistic(payload.id);
+              resolve(payload.id);
+
+              return;
+            }
+
             invalidate();
             reject(error);
           },
@@ -73,7 +95,7 @@ export function createUseStoresMutations({
       updateMutation.mutate(
         { ...data, version: getStoreVersion(data.id) },
         {
-          onError: () => invalidate(),
+          onError: invalidateUnlessQueued,
         }
       );
     };
@@ -120,7 +142,7 @@ export function createUseStoresMutations({
           stores: storeIds.map((id) => ({ id, version: getStoreVersion(id) })),
         },
         {
-          onError: () => invalidate(),
+          onError: invalidateUnlessQueued,
         }
       );
     };

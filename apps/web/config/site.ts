@@ -24,6 +24,6 @@ export const siteConfig = {
     },
   ],
   links: {
-    github: "https://github.com/mikevanes/norish",
+    github: "https://github.com/norish-recipes/norish",
   },
 };

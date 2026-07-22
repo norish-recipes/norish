@@ -29,7 +29,7 @@ export const RecipeImageInputSchema = z.object({
 });
 
 export const DeleteRecipeImageInputSchema = z.object({
-  imageId: z.string().uuid(),
+  imageId: z.uuid(),
   version: z.number().int().positive(),
 });
 

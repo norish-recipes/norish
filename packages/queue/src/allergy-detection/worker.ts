@@ -20,6 +20,7 @@ import { emitByPolicy } from "@norish/shared-server/realtime/policy";
 import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { reportStep } from "../job-steps";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:allergy-detection");
@@ -90,6 +91,7 @@ async function processAllergyDetectionJob(job: Job<AllergyDetectionJobData>): Pr
     ingredients: recipe.recipeIngredients.map((ri) => ri.ingredientName),
   };
 
+  await reportStep(job, "ai-request");
   const result = await detectAllergiesInRecipe(recipeForDetection, allergiesToDetect);
 
   if (!result.success) {
@@ -111,6 +113,7 @@ async function processAllergyDetectionJob(job: Job<AllergyDetectionJobData>): Pr
   }
 
   // Merge detected allergens with existing tags (preserves manually added tags)
+  await reportStep(job, "saving");
   const { newTags, allTags } = await mergeTagsIntoRecipe(recipeId, detectedAllergens);
 
   log.info(

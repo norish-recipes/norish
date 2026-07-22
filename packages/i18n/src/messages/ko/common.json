@@ -92,11 +92,12 @@
   },
   "connection": {
     "connecting": "Norish에 연결 중...",
-    "syncing": "동기화 중입니다. 잠시 기다려 주세요...",
     "checkInternet": "인터넷 연결을 확인해주세요",
-    "gettingUpdates": "최신 업데이트를 받는 동안 잠시만 기다려 주세요.",
     "offlineBanner": "오프라인 상태입니다 캐시된 데이터를 표시합니다",
-    "serverUnreachableBanner": "Norish 서버에 연결할 수 없습니다 캐시된 데이터를 표시합니다"
+    "serverUnreachableBanner": "Norish 서버에 연결할 수 없습니다 캐시된 데이터를 표시합니다",
+    "live": "연결됨",
+    "offline": "오프라인",
+    "openDetails": "Connection details"
   },
   "language": {
     "title": "언어"
@@ -213,5 +214,66 @@
     "notification_body": "{label}이(가) 완료되었습니다!",
     "notifications_disabled": "알림이 비활성화되었습니다.",
     "notifications_disabled_hint": "타이머가 백그라운드에서 완료될 때 알림을 받으려면 브라우저 설정에서 알림을 활성화하세요."
+  },
+  "offlineStatus": {
+    "title": "Connection & offline",
+    "connection": {
+      "heading": "Connection",
+      "live": "Live",
+      "offline": "Offline",
+      "forced": "Offline (forced)",
+      "liveDescription": "Connected to Norish. Changes sync as you make them.",
+      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
+      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
+      "devBadge": "dev"
+    },
+    "cache": {
+      "heading": "Offline cache",
+      "recipes": "Recipes",
+      "groceries": "Groceries",
+      "stores": "Stores",
+      "planned": "This week",
+      "dataAge": "Data from {when}",
+      "dataAgeUnknown": "Not warmed yet",
+      "wipe": "Clear cached data",
+      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
+      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
+      "wipeConfirm": "Clear",
+      "wipeCancel": "Keep"
+    },
+    "outbox": {
+      "heading": "Queued changes",
+      "empty": "Nothing queued — everything's synced.",
+      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
+      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
+      "syncNow": "Sync now",
+      "retryAll": "Retry all",
+      "discardAll": "Discard all",
+      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
+      "discardConfirm": "Discard",
+      "discardCancel": "Keep",
+      "status": {
+        "pending": "Syncing",
+        "parked": "Needs attention",
+        "conflicted": "Conflict"
+      }
+    },
+    "devToggle": {
+      "heading": "Developer",
+      "force": "Force offline",
+      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
+      "on": "On",
+      "off": "Off"
+    }
+  },
+  "offlineFallback": {
+    "title": "오프라인 상태입니다",
+    "body": "이 페이지는 오프라인 캐시에 없습니다. 최근에 방문한 페이지는 계속 사용할 수 있습니다.",
+    "retry": "다시 시도",
+    "home": "Norish 열기"
+  },
+  "queuedOffline": {
+    "title": "오프라인 상태입니다",
+    "description": "대기열에 추가되었습니다. 다시 온라인이 되면 Norish가 자동으로 완료합니다."
   }
 }

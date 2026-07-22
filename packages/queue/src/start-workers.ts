@@ -40,7 +40,7 @@ export async function startWorkers(): Promise<void> {
   log.info("Starting all BullMQ workers...");
 
   // Initialize all queues first
-  initializeQueues();
+  await initializeQueues();
 
   // Lazy import workers (start on-demand when jobs are added)
   // All lazy workers must be awaited to ensure Redis connections are ready

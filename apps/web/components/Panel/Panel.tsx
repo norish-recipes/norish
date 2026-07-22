@@ -9,7 +9,9 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { Sheet } from "@heroui-pro/react";
+import { CloseButton } from "@heroui/react";
+import { twMerge } from "tailwind-merge";
+import { Drawer } from "vaul";
 
 export interface PanelProps {
   className?: string;
@@ -46,6 +48,12 @@ type PanelTriggerProps = {
 };
 
 const PANEL_MAX_HEIGHT_CLASS = "max-h-[80dvh]";
+
+const BACKDROP_VARIANT_CLASSES: Record<NonNullable<PanelProps["backdropVariant"]>, string> = {
+  blur: "bg-(--background)/1 backdrop-blur-sm",
+  opaque: "bg-(--backdrop)",
+  transparent: "bg-transparent",
+};
 
 function getClassName(element: ReactElement<PanelSectionProps>) {
   return element.props.className ?? "";
@@ -120,14 +128,14 @@ const PanelRoot: React.FC<PanelProps> = ({
     };
   }, [children]);
   const hasFooter = footerChildren.length > 0;
-  const contentClasses = ["mx-auto max-w-[420px]", PANEL_MAX_HEIGHT_CLASS, contentClassName]
-    .filter(Boolean)
-    .join(" ");
-  const dialogClasses = ["min-h-0", PANEL_MAX_HEIGHT_CLASS, panelClassName]
-    .filter(Boolean)
-    .join(" ");
-  const bodyClasses = ["flex min-h-0 flex-1 flex-col", bodyClassName].filter(Boolean).join(" ");
-  const footerClasses = ["shrink-0", footerClassName].filter(Boolean).join(" ");
+  const contentClasses = twMerge(
+    "mx-auto w-full max-w-[420px]",
+    PANEL_MAX_HEIGHT_CLASS,
+    contentClassName
+  );
+  const dialogClasses = twMerge("min-h-0", PANEL_MAX_HEIGHT_CLASS, panelClassName);
+  const bodyClasses = twMerge("flex min-h-0 flex-1 flex-col", bodyClassName);
+  const footerClasses = twMerge("shrink-0", footerClassName);
 
   const panelTrigger = trigger as ReactElement<PanelTriggerProps> | undefined;
   const triggerElement =
@@ -142,31 +150,81 @@ const PanelRoot: React.FC<PanelProps> = ({
         toggle();
       },
     });
-  const Root = nested ? Sheet.NestedRoot : Sheet.Root;
+  const Root = nested ? Drawer.NestedRoot : Drawer.Root;
 
   return (
     <div data-panel className={className}>
       {trigger && <span className="inline-flex">{triggerElement}</span>}
 
       <PanelContext.Provider value={{ open, close, toggle }}>
-        <Root isOpen={open} placement="bottom" onOpenChange={setOpen}>
-          <Sheet.Backdrop className="z-[1000]" variant={backdropVariant}>
-            <Sheet.Content className={contentClasses}>
-              <Sheet.Dialog aria-label={title || "Panel"} className={dialogClasses}>
-                <Sheet.Handle className="relative z-10" />
-                <Sheet.CloseTrigger aria-label="Close panel" className="z-30" />
-
-                <Sheet.Header>
-                  <Sheet.Heading>{title}</Sheet.Heading>
-                </Sheet.Header>
-
-                <Sheet.Body className={bodyClasses}>{bodyChildren}</Sheet.Body>
-                {hasFooter && (
-                  <Sheet.Footer className={footerClasses}>{footerChildren}</Sheet.Footer>
+        {/* repositionInputs resizes the sheet and force-scrolls the focused field to
+            the top of its scroll container on iOS, which throws a scrolled panel body
+            out of view; Radix's RemoveScroll still locks the page behind the sheet. */}
+        <Root handleOnly open={open} repositionInputs={false} onOpenChange={setOpen}>
+          <Drawer.Portal>
+            <Drawer.Overlay
+              className={twMerge(
+                "fixed inset-0 z-[1000]",
+                BACKDROP_VARIANT_CLASSES[backdropVariant]
+              )}
+              data-variant={backdropVariant}
+            />
+            <Drawer.Content
+              aria-describedby={undefined}
+              aria-label={title || "Panel"}
+              className={twMerge(
+                "fixed inset-x-0 bottom-0 z-[1001] flex flex-col outline-none",
+                contentClasses
+              )}
+            >
+              <div
+                className={twMerge(
+                  "relative flex min-h-0 flex-col overflow-hidden rounded-t-[calc(var(--radius)*2)] bg-(--overlay) text-(--overlay-foreground) shadow-(--overlay-shadow)",
+                  dialogClasses
                 )}
-              </Sheet.Dialog>
-            </Sheet.Content>
-          </Sheet.Backdrop>
+                data-slot="panel-dialog"
+              >
+                <div
+                  className="relative z-10 flex shrink-0 items-center justify-center py-3"
+                  data-slot="panel-handle"
+                >
+                  <Drawer.Handle className="cursor-grab !bg-(--default) active:cursor-grabbing" />
+                </div>
+                <CloseButton
+                  aria-label="Close panel"
+                  className="absolute top-3 right-3 z-30"
+                  onPress={close}
+                />
+
+                <header className="flex shrink-0 flex-col gap-1 px-5 pb-2" data-slot="panel-header">
+                  <Drawer.Title
+                    className={title ? "text-lg font-semibold" : "sr-only"}
+                    data-slot="panel-heading"
+                  >
+                    {title || "Panel"}
+                  </Drawer.Title>
+                </header>
+
+                <div
+                  className={twMerge("overflow-y-auto overscroll-contain px-5 py-2", bodyClasses)}
+                  data-slot="panel-body"
+                >
+                  {bodyChildren}
+                </div>
+                {hasFooter && (
+                  <footer
+                    className={twMerge(
+                      "flex items-center justify-end gap-2 px-5 pt-2 pb-4",
+                      footerClasses
+                    )}
+                    data-slot="panel-footer"
+                  >
+                    {footerChildren}
+                  </footer>
+                )}
+              </div>
+            </Drawer.Content>
+          </Drawer.Portal>
         </Root>
       </PanelContext.Provider>
     </div>

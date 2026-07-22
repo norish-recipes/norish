@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
 import ImageLightbox from "@/components/shared/image-lightbox";
-import { Carousel } from "@heroui-pro/react";
+import { Carousel } from "@/components/ui/carousel";
 import { Button } from "@heroui/react";
 
 import type { ResolvedCookingModeStep } from "./cooking-mode-steps";

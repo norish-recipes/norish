@@ -5,7 +5,6 @@ env:
   DATABASE_URL: postgres://ci-user:ci-password@localhost:5432/ci-db
   MASTER_KEY: test-master-key
   SKIP_ENV_VALIDATION: "1"
-  HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
 
 on:
   push:
@@ -29,7 +28,7 @@ jobs:
       image_tags: ${{ steps.image_tags.outputs.value }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 

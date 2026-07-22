@@ -10,6 +10,11 @@ export type GrocerySubscriptionEvents = {
   recurringUpdated: { recurringGrocery: RecurringGroceryDto; grocery: GroceryDto };
   recurringDeleted: { recurringGroceryId: string };
   failed: { reason: string };
+  /**
+   * A version-guarded write was dropped because the row changed elsewhere.
+   * Clients should silently refetch so optimistic state converges to the DB.
+   */
+  stale: { reason: string };
 };
 
 declare global {

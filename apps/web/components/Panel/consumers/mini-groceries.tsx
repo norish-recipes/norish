@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import Panel from "@/components/Panel/Panel";
 import {
   ActionButton,
@@ -9,9 +8,11 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import { useGroceriesMutations } from "@/hooks/groceries";
-import { useRecipeIngredients } from "@/hooks/recipes/use-recipe-ingredients";
+import {
+  useLinkedRecipeIngredients,
+  useRecipeIngredients,
+} from "@/hooks/recipes/use-recipe-ingredients";
 import { Checkbox, Input, Separator, toast } from "@heroui/react";
-import { useQueries } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { formatServings, useServingsScaler } from "@norish/shared-react/hooks";
@@ -107,6 +108,12 @@ function formatEditableIngredient(item: GroceryIngredient) {
   return [item.amount, item.unit, item.ingredientName].filter(Boolean).join(" ");
 }
 
+/* React Aria checkboxes drop the onClick prop, so stopPropagation on the
+   Checkbox never runs; detect checkbox events by containment instead. */
+function isCheckboxEvent(event: React.SyntheticEvent) {
+  return event.target instanceof Element && event.target.closest('[data-slot="checkbox"]') !== null;
+}
+
 export default function MiniGroceries({
   open,
   recipeId,
@@ -116,27 +123,30 @@ export default function MiniGroceries({
 }: MiniGroceriesProps) {
   const t = useTranslations("groceries.panel");
   const tActions = useTranslations("common.actions");
-  const trpc = useTRPC();
   const { createGroceriesFromData } = useGroceriesMutations();
-  const { ingredients: rawIngredients, isLoading } = useRecipeIngredients(open ? recipeId : null);
+  const {
+    ingredients: rawIngredients,
+    systemUsed,
+    isLoading,
+  } = useRecipeIngredients(open ? recipeId : null);
 
   const linkedRecipeIds = useMemo(
     () => extractLinkedRecipeIds(rawIngredients as GroceryIngredient[]),
     [rawIngredients]
   );
-  const linkedRecipeQueries = useQueries({
-    queries: linkedRecipeIds.map((id) => trpc.recipes.get.queryOptions({ id })),
-  });
+  const { ingredients: linkedIngredients } = useLinkedRecipeIngredients(
+    linkedRecipeIds,
+    systemUsed
+  );
 
-  const ingredients = useMemo(() => {
-    const linkedIngredients = linkedRecipeQueries.flatMap((query) =>
-      query.data?.recipeIngredients ? (query.data.recipeIngredients as GroceryIngredient[]) : []
-    );
-
-    return [...(rawIngredients as GroceryIngredient[]), ...linkedIngredients].filter(
-      isGroceryIngredient
-    );
-  }, [rawIngredients, linkedRecipeQueries]);
+  const ingredients = useMemo(
+    () =>
+      [
+        ...(rawIngredients as GroceryIngredient[]),
+        ...(linkedIngredients as GroceryIngredient[]),
+      ].filter(isGroceryIngredient),
+    [rawIngredients, linkedIngredients]
+  );
   const { servings, scaledIngredients, incrementServings, decrementServings } = useServingsScaler(
     ingredients,
     originalServings,
@@ -279,9 +289,9 @@ export default function MiniGroceries({
                       className="flex cursor-pointer items-start px-2 py-2"
                       role="button"
                       tabIndex={0}
-                      onClick={() => !isEditing && handleEditStart(item.id)}
+                      onClick={(e) => !isEditing && !isCheckboxEvent(e) && handleEditStart(item.id)}
                       onKeyDown={(e) => {
-                        if ((e.key === "Enter" || e.key === " ") && !isEditing) {
+                        if ((e.key === "Enter" || e.key === " ") && !isEditing && !isCheckboxEvent(e)) {
                           e.preventDefault();
                           handleEditStart(item.id);
                         }
@@ -291,7 +301,6 @@ export default function MiniGroceries({
                         aria-label={item.ingredientName}
                         className="mt-[-4px] [&_[data-slot='checkbox-default-indicator--checkmark']]:size-3"
                         isSelected={selectedIds.includes(item.id)}
-                        onClick={(event) => event.stopPropagation()}
                         onChange={() => toggleSelect(item.id)}
                       >
                         <Checkbox.Control className="data-[selected=true]:border-accent data-[selected=true]:bg-accent size-5 rounded-full before:rounded-full">

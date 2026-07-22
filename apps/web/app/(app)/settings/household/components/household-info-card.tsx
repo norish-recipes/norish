@@ -56,41 +56,35 @@ export default function HouseholdInfoCard() {
       </Card>
 
       {/* Leave Household Modal */}
-      <Modal>
-        <Modal.Backdrop
-          className="z-[1099]"
-          isOpen={showLeaveModal}
-          onOpenChange={setShowLeaveModal}
-        >
-          <Modal.Container className="z-[1100]">
-            <Modal.Dialog>
-              {({ close: onClose }) => (
-                <>
-                  <Modal.Header>{t("leaveModal.title")}</Modal.Header>
-                  <Modal.Body>
-                    <p>
-                      {t("leaveModal.confirmMessage", {
-                        name: household.name,
-                      })}
-                    </p>
-                    {isAdmin && otherMembers.length > 0 && (
-                      <p className="text-warning mt-2">{t("leaveModal.adminWarning")}</p>
-                    )}
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button onPress={onClose} variant="tertiary">
-                      {tActions("cancel")}
-                    </Button>
-                    <Button onPress={handleLeaveHousehold} variant="danger">
-                      {t("leaveModal.confirmButton")}
-                    </Button>
-                  </Modal.Footer>
-                </>
-              )}
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+      <Modal.Backdrop className="z-[1099]" isOpen={showLeaveModal} onOpenChange={setShowLeaveModal}>
+        <Modal.Container className="z-[1100]">
+          <Modal.Dialog>
+            {({ close: onClose }) => (
+              <>
+                <Modal.Header>{t("leaveModal.title")}</Modal.Header>
+                <Modal.Body>
+                  <p>
+                    {t("leaveModal.confirmMessage", {
+                      name: household.name,
+                    })}
+                  </p>
+                  {isAdmin && otherMembers.length > 0 && (
+                    <p className="text-warning mt-2">{t("leaveModal.adminWarning")}</p>
+                  )}
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button onPress={onClose} variant="tertiary">
+                    {tActions("cancel")}
+                  </Button>
+                  <Button onPress={handleLeaveHousehold} variant="danger">
+                    {t("leaveModal.confirmButton")}
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </>
   );
 }

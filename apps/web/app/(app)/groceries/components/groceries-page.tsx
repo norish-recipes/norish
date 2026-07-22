@@ -35,7 +35,6 @@ export function GroceriesPage() {
     updateGrocery,
     updateRecurringGrocery,
     deleteRecurringGrocery,
-    assignGroceryToStore,
     reorderGroceriesInStore,
     getRecurringGroceryForGrocery,
     markAllDoneInStore,
@@ -71,23 +70,33 @@ export function GroceriesPage() {
   const editingRecurringGrocery = editingGrocery
     ? getRecurringGroceryForGrocery(editingGrocery.id)
     : null;
-  const handleEditSave = (itemName: string, pattern: RecurrencePattern | null) => {
+  const handleEditSave = (
+    itemName: string,
+    pattern: RecurrencePattern | null,
+    storeId?: string | null
+  ) => {
     if (!editingGrocery) return;
     if (editingRecurringGrocery) {
-      // Already recurring - update the recurring grocery
-      updateRecurringGrocery(editingRecurringGrocery.id, editingGrocery.id, itemName, pattern);
+      // Already recurring - update the recurring grocery (store change included)
+      updateRecurringGrocery(
+        editingRecurringGrocery.id,
+        editingGrocery.id,
+        itemName,
+        pattern,
+        storeId
+      );
     } else if (pattern) {
       // Convert regular grocery to recurring without racing an update against the delete.
-      createRecurringGrocery(itemName, pattern, editingGrocery.storeId);
+      createRecurringGrocery(
+        itemName,
+        pattern,
+        storeId !== undefined ? storeId : editingGrocery.storeId
+      );
       deleteGroceries([editingGrocery.id]);
     } else {
       // Simple update
-      updateGrocery(editingGrocery.id, itemName);
+      updateGrocery(editingGrocery.id, itemName, storeId);
     }
-  };
-  const handleEditAssignToStore = (storeId: string | null, savePreference?: boolean) => {
-    if (!editingGrocery) return;
-    assignGroceryToStore(editingGrocery.id, storeId, savePreference);
   };
   const handleEditDelete = () => {
     if (!editingGrocery) return;
@@ -242,7 +251,6 @@ export function GroceriesPage() {
           open={!!editingGrocery}
           recurringGrocery={editingRecurringGrocery}
           stores={stores}
-          onAssignToStore={handleEditAssignToStore}
           onDelete={handleEditDelete}
           onOpenChange={(open) => !open && setEditingGrocery(null)}
           onSave={handleEditSave}

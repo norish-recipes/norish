@@ -266,7 +266,7 @@ const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, i
 const updateCategories = authedProcedure
   .input(
     z.object({
-      recipeId: z.string().uuid(),
+      recipeId: z.uuid(),
       version: z.number().int().positive(),
       categories: z.array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"])),
     })
@@ -380,14 +380,6 @@ export const importFromUrlProcedure = authedProcedure
 
     return recipeId;
   });
-
-const reserveId = authedProcedure.query(() => {
-  const recipeId = randomUUID();
-
-  log.debug({ recipeId }, "Reserved recipe ID for step image uploads");
-
-  return { recipeId };
-});
 
 const convertMeasurements = authedProcedure
   .input(RecipeConvertInputSchema)
@@ -944,7 +936,6 @@ export const recipesProcedures = router({
   triggerAutoTag,
   triggerAutoCategorize,
   triggerAllergyDetection,
-  reserveId,
   autocomplete,
   updateCategories,
   getRandomRecipe,

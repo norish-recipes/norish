@@ -197,44 +197,39 @@ export default function ShareLinksTableCard({
           )}
         </Card.Content>
       </Card>
-
-      <Modal>
-        <Modal.Backdrop isOpen={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
-          <Modal.Container>
-            <Modal.Dialog>
-              {({ close: onClose }) => (
-                <>
-                  <Modal.Header>
-                    {confirmAction ? t(`${confirmAction.type}Modal.title`) : ""}
-                  </Modal.Header>
-                  <Modal.Body>
-                    <p>
-                      {confirmAction
-                        ? t(`${confirmAction.type}Modal.message`, {
-                            recipeName: confirmAction.share.recipeName,
-                          })
-                        : ""}
-                    </p>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button onPress={onClose} variant="tertiary">
-                      {tActions("cancel")}
-                    </Button>
-                    <Button
-                      onPress={handleConfirm}
-                      isPending={isRevoking || isReactivating || isDeleting}
-                    >
-                      {confirmAction
-                        ? t(`${confirmAction.type}Modal.confirm`)
-                        : tActions("confirm")}
-                    </Button>
-                  </Modal.Footer>
-                </>
-              )}
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+      <Modal.Backdrop isOpen={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
+        <Modal.Container>
+          <Modal.Dialog>
+            {({ close: onClose }) => (
+              <>
+                <Modal.Header>
+                  {confirmAction ? t(`${confirmAction.type}Modal.title`) : ""}
+                </Modal.Header>
+                <Modal.Body>
+                  <p>
+                    {confirmAction
+                      ? t(`${confirmAction.type}Modal.message`, {
+                          recipeName: confirmAction.share.recipeName,
+                        })
+                      : ""}
+                  </p>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button onPress={onClose} variant="tertiary">
+                    {tActions("cancel")}
+                  </Button>
+                  <Button
+                    onPress={handleConfirm}
+                    isPending={isRevoking || isReactivating || isDeleting}
+                  >
+                    {confirmAction ? t(`${confirmAction.type}Modal.confirm`) : tActions("confirm")}
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </>
   );
 }

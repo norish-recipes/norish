@@ -66,23 +66,23 @@ export const HouseholdAdminSettingsSchema = HouseholdSelectBaseSchema.omit({
 });
 
 export const LeaveHouseholdInputSchema = z.object({
-  householdId: z.string().uuid(),
+  householdId: z.uuid(),
   version: z.number().int().positive(),
 });
 
 export const KickHouseholdUserInputSchema = z.object({
-  householdId: z.string().uuid(),
+  householdId: z.uuid(),
   userId: z.string(),
   version: z.number().int().positive(),
 });
 
 export const RegenerateHouseholdJoinCodeInputSchema = z.object({
-  householdId: z.string().uuid(),
+  householdId: z.uuid(),
   version: z.number().int().positive(),
 });
 
 export const TransferHouseholdAdminInputSchema = z.object({
-  householdId: z.string().uuid(),
+  householdId: z.uuid(),
   newAdminId: z.string(),
   version: z.number().int().positive(),
 });

@@ -1,0 +1,10 @@
+# Next.js
+/.next/
+/out/
+
+# Build tooling
+/.turbo
+.cache
+
+# Generated
+next-env.d.ts

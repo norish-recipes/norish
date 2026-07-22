@@ -159,7 +159,7 @@ export default function TimerKeywordsEditor({
         <TextArea
           variant="secondary"
           className="font-mono text-sm"
-          minRows={2}
+          rows={2}
           placeholder={t("hoursPlaceholder")}
         />
         <Description>{t("hoursHelp")}</Description>
@@ -175,7 +175,7 @@ export default function TimerKeywordsEditor({
         <TextArea
           variant="secondary"
           className="font-mono text-sm"
-          minRows={2}
+          rows={2}
           placeholder={t("minutesPlaceholder")}
         />
         <Description>{t("minutesHelp")}</Description>
@@ -191,7 +191,7 @@ export default function TimerKeywordsEditor({
         <TextArea
           variant="secondary"
           className="font-mono text-sm"
-          minRows={2}
+          rows={2}
           placeholder={t("secondsPlaceholder")}
         />
         <Description>{t("secondsHelp")}</Description>

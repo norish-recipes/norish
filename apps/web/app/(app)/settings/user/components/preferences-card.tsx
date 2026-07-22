@@ -1,9 +1,11 @@
 "use client";
 
+import type { TodaySectionVisibility } from "@/hooks/use-today-section-visibility";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import SettingsSwitch from "@/app/(app)/settings/components/settings-switch";
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@/hooks/config";
+import { useTodaySectionVisibility } from "@/hooks/use-today-section-visibility";
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
 import { Card, Label, ListBox, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -24,6 +26,9 @@ export default function PreferencesCard() {
   const { globalEnabled } = useTimersEnabledQuery();
   const { enabledLocales, defaultLocale } = useLocaleConfigQuery();
   const router = useRouter();
+  const [todaySectionVisibility, setTodaySectionVisibility] = useTodaySectionVisibility();
+
+  const todaySectionOptions: TodaySectionVisibility[] = ["always", "planned", "hidden"];
 
   const effective = getTimersEnabledPreference(user);
 
@@ -97,12 +102,12 @@ export default function PreferencesCard() {
           </div>
 
           <Select
-            variant="secondary"
             aria-label={t("language.title")}
             className="max-w-[200px]"
             isDisabled={isUpdatingPreferences || enabledLocales.length === 0}
             placeholder={t("language.title")}
             value={selectedLocale ?? null}
+            variant="secondary"
             onChange={(selected) => {
               if (typeof selected === "string") handleLocaleChange(selected);
             }}
@@ -181,6 +186,43 @@ export default function PreferencesCard() {
               onValueChange={(v) => handleFavoritesToggle(v)}
             />
           </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-foreground font-medium">{t("todaySection.title")}</div>
+            <div className="text-muted text-sm">{t("todaySection.description")}</div>
+          </div>
+
+          <Select
+            aria-label={t("todaySection.title")}
+            className="max-w-[200px]"
+            value={todaySectionVisibility}
+            variant="secondary"
+            onChange={(selected) => {
+              if (selected === "always" || selected === "planned" || selected === "hidden") {
+                setTodaySectionVisibility(selected);
+              }
+            }}
+          >
+            <Label className="sr-only">{t("todaySection.title")}</Label>
+            <Select.Trigger>
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {todaySectionOptions.map((option) => (
+                  <ListBox.Item
+                    key={option}
+                    id={option}
+                    textValue={t(`todaySection.options.${option}`)}
+                  >
+                    {t(`todaySection.options.${option}`)}
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
         </div>
       </Card.Content>
     </Card>

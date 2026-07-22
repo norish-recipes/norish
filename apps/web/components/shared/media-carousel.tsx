@@ -5,7 +5,7 @@ import NextImage from "next/image";
 import { FallbackPlaceholder, useImageErrors } from "@/components/shared/fallback-image";
 import ImageLightbox from "@/components/shared/image-lightbox";
 import VideoPlayer from "@/components/shared/video-player";
-import { Carousel, useCarousel } from "@heroui-pro/react";
+import { Carousel, useCarousel } from "@/components/ui/carousel";
 import { useTranslations } from "next-intl";
 
 export interface MediaItem {

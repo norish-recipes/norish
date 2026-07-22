@@ -9,6 +9,7 @@ import { checkRecurringGroceries } from "@norish/queue/scheduler/recurring-groce
 import { createLogger } from "@norish/shared-server/logger";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { reportStep } from "../job-steps";
 
 const log = createLogger("worker:scheduled-tasks");
 
@@ -38,6 +39,7 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
   const { taskType } = job.data;
 
   log.info({ jobId: job.id, taskType }, "Processing scheduled task");
+  await reportStep(job, `running:${taskType}`);
 
   switch (taskType) {
     case "recurring-grocery-check": {

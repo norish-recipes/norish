@@ -3,10 +3,8 @@ import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import { isVideoUrl } from "@norish/api/helpers";
 import { fetchViaPlaywright } from "@norish/api/parser/fetch";
 import { extractRecipeNodesFromJsonLd } from "@norish/api/parser/jsonld";
-import { tryLegacyStructuredRecipeParsing } from "@norish/api/parser/legacy";
 import { adaptRecipeScrapersResponse } from "@norish/api/parser/python/adapter";
 import { callRecipeScrapersParser } from "@norish/api/parser/python/client";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   getContentIndicators,
   isAIEnabled,
@@ -16,10 +14,6 @@ import {
 import { parserLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { hasRecipeName } from "@norish/shared/lib/helpers";
-
-const parserEnvConfig = SERVER_CONFIG as typeof SERVER_CONFIG & {
-  LEGACY_RECIPE_PARSER_ROLLBACK: boolean;
-};
 
 export interface ParseRecipeResult {
   recipe: FullRecipeInsertDTO;
@@ -112,7 +106,7 @@ async function extractWithAIPreference(
   return tryExtractWithAI(html, recipeId, url, allergies, requireAI, html);
 }
 
-async function tryPythonStructuredParser(
+async function tryStructuredParser(
   url: string,
   html: string,
   recipeId: string
@@ -154,28 +148,6 @@ async function tryPythonStructuredParser(
       },
     };
   }
-}
-
-async function tryStructuredParser(
-  url: string,
-  html: string,
-  recipeId: string
-): Promise<StructuredParseOutcome> {
-  if (parserEnvConfig.LEGACY_RECIPE_PARSER_ROLLBACK) {
-    const legacy = await tryLegacyStructuredRecipeParsing(url, html, recipeId);
-
-    return legacy
-      ? { recipe: legacy, failure: null }
-      : {
-          recipe: null,
-          failure: {
-            code: "LegacyParserNoRecipe",
-            message: "Legacy structured parser did not return a valid recipe",
-          },
-        };
-  }
-
-  return tryPythonStructuredParser(url, html, recipeId);
 }
 
 /**
@@ -242,7 +214,6 @@ export async function parseRecipeFromUrl(
       {
         url,
         failureCode: structured.failure?.code,
-        legacyRollback: parserEnvConfig.LEGACY_RECIPE_PARSER_ROLLBACK,
       },
       "Structured parsing failed, attempting AI fallback"
     );

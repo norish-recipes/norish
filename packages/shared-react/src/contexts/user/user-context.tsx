@@ -5,7 +5,11 @@ import type { User } from "@norish/shared/contracts";
 export type UserContextValue = {
   user: User | null;
   isLoading: boolean;
-  signOut: () => void;
+  /**
+   * Complete an explicit sign-out. `discardQueue` is set only after the user
+   * confirmed discarding unsynced offline changes (ADR-0009, web).
+   */
+  signOut: (options?: { discardQueue?: boolean }) => void | Promise<void>;
 };
 
 type CreateUserContextOptions = {

@@ -1,15 +1,15 @@
 "use client";
 
-import type { DropZoneAreaProps } from "@heroui-pro/react";
+import type { DropZoneAreaProps } from "@/components/ui/drop-zone";
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { DropZone } from "@/components/ui/drop-zone";
 import { useUploadLimitsQuery } from "@/hooks/config";
 import { useRecipesMutations } from "@/hooks/recipes";
 import { useClipboardImagePaste } from "@/hooks/use-clipboard-image-paste";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { PhotoIcon, SparklesIcon, XMarkIcon } from "@heroicons/react/16/solid";
-import { DropZone } from "@heroui-pro/react";
 import { Button, Kbd, Modal, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -195,83 +195,81 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
   );
 
   return (
-    <Modal>
-      <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={handleOpenChange}>
-        <Modal.Container className="z-[1100]" size="lg">
-          <Modal.Dialog>
-            {() => (
-              <>
-                <Modal.CloseTrigger />
-                <Modal.Header className="flex flex-col gap-1">{t("title")}</Modal.Header>
-                <Modal.Body>
-                  <DropZone className="w-full">
-                    <DropZone.Area getDropOperation={getDropOperation} onDrop={handleDrop}>
-                      <DropZone.Icon>
-                        <PhotoIcon />
-                      </DropZone.Icon>
-                      <DropZone.Label>{t("dropzone")}</DropZone.Label>
-                      <DropZone.Description>{t("formats")}</DropZone.Description>
-                      <DropZone.Description className="flex items-center justify-center gap-1.5">
-                        <Kbd keys={["ctrl"]}>V</Kbd> {t("paste")}
-                      </DropZone.Description>
-                      <DropZone.Trigger>{t("library")}</DropZone.Trigger>
-                    </DropZone.Area>
-                    <DropZone.Input multiple accept={OCR_IMAGE_ACCEPT} onSelect={handleAddFiles} />
-                  </DropZone>
+    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={handleOpenChange}>
+      <Modal.Container className="z-[1100]" size="lg">
+        <Modal.Dialog>
+          {() => (
+            <>
+              <Modal.CloseTrigger />
+              <Modal.Header className="flex flex-col gap-1">{t("title")}</Modal.Header>
+              <Modal.Body>
+                <DropZone className="w-full">
+                  <DropZone.Area getDropOperation={getDropOperation} onDrop={handleDrop}>
+                    <DropZone.Icon>
+                      <PhotoIcon />
+                    </DropZone.Icon>
+                    <DropZone.Label>{t("dropzone")}</DropZone.Label>
+                    <DropZone.Description>{t("formats")}</DropZone.Description>
+                    <DropZone.Description className="flex items-center justify-center gap-1.5">
+                      <Kbd keys={["ctrl"]}>V</Kbd> {t("paste")}
+                    </DropZone.Description>
+                    <DropZone.Trigger>{t("library")}</DropZone.Trigger>
+                  </DropZone.Area>
+                  <DropZone.Input multiple accept={OCR_IMAGE_ACCEPT} onSelect={handleAddFiles} />
+                </DropZone>
 
-                  {/* File previews */}
-                  {files.length > 0 && (
-                    <div className="mt-4 grid grid-cols-4 gap-2">
-                      {files.map(({ id, file, preview }) => (
-                        <div key={id} className="group relative">
-                          <Image
-                            unoptimized
-                            alt={file.name}
-                            className="h-20 w-full rounded-lg object-cover"
-                            height={80}
-                            src={preview}
-                            width={160}
-                          />
-                          <button
-                            aria-label={`Remove ${file.name}`}
-                            className="bg-danger absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-white opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveFile(id);
-                            }}
-                          >
-                            <XMarkIcon className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                {/* File previews */}
+                {files.length > 0 && (
+                  <div className="mt-4 grid grid-cols-4 gap-2">
+                    {files.map(({ id, file, preview }) => (
+                      <div key={id} className="group relative">
+                        <Image
+                          unoptimized
+                          alt={file.name}
+                          className="h-20 w-full rounded-lg object-cover"
+                          height={80}
+                          src={preview}
+                          width={160}
+                        />
+                        <button
+                          aria-label={`Remove ${file.name}`}
+                          className="bg-danger absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-white opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveFile(id);
+                          }}
+                        >
+                          <XMarkIcon className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-                  {files.length > 1 && (
-                    <p className="text-muted mt-2 text-center text-xs">
-                      {t("selectedCount", {
-                        count: files.length,
-                      })}
-                    </p>
-                  )}
-                </Modal.Body>
-                <Modal.Footer>
-                  <Button
-                    isDisabled={files.length === 0}
-                    isPending={isSubmitting}
-                    variant="primary"
-                    onPress={handleImport}
-                  >
-                    {!isSubmitting && <SparklesIcon className="h-4 w-4" />}
-                    {tActions("importWithAI")}
-                  </Button>
-                </Modal.Footer>
-              </>
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+                {files.length > 1 && (
+                  <p className="text-muted mt-2 text-center text-xs">
+                    {t("selectedCount", {
+                      count: files.length,
+                    })}
+                  </p>
+                )}
+              </Modal.Body>
+              <Modal.Footer>
+                <Button
+                  isDisabled={files.length === 0}
+                  isPending={isSubmitting}
+                  variant="primary"
+                  onPress={handleImport}
+                >
+                  {!isSubmitting && <SparklesIcon className="h-4 w-4" />}
+                  {tActions("importWithAI")}
+                </Button>
+              </Modal.Footer>
+            </>
+          )}
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }

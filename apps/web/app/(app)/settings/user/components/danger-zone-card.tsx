@@ -33,39 +33,37 @@ export default function DangerZoneCard() {
       </Card>
 
       {/* Delete Account Confirmation */}
-      <Modal>
-        <Modal.Backdrop
-          className="z-[1099]"
-          isOpen={showAccountDeleteModal}
-          onOpenChange={setShowAccountDeleteModal}
-        >
-          <Modal.Container className="z-[1100]">
-            <Modal.Dialog>
-              {({ close: onClose }) => (
-                <>
-                  <Modal.Header className="text-danger">{t("deleteModal.title")}</Modal.Header>
-                  <Modal.Body>
-                    <p className="text-danger mb-2 font-semibold">
-                      {t("deleteModal.permanentWarning")}
-                    </p>
-                    <p>{t("deleteModal.dataWarning")}</p>
-                    <p className="mt-2">{t("deleteModal.recipesNote")}</p>
-                    <p className="mt-2">{t("deleteModal.adminNote")}</p>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button onPress={onClose} variant="tertiary">
-                      {tActions("cancel")}
-                    </Button>
-                    <Button onPress={handleDeleteAccount} variant="danger">
-                      {t("deleteModal.confirmButton")}
-                    </Button>
-                  </Modal.Footer>
-                </>
-              )}
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+      <Modal.Backdrop
+        className="z-[1099]"
+        isOpen={showAccountDeleteModal}
+        onOpenChange={setShowAccountDeleteModal}
+      >
+        <Modal.Container className="z-[1100]">
+          <Modal.Dialog>
+            {({ close: onClose }) => (
+              <>
+                <Modal.Header className="text-danger">{t("deleteModal.title")}</Modal.Header>
+                <Modal.Body>
+                  <p className="text-danger mb-2 font-semibold">
+                    {t("deleteModal.permanentWarning")}
+                  </p>
+                  <p>{t("deleteModal.dataWarning")}</p>
+                  <p className="mt-2">{t("deleteModal.recipesNote")}</p>
+                  <p className="mt-2">{t("deleteModal.adminNote")}</p>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button onPress={onClose} variant="tertiary">
+                    {tActions("cancel")}
+                  </Button>
+                  <Button onPress={handleDeleteAccount} variant="danger">
+                    {t("deleteModal.confirmButton")}
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </>
   );
 }

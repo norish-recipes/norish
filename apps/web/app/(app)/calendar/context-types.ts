@@ -1,4 +1,4 @@
-import type { CalendarData } from "@/hooks/calendar";
+import type { CalendarData } from "@/hooks/calendar/use-calendar-query";
 import type { ReactNode } from "react";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";

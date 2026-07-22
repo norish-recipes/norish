@@ -9,7 +9,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { useCalendarMutations, useCalendarQuery, useCalendarSubscription } from "@/hooks/calendar";
+import { useCalendarMutations } from "@/hooks/calendar/use-calendar-mutations";
+import { useCalendarQuery } from "@/hooks/calendar/use-calendar-query";
+import { useCalendarSubscription } from "@/hooks/calendar/use-calendar-subscription";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import { dateKey } from "@norish/shared/lib/helpers";

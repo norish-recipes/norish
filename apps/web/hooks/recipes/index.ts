@@ -16,7 +16,7 @@ export { useRecipesCacheHelpers, type RecipesCacheHelpers } from "./use-recipes-
 export { useRecipeId } from "./use-recipe-id";
 export { useRecipeAutocomplete } from "./use-recipe-autocomplete";
 
-export { useRecipeIngredients } from "./use-recipe-ingredients";
+export { useRecipeIngredients, useLinkedRecipeIngredients } from "./use-recipe-ingredients";
 export { useRecipeImages } from "./use-recipe-images";
 export { useRecipeVideos } from "./use-recipe-videos";
 export { useConvertMutation, type ConvertMutationResult } from "./use-convert-mutation";

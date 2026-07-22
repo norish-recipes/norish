@@ -1,8 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMockAuthedContext } from "./test-utils";
-
 // Mock logger
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: {
@@ -12,104 +10,6 @@ vi.mock("@norish/shared-server/logger", () => ({
     error: vi.fn(),
   },
 }));
-
-describe("recipes.reserveId", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  describe("authentication", () => {
-    it("requires authentication", async () => {
-      // reserveId uses authedProcedure, so it requires authentication
-      const ctx = createMockAuthedContext();
-
-      expect(ctx.user).toBeDefined();
-      expect(ctx.user.id).toBe("test-user-id");
-    });
-  });
-
-  describe("ID generation", () => {
-    it("returns a valid UUID", () => {
-      const _ctx = createMockAuthedContext();
-
-      const recipeId = globalThis.crypto.randomUUID();
-
-      // Verify it's a valid UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-      expect(uuidRegex.test(recipeId)).toBe(true);
-    });
-
-    it("generates unique IDs on each call", () => {
-      const id1 = globalThis.crypto.randomUUID();
-      const id2 = globalThis.crypto.randomUUID();
-      const id3 = globalThis.crypto.randomUUID();
-
-      expect(id1).not.toBe(id2);
-      expect(id2).not.toBe(id3);
-      expect(id1).not.toBe(id3);
-    });
-  });
-
-  describe("return value", () => {
-    it("returns object with recipeId property", () => {
-      const _ctx = createMockAuthedContext();
-
-      const result = { recipeId: globalThis.crypto.randomUUID() };
-
-      expect(result).toHaveProperty("recipeId");
-      expect(typeof result.recipeId).toBe("string");
-      expect(result.recipeId.length).toBe(36); // UUID length with hyphens
-    });
-  });
-
-  describe("logging", () => {
-    it("logs the reserved recipe ID", async () => {
-      const { trpcLogger } = await import("@norish/shared-server/logger");
-
-      const recipeId = globalThis.crypto.randomUUID();
-
-      // Simulate the procedure logging
-      trpcLogger.debug({ recipeId }, "Reserved recipe ID for step image uploads");
-
-      expect(trpcLogger.debug).toHaveBeenCalledWith(
-        { recipeId },
-        "Reserved recipe ID for step image uploads"
-      );
-    });
-  });
-
-  describe("use case", () => {
-    it("ID can be used for step image uploads before recipe creation", () => {
-      const _ctx = createMockAuthedContext();
-
-      // Reserve ID
-      const reservedId = globalThis.crypto.randomUUID();
-
-      // This ID should be usable for constructing step image paths
-      const stepImagePath = `/recipes/${reservedId}/steps/image.jpg`;
-
-      expect(stepImagePath).toMatch(/^\/recipes\/[0-9a-f-]{36}\/steps\/image\.jpg$/i);
-    });
-
-    it("reserved ID can be passed to create mutation", () => {
-      const reservedId = globalThis.crypto.randomUUID();
-
-      // Simulate passing to create mutation
-      const createInput = {
-        id: reservedId,
-        name: "Test Recipe",
-        servings: 4,
-        systemUsed: "metric" as const,
-        recipeIngredients: [],
-        steps: [],
-        tags: [],
-      };
-
-      expect(createInput.id).toBe(reservedId);
-    });
-  });
-});
 
 describe("recipes image procedures", () => {
   beforeEach(() => {

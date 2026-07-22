@@ -6,58 +6,44 @@ import "@testing-library/jest-dom";
 
 import Panel from "@/components/Panel/Panel";
 
-type MockSheetProps = {
+type MockDrawerProps = {
   "aria-label"?: string;
   children?: ReactNode;
   className?: string;
-  isOpen?: boolean;
-  placement?: string;
-  variant?: string;
+  "data-variant"?: string;
+  open?: boolean;
+  repositionInputs?: boolean;
 };
 
-vi.mock("@heroui-pro/react", () => {
-  const Root = ({ children, isOpen, placement }: MockSheetProps) => (
-    <div data-open={isOpen ? "true" : "false"} data-placement={placement} data-testid="sheet-root">
+vi.mock("vaul", () => {
+  const Root = ({ children, open, repositionInputs }: MockDrawerProps) => (
+    <div
+      data-open={open ? "true" : "false"}
+      data-reposition-inputs={repositionInputs === undefined ? "default" : String(repositionInputs)}
+      data-testid="drawer-root"
+    >
       {children}
     </div>
   );
 
   return {
-    Sheet: {
+    Drawer: {
       Root,
       NestedRoot: Root,
-      Backdrop: ({ children, className, variant }: MockSheetProps) => (
-        <div className={className} data-testid="sheet-backdrop" data-variant={variant}>
-          {children}
-        </div>
+      Portal: ({ children }: MockDrawerProps) => <>{children}</>,
+      Overlay: ({ className, "data-variant": dataVariant }: MockDrawerProps) => (
+        <div className={className} data-testid="drawer-overlay" data-variant={dataVariant} />
       ),
-      Content: ({ children, className }: MockSheetProps) => (
-        <div className={className} data-testid="sheet-content">
-          {children}
-        </div>
-      ),
-      Dialog: ({ "aria-label": ariaLabel, children, className }: MockSheetProps) => (
+      Content: ({ "aria-label": ariaLabel, children, className }: MockDrawerProps) => (
         <section aria-label={ariaLabel} className={className} role="dialog">
           {children}
         </section>
       ),
-      Handle: ({ className }: MockSheetProps) => (
-        <div className={className} data-testid="sheet-handle" />
+      Title: ({ children, className }: MockDrawerProps) => (
+        <h2 className={className}>{children}</h2>
       ),
-      CloseTrigger: ({ className }: MockSheetProps) => (
-        <button className={className} type="button">
-          Close
-        </button>
-      ),
-      Header: ({ children }: MockSheetProps) => <header>{children}</header>,
-      Heading: ({ children }: MockSheetProps) => <h2>{children}</h2>,
-      Body: ({ children, className }: MockSheetProps) => (
-        <div className={className} data-testid="sheet-body">
-          {children}
-        </div>
-      ),
-      Footer: ({ children, className }: MockSheetProps) => (
-        <footer className={className}>{children}</footer>
+      Handle: ({ className }: MockDrawerProps) => (
+        <div className={className} data-testid="drawer-handle" />
       ),
     },
   };
@@ -65,7 +51,7 @@ vi.mock("@heroui-pro/react", () => {
 
 describe("Panel", () => {
   it("uses the shared 80dvh height cap and blur backdrop by default", () => {
-    render(
+    const { container } = render(
       <Panel open title="Filters" onOpenChange={vi.fn()}>
         <Panel.Body>Filter controls</Panel.Body>
         <Panel.Footer>
@@ -74,10 +60,20 @@ describe("Panel", () => {
       </Panel>
     );
 
-    expect(screen.getByTestId("sheet-backdrop")).toHaveAttribute("data-variant", "blur");
-    expect(screen.getByTestId("sheet-content")).toHaveClass("max-h-[80dvh]");
+    expect(screen.getByTestId("drawer-overlay")).toHaveAttribute("data-variant", "blur");
     expect(screen.getByRole("dialog", { name: "Filters" })).toHaveClass("max-h-[80dvh]");
-    expect(screen.getByTestId("sheet-body")).toHaveClass("min-h-0");
+    expect(container.querySelector('[data-slot="panel-dialog"]')).toHaveClass("max-h-[80dvh]");
+    expect(container.querySelector('[data-slot="panel-body"]')).toHaveClass("min-h-0");
+  });
+
+  it("disables vaul input repositioning so iOS keyboard focus cannot scroll the sheet away", () => {
+    render(
+      <Panel open title="Groceries" onOpenChange={vi.fn()}>
+        <Panel.Body>List</Panel.Body>
+      </Panel>
+    );
+
+    expect(screen.getByTestId("drawer-root")).toHaveAttribute("data-reposition-inputs", "false");
   });
 
   it("still allows a deliberate backdrop override", () => {
@@ -87,6 +83,6 @@ describe("Panel", () => {
       </Panel>
     );
 
-    expect(screen.getByTestId("sheet-backdrop")).toHaveAttribute("data-variant", "transparent");
+    expect(screen.getByTestId("drawer-overlay")).toHaveAttribute("data-variant", "transparent");
   });
 });

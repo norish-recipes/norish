@@ -17,6 +17,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: mockUseQuery,
+  useQueryClient: () => ({}),
 }));
 
 function Wrapper({ children }: { children: ReactNode }) {

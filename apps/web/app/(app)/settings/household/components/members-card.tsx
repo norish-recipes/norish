@@ -167,70 +167,65 @@ export default function MembersCard() {
       </Card>
 
       {/* Kick User Modal */}
-      <Modal>
-        <Modal.Backdrop className="z-[1099]" isOpen={showKickModal} onOpenChange={setShowKickModal}>
-          <Modal.Container className="z-[1100]">
-            <Modal.Dialog>
-              {({ close: onClose }) => (
-                <>
-                  <Modal.Header>{t("kickModal.title")}</Modal.Header>
-                  <Modal.Body>
-                    <p>
-                      {t("kickModal.confirmMessage", {
-                        name: userToKick?.name ?? "",
-                      })}
-                    </p>
-                    <p className="text-muted mt-2 text-base">{t("kickModal.warning")}</p>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button onPress={onClose} variant="tertiary">
-                      {tActions("cancel")}
-                    </Button>
-                    <Button onPress={handleKickUser} variant="danger">
-                      {t("kickModal.confirmButton")}
-                    </Button>
-                  </Modal.Footer>
-                </>
-              )}
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
-
+      <Modal.Backdrop className="z-[1099]" isOpen={showKickModal} onOpenChange={setShowKickModal}>
+        <Modal.Container className="z-[1100]">
+          <Modal.Dialog>
+            {({ close: onClose }) => (
+              <>
+                <Modal.Header>{t("kickModal.title")}</Modal.Header>
+                <Modal.Body>
+                  <p>
+                    {t("kickModal.confirmMessage", {
+                      name: userToKick?.name ?? "",
+                    })}
+                  </p>
+                  <p className="text-muted mt-2 text-base">{t("kickModal.warning")}</p>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button onPress={onClose} variant="tertiary">
+                    {tActions("cancel")}
+                  </Button>
+                  <Button onPress={handleKickUser} variant="danger">
+                    {t("kickModal.confirmButton")}
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
       {/* Transfer Admin Modal */}
-      <Modal>
-        <Modal.Backdrop
-          className="z-[1099]"
-          isOpen={showTransferModal}
-          onOpenChange={setShowTransferModal}
-        >
-          <Modal.Container className="z-[1100]">
-            <Modal.Dialog>
-              {({ close: onClose }) => (
-                <>
-                  <Modal.Header>{t("transferModal.title")}</Modal.Header>
-                  <Modal.Body>
-                    <p>
-                      {t("transferModal.confirmMessage", {
-                        name: userToTransfer?.name ?? "",
-                      })}
-                    </p>
-                    <p className="text-muted mt-2 text-base">{t("transferModal.warning")}</p>
-                  </Modal.Body>
-                  <Modal.Footer>
-                    <Button onPress={onClose} variant="tertiary">
-                      {tActions("cancel")}
-                    </Button>
-                    <Button onPress={handleTransferAdmin} variant="primary">
-                      {t("transferModal.confirmButton")}
-                    </Button>
-                  </Modal.Footer>
-                </>
-              )}
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+      <Modal.Backdrop
+        className="z-[1099]"
+        isOpen={showTransferModal}
+        onOpenChange={setShowTransferModal}
+      >
+        <Modal.Container className="z-[1100]">
+          <Modal.Dialog>
+            {({ close: onClose }) => (
+              <>
+                <Modal.Header>{t("transferModal.title")}</Modal.Header>
+                <Modal.Body>
+                  <p>
+                    {t("transferModal.confirmMessage", {
+                      name: userToTransfer?.name ?? "",
+                    })}
+                  </p>
+                  <p className="text-muted mt-2 text-base">{t("transferModal.warning")}</p>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button onPress={onClose} variant="tertiary">
+                    {tActions("cancel")}
+                  </Button>
+                  <Button onPress={handleTransferAdmin} variant="primary">
+                    {t("transferModal.confirmButton")}
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </>
   );
 }

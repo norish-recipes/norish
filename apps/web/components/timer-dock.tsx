@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAutoHide } from "@/hooks/auto-hide";
 import { useTimersEnabledQuery } from "@/hooks/config";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
 import { useTimerStore } from "@/stores/timers";
 import {
@@ -56,7 +57,7 @@ export function TimerDock({ className = "" }: { className?: string }) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   // Track whether dock has been expanded before — distinguishes a collapse
   // transition (needs crossfade) from a fresh appearance (outer container handles fade)
   const hasExpandedRef = useRef(false);
@@ -68,13 +69,9 @@ export function TimerDock({ className = "" }: { className?: string }) {
     disabled: isExpanded,
   });
 
-  // Hydration fix and mobile detection
+  // Hydration fix
   useEffect(() => {
     setIsClient(true);
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // Clear all timers when feature is disabled

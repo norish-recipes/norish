@@ -21,6 +21,7 @@ import {
   setConfig,
 } from "@norish/db/repositories/server-config";
 import {
+  DEFAULT_JOB_RETENTION,
   DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
   UnitsConfigSchema,
@@ -98,6 +99,12 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     getDefaultValue: () => SERVER_CONFIG.SCHEDULER_CLEANUP_MONTHS,
     sensitive: false,
     description: `Scheduler cleanup: ${SERVER_CONFIG.SCHEDULER_CLEANUP_MONTHS} months`,
+  },
+  {
+    key: ServerConfigKeys.JOB_RETENTION,
+    getDefaultValue: () => DEFAULT_JOB_RETENTION,
+    sensitive: false,
+    description: `Job retention (completed: ${DEFAULT_JOB_RETENTION.keepCompleted}, failed: ${DEFAULT_JOB_RETENTION.keepFailed}, max age: ${DEFAULT_JOB_RETENTION.maxAgeDays}d)`,
   },
   {
     key: ServerConfigKeys.AI_CONFIG,
@@ -654,6 +661,8 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       return defaultRecurrenceConfig;
     case ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS:
       return 3;
+    case ServerConfigKeys.JOB_RETENTION:
+      return DEFAULT_JOB_RETENTION;
     case ServerConfigKeys.AI_CONFIG:
       return {
         enabled: false,
@@ -668,7 +677,7 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
         enabled: false,
         maxLengthSeconds: 120,
         maxVideoFileSize: SERVER_CONFIG.MAX_VIDEO_FILE_SIZE,
-        ytDlpVersion: "2025.11.12",
+        ytDlpVersion: "2026.07.04",
         transcriptionProvider: "disabled",
         transcriptionModel: "whisper-1",
       };

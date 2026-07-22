@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowPathIcon, ClockIcon, InformationCircleIcon } from "@heroicons/react/16/solid";
+import {
+  ArrowPathIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/16/solid";
 import { Button, Card, Chip, Pagination, Popover, Table } from "@heroui/react";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslations } from "next-intl";
@@ -66,6 +72,7 @@ export default function CalDavSyncStatusCard() {
   const totalPages = Math.ceil(syncStatusTotal / pageSize);
   const startIndex = (syncStatusPage - 1) * pageSize + 1;
   const endIndex = Math.min(syncStatusPage * pageSize, syncStatusTotal);
+
   return (
     <Card>
       <Card.Header>
@@ -77,11 +84,11 @@ export default function CalDavSyncStatusCard() {
               <h2 className="text-lg font-semibold">{t("title")}</h2>
             </div>
             <Button
-              size="sm"
-              onPress={handleManualSync}
-              variant="primary"
-              isPending={syncing}
               className="min-w-16"
+              isPending={syncing}
+              size="sm"
+              variant="primary"
+              onPress={handleManualSync}
             >
               {<ArrowPathIcon className="h-4 w-4" />}
               {t("syncNow")}
@@ -92,49 +99,49 @@ export default function CalDavSyncStatusCard() {
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap gap-2">
               <Chip
-                as="button"
                 aria-pressed={syncStatusFilter === "synced"}
+                as="button"
                 className="cursor-pointer transition-all"
                 color="success"
                 size="sm"
-                variant={syncStatusFilter === "synced" ? "primary" : "soft"}
                 type="button"
+                variant={syncStatusFilter === "synced" ? "primary" : "soft"}
                 onClick={() => handleFilterClick("synced")}
               >
                 {t("statuses.synced")}: {syncStatusSummary.synced}
               </Chip>
               <Chip
-                as="button"
                 aria-pressed={syncStatusFilter === "pending"}
+                as="button"
                 className="cursor-pointer transition-all"
                 color="warning"
                 size="sm"
-                variant={syncStatusFilter === "pending" ? "primary" : "soft"}
                 type="button"
+                variant={syncStatusFilter === "pending" ? "primary" : "soft"}
                 onClick={() => handleFilterClick("pending")}
               >
                 {t("statuses.pending")}: {syncStatusSummary.pending}
               </Chip>
               <Chip
-                as="button"
                 aria-pressed={syncStatusFilter === "failed"}
+                as="button"
                 className="cursor-pointer transition-all"
                 color="danger"
                 size="sm"
-                variant={syncStatusFilter === "failed" ? "primary" : "soft"}
                 type="button"
+                variant={syncStatusFilter === "failed" ? "primary" : "soft"}
                 onClick={() => handleFilterClick("failed")}
               >
                 {t("statuses.failed")}: {syncStatusSummary.failed}
               </Chip>
               <Chip
-                as="button"
                 aria-pressed={syncStatusFilter === "removed"}
+                as="button"
                 className="cursor-pointer transition-all"
                 color="default"
                 size="sm"
-                variant={syncStatusFilter === "removed" ? "primary" : "soft"}
                 type="button"
+                variant={syncStatusFilter === "removed" ? "primary" : "soft"}
                 onClick={() => handleFilterClick("removed")}
               >
                 {t("statuses.removed")}: {syncStatusSummary.removed}
@@ -147,11 +154,11 @@ export default function CalDavSyncStatusCard() {
                 <Button
                   className="h-8 min-w-16"
                   size="sm"
+                  variant="tertiary"
                   onPress={() => {
                     setSyncStatusFilter(undefined);
                     setSyncStatusPage(1);
                   }}
-                  variant="tertiary"
                 >
                   {t("clearFilter")}
                 </Button>
@@ -177,7 +184,7 @@ export default function CalDavSyncStatusCard() {
           <Table.ScrollContainer>
             <Table.Content aria-label="CalDAV sync status">
               <Table.Header>
-                <Table.Column id="item" isRowHeader>
+                <Table.Column isRowHeader id="item">
                   {t("tableHeaders.item")}
                 </Table.Column>
                 <Table.Column id="type">{t("tableHeaders.type")}</Table.Column>
@@ -258,13 +265,34 @@ export default function CalDavSyncStatusCard() {
 
         {totalPages > 1 && (
           <div className="mt-4 flex justify-center">
-            <Pagination
-              showControls
-              page={syncStatusPage}
-              size="sm"
-              total={totalPages}
-              onChange={setSyncStatusPage}
-            />
+            {/* Pagination is a "dumb" compound component (Root/Previous/
+                Summary/Next) with no built-in state — no flat
+                page/total/onChange API, so wire it up manually. */}
+            <Pagination aria-label={t("title")} size="sm">
+              <Pagination.Content>
+                <Pagination.Item>
+                  <Pagination.Previous
+                    isDisabled={syncStatusPage === 1}
+                    onPress={() => setSyncStatusPage(Math.max(1, syncStatusPage - 1))}
+                  >
+                    <ChevronLeftIcon className="h-4 w-4" />
+                  </Pagination.Previous>
+                </Pagination.Item>
+                <Pagination.Item>
+                  <Pagination.Summary>
+                    {t("pagination", { current: syncStatusPage, total: totalPages })}
+                  </Pagination.Summary>
+                </Pagination.Item>
+                <Pagination.Item>
+                  <Pagination.Next
+                    isDisabled={syncStatusPage === totalPages}
+                    onPress={() => setSyncStatusPage(Math.min(totalPages, syncStatusPage + 1))}
+                  >
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </Pagination.Next>
+                </Pagination.Item>
+              </Pagination.Content>
+            </Pagination>
           </div>
         )}
       </Card.Content>

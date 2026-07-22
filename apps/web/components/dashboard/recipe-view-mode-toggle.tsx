@@ -2,9 +2,9 @@
 
 import type { RecipeDashboardViewMode } from "@/hooks/use-recipe-dashboard-view-mode";
 import type { Key } from "react";
+import { Segment } from "@/components/ui/segment";
 import { useRecipeDashboardViewMode } from "@/hooks/use-recipe-dashboard-view-mode";
 import { ListBulletIcon, Squares2X2Icon } from "@heroicons/react/20/solid";
-import { Segment } from "@heroui-pro/react";
 import { useTranslations } from "next-intl";
 
 function toRecipeDashboardViewMode(key: Key): RecipeDashboardViewMode {

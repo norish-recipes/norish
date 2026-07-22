@@ -1,12 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type {
   CalendarCacheHelpers,
   CalendarMutationsResult,
   CreateCalendarHooksOptions,
 } from "./types";
+import {
+  invalidateUnlessPreserved,
+  shouldPreserveOptimisticUpdate as preserveOptimisticUpdate,
+} from "../optimistic-updates";
 
 type CreateUseCalendarMutationsOptions = CreateCalendarHooksOptions & {
   useCalendarCacheHelpers: (startISO: string, endISO: string) => CalendarCacheHelpers;
@@ -30,7 +35,8 @@ export function createUseCalendarMutations({
 
     const createMutation = useMutation(
       trpc.calendar.createItem.mutationOptions({
-        onError: () => invalidate(),
+        // Queued for Replay when the backend is unreachable — nothing to refetch.
+        onError: invalidateUnlessPreserved(invalidate),
       })
     );
 
@@ -48,7 +54,15 @@ export function createUseCalendarMutations({
 
           return { previousItems };
         },
-        onError: (_err, _vars, context) => {
+        onSuccess: (result) => {
+          // The server drops version-stale writes; refetch so the optimistic
+          // update converges back to the DB state.
+          if ("stale" in result && result.stale) invalidate();
+        },
+        onError: (error, _vars, context) => {
+          // Queued: keep the optimistic move/edit; the Outbox will Replay it.
+          if (preserveOptimisticUpdate(error)) return;
+
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);
           }
@@ -118,7 +132,13 @@ export function createUseCalendarMutations({
 
           return { previousItems };
         },
-        onError: (_err, _vars, context) => {
+        onSuccess: (result) => {
+          if ("stale" in result && result.stale) invalidate();
+        },
+        onError: (error, _vars, context) => {
+          // Queued: keep the optimistic move/edit; the Outbox will Replay it.
+          if (preserveOptimisticUpdate(error)) return;
+
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);
           }
@@ -142,7 +162,13 @@ export function createUseCalendarMutations({
 
           return { previousItems };
         },
-        onError: (_err, _vars, context) => {
+        onSuccess: (result) => {
+          if ("stale" in result && result.stale) invalidate();
+        },
+        onError: (error, _vars, context) => {
+          // Queued: keep the optimistic move/edit; the Outbox will Replay it.
+          if (preserveOptimisticUpdate(error)) return;
+
           if (context?.previousItems) {
             setCalendarData(() => context.previousItems);
           }
@@ -157,7 +183,8 @@ export function createUseCalendarMutations({
       recipeId?: string,
       title?: string
     ) => {
-      createMutation.mutate({ date, slot, itemType, recipeId, title });
+      // Client-minted id, honoured on insert (ADR-0003).
+      createMutation.mutate({ id: createClientId(), date, slot, itemType, recipeId, title });
     };
 
     const deleteItem = (itemId: string) => {

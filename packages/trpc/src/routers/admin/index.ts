@@ -4,6 +4,7 @@ import { authProvidersProcedures } from "./auth-providers";
 import { adminConfigProcedures } from "./config";
 import { contentConfigProcedures } from "./content-config";
 import { generalProcedures } from "./general";
+import { jobQueueProcedures } from "./job-queue";
 import { permissionsProcedures } from "./permissions";
 import { systemProcedures } from "./system";
 
@@ -19,6 +20,9 @@ export const adminRouter = router({
 
   // Content config (indicators, units, recurrence)
   content: contentConfigProcedures,
+
+  // Job queue monitoring
+  jobs: jobQueueProcedures,
 
   // AI and video
   ...aiConfigProcedures._def.procedures,

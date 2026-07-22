@@ -7,13 +7,9 @@ env:
   SKIP_ENV_VALIDATION: "1"
   AUTH_URL: http://localhost:3000
   CHROME_WS_ENDPOINT: ws://localhost:3000
-  HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
 
 on:
   workflow_call:
-    secrets:
-      HEROUI_AUTH_TOKEN:
-        required: false
     inputs:
       run-build:
         required: false
@@ -46,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup toolchain and install dependencies
         uses: ./tooling/github/setup
@@ -58,7 +54,7 @@ jobs:
     needs: install
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup toolchain and install dependencies
         uses: ./tooling/github/setup
@@ -73,7 +69,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup toolchain and install dependencies
         uses: ./tooling/github/setup
@@ -88,7 +84,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup toolchain and install dependencies
         uses: ./tooling/github/setup
@@ -103,7 +99,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup toolchain and install dependencies
         uses: ./tooling/github/setup
@@ -118,7 +114,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup toolchain and install dependencies
         uses: ./tooling/github/setup
