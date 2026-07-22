@@ -10,7 +10,18 @@ export const listItemsInput = z.object({
   endISO: z.string(),
 });
 
-export const createItemInput = z
+// Explicit boundary types keep the emitted declarations portable: inferring
+// them would name the injected `@norish/shared/node_modules/zod` copy (TS2742).
+export type CreateItemInput = {
+  id?: string;
+  date: string;
+  slot: z.infer<typeof slotSchema>;
+  itemType: z.infer<typeof itemTypeSchema>;
+  recipeId?: string;
+  title?: string;
+};
+
+export const createItemInput: z.ZodType<CreateItemInput, CreateItemInput> = z
   .object({
     id: clientMintedId,
     date: z.string(),
@@ -39,7 +50,17 @@ export const plannedRecipeListItemSchema = z.object({
   calories: z.number().nullable(),
 });
 
-export const createPlannedRecipeInputSchema = z.object({
+export type CreatePlannedRecipeInput = {
+  id?: string;
+  date: string;
+  slot: z.infer<typeof slotSchema>;
+  recipeId: string;
+};
+
+export const createPlannedRecipeInputSchema: z.ZodType<
+  CreatePlannedRecipeInput,
+  CreatePlannedRecipeInput
+> = z.object({
   id: clientMintedId,
   date: z.string(),
   slot: slotSchema,
@@ -55,5 +76,4 @@ export const deletePlannedRecipeOutputSchema = z.object({
   stale: z.boolean(),
 });
 
-export type CreateItemInput = z.infer<typeof createItemInput>;
 export type PlannedRecipeListItem = z.infer<typeof plannedRecipeListItemSchema>;

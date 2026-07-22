@@ -11,6 +11,7 @@ import {
 import { router } from "../../src/trpc";
 import {
   createMockAuthedContext,
+  createMockCallerContext,
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
@@ -63,7 +64,7 @@ describe("stores procedures", () => {
   it("logs stale store updates as no-ops", async () => {
     storesRepository.updateStore.mockResolvedValue(null);
 
-    const caller = storesProcedures.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
     const result = await caller.update({
       id: crypto.randomUUID(),
       version: 3,
@@ -83,7 +84,7 @@ describe("stores procedures", () => {
 
     storesRepository.reorderStores.mockResolvedValue([]);
 
-    const caller = storesProcedures.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
     const result = await caller.reorder({ stores: [{ id: storeId, version: 2 }] });
 
     expect(result).toEqual([storeId]);
@@ -108,7 +109,7 @@ describe("stores procedures", () => {
 
     storesRepository.reorderStores.mockResolvedValue([reorderedStore]);
 
-    const caller = storesProcedures.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
     const result = await caller.reorder({
       stores: [
         { id: storeA, version: 1 },
@@ -141,7 +142,7 @@ describe("stores procedures", () => {
 
     storesRepository.listStoresByUserIds.mockResolvedValue(stores);
 
-    const caller = openApiStoresRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = openApiStoresRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.listStores();
 
     expect(result).toEqual(stores);
@@ -157,7 +158,7 @@ describe("stores procedures", () => {
       })
     );
 
-    const caller = openApiStoresRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = openApiStoresRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.createStore({
       name: "Market",
       color: "primary",
@@ -187,7 +188,7 @@ describe("stores procedures", () => {
       async (id: string, data: Record<string, unknown>) => ({ id, ...data, version: 1 })
     );
 
-    const caller = openApiStoresRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = openApiStoresRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.createStore({
       id: clientId,
       name: "Market",

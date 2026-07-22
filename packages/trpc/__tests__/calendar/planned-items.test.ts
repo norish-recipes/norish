@@ -21,7 +21,12 @@ import {
   listPlannedItemsByUserAndDateRange,
   moveItem,
 } from "../mocks/planned-items";
-import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
+import {
+  createMockAuthedContext,
+  createMockCallerContext,
+  createMockHousehold,
+  createMockUser,
+} from "./test-utils";
 
 vi.mock("@norish/db/repositories/planned-items", () => import("../mocks/planned-items"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
@@ -221,7 +226,7 @@ describe("calendar planned recipe openapi procedures", () => {
       },
     ]);
 
-    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.listTodayPlannedRecipes();
 
     expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
@@ -248,7 +253,7 @@ describe("calendar planned recipe openapi procedures", () => {
   it("lists the current week's planned recipes using server time", async () => {
     listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
 
-    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     await caller.listWeekPlannedRecipes();
 
     expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
@@ -261,7 +266,7 @@ describe("calendar planned recipe openapi procedures", () => {
   it("lists the current month's planned recipes using server time", async () => {
     listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
 
-    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     await caller.listMonthPlannedRecipes();
 
     expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
@@ -304,7 +309,7 @@ describe("calendar planned recipe openapi procedures", () => {
       calories: 600,
     });
 
-    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.createPlannedRecipe({
       date: "2025-01-20",
       slot: "Dinner",
@@ -353,7 +358,7 @@ describe("calendar planned recipe openapi procedures", () => {
       calories: 600,
     });
 
-    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.createPlannedRecipe({
       id: clientId,
       date: "2025-01-20",
@@ -382,7 +387,7 @@ describe("calendar planned recipe openapi procedures", () => {
     deletePlannedItem.mockResolvedValue({ stale: false, value: {} });
     assertHouseholdAccess.mockResolvedValue(undefined);
 
-    const caller = openApiCalendarRouter.createCaller({ ...ctx, multiplexer: null } as any);
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.deletePlannedRecipe({ itemId, version: 2 });
 
     expect(result).toEqual({ success: true, stale: false });
