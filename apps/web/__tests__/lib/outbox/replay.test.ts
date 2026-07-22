@@ -1,16 +1,26 @@
-import { IDBFactory } from "fake-indexeddb";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import { createOfflineIdb } from "@/lib/offline/idb";
 import type { ReplayOutcome } from "@/lib/outbox/error-classification";
-import { createOutboxStore, type OutboxStore } from "@/lib/outbox/outbox-store";
+import type { OutboxStore } from "@/lib/outbox/outbox-store";
 import type { NewOutboxEntry, OutboxEntry } from "@/lib/outbox/outbox-types";
+import { createOfflineIdb } from "@/lib/offline/idb";
+import { createOutboxStore } from "@/lib/outbox/outbox-store";
 import {
   MAX_AMBIGUOUS_ATTEMPTS,
+  processQueue,
   referencesParkedEntity,
   retryDelayMs,
   runReplayPass,
+  setReplayOwnerResolver,
+  setReplaySessionGuard,
+  setReplaySubmit,
 } from "@/lib/outbox/replay";
+import { IDBFactory } from "fake-indexeddb";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  accumulateGroceryAmounts,
+  buildGroceryMergeIndex,
+  findGroceryMergeTarget,
+} from "@norish/shared/lib/grocery-merge";
 
 function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
   return {
@@ -129,9 +139,15 @@ describe("runReplayPass", () => {
   });
 
   it("parks a create's dependent edits with it (one broken story)", async () => {
-    await store.enqueue(entry({ id: "create", path: "groceries.create", input: { id: "g1" }, entityId: "g1" }));
     await store.enqueue(
-      entry({ id: "tick", path: "groceries.toggle", input: { groceries: [{ id: "g1" }], isDone: true } })
+      entry({ id: "create", path: "groceries.create", input: { id: "g1" }, entityId: "g1" })
+    );
+    await store.enqueue(
+      entry({
+        id: "tick",
+        path: "groceries.toggle",
+        input: { groceries: [{ id: "g1" }], isDone: true },
+      })
     );
 
     const { submit, submitted } = stubSubmit({ create: "deterministic" });
@@ -179,7 +195,12 @@ describe("runReplayPass", () => {
     const canonicalId = "22222222-2222-4222-8222-222222222222";
 
     await store.enqueue(
-      entry({ id: "create", path: "groceries.create", input: [{ id: clientId }], entityId: clientId })
+      entry({
+        id: "create",
+        path: "groceries.create",
+        input: [{ id: clientId }],
+        entityId: clientId,
+      })
     );
     await store.enqueue(
       entry({
@@ -221,7 +242,12 @@ describe("runReplayPass", () => {
     const canonicalId = "22222222-2222-4222-8222-222222222222";
 
     await store.enqueue(
-      entry({ id: "create", path: "groceries.create", input: [{ id: clientId }], entityId: clientId })
+      entry({
+        id: "create",
+        path: "groceries.create",
+        input: [{ id: clientId }],
+        entityId: clientId,
+      })
     );
     await store.enqueue(
       entry({
@@ -275,6 +301,170 @@ describe("referencesParkedEntity", () => {
     expect(referencesParkedEntity({ file: new Blob(["g1"]), ...cyclic }, new Set(["g1"]))).toBe(
       false
     );
+  });
+});
+
+describe("stale grocery merge across Replay (ADR-0009)", () => {
+  let store: OutboxStore;
+
+  beforeEach(() => {
+    store = createOutboxStore(createOfflineIdb(new IDBFactory()));
+  });
+
+  it("merges the queued create into the concurrent canonical row and follows with the edit", async () => {
+    const canonicalId = "22222222-2222-4222-8222-222222222222";
+    const clientId = "11111111-1111-4111-8111-111111111111";
+
+    // Another client created the canonical row after this client's cache went
+    // stale; the authoritative state the server double runs the shared rule
+    // against contains it.
+    type Row = {
+      id: string;
+      name: string | null;
+      unit: string | null;
+      amount: number | null;
+      isDone: boolean;
+      version: number;
+    };
+    const serverRows = new Map<string, Row>([
+      [
+        canonicalId,
+        { id: canonicalId, name: "Milk", unit: null, amount: 2, isDone: false, version: 1 },
+      ],
+    ]);
+
+    // The stale client queued a matching create and a dependent edit.
+    await store.enqueue(
+      entry({
+        id: "create",
+        path: "groceries.create",
+        input: [{ id: clientId, name: "milk", unit: null, amount: 1, isDone: false }],
+        entityId: clientId,
+      })
+    );
+    await store.enqueue(
+      entry({
+        id: "tick",
+        path: "groceries.toggle",
+        input: { groceries: [{ id: clientId, version: 1 }], isDone: true },
+        entityId: clientId,
+      })
+    );
+
+    // A server double faithful to the shared contract: the same pure merge
+    // rule the real createGroceriesData runs, reporting idSubstitutions.
+    const submit = async (e: OutboxEntry): Promise<ReplayOutcome> => {
+      if (e.path === "groceries.create") {
+        const items = e.input as Array<{
+          id: string;
+          name: string | null;
+          unit: string | null;
+          amount: number | null;
+          isDone: boolean;
+        }>;
+        const index = buildGroceryMergeIndex([...serverRows.values()]);
+        const idSubstitutions = items.map((item) => {
+          const target = findGroceryMergeTarget(index, item);
+
+          if (target) {
+            const row = serverRows.get(target.id)!;
+
+            serverRows.set(row.id, {
+              ...row,
+              amount: accumulateGroceryAmounts(row.amount, item.amount),
+              version: row.version + 1,
+            });
+
+            return { clientId: item.id, canonicalId: target.id };
+          }
+
+          serverRows.set(item.id, { ...item, version: 1 });
+
+          return { clientId: item.id, canonicalId: item.id };
+        });
+
+        return {
+          kind: "success",
+          result: { ids: idSubstitutions.map((s) => s.canonicalId), idSubstitutions },
+        };
+      }
+
+      const { groceries, isDone } = e.input as {
+        groceries: Array<{ id: string }>;
+        isDone: boolean;
+      };
+
+      for (const { id } of groceries) {
+        const row = serverRows.get(id);
+
+        if (!row) return { kind: "deterministic" };
+        serverRows.set(id, { ...row, isDone, version: row.version + 1 });
+      }
+
+      return { kind: "success" };
+    };
+
+    const result = await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(result).toMatchObject({ removed: 2, parked: 0, remaining: 0, halted: null });
+
+    // One merged grocery — accumulated, completed, no duplicate row.
+    expect(serverRows.size).toBe(1);
+    expect(serverRows.get(canonicalId)).toMatchObject({ amount: 3, isDone: true });
+    expect(serverRows.has(clientId)).toBe(false);
+  });
+});
+
+describe("processQueue session guard (ADR-0009)", () => {
+  let store: OutboxStore;
+
+  beforeEach(() => {
+    store = createOutboxStore(createOfflineIdb(new IDBFactory()));
+  });
+
+  afterEach(() => {
+    setReplaySubmit(null);
+    setReplayOwnerResolver(null);
+    setReplaySessionGuard(null);
+  });
+
+  it("submits nothing when the live session belongs to someone else — the queue stays dormant", async () => {
+    await store.enqueue(entry({ id: "a", ownerId: "u1" }));
+
+    const submit = vi.fn(async (): Promise<ReplayOutcome> => ({ kind: "success" }));
+
+    setReplaySubmit(submit);
+    setReplayOwnerResolver(() => "u1");
+    // The transport cookies now belong to another account (bypassed switch).
+    setReplaySessionGuard(async () => "mismatch");
+
+    await processQueue(store);
+
+    expect(submit).not.toHaveBeenCalled();
+    expect(await store.size("u1")).toBe(1);
+    expect((await store.forOwner("u1", "pending")).length).toBe(1);
+  });
+
+  it("drains normally when the session matches or cannot be verified", async () => {
+    await store.enqueue(entry({ id: "a", ownerId: "u1" }));
+
+    const submit = vi.fn(async (): Promise<ReplayOutcome> => ({ kind: "success" }));
+
+    setReplaySubmit(submit);
+    setReplayOwnerResolver(() => "u1");
+    setReplaySessionGuard(async () => "match");
+
+    await processQueue(store);
+    expect(submit).toHaveBeenCalledTimes(1);
+    expect(await store.size("u1")).toBe(0);
+
+    await store.enqueue(entry({ id: "b", ownerId: "u1" }));
+    // Offline: the session cannot be checked; the pass proceeds and halts on
+    // transport unreachability as before.
+    setReplaySessionGuard(async () => "unverifiable");
+
+    await processQueue(store);
+    expect(submit).toHaveBeenCalledTimes(2);
   });
 });
 

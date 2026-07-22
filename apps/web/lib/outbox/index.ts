@@ -24,9 +24,12 @@ export {
   type ReplayHaltReason,
   type ReplayPassResult,
   type ReplaySubmit,
+  type ReplaySessionGuard,
+  type ReplaySessionVerdict,
   retryDelayMs,
   runReplayPass,
   setReplayOwnerResolver,
+  setReplaySessionGuard,
   setReplaySubmit,
   subscribeReplayState,
 } from "./replay";

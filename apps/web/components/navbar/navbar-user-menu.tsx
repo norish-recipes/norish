@@ -78,6 +78,9 @@ export default function NavbarUserMenu({
 
   const handleConfirmedSignOut = useCallback(async () => {
     await signOut({ discardQueue: true });
+    // Still here: the auth sign-out failed (e.g. Offline) and nothing was
+    // discarded. Close the dialog with session, queue, and caches intact.
+    setSignOutUnsyncedCount(null);
   }, [signOut]);
 
   if (!user) return null;

@@ -13,6 +13,7 @@ const processQueue = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const runReconnectSequence = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const setReplaySubmit = vi.hoisted(() => vi.fn());
 const setReplayOwnerResolver = vi.hoisted(() => vi.fn());
+const setReplaySessionGuard = vi.hoisted(() => vi.fn());
 const replayOutboxEntry = vi.hoisted(() => vi.fn());
 
 let user: { id: string } | null = null;
@@ -32,6 +33,7 @@ vi.mock("@/lib/outbox", () => ({
   runIfLeader: (task: () => unknown) => task(),
   setReplaySubmit,
   setReplayOwnerResolver,
+  setReplaySessionGuard,
   replayOutboxEntry,
 }));
 

@@ -11,10 +11,13 @@ import {
   replayOutboxEntry,
   runReconnectSequence,
   setReplayOwnerResolver,
+  setReplaySessionGuard,
   setReplaySubmit,
 } from "@/lib/outbox";
 import { activeCacheOwner, resolveCacheOwner, topUpWarmSet } from "@/lib/query-cache";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { getSession } from "@norish/shared/lib/auth/client";
 
 /**
  * Drives the persisted Offline Cache and the Outbox from the two runtime signals
@@ -71,10 +74,28 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
 
     setReplaySubmit((entry) => replayOutboxEntry(trpcClient as OutboxMutationClient, entry));
     setReplayOwnerResolver(() => activeCacheOwner());
+    // Verify the live session right before a drain: a bypassed identity
+    // change can swap the transport cookies under a tab whose local owner
+    // state is stale, and the queue must never replay as the incoming
+    // account (ADR-0009). Unreachable auth means the pass simply halts on
+    // transport as usual.
+    setReplaySessionGuard(async (ownerId) => {
+      try {
+        const session = await getSession();
+        const sessionUserId = session?.data?.user?.id ?? null;
+
+        if (sessionUserId === null) return "unverifiable";
+
+        return sessionUserId === ownerId ? "match" : "mismatch";
+      } catch {
+        return "unverifiable";
+      }
+    });
 
     return () => {
       setReplaySubmit(null);
       setReplayOwnerResolver(null);
+      setReplaySessionGuard(null);
     };
   }, [trpcClient]);
 

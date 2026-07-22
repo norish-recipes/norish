@@ -16,11 +16,11 @@
 import { extractIdSubstitutions } from "@norish/shared/contracts";
 
 import type { ReplayOutcome } from "./error-classification";
+import type { OutboxStore } from "./outbox-store";
+import type { OutboxEntry } from "./outbox-types";
 import { substituteEntryIds } from "./id-substitution";
 import { runWithOutboxLock } from "./leader";
-import type { OutboxStore } from "./outbox-store";
 import { outboxStore } from "./outbox-store";
-import type { OutboxEntry } from "./outbox-types";
 
 /** Attempts a 5xx entry gets before it is parked as retries-exhausted. */
 export const MAX_AMBIGUOUS_ATTEMPTS = 3;
@@ -220,8 +220,20 @@ export async function runReplayPass({
 // Coordinator
 // ---------------------------------------------------------------------------
 
+/**
+ * Session-ownership verdict fetched immediately before a drain: `match` when
+ * the live session belongs to the queue owner, `mismatch` when it belongs to
+ * someone else (a bypassed identity change — the queue must stay dormant,
+ * ADR-0009), `unverifiable` when the backend cannot be asked (offline — the
+ * pass proceeds and halts on unreachability as usual).
+ */
+export type ReplaySessionVerdict = "match" | "mismatch" | "unverifiable";
+
+export type ReplaySessionGuard = (ownerId: string) => Promise<ReplaySessionVerdict>;
+
 let submitFn: ReplaySubmit | null = null;
 let ownerResolver: (() => string | null) | null = null;
+let sessionGuard: ReplaySessionGuard | null = null;
 let processing: Promise<ReplayPassResult> | null = null;
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
 let haltedByAuth = false;
@@ -242,6 +254,16 @@ export function setReplaySubmit(fn: ReplaySubmit | null): void {
 /** Register how the current Replay owner (session user id) is resolved. */
 export function setReplayOwnerResolver(resolver: (() => string | null) | null): void {
   ownerResolver = resolver;
+}
+
+/**
+ * Register the pre-drain session check. Client owner state alone cannot be
+ * trusted here: a bypassed identity change swaps the transport's cookies
+ * under a tab whose local state still names the old owner, and a drain would
+ * replay that owner's queue as the incoming account (ADR-0009).
+ */
+export function setReplaySessionGuard(guard: ReplaySessionGuard | null): void {
+  sessionGuard = guard;
 }
 
 /** True while Replay is halted on an expired session ("sign in to sync"). */
@@ -286,6 +308,13 @@ async function runOnce(store: OutboxStore): Promise<ReplayPassResult> {
   const ownerId = ownerResolver?.() ?? null;
 
   if (!submitFn || !ownerId) {
+    return EMPTY_RESULT;
+  }
+
+  // Nothing is submitted unless the live session still belongs to the queue
+  // owner; on mismatch the entries stay pending — dormant until that owner
+  // signs in again (ADR-0009).
+  if (sessionGuard && (await sessionGuard(ownerId)) === "mismatch") {
     return EMPTY_RESULT;
   }
 
