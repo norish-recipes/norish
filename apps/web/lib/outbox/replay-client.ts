@@ -11,6 +11,7 @@
 
 import type { OutboxEntry } from "./outbox-types";
 import { classifyReplayError, isStaleResult, type ReplayOutcome } from "./error-classification";
+import { decodeOutboxInput } from "./input-codec";
 
 /** Header stamped on replays so the Outbox link recognises and ignores them. */
 export const OUTBOX_REPLAY_HEADER = "x-replay-origin";
@@ -81,9 +82,12 @@ export async function replayOutboxEntry(
   }
 
   try {
-    const result = await mutate(entry.input, { context: createReplayContext(entry) });
+    // Encoded inputs (FormData) are reconstructed immediately before transport.
+    const result = await mutate(decodeOutboxInput(entry.input), {
+      context: createReplayContext(entry),
+    });
 
-    return isStaleResult(result) ? { kind: "conflict" } : { kind: "success" };
+    return isStaleResult(result) ? { kind: "conflict" } : { kind: "success", result };
   } catch (error) {
     return { kind: classifyReplayError(error) };
   }

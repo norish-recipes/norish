@@ -9,6 +9,9 @@ vi.mock("@/lib/query-cache", () => ({
   readBootOwner: () => null,
 }));
 
+import { hasOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
+
+import { isEncodedFormData } from "@/lib/outbox/input-codec";
 import { createOutboxLink } from "@/lib/outbox/outbox-link";
 import { OUTBOX_REPLAY_HEADER, OUTBOX_REPLAY_HEADER_VALUE } from "@/lib/outbox/replay-client";
 
@@ -96,5 +99,68 @@ describe("createOutboxLink", () => {
 
     expect(result.error).toBeInstanceOf(TypeError);
     expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it("waits for durable persistence before propagating the Queued signal", async () => {
+    const order: string[] = [];
+    let persist: (() => void) | undefined;
+
+    enqueue.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          persist = () => {
+            order.push("persisted");
+            resolve({});
+          };
+        })
+    );
+
+    const pending = runLink(mutationOp(), errorWith(new TypeError("Failed to fetch"))).then(
+      (result) => {
+        order.push("errored");
+
+        return result;
+      }
+    );
+
+    // Give the link a chance to (incorrectly) propagate before persistence.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(order).toEqual([]);
+
+    persist?.();
+    const result = await pending;
+
+    expect(order).toEqual(["persisted", "errored"]);
+    expect(result.error).toBeInstanceOf(TypeError);
+    expect(hasOutboxAdmissionFailed(result.error)).toBe(false);
+  });
+
+  it("marks the propagated error as a real failure when admission fails", async () => {
+    enqueue.mockImplementationOnce(async () => {
+      throw new Error("quota exceeded");
+    });
+
+    const result = await runLink(mutationOp(), errorWith(new TypeError("Failed to fetch")));
+
+    expect(result.error).toBeInstanceOf(TypeError);
+    expect(hasOutboxAdmissionFailed(result.error)).toBe(true);
+  });
+
+  it("encodes a FormData input for storage and reads its client-minted id", async () => {
+    const formData = new FormData();
+
+    formData.append("id", "33333333-3333-4333-8333-333333333333");
+    formData.append("name", "Pasta");
+
+    await runLink(
+      mutationOp({ path: "recipes.create", input: formData }),
+      errorWith(new TypeError("Failed to fetch"))
+    );
+
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    const stored = enqueue.mock.calls[0]?.[0] as { input: unknown; entityId: string | null };
+
+    expect(isEncodedFormData(stored.input)).toBe(true);
+    expect(stored.entityId).toBe("33333333-3333-4333-8333-333333333333");
   });
 });

@@ -35,6 +35,16 @@ describe("outbox store", () => {
     expect(a.createdAt).toBeTruthy();
   });
 
+  it("rejects the enqueue when the IndexedDB transaction fails (quota, clone)", async () => {
+    // A structured-clone-hostile input makes the write itself fail — the same
+    // observable behaviour as a quota error: the promise must reject so the
+    // caller can present a real failure instead of a false Queued (ADR-0009).
+    const unclonable = entry({ input: { fn: () => "not clonable" } });
+
+    await expect(store.enqueue(unclonable)).rejects.toBeTruthy();
+    expect(await store.size()).toBe(0);
+  });
+
   it("returns an owner's entries in FIFO order, filtered by status", async () => {
     await store.enqueue(entry({ id: "a", ownerId: "u1" }));
     await store.enqueue(entry({ id: "b", ownerId: "u2" }));

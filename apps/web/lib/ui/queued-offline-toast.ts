@@ -2,18 +2,19 @@
 
 import { toast } from "@heroui/react";
 
-import { isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
+import { isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
 
 /**
  * Whether a failed mutation was in fact Queued (design record: "Queued is a
  * third outcome"): on the backend-unreachable signal the Outbox link has
- * captured the mutation for Replay — admission is universal — so the change is
- * saved, not lost. Callers must present this as "saved offline", never as an
- * error. This is the same signal the hero hooks use to keep their optimistic
- * state (`shouldPreserveOptimisticUpdate`).
+ * durably captured the mutation for Replay — admission is universal — so the
+ * change is saved, not lost. A marked admission failure is excluded: that
+ * change was neither delivered nor stored (ADR-0009). Callers present Queued
+ * as "saved offline", never as an error. This is the same signal the hero
+ * hooks use to keep their optimistic state (`shouldPreserveOptimisticUpdate`).
  */
 export function isQueuedForReplay(error: unknown): boolean {
-  return isBackendUnreachableError(error);
+  return isQueuedOutboxSignal(error);
 }
 
 export interface QueuedOfflineToastStrings {

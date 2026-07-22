@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { encodeOutboxInput } from "@/lib/outbox/input-codec";
 import type { OutboxEntry } from "@/lib/outbox/outbox-types";
 import {
   isOutboxReplayContext,
@@ -35,7 +36,7 @@ describe("replayOutboxEntry", () => {
 
     const outcome = await replayOutboxEntry(clientWith(mutate), entry());
 
-    expect(outcome).toEqual({ kind: "success" });
+    expect(outcome).toEqual({ kind: "success", result: { success: true } });
 
     const [input, opts] = mutate.mock.calls[0];
 
@@ -47,6 +48,29 @@ describe("replayOutboxEntry", () => {
         headers: { [OUTBOX_REPLAY_HEADER]: OUTBOX_REPLAY_HEADER_VALUE },
       },
     });
+  });
+
+  it("reconstructs an encoded FormData input immediately before transport", async () => {
+    const formData = new FormData();
+
+    formData.append("id", "g1");
+    formData.append("photo", new File(["x"], "a.png", { type: "image/png" }));
+    formData.append("tag", "one");
+    formData.append("tag", "two");
+
+    const mutate = vi.fn(async () => ({ success: true }));
+
+    await replayOutboxEntry(clientWith(mutate), entry({ input: encodeOutboxInput(formData) }));
+
+    const [input] = mutate.mock.calls[0];
+
+    expect(input).toBeInstanceOf(FormData);
+    const entries = [...(input as FormData).entries()];
+
+    expect(entries.map(([key]) => key)).toEqual(["id", "photo", "tag", "tag"]);
+    expect(entries[0]?.[1]).toBe("g1");
+    expect((entries[1]?.[1] as File).name).toBe("a.png");
+    expect(entries[3]?.[1]).toBe("two");
   });
 
   it("maps a stale response to a conflict", async () => {

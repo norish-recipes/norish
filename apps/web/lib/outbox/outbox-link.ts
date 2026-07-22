@@ -2,12 +2,13 @@
  * The Outbox tRPC mutation link.
  *
  * Sits ahead of the transport, in front of every mutation. When a mutation
- * fails because the backend is unreachable, it captures the request into the
- * IndexedDB Outbox for later Replay — by structured clone, so `File`/`Blob`
- * uploads are preserved (no serialization, no whitelist) — and then *still
- * propagates the error*. Propagating is deliberate: the hero hooks read that
- * same backend-unreachable signal to keep their optimistic state (Queued) rather
- * than roll back.
+ * fails because the backend is unreachable, it runs the input through the
+ * explicit Outbox codec (`FormData` becomes a tagged ordered entry list;
+ * everything else is structured-cloned), **awaits** the IndexedDB write, and
+ * only then propagates the backend-unreachable error — that signal is the
+ * Queued outcome the hero hooks key off, so Queued now means durably stored
+ * (ADR-0009). If admission fails, the propagated error is marked so those
+ * same consumers present a real failure and roll back instead.
  *
  * Replayed mutations carry a marker context and are skipped, so a replay is
  * never re-captured.
@@ -17,13 +18,20 @@ import type { HTTPHeaders, TRPCLink } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
 import { observable } from "@trpc/server/observable";
 
+import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
-import { isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
+import {
+  isBackendUnreachableError,
+  markOutboxAdmissionFailed,
+} from "@norish/shared/lib/trpc-errors";
 
 import { activeCacheOwner, readBootOwner } from "@/lib/query-cache";
 
+import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input-codec";
 import { outboxStore } from "./outbox-store";
 import { isOutboxReplayContext } from "./replay-client";
+
+const log = createClientLogger("OutboxLink");
 
 function normalizeHeaders(headers: unknown): Record<string, string> {
   if (!headers || typeof headers !== "object") {
@@ -48,17 +56,12 @@ function captureOwner(): string {
   return activeCacheOwner() ?? readBootOwner() ?? "anon";
 }
 
-function cloneInput(input: unknown): unknown {
-  try {
-    return typeof structuredClone === "function" ? structuredClone(input) : input;
-  } catch {
-    // Fall back to the live reference; IndexedDB clones again on write.
-    return input;
-  }
-}
-
 /** The client-minted id a hero create carries as `input.id` (ADR-0003), if any. */
 function entityIdOf(input: unknown): string | null {
+  if (isEncodedFormData(input)) {
+    return encodedFormDataId(input);
+  }
+
   if (input && typeof input === "object") {
     const id = (input as { id?: unknown }).id;
 
@@ -70,23 +73,21 @@ function entityIdOf(input: unknown): string | null {
   return null;
 }
 
-function captureToOutbox(path: string, input: unknown, context: unknown): void {
+/** Durably admit the mutation to the Outbox; rejects when persistence fails. */
+async function captureToOutbox(path: string, input: unknown, context: unknown): Promise<void> {
   const ctx = (context ?? {}) as { operationId?: unknown; headers?: HTTPHeaders };
   const operationId = typeof ctx.operationId === "string" ? ctx.operationId : null;
+  const encodedInput = encodeOutboxInput(input);
 
-  void outboxStore
-    .enqueue({
-      id: createClientId(),
-      ownerId: captureOwner(),
-      path,
-      input: cloneInput(input),
-      entityId: entityIdOf(input),
-      operationId,
-      headers: normalizeHeaders(ctx.headers),
-    })
-    .catch(() => {
-      // Best-effort — a failed enqueue must not turn into an unhandled rejection.
-    });
+  await outboxStore.enqueue({
+    id: createClientId(),
+    ownerId: captureOwner(),
+    path,
+    input: encodedInput,
+    entityId: entityIdOf(encodedInput),
+    operationId,
+    headers: normalizeHeaders(ctx.headers),
+  });
 }
 
 export function createOutboxLink<TRouter extends AnyTRPCRouter>(): TRPCLink<TRouter> {
@@ -100,11 +101,27 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(): TRPCLink<TRou
         const subscription = next(op).subscribe({
           next: (value) => observer.next(value),
           error: (error) => {
-            if (!isOutboxReplayContext(op.context) && isBackendUnreachableError(error)) {
-              captureToOutbox(op.path, op.input, op.context);
+            if (isOutboxReplayContext(op.context) || !isBackendUnreachableError(error)) {
+              observer.error(error);
+
+              return;
             }
 
-            observer.error(error);
+            // Queued means durably stored: hold the error until the entry is
+            // in IndexedDB, and downgrade it to a real failure if it is not.
+            void Promise.resolve()
+              .then(() => captureToOutbox(op.path, op.input, op.context))
+              .then(
+                () => observer.error(error),
+                (persistError: unknown) => {
+                  log.error(
+                    { error: persistError, path: op.path },
+                    "Outbox admission failed; presenting mutation as failed"
+                  );
+                  markOutboxAdmissionFailed(error);
+                  observer.error(error);
+                }
+              );
           },
           complete: () => observer.complete(),
         });

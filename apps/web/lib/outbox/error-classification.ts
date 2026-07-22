@@ -22,7 +22,11 @@ import { isUnauthorizedTRPCError } from "@norish/shared-react/providers";
 
 export type ReplayFailureClass = "unreachable" | "unauthorized" | "ambiguous" | "deterministic";
 
-export type ReplayOutcome = { kind: "success" | "conflict" | ReplayFailureClass };
+export type ReplayOutcome =
+  /** `result` carries the mutation response so Replay can read generic
+   *  contracts off it (client-to-canonical id substitutions, ADR-0009). */
+  | { kind: "success"; result?: unknown }
+  | { kind: "conflict" | ReplayFailureClass };
 
 /**
  * The HTTP status a tRPC error carries, from `error.data.httpStatus` — the same
