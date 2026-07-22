@@ -271,5 +271,9 @@
     "body": "Denne siden er ikke i frakoblet-cachen. Nylig besøkte sider er fortsatt tilgjengelige.",
     "retry": "Prøv igjen",
     "home": "Åpne Norish"
+  },
+  "queuedOffline": {
+    "title": "Du er frakoblet",
+    "description": "Lagt i kø — Norish fullfører dette automatisk når du er tilkoblet igjen."
   }
 }

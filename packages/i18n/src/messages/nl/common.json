@@ -271,5 +271,9 @@
     "body": "Deze pagina staat niet in de offlinecache. Onlangs bezochte pagina's zijn nog wel beschikbaar.",
     "retry": "Opnieuw proberen",
     "home": "Norish openen"
+  },
+  "queuedOffline": {
+    "title": "Je bent offline",
+    "description": "In de wachtrij gezet — Norish maakt dit automatisch af zodra je weer online bent."
   }
 }

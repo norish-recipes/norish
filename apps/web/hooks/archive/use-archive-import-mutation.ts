@@ -1,6 +1,7 @@
 "use client";
 
 import { useTRPC } from "@/app/providers/trpc-provider";
+import { isQueuedForReplay, showQueuedOfflineToast } from "@/lib/ui/queued-offline-toast";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { toast } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
@@ -20,6 +21,7 @@ export type ArchiveImportMutationResult = {
 export function useArchiveImportMutation(): ArchiveImportMutationResult {
   const trpc = useTRPC();
   const tErrors = useTranslations("common.errors");
+  const tQueued = useTranslations("common.queuedOffline");
   const { setImportState } = useArchiveImportQuery();
 
   // Mutation for starting import
@@ -58,6 +60,17 @@ export function useArchiveImportMutation(): ArchiveImportMutationResult {
         }
       },
       onError: (error) => {
+        // Backend-unreachable = Queued: the Outbox captured the upload (blobs
+        // survive by structured clone) and the import starts at Replay time.
+        if (isQueuedForReplay(error)) {
+          showQueuedOfflineToast({
+            title: tQueued("title"),
+            description: tQueued("description"),
+          });
+
+          return;
+        }
+
         showSafeErrorToast({
           title: tErrors("operationFailed"),
           description: tErrors("technicalDetails"),

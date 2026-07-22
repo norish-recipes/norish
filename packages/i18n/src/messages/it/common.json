@@ -271,5 +271,9 @@
     "body": "Questa pagina non è nella cache offline. Le pagine visitate di recente sono ancora disponibili.",
     "retry": "Riprova",
     "home": "Apri Norish"
+  },
+  "queuedOffline": {
+    "title": "Sei offline",
+    "description": "In coda: Norish completerà automaticamente quando tornerai online."
   }
 }

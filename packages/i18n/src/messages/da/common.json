@@ -271,5 +271,9 @@
     "body": "Denne side er ikke i offline-cachen. Senest besøgte sider er stadig tilgængelige.",
     "retry": "Prøv igen",
     "home": "Åbn Norish"
+  },
+  "queuedOffline": {
+    "title": "Du er offline",
+    "description": "Sat i kø — Norish fuldfører dette automatisk, når du er online igen."
   }
 }

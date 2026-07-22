@@ -271,5 +271,9 @@
     "body": "Tej strony nie ma w pamięci podręcznej offline. Ostatnio odwiedzane strony są nadal dostępne.",
     "retry": "Spróbuj ponownie",
     "home": "Otwórz Norish"
+  },
+  "queuedOffline": {
+    "title": "Jesteś offline",
+    "description": "Dodano do kolejki — Norish dokończy to automatycznie, gdy wrócisz online."
   }
 }

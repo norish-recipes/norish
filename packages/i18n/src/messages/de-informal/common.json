@@ -271,5 +271,9 @@
     "body": "Diese Seite ist nicht im Offline-Cache. Kürzlich besuchte Seiten sind weiterhin verfügbar.",
     "retry": "Erneut versuchen",
     "home": "Norish öffnen"
+  },
+  "queuedOffline": {
+    "title": "Du bist offline",
+    "description": "In der Warteschlange — Norish schließt dies automatisch ab, sobald du wieder online bist."
   }
 }

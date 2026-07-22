@@ -271,5 +271,9 @@
     "body": "Esta página no está en la caché sin conexión. Las páginas visitadas recientemente siguen disponibles.",
     "retry": "Reintentar",
     "home": "Abrir Norish"
+  },
+  "queuedOffline": {
+    "title": "Estás sin conexión",
+    "description": "En cola: Norish lo completará automáticamente cuando vuelvas a estar en línea."
   }
 }

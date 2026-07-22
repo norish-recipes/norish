@@ -2,6 +2,7 @@
 
 import { useTRPC } from "@/app/providers/trpc-provider";
 import { CACHE_MAX_AGE_MS } from "@/lib/query-cache";
+import { isQueuedForReplay, showQueuedOfflineToast } from "@/lib/ui/queued-offline-toast";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { useTranslations } from "next-intl";
 
@@ -24,8 +25,21 @@ export type { RecipesMutationsResult };
 
 export function useRecipesMutations(): RecipesMutationsResult {
   const tErrors = useTranslations("common.errors");
+  const tQueued = useTranslations("common.queuedOffline");
 
   const showMutationErrorToast = (error: unknown, operation: string): void => {
+    // Backend-unreachable is the Queued outcome, not a failure: the Outbox has
+    // captured the mutation (an import simply runs at Replay time), so tell the
+    // user it's saved and will happen — never show an error toast for it.
+    if (isQueuedForReplay(error)) {
+      showQueuedOfflineToast({
+        title: tQueued("title"),
+        description: tQueued("description"),
+      });
+
+      return;
+    }
+
     showSafeErrorToast({
       title: tErrors("operationFailed"),
       description: tErrors("technicalDetails"),

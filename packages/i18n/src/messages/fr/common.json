@@ -271,5 +271,9 @@
     "body": "Cette page n'est pas dans le cache hors ligne. Les pages récemment visitées restent disponibles.",
     "retry": "Réessayer",
     "home": "Ouvrir Norish"
+  },
+  "queuedOffline": {
+    "title": "Vous êtes hors ligne",
+    "description": "Mis en file d'attente — Norish terminera automatiquement dès que vous serez de nouveau en ligne."
   }
 }

@@ -1,3 +1,4 @@
+import { toast } from "@heroui/react";
 import { act, renderHook } from "@testing-library/react";
 import { TRPCClientError } from "@trpc/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -202,6 +203,70 @@ describe("useRecipesMutations", () => {
       expect(pendingRecipes).toHaveLength(1);
       expect(pendingRecipes?.[0]?.recipeId).toBe(context.optimisticPendingId);
       expect(context.optimisticPendingId.startsWith("optimistic-pending-recipe:")).toBe(true);
+    });
+  });
+
+  describe("Queued outcome toasts", () => {
+    type ImportMutationOpts = {
+      onMutate: () => { optimisticPendingId: string };
+      onError: (
+        error: unknown,
+        variables: { url: string; forceAI?: boolean },
+        context: { optimisticPendingId: string }
+      ) => void;
+    };
+
+    async function captureImportOnError() {
+      queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
+      queryClient.setQueryData([["recipes", "getPending"], { type: "query" }], []);
+
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+
+      renderHook(() => useRecipesMutations(), { wrapper: createTestWrapper(queryClient) });
+
+      return mockImportFromUrlMutationOptions.mock.calls[0][0] as ImportMutationOpts;
+    }
+
+    it("toasts the queued-offline message, not an error, when the import was captured", async () => {
+      const mutationOpts = await captureImportOnError();
+      const context = mutationOpts.onMutate();
+
+      act(() => {
+        // No cause and no data.httpStatus: the backend-unreachable shape the
+        // Outbox link captures (design record: "Queued is a third outcome").
+        mutationOpts.onError(
+          new TRPCClientError("Failed to fetch"),
+          { url: "https://example.com/recipe" },
+          context
+        );
+      });
+
+      // Key-echo translations: common.queuedOffline.title renders as "title".
+      expect(toast).toHaveBeenCalledTimes(1);
+      expect(toast).toHaveBeenCalledWith(
+        "title",
+        expect.objectContaining({ description: "description", variant: "warning" })
+      );
+    });
+
+    it("keeps the error toast for a genuine import failure", async () => {
+      const mutationOpts = await captureImportOnError();
+      const context = mutationOpts.onMutate();
+
+      act(() => {
+        // An error that carries an HTTP status is a real backend rejection,
+        // not the Queued outcome.
+        mutationOpts.onError(
+          new TRPCClientError("Bad recipe URL", {
+            result: { error: { data: { httpStatus: 500 } } },
+          } as never),
+          { url: "https://example.com/recipe" },
+          context
+        );
+      });
+
+      expect(toast).toHaveBeenCalledTimes(1);
+      expect(toast).toHaveBeenCalledWith("operationFailed", expect.anything());
     });
   });
 
