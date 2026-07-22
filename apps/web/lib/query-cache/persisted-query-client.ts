@@ -81,6 +81,8 @@ export interface CacheManager {
    * effective owner changes. Resolves once any restore/switch has settled.
    */
   resolveOwner(inputs: Pick<CacheOwnerInputs, "sessionUserId" | "isOffline">): Promise<void>;
+  /** Notified each time an owner's persisted cache finishes restoring. */
+  onOwnerApplied(listener: () => void): () => void;
 }
 
 export function createCacheManager(idb: OfflineIdb): CacheManager {
@@ -91,6 +93,7 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
   let appliedOwner: string | null = null;
   let unsubscribe: (() => void) | null = null;
   let inFlight: Promise<void> = Promise.resolve();
+  const appliedListeners = new Set<() => void>();
 
   async function restoreForOwner(owner: string): Promise<void> {
     persister.setOwner(owner);
@@ -120,6 +123,10 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
 
     appliedOwner = owner;
     writeBootOwner(owner);
+
+    for (const listener of appliedListeners) {
+      listener();
+    }
   }
 
   async function apply(
@@ -176,6 +183,14 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
 
       return inFlight;
     },
+
+    onOwnerApplied(listener) {
+      appliedListeners.add(listener);
+
+      return () => {
+        appliedListeners.delete(listener);
+      };
+    },
   };
 }
 
@@ -204,4 +219,18 @@ export function resolveCacheOwner(
 /** The active cache owner, for diagnostics and the status UI. */
 export function activeCacheOwner(): string | null {
   return manager().activeOwner();
+}
+
+/**
+ * Whether some owner's persisted cache has finished restoring — the signal the
+ * offline bootstrap router waits for before declaring a recipe unwarmed
+ * (ADR-0009): before this, an absent query might simply not be hydrated yet.
+ */
+export function isCacheOwnerApplied(): boolean {
+  return manager().activeOwner() !== null;
+}
+
+/** Subscribe to cache-restore completion; usable with `useSyncExternalStore`. */
+export function subscribeCacheOwnerApplied(listener: () => void): () => void {
+  return manager().onOwnerApplied(listener);
 }

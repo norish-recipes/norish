@@ -17,7 +17,9 @@ export {
   type CacheManager,
   createCacheManager,
   getPersistedQueryClient,
+  isCacheOwnerApplied,
   resolveCacheOwner,
+  subscribeCacheOwnerApplied,
 } from "./persisted-query-client";
 export { createIdbPersister, type OwnerScopedPersister } from "./idb-persister";
 export {
