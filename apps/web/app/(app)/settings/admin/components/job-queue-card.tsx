@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import DataTable from "@/components/ui/data-table";
 import {
   useAdminConfigsQuery,
   useJobListQuery,
   useJobQueueMutations,
   useQueueSummaryQuery,
 } from "@/hooks/admin";
-import DataTable from "@/components/ui/data-table";
 import {
   CheckIcon,
   ChevronLeftIcon,
@@ -32,11 +32,11 @@ import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 import type { AdminJobRowDTO } from "@norish/shared/contracts";
 import { DEFAULT_JOB_RETENTION, ServerConfigKeys } from "@norish/config/zod/server-config";
 
+import JobDetailModal from "./jobs/job-detail-modal";
+import { formatDuration, formatStep } from "./jobs/job-format";
+import JobStatusChip from "./jobs/job-status-chip";
 import { RestartRequiredChip } from "./restart-required-chip";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
-import JobDetailModal from "./jobs/job-detail-modal";
-import JobStatusChip from "./jobs/job-status-chip";
-import { formatDuration, formatStep } from "./jobs/job-format";
 
 const QUEUE_OPTIONS = [
   "recipe-import",
@@ -313,8 +313,8 @@ export default function JobQueueCard() {
           {totalPages > 1 ? (
             <div className="flex justify-center">
               {/* Pagination is a "dumb" compound component (Root/Previous/
-                  Summary/Next) with no built-in state, unlike HeroUI Pro's
-                  flat page/total/onChange API — wire it up manually. */}
+                  Summary/Next) with no built-in state — no flat
+                  page/total/onChange API, so wire it up manually. */}
               <Pagination aria-label={t("title")} size="sm">
                 <Pagination.Content>
                   <Pagination.Item>

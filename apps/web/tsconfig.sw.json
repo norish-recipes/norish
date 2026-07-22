@@ -1,0 +1,16 @@
+// The service-worker entry's own type program: app/sw.ts runs in a webworker
+// environment, so it can't join tsconfig.json's DOM-lib program — but it must
+// not escape typechecking either (it is compiled by @serwist/next, which does
+// not typecheck). Run via the workspace `typecheck` script.
+{
+  "extends": "@norish/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "WebWorker"],
+    "types": [],
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["app/sw.ts", "lib/offline/cache-names.ts"]
+}

@@ -13,6 +13,10 @@
       "description": "Gestionar tu cuenta"
     },
     "logout": "Cerrar sesión",
+    "signOutConfirm": {
+      "title": "¿Descartar los cambios sin sincronizar?",
+      "description": "{count, plural, one {# cambio hecho sin conexión aún no ha llegado al servidor.} other {# cambios hechos sin conexión aún no han llegado al servidor.}} Al cerrar sesión, este trabajo pendiente se descartará permanentemente y los datos sin conexión de tu cuenta se eliminarán de este dispositivo."
+    },
     "version": {
       "updateAvailable": "v{version} disponible"
     }

@@ -198,10 +198,6 @@ export async function shouldAlwaysUseAI(): Promise<boolean> {
   return (aiConfig?.enabled && aiConfig?.alwaysUseAI) ?? false;
 }
 
-export function shouldUseLegacyRecipeParserRollback(): boolean {
-  return SERVER_CONFIG.LEGACY_RECIPE_PARSER_ROLLBACK;
-}
-
 /**
  * Check if video parsing is enabled
  */

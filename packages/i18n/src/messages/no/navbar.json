@@ -13,6 +13,10 @@
       "description": "Administrer kontoen din"
     },
     "logout": "Logg ut",
+    "signOutConfirm": {
+      "title": "Forkaste usynkroniserte endringer?",
+      "description": "{count, plural, one {# endring gjort frakoblet har ennå ikke nådd serveren.} other {# endringer gjort frakoblet har ennå ikke nådd serveren.}} Når du logger ut, forkastes dette ventende arbeidet permanent, og kontoens frakoblede data fjernes fra denne enheten."
+    },
     "version": {
       "updateAvailable": "v{version} tilgjengelig"
     }

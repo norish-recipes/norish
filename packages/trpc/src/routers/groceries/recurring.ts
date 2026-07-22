@@ -19,7 +19,7 @@ import {
 } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { DetachRecurringGroceryInputSchema } from "@norish/shared/contracts/zod";
+import { clientMintedId, DetachRecurringGroceryInputSchema } from "@norish/shared/contracts/zod";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
@@ -30,6 +30,7 @@ import { groceryEmitter } from "./emitter";
 const createRecurring = authedProcedure
   .input(
     z.object({
+      id: clientMintedId,
       name: z.string(),
       amount: z.number().nullable(),
       unit: z.string().nullable(),
@@ -37,7 +38,7 @@ const createRecurring = authedProcedure
       recurrenceInterval: z.number().min(1),
       recurrenceWeekday: z.number().nullable(),
       nextPlannedFor: z.string(),
-      storeId: z.string().uuid().nullable().optional(),
+      storeId: z.uuid().nullable().optional(),
     })
   )
   .mutation(async ({ ctx, input }) => {
@@ -49,7 +50,7 @@ const createRecurring = authedProcedure
     );
 
     const recurringData = {
-      id: crypto.randomUUID(),
+      id: input.id ?? crypto.randomUUID(),
       userId: ctx.user.id,
       name: input.name,
       amount: input.amount,
@@ -105,7 +106,7 @@ const updateRecurring = authedProcedure
       recurringVersion: z.number().int().positive(),
       groceryId: z.string(),
       groceryVersion: z.number().int().positive(),
-      storeId: z.string().uuid().nullable().optional(),
+      storeId: z.uuid().nullable().optional(),
       data: z.object({
         name: z.string().optional(),
         amount: z.number().nullable().optional(),
@@ -182,13 +183,9 @@ const updateRecurring = authedProcedure
 const detachRecurring = authedProcedure
   .input(DetachRecurringGroceryInputSchema)
   .mutation(({ ctx, input }) => {
-    const { recurringGroceryId, recurringVersion, groceryId, groceryVersion, raw, storeId } =
-      input;
+    const { recurringGroceryId, recurringVersion, groceryId, groceryVersion, raw, storeId } = input;
 
-    log.info(
-      { userId: ctx.user.id, recurringGroceryId, groceryId },
-      "Detaching recurring grocery"
-    );
+    log.info({ userId: ctx.user.id, recurringGroceryId, groceryId }, "Detaching recurring grocery");
 
     getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
@@ -413,10 +410,7 @@ const checkRecurring = authedProcedure
           return;
         }
 
-        log.debug(
-          { userId: ctx.user.id, recurringGroceryId, isDone },
-          "Recurring grocery checked"
-        );
+        log.debug({ userId: ctx.user.id, recurringGroceryId, isDone }, "Recurring grocery checked");
         groceryEmitter.emitToHousehold(ctx.householdKey, "recurringUpdated", {
           recurringGrocery: outcome.value.recurringGrocery ?? recurringGrocery,
           grocery: outcome.value.grocery,

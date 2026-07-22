@@ -1,6 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { isQueuedOutboxSignal, markOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
+
 import {
   createMockGroceriesData,
   createMockGrocery,
@@ -25,6 +27,7 @@ const _mockMutations = {
   markAllDone: vi.fn(),
   deleteDone: vi.fn(),
 };
+const showErrorToast = vi.hoisted(() => vi.fn());
 
 // Mock the dependencies
 vi.mock("@tanstack/react-query", async () => {
@@ -53,7 +56,7 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           queryFn: async () => createMockGroceriesData(),
         }),
       },
-      create: { mutationOptions: vi.fn() },
+      create: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.create })) },
       toggle: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.toggle })) },
       update: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.update })) },
       delete: { mutationOptions: vi.fn(() => ({ mutationFn: _mockMutations.delete })) },
@@ -102,6 +105,10 @@ vi.mock("@/app/providers/trpc-provider", () => ({
       },
     },
   }),
+}));
+
+vi.mock("@/hooks/groceries/error-adapter", () => ({
+  useGroceriesErrorAdapter: () => ({ showErrorToast }),
 }));
 
 vi.mock("@/hooks/config", () => ({
@@ -222,6 +229,74 @@ describe("useGroceriesMutations", () => {
         id: "existing",
         sortOrder: 1,
       });
+    });
+
+    it("removes an optimistic grocery and reports a failed Outbox admission", () => {
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData([createMockGrocery({ id: "existing", name: "Milk" })], [])
+      );
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.createGrocery("Apples"));
+
+      const options = _mockMutations.create.mock.calls[0]?.[1] as
+        | { onError: (error: unknown) => void }
+        | undefined;
+
+      const admissionError = new TypeError("Failed to fetch");
+
+      markOutboxAdmissionFailed(admissionError);
+      expect(isQueuedOutboxSignal(admissionError)).toBe(false);
+      expect(options?.onError).toEqual(expect.any(Function));
+      act(() => options?.onError(admissionError));
+
+      const data = queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>([
+        "groceries",
+        "list",
+      ]);
+
+      expect(showErrorToast).toHaveBeenCalledWith(
+        "The grocery change was not saved. Please try again."
+      );
+      expect(data?.groceries.map((grocery) => grocery.id)).toEqual(["existing"]);
+    });
+
+    it("rolls back a grocery check-off and reports a failed Outbox admission", () => {
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData([createMockGrocery({ id: "g1", isDone: false, version: 3 })], [])
+      );
+
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.toggleGroceries(["g1"], true));
+
+      const options = _mockMutations.toggle.mock.calls[0]?.[1] as
+        | { onError: (error: unknown) => void }
+        | undefined;
+
+      const admissionError = new TypeError("Failed to fetch");
+
+      markOutboxAdmissionFailed(admissionError);
+      expect(isQueuedOutboxSignal(admissionError)).toBe(false);
+      expect(options?.onError).toEqual(expect.any(Function));
+      act(() => options?.onError(admissionError));
+
+      const data = queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>([
+        "groceries",
+        "list",
+      ]);
+
+      expect(showErrorToast).toHaveBeenCalledWith(
+        "The grocery change was not saved. Please try again."
+      );
+      expect(data?.groceries[0]).toMatchObject({ id: "g1", isDone: false, version: 3 });
     });
   });
 

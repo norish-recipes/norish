@@ -13,6 +13,10 @@
       "description": "Gérez votre compte"
     },
     "logout": "Se déconnecter",
+    "signOutConfirm": {
+      "title": "Abandonner les modifications non synchronisées ?",
+      "description": "{count, plural, one {# modification effectuée hors ligne n'a pas encore atteint le serveur.} other {# modifications effectuées hors ligne n'ont pas encore atteint le serveur.}} En vous déconnectant, ce travail en attente sera définitivement abandonné et les données hors ligne de votre compte seront supprimées de cet appareil."
+    },
     "version": {
       "updateAvailable": "v{version} disponible"
     }

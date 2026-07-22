@@ -10,8 +10,7 @@
     "AUTH_URL",
     "CHROME_WS_ENDPOINT",
     "REDIS_URL",
-    "PARSER_API_TIMEOUT_MS",
-    "LEGACY_RECIPE_PARSER_ROLLBACK"
+    "PARSER_API_TIMEOUT_MS"
   ],
   "tasks": {
     "topo": {
@@ -25,10 +24,6 @@
     "build:server": {
       "dependsOn": ["^build:server"],
       "outputs": []
-    },
-    "update-sw": {
-      "dependsOn": ["^update-sw"],
-      "outputs": ["public/sw.js"]
     },
     "dev": {
       "dependsOn": ["^dev"],

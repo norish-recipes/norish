@@ -41,6 +41,7 @@ export function createGroceriesHooks({
     useTRPC,
     useGroceriesQuery,
     useUnitsQuery,
+    useErrorAdapter,
   });
   const useGroceriesSubscription = createUseGroceriesSubscription({
     useTRPC,

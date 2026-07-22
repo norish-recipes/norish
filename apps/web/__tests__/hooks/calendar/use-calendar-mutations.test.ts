@@ -111,6 +111,8 @@ describe("useCalendarMutations", () => {
       await waitFor(() => {
         expect(mockCreateItemMutate).toHaveBeenCalled();
         expect(mockCreateItemMutate.mock.calls[0][0]).toEqual({
+          // Client-minted id (ADR-0003).
+          id: expect.any(String),
           date: "2025-01-15",
           slot: "Breakfast",
           itemType: "recipe",
@@ -134,6 +136,8 @@ describe("useCalendarMutations", () => {
       await waitFor(() => {
         expect(mockCreateItemMutate).toHaveBeenCalled();
         expect(mockCreateItemMutate.mock.calls[0][0]).toEqual({
+          // Client-minted id (ADR-0003).
+          id: expect.any(String),
           date: "2025-01-15",
           slot: "Lunch",
           itemType: "note",
@@ -306,6 +310,39 @@ describe("useCalendarMutations", () => {
         expect(item?.date).toBe("2025-01-15");
         expect(item?.slot).toBe("Breakfast");
       });
+    });
+
+    it("keeps the optimistic move when the mutation is Queued (backend unreachable)", async () => {
+      const item = createMockItem({
+        id: "item-1",
+        date: "2025-01-15",
+        slot: "Breakfast",
+        sortOrder: 0,
+      });
+
+      queryClient.setQueryData(getQueryKey(), [item]);
+
+      // A backend-unreachable failure means the mutation was captured into the
+      // Outbox (Queued) — the optimistic move must be preserved, not rolled back.
+      mockMoveItemMutate.mockRejectedValue(new TypeError("Failed to fetch"));
+
+      const { result } = renderHook(() => useCalendarMutations(startISO, endISO), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => {
+        result.current.moveItem("item-1", "2025-01-20", "Dinner", 0);
+      });
+
+      await waitFor(() => {
+        expect(result.current.isMoving).toBe(false);
+      });
+
+      const data = queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey());
+      const moved = data!.find((i) => i.id === "item-1");
+
+      expect(moved?.date).toBe("2025-01-20");
+      expect(moved?.slot).toBe("Dinner");
     });
   });
 

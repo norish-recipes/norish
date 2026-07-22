@@ -14,7 +14,9 @@ import {
   markGroceryDoneProcedure,
   markGroceryUndoneProcedure,
 } from "../../src/routers/groceries/groceries";
+import { createGroceriesData } from "../../src/routers/groceries/groceries-helpers";
 import { router } from "../../src/trpc";
+import { createMockCallerContext } from "../calendar/test-utils";
 // Import mocks for assertions
 import {
   assignGroceryToStore,
@@ -186,6 +188,48 @@ describe("groceries openapi procedures", () => {
         name: "Apples",
       })
     );
+  });
+
+  it("inserts a new grocery with the client-minted id when one is supplied", async () => {
+    const clientId = crypto.randomUUID();
+
+    // No existing groceries → no merge, so the create path runs.
+    listGroceriesByUsers.mockResolvedValue([]);
+    createGroceries.mockImplementation(
+      async (items: Array<{ id: string; groceries: { name: string | null } }>) =>
+        items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name }))
+    );
+
+    // Exercise the create helper directly: the internal `create` procedure validates
+    // `z.array(GroceryCreateSchema)`, which mixes zod instances across the injected
+    // workspace copies and can't be driven through a tRPC caller in this test env.
+    const result = await createGroceriesData(ctx, [
+      { id: clientId, name: "Apples", unit: null, amount: 1, isDone: false },
+    ]);
+
+    expect(createGroceries).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ id: clientId })]),
+      expect.anything()
+    );
+    expect(result.ids).toContain(clientId);
+  });
+
+  it("mints a server-side id when the client supplies none (existing clients unaffected)", async () => {
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    listGroceriesByUsers.mockResolvedValue([]);
+    createGroceries.mockImplementation(
+      async (items: Array<{ id: string; groceries: { name: string | null } }>) =>
+        items.map(({ id, groceries }) => createMockGrocery({ id, name: groceries.name }))
+    );
+
+    const result = await createGroceriesData(ctx, [
+      { name: "Bananas", unit: null, amount: 1, isDone: false },
+    ]);
+
+    const created = createGroceries.mock.calls[0][0] as Array<{ id: string }>;
+    expect(created[0]?.id).toMatch(UUID_RE);
+    expect(result.ids[0]).toMatch(UUID_RE);
   });
 
   it("marks a grocery done and returns the updated grocery", async () => {

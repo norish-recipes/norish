@@ -1,6 +1,6 @@
 {
   "name": "@norish/trpc",
-  "version": "0.19.1-beta",
+  "version": "0.20.0-beta",
   "private": true,
   "type": "module",
   "types": "./dist/public.d.ts",

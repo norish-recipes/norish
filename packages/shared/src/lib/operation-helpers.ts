@@ -27,25 +27,36 @@ function isRealtimeEventScope(value: unknown): value is RealtimeEventScope {
 }
 
 /**
- * Generate a new operationId.
+ * Generate a client-minted id (UUID v4) that is safe to send to the server.
  *
- * Uses `crypto.randomUUID()` where available (browsers, Node.js).
- * Falls back to a Math.random-based UUID v4 for environments like
- * React Native / Hermes where the Web Crypto API is absent.
+ * Uses `crypto.randomUUID()` where available, falling back to a Math.random
+ * UUID v4 for environments without the Web Crypto API: React Native / Hermes,
+ * and browsers in an insecure context (a self-hosted deployment served over
+ * plain `http://`). The fallback is a *valid* UUID so it still satisfies the
+ * server's `z.uuid()` validation on client-minted entity ids (ADR-0003).
  */
-export function generateOperationId(): OperationId {
+export function createClientId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID() as OperationId;
+    return crypto.randomUUID();
   }
 
-  // Fallback UUID v4 — sufficient for correlation IDs
-  // Doesn't matter if it is an invalid GUID as long as it is unique.
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === "x" ? r : (r & 0x3) | 0x8;
 
     return v.toString(16);
-  }) as OperationId;
+  });
+}
+
+/**
+ * Generate a new operationId.
+ *
+ * Uses `crypto.randomUUID()` where available (browsers, Node.js) and falls back
+ * to a Math.random-based UUID v4 for environments like React Native / Hermes
+ * where the Web Crypto API is absent.
+ */
+export function generateOperationId(): OperationId {
+  return createClientId() as OperationId;
 }
 
 /**

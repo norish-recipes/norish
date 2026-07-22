@@ -13,6 +13,10 @@
       "description": "Gerencie sua conta"
     },
     "logout": "Sair",
+    "signOutConfirm": {
+      "title": "Descartar alterações não sincronizadas?",
+      "description": "{count, plural, one {# alteração feita offline ainda não chegou ao servidor.} other {# alterações feitas offline ainda não chegaram ao servidor.}} Ao sair, esse trabalho pendente será descartado permanentemente e os dados offline da sua conta serão removidos deste dispositivo."
+    },
     "version": {
       "updateAvailable": "v{version} disponível"
     }

@@ -87,11 +87,12 @@
   },
   "connection": {
     "connecting": "Подключение к Norish...",
-    "syncing": "Синхронизация, пожалуйста подождите...",
     "checkInternet": "Пожалуйста, проверьте подключение к интернету",
-    "gettingUpdates": "Получаем последние обновления...",
     "offlineBanner": "Вы офлайн, показываем сохранённые данные",
-    "serverUnreachableBanner": "Не удаётся связаться с сервером Norish, показываем сохранённые данные"
+    "serverUnreachableBanner": "Не удаётся связаться с сервером Norish, показываем сохранённые данные",
+    "live": "На связи",
+    "offline": "Не в сети",
+    "openDetails": "Connection details"
   },
   "language": {
     "title": "Язык"
@@ -213,5 +214,66 @@
     "notification_body": "{label} завершён!",
     "notifications_disabled": "Уведомления отключены",
     "notifications_disabled_hint": "Включите уведомления в настройках браузера, чтобы получать оповещения при завершении таймеров в фоновом режиме."
+  },
+  "offlineStatus": {
+    "title": "Connection & offline",
+    "connection": {
+      "heading": "Connection",
+      "live": "Live",
+      "offline": "Offline",
+      "forced": "Offline (forced)",
+      "liveDescription": "Connected to Norish. Changes sync as you make them.",
+      "offlineDescription": "Can't reach Norish. Showing cached data; changes are queued and sync when you're back.",
+      "forcedDescription": "Offline is forced for development. The backend is reachable but every request is blocked.",
+      "devBadge": "dev"
+    },
+    "cache": {
+      "heading": "Offline cache",
+      "recipes": "Recipes",
+      "groceries": "Groceries",
+      "stores": "Stores",
+      "planned": "This week",
+      "dataAge": "Data from {when}",
+      "dataAgeUnknown": "Not warmed yet",
+      "wipe": "Clear cached data",
+      "wipeConfirmBody": "Remove the offline copy of your recipes, groceries, stores and plan? Your queued changes are kept.",
+      "wipeConfirmOfflineBody": "You're offline — clearing now leaves nothing to show until you reconnect. Your queued changes are kept.",
+      "wipeConfirm": "Clear",
+      "wipeCancel": "Keep"
+    },
+    "outbox": {
+      "heading": "Queued changes",
+      "empty": "Nothing queued — everything's synced.",
+      "pending": "{count, plural, =0 {No changes waiting} one {# change waiting} other {# changes waiting}}",
+      "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
+      "syncNow": "Sync now",
+      "retryAll": "Retry all",
+      "discardAll": "Discard all",
+      "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
+      "discardConfirm": "Discard",
+      "discardCancel": "Keep",
+      "status": {
+        "pending": "Syncing",
+        "parked": "Needs attention",
+        "conflicted": "Conflict"
+      }
+    },
+    "devToggle": {
+      "heading": "Developer",
+      "force": "Force offline",
+      "description": "Blocks the backend transport to exercise the offline runtime. Dev builds only.",
+      "on": "On",
+      "off": "Off"
+    }
+  },
+  "offlineFallback": {
+    "title": "Вы офлайн",
+    "body": "Этой страницы нет в офлайн-кэше. Недавно открытые страницы по-прежнему доступны.",
+    "retry": "Повторить",
+    "home": "Открыть Norish"
+  },
+  "queuedOffline": {
+    "title": "Вы офлайн",
+    "description": "Добавлено в очередь — Norish автоматически завершит это, когда вы снова будете в сети."
   }
 }

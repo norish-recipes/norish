@@ -22,6 +22,12 @@
 **/.next/
 /out/
 
+# serwist service worker (generated at build time by @serwist/next)
+apps/web/public/sw.js
+apps/web/public/sw.js.map
+apps/web/public/swe-worker-*.js
+apps/web/public/swe-worker-*.js.map
+
 /public/recipes/
 
 # production
@@ -93,3 +99,7 @@ docker-compose.yml
 !.devcontainer/default/
 !.devcontainer/default/**
 
+
+# Playwright e2e artifacts (apps/web/e2e)
+apps/web/e2e/.results/
+apps/web/e2e/.runtime/
