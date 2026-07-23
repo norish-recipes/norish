@@ -23,7 +23,7 @@ import { QueryClient } from "@tanstack/react-query";
 
 import {
   CACHE_OWNER_STORAGE_KEY,
-  purgeForeignCaches,
+  purgeForeignReadArtifacts,
   queryCacheKey,
 } from "@/lib/query-cache/cache-identity";
 import { createIdbPersister } from "@/lib/query-cache/idb-persister";
@@ -199,7 +199,7 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
 
       await Promise.all([
         clearOwnerReadArtifacts(knownOwner),
-        purgeForeignCaches(idb, nextOwner),
+        purgeForeignReadArtifacts(idb, nextOwner),
       ]);
     } else if (!knownOwner) {
       queryClient.clear();

@@ -3,22 +3,16 @@
  *
  * The status modal shows an Offline-only "data from X ago" line so a developer
  * or a user reading a stale cache knows how old it is. The timestamp is written
- * when the Cache Warmer completes (see `offline-cache-controller`) and read back
+ * when the Warm Set completes and read back
  * while Offline. It lives in the same IndexedDB keyval store as the query cache,
  * keyed per owner, and is dropped by the wipe-cache action.
  */
 
 import type { OfflineIdb } from "@/lib/offline/idb";
 import { KEYVAL_STORE, offlineIdb } from "@/lib/offline/idb";
+import { lastWarmedKey } from "@/lib/query-cache/cache-identity";
 
-/** keyval prefix for the per-owner last-warmed timestamp. */
-const LAST_WARMED_KEY_PREFIX = "last-warmed:";
-
-function lastWarmedKey(ownerId: string): string {
-  return `${LAST_WARMED_KEY_PREFIX}${ownerId}`;
-}
-
-/** Record when the Cache Warmer last completed for an owner (epoch ms). */
+/** Record when the Warm Set last completed for an owner (epoch ms). */
 export async function writeLastWarmedAt(
   ownerId: string,
   timestampMs: number,

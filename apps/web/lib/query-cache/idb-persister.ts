@@ -5,7 +5,7 @@
  * The owner is mutable so an account switch can re-point the persister at the
  * new user's key without tearing down the QueryClient: subsequent saves land
  * under the new key, and the departed owner's blob is purged separately (see
- * {@link ../query-cache/cache-identity#purgeForeignCaches}).
+ * {@link ../query-cache/cache-identity#purgeForeignReadArtifacts}).
  *
  * Every operation is best-effort — a persistence failure must degrade to an
  * in-memory cache, never crash a render.
