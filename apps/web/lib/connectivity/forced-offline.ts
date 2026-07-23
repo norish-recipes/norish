@@ -2,7 +2,7 @@
  * The dev-only forced-Offline override (ADR-0007).
  *
  * Forcing Offline is a development affordance, not a shipped user control: it
- * lets a developer exercise the Outbox, cache-serving and Reconnect Sequence
+ * lets a developer exercise the Outbox, cache-serving and Recovery
  * without taking the backend down. It is modelled as an orthogonal persisted
  * override — a `localStorage` flag — layered on top of the pure two-state
  * connectivity machine, *not* a third machine state. The effective posture

@@ -4,19 +4,11 @@ import type { OutboxEntry } from "@/lib/outbox";
 import type { WarmSetInventory } from "@/lib/query-cache";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
+import { useRecovery } from "@/app/providers/recovery-provider";
 import { useWarmSet } from "@/hooks/use-warm-set";
 import { probeBackendReachable, setOfflineForced } from "@/lib/connectivity";
-import {
-  discardAllEntries,
-  isReplaying,
-  outboxStore,
-  processQueue,
-  retryParkedEntries,
-  runReconnectSequence,
-  subscribeReplayState,
-} from "@/lib/outbox";
+import { discardAllEntries, outboxStore, requeueParkedEntries } from "@/lib/outbox";
 import { cacheManager } from "@/lib/query-cache";
-import { useQueryClient } from "@tanstack/react-query";
 
 export interface OutboxSummary {
   entries: OutboxEntry[];
@@ -44,7 +36,6 @@ export interface OfflineStatus {
   counts: Omit<WarmSetInventory, "lastCompletedAt">;
   lastWarmedAt: number | null;
   outbox: OutboxSummary;
-  isReplaying: boolean;
   isSyncing: boolean;
   syncNow: () => Promise<void>;
   retryAll: () => Promise<void>;
@@ -61,7 +52,7 @@ export interface OfflineStatus {
  */
 export function useOfflineStatus(): OfflineStatus {
   const { posture, isLive, isOffline, isForced } = useConnectivity();
-  const queryClient = useQueryClient();
+  const recovery = useRecovery();
   const warmSet = useWarmSet();
   const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
 
@@ -73,9 +64,7 @@ export function useOfflineStatus(): OfflineStatus {
     plannedThisWeek: 0,
     lastCompletedAt: null,
   });
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  const replaying = useSyncExternalStore(subscribeReplayState, isReplaying, () => false);
+  const isSyncing = useSyncExternalStore(recovery.subscribe, recovery.isSyncing, () => false);
 
   // Keep the Outbox list live while open (in-tab and cross-tab).
   useEffect(() => {
@@ -146,33 +135,23 @@ export function useOfflineStatus(): OfflineStatus {
       return;
     }
 
-    setIsSyncing(true);
-
-    try {
-      // Probe first when Offline so we don't drain into an unreachable backend.
-      if (isOffline && !(await probeBackendReachable())) {
-        return;
-      }
-
-      await runReconnectSequence({
-        drain: () => processQueue(),
-        invalidate: () => queryClient.invalidateQueries(),
-        warm,
-      });
-
-      // The sequence's warm stamped a fresh last-warmed (in the leader tab);
-      // reflect it in the open modal.
-      await refreshInventory();
-    } finally {
-      setIsSyncing(false);
+    // Probe first when Offline so we don't start a batch against a backend we
+    // already know is unreachable.
+    if (isOffline && !(await probeBackendReachable())) {
+      return;
     }
-  }, [isForced, isOffline, queryClient, warm, refreshInventory]);
+
+    await recovery.recover();
+    await refreshInventory();
+  }, [isForced, isOffline, recovery, refreshInventory]);
 
   const retryAll = useCallback(async () => {
     if (owner) {
-      await retryParkedEntries(owner);
+      await requeueParkedEntries(owner);
+      await recovery.recover();
+      await refreshInventory();
     }
-  }, [owner]);
+  }, [owner, recovery, refreshInventory]);
 
   const discardAll = useCallback(async () => {
     if (!owner) {
@@ -182,8 +161,8 @@ export function useOfflineStatus(): OfflineStatus {
     await discardAllEntries(owner);
     // Reconcile the optimistically-applied changes against server truth so no
     // phantom lingers (best-effort while Offline; converges on reconnect).
-    await queryClient.invalidateQueries();
-  }, [owner, queryClient]);
+    await recovery.recover();
+  }, [owner, recovery]);
 
   const wipeCache = useCallback(async () => {
     await cacheManager.resetOfflineCopy("manual");
@@ -216,10 +195,8 @@ export function useOfflineStatus(): OfflineStatus {
     }
     // Exiting reuses the organic Offline→Live path (ADR-0007): clearing the flag
     // resumes the probe loop, the dev link forwards its held subscriptions to
-    // the real transport (the WebSocket un-suspends), and the controller's
-    // Offline→Live effect runs the Reconnect Sequence — drain, then refetch,
-    // then warm. A reload here would instead let mount refetches race the drain
-    // and make queued changes visibly vanish and reappear.
+    // the real transport (the WebSocket un-suspends), and Recovery converges the
+    // Outbox and read copy.
   }, []);
 
   return {
@@ -230,7 +207,6 @@ export function useOfflineStatus(): OfflineStatus {
     counts,
     lastWarmedAt,
     outbox,
-    isReplaying: replaying,
     isSyncing,
     syncNow,
     retryAll,

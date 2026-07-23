@@ -18,7 +18,7 @@ _Avoid_: online (ambiguous with general internet connectivity)
 The static assets (HTML, JS, CSS, fonts, icons) required to boot the web app without any backend response.
 
 **Offline Cache**:
-The persisted copy of previously fetched server data that the web app serves while Offline. Contains at minimum the Warm Set; everything else best-effort.
+The personalized persisted copy of previously fetched server data that the web app serves while Offline. It contains at minimum the Warm Set, treats everything else as best-effort, and excludes both the mutation Outbox and the static App Shell.
 
 **Warm Set**:
 The content guaranteed to be in the Offline Cache: the 50 most recent recipes in full (each with its primary image; further gallery images and videos are excluded from the guarantee), all groceries (including recurring) and stores, and the calendar's initial view window (roughly the current week on desktop, two weeks back/forward on mobile — enough to see the coming week's planned days). The Warm Set is a guaranteed floor — anything else fetched while Live is kept best-effort. A recipe the user creates joins the Warm Set on create (ADR-0008), so it is offline-available immediately rather than only at the next warm.
@@ -29,8 +29,9 @@ The background process that, while Live, tops the Offline Cache up until the War
 **Offline Toggle**:
 A development-only debug affordance that forces Offline, faithfully blocking every backend exchange (probes, realtime, refetches, Replay) at the transport layer so the offline runtime can be exercised without taking the backend down. Gated out of production builds; persists across reloads; cleared only by an explicit action. Not a shipped user control (ADR-0007).
 
-**Reconnect Sequence**:
-The strict order of events when Live returns: drain the Outbox first, then refetch server truth, then top up the Warm Set. Refetching before draining would make queued changes visibly vanish and reappear.
+**Recovery**:
+The process that makes the Live view trustworthy whenever queued work may exist: initial Live startup, return from Offline, WebSocket reconnection, manual synchronization, or automatic retry continuation. Recovery replays the Outbox to a terminal state, refetches active queries from server truth without clearing their visible cached data, then tops up the Warm Set. Its only public progress state is `isSyncing`.
+_Avoid_: Reconnect Sequence (too narrow; Recovery is not limited to an Offline-to-Live transition)
 
 **Outbox**:
 The persisted queue of mutations that could not reach the backend, held for Replay. Admission is universal — any mutation qualifies, with no per-feature list. Flows outside the data API (authentication) are outside the Outbox.

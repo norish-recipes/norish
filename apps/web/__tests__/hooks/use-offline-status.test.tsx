@@ -1,14 +1,7 @@
-import type { ReactNode } from "react";
 import { useOfflineStatus } from "@/components/navbar/offline-status/use-offline-status";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-/**
- * Shared mutable state for the module mocks. `calls` records the reconnect
- * steps in execution order — the ordering guarantee (drain → invalidate → warm)
- * is the point of several tests, so runReconnectSequence itself stays real.
- */
 const h = vi.hoisted(() => ({
   connectivity: {
     posture: "live" as "live" | "offline" | "offline-forced",
@@ -18,11 +11,11 @@ const h = vi.hoisted(() => ({
   },
   owner: "user-1" as string | null,
   outboxEntries: [] as Array<{ seq: number; path: string; status: string }>,
-  calls: [] as string[],
+  syncing: false,
   probeBackendReachable: vi.fn(async () => true),
   setOfflineForced: vi.fn(),
-  processQueue: vi.fn(async () => {}),
-  retryParkedEntries: vi.fn(async () => {}),
+  recover: vi.fn(async () => {}),
+  requeueParkedEntries: vi.fn(async () => {}),
   discardAllEntries: vi.fn(async () => 0),
   warmSetTopUp: vi.fn(async () => "complete" as const),
   warmSetInspect: vi.fn(async () => ({
@@ -39,8 +32,12 @@ vi.mock("@/app/providers/connectivity-provider", () => ({
   useConnectivity: () => h.connectivity,
 }));
 
-vi.mock("@/app/providers/trpc-provider", () => ({
-  useTRPC: () => ({}),
+vi.mock("@/app/providers/recovery-provider", () => ({
+  useRecovery: () => ({
+    recover: h.recover,
+    isSyncing: () => h.syncing,
+    subscribe: () => () => {},
+  }),
 }));
 
 vi.mock("@/hooks/use-warm-set", () => ({
@@ -56,17 +53,10 @@ vi.mock("@/lib/connectivity", () => ({
   setOfflineForced: h.setOfflineForced,
 }));
 
-vi.mock("@/lib/outbox", async () => {
-  const { runReconnectSequence } =
-    await vi.importActual<typeof import("@/lib/outbox/reconnect")>("@/lib/outbox/reconnect");
-
+vi.mock("@/lib/outbox", () => {
   return {
-    runReconnectSequence,
-    processQueue: h.processQueue,
-    retryParkedEntries: h.retryParkedEntries,
+    requeueParkedEntries: h.requeueParkedEntries,
     discardAllEntries: h.discardAllEntries,
-    isReplaying: () => false,
-    subscribeReplayState: () => () => {},
     outboxStore: {
       forOwner: vi.fn(async () => h.outboxEntries),
       subscribe: vi.fn(() => () => {}),
@@ -82,14 +72,8 @@ vi.mock("@/lib/query-cache", () => ({
   },
 }));
 
-let queryClient: QueryClient;
-
-function wrapper({ children }: { children: ReactNode }) {
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-}
-
 function renderStatus() {
-  return renderHook(() => useOfflineStatus(), { wrapper });
+  return renderHook(() => useOfflineStatus());
 }
 
 function setConnectivity(posture: "live" | "offline" | "offline-forced") {
@@ -106,7 +90,7 @@ beforeEach(() => {
   setConnectivity("live");
   h.owner = "user-1";
   h.outboxEntries = [];
-  h.calls = [];
+  h.syncing = false;
   h.probeBackendReachable.mockResolvedValue(true);
   h.warmSetInspect.mockResolvedValue({
     recipes: 2,
@@ -115,18 +99,8 @@ beforeEach(() => {
     plannedThisWeek: 4,
     lastCompletedAt: null,
   });
-  h.processQueue.mockImplementation(async () => {
-    h.calls.push("drain");
-  });
   h.warmSetTopUp.mockImplementation(async () => {
-    h.calls.push("warm");
-
     return "complete";
-  });
-
-  queryClient = new QueryClient();
-  vi.spyOn(queryClient, "invalidateQueries").mockImplementation(async () => {
-    h.calls.push("invalidate");
   });
 
   Object.defineProperty(window, "location", {
@@ -156,7 +130,7 @@ describe("useOfflineStatus", () => {
     expect(result.current.outbox.conflicted).toBe(1);
   });
 
-  it("syncNow runs the Reconnect Sequence strictly as drain → invalidate → warm", async () => {
+  it("syncNow delegates convergence to Recovery and refreshes the inventory", async () => {
     h.warmSetInspect.mockResolvedValue({
       recipes: 2,
       groceries: 3,
@@ -169,8 +143,7 @@ describe("useOfflineStatus", () => {
 
     await act(() => result.current.syncNow());
 
-    expect(h.calls).toEqual(["drain", "invalidate", "warm"]);
-    // The sequence's warm stamped last-warmed; the modal reflects it.
+    expect(h.recover).toHaveBeenCalledTimes(1);
     expect(result.current.lastWarmedAt).toBe(1234);
   });
 
@@ -191,18 +164,18 @@ describe("useOfflineStatus", () => {
     await act(() => result.current.syncNow());
 
     expect(h.probeBackendReachable).toHaveBeenCalled();
-    expect(h.calls).toEqual([]);
+    expect(h.recover).not.toHaveBeenCalled();
     expect(result.current.isSyncing).toBe(false);
   });
 
-  it("syncNow drains after a successful probe while Offline", async () => {
+  it("syncNow recovers after a successful probe while Offline", async () => {
     setConnectivity("offline");
 
     const { result } = renderStatus();
 
     await act(() => result.current.syncNow());
 
-    expect(h.calls).toEqual(["drain", "invalidate", "warm"]);
+    expect(h.recover).toHaveBeenCalledTimes(1);
   });
 
   it("syncNow is inert under the dev override — the transport is blocked", async () => {
@@ -213,7 +186,7 @@ describe("useOfflineStatus", () => {
     await act(() => result.current.syncNow());
 
     expect(h.probeBackendReachable).not.toHaveBeenCalled();
-    expect(h.calls).toEqual([]);
+    expect(h.recover).not.toHaveBeenCalled();
   });
 
   it("wipeCache clears the read cache, re-warms while Live and re-reads the stamp", async () => {
@@ -252,7 +225,7 @@ describe("useOfflineStatus", () => {
     await act(() => result.current.discardAll());
 
     expect(h.discardAllEntries).toHaveBeenCalledWith("user-1");
-    expect(h.calls).toContain("invalidate");
+    expect(h.recover).toHaveBeenCalledTimes(1);
   });
 
   it("retryAll un-parks for the active owner", async () => {
@@ -260,7 +233,8 @@ describe("useOfflineStatus", () => {
 
     await act(() => result.current.retryAll());
 
-    expect(h.retryParkedEntries).toHaveBeenCalledWith("user-1");
+    expect(h.requeueParkedEntries).toHaveBeenCalledWith("user-1");
+    expect(h.recover).toHaveBeenCalledTimes(1);
   });
 
   it("entering the dev override persists the flag and reloads", () => {

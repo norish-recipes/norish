@@ -33,20 +33,27 @@ const cache = vi.hoisted(() => {
 const warmSetTopUp = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
 
 const outboxStoreMock = vi.hoisted(() => ({}) as Record<string, never>);
-const processQueue = vi.hoisted(() => vi.fn(() => Promise.resolve()));
-const runReconnectSequence = vi.hoisted(() => vi.fn(() => Promise.resolve()));
-const setReplaySubmit = vi.hoisted(() => vi.fn());
-const setReplayOwnerResolver = vi.hoisted(() => vi.fn());
-const setReplaySessionGuard = vi.hoisted(() => vi.fn());
 const replayOutboxEntry = vi.hoisted(() => vi.fn());
+const recover = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+const recovery = vi.hoisted(() => ({
+  recover,
+  isSyncing: () => false,
+  subscribe: () => () => {},
+}));
+const createRecovery = vi.hoisted(() => vi.fn(() => recovery));
 
 let user: { id: string } | null = null;
 let connectivity = { isLive: true, isOffline: false };
+let wsStatus: "idle" | "connecting" | "connected" | "disconnected" = "idle";
 
 vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user }) }));
 vi.mock("@/app/providers/connectivity-provider", () => ({ useConnectivity: () => connectivity }));
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPCClient: () => ({}),
+  useConnectionStatus: () => ({ status: wsStatus }),
+}));
+vi.mock("@/app/providers/recovery-provider", () => ({
+  RecoveryProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 vi.mock("@/lib/query-cache", () => ({
   cacheManager: {
@@ -60,14 +67,9 @@ vi.mock("@/hooks/use-warm-set", () => ({
 }));
 vi.mock("@/lib/outbox", () => ({
   outboxStore: outboxStoreMock,
-  processQueue,
-  runReconnectSequence,
-  runIfLeader: (task: () => unknown) => task(),
-  setReplaySubmit,
-  setReplayOwnerResolver,
-  setReplaySessionGuard,
   replayOutboxEntry,
 }));
+vi.mock("@/lib/outbox/recovery", () => ({ createRecovery }));
 
 function renderController() {
   const queryClient = new QueryClient();
@@ -85,14 +87,7 @@ function renderController() {
 
 describe("OfflineCacheController", () => {
   beforeEach(() => {
-    for (const fn of [
-      cache.reconcileIdentity,
-      warmSetTopUp,
-      processQueue,
-      runReconnectSequence,
-      setReplaySubmit,
-      setReplayOwnerResolver,
-    ]) {
+    for (const fn of [cache.reconcileIdentity, warmSetTopUp, createRecovery, recover]) {
       fn.mockClear();
     }
     cache.state.owner = null;
@@ -104,6 +99,7 @@ describe("OfflineCacheController", () => {
     });
     user = null;
     connectivity = { isLive: true, isOffline: false };
+    wsStatus = "idle";
   });
 
   afterEach(() => cleanup());
@@ -153,45 +149,58 @@ describe("OfflineCacheController", () => {
     await screen.findByText("child");
   });
 
-  it("registers how the Outbox replays and who owns it", async () => {
+  it("builds Recovery with the current cache, Outbox and reconciliation adapters", async () => {
     user = { id: "u1" };
     renderController();
 
-    await waitFor(() => expect(setReplaySubmit).toHaveBeenCalled());
-    expect(setReplayOwnerResolver).toHaveBeenCalled();
+    await waitFor(() => expect(createRecovery).toHaveBeenCalled());
+    expect(createRecovery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        store: outboxStoreMock,
+        owner: cache.owner,
+        submit: expect.any(Function),
+        refetchActiveQueries: expect.any(Function),
+        topUp: warmSetTopUp,
+      })
+    );
   });
 
   it("retains other owners' queued mutations dormant (no purge on identity change)", async () => {
     user = { id: "u1" };
     renderController();
 
-    // ADR-0009: a bypassed identity transition keeps the outgoing queue under
-    // its owner. The controller never touches the store — the outbox mock has
-    // no methods at all, so any store call here would throw — and Replay stays
-    // owner-scoped via the registered resolver.
-    await waitFor(() => expect(setReplayOwnerResolver).toHaveBeenCalled());
-
-    const resolver = setReplayOwnerResolver.mock.calls.at(-1)?.[0] as () => string | null;
+    await waitFor(() => expect(createRecovery).toHaveBeenCalled());
+    const resolver = createRecovery.mock.calls.at(-1)?.[0].owner as () => string | null;
 
     expect(resolver()).toBe("u1");
   });
 
-  it("runs the Reconnect Sequence once an owner is settled while Live", async () => {
+  it("runs Recovery once an owner is settled while Live", async () => {
     user = { id: "u1" };
     renderController();
 
-    await waitFor(() => expect(runReconnectSequence).toHaveBeenCalledTimes(1));
-    // The sequence is given the drain/refetch/warm steps to run in order.
-    expect(runReconnectSequence).toHaveBeenCalledWith(
-      expect.objectContaining({
-        drain: expect.any(Function),
-        invalidate: expect.any(Function),
-        warm: expect.any(Function),
-      })
-    );
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
   });
 
-  it("does not run the Reconnect Sequence while Offline", async () => {
+  it("runs Recovery again when the WebSocket reconnects while already Live", async () => {
+    user = { id: "u1" };
+    const view = renderController();
+
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
+
+    wsStatus = "connected";
+    view.rerender(
+      <QueryClientProvider client={view.queryClient}>
+        <OfflineCacheController>
+          <div>child</div>
+        </OfflineCacheController>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(2));
+  });
+
+  it("does not run Recovery while Offline", async () => {
     user = { id: "u1" };
     connectivity = { isLive: false, isOffline: true };
     renderController();
@@ -202,7 +211,7 @@ describe("OfflineCacheController", () => {
         isOffline: true,
       })
     );
-    expect(runReconnectSequence).not.toHaveBeenCalled();
+    expect(recover).not.toHaveBeenCalled();
   });
 
   it("does not act before an owner is known (session unresolved)", async () => {
@@ -215,6 +224,6 @@ describe("OfflineCacheController", () => {
         isOffline: false,
       })
     );
-    expect(runReconnectSequence).not.toHaveBeenCalled();
+    expect(recover).not.toHaveBeenCalled();
   });
 });

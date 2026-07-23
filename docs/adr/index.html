@@ -226,11 +226,11 @@
       <header>
         <h1>
           Norish Architecture Decisions<span class="status-pill"
-            >ADR-0009 and ADR-0010 implemented</span
+            >ADR-0011 implemented</span
           >
         </h1>
         <p class="meta">
-          Updated July 22, 2026 · branch <code>feat/web-offline-safe</code> · source decisions in
+          Updated July 23, 2026 · branch <code>feat/web-offline-safe</code> · source decisions in
           <code>docs/adr/offline</code> · <code>docs/adr/releases</code>
         </p>
         <p class="lede">
@@ -581,6 +581,15 @@
           <p>
             <b>Accepted and executed.</b> A thin docs-version command, practical release checkpoint,
             usual-style notes, and production docs validation.
+          </p>
+        </li>
+        <li>
+          <a href="offline/0011-recovery-reconciles-after-terminal-replay.md"
+            >ADR-0011 — Recovery reconciles after terminal Replay</a
+          >
+          <p>
+            <b>Implemented.</b> Realtime remains the fast path; one post-Replay active-query
+            refetch is the cache-consistency guarantee.
           </p>
         </li>
       </ul>

@@ -1,7 +1,7 @@
 /**
  * Single-leader coordination via the Web Locks API.
  *
- * Replay (and the Reconnect Sequence that wraps it) run in one tab at a time so
+ * Replay (inside Recovery) runs in one tab at a time so
  * two tabs can't drain the shared Outbox at once. The lock is taken
  * *exclusive and blocking*: a second tab's call waits until the holder releases,
  * which means every tab's reconnect flow observes the drain as finished before

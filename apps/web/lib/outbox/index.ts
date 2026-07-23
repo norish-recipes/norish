@@ -16,22 +16,13 @@ export {
 } from "./replay-client";
 export { OUTBOX_LEADER_LOCK, runIfLeader, runWithOutboxLock } from "./leader";
 export {
-  isReplayHaltedByAuth,
-  isReplaying,
   MAX_AMBIGUOUS_ATTEMPTS,
-  processQueue,
   referencesParkedEntity,
   type ReplayHaltReason,
   type ReplayPassResult,
   type ReplaySubmit,
-  type ReplaySessionGuard,
-  type ReplaySessionVerdict,
   retryDelayMs,
   runReplayPass,
-  setReplayOwnerResolver,
-  setReplaySessionGuard,
-  setReplaySubmit,
-  subscribeReplayState,
 } from "./replay";
-export { runReconnectSequence, type ReconnectSequenceSteps } from "./reconnect";
-export { discardAllEntries, retryParkedEntries } from "./status-actions";
+export { createRecovery, type Recovery } from "./recovery";
+export { discardAllEntries, requeueParkedEntries } from "./status-actions";
