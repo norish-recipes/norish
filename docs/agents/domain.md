@@ -51,4 +51,4 @@ If your output contradicts an existing ADR, surface it explicitly rather than si
 
 ## Retired: openspec
 
-`openspec/` (capability specs + change proposals) was removed in July 2026. Don't look for it, and don't recreate spec mirrors of current behavior — behavior truth is the code and its tests; language lives in `CONTEXT.md`; decisions in `docs/adr/`; work-in-progress in GitHub issues (see `issue-tracker.md`).
+`openspec/` (capability specs + change proposals) was removed in July 2026. Don't look for it, and don't recreate spec mirrors of current behavior — behavior truth is the code and its tests; language lives in `CONTEXT.md`; decisions in `docs/adr/`; work-in-progress in `.scratch/` tickets (see `issue-tracker.md`).
