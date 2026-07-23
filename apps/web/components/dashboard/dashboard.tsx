@@ -8,12 +8,8 @@ import SearchInput from "@/components/dashboard/search-input";
 import TodaysMeals from "@/components/dashboard/today/todays-meals";
 import { useTranslations } from "next-intl";
 
-/**
- * The dashboard surface for the offline bootstrap (ADR-0009): the same client
- * composition as the Live dashboard page, minus its server-side session
- * lookup — the Warm Set renders from the restored persisted cache.
- */
-export function OfflineDashboard() {
+/** The dashboard surface shared by the Live route and Offline bootstrap. */
+export function Dashboard() {
   const t = useTranslations("recipes.dashboard");
 
   return (
