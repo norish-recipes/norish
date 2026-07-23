@@ -228,6 +228,18 @@ describe("useOfflineStatus", () => {
     expect(h.recover).toHaveBeenCalledTimes(1);
   });
 
+  it("discardAll stays local under the dev override", async () => {
+    setConnectivity("offline-forced");
+
+    const { result } = renderStatus();
+
+    await act(() => result.current.discardAll());
+
+    expect(h.discardAllEntries).toHaveBeenCalledWith("user-1");
+    expect(h.probeBackendReachable).not.toHaveBeenCalled();
+    expect(h.recover).not.toHaveBeenCalled();
+  });
+
   it("retryAll un-parks for the active owner", async () => {
     const { result } = renderStatus();
 
@@ -235,6 +247,31 @@ describe("useOfflineStatus", () => {
 
     expect(h.requeueParkedEntries).toHaveBeenCalledWith("user-1");
     expect(h.recover).toHaveBeenCalledTimes(1);
+  });
+
+  it("retryAll is inert under the dev override", async () => {
+    setConnectivity("offline-forced");
+
+    const { result } = renderStatus();
+
+    await act(() => result.current.retryAll());
+
+    expect(h.probeBackendReachable).not.toHaveBeenCalled();
+    expect(h.requeueParkedEntries).not.toHaveBeenCalled();
+    expect(h.recover).not.toHaveBeenCalled();
+  });
+
+  it("retryAll leaves parked work untouched while the backend is unreachable", async () => {
+    setConnectivity("offline");
+    h.probeBackendReachable.mockResolvedValue(false);
+
+    const { result } = renderStatus();
+
+    await act(() => result.current.retryAll());
+
+    expect(h.probeBackendReachable).toHaveBeenCalled();
+    expect(h.requeueParkedEntries).not.toHaveBeenCalled();
+    expect(h.recover).not.toHaveBeenCalled();
   });
 
   it("entering the dev override persists the flag and reloads", () => {

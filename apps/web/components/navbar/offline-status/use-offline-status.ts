@@ -129,29 +129,32 @@ export function useOfflineStatus(): OfflineStatus {
     setInventory(await warmSet.inspect());
   }, [warmSet]);
 
-  const syncNow = useCallback(async () => {
-    // The dev override blocks the transport entirely — there is nothing to sync.
+  const canReachBackend = useCallback(async () => {
     if (isForced) {
-      return;
+      return false;
     }
 
-    // Probe first when Offline so we don't start a batch against a backend we
-    // already know is unreachable.
-    if (isOffline && !(await probeBackendReachable())) {
+    return !isOffline || probeBackendReachable();
+  }, [isForced, isOffline]);
+
+  const syncNow = useCallback(async () => {
+    if (!(await canReachBackend())) {
       return;
     }
 
     await recovery.recover();
     await refreshInventory();
-  }, [isForced, isOffline, recovery, refreshInventory]);
+  }, [canReachBackend, recovery, refreshInventory]);
 
   const retryAll = useCallback(async () => {
-    if (owner) {
-      await requeueParkedEntries(owner);
-      await recovery.recover();
-      await refreshInventory();
+    if (!owner || !(await canReachBackend())) {
+      return;
     }
-  }, [owner, recovery, refreshInventory]);
+
+    await requeueParkedEntries(owner);
+    await recovery.recover();
+    await refreshInventory();
+  }, [canReachBackend, owner, recovery, refreshInventory]);
 
   const discardAll = useCallback(async () => {
     if (!owner) {
@@ -161,8 +164,10 @@ export function useOfflineStatus(): OfflineStatus {
     await discardAllEntries(owner);
     // Reconcile the optimistically-applied changes against server truth so no
     // phantom lingers (best-effort while Offline; converges on reconnect).
-    await recovery.recover();
-  }, [owner, recovery]);
+    if (await canReachBackend()) {
+      await recovery.recover();
+    }
+  }, [canReachBackend, owner, recovery]);
 
   const wipeCache = useCallback(async () => {
     await cacheManager.resetOfflineCopy("manual");

@@ -88,6 +88,22 @@ describe("Recovery", () => {
     expect(calls.slice(-2)).toEqual(["refetch", "warm"]);
   });
 
+  it("keeps draining when a pass discovers newly appended pending work", async () => {
+    await store.enqueue(entry({ id: "first", entityId: "g1" }));
+    submit.mockImplementationOnce(async () => {
+      calls.push("replay");
+      await store.enqueue(entry({ id: "second", entityId: "g2", input: { id: "g2" } }));
+
+      return { kind: "success" };
+    });
+
+    await recovery().recover();
+
+    expect(submit).toHaveBeenCalledTimes(2);
+    expect(await store.size("u1")).toBe(0);
+    expect(calls).toEqual(["replay", "replay", "refetch", "warm"]);
+  });
+
   it("does not reconcile a batch halted by transport or an identity mismatch", async () => {
     await store.enqueue(entry());
     submit.mockResolvedValueOnce({ kind: "unreachable" });
@@ -107,10 +123,15 @@ describe("Recovery", () => {
   it("shares one in-flight run and exposes only isSyncing", async () => {
     let finishRefetch: (() => void) | undefined;
     const recoveryInstance = recovery({
-      refetchActiveQueries: () =>
-        new Promise<void>((resolve) => {
-          finishRefetch = resolve;
-        }),
+      refetchActiveQueries: vi
+        .fn<() => Promise<void>>()
+        .mockImplementationOnce(
+          () =>
+            new Promise<void>((resolve) => {
+              finishRefetch = resolve;
+            })
+        )
+        .mockResolvedValue(undefined),
     });
     const syncing: boolean[] = [];
 
@@ -128,5 +149,35 @@ describe("Recovery", () => {
 
     expect(recoveryInstance.isSyncing()).toBe(false);
     expect(syncing).toEqual([true, false]);
+  });
+
+  it("runs a requested follow-up before the shared in-flight promise settles", async () => {
+    let finishFirstRefetch: (() => void) | undefined;
+    const controlledRefetch = vi
+      .fn<() => Promise<void>>()
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            finishFirstRefetch = resolve;
+          })
+      )
+      .mockImplementation(async () => {
+        calls.push("refetch");
+      });
+    const recoveryInstance = recovery({ refetchActiveQueries: controlledRefetch });
+    const first = recoveryInstance.recover();
+
+    await vi.waitFor(() => expect(finishFirstRefetch).toBeTypeOf("function"));
+    await store.enqueue(entry());
+    const followUp = recoveryInstance.recover();
+
+    expect(followUp).toBe(first);
+    finishFirstRefetch?.();
+    await first;
+
+    expect(submit).toHaveBeenCalledTimes(1);
+    expect(controlledRefetch).toHaveBeenCalledTimes(2);
+    expect(topUp).toHaveBeenCalledTimes(2);
+    expect(await store.size("u1")).toBe(0);
   });
 });

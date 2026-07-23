@@ -7,10 +7,10 @@
  * transport/auth/identity halt leaves the local copy as-is for a later trigger.
  */
 
-import type { OutboxStore } from "./outbox-store";
-import type { ReplaySubmit } from "./replay";
-import { runWithOutboxLock } from "./leader";
-import { runReplayPass } from "./replay";
+import type { OutboxStore } from "@/lib/outbox/outbox-store";
+import type { ReplaySubmit } from "@/lib/outbox/replay";
+import { runWithOutboxLock } from "@/lib/outbox/leader";
+import { runReplayPass } from "@/lib/outbox/replay";
 
 type SessionVerdict = "match" | "mismatch" | "unverifiable";
 
@@ -45,6 +45,7 @@ export function createRecovery({
   wait = waitFor,
 }: RecoveryDependencies): Recovery {
   let processing: Promise<void> | null = null;
+  let followUpRequested = false;
   const listeners = new Set<() => void>();
 
   function notify(): void {
@@ -90,6 +91,10 @@ export function createRecovery({
         continue;
       }
 
+      if (attempt.halted === null && attempt.remaining > 0) {
+        continue;
+      }
+
       return attempt.halted === null;
     }
 
@@ -105,18 +110,31 @@ export function createRecovery({
     await topUp();
   }
 
+  async function runRequestedRecoveries(): Promise<void> {
+    do {
+      followUpRequested = false;
+
+      try {
+        await run();
+      } catch {
+        // Recovery is best-effort and exposes no parallel error state. A trigger
+        // that arrived during the failed run still gets its requested follow-up.
+      }
+    } while (followUpRequested);
+  }
+
   return {
     recover() {
       if (processing) {
+        followUpRequested = true;
+
         return processing;
       }
 
-      processing = run()
-        .catch(() => undefined)
-        .finally(() => {
-          processing = null;
-          notify();
-        });
+      processing = runRequestedRecoveries().finally(() => {
+        processing = null;
+        notify();
+      });
       notify();
 
       return processing;
