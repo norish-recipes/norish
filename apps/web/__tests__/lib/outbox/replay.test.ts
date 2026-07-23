@@ -5,16 +5,12 @@ import { createOfflineIdb } from "@/lib/offline/idb";
 import { createOutboxStore } from "@/lib/outbox/outbox-store";
 import {
   MAX_AMBIGUOUS_ATTEMPTS,
-  processQueue,
   referencesParkedEntity,
   retryDelayMs,
   runReplayPass,
-  setReplayOwnerResolver,
-  setReplaySessionGuard,
-  setReplaySubmit,
 } from "@/lib/outbox/replay";
 import { IDBFactory } from "fake-indexeddb";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
   return {
@@ -203,59 +199,6 @@ describe("referencesParkedEntity", () => {
     expect(referencesParkedEntity({ file: new Blob(["g1"]), ...cyclic }, new Set(["g1"]))).toBe(
       false
     );
-  });
-});
-
-describe("processQueue session guard (ADR-0009)", () => {
-  let store: OutboxStore;
-
-  beforeEach(() => {
-    store = createOutboxStore(createOfflineIdb(new IDBFactory()));
-  });
-
-  afterEach(() => {
-    setReplaySubmit(null);
-    setReplayOwnerResolver(null);
-    setReplaySessionGuard(null);
-  });
-
-  it("submits nothing when the live session belongs to someone else — the queue stays dormant", async () => {
-    await store.enqueue(entry({ id: "a", ownerId: "u1" }));
-
-    const submit = vi.fn(async (): Promise<ReplayOutcome> => ({ kind: "success" }));
-
-    setReplaySubmit(submit);
-    setReplayOwnerResolver(() => "u1");
-    // The transport cookies now belong to another account (bypassed switch).
-    setReplaySessionGuard(async () => "mismatch");
-
-    await processQueue(store);
-
-    expect(submit).not.toHaveBeenCalled();
-    expect(await store.size("u1")).toBe(1);
-    expect((await store.forOwner("u1", "pending")).length).toBe(1);
-  });
-
-  it("drains normally when the session matches or cannot be verified", async () => {
-    await store.enqueue(entry({ id: "a", ownerId: "u1" }));
-
-    const submit = vi.fn(async (): Promise<ReplayOutcome> => ({ kind: "success" }));
-
-    setReplaySubmit(submit);
-    setReplayOwnerResolver(() => "u1");
-    setReplaySessionGuard(async () => "match");
-
-    await processQueue(store);
-    expect(submit).toHaveBeenCalledTimes(1);
-    expect(await store.size("u1")).toBe(0);
-
-    await store.enqueue(entry({ id: "b", ownerId: "u1" }));
-    // Offline: the session cannot be checked; the pass proceeds and halts on
-    // transport unreachability as before.
-    setReplaySessionGuard(async () => "unverifiable");
-
-    await processQueue(store);
-    expect(submit).toHaveBeenCalledTimes(2);
   });
 });
 

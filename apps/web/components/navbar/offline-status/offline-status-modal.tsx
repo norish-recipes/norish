@@ -236,7 +236,7 @@ function OutboxSection({ status }: { status: OfflineStatus }) {
             ))}
           </ul>
           <p className="text-muted text-xs">
-            {status.isReplaying || status.isSyncing
+            {status.isSyncing
               ? t("syncing", { count: outbox.pending })
               : t("pending", { count: outbox.pending })}
           </p>
@@ -255,7 +255,12 @@ function OutboxSection({ status }: { status: OfflineStatus }) {
           {t("syncNow")}
         </Button>
         {needsAttention > 0 ? (
-          <Button size="sm" variant="tertiary" onPress={() => void status.retryAll()}>
+          <Button
+            isDisabled={status.isForced || status.isSyncing}
+            size="sm"
+            variant="tertiary"
+            onPress={() => void status.retryAll()}
+          >
             {t("retryAll")}
           </Button>
         ) : null}

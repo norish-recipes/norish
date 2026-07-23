@@ -19,7 +19,7 @@ import type { AnyTRPCRouter } from "@trpc/server";
 import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "@/lib/outbox/input-codec";
 import { outboxStore } from "@/lib/outbox/outbox-store";
 import { isOutboxReplayContext } from "@/lib/outbox/replay-client";
-import { activeCacheOwner, readBootOwner } from "@/lib/query-cache";
+import { cacheManager } from "@/lib/query-cache";
 import { observable } from "@trpc/server/observable";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -50,8 +50,13 @@ function normalizeHeaders(headers: unknown): Record<string, string> {
 }
 
 function captureOwner(): string {
-  // The entry belongs to whoever is signed in now; anon only on a pre-login edge.
-  return activeCacheOwner() ?? readBootOwner() ?? "anon";
+  const owner = cacheManager.owner();
+
+  if (!owner) {
+    throw new Error("Cannot queue an offline mutation before cache ownership is established");
+  }
+
+  return owner;
 }
 
 /** The client-minted id a hero create carries as `input.id` (ADR-0003), if any. */

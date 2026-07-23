@@ -212,6 +212,7 @@ pnpm build
 - Follow the PR template
 - Link the PR to an issue (`Fixes #...` in the PR body)
 - PRs without a linked issue will be closed, except translation-only PRs
+  (maintainer PRs may reference a Linear issue id — e.g. `GEZ-46` — instead)
 - Ensure CI checks pass
 
 ## Testing

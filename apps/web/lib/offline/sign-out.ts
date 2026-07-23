@@ -8,14 +8,12 @@
  * here; they retain the outgoing queue dormant under its owner.
  */
 import type { OutboxStore } from "@/lib/outbox";
-import type { QueryClient } from "@tanstack/react-query";
-import { deleteImageCache } from "@/lib/offline/cache-names";
 import { discardAllEntries, outboxStore } from "@/lib/outbox";
-import { activeCacheOwner, readBootOwner, wipeReadCache } from "@/lib/query-cache";
+import { cacheManager } from "@/lib/query-cache";
 
 /** The account whose offline state a sign-out would affect. */
 function signOutOwner(): string | null {
-  return activeCacheOwner() ?? readBootOwner();
+  return cacheManager.owner();
 }
 
 /**
@@ -29,7 +27,6 @@ export async function countUnsyncedChanges(store: OutboxStore = outboxStore): Pr
 }
 
 export interface ClearOfflineStateOptions {
-  queryClient: QueryClient;
   /** True only when the user confirmed discarding a non-empty queue. */
   discardQueue: boolean;
   store?: OutboxStore;
@@ -41,7 +38,6 @@ export interface ClearOfflineStateOptions {
  * only on explicit confirmation (ADR-0009).
  */
 export async function clearOfflineStateForSignOut({
-  queryClient,
   discardQueue,
   store = outboxStore,
 }: ClearOfflineStateOptions): Promise<void> {
@@ -51,6 +47,5 @@ export async function clearOfflineStateForSignOut({
     await discardAllEntries(owner, store);
   }
 
-  await wipeReadCache(queryClient, owner ? { ownerId: owner } : {});
-  await deleteImageCache();
+  await cacheManager.resetOfflineCopy("sign-out");
 }

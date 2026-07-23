@@ -8,16 +8,13 @@
  * parked create parks the edits that depend on it, so a broken chain is shown as
  * one story rather than a cascade of unrelated failures.
  *
- * {@link runReplayPass} is the pure, testable core (store + submit in, result
- * out). The coordinator below adds single-flight execution, leader-election, and
- * bounded-backoff rescheduling for transient 5xx failures.
+ * Recovery owns single-flight execution, leader election, retry continuation,
+ * and final cache reconciliation; this module is only the FIFO Replay pass.
  */
 
 import type { ReplayOutcome } from "@/lib/outbox/error-classification";
 import type { OutboxStore } from "@/lib/outbox/outbox-store";
 import type { OutboxEntry } from "@/lib/outbox/outbox-types";
-import { runWithOutboxLock } from "@/lib/outbox/leader";
-import { outboxStore } from "@/lib/outbox/outbox-store";
 
 /** Attempts a 5xx entry gets before it is parked as retries-exhausted. */
 export const MAX_AMBIGUOUS_ATTEMPTS = 3;
@@ -176,145 +173,4 @@ export async function runReplayPass({
   }
 
   return finish(null, null);
-}
-
-// ---------------------------------------------------------------------------
-// Coordinator
-// ---------------------------------------------------------------------------
-
-/**
- * Session-ownership verdict fetched immediately before a drain: `match` when
- * the live session belongs to the queue owner, `mismatch` when it belongs to
- * someone else (a bypassed identity change — the queue must stay dormant,
- * ADR-0009), `unverifiable` when the backend cannot be asked (offline — the
- * pass proceeds and halts on unreachability as usual).
- */
-export type ReplaySessionVerdict = "match" | "mismatch" | "unverifiable";
-
-export type ReplaySessionGuard = (ownerId: string) => Promise<ReplaySessionVerdict>;
-
-let submitFn: ReplaySubmit | null = null;
-let ownerResolver: (() => string | null) | null = null;
-let sessionGuard: ReplaySessionGuard | null = null;
-let processing: Promise<ReplayPassResult> | null = null;
-let retryTimer: ReturnType<typeof setTimeout> | null = null;
-let haltedByAuth = false;
-
-const stateListeners = new Set<() => void>();
-
-function notifyState(): void {
-  for (const listener of stateListeners) {
-    listener();
-  }
-}
-
-/** Register how a stored entry is replayed (the live tRPC client is captured here). */
-export function setReplaySubmit(fn: ReplaySubmit | null): void {
-  submitFn = fn;
-}
-
-/** Register how the current Replay owner (session user id) is resolved. */
-export function setReplayOwnerResolver(resolver: (() => string | null) | null): void {
-  ownerResolver = resolver;
-}
-
-/**
- * Register the pre-drain session check. Client owner state alone cannot be
- * trusted here: a bypassed identity change swaps the transport's cookies
- * under a tab whose local state still names the old owner, and a drain would
- * replay that owner's queue as the incoming account (ADR-0009).
- */
-export function setReplaySessionGuard(guard: ReplaySessionGuard | null): void {
-  sessionGuard = guard;
-}
-
-/** True while Replay is halted on an expired session ("sign in to sync"). */
-export function isReplayHaltedByAuth(): boolean {
-  return haltedByAuth;
-}
-
-export function subscribeReplayState(listener: () => void): () => void {
-  stateListeners.add(listener);
-
-  return () => {
-    stateListeners.delete(listener);
-  };
-}
-
-function clearRetryTimer(): void {
-  if (retryTimer) {
-    clearTimeout(retryTimer);
-    retryTimer = null;
-  }
-}
-
-function scheduleRetry(delayMs: number): void {
-  clearRetryTimer();
-  retryTimer = setTimeout(() => {
-    retryTimer = null;
-    void processQueue();
-  }, delayMs);
-}
-
-const EMPTY_RESULT: ReplayPassResult = {
-  removed: 0,
-  parked: 0,
-  remaining: 0,
-  halted: null,
-  retryAfterMs: null,
-};
-
-async function runOnce(store: OutboxStore): Promise<ReplayPassResult> {
-  clearRetryTimer();
-
-  const ownerId = ownerResolver?.() ?? null;
-
-  if (!submitFn || !ownerId) {
-    return EMPTY_RESULT;
-  }
-
-  // Nothing is submitted unless the live session still belongs to the queue
-  // owner; on mismatch the entries stay pending — dormant until that owner
-  // signs in again (ADR-0009).
-  if (sessionGuard && (await sessionGuard(ownerId)) === "mismatch") {
-    return EMPTY_RESULT;
-  }
-
-  const result = await runReplayPass({ store, submit: submitFn, ownerId });
-
-  const nextAuthHalt = result.halted === "unauthorized";
-
-  if (nextAuthHalt !== haltedByAuth) {
-    haltedByAuth = nextAuthHalt;
-  }
-
-  if (result.halted === "retry" && result.retryAfterMs !== null) {
-    scheduleRetry(result.retryAfterMs);
-  }
-
-  notifyState();
-
-  return result;
-}
-
-/**
- * Drain the Outbox once, under the leader lock and single-flight. Safe to call
- * from any tab and on any trigger — a run already in progress is shared, and a
- * non-leader tab blocks until the leader's drain completes.
- */
-export function processQueue(store: OutboxStore = outboxStore): Promise<ReplayPassResult> {
-  if (processing) {
-    return processing;
-  }
-
-  processing = runWithOutboxLock(() => runOnce(store)).finally(() => {
-    processing = null;
-  });
-
-  return processing;
-}
-
-/** Whether a drain is currently in progress. */
-export function isReplaying(): boolean {
-  return processing !== null;
 }

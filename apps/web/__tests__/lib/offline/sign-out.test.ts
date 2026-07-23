@@ -1,18 +1,17 @@
 import type { OutboxStore } from "@/lib/outbox/outbox-store";
 import type { NewOutboxEntry } from "@/lib/outbox/outbox-types";
-import type { QueryClient } from "@tanstack/react-query";
-import { IMAGE_CACHE_NAME } from "@/lib/offline/cache-names";
 import { createOfflineIdb } from "@/lib/offline/idb";
 import { clearOfflineStateForSignOut, countUnsyncedChanges } from "@/lib/offline/sign-out";
 import { createOutboxStore } from "@/lib/outbox/outbox-store";
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const activeCacheOwner = vi.hoisted(() => vi.fn<() => string | null>(() => "u1"));
-const readBootOwner = vi.hoisted(() => vi.fn<() => string | null>(() => null));
-const wipeReadCache = vi.hoisted(() => vi.fn(async () => {}));
+const owner = vi.hoisted(() => vi.fn<() => string | null>(() => "u1"));
+const resetOfflineCopy = vi.hoisted(() => vi.fn(async () => {}));
 
-vi.mock("@/lib/query-cache", () => ({ activeCacheOwner, readBootOwner, wipeReadCache }));
+vi.mock("@/lib/query-cache", () => ({
+  cacheManager: { owner, resetOfflineCopy },
+}));
 
 function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
   return {
@@ -29,24 +28,11 @@ function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
 
 describe("sign-out offline state (ADR-0009)", () => {
   let store: OutboxStore;
-  const queryClient = {} as QueryClient;
-  const deletedCaches: string[] = [];
 
   beforeEach(() => {
     store = createOutboxStore(createOfflineIdb(new IDBFactory()));
-    activeCacheOwner.mockReturnValue("u1");
-    readBootOwner.mockReturnValue(null);
-    wipeReadCache.mockClear();
-    deletedCaches.length = 0;
-    vi.stubGlobal("caches", {
-      delete: vi.fn(async (name: string) => {
-        deletedCaches.push(name);
-
-        return true;
-      }),
-    });
-
-    return () => vi.unstubAllGlobals();
+    owner.mockReturnValue("u1");
+    resetOfflineCopy.mockClear();
   });
 
   it("counts the active owner's queued changes, parked included", async () => {
@@ -60,7 +46,7 @@ describe("sign-out offline state (ADR-0009)", () => {
   });
 
   it("counts zero when no owner is resolvable", async () => {
-    activeCacheOwner.mockReturnValue(null);
+    owner.mockReturnValue(null);
 
     await store.enqueue(entry());
 
@@ -70,11 +56,10 @@ describe("sign-out offline state (ADR-0009)", () => {
   it("clears reads and images but keeps the queue without discard confirmation", async () => {
     await store.enqueue(entry());
 
-    await clearOfflineStateForSignOut({ queryClient, discardQueue: false, store });
+    await clearOfflineStateForSignOut({ discardQueue: false, store });
 
     expect(await store.size("u1")).toBe(1);
-    expect(wipeReadCache).toHaveBeenCalledWith(queryClient, { ownerId: "u1" });
-    expect(deletedCaches).toEqual([IMAGE_CACHE_NAME]);
+    expect(resetOfflineCopy).toHaveBeenCalledWith("sign-out");
   });
 
   it("discards only the active owner's queue after confirmation", async () => {
@@ -82,12 +67,11 @@ describe("sign-out offline state (ADR-0009)", () => {
     await store.enqueue(entry({ id: "b" }));
     await store.enqueue(entry({ id: "dormant", ownerId: "someone-else" }));
 
-    await clearOfflineStateForSignOut({ queryClient, discardQueue: true, store });
+    await clearOfflineStateForSignOut({ discardQueue: true, store });
 
     expect(await store.size("u1")).toBe(0);
     // Another owner's dormant queue is never touched by this user's sign-out.
     expect(await store.size("someone-else")).toBe(1);
-    expect(wipeReadCache).toHaveBeenCalledTimes(1);
-    expect(deletedCaches).toEqual([IMAGE_CACHE_NAME]);
+    expect(resetOfflineCopy).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,7 +1,5 @@
 import type { OutboxStore } from "./outbox-store";
-import type { ReplayPassResult } from "./replay";
 import { outboxStore } from "./outbox-store";
-import { processQueue } from "./replay";
 
 /**
  * Bulk Outbox actions for the status modal (commit 9).
@@ -11,14 +9,13 @@ import { processQueue } from "./replay";
  */
 
 /**
- * Un-park every Parked/Conflicted entry for an owner, then drain — the modal's
- * bulk "Retry all". Parking is never permanent: a manual retry resets the entry
- * to pending and lets Replay attempt it again.
+ * Un-park every Parked/Conflicted entry for an owner. Recovery owns the ensuing
+ * Replay and cache reconciliation.
  */
-export async function retryParkedEntries(
+export async function requeueParkedEntries(
   ownerId: string,
   store: OutboxStore = outboxStore
-): Promise<ReplayPassResult> {
+): Promise<void> {
   const parked = (await store.forOwner(ownerId)).filter(
     (entry) => entry.status === "parked" || entry.status === "conflicted"
   );
@@ -26,8 +23,6 @@ export async function retryParkedEntries(
   await Promise.all(
     parked.map((entry) => store.update(entry.seq, { status: "pending", parkedReason: undefined }))
   );
-
-  return processQueue(store);
 }
 
 /**

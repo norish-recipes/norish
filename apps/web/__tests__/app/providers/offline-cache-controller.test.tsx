@@ -6,42 +6,70 @@ import "@testing-library/jest-dom";
 
 import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 
-const resolveCacheOwner = vi.hoisted(() =>
-  vi.fn<(options: { sessionUserId: string | null; isOffline: boolean }) => Promise<void>>(() =>
-    Promise.resolve()
-  )
-);
-const activeCacheOwner = vi.hoisted(() => vi.fn<() => string | null>(() => null));
-const warmCache = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
+const cache = vi.hoisted(() => {
+  const state = {
+    owner: null as string | null,
+    listeners: new Set<() => void>(),
+  };
+
+  return {
+    state,
+    owner: vi.fn(() => state.owner),
+    subscribe: vi.fn((listener: () => void) => {
+      state.listeners.add(listener);
+
+      return () => state.listeners.delete(listener);
+    }),
+    reconcileIdentity: vi.fn<
+      (options: { sessionUserId: string | null; isOffline: boolean }) => Promise<void>
+    >(() => Promise.resolve()),
+    publish(owner: string | null) {
+      state.owner = owner;
+
+      for (const listener of state.listeners) listener();
+    },
+  };
+});
+const warmSetTopUp = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
 
 const outboxStoreMock = vi.hoisted(() => ({}) as Record<string, never>);
-const processQueue = vi.hoisted(() => vi.fn(() => Promise.resolve()));
-const runReconnectSequence = vi.hoisted(() => vi.fn(() => Promise.resolve()));
-const setReplaySubmit = vi.hoisted(() => vi.fn());
-const setReplayOwnerResolver = vi.hoisted(() => vi.fn());
-const setReplaySessionGuard = vi.hoisted(() => vi.fn());
 const replayOutboxEntry = vi.hoisted(() => vi.fn());
+const recover = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+const recovery = vi.hoisted(() => ({
+  recover,
+  isSyncing: () => false,
+  subscribe: () => () => {},
+}));
+const createRecovery = vi.hoisted(() => vi.fn(() => recovery));
 
 let user: { id: string } | null = null;
 let connectivity = { isLive: true, isOffline: false };
+let wsStatus: "idle" | "connecting" | "connected" | "disconnected" = "idle";
 
 vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user }) }));
 vi.mock("@/app/providers/connectivity-provider", () => ({ useConnectivity: () => connectivity }));
 vi.mock("@/app/providers/trpc-provider", () => ({
-  useTRPC: () => ({}),
   useTRPCClient: () => ({}),
+  useConnectionStatus: () => ({ status: wsStatus }),
 }));
-vi.mock("@/lib/query-cache", () => ({ resolveCacheOwner, activeCacheOwner, warmCache }));
+vi.mock("@/app/providers/recovery-provider", () => ({
+  RecoveryProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+vi.mock("@/lib/query-cache", () => ({
+  cacheManager: {
+    owner: cache.owner,
+    subscribe: cache.subscribe,
+    reconcileIdentity: cache.reconcileIdentity,
+  },
+}));
+vi.mock("@/hooks/use-warm-set", () => ({
+  useWarmSet: () => ({ topUp: warmSetTopUp, inspect: vi.fn(), promoteCreatedRecipe: vi.fn() }),
+}));
 vi.mock("@/lib/outbox", () => ({
   outboxStore: outboxStoreMock,
-  processQueue,
-  runReconnectSequence,
-  runIfLeader: (task: () => unknown) => task(),
-  setReplaySubmit,
-  setReplayOwnerResolver,
-  setReplaySessionGuard,
   replayOutboxEntry,
 }));
+vi.mock("@/lib/outbox/recovery", () => ({ createRecovery }));
 
 function renderController() {
   const queryClient = new QueryClient();
@@ -59,48 +87,50 @@ function renderController() {
 
 describe("OfflineCacheController", () => {
   beforeEach(() => {
-    for (const fn of [
-      resolveCacheOwner,
-      warmCache,
-      processQueue,
-      runReconnectSequence,
-      setReplaySubmit,
-      setReplayOwnerResolver,
-    ]) {
+    for (const fn of [cache.reconcileIdentity, warmSetTopUp, createRecovery, recover]) {
       fn.mockClear();
     }
-    activeCacheOwner.mockReset().mockReturnValue(null);
+    cache.state.owner = null;
+    cache.state.listeners.clear();
+    cache.owner.mockClear();
+    cache.subscribe.mockClear();
+    cache.reconcileIdentity.mockImplementation(async ({ sessionUserId }) => {
+      if (sessionUserId) cache.publish(sessionUserId);
+    });
     user = null;
     connectivity = { isLive: true, isOffline: false };
+    wsStatus = "idle";
   });
 
   afterEach(() => cleanup());
 
   it("reconciles the cache owner from the current identity and connectivity", async () => {
     user = { id: "u1" };
-    activeCacheOwner.mockReturnValue("u1");
-
     renderController();
 
     await waitFor(() =>
-      expect(resolveCacheOwner).toHaveBeenCalledWith({ sessionUserId: "u1", isOffline: false })
+      expect(cache.reconcileIdentity).toHaveBeenCalledWith({
+        sessionUserId: "u1",
+        isOffline: false,
+      })
     );
   });
 
   it("hides the outgoing owner's UI until an account switch is isolated", async () => {
     user = { id: "u1" };
-    activeCacheOwner.mockReturnValue("u1");
-
     const view = renderController();
 
     await screen.findByText("child");
 
     let finishSwitch: (() => void) | undefined;
 
-    resolveCacheOwner.mockImplementationOnce(
+    cache.reconcileIdentity.mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
-          finishSwitch = resolve;
+          finishSwitch = () => {
+            cache.publish("u2");
+            resolve();
+          };
         })
     );
     user = { id: "u2" };
@@ -114,78 +144,86 @@ describe("OfflineCacheController", () => {
 
     expect(screen.queryByText("child")).not.toBeInTheDocument();
 
-    activeCacheOwner.mockReturnValue("u2");
     finishSwitch?.();
 
     await screen.findByText("child");
   });
 
-  it("registers how the Outbox replays and who owns it", async () => {
+  it("builds Recovery with the current cache, Outbox and reconciliation adapters", async () => {
     user = { id: "u1" };
-    activeCacheOwner.mockReturnValue("u1");
-
     renderController();
 
-    await waitFor(() => expect(setReplaySubmit).toHaveBeenCalled());
-    expect(setReplayOwnerResolver).toHaveBeenCalled();
-  });
-
-  it("retains other owners' queued mutations dormant (no purge on identity change)", async () => {
-    user = { id: "u1" };
-    activeCacheOwner.mockReturnValue("u1");
-
-    renderController();
-
-    // ADR-0009: a bypassed identity transition keeps the outgoing queue under
-    // its owner. The controller never touches the store — the outbox mock has
-    // no methods at all, so any store call here would throw — and Replay stays
-    // owner-scoped via the registered resolver.
-    await waitFor(() => expect(setReplayOwnerResolver).toHaveBeenCalled());
-
-    const resolver = setReplayOwnerResolver.mock.calls.at(-1)?.[0] as () => string | null;
-
-    expect(resolver()).toBe("u1");
-  });
-
-  it("runs the Reconnect Sequence once an owner is settled while Live", async () => {
-    user = { id: "u1" };
-    activeCacheOwner.mockReturnValue("u1");
-
-    renderController();
-
-    await waitFor(() => expect(runReconnectSequence).toHaveBeenCalledTimes(1));
-    // The sequence is given the drain/refetch/warm steps to run in order.
-    expect(runReconnectSequence).toHaveBeenCalledWith(
+    await waitFor(() => expect(createRecovery).toHaveBeenCalled());
+    expect(createRecovery).toHaveBeenCalledWith(
       expect.objectContaining({
-        drain: expect.any(Function),
-        invalidate: expect.any(Function),
-        warm: expect.any(Function),
+        store: outboxStoreMock,
+        owner: cache.owner,
+        submit: expect.any(Function),
+        refetchActiveQueries: expect.any(Function),
+        topUp: warmSetTopUp,
       })
     );
   });
 
-  it("does not run the Reconnect Sequence while Offline", async () => {
+  it("retains other owners' queued mutations dormant (no purge on identity change)", async () => {
+    user = { id: "u1" };
+    renderController();
+
+    await waitFor(() => expect(createRecovery).toHaveBeenCalled());
+    const resolver = createRecovery.mock.calls.at(-1)?.[0].owner as () => string | null;
+
+    expect(resolver()).toBe("u1");
+  });
+
+  it("runs Recovery once an owner is settled while Live", async () => {
+    user = { id: "u1" };
+    renderController();
+
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
+  });
+
+  it("runs Recovery again when the WebSocket reconnects while already Live", async () => {
+    user = { id: "u1" };
+    const view = renderController();
+
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(1));
+
+    wsStatus = "connected";
+    view.rerender(
+      <QueryClientProvider client={view.queryClient}>
+        <OfflineCacheController>
+          <div>child</div>
+        </OfflineCacheController>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(recover).toHaveBeenCalledTimes(2));
+  });
+
+  it("does not run Recovery while Offline", async () => {
     user = { id: "u1" };
     connectivity = { isLive: false, isOffline: true };
-    activeCacheOwner.mockReturnValue("u1");
-
     renderController();
 
     await waitFor(() =>
-      expect(resolveCacheOwner).toHaveBeenCalledWith({ sessionUserId: "u1", isOffline: true })
+      expect(cache.reconcileIdentity).toHaveBeenCalledWith({
+        sessionUserId: "u1",
+        isOffline: true,
+      })
     );
-    expect(runReconnectSequence).not.toHaveBeenCalled();
+    expect(recover).not.toHaveBeenCalled();
   });
 
   it("does not act before an owner is known (session unresolved)", async () => {
     user = null;
-    activeCacheOwner.mockReturnValue(null);
-
     renderController();
 
     await waitFor(() =>
-      expect(resolveCacheOwner).toHaveBeenCalledWith({ sessionUserId: null, isOffline: false })
+      expect(cache.reconcileIdentity).toHaveBeenCalledWith({
+        sessionUserId: null,
+        isOffline: false,
+      })
     );
-    expect(runReconnectSequence).not.toHaveBeenCalled();
+    expect(recover).not.toHaveBeenCalled();
   });
 });

@@ -57,7 +57,6 @@ function makeStatus(overrides: Partial<OfflineStatus> = {}): Record<string, unkn
     counts: { recipes: 12, groceries: 5, stores: 2, plannedThisWeek: 4 },
     lastWarmedAt: null,
     outbox: { entries: [], total: 0, pending: 0, parked: 0, conflicted: 0 },
-    isReplaying: false,
     isSyncing: false,
     syncNow: vi.fn(async () => {}),
     retryAll: vi.fn(async () => {}),

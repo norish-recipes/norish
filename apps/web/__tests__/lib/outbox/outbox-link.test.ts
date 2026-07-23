@@ -7,11 +7,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { hasOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 
 const enqueue = vi.hoisted(() => vi.fn(async () => ({})));
+const owner = vi.hoisted(() => vi.fn<() => string | null>(() => "u1"));
 
 vi.mock("@/lib/outbox/outbox-store", () => ({ outboxStore: { enqueue } }));
 vi.mock("@/lib/query-cache", () => ({
-  activeCacheOwner: () => "u1",
-  readBootOwner: () => null,
+  cacheManager: { owner },
 }));
 
 type FakeOp = {
@@ -47,7 +47,10 @@ function mutationOp(overrides: Partial<FakeOp> = {}): FakeOp {
 }
 
 describe("createOutboxLink", () => {
-  beforeEach(() => enqueue.mockClear());
+  beforeEach(() => {
+    enqueue.mockClear();
+    owner.mockReturnValue("u1");
+  });
 
   it("captures a mutation that failed on unreachability, then still propagates the error", async () => {
     const result = await runLink(mutationOp(), errorWith(new TypeError("Failed to fetch")));
@@ -71,6 +74,15 @@ describe("createOutboxLink", () => {
 
     expect(result.error).toBeDefined();
     expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it("rejects admission when no cache owner has been established", async () => {
+    owner.mockReturnValue(null);
+
+    const result = await runLink(mutationOp(), errorWith(new TypeError("Failed to fetch")));
+
+    expect(enqueue).not.toHaveBeenCalled();
+    expect(hasOutboxAdmissionFailed(result.error)).toBe(true);
   });
 
   it("does not re-capture a replay (marked context)", async () => {

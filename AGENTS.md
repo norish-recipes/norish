@@ -34,4 +34,23 @@ Use this file for lightweight repo context.
 - Use the existing logger patterns instead of `console.log`.
 - Avoid `as any`, `@ts-ignore`, and `@ts-expect-error`.
 - Route database access through repositories instead of direct router-level queries.
+- Definition of done: the `CONTRIBUTING.md` gates — `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build` — plus tests for new functionality; user-visible work also follows `docs/agents/feature-docs.md`.
 - Keep repo guidance concise; prefer practical conventions over long project narratives.
+
+## Agent skills
+
+### Issue tracker
+
+Working tickets and specs live as committed markdown under `.scratch/<feature>/`, so they need no tracker account and travel with the branch; GitHub Issues is the community inbox and Linear (`GEZ`) the maintainer backlog, both read-only to the skills. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+One glossary at root `CONTEXT.md` (a `###` section per feature area); ADRs in per-area folders under `docs/adr/` with globally unique numbering. See `docs/agents/domain.md`.
+
+### Feature docs & release notes
+
+Every feature PR updates the Target Version's release notes and the docs in `apps/docs` (pages with screenshots; env vars land in `.env.example`, a configuration page, and Upgrade notes). See `docs/agents/feature-docs.md`.

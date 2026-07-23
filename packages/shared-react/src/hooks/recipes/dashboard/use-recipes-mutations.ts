@@ -13,7 +13,6 @@ import type { CreateRecipeHooksOptions } from "../types";
 import type { RecipesCacheHelpers } from "./use-recipes-cache";
 import { shouldPreserveOptimisticUpdate as preserveOptimisticUpdate } from "../../optimistic-updates";
 import { OPTIMISTIC_PENDING_RECIPE_PREFIX } from "./use-recipes-cache";
-import { promoteRecipeToWarmSet } from "./warm-recipe";
 
 type RecipeListPage = {
   recipes: RecipeDashboardDTO[];
@@ -260,9 +259,10 @@ export type RecipesMutationsResult = {
 };
 
 export type RecipesMutationErrorHandler = (error: unknown, operation: string) => void;
+export type RecipeCreatedAdapter = (recipeId: string) => void;
 
 export function createUseRecipesMutations(
-  { useTRPC, shouldPreserveOptimisticUpdate, warmRecipeGcTime }: CreateRecipeHooksOptions,
+  { useTRPC, shouldPreserveOptimisticUpdate }: CreateRecipeHooksOptions,
   dependencies: {
     useRecipesCacheHelpers: () => Pick<
       RecipesCacheHelpers,
@@ -275,7 +275,8 @@ export function createUseRecipesMutations(
   }
 ) {
   return function useRecipesMutations(
-    onError?: RecipesMutationErrorHandler
+    onError?: RecipesMutationErrorHandler,
+    onRecipeCreated?: RecipeCreatedAdapter
   ): RecipesMutationsResult {
     const trpc = useTRPC();
     const queryClient = useQueryClient();
@@ -405,10 +406,7 @@ export function createUseRecipesMutations(
           });
 
           queryClient.setQueryData<FullRecipeDTO | null>(detailQueryKey, optimisticRecipe);
-          // Promote the new recipe into the Warm Set so it survives Offline
-          // immediately — covering the optimistic/queued offline create too, since
-          // this onMutate runs identically whether Live or Offline (ADR-0008).
-          promoteRecipeToWarmSet(queryClient, detailQueryKey, warmRecipeGcTime);
+          onRecipeCreated?.(optimisticRecipe.id);
           setAllRecipesData((previousData) =>
             addRecipeToLists(previousData, createOptimisticDashboardRecipe(optimisticRecipe))
           );

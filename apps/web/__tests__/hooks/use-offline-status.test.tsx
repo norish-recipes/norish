@@ -1,14 +1,7 @@
-import type { ReactNode } from "react";
 import { useOfflineStatus } from "@/components/navbar/offline-status/use-offline-status";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-/**
- * Shared mutable state for the module mocks. `calls` records the reconnect
- * steps in execution order — the ordering guarantee (drain → invalidate → warm)
- * is the point of several tests, so runReconnectSequence itself stays real.
- */
 const h = vi.hoisted(() => ({
   connectivity: {
     posture: "live" as "live" | "offline" | "offline-forced",
@@ -18,23 +11,41 @@ const h = vi.hoisted(() => ({
   },
   owner: "user-1" as string | null,
   outboxEntries: [] as Array<{ seq: number; path: string; status: string }>,
-  calls: [] as string[],
+  syncing: false,
   probeBackendReachable: vi.fn(async () => true),
   setOfflineForced: vi.fn(),
-  processQueue: vi.fn(async () => {}),
-  retryParkedEntries: vi.fn(async () => {}),
+  recover: vi.fn(async () => {}),
+  requeueParkedEntries: vi.fn(async () => {}),
   discardAllEntries: vi.fn(async () => 0),
-  topUpWarmSet: vi.fn(async () => {}),
-  wipeReadCache: vi.fn(async () => {}),
-  readLastWarmedAt: vi.fn(async (): Promise<number | null> => null),
+  warmSetTopUp: vi.fn(async () => "complete" as const),
+  warmSetInspect: vi.fn(async () => ({
+    recipes: 2,
+    groceries: 3,
+    stores: 1,
+    plannedThisWeek: 4,
+    lastCompletedAt: null as number | null,
+  })),
+  resetOfflineCopy: vi.fn(async () => {}),
 }));
 
 vi.mock("@/app/providers/connectivity-provider", () => ({
   useConnectivity: () => h.connectivity,
 }));
 
-vi.mock("@/app/providers/trpc-provider", () => ({
-  useTRPC: () => ({}),
+vi.mock("@/app/providers/recovery-provider", () => ({
+  useRecovery: () => ({
+    recover: h.recover,
+    isSyncing: () => h.syncing,
+    subscribe: () => () => {},
+  }),
+}));
+
+vi.mock("@/hooks/use-warm-set", () => ({
+  useWarmSet: () => ({
+    topUp: h.warmSetTopUp,
+    inspect: h.warmSetInspect,
+    promoteCreatedRecipe: vi.fn(),
+  }),
 }));
 
 vi.mock("@/lib/connectivity", () => ({
@@ -42,17 +53,10 @@ vi.mock("@/lib/connectivity", () => ({
   setOfflineForced: h.setOfflineForced,
 }));
 
-vi.mock("@/lib/outbox", async () => {
-  const { runReconnectSequence } =
-    await vi.importActual<typeof import("@/lib/outbox/reconnect")>("@/lib/outbox/reconnect");
-
+vi.mock("@/lib/outbox", () => {
   return {
-    runReconnectSequence,
-    processQueue: h.processQueue,
-    retryParkedEntries: h.retryParkedEntries,
+    requeueParkedEntries: h.requeueParkedEntries,
     discardAllEntries: h.discardAllEntries,
-    isReplaying: () => false,
-    subscribeReplayState: () => () => {},
     outboxStore: {
       forOwner: vi.fn(async () => h.outboxEntries),
       subscribe: vi.fn(() => () => {}),
@@ -61,21 +65,15 @@ vi.mock("@/lib/outbox", async () => {
 });
 
 vi.mock("@/lib/query-cache", () => ({
-  activeCacheOwner: () => h.owner,
-  getOfflineCacheCounts: () => ({ recipes: 2, groceries: 3, stores: 1, plannedThisWeek: 4 }),
-  readLastWarmedAt: h.readLastWarmedAt,
-  topUpWarmSet: h.topUpWarmSet,
-  wipeReadCache: h.wipeReadCache,
+  cacheManager: {
+    owner: () => h.owner,
+    subscribe: () => () => {},
+    resetOfflineCopy: h.resetOfflineCopy,
+  },
 }));
 
-let queryClient: QueryClient;
-
-function wrapper({ children }: { children: ReactNode }) {
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-}
-
 function renderStatus() {
-  return renderHook(() => useOfflineStatus(), { wrapper });
+  return renderHook(() => useOfflineStatus());
 }
 
 function setConnectivity(posture: "live" | "offline" | "offline-forced") {
@@ -92,19 +90,17 @@ beforeEach(() => {
   setConnectivity("live");
   h.owner = "user-1";
   h.outboxEntries = [];
-  h.calls = [];
+  h.syncing = false;
   h.probeBackendReachable.mockResolvedValue(true);
-  h.readLastWarmedAt.mockResolvedValue(null);
-  h.processQueue.mockImplementation(async () => {
-    h.calls.push("drain");
+  h.warmSetInspect.mockResolvedValue({
+    recipes: 2,
+    groceries: 3,
+    stores: 1,
+    plannedThisWeek: 4,
+    lastCompletedAt: null,
   });
-  h.topUpWarmSet.mockImplementation(async () => {
-    h.calls.push("warm");
-  });
-
-  queryClient = new QueryClient();
-  vi.spyOn(queryClient, "invalidateQueries").mockImplementation(async () => {
-    h.calls.push("invalidate");
+  h.warmSetTopUp.mockImplementation(async () => {
+    return "complete";
   });
 
   Object.defineProperty(window, "location", {
@@ -134,15 +130,20 @@ describe("useOfflineStatus", () => {
     expect(result.current.outbox.conflicted).toBe(1);
   });
 
-  it("syncNow runs the Reconnect Sequence strictly as drain → invalidate → warm", async () => {
-    h.readLastWarmedAt.mockResolvedValue(1234);
+  it("syncNow delegates convergence to Recovery and refreshes the inventory", async () => {
+    h.warmSetInspect.mockResolvedValue({
+      recipes: 2,
+      groceries: 3,
+      stores: 1,
+      plannedThisWeek: 4,
+      lastCompletedAt: 1234,
+    });
 
     const { result } = renderStatus();
 
     await act(() => result.current.syncNow());
 
-    expect(h.calls).toEqual(["drain", "invalidate", "warm"]);
-    // The sequence's warm stamped last-warmed; the modal reflects it.
+    expect(h.recover).toHaveBeenCalledTimes(1);
     expect(result.current.lastWarmedAt).toBe(1234);
   });
 
@@ -163,18 +164,18 @@ describe("useOfflineStatus", () => {
     await act(() => result.current.syncNow());
 
     expect(h.probeBackendReachable).toHaveBeenCalled();
-    expect(h.calls).toEqual([]);
+    expect(h.recover).not.toHaveBeenCalled();
     expect(result.current.isSyncing).toBe(false);
   });
 
-  it("syncNow drains after a successful probe while Offline", async () => {
+  it("syncNow recovers after a successful probe while Offline", async () => {
     setConnectivity("offline");
 
     const { result } = renderStatus();
 
     await act(() => result.current.syncNow());
 
-    expect(h.calls).toEqual(["drain", "invalidate", "warm"]);
+    expect(h.recover).toHaveBeenCalledTimes(1);
   });
 
   it("syncNow is inert under the dev override — the transport is blocked", async () => {
@@ -185,18 +186,24 @@ describe("useOfflineStatus", () => {
     await act(() => result.current.syncNow());
 
     expect(h.probeBackendReachable).not.toHaveBeenCalled();
-    expect(h.calls).toEqual([]);
+    expect(h.recover).not.toHaveBeenCalled();
   });
 
   it("wipeCache clears the read cache, re-warms while Live and re-reads the stamp", async () => {
-    h.readLastWarmedAt.mockResolvedValue(5678);
+    h.warmSetInspect.mockResolvedValue({
+      recipes: 2,
+      groceries: 3,
+      stores: 1,
+      plannedThisWeek: 4,
+      lastCompletedAt: 5678,
+    });
 
     const { result } = renderStatus();
 
     await act(() => result.current.wipeCache());
 
-    expect(h.wipeReadCache).toHaveBeenCalledWith(queryClient);
-    expect(h.topUpWarmSet).toHaveBeenCalled();
+    expect(h.resetOfflineCopy).toHaveBeenCalledWith("manual");
+    expect(h.warmSetTopUp).toHaveBeenCalled();
     expect(result.current.lastWarmedAt).toBe(5678);
   });
 
@@ -207,8 +214,8 @@ describe("useOfflineStatus", () => {
 
     await act(() => result.current.wipeCache());
 
-    expect(h.wipeReadCache).toHaveBeenCalled();
-    expect(h.topUpWarmSet).not.toHaveBeenCalled();
+    expect(h.resetOfflineCopy).toHaveBeenCalledWith("manual");
+    expect(h.warmSetTopUp).not.toHaveBeenCalled();
     expect(result.current.lastWarmedAt).toBeNull();
   });
 
@@ -218,7 +225,19 @@ describe("useOfflineStatus", () => {
     await act(() => result.current.discardAll());
 
     expect(h.discardAllEntries).toHaveBeenCalledWith("user-1");
-    expect(h.calls).toContain("invalidate");
+    expect(h.recover).toHaveBeenCalledTimes(1);
+  });
+
+  it("discardAll stays local under the dev override", async () => {
+    setConnectivity("offline-forced");
+
+    const { result } = renderStatus();
+
+    await act(() => result.current.discardAll());
+
+    expect(h.discardAllEntries).toHaveBeenCalledWith("user-1");
+    expect(h.probeBackendReachable).not.toHaveBeenCalled();
+    expect(h.recover).not.toHaveBeenCalled();
   });
 
   it("retryAll un-parks for the active owner", async () => {
@@ -226,7 +245,33 @@ describe("useOfflineStatus", () => {
 
     await act(() => result.current.retryAll());
 
-    expect(h.retryParkedEntries).toHaveBeenCalledWith("user-1");
+    expect(h.requeueParkedEntries).toHaveBeenCalledWith("user-1");
+    expect(h.recover).toHaveBeenCalledTimes(1);
+  });
+
+  it("retryAll is inert under the dev override", async () => {
+    setConnectivity("offline-forced");
+
+    const { result } = renderStatus();
+
+    await act(() => result.current.retryAll());
+
+    expect(h.probeBackendReachable).not.toHaveBeenCalled();
+    expect(h.requeueParkedEntries).not.toHaveBeenCalled();
+    expect(h.recover).not.toHaveBeenCalled();
+  });
+
+  it("retryAll leaves parked work untouched while the backend is unreachable", async () => {
+    setConnectivity("offline");
+    h.probeBackendReachable.mockResolvedValue(false);
+
+    const { result } = renderStatus();
+
+    await act(() => result.current.retryAll());
+
+    expect(h.probeBackendReachable).toHaveBeenCalled();
+    expect(h.requeueParkedEntries).not.toHaveBeenCalled();
+    expect(h.recover).not.toHaveBeenCalled();
   });
 
   it("entering the dev override persists the flag and reloads", () => {

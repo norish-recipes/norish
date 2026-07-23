@@ -33,8 +33,7 @@ export const { TRPCProvider, TRPCProviderWrapper, useConnectionStatus, useTRPC, 
     // organically). Do not pass wsLazyEnabled:false here without revisiting
     // forced-Offline (an eager socket would connect despite the dev link).
     extraLinks: OFFLINE_FORCED_AVAILABLE ? [createForcedOfflineLink<AppRouter>()] : [],
-    // Reconnect is handled by the explicit Reconnect Sequence (drain → refetch →
-    // warm) in OfflineCacheController, not the bundle's blanket invalidation —
-    // refetching before draining would make queued changes vanish and reappear.
+    // Recovery owns reconnect Replay followed by the final active-query refetch
+    // and Warm Set top-up, so the bundle must not start a competing invalidation.
     invalidateOnReconnect: false,
   });

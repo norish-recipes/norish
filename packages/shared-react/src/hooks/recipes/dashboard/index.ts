@@ -9,7 +9,6 @@ import { createUseRecipesCacheHelpers } from "./use-recipes-cache";
 import { createUseRecipesMutations } from "./use-recipes-mutations";
 import { createUseRecipesQuery } from "./use-recipes-query";
 import { createUseRecipesSubscription } from "./use-recipes-subscription";
-import { promoteRecipeToWarmSet } from "./warm-recipe";
 
 export type { InfiniteRecipeData, RecipesCacheHelpers } from "./use-recipes-cache";
 export type {
@@ -18,7 +17,11 @@ export type {
   RecipesQueryDependencies,
 } from "./use-recipes-query";
 export type { RandomRecipeResult } from "./use-random-recipe";
-export type { RecipesMutationsResult, RecipesMutationErrorHandler } from "./use-recipes-mutations";
+export type {
+  RecipeCreatedAdapter,
+  RecipesMutationsResult,
+  RecipesMutationErrorHandler,
+} from "./use-recipes-mutations";
 export type { RecipesSubscriptionCallbacks } from "./use-recipes-subscription";
 export type { FavoritesQueryResult } from "./use-favorites-query";
 export type { FavoritesMutationResult } from "./use-favorites-mutation";
@@ -36,7 +39,6 @@ export {
   createUseFavoritesMutation,
   createUseRatingsSubscription,
   createUseRandomRecipe,
-  promoteRecipeToWarmSet,
 };
 
 export function createDashboardRecipeHooks(

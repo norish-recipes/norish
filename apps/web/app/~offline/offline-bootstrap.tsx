@@ -4,10 +4,27 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/app/(app)/app-shell";
 import CalendarPage from "@/app/(app)/calendar/page";
 import GroceriesPage from "@/app/(app)/groceries/page";
-import { OfflineDashboard } from "@/app/~offline/offline-dashboard";
 import { OfflineRecipeDetail } from "@/app/~offline/offline-recipe-detail";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
-import { matchOfflineRoute } from "@/lib/offline/offline-routes";
+import { Dashboard } from "@/components/dashboard/dashboard";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function offlineSurface(pathname: string) {
+  const path = pathname.replace(/\/+$/, "") || "/";
+
+  if (path === "/") return <Dashboard />;
+  if (path === "/groceries") return <GroceriesPage />;
+  if (path === "/calendar") return <CalendarPage />;
+
+  const recipeId = /^\/recipes\/([^/]+)$/.exec(path)?.[1];
+
+  if (recipeId && UUID_RE.test(recipeId)) {
+    return <OfflineRecipeDetail id={recipeId.toLowerCase()} />;
+  }
+
+  return <OfflineUnavailable />;
+}
 
 /**
  * The offline bootstrap router (ADR-0009). The service worker serves this
@@ -35,27 +52,5 @@ export function OfflineBootstrap() {
     );
   }
 
-  const route = matchOfflineRoute(pathname);
-
-  if (route.kind === "unsupported") {
-    return (
-      <AppShell>
-        <OfflineUnavailable />
-      </AppShell>
-    );
-  }
-
-  return (
-    <AppShell>
-      {route.kind === "dashboard" ? (
-        <OfflineDashboard />
-      ) : route.kind === "groceries" ? (
-        <GroceriesPage />
-      ) : route.kind === "calendar" ? (
-        <CalendarPage />
-      ) : (
-        <OfflineRecipeDetail id={route.id} />
-      )}
-    </AppShell>
-  );
+  return <AppShell>{offlineSurface(pathname)}</AppShell>;
 }
