@@ -12,6 +12,7 @@ export {
 } from "./cache-identity";
 export {
   activeCacheOwner,
+  cacheManager,
   CACHE_BUSTER,
   CACHE_MAX_AGE_MS,
   type CacheManager,
@@ -28,5 +29,4 @@ export {
   type WarmSetInventory,
   type WarmSetTopUpResult,
 } from "./warm-set";
-export { wipeReadCache } from "./cache-status";
 export { clearLastWarmedAt, readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";

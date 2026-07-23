@@ -32,7 +32,7 @@ const h = vi.hoisted(() => ({
     plannedThisWeek: 4,
     lastCompletedAt: null as number | null,
   })),
-  wipeReadCache: vi.fn(async () => {}),
+  resetOfflineCopy: vi.fn(async () => {}),
 }));
 
 vi.mock("@/app/providers/connectivity-provider", () => ({
@@ -75,8 +75,10 @@ vi.mock("@/lib/outbox", async () => {
 });
 
 vi.mock("@/lib/query-cache", () => ({
-  activeCacheOwner: () => h.owner,
-  wipeReadCache: h.wipeReadCache,
+  cacheManager: {
+    activeOwner: () => h.owner,
+    resetOfflineCopy: h.resetOfflineCopy,
+  },
 }));
 
 let queryClient: QueryClient;
@@ -226,7 +228,7 @@ describe("useOfflineStatus", () => {
 
     await act(() => result.current.wipeCache());
 
-    expect(h.wipeReadCache).toHaveBeenCalledWith(queryClient);
+    expect(h.resetOfflineCopy).toHaveBeenCalledWith("manual");
     expect(h.warmSetTopUp).toHaveBeenCalled();
     expect(result.current.lastWarmedAt).toBe(5678);
   });
@@ -238,7 +240,7 @@ describe("useOfflineStatus", () => {
 
     await act(() => result.current.wipeCache());
 
-    expect(h.wipeReadCache).toHaveBeenCalled();
+    expect(h.resetOfflineCopy).toHaveBeenCalledWith("manual");
     expect(h.warmSetTopUp).not.toHaveBeenCalled();
     expect(result.current.lastWarmedAt).toBeNull();
   });

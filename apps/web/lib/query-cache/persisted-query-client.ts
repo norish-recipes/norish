@@ -14,7 +14,7 @@
 
 import type { OfflineIdb } from "@/lib/offline/idb";
 import { deleteImageCache } from "@/lib/offline/cache-names";
-import { offlineIdb } from "@/lib/offline/idb";
+import { KEYVAL_STORE, offlineIdb } from "@/lib/offline/idb";
 import {
   persistQueryClientRestore,
   persistQueryClientSubscribe,
@@ -23,12 +23,15 @@ import { QueryClient } from "@tanstack/react-query";
 
 import type { CacheOwnerInputs } from "./cache-identity";
 import {
+  CACHE_OWNER_STORAGE_KEY,
   decideCacheOwner,
   purgeForeignCaches,
+  queryCacheKey,
   readBootOwner,
   writeBootOwner,
 } from "./cache-identity";
 import { createIdbPersister } from "./idb-persister";
+import { clearLastWarmedAt } from "./last-warmed";
 
 /** Discard a restored cache older than this (ADR: 7-day maxAge). */
 export const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -81,19 +84,37 @@ export interface CacheManager {
    * effective owner changes. Resolves once any restore/switch has settled.
    */
   resolveOwner(inputs: Pick<CacheOwnerInputs, "sessionUserId" | "isOffline">): Promise<void>;
+  /** Clear the complete local read copy without touching queued mutations or the app shell. */
+  resetOfflineCopy(cause: "manual" | "sign-out"): Promise<void>;
   /** Notified each time an owner's persisted cache finishes restoring. */
   onOwnerApplied(listener: () => void): () => void;
 }
 
 export function createCacheManager(idb: OfflineIdb): CacheManager {
-  const initialBootOwner = readBootOwner();
-  const persister = createIdbPersister(idb, initialBootOwner ?? ANON_OWNER);
+  let bootOwner = readBootOwner();
+  const persister = createIdbPersister(idb, bootOwner ?? ANON_OWNER);
   const queryClient = createQueryClient();
 
   let appliedOwner: string | null = null;
   let unsubscribe: (() => void) | null = null;
   let inFlight: Promise<void> = Promise.resolve();
   const appliedListeners = new Set<() => void>();
+
+  function subscribeToPersistence(): void {
+    unsubscribe?.();
+    unsubscribe = persistQueryClientSubscribe({
+      queryClient,
+      persister,
+      buster: CACHE_BUSTER,
+      dehydrateOptions: { shouldDehydrateQuery },
+    });
+  }
+
+  function notifyOwnerApplied(): void {
+    for (const listener of appliedListeners) {
+      listener();
+    }
+  }
 
   async function restoreForOwner(owner: string): Promise<void> {
     persister.setOwner(owner);
@@ -113,27 +134,19 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
       hydrateOptions: { defaultOptions: { queries: { gcTime: CACHE_MAX_AGE_MS } } },
     });
 
-    unsubscribe?.();
-    unsubscribe = persistQueryClientSubscribe({
-      queryClient,
-      persister,
-      buster: CACHE_BUSTER,
-      dehydrateOptions: { shouldDehydrateQuery },
-    });
+    subscribeToPersistence();
 
     appliedOwner = owner;
+    bootOwner = owner;
     writeBootOwner(owner);
-
-    for (const listener of appliedListeners) {
-      listener();
-    }
+    notifyOwnerApplied();
   }
 
   async function apply(
     inputs: Pick<CacheOwnerInputs, "sessionUserId" | "isOffline">
   ): Promise<void> {
     const decision = decideCacheOwner({
-      bootOwner: appliedOwner ?? initialBootOwner,
+      bootOwner: appliedOwner ?? bootOwner,
       sessionUserId: inputs.sessionUserId,
       isOffline: inputs.isOffline,
     });
@@ -184,6 +197,46 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
       return inFlight;
     },
 
+    resetOfflineCopy(cause) {
+      inFlight = inFlight
+        .then(async () => {
+          const owner = appliedOwner ?? bootOwner;
+
+          unsubscribe?.();
+          unsubscribe = null;
+          queryClient.clear();
+
+          await Promise.all([
+            owner ? idb.del(KEYVAL_STORE, queryCacheKey(owner)) : Promise.resolve(),
+            owner ? clearLastWarmedAt(owner, idb) : Promise.resolve(),
+            deleteImageCache(),
+          ]);
+
+          if (cause === "sign-out") {
+            appliedOwner = null;
+            bootOwner = null;
+
+            try {
+              window.localStorage.removeItem(CACHE_OWNER_STORAGE_KEY);
+            } catch {
+              // Private-mode storage failures degrade to the in-memory reset.
+            }
+
+            notifyOwnerApplied();
+
+            return;
+          }
+
+          if (owner) {
+            persister.setOwner(owner);
+            subscribeToPersistence();
+          }
+        })
+        .catch(() => undefined);
+
+      return inFlight;
+    },
+
     onOwnerApplied(listener) {
       appliedListeners.add(listener);
 
@@ -194,31 +247,23 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
   };
 }
 
-let sharedManager: CacheManager | null = null;
-
-function manager(): CacheManager {
-  if (!sharedManager) {
-    sharedManager = createCacheManager(offlineIdb);
-  }
-
-  return sharedManager;
-}
+export const cacheManager = createCacheManager(offlineIdb);
 
 /** The seam handed to the provider bundle's `getQueryClient`. */
 export function getPersistedQueryClient(): QueryClient {
-  return manager().queryClient;
+  return cacheManager.queryClient;
 }
 
 /** Reconcile the persisted cache with the current identity (see manager). */
 export function resolveCacheOwner(
   inputs: Pick<CacheOwnerInputs, "sessionUserId" | "isOffline">
 ): Promise<void> {
-  return manager().resolveOwner(inputs);
+  return cacheManager.resolveOwner(inputs);
 }
 
 /** The active cache owner, for diagnostics and the status UI. */
 export function activeCacheOwner(): string | null {
-  return manager().activeOwner();
+  return cacheManager.activeOwner();
 }
 
 /**
@@ -227,10 +272,10 @@ export function activeCacheOwner(): string | null {
  * (ADR-0009): before this, an absent query might simply not be hydrated yet.
  */
 export function isCacheOwnerApplied(): boolean {
-  return manager().activeOwner() !== null;
+  return cacheManager.activeOwner() !== null;
 }
 
 /** Subscribe to cache-restore completion; usable with `useSyncExternalStore`. */
 export function subscribeCacheOwnerApplied(listener: () => void): () => void {
-  return manager().onOwnerApplied(listener);
+  return cacheManager.onOwnerApplied(listener);
 }

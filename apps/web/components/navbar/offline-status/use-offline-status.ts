@@ -15,7 +15,7 @@ import {
   runReconnectSequence,
   subscribeReplayState,
 } from "@/lib/outbox";
-import { activeCacheOwner, wipeReadCache } from "@/lib/query-cache";
+import { cacheManager } from "@/lib/query-cache";
 import { useQueryClient } from "@tanstack/react-query";
 
 export interface OutboxSummary {
@@ -63,7 +63,7 @@ export function useOfflineStatus(): OfflineStatus {
   const { posture, isLive, isOffline, isForced } = useConnectivity();
   const queryClient = useQueryClient();
   const warmSet = useWarmSet();
-  const owner = activeCacheOwner();
+  const owner = cacheManager.activeOwner();
 
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
   const [inventory, setInventory] = useState<WarmSetInventory>({
@@ -186,7 +186,7 @@ export function useOfflineStatus(): OfflineStatus {
   }, [owner, queryClient]);
 
   const wipeCache = useCallback(async () => {
-    await wipeReadCache(queryClient);
+    await cacheManager.resetOfflineCopy("manual");
     setInventory({
       recipes: 0,
       groceries: 0,
@@ -201,7 +201,7 @@ export function useOfflineStatus(): OfflineStatus {
       await warm();
       await refreshInventory();
     }
-  }, [queryClient, isLive, warm, refreshInventory]);
+  }, [isLive, warm, refreshInventory]);
 
   const setForcedOffline = useCallback((next: boolean) => {
     setOfflineForced(next);
