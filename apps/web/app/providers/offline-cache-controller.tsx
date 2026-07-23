@@ -4,8 +4,9 @@ import type { OutboxMutationClient } from "@/lib/outbox";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useConnectivity } from "@/app/providers/connectivity-provider";
-import { useTRPC, useTRPCClient } from "@/app/providers/trpc-provider";
+import { useTRPCClient } from "@/app/providers/trpc-provider";
 import { useUserContext } from "@/context/user-context";
+import { useWarmSet } from "@/hooks/use-warm-set";
 import {
   processQueue,
   replayOutboxEntry,
@@ -14,7 +15,7 @@ import {
   setReplaySessionGuard,
   setReplaySubmit,
 } from "@/lib/outbox";
-import { activeCacheOwner, resolveCacheOwner, topUpWarmSet } from "@/lib/query-cache";
+import { activeCacheOwner, resolveCacheOwner } from "@/lib/query-cache";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { getSession } from "@norish/shared/lib/auth/client";
@@ -38,9 +39,9 @@ import { getSession } from "@norish/shared/lib/auth/client";
 export function OfflineCacheController({ children }: { children: ReactNode }) {
   const { user } = useUserContext();
   const { isLive, isOffline } = useConnectivity();
-  const trpc = useTRPC();
   const trpcClient = useTRPCClient();
   const queryClient = useQueryClient();
+  const warmSet = useWarmSet();
 
   const sessionUserId = user?.id ?? null;
   const [readyOwner, setReadyOwner] = useState<string | null>(null);
@@ -131,14 +132,14 @@ export function OfflineCacheController({ children }: { children: ReactNode }) {
       // Drain is leader-gated + FIFO-ordered inside processQueue; a non-leader
       // tab blocks until the leader's drain completes, so refetch never races
       // ahead of it. Invalidate is per-tab (each refetches its own view). Warm
-      // is leader-gated inside topUpWarmSet, which also stamps last-warmed:
+      // is leader-gated inside WarmSet, which also stamps last-warmed:
       // other tabs pick both up from the shared persisted cache rather than
       // re-fetching the whole Warm Set concurrently (ADR).
       drain: () => processQueue(),
       invalidate: () => (reconnecting ? queryClient.invalidateQueries() : Promise.resolve()),
-      warm: () => topUpWarmSet({ trpc, queryClient }),
+      warm: () => warmSet.topUp(),
     });
-  }, [isLive, isOffline, readyOwner, queryClient, trpc]);
+  }, [isLive, isOffline, readyOwner, queryClient, warmSet]);
 
   // `resolveCacheOwner` clears the outgoing QueryClient before activating the
   // incoming owner, but that work crosses an async boundary. Do not let the

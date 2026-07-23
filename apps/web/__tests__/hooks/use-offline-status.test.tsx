@@ -24,9 +24,15 @@ const h = vi.hoisted(() => ({
   processQueue: vi.fn(async () => {}),
   retryParkedEntries: vi.fn(async () => {}),
   discardAllEntries: vi.fn(async () => 0),
-  topUpWarmSet: vi.fn(async () => {}),
+  warmSetTopUp: vi.fn(async () => "complete" as const),
+  warmSetInspect: vi.fn(async () => ({
+    recipes: 2,
+    groceries: 3,
+    stores: 1,
+    plannedThisWeek: 4,
+    lastCompletedAt: null as number | null,
+  })),
   wipeReadCache: vi.fn(async () => {}),
-  readLastWarmedAt: vi.fn(async (): Promise<number | null> => null),
 }));
 
 vi.mock("@/app/providers/connectivity-provider", () => ({
@@ -35,6 +41,14 @@ vi.mock("@/app/providers/connectivity-provider", () => ({
 
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPC: () => ({}),
+}));
+
+vi.mock("@/hooks/use-warm-set", () => ({
+  useWarmSet: () => ({
+    topUp: h.warmSetTopUp,
+    inspect: h.warmSetInspect,
+    promoteCreatedRecipe: vi.fn(),
+  }),
 }));
 
 vi.mock("@/lib/connectivity", () => ({
@@ -62,9 +76,6 @@ vi.mock("@/lib/outbox", async () => {
 
 vi.mock("@/lib/query-cache", () => ({
   activeCacheOwner: () => h.owner,
-  getOfflineCacheCounts: () => ({ recipes: 2, groceries: 3, stores: 1, plannedThisWeek: 4 }),
-  readLastWarmedAt: h.readLastWarmedAt,
-  topUpWarmSet: h.topUpWarmSet,
   wipeReadCache: h.wipeReadCache,
 }));
 
@@ -94,12 +105,20 @@ beforeEach(() => {
   h.outboxEntries = [];
   h.calls = [];
   h.probeBackendReachable.mockResolvedValue(true);
-  h.readLastWarmedAt.mockResolvedValue(null);
+  h.warmSetInspect.mockResolvedValue({
+    recipes: 2,
+    groceries: 3,
+    stores: 1,
+    plannedThisWeek: 4,
+    lastCompletedAt: null,
+  });
   h.processQueue.mockImplementation(async () => {
     h.calls.push("drain");
   });
-  h.topUpWarmSet.mockImplementation(async () => {
+  h.warmSetTopUp.mockImplementation(async () => {
     h.calls.push("warm");
+
+    return "complete";
   });
 
   queryClient = new QueryClient();
@@ -135,7 +154,13 @@ describe("useOfflineStatus", () => {
   });
 
   it("syncNow runs the Reconnect Sequence strictly as drain → invalidate → warm", async () => {
-    h.readLastWarmedAt.mockResolvedValue(1234);
+    h.warmSetInspect.mockResolvedValue({
+      recipes: 2,
+      groceries: 3,
+      stores: 1,
+      plannedThisWeek: 4,
+      lastCompletedAt: 1234,
+    });
 
     const { result } = renderStatus();
 
@@ -189,14 +214,20 @@ describe("useOfflineStatus", () => {
   });
 
   it("wipeCache clears the read cache, re-warms while Live and re-reads the stamp", async () => {
-    h.readLastWarmedAt.mockResolvedValue(5678);
+    h.warmSetInspect.mockResolvedValue({
+      recipes: 2,
+      groceries: 3,
+      stores: 1,
+      plannedThisWeek: 4,
+      lastCompletedAt: 5678,
+    });
 
     const { result } = renderStatus();
 
     await act(() => result.current.wipeCache());
 
     expect(h.wipeReadCache).toHaveBeenCalledWith(queryClient);
-    expect(h.topUpWarmSet).toHaveBeenCalled();
+    expect(h.warmSetTopUp).toHaveBeenCalled();
     expect(result.current.lastWarmedAt).toBe(5678);
   });
 
@@ -208,7 +239,7 @@ describe("useOfflineStatus", () => {
     await act(() => result.current.wipeCache());
 
     expect(h.wipeReadCache).toHaveBeenCalled();
-    expect(h.topUpWarmSet).not.toHaveBeenCalled();
+    expect(h.warmSetTopUp).not.toHaveBeenCalled();
     expect(result.current.lastWarmedAt).toBeNull();
   });
 

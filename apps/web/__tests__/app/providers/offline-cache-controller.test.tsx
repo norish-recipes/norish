@@ -12,7 +12,7 @@ const resolveCacheOwner = vi.hoisted(() =>
   )
 );
 const activeCacheOwner = vi.hoisted(() => vi.fn<() => string | null>(() => null));
-const warmCache = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
+const warmSetTopUp = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
 
 const outboxStoreMock = vi.hoisted(() => ({}) as Record<string, never>);
 const processQueue = vi.hoisted(() => vi.fn(() => Promise.resolve()));
@@ -28,10 +28,12 @@ let connectivity = { isLive: true, isOffline: false };
 vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user }) }));
 vi.mock("@/app/providers/connectivity-provider", () => ({ useConnectivity: () => connectivity }));
 vi.mock("@/app/providers/trpc-provider", () => ({
-  useTRPC: () => ({}),
   useTRPCClient: () => ({}),
 }));
-vi.mock("@/lib/query-cache", () => ({ resolveCacheOwner, activeCacheOwner, warmCache }));
+vi.mock("@/lib/query-cache", () => ({ resolveCacheOwner, activeCacheOwner }));
+vi.mock("@/hooks/use-warm-set", () => ({
+  useWarmSet: () => ({ topUp: warmSetTopUp, inspect: vi.fn(), promoteCreatedRecipe: vi.fn() }),
+}));
 vi.mock("@/lib/outbox", () => ({
   outboxStore: outboxStoreMock,
   processQueue,
@@ -61,7 +63,7 @@ describe("OfflineCacheController", () => {
   beforeEach(() => {
     for (const fn of [
       resolveCacheOwner,
-      warmCache,
+      warmSetTopUp,
       processQueue,
       runReconnectSequence,
       setReplaySubmit,
