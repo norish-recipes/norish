@@ -54,6 +54,5 @@ apps/mobile/**
 # Community app references
 apps/quick-import-extension/**
 
-# OpenSpec artifacts — not needed in Docker build
-openspec/
+# Docs — not needed in Docker build
 docs/

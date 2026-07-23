@@ -231,7 +231,7 @@
         </h1>
         <p class="meta">
           Updated July 22, 2026 · branch <code>feat/web-offline-safe</code> · source decisions in
-          <code>docs/adr/0001–0010</code>
+          <code>docs/adr/offline</code> · <code>docs/adr/releases</code>
         </p>
         <p class="lede">
           Norish web targets flaky connectivity and backend-down page loads with a persisted Warm
@@ -497,7 +497,7 @@
       <h2>Decisions (ADRs)</h2>
       <ul class="adr-list">
         <li>
-          <a href="0001-web-offline-is-a-persisted-query-cache.md"
+          <a href="offline/0001-web-offline-is-a-persisted-query-cache.md"
             >ADR-0001 — Web offline is a persisted query cache</a
           >
           <p>
@@ -506,7 +506,7 @@
           </p>
         </li>
         <li>
-          <a href="0002-replay-idempotency-via-operation-id-middleware.md"
+          <a href="offline/0002-replay-idempotency-via-operation-id-middleware.md"
             >ADR-0002 — Replay idempotency via operation ids</a
           >
           <p>
@@ -515,7 +515,7 @@
           </p>
         </li>
         <li>
-          <a href="0003-client-minted-entity-ids-on-create.md"
+          <a href="offline/0003-client-minted-entity-ids-on-create.md"
             >ADR-0003 — Client-minted entity ids on create</a
           >
           <p>
@@ -524,7 +524,7 @@
           </p>
         </li>
         <li>
-          <a href="0004-first-writer-wins-on-replay-conflicts.md"
+          <a href="offline/0004-first-writer-wins-on-replay-conflicts.md"
             >ADR-0004 — First-writer-wins Replay conflicts</a
           >
           <p>
@@ -532,14 +532,14 @@
           </p>
         </li>
         <li>
-          <a href="0005-offline-security-posture.md">ADR-0005 — Offline security posture</a>
+          <a href="offline/0005-offline-security-posture.md">ADR-0005 — Offline security posture</a>
           <p>
             Device possession grants Offline read access; Offline sign-out is disabled and account
             switches purge scoped cache and Outbox state with a warning.
           </p>
         </li>
         <li>
-          <a href="0006-serwist-owns-the-service-worker.md"
+          <a href="offline/0006-serwist-owns-the-service-worker.md"
             >ADR-0006 — Serwist owns the service worker</a
           >
           <p>
@@ -548,7 +548,7 @@
           </p>
         </li>
         <li>
-          <a href="0007-offline-forced-is-a-dev-only-debug-affordance.md"
+          <a href="offline/0007-offline-forced-is-a-dev-only-debug-affordance.md"
             >ADR-0007 — Forced Offline is development-only</a
           >
           <p>
@@ -557,7 +557,7 @@
           </p>
         </li>
         <li>
-          <a href="0008-new-recipes-join-the-warm-set-on-create.md"
+          <a href="offline/0008-new-recipes-join-the-warm-set-on-create.md"
             >ADR-0008 — New recipes join the Warm Set</a
           >
           <p>
@@ -566,7 +566,7 @@
           </p>
         </li>
         <li>
-          <a href="0009-offline-guarantees-are-end-to-end.md"
+          <a href="offline/0009-offline-guarantees-are-end-to-end.md"
             >ADR-0009 — Offline guarantees are end-to-end</a
           >
           <p>
@@ -575,7 +575,7 @@
           </p>
         </li>
         <li>
-          <a href="0010-release-notes-use-a-release-checkpoint.md"
+          <a href="releases/0010-release-notes-use-a-release-checkpoint.md"
             >ADR-0010 — Release notes use a release checkpoint</a
           >
           <p>
