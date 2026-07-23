@@ -21,9 +21,13 @@ import {
 } from "@tanstack/query-persist-client-core";
 import { QueryClient } from "@tanstack/react-query";
 
-import { CACHE_OWNER_STORAGE_KEY, purgeForeignCaches, queryCacheKey } from "./cache-identity";
-import { createIdbPersister } from "./idb-persister";
-import { clearLastWarmedAt } from "./last-warmed";
+import {
+  CACHE_OWNER_STORAGE_KEY,
+  purgeForeignCaches,
+  queryCacheKey,
+} from "@/lib/query-cache/cache-identity";
+import { createIdbPersister } from "@/lib/query-cache/idb-persister";
+import { clearLastWarmedAt } from "@/lib/query-cache/last-warmed";
 
 /** Discard a restored cache older than this (ADR: 7-day maxAge). */
 export const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -134,6 +138,16 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
     }
   }
 
+  async function clearOwnerReadArtifacts(owner: string): Promise<void> {
+    // A failure in one browser store must not prevent the other cleanup attempts
+    // or strand the manager between lifecycle states.
+    await Promise.allSettled([
+      idb.del(KEYVAL_STORE, queryCacheKey(owner)),
+      clearLastWarmedAt(owner, idb),
+      deleteImageCache(),
+    ]);
+  }
+
   async function restoreForOwner(owner: string): Promise<void> {
     persister.setOwner(owner);
 
@@ -179,11 +193,15 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
     // in-memory client. The departed user's Outbox is deliberately untouched —
     // it stays dormant under its owner (ADR-0009).
     if (knownOwner && knownOwner !== nextOwner) {
-      await purgeForeignCaches(idb, nextOwner);
-      await deleteImageCache();
-    }
+      unsubscribe?.();
+      unsubscribe = null;
+      queryClient.clear();
 
-    if (!knownOwner || knownOwner !== nextOwner) {
+      await Promise.all([
+        clearOwnerReadArtifacts(knownOwner),
+        purgeForeignCaches(idb, nextOwner),
+      ]);
+    } else if (!knownOwner) {
       queryClient.clear();
     }
 
@@ -214,11 +232,11 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
           unsubscribe = null;
           queryClient.clear();
 
-          await Promise.all([
-            owner ? idb.del(KEYVAL_STORE, queryCacheKey(owner)) : Promise.resolve(),
-            owner ? clearLastWarmedAt(owner, idb) : Promise.resolve(),
-            deleteImageCache(),
-          ]);
+          if (owner) {
+            await clearOwnerReadArtifacts(owner);
+          } else {
+            await Promise.allSettled([deleteImageCache()]);
+          }
 
           if (cause === "sign-out") {
             appliedOwner = null;

@@ -74,6 +74,7 @@ describe("createCacheManager", () => {
 
   it("purges the departed user's cache and never surfaces it on an account switch", async () => {
     await seedOwnerCache(idb, "u1", ["greeting"], "u1-secret");
+    await writeLastWarmedAt("u1", 123, idb);
     window.localStorage.setItem("norish.offline.cache-owner", "u1");
 
     const manager = createCacheManager(idb);
@@ -85,6 +86,7 @@ describe("createCacheManager", () => {
     // u1's data is gone from both the live client and IndexedDB.
     expect(manager.queryClient.getQueryData(["greeting"])).toBeUndefined();
     expect(await idb.get(KEYVAL_STORE, queryCacheKey("u1"))).toBeUndefined();
+    expect(await readLastWarmedAt("u1", idb)).toBeNull();
     // The new owner is recorded as the cache owner.
     expect(window.localStorage.getItem("norish.offline.cache-owner")).toBe("u2");
   });
@@ -167,6 +169,35 @@ describe("createCacheManager", () => {
 
     expect(manager.owner()).toBeNull();
     expect(window.localStorage.getItem("norish.offline.cache-owner")).toBeNull();
+  });
+
+  it("finalizes sign-out identity even when an artifact cannot be deleted", async () => {
+    window.localStorage.setItem("norish.offline.cache-owner", "u1");
+
+    const manager = createCacheManager(idb);
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    vi.spyOn(idb, "del").mockRejectedValueOnce(new Error("storage unavailable"));
+    await manager.resetOfflineCopy("sign-out");
+
+    expect(manager.owner()).toBeNull();
+    expect(window.localStorage.getItem("norish.offline.cache-owner")).toBeNull();
+  });
+
+  it("resumes manual-reset persistence when an artifact cannot be deleted", async () => {
+    window.localStorage.setItem("norish.offline.cache-owner", "u1");
+
+    const manager = createCacheManager(idb);
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    vi.spyOn(idb, "del").mockRejectedValueOnce(new Error("storage unavailable"));
+    await manager.resetOfflineCopy("manual");
+
+    manager.queryClient.setQueryData(["after-reset"], "fresh");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(manager.owner()).toBe("u1");
+    expect(await idb.get(KEYVAL_STORE, queryCacheKey("u1"))).toBeDefined();
   });
 
   it("publishes the applied owner as its only identity observable", async () => {
