@@ -6,13 +6,11 @@ import { createOutboxStore } from "@/lib/outbox/outbox-store";
 import { IDBFactory } from "fake-indexeddb";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const activeOwner = vi.hoisted(() => vi.fn<() => string | null>(() => "u1"));
-const readBootOwner = vi.hoisted(() => vi.fn<() => string | null>(() => null));
+const owner = vi.hoisted(() => vi.fn<() => string | null>(() => "u1"));
 const resetOfflineCopy = vi.hoisted(() => vi.fn(async () => {}));
 
 vi.mock("@/lib/query-cache", () => ({
-  cacheManager: { activeOwner, resetOfflineCopy },
-  readBootOwner,
+  cacheManager: { owner, resetOfflineCopy },
 }));
 
 function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
@@ -33,8 +31,7 @@ describe("sign-out offline state (ADR-0009)", () => {
 
   beforeEach(() => {
     store = createOutboxStore(createOfflineIdb(new IDBFactory()));
-    activeOwner.mockReturnValue("u1");
-    readBootOwner.mockReturnValue(null);
+    owner.mockReturnValue("u1");
     resetOfflineCopy.mockClear();
   });
 
@@ -49,7 +46,7 @@ describe("sign-out offline state (ADR-0009)", () => {
   });
 
   it("counts zero when no owner is resolvable", async () => {
-    activeOwner.mockReturnValue(null);
+    owner.mockReturnValue(null);
 
     await store.enqueue(entry());
 

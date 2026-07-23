@@ -14,7 +14,7 @@ import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "@norish/shared-re
 import { dateKey } from "@norish/shared/lib/helpers";
 
 import { readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";
-import { activeCacheOwner, CACHE_MAX_AGE_MS } from "./persisted-query-client";
+import { CACHE_MAX_AGE_MS, cacheManager } from "./persisted-query-client";
 
 const WARM_RECIPE_LIST_LIMIT = 100;
 const WARM_FULL_RECIPE_COUNT = 50;
@@ -89,7 +89,7 @@ export function createWarmSet({
           warmRecipes(trpc, queryClient),
           warmLists(trpc, queryClient),
         ]);
-        const owner = activeCacheOwner();
+        const owner = cacheManager.owner();
         const complete = recipesComplete && listsComplete && owner !== null;
 
         if (complete) {
@@ -107,7 +107,7 @@ export function createWarmSet({
     },
 
     async inspect() {
-      const owner = activeCacheOwner();
+      const owner = cacheManager.owner();
       const desktopRange = calendarRanges()[0];
       const recipePath = [trpc.recipes.get.queryKey({ id: "" })[0]];
       const recipes = queryClient

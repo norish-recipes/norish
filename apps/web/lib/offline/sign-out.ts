@@ -9,11 +9,11 @@
  */
 import type { OutboxStore } from "@/lib/outbox";
 import { discardAllEntries, outboxStore } from "@/lib/outbox";
-import { cacheManager, readBootOwner } from "@/lib/query-cache";
+import { cacheManager } from "@/lib/query-cache";
 
 /** The account whose offline state a sign-out would affect. */
 function signOutOwner(): string | null {
-  return cacheManager.activeOwner() ?? readBootOwner();
+  return cacheManager.owner();
 }
 
 /**

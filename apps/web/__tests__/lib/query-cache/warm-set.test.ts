@@ -1,5 +1,5 @@
 import { readLastWarmedAt, writeLastWarmedAt } from "@/lib/query-cache/last-warmed";
-import { activeCacheOwner } from "@/lib/query-cache/persisted-query-client";
+import { cacheManager } from "@/lib/query-cache/persisted-query-client";
 import { createWarmSet } from "@/lib/query-cache/warm-set";
 import { QueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -29,7 +29,7 @@ vi.mock("@/lib/query-cache/last-warmed", async (importOriginal) => ({
 
 vi.mock("@/lib/query-cache/persisted-query-client", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
-  activeCacheOwner: vi.fn(() => "owner-1"),
+  cacheManager: { owner: vi.fn(() => "owner-1") },
 }));
 
 function makeTrpc() {
@@ -93,7 +93,7 @@ function makeTrpc() {
 
 describe("WarmSet", () => {
   beforeEach(() => {
-    vi.mocked(activeCacheOwner).mockReturnValue("owner-1");
+    vi.mocked(cacheManager.owner).mockReturnValue("owner-1");
     vi.mocked(readLastWarmedAt).mockResolvedValue(123);
     vi.mocked(writeLastWarmedAt).mockClear();
   });

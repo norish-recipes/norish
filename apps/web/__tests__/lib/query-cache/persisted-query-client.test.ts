@@ -42,9 +42,9 @@ describe("createCacheManager", () => {
   it("does nothing while the online session is still unresolved", async () => {
     const manager = createCacheManager(idb);
 
-    await manager.resolveOwner({ sessionUserId: null, isOffline: false });
+    await manager.reconcileIdentity({ sessionUserId: null, isOffline: false });
 
-    expect(manager.activeOwner()).toBeNull();
+    expect(manager.owner()).toBeNull();
     expect(manager.queryClient.getQueryData(["greeting"])).toBeUndefined();
   });
 
@@ -54,9 +54,9 @@ describe("createCacheManager", () => {
 
     const manager = createCacheManager(idb);
 
-    await manager.resolveOwner({ sessionUserId: "u1", isOffline: false });
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
 
-    expect(manager.activeOwner()).toBe("u1");
+    expect(manager.owner()).toBe("u1");
     expect(manager.queryClient.getQueryData(["greeting"])).toBe("hello");
   });
 
@@ -66,9 +66,9 @@ describe("createCacheManager", () => {
 
     const manager = createCacheManager(idb);
 
-    await manager.resolveOwner({ sessionUserId: null, isOffline: true });
+    await manager.reconcileIdentity({ sessionUserId: null, isOffline: true });
 
-    expect(manager.activeOwner()).toBe("u1");
+    expect(manager.owner()).toBe("u1");
     expect(manager.queryClient.getQueryData(["greeting"])).toBe("cached-while-offline");
   });
 
@@ -79,9 +79,9 @@ describe("createCacheManager", () => {
     const manager = createCacheManager(idb);
 
     // A different user signs in on the same browser.
-    await manager.resolveOwner({ sessionUserId: "u2", isOffline: false });
+    await manager.reconcileIdentity({ sessionUserId: "u2", isOffline: false });
 
-    expect(manager.activeOwner()).toBe("u2");
+    expect(manager.owner()).toBe("u2");
     // u1's data is gone from both the live client and IndexedDB.
     expect(manager.queryClient.getQueryData(["greeting"])).toBeUndefined();
     expect(await idb.get(KEYVAL_STORE, queryCacheKey("u1"))).toBeUndefined();
@@ -92,13 +92,13 @@ describe("createCacheManager", () => {
   it("adopts a first owner without a purge and starts persisting under their key", async () => {
     const manager = createCacheManager(idb);
 
-    await manager.resolveOwner({ sessionUserId: "u1", isOffline: false });
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
     manager.queryClient.setQueryData(["k"], "v");
 
     // Give the persist subscription a tick to flush.
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(manager.activeOwner()).toBe("u1");
+    expect(manager.owner()).toBe("u1");
     expect(await idb.get(KEYVAL_STORE, queryCacheKey("u1"))).toBeDefined();
   });
 
@@ -108,7 +108,7 @@ describe("createCacheManager", () => {
 
     const manager = createCacheManager(idb);
 
-    await manager.resolveOwner({ sessionUserId: "u1", isOffline: false });
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
 
     // Dehydration drops per-query gcTime, so without the hydrate-time floor this
     // would be the 10-minute default — and a warmed entry would be GC'd and fall
@@ -138,7 +138,7 @@ describe("createCacheManager", () => {
 
     const manager = createCacheManager(idb);
 
-    await manager.resolveOwner({ sessionUserId: "u1", isOffline: false });
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
     manager.queryClient.setQueryData(["memory"], "read");
     await manager.resetOfflineCopy("manual");
 
@@ -151,7 +151,7 @@ describe("createCacheManager", () => {
     manager.queryClient.setQueryData(["rewarmed"], "read");
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(manager.activeOwner()).toBe("u1");
+    expect(manager.owner()).toBe("u1");
     expect(await idb.get(KEYVAL_STORE, queryCacheKey("u1"))).toBeDefined();
 
     vi.unstubAllGlobals();
@@ -162,10 +162,23 @@ describe("createCacheManager", () => {
 
     const manager = createCacheManager(idb);
 
-    await manager.resolveOwner({ sessionUserId: "u1", isOffline: false });
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
     await manager.resetOfflineCopy("sign-out");
 
-    expect(manager.activeOwner()).toBeNull();
+    expect(manager.owner()).toBeNull();
     expect(window.localStorage.getItem("norish.offline.cache-owner")).toBeNull();
+  });
+
+  it("publishes the applied owner as its only identity observable", async () => {
+    const manager = createCacheManager(idb);
+    const owners: Array<string | null> = [];
+    const unsubscribe = manager.subscribe(() => owners.push(manager.owner()));
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    await manager.reconcileIdentity({ sessionUserId: "u2", isOffline: false });
+    unsubscribe();
+    await manager.reconcileIdentity({ sessionUserId: "u3", isOffline: false });
+
+    expect(owners).toEqual(["u1", "u2"]);
   });
 });

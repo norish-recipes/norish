@@ -63,7 +63,7 @@ export function useOfflineStatus(): OfflineStatus {
   const { posture, isLive, isOffline, isForced } = useConnectivity();
   const queryClient = useQueryClient();
   const warmSet = useWarmSet();
-  const owner = cacheManager.activeOwner();
+  const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
 
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
   const [inventory, setInventory] = useState<WarmSetInventory>({

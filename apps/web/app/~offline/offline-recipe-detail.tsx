@@ -5,7 +5,7 @@ import RecipeDetailPage from "@/app/(app)/recipes/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { useTRPC } from "@/app/providers/trpc-provider";
 import RecipeSkeleton from "@/components/skeleton/recipe-skeleton";
-import { isCacheOwnerApplied, subscribeCacheOwnerApplied } from "@/lib/query-cache";
+import { cacheManager } from "@/lib/query-cache";
 import { useQueryClient } from "@tanstack/react-query";
 
 /**
@@ -20,16 +20,12 @@ export function OfflineRecipeDetail({ id }: { id: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const cacheReady = useSyncExternalStore(
-    subscribeCacheOwnerApplied,
-    isCacheOwnerApplied,
-    () => false
-  );
+  const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
 
   // A stable promise identity so the reused page's `use(params)` settles.
   const params = useMemo(() => Promise.resolve({ id }), [id]);
 
-  if (!cacheReady) {
+  if (!owner) {
     return <RecipeSkeleton />;
   }
 

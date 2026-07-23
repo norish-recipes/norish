@@ -6,12 +6,30 @@ import "@testing-library/jest-dom";
 
 import { OfflineCacheController } from "@/app/providers/offline-cache-controller";
 
-const resolveCacheOwner = vi.hoisted(() =>
-  vi.fn<(options: { sessionUserId: string | null; isOffline: boolean }) => Promise<void>>(() =>
-    Promise.resolve()
-  )
-);
-const activeCacheOwner = vi.hoisted(() => vi.fn<() => string | null>(() => null));
+const cache = vi.hoisted(() => {
+  const state = {
+    owner: null as string | null,
+    listeners: new Set<() => void>(),
+  };
+
+  return {
+    state,
+    owner: vi.fn(() => state.owner),
+    subscribe: vi.fn((listener: () => void) => {
+      state.listeners.add(listener);
+
+      return () => state.listeners.delete(listener);
+    }),
+    reconcileIdentity: vi.fn<
+      (options: { sessionUserId: string | null; isOffline: boolean }) => Promise<void>
+    >(() => Promise.resolve()),
+    publish(owner: string | null) {
+      state.owner = owner;
+
+      for (const listener of state.listeners) listener();
+    },
+  };
+});
 const warmSetTopUp = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));
 
 const outboxStoreMock = vi.hoisted(() => ({}) as Record<string, never>);
@@ -30,7 +48,13 @@ vi.mock("@/app/providers/connectivity-provider", () => ({ useConnectivity: () =>
 vi.mock("@/app/providers/trpc-provider", () => ({
   useTRPCClient: () => ({}),
 }));
-vi.mock("@/lib/query-cache", () => ({ resolveCacheOwner, activeCacheOwner }));
+vi.mock("@/lib/query-cache", () => ({
+  cacheManager: {
+    owner: cache.owner,
+    subscribe: cache.subscribe,
+    reconcileIdentity: cache.reconcileIdentity,
+  },
+}));
 vi.mock("@/hooks/use-warm-set", () => ({
   useWarmSet: () => ({ topUp: warmSetTopUp, inspect: vi.fn(), promoteCreatedRecipe: vi.fn() }),
 }));
@@ -62,7 +86,7 @@ function renderController() {
 describe("OfflineCacheController", () => {
   beforeEach(() => {
     for (const fn of [
-      resolveCacheOwner,
+      cache.reconcileIdentity,
       warmSetTopUp,
       processQueue,
       runReconnectSequence,
@@ -71,7 +95,13 @@ describe("OfflineCacheController", () => {
     ]) {
       fn.mockClear();
     }
-    activeCacheOwner.mockReset().mockReturnValue(null);
+    cache.state.owner = null;
+    cache.state.listeners.clear();
+    cache.owner.mockClear();
+    cache.subscribe.mockClear();
+    cache.reconcileIdentity.mockImplementation(async ({ sessionUserId }) => {
+      if (sessionUserId) cache.publish(sessionUserId);
+    });
     user = null;
     connectivity = { isLive: true, isOffline: false };
   });
@@ -80,29 +110,31 @@ describe("OfflineCacheController", () => {
 
   it("reconciles the cache owner from the current identity and connectivity", async () => {
     user = { id: "u1" };
-    activeCacheOwner.mockReturnValue("u1");
-
     renderController();
 
     await waitFor(() =>
-      expect(resolveCacheOwner).toHaveBeenCalledWith({ sessionUserId: "u1", isOffline: false })
+      expect(cache.reconcileIdentity).toHaveBeenCalledWith({
+        sessionUserId: "u1",
+        isOffline: false,
+      })
     );
   });
 
   it("hides the outgoing owner's UI until an account switch is isolated", async () => {
     user = { id: "u1" };
-    activeCacheOwner.mockReturnValue("u1");
-
     const view = renderController();
 
     await screen.findByText("child");
 
     let finishSwitch: (() => void) | undefined;
 
-    resolveCacheOwner.mockImplementationOnce(
+    cache.reconcileIdentity.mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
-          finishSwitch = resolve;
+          finishSwitch = () => {
+            cache.publish("u2");
+            resolve();
+          };
         })
     );
     user = { id: "u2" };
@@ -116,7 +148,6 @@ describe("OfflineCacheController", () => {
 
     expect(screen.queryByText("child")).not.toBeInTheDocument();
 
-    activeCacheOwner.mockReturnValue("u2");
     finishSwitch?.();
 
     await screen.findByText("child");
@@ -124,8 +155,6 @@ describe("OfflineCacheController", () => {
 
   it("registers how the Outbox replays and who owns it", async () => {
     user = { id: "u1" };
-    activeCacheOwner.mockReturnValue("u1");
-
     renderController();
 
     await waitFor(() => expect(setReplaySubmit).toHaveBeenCalled());
@@ -134,8 +163,6 @@ describe("OfflineCacheController", () => {
 
   it("retains other owners' queued mutations dormant (no purge on identity change)", async () => {
     user = { id: "u1" };
-    activeCacheOwner.mockReturnValue("u1");
-
     renderController();
 
     // ADR-0009: a bypassed identity transition keeps the outgoing queue under
@@ -151,8 +178,6 @@ describe("OfflineCacheController", () => {
 
   it("runs the Reconnect Sequence once an owner is settled while Live", async () => {
     user = { id: "u1" };
-    activeCacheOwner.mockReturnValue("u1");
-
     renderController();
 
     await waitFor(() => expect(runReconnectSequence).toHaveBeenCalledTimes(1));
@@ -169,24 +194,26 @@ describe("OfflineCacheController", () => {
   it("does not run the Reconnect Sequence while Offline", async () => {
     user = { id: "u1" };
     connectivity = { isLive: false, isOffline: true };
-    activeCacheOwner.mockReturnValue("u1");
-
     renderController();
 
     await waitFor(() =>
-      expect(resolveCacheOwner).toHaveBeenCalledWith({ sessionUserId: "u1", isOffline: true })
+      expect(cache.reconcileIdentity).toHaveBeenCalledWith({
+        sessionUserId: "u1",
+        isOffline: true,
+      })
     );
     expect(runReconnectSequence).not.toHaveBeenCalled();
   });
 
   it("does not act before an owner is known (session unresolved)", async () => {
     user = null;
-    activeCacheOwner.mockReturnValue(null);
-
     renderController();
 
     await waitFor(() =>
-      expect(resolveCacheOwner).toHaveBeenCalledWith({ sessionUserId: null, isOffline: false })
+      expect(cache.reconcileIdentity).toHaveBeenCalledWith({
+        sessionUserId: null,
+        isOffline: false,
+      })
     );
     expect(runReconnectSequence).not.toHaveBeenCalled();
   });

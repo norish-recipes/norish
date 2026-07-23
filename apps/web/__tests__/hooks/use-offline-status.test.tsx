@@ -76,7 +76,8 @@ vi.mock("@/lib/outbox", async () => {
 
 vi.mock("@/lib/query-cache", () => ({
   cacheManager: {
-    activeOwner: () => h.owner,
+    owner: () => h.owner,
+    subscribe: () => () => {},
     resetOfflineCopy: h.resetOfflineCopy,
   },
 }));

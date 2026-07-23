@@ -21,15 +21,7 @@ import {
 } from "@tanstack/query-persist-client-core";
 import { QueryClient } from "@tanstack/react-query";
 
-import type { CacheOwnerInputs } from "./cache-identity";
-import {
-  CACHE_OWNER_STORAGE_KEY,
-  decideCacheOwner,
-  purgeForeignCaches,
-  queryCacheKey,
-  readBootOwner,
-  writeBootOwner,
-} from "./cache-identity";
+import { CACHE_OWNER_STORAGE_KEY, purgeForeignCaches, queryCacheKey } from "./cache-identity";
 import { createIdbPersister } from "./idb-persister";
 import { clearLastWarmedAt } from "./last-warmed";
 
@@ -47,6 +39,32 @@ export const CACHE_BUSTER = process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0";
 
 /** Placeholder owner before any user is confirmed; never actually persisted. */
 const ANON_OWNER = "__anon__";
+
+function readBootOwner(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const value = window.localStorage.getItem(CACHE_OWNER_STORAGE_KEY);
+
+    return value && value.length > 0 ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeBootOwner(ownerId: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(CACHE_OWNER_STORAGE_KEY, ownerId);
+  } catch {
+    // Private-mode or quota failure: identity degrades to in-memory only.
+  }
+}
 
 /** Only fully-successful queries are worth persisting for offline reads. */
 const shouldDehydrateQuery = (query: { state: { status: string } }) =>
@@ -77,17 +95,17 @@ function createQueryClient(): QueryClient {
 export interface CacheManager {
   readonly queryClient: QueryClient;
   /** The owner whose cache is currently restored, or null before any restore. */
-  activeOwner(): string | null;
+  owner(): string | null;
   /**
    * Reconcile the persisted cache with the current identity. Idempotent — safe
    * to call on every identity/connectivity change; it acts only when the
    * effective owner changes. Resolves once any restore/switch has settled.
    */
-  resolveOwner(inputs: Pick<CacheOwnerInputs, "sessionUserId" | "isOffline">): Promise<void>;
+  reconcileIdentity(inputs: { sessionUserId: string | null; isOffline: boolean }): Promise<void>;
   /** Clear the complete local read copy without touching queued mutations or the app shell. */
   resetOfflineCopy(cause: "manual" | "sign-out"): Promise<void>;
-  /** Notified each time an owner's persisted cache finishes restoring. */
-  onOwnerApplied(listener: () => void): () => void;
+  /** Observe the one applied-owner value. */
+  subscribe(listener: () => void): () => void;
 }
 
 export function createCacheManager(idb: OfflineIdb): CacheManager {
@@ -142,26 +160,17 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
     notifyOwnerApplied();
   }
 
-  async function apply(
-    inputs: Pick<CacheOwnerInputs, "sessionUserId" | "isOffline">
-  ): Promise<void> {
-    const decision = decideCacheOwner({
-      bootOwner: appliedOwner ?? bootOwner,
-      sessionUserId: inputs.sessionUserId,
-      isOffline: inputs.isOffline,
-    });
+  async function applyIdentity({
+    sessionUserId,
+    isOffline,
+  }: {
+    sessionUserId: string | null;
+    isOffline: boolean;
+  }): Promise<void> {
+    const knownOwner = appliedOwner ?? bootOwner;
+    const nextOwner = sessionUserId ?? (isOffline ? knownOwner : null);
 
-    if (decision.action === "wait") {
-      return;
-    }
-
-    if (decision.action === "restore") {
-      if (appliedOwner === decision.owner) {
-        return;
-      }
-
-      await restoreForOwner(decision.owner);
-
+    if (!nextOwner || appliedOwner === nextOwner) {
       return;
     }
 
@@ -169,30 +178,29 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
     // before adopting the new one, then start the new owner from a clean
     // in-memory client. The departed user's Outbox is deliberately untouched —
     // it stays dormant under its owner (ADR-0009).
-    if (appliedOwner === decision.to) {
-      return;
-    }
-
-    if (decision.from && decision.from !== decision.to) {
-      await purgeForeignCaches(idb, decision.to);
+    if (knownOwner && knownOwner !== nextOwner) {
+      await purgeForeignCaches(idb, nextOwner);
       await deleteImageCache();
     }
 
-    queryClient.clear();
-    await restoreForOwner(decision.to);
+    if (!knownOwner || knownOwner !== nextOwner) {
+      queryClient.clear();
+    }
+
+    await restoreForOwner(nextOwner);
   }
 
   return {
     queryClient,
 
-    activeOwner() {
+    owner() {
       return appliedOwner;
     },
 
-    resolveOwner(inputs) {
+    reconcileIdentity(inputs) {
       // Serialize resolutions so a rapid identity/connectivity change can't
       // interleave a restore with a switch.
-      inFlight = inFlight.then(() => apply(inputs)).catch(() => undefined);
+      inFlight = inFlight.then(() => applyIdentity(inputs)).catch(() => undefined);
 
       return inFlight;
     },
@@ -237,7 +245,7 @@ export function createCacheManager(idb: OfflineIdb): CacheManager {
       return inFlight;
     },
 
-    onOwnerApplied(listener) {
+    subscribe(listener) {
       appliedListeners.add(listener);
 
       return () => {
@@ -252,30 +260,4 @@ export const cacheManager = createCacheManager(offlineIdb);
 /** The seam handed to the provider bundle's `getQueryClient`. */
 export function getPersistedQueryClient(): QueryClient {
   return cacheManager.queryClient;
-}
-
-/** Reconcile the persisted cache with the current identity (see manager). */
-export function resolveCacheOwner(
-  inputs: Pick<CacheOwnerInputs, "sessionUserId" | "isOffline">
-): Promise<void> {
-  return cacheManager.resolveOwner(inputs);
-}
-
-/** The active cache owner, for diagnostics and the status UI. */
-export function activeCacheOwner(): string | null {
-  return cacheManager.activeOwner();
-}
-
-/**
- * Whether some owner's persisted cache has finished restoring — the signal the
- * offline bootstrap router waits for before declaring a recipe unwarmed
- * (ADR-0009): before this, an absent query might simply not be hydrated yet.
- */
-export function isCacheOwnerApplied(): boolean {
-  return cacheManager.activeOwner() !== null;
-}
-
-/** Subscribe to cache-restore completion; usable with `useSyncExternalStore`. */
-export function subscribeCacheOwnerApplied(listener: () => void): () => void {
-  return cacheManager.onOwnerApplied(listener);
 }
