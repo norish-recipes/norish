@@ -32,7 +32,12 @@ export async function createManyRecipeStepsTx(
   if (!rawSteps.length) return [];
 
   const cleaned = rawSteps
-    .map((s, index) => ({ ...s, order: s.order ?? index, step: stripHtmlTags(s.step) }))
+    .map((s, index) => ({
+      ...s,
+      systemUsed: s.systemUsed ?? "metric",
+      order: s.order ?? index,
+      step: stripHtmlTags(s.step),
+    }))
     .filter((s) => s.step.length > 0 && s.recipeId);
 
   if (cleaned.length === 0) return [];

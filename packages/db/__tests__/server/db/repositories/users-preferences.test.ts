@@ -5,18 +5,22 @@ import { getUserPreferences, updateUserPreferences } from "@norish/db/repositori
 
 // Use hoisted factories so the mocks are available to the hoisted vi.mock call.
 const mockFindFirst = vi.hoisted(() => vi.fn());
-const mockExecute = vi.hoisted(() => vi.fn());
+const mockReturning = vi.hoisted(() => vi.fn());
+const mockWhere = vi.hoisted(() => vi.fn(() => ({ returning: mockReturning })));
+const mockSet = vi.hoisted(() => vi.fn(() => ({ where: mockWhere })));
+const mockUpdate = vi.hoisted(() => vi.fn(() => ({ set: mockSet })));
 
 vi.mock("@norish/db/drizzle", () => ({
   db: {
     query: { users: { findFirst: mockFindFirst } },
-    execute: mockExecute,
+    update: mockUpdate,
   },
 }));
 
 describe("user preferences repository", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mockReturning.mockResolvedValue([{ id: "user-1" }]);
   });
 
   it("returns empty object when preferences row missing", async () => {
@@ -28,18 +32,21 @@ describe("user preferences repository", () => {
     expect(mockFindFirst).toHaveBeenCalled();
   });
 
-  it("calls db.execute to merge preferences", async () => {
-    mockExecute.mockResolvedValue(undefined);
+  it("updates the user row to merge preferences", async () => {
+    await expect(updateUserPreferences("user-1", { timersEnabled: false })).resolves.toEqual({
+      applied: true,
+      stale: false,
+      value: undefined,
+    });
 
-    await expect(
-      updateUserPreferences("user-1", { timersEnabled: false })
-    ).resolves.toBeUndefined();
-
-    expect(mockExecute).toHaveBeenCalled();
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(mockSet).toHaveBeenCalled();
+    expect(mockWhere).toHaveBeenCalled();
+    expect(mockReturning).toHaveBeenCalled();
   });
 
-  it("rethrows if db.execute fails", async () => {
-    mockExecute.mockRejectedValue(new Error("boom"));
+  it("rethrows if the update fails", async () => {
+    mockReturning.mockRejectedValue(new Error("boom"));
 
     await expect(updateUserPreferences("user-1", { showConversionButton: true })).rejects.toThrow(
       "boom"

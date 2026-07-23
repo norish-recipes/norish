@@ -8,7 +8,11 @@
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
+import {
+  addStepsAndIngredientsToRecipeByInput,
+  createRecipeWithRefs,
+  updateRecipeWithRefs,
+} from "@norish/db/repositories/recipes";
 
 import {
   createTestIngredient,
@@ -554,6 +558,26 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
   });
 
   describe("Step creation", () => {
+    it("defaults an omitted step measurement system to metric", async () => {
+      const result = await addStepsAndIngredientsToRecipeByInput(
+        [
+          {
+            recipeId: testRecipeId,
+            step: "Preheat the oven",
+            order: 0,
+          },
+        ],
+        []
+      );
+
+      expect(result.steps).toHaveLength(1);
+      expect(result.steps[0]).toMatchObject({
+        recipeId: testRecipeId,
+        step: "Preheat the oven",
+        systemUsed: "metric",
+      });
+    });
+
     it("should preserve repeated step text at different orders", async () => {
       const recipeId = crypto.randomUUID();
 
