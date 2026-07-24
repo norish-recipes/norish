@@ -73,6 +73,14 @@ export interface AIProviderControl {
   respondInvalid(raw?: string): void;
   /** Clear the queue, the default, and captured requests. */
   reset(): void;
+  /**
+   * Hold responses: requests are still recorded (so `requestCount` advances and
+   * a queued worker's job appears "active"), but the HTTP response is withheld
+   * until {@link release} is called. Lets a scenario observe a pending state.
+   */
+  hold(): void;
+  /** Release any held responses and stop holding. */
+  release(): void;
   /** Number of chat-completion requests received since the last reset. */
   readonly requestCount: number;
   /** Captured chat-completion requests, in arrival order. */
@@ -108,6 +116,8 @@ class Controller implements AIProviderControl {
   private queue: Directive[] = [];
   private defaultDirective: Directive | null = null;
   private captured: CapturedRequest[] = [];
+  private gate: Promise<void> | null = null;
+  private openGate: (() => void) | null = null;
 
   setDefault(directive: Directive | null): void {
     this.defaultDirective = directive;
@@ -137,6 +147,26 @@ class Controller implements AIProviderControl {
     this.queue = [];
     this.defaultDirective = null;
     this.captured = [];
+    this.release();
+  }
+
+  hold(): void {
+    if (this.gate) return;
+
+    this.gate = new Promise<void>((resolve) => {
+      this.openGate = resolve;
+    });
+  }
+
+  release(): void {
+    this.openGate?.();
+    this.gate = null;
+    this.openGate = null;
+  }
+
+  /** Resolves immediately unless currently holding. */
+  waitForGate(): Promise<void> {
+    return this.gate ?? Promise.resolve();
   }
 
   get requestCount(): number {
@@ -214,6 +244,10 @@ async function handleRequest(
   }
 
   const directive = controller.resolve({ path, body: parsed });
+
+  // The request is recorded above; withhold the response while holding so a
+  // scenario can observe the queued worker's job as active/pending.
+  await controller.waitForGate();
 
   if (directive.kind === "success") {
     sendJson(res, 200, buildChatCompletionBody(directive.content, extractModel(parsed)));
