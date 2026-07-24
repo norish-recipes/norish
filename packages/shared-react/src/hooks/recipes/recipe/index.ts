@@ -18,6 +18,8 @@ import { createUseLinkedRecipeIngredients } from "./use-linked-recipe-ingredient
 import { createUseNutritionMutation } from "./use-nutrition-mutation";
 import { createUseNutritionQuery } from "./use-nutrition-query";
 import { createUseNutritionSubscription } from "./use-nutrition-subscription";
+import { createUseProvenanceQuery } from "./use-provenance-query";
+import { createUseProvenanceSubscription } from "./use-provenance-subscription";
 import { createUseRecipeId } from "./use-recipe-id";
 import { createUseRecipeImages } from "./use-recipe-images";
 import { createUseRecipeIngredients } from "./use-recipe-ingredients";
@@ -29,6 +31,7 @@ export type { RecipeIdResult } from "./use-recipe-id";
 export type { RecipeQueryResult } from "./use-recipe-query";
 export type { RecipeSubscriptionCallbacks } from "./use-recipe-subscription";
 export type { ConvertMutationResult } from "./use-convert-mutation";
+export type { ProvenanceQueryResult } from "./use-provenance-query";
 
 export {
   createUseRecipeId,
@@ -45,6 +48,8 @@ export {
   createUseConvertMutation,
   createUseNutritionSubscription,
   createUseNutritionMutation,
+  createUseProvenanceQuery,
+  createUseProvenanceSubscription,
   createUseRecipeSubscription,
   createUseRecipeImages,
   createUseRecipeVideos,
@@ -75,6 +80,8 @@ export function createRecipeFamilyHooks(options: CreateRecipeHooksOptions) {
     useConvertMutation: createUseConvertMutation(options),
     useNutritionSubscription: createUseNutritionSubscription(options),
     useNutritionMutation: createUseNutritionMutation(options),
+    useProvenanceQuery: createUseProvenanceQuery(options),
+    useProvenanceSubscription: createUseProvenanceSubscription(options),
     useRecipeIngredients: createUseRecipeIngredients(useRecipeQuery),
     useLinkedRecipeIngredients: createUseLinkedRecipeIngredients(options),
   };

@@ -270,5 +270,13 @@
     "swipeSteps": "Veeg om door stappen te navigeren",
     "swipeIngredients": "Veeg links voor ingrediënten",
     "swipeBackToSteps": "Veeg rechts voor stappen"
+  },
+  "provenance": {
+    "title": "Herkomst",
+    "pending": "Herkomst afleiden…",
+    "updating": "Herkomst bijwerken…",
+    "regionLabel": "Regio",
+    "cuisinesLabel": "Keuken",
+    "aiInferred": "Door AI afgeleide context — een onderbouwde schatting, geen geverifieerde geschiedenis."
   }
 }

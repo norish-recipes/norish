@@ -2,6 +2,7 @@ import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { RecipeCategory, Slot } from "@norish/shared/contracts";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
+import type { RecipeProvenance } from "@norish/shared/lib/provenance";
 
 import type { ImageImportFile } from "./contracts/job-types";
 
@@ -68,6 +69,7 @@ export interface QueueApiHandlers {
   ): Promise<AIResult<QueueNutritionEstimate>>;
   generateTagsForRecipe(recipe: QueueRecipeSummary): Promise<AIResult<string[]>>;
   categorizeRecipe(recipe: QueueRecipeSummary): Promise<AIResult<RecipeCategory[]>>;
+  inferRecipeProvenance(recipe: QueueRecipeSummary): Promise<AIResult<RecipeProvenance>>;
   detectAllergiesInRecipe(
     recipe: QueueRecipeSummary,
     allergiesToDetect: string[]

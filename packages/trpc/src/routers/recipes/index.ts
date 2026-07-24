@@ -1,6 +1,7 @@
 import { router } from "../../trpc";
 import { imagesProcedures } from "./images";
 import { pendingProcedures } from "./pending";
+import { provenanceProcedures } from "./provenance";
 import { recipesProcedures } from "./recipes";
 import { recipeSharesProcedures } from "./shares";
 import { recipesSubscriptions } from "./subscriptions";
@@ -16,4 +17,5 @@ export const recipesRouter = router({
   ...imagesProcedures._def.procedures,
   ...videosProcedures._def.procedures,
   ...pendingProcedures._def.procedures,
+  ...provenanceProcedures._def.procedures,
 });

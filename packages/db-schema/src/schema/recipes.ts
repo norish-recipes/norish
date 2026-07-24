@@ -40,6 +40,12 @@ export const recipes = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     categories: recipeCategoryEnum("categories").array().notNull().default([]),
+    // Recipe Provenance (AI-inferred origin). Nullable so existing recipes
+    // migrate without fabricated values; cuisines default to an empty list.
+    originCountryCode: text("origin_country_code"),
+    region: text("region"),
+    cuisines: text("cuisines").array().notNull().default([]),
+    provenanceNote: text("provenance_note"),
     ...versionColumn,
   },
   (t) => [

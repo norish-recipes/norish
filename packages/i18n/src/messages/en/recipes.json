@@ -270,5 +270,13 @@
     "swipeSteps": "Swipe to navigate steps",
     "swipeIngredients": "Swipe left for ingredients",
     "swipeBackToSteps": "Swipe right for steps"
+  },
+  "provenance": {
+    "title": "Origin",
+    "pending": "Inferring origin…",
+    "updating": "Updating origin…",
+    "regionLabel": "Region",
+    "cuisinesLabel": "Cuisine",
+    "aiInferred": "AI-inferred context — an informed guess, not verified history."
   }
 }

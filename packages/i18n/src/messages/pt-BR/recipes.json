@@ -270,5 +270,13 @@
     "swipeSteps": "Deslize para navegar pelas etapas",
     "swipeIngredients": "Deslize para a esquerda para ver os ingredientes",
     "swipeBackToSteps": "Deslize para a direita para ver as etapas"
+  },
+  "provenance": {
+    "title": "Origem",
+    "pending": "Inferindo a origem…",
+    "updating": "Atualizando a origem…",
+    "regionLabel": "Região",
+    "cuisinesLabel": "Culinária",
+    "aiInferred": "Contexto inferido por IA — uma estimativa fundamentada, não um fato histórico verificado."
   }
 }

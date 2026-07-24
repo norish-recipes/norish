@@ -270,5 +270,13 @@
     "swipeSteps": "Swipe for at navigere mellem trin",
     "swipeIngredients": "Swipe til venstre for ingredienser",
     "swipeBackToSteps": "Swipe til højre for trin"
+  },
+  "provenance": {
+    "title": "Oprindelse",
+    "pending": "Udleder oprindelse…",
+    "updating": "Opdaterer oprindelse…",
+    "regionLabel": "Region",
+    "cuisinesLabel": "Køkken",
+    "aiInferred": "AI-udledt kontekst – et kvalificeret gæt, ikke verificeret historie."
   }
 }

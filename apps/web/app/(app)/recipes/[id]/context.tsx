@@ -14,6 +14,8 @@ import {
   useNutritionMutation,
   useNutritionQuery,
   useNutritionSubscription,
+  useProvenanceQuery,
+  useProvenanceSubscription,
   useRecipeQuery,
   useRecipeSubscription,
 } from "@/hooks/recipes";
@@ -36,6 +38,8 @@ const {
   useNutritionQuery,
   useNutritionMutation,
   useNutritionSubscription,
+  useProvenanceQuery,
+  useProvenanceSubscription,
   useAutoTaggingMutation,
   useAutoTagging,
   useAutoCategorizationMutation,

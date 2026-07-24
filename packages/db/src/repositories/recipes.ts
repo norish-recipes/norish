@@ -22,6 +22,7 @@ import {
 } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
+import type { RecipeProvenance } from "@norish/shared/lib/provenance";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
@@ -783,6 +784,42 @@ export async function updateRecipeCategories(
   return appliedOutcome(undefined);
 }
 
+/**
+ * Persist all provenance values atomically in a single update. Re-inference
+ * leaves the previous values intact until this replacement succeeds. When a
+ * `version` is supplied the update is optimistic-concurrency guarded.
+ */
+export async function updateRecipeProvenance(
+  recipeId: string,
+  provenance: RecipeProvenance,
+  version?: number
+): Promise<MutationOutcome<void>> {
+  const whereConditions = [eq(recipes.id, recipeId)];
+
+  if (version) {
+    whereConditions.push(eq(recipes.version, version));
+  }
+
+  const updated = await db
+    .update(recipes)
+    .set({
+      originCountryCode: provenance.originCountryCode,
+      region: provenance.region,
+      cuisines: provenance.cuisines,
+      provenanceNote: provenance.note,
+      updatedAt: new Date(),
+      version: sql`${recipes.version} + 1`,
+    })
+    .where(and(...whereConditions))
+    .returning({ id: recipes.id });
+
+  if (updated.length === 0 && version) {
+    return staleOutcome();
+  }
+
+  return appliedOutcome(undefined);
+}
+
 export async function getRecipesWithoutCategories(): Promise<{ id: string; name: string }[]> {
   const rows = await db
     .select({ id: recipes.id, name: recipes.name })
@@ -813,6 +850,10 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       carbs: true,
       protein: true,
       categories: true,
+      originCountryCode: true,
+      region: true,
+      cuisines: true,
+      provenanceNote: true,
       createdAt: true,
       updatedAt: true,
       version: true,
@@ -898,6 +939,10 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     carbs: full.carbs ?? null,
     protein: full.protein ?? null,
     categories: full.categories ?? [],
+    originCountryCode: full.originCountryCode ?? null,
+    region: full.region ?? null,
+    cuisines: full.cuisines ?? [],
+    provenanceNote: full.provenanceNote ?? null,
     steps: (full.steps ?? []).map((s: any) => ({
       step: s.step,
       systemUsed: s.systemUsed,

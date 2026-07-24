@@ -270,5 +270,13 @@
     "swipeSteps": "Przesuń, aby nawigować kroki",
     "swipeIngredients": "Przesuń w lewo, aby zobaczyć składniki",
     "swipeBackToSteps": "Przesuń w prawo, aby wrócić do kroków"
+  },
+  "provenance": {
+    "title": "Pochodzenie",
+    "pending": "Ustalanie pochodzenia…",
+    "updating": "Aktualizowanie pochodzenia…",
+    "regionLabel": "Region",
+    "cuisinesLabel": "Kuchnia",
+    "aiInferred": "Kontekst wywnioskowany przez AI — świadome przypuszczenie, a nie zweryfikowana historia."
   }
 }

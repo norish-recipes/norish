@@ -40,6 +40,11 @@ export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   fat: true,
   carbs: true,
   protein: true,
+  // Provenance is a recipe-detail concern in this slice; cards/lists opt in later.
+  originCountryCode: true,
+  region: true,
+  cuisines: true,
+  provenanceNote: true,
 }).extend({
   tags: z.array(TagSummarySchema).default([]),
   categories: z.array(recipeCategorySchema).default([]),
@@ -53,6 +58,7 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   steps: z.array(StepOutputSchema).default([]),
   tags: z.array(TagSummarySchema).default([]),
   categories: z.array(recipeCategorySchema).default([]),
+  cuisines: z.array(z.string()).default([]),
   author: AuthorSchema,
   images: RecipeImagesArraySchema.default([]),
   videos: RecipeVideosArraySchema.default([]),

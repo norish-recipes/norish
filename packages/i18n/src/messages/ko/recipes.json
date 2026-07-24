@@ -270,5 +270,13 @@
     "swipeSteps": "스와이프하여 단계를 탐색하세요",
     "swipeIngredients": "왼쪽으로 스와이프하여 재료 보기",
     "swipeBackToSteps": "오른쪽으로 스와이프하여 단계 보기"
+  },
+  "provenance": {
+    "title": "유래",
+    "pending": "유래를 추론하는 중…",
+    "updating": "유래를 업데이트하는 중…",
+    "regionLabel": "지역",
+    "cuisinesLabel": "요리",
+    "aiInferred": "AI가 추론한 정보입니다 — 검증된 역사가 아닌 근거 있는 추정입니다."
   }
 }
