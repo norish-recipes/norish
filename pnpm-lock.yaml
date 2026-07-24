@@ -503,6 +503,9 @@ importers:
       '@scalar/nextjs-api-reference':
         specifier: 'catalog:'
         version: 0.10.16(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
+      '@serwist/next':
+        specifier: ^9.5.11
+        version: 9.5.11(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
       '@tanstack/query-persist-client-core':
         specifier: ^5.100.8
         version: 5.100.10
@@ -560,6 +563,9 @@ importers:
       server-only:
         specifier: 'catalog:'
         version: 0.0.1
+      serwist:
+        specifier: ^9.5.11
+        version: 9.5.11(browserslist@4.28.2)(typescript@6.0.3)
       tailwind-merge:
         specifier: ^3.5.0
         version: 3.5.0
@@ -594,9 +600,6 @@ importers:
       '@playwright/test':
         specifier: ^1.61.1
         version: 1.61.1
-      '@serwist/next':
-        specifier: ^9.5.11
-        version: 9.5.11(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.61.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
       '@tailwindcss/postcss':
         specifier: 'catalog:'
         version: 4.2.2
@@ -639,9 +642,6 @@ importers:
       prettier:
         specifier: 'catalog:'
         version: 3.8.1
-      serwist:
-        specifier: ^9.5.11
-        version: 9.5.11(browserslist@4.28.2)(typescript@6.0.3)
       tailwindcss:
         specifier: 'catalog:'
         version: 4.2.2
