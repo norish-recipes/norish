@@ -36,7 +36,6 @@ export { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
 export { createAutoTaggingQueue } from "./auto-tagging/queue";
 export { createAutoCategorizationQueue } from "./auto-categorization/queue";
 export { createAllergyDetectionQueue } from "./allergy-detection/queue";
-export { createProvenanceQueue } from "./provenance/queue";
 export { createCaldavSyncQueue } from "./caldav-sync/queue";
 export { createScheduledTasksQueue } from "./scheduled-tasks/queue";
 
@@ -52,7 +51,6 @@ export {
   isAutoCategorizationJobActive,
 } from "./auto-categorization/producer";
 export { addAllergyDetectionJob, isAllergyDetectionJobActive } from "./allergy-detection/producer";
-export { addProvenanceJob, provenanceJobId } from "./provenance/producer";
 export { addCaldavSyncJob } from "./caldav-sync/producer";
 export { initializeScheduledJobs } from "./scheduled-tasks/producer";
 
@@ -73,7 +71,6 @@ export {
   startAllergyDetectionWorker,
   stopAllergyDetectionWorker,
 } from "./allergy-detection/worker";
-export { startProvenanceWorker, stopProvenanceWorker } from "./provenance/worker";
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
 export { startScheduledTasksWorker, stopScheduledTasksWorker } from "./scheduled-tasks/worker";
 

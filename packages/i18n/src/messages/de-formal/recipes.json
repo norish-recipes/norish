@@ -270,13 +270,5 @@
     "swipeSteps": "Wischen Sie, um durch die Schritte zu navigieren",
     "swipeIngredients": "Nach links wischen für Zutaten",
     "swipeBackToSteps": "Nach rechts wischen für Schritte"
-  },
-  "provenance": {
-    "title": "Herkunft",
-    "pending": "Herkunft wird ermittelt…",
-    "updating": "Herkunft wird aktualisiert…",
-    "regionLabel": "Region",
-    "cuisinesLabel": "Küche",
-    "aiInferred": "KI-abgeleiteter Kontext – eine fundierte Vermutung, keine gesicherte Geschichte."
   }
 }

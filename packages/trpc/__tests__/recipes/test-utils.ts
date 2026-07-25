@@ -114,10 +114,6 @@ export function createMockFullRecipe(overrides: Partial<FullRecipeDTO> = {}): Fu
     systemUsed: "metric",
     createdAt: now,
     updatedAt: now,
-    originCountryCode: null,
-    region: null,
-    cuisines: [],
-    provenanceNote: null,
     tags: [{ name: "dinner" }],
     categories: ["Dinner"],
     recipeIngredients: [

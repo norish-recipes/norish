@@ -3,7 +3,6 @@ import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import { NutritionSection } from "@/app/(app)/recipes/[id]/components/nutrition-card";
-import { ProvenanceSection } from "@/app/(app)/recipes/[id]/components/provenance-card";
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
@@ -25,7 +24,6 @@ import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card, Link, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { countryCodeToFlagEmoji } from "@norish/shared/lib/provenance";
 import {
   getShowFavoritesPreference,
   getShowRatingsPreference,
@@ -127,7 +125,6 @@ export default function RecipePageMobile() {
           <ReadonlyRecipeSummary
             allergies={allergies}
             allergySet={allergySet}
-            namePrefix={countryCodeToFlagEmoji(recipe.originCountryCode)}
             recipe={recipe}
             timeVariant="mobile"
           />
@@ -198,9 +195,6 @@ export default function RecipePageMobile() {
 
           {/* Nutrition Section */}
           <NutritionSection />
-
-          {/* Recipe Provenance Section */}
-          <ProvenanceSection />
         </Card.Content>
       </Card>
 

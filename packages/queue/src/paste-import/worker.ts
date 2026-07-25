@@ -19,7 +19,6 @@ import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
-import { addProvenanceJob } from "@norish/queue/provenance/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getQueues } from "@norish/queue/registry";
 import {
@@ -256,19 +255,6 @@ export async function processPasteImportJob(
         userId,
         householdKey,
       });
-    }
-
-    // Recipe Provenance runs for every imported recipe regardless of extraction
-    // method. Import has already succeeded, so a failure to queue inference must
-    // never throw here — that would roll back or duplicate the imported recipe.
-    try {
-      await addProvenanceJob(queues.provenance, {
-        recipeId: createdId,
-        userId,
-        householdKey,
-      });
-    } catch (error) {
-      log.error({ err: error, recipeId: createdId }, "Failed to queue provenance inference");
     }
   }
 

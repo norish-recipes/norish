@@ -6,7 +6,6 @@ import type {
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
 import type { RecipeShareLifecycleEventDto } from "@norish/shared/contracts/dto/recipe-shares";
-import type { ProvenanceStatus } from "@norish/shared/lib/provenance";
 import { createTypedEmitter } from "@norish/shared-server/redis/pubsub";
 
 export type RecipeSubscriptionEvents = {
@@ -33,9 +32,6 @@ export type RecipeSubscriptionEvents = {
   autoCategorizationCompleted: { recipeId: string };
   allergyDetectionStarted: { recipeId: string };
   allergyDetectionCompleted: { recipeId: string };
-  // Recipe Provenance inference lifecycle (low-latency signal; the status query
-  // is authoritative). `updated` still carries the enriched recipe on success.
-  provenance: { recipeId: string; status: ProvenanceStatus };
   processingToast: {
     recipeId: string;
     titleKey: string;

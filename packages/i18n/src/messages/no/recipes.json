@@ -270,13 +270,5 @@
     "swipeSteps": "Sveip for å navigere mellom trinn",
     "swipeIngredients": "Sveip til venstre for ingredienser",
     "swipeBackToSteps": "Sveip til høyre for trinn"
-  },
-  "provenance": {
-    "title": "Opprinnelse",
-    "pending": "Utleder opprinnelse…",
-    "updating": "Oppdaterer opprinnelse…",
-    "regionLabel": "Region",
-    "cuisinesLabel": "Kjøkken",
-    "aiInferred": "AI-utledet kontekst – et kvalifisert gjett, ikke verifisert historie."
   }
 }

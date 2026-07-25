@@ -39,9 +39,6 @@ export { useNutritionQuery } from "./use-nutrition-query";
 export { useNutritionMutation } from "./use-nutrition-mutation";
 export { useNutritionSubscription } from "./use-nutrition-subscription";
 
-export { useProvenanceQuery } from "./use-provenance-query";
-export { useProvenanceSubscription } from "./use-provenance-subscription";
-
 export {
   useServingsScaler,
   formatServings,

@@ -10,7 +10,6 @@ import type {
   RecipeShareSummaryDto,
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts";
-import type { ProvenanceStatus } from "@norish/shared/lib/provenance";
 
 import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
 
@@ -54,9 +53,6 @@ export type RecipeDetailContextValue = {
   // Allergy detection
   isDetectingAllergies: boolean;
   triggerAllergyDetection: () => void;
-  // Recipe Provenance
-  provenanceStatus: ProvenanceStatus;
-  isInferringProvenance: boolean;
   // Allergies list
   allergies: string[];
   allergySet: Set<string>;
@@ -111,15 +107,6 @@ export type RecipeDetailAdapters = {
   useAutoCategorization: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
   useAllergyDetectionMutation: () => { mutate: (input: { recipeId: string }) => void };
   useAllergyDetection: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
-  useProvenanceQuery?: (recipeId: string) => {
-    status: ProvenanceStatus;
-    isPending: boolean;
-    invalidate: () => void;
-  };
-  useProvenanceSubscription?: (
-    recipeId: string | null,
-    onEvent: (status: ProvenanceStatus) => void
-  ) => void;
   useActiveAllergies: () => { allergies: string[]; allergySet: Set<string> };
   useConvertMutation: (recipeId: string) => {
     convertMeasurements: (targetSystem: MeasurementSystem, version: number) => void;
@@ -166,16 +153,6 @@ function useDefaultRecipeSharesQuery(): RecipeSharesQueryAdapterResult {
 
 function useDefaultRecipeShareSubscription() {}
 
-function useDefaultProvenanceQuery(): {
-  status: ProvenanceStatus;
-  isPending: boolean;
-  invalidate: () => void;
-} {
-  return { status: "idle", isPending: false, invalidate: noop };
-}
-
-function useDefaultProvenanceSubscription() {}
-
 function useDefaultRecipeShareMutations(): RecipeShareMutationsAdapterResult {
   return {
     createShare: noopAsync,
@@ -200,9 +177,6 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
     adapters.useRecipeShareSubscription ?? useDefaultRecipeShareSubscription;
   const useRecipeShareMutations =
     adapters.useRecipeShareMutations ?? useDefaultRecipeShareMutations;
-  const useProvenanceQuery = adapters.useProvenanceQuery ?? useDefaultProvenanceQuery;
-  const useProvenanceSubscription =
-    adapters.useProvenanceSubscription ?? useDefaultProvenanceSubscription;
 
   type ProviderProps = {
     recipeId: string;
@@ -210,9 +184,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
   };
 
   function RecipeDetailProvider({ recipeId, children }: ProviderProps) {
-    const { recipe, isLoading, error, invalidate: invalidateRecipe } = adapters.useRecipeQuery(
-      recipeId
-    );
+    const { recipe, isLoading, error } = adapters.useRecipeQuery(recipeId);
     const {
       shares,
       isLoading: isLoadingShares,
@@ -298,25 +270,6 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       if (!recipe) return;
       allergyDetectionMutation.mutate({ recipeId: recipe.id });
     }, [recipe, allergyDetectionMutation]);
-
-    // Recipe Provenance — the status query is authoritative; realtime events just
-    // refresh it (and `updated` refreshes the recipe content itself).
-    const {
-      status: provenanceStatus,
-      isPending: isInferringProvenance,
-      invalidate: invalidateProvenance,
-    } = useProvenanceQuery(recipeId);
-
-    useProvenanceSubscription(recipeId, (status) => {
-      // Realtime is a low-latency signal; the queries are authoritative. Refresh
-      // the status always, and the recipe content on success so the enriched
-      // provenance appears even if the recipe `updated` event was missed.
-      invalidateProvenance();
-
-      if (status === "succeeded") {
-        invalidateRecipe();
-      }
-    });
 
     // Get allergies
     const { allergies, allergySet } = adapters.useActiveAllergies();
@@ -492,8 +445,6 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         triggerAutoCategorize,
         isDetectingAllergies,
         triggerAllergyDetection,
-        provenanceStatus,
-        isInferringProvenance,
         allergies,
         allergySet,
         userRating,
@@ -534,8 +485,6 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         triggerAutoCategorize,
         isDetectingAllergies,
         triggerAllergyDetection,
-        provenanceStatus,
-        isInferringProvenance,
         allergies,
         allergySet,
         userRating,

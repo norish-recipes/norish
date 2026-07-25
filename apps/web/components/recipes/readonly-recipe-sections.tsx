@@ -53,13 +53,6 @@ type ReadonlyRecipeSummaryProps = {
   allergies?: string[];
   allergySet?: Set<string>;
   timeVariant?: "desktop" | "mobile";
-  /**
-   * Decorative origin flag rendered before the name (e.g. `🇮🇹`). Presentation
-   * only — never changes the stored/editable name — and opt-in so it appears on
-   * recipe detail but not on shared-recipe pages. Hidden from assistive tech
-   * because the provenance panel exposes the localized country name.
-   */
-  namePrefix?: string | null;
 };
 
 type ReadonlyRecipeMediaProps = {
@@ -128,7 +121,6 @@ export function ReadonlyRecipeSummary({
   allergies = [],
   allergySet = new Set<string>(),
   timeVariant = "desktop",
-  namePrefix,
 }: ReadonlyRecipeSummaryProps) {
   const t = useTranslations("recipes.detail");
   const tForm = useTranslations("recipes.form");
@@ -138,7 +130,6 @@ export function ReadonlyRecipeSummary({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl leading-tight font-bold">
-            {namePrefix && <span aria-hidden="true">{namePrefix} </span>}
             {recipe.name}
             {recipe.url && (
               <Link

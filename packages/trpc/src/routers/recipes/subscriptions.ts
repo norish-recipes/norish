@@ -73,11 +73,6 @@ const onAllergyDetectionCompleted = createEnvelopeAwareSubscription(
   "allergyDetectionCompleted",
   "allergy detection completed"
 );
-const onProvenance = createEnvelopeAwareSubscription(
-  recipeEmitter,
-  "provenance",
-  "recipe provenance"
-);
 const onProcessingToast = createEnvelopeAwareSubscription(
   recipeEmitter,
   "processingToast",
@@ -109,7 +104,6 @@ export const recipesSubscriptions = router({
   onAutoCategorizationCompleted,
   onAllergyDetectionStarted,
   onAllergyDetectionCompleted,
-  onProvenance,
   onProcessingToast,
   onRecipeBatchCreated,
 });

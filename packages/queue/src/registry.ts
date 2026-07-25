@@ -19,7 +19,6 @@ import type {
   ImageImportJobData,
   NutritionEstimationJobData,
   PasteImportJobData,
-  ProvenanceJobData,
   RecipeImportJobData,
 } from "@norish/queue/contracts/job-types";
 import { DEFAULT_JOB_RETENTION, ServerConfigKeys } from "@norish/config/zod/server-config";
@@ -36,7 +35,6 @@ import { buildRemovalOptions, QUEUE_NAMES } from "./config";
 import { createImageImportQueue } from "./image-import/queue";
 import { createNutritionEstimationQueue } from "./nutrition-estimation/queue";
 import { createPasteImportQueue } from "./paste-import/queue";
-import { createProvenanceQueue } from "./provenance/queue";
 import { createRecipeImportQueue } from "./recipe-import/queue";
 import { createScheduledTasksQueue } from "./scheduled-tasks/queue";
 
@@ -58,7 +56,6 @@ interface QueueRegistry {
   autoTagging: Queue<AutoTaggingJobData>;
   autoCategorization: Queue<AutoCategorizationJobData>;
   allergyDetection: Queue<AllergyDetectionJobData>;
-  provenance: Queue<ProvenanceJobData>;
   caldavSync: Queue<CaldavSyncJobData>;
   scheduledTasks: Queue<ScheduledTaskJobData>;
 }
@@ -111,7 +108,6 @@ export async function initializeQueues(): Promise<QueueRegistry> {
       autoTagging: createAutoTaggingQueue(removalOptions),
       autoCategorization: createAutoCategorizationQueue(removalOptions),
       allergyDetection: createAllergyDetectionQueue(removalOptions),
-      provenance: createProvenanceQueue(removalOptions),
       caldavSync: createCaldavSyncQueue(removalOptions),
       scheduledTasks: createScheduledTasksQueue(removalOptions),
     };
@@ -154,7 +150,6 @@ export function getQueueByName(name: QueueName): Queue {
     [QUEUE_NAMES.AUTO_TAGGING]: getQueues().autoTagging,
     [QUEUE_NAMES.AUTO_CATEGORIZATION]: getQueues().autoCategorization,
     [QUEUE_NAMES.ALLERGY_DETECTION]: getQueues().allergyDetection,
-    [QUEUE_NAMES.PROVENANCE]: getQueues().provenance,
     [QUEUE_NAMES.CALDAV_SYNC]: getQueues().caldavSync,
     [QUEUE_NAMES.SCHEDULED_TASKS]: getQueues().scheduledTasks,
   };
@@ -192,7 +187,6 @@ export async function closeAllQueues(): Promise<void> {
     registry.autoTagging.close(),
     registry.autoCategorization.close(),
     registry.allergyDetection.close(),
-    registry.provenance.close(),
     registry.caldavSync.close(),
     registry.scheduledTasks.close(),
   ]);

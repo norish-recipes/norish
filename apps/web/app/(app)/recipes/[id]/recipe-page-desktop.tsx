@@ -6,7 +6,6 @@ import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
-import ProvenanceCard from "@/app/(app)/recipes/[id]/components/provenance-card";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
@@ -30,7 +29,6 @@ import {
   getShowFavoritesPreference,
   getShowRatingsPreference,
 } from "@norish/shared/lib/user-preferences";
-import { countryCodeToFlagEmoji } from "@norish/shared/lib/provenance";
 import StarRating from "@norish/ui/star-rating";
 
 import ServingsControl from "./components/servings-control";
@@ -82,7 +80,6 @@ export default function RecipePageDesktop() {
                 actions={<ActionsMenu id={recipe.id} />}
                 allergies={allergies}
                 allergySet={allergySet}
-                namePrefix={countryCodeToFlagEmoji(recipe.originCountryCode)}
                 recipe={recipe}
               />
               <div className="pt-2">
@@ -115,9 +112,6 @@ export default function RecipePageDesktop() {
 
           {/* Nutrition Card */}
           <NutritionCard />
-
-          {/* Recipe Provenance Card */}
-          <ProvenanceCard />
         </div>
 
         {/* RIGHT column: Image + Steps (stacked) */}

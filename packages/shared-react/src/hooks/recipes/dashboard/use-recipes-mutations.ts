@@ -178,10 +178,6 @@ function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO |
     systemUsed,
     createdAt: now,
     updatedAt: now,
-    originCountryCode: input.originCountryCode ?? null,
-    region: input.region ?? null,
-    cuisines: input.cuisines ?? [],
-    provenanceNote: input.provenanceNote ?? null,
     tags: (input.tags ?? []).map((tag) => ({ name: tag.name, version: 1 })),
     categories: input.categories ?? [],
     recipeIngredients: (input.recipeIngredients ?? []).map((ingredient, index) => ({

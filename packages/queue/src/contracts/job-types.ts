@@ -105,17 +105,6 @@ export type AddAutoCategorizationJobResult =
   | { status: "duplicate"; existingJobId: string }
   | { status: "skipped"; reason: "disabled" };
 
-export interface ProvenanceJobData {
-  recipeId: string;
-  userId: string;
-  householdKey: string;
-}
-
-export type AddProvenanceJobResult =
-  | { status: "queued"; job: Job<ProvenanceJobData> }
-  | { status: "duplicate"; existingJobId: string }
-  | { status: "skipped"; reason: "disabled" };
-
 export interface AllergyDetectionJobData {
   recipeId: string;
   userId: string;
