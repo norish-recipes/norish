@@ -11,7 +11,7 @@ import type { Job } from "bullmq";
 import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import { getAllergiesForUsers, getHouseholdMemberIds, getRecipeFull } from "@norish/db";
-import { mergeTagsIntoRecipe } from "@norish/db/repositories/tags";
+import { appendRecipeTags } from "@norish/db/repositories/tags";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
@@ -114,7 +114,7 @@ async function processAllergyDetectionJob(job: Job<AllergyDetectionJobData>): Pr
 
   // Merge detected allergens with existing tags (preserves manually added tags)
   await reportStep(job, "saving");
-  const { newTags, allTags } = await mergeTagsIntoRecipe(recipeId, detectedAllergens);
+  const { added: newTags, allTags } = await appendRecipeTags(recipeId, detectedAllergens);
 
   log.info(
     { jobId: job.id, recipeId, newTags, totalTags: allTags.length },

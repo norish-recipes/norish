@@ -135,7 +135,8 @@ async function createStructuredRecipe(
     return null;
   }
 
-  const createdId = await createRecipeWithRefs(structuredRecipe.recipeId, userId, parsed.data);
+  const created = await createRecipeWithRefs(structuredRecipe.recipeId, userId, parsed.data);
+    const createdId = created?.recipeId;
 
   if (!createdId) {
     return null;
@@ -212,7 +213,8 @@ export async function processPasteImportJob(
     const parseResult = await parseFromPastedText(text, recipeId, allergyNames, forceAI);
 
     await reportStep(job, "saving");
-    const createdId = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
+    const created = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
+    const createdId = created?.recipeId;
 
     if (!createdId) {
       throw new Error("Failed to save imported recipe");

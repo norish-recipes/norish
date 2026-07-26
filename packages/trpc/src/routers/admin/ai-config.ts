@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { AIConfig, VideoConfig } from "@norish/config/zod/server-config";
 import { testAIEndpoint as testAIEndpointFn } from "@norish/auth/connection-tests";
 import {
+  AIConfigInputSchema,
   AIConfigSchema,
   ServerConfigKeys,
   TranscriptionProviderSchema,
@@ -73,7 +74,7 @@ const updateVideoConfig = adminProcedure
 const testAIEndpoint = adminProcedure
   .input(
     z.object({
-      provider: AIConfigSchema.shape.provider,
+      provider: AIConfigInputSchema.shape.provider,
       endpoint: z.string().url().optional(),
       apiKey: z.string().optional(),
     })
@@ -99,7 +100,7 @@ const testAIEndpoint = adminProcedure
 const listAvailableModels = adminProcedure
   .input(
     z.object({
-      provider: AIConfigSchema.shape.provider,
+      provider: AIConfigInputSchema.shape.provider,
       endpoint: z.string().optional(),
       apiKey: z.string().optional(),
     })

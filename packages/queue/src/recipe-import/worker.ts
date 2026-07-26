@@ -134,7 +134,8 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   await completeStep(job, { usedAI: parseResult.usedAI });
 
   await reportStep(job, "saving");
-  const createdId = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
+  const created = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
+  const createdId = created?.recipeId;
 
   if (!createdId) {
     throw new Error("Failed to save imported recipe");

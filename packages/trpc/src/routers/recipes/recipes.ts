@@ -199,14 +199,15 @@ export const createRecipeProcedure = authedProcedure
     }
 
     createRecipeWithRefs(recipeId, ctx.user.id, input)
-      .then(async (createdId) => {
-        if (!createdId) {
+      .then(async (created) => {
+        if (!created) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Failed to create recipe",
           });
         }
 
+        const createdId = created.recipeId;
         const dashboardDto = await dashboardRecipe(createdId);
 
         if (dashboardDto) {

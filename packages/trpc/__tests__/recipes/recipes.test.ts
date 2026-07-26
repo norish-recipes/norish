@@ -507,7 +507,7 @@ describe("recipes procedures", () => {
     it("returns recipe ID and emits created event on success", async () => {
       const mockDashboard = createMockRecipeDashboard({ name: "New Recipe" });
 
-      createRecipeWithRefs.mockResolvedValue("new-recipe-id");
+      createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "new-recipe-id" });
       dashboardRecipe.mockResolvedValue(mockDashboard);
 
       const testRouter = t.router({

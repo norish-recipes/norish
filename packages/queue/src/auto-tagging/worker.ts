@@ -11,7 +11,7 @@ import type { Job } from "bullmq";
 import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import { getRecipeFull } from "@norish/db";
-import { mergeTagsIntoRecipe } from "@norish/db/repositories/tags";
+import { appendRecipeTags } from "@norish/db/repositories/tags";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
@@ -95,7 +95,7 @@ async function processAutoTaggingJob(job: Job<AutoTaggingJobData>): Promise<void
 
   // Merge AI tags with existing tags (preserves manually added tags)
   await reportStep(job, "saving");
-  const { newTags, allTags } = await mergeTagsIntoRecipe(recipeId, generatedTags);
+  const { added: newTags, allTags } = await appendRecipeTags(recipeId, generatedTags);
 
   log.info(
     { jobId: job.id, recipeId, newTags, totalTags: allTags.length },

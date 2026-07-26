@@ -67,7 +67,9 @@ describe("processPasteImportJob", () => {
   it("creates valid structured recipes in order and persists normalized ratings", async () => {
     const { processPasteImportJob } = await import("../../src/paste-import/worker");
 
-    createRecipeWithRefs.mockResolvedValueOnce("recipe-1").mockResolvedValueOnce("recipe-2");
+    createRecipeWithRefs
+      .mockResolvedValueOnce({ status: "inserted", recipeId: "recipe-1" })
+      .mockResolvedValueOnce({ status: "inserted", recipeId: "recipe-2" });
     dashboardRecipe
       .mockResolvedValueOnce({ id: "recipe-1", name: "First" })
       .mockResolvedValueOnce({ id: "recipe-2", name: "Second" });

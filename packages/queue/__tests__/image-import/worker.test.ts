@@ -89,7 +89,7 @@ describe("processImageImportJob", () => {
         videos: [],
       },
     });
-    createRecipeWithRefs.mockResolvedValue("recipe-123");
+    createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "recipe-123" });
     dashboardRecipe.mockResolvedValue({ id: "recipe-123", name: "Extracted Recipe" });
     saveImageBytes.mockResolvedValue("/recipes/recipe-123/uploaded.jpg");
   });

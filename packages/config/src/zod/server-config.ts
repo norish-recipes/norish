@@ -278,7 +278,7 @@ export const DEFAULT_AUTOMATIC_ENRICHMENT: AutomaticEnrichmentConfig = {
 
 export const DEFAULT_TAG_STRATEGY: TagStrategy = "predefined";
 
-const AIConfigInputSchema = z.object({
+export const AIConfigInputSchema = z.object({
   enabled: z.boolean(),
   provider: AIProviderSchema,
   endpoint: z.url("Endpoint must be a valid URL").optional(),

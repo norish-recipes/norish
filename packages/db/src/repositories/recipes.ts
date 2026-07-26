@@ -620,11 +620,23 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
   return parsed.success ? parsed.data : null;
 }
 
+/**
+ * Outcome of a recipe creation attempt.
+ *
+ * `inserted` distinguishes a genuinely new recipe from a URL that already
+ * resolved to one. Only a new insert becomes a usable recipe for the first
+ * time, and only that may enroll Automatic Recipe Enrichment — an ambiguous
+ * identifier alone cannot tell the caller which happened.
+ */
+export type CreateRecipeResult =
+  | { status: "inserted"; recipeId: string }
+  | { status: "existing"; recipeId: string };
+
 export async function createRecipeWithRefs(
   recipeId: string,
   userId: string | null | undefined,
   input: FullRecipeInsertDTO
-): Promise<string | null> {
+): Promise<CreateRecipeResult | null> {
   const parsed = FullRecipeInsertSchema.safeParse(input);
 
   dbLogger.debug({ parsed }, "Parsed full recipe insert");
@@ -654,7 +666,7 @@ export async function createRecipeWithRefs(
     categories: payload.categories ?? [],
   };
 
-  const finalRecipeId = await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx): Promise<CreateRecipeResult> => {
     const [inserted] = await tx
       .insert(recipes)
       .values(toInsert)
@@ -671,7 +683,7 @@ export async function createRecipeWithRefs(
         throw new Error("Failed to save recipe");
       }
 
-      return existing.id;
+      return { status: "existing", recipeId: existing.id };
     }
 
     const rid = inserted.id;
@@ -729,10 +741,10 @@ export async function createRecipeWithRefs(
       );
     }
 
-    return rid;
+    return { status: "inserted", recipeId: rid };
   });
 
-  return finalRecipeId;
+  return result;
 }
 
 export async function setActiveSystemForRecipe(

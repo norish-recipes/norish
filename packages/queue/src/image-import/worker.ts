@@ -82,7 +82,8 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   // Save the recipe
   await reportStep(job, "saving");
-  const createdId = await createRecipeWithRefs(recipeId, userId, parsedRecipe);
+  const created = await createRecipeWithRefs(recipeId, userId, parsedRecipe);
+  const createdId = created?.recipeId;
 
   if (!createdId) {
     throw new Error("Failed to save imported recipe");
