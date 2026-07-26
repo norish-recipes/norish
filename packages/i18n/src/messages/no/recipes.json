@@ -238,12 +238,6 @@
     "ariaLabel": "Hold skjermen på"
   },
   "toasts": {
-    "processingBoth": "Behandler tags og allergener",
-    "processingTags": "Genererer tags",
-    "processingAllergies": "Registrerer allergener",
-    "bothComplete": "Tags og allergener oppdatert",
-    "tagsComplete": "Tags generert",
-    "allergiesComplete": "Allergener registrert",
     "imported": "Oppskrift importert",
     "converted": "Mål konvertert",
     "convertedDescription": "Oppskrift konvertert til {system}-enheter",
@@ -270,5 +264,14 @@
     "swipeSteps": "Sveip for å navigere mellom trinn",
     "swipeIngredients": "Sveip til venstre for ingredienser",
     "swipeBackToSteps": "Sveip til høyre for trinn"
+  },
+  "enrichment": {
+    "failed": "Berikelse mislyktes",
+    "kinds": {
+      "auto-tagging": "Automatiske tagger",
+      "allergy-detection": "Allergideteksjon",
+      "auto-categorization": "Automatisk kategorisering",
+      "nutrition-estimation": "Estimering av næringsinnhold"
+    }
   }
 }

@@ -238,12 +238,6 @@
     "ariaLabel": "Hold skærm tændt"
   },
   "toasts": {
-    "processingBoth": "Behandler tags og allergener",
-    "processingTags": "Genererer tags",
-    "processingAllergies": "Registrerer allergener",
-    "bothComplete": "Tags og allergener opdateret",
-    "tagsComplete": "Tags genereret",
-    "allergiesComplete": "Allergener registreret",
     "imported": "Opskrift importeret",
     "converted": "Mål konverteret",
     "convertedDescription": "Opskrift konverteret til {system}-enheder",
@@ -270,5 +264,14 @@
     "swipeSteps": "Swipe for at navigere mellem trin",
     "swipeIngredients": "Swipe til venstre for ingredienser",
     "swipeBackToSteps": "Swipe til højre for trin"
+  },
+  "enrichment": {
+    "failed": "Berigelse mislykkedes",
+    "kinds": {
+      "auto-tagging": "Automatiske tags",
+      "allergy-detection": "Allergiregistrering",
+      "auto-categorization": "Automatisk kategorisering",
+      "nutrition-estimation": "Estimering af næringsindhold"
+    }
   }
 }

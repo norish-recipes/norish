@@ -10,7 +10,6 @@ export type RecipesSubscriptionCallbacks = {
   onImported?: (payload: unknown) => void;
   onConverted?: (payload: unknown) => void;
   onFailed?: (payload: unknown) => void;
-  onProcessingToast?: (payload: unknown) => void;
 };
 
 export function createUseRecipesSubscription(
@@ -28,10 +27,6 @@ export function createUseRecipesSubscription(
       invalidate,
       replaceOldestOptimisticPendingRecipe,
       removePendingRecipe,
-      addAutoTaggingRecipe,
-      removeAutoTaggingRecipe,
-      addAllergyDetectionRecipe,
-      removeAllergyDetectionRecipe,
     } = dependencies.useRecipesCacheHelpers();
 
     const asSubscriptionOptions = (options: unknown): Parameters<typeof useSubscription>[0] => {
@@ -198,62 +193,10 @@ export function createUseRecipesSubscription(
             if (payload.recipeId) {
               replaceOldestOptimisticPendingRecipe(payload.recipeId);
               removePendingRecipe(payload.recipeId);
-              removeAutoTaggingRecipe(payload.recipeId);
-              removeAllergyDetectionRecipe(payload.recipeId);
             }
 
             invalidate();
             callbacks.onFailed?.(payload);
-          },
-        })
-      )
-    );
-
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onAutoTaggingStarted.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            addAutoTaggingRecipe(payload.recipeId);
-          },
-        })
-      )
-    );
-
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onAllergyDetectionStarted.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            addAllergyDetectionRecipe(payload.recipeId);
-          },
-        })
-      )
-    );
-
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onAutoTaggingCompleted.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            removeAutoTaggingRecipe(payload.recipeId);
-          },
-        })
-      )
-    );
-
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onAllergyDetectionCompleted.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            removeAllergyDetectionRecipe(payload.recipeId);
-          },
-        })
-      )
-    );
-
-    useSubscription(
-      asSubscriptionOptions(
-        trpc.recipes.onProcessingToast.subscriptionOptions(undefined, {
-          onData: ({ payload }: any) => {
-            callbacks.onProcessingToast?.(payload);
           },
         })
       )

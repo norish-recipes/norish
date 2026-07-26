@@ -52,17 +52,7 @@ export default function ActionsMenu({ id }: Props) {
   const router = useRouter();
   const { canEditRecipe, canDeleteRecipe, isAIEnabled } = usePermissionsContext();
   const { deleteRecipe } = useRecipesContext();
-  const {
-    recipe,
-    isAutoTagging,
-    triggerAutoTag,
-    isCategorizing,
-    triggerAutoCategorize,
-    isDetectingAllergies,
-    triggerAllergyDetection,
-    isEstimatingNutrition,
-    estimateNutrition,
-  } = useRecipeContextRequired();
+  const { recipe, enrichment } = useRecipeContextRequired();
   const { allergies } = useActiveAllergies();
   const { isSupported, isActive, toggle } = useWakeLockContext();
   const t = useTranslations("recipes.actions");
@@ -115,53 +105,57 @@ export default function ActionsMenu({ id }: Props) {
         iconClassName: isActive ? "text-success" : "text-muted",
       });
     }
+    // Manual Recipe Enrichment: shown on AI enablement and edit permission alone.
+    // The administrator's automatic switches decide what runs on creation, not
+    // whether an editor may ask for it.
     if (isAIEnabled && canEdit) {
+      const busyTagging = enrichment.isBusy("auto-tagging");
+
       items.push({
         key: "auto-tag",
-        label: isAutoTagging ? t("autoTagging") : t("autoTag"),
+        label: busyTagging ? t("autoTagging") : t("autoTag"),
         icon: <SparklesIcon className="size-4" />,
-        onPress: triggerAutoTag,
+        onPress: () => enrichment.request("auto-tagging"),
         labelClassName: cssAIGradientText,
         iconClassName: cssAIIconColor,
-        isDisabled: isAutoTagging,
+        isDisabled: busyTagging,
       });
-    }
-    if (isAIEnabled && canEdit) {
+
       items.push({
         key: "auto-categorize",
         label: t("autoCategorize"),
         icon: <SparklesIcon className="size-4" />,
-        onPress: () => triggerAutoCategorize(),
+        onPress: () => enrichment.request("auto-categorization"),
         labelClassName: cssAIGradientText,
         iconClassName: cssAIIconColor,
-        isDisabled: isCategorizing,
+        isDisabled: enrichment.isBusy("auto-categorization"),
       });
-    }
 
-    // Show allergy detection when AI is enabled, user can edit, and allergies are configured
-    const hasAllergies = allergies.length > 0;
-    if (isAIEnabled && canEdit && hasAllergies) {
-      items.push({
-        key: "detect-allergies",
-        label: isDetectingAllergies ? t("detectingAllergies") : t("detectAllergies"),
-        icon: <SparklesIcon className="size-4" />,
-        onPress: triggerAllergyDetection,
-        labelClassName: cssAIGradientText,
-        iconClassName: cssAIIconColor,
-        isDisabled: isDetectingAllergies,
-      });
-    }
+      // Allergy detection needs something to look for.
+      if (allergies.length > 0) {
+        const busyAllergies = enrichment.isBusy("allergy-detection");
 
-    // Show nutrition estimation when AI is enabled and user can edit
-    if (isAIEnabled && canEdit) {
+        items.push({
+          key: "detect-allergies",
+          label: busyAllergies ? t("detectingAllergies") : t("detectAllergies"),
+          icon: <SparklesIcon className="size-4" />,
+          onPress: () => enrichment.request("allergy-detection"),
+          labelClassName: cssAIGradientText,
+          iconClassName: cssAIIconColor,
+          isDisabled: busyAllergies,
+        });
+      }
+
+      const busyNutrition = enrichment.isBusy("nutrition-estimation");
+
       items.push({
         key: "estimate-nutrition",
-        label: isEstimatingNutrition ? t("estimatingNutrition") : t("estimateNutrition"),
+        label: busyNutrition ? t("estimatingNutrition") : t("estimateNutrition"),
         icon: <SparklesIcon className="size-4" />,
-        onPress: estimateNutrition,
+        onPress: () => enrichment.request("nutrition-estimation"),
         labelClassName: cssAIGradientText,
         iconClassName: cssAIIconColor,
-        isDisabled: isEstimatingNutrition,
+        isDisabled: busyNutrition,
       });
     }
     if (canDelete) {
@@ -185,16 +179,9 @@ export default function ActionsMenu({ id }: Props) {
     isActive,
     toggle,
     t,
-    isAutoTagging,
-    triggerAutoTag,
     isAIEnabled,
     allergies,
-    isDetectingAllergies,
-    triggerAllergyDetection,
-    isEstimatingNutrition,
-    estimateNutrition,
-    isCategorizing,
-    triggerAutoCategorize,
+    enrichment,
   ]);
   return (
     <>

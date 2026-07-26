@@ -238,12 +238,6 @@
     "ariaLabel": "Mantener la pantalla encendida"
   },
   "toasts": {
-    "processingBoth": "Procesando etiquetas y alergias",
-    "processingTags": "Generando etiquetas",
-    "processingAllergies": "Detectando alergias",
-    "bothComplete": "Etiquetas y alergias actualizadas",
-    "tagsComplete": "Etiquetas generadas",
-    "allergiesComplete": "Alergias detectadas",
     "imported": "Receta importada",
     "converted": "Medidas convertidas",
     "convertedDescription": "Receta convertida a unidades {system}",
@@ -270,5 +264,14 @@
     "swipeSteps": "Desliza para navegar entre pasos",
     "swipeIngredients": "Desliza a la izquierda para ingredientes",
     "swipeBackToSteps": "Desliza a la derecha para pasos"
+  },
+  "enrichment": {
+    "failed": "El enriquecimiento falló",
+    "kinds": {
+      "auto-tagging": "Etiquetado automático",
+      "allergy-detection": "Detección de alergias",
+      "auto-categorization": "Categorización automática",
+      "nutrition-estimation": "Estimación nutricional"
+    }
   }
 }

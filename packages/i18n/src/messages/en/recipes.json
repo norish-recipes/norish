@@ -238,12 +238,6 @@
     "ariaLabel": "Keep screen awake"
   },
   "toasts": {
-    "processingBoth": "Processing tags & allergies",
-    "processingTags": "Generating tags",
-    "processingAllergies": "Detecting allergies",
-    "bothComplete": "Tags & allergies updated",
-    "tagsComplete": "Tags generated",
-    "allergiesComplete": "Allergies detected",
     "imported": "Recipe imported",
     "converted": "Measurements converted",
     "convertedDescription": "Recipe converted to {system} units",
@@ -270,5 +264,14 @@
     "swipeSteps": "Swipe to navigate steps",
     "swipeIngredients": "Swipe left for ingredients",
     "swipeBackToSteps": "Swipe right for steps"
+  },
+  "enrichment": {
+    "failed": "Enrichment failed",
+    "kinds": {
+      "auto-tagging": "Auto-tagging",
+      "allergy-detection": "Allergy detection",
+      "auto-categorization": "Auto-categorization",
+      "nutrition-estimation": "Nutrition estimation"
+    }
   }
 }

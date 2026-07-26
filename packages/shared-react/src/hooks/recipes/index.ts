@@ -11,10 +11,7 @@ export * from "./shares";
 
 export function createRecipeHooks(options: CreateRecipeHooksOptions) {
   const recipe = createRecipeFamilyHooks(options);
-  const dashboard = createDashboardRecipeHooks(options, {
-    useAutoTaggingQuery: recipe.useAutoTaggingQuery,
-    useAllergyDetectionQuery: recipe.useAllergyDetectionQuery,
-  });
+  const dashboard = createDashboardRecipeHooks(options);
   const shares = createRecipeShareHooks(options);
 
   return {

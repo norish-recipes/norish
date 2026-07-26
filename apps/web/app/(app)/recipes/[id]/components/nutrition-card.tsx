@@ -10,7 +10,10 @@ import { Card, Separator, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
-  const { recipe, isEstimatingNutrition, estimateNutrition } = useRecipeContext();
+  const { recipe, enrichment } = useRecipeContext();
+  // Queued and processing both render as "working"; a quiet automatic failure
+  // simply leaves the panel showing whatever is stored.
+  const isEstimatingNutrition = enrichment.isBusy("nutrition-estimation");
   const { isAIEnabled } = usePermissionsContext();
   const t = useTranslations("recipes.nutrition");
   // Independent portion state - defaults to 1 (per serving)
@@ -89,7 +92,7 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
             <AIActionButton
               isLoading={isEstimatingNutrition}
               label={t("estimateWithAI")}
-              onPress={estimateNutrition}
+              onPress={() => enrichment.request("nutrition-estimation")}
             />
           )}
         </div>

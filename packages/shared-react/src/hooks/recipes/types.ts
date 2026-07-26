@@ -26,14 +26,7 @@ type SubscriptionProceduresContract = {
     onDeleted: { subscriptionOptions: SubscriptionOptionsFactory };
     onConverted: { subscriptionOptions: SubscriptionOptionsFactory };
     onFailed: { subscriptionOptions: SubscriptionOptionsFactory };
-    onNutritionStarted: { subscriptionOptions: SubscriptionOptionsFactory };
-    onAutoTaggingStarted: { subscriptionOptions: SubscriptionOptionsFactory };
-    onAutoTaggingCompleted: { subscriptionOptions: SubscriptionOptionsFactory };
-    onAutoCategorizationStarted: { subscriptionOptions: SubscriptionOptionsFactory };
-    onAutoCategorizationCompleted: { subscriptionOptions: SubscriptionOptionsFactory };
-    onAllergyDetectionStarted: { subscriptionOptions: SubscriptionOptionsFactory };
-    onAllergyDetectionCompleted: { subscriptionOptions: SubscriptionOptionsFactory };
-    onProcessingToast: { subscriptionOptions: SubscriptionOptionsFactory };
+    onEnrichment: { subscriptionOptions: SubscriptionOptionsFactory };
     onRecipeBatchCreated: { subscriptionOptions: SubscriptionOptionsFactory };
   };
   permissions: {

@@ -124,15 +124,17 @@ describe("RecipeDetailContext", () => {
       };
     },
     useRecipeSubscription: () => {},
-    useNutritionQuery: () => ({ isEstimating: false, setIsEstimating: vi.fn() }),
-    useNutritionMutation: () => ({ estimateNutrition: vi.fn() }),
-    useNutritionSubscription: () => {},
-    useAutoTaggingMutation: () => ({ mutate: vi.fn() }),
-    useAutoTagging: () => {},
-    useAutoCategorizationMutation: () => ({ mutate: vi.fn() }),
-    useAutoCategorization: () => {},
-    useAllergyDetectionMutation: () => ({ mutate: vi.fn() }),
-    useAllergyDetection: () => {},
+    useRecipeEnrichment: () => ({
+      states: {
+        "auto-tagging": "idle" as const,
+        "allergy-detection": "idle" as const,
+        "auto-categorization": "idle" as const,
+        "nutrition-estimation": "idle" as const,
+      },
+      isBusy: () => false,
+      request: vi.fn(),
+      isLoading: false,
+    }),
     useActiveAllergies: () => ({ allergies: [], allergySet: new Set<string>() }),
     useConvertMutation: (recipeId: string) => {
       const [error, setError] = React.useState<unknown>(null);

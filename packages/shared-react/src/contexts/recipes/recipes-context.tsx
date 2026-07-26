@@ -32,7 +32,6 @@ export type SharedRecipesContextValue = {
   isFetchingMore: boolean;
   hasMore: boolean;
   pendingRecipeIds: Set<string>;
-  autoTaggingRecipeIds: Set<string>;
   favoriteIds: string[];
   isFavorite: (recipeId: string) => boolean;
   toggleFavorite: (recipeId: string) => void;
@@ -111,7 +110,6 @@ export function createRecipesContext({
       error,
       hasMore,
       pendingRecipeIds,
-      autoTaggingRecipeIds,
       loadMore,
       invalidate,
     } = useRecipesQuery(queryFilters);
@@ -197,7 +195,6 @@ export function createRecipesContext({
         isFetchingMore: isValidating && !isLoading,
         hasMore,
         pendingRecipeIds,
-        autoTaggingRecipeIds,
         hasAppliedFilters,
         clearFilters,
         filterKey,
@@ -223,7 +220,6 @@ export function createRecipesContext({
         error,
         hasMore,
         pendingRecipeIds,
-        autoTaggingRecipeIds,
         hasAppliedFilters,
         clearFilters,
         filterKey,

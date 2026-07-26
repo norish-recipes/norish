@@ -11,6 +11,7 @@ import type {
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts";
 
+import type { RecipeEnrichmentResult } from "../recipes/recipe";
 import { shouldPreserveOptimisticUpdate } from "../optimistic-updates";
 
 // --- Types ---
@@ -42,17 +43,8 @@ export type RecipeDetailContextValue = {
   setIngredientAmounts: (servings: number) => void;
   startConversion: (target: MeasurementSystem) => void;
   reset: () => void;
-  // Nutrition
-  isEstimatingNutrition: boolean;
-  estimateNutrition: () => void;
-  // Auto-tagging
-  isAutoTagging: boolean;
-  triggerAutoTag: () => void;
-  isCategorizing: boolean;
-  triggerAutoCategorize: () => void;
-  // Allergy detection
-  isDetectingAllergies: boolean;
-  triggerAllergyDetection: () => void;
+  /** Recipe Enrichment: one lifecycle state per kind, and one way to request a run. */
+  enrichment: RecipeEnrichmentResult;
   // Allergies list
   allergies: string[];
   allergySet: Set<string>;
@@ -93,20 +85,7 @@ export type RecipeDetailAdapters = {
     isReactivating: boolean;
     isDeleting: boolean;
   };
-  useNutritionQuery: (recipeId: string) => {
-    isEstimating: boolean;
-    setIsEstimating: (v: boolean) => void;
-  };
-  useNutritionMutation: (recipeId: string) => {
-    estimateNutrition: () => void;
-  };
-  useNutritionSubscription: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
-  useAutoTaggingMutation: () => { mutate: (input: { recipeId: string }) => void };
-  useAutoTagging: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
-  useAutoCategorizationMutation: () => { mutate: (input: { recipeId: string }) => void };
-  useAutoCategorization: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
-  useAllergyDetectionMutation: () => { mutate: (input: { recipeId: string }) => void };
-  useAllergyDetection: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
+  useRecipeEnrichment: (recipeId: string) => RecipeEnrichmentResult;
   useActiveAllergies: () => { allergies: string[]; allergySet: Set<string> };
   useConvertMutation: (recipeId: string) => {
     convertMeasurements: (targetSystem: MeasurementSystem, version: number) => void;
@@ -216,60 +195,8 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
     adapters.useRecipeSubscription(recipeId);
     useRecipeShareSubscription(recipeId);
 
-    // Nutrition hooks
-    const { isEstimating: isEstimatingNutrition, setIsEstimating: setIsEstimatingNutrition } =
-      adapters.useNutritionQuery(recipeId);
-    const { estimateNutrition } = adapters.useNutritionMutation(recipeId);
-
-    adapters.useNutritionSubscription(
-      recipeId,
-      () => setIsEstimatingNutrition(true),
-      () => setIsEstimatingNutrition(false)
-    );
-
-    // Auto-tagging hooks
-    const [isAutoTagging, setIsAutoTagging] = useState(false);
-    const autoTagMutation = adapters.useAutoTaggingMutation();
-
-    adapters.useAutoTagging(
-      recipeId,
-      () => setIsAutoTagging(true),
-      () => setIsAutoTagging(false)
-    );
-
-    const triggerAutoTag = useCallback(() => {
-      if (!recipe) return;
-      autoTagMutation.mutate({ recipeId: recipe.id });
-    }, [recipe, autoTagMutation]);
-
-    const [isCategorizing, setIsCategorizing] = useState(false);
-    const autoCategorizeMutation = adapters.useAutoCategorizationMutation();
-
-    adapters.useAutoCategorization(
-      recipeId,
-      () => setIsCategorizing(true),
-      () => setIsCategorizing(false)
-    );
-
-    const triggerAutoCategorize = useCallback(() => {
-      if (!recipe) return;
-      autoCategorizeMutation.mutate({ recipeId: recipe.id });
-    }, [recipe, autoCategorizeMutation]);
-
-    // Allergy detection hooks
-    const [isDetectingAllergies, setIsDetectingAllergies] = useState(false);
-    const allergyDetectionMutation = adapters.useAllergyDetectionMutation();
-
-    adapters.useAllergyDetection(
-      recipeId,
-      () => setIsDetectingAllergies(true),
-      () => setIsDetectingAllergies(false)
-    );
-
-    const triggerAllergyDetection = useCallback(() => {
-      if (!recipe) return;
-      allergyDetectionMutation.mutate({ recipeId: recipe.id });
-    }, [recipe, allergyDetectionMutation]);
+    // One hook for all four enrichment kinds: status, busy state, and requests.
+    const enrichment = adapters.useRecipeEnrichment(recipeId);
 
     // Get allergies
     const { allergies, allergySet } = adapters.useActiveAllergies();
@@ -437,14 +364,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         setIngredientAmounts,
         startConversion,
         reset,
-        isEstimatingNutrition,
-        estimateNutrition,
-        isAutoTagging,
-        triggerAutoTag,
-        isCategorizing,
-        triggerAutoCategorize,
-        isDetectingAllergies,
-        triggerAllergyDetection,
+        enrichment,
         allergies,
         allergySet,
         userRating,
@@ -477,14 +397,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         setIngredientAmounts,
         startConversion,
         reset,
-        isEstimatingNutrition,
-        estimateNutrition,
-        isAutoTagging,
-        triggerAutoTag,
-        isCategorizing,
-        triggerAutoCategorize,
-        isDetectingAllergies,
-        triggerAllergyDetection,
+        enrichment,
         allergies,
         allergySet,
         userRating,

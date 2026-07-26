@@ -238,12 +238,6 @@
     "ariaLabel": "Bildschirm aktiv halten"
   },
   "toasts": {
-    "processingBoth": "Tags & Allergene werden verarbeitet",
-    "processingTags": "Tags werden generiert",
-    "processingAllergies": "Allergene werden erkannt",
-    "bothComplete": "Tags & Allergene aktualisiert",
-    "tagsComplete": "Tags generiert",
-    "allergiesComplete": "Allergene erkannt",
     "imported": "Rezept importiert",
     "converted": "Maße umgerechnet",
     "convertedDescription": "Rezept in {system}-Einheiten umgerechnet",
@@ -270,5 +264,14 @@
     "swipeSteps": "Wischen Sie, um durch die Schritte zu navigieren",
     "swipeIngredients": "Nach links wischen für Zutaten",
     "swipeBackToSteps": "Nach rechts wischen für Schritte"
+  },
+  "enrichment": {
+    "failed": "Anreicherung fehlgeschlagen",
+    "kinds": {
+      "auto-tagging": "Automatische Tags",
+      "allergy-detection": "Allergieerkennung",
+      "auto-categorization": "Automatische Kategorisierung",
+      "nutrition-estimation": "Nährwertschätzung"
+    }
   }
 }

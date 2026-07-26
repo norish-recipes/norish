@@ -238,12 +238,6 @@
     "ariaLabel": "Не выключать экран"
   },
   "toasts": {
-    "processingBoth": "Обработка тегов и аллергенов",
-    "processingTags": "Генерация тегов",
-    "processingAllergies": "Определение аллергенов",
-    "bothComplete": "Теги и аллергены обновлены",
-    "tagsComplete": "Теги сгенерированы",
-    "allergiesComplete": "Аллергены определены",
     "imported": "Рецепт импортирован",
     "converted": "Единицы измерения преобразованы",
     "convertedDescription": "Рецепт преобразован в систему {system}",
@@ -270,5 +264,14 @@
     "swipeSteps": "Проведите для навигации по шагам",
     "swipeIngredients": "Проведите влево для ингредиентов",
     "swipeBackToSteps": "Проведите вправо для шагов"
+  },
+  "enrichment": {
+    "failed": "Не удалось выполнить обогащение",
+    "kinds": {
+      "auto-tagging": "Автоматические теги",
+      "allergy-detection": "Определение аллергенов",
+      "auto-categorization": "Автоматическая категоризация",
+      "nutrition-estimation": "Оценка пищевой ценности"
+    }
   }
 }

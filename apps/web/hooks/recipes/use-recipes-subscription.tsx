@@ -48,21 +48,5 @@ export function useRecipesSubscription() {
         description: t("failedDescription"),
       });
     },
-    onProcessingToast: (rawPayload) => {
-      const payload = rawPayload as {
-        recipeId: string;
-        titleKey: string;
-        severity: "success" | "warning" | "danger" | "secondary";
-      };
-
-      toast(t(payload.titleKey), {
-        variant: payload.severity === "secondary" ? "accent" : payload.severity,
-        timeout: payload.severity === "success" ? 2000 : 3000,
-        actionProps: {
-          children: t("open"),
-          onPress: () => router.push(`/recipes/${payload.recipeId}`),
-        },
-      });
-    },
   });
 }

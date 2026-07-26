@@ -238,12 +238,6 @@
     "ariaLabel": "Scherm wakker houden"
   },
   "toasts": {
-    "processingBoth": "Tags & allergieën verwerken",
-    "processingTags": "Tags genereren",
-    "processingAllergies": "Allergieën detecteren",
-    "bothComplete": "Tags & allergieën bijgewerkt",
-    "tagsComplete": "Tags gegenereerd",
-    "allergiesComplete": "Allergieën gedetecteerd",
     "imported": "Recept geïmporteerd",
     "converted": "Maateenheden omgezet",
     "convertedDescription": "Recept omgezet naar {system} eenheden",
@@ -270,5 +264,14 @@
     "swipeSteps": "Veeg om door stappen te navigeren",
     "swipeIngredients": "Veeg links voor ingrediënten",
     "swipeBackToSteps": "Veeg rechts voor stappen"
+  },
+  "enrichment": {
+    "failed": "Verrijking mislukt",
+    "kinds": {
+      "auto-tagging": "Automatisch taggen",
+      "allergy-detection": "Allergiedetectie",
+      "auto-categorization": "Automatisch categoriseren",
+      "nutrition-estimation": "Voedingswaarde schatten"
+    }
   }
 }

@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, Linking, Share } from "react-native";
-import { ShellMenu } from "@/components/shell/menu";
 import { shareRecipeFromMenu } from "@/components/recipe-detail/recipe-share";
+import { ShellMenu } from "@/components/shell/menu";
 import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { getCurrentBaseUrl } from "@/providers/trpc-provider";
@@ -33,13 +33,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
   const {
     recipe,
     convertingTo,
-    isAutoTagging,
-    triggerAutoTag,
-    triggerAutoCategorize,
-    isDetectingAllergies,
-    triggerAllergyDetection,
-    isEstimatingNutrition,
-    estimateNutrition,
+    enrichment,
     startConversion,
     allergies,
     createShare,
@@ -224,39 +218,41 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       {isAIEnabled && canEdit ? (
         <UIButton
           label={intl.formatMessage({
-            id: isAutoTagging ? "recipes.actions.autoTagging" : "recipes.actions.autoTag",
+            id: enrichment.isBusy("auto-tagging")
+              ? "recipes.actions.autoTagging"
+              : "recipes.actions.autoTag",
           })}
           systemImage="sparkles"
-          onPress={triggerAutoTag}
+          onPress={() => enrichment.request("auto-tagging")}
         />
       ) : null}
       {isAIEnabled && canEdit ? (
         <UIButton
           label={intl.formatMessage({ id: "recipes.actions.autoCategorize" })}
           systemImage="sparkles"
-          onPress={() => triggerAutoCategorize()}
+          onPress={() => enrichment.request("auto-categorization")}
         />
       ) : null}
       {isAIEnabled && canEdit && hasAllergies ? (
         <UIButton
           label={intl.formatMessage({
-            id: isDetectingAllergies
+            id: enrichment.isBusy("allergy-detection")
               ? "recipes.actions.detectingAllergies"
               : "recipes.actions.detectAllergies",
           })}
           systemImage="sparkles"
-          onPress={triggerAllergyDetection}
+          onPress={() => enrichment.request("allergy-detection")}
         />
       ) : null}
       {isAIEnabled && canEdit ? (
         <UIButton
           label={intl.formatMessage({
-            id: isEstimatingNutrition
+            id: enrichment.isBusy("nutrition-estimation")
               ? "recipes.actions.estimatingNutrition"
               : "recipes.actions.estimateNutrition",
           })}
           systemImage="sparkles"
-          onPress={estimateNutrition}
+          onPress={() => enrichment.request("nutrition-estimation")}
         />
       ) : null}
 
