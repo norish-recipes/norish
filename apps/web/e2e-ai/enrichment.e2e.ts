@@ -90,8 +90,7 @@ async function importAndOpen(name: string, directives: unknown[]): Promise<void>
   ai.control.setDefault(null);
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Paste" }).click();
+  await openPasteImport();
   await page
     .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
     .fill(`Import ${name} — the harness supplies the result.`);
@@ -104,6 +103,25 @@ async function importAndOpen(name: string, directives: unknown[]): Promise<void>
 
   await page.getByText(name).first().click();
   await expect(page.getByRole("heading", { name })).toBeVisible({ timeout: 15_000 });
+}
+
+/**
+ * Open the create menu and choose Paste.
+ *
+ * Retried as a unit: a toast left over from a previous scenario can steal the
+ * click that opens the menu, and the menu then never appears.
+ */
+async function openPasteImport(): Promise<void> {
+  // Retried as a unit through to the open dialog: a toast left over from an
+  // earlier scenario can steal the click that opens the menu, and the menu can
+  // also close again between opening and the next action.
+  await expect(async () => {
+    await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Paste" }).click({ timeout: 2_000 });
+    await expect(
+      page.getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
+    ).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
 }
 
 /** Poll the open recipe page until the assertion holds, reloading each attempt. */
@@ -230,8 +248,7 @@ test("an automatic failure stays quiet and leaves the recipe intact", async () =
   ai.control.failPermanently("provider refused");
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Paste" }).click();
+  await openPasteImport();
   await page
     .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
     .fill("Import Quiet Failure Stew — the harness supplies the result.");
@@ -279,10 +296,16 @@ test("lifecycle state survives a page reload", async () => {
   }).toPass({ timeout: 30_000 });
 
   await page.reload();
-  await page.getByRole("button", { name: "Actions" }).click();
 
   // Recovered as in-flight after a reload, so the action is still disabled.
-  await expect(page.getByRole("menuitem", { name: "Auto Categorize" })).toBeDisabled();
+  // The disabled state sits on the button inside the menu item, and the menu
+  // needs a moment after a reload before it will open.
+  await expect(async () => {
+    await page.getByRole("button", { name: "Actions" }).click();
+    await expect(page.getByRole("button", { name: "Auto Categorize" })).toBeDisabled({
+      timeout: 2_000,
+    });
+  }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
 
   await page.keyboard.press("Escape");
   stack!.ai.control.release();

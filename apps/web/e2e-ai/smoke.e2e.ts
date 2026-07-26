@@ -74,8 +74,16 @@ test("a browser AI paste import receives the controlled provider response", asyn
 
   // Open the create menu and start an AI-assisted paste import. The AI Import
   // action is present because the harness has AI enabled server-side.
-  await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Paste" }).click();
+  // Retried as a unit through to the open dialog: a toast left over from an
+  // earlier scenario can steal the click that opens the menu, and the menu can
+  // also close again between opening and the next action.
+  await expect(async () => {
+    await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Paste" }).click({ timeout: 2_000 });
+    await expect(
+      page.getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
+    ).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
   await page
     .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
     .fill("Please infer a recipe from this note — the harness supplies the result.");
