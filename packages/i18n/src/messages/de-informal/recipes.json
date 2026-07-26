@@ -70,7 +70,9 @@
     "estimatingNutrition": "Schätze Nährwerte...",
     "screenOn": "Bildschirm an",
     "keepScreenOn": "Bildschirm an",
-    "actionsLabel": "Aktionen"
+    "actionsLabel": "Aktionen",
+    "autoCategorizing": "Kategorisierung läuft…",
+    "enrichmentFailed": "Letzter Versuch fehlgeschlagen"
   },
   "sharePanel": {
     "title": "Rezept teilen",

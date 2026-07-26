@@ -70,7 +70,9 @@
     "estimatingNutrition": "Stima valori nutrizionali...",
     "screenOn": "Schermo acceso",
     "keepScreenOn": "Mantieni schermo acceso",
-    "actionsLabel": "Azioni"
+    "actionsLabel": "Azioni",
+    "autoCategorizing": "Categorizzazione…",
+    "enrichmentFailed": "Ultimo tentativo non riuscito"
   },
   "sharePanel": {
     "title": "Condividi ricetta",

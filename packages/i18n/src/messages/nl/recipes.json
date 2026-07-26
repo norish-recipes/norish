@@ -70,7 +70,9 @@
     "estimatingNutrition": "Voedingswaarde schatten...",
     "screenOn": "Scherm Aan",
     "keepScreenOn": "Scherm Aan Houden",
-    "actionsLabel": "Acties"
+    "actionsLabel": "Acties",
+    "autoCategorizing": "Automatisch categoriseren…",
+    "enrichmentFailed": "Laatste poging mislukt"
   },
   "sharePanel": {
     "title": "Recept delen",

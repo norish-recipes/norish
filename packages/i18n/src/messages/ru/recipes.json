@@ -70,7 +70,9 @@
     "estimatingNutrition": "Оцениваем пищевую ценность...",
     "screenOn": "Экран включён",
     "keepScreenOn": "Не выключать экран",
-    "actionsLabel": "Действия"
+    "actionsLabel": "Действия",
+    "autoCategorizing": "Категоризация…",
+    "enrichmentFailed": "Последняя попытка не удалась"
   },
   "sharePanel": {
     "title": "Поделиться рецептом",

@@ -70,7 +70,9 @@
     "estimatingNutrition": "영양소 추정 중...",
     "screenOn": "화면 켜짐",
     "keepScreenOn": "화면 켜짐 유지",
-    "actionsLabel": "작업"
+    "actionsLabel": "작업",
+    "autoCategorizing": "분류 중…",
+    "enrichmentFailed": "마지막 실행 실패"
   },
   "sharePanel": {
     "title": "레시피 공유",

@@ -70,7 +70,9 @@
     "estimatingNutrition": "Calculando nutrición...",
     "screenOn": "Pantalla encendida",
     "keepScreenOn": "Mantener pantalla encendida",
-    "actionsLabel": "Acciones"
+    "actionsLabel": "Acciones",
+    "autoCategorizing": "Categorizando…",
+    "enrichmentFailed": "El último intento falló"
   },
   "sharePanel": {
     "title": "Compartir receta",

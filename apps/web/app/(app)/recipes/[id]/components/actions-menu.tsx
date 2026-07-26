@@ -20,6 +20,7 @@ import {
 import { Button, Dropdown, Label, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 import { useRecipeContextRequired } from "../context";
@@ -38,6 +39,8 @@ type MenuItem = {
   labelClassName?: string;
   iconClassName?: string;
   isDisabled?: boolean;
+  /** Secondary line under the label, e.g. a quiet enrichment failure. */
+  description?: string;
 };
 export default function ActionsMenu({ id }: Props) {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
@@ -109,54 +112,62 @@ export default function ActionsMenu({ id }: Props) {
     // The administrator's automatic switches decide what runs on creation, not
     // whether an editor may ask for it.
     if (isAIEnabled && canEdit) {
-      const busyTagging = enrichment.isBusy("auto-tagging");
+      // Every kind renders the same way, so the four states read consistently
+      // and a quiet automatic failure is still discoverable here.
+      const enrichmentActions: {
+        kind: RecipeEnrichmentKind;
+        key: string;
+        idleLabel: string;
+        busyLabel: string;
+        show?: boolean;
+      }[] = [
+        {
+          kind: "auto-tagging",
+          key: "auto-tag",
+          idleLabel: t("autoTag"),
+          busyLabel: t("autoTagging"),
+        },
+        {
+          kind: "auto-categorization",
+          key: "auto-categorize",
+          idleLabel: t("autoCategorize"),
+          busyLabel: t("autoCategorizing"),
+        },
+        {
+          kind: "allergy-detection",
+          key: "detect-allergies",
+          idleLabel: t("detectAllergies"),
+          busyLabel: t("detectingAllergies"),
+          // Allergy detection needs something to look for.
+          show: allergies.length > 0,
+        },
+        {
+          kind: "nutrition-estimation",
+          key: "estimate-nutrition",
+          idleLabel: t("estimateNutrition"),
+          busyLabel: t("estimatingNutrition"),
+        },
+      ];
 
-      items.push({
-        key: "auto-tag",
-        label: busyTagging ? t("autoTagging") : t("autoTag"),
-        icon: <SparklesIcon className="size-4" />,
-        onPress: () => enrichment.request("auto-tagging"),
-        labelClassName: cssAIGradientText,
-        iconClassName: cssAIIconColor,
-        isDisabled: busyTagging,
-      });
+      for (const action of enrichmentActions) {
+        if (action.show === false) continue;
 
-      items.push({
-        key: "auto-categorize",
-        label: t("autoCategorize"),
-        icon: <SparklesIcon className="size-4" />,
-        onPress: () => enrichment.request("auto-categorization"),
-        labelClassName: cssAIGradientText,
-        iconClassName: cssAIIconColor,
-        isDisabled: enrichment.isBusy("auto-categorization"),
-      });
-
-      // Allergy detection needs something to look for.
-      if (allergies.length > 0) {
-        const busyAllergies = enrichment.isBusy("allergy-detection");
+        const state = enrichment.states[action.kind];
+        const isBusy = state === "queued" || state === "processing";
 
         items.push({
-          key: "detect-allergies",
-          label: busyAllergies ? t("detectingAllergies") : t("detectAllergies"),
+          key: action.key,
+          label: isBusy ? action.busyLabel : action.idleLabel,
           icon: <SparklesIcon className="size-4" />,
-          onPress: () => enrichment.request("allergy-detection"),
+          onPress: () => enrichment.request(action.kind),
           labelClassName: cssAIGradientText,
           iconClassName: cssAIIconColor,
-          isDisabled: busyAllergies,
+          // A failed run stays visible and re-runnable; only an in-flight one
+          // is disabled.
+          description: state === "failed" ? t("enrichmentFailed") : undefined,
+          isDisabled: isBusy,
         });
       }
-
-      const busyNutrition = enrichment.isBusy("nutrition-estimation");
-
-      items.push({
-        key: "estimate-nutrition",
-        label: busyNutrition ? t("estimatingNutrition") : t("estimateNutrition"),
-        icon: <SparklesIcon className="size-4" />,
-        onPress: () => enrichment.request("nutrition-estimation"),
-        labelClassName: cssAIGradientText,
-        iconClassName: cssAIIconColor,
-        isDisabled: busyNutrition,
-      });
     }
     if (canDelete) {
       items.push({
@@ -220,8 +231,13 @@ export default function ActionsMenu({ id }: Props) {
                   variant="tertiary"
                 >
                   {<span className={item.iconClassName ?? "text-muted"}>{item.icon}</span>}
-                  <span className={`text-sm font-medium ${item.labelClassName ?? ""}`}>
-                    <Label>{item.label}</Label>
+                  <span className="flex flex-col items-start">
+                    <span className={`text-sm font-medium ${item.labelClassName ?? ""}`}>
+                      <Label>{item.label}</Label>
+                    </span>
+                    {item.description && (
+                      <span className="text-danger text-xs">{item.description}</span>
+                    )}
                   </span>
                 </Button>
               </Dropdown.Item>

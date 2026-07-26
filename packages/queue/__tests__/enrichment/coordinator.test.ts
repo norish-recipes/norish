@@ -25,12 +25,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 }));
 
 vi.mock("@norish/queue/registry", () => ({
-  getQueues: () => ({
-    autoTagging: { name: "auto-tagging" },
-    allergyDetection: { name: "allergy-detection" },
-    autoCategorization: { name: "auto-categorization" },
-    nutritionEstimation: { name: "nutrition-estimation" },
-  }),
+  getQueueByName: (name: string) => ({ name }),
 }));
 
 vi.mock("../../src/enrichment/producer", () => ({ addEnrichmentJob }));

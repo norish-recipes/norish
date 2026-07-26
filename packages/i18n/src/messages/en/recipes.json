@@ -70,7 +70,9 @@
     "estimatingNutrition": "Estimating nutrition...",
     "screenOn": "Screen On",
     "keepScreenOn": "Keep Screen On",
-    "actionsLabel": "Actions"
+    "actionsLabel": "Actions",
+    "autoCategorizing": "Auto-categorizing…",
+    "enrichmentFailed": "Last run failed"
   },
   "sharePanel": {
     "title": "Share recipe",

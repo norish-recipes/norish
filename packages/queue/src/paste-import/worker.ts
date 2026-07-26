@@ -7,6 +7,7 @@
 
 import type { Job } from "bullmq";
 
+import type { CreateRecipeResult } from "@norish/db/repositories/recipes";
 import type {
   PasteImportJobData,
   PasteImportJobResult,
@@ -124,7 +125,7 @@ async function createStructuredRecipe(
   structuredRecipe: StructuredPasteImportRecipe,
   userId: string,
   _householdKey: string
-): Promise<string | null> {
+): Promise<CreateRecipeResult | null> {
   const parsed = FullRecipeInsertSchema.safeParse(structuredRecipe.recipe);
 
   if (!parsed.success || !hasRecipeNameIngredientsAndSteps(parsed.data)) {
@@ -132,15 +133,14 @@ async function createStructuredRecipe(
   }
 
   const created = await createRecipeWithRefs(structuredRecipe.recipeId, userId, parsed.data);
-  const createdId = created?.recipeId;
 
-  if (!createdId) {
+  if (!created) {
     return null;
   }
 
-  await persistImportedRating(userId, createdId, structuredRecipe.importedRating);
+  await persistImportedRating(userId, created.recipeId, structuredRecipe.importedRating);
 
-  return createdId;
+  return created;
 }
 
 export async function processPasteImportJob(
@@ -165,7 +165,7 @@ export async function processPasteImportJob(
     });
   });
 
-  const createdRecipeIds: string[] = [];
+  const created: CreateRecipeResult[] = [];
 
   if (structuredRecipes && structuredRecipes.length > 0) {
     let index = 0;
@@ -173,16 +173,16 @@ export async function processPasteImportJob(
     for (const structuredRecipe of structuredRecipes) {
       index++;
       await reportStep(job, `creating-recipes:${index}/${structuredRecipes.length}`);
-      const createdId = await createStructuredRecipe(structuredRecipe, userId, householdKey);
+      const structuredResult = await createStructuredRecipe(structuredRecipe, userId, householdKey);
 
-      if (!createdId) {
+      if (!structuredResult) {
         continue;
       }
 
-      createdRecipeIds.push(createdId);
+      created.push(structuredResult);
     }
 
-    if (createdRecipeIds.length === 0) {
+    if (created.length === 0) {
       throw new Error("No valid recipes found in structured paste input.");
     }
   } else {
@@ -196,39 +196,38 @@ export async function processPasteImportJob(
     const parseResult = await parseFromPastedText(text, recipeId, forceAI);
 
     await reportStep(job, "saving");
-    const created = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
-    const createdId = created?.recipeId;
+    const textResult = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
 
-    if (!createdId) {
+    if (!textResult) {
       throw new Error("Failed to save imported recipe");
     }
 
-    createdRecipeIds.push(createdId);
+    created.push(textResult);
   }
 
-  await completeStep(job, { createdCount: createdRecipeIds.length });
+  await completeStep(job, { createdCount: created.length });
   await reportStep(job, "post-processing");
 
-  for (const createdId of createdRecipeIds) {
-    const dashboardDto = await dashboardRecipe(createdId);
+  for (const result of created) {
+    const dashboardDto = await dashboardRecipe(result.recipeId);
 
     if (!dashboardDto) {
       continue;
     }
 
-    log.info({ jobId: job.id, recipeId: createdId }, "Pasted recipe imported successfully");
+    log.info({ jobId: job.id, recipeId: result.recipeId }, "Pasted recipe imported successfully");
 
     // Import success is terminal here regardless of what enrichment does next.
     emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
       recipe: dashboardDto,
-      pendingRecipeId: createdId,
+      pendingRecipeId: result.recipeId,
       toast: "imported",
     });
 
-    await announceUsableRecipe({ recipeId: createdId, userId, householdKey, householdUserIds });
+    await announceUsableRecipe(result, { userId, householdKey, householdUserIds });
   }
 
-  return { recipeIds: createdRecipeIds };
+  return { recipeIds: created.map((result) => result.recipeId) };
 }
 
 async function handleJobFailed(

@@ -6,6 +6,7 @@ import { usePermissionsContext } from "@/context/permissions-context";
 import { useRecipesContext } from "@/context/recipes-context";
 import { getCurrentBaseUrl } from "@/providers/trpc-provider";
 import { Button as UIButton, Divider as UIDivider } from "@expo/ui/swift-ui";
+import { disabled as disabledModifier } from "@expo/ui/swift-ui/modifiers";
 import * as KeepAwake from "expo-keep-awake";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -222,13 +223,19 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
               ? "recipes.actions.autoTagging"
               : "recipes.actions.autoTag",
           })}
+          modifiers={[disabledModifier(enrichment.isBusy("auto-tagging"))]}
           systemImage="sparkles"
           onPress={() => enrichment.request("auto-tagging")}
         />
       ) : null}
       {isAIEnabled && canEdit ? (
         <UIButton
-          label={intl.formatMessage({ id: "recipes.actions.autoCategorize" })}
+          label={intl.formatMessage({
+            id: enrichment.isBusy("auto-categorization")
+              ? "recipes.actions.autoCategorizing"
+              : "recipes.actions.autoCategorize",
+          })}
+          modifiers={[disabledModifier(enrichment.isBusy("auto-categorization"))]}
           systemImage="sparkles"
           onPress={() => enrichment.request("auto-categorization")}
         />
@@ -240,6 +247,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
               ? "recipes.actions.detectingAllergies"
               : "recipes.actions.detectAllergies",
           })}
+          modifiers={[disabledModifier(enrichment.isBusy("allergy-detection"))]}
           systemImage="sparkles"
           onPress={() => enrichment.request("allergy-detection")}
         />
@@ -251,6 +259,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
               ? "recipes.actions.estimatingNutrition"
               : "recipes.actions.estimateNutrition",
           })}
+          modifiers={[disabledModifier(enrichment.isBusy("nutrition-estimation"))]}
           systemImage="sparkles"
           onPress={() => enrichment.request("nutrition-estimation")}
         />

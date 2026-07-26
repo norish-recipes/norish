@@ -70,7 +70,9 @@
     "estimatingNutrition": "Szacowanie wartości odżywczych...",
     "screenOn": "Ekran włączony",
     "keepScreenOn": "Utrzymaj ekran włączony",
-    "actionsLabel": "Akcje"
+    "actionsLabel": "Akcje",
+    "autoCategorizing": "Kategoryzowanie…",
+    "enrichmentFailed": "Ostatnia próba nie powiodła się"
   },
   "sharePanel": {
     "title": "Udostępnij przepis",

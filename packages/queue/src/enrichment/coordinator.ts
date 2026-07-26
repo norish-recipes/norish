@@ -19,7 +19,7 @@ import type {
   RecipeEnrichmentSkipReason,
 } from "@norish/shared/lib/recipe-enrichment";
 import { getAllergiesForUsers, getHouseholdMemberIds, getRecipeFull } from "@norish/db";
-import { getQueues } from "@norish/queue/registry";
+import { getQueueByName } from "@norish/queue/registry";
 import {
   getAutomaticEnrichmentConfig,
   isAIEnabled,
@@ -32,6 +32,7 @@ import {
 } from "@norish/shared/lib/recipe-enrichment";
 
 import type { RecipeEnrichmentJobData } from "../contracts/job-types";
+import { ENRICHMENT_QUEUE_NAMES } from "./identity";
 import { addEnrichmentJob } from "./producer";
 
 const log = createLogger("queue:enrichment-coordinator");
@@ -192,16 +193,5 @@ async function loadHouseholdHasAllergies(context: RecipeEnrichmentContext): Prom
 }
 
 function queueForKind(kind: RecipeEnrichmentKind): Queue<RecipeEnrichmentJobData> {
-  const queues = getQueues();
-
-  switch (kind) {
-    case "auto-tagging":
-      return queues.autoTagging;
-    case "allergy-detection":
-      return queues.allergyDetection;
-    case "auto-categorization":
-      return queues.autoCategorization;
-    case "nutrition-estimation":
-      return queues.nutritionEstimation;
-  }
+  return getQueueByName(ENRICHMENT_QUEUE_NAMES[kind]) as Queue<RecipeEnrichmentJobData>;
 }

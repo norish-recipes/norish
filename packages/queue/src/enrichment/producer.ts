@@ -41,7 +41,12 @@ export async function addEnrichmentJob(
     return { kind, status: "duplicate", existingJobId: activeJobId };
   }
 
-  await removeRetainedJob(queue, jobId, kind, recipeId);
+  if (data.origin === "manual") {
+    // A deliberate rerun clears the retained terminal job so history cannot
+    // block it. Automatic enrollment deliberately does not: a duplicate
+    // creation event must coalesce onto the completed run, not re-spend AI.
+    await removeRetainedJob(queue, jobId, kind, recipeId);
+  }
 
   const job = await queue.add(ENRICHMENT_JOB_NAMES[kind], data, { jobId });
 

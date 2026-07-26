@@ -7,10 +7,7 @@
  */
 
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
-import {
-  replaceRecipeNutrition,
-  replaceRecipeNutritionIfAbsent,
-} from "@norish/db/repositories/recipe-enrichment";
+import { replaceRecipeNutrition } from "@norish/db/repositories/recipe-enrichment";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import { createLogger } from "@norish/shared-server/logger";
@@ -54,10 +51,7 @@ export async function startNutritionEstimationWorker(): Promise<void> {
 
         await reportStep(job, "saving");
 
-        const applied =
-          job.data.origin === "manual"
-            ? await replaceRecipeNutrition(recipe.id, result.data)
-            : await replaceRecipeNutritionIfAbsent(recipe.id, result.data);
+        const applied = await replaceRecipeNutrition(recipe.id, result.data, job.data.origin);
 
         log.info(
           { recipeId: recipe.id, applied, origin: job.data.origin },

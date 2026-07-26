@@ -4,9 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
   replaceRecipeCategories,
-  replaceRecipeCategoriesIfAbsent,
   replaceRecipeNutrition,
-  replaceRecipeNutritionIfAbsent,
 } from "@norish/db/repositories/recipe-enrichment";
 import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { appendRecipeTags, getRecipeTagNames } from "@norish/db/repositories/tags";
@@ -82,33 +80,33 @@ describe("Recipe Enrichment repository", () => {
 
   describe("replaceRecipeCategories", () => {
     it("replaces the complete list unconditionally", async () => {
-      await replaceRecipeCategories(testRecipe.id, ["Breakfast"]);
-      const applied = await replaceRecipeCategories(testRecipe.id, ["Dinner", "Snack"]);
+      await replaceRecipeCategories(testRecipe.id, ["Breakfast"], "manual");
+      const applied = await replaceRecipeCategories(testRecipe.id, ["Dinner", "Snack"], "manual");
 
       expect(applied).toBe(true);
       expect((await getRecipeFull(testRecipe.id))?.categories).toEqual(["Dinner", "Snack"]);
     });
 
     it("rejects an empty proposal without touching stored values", async () => {
-      await replaceRecipeCategories(testRecipe.id, ["Breakfast"]);
+      await replaceRecipeCategories(testRecipe.id, ["Breakfast"], "manual");
 
-      await expect(replaceRecipeCategories(testRecipe.id, [])).rejects.toThrow();
+      await expect(replaceRecipeCategories(testRecipe.id, [], "manual")).rejects.toThrow();
       expect((await getRecipeFull(testRecipe.id))?.categories).toEqual(["Breakfast"]);
     });
   });
 
-  describe("replaceRecipeCategoriesIfAbsent", () => {
+  describe("replaceRecipeCategories with the automatic origin", () => {
     it("applies while the stored list is empty", async () => {
-      const applied = await replaceRecipeCategoriesIfAbsent(testRecipe.id, ["Dinner"]);
+      const applied = await replaceRecipeCategories(testRecipe.id, ["Dinner"], "automatic");
 
       expect(applied).toBe(true);
       expect((await getRecipeFull(testRecipe.id))?.categories).toEqual(["Dinner"]);
     });
 
     it("becomes a no-op when data appeared while AI was running", async () => {
-      await replaceRecipeCategories(testRecipe.id, ["Breakfast"]);
+      await replaceRecipeCategories(testRecipe.id, ["Breakfast"], "manual");
 
-      const applied = await replaceRecipeCategoriesIfAbsent(testRecipe.id, ["Dinner"]);
+      const applied = await replaceRecipeCategories(testRecipe.id, ["Dinner"], "automatic");
 
       expect(applied).toBe(false);
       expect((await getRecipeFull(testRecipe.id))?.categories).toEqual(["Breakfast"]);
@@ -117,14 +115,13 @@ describe("Recipe Enrichment repository", () => {
 
   describe("replaceRecipeNutrition", () => {
     it("replaces the whole group atomically and clears omitted fields", async () => {
-      await replaceRecipeNutrition(testRecipe.id, {
-        calories: 500,
-        fat: "20",
-        carbs: "40",
-        protein: "30",
-      });
+      await replaceRecipeNutrition(
+        testRecipe.id,
+        { calories: 500, fat: "20", carbs: "40", protein: "30" },
+        "manual"
+      );
 
-      const applied = await replaceRecipeNutrition(testRecipe.id, { calories: 240 });
+      const applied = await replaceRecipeNutrition(testRecipe.id, { calories: 240 }, "manual");
 
       expect(applied).toBe(true);
 
@@ -137,28 +134,26 @@ describe("Recipe Enrichment repository", () => {
     });
 
     it("rejects an entirely blank proposal without touching stored values", async () => {
-      await replaceRecipeNutrition(testRecipe.id, { calories: 500 });
+      await replaceRecipeNutrition(testRecipe.id, { calories: 500 }, "manual");
 
       await expect(
-        replaceRecipeNutrition(testRecipe.id, {
-          calories: null,
-          fat: "  ",
-          carbs: "",
-          protein: null,
-        })
+        replaceRecipeNutrition(
+          testRecipe.id,
+          { calories: null, fat: "  ", carbs: "", protein: null },
+          "manual"
+        )
       ).rejects.toThrow();
       expect((await getRecipeFull(testRecipe.id))?.calories).toBe(500);
     });
   });
 
-  describe("replaceRecipeNutritionIfAbsent", () => {
+  describe("replaceRecipeNutrition with the automatic origin", () => {
     it("applies while the whole group is absent", async () => {
-      const applied = await replaceRecipeNutritionIfAbsent(testRecipe.id, {
-        calories: 240,
-        fat: "9",
-        carbs: "30",
-        protein: "12",
-      });
+      const applied = await replaceRecipeNutrition(
+        testRecipe.id,
+        { calories: 240, fat: "9", carbs: "30", protein: "12" },
+        "automatic"
+      );
 
       expect(applied).toBe(true);
       expect((await getRecipeFull(testRecipe.id))?.calories).toBe(240);
@@ -167,12 +162,11 @@ describe("Recipe Enrichment repository", () => {
     it("leaves partial supplied nutrition untouched", async () => {
       const supplied = await createTestRecipe(userId, { name: "Supplied protein", protein: "31" });
 
-      const applied = await replaceRecipeNutritionIfAbsent(supplied.id, {
-        calories: 240,
-        fat: "9",
-        carbs: "30",
-        protein: "12",
-      });
+      const applied = await replaceRecipeNutrition(
+        supplied.id,
+        { calories: 240, fat: "9", carbs: "30", protein: "12" },
+        "automatic"
+      );
 
       expect(applied).toBe(false);
 

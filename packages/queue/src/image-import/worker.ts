@@ -102,9 +102,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   // Vision parsing is a reader, not an inference step: an image import enters
   // the same enrichment flow as every other creation path.
-  if (created.status === "inserted") {
-    await announceUsableRecipe({ recipeId: createdId, userId, householdKey, householdUserIds });
-  }
+  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
 }
 
 /**

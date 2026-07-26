@@ -70,7 +70,9 @@
     "estimatingNutrition": "Estimerer næring...",
     "screenOn": "Skjerm på",
     "keepScreenOn": "Hold skjermen på",
-    "actionsLabel": "Handlinger"
+    "actionsLabel": "Handlinger",
+    "autoCategorizing": "Kategoriserer…",
+    "enrichmentFailed": "Siste forsøk mislyktes"
   },
   "sharePanel": {
     "title": "Del oppskrift",

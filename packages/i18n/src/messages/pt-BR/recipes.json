@@ -70,7 +70,9 @@
     "estimatingNutrition": "Estimando nutrição...",
     "screenOn": "Tela ligada",
     "keepScreenOn": "Manter tela ligada",
-    "actionsLabel": "Ações"
+    "actionsLabel": "Ações",
+    "autoCategorizing": "Categorizando…",
+    "enrichmentFailed": "A última execução falhou"
   },
   "sharePanel": {
     "title": "Compartilhar receita",

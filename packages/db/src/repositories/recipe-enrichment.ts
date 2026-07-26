@@ -12,7 +12,10 @@
 import { and, eq, sql } from "drizzle-orm";
 
 import type { RecipeCategory } from "@norish/shared/contracts";
-import type { NutritionGroupInput } from "@norish/shared/lib/recipe-enrichment";
+import type {
+  NutritionGroupInput,
+  RecipeEnrichmentOrigin,
+} from "@norish/shared/lib/recipe-enrichment";
 import { db } from "@norish/db/drizzle";
 import { recipes } from "@norish/db/schema";
 import {
@@ -49,45 +52,32 @@ function validateCategories(categories: readonly RecipeCategory[]): RecipeCatego
 }
 
 /**
- * Replace a recipe's complete category list. Manual replacement is intentional
- * and unconditional once the proposal validates.
+ * Replace a recipe's complete category list.
  *
- * @returns whether a row was updated (false only when the recipe is gone)
- */
-export async function replaceRecipeCategories(
-  recipeId: string,
-  categories: readonly RecipeCategory[]
-): Promise<boolean> {
-  const validated = validateCategories(categories);
-
-  const updated = await db
-    .update(recipes)
-    .set({ categories: validated, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
-    .where(eq(recipes.id, recipeId))
-    .returning({ id: recipes.id });
-
-  return updated.length > 0;
-}
-
-/**
- * Replace a recipe's category list only while it is still empty.
+ * The origin decides how the write guards itself, because that is the domain
+ * rule rather than a caller's choice: an automatic run defers to Supplied
+ * Recipe Data, and a manual run is a deliberate refresh that replaces.
  *
- * The absence check is part of the write itself: if a person supplied categories
- * while the AI request was in flight, this becomes a successful no-op and the
- * newer supplied data wins.
+ * For an automatic run the absence check is part of the UPDATE itself, so if a
+ * person supplied categories while the AI request was in flight this becomes a
+ * successful no-op and the newer supplied data wins.
  *
  * @returns whether the replacement was applied
  */
-export async function replaceRecipeCategoriesIfAbsent(
+export async function replaceRecipeCategories(
   recipeId: string,
-  categories: readonly RecipeCategory[]
+  categories: readonly RecipeCategory[],
+  origin: RecipeEnrichmentOrigin
 ): Promise<boolean> {
   const validated = validateCategories(categories);
+  const guards = [eq(recipes.id, recipeId)];
+
+  if (origin === "automatic") guards.push(CATEGORIES_ABSENT);
 
   const updated = await db
     .update(recipes)
     .set({ categories: validated, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
-    .where(and(eq(recipes.id, recipeId), CATEGORIES_ABSENT))
+    .where(and(...guards))
     .returning({ id: recipes.id });
 
   return updated.length > 0;
@@ -106,39 +96,26 @@ function validateNutrition(nutrition: NutritionGroupInput) {
 /**
  * Atomically replace all four Nutrition Information fields.
  *
- * @returns whether a row was updated (false only when the recipe is gone)
- */
-export async function replaceRecipeNutrition(
-  recipeId: string,
-  nutrition: NutritionGroupInput
-): Promise<boolean> {
-  const group = validateNutrition(nutrition);
-
-  const updated = await db
-    .update(recipes)
-    .set({ ...group, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
-    .where(eq(recipes.id, recipeId))
-    .returning({ id: recipes.id });
-
-  return updated.length > 0;
-}
-
-/**
- * Atomically replace all four Nutrition Information fields, but only while the
- * whole group is still absent. Partial supplied nutrition therefore survives.
+ * As with categories, the origin decides the guard. Nutrition Information is
+ * one atomic precedence group, so an automatic run applies only while all four
+ * fields are absent — partial supplied nutrition survives untouched.
  *
  * @returns whether the replacement was applied
  */
-export async function replaceRecipeNutritionIfAbsent(
+export async function replaceRecipeNutrition(
   recipeId: string,
-  nutrition: NutritionGroupInput
+  nutrition: NutritionGroupInput,
+  origin: RecipeEnrichmentOrigin
 ): Promise<boolean> {
   const group = validateNutrition(nutrition);
+  const guards = [eq(recipes.id, recipeId)];
+
+  if (origin === "automatic") guards.push(NUTRITION_ABSENT);
 
   const updated = await db
     .update(recipes)
     .set({ ...group, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
-    .where(and(eq(recipes.id, recipeId), NUTRITION_ABSENT))
+    .where(and(...guards))
     .returning({ id: recipes.id });
 
   return updated.length > 0;

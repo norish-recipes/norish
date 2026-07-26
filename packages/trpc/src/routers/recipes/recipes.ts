@@ -226,14 +226,11 @@ export const createRecipeProcedure = authedProcedure
 
         // A manually created recipe enters the same automatic flow as an
         // import: importing is not a prerequisite for automation.
-        if (created.status === "inserted") {
-          await announceUsableRecipe({
-            recipeId: createdId,
-            userId: ctx.user.id,
-            householdKey: ctx.householdKey,
-            householdUserIds: ctx.householdUserIds,
-          });
-        }
+        await announceUsableRecipe(created, {
+          userId: ctx.user.id,
+          householdKey: ctx.householdKey,
+          householdUserIds: ctx.householdUserIds,
+        });
       })
       .catch((err) => handleRecipeError(ctx, err, "create recipe", { recipeId }));
 

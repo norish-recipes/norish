@@ -33,6 +33,32 @@ export interface RecipeEnrichmentCallbacks {
   onManualError?: (kind: RecipeEnrichmentKind, error: unknown) => void;
 }
 
+export interface EnrichmentRequestInput {
+  recipeId: string;
+  kind: RecipeEnrichmentKind;
+}
+
+/**
+ * Narrow a realtime frame to a lifecycle event.
+ *
+ * Subscriptions arrive typed as `unknown` because the envelope wrapper is not
+ * part of the generated router types, so this is where the shape is checked
+ * rather than asserted.
+ */
+function asLifecycleEvent(data: unknown): RecipeEnrichmentLifecycleEventDto | null {
+  const payload = (data as { payload?: unknown } | null)?.payload;
+
+  if (!payload || typeof payload !== "object") return null;
+
+  const candidate = payload as Partial<RecipeEnrichmentLifecycleEventDto>;
+
+  return typeof candidate.recipeId === "string" && typeof candidate.kind === "string"
+    ? (candidate as RecipeEnrichmentLifecycleEventDto)
+    : null;
+}
+
+type EnrichmentMutation = { mutate: (input: EnrichmentRequestInput) => void };
+
 const IDLE_STATES: RecipeEnrichmentStateMap = {
   "auto-tagging": "idle",
   "allergy-detection": "idle",
@@ -58,11 +84,11 @@ export function createUseRecipeEnrichment({ useTRPC }: CreateRecipeHooksOptions)
 
     const statusOptions = trpc.recipes.enrichmentStatus.queryOptions({
       recipeId: recipeId ?? "",
-    }) as unknown as { queryKey: unknown[]; queryFn: () => Promise<RecipeEnrichmentStatusDto> };
+    });
+    const statusKey = statusOptions.queryKey;
 
     const { data, isLoading } = useQuery({
-      queryKey: statusOptions.queryKey,
-      queryFn: statusOptions.queryFn,
+      ...statusOptions,
       enabled: !!recipeId,
       // Mount, refocus, and reconnect converge missed lifecycle events. No
       // interval: realtime carries the transitions.
@@ -72,7 +98,7 @@ export function createUseRecipeEnrichment({ useTRPC }: CreateRecipeHooksOptions)
     });
 
     const states = useMemo<RecipeEnrichmentStateMap>(() => {
-      const status = data as RecipeEnrichmentStatusDto | undefined;
+      const status = data;
 
       if (!status) return IDLE_STATES;
 
@@ -88,39 +114,38 @@ export function createUseRecipeEnrichment({ useTRPC }: CreateRecipeHooksOptions)
     /** Apply a lifecycle transition to the status cache without refetching. */
     const applyLifecycle = useCallback(
       (event: RecipeEnrichmentLifecycleEventDto) => {
-        queryClient.setQueryData(
-          statusOptions.queryKey,
-          (current: RecipeEnrichmentStatusDto | undefined) => {
-            const base =
-              current ??
-              ({
-                recipeId: event.recipeId,
-                kinds: ENRICHMENT_KINDS.map((kind) => ({
-                  kind,
-                  state: "idle" as RecipeEnrichmentLifecycleState,
-                  origin: null,
-                })),
-              } satisfies RecipeEnrichmentStatusDto);
+        queryClient.setQueryData(statusKey, (current: RecipeEnrichmentStatusDto | undefined) => {
+          const base =
+            current ??
+            ({
+              recipeId: event.recipeId,
+              kinds: ENRICHMENT_KINDS.map((kind) => ({
+                kind,
+                state: "idle" as RecipeEnrichmentLifecycleState,
+                origin: null,
+              })),
+            } satisfies RecipeEnrichmentStatusDto);
 
-            return {
-              ...base,
-              kinds: base.kinds.map((entry) =>
-                entry.kind === event.kind
-                  ? { ...entry, state: event.state, origin: event.origin }
-                  : entry
-              ),
-            };
-          }
-        );
+          return {
+            ...base,
+            kinds: base.kinds.map((entry) =>
+              entry.kind === event.kind
+                ? { ...entry, state: event.state, origin: event.origin }
+                : entry
+            ),
+          };
+        });
       },
-      [queryClient, statusOptions.queryKey]
+      [queryClient, statusKey]
     );
 
     useSubscription(
       trpc.recipes.onEnrichment.subscriptionOptions(undefined, {
         enabled: !!recipeId,
-        onData: ({ payload }: any) => {
-          if (payload.recipeId !== recipeId) return;
+        onData: (data: unknown) => {
+          const payload = asLifecycleEvent(data);
+
+          if (!payload || payload.recipeId !== recipeId) return;
 
           applyLifecycle(payload);
 
@@ -136,16 +161,20 @@ export function createUseRecipeEnrichment({ useTRPC }: CreateRecipeHooksOptions)
             callbacks.onManualError?.(payload.kind, new Error("Enrichment failed"));
           }
         },
-      }) as never
+      })
     );
 
-    const mutation = useMutation(
+    const mutation: EnrichmentMutation = useMutation(
       trpc.recipes.requestEnrichment.mutationOptions({
-        onError: (error: unknown, variables: { kind: RecipeEnrichmentKind }) => {
+        onError: (error: unknown, variables: EnrichmentRequestInput) => {
+          // The optimistic `queued` never happened: put the kind back where the
+          // server says it is, so a rejected request cannot leave the action
+          // disabled until the next refocus.
+          void queryClient.invalidateQueries({ queryKey: statusKey });
           callbacks.onManualError?.(variables.kind, error);
         },
-      }) as never
-    ) as { mutate: (input: { recipeId: string; kind: RecipeEnrichmentKind }) => void };
+      })
+    );
 
     const request = useCallback(
       (kind: RecipeEnrichmentKind) => {

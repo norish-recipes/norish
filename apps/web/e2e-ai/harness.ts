@@ -6,7 +6,6 @@
  * `stack.ai.control`. This keeps every `.e2e.ts` free of harness
  * plumbing and free of scenario-specific coupling to the offline suite.
  */
-import { execSync } from "node:child_process";
 import type { APIRequestContext } from "@playwright/test";
 import { request } from "@playwright/test";
 import { Client } from "pg";
@@ -14,7 +13,7 @@ import { Client } from "pg";
 import type { FakeAIProvider } from "./ai-provider";
 import type { E2eServer } from "./server";
 import { createFakeAIProvider } from "./ai-provider";
-import { E2E_BASE_URL, E2E_DATABASE_URL, E2E_DIR, FAKE_AI_PORT } from "./env";
+import { E2E_BASE_URL, E2E_DATABASE_URL, FAKE_AI_PORT } from "./env";
 import { startServer } from "./server";
 
 export { createFakeAIProvider } from "./ai-provider";
@@ -53,8 +52,9 @@ export async function signIn(user: { email: string; password: string }): Promise
  * Set the four Automatic Recipe Enrichment switches in the harness database.
  *
  * They are written straight into `ai_config` because the administrator UI is
- * not the subject under test, and the server reads the switches per enrollment,
- * so no restart is needed. Redis is flushed because config reads are cached.
+ * not the subject under test. Server config is read from the database on every
+ * call, so no restart and no cache flush is needed — and flushing Redis here
+ * would drop the signed-in session.
  */
 export async function setAutomaticEnrichment(
   switches: Partial<
@@ -86,11 +86,6 @@ export async function setAutomaticEnrichment(
   } finally {
     await db.end();
   }
-
-  execSync("docker compose -f compose.yaml exec -T redis redis-cli flushall", {
-    cwd: E2E_DIR,
-    stdio: "ignore",
-  });
 }
 
 export interface AIE2EStack {

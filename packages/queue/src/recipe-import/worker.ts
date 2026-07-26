@@ -129,9 +129,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     });
   }
 
-  if (created.status === "inserted") {
-    await announceUsableRecipe({ recipeId: createdId, userId, householdKey, householdUserIds });
-  }
+  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
 }
 
 /**
