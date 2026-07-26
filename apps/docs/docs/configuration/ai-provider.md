@@ -14,8 +14,8 @@ AI enables:
 - AI fallback when a recipe can't be imported from a URL structurally
 - **Image import** from screenshots or photos of recipes
 - **Video import** from YouTube Shorts, Instagram Reels, TikTok, and more
-- **Nutritional information** generation
-- **Allergy detection** for ingredients
+- **Recipe Enrichment**: tags, allergy indications, meal categories, and
+  nutrition values added after a recipe is saved
 - **Unit conversion** between metric and US units
 
 ## Enable AI
@@ -48,6 +48,71 @@ AI_API_KEY: <your-api-key>
 AI feature speed and quality vary by provider, model, and region. You can also
 adjust AI settings at runtime in **Settings → Admin**.
 :::
+
+## Recipe Enrichment
+
+Recipe Enrichment is the optional AI work that runs **after** a recipe is saved:
+auto-tagging, allergy detection, auto-categorization, and nutrition estimation.
+
+Importing and creating a recipe never depend on it. The recipe is saved first;
+enrichment is enrolled separately, and a disabled, unavailable, slow, or failing
+AI provider cannot make a save fail.
+
+### Automatic enrichment
+
+Under **Settings → Admin → AI**, each kind has its own switch. They apply to
+every newly created recipe — manual entry and every import path alike.
+
+| Switch                   | What it does automatically                                          | Default |
+| ------------------------ | ------------------------------------------------------------------- | ------- |
+| **Auto-tagging**         | Adds suggested tags without removing existing ones                  | Off     |
+| **Allergy detection**    | Adds allergy tags for your household's configured allergies         | On      |
+| **Auto-categorization**  | Sets meal categories on recipes that have none                      | Off     |
+| **Nutrition estimation** | Estimates calories, fat, carbs, and protein when none were supplied | Off     |
+
+Enabling AI globally does not switch these on by itself — each is opt-in
+(except allergy detection, which keeps the behaviour of the setting it
+replaced). Turning one off only stops the automatic run; household members can
+still request that kind by hand from the recipe.
+
+Automatic enrichment runs once, when a recipe is first created. Editing a recipe
+later does not trigger it again, and a URL import that matches a recipe you
+already have is not treated as a new recipe.
+
+### Supplied recipe data wins
+
+Information you entered yourself, or that an import source stated explicitly, is
+never overwritten by automatic enrichment:
+
+- Any meal category on the recipe suppresses **automatic** categorization.
+- Any of calories, fat, carbs, or protein suppresses **automatic** nutrition
+  estimation for the whole group — partial values you supplied stay untouched.
+- Empty and blank values do not count as supplied, so placeholders don't block
+  useful enrichment.
+
+Tags and allergy indications work differently: enrichment appends findings and
+never removes what is already there, so existing tags never suppress it.
+
+A run you request by hand is a deliberate refresh and does replace the current
+categories or the complete nutrition group.
+
+### Tag strategy
+
+**Tag strategy** decides which tags auto-tagging may use, independently of
+whether it runs automatically:
+
+| Strategy                       | Behaviour                                          |
+| ------------------------------ | -------------------------------------------------- |
+| **Predefined tags only**       | Only Norish's built-in tag list                    |
+| **Predefined + existing tags** | Also tags already used by recipes on this instance |
+| **AI can create new tags**     | May invent new tags when nothing fits              |
+
+Turning automatic auto-tagging off keeps the selected strategy for manual runs.
+
+### Turning it all off
+
+`AI_ENABLED=false` (or the global switch in the admin settings) suppresses every
+enrichment, automatic and manual. No AI request can bypass it.
 
 ## Video import
 
