@@ -4,6 +4,38 @@ Self-hostable recipe manager and meal planner: recipes, groceries, stores, and a
 
 ## Language
 
+### Recipes
+
+**Usable Recipe**:
+A recipe whose creation transaction has succeeded and whose stored state can be loaded. Automatic enrichment adds no second completeness check beyond the existing creation contract.
+_Avoid_: Complete Recipe (suggests optional fields must be present)
+
+**Recipe Enrichment**:
+Optional AI-assisted processing that adds or refreshes recipe tags, allergy indications, meal categories, or nutrition values after a recipe is usable. It includes both automatic runs for newly usable recipes and manually requested runs; its outcome does not determine whether recipe creation or import succeeded.
+_Avoid_: Post-Import Enrichment (excludes manual creation and manual runs), Recipe Provenance (a separate, unimplemented feature)
+
+**Automatic Recipe Enrichment**:
+Recipe Enrichment enrolled once for every newly usable recipe, whether created manually or through any import path, according to deployment settings and safely supplied recipe data. Later recipe edits do not enroll it again. It is quiet background work: failure neither changes recipe creation or import success nor presents an operational error to the user.
+_Avoid_: Auto-enhancement
+
+**Automatic Enrichment Enrollment**:
+The post-commit event-driven handoff from a usable recipe to its eligible Automatic Recipe Enrichment jobs. A listener is part of the normal server runtime, but the event is not persisted or replayed; a brief process or Redis interruption can therefore miss enrollment by accepted design.
+_Avoid_: Scheduled enrichment, Enrichment saga
+
+**Manual Recipe Enrichment**:
+A single enrichment explicitly requested by a recipe editor. Its lifecycle remains visible and a terminal failure is reported to the requester.
+
+**Supplied Recipe Data**:
+Recipe information intentionally entered by a person or explicitly present in an import source and stored with the recipe. Substantive supplied categories or Nutrition Information suppress the corresponding Automatic Recipe Enrichment; null and empty values do not. AI may read source material to extract supplied facts, but information inferred beyond the source is Recipe Enrichment.
+
+**Imported Recipe Data**:
+Supplied Recipe Data explicitly present in an import source and preserved during import. It remains imported data even when AI is required to read the source.
+_Avoid_: AI-imported data (describes the mechanism, not the source evidence)
+
+**Nutrition Information**:
+A recipe's calories, fat, carbohydrates, and protein considered as one atomic group. Blank values are absent; any substantive supplied value makes the stored group authoritative for Automatic Recipe Enrichment.
+_Avoid_: Macros (does not include calories)
+
 ### Connectivity & Offline
 
 **Offline**:
