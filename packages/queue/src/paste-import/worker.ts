@@ -14,12 +14,11 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@norish/db";
+import { createRecipeWithRefs, dashboardRecipe } from "@norish/db";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 import {
-  getAIConfig,
   getRecipePermissionPolicy,
   isAIEnabled,
 } from "@norish/shared-server/config/server-config-loader";
@@ -55,7 +54,6 @@ interface ParseResult {
 async function parseFromPastedText(
   text: string,
   recipeId: string,
-  allergies?: string[],
   forceAI?: boolean
 ): Promise<ParseResult> {
   const extractRecipeWithAI = requireQueueApiHandler("extractRecipeWithAI");
@@ -74,7 +72,7 @@ async function parseFromPastedText(
     }
 
     const html = `<html><body><main><h1>Pasted recipe</h1><p>${escapeHtml(trimmed)}</p></main></body></html>`;
-    const ai = await extractRecipeWithAI(html, recipeId, undefined, allergies);
+    const ai = await extractRecipeWithAI(html, recipeId);
 
     if (ai.success && hasRecipeNameIngredientsAndSteps(ai.data)) {
       return { recipe: ai.data, usedAI: true };
@@ -88,7 +86,7 @@ async function parseFromPastedText(
   }
 
   const html = `<html><body><main><h1>Pasted recipe</h1><p>${escapeHtml(trimmed)}</p></main></body></html>`;
-  const ai = await extractRecipeWithAI(html, recipeId, undefined, allergies);
+  const ai = await extractRecipeWithAI(html, recipeId);
 
   if (ai.success && hasRecipeNameIngredientsAndSteps(ai.data)) {
     return { recipe: ai.data, usedAI: true };
@@ -167,19 +165,6 @@ export async function processPasteImportJob(
     });
   });
 
-  const aiConfig = await getAIConfig();
-  let allergyNames: string[] | undefined;
-
-  if (aiConfig?.automaticEnrichment.allergyDetection) {
-    const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
-
-    allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
-    log.debug(
-      { allergyCount: allergyNames.length },
-      "Fetched household allergies for paste import"
-    );
-  }
-
   const createdRecipeIds: string[] = [];
 
   if (structuredRecipes && structuredRecipes.length > 0) {
@@ -208,7 +193,7 @@ export async function processPasteImportJob(
     }
 
     await reportStep(job, "parsing-text");
-    const parseResult = await parseFromPastedText(text, recipeId, allergyNames, forceAI);
+    const parseResult = await parseFromPastedText(text, recipeId, forceAI);
 
     await reportStep(job, "saving");
     const created = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);

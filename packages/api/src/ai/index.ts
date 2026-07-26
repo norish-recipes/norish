@@ -78,10 +78,8 @@ export {
   buildRecipeExtractionPrompt,
   buildImageExtractionPrompt,
   buildVideoExtractionPrompt,
-  buildAllergyInstruction,
   type RecipeExtractionPromptOptions,
   type VideoExtractionPromptOptions,
-  type AllergyInstructionOptions,
 } from "./prompts";
 
 // ============================================================================

@@ -9,19 +9,11 @@ import type { Job } from "bullmq";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
-import {
-  createRecipeWithRefs,
-  dashboardRecipe,
-  getAllergiesForUsers,
-  recipeExistsByUrlForPolicy,
-} from "@norish/db";
+import { createRecipeWithRefs, dashboardRecipe, recipeExistsByUrlForPolicy } from "@norish/db";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
-import {
-  getAIConfig,
-  getRecipePermissionPolicy,
-} from "@norish/shared-server/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { emitByPolicy } from "@norish/shared-server/realtime/policy";
@@ -88,28 +80,8 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     return;
   }
 
-  // Fetch household allergies for targeted allergy detection (only if automatic allergy detection is enabled)
-  await reportStep(job, "fetch-allergies");
-  const aiConfig = await getAIConfig();
-  let allergyNames: string[] | undefined;
-
-  if (aiConfig?.automaticEnrichment.allergyDetection) {
-    const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
-
-    allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
-    log.debug(
-      { allergyCount: allergyNames.length, allergies: allergyNames },
-      "Fetched household allergies"
-    );
-  } else {
-    log.debug("Auto-tag allergies disabled, skipping allergy detection");
-  }
-
-  await completeStep(job, {
-    allergies: allergyNames ?? [],
-    allergyCount: allergyNames?.length ?? 0,
-  });
-
+  // No allergy list is fetched here: extraction reads the source, and allergy
+  // detection runs afterwards as its own enrichment kind.
   // Parse and create recipe
   await reportStep(job, "parsing");
   const userTokens = await getDecryptedTokensByUserId(userId);
@@ -118,7 +90,6 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       parseRecipeFromUrl(
         url,
         recipeId,
-        allergyNames,
         job.data.forceAI,
         userTokens.length > 0 ? userTokens : undefined
       ),

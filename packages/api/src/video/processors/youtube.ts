@@ -15,7 +15,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
   readonly name = "YouTubeProcessor";
 
   async process(context: VideoProcessorContext): Promise<FullRecipeInsertDTO> {
-    const { url, recipeId, allergies, tokens } = context;
+    const { url, recipeId, tokens } = context;
 
     let audioPath: string | null = null;
     let videoPath: string | null = null;
@@ -66,8 +66,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
           combinedCaptionAndDescription,
           metadata,
           recipeId,
-          url,
-          allergies
+          url
         );
 
         if (result.success) {
@@ -105,8 +104,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
         combinedTranscriptAndDescription,
         metadata,
         recipeId,
-        url,
-        allergies
+        url
       );
 
       if (!result.success) {

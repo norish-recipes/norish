@@ -10,18 +10,10 @@ import type { Job } from "bullmq";
 
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
-import {
-  addRecipeImages,
-  createRecipeWithRefs,
-  dashboardRecipe,
-  getAllergiesForUsers,
-} from "@norish/db";
+import { addRecipeImages, createRecipeWithRefs, dashboardRecipe } from "@norish/db";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
-import {
-  getAIConfig,
-  getRecipePermissionPolicy,
-} from "@norish/shared-server/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
 import { emitByPolicy } from "@norish/shared-server/realtime/policy";
@@ -53,24 +45,8 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
     url: `[${files.length} image(s)]`,
   });
 
-  // Fetch household allergies for targeted allergy detection
-  await reportStep(job, "preparing-images");
-  const aiConfig = await getAIConfig();
-  let allergyNames: string[] | undefined;
-
-  if (aiConfig?.automaticEnrichment.allergyDetection) {
-    const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
-
-    allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
-    log.debug(
-      { allergyCount: allergyNames.length },
-      "Fetched household allergies for image import"
-    );
-  }
-
-  // Extract recipe from images using AI vision
-  await reportStep(job, "ai-extraction");
-  const result = await extractRecipeFromImages(recipeId, files, allergyNames);
+  // Vision parsing reads the images; every inference happens afterwards.
+  const result = await extractRecipeFromImages(recipeId, files);
 
   if (!result.success) {
     throw new Error(

@@ -8,24 +8,11 @@ import { listAllTagNames } from "@norish/db/repositories/tags";
 import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
 import { getTagStrategy } from "@norish/shared-server/config/server-config-loader";
 
-import { buildAllergyInstruction } from "./fragments/allergies";
-
 export interface RecipeExtractionPromptOptions {
   /**
    * Source URL of the recipe (optional).
    */
   url?: string;
-
-  /**
-   * List of allergens to detect in the recipe.
-   */
-  allergies?: string[];
-
-  /**
-   * Use strict allergy detection mode.
-   * @default false for image/video, true for HTML/text
-   */
-  strictAllergyDetection?: boolean;
 
   /**
    * Additional context to append to the prompt.
@@ -166,13 +153,13 @@ export async function buildRecipeExtractionPrompt(
   content: string,
   options: RecipeExtractionPromptOptions = {}
 ): Promise<string> {
-  const { url, allergies, strictAllergyDetection = true, additionalContext } = options;
+  const { url, additionalContext } = options;
 
+  // No tagging or allergy instructions: extraction reads source facts, and every
+  // inference belongs to the background enrichment workers under their own policy.
   const basePrompt = await loadPrompt("recipe-extraction");
-  const allergyInstruction = buildAllergyInstruction(allergies, { strict: strictAllergyDetection });
-  const autoTaggingInstruction = await buildAutoTaggingPrompt({ embedded: true });
 
-  const parts = [basePrompt, allergyInstruction, autoTaggingInstruction];
+  const parts = [basePrompt];
 
   if (url) {
     parts.push(`URL: ${url}`);
@@ -190,10 +177,9 @@ export async function buildRecipeExtractionPrompt(
 /**
  * Build a recipe extraction prompt for image-based extraction.
  *
- * @param allergies - List of allergens to detect.
  * @returns The prompt string to use with image content.
  */
-export async function buildImageExtractionPrompt(allergies?: string[]): Promise<string> {
+export async function buildImageExtractionPrompt(): Promise<string> {
   const basePrompt = await loadPrompt("recipe-extraction");
 
   // Modify prompt for image context
@@ -204,12 +190,7 @@ export async function buildImageExtractionPrompt(allergies?: string[]): Promise<
     )
     .replace("reads website data", "reads recipe images");
 
-  const allergyInstruction = buildAllergyInstruction(allergies, { strict: false });
-  const autoTaggingInstruction = await buildAutoTaggingPrompt({ embedded: true });
-
-  return `${imagePrompt}${allergyInstruction}${autoTaggingInstruction}
-
-Categorize the recipe as one or more of: Breakfast, Lunch, Dinner, Snack.
+  return `${imagePrompt}
 
 Analyze the provided images and extract the complete recipe data. If multiple images are provided, they represent different pages/parts of the same recipe - combine them into a single complete recipe.`;
 }
@@ -225,19 +206,15 @@ export async function buildVideoExtractionPrompt(
   transcript: string,
   options: VideoExtractionPromptOptions
 ): Promise<string> {
-  const { url, title, description, duration, uploader, allergies } = options;
+  const { url, title, description, duration, uploader } = options;
 
   const basePrompt = await loadPrompt("recipe-extraction");
-  const allergyInstruction = buildAllergyInstruction(allergies, { strict: false });
-  const autoTaggingInstruction = await buildAutoTaggingPrompt({ embedded: true });
 
   const durationMinutes = Math.floor(duration / 60);
   const durationSeconds = (duration % 60).toString().padStart(2, "0");
 
   const parts = [
     basePrompt,
-    allergyInstruction,
-    autoTaggingInstruction,
     "",
     `SOURCE: Video transcript (${title})`,
     `URL: ${url}`,

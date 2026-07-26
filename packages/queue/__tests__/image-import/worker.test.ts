@@ -116,11 +116,7 @@ describe("processImageImportJob", () => {
       },
     } as any);
 
-    expect(extractRecipeFromImages).toHaveBeenCalledWith(
-      "recipe-123",
-      expect.any(Array),
-      undefined
-    );
+    expect(extractRecipeFromImages).toHaveBeenCalledWith("recipe-123", expect.any(Array));
     expect(createRecipeWithRefs).toHaveBeenCalledWith(
       "recipe-123",
       "user-1",

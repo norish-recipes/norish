@@ -50,13 +50,11 @@ function buildImageMessageContent(prompt: string, files: ImageImportFile[]) {
  *
  * @param recipeId - Recipe ID allocated by the import entry point
  * @param files - Array of image files (base64 encoded)
- * @param allergies - Optional list of allergens to detect
  * @returns AIResult with extracted recipe or error
  */
 export async function extractRecipeFromImages(
   recipeId: string,
-  files: ImageImportFile[],
-  allergies?: string[]
+  files: ImageImportFile[]
 ): Promise<AIResult<FullRecipeInsertDTO>> {
   // Guard: AI must be enabled
   const aiEnabled = await isAIEnabled();
@@ -80,7 +78,7 @@ export async function extractRecipeFromImages(
     const settings = await getGenerationSettings();
 
     // Build prompt using shared builder
-    const prompt = await buildImageExtractionPrompt(allergies);
+    const prompt = await buildImageExtractionPrompt();
 
     aiLogger.debug(
       { fileCount: files.length, filenames: files.map((f) => f.filename), provider: providerName },

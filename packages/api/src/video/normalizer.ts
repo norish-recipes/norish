@@ -28,15 +28,13 @@ import type { VideoMetadata } from "./types";
  * @param transcript - The video transcript text.
  * @param metadata - Video metadata (title, description, duration, etc.).
  * @param url - Source URL of the video.
- * @param allergies - Optional list of allergens to detect.
  * @returns AIResult with extracted recipe or error.
  */
 export async function extractRecipeFromVideo(
   transcript: string,
   metadata: VideoMetadata,
   recipeId: string,
-  url: string,
-  allergies?: string[]
+  url: string
 ): Promise<AIResult<FullRecipeInsertDTO>> {
   // Guard: AI must be enabled
   const aiEnabled = await isAIEnabled();
@@ -60,7 +58,6 @@ export async function extractRecipeFromVideo(
       description: metadata.description,
       duration: metadata.duration,
       uploader: metadata.uploader,
-      allergies,
     });
 
     videoLogger.debug(

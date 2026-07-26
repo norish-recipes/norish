@@ -71,17 +71,17 @@ export class InstagramProcessor extends BaseVideoProcessor {
   readonly name: string = "InstagramProcessor";
 
   async process(context: VideoProcessorContext): Promise<FullRecipeInsertDTO> {
-    const { url, recipeId, allergies, tokens } = context;
+    const { url, recipeId, tokens } = context;
 
     log.info({ url }, "Processing Instagram post");
 
     const metadata = await this.getMetadata(url, tokens);
 
     if (isImagePost(metadata)) {
-      return this.processImagePost(url, recipeId, metadata, allergies, tokens);
+      return this.processImagePost(url, recipeId, metadata, tokens);
     }
 
-    return this.processVideoPost(url, recipeId, metadata, allergies, tokens);
+    return this.processVideoPost(url, recipeId, metadata, tokens);
   }
 
   /**
@@ -92,7 +92,6 @@ export class InstagramProcessor extends BaseVideoProcessor {
     url: string,
     recipeId: string,
     metadata: VideoMetadata,
-    allergies?: string[],
     tokens?: SiteAuthTokenDecryptedDto[]
   ): Promise<FullRecipeInsertDTO> {
     log.info({ url }, "Detected Instagram image post");
@@ -122,7 +121,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
     }
 
     // Use AI to extract recipe from description
-    const result = await extractRecipeWithAI(description, recipeId, url, allergies);
+    const result = await extractRecipeWithAI(description, recipeId, url);
 
     if (!result.success) {
       log.warn({ url, error: result.error }, "AI extraction failed for Instagram image post");
@@ -159,7 +158,6 @@ export class InstagramProcessor extends BaseVideoProcessor {
     url: string,
     recipeId: string,
     metadata: VideoMetadata,
-    allergies?: string[],
     tokens?: SiteAuthTokenDecryptedDto[]
   ): Promise<FullRecipeInsertDTO> {
     let audioPath: string | null = null;
@@ -182,13 +180,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
           "Trying extraction from description first"
         );
 
-        const result = await extractRecipeFromVideo(
-          descriptionText,
-          metadata,
-          recipeId,
-          url,
-          allergies
-        );
+        const result = await extractRecipeFromVideo(descriptionText, metadata, recipeId, url);
 
         if (result.success) {
           log.info({ url }, "Successfully extracted recipe from description");
@@ -213,7 +205,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
         );
 
         if (descriptionText.length >= 50) {
-          const result = await extractRecipeWithAI(descriptionText, recipeId, url, allergies);
+          const result = await extractRecipeWithAI(descriptionText, recipeId, url);
 
           if (result.success) {
             const savedVideo = videoPath
@@ -241,7 +233,7 @@ export class InstagramProcessor extends BaseVideoProcessor {
       // Combine transcript with description
       const combinedText = [transcript, descriptionText].filter(Boolean).join("\n\n---\n\n");
 
-      const result = await extractRecipeFromVideo(combinedText, metadata, recipeId, url, allergies);
+      const result = await extractRecipeFromVideo(combinedText, metadata, recipeId, url);
 
       if (!result.success) {
         throw new Error(

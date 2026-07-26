@@ -21,4 +21,3 @@ export {
 } from "./builder";
 
 // Reusable prompt fragments
-export { buildAllergyInstruction, type AllergyInstructionOptions } from "./fragments/allergies";

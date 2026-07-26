@@ -42,20 +42,17 @@ export interface QueueApiHandlers {
     html: string,
     recipeId: string,
     url?: string,
-    allergies?: string[],
     originalHtml?: string
   ): Promise<AIResult<FullRecipeInsertDTO>>;
   parseRecipeFromUrl(
     url: string,
     recipeId: string,
-    allergies?: string[],
     forceAI?: boolean,
     tokens?: SiteAuthTokenDecryptedDto[]
   ): Promise<QueueParseRecipeResult>;
   extractRecipeFromImages(
     recipeId: string,
-    files: ImageImportFile[],
-    allergies?: string[]
+    files: ImageImportFile[]
   ): Promise<AIResult<FullRecipeInsertDTO>>;
   estimateNutritionFromIngredients(
     recipeName: string,

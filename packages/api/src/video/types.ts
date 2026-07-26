@@ -18,7 +18,6 @@ export interface VideoMetadata {
 export interface VideoProcessorContext {
   url: string;
   recipeId: string;
-  allergies?: string[];
   tokens?: SiteAuthTokenDecryptedDto[];
 }
 
