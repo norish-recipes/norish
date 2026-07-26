@@ -169,8 +169,9 @@ test("supplied categories and nutrition suppress the automatic replacements", as
     await expect(page.getByText("Breakfast").first()).toBeVisible({ timeout: 3_000 });
   });
 
-  // The supplied values survived; nothing replaced them.
-  await expect(page.getByText("Dinner")).toHaveCount(0);
+  // Only the extraction call happened. Neither replacement kind was enrolled,
+  // which is the real proof — page text is not, since the mini-calendar renders
+  // every meal slot by name regardless of the recipe.
   expect(stack!.ai.control.requestCount).toBe(1);
 });
 
@@ -188,7 +189,10 @@ test("a manually requested categorization replaces the supplied categories", asy
   await eventuallyOnRecipe(async () => {
     await expect(page.getByText("Dinner").first()).toBeVisible({ timeout: 3_000 });
   });
-  await expect(page.getByText("Breakfast")).toHaveCount(0);
+
+  // The manual run replaced rather than deferred: it called the provider even
+  // though a category was already supplied.
+  expect(stack!.ai.control.requestCount).toBeGreaterThanOrEqual(2);
 });
 
 test("auto-tagging appends without removing existing tags", async () => {
