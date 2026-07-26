@@ -6,7 +6,7 @@
 
 import { listAllTagNames } from "@norish/db/repositories/tags";
 import { fillPrompt, loadPrompt } from "@norish/shared-server/ai/prompts/loader";
-import { getAutoTaggingMode } from "@norish/shared-server/config/server-config-loader";
+import { getTagStrategy } from "@norish/shared-server/config/server-config-loader";
 
 import { buildAllergyInstruction } from "./fragments/allergies";
 
@@ -70,25 +70,21 @@ export async function buildAutoTaggingPrompt(
   recipe?: RecipeForTagging
 ): Promise<string> {
   const { embedded = false, existingDbTags: providedTags } = options;
-  const mode = await getAutoTaggingMode();
-
-  if (mode === "disabled") {
-    return "";
-  }
+  const strategy = await getTagStrategy();
 
   const basePrompt = await loadPrompt("auto-tagging");
 
   // Fetch DB tags if needed and not provided
   let dbTags: string[] | undefined = providedTags;
 
-  if (mode === "predefined_db" && !dbTags) {
+  if (strategy === "predefined_db" && !dbTags) {
     dbTags = await listAllTagNames();
   }
 
-  // Build mode-specific additions
+  // Build strategy-specific additions
   let modeAddition = "";
 
-  if (mode === "predefined_db" && dbTags && dbTags.length > 0) {
+  if (strategy === "predefined_db" && dbTags && dbTags.length > 0) {
     const dbTagsList = dbTags.join(", ");
 
     modeAddition = `
@@ -97,7 +93,7 @@ ADDITIONAL ALLOWED TAGS (from existing recipes):
 ${dbTagsList}
 
 You may use tags from both the predefined list above AND this additional list.`;
-  } else if (mode === "freeform") {
+  } else if (strategy === "freeform") {
     modeAddition = `
 
 Note: While you should prefer using predefined tags, you may create new relevant tags if needed.`;

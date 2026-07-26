@@ -561,21 +561,30 @@
       "temperatureHint": "Más bajo = más centrado, Más alto = más creativo",
       "maxTokens": "Máx. tokens",
       "requestTimeout": "Tiempo de espera de la solicitud (ms)",
-      "autoTagAllergies": "Detectar etiquetas de alergias automáticamente",
-      "autoTagAllergiesDescription": "Añadir etiquetas relacionadas con alergias automáticamente al importar recetas",
       "alwaysUseAI": "Usar siempre IA para importar",
       "alwaysUseAIDescription": "Omitir los analizadores estructurados y extraer recetas solo con IA",
-      "autoTaggingMode": "Modo de etiquetado automático",
-      "autoTaggingModeDescription": "Asignar etiquetas/palabras clave automáticamente a recetas importadas usando IA",
-      "autoTaggingModes": {
-        "disabled": "Desactivado",
+      "connectionSuccess": "Conexión correcta",
+      "testConnection": "Probar conexión",
+      "vision": "visión",
+      "automaticEnrichment": "Enriquecimiento automático de recetas",
+      "automaticEnrichmentDescription": "Elige qué enriquecimiento con IA se ejecuta automáticamente en las recetas nuevas. Los miembros pueden ejecutar cada uno manualmente mientras la IA esté activada.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Etiquetado automático",
+        "autoTaggingDescription": "Añade etiquetas sugeridas por IA a las recetas nuevas sin eliminar las existentes",
+        "allergyDetection": "Detección de alergias",
+        "allergyDetectionDescription": "Añadir etiquetas relacionadas con alergias automáticamente al importar recetas",
+        "autoCategorization": "Categorización automática",
+        "autoCategorizationDescription": "Asigna categorías de comida a las recetas nuevas que no tengan ninguna",
+        "nutritionEstimation": "Estimación nutricional",
+        "nutritionEstimationDescription": "Estima calorías, grasas, carbohidratos y proteínas en recetas nuevas sin datos"
+      },
+      "tagStrategy": "Estrategia de etiquetas",
+      "tagStrategyDescription": "Qué etiquetas puede usar el etiquetado automático, se ejecute automática o manualmente",
+      "tagStrategies": {
         "predefined": "Solo etiquetas predefinidas",
         "predefinedDb": "Predefinidas + etiquetas existentes",
         "freeform": "IA puede crear nuevas etiquetas"
-      },
-      "connectionSuccess": "Conexión correcta",
-      "testConnection": "Probar conexión",
-      "vision": "visión"
+      }
     },
     "videoConfig": {
       "enableVideo": "Activar analizador de vídeo",

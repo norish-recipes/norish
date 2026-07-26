@@ -11,7 +11,7 @@ import type {
   AddAutoTaggingJobResult,
   AutoTaggingJobData,
 } from "@norish/queue/contracts/job-types";
-import { getAutoTaggingMode } from "@norish/shared-server/config/server-config-loader";
+import { getAutomaticEnrichmentConfig } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 
 import { isJobInQueue } from "../helpers";
@@ -28,9 +28,9 @@ export async function addAutoTaggingJob(
   data: AutoTaggingJobData
 ): Promise<AddAutoTaggingJobResult> {
   // Check if auto-tagging is enabled
-  const autoTaggingMode = await getAutoTaggingMode();
+  const automatic = await getAutomaticEnrichmentConfig();
 
-  if (autoTaggingMode === "disabled") {
+  if (!automatic.autoTagging) {
     return { status: "skipped", reason: "disabled" };
   }
 

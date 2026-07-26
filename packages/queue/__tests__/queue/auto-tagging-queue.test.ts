@@ -11,7 +11,7 @@ import type { Queue } from "bullmq";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
-import { getAutoTaggingMode } from "@norish/shared-server/config/server-config-loader";
+import { getAutomaticEnrichmentConfig } from "@norish/shared-server/config/server-config-loader";
 
 // Mock BullMQ
 const mockAdd = vi.fn();
@@ -35,7 +35,7 @@ vi.mock("bullmq", () => {
 
 // Mock config loader
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
-  getAutoTaggingMode: vi.fn(),
+  getAutomaticEnrichmentConfig: vi.fn(),
 }));
 
 // Mock server config
@@ -124,7 +124,12 @@ describe("Auto-Tagging Queue", () => {
     };
 
     it("skips job when auto-tagging is disabled", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("disabled");
+      vi.mocked(getAutomaticEnrichmentConfig).mockResolvedValue({
+        autoTagging: false,
+        allergyDetection: false,
+        autoCategorization: false,
+        nutritionEstimation: false,
+      });
 
       const { addAutoTaggingJob } = await import("@norish/queue/auto-tagging/producer");
 
@@ -138,7 +143,12 @@ describe("Auto-Tagging Queue", () => {
     });
 
     it("adds job successfully when auto-tagging is enabled (predefined mode)", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getAutomaticEnrichmentConfig).mockResolvedValue({
+        autoTagging: true,
+        allergyDetection: false,
+        autoCategorization: false,
+        nutritionEstimation: false,
+      });
       const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(false);
@@ -159,7 +169,12 @@ describe("Auto-Tagging Queue", () => {
     });
 
     it("adds job successfully when auto-tagging is in predefined_db mode", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined_db");
+      vi.mocked(getAutomaticEnrichmentConfig).mockResolvedValue({
+        autoTagging: true,
+        allergyDetection: false,
+        autoCategorization: false,
+        nutritionEstimation: false,
+      });
       const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(false);
@@ -173,7 +188,12 @@ describe("Auto-Tagging Queue", () => {
     });
 
     it("adds job successfully when auto-tagging is in freeform mode", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("freeform");
+      vi.mocked(getAutomaticEnrichmentConfig).mockResolvedValue({
+        autoTagging: true,
+        allergyDetection: false,
+        autoCategorization: false,
+        nutritionEstimation: false,
+      });
       const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(false);
@@ -187,7 +207,12 @@ describe("Auto-Tagging Queue", () => {
     });
 
     it("returns duplicate when job already exists in queue", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getAutomaticEnrichmentConfig).mockResolvedValue({
+        autoTagging: true,
+        allergyDetection: false,
+        autoCategorization: false,
+        nutritionEstimation: false,
+      });
       const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(true);
@@ -204,7 +229,12 @@ describe("Auto-Tagging Queue", () => {
     });
 
     it("uses recipe ID to generate unique job ID", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getAutomaticEnrichmentConfig).mockResolvedValue({
+        autoTagging: true,
+        allergyDetection: false,
+        autoCategorization: false,
+        nutritionEstimation: false,
+      });
       const { isJobInQueue } = await import("@norish/queue/helpers");
 
       vi.mocked(isJobInQueue).mockResolvedValue(false);

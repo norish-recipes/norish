@@ -561,21 +561,30 @@
       "temperatureHint": "Niedriger = fokussierter, Höher = kreativer",
       "maxTokens": "Max Token",
       "requestTimeout": "Zeitüberschreitung der Anforderung (ms)",
-      "autoTagAllergies": "Allergene automatisch erkennen",
-      "autoTagAllergiesDescription": "Füge automatisch allergiebezogene Tags beim Importieren von Rezepten hinzu",
       "alwaysUseAI": "Immer KI-Import verwenden",
       "alwaysUseAIDescription": "Überspringe strukturierte Parser und extrahiere Rezepte nur mit KI",
-      "autoTaggingMode": "Auto-Tagging-Modus",
-      "autoTaggingModeDescription": "Weise importierten Rezepten automatisch Tags/Schlüsselwörter mit KI zu",
-      "autoTaggingModes": {
-        "disabled": "Deaktiviert",
+      "connectionSuccess": "Verbindung erfolgreich",
+      "testConnection": "Verbindung testen",
+      "vision": "Vision",
+      "automaticEnrichment": "Automatische Rezeptanreicherung",
+      "automaticEnrichmentDescription": "Wähle, welche KI-Anreicherung für neue Rezepte automatisch läuft. Mitglieder können jede Anreicherung weiterhin manuell starten, solange KI aktiviert ist.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Automatische Tags",
+        "autoTaggingDescription": "Fügt neuen Rezepten KI-vorgeschlagene Tags hinzu, ohne vorhandene Tags zu entfernen",
+        "allergyDetection": "Allergieerkennung",
+        "allergyDetectionDescription": "Füge automatisch allergiebezogene Tags beim Importieren von Rezepten hinzu",
+        "autoCategorization": "Automatische Kategorisierung",
+        "autoCategorizationDescription": "Setzt Mahlzeitkategorien für neue Rezepte, die noch keine haben",
+        "nutritionEstimation": "Nährwertschätzung",
+        "nutritionEstimationDescription": "Schätzt Kalorien, Fett, Kohlenhydrate und Eiweiß für neue Rezepte ohne Angaben"
+      },
+      "tagStrategy": "Tag-Strategie",
+      "tagStrategyDescription": "Welche Tags die automatische Verschlagwortung verwenden darf, ob automatisch oder manuell",
+      "tagStrategies": {
         "predefined": "Nur vordefinierte Tags",
         "predefinedDb": "Vordefinierte + existierende Tags",
         "freeform": "KI kann neue Tags erstellen"
-      },
-      "connectionSuccess": "Verbindung erfolgreich",
-      "testConnection": "Verbindung testen",
-      "vision": "Vision"
+      }
     },
     "videoConfig": {
       "enableVideo": "Video-Parsing aktivieren",

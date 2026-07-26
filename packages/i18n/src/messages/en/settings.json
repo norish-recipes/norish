@@ -561,21 +561,30 @@
       "temperatureHint": "Lower = more focused, Higher = more creative",
       "maxTokens": "Max Tokens",
       "requestTimeout": "Request Timeout (ms)",
-      "autoTagAllergies": "Auto-detect Allergy Tags",
-      "autoTagAllergiesDescription": "Automatically add allergy-related tags when importing recipes",
       "alwaysUseAI": "Always Use AI Importing",
       "alwaysUseAIDescription": "Skip structured parsers and extract recipes using AI only",
-      "autoTaggingMode": "Auto-Tagging Mode",
-      "autoTaggingModeDescription": "Automatically assign tags/keywords to imported recipes using AI",
-      "autoTaggingModes": {
-        "disabled": "Disabled",
+      "connectionSuccess": "Connection successful",
+      "testConnection": "Test Connection",
+      "vision": "vision",
+      "automaticEnrichment": "Automatic Recipe Enrichment",
+      "automaticEnrichmentDescription": "Choose which AI enrichment runs automatically for newly created recipes. Members can still run each one manually while AI is enabled.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Auto-Tagging",
+        "autoTaggingDescription": "Add AI-suggested tags to new recipes without removing existing tags",
+        "allergyDetection": "Allergy Detection",
+        "allergyDetectionDescription": "Automatically add allergy-related tags when importing recipes",
+        "autoCategorization": "Auto-Categorization",
+        "autoCategorizationDescription": "Set meal categories on new recipes that have none",
+        "nutritionEstimation": "Nutrition Estimation",
+        "nutritionEstimationDescription": "Estimate calories, fat, carbs, and protein for new recipes that supply none"
+      },
+      "tagStrategy": "Tag Strategy",
+      "tagStrategyDescription": "Which tags auto-tagging may use, whether it runs automatically or manually",
+      "tagStrategies": {
         "predefined": "Predefined Tags Only",
         "predefinedDb": "Predefined + Existing Tags",
         "freeform": "AI Can Create New Tags"
-      },
-      "connectionSuccess": "Connection successful",
-      "testConnection": "Test Connection",
-      "vision": "vision"
+      }
     },
     "videoConfig": {
       "enableVideo": "Enable Video Parsing",

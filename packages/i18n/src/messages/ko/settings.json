@@ -561,21 +561,30 @@
       "temperatureHint": "낮음 = 더 집중적, 높음 = 더 창의적",
       "maxTokens": "최대 토큰",
       "requestTimeout": "요청 제한 시간 (ms)",
-      "autoTagAllergies": "알러지 태그 자동 감지",
-      "autoTagAllergiesDescription": "레시피를 가져올 때 알러지 관련 태그를 자동으로 추가합니다.",
       "alwaysUseAI": "항상 AI 가져오기 사용",
       "alwaysUseAIDescription": "구조화된 파서를 건너뛰고 AI만 사용하여 레시피 추출",
-      "autoTaggingMode": "자동 태그 추가 모드",
-      "autoTaggingModeDescription": "AI를 사용하여 가져온 레시피에 자동으로 태그/키워드 할당",
-      "autoTaggingModes": {
-        "disabled": "비활성",
+      "connectionSuccess": "연결 성공",
+      "testConnection": "연결 테스트",
+      "vision": "비전",
+      "automaticEnrichment": "자동 레시피 보강",
+      "automaticEnrichmentDescription": "새 레시피에 자동으로 실행할 AI 보강을 선택하세요. AI가 켜져 있으면 구성원은 각 항목을 수동으로 실행할 수 있습니다.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "자동 태그 지정",
+        "autoTaggingDescription": "기존 태그를 지우지 않고 새 레시피에 AI가 제안한 태그를 추가합니다",
+        "allergyDetection": "알레르기 감지",
+        "allergyDetectionDescription": "레시피를 가져올 때 알러지 관련 태그를 자동으로 추가합니다.",
+        "autoCategorization": "자동 분류",
+        "autoCategorizationDescription": "분류가 없는 새 레시피에 식사 분류를 설정합니다",
+        "nutritionEstimation": "영양 정보 추정",
+        "nutritionEstimationDescription": "값이 없는 새 레시피의 칼로리, 지방, 탄수화물, 단백질을 추정합니다"
+      },
+      "tagStrategy": "태그 전략",
+      "tagStrategyDescription": "자동 또는 수동 실행 여부와 관계없이 자동 태그 지정이 사용할 수 있는 태그",
+      "tagStrategies": {
         "predefined": "사전 정의된 태그만",
         "predefinedDb": "사전 정의된 태그 + 기존 태그",
         "freeform": "AI는 새로운 태그를 만들 수 있습니다"
-      },
-      "connectionSuccess": "연결 성공",
-      "testConnection": "연결 테스트",
-      "vision": "비전"
+      }
     },
     "videoConfig": {
       "enableVideo": "비디오 구문 분석 활성화",

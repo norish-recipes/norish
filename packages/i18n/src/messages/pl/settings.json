@@ -561,21 +561,30 @@
       "temperatureHint": "Niżej = bardziej precyzyjne, Wyżej = bardziej kreatywne",
       "maxTokens": "Maks. tokenów",
       "requestTimeout": "Limit czasu żądania (ms)",
-      "autoTagAllergies": "Automatyczne wykrywanie tagów alergii",
-      "autoTagAllergiesDescription": "Automatycznie dodawaj tagi związane z alergiami podczas importowania przepisów",
       "alwaysUseAI": "Zawsze używaj AI przy imporcie",
       "alwaysUseAIDescription": "Pomijaj parsowanie ustrukturyzowane i wyciągaj przepisy wyłącznie przez AI",
-      "autoTaggingMode": "Tryb automatycznego tagowania",
-      "autoTaggingModeDescription": "Automatycznie przypisuj tagi/słowa kluczowe do importowanych przepisów za pomocą AI",
-      "autoTaggingModes": {
-        "disabled": "Wyłączone",
+      "connectionSuccess": "Połączenie udane",
+      "testConnection": "Testuj połączenie",
+      "vision": "vision",
+      "automaticEnrichment": "Automatyczne wzbogacanie przepisów",
+      "automaticEnrichmentDescription": "Wybierz, które wzbogacanie AI uruchamia się automatycznie dla nowych przepisów. Członkowie nadal mogą uruchomić każde ręcznie, gdy AI jest włączone.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Automatyczne tagowanie",
+        "autoTaggingDescription": "Dodaje tagi zaproponowane przez AI do nowych przepisów bez usuwania istniejących",
+        "allergyDetection": "Wykrywanie alergenów",
+        "allergyDetectionDescription": "Automatycznie dodawaj tagi związane z alergiami podczas importowania przepisów",
+        "autoCategorization": "Automatyczna kategoryzacja",
+        "autoCategorizationDescription": "Ustawia kategorie posiłku w nowych przepisach, które ich nie mają",
+        "nutritionEstimation": "Szacowanie wartości odżywczych",
+        "nutritionEstimationDescription": "Szacuje kalorie, tłuszcze, węglowodany i białko dla nowych przepisów bez podanych wartości"
+      },
+      "tagStrategy": "Strategia tagów",
+      "tagStrategyDescription": "Jakich tagów może używać automatyczne tagowanie, niezależnie od tego, czy działa automatycznie czy ręcznie",
+      "tagStrategies": {
         "predefined": "Tylko zdefiniowane tagi",
         "predefinedDb": "Zdefiniowane + istniejące tagi",
         "freeform": "AI może tworzyć nowe tagi"
-      },
-      "connectionSuccess": "Połączenie udane",
-      "testConnection": "Testuj połączenie",
-      "vision": "vision"
+      }
     },
     "videoConfig": {
       "enableVideo": "Włącz parsowanie wideo",

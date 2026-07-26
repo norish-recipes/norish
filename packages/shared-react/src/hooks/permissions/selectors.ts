@@ -1,4 +1,4 @@
-import type { AutoTaggingMode, RecipePermissionPolicy } from "@norish/config/zod/server-config";
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 
 import type { NormalizedPermissionsData, PermissionAccessInput, PermissionsData } from "./types";
 
@@ -8,8 +8,6 @@ const DEFAULT_RECIPE_POLICY: RecipePermissionPolicy = {
   delete: "owner",
 };
 
-const DEFAULT_AUTO_TAGGING_MODE: AutoTaggingMode = "disabled";
-
 export function normalizePermissionsData(
   input: PermissionsData | null | undefined
 ): NormalizedPermissionsData {
@@ -18,7 +16,6 @@ export function normalizePermissionsData(
     isAIEnabled: input?.isAIEnabled ?? false,
     householdUserIds: input?.householdUserIds ?? null,
     isServerAdmin: input?.isServerAdmin ?? false,
-    autoTaggingMode: input?.autoTaggingMode ?? DEFAULT_AUTO_TAGGING_MODE,
   };
 }
 
@@ -83,8 +80,4 @@ export function selectCanDeleteRecipe(
     householdUserIds: permissions.householdUserIds,
     isServerAdmin: permissions.isServerAdmin,
   });
-}
-
-export function selectIsAutoTaggingEnabled(permissions: NormalizedPermissionsData): boolean {
-  return permissions.autoTaggingMode !== "disabled";
 }

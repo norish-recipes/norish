@@ -561,21 +561,30 @@
       "temperatureHint": "Lavere = mer fokusert, Høyere = mer kreativ",
       "maxTokens": "Maks. tokens",
       "requestTimeout": "Tidsavbrudd for forespørsel (ms)",
-      "autoTagAllergies": "Registrer allergentags automatisk",
-      "autoTagAllergiesDescription": "Legg automatisk til allergenrelaterte tags ved import av oppskrifter",
       "alwaysUseAI": "Bruk alltid AI-import",
       "alwaysUseAIDescription": "Hopp over strukturerte analysatorer og trekk ut oppskrifter med AI alene",
-      "autoTaggingMode": "Auto-tagmodus",
-      "autoTaggingModeDescription": "Tildel automatisk tags/nøkkelord til importerte oppskrifter med AI",
-      "autoTaggingModes": {
-        "disabled": "Deaktivert",
+      "connectionSuccess": "Tilkobling vellykket",
+      "testConnection": "Test tilkobling",
+      "vision": "visjon",
+      "automaticEnrichment": "Automatisk oppskriftsberikelse",
+      "automaticEnrichmentDescription": "Velg hvilken AI-berikelse som kjøres automatisk for nye oppskrifter. Medlemmer kan fortsatt kjøre hver enkelt manuelt når AI er på.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Automatiske tagger",
+        "autoTaggingDescription": "Legg til AI-foreslåtte tagger på nye oppskrifter uten å fjerne eksisterende tagger",
+        "allergyDetection": "Allergideteksjon",
+        "allergyDetectionDescription": "Legg automatisk til allergenrelaterte tags ved import av oppskrifter",
+        "autoCategorization": "Automatisk kategorisering",
+        "autoCategorizationDescription": "Sett måltidskategorier på nye oppskrifter som mangler dem",
+        "nutritionEstimation": "Estimering av næringsinnhold",
+        "nutritionEstimationDescription": "Estimer kalorier, fett, karbohydrater og protein for nye oppskrifter uten oppgitte verdier"
+      },
+      "tagStrategy": "Taggstrategi",
+      "tagStrategyDescription": "Hvilke tagger automatisk tagging kan bruke, enten den kjører automatisk eller manuelt",
+      "tagStrategies": {
         "predefined": "Bare forhåndsdefinerte tags",
         "predefinedDb": "Forhåndsdefinerte + eksisterende tags",
         "freeform": "AI kan opprette nye tags"
-      },
-      "connectionSuccess": "Tilkobling vellykket",
-      "testConnection": "Test tilkobling",
-      "vision": "visjon"
+      }
     },
     "videoConfig": {
       "enableVideo": "Aktiver videoanalyse",

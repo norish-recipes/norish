@@ -561,21 +561,30 @@
       "temperatureHint": "Ниже = более точные ответы, выше = более творческие",
       "maxTokens": "Макс. токенов",
       "requestTimeout": "Время ожидания запроса (мс)",
-      "autoTagAllergies": "Автоматически добавлять теги аллергии",
-      "autoTagAllergiesDescription": "Автоматически добавлять теги, связанные с аллергией, при импорте рецептов",
       "alwaysUseAI": "Всегда использовать импорт с ИИ",
       "alwaysUseAIDescription": "Пропускать структурированные парсеры и извлекать рецепт только с помощью ИИ",
-      "autoTaggingMode": "Режим автотегирования",
-      "autoTaggingModeDescription": "Автоматически назначать теги/ключевые слова импортированным рецептам с помощью ИИ",
-      "autoTaggingModes": {
-        "disabled": "Отключено",
+      "connectionSuccess": "Подключение успешно",
+      "testConnection": "Проверить подключение",
+      "vision": "vision",
+      "automaticEnrichment": "Автоматическое обогащение рецептов",
+      "automaticEnrichmentDescription": "Выберите, какое обогащение ИИ выполняется автоматически для новых рецептов. Участники по-прежнему могут запускать каждое вручную, пока ИИ включён.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Автоматические теги",
+        "autoTaggingDescription": "Добавляет предложенные ИИ теги к новым рецептам, не удаляя существующие",
+        "allergyDetection": "Определение аллергенов",
+        "allergyDetectionDescription": "Автоматически добавлять теги, связанные с аллергией, при импорте рецептов",
+        "autoCategorization": "Автоматическая категоризация",
+        "autoCategorizationDescription": "Задаёт категории приёма пищи для новых рецептов, у которых их нет",
+        "nutritionEstimation": "Оценка пищевой ценности",
+        "nutritionEstimationDescription": "Оценивает калории, жиры, углеводы и белки для новых рецептов без указанных значений"
+      },
+      "tagStrategy": "Стратегия тегов",
+      "tagStrategyDescription": "Какие теги может использовать автоматическое тегирование — как автоматически, так и вручную",
+      "tagStrategies": {
         "predefined": "Только предустановленные теги",
         "predefinedDb": "Предустановленные + существующие теги",
         "freeform": "ИИ может создавать новые теги"
-      },
-      "connectionSuccess": "Подключение успешно",
-      "testConnection": "Проверить подключение",
-      "vision": "vision"
+      }
     },
     "videoConfig": {
       "enableVideo": "Включить парсинг видео",

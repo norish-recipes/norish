@@ -15,7 +15,6 @@ export {
   selectCanDeleteRecipe,
   selectCanEditRecipe,
   selectCanViewRecipe,
-  selectIsAutoTaggingEnabled,
 } from "./selectors";
 export { createUsePermissionsQuery } from "./use-permissions-query";
 export { createUseServerSettingsQuery } from "./use-server-settings-query";

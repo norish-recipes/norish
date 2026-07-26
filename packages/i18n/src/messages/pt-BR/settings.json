@@ -561,21 +561,30 @@
       "temperatureHint": "Menor = mais focado, maior = mais criativo",
       "maxTokens": "Máx. tokens",
       "requestTimeout": "Tempo limite da solicitação (ms)",
-      "autoTagAllergies": "Detectar tags de alergia automaticamente",
-      "autoTagAllergiesDescription": "Adicionar automaticamente tags relacionadas a alergias ao importar receitas",
       "alwaysUseAI": "Sempre usar importação com IA",
       "alwaysUseAIDescription": "Ignorar analisadores estruturados e extrair receitas usando apenas IA",
-      "autoTaggingMode": "Modo de marcação automática",
-      "autoTaggingModeDescription": "Atribuir automaticamente tags/palavras-chave a receitas importadas usando IA",
-      "autoTaggingModes": {
-        "disabled": "Desativado",
+      "connectionSuccess": "Conexão bem-sucedida",
+      "testConnection": "Testar conexão",
+      "vision": "visão",
+      "automaticEnrichment": "Enriquecimento automático de receitas",
+      "automaticEnrichmentDescription": "Escolha qual enriquecimento por IA é executado automaticamente para novas receitas. Os membros ainda podem executar cada um manualmente enquanto a IA estiver ativada.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Marcação automática",
+        "autoTaggingDescription": "Adiciona tags sugeridas pela IA às novas receitas sem remover as existentes",
+        "allergyDetection": "Detecção de alergias",
+        "allergyDetectionDescription": "Adicionar automaticamente tags relacionadas a alergias ao importar receitas",
+        "autoCategorization": "Categorização automática",
+        "autoCategorizationDescription": "Define categorias de refeição em novas receitas que não têm nenhuma",
+        "nutritionEstimation": "Estimativa nutricional",
+        "nutritionEstimationDescription": "Estima calorias, gorduras, carboidratos e proteínas em novas receitas sem valores informados"
+      },
+      "tagStrategy": "Estratégia de tags",
+      "tagStrategyDescription": "Quais tags a marcação automática pode usar, seja executada automática ou manualmente",
+      "tagStrategies": {
         "predefined": "Apenas tags predefinidas",
         "predefinedDb": "Predefinidas + tags existentes",
         "freeform": "A IA pode criar novas tags"
-      },
-      "connectionSuccess": "Conexão bem-sucedida",
-      "testConnection": "Testar conexão",
-      "vision": "visão"
+      }
     },
     "videoConfig": {
       "enableVideo": "Ativar análise de vídeo",

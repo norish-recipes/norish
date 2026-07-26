@@ -561,21 +561,30 @@
       "temperatureHint": "Lager = gefocuster, Hoger = creatiever",
       "maxTokens": "Max Tokens",
       "requestTimeout": "Time-out van aanvraag (ms)",
-      "autoTagAllergies": "Allergietags automatisch detecteren",
-      "autoTagAllergiesDescription": "Voeg automatisch allergiegerelateerde tags toe bij het importeren van recepten",
       "alwaysUseAI": "Altijd AI gebruiken voor import",
       "alwaysUseAIDescription": "Sla gestructureerde parsers over en extraheer recepten alleen met AI",
-      "autoTaggingMode": "Auto-tagging Modus",
-      "autoTaggingModeDescription": "Wijs automatisch tags/trefwoorden toe aan geïmporteerde recepten met AI",
-      "autoTaggingModes": {
-        "disabled": "Uitgeschakeld",
+      "connectionSuccess": "Verbinding succesvol",
+      "testConnection": "Test verbinding",
+      "vision": "vision",
+      "automaticEnrichment": "Automatische receptverrijking",
+      "automaticEnrichmentDescription": "Kies welke AI-verrijking automatisch draait voor nieuwe recepten. Leden kunnen elke verrijking handmatig blijven starten zolang AI aanstaat.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Automatisch taggen",
+        "autoTaggingDescription": "Voeg door AI voorgestelde tags toe aan nieuwe recepten zonder bestaande tags te verwijderen",
+        "allergyDetection": "Allergiedetectie",
+        "allergyDetectionDescription": "Voeg automatisch allergiegerelateerde tags toe bij het importeren van recepten",
+        "autoCategorization": "Automatisch categoriseren",
+        "autoCategorizationDescription": "Stel maaltijdcategorieën in op nieuwe recepten die er nog geen hebben",
+        "nutritionEstimation": "Voedingswaarde schatten",
+        "nutritionEstimationDescription": "Schat calorieën, vet, koolhydraten en eiwitten voor nieuwe recepten zonder opgegeven waarden"
+      },
+      "tagStrategy": "Tagstrategie",
+      "tagStrategyDescription": "Welke tags automatisch taggen mag gebruiken, of het nu automatisch of handmatig draait",
+      "tagStrategies": {
         "predefined": "Alleen voorgedefinieerde tags",
         "predefinedDb": "Voorgedefinieerd + bestaande tags",
         "freeform": "AI kan nieuwe tags maken"
-      },
-      "connectionSuccess": "Verbinding succesvol",
-      "testConnection": "Test verbinding",
-      "vision": "vision"
+      }
     },
     "videoConfig": {
       "enableVideo": "Video parsing inschakelen",

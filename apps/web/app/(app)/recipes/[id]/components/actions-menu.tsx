@@ -50,8 +50,7 @@ export default function ActionsMenu({ id }: Props) {
     close: onDeleteModalClose,
   } = useOverlayState();
   const router = useRouter();
-  const { canEditRecipe, canDeleteRecipe, isAutoTaggingEnabled, isAIEnabled } =
-    usePermissionsContext();
+  const { canEditRecipe, canDeleteRecipe, isAIEnabled } = usePermissionsContext();
   const { deleteRecipe } = useRecipesContext();
   const {
     recipe,
@@ -116,7 +115,7 @@ export default function ActionsMenu({ id }: Props) {
         iconClassName: isActive ? "text-success" : "text-muted",
       });
     }
-    if (isAutoTaggingEnabled && canEdit) {
+    if (isAIEnabled && canEdit) {
       items.push({
         key: "auto-tag",
         label: isAutoTagging ? t("autoTagging") : t("autoTag"),
@@ -186,7 +185,6 @@ export default function ActionsMenu({ id }: Props) {
     isActive,
     toggle,
     t,
-    isAutoTaggingEnabled,
     isAutoTagging,
     triggerAutoTag,
     isAIEnabled,

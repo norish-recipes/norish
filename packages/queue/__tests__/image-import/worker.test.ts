@@ -18,7 +18,14 @@ vi.mock("@norish/db", () => ({
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
-  getAIConfig: vi.fn().mockResolvedValue({ autoTagAllergies: false }),
+  getAIConfig: vi.fn().mockResolvedValue({
+    automaticEnrichment: {
+      autoTagging: false,
+      allergyDetection: false,
+      autoCategorization: false,
+      nutritionEstimation: false,
+    },
+  }),
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "everyone" }),
 }));
 

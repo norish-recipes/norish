@@ -12,7 +12,10 @@ import type {
   AllergyDetectionJobData,
 } from "@norish/queue/contracts/job-types";
 import { getAllergiesForUsers, getHouseholdMemberIds } from "@norish/db";
-import { getAIConfig, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+import {
+  getAutomaticEnrichmentConfig,
+  isAIEnabled,
+} from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 
 import { isJobInQueue } from "../helpers";
@@ -35,10 +38,10 @@ export async function addAllergyDetectionJob(
     return { status: "skipped", reason: "disabled" };
   }
 
-  // Check if autoTagAllergies is enabled
-  const aiConfig = await getAIConfig();
+  // Check if automatic allergy detection is enabled
+  const automatic = await getAutomaticEnrichmentConfig();
 
-  if (!aiConfig?.autoTagAllergies) {
+  if (!automatic.allergyDetection) {
     return { status: "skipped", reason: "disabled" };
   }
 

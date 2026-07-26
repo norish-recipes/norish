@@ -561,21 +561,30 @@
       "temperatureHint": "Più bassa = più focalizzata, Più alta = più creativa",
       "maxTokens": "Token massimi",
       "requestTimeout": "Timeout richiesta (ms)",
-      "autoTagAllergies": "Rileva automaticamente tag allergie",
-      "autoTagAllergiesDescription": "Aggiungi automaticamente tag relativi alle allergie durante l'importazione delle ricette",
       "alwaysUseAI": "Usa sempre importazione IA",
       "alwaysUseAIDescription": "Salta i parser strutturati ed estrai le ricette usando solo l'IA",
-      "autoTaggingMode": "Modalità tag automatici",
-      "autoTaggingModeDescription": "Assegna automaticamente tag/parole chiave alle ricette importate usando l'IA",
-      "autoTaggingModes": {
-        "disabled": "Disabilitato",
+      "connectionSuccess": "Connessione riuscita",
+      "testConnection": "Testa connessione",
+      "vision": "visione",
+      "automaticEnrichment": "Arricchimento automatico delle ricette",
+      "automaticEnrichmentDescription": "Scegli quale arricchimento AI viene eseguito automaticamente per le nuove ricette. I membri possono comunque eseguirne ciascuno manualmente quando l'AI è attiva.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Tag automatici",
+        "autoTaggingDescription": "Aggiunge tag suggeriti dall'AI alle nuove ricette senza rimuovere quelli esistenti",
+        "allergyDetection": "Rilevamento allergie",
+        "allergyDetectionDescription": "Aggiungi automaticamente tag relativi alle allergie durante l'importazione delle ricette",
+        "autoCategorization": "Categorizzazione automatica",
+        "autoCategorizationDescription": "Assegna categorie di pasto alle nuove ricette che non ne hanno",
+        "nutritionEstimation": "Stima nutrizionale",
+        "nutritionEstimationDescription": "Stima calorie, grassi, carboidrati e proteine per le nuove ricette senza valori indicati"
+      },
+      "tagStrategy": "Strategia dei tag",
+      "tagStrategyDescription": "Quali tag può usare il tagging automatico, sia che venga eseguito automaticamente o manualmente",
+      "tagStrategies": {
         "predefined": "Solo tag predefiniti",
         "predefinedDb": "Tag predefiniti + esistenti",
         "freeform": "L'IA può creare nuovi tag"
-      },
-      "connectionSuccess": "Connessione riuscita",
-      "testConnection": "Testa connessione",
-      "vision": "visione"
+      }
     },
     "videoConfig": {
       "enableVideo": "Abilita analisi video",

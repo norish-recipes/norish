@@ -91,12 +91,12 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     return;
   }
 
-  // Fetch household allergies for targeted allergy detection (only if autoTagAllergies is enabled)
+  // Fetch household allergies for targeted allergy detection (only if automatic allergy detection is enabled)
   await reportStep(job, "fetch-allergies");
   const aiConfig = await getAIConfig();
   let allergyNames: string[] | undefined;
 
-  if (aiConfig?.autoTagAllergies) {
+  if (aiConfig?.automaticEnrichment.allergyDetection) {
     const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
 
     allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];

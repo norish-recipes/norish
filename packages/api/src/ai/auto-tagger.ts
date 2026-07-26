@@ -2,7 +2,7 @@ import { generateText, Output } from "ai";
 
 import { listAllTagNames } from "@norish/db/repositories/tags";
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
-import { getAutoTaggingMode, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+import { getTagStrategy, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIResult } from "./core/types";
@@ -31,14 +31,9 @@ export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<A
     return aiError("AI features are disabled", "AI_DISABLED");
   }
 
-  // Guard: Auto-tagging must be enabled
-  const mode = await getAutoTaggingMode();
-
-  if (mode === "disabled") {
-    aiLogger.info("Auto-tagging is disabled");
-
-    return aiError("Auto-tagging is disabled", "AI_DISABLED");
-  }
+  // The tag strategy is deliberately not an enablement check: whether auto-tagging
+  // runs automatically is coordination policy, not a reason to refuse a request.
+  const strategy = await getTagStrategy();
 
   if (recipe.ingredients.length === 0) {
     aiLogger.warn("No ingredients provided for auto-tagging");
@@ -47,7 +42,7 @@ export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<A
   }
 
   aiLogger.info(
-    { title: recipe.title, ingredientCount: recipe.ingredients.length, mode },
+    { title: recipe.title, ingredientCount: recipe.ingredients.length, strategy },
     "Starting auto-tagging"
   );
 
@@ -58,7 +53,7 @@ export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<A
     // For predefined_db mode, fetch existing tags from database
     let existingDbTags: string[] | undefined;
 
-    if (mode === "predefined_db") {
+    if (strategy === "predefined_db") {
       existingDbTags = await listAllTagNames();
       aiLogger.debug({ existingTagCount: existingDbTags.length }, "Fetched existing DB tags");
     }

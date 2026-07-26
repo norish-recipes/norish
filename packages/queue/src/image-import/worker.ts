@@ -57,7 +57,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   const aiConfig = await getAIConfig();
   let allergyNames: string[] | undefined;
 
-  if (aiConfig?.autoTagAllergies) {
+  if (aiConfig?.automaticEnrichment.allergyDetection) {
     const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
 
     allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];

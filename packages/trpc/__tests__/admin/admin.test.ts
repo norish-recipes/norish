@@ -177,9 +177,14 @@ describe("admin procedures", () => {
         temperature: 0.7,
         maxTokens: 4096,
         timeoutMs: 300000,
-        autoTagAllergies: true,
         alwaysUseAI: false,
-        autoTaggingMode: "disabled" as const,
+        tagStrategy: "predefined" as const,
+        automaticEnrichment: {
+          autoTagging: false,
+          allergyDetection: true,
+          autoCategorization: false,
+          nutritionEstimation: false,
+        },
       };
 
       // Current config has enabled: false
@@ -228,9 +233,14 @@ describe("admin procedures", () => {
         temperature: 0.7,
         maxTokens: 4096,
         timeoutMs: 300000,
-        autoTagAllergies: true,
         alwaysUseAI: false,
-        autoTaggingMode: "disabled" as const,
+        tagStrategy: "predefined" as const,
+        automaticEnrichment: {
+          autoTagging: false,
+          allergyDetection: true,
+          autoCategorization: false,
+          nutritionEstimation: false,
+        },
       };
 
       // Current config also has enabled: false

@@ -51,7 +51,6 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
     canEditRecipe,
     canDeleteRecipe,
     isAIEnabled,
-    isAutoTaggingEnabled,
     isLoading: isLoadingPermissions,
   } = usePermissionsContext();
 
@@ -220,9 +219,9 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       />
 
       {/* AI actions — only shown when AI is enabled */}
-      {(isAutoTaggingEnabled || isAIEnabled) && canEdit ? <UIDivider /> : null}
+      {isAIEnabled && canEdit ? <UIDivider /> : null}
 
-      {isAutoTaggingEnabled && canEdit ? (
+      {isAIEnabled && canEdit ? (
         <UIButton
           label={intl.formatMessage({
             id: isAutoTagging ? "recipes.actions.autoTagging" : "recipes.actions.autoTag",
