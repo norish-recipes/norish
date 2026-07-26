@@ -283,34 +283,36 @@ test("lifecycle state survives a page reload", async () => {
 
   await importAndOpen("Reload Recovery Stew", [bareRecipe("Reload Recovery Stew")]);
 
-  // Hold the provider so the job stays active while we reload: the state on
+  // Hold the provider so the job stays in flight while we reload: the state on
   // screen must come from the status query, not from having watched the events.
   stack!.ai.control.succeedWith({ categories: ["Dinner"] });
   stack!.ai.control.hold();
 
-  await page.getByRole("button", { name: "Actions" }).click();
-  await page.getByRole("menuitem", { name: "Auto Categorize" }).click();
-
-  await expect(async () => {
-    expect(stack!.ai.control.requestCount).toBeGreaterThanOrEqual(2);
-  }).toPass({ timeout: 30_000 });
-
-  await page.reload();
-
-  // Recovered as in-flight after a reload, so the action is still disabled.
-  // The disabled state sits on the button inside the menu item, and the menu
-  // needs a moment after a reload before it will open.
-  // The menu item is the addressable element; the disabled state sits on the
-  // button it wraps.
-  await expect(async () => {
+  try {
     await page.getByRole("button", { name: "Actions" }).click();
-    await expect(
-      page.getByRole("menuitem", { name: "Auto Categorize" }).locator("button")
-    ).toBeDisabled({ timeout: 2_000 });
-  }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
+    await page.getByRole("menuitem", { name: "Auto Categorize" }).click();
 
-  await page.keyboard.press("Escape");
-  stack!.ai.control.release();
+    await expect(async () => {
+      expect(stack!.ai.control.requestCount).toBeGreaterThanOrEqual(2);
+    }).toPass({ timeout: 30_000 });
+
+    await page.reload();
+
+    // The action reads as in-flight after a reload, recovered from the status
+    // query alone — this browser never saw the queued or processing event.
+    await expect(async () => {
+      await page.getByRole("button", { name: "Actions" }).click();
+      await expect(page.getByRole("menuitem", { name: /Auto-categorizing/i })).toBeVisible({
+        timeout: 2_000,
+      });
+    }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
+
+    await page.keyboard.press("Escape");
+  } finally {
+    // Always release: a held provider would hang every later scenario's
+    // extraction call, turning one failure into a cascade.
+    stack!.ai.control.release();
+  }
 
   await eventuallyOnRecipe(async () => {
     await expect(page.getByText("Dinner").first()).toBeVisible({ timeout: 3_000 });
