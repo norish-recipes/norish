@@ -12,13 +12,10 @@ import type { Queue } from "bullmq";
 
 import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 import type {
-  AllergyDetectionJobData,
-  AutoCategorizationJobData,
-  AutoTaggingJobData,
   CaldavSyncJobData,
   ImageImportJobData,
-  NutritionEstimationJobData,
   PasteImportJobData,
+  RecipeEnrichmentJobData,
   RecipeImportJobData,
 } from "@norish/queue/contracts/job-types";
 import { DEFAULT_JOB_RETENTION, ServerConfigKeys } from "@norish/config/zod/server-config";
@@ -52,10 +49,10 @@ interface QueueRegistry {
   recipeImport: Queue<RecipeImportJobData>;
   imageImport: Queue<ImageImportJobData>;
   pasteImport: Queue<PasteImportJobData>;
-  nutritionEstimation: Queue<NutritionEstimationJobData>;
-  autoTagging: Queue<AutoTaggingJobData>;
-  autoCategorization: Queue<AutoCategorizationJobData>;
-  allergyDetection: Queue<AllergyDetectionJobData>;
+  nutritionEstimation: Queue<RecipeEnrichmentJobData>;
+  autoTagging: Queue<RecipeEnrichmentJobData>;
+  autoCategorization: Queue<RecipeEnrichmentJobData>;
+  allergyDetection: Queue<RecipeEnrichmentJobData>;
   caldavSync: Queue<CaldavSyncJobData>;
   scheduledTasks: Queue<ScheduledTaskJobData>;
 }

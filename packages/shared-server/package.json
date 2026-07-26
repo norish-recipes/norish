@@ -39,6 +39,7 @@
     "./realtime/groceries": "./src/realtime/groceries.ts",
     "./realtime/households": "./src/realtime/households.ts",
     "./realtime/policy": "./src/realtime/policy.ts",
+    "./realtime/recipe-enrichment": "./src/realtime/recipe-enrichment.ts",
     "./realtime/recipes": "./src/realtime/recipes.ts",
     "./redis/client": "./src/redis/client.ts",
     "./redis/pubsub": "./src/redis/pubsub.ts",

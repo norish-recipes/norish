@@ -38,45 +38,10 @@ const onShareDeleted = createEnvelopeAwareSubscription(
   "shareDeleted",
   "recipe share deleted"
 );
-const onNutritionStarted = createEnvelopeAwareSubscription(
+const onEnrichment = createEnvelopeAwareSubscription(
   recipeEmitter,
-  "nutritionStarted",
-  "nutrition estimation started"
-);
-const onAutoTaggingStarted = createEnvelopeAwareSubscription(
-  recipeEmitter,
-  "autoTaggingStarted",
-  "auto-tagging started"
-);
-const onAutoTaggingCompleted = createEnvelopeAwareSubscription(
-  recipeEmitter,
-  "autoTaggingCompleted",
-  "auto-tagging completed"
-);
-const onAutoCategorizationStarted = createEnvelopeAwareSubscription(
-  recipeEmitter,
-  "autoCategorizationStarted",
-  "auto-categorization started"
-);
-const onAutoCategorizationCompleted = createEnvelopeAwareSubscription(
-  recipeEmitter,
-  "autoCategorizationCompleted",
-  "auto-categorization completed"
-);
-const onAllergyDetectionStarted = createEnvelopeAwareSubscription(
-  recipeEmitter,
-  "allergyDetectionStarted",
-  "allergy detection started"
-);
-const onAllergyDetectionCompleted = createEnvelopeAwareSubscription(
-  recipeEmitter,
-  "allergyDetectionCompleted",
-  "allergy detection completed"
-);
-const onProcessingToast = createEnvelopeAwareSubscription(
-  recipeEmitter,
-  "processingToast",
-  "processing toast"
+  "enrichment",
+  "recipe enrichment lifecycle"
 );
 const onRecipeBatchCreated = createEnvelopeAwareSubscription(
   recipeEmitter,
@@ -97,13 +62,6 @@ export const recipesSubscriptions = router({
   onShareRevoked,
   onShareReactivated,
   onShareDeleted,
-  onNutritionStarted,
-  onAutoTaggingStarted,
-  onAutoTaggingCompleted,
-  onAutoCategorizationStarted,
-  onAutoCategorizationCompleted,
-  onAllergyDetectionStarted,
-  onAllergyDetectionCompleted,
-  onProcessingToast,
+  onEnrichment,
   onRecipeBatchCreated,
 });

@@ -1,162 +1,64 @@
 /**
  * Auto-Tagging Worker
  *
- * Processes auto-tagging jobs from the queue.
- * Generates AI-based tags for recipes that were imported via structured parsers.
- * Uses lazy worker pattern - starts on-demand and pauses when idle.
+ * One AI request, validated output, and an append that can never remove an
+ * existing tag. Uses lazy worker pattern - starts on-demand and pauses when idle.
  */
 
-import type { Job } from "bullmq";
-
-import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
-import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
-import { getRecipeFull } from "@norish/db";
+import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { appendRecipeTags } from "@norish/db/repositories/tags";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
-import { emitByPolicy } from "@norish/shared-server/realtime/policy";
-import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
+import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import {
+  handleEnrichmentJobFailure,
+  runEnrichmentJob,
+  toRecipeSummary,
+} from "../enrichment/worker-runner";
 import { reportStep } from "../job-steps";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:auto-tagging");
 
-async function processAutoTaggingJob(job: Job<AutoTaggingJobData>): Promise<void> {
-  const generateTagsForRecipe = requireQueueApiHandler("generateTagsForRecipe");
-  const { recipeId, userId, householdKey } = job.data;
-
-  log.info(
-    { jobId: job.id, recipeId, attempt: job.attemptsMade + 1 },
-    "Processing auto-tagging job"
-  );
-
-  const policy = await getRecipePermissionPolicy();
-  const ctx: PolicyEmitContext = { userId, householdKey };
-
-  // Emit autoTaggingStarted event so clients can show loading state
-  emitByPolicy(recipeEmitter, policy.view, ctx, "autoTaggingStarted", { recipeId });
-
-  // Emit toast with i18n key - client just shows it directly
-  emitByPolicy(recipeEmitter, policy.view, ctx, "processingToast", {
-    recipeId,
-    titleKey: "processingTags",
-    severity: "default",
-  });
-
-  const recipe = await getRecipeFull(recipeId);
-
-  if (!recipe) {
-    throw new Error(`Recipe not found: ${recipeId}`);
-  }
-
-  if (recipe.recipeIngredients.length === 0) {
-    log.warn({ recipeId }, "Recipe has no ingredients, skipping auto-tagging");
-    emitByPolicy(recipeEmitter, policy.view, ctx, "autoTaggingCompleted", { recipeId });
-    emitByPolicy(recipeEmitter, policy.view, ctx, "processingToast", {
-      recipeId,
-      titleKey: "tagsComplete",
-      severity: "success",
-    });
-
-    return;
-  }
-
-  // Prepare recipe data for AI tagging
-  const recipeForTagging = {
-    title: recipe.name,
-    description: recipe.description,
-    ingredients: recipe.recipeIngredients.map((ri) => ri.ingredientName),
-  };
-
-  await reportStep(job, "ai-request");
-  const result = await generateTagsForRecipe(recipeForTagging);
-
-  if (!result.success) {
-    throw new Error(result.error);
-  }
-
-  const generatedTags = result.data;
-
-  if (generatedTags.length === 0) {
-    log.info({ recipeId }, "AI returned no tags");
-    emitByPolicy(recipeEmitter, policy.view, ctx, "autoTaggingCompleted", { recipeId });
-    emitByPolicy(recipeEmitter, policy.view, ctx, "processingToast", {
-      recipeId,
-      titleKey: "tagsComplete",
-      severity: "success",
-    });
-
-    return;
-  }
-
-  // Merge AI tags with existing tags (preserves manually added tags)
-  await reportStep(job, "saving");
-  const { added: newTags, allTags } = await appendRecipeTags(recipeId, generatedTags);
-
-  log.info(
-    { jobId: job.id, recipeId, newTags, totalTags: allTags.length },
-    "Auto-tagging completed and saved"
-  );
-
-  // Fetch updated recipe and emit events
-  const updatedRecipe = await getRecipeFull(recipeId);
-
-  if (updatedRecipe) {
-    emitByPolicy(recipeEmitter, policy.view, ctx, "updated", { recipe: updatedRecipe });
-  }
-
-  // Emit completion event so clients can track when auto-tagging is done
-  emitByPolicy(recipeEmitter, policy.view, ctx, "autoTaggingCompleted", { recipeId });
-
-  // Emit toast with i18n key for completion
-  emitByPolicy(recipeEmitter, policy.view, ctx, "processingToast", {
-    recipeId,
-    titleKey: "tagsComplete",
-    severity: "success",
-  });
-}
-
-async function handleJobFailed(
-  job: Job<AutoTaggingJobData> | undefined,
-  error: Error
-): Promise<void> {
-  if (!job) return;
-
-  const { recipeId } = job.data;
-  const maxAttempts = job.opts.attempts ?? 3;
-  const isFinalFailure = job.attemptsMade >= maxAttempts;
-
-  log.error(
-    {
-      jobId: job.id,
-      recipeId,
-      attempt: job.attemptsMade,
-      maxAttempts,
-      isFinalFailure,
-      error: error.message,
-    },
-    "Auto-tagging job failed"
-  );
-
-  // Note: We don't emit a "failed" event for auto-tagging failures
-  // since it's a background enhancement, not a user-initiated action
-}
-
 export async function startAutoTaggingWorker(): Promise<void> {
-  await createLazyWorker<AutoTaggingJobData>(
+  await createLazyWorker<RecipeEnrichmentJobData>(
     QUEUE_NAMES.AUTO_TAGGING,
-    processAutoTaggingJob,
+    (job) =>
+      runEnrichmentJob(job, async (recipe) => {
+        const generateTagsForRecipe = requireQueueApiHandler("generateTagsForRecipe");
+        const result = await generateTagsForRecipe(toRecipeSummary(recipe));
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        const tags = normalizeEnrichmentTagNames(result.data);
+
+        if (tags.length === 0) {
+          // Nothing to append is a legitimate outcome, not a failure: appending
+          // adds findings, and an empty finding set removes nothing.
+          log.info({ recipeId: recipe.id }, "AI returned no tags");
+
+          return false;
+        }
+
+        await reportStep(job, "saving");
+        const { added } = await appendRecipeTags(recipe.id, tags);
+
+        log.info({ recipeId: recipe.id, added }, "Auto-tagging saved");
+
+        return added.length > 0;
+      }),
     {
       connection: getBullClient(),
       ...baseWorkerOptions,
       stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.AUTO_TAGGING],
       concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.AUTO_TAGGING],
     },
-    handleJobFailed
+    handleEnrichmentJobFailure
   );
 }
 

@@ -7,8 +7,7 @@ const dashboardRecipe = vi.fn();
 const getAllergiesForUsers = vi.fn();
 const rateRecipe = vi.fn();
 const getAverageRating = vi.fn();
-const addAutoTaggingJob = vi.fn();
-const addAllergyDetectionJob = vi.fn();
+const publishRecipeBecameUsable = vi.fn();
 const emitByPolicy = vi.fn();
 
 vi.mock("@norish/db", () => ({
@@ -39,12 +38,8 @@ vi.mock("@norish/queue/registry", () => ({
   getQueues: vi.fn(() => ({ autoTagging: {}, allergyDetection: {} })),
 }));
 
-vi.mock("@norish/queue/auto-tagging/producer", () => ({
-  addAutoTaggingJob,
-}));
-
-vi.mock("@norish/queue/allergy-detection/producer", () => ({
-  addAllergyDetectionJob,
+vi.mock("@norish/shared-server/realtime/recipe-enrichment", () => ({
+  publishRecipeBecameUsable,
 }));
 
 vi.mock("@norish/shared-server/realtime/policy", () => ({
@@ -191,8 +186,13 @@ describe("processPasteImportJob", () => {
     expect(createRecipeWithRefs).toHaveBeenCalledTimes(2);
     expect(rateRecipe).toHaveBeenNthCalledWith(1, "user-1", "recipe-1", 5);
     expect(rateRecipe).toHaveBeenNthCalledWith(2, "user-1", "recipe-2", 5);
-    expect(addAutoTaggingJob).toHaveBeenCalledTimes(2);
-    expect(addAllergyDetectionJob).toHaveBeenCalledTimes(2);
+    // Creation and enrichment are separate: the worker persists and announces,
+    // and the coordinator decides independently what should run.
+    expect(publishRecipeBecameUsable).toHaveBeenCalledTimes(2);
+    expect(publishRecipeBecameUsable).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ recipeId: "recipe-1", userId: "user-1" })
+    );
   });
 
   it("fails when no valid structured items remain", async () => {

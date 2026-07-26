@@ -1,128 +1,70 @@
-import type { Job } from "bullmq";
+/**
+ * Auto-Categorization Worker
+ *
+ * One AI request and a category replacement. Automatic runs replace only while
+ * the stored list is still empty, so data supplied while AI was running wins.
+ * Uses lazy worker pattern - starts on-demand and pauses when idle.
+ */
 
-import type { AutoCategorizationJobData } from "@norish/queue/contracts/job-types";
-import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
-import { getRecipeFull, updateRecipeCategories } from "@norish/db";
+import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
+import {
+  replaceRecipeCategories,
+  replaceRecipeCategoriesIfAbsent,
+} from "@norish/db/repositories/recipe-enrichment";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getBullClient } from "@norish/queue/redis/bullmq";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
-import { emitByPolicy } from "@norish/shared-server/realtime/policy";
-import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import {
+  handleEnrichmentJobFailure,
+  runEnrichmentJob,
+  toRecipeSummary,
+} from "../enrichment/worker-runner";
 import { reportStep } from "../job-steps";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:auto-categorization");
 
-async function processAutoCategorizationJob(job: Job<AutoCategorizationJobData>): Promise<void> {
-  const categorizeRecipe = requireQueueApiHandler("categorizeRecipe");
-  const { recipeId, userId, householdKey } = job.data;
-
-  log.info(
-    { jobId: job.id, recipeId, attempt: job.attemptsMade + 1 },
-    "Processing auto-categorization job"
-  );
-
-  const policy = await getRecipePermissionPolicy();
-  const ctx: PolicyEmitContext = { userId, householdKey };
-
-  emitByPolicy(recipeEmitter, policy.view, ctx, "autoCategorizationStarted", { recipeId });
-
-  const recipe = await getRecipeFull(recipeId);
-
-  if (!recipe) {
-    throw new Error(`Recipe not found: ${recipeId}`);
-  }
-
-  if (recipe.categories.length > 0) {
-    log.info({ recipeId }, "Recipe already has categories, skipping auto-categorization");
-    emitByPolicy(recipeEmitter, policy.view, ctx, "autoCategorizationCompleted", { recipeId });
-
-    return;
-  }
-
-  if (recipe.recipeIngredients.length === 0) {
-    log.warn({ recipeId }, "Recipe has no ingredients, skipping auto-categorization");
-    emitByPolicy(recipeEmitter, policy.view, ctx, "autoCategorizationCompleted", { recipeId });
-
-    return;
-  }
-
-  const recipeForCategorization = {
-    title: recipe.name,
-    description: recipe.description,
-    ingredients: recipe.recipeIngredients.map((ri) => ri.ingredientName),
-  };
-
-  await reportStep(job, "ai-request");
-  const result = await categorizeRecipe(recipeForCategorization);
-
-  if (!result.success) {
-    throw new Error(result.error);
-  }
-
-  const categories = result.data;
-
-  if (categories.length === 0) {
-    log.info({ recipeId }, "AI returned no categories");
-    emitByPolicy(recipeEmitter, policy.view, ctx, "autoCategorizationCompleted", { recipeId });
-
-    return;
-  }
-
-  await reportStep(job, "saving");
-  await updateRecipeCategories(recipeId, categories);
-
-  log.info(
-    { jobId: job.id, recipeId, categories, totalCategories: categories.length },
-    "Auto-categorization completed and saved"
-  );
-
-  const updatedRecipe = await getRecipeFull(recipeId);
-
-  if (updatedRecipe) {
-    emitByPolicy(recipeEmitter, policy.view, ctx, "updated", { recipe: updatedRecipe });
-  }
-
-  emitByPolicy(recipeEmitter, policy.view, ctx, "autoCategorizationCompleted", { recipeId });
-}
-
-async function handleJobFailed(
-  job: Job<AutoCategorizationJobData> | undefined,
-  error: Error
-): Promise<void> {
-  if (!job) return;
-
-  const { recipeId } = job.data;
-  const maxAttempts = job.opts.attempts ?? 3;
-  const isFinalFailure = job.attemptsMade >= maxAttempts;
-
-  log.error(
-    {
-      jobId: job.id,
-      recipeId,
-      attempt: job.attemptsMade,
-      maxAttempts,
-      isFinalFailure,
-      error: error.message,
-    },
-    "Auto-categorization job failed"
-  );
-}
-
 export async function startAutoCategorizationWorker(): Promise<void> {
-  await createLazyWorker<AutoCategorizationJobData>(
+  await createLazyWorker<RecipeEnrichmentJobData>(
     QUEUE_NAMES.AUTO_CATEGORIZATION,
-    processAutoCategorizationJob,
+    (job) =>
+      runEnrichmentJob(job, async (recipe) => {
+        const categorizeRecipe = requireQueueApiHandler("categorizeRecipe");
+        const result = await categorizeRecipe(toRecipeSummary(recipe));
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        if (result.data.length === 0) {
+          // Replacement with nothing would erase stored categories, so an empty
+          // result is a failure the job retries rather than a write.
+          throw new Error("AI returned no categories to replace the stored list with");
+        }
+
+        await reportStep(job, "saving");
+
+        const applied =
+          job.data.origin === "manual"
+            ? await replaceRecipeCategories(recipe.id, result.data)
+            : await replaceRecipeCategoriesIfAbsent(recipe.id, result.data);
+
+        log.info(
+          { recipeId: recipe.id, categories: result.data, applied, origin: job.data.origin },
+          applied ? "Auto-categorization saved" : "Auto-categorization deferred to supplied data"
+        );
+
+        return applied;
+      }),
     {
       connection: getBullClient(),
       ...baseWorkerOptions,
       stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.AUTO_CATEGORIZATION],
       concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.AUTO_CATEGORIZATION],
     },
-    handleJobFailed
+    handleEnrichmentJobFailure
   );
 }
 

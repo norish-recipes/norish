@@ -1,4 +1,5 @@
 import { initCaldavSync } from "@norish/api/caldav/event-listener";
+import { initRecipeEnrichmentListener } from "@norish/api/recipes/enrichment-listener";
 import { createServer } from "@norish/api/startup/http-server";
 import { runStartupMaintenanceCleanup } from "@norish/api/startup/maintenance-cleanup";
 import { migrateGalleryImages } from "@norish/api/startup/migrate-gallery-images";
@@ -44,6 +45,12 @@ async function main() {
 
   initCaldavSync();
   log.info("CalDAV sync service initialized");
+  log.info("-".repeat(50));
+
+  // Subscribe before any recipe-producing worker or HTTP handler can publish,
+  // and await it, so the server never starts creating recipes while claiming a
+  // listener it does not have.
+  await initRecipeEnrichmentListener();
   log.info("-".repeat(50));
 
   await startWorkers();

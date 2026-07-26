@@ -16,11 +16,8 @@ import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@norish/db";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
-import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
-import { getQueues } from "@norish/queue/registry";
 import {
   getAIConfig,
   getRecipePermissionPolicy,
@@ -35,6 +32,7 @@ import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { announceUsableRecipe } from "../enrichment/announce";
 import { completeStep, reportStep } from "../job-steps";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
@@ -136,7 +134,7 @@ async function createStructuredRecipe(
   }
 
   const created = await createRecipeWithRefs(structuredRecipe.recipeId, userId, parsed.data);
-    const createdId = created?.recipeId;
+  const createdId = created?.recipeId;
 
   if (!createdId) {
     return null;
@@ -226,8 +224,6 @@ export async function processPasteImportJob(
   await completeStep(job, { createdCount: createdRecipeIds.length });
   await reportStep(job, "post-processing");
 
-  const queues = getQueues();
-
   for (const createdId of createdRecipeIds) {
     const dashboardDto = await dashboardRecipe(createdId);
 
@@ -235,29 +231,16 @@ export async function processPasteImportJob(
       continue;
     }
 
-    const usedAI = !structuredRecipes || structuredRecipes.length === 0;
+    log.info({ jobId: job.id, recipeId: createdId }, "Pasted recipe imported successfully");
 
-    log.info({ jobId: job.id, recipeId: createdId, usedAI }, "Pasted recipe imported successfully");
-
+    // Import success is terminal here regardless of what enrichment does next.
     emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
       recipe: dashboardDto,
       pendingRecipeId: createdId,
-      toast: usedAI ? "imported" : undefined,
+      toast: "imported",
     });
 
-    if (!usedAI) {
-      await addAutoTaggingJob(queues.autoTagging, {
-        recipeId: createdId,
-        userId,
-        householdKey,
-      });
-
-      await addAllergyDetectionJob(queues.allergyDetection, {
-        recipeId: createdId,
-        userId,
-        householdKey,
-      });
-    }
+    await announceUsableRecipe({ recipeId: createdId, userId, householdKey, householdUserIds });
   }
 
   return { recipeIds: createdRecipeIds };

@@ -16,12 +16,8 @@ import {
   recipeExistsByUrlForPolicy,
 } from "@norish/db";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
-import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
-import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
 import { getBullClient } from "@norish/queue/redis/bullmq";
-import { getQueues } from "@norish/queue/registry";
 import {
   getAIConfig,
   getRecipePermissionPolicy,
@@ -38,6 +34,7 @@ import {
   STALLED_INTERVAL,
   WORKER_CONCURRENCY,
 } from "../config";
+import { announceUsableRecipe } from "../enrichment/announce";
 import { withTimeout } from "../helpers";
 import { completeStep, reportStep } from "../job-steps";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
@@ -108,7 +105,10 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     log.debug("Auto-tag allergies disabled, skipping allergy detection");
   }
 
-  await completeStep(job, { allergies: allergyNames ?? [], allergyCount: allergyNames?.length ?? 0 });
+  await completeStep(job, {
+    allergies: allergyNames ?? [],
+    allergyCount: allergyNames?.length ?? 0,
+  });
 
   // Parse and create recipe
   await reportStep(job, "parsing");
@@ -149,44 +149,17 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       "Recipe imported successfully"
     );
 
-    // If AI was used, no processing will follow - show imported toast
-    // If AI was NOT used, auto-tagging/allergy detection will follow - no toast needed
+    // Import success is terminal here: enrichment is enrolled independently and
+    // cannot roll it back, delay it, or change the toast the user sees.
     emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
       recipe: dashboardDto,
       pendingRecipeId: recipeId,
-      toast: parseResult.usedAI ? "imported" : undefined,
+      toast: "imported",
     });
+  }
 
-    // Trigger auto-tagging only if AI was NOT used for extraction
-    // (AI extraction already includes auto-tagging instructions in the prompt)
-    if (!parseResult.usedAI) {
-      await reportStep(job, "post-processing");
-      const queues = getQueues();
-
-      await addAutoTaggingJob(queues.autoTagging, {
-        recipeId: createdId,
-        userId,
-        householdKey,
-      });
-
-      // Trigger allergy detection for structured imports
-      // (AI extraction already handles allergy detection inline)
-      await addAllergyDetectionJob(queues.allergyDetection, {
-        recipeId: createdId,
-        userId,
-        householdKey,
-      });
-
-      // Trigger auto-categorization for structured imports without categories
-      // (AI extraction already includes categorization in the prompt)
-      if (!parseResult.recipe.categories?.length) {
-        await addAutoCategorizationJob(queues.autoCategorization, {
-          recipeId: createdId,
-          userId,
-          householdKey,
-        });
-      }
-    }
+  if (created.status === "inserted") {
+    await announceUsableRecipe({ recipeId: createdId, userId, householdKey, householdUserIds });
   }
 }
 

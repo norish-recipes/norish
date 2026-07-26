@@ -7,7 +7,7 @@
 
 import type { Queue } from "bullmq";
 
-import type { AllergyDetectionJobData } from "@norish/queue/contracts/job-types";
+import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import type { QueueRemovalOptions } from "../config";
@@ -20,8 +20,8 @@ import { createOperationAwareQueue } from "../operation-aware-queue";
  */
 export function createAllergyDetectionQueue(
   removalOptions?: QueueRemovalOptions
-): Queue<AllergyDetectionJobData> {
-  return createOperationAwareQueue<AllergyDetectionJobData>(QUEUE_NAMES.ALLERGY_DETECTION, {
+): Queue<RecipeEnrichmentJobData> {
+  return createOperationAwareQueue<RecipeEnrichmentJobData>(QUEUE_NAMES.ALLERGY_DETECTION, {
     connection: getBullClient(),
     defaultJobOptions: { ...allergyDetectionJobOptions, ...removalOptions },
   });

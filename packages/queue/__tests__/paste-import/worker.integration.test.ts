@@ -12,8 +12,7 @@ let getAverageRating: typeof import("@norish/db/repositories/ratings").getAverag
 let getUserRatingWithVersion: typeof import("@norish/db/repositories/ratings").getUserRatingWithVersion;
 
 const mocked = vi.hoisted(() => ({
-  addAutoTaggingJob: vi.fn(),
-  addAllergyDetectionJob: vi.fn(),
+  publishRecipeBecameUsable: vi.fn(),
   emitByPolicy: vi.fn(),
 }));
 
@@ -34,12 +33,8 @@ vi.mock("@norish/queue/registry", () => ({
   getQueues: vi.fn(() => ({ autoTagging: {}, allergyDetection: {} })),
 }));
 
-vi.mock("@norish/queue/auto-tagging/producer", () => ({
-  addAutoTaggingJob: mocked.addAutoTaggingJob,
-}));
-
-vi.mock("@norish/queue/allergy-detection/producer", () => ({
-  addAllergyDetectionJob: mocked.addAllergyDetectionJob,
+vi.mock("@norish/shared-server/realtime/recipe-enrichment", () => ({
+  publishRecipeBecameUsable: mocked.publishRecipeBecameUsable,
 }));
 
 vi.mock("@norish/shared-server/realtime/policy", () => ({
@@ -79,8 +74,7 @@ describe("processPasteImportJob integration", () => {
     const [user] = await testBase.beforeEachTest();
 
     userId = user.id;
-    mocked.addAutoTaggingJob.mockReset();
-    mocked.addAllergyDetectionJob.mockReset();
+    mocked.publishRecipeBecameUsable.mockReset();
     mocked.emitByPolicy.mockReset();
   });
 
@@ -200,7 +194,6 @@ describe("processPasteImportJob integration", () => {
     expect(secondUserRating.rating).toBe(2);
     expect(firstStats).toEqual({ averageRating: 5, ratingCount: 1 });
     expect(secondStats).toEqual({ averageRating: 2, ratingCount: 1 });
-    expect(mocked.addAutoTaggingJob).toHaveBeenCalledTimes(2);
-    expect(mocked.addAllergyDetectionJob).toHaveBeenCalledTimes(2);
+    expect(mocked.publishRecipeBecameUsable).toHaveBeenCalledTimes(2);
   });
 });

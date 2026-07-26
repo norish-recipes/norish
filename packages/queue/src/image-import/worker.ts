@@ -28,6 +28,7 @@ import { emitByPolicy } from "@norish/shared-server/realtime/policy";
 import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
 import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { announceUsableRecipe } from "../enrichment/announce";
 import { reportStep } from "../job-steps";
 import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
@@ -121,9 +122,12 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
       pendingRecipeId: recipeId,
       toast: "imported",
     });
+  }
 
-    // Note: No auto-tagging job queued - image import is always AI-based,
-    // and AI extraction prompts already include auto-tagging instructions
+  // Vision parsing is a reader, not an inference step: an image import enters
+  // the same enrichment flow as every other creation path.
+  if (created.status === "inserted") {
+    await announceUsableRecipe({ recipeId: createdId, userId, householdKey, householdUserIds });
   }
 }
 

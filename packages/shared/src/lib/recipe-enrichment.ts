@@ -31,11 +31,17 @@ export type RecipeEnrichmentOrigin = "automatic" | "manual";
 
 /** Why the coordinator declined to enroll a kind. */
 export type RecipeEnrichmentSkipReason =
+  /** Global AI enablement is the top-level prerequisite for automatic and manual alike. */
   | "ai-disabled"
+  /** The recipe could not be loaded, so there is nothing to enrich. */
+  | "recipe-unavailable"
+  /** This kind's automatic switch is off. Never applies to a manual request. */
   | "automatic-disabled"
+  /** The stored recipe lacks the input this kind needs; the recipe itself is fine. */
   | "insufficient-input"
+  /** Allergy detection has nothing to look for. */
   | "no-household-allergies"
-  | "tag-strategy-unusable"
+  /** Substantive Supplied Recipe Data outranks automatic replacement. */
   | "supplied-data-present";
 
 /** Per-kind coordinator outcome. Automatic enrollment never waits for the job itself. */
