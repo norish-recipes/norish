@@ -114,25 +114,48 @@ async function eventuallyOnRecipe(assertion: () => Promise<void>): Promise<void>
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
 }
 
-test("an import enrolls the enabled automatic kinds and renders the result", async () => {
-  await setAutomaticEnrichment({ autoTagging: true, autoCategorization: true });
+// One automatic kind per scenario. The four queues run concurrently, so a
+// scenario that enabled two would race for the provider's queued responses;
+// which kind runs is the coordinator's decision and is asserted directly.
+test("an import enrols the enabled automatic kind and renders the result", async () => {
+  await setAutomaticEnrichment({ autoTagging: true });
 
   await importAndOpen("Automatic Enrichment Stew", [
     bareRecipe("Automatic Enrichment Stew"),
-    // Auto-tagging and auto-categorization each make one further AI call.
+    // The one enrichment call that follows the extraction call.
     { tags: ["hearty", "one-pot"] },
+  ]);
+
+  // Auto-tagging applied to a recipe whose extraction supplied no tags.
+  await eventuallyOnRecipe(async () => {
+    await expect(page.getByText("hearty").first()).toBeVisible({ timeout: 3_000 });
+  });
+
+  // Enrichment is quiet on success: the recipe updated, and nothing was raised.
+  await expect(page.getByText(/enrichment failed/i)).toHaveCount(0);
+});
+
+test("a disabled automatic switch leaves that kind alone", async () => {
+  await setAutomaticEnrichment({ autoTagging: false });
+
+  // Only the extraction directive is queued: an enrolled auto-tagging job would
+  // call the provider, and the null default fails the request loudly.
+  await importAndOpen("No Automation Stew", [bareRecipe("No Automation Stew")]);
+
+  expect(stack!.ai.control.requestCount).toBe(1);
+});
+
+test("automatic categorization fills an empty category list", async () => {
+  await setAutomaticEnrichment({ autoCategorization: true });
+
+  await importAndOpen("Automatic Categories Stew", [
+    bareRecipe("Automatic Categories Stew"),
     { categories: ["Dinner"] },
   ]);
 
-  // Both enrichments applied to a recipe whose extraction supplied neither.
   await eventuallyOnRecipe(async () => {
-    await expect(page.getByText("hearty").first()).toBeVisible({ timeout: 3_000 });
     await expect(page.getByText("Dinner").first()).toBeVisible({ timeout: 3_000 });
   });
-
-  // Enrichment is quiet on success: the recipe updated, and no enrichment toast
-  // was raised for it.
-  await expect(page.getByText(/enrichment failed/i)).toHaveCount(0);
 });
 
 test("supplied categories and nutrition suppress the automatic replacements", async () => {
