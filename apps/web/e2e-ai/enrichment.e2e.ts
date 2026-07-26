@@ -90,7 +90,7 @@ async function importAndOpen(name: string, directives: unknown[]): Promise<void>
   ai.control.setDefault(null);
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Add Recipe" }).click();
+  await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
   await page.getByRole("menuitem", { name: "Paste" }).click();
   await page
     .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
@@ -226,7 +226,7 @@ test("an automatic failure stays quiet and leaves the recipe intact", async () =
   ai.control.failPermanently("provider refused");
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Add Recipe" }).click();
+  await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
   await page.getByRole("menuitem", { name: "Paste" }).click();
   await page
     .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")

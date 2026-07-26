@@ -74,7 +74,7 @@ test("a browser AI paste import receives the controlled provider response", asyn
 
   // Open the create menu and start an AI-assisted paste import. The AI Import
   // action is present because the harness has AI enabled server-side.
-  await page.getByRole("button", { name: "Add Recipe" }).click();
+  await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
   await page.getByRole("menuitem", { name: "Paste" }).click();
   await page
     .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
