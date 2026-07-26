@@ -300,11 +300,13 @@ test("lifecycle state survives a page reload", async () => {
   // Recovered as in-flight after a reload, so the action is still disabled.
   // The disabled state sits on the button inside the menu item, and the menu
   // needs a moment after a reload before it will open.
+  // The menu item is the addressable element; the disabled state sits on the
+  // button it wraps.
   await expect(async () => {
     await page.getByRole("button", { name: "Actions" }).click();
-    await expect(page.getByRole("button", { name: "Auto Categorize" })).toBeDisabled({
-      timeout: 2_000,
-    });
+    await expect(
+      page.getByRole("menuitem", { name: "Auto Categorize" }).locator("button")
+    ).toBeDisabled({ timeout: 2_000 });
   }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
 
   await page.keyboard.press("Escape");
