@@ -5,15 +5,15 @@
  * in a real browser, with the real database, Redis, queue registry, and workers
  * all running, and only the third-party AI-provider HTTP boundary replaced by a
  * deterministic in-harness provider (./ai-provider.ts). Reusable by every
- * recipe-provenance browser scenario.
+ * production-like AI browser scenario.
  *
  * Prerequisites (Docker running, once per build):
  *   pnpm run build:web && pnpm run build:server        # repo root
- *   pnpm --filter @norish/web run test:e2e:provenance
+ *   pnpm --filter @norish/web run test:e2e:ai
  */
 import { defineConfig } from "@playwright/test";
 
-import { PROV_BASE_URL } from "./env";
+import { E2E_BASE_URL } from "./env";
 
 export default defineConfig({
   testDir: ".",
@@ -29,7 +29,7 @@ export default defineConfig({
   reporter: [["list"]],
   outputDir: "./.results",
   use: {
-    baseURL: PROV_BASE_URL,
+    baseURL: E2E_BASE_URL,
     headless: true,
     trace: "retain-on-failure",
   },

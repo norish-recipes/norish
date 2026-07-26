@@ -5,20 +5,20 @@
  * feature is enabled and pointed at the fake provider), then create the two
  * test users through the real auth API.
  *
- * No recipe/grocery seeding: provenance scenarios create their own recipes by
+ * No recipe/grocery seeding: scenarios create their own recipes by
  * importing, which is exactly the path under test.
  */
 import { execSync } from "node:child_process";
 import { Client } from "pg";
 
-import { PROV_BASE_URL, PROV_DATABASE_URL, PROV_DIR, USER_A, USER_B } from "./env";
+import { E2E_BASE_URL, E2E_DATABASE_URL, E2E_DIR, USER_A, USER_B } from "./env";
 import { composeDown, composeUp, ensureBuilt, startServer } from "./server";
 
 async function signUp(user: { email: string; password: string; name: string }): Promise<void> {
-  const response = await fetch(`${PROV_BASE_URL}/api/auth/sign-up/email`, {
+  const response = await fetch(`${E2E_BASE_URL}/api/auth/sign-up/email`, {
     method: "POST",
     // Better Auth rejects auth POSTs without a trusted Origin.
-    headers: { "content-type": "application/json", origin: PROV_BASE_URL },
+    headers: { "content-type": "application/json", origin: E2E_BASE_URL },
     body: JSON.stringify(user),
   });
 
@@ -31,7 +31,7 @@ async function signUp(user: { email: string; password: string; name: string }): 
 }
 
 async function forceAuthConfig(): Promise<void> {
-  const db = new Client({ connectionString: PROV_DATABASE_URL });
+  const db = new Client({ connectionString: E2E_DATABASE_URL });
 
   await db.connect();
 
@@ -46,7 +46,7 @@ async function forceAuthConfig(): Promise<void> {
 
   // getConfig reads may be Redis-cached; drop them so the SQL value wins.
   execSync("docker compose -f compose.yaml exec -T redis redis-cli flushall", {
-    cwd: PROV_DIR,
+    cwd: E2E_DIR,
     stdio: "ignore",
   });
 }

@@ -101,7 +101,10 @@ function errorBody(message: string, type: string): unknown {
 }
 
 /** Build an OpenAI Chat Completions body carrying `content` verbatim. */
-export function buildChatCompletionBody(content: string, model = "test-model"): OpenAIChatCompletion {
+export function buildChatCompletionBody(
+  content: string,
+  model = "test-model"
+): OpenAIChatCompletion {
   return {
     id: "chatcmpl-e2e-harness",
     object: "chat.completion",
@@ -132,7 +135,11 @@ class Controller implements AIProviderControl {
   }
 
   failPermanently(message = "permanent failure"): void {
-    this.setDefault({ kind: "error", status: 400, body: errorBody(message, "invalid_request_error") });
+    this.setDefault({
+      kind: "error",
+      status: 400,
+      body: errorBody(message, "invalid_request_error"),
+    });
   }
 
   failRetryably(message = "retryable failure"): void {

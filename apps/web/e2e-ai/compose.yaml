@@ -1,4 +1,4 @@
-name: norish-web-provenance-e2e
+name: norish-web-ai-e2e
 
 # Dedicated Postgres/Redis for the production-like AI E2E harness. Ports are
 # distinct from the offline suite (apps/web/e2e) so the two never collide.
@@ -6,13 +6,13 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: norish_prov
-      POSTGRES_PASSWORD: norish_prov
-      POSTGRES_USER: norish_prov
+      POSTGRES_DB: norish_ai_e2e
+      POSTGRES_PASSWORD: norish_ai_e2e
+      POSTGRES_USER: norish_ai_e2e
     ports:
       - "55433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U norish_prov -d norish_prov"]
+      test: ["CMD-SHELL", "pg_isready -U norish_ai_e2e -d norish_ai_e2e"]
       interval: 1s
       timeout: 5s
       retries: 30

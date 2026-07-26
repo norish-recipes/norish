@@ -9,14 +9,14 @@
  * replaced — tRPC, the queue worker, the repository, realtime, and the UI are
  * all genuinely exercised.
  *
- * This is the harness's own acceptance test; provenance scenarios (issue 02+)
+ * This is the harness's own acceptance test; the Recipe Enrichment scenarios
  * reuse the same `bootStack`/`signIn` seam.
  */
 import type { BrowserContext, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
-import type { ProvenanceStack } from "./harness";
-import { PROV_BASE_URL, USER_A } from "./env";
+import type { AIE2EStack } from "./harness";
+import { E2E_BASE_URL, USER_A } from "./env";
 import { bootStack, signIn } from "./harness";
 
 test.describe.configure({ mode: "serial" });
@@ -24,7 +24,7 @@ test.describe.configure({ mode: "serial" });
 // A deterministic recipe the fake provider returns for the extraction call.
 // The distinctive name can only reach the browser through the controlled
 // provider response, since the pasted text carries no recipe content.
-const PROVENANCE_RECIPE = {
+const SMOKE_RECIPE = {
   name: "Harness Verification Stew",
   description: "A deterministic recipe returned by the E2E AI provider.",
   notes: null,
@@ -45,7 +45,7 @@ const PROVENANCE_RECIPE = {
   nutrition: { calories: 320, fat: 6, carbs: 48, protein: 16 },
 };
 
-let stack: ProvenanceStack | null = null;
+let stack: AIE2EStack | null = null;
 let context: BrowserContext;
 let page: Page;
 
@@ -54,7 +54,7 @@ test.beforeAll(async ({ browser }) => {
 
   const cookies = await signIn(USER_A);
 
-  context = await browser.newContext({ baseURL: PROV_BASE_URL });
+  context = await browser.newContext({ baseURL: E2E_BASE_URL });
   await context.addCookies(cookies);
   page = await context.newPage();
 });
@@ -68,7 +68,7 @@ test.afterAll(async () => {
 test("a browser AI paste import receives the controlled provider response", async () => {
   const ai = stack!.ai;
 
-  ai.control.succeedWith(PROVENANCE_RECIPE);
+  ai.control.succeedWith(SMOKE_RECIPE);
 
   await page.goto("/");
 
@@ -86,7 +86,7 @@ test("a browser AI paste import receives the controlled provider response", asyn
   // the post-submit navigation still resolves from server truth.
   await expect(async () => {
     await page.reload();
-    await expect(page.getByText(PROVENANCE_RECIPE.name).first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText(SMOKE_RECIPE.name).first()).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
 
   // The rendered name can only have come from the controlled provider, so a real

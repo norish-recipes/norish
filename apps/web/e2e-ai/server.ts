@@ -4,9 +4,9 @@ import type { ChildProcess } from "node:child_process";
 
 import {
   DIST_SERVER_ENTRY,
-  PROV_BASE_URL,
-  PROV_DIR,
-  PROV_UPLOADS_DIR,
+  E2E_BASE_URL,
+  E2E_DIR,
+  E2E_UPLOADS_DIR,
   serverEnv,
   WEB_DIR,
 } from "./env";
@@ -18,7 +18,7 @@ import {
  * queued worker rather than a stub.
  */
 
-const HEALTH_URL = `${PROV_BASE_URL}/api/v1/health`;
+const HEALTH_URL = `${E2E_BASE_URL}/api/v1/health`;
 const START_TIMEOUT_MS = 90_000;
 const STOP_TIMEOUT_MS = 15_000;
 
@@ -32,14 +32,14 @@ export function ensureBuilt(): void {
 
 export function composeUp(): void {
   execSync("docker compose -f compose.yaml up -d --wait", {
-    cwd: PROV_DIR,
+    cwd: E2E_DIR,
     stdio: "inherit",
   });
 }
 
 export function composeDown(): void {
   execSync("docker compose -f compose.yaml down -v", {
-    cwd: PROV_DIR,
+    cwd: E2E_DIR,
     stdio: "ignore",
   });
 }
@@ -64,10 +64,12 @@ export async function startServer(): Promise<E2eServer> {
   // A lingering listener (a crashed run, a manual debug server) would make the
   // suite talk to the wrong process; fail fast instead.
   if (await isHealthy()) {
-    throw new Error(`something is already serving ${HEALTH_URL} — stop it before running the suite`);
+    throw new Error(
+      `something is already serving ${HEALTH_URL} — stop it before running the suite`
+    );
   }
 
-  mkdirSync(PROV_UPLOADS_DIR, { recursive: true });
+  mkdirSync(E2E_UPLOADS_DIR, { recursive: true });
 
   const child: ChildProcess = spawn(process.execPath, [DIST_SERVER_ENTRY], {
     cwd: WEB_DIR,
@@ -84,7 +86,7 @@ export async function startServer(): Promise<E2eServer> {
 
   while (Date.now() < deadline) {
     if (child.exitCode !== null) {
-      throw new Error(`provenance e2e server exited early with code ${child.exitCode}`);
+      throw new Error(`AI e2e server exited early with code ${child.exitCode}`);
     }
 
     if (await isHealthy()) {
@@ -97,7 +99,7 @@ export async function startServer(): Promise<E2eServer> {
 
   if (!up) {
     child.kill("SIGKILL");
-    throw new Error(`provenance e2e server did not become healthy within ${START_TIMEOUT_MS}ms`);
+    throw new Error(`AI e2e server did not become healthy within ${START_TIMEOUT_MS}ms`);
   }
 
   return {
