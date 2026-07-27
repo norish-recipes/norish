@@ -38,6 +38,7 @@ export { createAutoCategorizationQueue } from "./auto-categorization/queue";
 export { createAllergyDetectionQueue } from "./allergy-detection/queue";
 export { createCaldavSyncQueue } from "./caldav-sync/queue";
 export { createScheduledTasksQueue } from "./scheduled-tasks/queue";
+export { createRecipeAiEditQueue } from "./recipe-ai-edit/queue";
 
 // Producers
 export { addImportJob } from "./recipe-import/producer";
@@ -53,6 +54,7 @@ export {
 export { addAllergyDetectionJob, isAllergyDetectionJobActive } from "./allergy-detection/producer";
 export { addCaldavSyncJob } from "./caldav-sync/producer";
 export { initializeScheduledJobs } from "./scheduled-tasks/producer";
+export { addRecipeAiEditJob, isRecipeAiEditJobActive } from "./recipe-ai-edit/producer";
 
 // Workers
 export { startRecipeImportWorker, stopRecipeImportWorker } from "./recipe-import/worker";
@@ -73,6 +75,7 @@ export {
 } from "./allergy-detection/worker";
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
 export { startScheduledTasksWorker, stopScheduledTasksWorker } from "./scheduled-tasks/worker";
+export { startRecipeAiEditWorker, stopRecipeAiEditWorker } from "./recipe-ai-edit/worker";
 
 // Types from @norish/shared/contracts
 export type {
@@ -90,6 +93,8 @@ export type {
   AddAutoCategorizationJobResult,
   AllergyDetectionJobData,
   AddAllergyDetectionJobResult,
+  RecipeAiEditJobData,
+  AddRecipeAiEditJobResult,
   CaldavSyncJobData,
   CaldavSyncOperation,
 } from "@norish/queue/contracts/job-types";

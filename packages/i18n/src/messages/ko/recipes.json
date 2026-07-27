@@ -70,7 +70,17 @@
     "estimatingNutrition": "영양소 추정 중...",
     "screenOn": "화면 켜짐",
     "keepScreenOn": "화면 켜짐 유지",
-    "actionsLabel": "작업"
+    "actionsLabel": "작업",
+    "aiEdit": "Edit with AI",
+    "aiEditing": "Editing with AI..."
+  },
+  "aiEdit": {
+    "title": "Edit with AI",
+    "label": "What would you like to change?",
+    "placeholder": "e.g. Make it vegan, halve the servings, convert to metric...",
+    "hint": "The AI rewrites the recipe from your instruction. Existing photos are kept.",
+    "submit": "Apply with AI",
+    "maxCharacters": "Instruction must be {max} characters or fewer."
   },
   "sharePanel": {
     "title": "레시피 공유",
@@ -252,7 +262,11 @@
     "batchImported": "레시피 가져오기 완료",
     "batchImportedDescription": "아카이브에서 {count}개 레시피를 가져왔습니다.",
     "view": "보기",
-    "open": "열기"
+    "open": "열기",
+    "processingAiEdit": "Editing recipe with AI",
+    "aiEditComplete": "Recipe updated",
+    "aiEditStale": "Recipe changed, edit skipped",
+    "aiEditFailed": "AI edit failed"
   },
   "tags": {
     "panel": {

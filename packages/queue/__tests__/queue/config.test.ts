@@ -14,6 +14,7 @@ import {
   pasteImportJobOptions,
   QUEUE_NAMES,
   RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
+  recipeAiEditJobOptions,
   recipeImportJobOptions,
   scheduledTasksJobOptions,
 } from "@norish/queue/config";
@@ -41,6 +42,7 @@ describe("Queue config", () => {
       autoTaggingJobOptions,
       autoCategorizationJobOptions,
       allergyDetectionJobOptions,
+      recipeAiEditJobOptions,
     ];
 
     for (const options of allOptions) {

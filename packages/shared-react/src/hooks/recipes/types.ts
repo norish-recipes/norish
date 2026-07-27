@@ -33,6 +33,8 @@ type SubscriptionProceduresContract = {
     onAutoCategorizationCompleted: { subscriptionOptions: SubscriptionOptionsFactory };
     onAllergyDetectionStarted: { subscriptionOptions: SubscriptionOptionsFactory };
     onAllergyDetectionCompleted: { subscriptionOptions: SubscriptionOptionsFactory };
+    onAiEditStarted: { subscriptionOptions: SubscriptionOptionsFactory };
+    onAiEditCompleted: { subscriptionOptions: SubscriptionOptionsFactory };
     onProcessingToast: { subscriptionOptions: SubscriptionOptionsFactory };
     onRecipeBatchCreated: { subscriptionOptions: SubscriptionOptionsFactory };
   };

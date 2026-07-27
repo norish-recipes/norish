@@ -14,6 +14,7 @@ import { startImageImportWorker } from "@norish/queue/image-import/worker";
 import { stopAllLazyWorkers } from "@norish/queue/lazy-worker-manager";
 import { startNutritionEstimationWorker } from "@norish/queue/nutrition-estimation/worker";
 import { startPasteImportWorker } from "@norish/queue/paste-import/worker";
+import { startRecipeAiEditWorker } from "@norish/queue/recipe-ai-edit/worker";
 import { startRecipeImportWorker } from "@norish/queue/recipe-import/worker";
 import { closeBullConnection } from "@norish/queue/redis/bullmq";
 import { closeAllQueues, getQueues, initializeQueues } from "@norish/queue/registry";
@@ -53,6 +54,7 @@ export async function startWorkers(): Promise<void> {
     startAutoTaggingWorker(),
     startAutoCategorizationWorker(),
     startAllergyDetectionWorker(),
+    startRecipeAiEditWorker(),
     startCaldavSyncWorker(),
   ]);
 

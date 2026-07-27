@@ -1,5 +1,6 @@
 import type { CreateRecipeHooksOptions } from "../types";
 
+import { createUseAiEdit, createUseAiEditMutation } from "./use-ai-edit-subscription";
 import { createUseAllergyDetectionQuery } from "./use-allergy-detection-query";
 import {
   createUseAllergyDetection,
@@ -43,6 +44,8 @@ export {
   createUseAutoCategorizationMutation,
   createUseAllergyDetection,
   createUseAllergyDetectionMutation,
+  createUseAiEdit,
+  createUseAiEditMutation,
   createUseConvertMutation,
   createUseNutritionSubscription,
   createUseNutritionMutation,
@@ -73,6 +76,8 @@ export function createRecipeFamilyHooks(options: CreateRecipeHooksOptions) {
     useAutoCategorizationMutation: createUseAutoCategorizationMutation(options),
     useAllergyDetection: createUseAllergyDetection(options),
     useAllergyDetectionMutation: createUseAllergyDetectionMutation(options),
+    useAiEdit: createUseAiEdit(options),
+    useAiEditMutation: createUseAiEditMutation(options),
     useConvertMutation: createUseConvertMutation(options),
     useNutritionSubscription: createUseNutritionSubscription(options),
     useNutritionMutation: createUseNutritionMutation(options),

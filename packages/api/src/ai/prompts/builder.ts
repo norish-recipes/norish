@@ -219,6 +219,51 @@ Analyze the provided images and extract the complete recipe data. If multiple im
 }
 
 /**
+ * Build a prompt for editing an existing recipe with AI.
+ *
+ * Reuses the recipe-extraction base prompt (so the output matches the same
+ * dual-system schema) and adds editing-specific rules: apply only the
+ * requested change and preserve everything else verbatim.
+ *
+ * @param currentRecipeJson - The current recipe serialized as JSON (dual-system).
+ * @param instruction - The user's natural-language edit instruction.
+ * @param options - Prompt configuration options (allergies, etc.).
+ * @returns The complete prompt string ready for the AI model.
+ */
+export async function buildRecipeEditPrompt(
+  currentRecipeJson: string,
+  instruction: string,
+  options: RecipeExtractionPromptOptions = {}
+): Promise<string> {
+  const { allergies, strictAllergyDetection = false } = options;
+
+  const basePrompt = await loadPrompt("recipe-extraction");
+  const allergyInstruction = buildAllergyInstruction(allergies, { strict: strictAllergyDetection });
+  const autoTaggingInstruction = await buildAutoTaggingPrompt({ embedded: true });
+
+  const editingRules = `
+EDITING TASK:
+You are editing an EXISTING recipe. Apply ONLY the change described in the instruction below.
+- Preserve every field that the instruction does not ask you to change, copying it verbatim.
+- Keep the metric and US versions of ingredients and instructions consistent with each other.
+- Return the COMPLETE recipe (all fields), not just the changed parts, matching the schema.
+- Do not invent unrelated changes.
+
+EDIT INSTRUCTION:
+${instruction}`;
+
+  const parts = [
+    basePrompt,
+    allergyInstruction,
+    autoTaggingInstruction,
+    editingRules,
+    `CURRENT RECIPE (JSON):\n${currentRecipeJson}`,
+  ];
+
+  return parts.join("\n");
+}
+
+/**
  * Build a recipe extraction prompt for video transcript extraction.
  *
  * @param transcript - The video transcript text.

@@ -218,6 +218,8 @@ describe("recipe share hooks", () => {
       useAutoCategorization: vi.fn(),
       useAllergyDetectionMutation: () => ({ mutate: vi.fn() }),
       useAllergyDetection: vi.fn(),
+      useAiEditMutation: () => ({ mutate: vi.fn() }),
+      useAiEdit: vi.fn(),
       useActiveAllergies: () => ({ allergies: [], allergySet: new Set<string>() }),
       useConvertMutation: () => ({
         convertMeasurements: vi.fn(),

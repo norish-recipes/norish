@@ -17,3 +17,5 @@ export { useAutoCategorizationMutation } from "./use-auto-categorization-mutatio
 export { useAutoCategorization } from "./use-auto-categorization";
 export { useAllergyDetectionMutation } from "./use-allergy-detection-mutation";
 export { useAllergyDetection } from "./use-allergy-detection";
+export { useAiEditMutation } from "./use-ai-edit-mutation";
+export { useAiEdit } from "./use-ai-edit";

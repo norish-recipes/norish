@@ -73,6 +73,16 @@ const onAllergyDetectionCompleted = createEnvelopeAwareSubscription(
   "allergyDetectionCompleted",
   "allergy detection completed"
 );
+const onAiEditStarted = createEnvelopeAwareSubscription(
+  recipeEmitter,
+  "aiEditStarted",
+  "ai edit started"
+);
+const onAiEditCompleted = createEnvelopeAwareSubscription(
+  recipeEmitter,
+  "aiEditCompleted",
+  "ai edit completed"
+);
 const onProcessingToast = createEnvelopeAwareSubscription(
   recipeEmitter,
   "processingToast",
@@ -104,6 +114,8 @@ export const recipesSubscriptions = router({
   onAutoCategorizationCompleted,
   onAllergyDetectionStarted,
   onAllergyDetectionCompleted,
+  onAiEditStarted,
+  onAiEditCompleted,
   onProcessingToast,
   onRecipeBatchCreated,
 });

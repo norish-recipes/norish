@@ -53,6 +53,9 @@ export type RecipeDetailContextValue = {
   // Allergy detection
   isDetectingAllergies: boolean;
   triggerAllergyDetection: () => void;
+  // AI edit
+  isAiEditing: boolean;
+  triggerAiEdit: (instruction: string) => void;
   // Allergies list
   allergies: string[];
   allergySet: Set<string>;
@@ -107,6 +110,10 @@ export type RecipeDetailAdapters = {
   useAutoCategorization: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
   useAllergyDetectionMutation: () => { mutate: (input: { recipeId: string }) => void };
   useAllergyDetection: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
+  useAiEditMutation: () => {
+    mutate: (input: { recipeId: string; version: number; instruction: string }) => void;
+  };
+  useAiEdit: (recipeId: string, onStart: () => void, onEnd: () => void) => void;
   useActiveAllergies: () => { allergies: string[]; allergySet: Set<string> };
   useConvertMutation: (recipeId: string) => {
     convertMeasurements: (targetSystem: MeasurementSystem, version: number) => void;
@@ -270,6 +277,27 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
       if (!recipe) return;
       allergyDetectionMutation.mutate({ recipeId: recipe.id });
     }, [recipe, allergyDetectionMutation]);
+
+    // AI edit hooks
+    const [isAiEditing, setIsAiEditing] = useState(false);
+    const aiEditMutation = adapters.useAiEditMutation();
+
+    adapters.useAiEdit(
+      recipeId,
+      () => setIsAiEditing(true),
+      () => setIsAiEditing(false)
+    );
+
+    const triggerAiEdit = useCallback(
+      (instruction: string) => {
+        if (!recipe) return;
+        // Loading state is driven by the aiEditStarted/Completed subscriptions
+        // (see adapters.useAiEdit above), so a failed/duplicate mutation can't
+        // leave the spinner stuck on.
+        aiEditMutation.mutate({ recipeId: recipe.id, version: recipe.version, instruction });
+      },
+      [recipe, aiEditMutation]
+    );
 
     // Get allergies
     const { allergies, allergySet } = adapters.useActiveAllergies();
@@ -445,6 +473,8 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         triggerAutoCategorize,
         isDetectingAllergies,
         triggerAllergyDetection,
+        isAiEditing,
+        triggerAiEdit,
         allergies,
         allergySet,
         userRating,
@@ -485,6 +515,8 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
         triggerAutoCategorize,
         isDetectingAllergies,
         triggerAllergyDetection,
+        isAiEditing,
+        triggerAiEdit,
         allergies,
         allergySet,
         userRating,

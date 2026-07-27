@@ -70,7 +70,17 @@
     "estimatingNutrition": "Estimerer næring...",
     "screenOn": "Skærm tændt",
     "keepScreenOn": "Hold skærm tændt",
-    "actionsLabel": "Handlinger"
+    "actionsLabel": "Handlinger",
+    "aiEdit": "Edit with AI",
+    "aiEditing": "Editing with AI..."
+  },
+  "aiEdit": {
+    "title": "Edit with AI",
+    "label": "What would you like to change?",
+    "placeholder": "e.g. Make it vegan, halve the servings, convert to metric...",
+    "hint": "The AI rewrites the recipe from your instruction. Existing photos are kept.",
+    "submit": "Apply with AI",
+    "maxCharacters": "Instruction must be {max} characters or fewer."
   },
   "sharePanel": {
     "title": "Del opskrift",
@@ -252,7 +262,11 @@
     "batchImported": "Opskrifter importeret",
     "batchImportedDescription": "{count} opskrifter importeret fra arkiv",
     "view": "Se",
-    "open": "Åbn"
+    "open": "Åbn",
+    "processingAiEdit": "Editing recipe with AI",
+    "aiEditComplete": "Recipe updated",
+    "aiEditStale": "Recipe changed, edit skipped",
+    "aiEditFailed": "AI edit failed"
   },
   "tags": {
     "panel": {

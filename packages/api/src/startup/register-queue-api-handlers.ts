@@ -3,6 +3,7 @@ import { categorizeRecipe } from "@norish/api/ai/auto-categorizer";
 import { generateTagsForRecipe } from "@norish/api/ai/auto-tagger";
 import { extractRecipeFromImages } from "@norish/api/ai/image-recipe-parser";
 import { estimateNutritionFromIngredients } from "@norish/api/ai/nutrition-estimator";
+import { editRecipeWithAI } from "@norish/api/ai/recipe-editor";
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
 import {
   deletePlannedItem,
@@ -31,6 +32,7 @@ export function registerApiHandlersForQueue(): void {
     extractRecipeFromImages,
     estimateNutritionFromIngredients,
     generateTagsForRecipe,
+    editRecipeWithAI,
     categorizeRecipe,
     detectAllergiesInRecipe,
     syncPlannedItem,

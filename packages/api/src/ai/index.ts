@@ -94,6 +94,9 @@ export type { RecipeExtractionOutput } from "./recipe-parser";
 
 export { extractRecipeFromImages } from "./image-recipe-parser";
 
+// Recipe editing (natural-language edits to an existing recipe)
+export { editRecipeWithAI } from "./recipe-editor";
+
 // Recipe extraction normalization utilities
 export {
   normalizeExtractionOutput,
