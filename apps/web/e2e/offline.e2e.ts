@@ -166,12 +166,34 @@ test("backend-down unseen navigation boots every Warm Set surface", async () => 
   await expect(page.getByTestId("offline-unavailable")).toBeVisible();
 });
 
+test("an offline grocery toggle survives navigation and a document cold launch", async () => {
+  await page.goto("/groceries");
+  const groceryCheckbox = page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME });
+
+  await expect(groceryCheckbox).not.toBeChecked();
+  await groceryCheckbox.press("Space");
+  await expect(groceryCheckbox).toBeChecked();
+  await expect.poll(() => readOutbox(page)).toHaveLength(1);
+
+  await page.goto("/calendar");
+  await page.goto("/groceries");
+  await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
+
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
+
+  const [entry] = await readOutbox(page);
+
+  expect(entry?.path).toBe("groceries.toggle");
+  expect(entry?.status).toBe("pending");
+});
+
 test("an offline grocery add is durably queued for its owner", async () => {
   await page.goto("/groceries");
   await addGroceryViaUi(page, "E2E Dormant Milk");
 
-  await expect.poll(() => readOutbox(page)).toHaveLength(1);
-  const [entry] = await readOutbox(page);
+  await expect.poll(() => readOutbox(page)).toHaveLength(2);
+  const entry = (await readOutbox(page)).find(({ path }) => path === "groceries.create");
 
   expect(entry?.path).toBe("groceries.create");
   expect(entry?.status).toBe("pending");
@@ -190,11 +212,11 @@ test("a bypassed identity change isolates the incoming account and keeps the que
   await expect(page.getByText(SEEDED_GROCERY_NAME)).toHaveCount(0);
   await expect(page.getByText("E2E Dormant Milk")).toHaveCount(0);
 
-  // A's entry is retained dormant under A — never replayed as B.
+  // A's entries are retained dormant under A — never replayed as B.
   const entries = await readOutbox(page);
 
-  expect(entries).toHaveLength(1);
-  expect(entries[0]?.path).toBe("groceries.create");
+  expect(entries).toHaveLength(2);
+  expect(entries.map(({ path }) => path)).toEqual(["groceries.toggle", "groceries.create"]);
 });
 
 test("the dormant queue replays only once its owner signs in again", async () => {

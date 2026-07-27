@@ -70,9 +70,9 @@ function writeBootOwner(ownerId: string): void {
   }
 }
 
-/** Only fully-successful queries are worth persisting for offline reads. */
-const shouldDehydrateQuery = (query: { state: { status: string } }) =>
-  query.state.status === "success";
+/** Persist usable read data even when its latest background refetch failed. */
+const shouldDehydrateQuery = (query: { state: { data: unknown } }) =>
+  query.state.data !== undefined;
 
 function createQueryClient(): QueryClient {
   return new QueryClient({

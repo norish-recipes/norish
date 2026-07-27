@@ -104,6 +104,80 @@ describe("createCacheManager", () => {
     expect(await idb.get(KEYVAL_STORE, queryCacheKey("u1"))).toBeDefined();
   });
 
+  it("restores last successful data after background refetches fail", async () => {
+    const manager = createCacheManager(idb);
+    const cachedReads = [
+      {
+        key: [["groceries", "list"], { type: "query" }],
+        value: { items: [{ id: "g1", name: "Oat milk" }] },
+      },
+      {
+        key: [
+          ["calendar", "listItems"],
+          { input: { startISO: "2026-07-27", endISO: "2026-08-03" }, type: "query" },
+        ],
+        value: [{ id: "plan-1", recipeId: "r1" }],
+      },
+      {
+        key: [["recipes", "list"], { input: {}, type: "infinite" }],
+        value: { pages: [{ items: [{ id: "r1", name: "Soup" }] }], pageParams: [null] },
+      },
+      {
+        key: [["recipes", "get"], { input: { id: "r1" }, type: "query" }],
+        value: { id: "r1", name: "Soup" },
+      },
+      {
+        key: [["user", "get"], { type: "query" }],
+        value: { id: "u1", name: "Offline User" },
+      },
+    ] as const;
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+
+    for (const { key, value } of cachedReads) {
+      manager.queryClient.setQueryData(key, value);
+      await expect(
+        manager.queryClient.fetchQuery({
+          queryKey: key,
+          queryFn: () => Promise.reject(new Error("backend unavailable")),
+          retry: false,
+          staleTime: 0,
+        })
+      ).rejects.toThrow("backend unavailable");
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const restored = createCacheManager(idb);
+
+    await restored.reconcileIdentity({ sessionUserId: null, isOffline: true });
+
+    for (const { key, value } of cachedReads) {
+      expect(restored.queryClient.getQueryData(key)).toEqual(value);
+    }
+  });
+
+  it("does not restore a query whose initial request failed without data", async () => {
+    const manager = createCacheManager(idb);
+    const failedKey = [["groceries", "list"], { type: "query" }] as const;
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    await expect(
+      manager.queryClient.fetchQuery({
+        queryKey: failedKey,
+        queryFn: () => Promise.reject(new Error("backend unavailable")),
+        retry: false,
+      })
+    ).rejects.toThrow("backend unavailable");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const restored = createCacheManager(idb);
+
+    await restored.reconcileIdentity({ sessionUserId: null, isOffline: true });
+
+    expect(restored.queryClient.getQueryState(failedKey)).toBeUndefined();
+  });
+
   it("restores entries at the cache's own maxAge as their gcTime (ADR-0008 durability)", async () => {
     await seedOwnerCache(idb, "u1", ["recipes", "get", "r1"], { id: "r1" });
     window.localStorage.setItem("norish.offline.cache-owner", "u1");
