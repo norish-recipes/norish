@@ -32,6 +32,8 @@ export type RecipeSubscriptionEvents = {
   autoCategorizationCompleted: { recipeId: string };
   allergyDetectionStarted: { recipeId: string };
   allergyDetectionCompleted: { recipeId: string };
+  aiEditStarted: { recipeId: string };
+  aiEditCompleted: { recipeId: string };
   processingToast: {
     recipeId: string;
     titleKey: string;

@@ -23,6 +23,7 @@ import { useTranslations } from "next-intl";
 import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 import { useRecipeContextRequired } from "../context";
+import AiEditModal from "./ai-edit-modal";
 import RecipeSharePanel from "./recipe-share-panel";
 import { useWakeLockContext } from "./wake-lock-context";
 
@@ -44,6 +45,7 @@ export default function ActionsMenu({ id }: Props) {
   const [openCalendar, setOpenCalendar] = React.useState(false);
   const [openGroceries, setOpenGroceries] = React.useState(false);
   const [openSharePanel, setOpenSharePanel] = React.useState(false);
+  const [openAiEdit, setOpenAiEdit] = React.useState(false);
   const {
     isOpen: isDeleteModalOpen,
     open: onDeleteModalOpen,
@@ -63,6 +65,8 @@ export default function ActionsMenu({ id }: Props) {
     triggerAllergyDetection,
     isEstimatingNutrition,
     estimateNutrition,
+    isAiEditing,
+    triggerAiEdit,
   } = useRecipeContextRequired();
   const { allergies } = useActiveAllergies();
   const { isSupported, isActive, toggle } = useWakeLockContext();
@@ -139,6 +143,18 @@ export default function ActionsMenu({ id }: Props) {
       });
     }
 
+    if (isAIEnabled && canEdit) {
+      items.push({
+        key: "ai-edit",
+        label: isAiEditing ? t("aiEditing") : t("aiEdit"),
+        icon: <SparklesIcon className="size-4" />,
+        onPress: () => setOpenAiEdit(true),
+        labelClassName: cssAIGradientText,
+        iconClassName: cssAIIconColor,
+        isDisabled: isAiEditing,
+      });
+    }
+
     // Show allergy detection when AI is enabled, user can edit, and allergies are configured
     const hasAllergies = allergies.length > 0;
     if (isAIEnabled && canEdit && hasAllergies) {
@@ -197,6 +213,7 @@ export default function ActionsMenu({ id }: Props) {
     estimateNutrition,
     isCategorizing,
     triggerAutoCategorize,
+    isAiEditing,
   ]);
   return (
     <>
@@ -250,6 +267,8 @@ export default function ActionsMenu({ id }: Props) {
       <MiniCalendar open={openCalendar} recipeId={id} onOpenChange={setOpenCalendar} />
 
       <RecipeSharePanel open={openSharePanel} onOpenChange={setOpenSharePanel} />
+
+      <AiEditModal isOpen={openAiEdit} onOpenChange={setOpenAiEdit} onSubmit={triggerAiEdit} />
 
       <DeleteRecipeModal
         isOpen={isDeleteModalOpen}

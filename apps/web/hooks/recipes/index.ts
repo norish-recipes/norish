@@ -35,6 +35,8 @@ export {
   useAllergyDetectionMutation,
 } from "./use-allergy-detection-subscription";
 
+export { useAiEdit, useAiEditMutation } from "./use-ai-edit-subscription";
+
 export { useNutritionQuery } from "./use-nutrition-query";
 export { useNutritionMutation } from "./use-nutrition-mutation";
 export { useNutritionSubscription } from "./use-nutrition-subscription";

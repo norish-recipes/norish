@@ -70,7 +70,17 @@
     "estimatingNutrition": "Оцениваем пищевую ценность...",
     "screenOn": "Экран включён",
     "keepScreenOn": "Не выключать экран",
-    "actionsLabel": "Действия"
+    "actionsLabel": "Действия",
+    "aiEdit": "Edit with AI",
+    "aiEditing": "Editing with AI..."
+  },
+  "aiEdit": {
+    "title": "Edit with AI",
+    "label": "What would you like to change?",
+    "placeholder": "e.g. Make it vegan, halve the servings, convert to metric...",
+    "hint": "The AI rewrites the recipe from your instruction. Existing photos are kept.",
+    "submit": "Apply with AI",
+    "maxCharacters": "Instruction must be {max} characters or fewer."
   },
   "sharePanel": {
     "title": "Поделиться рецептом",
@@ -252,7 +262,11 @@
     "batchImported": "Рецепты импортированы",
     "batchImportedDescription": "{count} {count, plural, one {рецепт} few {рецепта} many {рецептов} other {рецепта}} импортировано из архива",
     "view": "Просмотр",
-    "open": "Открыть"
+    "open": "Открыть",
+    "processingAiEdit": "Editing recipe with AI",
+    "aiEditComplete": "Recipe updated",
+    "aiEditStale": "Recipe changed, edit skipped",
+    "aiEditFailed": "AI edit failed"
   },
   "tags": {
     "panel": {

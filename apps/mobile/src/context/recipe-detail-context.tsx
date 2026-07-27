@@ -1,6 +1,8 @@
 import { useRecipesContext } from "@/context/recipes-context";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import {
+  useAiEdit,
+  useAiEditMutation,
   useAllergyDetection,
   useAllergyDetectionMutation,
   useAutoCategorization,
@@ -37,6 +39,8 @@ const { RecipeDetailProvider, useRecipeContext, useRecipeContextRequired } =
     useAutoCategorization,
     useAllergyDetectionMutation,
     useAllergyDetection,
+    useAiEditMutation,
+    useAiEdit,
     useActiveAllergies,
     useConvertMutation,
     useRatingQuery,

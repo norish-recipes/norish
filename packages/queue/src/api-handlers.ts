@@ -1,5 +1,5 @@
 import type { AIResult } from "@norish/shared-server/ai/types/result";
-import type { RecipeCategory, Slot } from "@norish/shared/contracts";
+import type { FullRecipeDTO, RecipeCategory, Slot } from "@norish/shared/contracts";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 
@@ -67,6 +67,12 @@ export interface QueueApiHandlers {
     }>
   ): Promise<AIResult<QueueNutritionEstimate>>;
   generateTagsForRecipe(recipe: QueueRecipeSummary): Promise<AIResult<string[]>>;
+  editRecipeWithAI(
+    recipe: FullRecipeDTO,
+    instruction: string,
+    recipeId: string,
+    allergies?: string[]
+  ): Promise<AIResult<FullRecipeInsertDTO>>;
   categorizeRecipe(recipe: QueueRecipeSummary): Promise<AIResult<RecipeCategory[]>>;
   detectAllergiesInRecipe(
     recipe: QueueRecipeSummary,

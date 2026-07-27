@@ -51,7 +51,7 @@ import {
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { getConfig } from "./server-config";
 import { createManyRecipeStepsTx } from "./steps";
-import { attachTagsToRecipeByInputTx } from "./tags";
+import { attachTagsToRecipeByInputTx, getRecipeTagNamesTx } from "./tags";
 
 type RecipeViewPolicy = RecipePermissionPolicy["view"];
 
@@ -1360,6 +1360,131 @@ export async function updateRecipeWithRefs(
     // Replace videos if provided
     if (payload.videos !== undefined) {
       await syncRecipeVideosTx(tx, recipeId, payload.videos);
+    }
+
+    return appliedOutcome(undefined);
+  });
+}
+
+/**
+ * Apply an AI-generated edit to an existing recipe.
+ *
+ * Unlike {@link updateRecipeWithRefs} (which targets a single active system and
+ * backs the manual edit form), this replaces BOTH measurement systems'
+ * ingredients and steps in one version-guarded transaction, and MERGES tags
+ * with the recipe's existing set so an unrelated edit (e.g. "halve servings")
+ * can't silently drop manually-added or allergy tags. Media (images/videos) and
+ * the source URL are intentionally left untouched — omit them from `input`.
+ */
+export async function applyRecipeAiEdit(
+  recipeId: string,
+  userId: string,
+  input: FullRecipeUpdateDTO,
+  version: number
+): Promise<MutationOutcome<void>> {
+  const parsed = FullRecipeUpdateSchema.safeParse(input);
+
+  if (!parsed.success) {
+    throw new Error("Invalid FullRecipeUpdateDTO");
+  }
+
+  const payload = parsed.data;
+
+  dbLogger.debug({ recipeId, userId, version }, "Applying AI recipe edit");
+
+  // Explicit shapes: the zod-derived payload types resolve to `unknown` under
+  // the repo's drizzle-zod/zod version skew, so we type the child collections
+  // locally to keep this function type-clean.
+  type EditIngredient = {
+    id?: string;
+    ingredientId?: string | null;
+    ingredientName?: string;
+    amount?: number | null;
+    unit?: string | null;
+    order?: number;
+    systemUsed?: MeasurementSystem;
+  };
+  type EditStep = { step: string; order?: number; systemUsed?: MeasurementSystem };
+
+  const editTags = payload.tags as { name: string }[] | undefined;
+  const editIngredients = payload.recipeIngredients as EditIngredient[] | undefined;
+  const editSteps = payload.steps as EditStep[] | undefined;
+
+  return await db.transaction(async (tx) => {
+    const updateData: any = {};
+
+    if (payload.name !== undefined) updateData.name = stripHtmlTags(payload.name);
+    if (payload.description !== undefined)
+      updateData.description = payload.description ? stripHtmlTags(payload.description) : null;
+    if (payload.notes !== undefined) updateData.notes = payload.notes;
+    if (payload.servings !== undefined) updateData.servings = payload.servings;
+    if (payload.prepMinutes !== undefined) updateData.prepMinutes = payload.prepMinutes;
+    if (payload.cookMinutes !== undefined) updateData.cookMinutes = payload.cookMinutes;
+    if (payload.totalMinutes !== undefined) updateData.totalMinutes = payload.totalMinutes;
+    if (payload.systemUsed !== undefined) updateData.systemUsed = payload.systemUsed;
+    if (payload.calories !== undefined) updateData.calories = payload.calories;
+    if (payload.categories !== undefined && payload.categories?.length > 0)
+      updateData.categories = payload.categories;
+    if (payload.fat !== undefined) updateData.fat = payload.fat;
+    if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
+    if (payload.protein !== undefined) updateData.protein = payload.protein;
+
+    updateData.updatedAt = new Date();
+
+    const [updatedRecipeRow] = await tx
+      .update(recipes)
+      .set({ ...updateData, version: sql`${recipes.version} + 1` })
+      .where(and(eq(recipes.id, recipeId), eq(recipes.version, version)))
+      .returning({ id: recipes.id });
+
+    if (!updatedRecipeRow) {
+      return staleOutcome();
+    }
+
+    // Merge tags with the existing set (preserve manual/allergy tags).
+    if (editTags !== undefined) {
+      const existing = await getRecipeTagNamesTx(tx, recipeId);
+      const existingLower = new Set(existing.map((t) => t.toLowerCase()));
+      const merged = [
+        ...existing,
+        ...editTags.map((t) => t.name).filter((name) => !existingLower.has(name.toLowerCase())),
+      ];
+
+      await attachTagsToRecipeByInputTx(tx, recipeId, merged);
+    }
+
+    // Replace ingredients for each system the edit produced. Only touch a
+    // system that has items so a partial AI response can't wipe a whole view.
+    if (editIngredients !== undefined) {
+      for (const system of ["metric", "us"] as const) {
+        const items = editIngredients.filter((ri) => ri.systemUsed === system);
+
+        if (items.length === 0) continue;
+
+        await syncRecipeIngredientsTx(
+          tx,
+          recipeId,
+          system,
+          items.map((ri) => ({
+            ...ri,
+            recipeId,
+            ingredientId: ri.ingredientId ?? null,
+            amount: ri.amount ?? null,
+            order: ri.order ?? 0,
+          }))
+        );
+      }
+    }
+
+    // Replace steps for each system the edit produced.
+    if (editSteps !== undefined) {
+      for (const system of ["metric", "us"] as const) {
+        const items = editSteps.filter((s) => s.systemUsed === system);
+
+        if (items.length === 0) continue;
+
+        await syncRecipeStepsTx(tx, recipeId, system, items);
+      }
     }
 
     return appliedOutcome(undefined);

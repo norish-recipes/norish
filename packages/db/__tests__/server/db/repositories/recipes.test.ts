@@ -8,7 +8,13 @@
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
+import {
+  applyRecipeAiEdit,
+  createRecipeWithRefs,
+  getRecipeFull,
+  updateRecipeWithRefs,
+} from "@norish/db/repositories/recipes";
+import { mergeTagsIntoRecipe } from "@norish/db/repositories/tags";
 
 import {
   createTestIngredient,
@@ -580,5 +586,146 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
       expect(createdSteps.map((step) => Number(step.order)).sort()).toEqual([0, 1]);
       expect(createdSteps.every((step) => step.step === "Stir well")).toBe(true);
     });
+  });
+});
+
+describe("Recipe Repository - applyRecipeAiEdit", () => {
+  let testUserId: string;
+  let testRecipeId: string;
+  const testBase = new RepositoryTestBase("test_recipes_aiedit");
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    const [user, recipe] = await testBase.beforeEachTest();
+
+    testUserId = user.id;
+    testRecipeId = recipe.id;
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  it("replaces BOTH measurement systems without duplicating or leaving one stale", async () => {
+    const flour = await createTestIngredient({ name: "Flour" });
+    const sugar = await createTestIngredient({ name: "Sugar" });
+
+    await createTestRecipeIngredients(testRecipeId, flour.id, "metric", {
+      amount: "250",
+      unit: "g",
+      order: "0",
+    });
+    await createTestRecipeIngredients(testRecipeId, sugar.id, "metric", {
+      amount: "100",
+      unit: "g",
+      order: "1",
+    });
+    await createTestRecipeIngredients(testRecipeId, flour.id, "us", {
+      amount: "2",
+      unit: "cup",
+      order: "0",
+    });
+    await createTestRecipeIngredients(testRecipeId, sugar.id, "us", {
+      amount: "0.5",
+      unit: "cup",
+      order: "1",
+    });
+    await createTestRecipeStep(testRecipeId, "metric", { step: "Bake at 180C", order: "0" });
+    await createTestRecipeStep(testRecipeId, "us", { step: "Bake at 350F", order: "0" });
+
+    expect(await getRecipeIngredients(testRecipeId)).toHaveLength(4);
+
+    const before = (await getRecipeFull(testRecipeId))!;
+
+    // AI edit returns a full dual-system recipe (1 metric + 1 US each).
+    const outcome = await applyRecipeAiEdit(
+      testRecipeId,
+      testUserId,
+      {
+        name: "Vegan Bake",
+        systemUsed: "metric",
+        recipeIngredients: [
+          {
+            ingredientId: flour.id,
+            ingredientName: "Flour",
+            amount: 300,
+            unit: "g",
+            order: 0,
+            systemUsed: "metric",
+          },
+          {
+            ingredientId: flour.id,
+            ingredientName: "Flour",
+            amount: 2.5,
+            unit: "cup",
+            order: 0,
+            systemUsed: "us",
+          },
+        ],
+        steps: [
+          { step: "Bake at 200C", order: 0, systemUsed: "metric" },
+          { step: "Bake at 400F", order: 0, systemUsed: "us" },
+        ],
+      },
+      before.version
+    );
+
+    expect(outcome.stale).toBeFalsy();
+
+    // Exactly one ingredient per system — no doubling, US not left stale.
+    const after = await getRecipeIngredients(testRecipeId);
+    const metric = after.filter((ri) => ri.systemUsed === "metric");
+    const us = after.filter((ri) => ri.systemUsed === "us");
+
+    expect(metric).toHaveLength(1);
+    expect(us).toHaveLength(1);
+    expect(metric[0].amount).toBe("300.000");
+    expect(us[0].amount).toBe("2.500");
+
+    const afterSteps = await getRecipeSteps(testRecipeId);
+
+    expect(afterSteps.filter((s) => s.systemUsed === "metric")).toHaveLength(1);
+    expect(afterSteps.filter((s) => s.systemUsed === "us")).toHaveLength(1);
+    expect(afterSteps.find((s) => s.systemUsed === "metric")!.step).toBe("Bake at 200C");
+    expect(afterSteps.find((s) => s.systemUsed === "us")!.step).toBe("Bake at 400F");
+  });
+
+  it("merges tags with the existing set instead of replacing them", async () => {
+    await mergeTagsIntoRecipe(testRecipeId, ["manual-tag"]);
+
+    const before = (await getRecipeFull(testRecipeId))!;
+
+    await applyRecipeAiEdit(
+      testRecipeId,
+      testUserId,
+      { name: "Tagged", tags: [{ name: "vegan" }] },
+      before.version
+    );
+
+    const after = (await getRecipeFull(testRecipeId))!;
+    const names = after.tags.map((t) => t.name.toLowerCase());
+
+    expect(names).toContain("manual-tag");
+    expect(names).toContain("vegan");
+  });
+
+  it("returns stale and makes no changes when the version does not match", async () => {
+    const before = (await getRecipeFull(testRecipeId))!;
+
+    const outcome = await applyRecipeAiEdit(
+      testRecipeId,
+      testUserId,
+      { name: "Should Not Apply" },
+      before.version + 999
+    );
+
+    expect(outcome.stale).toBe(true);
+
+    const after = (await getRecipeFull(testRecipeId))!;
+
+    expect(after.name).toBe(before.name);
   });
 });

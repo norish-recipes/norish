@@ -151,6 +151,12 @@ export const RecipeUpdateInputSchema = z.object({
   data: FullRecipeUpdateSchema,
 });
 
+export const RecipeAiEditInputSchema = z.object({
+  recipeId: z.uuid(),
+  version: z.number().int().positive(),
+  instruction: z.string().trim().min(1).max(2000),
+});
+
 // Image import schemas
 export const OcrImportFileSchema = z.object({
   data: z.string(), // base64 encoded

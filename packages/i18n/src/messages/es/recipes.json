@@ -70,7 +70,17 @@
     "estimatingNutrition": "Calculando nutrición...",
     "screenOn": "Pantalla encendida",
     "keepScreenOn": "Mantener pantalla encendida",
-    "actionsLabel": "Acciones"
+    "actionsLabel": "Acciones",
+    "aiEdit": "Edit with AI",
+    "aiEditing": "Editing with AI..."
+  },
+  "aiEdit": {
+    "title": "Edit with AI",
+    "label": "What would you like to change?",
+    "placeholder": "e.g. Make it vegan, halve the servings, convert to metric...",
+    "hint": "The AI rewrites the recipe from your instruction. Existing photos are kept.",
+    "submit": "Apply with AI",
+    "maxCharacters": "Instruction must be {max} characters or fewer."
   },
   "sharePanel": {
     "title": "Compartir receta",
@@ -252,7 +262,11 @@
     "batchImported": "Recetas importadas",
     "batchImportedDescription": "{count} recetas importadas desde el archivo",
     "view": "Ver",
-    "open": "Abrir"
+    "open": "Abrir",
+    "processingAiEdit": "Editing recipe with AI",
+    "aiEditComplete": "Recipe updated",
+    "aiEditStale": "Recipe changed, edit skipped",
+    "aiEditFailed": "AI edit failed"
   },
   "tags": {
     "panel": {

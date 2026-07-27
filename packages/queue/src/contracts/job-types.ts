@@ -111,6 +111,20 @@ export interface AllergyDetectionJobData {
   householdKey: string;
 }
 
+export interface RecipeAiEditJobData {
+  recipeId: string;
+  userId: string;
+  householdKey: string;
+  /** Natural-language instruction describing the edit to apply. */
+  instruction: string;
+  /** Recipe version captured when the job was enqueued, for optimistic concurrency. */
+  version: number;
+}
+
+export type AddRecipeAiEditJobResult =
+  | { status: "queued"; job: Job<RecipeAiEditJobData> }
+  | { status: "duplicate"; existingJobId: string };
+
 export type AddAllergyDetectionJobResult =
   | { status: "queued"; job: Job<AllergyDetectionJobData> }
   | { status: "duplicate"; existingJobId: string }

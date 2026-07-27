@@ -16,6 +16,7 @@ export {
   buildRecipeExtractionPrompt,
   buildImageExtractionPrompt,
   buildVideoExtractionPrompt,
+  buildRecipeEditPrompt,
   type RecipeExtractionPromptOptions,
   type VideoExtractionPromptOptions,
 } from "./builder";

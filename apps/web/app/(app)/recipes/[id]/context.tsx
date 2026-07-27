@@ -4,6 +4,8 @@ import { useRecipesContext } from "@/context/recipes-context";
 import { useFavoritesMutation } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
 import {
+  useAiEdit,
+  useAiEditMutation,
   useAllergyDetection,
   useAllergyDetectionMutation,
   useAutoCategorization,
@@ -42,6 +44,8 @@ const {
   useAutoCategorization,
   useAllergyDetectionMutation,
   useAllergyDetection,
+  useAiEditMutation,
+  useAiEdit,
   useActiveAllergies,
   useConvertMutation,
   useRatingQuery,

@@ -13,6 +13,7 @@ import {
   getRandomRecipeCandidates,
   getRecipeFull,
   listRecipes,
+  RecipeAiEditInputSchema,
   RecipeConvertInputSchema,
   RecipeDeleteInputSchema,
   RecipeGetInputSchema,
@@ -32,6 +33,7 @@ import {
   addImportJob,
   addNutritionEstimationJob,
   addPasteImportJob,
+  addRecipeAiEditJob,
   preparePasteImport,
 } from "@norish/queue";
 import { getQueues } from "@norish/queue/registry";
@@ -929,6 +931,54 @@ const triggerAllergyDetection = authedProcedure
     return { success: true };
   });
 
+const aiEdit = authedProcedure
+  .input(RecipeAiEditInputSchema)
+  .mutation(async ({ ctx, input }) => {
+    const { recipeId, instruction, version } = input;
+
+    log.info({ userId: ctx.user.id, recipeId }, "Queueing AI edit for recipe");
+
+    const aiEnabled = await checkAIEnabled();
+
+    if (!aiEnabled) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "AI features are disabled",
+      });
+    }
+
+    // Enforce edit permission (also throws NOT_FOUND if the recipe is missing).
+    await assertRecipeAccess(ctx, recipeId, "edit");
+
+    const queues = getQueues();
+    const result = await addRecipeAiEditJob(queues.recipeAiEdit, {
+      recipeId,
+      userId: ctx.user.id,
+      householdKey: ctx.householdKey,
+      instruction,
+      version,
+    });
+
+    if (result.status === "duplicate") {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "An AI edit is already in progress for this recipe",
+      });
+    }
+
+    const policy = await getRecipePermissionPolicy();
+
+    emitByPolicy(
+      recipeEmitter,
+      policy.view,
+      { userId: ctx.user.id, householdKey: ctx.householdKey },
+      "aiEditStarted",
+      { recipeId }
+    );
+
+    return { success: true };
+  });
+
 export const recipesProcedures = router({
   list: listProcedure,
   get: getProcedure,
@@ -944,6 +994,7 @@ export const recipesProcedures = router({
   triggerAutoTag,
   triggerAutoCategorize,
   triggerAllergyDetection,
+  aiEdit,
   reserveId,
   autocomplete,
   updateCategories,
