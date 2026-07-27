@@ -73,7 +73,10 @@ export async function publishEnrichmentRecipeUpdated(
   data: RecipeEnrichmentJobData,
   recipe: FullRecipeDTO
 ): Promise<void> {
-  emitByPolicy(recipeEmitter, await viewPolicy(), emitContext(data), "updated", { recipe });
+  emitByPolicy(recipeEmitter, await viewPolicy(), emitContext(data), "updated", {
+    recipe,
+    source: "enrichment",
+  });
 }
 
 async function viewPolicy() {

@@ -84,10 +84,10 @@ export async function enrichRecipe(
   }
 
   const automatic = await getAutomaticEnrichmentConfig();
-  const needsAllergies = kinds.includes("allergy-detection");
-  const householdHasAllergies = needsAllergies ? await loadHouseholdHasAllergies(context) : false;
 
   const attempts = kinds.map(async (kind): Promise<RecipeEnrichmentEnrollment> => {
+    const householdHasAllergies =
+      kind === "allergy-detection" ? await loadHouseholdHasAllergies(context) : false;
     const eligibility = evaluate(kind, {
       recipe,
       origin: request.origin,
@@ -125,7 +125,7 @@ export async function enrichRecipe(
 
     log.error(
       { recipeId: context.recipeId, kind, origin: request.origin, err: result.reason },
-      "Failed to queue Recipe Enrichment job"
+      "Failed to enroll Recipe Enrichment job"
     );
 
     return { kind, status: "failed-to-queue", error };

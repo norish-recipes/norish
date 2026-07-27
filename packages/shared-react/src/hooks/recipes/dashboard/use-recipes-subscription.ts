@@ -79,6 +79,7 @@ export function createUseRecipesSubscription(
                     prepMinutes: updatedRecipe.prepMinutes,
                     cookMinutes: updatedRecipe.cookMinutes,
                     totalMinutes: updatedRecipe.totalMinutes,
+                    calories: updatedRecipe.calories,
                     tags: updatedRecipe.tags,
                     categories: updatedRecipe.categories,
                     updatedAt: updatedRecipe.updatedAt,
@@ -150,10 +151,14 @@ export function createUseRecipesSubscription(
         trpc.recipes.onUpdated.subscriptionOptions(undefined, {
           onData: ({ payload }: any) => {
             updateRecipeInList(payload.recipe);
-            queryClient.invalidateQueries({
-              queryKey: [["recipes", "get"], { input: { id: payload.recipe.id }, type: "query" }],
-            });
-            queryClient.invalidateQueries({ queryKey: [["calendar", "listRecipes"]] });
+            queryClient.setQueryData(
+              trpc.recipes.get.queryKey({ id: payload.recipe.id }),
+              payload.recipe
+            );
+
+            if (payload.source !== "enrichment") {
+              queryClient.invalidateQueries({ queryKey: [["calendar", "listRecipes"]] });
+            }
           },
         })
       )

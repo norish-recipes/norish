@@ -229,6 +229,21 @@ describe("automatic enrollment", () => {
     expect(results.filter((r) => r.status === "queued")).toHaveLength(3);
   });
 
+  it("keeps enrolling siblings when allergy lookup throws", async () => {
+    getAllergiesForUsers.mockRejectedValue(new Error("allergy database is down"));
+
+    const results = await enrichRecipe(context, { origin: "automatic" });
+
+    expect(outcome(results, "allergy-detection")).toEqual({
+      kind: "allergy-detection",
+      status: "failed-to-queue",
+      error: "allergy database is down",
+    });
+    expect(outcome(results, "auto-tagging")?.status).toBe("queued");
+    expect(outcome(results, "auto-categorization")?.status).toBe("queued");
+    expect(outcome(results, "nutrition-estimation")?.status).toBe("queued");
+  });
+
   it("skips everything when the recipe can no longer be loaded", async () => {
     getRecipeFull.mockResolvedValue(null);
 

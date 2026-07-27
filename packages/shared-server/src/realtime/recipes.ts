@@ -22,7 +22,7 @@ export type RecipeSubscriptionEvents = {
   shareRevoked: RecipeShareLifecycleEventDto;
   shareReactivated: RecipeShareLifecycleEventDto;
   shareDeleted: RecipeShareLifecycleEventDto;
-  updated: { recipe: FullRecipeDTO };
+  updated: { recipe: FullRecipeDTO; source?: "enrichment" };
   deleted: { id: string };
   converted: { recipe: FullRecipeDTO };
   failed: { reason: string; recipeId?: string; url?: string };
