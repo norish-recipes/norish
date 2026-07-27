@@ -48,6 +48,11 @@ export const recipeExtractionSchema = z
       .array(z.string())
       .nullable()
       .describe("Tags the source explicitly lists. Do not infer tags the source does not state."),
+    allergyIndications: z
+      .array(z.string())
+      .describe(
+        "Allergy or allergen indications the source explicitly states, such as a Contains statement. Empty when the source states none; never infer from ingredients."
+      ),
     categories: z
       .array(z.string())
       .describe(

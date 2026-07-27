@@ -269,6 +269,12 @@
   },
   "enrichment": {
     "failed": "Falha no enriquecimento",
+    "states": {
+      "queued": "Na fila",
+      "processing": "Em andamento",
+      "succeeded": "Concluído",
+      "failed": "A última execução falhou"
+    },
     "kinds": {
       "auto-tagging": "Marcação automática",
       "allergy-detection": "Detecção de alergias",

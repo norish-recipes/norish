@@ -5,9 +5,12 @@
  * Connection management is handled by @norish/queue/redis/bullmq module.
  */
 
-import type { DefaultJobOptions, WorkerOptions } from "bullmq";
+import type { DefaultJobOptions, Job, Processor, WorkerOptions } from "bullmq";
 
 import type { JobRetentionConfig } from "@norish/config/zod/server-config";
+
+import { createLazyWorker, stopLazyWorker } from "./lazy-worker-manager";
+import { getBullClient } from "./redis/bullmq";
 
 /**
  * Queue names for all background job queues
@@ -25,6 +28,11 @@ export const QUEUE_NAMES = {
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
+
+export interface LazyWorkerController {
+  start: () => Promise<void>;
+  stop: () => Promise<void>;
+}
 
 /**
  * Base worker options shared across all workers.
@@ -71,6 +79,34 @@ export const WORKER_CONCURRENCY = {
   [QUEUE_NAMES.AUTO_CATEGORIZATION]: 2,
   [QUEUE_NAMES.ALLERGY_DETECTION]: 2,
 } as const;
+
+/**
+ * Define the standard lifecycle and configuration for an on-demand worker.
+ *
+ * Queue-specific modules own only their processor and failure policy. Redis,
+ * stalled recovery, concurrency, registration, and shutdown stay consistent.
+ */
+export function defineLazyWorker<T>(
+  queueName: QueueName,
+  processor: Processor<T>,
+  onFailed?: (job: Job<T> | undefined, error: Error) => void | Promise<void>
+): LazyWorkerController {
+  return {
+    start: () =>
+      createLazyWorker(
+        queueName,
+        processor,
+        {
+          connection: getBullClient(),
+          ...baseWorkerOptions,
+          stalledInterval: STALLED_INTERVAL[queueName],
+          concurrency: WORKER_CONCURRENCY[queueName],
+        },
+        onFailed
+      ),
+    stop: () => stopLazyWorker(queueName),
+  };
+}
 
 export const RECIPE_IMPORT_PROCESSING_TIMEOUT_MS = 30 * 60 * 1000;
 

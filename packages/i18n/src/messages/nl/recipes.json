@@ -269,6 +269,12 @@
   },
   "enrichment": {
     "failed": "Verrijking mislukt",
+    "states": {
+      "queued": "In de wachtrij",
+      "processing": "Bezig",
+      "succeeded": "Voltooid",
+      "failed": "Laatste poging mislukt"
+    },
     "kinds": {
       "auto-tagging": "Automatisch taggen",
       "allergy-detection": "Allergiedetectie",

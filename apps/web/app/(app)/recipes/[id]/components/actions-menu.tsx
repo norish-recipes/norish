@@ -41,6 +41,7 @@ type MenuItem = {
   isDisabled?: boolean;
   /** Secondary line under the label, e.g. a quiet enrichment failure. */
   description?: string;
+  descriptionClassName?: string;
 };
 export default function ActionsMenu({ id }: Props) {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
@@ -59,6 +60,7 @@ export default function ActionsMenu({ id }: Props) {
   const { allergies } = useActiveAllergies();
   const { isSupported, isActive, toggle } = useWakeLockContext();
   const t = useTranslations("recipes.actions");
+  const tEnrichment = useTranslations("recipes.enrichment");
   const canEdit = recipe.userId ? canEditRecipe(recipe.userId) : true;
   const canDelete = recipe.userId ? canDeleteRecipe(recipe.userId) : true;
   const handleDeleteClick = React.useCallback(() => {
@@ -164,7 +166,8 @@ export default function ActionsMenu({ id }: Props) {
           iconClassName: cssAIIconColor,
           // A failed run stays visible and re-runnable; only an in-flight one
           // is disabled.
-          description: state === "failed" ? t("enrichmentFailed") : undefined,
+          description: state === "idle" ? undefined : tEnrichment(`states.${state}`),
+          descriptionClassName: state === "failed" ? "text-danger" : "text-muted",
           isDisabled: isBusy,
         });
       }
@@ -190,6 +193,7 @@ export default function ActionsMenu({ id }: Props) {
     isActive,
     toggle,
     t,
+    tEnrichment,
     isAIEnabled,
     allergies,
     enrichment,
@@ -236,7 +240,9 @@ export default function ActionsMenu({ id }: Props) {
                       <Label>{item.label}</Label>
                     </span>
                     {item.description && (
-                      <span className="text-danger text-xs">{item.description}</span>
+                      <span className={`${item.descriptionClassName ?? "text-muted"} text-xs`}>
+                        {item.description}
+                      </span>
                     )}
                   </span>
                 </Button>

@@ -18,7 +18,6 @@ import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { createRecipeWithRefs, dashboardRecipe } from "@norish/db";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getBullClient } from "@norish/queue/redis/bullmq";
 import {
   getRecipePermissionPolicy,
   isAIEnabled,
@@ -31,10 +30,9 @@ import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
-import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { defineLazyWorker, QUEUE_NAMES } from "../config";
 import { announceUsableRecipe } from "../enrichment/announce";
 import { completeStep, reportStep } from "../job-steps";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:paste-import");
 
@@ -268,20 +266,11 @@ async function handleJobFailed(
   }
 }
 
-export async function startPasteImportWorker(): Promise<void> {
-  await createLazyWorker<PasteImportJobData>(
-    QUEUE_NAMES.PASTE_IMPORT,
-    processPasteImportJob,
-    {
-      connection: getBullClient(),
-      ...baseWorkerOptions,
-      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.PASTE_IMPORT],
-      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.PASTE_IMPORT],
-    },
-    handleJobFailed
-  );
-}
+const pasteImportWorker = defineLazyWorker(
+  QUEUE_NAMES.PASTE_IMPORT,
+  processPasteImportJob,
+  handleJobFailed
+);
 
-export async function stopPasteImportWorker(): Promise<void> {
-  await stopLazyWorker(QUEUE_NAMES.PASTE_IMPORT);
-}
+export const startPasteImportWorker = pasteImportWorker.start;
+export const stopPasteImportWorker = pasteImportWorker.stop;

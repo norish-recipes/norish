@@ -12,24 +12,16 @@ import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import { createRecipeWithRefs, dashboardRecipe, recipeExistsByUrlForPolicy } from "@norish/db";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { emitByPolicy } from "@norish/shared-server/realtime/policy";
 import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
-import {
-  baseWorkerOptions,
-  QUEUE_NAMES,
-  RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
-  STALLED_INTERVAL,
-  WORKER_CONCURRENCY,
-} from "../config";
+import { defineLazyWorker, QUEUE_NAMES, RECIPE_IMPORT_PROCESSING_TIMEOUT_MS } from "../config";
 import { announceUsableRecipe } from "../enrichment/announce";
 import { withTimeout } from "../helpers";
 import { completeStep, reportStep } from "../job-steps";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:recipe-import");
 
@@ -178,27 +170,18 @@ async function handleJobFailed(
  * Start the recipe import worker (lazy - starts on demand).
  * Call during server startup.
  */
-export async function startRecipeImportWorker(): Promise<void> {
-  const rawProcessor = (job: Job<RecipeImportJobData>) =>
-    withTimeout(
-      () => processImportJob(job),
-      RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
-      "Recipe import job"
-    );
-
-  await createLazyWorker<RecipeImportJobData>(
-    QUEUE_NAMES.RECIPE_IMPORT,
-    rawProcessor,
-    {
-      connection: getBullClient(),
-      ...baseWorkerOptions,
-      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.RECIPE_IMPORT],
-      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.RECIPE_IMPORT],
-    },
-    handleJobFailed
+const processRecipeImportJob = (job: Job<RecipeImportJobData>) =>
+  withTimeout(
+    () => processImportJob(job),
+    RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
+    "Recipe import job"
   );
-}
 
-export async function stopRecipeImportWorker(): Promise<void> {
-  await stopLazyWorker(QUEUE_NAMES.RECIPE_IMPORT);
-}
+const recipeImportWorker = defineLazyWorker(
+  QUEUE_NAMES.RECIPE_IMPORT,
+  processRecipeImportJob,
+  handleJobFailed
+);
+
+export const startRecipeImportWorker = recipeImportWorker.start;
+export const stopRecipeImportWorker = recipeImportWorker.stop;

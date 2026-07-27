@@ -12,17 +12,15 @@ import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import { addRecipeImages, createRecipeWithRefs, dashboardRecipe } from "@norish/db";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getBullClient } from "@norish/queue/redis/bullmq";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
 import { emitByPolicy } from "@norish/shared-server/realtime/policy";
 import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
-import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { defineLazyWorker, QUEUE_NAMES } from "../config";
 import { announceUsableRecipe } from "../enrichment/announce";
 import { reportStep } from "../job-steps";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:image-import");
 
@@ -142,20 +140,11 @@ async function handleJobFailed(
 /**
  * Start the image import worker (lazy - starts on demand).
  */
-export async function startImageImportWorker(): Promise<void> {
-  await createLazyWorker<ImageImportJobData>(
-    QUEUE_NAMES.IMAGE_IMPORT,
-    processImageImportJob,
-    {
-      connection: getBullClient(),
-      ...baseWorkerOptions,
-      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.IMAGE_IMPORT],
-      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.IMAGE_IMPORT],
-    },
-    handleJobFailed
-  );
-}
+const imageImportWorker = defineLazyWorker(
+  QUEUE_NAMES.IMAGE_IMPORT,
+  processImageImportJob,
+  handleJobFailed
+);
 
-export async function stopImageImportWorker(): Promise<void> {
-  await stopLazyWorker(QUEUE_NAMES.IMAGE_IMPORT);
-}
+export const startImageImportWorker = imageImportWorker.start;
+export const stopImageImportWorker = imageImportWorker.stop;

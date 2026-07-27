@@ -84,7 +84,7 @@ All four kinds share one lifecycle contract with independent `idle`, `queued`, `
 60. As a maintainer, I want enrichment workers to own AI execution rather than enrollment policy, so that each module has one clear responsibility.
 61. As a maintainer, I want repository operations to encode append and replace semantics, so that callers cannot accidentally implement them differently.
 62. As a maintainer, I want one combined lifecycle contract for all four kinds, so that clients do not need four unrelated status implementations.
-63. As a maintainer, I want the implementation documented with release notes and screenshots, so that users and self-hosters can understand the new controls and behavior.
+63. As a maintainer, I want the implementation documented with release notes and applicable screenshots, so that users and self-hosters can understand the new controls and behavior.
 
 ## Implementation Decisions
 
@@ -211,7 +211,8 @@ All four kinds share one lifecycle contract with independent `idle`, `queued`, `
 ### Documentation and rollout
 
 - Update administrator AI settings documentation to describe global enablement, four independent automatic controls, tag strategy, Supplied Recipe Data precedence, and manual availability.
-- Update recipe user documentation with screenshots of manual actions and lifecycle states.
+- Update recipe user documentation with screenshots of manual actions and lifecycle states when
+  screenshots materially clarify the workflow.
 - Add Target Version release notes describing the unified flow and quiet background behavior.
 - Add Upgrade notes for configuration migration/defaults. No new environment variable is expected; if implementation introduces one, follow the repository environment-documentation requirements.
 - Use Recipe Enrichment vocabulary in user text, logs, contracts, documentation, and tests. Do not introduce Recipe Provenance terminology.

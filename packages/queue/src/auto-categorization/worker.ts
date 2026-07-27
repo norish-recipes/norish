@@ -9,59 +9,48 @@
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { replaceRecipeCategories } from "@norish/db/repositories/recipe-enrichment";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getBullClient } from "@norish/queue/redis/bullmq";
 import { createLogger } from "@norish/shared-server/logger";
 
-import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { defineLazyWorker, QUEUE_NAMES } from "../config";
 import {
   handleEnrichmentJobFailure,
   runEnrichmentJob,
   toRecipeSummary,
 } from "../enrichment/worker-runner";
 import { reportStep } from "../job-steps";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:auto-categorization");
 
-export async function startAutoCategorizationWorker(): Promise<void> {
-  await createLazyWorker<RecipeEnrichmentJobData>(
-    QUEUE_NAMES.AUTO_CATEGORIZATION,
-    (job) =>
-      runEnrichmentJob(job, async (recipe) => {
-        const categorizeRecipe = requireQueueApiHandler("categorizeRecipe");
-        const result = await categorizeRecipe(toRecipeSummary(recipe));
+const autoCategorizationWorker = defineLazyWorker<RecipeEnrichmentJobData>(
+  QUEUE_NAMES.AUTO_CATEGORIZATION,
+  (job) =>
+    runEnrichmentJob(job, async (recipe) => {
+      const categorizeRecipe = requireQueueApiHandler("categorizeRecipe");
+      const result = await categorizeRecipe(toRecipeSummary(recipe));
 
-        if (!result.success) {
-          throw new Error(result.error);
-        }
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
-        if (result.data.length === 0) {
-          // Replacement with nothing would erase stored categories, so an empty
-          // result is a failure the job retries rather than a write.
-          throw new Error("AI returned no categories to replace the stored list with");
-        }
+      if (result.data.length === 0) {
+        // Replacement with nothing would erase stored categories, so an empty
+        // result is a failure the job retries rather than a write.
+        throw new Error("AI returned no categories to replace the stored list with");
+      }
 
-        await reportStep(job, "saving");
+      await reportStep(job, "saving");
 
-        const applied = await replaceRecipeCategories(recipe.id, result.data, job.data.origin);
+      const applied = await replaceRecipeCategories(recipe.id, result.data, job.data.origin);
 
-        log.info(
-          { recipeId: recipe.id, categories: result.data, applied, origin: job.data.origin },
-          applied ? "Auto-categorization saved" : "Auto-categorization deferred to supplied data"
-        );
+      log.info(
+        { recipeId: recipe.id, categories: result.data, applied, origin: job.data.origin },
+        applied ? "Auto-categorization saved" : "Auto-categorization deferred to supplied data"
+      );
 
-        return applied;
-      }),
-    {
-      connection: getBullClient(),
-      ...baseWorkerOptions,
-      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.AUTO_CATEGORIZATION],
-      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.AUTO_CATEGORIZATION],
-    },
-    handleEnrichmentJobFailure
-  );
-}
+      return applied;
+    }),
+  handleEnrichmentJobFailure
+);
 
-export async function stopAutoCategorizationWorker(): Promise<void> {
-  await stopLazyWorker(QUEUE_NAMES.AUTO_CATEGORIZATION);
-}
+export const startAutoCategorizationWorker = autoCategorizationWorker.start;
+export const stopAutoCategorizationWorker = autoCategorizationWorker.stop;

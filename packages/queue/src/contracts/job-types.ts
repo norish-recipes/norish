@@ -85,6 +85,10 @@ export type AddPasteImportJobResult =
  */
 export interface RecipeEnrichmentJobData {
   recipeId: string;
+  /** Unique per accepted enrollment; optional only for retained jobs created before this field existed. */
+  runId?: string;
+  /** Redis-allocated ordering token; optional only for retained jobs created before this field existed. */
+  runSequence?: number;
   kind: RecipeEnrichmentKind;
   userId: string;
   householdKey: string;

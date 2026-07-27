@@ -41,6 +41,7 @@ const SMOKE_RECIPE = {
     us: ["Simmer the beans in the stock for 40 minutes.", "Season, then serve warm."],
   },
   keywords: null,
+  allergyIndications: [],
   categories: ["Dinner"],
   nutrition: { calories: 320, fat: 6, carbs: 48, protein: 16 },
 };

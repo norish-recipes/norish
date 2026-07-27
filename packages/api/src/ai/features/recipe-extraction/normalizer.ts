@@ -14,6 +14,7 @@ import { matchCategory } from "@norish/shared-server/ai/utils/category-matcher";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
 
 /**
  * Options for normalizing AI extraction output.
@@ -177,6 +178,14 @@ export async function normalizeExtractionOutput(
     .filter((category, index, categories) => categories.indexOf(category) === index);
 
   normalized.categories = normalizedCategories;
+
+  // Allergy indications are stored as ordinary recipe tags, which is how the
+  // household allergy matcher recognizes them. They are supplied source facts,
+  // not inferred findings, so preserve them alongside any source keywords.
+  normalized.tags = normalizeEnrichmentTagNames([
+    ...(normalized.tags ?? []).map((tag) => tag.name),
+    ...(output.allergyIndications ?? []),
+  ]).map((name) => ({ name }));
 
   // Log if no categories were matched (helps debug AI responses)
   if (normalizedCategories.length === 0 && (output.categories?.length ?? 0) > 0) {

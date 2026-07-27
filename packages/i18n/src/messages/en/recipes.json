@@ -269,6 +269,12 @@
   },
   "enrichment": {
     "failed": "Enrichment failed",
+    "states": {
+      "queued": "Queued",
+      "processing": "In progress",
+      "succeeded": "Completed",
+      "failed": "Last run failed"
+    },
     "kinds": {
       "auto-tagging": "Auto-tagging",
       "allergy-detection": "Allergy detection",

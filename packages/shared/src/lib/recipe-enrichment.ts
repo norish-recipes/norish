@@ -55,6 +55,10 @@ export interface RecipeEnrichmentKindStatus {
   kind: RecipeEnrichmentKind;
   state: RecipeEnrichmentLifecycleState;
   origin: RecipeEnrichmentOrigin | null;
+  /** Identifies the retained run so out-of-order realtime events cannot regress a newer state. */
+  runId: string | null;
+  /** Monotonic within a kind's queue; orders reruns whose UUIDs cannot express freshness. */
+  runSequence: number | null;
 }
 
 /** Authoritative initial/recovery read: one entry per kind, always all four. */
@@ -66,11 +70,48 @@ export interface RecipeEnrichmentStatusDto {
 /** One typed lifecycle event shape for every kind and transition. */
 export interface RecipeEnrichmentLifecycleEventDto {
   recipeId: string;
+  /** Unique per enrollment, including reruns of the same recipe and kind. */
+  runId: string;
+  /** Monotonic within this kind's queue, so older-run events can be discarded. */
+  runSequence: number;
   kind: RecipeEnrichmentKind;
   state: Exclude<RecipeEnrichmentLifecycleState, "idle">;
   origin: RecipeEnrichmentOrigin;
-  /** Only set for manual runs, so a terminal failure can be reported to the requester alone. */
+  /** Set only on manual terminal failure, so targeted feedback does not disclose it otherwise. */
   requestedByUserId?: string;
+}
+
+function includesString<T extends readonly string[]>(
+  values: T,
+  value: unknown
+): value is T[number] {
+  return typeof value === "string" && values.includes(value);
+}
+
+/** Runtime guard for the realtime boundary, whose envelope payload is untrusted. */
+export function isRecipeEnrichmentLifecycleEvent(
+  value: unknown
+): value is RecipeEnrichmentLifecycleEventDto {
+  if (!value || typeof value !== "object") return false;
+
+  const candidate = value as Record<string, unknown>;
+  const needsRequester = candidate.origin === "manual" && candidate.state === "failed";
+  const hasValidRequester =
+    (needsRequester && typeof candidate.requestedByUserId === "string") ||
+    (!needsRequester && candidate.requestedByUserId === undefined);
+
+  return (
+    typeof candidate.recipeId === "string" &&
+    typeof candidate.runId === "string" &&
+    candidate.runId.length > 0 &&
+    Number.isSafeInteger(candidate.runSequence) &&
+    (candidate.runSequence as number) >= 0 &&
+    includesString(ENRICHMENT_KINDS, candidate.kind) &&
+    includesString(ENRICHMENT_LIFECYCLE_STATES, candidate.state) &&
+    candidate.state !== "idle" &&
+    (candidate.origin === "automatic" || candidate.origin === "manual") &&
+    hasValidRequester
+  );
 }
 
 export interface NutritionGroupInput {

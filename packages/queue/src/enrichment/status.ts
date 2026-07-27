@@ -35,7 +35,7 @@ export async function getRecipeEnrichmentStatus(
       const job = await queue.getJob(enrichmentJobId(kind, recipeId));
 
       if (!job) {
-        return { kind, state: "idle", origin: null };
+        return { kind, state: "idle", origin: null, runId: null, runSequence: null };
       }
 
       const data = job.data as RecipeEnrichmentJobData | undefined;
@@ -44,6 +44,8 @@ export async function getRecipeEnrichmentStatus(
         kind,
         state: toEnrichmentLifecycleState(await job.getState()),
         origin: data?.origin ?? null,
+        runId: data?.runId ?? enrichmentJobId(kind, recipeId),
+        runSequence: data?.runSequence ?? 0,
       };
     })
   );

@@ -70,6 +70,7 @@ describe("extraction schema keeps explicit source facts", () => {
     recipeIngredient: { metric: ["200 g pasta"], us: ["7 oz pasta"] },
     recipeInstructions: { metric: ["Boil"], us: ["Boil"] },
     keywords: ["italian"],
+    allergyIndications: [],
     categories: ["Dinner"],
     nutrition: { calories: 500, fat: 10, carbs: 60, protein: 20 },
   };
@@ -80,6 +81,15 @@ describe("extraction schema keeps explicit source facts", () => {
     expect(parsed.categories).toEqual(["Dinner"]);
     expect(parsed.keywords).toEqual(["italian"]);
     expect(parsed.nutrition).toEqual({ calories: 500, fat: 10, carbs: 60, protein: 20 });
+  });
+
+  it("accepts allergy indications the source explicitly states", () => {
+    const parsed = recipeExtractionSchema.parse({
+      ...validOutput,
+      allergyIndications: ["Peanut", "Milk"],
+    });
+
+    expect(parsed.allergyIndications).toEqual(["Peanut", "Milk"]);
   });
 
   it("accepts a source that states no categories, rather than forcing a guess", () => {

@@ -269,6 +269,12 @@
   },
   "enrichment": {
     "failed": "Berigelse mislykkedes",
+    "states": {
+      "queued": "I kø",
+      "processing": "I gang",
+      "succeeded": "Fuldført",
+      "failed": "Sidste forsøg mislykkedes"
+    },
     "kinds": {
       "auto-tagging": "Automatiske tags",
       "allergy-detection": "Allergiregistrering",

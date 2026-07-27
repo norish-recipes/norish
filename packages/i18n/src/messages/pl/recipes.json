@@ -269,6 +269,12 @@
   },
   "enrichment": {
     "failed": "Wzbogacanie nie powiodło się",
+    "states": {
+      "queued": "W kolejce",
+      "processing": "W toku",
+      "succeeded": "Ukończono",
+      "failed": "Ostatnia próba nie powiodła się"
+    },
     "kinds": {
       "auto-tagging": "Automatyczne tagowanie",
       "allergy-detection": "Wykrywanie alergenów",

@@ -13,20 +13,13 @@
 
 import type { Job } from "bullmq";
 
-import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
-import type {
-  RecipeEnrichmentLifecycleEventDto,
-  RecipeEnrichmentLifecycleState,
-} from "@norish/shared/lib/recipe-enrichment";
 import { getRecipeFull } from "@norish/db";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
-import { emitByPolicy } from "@norish/shared-server/realtime/policy";
-import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
 import type { RecipeEnrichmentJobData } from "../contracts/job-types";
 import { reportStep } from "../job-steps";
+import { publishEnrichmentLifecycle, publishEnrichmentRecipeUpdated } from "./announce";
 
 const log = createLogger("worker:enrichment");
 
@@ -43,7 +36,9 @@ export type EnrichmentExecutor = (
 
 /**
  * Run one enrichment job: publish `processing`, execute, then publish
- * `succeeded` alongside the canonical updated recipe.
+ * `succeeded` alongside the canonical updated recipe. The producer publishes
+ * `queued` when BullMQ accepts the job; clients ignore that event if it arrives
+ * after this later worker state.
  *
  * Nothing here is caught: a thrown error is how a worker signals a retryable
  * failure, and BullMQ's existing attempts and backoff decide when it becomes
@@ -57,7 +52,7 @@ export async function runEnrichmentJob(
 
   log.info({ jobId: job.id, recipeId, kind, origin, attempt: job.attemptsMade + 1 }, "Processing");
 
-  await publishLifecycle(job.data, "processing");
+  await publishEnrichmentLifecycle(job.data, "processing");
 
   const recipe = await getRecipeFull(recipeId);
 
@@ -74,13 +69,13 @@ export async function runEnrichmentJob(
     const updated = await getRecipeFull(recipeId);
 
     if (updated) {
-      await emitUpdatedRecipe(job.data, updated);
+      await publishEnrichmentRecipeUpdated(job.data, updated);
     }
   }
 
   log.info({ jobId: job.id, recipeId, kind, origin, changed }, "Enrichment succeeded");
 
-  await publishLifecycle(job.data, "succeeded");
+  await publishEnrichmentLifecycle(job.data, "succeeded");
 }
 
 /**
@@ -113,45 +108,8 @@ export async function handleEnrichmentJobFailure(
   );
 
   if (isFinalFailure) {
-    await publishLifecycle(job.data, "failed");
+    await publishEnrichmentLifecycle(job.data, "failed");
   }
-}
-
-async function publishLifecycle(
-  data: RecipeEnrichmentJobData,
-  state: Exclude<RecipeEnrichmentLifecycleState, "idle">
-): Promise<void> {
-  await emitLifecycle(data, {
-    recipeId: data.recipeId,
-    kind: data.kind,
-    state,
-    origin: data.origin,
-    // Automatic failures stay quiet; only a requested action names a requester,
-    // which is what lets the client show an error to that user alone.
-    requestedByUserId: data.origin === "manual" ? data.requestedByUserId : undefined,
-  });
-}
-
-async function emitLifecycle(
-  data: RecipeEnrichmentJobData,
-  payload: RecipeEnrichmentLifecycleEventDto
-): Promise<void> {
-  emitByPolicy(recipeEmitter, await viewPolicy(), emitContext(data), "enrichment", payload);
-}
-
-async function emitUpdatedRecipe(
-  data: RecipeEnrichmentJobData,
-  recipe: FullRecipeDTO
-): Promise<void> {
-  emitByPolicy(recipeEmitter, await viewPolicy(), emitContext(data), "updated", { recipe });
-}
-
-async function viewPolicy() {
-  return (await getRecipePermissionPolicy()).view;
-}
-
-function emitContext(data: RecipeEnrichmentJobData): PolicyEmitContext {
-  return { userId: data.userId, householdKey: data.householdKey };
 }
 
 /** Kinds whose AI handler needs a plain recipe summary. */

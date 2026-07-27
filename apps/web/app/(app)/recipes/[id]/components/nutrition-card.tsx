@@ -14,8 +14,11 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
   // Queued and processing both render as "working"; a quiet automatic failure
   // simply leaves the panel showing whatever is stored.
   const isEstimatingNutrition = enrichment.isBusy("nutrition-estimation");
-  const { isAIEnabled } = usePermissionsContext();
+  const enrichmentState = enrichment.states["nutrition-estimation"];
+  const { canEditRecipe, isAIEnabled } = usePermissionsContext();
+  const canEdit = recipe?.userId ? canEditRecipe(recipe.userId) : true;
   const t = useTranslations("recipes.nutrition");
+  const tEnrichment = useTranslations("recipes.enrichment");
   // Independent portion state - defaults to 1 (per serving)
   const [portions, setPortions] = useState(1);
 
@@ -25,13 +28,13 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
     const values = getNutritionData(recipe, portions);
     const hasData = values.hasData;
 
-    if (!hasData && !isAIEnabled) return null;
+    if (!hasData && !(isAIEnabled && canEdit)) return null;
 
     return {
       hasData,
       values: values.values,
     };
-  }, [recipe, portions, isAIEnabled]);
+  }, [recipe, portions, isAIEnabled, canEdit]);
 
   if (!nutritionData) return null;
 
@@ -45,6 +48,7 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
       </div>
       {isEstimatingNutrition ? (
         <div className="space-y-1">
+          <p className="text-muted pb-1 text-sm">{tEnrichment(`states.${enrichmentState}`)}</p>
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center justify-between py-2">
               <div className="flex items-center gap-3">
@@ -88,12 +92,21 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
       ) : (
         <div className="flex flex-col items-center gap-3 py-2">
           <p className="text-muted text-base">{t("noInfo")}</p>
-          {isAIEnabled && (
+          {isAIEnabled && canEdit && (
             <AIActionButton
               isLoading={isEstimatingNutrition}
               label={t("estimateWithAI")}
               onPress={() => enrichment.request("nutrition-estimation")}
             />
+          )}
+          {enrichmentState !== "idle" && (
+            <p
+              className={
+                enrichmentState === "failed" ? "text-danger text-sm" : "text-muted text-sm"
+              }
+            >
+              {tEnrichment(`states.${enrichmentState}`)}
+            </p>
           )}
         </div>
       )}

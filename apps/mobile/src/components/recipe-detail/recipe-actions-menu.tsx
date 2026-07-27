@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
 import type { RecipeDetailContextValue } from "@norish/shared-react/hooks";
+import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 
 type RecipeActionsMenuProps = {
   /** Recipe context — passed as a prop because the native header renders outside the RecipeDetailProvider tree. */
@@ -148,6 +149,14 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
   const canDelete =
     !isLoadingPermissions && (recipe.userId ? canDeleteRecipe(recipe.userId) : true);
   const hasAllergies = allergies.length > 0;
+  const enrichmentLabel = (kind: RecipeEnrichmentKind, actionId: string) => {
+    const action = intl.formatMessage({ id: actionId });
+    const state = enrichment.states[kind];
+
+    return state === "idle"
+      ? action
+      : `${action} — ${intl.formatMessage({ id: `recipes.enrichment.states.${state}` })}`;
+  };
 
   return (
     <ShellMenu
@@ -218,11 +227,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
 
       {isAIEnabled && canEdit ? (
         <UIButton
-          label={intl.formatMessage({
-            id: enrichment.isBusy("auto-tagging")
-              ? "recipes.actions.autoTagging"
-              : "recipes.actions.autoTag",
-          })}
+          label={enrichmentLabel("auto-tagging", "recipes.actions.autoTag")}
           modifiers={[disabledModifier(enrichment.isBusy("auto-tagging"))]}
           systemImage="sparkles"
           onPress={() => enrichment.request("auto-tagging")}
@@ -230,11 +235,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       ) : null}
       {isAIEnabled && canEdit ? (
         <UIButton
-          label={intl.formatMessage({
-            id: enrichment.isBusy("auto-categorization")
-              ? "recipes.actions.autoCategorizing"
-              : "recipes.actions.autoCategorize",
-          })}
+          label={enrichmentLabel("auto-categorization", "recipes.actions.autoCategorize")}
           modifiers={[disabledModifier(enrichment.isBusy("auto-categorization"))]}
           systemImage="sparkles"
           onPress={() => enrichment.request("auto-categorization")}
@@ -242,11 +243,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       ) : null}
       {isAIEnabled && canEdit && hasAllergies ? (
         <UIButton
-          label={intl.formatMessage({
-            id: enrichment.isBusy("allergy-detection")
-              ? "recipes.actions.detectingAllergies"
-              : "recipes.actions.detectAllergies",
-          })}
+          label={enrichmentLabel("allergy-detection", "recipes.actions.detectAllergies")}
           modifiers={[disabledModifier(enrichment.isBusy("allergy-detection"))]}
           systemImage="sparkles"
           onPress={() => enrichment.request("allergy-detection")}
@@ -254,11 +251,7 @@ export function RecipeActionsMenu({ ctx }: RecipeActionsMenuProps) {
       ) : null}
       {isAIEnabled && canEdit ? (
         <UIButton
-          label={intl.formatMessage({
-            id: enrichment.isBusy("nutrition-estimation")
-              ? "recipes.actions.estimatingNutrition"
-              : "recipes.actions.estimateNutrition",
-          })}
+          label={enrichmentLabel("nutrition-estimation", "recipes.actions.estimateNutrition")}
           modifiers={[disabledModifier(enrichment.isBusy("nutrition-estimation"))]}
           systemImage="sparkles"
           onPress={() => enrichment.request("nutrition-estimation")}

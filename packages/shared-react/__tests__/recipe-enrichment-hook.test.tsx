@@ -27,10 +27,10 @@ function idleStatus(): RecipeEnrichmentStatusDto {
   return {
     recipeId: "recipe-1",
     kinds: [
-      { kind: "auto-tagging", state: "idle", origin: null },
-      { kind: "allergy-detection", state: "idle", origin: null },
-      { kind: "auto-categorization", state: "idle", origin: null },
-      { kind: "nutrition-estimation", state: "idle", origin: null },
+      { kind: "auto-tagging", state: "idle", origin: null, runId: null, runSequence: null },
+      { kind: "allergy-detection", state: "idle", origin: null, runId: null, runSequence: null },
+      { kind: "auto-categorization", state: "idle", origin: null, runId: null, runSequence: null },
+      { kind: "nutrition-estimation", state: "idle", origin: null, runId: null, runSequence: null },
     ],
   };
 }
@@ -64,7 +64,7 @@ async function emitLifecycle(payload: Record<string, unknown>) {
   };
 
   await act(async () => {
-    options?.onData?.({ payload });
+    options?.onData?.({ payload: { runId: "run-1", runSequence: 1, ...payload } });
   });
 }
 
@@ -140,10 +140,34 @@ describe("useRecipeEnrichment", () => {
     queryClient.setQueryData(STATUS_KEY, {
       recipeId: "recipe-1",
       kinds: [
-        { kind: "auto-tagging", state: "processing", origin: "automatic" },
-        { kind: "allergy-detection", state: "failed", origin: "automatic" },
-        { kind: "auto-categorization", state: "succeeded", origin: "manual" },
-        { kind: "nutrition-estimation", state: "idle", origin: null },
+        {
+          kind: "auto-tagging",
+          state: "processing",
+          origin: "automatic",
+          runId: "run-a",
+          runSequence: 1,
+        },
+        {
+          kind: "allergy-detection",
+          state: "failed",
+          origin: "automatic",
+          runId: "run-b",
+          runSequence: 1,
+        },
+        {
+          kind: "auto-categorization",
+          state: "succeeded",
+          origin: "manual",
+          runId: "run-c",
+          runSequence: 1,
+        },
+        {
+          kind: "nutrition-estimation",
+          state: "idle",
+          origin: null,
+          runId: null,
+          runSequence: null,
+        },
       ],
     } satisfies RecipeEnrichmentStatusDto);
 
@@ -173,6 +197,95 @@ describe("useRecipeEnrichment", () => {
     expect(statusFetch.mock.calls.length).toBe(fetchesBefore);
   });
 
+  it("does not let an older status response overwrite a newer lifecycle event", async () => {
+    let resolveStatus: ((status: RecipeEnrichmentStatusDto) => void) | undefined;
+
+    statusFetch.mockReturnValueOnce(
+      new Promise<RecipeEnrichmentStatusDto>((resolve) => {
+        resolveStatus = resolve;
+      })
+    );
+    render();
+
+    await emitLifecycle({
+      recipeId: "recipe-1",
+      kind: "auto-tagging",
+      state: "processing",
+      origin: "automatic",
+    });
+
+    await act(async () => {
+      resolveStatus?.({
+        ...idleStatus(),
+        kinds: idleStatus().kinds.map((entry) =>
+          entry.kind === "auto-tagging"
+            ? {
+                ...entry,
+                state: "queued" as const,
+                origin: "automatic" as const,
+                runId: "run-1",
+                runSequence: 1,
+              }
+            : entry
+        ),
+      });
+    });
+
+    expect(cachedState("auto-tagging")).toBe("processing");
+  });
+
+  it("lets a status response clear an untouched kind after another kind receives an event", async () => {
+    let resolveStatus: ((status: RecipeEnrichmentStatusDto) => void) | undefined;
+
+    statusFetch.mockReturnValueOnce(
+      new Promise<RecipeEnrichmentStatusDto>((resolve) => {
+        resolveStatus = resolve;
+      })
+    );
+    queryClient.setQueryData(STATUS_KEY, {
+      ...idleStatus(),
+      kinds: idleStatus().kinds.map((entry) =>
+        entry.kind === "allergy-detection"
+          ? {
+              ...entry,
+              state: "failed" as const,
+              origin: "automatic" as const,
+              runId: "removed-run",
+              runSequence: 1,
+            }
+          : entry
+      ),
+    });
+    render();
+
+    await emitLifecycle({
+      recipeId: "recipe-1",
+      kind: "auto-tagging",
+      state: "processing",
+      origin: "automatic",
+    });
+
+    await act(async () => {
+      resolveStatus?.({
+        ...idleStatus(),
+        kinds: idleStatus().kinds.map((entry) =>
+          entry.kind === "auto-tagging"
+            ? {
+                ...entry,
+                state: "queued" as const,
+                origin: "automatic" as const,
+                runId: "run-1",
+                runSequence: 1,
+              }
+            : entry
+        ),
+      });
+    });
+
+    expect(cachedState("auto-tagging")).toBe("processing");
+    expect(cachedState("allergy-detection")).toBe("idle");
+  });
+
   it("ignores lifecycle events for other recipes", async () => {
     queryClient.setQueryData(STATUS_KEY, idleStatus());
     render();
@@ -185,6 +298,107 @@ describe("useRecipeEnrichment", () => {
     });
 
     expect(cachedState("auto-tagging")).toBe("idle");
+  });
+
+  it("ignores lifecycle payloads outside the shared vocabulary", async () => {
+    queryClient.setQueryData(STATUS_KEY, idleStatus());
+    render();
+
+    await emitLifecycle({
+      recipeId: "recipe-1",
+      kind: "auto-tagging",
+      state: "finished",
+      origin: "scheduled",
+    });
+
+    expect(cachedState("auto-tagging")).toBe("idle");
+  });
+
+  it("does not let a delayed queued event regress an active run", async () => {
+    queryClient.setQueryData(STATUS_KEY, {
+      ...idleStatus(),
+      kinds: idleStatus().kinds.map((entry) =>
+        entry.kind === "auto-tagging"
+          ? {
+              ...entry,
+              state: "processing" as const,
+              origin: "automatic" as const,
+              runId: "run-1",
+              runSequence: 1,
+            }
+          : entry
+      ),
+    });
+    render();
+
+    await emitLifecycle({
+      recipeId: "recipe-1",
+      kind: "auto-tagging",
+      state: "queued",
+      origin: "automatic",
+    });
+
+    expect(cachedState("auto-tagging")).toBe("processing");
+  });
+
+  it("accepts queued for a new run after a retained terminal state", async () => {
+    queryClient.setQueryData(STATUS_KEY, {
+      ...idleStatus(),
+      kinds: idleStatus().kinds.map((entry) =>
+        entry.kind === "auto-tagging"
+          ? {
+              ...entry,
+              state: "failed" as const,
+              origin: "manual" as const,
+              runId: "old-run",
+              runSequence: 1,
+            }
+          : entry
+      ),
+    });
+    render();
+
+    await emitLifecycle({
+      recipeId: "recipe-1",
+      runId: "new-run",
+      runSequence: 2,
+      kind: "auto-tagging",
+      state: "queued",
+      origin: "manual",
+    });
+
+    expect(cachedState("auto-tagging")).toBe("queued");
+  });
+
+  it("ignores a terminal event from an older run after a newer run is queued", async () => {
+    queryClient.setQueryData(STATUS_KEY, {
+      ...idleStatus(),
+      kinds: idleStatus().kinds.map((entry) =>
+        entry.kind === "auto-tagging"
+          ? {
+              ...entry,
+              state: "queued" as const,
+              origin: "manual" as const,
+              runId: "new-run",
+              runSequence: 2,
+            }
+          : entry
+      ),
+    });
+    render();
+
+    await emitLifecycle({
+      recipeId: "recipe-1",
+      runId: "old-run",
+      runSequence: 1,
+      kind: "auto-tagging",
+      state: "failed",
+      origin: "manual",
+      requestedByUserId: "user-1",
+    });
+
+    expect(cachedState("auto-tagging")).toBe("queued");
+    expect(manualErrors).toEqual([]);
   });
 
   it("stays quiet on an automatic failure", async () => {
@@ -234,7 +448,6 @@ describe("useRecipeEnrichment", () => {
       kind: "auto-tagging",
       state: "succeeded",
       origin: "manual",
-      requestedByUserId: "user-1",
     });
 
     expect(cachedState("auto-tagging")).toBe("succeeded");

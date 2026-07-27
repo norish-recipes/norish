@@ -13,8 +13,11 @@ vi.mock("../../src/registry", () => ({
 const { getRecipeEnrichmentStatus } = await import("../../src/enrichment/status");
 
 /** A retained job in the given BullMQ state, carrying the given origin. */
-function retained(state: string, origin: "automatic" | "manual" = "automatic") {
-  return { getState: vi.fn().mockResolvedValue(state), data: { origin } };
+function retained(state: string, origin: "automatic" | "manual" = "automatic", runId = "run-1") {
+  return {
+    getState: vi.fn().mockResolvedValue(state),
+    data: { origin, runId, runSequence: 1 },
+  };
 }
 
 beforeEach(() => {
@@ -60,6 +63,8 @@ describe("getRecipeEnrichmentStatus", () => {
     expect(status.kinds[0]?.state).toBe("succeeded");
     expect(status.kinds[1]?.state).toBe("idle");
     expect(status.kinds[1]?.origin).toBeNull();
+    expect(status.kinds[1]?.runId).toBeNull();
+    expect(status.kinds[1]?.runSequence).toBeNull();
   });
 
   it("reports the origin of the retained run", async () => {
@@ -71,6 +76,8 @@ describe("getRecipeEnrichmentStatus", () => {
       kind: "auto-tagging",
       state: "processing",
       origin: "manual",
+      runId: "run-1",
+      runSequence: 1,
     });
   });
 

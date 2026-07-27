@@ -7,12 +7,11 @@
  * server, database, Redis, BullMQ workers, repositories, authorized mutation
  * layer, realtime connection, and UI are all exercised.
  */
+import type { AIE2EStack } from "@/e2e-ai/harness";
 import type { BrowserContext, Page } from "@playwright/test";
+import { E2E_BASE_URL, USER_A } from "@/e2e-ai/env";
+import { bootStack, setAutomaticEnrichment, signIn } from "@/e2e-ai/harness";
 import { expect, test } from "@playwright/test";
-
-import type { AIE2EStack } from "./harness";
-import { E2E_BASE_URL, USER_A } from "./env";
-import { bootStack, setAutomaticEnrichment, signIn } from "./harness";
 
 test.describe.configure({ mode: "serial" });
 
@@ -35,6 +34,7 @@ function bareRecipe(name: string) {
       us: ["Simmer for 40 minutes.", "Season, then serve."],
     },
     keywords: null,
+    allergyIndications: [],
     categories: [],
     nutrition: { calories: null, fat: null, carbs: null, protein: null },
   };
@@ -98,11 +98,25 @@ async function importAndOpen(name: string, directives: unknown[]): Promise<void>
 
   await expect(async () => {
     await page.reload();
-    await expect(page.getByText(name).first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByRole("heading", { name, exact: true, level: 3 })).toBeVisible({
+      timeout: 3_000,
+    });
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
 
-  await page.getByText(name).first().click();
-  await expect(page.getByRole("heading", { name })).toBeVisible({ timeout: 15_000 });
+  await openRecipe(name);
+}
+
+/** Open the recipe card itself, excluding same-name toasts and dashboard text. */
+async function openRecipe(name: string): Promise<void> {
+  await page.getByRole("heading", { name, exact: true, level: 3 }).click();
+  await expect(page).toHaveURL(/\/recipes\/[^/]+$/);
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible({ timeout: 15_000 });
+}
+
+/** Open the actions menu from a known closed state, including inside retries. */
+async function openActions(): Promise<void> {
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Actions" }).click();
 }
 
 /**
@@ -122,6 +136,24 @@ async function openPasteImport(): Promise<void> {
       page.getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
     ).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
+}
+
+/** Create through the ordinary recipe form, then wait for the detail route. */
+async function createManuallyAndOpen(name: string): Promise<void> {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Create" }).click();
+
+  await page.getByLabel("Recipe Name").fill(name);
+  await page.getByPlaceholder("e.g., 2 cups flour").fill("200 g pinto beans");
+  await page.getByPlaceholder("Step 1: Describe the step...").fill("Simmer until tender.");
+
+  // Ingredient parsing is deliberately debounced in the form.
+  await page.waitForTimeout(400);
+  await page.getByRole("button", { name: "Create Recipe" }).click();
+
+  await expect(page).toHaveURL(/\/recipes\/[^/]+$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible({ timeout: 30_000 });
 }
 
 /** Poll the open recipe page until the assertion holds, reloading each attempt. */
@@ -149,8 +181,25 @@ test("an import enrols the enabled automatic kind and renders the result", async
     await expect(page.getByText("hearty").first()).toBeVisible({ timeout: 3_000 });
   });
 
+  await page.getByRole("button", { name: "Actions" }).click();
+  await expect(page.getByText("Completed")).toBeVisible();
+  await page.keyboard.press("Escape");
+
   // Enrichment is quiet on success: the recipe updated, and nothing was raised.
   await expect(page.getByText(/enrichment failed/i)).toHaveCount(0);
+});
+
+test("a manual creation enrols the enabled automatic kind", async () => {
+  await setAutomaticEnrichment({ autoTagging: true });
+
+  stack!.ai.control.reset();
+  stack!.ai.control.succeedWith({ tags: ["created-manually"] });
+
+  await createManuallyAndOpen("Manual Creation Stew");
+
+  await eventuallyOnRecipe(async () => {
+    await expect(page.getByText("created-manually").first()).toBeVisible({ timeout: 3_000 });
+  });
 });
 
 test("a disabled automatic switch leaves that kind alone", async () => {
@@ -258,10 +307,24 @@ test("an automatic failure stays quiet and leaves the recipe intact", async () =
   // a failure, and its own failure raises no error for the user.
   await expect(async () => {
     await page.reload();
-    await expect(page.getByText("Quiet Failure Stew").first()).toBeVisible({ timeout: 3_000 });
+    await expect(
+      page.getByRole("heading", { name: "Quiet Failure Stew", exact: true, level: 3 })
+    ).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
 
-  await expect(page.getByText(/failed/i)).toHaveCount(0);
+  await openRecipe("Quiet Failure Stew");
+
+  // Wait for the retained terminal state before the next scenario resets the
+  // provider. Otherwise this job can consume that scenario's extraction reply.
+  await expect(async () => {
+    await openActions();
+    await expect(
+      page.getByRole("menuitem", { name: /Auto Categorize Last run failed/i })
+    ).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
+
+  // The discoverable inline status is not an automatic error toast.
+  await expect(page.getByText("Enrichment failed")).toHaveCount(0);
 });
 
 test("a manual failure is reported to the requester", async () => {
@@ -278,7 +341,7 @@ test("a manual failure is reported to the requester", async () => {
   await expect(page.getByText(/enrichment failed/i).first()).toBeVisible({ timeout: 60_000 });
 });
 
-test("lifecycle state survives a page reload", async () => {
+test("lifecycle state survives a page reload and reconnect", async () => {
   await setAutomaticEnrichment({});
 
   await importAndOpen("Reload Recovery Stew", [bareRecipe("Reload Recovery Stew")]);
@@ -287,6 +350,7 @@ test("lifecycle state survives a page reload", async () => {
   // screen must come from the status query, not from having watched the events.
   stack!.ai.control.succeedWith({ categories: ["Dinner"] });
   stack!.ai.control.hold();
+  let isOffline = false;
 
   try {
     await page.getByRole("button", { name: "Actions" }).click();
@@ -301,20 +365,33 @@ test("lifecycle state survives a page reload", async () => {
     // The action reads as in-flight after a reload, recovered from the status
     // query alone — this browser never saw the queued or processing event.
     await expect(async () => {
-      await page.getByRole("button", { name: "Actions" }).click();
-      await expect(page.getByRole("menuitem", { name: /Auto-categorizing/i })).toBeVisible({
-        timeout: 2_000,
-      });
+      await openActions();
+      await expect(
+        page.getByRole("menuitem", { name: /Auto-categorizing.*In progress/i })
+      ).toBeVisible({ timeout: 2_000 });
     }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
 
     await page.keyboard.press("Escape");
+
+    // Miss the terminal realtime events while disconnected. Reconnect Recovery
+    // must converge both the recipe and lifecycle query without another reload.
+    await context.setOffline(true);
+    isOffline = true;
+    stack!.ai.control.release();
+    await page.waitForTimeout(1_000);
+    await context.setOffline(false);
+    isOffline = false;
+
+    await expect(async () => {
+      await expect(page.getByText("Dinner").first()).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000, intervals: [500, 1_000, 2_000] });
+
+    await page.getByRole("button", { name: "Actions" }).click();
+    await expect(page.getByText("Completed")).toBeVisible({ timeout: 10_000 });
   } finally {
     // Always release: a held provider would hang every later scenario's
     // extraction call, turning one failure into a cascade.
     stack!.ai.control.release();
+    if (isOffline) await context.setOffline(false);
   }
-
-  await eventuallyOnRecipe(async () => {
-    await expect(page.getByText("Dinner").first()).toBeVisible({ timeout: 3_000 });
-  });
 });

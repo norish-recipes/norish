@@ -269,6 +269,12 @@
   },
   "enrichment": {
     "failed": "Berikelse mislyktes",
+    "states": {
+      "queued": "I kø",
+      "processing": "Pågår",
+      "succeeded": "Fullført",
+      "failed": "Siste forsøk mislyktes"
+    },
     "kinds": {
       "auto-tagging": "Automatiske tagger",
       "allergy-detection": "Allergideteksjon",

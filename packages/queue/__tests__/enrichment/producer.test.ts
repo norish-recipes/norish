@@ -7,14 +7,27 @@ vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
+const mocks = vi.hoisted(() => ({ publishLifecycle: vi.fn() }));
+
+vi.mock("../../src/enrichment/announce", () => ({
+  publishEnrichmentLifecycle: mocks.publishLifecycle,
+}));
+
 const { addEnrichmentJob } = await import("../../src/enrichment/producer");
 const { enrichmentJobId } = await import("../../src/enrichment/identity");
 
 const add = vi.fn();
 const getJob = vi.fn();
 const remove = vi.fn();
+const incr = vi.fn();
+const toKey = vi.fn((suffix: string) => `norish:${suffix}`);
 
-const queue = { add, getJob } as unknown as Queue<RecipeEnrichmentJobData>;
+const queue = {
+  add,
+  getJob,
+  client: Promise.resolve({ incr }),
+  toKey,
+} as unknown as Queue<RecipeEnrichmentJobData>;
 
 function job(data: Partial<RecipeEnrichmentJobData> = {}): RecipeEnrichmentJobData {
   return {
@@ -35,6 +48,8 @@ function retained(state: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.publishLifecycle.mockResolvedValue(undefined);
+  incr.mockResolvedValue(1);
   getJob.mockResolvedValue(null);
   add.mockImplementation(async (_name: string, _data: unknown, opts: { jobId: string }) => ({
     id: opts.jobId,
@@ -66,7 +81,61 @@ describe("addEnrichmentJob", () => {
       status: "queued",
       jobId: "enrich_auto-tagging_recipe-1",
     });
-    expect(add).toHaveBeenCalledWith("auto-tag", job(), { jobId: "enrich_auto-tagging_recipe-1" });
+    expect(add).toHaveBeenCalledWith(
+      "auto-tag",
+      { ...job(), runId: expect.any(String), runSequence: 1 },
+      { jobId: "enrich_auto-tagging_recipe-1" }
+    );
+  });
+
+  it("announces queued after BullMQ accepts without making publication part of enrollment", async () => {
+    const data = job({ origin: "manual", requestedByUserId: "user-1" });
+
+    await expect(addEnrichmentJob(queue, data)).resolves.toMatchObject({ status: "queued" });
+
+    const enrolledData = add.mock.calls[0]?.[1];
+
+    expect(enrolledData).toEqual({ ...data, runId: expect.any(String), runSequence: 1 });
+    expect(mocks.publishLifecycle).toHaveBeenCalledWith(enrolledData, "queued");
+    expect(add.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.publishLifecycle.mock.invocationCallOrder[0]!
+    );
+  });
+
+  it("keeps accepted enrollment successful when queued publication fails", async () => {
+    mocks.publishLifecycle.mockRejectedValueOnce(new Error("realtime unavailable"));
+
+    await expect(addEnrichmentJob(queue, job())).resolves.toMatchObject({ status: "queued" });
+  });
+
+  it("reports a concurrent deterministic-id winner as duplicate and emits no phantom run", async () => {
+    getJob
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ data: { ...job(), runId: "winning-run", runSequence: 2 } });
+
+    const result = await addEnrichmentJob(queue, job({ origin: "manual" }));
+
+    expect(result).toEqual({
+      kind: "auto-tagging",
+      status: "duplicate",
+      existingJobId: "enrich_auto-tagging_recipe-1",
+    });
+    expect(mocks.publishLifecycle).not.toHaveBeenCalled();
+  });
+
+  it("allocates a monotonic sequence from Redis for each attempted run", async () => {
+    incr.mockResolvedValueOnce(42);
+
+    await addEnrichmentJob(queue, job());
+
+    expect(toKey).toHaveBeenCalledWith("enrichment-run-sequence");
+    expect(incr).toHaveBeenCalledWith("norish:enrichment-run-sequence");
+    expect(add).toHaveBeenCalledWith(
+      "auto-tag",
+      expect.objectContaining({ runSequence: 42 }),
+      expect.anything()
+    );
   });
 
   it.each(["waiting", "delayed", "active", "prioritized"])(
@@ -100,20 +169,26 @@ describe("addEnrichmentJob", () => {
   it("does not clear a retained job for automatic enrollment, so duplicates coalesce", async () => {
     getJob.mockResolvedValue(retained("completed"));
 
-    await addEnrichmentJob(queue, job({ origin: "automatic" }));
+    const result = await addEnrichmentJob(queue, job({ origin: "automatic" }));
 
-    // BullMQ treats the re-add as a no-op for an existing id, so a second
-    // creation event cannot re-spend AI on a run that already completed.
+    expect(result).toEqual({
+      kind: "auto-tagging",
+      status: "duplicate",
+      existingJobId: "enrich_auto-tagging_recipe-1",
+    });
     expect(remove).not.toHaveBeenCalled();
+    expect(add).not.toHaveBeenCalled();
+    expect(mocks.publishLifecycle).not.toHaveBeenCalled();
   });
 
-  it("still queues when a retained job cannot be removed", async () => {
+  it("does not report a rerun when a retained job cannot be removed", async () => {
     getJob.mockResolvedValue(retained("failed"));
     remove.mockRejectedValue(new Error("locked"));
 
-    const result = await addEnrichmentJob(queue, job({ origin: "manual" }));
-
-    expect(result.status).toBe("queued");
+    await expect(addEnrichmentJob(queue, job({ origin: "manual" }))).rejects.toThrow(
+      "Could not replace retained enrichment job"
+    );
+    expect(add).not.toHaveBeenCalled();
   });
 
   it("uses each kind's own queue job name", async () => {

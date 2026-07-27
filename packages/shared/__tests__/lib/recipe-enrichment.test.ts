@@ -4,6 +4,7 @@ import {
   ENRICHMENT_KINDS,
   hasSubstantiveCategories,
   hasSubstantiveNutrition,
+  isRecipeEnrichmentLifecycleEvent,
   normalizeEnrichmentTagNames,
   normalizeNutritionGroup,
   toEnrichmentLifecycleState,
@@ -125,5 +126,60 @@ describe("toEnrichmentLifecycleState", () => {
   it("maps a missing or unknown job to idle", () => {
     expect(toEnrichmentLifecycleState(null)).toBe("idle");
     expect(toEnrichmentLifecycleState("unknown")).toBe("idle");
+  });
+});
+
+describe("isRecipeEnrichmentLifecycleEvent", () => {
+  it("accepts the complete shared lifecycle vocabulary", () => {
+    expect(
+      isRecipeEnrichmentLifecycleEvent({
+        recipeId: "recipe-1",
+        runId: "run-1",
+        runSequence: 1,
+        kind: "auto-tagging",
+        state: "failed",
+        origin: "manual",
+        requestedByUserId: "user-1",
+      })
+    ).toBe(true);
+  });
+
+  it("accepts a non-failing manual transition without disclosing the requester", () => {
+    expect(
+      isRecipeEnrichmentLifecycleEvent({
+        recipeId: "recipe-1",
+        runId: "run-1",
+        runSequence: 1,
+        kind: "auto-tagging",
+        state: "queued",
+        origin: "manual",
+      })
+    ).toBe(true);
+  });
+
+  it.each([
+    { runId: "" },
+    { runSequence: -1 },
+    { runSequence: 1.5 },
+    { kind: "run-everything" },
+    { state: "idle" },
+    { state: "finished" },
+    { origin: "scheduled" },
+    { requestedByUserId: 42 },
+    { origin: "manual", state: "failed", requestedByUserId: undefined },
+    { origin: "manual", requestedByUserId: "user-1" },
+    { origin: "automatic", requestedByUserId: "user-1" },
+  ])("rejects payloads outside the lifecycle contract: %o", (override) => {
+    expect(
+      isRecipeEnrichmentLifecycleEvent({
+        recipeId: "recipe-1",
+        runId: "run-1",
+        runSequence: 1,
+        kind: "auto-tagging",
+        state: "processing",
+        origin: "automatic",
+        ...override,
+      })
+    ).toBe(false);
   });
 });

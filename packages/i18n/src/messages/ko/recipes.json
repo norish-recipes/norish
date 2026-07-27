@@ -269,6 +269,12 @@
   },
   "enrichment": {
     "failed": "보강에 실패했습니다",
+    "states": {
+      "queued": "대기 중",
+      "processing": "진행 중",
+      "succeeded": "완료됨",
+      "failed": "마지막 실행 실패"
+    },
     "kinds": {
       "auto-tagging": "자동 태그 지정",
       "allergy-detection": "알레르기 감지",
