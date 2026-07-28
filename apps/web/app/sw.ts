@@ -3,6 +3,7 @@ import {
   IMAGE_CACHE_MAX_AGE_SECONDS,
   IMAGE_CACHE_MAX_ENTRIES,
   IMAGE_CACHE_NAME,
+  LEGACY_API_CACHE_NAME,
 } from "@/lib/offline/cache-names";
 import { defaultCache } from "@serwist/next/worker";
 import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist } from "serwist";
@@ -23,13 +24,6 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
-    // The connectivity runtime decides Live vs Offline by probing `/api/v1/health`.
-    // A cached 200 would lie to that probe, so the health route is never cached — it
-    // must always hit the network or genuinely fail (ADR-0006, ADR-0005).
-    {
-      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname === "/api/v1/health",
-      handler: new NetworkOnly(),
-    },
     // Same-origin images (recipe photos via /_next/image included), cache-first
     // like the hand-rolled sw.js this replaces — but bounded. The old worker
     // capped nothing; defaultCache's 64-entry image LRUs are below the Warm Set
@@ -48,6 +42,20 @@ const serwist = new Serwist({
           }),
         ],
       }),
+    },
+    // The API is never cached at the HTTP layer, so an Offline read genuinely
+    // fails instead of being answered with something stale. `defaultCache`
+    // would otherwise hold same-origin `/api/` GETs under NetworkFirst, which
+    // both lies to the connectivity probe and gives reads a second source of
+    // truth beside the persisted query cache — see ADR-0006 for what that cost.
+    //
+    // Serwist routes default to GET, so mutations are unaffected (they were
+    // never cached by anything). The 10s ceiling is `defaultCache`'s, kept so
+    // its `/api/auth/*` rule — which this one now shadows — behaves as before;
+    // the health probe bounds itself at 5s and never reaches it.
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/api/"),
+      handler: new NetworkOnly({ networkTimeoutSeconds: 10 }),
     },
     // Everything else keeps Serwist's Next.js-aware defaults: runtime page/RSC
     // caches for visited routes, static assets and fonts.
@@ -68,6 +76,15 @@ const serwist = new Serwist({
       },
     ],
   },
+});
+
+// An app installed before the rule above has an `apis` cache full of
+// personalized responses that no route reads any more, so nothing expires it
+// and sign-out does not clear it (ADR-0005). Deleting a cache that isn't there
+// is a no-op, so this needs no one-shot guard — it does real work on the
+// activation that replaces such a worker and nothing on every later one.
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.delete(LEGACY_API_CACHE_NAME).catch(() => false));
 });
 
 self.addEventListener("notificationclick", (event) => {

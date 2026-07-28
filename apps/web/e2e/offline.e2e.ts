@@ -167,6 +167,17 @@ test("backend-down unseen navigation boots every Warm Set surface", async () => 
 });
 
 test("an offline grocery toggle survives navigation and a document cold launch", async () => {
+  // Visit /groceries once while Live first. That is what a real user does, and
+  // it is what gives this test teeth: the page's own query batch is a
+  // same-origin GET, so any HTTP-level cache the worker keeps now holds a
+  // pre-toggle copy of it, ready to answer the next Offline refetch with a
+  // stale success. See ADR-0006.
+  server = await startServer();
+  await page.goto("/groceries");
+  await expect(page.getByText(SEEDED_GROCERY_NAME).first()).toBeVisible();
+  await server.stop();
+  server = null;
+
   await page.goto("/groceries");
   const groceryCheckbox = page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME });
 
@@ -186,6 +197,59 @@ test("an offline grocery toggle survives navigation and a document cold launch",
 
   expect(entry?.path).toBe("groceries.toggle");
   expect(entry?.status).toBe("pending");
+});
+
+test("no Offline API read is answered from a stale cache", async () => {
+  // The cause behind the test above, asserted deterministically: whether the
+  // revert reproduces through the UI depends on which query batch URLs the
+  // worker happens to hold, which is why the suite missed it for so long.
+  //
+  // Offline reads come from the persisted query cache (ADR-0001). An HTTP-level
+  // copy of the same responses is both a second source of truth and a liar: it
+  // turns a failed Offline refetch into a *success* carrying pre-mutation data,
+  // and it would answer the connectivity probe with a cached 200. With the
+  // backend down, no API GET may be answered by anything.
+  const { cachedApiUrls, otherCachedEntries, answered } = await page.evaluate(async () => {
+    const cachedApiUrls: string[] = [];
+    let otherCachedEntries = 0;
+
+    for (const name of await caches.keys()) {
+      const cache = await caches.open(name);
+
+      for (const request of await cache.keys()) {
+        if (new URL(request.url).pathname.startsWith("/api/")) {
+          cachedApiUrls.push(request.url);
+        } else {
+          otherCachedEntries += 1;
+        }
+      }
+    }
+
+    const outcomes = await Promise.all(
+      cachedApiUrls.map(async (url) => {
+        try {
+          const response = await fetch(url);
+
+          return `${new URL(url).pathname} answered ${response.status}`;
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    return {
+      cachedApiUrls,
+      otherCachedEntries,
+      answered: outcomes.filter((outcome) => outcome !== null),
+    };
+  });
+
+  // Arming check: an empty API set only means something if the worker is
+  // caching at all. Without this, a change that stopped the suite exercising
+  // the worker would leave the assertion below passing on nothing.
+  expect(otherCachedEntries).toBeGreaterThan(0);
+  expect(cachedApiUrls).toEqual([]);
+  expect(answered).toEqual([]);
 });
 
 test("an offline grocery add is durably queued for its owner", async () => {
@@ -230,6 +294,9 @@ test("the dormant queue replays only once its owner signs in again", async () =>
   // shows it from server truth.
   await page.reload();
   await expect(page.getByText("E2E Dormant Milk").first()).toBeVisible();
+  // Same for the queued toggle: the row is done because the server says so, so
+  // the Offline check-off survived the whole round trip and applied once.
+  await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
 });
 
 /**
