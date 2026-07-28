@@ -41,15 +41,15 @@ Evidence gathered on an iPhone 16e Simulator running iOS 26.2:
 
 ## Acceptance criteria
 
-- [ ] A failed background refetch does not remove previously successful query data from the persisted client.
-- [ ] Queries that have never produced usable data are not persisted merely because they reached an error state.
-- [ ] After warming while Live, Groceries survives Offline navigation, Safari termination, and a direct cold launch to `/groceries`.
-- [ ] Planned calendar entries and their recipe details survive the same Offline cold-launch flow.
-- [ ] The recipe dashboard and representative warmed recipe details remain available after repeated Offline route changes and two consecutive cold launches.
-- [ ] The last-known user identity/profile remains available Offline under the existing owner-scoping rules.
-- [ ] A queued grocery toggle does not revert during navigation or cold launch; if it does, a separate agent-ready issue captures the remaining outbox reconciliation failure.
-- [ ] Existing owner isolation, cache reset, max-age, and cache-buster tests continue to pass.
-- [ ] Focused unit tests, Offline browser E2E, and the iOS Simulator acceptance flow are reported explicitly as passed, failed, or blocked.
+- [x] A failed background refetch does not remove previously successful query data from the persisted client.
+- [x] Queries that have never produced usable data are not persisted merely because they reached an error state.
+- [x] After warming while Live, Groceries survives Offline navigation, Safari termination, and a direct cold launch to `/groceries`.
+- [x] Planned calendar entries and their recipe details survive the same Offline cold-launch flow.
+- [x] The recipe dashboard and representative warmed recipe details remain available after repeated Offline route changes and two consecutive cold launches.
+- [x] The last-known user identity/profile remains available Offline under the existing owner-scoping rules.
+- [x] A queued grocery toggle does not revert during navigation or cold launch; if it does, a separate agent-ready issue captures the remaining outbox reconciliation failure. — it does revert; captured in `.scratch/offline-cache-retention/issues/02-queued-grocery-toggle-reverts-across-offline-navigation.md`.
+- [x] Existing owner isolation, cache reset, max-age, and cache-buster tests continue to pass.
+- [x] Focused unit tests, Offline browser E2E, and the iOS Simulator acceptance flow are reported explicitly as passed, failed, or blocked.
 
 ## Reproduction seam
 
@@ -64,3 +64,8 @@ The diagnosis used an isolated production E2E server on `http://localhost:3100` 
 ## Comments
 
 - 2026-07-24: Reproduced on iOS Simulator after Safari process termination. Desktop Firefox network throttling did not reliably expose the bug because it does not exercise the same mobile cold-start lifecycle.
+- 2026-07-28: Verification run against a clean production build (`build:web` + `build:server`).
+  - Focused unit suite — **passed**. `apps/web/__tests__/lib/query-cache/persisted-query-client.test.ts`, 13/13, including the two new cases.
+  - Offline browser E2E — **passed**. `pnpm --filter @norish/web run test:e2e`, 8/8 in 36.3s, owner isolation, cache reset, max-age and cache-buster cases included.
+  - iOS Simulator acceptance flow — **passed for every read-cache criterion**. iPhone 16e, iOS 26.2, Mobile Safari against the production bundle on `http://localhost:3100` as `offline-a@norish.test`: warmed while Live, stopped the backend, forced failing refetches across `/groceries`, `/calendar`, `/` and the warmed recipe detail, then terminated Safari. Groceries, the calendar note, the warmed recipe detail, the dashboard catalogue and the `Offline A` profile chip all survived four Safari terminations, including two consecutive cold launches.
+  - The queued grocery toggle — **failed**, and is now issue 02. The Outbox entry itself survives and replays correctly on reconnect (`is_done` became true in Postgres), so this is a read-view reconciliation gap, not data loss.
