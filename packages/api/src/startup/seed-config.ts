@@ -632,8 +632,8 @@ async function syncLocales(): Promise<void> {
     if (!existing.locales[locale]) {
       newLocales.push(locale);
       // If ENABLED_LOCALES env is set, only enable if locale is in that list
-      // Otherwise use the default enabled state
-      const enabled = hasEnvFilter ? envEnabledLocales.includes(locale) : entry.enabled;
+      // Otherwise default to false for newly added languages so the admin can review them
+      const enabled = hasEnvFilter ? envEnabledLocales.includes(locale) : false;
 
       existing.locales[locale] = { ...entry, enabled };
     }
