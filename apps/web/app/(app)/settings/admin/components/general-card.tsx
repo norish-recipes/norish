@@ -148,15 +148,16 @@ export default function GeneralCard() {
             isDisabled={isLoading || isSaving}
             placeholder={t("locales")}
             selectedKeys={new Set(enabledLocales)}
+            value={enabledLocales}
             selectionMode="multiple"
             variant="secondary"
-            onSelectionChange={(keys) => {
-              const selected =
-                keys === "all"
-                  ? allLocales.map((locale) => locale.code)
-                  : Array.from(keys as Set<Key>, String);
-
-              handleEnabledLocalesChange(selected);
+            onChange={(e: any) => {
+              const val = e?.target ? e.target.value : e;
+              if (typeof val === "string") {
+                handleEnabledLocalesChange(val ? val.split(",") : []);
+              } else if (Array.isArray(val)) {
+                handleEnabledLocalesChange(val);
+              }
             }}
           >
             <Label>{t("locales")}</Label>
