@@ -18,7 +18,7 @@ import type { CreateRecipeHooksOptions } from "../types";
 export type RecipeEnrichmentStateMap = Record<RecipeEnrichmentKind, RecipeEnrichmentLifecycleState>;
 
 export interface RecipeEnrichmentResult {
-  /** Lifecycle state per kind. Always all four, so callers never handle "unknown". */
+  /** Lifecycle state per kind. Always every kind, so callers never handle "unknown". */
   states: RecipeEnrichmentStateMap;
   /** True while that kind is queued or processing, which is when its action is disabled. */
   isBusy: (kind: RecipeEnrichmentKind) => boolean;
@@ -61,6 +61,7 @@ const IDLE_STATES: RecipeEnrichmentStateMap = {
   "allergy-detection": "idle",
   "auto-categorization": "idle",
   "nutrition-estimation": "idle",
+  "recipe-provenance": "idle",
 };
 
 const STATE_FRESHNESS: Record<RecipeEnrichmentLifecycleState, number> = {
@@ -113,9 +114,9 @@ function reconcileStatusAfterLifecycle(
 }
 
 /**
- * One hook for all four Recipe Enrichment kinds.
+ * One hook for every Recipe Enrichment kind.
  *
- * Replaces four near-identical query/subscription families. The combined status
+ * Replaces a near-identical query/subscription family per kind. The combined status
  * query is the authoritative initial and recovery read; lifecycle events update
  * that cache directly, so a success needs no refetch and there is no polling.
  */
@@ -137,6 +138,7 @@ export function createUseRecipeEnrichment({ useTRPC }: CreateRecipeHooksOptions)
       "allergy-detection": 0,
       "auto-categorization": 0,
       "nutrition-estimation": 0,
+      "recipe-provenance": 0,
     });
 
     const { data, isLoading } = useQuery({

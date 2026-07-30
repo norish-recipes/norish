@@ -23,6 +23,13 @@ export interface QueueRecipeSummary {
   ingredients: string[];
 }
 
+/** The whole Recipe Provenance claim from one AI request. */
+export interface QueueProvenanceInference {
+  originCountry: string | null;
+  originRegion: string | null;
+  provenanceNote: string;
+}
+
 export interface QueueSyncResult {
   uid: string;
   isNew: boolean;
@@ -69,6 +76,7 @@ export interface QueueApiHandlers {
     recipe: QueueRecipeSummary,
     allergiesToDetect: string[]
   ): Promise<AIResult<string[]>>;
+  inferRecipeProvenance(recipe: QueueRecipeSummary): Promise<AIResult<QueueProvenanceInference>>;
   syncPlannedItem(
     userId: string,
     itemId: string,

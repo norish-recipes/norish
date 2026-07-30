@@ -37,6 +37,13 @@ export const recipes = pgTable(
     fat: numeric("fat", { precision: 6, scale: 2 }),
     carbs: numeric("carbs", { precision: 6, scale: 2 }),
     protein: numeric("protein", { precision: 6, scale: 2 }),
+    // Recipe Provenance. The country is an ISO-3166-1 alpha-2 code rather than a
+    // display name, so the client localises it; the region is free text and is
+    // never translated. The note is written in the language of the recipe
+    // itself and that language is deliberately not recorded.
+    originCountry: text("origin_country"),
+    originRegion: text("origin_region"),
+    provenanceNote: text("provenance_note"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     categories: recipeCategoryEnum("categories").array().notNull().default([]),

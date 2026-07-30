@@ -49,6 +49,7 @@ const ALL_AUTOMATIC_ENRICHMENT_OFF: AutomaticEnrichmentConfig = {
   allergyDetection: false,
   autoCategorization: false,
   nutritionEstimation: false,
+  recipeProvenance: false,
 };
 
 // ============================================================================
@@ -262,7 +263,7 @@ export async function getCuisineStrategy(): Promise<CuisineStrategy> {
 }
 
 /**
- * Get the four independent Automatic Recipe Enrichment switches.
+ * Get the independent Automatic Recipe Enrichment switches, one per kind.
  * Every kind is off when AI is globally disabled, because no automatic or manual
  * AI request may bypass deployment policy.
  */

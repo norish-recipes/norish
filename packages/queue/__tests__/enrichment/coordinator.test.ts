@@ -44,7 +44,10 @@ const ALL_ON = {
   allergyDetection: true,
   autoCategorization: true,
   nutritionEstimation: true,
+  recipeProvenance: true,
 };
+
+const KIND_COUNT = 5;
 
 function recipe(overrides: Record<string, unknown> = {}) {
   return {
@@ -56,6 +59,10 @@ function recipe(overrides: Record<string, unknown> = {}) {
     fat: null,
     carbs: null,
     protein: null,
+    originCountry: null,
+    originRegion: null,
+    provenanceNote: null,
+    cuisines: [],
     ...overrides,
   };
 }
@@ -82,9 +89,9 @@ describe("automatic enrollment", () => {
   it("enrolls every eligible kind independently", async () => {
     const results = await enrichRecipe(context, { origin: "automatic" });
 
-    expect(results).toHaveLength(4);
+    expect(results).toHaveLength(KIND_COUNT);
     expect(results.every((result) => result.status === "queued")).toBe(true);
-    expect(addEnrichmentJob).toHaveBeenCalledTimes(4);
+    expect(addEnrichmentJob).toHaveBeenCalledTimes(KIND_COUNT);
   });
 
   it("records automatic origin and no requester on the job", async () => {
@@ -101,7 +108,7 @@ describe("automatic enrollment", () => {
 
     const results = await enrichRecipe(context, { origin: "automatic" });
 
-    expect(results).toHaveLength(4);
+    expect(results).toHaveLength(KIND_COUNT);
     expect(results.every((r) => r.status === "skipped" && r.reason === "ai-disabled")).toBe(true);
     expect(addEnrichmentJob).not.toHaveBeenCalled();
   });
@@ -111,6 +118,7 @@ describe("automatic enrollment", () => {
     ["allergyDetection", "allergy-detection"],
     ["autoCategorization", "auto-categorization"],
     ["nutritionEstimation", "nutrition-estimation"],
+    ["recipeProvenance", "recipe-provenance"],
   ] as const)("skips %s when its automatic switch is off", async (setting, kind) => {
     getAutomaticEnrichmentConfig.mockResolvedValue({ ...ALL_ON, [setting]: false });
 
@@ -121,7 +129,7 @@ describe("automatic enrollment", () => {
       status: "skipped",
       reason: "automatic-disabled",
     });
-    expect(addEnrichmentJob).toHaveBeenCalledTimes(3);
+    expect(addEnrichmentJob).toHaveBeenCalledTimes(KIND_COUNT - 1);
   });
 
   it("skips every kind with insufficient input when the recipe has no ingredients", async () => {
@@ -190,6 +198,33 @@ describe("automatic enrollment", () => {
     expect(outcome(results, "nutrition-estimation")?.status).toBe("queued");
   });
 
+  it.each([
+    ["originCountry", "IT"],
+    ["originRegion", "Lazio"],
+    ["provenanceNote", "A Roman classic."],
+  ] as const)(
+    "skips provenance when supplied %s makes the whole group substantive",
+    async (field, value) => {
+      getRecipeFull.mockResolvedValue(recipe({ [field]: value }));
+
+      const results = await enrichRecipe(context, { origin: "automatic" });
+
+      expect(outcome(results, "recipe-provenance")).toEqual({
+        kind: "recipe-provenance",
+        status: "skipped",
+        reason: "supplied-data-present",
+      });
+    }
+  );
+
+  it("treats blank provenance values as absent", async () => {
+    getRecipeFull.mockResolvedValue(recipe({ originRegion: "  ", provenanceNote: "" }));
+
+    const results = await enrichRecipe(context, { origin: "automatic" });
+
+    expect(outcome(results, "recipe-provenance")?.status).toBe("queued");
+  });
+
   it("keeps supplied tags from suppressing append work", async () => {
     getRecipeFull.mockResolvedValue(recipe({ tags: [{ name: "supplied" }] }));
 
@@ -226,7 +261,7 @@ describe("automatic enrollment", () => {
       status: "failed-to-queue",
       error: "redis is down",
     });
-    expect(results.filter((r) => r.status === "queued")).toHaveLength(3);
+    expect(results.filter((r) => r.status === "queued")).toHaveLength(KIND_COUNT - 1);
   });
 
   it("keeps enrolling siblings when allergy lookup throws", async () => {
@@ -280,6 +315,7 @@ describe("manual enrollment", () => {
     ["allergyDetection", "allergy-detection"],
     ["autoCategorization", "auto-categorization"],
     ["nutritionEstimation", "nutrition-estimation"],
+    ["recipeProvenance", "recipe-provenance"],
   ] as const)("ignores the %s automatic switch", async (setting, kind) => {
     getAutomaticEnrichmentConfig.mockResolvedValue({ ...ALL_ON, [setting]: false });
 
@@ -300,6 +336,16 @@ describe("manual enrollment", () => {
     getRecipeFull.mockResolvedValue(recipe({ categories: ["Dinner"] }));
 
     const results = await enrichRecipe(context, { origin: "manual", kind: "auto-categorization" });
+
+    expect(results[0]?.status).toBe("queued");
+  });
+
+  it("replaces the whole supplied provenance group on request", async () => {
+    getRecipeFull.mockResolvedValue(
+      recipe({ originCountry: "IT", provenanceNote: "Set by an editor." })
+    );
+
+    const results = await enrichRecipe(context, { origin: "manual", kind: "recipe-provenance" });
 
     expect(results[0]?.status).toBe("queued");
   });

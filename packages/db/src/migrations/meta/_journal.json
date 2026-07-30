@@ -253,6 +253,13 @@
       "when": 1785422267982,
       "tag": "0035_recipe_cuisines",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1785423220226,
+      "tag": "0036_recipe_provenance",
+      "breakpoints": true
     }
   ]
 }

@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 describe("getRecipeEnrichmentStatus", () => {
-  it("always reports all four kinds, so a client never distinguishes idle from missing", async () => {
+  it("always reports every kind, so a client never distinguishes idle from missing", async () => {
     const status = await getRecipeEnrichmentStatus("recipe-1");
 
     expect(status.recipeId).toBe("recipe-1");
@@ -35,6 +35,7 @@ describe("getRecipeEnrichmentStatus", () => {
       "allergy-detection",
       "auto-categorization",
       "nutrition-estimation",
+      "recipe-provenance",
     ]);
     expect(status.kinds.every((entry) => entry.state === "idle")).toBe(true);
   });

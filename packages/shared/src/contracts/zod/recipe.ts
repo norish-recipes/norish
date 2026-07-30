@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { measurementSystemEnum, recipes } from "@norish/db-schema/schema";
 
+import { CuisineSummarySchema } from "./cuisine";
 import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
 import {
   RecipeIngredientInputBaseSchema,
@@ -40,6 +41,11 @@ export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   fat: true,
   carbs: true,
   protein: true,
+  // Browsing by origin is a separate feature; the dashboard has no use for
+  // Recipe Provenance, so it does not carry it.
+  originCountry: true,
+  originRegion: true,
+  provenanceNote: true,
 }).extend({
   tags: z.array(TagSummarySchema).default([]),
   categories: z.array(recipeCategorySchema).default([]),
@@ -52,6 +58,9 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientsWithIdSchema),
   steps: z.array(StepOutputSchema).default([]),
   tags: z.array(TagSummarySchema).default([]),
+  // Recipe Provenance travels with the recipe, which is why an Offline reader
+  // sees exactly what a Live one does and no separate warming is needed.
+  cuisines: z.array(CuisineSummarySchema).default([]),
   categories: z.array(recipeCategorySchema).default([]),
   author: AuthorSchema,
   images: RecipeImagesArraySchema.default([]),

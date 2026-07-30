@@ -176,6 +176,12 @@ function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO |
     carbs: input.carbs ?? null,
     protein: input.protein ?? null,
     systemUsed,
+    // Recipe Provenance is never supplied at creation: it is inferred later, or
+    // typed in the recipe form afterwards.
+    originCountry: input.originCountry ?? null,
+    originRegion: input.originRegion ?? null,
+    provenanceNote: input.provenanceNote ?? null,
+    cuisines: [],
     createdAt: now,
     updatedAt: now,
     tags: (input.tags ?? []).map((tag) => ({ name: tag.name, version: 1 })),

@@ -580,7 +580,9 @@
         "autoCategorization": "Catégorisation automatique",
         "autoCategorizationDescription": "Attribue des catégories de repas aux nouvelles recettes qui n'en ont pas",
         "nutritionEstimation": "Estimation nutritionnelle",
-        "nutritionEstimationDescription": "Estime les calories, lipides, glucides et protéines des nouvelles recettes sans valeurs fournies"
+        "nutritionEstimationDescription": "Estime les calories, lipides, glucides et protéines des nouvelles recettes sans valeurs fournies",
+        "recipeProvenance": "Provenance des recettes",
+        "recipeProvenanceDescription": "Déduire le pays, la région, les cuisines et une courte note pour les nouvelles recettes qui n'en ont pas"
       },
       "tagStrategy": "Stratégie d'étiquetage",
       "tagStrategyDescription": "Quelles étiquettes l'étiquetage automatique peut utiliser, qu'il soit automatique ou manuel",
@@ -645,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Entrez le prompt...",
       "autoTagging": "Prompt d’auto‑tag",
       "autoTaggingDescription": "Utilisé pour générer les tags des recettes importées",
-      "autoTaggingPlaceholder": "Entrez le prompt..."
+      "autoTaggingPlaceholder": "Entrez le prompt...",
+      "recipeProvenance": "Invite de provenance des recettes",
+      "recipeProvenanceDescription": "Cette invite détermine l'origine d'une recette. La note produite est rédigée dans la langue de la recette elle-même. Variables disponibles : recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Saisissez l'invite de provenance des recettes..."
     },
     "unsavedChanges": "Modifications non enregistrées",
     "jsonEditor": {

@@ -580,7 +580,9 @@
         "autoCategorization": "Automatisk kategorisering",
         "autoCategorizationDescription": "Sett måltidskategorier på nye oppskrifter som mangler dem",
         "nutritionEstimation": "Estimering av næringsinnhold",
-        "nutritionEstimationDescription": "Estimer kalorier, fett, karbohydrater og protein for nye oppskrifter uten oppgitte verdier"
+        "nutritionEstimationDescription": "Estimer kalorier, fett, karbohydrater og protein for nye oppskrifter uten oppgitte verdier",
+        "recipeProvenance": "Oppskriftens opphav",
+        "recipeProvenanceDescription": "Utled land, region, kjøkken og et kort notat for nye oppskrifter som mangler det"
       },
       "tagStrategy": "Taggstrategi",
       "tagStrategyDescription": "Hvilke tagger automatisk tagging kan bruke, enten den kjører automatisk eller manuelt",
@@ -645,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Skriv inn prompt for næringsestimering...",
       "autoTagging": "Prompt for auto-tagging",
       "autoTaggingDescription": "Denne prompten brukes til å generere tags for importerte oppskrifter. Definer taggregler og liste over forhåndsdefinerte tags.",
-      "autoTaggingPlaceholder": "Skriv inn prompt for auto-tagging..."
+      "autoTaggingPlaceholder": "Skriv inn prompt for auto-tagging...",
+      "recipeProvenance": "Ledetekst for oppskriftens opphav",
+      "recipeProvenanceDescription": "Denne ledeteksten finner ut hvor en oppskrift kommer fra. Notatet skrives på oppskriftens eget språk. Tilgjengelige variabler: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Skriv inn ledeteksten for oppskriftens opphav ..."
     },
     "unsavedChanges": "Ulagrede endringer",
     "jsonEditor": {

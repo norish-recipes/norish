@@ -29,6 +29,7 @@ import {
   ENRICHMENT_KINDS,
   hasSubstantiveCategories,
   hasSubstantiveNutrition,
+  hasSubstantiveProvenance,
 } from "@norish/shared/lib/recipe-enrichment";
 
 import type { RecipeEnrichmentJobData } from "../contracts/job-types";
@@ -60,7 +61,7 @@ function ineligible(reason: RecipeEnrichmentSkipReason): Eligibility {
 /**
  * Enroll Recipe Enrichment for one recipe.
  *
- * Automatic enrollment evaluates all four kinds; a manual request evaluates
+ * Automatic enrollment evaluates every kind; a manual request evaluates
  * exactly the one asked for. Every eligible kind is attempted independently, so
  * one producer failure cannot short-circuit its siblings — and for automatic
  * enrollment, cannot affect the creation that triggered it.
@@ -137,6 +138,7 @@ const SETTING_BY_KIND = {
   "allergy-detection": "allergyDetection",
   "auto-categorization": "autoCategorization",
   "nutrition-estimation": "nutritionEstimation",
+  "recipe-provenance": "recipeProvenance",
 } as const satisfies Record<RecipeEnrichmentKind, string>;
 
 interface EvaluationInput {
@@ -180,6 +182,15 @@ function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibili
       // Nutrition Information is one atomic group: any substantive supplied
       // value protects the whole group from automatic estimation.
       return origin === "automatic" && hasSubstantiveNutrition(recipe)
+        ? ineligible("supplied-data-present")
+        : ELIGIBLE;
+
+    case "recipe-provenance":
+      // Recipe Provenance is one atomic group too, and for a sharper reason:
+      // the note explains the whole claim, so filling Cuisines beside a
+      // human-set country would store a paragraph arguing against the field
+      // next to it.
+      return origin === "automatic" && hasSubstantiveProvenance(recipe)
         ? ineligible("supplied-data-present")
         : ELIGIBLE;
   }

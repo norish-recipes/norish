@@ -12,6 +12,7 @@ export const ENRICHMENT_KINDS = [
   "allergy-detection",
   "auto-categorization",
   "nutrition-estimation",
+  "recipe-provenance",
 ] as const;
 
 export type RecipeEnrichmentKind = (typeof ENRICHMENT_KINDS)[number];
@@ -61,7 +62,7 @@ export interface RecipeEnrichmentKindStatus {
   runSequence: number | null;
 }
 
-/** Authoritative initial/recovery read: one entry per kind, always all four. */
+/** Authoritative initial/recovery read: one entry per kind, always all of them. */
 export interface RecipeEnrichmentStatusDto {
   recipeId: string;
   kinds: RecipeEnrichmentKindStatus[];
@@ -190,6 +191,99 @@ export function normalizeNutritionGroup(nutrition: NutritionGroupInput): Nutriti
     fat: fat === null ? null : String(fat),
     carbs: carbs === null ? null : String(carbs),
     protein: protein === null ? null : String(protein),
+  };
+}
+
+/** Recipe Provenance as proposed: any field may be absent or blank. */
+export interface ProvenanceGroupInput {
+  originCountry?: string | null;
+  originRegion?: string | null;
+  provenanceNote?: string | null;
+  /** Resolved Cuisine names, or the rows themselves when reading a stored recipe. */
+  cuisines?: readonly (string | { name?: string | null } | null | undefined)[] | null;
+}
+
+/**
+ * Recipe Provenance as stored.
+ *
+ * The country is an ISO-3166-1 alpha-2 code so the client can localise it; the
+ * region and the note are free text and are never translated. Cuisines are not
+ * part of this shape because they are join rows rather than columns.
+ */
+export interface ProvenanceGroup {
+  originCountry: string | null;
+  originRegion: string | null;
+  provenanceNote: string | null;
+}
+
+export const EMPTY_PROVENANCE_GROUP: ProvenanceGroup = {
+  originCountry: null,
+  originRegion: null,
+  provenanceNote: null,
+};
+
+function normalizeText(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+
+  return trimmed === "" ? null : trimmed;
+}
+
+/**
+ * An ISO-3166-1 alpha-2 code, or null.
+ *
+ * The country is stored as a code and never as a display name, so anything that
+ * is not two letters is not a country code and is discarded rather than
+ * rendered as a broken flag.
+ */
+export function normalizeOriginCountry(value: string | null | undefined): string | null {
+  const trimmed = normalizeText(value);
+
+  if (trimmed === null || !/^[A-Za-z]{2}$/.test(trimmed)) return null;
+
+  return trimmed.toUpperCase();
+}
+
+/** True when at least one Cuisine name survives normalization. */
+export function hasSubstantiveCuisines(cuisines: ProvenanceGroupInput["cuisines"]): boolean {
+  if (!cuisines) return false;
+
+  return cuisines.some((cuisine) => {
+    const name = typeof cuisine === "string" ? cuisine : cuisine?.name;
+
+    return normalizeText(name) !== null;
+  });
+}
+
+/**
+ * Recipe Provenance is one atomic precedence group: any substantive value among
+ * the country, the region, the Cuisines, and the note makes the stored group
+ * authoritative, following the precedent set by Nutrition Information.
+ *
+ * Atomicity is deliberate. The note explains the whole claim, so letting AI fill
+ * Cuisines beside a human-set country would store a paragraph arguing against
+ * the field next to it.
+ */
+export function hasSubstantiveProvenance(provenance: ProvenanceGroupInput): boolean {
+  return (
+    normalizeOriginCountry(provenance.originCountry) !== null ||
+    normalizeText(provenance.originRegion) !== null ||
+    normalizeText(provenance.provenanceNote) !== null ||
+    hasSubstantiveCuisines(provenance.cuisines)
+  );
+}
+
+/**
+ * Normalize a proposed Recipe Provenance group for replacement.
+ * Omitted, blank, and malformed fields become null because replacement cannot
+ * mix an old claim with a new one.
+ */
+export function normalizeProvenanceGroup(provenance: ProvenanceGroupInput): ProvenanceGroup {
+  return {
+    originCountry: normalizeOriginCountry(provenance.originCountry),
+    originRegion: normalizeText(provenance.originRegion),
+    provenanceNote: normalizeText(provenance.provenanceNote),
   };
 }
 

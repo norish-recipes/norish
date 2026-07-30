@@ -14,7 +14,8 @@ vi.mock("../../src/enrichment/announce", () => ({
 }));
 
 const { addEnrichmentJob } = await import("../../src/enrichment/producer");
-const { enrichmentJobId } = await import("../../src/enrichment/identity");
+const { ENRICHMENT_JOB_NAMES, ENRICHMENT_QUEUE_NAMES, enrichmentJobId } =
+  await import("../../src/enrichment/identity");
 
 const add = vi.fn();
 const getJob = vi.fn();
@@ -69,6 +70,25 @@ describe("enrichment job identity", () => {
 
   it("contains no colons, which BullMQ rejects in job ids", () => {
     expect(enrichmentJobId("nutrition-estimation", "recipe-1")).not.toContain(":");
+  });
+
+  it("gives every kind its own queue and job name, so none can disturb another", () => {
+    const queues = Object.values(ENRICHMENT_QUEUE_NAMES);
+    const jobNames = Object.values(ENRICHMENT_JOB_NAMES);
+
+    expect(new Set(queues).size).toBe(queues.length);
+    expect(new Set(jobNames).size).toBe(jobNames.length);
+    expect(ENRICHMENT_QUEUE_NAMES["recipe-provenance"]).toBe("recipe-provenance");
+  });
+
+  it("keys provenance by recipe and kind only, with no locale or field in the id", () => {
+    // Duplicate coalescing across server instances depends on this invariant.
+    expect(enrichmentJobId("recipe-provenance", "recipe-1")).toBe(
+      "enrich_recipe-provenance_recipe-1"
+    );
+    expect(enrichmentJobId("recipe-provenance", "recipe-1")).not.toBe(
+      enrichmentJobId("recipe-provenance", "recipe-2")
+    );
   });
 });
 

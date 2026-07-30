@@ -25,6 +25,7 @@ export const QUEUE_NAMES = {
   AUTO_TAGGING: "auto-tagging",
   AUTO_CATEGORIZATION: "auto-categorization",
   ALLERGY_DETECTION: "allergy-detection",
+  RECIPE_PROVENANCE: "recipe-provenance",
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -63,6 +64,7 @@ export const STALLED_INTERVAL = {
   [QUEUE_NAMES.AUTO_TAGGING]: 60_000, // 1 min - background enhancement
   [QUEUE_NAMES.AUTO_CATEGORIZATION]: 60_000, // 1 min - background enhancement
   [QUEUE_NAMES.ALLERGY_DETECTION]: 60_000, // 1 min - background enhancement
+  [QUEUE_NAMES.RECIPE_PROVENANCE]: 60_000, // 1 min - background enhancement
 } as const;
 
 /**
@@ -78,6 +80,7 @@ export const WORKER_CONCURRENCY = {
   [QUEUE_NAMES.AUTO_TAGGING]: 2,
   [QUEUE_NAMES.AUTO_CATEGORIZATION]: 2,
   [QUEUE_NAMES.ALLERGY_DETECTION]: 2,
+  [QUEUE_NAMES.RECIPE_PROVENANCE]: 2,
 } as const;
 
 /**
@@ -125,6 +128,7 @@ export const HANGING_THRESHOLD_MS: Record<QueueName, number> = {
   [QUEUE_NAMES.AUTO_TAGGING]: 15 * 60_000,
   [QUEUE_NAMES.AUTO_CATEGORIZATION]: 15 * 60_000,
   [QUEUE_NAMES.ALLERGY_DETECTION]: 15 * 60_000,
+  [QUEUE_NAMES.RECIPE_PROVENANCE]: 15 * 60_000,
 };
 
 export type QueueRemovalOptions = Pick<DefaultJobOptions, "removeOnComplete" | "removeOnFail">;
@@ -255,6 +259,19 @@ export const autoCategorizationJobOptions: DefaultJobOptions = {
 };
 
 export const allergyDetectionJobOptions: DefaultJobOptions = {
+  attempts: 3,
+  backoff: {
+    type: "exponential",
+    delay: 2000, // 2s, 4s, 8s
+  },
+  removeOnComplete: {
+    age: 3600,
+    count: 500,
+  },
+  removeOnFail: FALLBACK_REMOVAL,
+};
+
+export const recipeProvenanceJobOptions: DefaultJobOptions = {
   attempts: 3,
   backoff: {
     type: "exponential",

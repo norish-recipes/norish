@@ -4,20 +4,90 @@ import {
   ENRICHMENT_KINDS,
   hasSubstantiveCategories,
   hasSubstantiveNutrition,
+  hasSubstantiveProvenance,
   isRecipeEnrichmentLifecycleEvent,
   normalizeEnrichmentTagNames,
   normalizeNutritionGroup,
+  normalizeOriginCountry,
+  normalizeProvenanceGroup,
   toEnrichmentLifecycleState,
 } from "@norish/shared/lib/recipe-enrichment";
 
 describe("ENRICHMENT_KINDS", () => {
-  it("names the four independent enrichment kinds", () => {
+  it("names the five independent enrichment kinds", () => {
     expect([...ENRICHMENT_KINDS]).toEqual([
       "auto-tagging",
       "allergy-detection",
       "auto-categorization",
       "nutrition-estimation",
+      "recipe-provenance",
     ]);
+  });
+});
+
+describe("normalizeOriginCountry", () => {
+  it("uppercases a two-letter code", () => {
+    expect(normalizeOriginCountry("it")).toBe("IT");
+    expect(normalizeOriginCountry(" jp ")).toBe("JP");
+  });
+
+  it("discards anything that is not an alpha-2 code", () => {
+    // The country is stored as a code, never a display name, so a name is not
+    // a country the client can render a flag for.
+    expect(normalizeOriginCountry("Italy")).toBeNull();
+    expect(normalizeOriginCountry("ITA")).toBeNull();
+    expect(normalizeOriginCountry("")).toBeNull();
+    expect(normalizeOriginCountry(null)).toBeNull();
+  });
+});
+
+describe("hasSubstantiveProvenance", () => {
+  it("treats an absent or blank group as absent", () => {
+    expect(hasSubstantiveProvenance({})).toBe(false);
+    expect(
+      hasSubstantiveProvenance({
+        originCountry: null,
+        originRegion: "  ",
+        provenanceNote: "\n",
+        cuisines: [],
+      })
+    ).toBe(false);
+  });
+
+  it("treats any single substantive field as making the whole group authoritative", () => {
+    expect(hasSubstantiveProvenance({ originCountry: "IT" })).toBe(true);
+    expect(hasSubstantiveProvenance({ originRegion: "Lazio" })).toBe(true);
+    expect(hasSubstantiveProvenance({ provenanceNote: "A Roman classic." })).toBe(true);
+    expect(hasSubstantiveProvenance({ cuisines: [{ name: "Italian" }] })).toBe(true);
+    expect(hasSubstantiveProvenance({ cuisines: ["Italian"] })).toBe(true);
+  });
+
+  it("does not count a malformed country as substantive", () => {
+    expect(hasSubstantiveProvenance({ originCountry: "Italy" })).toBe(false);
+  });
+});
+
+describe("normalizeProvenanceGroup", () => {
+  it("nulls omitted, blank, and malformed fields so replacement cannot mix claims", () => {
+    expect(normalizeProvenanceGroup({ originCountry: "Italy", originRegion: "   " })).toEqual({
+      originCountry: null,
+      originRegion: null,
+      provenanceNote: null,
+    });
+  });
+
+  it("keeps the note exactly as written apart from surrounding whitespace", () => {
+    expect(
+      normalizeProvenanceGroup({
+        originCountry: "jp",
+        originRegion: " Kansai ",
+        provenanceNote: "  \u3053\u306e\u30ec\u30b7\u30d4\u306f...  ",
+      })
+    ).toEqual({
+      originCountry: "JP",
+      originRegion: "Kansai",
+      provenanceNote: "\u3053\u306e\u30ec\u30b7\u30d4\u306f...",
+    });
   });
 });
 

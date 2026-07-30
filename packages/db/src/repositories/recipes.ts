@@ -824,6 +824,9 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       fat: true,
       carbs: true,
       protein: true,
+      originCountry: true,
+      originRegion: true,
+      provenanceNote: true,
       categories: true,
       createdAt: true,
       updatedAt: true,
@@ -834,6 +837,11 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
         columns: {},
         with: { tag: { columns: { id: true, name: true, version: true } } },
         orderBy: (rt, { asc }) => [asc(rt.order)],
+      },
+      recipeCuisines: {
+        columns: {},
+        with: { cuisine: { columns: { id: true, name: true, version: true } } },
+        orderBy: (rc, { asc }) => [asc(rc.order)],
       },
       ingredients: {
         columns: {
@@ -909,6 +917,9 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     fat: full.fat ?? null,
     carbs: full.carbs ?? null,
     protein: full.protein ?? null,
+    originCountry: full.originCountry ?? null,
+    originRegion: full.originRegion ?? null,
+    provenanceNote: full.provenanceNote ?? null,
     categories: full.categories ?? [],
     steps: (full.steps ?? []).map((s: any) => ({
       step: s.step,
@@ -929,6 +940,14 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       .map((rt: any) => rt.tag)
       .filter((tag: { name?: string; version?: number } | null | undefined) => tag?.name)
       .map((tag: { name: string; version: number }) => ({ name: tag.name, version: tag.version })),
+    cuisines: (full.recipeCuisines ?? [])
+      .map((rc: any) => rc.cuisine)
+      .filter((cuisine: { name?: string } | null | undefined) => cuisine?.name)
+      .map((cuisine: { id: string; name: string; version: number }) => ({
+        id: cuisine.id,
+        name: cuisine.name,
+        version: cuisine.version,
+      })),
     recipeIngredients: (full.ingredients ?? []).map((ri: any) => ({
       id: ri.id,
       ingredientId: ri.ingredientId,

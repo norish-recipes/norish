@@ -179,11 +179,13 @@ describe("admin procedures", () => {
         timeoutMs: 300000,
         alwaysUseAI: false,
         tagStrategy: "predefined" as const,
+        cuisineStrategy: "existing" as const,
         automaticEnrichment: {
           autoTagging: false,
           allergyDetection: true,
           autoCategorization: false,
           nutritionEstimation: false,
+          recipeProvenance: false,
         },
       };
 
@@ -235,11 +237,13 @@ describe("admin procedures", () => {
         timeoutMs: 300000,
         alwaysUseAI: false,
         tagStrategy: "predefined" as const,
+        cuisineStrategy: "existing" as const,
         automaticEnrichment: {
           autoTagging: false,
           allergyDetection: true,
           autoCategorization: false,
           nutritionEstimation: false,
+          recipeProvenance: false,
         },
       };
 

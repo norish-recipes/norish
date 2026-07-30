@@ -580,7 +580,9 @@
         "autoCategorization": "Auto-Categorization",
         "autoCategorizationDescription": "Set meal categories on new recipes that have none",
         "nutritionEstimation": "Nutrition Estimation",
-        "nutritionEstimationDescription": "Estimate calories, fat, carbs, and protein for new recipes that supply none"
+        "nutritionEstimationDescription": "Estimate calories, fat, carbs, and protein for new recipes that supply none",
+        "recipeProvenance": "Recipe Provenance",
+        "recipeProvenanceDescription": "Work out the country, region, Cuisines, and a short note for new recipes that have none"
       },
       "tagStrategy": "Tag Strategy",
       "tagStrategyDescription": "Which tags auto-tagging may use, whether it runs automatically or manually",
@@ -645,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Enter the nutrition estimation prompt...",
       "autoTagging": "Auto-Tagging Prompt",
       "autoTaggingDescription": "This prompt is used to generate tags for imported recipes. Define tagging rules and predefined tags list.",
-      "autoTaggingPlaceholder": "Enter the auto-tagging prompt..."
+      "autoTaggingPlaceholder": "Enter the auto-tagging prompt...",
+      "recipeProvenance": "Recipe Provenance Prompt",
+      "recipeProvenanceDescription": "This prompt is used to work out where a recipe comes from. The note it produces is written in the language of the recipe itself. Available variables: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Enter the Recipe Provenance prompt..."
     },
     "unsavedChanges": "Unsaved changes",
     "jsonEditor": {

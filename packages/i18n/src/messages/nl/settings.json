@@ -580,7 +580,9 @@
         "autoCategorization": "Automatisch categoriseren",
         "autoCategorizationDescription": "Stel maaltijdcategorieën in op nieuwe recepten die er nog geen hebben",
         "nutritionEstimation": "Voedingswaarde schatten",
-        "nutritionEstimationDescription": "Schat calorieën, vet, koolhydraten en eiwitten voor nieuwe recepten zonder opgegeven waarden"
+        "nutritionEstimationDescription": "Schat calorieën, vet, koolhydraten en eiwitten voor nieuwe recepten zonder opgegeven waarden",
+        "recipeProvenance": "Receptherkomst",
+        "recipeProvenanceDescription": "Bepaal land, streek, keukens en een korte toelichting voor nieuwe recepten die die nog niet hebben"
       },
       "tagStrategy": "Tagstrategie",
       "tagStrategyDescription": "Welke tags automatisch taggen mag gebruiken, of het nu automatisch of handmatig draait",
@@ -645,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Voer de voedingswaarde prompt in...",
       "autoTagging": "Auto-tagging Prompt",
       "autoTaggingDescription": "Deze prompt wordt gebruikt om tags te genereren voor geïmporteerde recepten. Definieer taggingregels en een lijst met voorgedefinieerde tags.",
-      "autoTaggingPlaceholder": "Voer de auto-tagging prompt in..."
+      "autoTaggingPlaceholder": "Voer de auto-tagging prompt in...",
+      "recipeProvenance": "Prompt voor receptherkomst",
+      "recipeProvenanceDescription": "Deze prompt bepaalt waar een recept vandaan komt. De toelichting die eruit komt staat in de taal van het recept zelf. Beschikbare variabelen: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Voer de prompt voor receptherkomst in..."
     },
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {

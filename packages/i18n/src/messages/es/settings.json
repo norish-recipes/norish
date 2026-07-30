@@ -580,7 +580,9 @@
         "autoCategorization": "Categorización automática",
         "autoCategorizationDescription": "Asigna categorías de comida a las recetas nuevas que no tengan ninguna",
         "nutritionEstimation": "Estimación nutricional",
-        "nutritionEstimationDescription": "Estima calorías, grasas, carbohidratos y proteínas en recetas nuevas sin datos"
+        "nutritionEstimationDescription": "Estima calorías, grasas, carbohidratos y proteínas en recetas nuevas sin datos",
+        "recipeProvenance": "Procedencia de la receta",
+        "recipeProvenanceDescription": "Deducir el país, la región, las cocinas y una nota breve para recetas nuevas que no los tengan"
       },
       "tagStrategy": "Estrategia de etiquetas",
       "tagStrategyDescription": "Qué etiquetas puede usar el etiquetado automático, se ejecute automática o manualmente",
@@ -645,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Introduce el prompt de estimación nutricional...",
       "autoTagging": "Prompt de etiquetado automático",
       "autoTaggingDescription": "Este prompt se usa para generar etiquetas al importar recetas. Define reglas de etiquetado y la lista de etiquetas predefinidas.",
-      "autoTaggingPlaceholder": "Introduce el prompt de etiquetado automático..."
+      "autoTaggingPlaceholder": "Introduce el prompt de etiquetado automático...",
+      "recipeProvenance": "Prompt de procedencia de la receta",
+      "recipeProvenanceDescription": "Este prompt deduce de dónde viene una receta. La nota resultante se escribe en el idioma de la propia receta. Variables disponibles: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Introduce el prompt de procedencia de la receta..."
     },
     "unsavedChanges": "Cambios sin guardar",
     "jsonEditor": {

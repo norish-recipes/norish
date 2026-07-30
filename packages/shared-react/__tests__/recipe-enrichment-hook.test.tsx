@@ -133,6 +133,7 @@ describe("useRecipeEnrichment", () => {
       "allergy-detection": "idle",
       "auto-categorization": "idle",
       "nutrition-estimation": "idle",
+      "recipe-provenance": "idle",
     });
   });
 

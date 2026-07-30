@@ -580,7 +580,9 @@
         "autoCategorization": "자동 분류",
         "autoCategorizationDescription": "분류가 없는 새 레시피에 식사 분류를 설정합니다",
         "nutritionEstimation": "영양 정보 추정",
-        "nutritionEstimationDescription": "값이 없는 새 레시피의 칼로리, 지방, 탄수화물, 단백질을 추정합니다"
+        "nutritionEstimationDescription": "값이 없는 새 레시피의 칼로리, 지방, 탄수화물, 단백질을 추정합니다",
+        "recipeProvenance": "레시피 출처",
+        "recipeProvenanceDescription": "정보가 없는 새 레시피의 국가, 지역, 요리와 짧은 설명을 추론합니다"
       },
       "tagStrategy": "태그 전략",
       "tagStrategyDescription": "자동 또는 수동 실행 여부와 관계없이 자동 태그 지정이 사용할 수 있는 태그",
@@ -645,7 +647,10 @@
       "nutritionEstimationPlaceholder": "영양소 추정 프롬프트를 입력하세요...",
       "autoTagging": "자동 태그 추가 프롬프트",
       "autoTaggingDescription": "이 프롬프트는 가져온 레시피에 대한 태그를 생성하는 데 사용됩니다. 태그 지정 규칙과 사전 정의된 태그 목록을 정의합니다.",
-      "autoTaggingPlaceholder": "자동 태그 추가 프롬프트를 입력하세요..."
+      "autoTaggingPlaceholder": "자동 태그 추가 프롬프트를 입력하세요...",
+      "recipeProvenance": "레시피 출처 프롬프트",
+      "recipeProvenanceDescription": "이 프롬프트는 레시피의 출처를 추론합니다. 생성된 설명은 레시피 자체의 언어로 작성됩니다. 사용 가능한 변수: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "레시피 출처 프롬프트를 입력하세요..."
     },
     "unsavedChanges": "저장되지 않은 변경사항",
     "jsonEditor": {

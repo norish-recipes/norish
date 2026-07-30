@@ -23,12 +23,21 @@ describe("AIConfigSchema automatic enrichment", () => {
       allergyDetection: true,
       autoCategorization: false,
       nutritionEstimation: false,
+      recipeProvenance: false,
     });
     expect(config.automaticEnrichment).toEqual(DEFAULT_AUTOMATIC_ENRICHMENT);
   });
 
   it("defaults the tag strategy to predefined", () => {
     expect(parse({}).tagStrategy).toBe("predefined");
+  });
+
+  it("defaults the cuisine strategy to the restrictive one", () => {
+    // An administrator opts in to letting AI mint Cuisines; it is never the
+    // default, and it is independent of every automatic switch.
+    expect(parse({}).cuisineStrategy).toBe("existing");
+    expect(parse({ cuisineStrategy: "extend" }).cuisineStrategy).toBe("extend");
+    expect(parse({ cuisineStrategy: "extend" }).automaticEnrichment.recipeProvenance).toBe(false);
   });
 
   it("keeps explicit canonical values", () => {
@@ -39,6 +48,7 @@ describe("AIConfigSchema automatic enrichment", () => {
         allergyDetection: false,
         autoCategorization: true,
         nutritionEstimation: true,
+        recipeProvenance: true,
       },
     });
 
@@ -48,6 +58,7 @@ describe("AIConfigSchema automatic enrichment", () => {
       allergyDetection: false,
       autoCategorization: true,
       nutritionEstimation: true,
+      recipeProvenance: true,
     });
   });
 

@@ -2,9 +2,12 @@
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { findCuisineByName, getRecipeCuisines } from "@norish/db/repositories/cuisines";
 import {
+  clearRecipeProvenance,
   replaceRecipeCategories,
   replaceRecipeNutrition,
+  replaceRecipeProvenance,
 } from "@norish/db/repositories/recipe-enrichment";
 import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { appendRecipeTags, getRecipeTagNames } from "@norish/db/repositories/tags";
@@ -174,6 +177,192 @@ describe("Recipe Enrichment repository", () => {
 
       expect(recipe?.protein).toBe("31.00");
       expect(recipe?.calories).toBeNull();
+    });
+  });
+
+  describe("replaceRecipeProvenance", () => {
+    async function cuisineId(name: string): Promise<string> {
+      const cuisine = await findCuisineByName(name);
+
+      if (!cuisine) throw new Error(`Seeded Cuisine missing: ${name}`);
+
+      return cuisine.id;
+    }
+
+    it("writes the scalar fields, the note, and the join rows in one operation", async () => {
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        {
+          originCountry: "IT",
+          originRegion: "Lazio",
+          provenanceNote: "Una classica ricetta romana.",
+          cuisineIds: [await cuisineId("Italian"), await cuisineId("Mediterranean")],
+        },
+        "manual"
+      );
+
+      expect(applied).toBe(true);
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBe("IT");
+      expect(recipe?.originRegion).toBe("Lazio");
+      expect(recipe?.provenanceNote).toBe("Una classica ricetta romana.");
+      expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Italian", "Mediterranean"]);
+    });
+
+    it("replaces the whole group, clearing omitted fields and dropped Cuisines", async () => {
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        {
+          originCountry: "IT",
+          originRegion: "Lazio",
+          provenanceNote: "First claim.",
+          cuisineIds: [await cuisineId("Italian")],
+        },
+        "manual"
+      );
+
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "JP", provenanceNote: "Second claim." },
+        "manual"
+      );
+
+      expect(applied).toBe(true);
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBe("JP");
+      expect(recipe?.originRegion).toBeNull();
+      expect(recipe?.cuisines).toEqual([]);
+    });
+
+    it("normalizes the country to an alpha-2 code and rejects a display name", async () => {
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "it", provenanceNote: "Lowercase code." },
+        "manual"
+      );
+
+      expect((await getRecipeFull(testRecipe.id))?.originCountry).toBe("IT");
+
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "Italy", provenanceNote: "A name, not a code." },
+        "manual"
+      );
+
+      expect((await getRecipeFull(testRecipe.id))?.originCountry).toBeNull();
+    });
+
+    it("rejects an entirely blank proposal without touching stored values", async () => {
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "IT", provenanceNote: "Stored." },
+        "manual"
+      );
+
+      await expect(
+        replaceRecipeProvenance(
+          testRecipe.id,
+          { originCountry: null, originRegion: "  ", provenanceNote: "" },
+          "manual"
+        )
+      ).rejects.toThrow();
+
+      expect((await getRecipeFull(testRecipe.id))?.provenanceNote).toBe("Stored.");
+    });
+
+    it("leaves no partial group behind when the join write fails", async () => {
+      await expect(
+        replaceRecipeProvenance(
+          testRecipe.id,
+          {
+            originCountry: "IT",
+            provenanceNote: "Would be stored.",
+            cuisineIds: ["00000000-0000-0000-0000-000000000000"],
+          },
+          "manual"
+        )
+      ).rejects.toThrow();
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBeNull();
+      expect(recipe?.provenanceNote).toBeNull();
+    });
+  });
+
+  describe("replaceRecipeProvenance with the automatic origin", () => {
+    it("applies while the whole group is absent", async () => {
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "IT", provenanceNote: "Inferred." },
+        "automatic"
+      );
+
+      expect(applied).toBe(true);
+    });
+
+    it.each(["originCountry", "originRegion", "provenanceNote"] as const)(
+      "defers to supplied %s that appeared while the request was in flight",
+      async (field) => {
+        await replaceRecipeProvenance(
+          testRecipe.id,
+          { [field]: field === "originCountry" ? "NL" : "Set by an editor." },
+          "manual"
+        );
+
+        const applied = await replaceRecipeProvenance(
+          testRecipe.id,
+          { originCountry: "IT", provenanceNote: "Inferred." },
+          "automatic"
+        );
+
+        expect(applied).toBe(false);
+        expect((await getRecipeFull(testRecipe.id))?.provenanceNote).not.toBe("Inferred.");
+      }
+    );
+
+    it("defers to a supplied Cuisine even when every scalar field is absent", async () => {
+      const italian = await findCuisineByName("Italian");
+
+      await replaceRecipeProvenance(testRecipe.id, { cuisineIds: [italian!.id] }, "manual");
+
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "JP", provenanceNote: "Inferred." },
+        "automatic"
+      );
+
+      expect(applied).toBe(false);
+      expect((await getRecipeCuisines(testRecipe.id)).map((c) => c.name)).toEqual(["Italian"]);
+    });
+  });
+
+  describe("clearRecipeProvenance", () => {
+    it("removes the whole group, unlike a run writing an empty result", async () => {
+      const italian = await findCuisineByName("Italian");
+
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "IT", provenanceNote: "Wrong.", cuisineIds: [italian!.id] },
+        "manual"
+      );
+
+      expect(await clearRecipeProvenance(testRecipe.id)).toBe(true);
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBeNull();
+      expect(recipe?.originRegion).toBeNull();
+      expect(recipe?.provenanceNote).toBeNull();
+      expect(recipe?.cuisines).toEqual([]);
+    });
+
+    it("reports a clear of a recipe that is not there", async () => {
+      expect(await clearRecipeProvenance("00000000-0000-0000-0000-000000000000")).toBe(false);
     });
   });
 });

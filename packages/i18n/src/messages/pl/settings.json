@@ -580,7 +580,9 @@
         "autoCategorization": "Automatyczna kategoryzacja",
         "autoCategorizationDescription": "Ustawia kategorie posiłku w nowych przepisach, które ich nie mają",
         "nutritionEstimation": "Szacowanie wartości odżywczych",
-        "nutritionEstimationDescription": "Szacuje kalorie, tłuszcze, węglowodany i białko dla nowych przepisów bez podanych wartości"
+        "nutritionEstimationDescription": "Szacuje kalorie, tłuszcze, węglowodany i białko dla nowych przepisów bez podanych wartości",
+        "recipeProvenance": "Pochodzenie przepisu",
+        "recipeProvenanceDescription": "Ustal kraj, region, kuchnie i krótką notatkę dla nowych przepisów, które ich nie mają"
       },
       "tagStrategy": "Strategia tagów",
       "tagStrategyDescription": "Jakich tagów może używać automatyczne tagowanie, niezależnie od tego, czy działa automatycznie czy ręcznie",
@@ -645,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Wpisz prompt szacowania wartości odżywczych...",
       "autoTagging": "Prompt automatycznego tagowania",
       "autoTaggingDescription": "Ten prompt jest używany do generowania tagów dla importowanych przepisów. Zdefiniuj reguły tagowania i listę predefiniowanych tagów.",
-      "autoTaggingPlaceholder": "Wpisz prompt automatycznego tagowania..."
+      "autoTaggingPlaceholder": "Wpisz prompt automatycznego tagowania...",
+      "recipeProvenance": "Prompt pochodzenia przepisu",
+      "recipeProvenanceDescription": "Ten prompt ustala, skąd pochodzi przepis. Powstała notatka jest napisana w języku samego przepisu. Dostępne zmienne: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Wprowadź prompt pochodzenia przepisu..."
     },
     "unsavedChanges": "Niezapisane zmiany",
     "jsonEditor": {

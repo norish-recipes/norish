@@ -46,10 +46,7 @@ export { addPasteImportJob } from "./paste-import/producer";
 export { MAX_STRUCTURED_PASTE_RECIPES, preparePasteImport } from "./paste-import/parser";
 export { addEnrichmentJob } from "./enrichment/producer";
 export { enrichRecipe } from "./enrichment/coordinator";
-export type {
-  RecipeEnrichmentContext,
-  RecipeEnrichmentRequest,
-} from "./enrichment/coordinator";
+export type { RecipeEnrichmentContext, RecipeEnrichmentRequest } from "./enrichment/coordinator";
 export {
   ENRICHMENT_QUEUE_NAMES,
   enrichmentJobId,
@@ -75,6 +72,10 @@ export {
   startAllergyDetectionWorker,
   stopAllergyDetectionWorker,
 } from "./allergy-detection/worker";
+export {
+  startRecipeProvenanceWorker,
+  stopRecipeProvenanceWorker,
+} from "./recipe-provenance/worker";
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
 export { startScheduledTasksWorker, stopScheduledTasksWorker } from "./scheduled-tasks/worker";
 

@@ -580,7 +580,9 @@
         "autoCategorization": "Automatische Kategorisierung",
         "autoCategorizationDescription": "Setzt Mahlzeitkategorien für neue Rezepte, die noch keine haben",
         "nutritionEstimation": "Nährwertschätzung",
-        "nutritionEstimationDescription": "Schätzt Kalorien, Fett, Kohlenhydrate und Eiweiß für neue Rezepte ohne Angaben"
+        "nutritionEstimationDescription": "Schätzt Kalorien, Fett, Kohlenhydrate und Eiweiß für neue Rezepte ohne Angaben",
+        "recipeProvenance": "Rezept-Herkunft",
+        "recipeProvenanceDescription": "Land, Region, Küchen und eine kurze Notiz für neue Rezepte ermitteln, die noch keine haben"
       },
       "tagStrategy": "Tag-Strategie",
       "tagStrategyDescription": "Welche Tags die automatische Verschlagwortung verwenden darf, ob automatisch oder manuell",
@@ -645,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Gib den Nährwert-Schätzungs-Prompt ein...",
       "autoTagging": "Auto-Tagging-Prompt",
       "autoTaggingDescription": "Dieser Prompt wird verwendet, um Tags für importierte Rezepte zu generieren. Definiere Tagging-Regeln und vordefinierte Tags-Liste.",
-      "autoTaggingPlaceholder": "Gib den Auto-Tagging-Prompt ein..."
+      "autoTaggingPlaceholder": "Gib den Auto-Tagging-Prompt ein...",
+      "recipeProvenance": "Prompt für Rezept-Herkunft",
+      "recipeProvenanceDescription": "Dieser Prompt ermittelt die Herkunft eines Rezepts. Die entstehende Notiz ist in der Sprache des Rezepts selbst verfasst. Verfügbare Variablen: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Prompt für die Rezept-Herkunft eingeben ..."
     },
     "unsavedChanges": "Ungespeicherte Änderungen",
     "jsonEditor": {

@@ -59,6 +59,7 @@ export const JOB_PIPELINES: Record<QueueName, string[]> = {
   [QUEUE_NAMES.AUTO_TAGGING]: ["ai-request", "saving"],
   [QUEUE_NAMES.AUTO_CATEGORIZATION]: ["ai-request", "saving"],
   [QUEUE_NAMES.ALLERGY_DETECTION]: ["ai-request", "saving"],
+  [QUEUE_NAMES.RECIPE_PROVENANCE]: ["ai-request", "saving"],
   // CalDAV runs either a sync or a delete flow; no fixed sequence
   [QUEUE_NAMES.CALDAV_SYNC]: [],
   [QUEUE_NAMES.SCHEDULED_TASKS]: ["running"],
@@ -192,7 +193,11 @@ export async function completeStep(job: Job, detail?: unknown): Promise<void> {
       last.detail = detail;
     }
 
-    await job.updateProgress({ step: prev.step, updatedAt: now, attempts } satisfies JobStepProgress);
+    await job.updateProgress({
+      step: prev.step,
+      updatedAt: now,
+      attempts,
+    } satisfies JobStepProgress);
   } catch (err) {
     log.debug({ err, jobId: job.id }, "Failed to complete job step");
   }

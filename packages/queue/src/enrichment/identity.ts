@@ -38,6 +38,7 @@ export const ENRICHMENT_QUEUE_NAMES: Record<RecipeEnrichmentKind, QueueName> = {
   "allergy-detection": QUEUE_NAMES.ALLERGY_DETECTION,
   "auto-categorization": QUEUE_NAMES.AUTO_CATEGORIZATION,
   "nutrition-estimation": QUEUE_NAMES.NUTRITION_ESTIMATION,
+  "recipe-provenance": QUEUE_NAMES.RECIPE_PROVENANCE,
 };
 
 /** The BullMQ job name each queue's worker processes. */
@@ -46,6 +47,7 @@ export const ENRICHMENT_JOB_NAMES: Record<RecipeEnrichmentKind, string> = {
   "allergy-detection": "allergy-detect",
   "auto-categorization": "auto-categorize",
   "nutrition-estimation": "estimate",
+  "recipe-provenance": "infer-provenance",
 };
 
 /**
