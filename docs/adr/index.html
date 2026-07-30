@@ -230,8 +230,9 @@
           >
         </h1>
         <p class="meta">
-          Updated July 23, 2026 · branch <code>feat/web-offline-safe</code> · source decisions in
-          <code>docs/adr/offline</code> · <code>docs/adr/releases</code>
+          Updated July 29, 2026 · branch <code>feat/web-offline-safe</code> · source decisions in
+          <code>docs/adr/offline</code> · <code>docs/adr/releases</code> ·
+          <code>docs/adr/recipes</code>
         </p>
         <p class="lede">
           Norish web targets flaky connectivity and backend-down page loads with a persisted Warm
@@ -590,6 +591,15 @@
           <p>
             <b>Implemented.</b> Realtime remains the fast path; one post-Replay active-query
             refetch is the cache-consistency guarantee.
+          </p>
+        </li>
+        <li>
+          <a href="recipes/0012-cuisines-are-curated-tags-are-not.md"
+            >ADR-0012 — Cuisines and Tags share a shape and differ in governance</a
+          >
+          <p>
+            <b>Accepted.</b> Cuisines are a curated vocabulary in their own table; Tags stay an
+            open folksonomy. Rejects a database enum, a config list, and reusing Tags.
           </p>
         </li>
       </ul>
