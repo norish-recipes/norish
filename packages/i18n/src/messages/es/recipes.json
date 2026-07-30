@@ -72,6 +72,8 @@
     "keepScreenOn": "Mantener pantalla encendida",
     "actionsLabel": "Acciones",
     "autoCategorizing": "Categorizando…",
+    "inferProvenance": "Averiguar la procedencia",
+    "inferringProvenance": "Averiguando la procedencia…",
     "enrichmentFailed": "El último intento falló"
   },
   "sharePanel": {

@@ -49,17 +49,24 @@ export async function signIn(user: { email: string; password: string }): Promise
 }
 
 /**
- * Set the four Automatic Recipe Enrichment switches in the harness database.
+ * Set the Automatic Recipe Enrichment switches in the harness database.
  *
  * They are written straight into `ai_config` because the administrator UI is
  * not the subject under test. Server config is read from the database on every
  * call, so no restart and no cache flush is needed — and flushing Redis here
  * would drop the signed-in session.
+ *
+ * Every switch not named is turned off, so a scenario states exactly which
+ * kinds may enrol and cannot inherit another scenario's settings.
  */
 export async function setAutomaticEnrichment(
   switches: Partial<
     Record<
-      "autoTagging" | "allergyDetection" | "autoCategorization" | "nutritionEstimation",
+      | "autoTagging"
+      | "allergyDetection"
+      | "autoCategorization"
+      | "nutritionEstimation"
+      | "recipeProvenance",
       boolean
     >
   >
@@ -79,10 +86,110 @@ export async function setAutomaticEnrichment(
           allergyDetection: false,
           autoCategorization: false,
           nutritionEstimation: false,
+          recipeProvenance: false,
           ...switches,
         }),
       ]
     );
+  } finally {
+    await db.end();
+  }
+}
+
+/** A Cuisine from the seeded vocabulary, by name. */
+export async function findCuisineIdByName(name: string): Promise<string> {
+  const db = new Client({ connectionString: E2E_DATABASE_URL });
+
+  await db.connect();
+
+  try {
+    const result = await db.query<{ id: string }>(
+      "select id from cuisines where lower(name) = lower($1)",
+      [name]
+    );
+    const id = result.rows[0]?.id;
+
+    if (!id) throw new Error(`Seeded Cuisine missing: ${name}`);
+
+    return id;
+  } finally {
+    await db.end();
+  }
+}
+
+/** Read a recipe's stored Recipe Provenance straight from the database. */
+export async function readStoredProvenance(recipeName: string): Promise<{
+  originCountry: string | null;
+  originRegion: string | null;
+  provenanceNote: string | null;
+  cuisines: string[];
+}> {
+  const db = new Client({ connectionString: E2E_DATABASE_URL });
+
+  await db.connect();
+
+  try {
+    const recipe = await db.query<{
+      id: string;
+      origin_country: string | null;
+      origin_region: string | null;
+      provenance_note: string | null;
+    }>("select id, origin_country, origin_region, provenance_note from recipes where name = $1", [
+      recipeName,
+    ]);
+    const row = recipe.rows[0];
+
+    if (!row) throw new Error(`Recipe not found: ${recipeName}`);
+
+    const cuisines = await db.query<{ name: string }>(
+      `select c.name from recipe_cuisines rc
+         join cuisines c on c.id = rc.cuisine_id
+        where rc.recipe_id = $1
+        order by rc."order"`,
+      [row.id]
+    );
+
+    return {
+      originCountry: row.origin_country,
+      originRegion: row.origin_region,
+      provenanceNote: row.provenance_note,
+      cuisines: cuisines.rows.map((cuisine) => cuisine.name),
+    };
+  } finally {
+    await db.end();
+  }
+}
+
+/** Write Recipe Provenance straight into the database, as a person would have. */
+export async function supplyProvenance(
+  recipeName: string,
+  provenance: { originCountry?: string; provenanceNote?: string; cuisineIds?: string[] }
+): Promise<void> {
+  const db = new Client({ connectionString: E2E_DATABASE_URL });
+
+  await db.connect();
+
+  try {
+    const recipe = await db.query<{ id: string }>("select id from recipes where name = $1", [
+      recipeName,
+    ]);
+    const id = recipe.rows[0]?.id;
+
+    if (!id) throw new Error(`Recipe not found: ${recipeName}`);
+
+    await db.query(
+      `update recipes set origin_country = $2, provenance_note = $3, version = version + 1
+        where id = $1`,
+      [id, provenance.originCountry ?? null, provenance.provenanceNote ?? null]
+    );
+
+    for (const [order, cuisineId] of (provenance.cuisineIds ?? []).entries()) {
+      await db.query(
+        `insert into recipe_cuisines (recipe_id, cuisine_id, "order") values ($1, $2, $3)
+         on conflict do nothing`,
+        [id, cuisineId, order]
+      );
+    }
   } finally {
     await db.end();
   }

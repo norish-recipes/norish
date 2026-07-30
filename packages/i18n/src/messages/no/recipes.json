@@ -72,6 +72,8 @@
     "keepScreenOn": "Hold skjermen på",
     "actionsLabel": "Handlinger",
     "autoCategorizing": "Kategoriserer…",
+    "inferProvenance": "Finn opphavet",
+    "inferringProvenance": "Finner opphavet …",
     "enrichmentFailed": "Siste forsøk mislyktes"
   },
   "sharePanel": {

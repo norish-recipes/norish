@@ -72,6 +72,8 @@
     "keepScreenOn": "Garder l’écran allumé",
     "actionsLabel": "Actions",
     "autoCategorizing": "Catégorisation…",
+    "inferProvenance": "Déterminer la provenance",
+    "inferringProvenance": "Détermination de la provenance…",
     "enrichmentFailed": "Dernière tentative échouée"
   },
   "sharePanel": {

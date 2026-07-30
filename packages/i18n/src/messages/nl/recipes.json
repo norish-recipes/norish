@@ -72,6 +72,8 @@
     "keepScreenOn": "Scherm Aan Houden",
     "actionsLabel": "Acties",
     "autoCategorizing": "Automatisch categoriseren…",
+    "inferProvenance": "Herkomst bepalen",
+    "inferringProvenance": "Herkomst bepalen…",
     "enrichmentFailed": "Laatste poging mislukt"
   },
   "sharePanel": {

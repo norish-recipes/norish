@@ -72,6 +72,8 @@
     "keepScreenOn": "Bildschirm an",
     "actionsLabel": "Aktionen",
     "autoCategorizing": "Kategorisierung läuft…",
+    "inferProvenance": "Herkunft ermitteln",
+    "inferringProvenance": "Herkunft wird ermittelt …",
     "enrichmentFailed": "Letzter Versuch fehlgeschlagen"
   },
   "sharePanel": {

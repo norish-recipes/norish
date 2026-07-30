@@ -52,7 +52,8 @@ adjust AI settings at runtime in **Settings → Admin**.
 ## Recipe Enrichment
 
 Recipe Enrichment is the optional AI work that runs **after** a recipe is saved:
-auto-tagging, allergy detection, auto-categorization, and nutrition estimation.
+auto-tagging, allergy detection, auto-categorization, nutrition estimation, and
+recipe provenance.
 
 Importing and creating a recipe never depend on it. The recipe is saved first;
 enrichment is enrolled separately, and a disabled, unavailable, slow, or failing
@@ -69,6 +70,7 @@ every newly created recipe — manual entry and every import path alike.
 | **Allergy detection**    | Adds allergy tags for your household's configured allergies         | On      |
 | **Auto-categorization**  | Sets meal categories on recipes that have none                      | Off     |
 | **Nutrition estimation** | Estimates calories, fat, carbs, and protein when none were supplied | Off     |
+| **Recipe Provenance**    | Works out the country, region, cuisines, and a short note           | Off     |
 
 Enabling AI globally does not switch these on by itself — each is opt-in
 (except allergy detection, which keeps the behaviour of the setting it
@@ -87,6 +89,9 @@ never overwritten by automatic enrichment:
 - Any meal category on the recipe suppresses **automatic** categorization.
 - Any of calories, fat, carbs, or protein suppresses **automatic** nutrition
   estimation for the whole group — partial values you supplied stay untouched.
+- Any part of provenance — country, region, a cuisine, or the note — suppresses
+  **automatic** provenance inference for the whole group. The note explains the
+  whole claim, so it is never mixed with a value you set yourself.
 - Empty and blank values do not count as supplied, so placeholders don't block
   useful enrichment.
 
@@ -94,7 +99,7 @@ Tags and allergy indications work differently: enrichment appends findings and
 never removes what is already there, so existing tags never suppress it.
 
 A run you request by hand is a deliberate refresh and does replace the current
-categories or the complete nutrition group.
+categories, the complete nutrition group, or the complete provenance group.
 
 ### Tag strategy
 
@@ -108,6 +113,23 @@ whether it runs automatically:
 | **AI can create new tags**     | May invent new tags when nothing fits              |
 
 Turning automatic auto-tagging off keeps the selected strategy for manual runs.
+
+### Cuisine strategy
+
+**Cuisine strategy** decides whether provenance inference may add to the cuisine
+list your administrator maintains, independently of whether it runs
+automatically:
+
+| Strategy                    | Behaviour                                           |
+| --------------------------- | --------------------------------------------------- |
+| **Only existing cuisines**  | Pick from the list; anything else is discarded      |
+| **AI can add new cuisines** | Pick from the list, or add an entry that is missing |
+
+Under both strategies the AI's answers are matched against the existing list
+first, so a slight misspelling lands on the entry that already exists rather than
+creating a near-duplicate. The list itself is managed under
+**Settings → Admin → AI & Processing → Cuisines**; see
+[Recipe provenance](../recipes/provenance.md).
 
 ### Turning it all off
 

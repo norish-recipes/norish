@@ -72,6 +72,8 @@
     "keepScreenOn": "Не выключать экран",
     "actionsLabel": "Действия",
     "autoCategorizing": "Категоризация…",
+    "inferProvenance": "Определить происхождение",
+    "inferringProvenance": "Определяем происхождение…",
     "enrichmentFailed": "Последняя попытка не удалась"
   },
   "sharePanel": {

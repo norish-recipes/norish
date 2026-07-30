@@ -72,6 +72,8 @@
     "keepScreenOn": "Utrzymaj ekran włączony",
     "actionsLabel": "Akcje",
     "autoCategorizing": "Kategoryzowanie…",
+    "inferProvenance": "Ustal pochodzenie",
+    "inferringProvenance": "Ustalanie pochodzenia…",
     "enrichmentFailed": "Ostatnia próba nie powiodła się"
   },
   "sharePanel": {

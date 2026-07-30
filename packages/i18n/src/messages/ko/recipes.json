@@ -72,6 +72,8 @@
     "keepScreenOn": "화면 켜짐 유지",
     "actionsLabel": "작업",
     "autoCategorizing": "분류 중…",
+    "inferProvenance": "출처 알아보기",
+    "inferringProvenance": "출처를 알아보는 중…",
     "enrichmentFailed": "마지막 실행 실패"
   },
   "sharePanel": {

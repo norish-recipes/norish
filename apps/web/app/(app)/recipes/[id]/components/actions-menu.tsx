@@ -114,7 +114,7 @@ export default function ActionsMenu({ id }: Props) {
     // The administrator's automatic switches decide what runs on creation, not
     // whether an editor may ask for it.
     if (isAIEnabled && canEdit) {
-      // Every kind renders the same way, so the four states read consistently
+      // Every kind renders the same way, so the states read consistently
       // and a quiet automatic failure is still discoverable here.
       const enrichmentActions: {
         kind: RecipeEnrichmentKind;
@@ -148,6 +148,12 @@ export default function ActionsMenu({ id }: Props) {
           key: "estimate-nutrition",
           idleLabel: t("estimateNutrition"),
           busyLabel: t("estimatingNutrition"),
+        },
+        {
+          kind: "recipe-provenance",
+          key: "infer-provenance",
+          idleLabel: t("inferProvenance"),
+          busyLabel: t("inferringProvenance"),
         },
       ];
 

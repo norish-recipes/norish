@@ -72,6 +72,8 @@
     "keepScreenOn": "Hold skærm tændt",
     "actionsLabel": "Handlinger",
     "autoCategorizing": "Kategoriserer…",
+    "inferProvenance": "Find oprindelsen",
+    "inferringProvenance": "Finder oprindelsen …",
     "enrichmentFailed": "Sidste forsøg mislykkedes"
   },
   "sharePanel": {

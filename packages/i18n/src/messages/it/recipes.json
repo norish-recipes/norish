@@ -72,6 +72,8 @@
     "keepScreenOn": "Mantieni schermo acceso",
     "actionsLabel": "Azioni",
     "autoCategorizing": "Categorizzazione…",
+    "inferProvenance": "Deduci la provenienza",
+    "inferringProvenance": "Deduzione della provenienza…",
     "enrichmentFailed": "Ultimo tentativo non riuscito"
   },
   "sharePanel": {

@@ -72,6 +72,8 @@
     "keepScreenOn": "Keep Screen On",
     "actionsLabel": "Actions",
     "autoCategorizing": "Auto-categorizing…",
+    "inferProvenance": "Work Out Provenance",
+    "inferringProvenance": "Working out provenance…",
     "enrichmentFailed": "Last run failed"
   },
   "sharePanel": {
