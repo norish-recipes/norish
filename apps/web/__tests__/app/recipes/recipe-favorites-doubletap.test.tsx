@@ -83,6 +83,11 @@ vi.mock("@/components/shared/media-carousel", () => ({
   buildMediaItems: () => [],
 }));
 
+vi.mock("@/app/(app)/recipes/[id]/components/provenance-card", () => ({
+  default: () => <div>provenance-card</div>,
+  ProvenanceSection: () => <div>provenance-section</div>,
+}));
+
 vi.mock("@/app/(app)/recipes/[id]/components/nutrition-card", () => ({
   default: () => <div>nutrition-card</div>,
   NutritionSection: () => <div>nutrition-section</div>,

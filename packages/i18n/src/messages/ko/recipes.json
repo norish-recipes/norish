@@ -279,7 +279,16 @@
       "auto-tagging": "자동 태그 지정",
       "allergy-detection": "알레르기 감지",
       "auto-categorization": "자동 분류",
-      "nutrition-estimation": "영양 정보 추정"
+      "nutrition-estimation": "영양 정보 추정",
+      "recipe-provenance": "레시피 출처"
     }
+  },
+  "provenance": {
+    "title": "출처",
+    "region": "지역",
+    "cuisines": "요리",
+    "inferring": "이 레시피의 출처를 알아보는 중…",
+    "noInfo": "아직 출처 정보가 없습니다",
+    "inferWithAI": "AI로 알아보기"
   }
 }

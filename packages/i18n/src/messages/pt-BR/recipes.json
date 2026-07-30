@@ -279,7 +279,16 @@
       "auto-tagging": "Marcação automática",
       "allergy-detection": "Detecção de alergias",
       "auto-categorization": "Categorização automática",
-      "nutrition-estimation": "Estimativa nutricional"
+      "nutrition-estimation": "Estimativa nutricional",
+      "recipe-provenance": "Procedência da receita"
     }
+  },
+  "provenance": {
+    "title": "De onde vem",
+    "region": "Região",
+    "cuisines": "Culinárias",
+    "inferring": "Descobrindo de onde vem esta receita…",
+    "noInfo": "Ainda sem informações de procedência",
+    "inferWithAI": "Descobrir com IA"
   }
 }

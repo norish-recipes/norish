@@ -279,7 +279,16 @@
       "auto-tagging": "Automatiske tags",
       "allergy-detection": "Allergiregistrering",
       "auto-categorization": "Automatisk kategorisering",
-      "nutrition-estimation": "Estimering af næringsindhold"
+      "nutrition-estimation": "Estimering af næringsindhold",
+      "recipe-provenance": "Opskriftens oprindelse"
     }
+  },
+  "provenance": {
+    "title": "Hvor den kommer fra",
+    "region": "Region",
+    "cuisines": "Køkkener",
+    "inferring": "Finder ud af, hvor denne opskrift kommer fra …",
+    "noInfo": "Ingen oprindelsesoplysninger endnu",
+    "inferWithAI": "Find ud af det med AI"
   }
 }

@@ -6,6 +6,7 @@ import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
+import ProvenanceCard from "@/app/(app)/recipes/[id]/components/provenance-card";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
@@ -112,6 +113,9 @@ export default function RecipePageDesktop() {
 
           {/* Nutrition Card */}
           <NutritionCard />
+
+          {/* Recipe Provenance */}
+          <ProvenanceCard />
         </div>
 
         {/* RIGHT column: Image + Steps (stacked) */}

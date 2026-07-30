@@ -279,7 +279,16 @@
       "auto-tagging": "Automatiske tagger",
       "allergy-detection": "Allergideteksjon",
       "auto-categorization": "Automatisk kategorisering",
-      "nutrition-estimation": "Estimering av næringsinnhold"
+      "nutrition-estimation": "Estimering av næringsinnhold",
+      "recipe-provenance": "Oppskriftens opphav"
     }
+  },
+  "provenance": {
+    "title": "Hvor den kommer fra",
+    "region": "Region",
+    "cuisines": "Kjøkken",
+    "inferring": "Finner ut hvor denne oppskriften kommer fra …",
+    "noInfo": "Ingen opphavsinformasjon ennå",
+    "inferWithAI": "Finn ut med KI"
   }
 }

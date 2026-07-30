@@ -279,7 +279,16 @@
       "auto-tagging": "Auto-tagging",
       "allergy-detection": "Allergy detection",
       "auto-categorization": "Auto-categorization",
-      "nutrition-estimation": "Nutrition estimation"
+      "nutrition-estimation": "Nutrition estimation",
+      "recipe-provenance": "Recipe Provenance"
     }
+  },
+  "provenance": {
+    "title": "Where it comes from",
+    "region": "Region",
+    "cuisines": "Cuisines",
+    "inferring": "Working out where this recipe comes from…",
+    "noInfo": "No provenance information yet",
+    "inferWithAI": "Work out with AI"
   }
 }

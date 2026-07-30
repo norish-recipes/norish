@@ -279,7 +279,16 @@
       "auto-tagging": "Automatisch taggen",
       "allergy-detection": "Allergiedetectie",
       "auto-categorization": "Automatisch categoriseren",
-      "nutrition-estimation": "Voedingswaarde schatten"
+      "nutrition-estimation": "Voedingswaarde schatten",
+      "recipe-provenance": "Receptherkomst"
     }
+  },
+  "provenance": {
+    "title": "Waar het vandaan komt",
+    "region": "Streek",
+    "cuisines": "Keukens",
+    "inferring": "Bezig met bepalen waar dit recept vandaan komt…",
+    "noInfo": "Nog geen herkomstinformatie",
+    "inferWithAI": "Bepalen met AI"
   }
 }

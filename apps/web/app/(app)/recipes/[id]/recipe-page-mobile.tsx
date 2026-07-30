@@ -3,6 +3,7 @@ import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import { NutritionSection } from "@/app/(app)/recipes/[id]/components/nutrition-card";
+import { ProvenanceSection } from "@/app/(app)/recipes/[id]/components/provenance-card";
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
@@ -195,6 +196,9 @@ export default function RecipePageMobile() {
 
           {/* Nutrition Section */}
           <NutritionSection />
+
+          {/* Recipe Provenance */}
+          <ProvenanceSection />
         </Card.Content>
       </Card>
 

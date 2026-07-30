@@ -279,7 +279,16 @@
       "auto-tagging": "Автоматические теги",
       "allergy-detection": "Определение аллергенов",
       "auto-categorization": "Автоматическая категоризация",
-      "nutrition-estimation": "Оценка пищевой ценности"
+      "nutrition-estimation": "Оценка пищевой ценности",
+      "recipe-provenance": "Происхождение рецепта"
     }
+  },
+  "provenance": {
+    "title": "Откуда это блюдо",
+    "region": "Регион",
+    "cuisines": "Кухни",
+    "inferring": "Определяем происхождение этого рецепта…",
+    "noInfo": "Пока нет сведений о происхождении",
+    "inferWithAI": "Определить с помощью ИИ"
   }
 }
