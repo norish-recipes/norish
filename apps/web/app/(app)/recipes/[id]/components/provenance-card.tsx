@@ -1,8 +1,6 @@
 "use client";
 
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
-import AIActionButton from "@/components/shared/ai-action-button";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { Card, Chip, Separator, Skeleton } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -18,27 +16,24 @@ import { countryDisplayName, countryFlagEmoji } from "@norish/shared/lib/recipe-
  *
  * The section is absent entirely when there is nothing to show and nothing in
  * flight, so a recipe that will never have provenance shows nothing at all.
+ * Asking for a run lives in the actions menu, alongside every other kind.
  */
 function ProvenanceDisplay({ inCard = true }: { inCard?: boolean }) {
   const { recipe, enrichment } = useRecipeContext();
   const locale = useLocale();
   const t = useTranslations("recipes.provenance");
   const tEnrichment = useTranslations("recipes.enrichment");
-  const { canEditRecipe, isAIEnabled } = usePermissionsContext();
 
   // Queued and processing both read as "working"; a quiet automatic failure
   // simply leaves the section showing whatever is stored.
   const isInferring = enrichment.isBusy("recipe-provenance");
   const enrichmentState = enrichment.states["recipe-provenance"];
-  const canEdit = recipe?.userId ? canEditRecipe(recipe.userId) : true;
-  const canRequest = isAIEnabled && canEdit;
 
   if (!recipe) return null;
 
-  const hasProvenance = hasSubstantiveProvenance(recipe);
-
-  // Nothing stored, nothing running, and no action to offer: show nothing.
-  if (!hasProvenance && !isInferring && !canRequest) return null;
+  // Nothing stored and nothing running: show nothing, so a recipe that will
+  // never have provenance carries no empty panel.
+  if (!hasSubstantiveProvenance(recipe) && !isInferring) return null;
 
   const flag = countryFlagEmoji(recipe.originCountry);
   const country = countryDisplayName(recipe.originCountry, locale);
@@ -55,7 +50,7 @@ function ProvenanceDisplay({ inCard = true }: { inCard?: boolean }) {
           <Skeleton className="h-4 w-full rounded-md" />
           <Skeleton className="h-4 w-3/4 rounded-md" />
         </div>
-      ) : hasProvenance ? (
+      ) : (
         <div className="flex flex-col gap-3">
           {country && (
             <div className="flex items-center gap-2">
@@ -86,24 +81,6 @@ function ProvenanceDisplay({ inCard = true }: { inCard?: boolean }) {
           )}
           {recipe.provenanceNote && (
             <p className="text-base leading-relaxed">{recipe.provenanceNote}</p>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-3 py-2">
-          <p className="text-muted text-base">{t("noInfo")}</p>
-          <AIActionButton
-            isLoading={isInferring}
-            label={t("inferWithAI")}
-            onPress={() => enrichment.request("recipe-provenance")}
-          />
-          {enrichmentState !== "idle" && (
-            <p
-              className={
-                enrichmentState === "failed" ? "text-danger text-sm" : "text-muted text-sm"
-              }
-            >
-              {tEnrichment(`states.${enrichmentState}`)}
-            </p>
           )}
         </div>
       )}

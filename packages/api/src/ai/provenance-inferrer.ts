@@ -18,6 +18,7 @@
 
 import { generateText, Output } from "ai";
 
+import type { CuisineStrategy } from "@norish/config/zod/server-config";
 import type { AIResult } from "@norish/shared-server/ai/types/result";
 import type { CuisineVocabularyEntry } from "@norish/shared/lib/cuisine-resolver";
 import { createCuisines, listCuisines } from "@norish/db/repositories/cuisines";
@@ -51,7 +52,8 @@ export interface ProvenanceInference {
 
 async function buildProvenancePrompt(
   recipe: RecipeForProvenance,
-  vocabulary: readonly CuisineVocabularyEntry[]
+  vocabulary: readonly CuisineVocabularyEntry[],
+  strategy: CuisineStrategy
 ): Promise<string> {
   const template = await loadPrompt("recipe-provenance");
 
@@ -62,7 +64,14 @@ async function buildProvenancePrompt(
     cuisines:
       vocabulary.length > 0
         ? vocabulary.map((cuisine) => cuisine.name).join(", ")
-        : "(no Cuisines are configured; return an empty list)",
+        : "(no Cuisines are configured)",
+    // Under `extend` the administrator has opted in to AI adding to the
+    // vocabulary, so the model is told it may name one that is missing. Under
+    // `existing` it must not be, or every unmatched proposal is just discarded.
+    cuisineFallback:
+      strategy === "extend"
+        ? "If none of them fits, name the tradition it does belong to instead."
+        : "Return an empty list when none of them fits.",
   });
 }
 
@@ -75,9 +84,9 @@ async function buildProvenancePrompt(
  */
 async function resolveProposedCuisines(
   proposed: readonly string[],
-  vocabulary: readonly CuisineVocabularyEntry[]
+  vocabulary: readonly CuisineVocabularyEntry[],
+  strategy: CuisineStrategy
 ): Promise<string[]> {
-  const strategy = await getCuisineStrategy();
   const { resolved, created } = resolveCuisines({ proposed, strategy, vocabulary });
   const ids = resolved.map((cuisine) => cuisine.id);
 
@@ -117,18 +126,23 @@ export async function inferRecipeProvenance(
 
   try {
     // The request schema is built from the vocabulary as it stands right now,
-    // never from a compile-time list.
+    // never from a compile-time list. The strategy shapes the request as well as
+    // the resolution: what the model is allowed to propose is the same decision.
     const vocabulary = await listCuisines();
+    const strategy = await getCuisineStrategy();
     const { model, providerName } = await getModels();
     const settings = await getGenerationSettings();
-    const prompt = await buildProvenancePrompt(recipe, vocabulary);
+    const prompt = await buildProvenancePrompt(recipe, vocabulary, strategy);
 
     aiLogger.debug({ provider: providerName, prompt }, "Sending provenance prompt to AI");
 
     const result = await generateText({
       model,
       output: Output.object({
-        schema: buildProvenanceSchema(vocabulary.map((cuisine) => cuisine.name)),
+        schema: buildProvenanceSchema(
+          vocabulary.map((cuisine) => cuisine.name),
+          strategy
+        ),
       }),
       prompt,
       // Deliberately no language instruction here: the prompt decides the note's
@@ -156,7 +170,8 @@ export async function inferRecipeProvenance(
 
     const cuisineIds = await resolveProposedCuisines(
       Array.isArray(output.cuisines) ? output.cuisines : [],
-      vocabulary
+      vocabulary,
+      strategy
     );
 
     aiLogger.info(

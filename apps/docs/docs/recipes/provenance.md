@@ -62,8 +62,7 @@ behaves like the others:
   **Settings → Admin → AI**. It is **off by default**, so upgrading never starts
   spending AI on its own.
 - You can ask for it yourself at any time from a recipe's actions menu
-  (**Work Out Provenance**) or from the provenance section, whether or not the
-  automatic switch is on.
+  (**Work Out Provenance**), whether or not the automatic switch is on.
 - A run you ask for **replaces the whole group** — country, region, cuisines,
   and note together — because a deliberate refresh shouldn't be half-blocked by
   a value you no longer want.

@@ -1,15 +1,19 @@
 // @vitest-environment node
 
+import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { findCuisineByName, getRecipeCuisines } from "@norish/db/repositories/cuisines";
 import {
-  clearRecipeProvenance,
   replaceRecipeCategories,
   replaceRecipeNutrition,
   replaceRecipeProvenance,
 } from "@norish/db/repositories/recipe-enrichment";
-import { getRecipeFull, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
+import {
+  createRecipeWithRefs,
+  getRecipeFull,
+  updateRecipeWithRefs,
+} from "@norish/db/repositories/recipes";
 import { appendRecipeTags, getRecipeTagNames } from "@norish/db/repositories/tags";
 
 import { createTestRecipe } from "../../../helpers/db-test-helpers";
@@ -360,6 +364,22 @@ describe("Recipe Enrichment repository", () => {
       expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Italian"]);
     });
 
+    it("keeps the Cuisines chosen while creating the recipe", async () => {
+      const italian = await findCuisineByName("Italian");
+      const created = await createRecipeWithRefs(randomUUID(), userId, {
+        name: "Created with provenance",
+        systemUsed: "metric",
+        originCountry: "IT",
+        provenanceNote: "Typed in at creation.",
+        cuisines: [italian!.id],
+      });
+
+      const recipe = await getRecipeFull(created!.recipeId);
+
+      expect(recipe?.originCountry).toBe("IT");
+      expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Italian"]);
+    });
+
     it("normalizes a country the editor typed as a name away", async () => {
       await updateRecipeWithRefs(testRecipe.id, userId, { originCountry: "Italy" });
 
@@ -418,31 +438,6 @@ describe("Recipe Enrichment repository", () => {
 
       expect(recipe?.name).toBe("A new title");
       expect(recipe?.provenanceNote).toBe("Keep me.");
-    });
-  });
-
-  describe("clearRecipeProvenance", () => {
-    it("removes the whole group, unlike a run writing an empty result", async () => {
-      const italian = await findCuisineByName("Italian");
-
-      await replaceRecipeProvenance(
-        testRecipe.id,
-        { originCountry: "IT", provenanceNote: "Wrong.", cuisineIds: [italian!.id] },
-        "manual"
-      );
-
-      expect(await clearRecipeProvenance(testRecipe.id)).toBe(true);
-
-      const recipe = await getRecipeFull(testRecipe.id);
-
-      expect(recipe?.originCountry).toBeNull();
-      expect(recipe?.originRegion).toBeNull();
-      expect(recipe?.provenanceNote).toBeNull();
-      expect(recipe?.cuisines).toEqual([]);
-    });
-
-    it("reports a clear of a recipe that is not there", async () => {
-      expect(await clearRecipeProvenance("00000000-0000-0000-0000-000000000000")).toBe(false);
     });
   });
 });

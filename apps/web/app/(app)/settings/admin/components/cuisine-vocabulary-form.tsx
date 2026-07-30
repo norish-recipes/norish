@@ -24,7 +24,7 @@ export default function CuisineVocabularyForm() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<"duplicate" | "saveFailed" | null>(null);
 
   const run = useCallback(async (action: () => Promise<unknown>, onDone: () => void) => {
     setError(null);
@@ -90,11 +90,7 @@ export default function CuisineVocabularyForm() {
         </Button>
       </div>
 
-      {error && (
-        <p className="text-danger text-sm">
-          {t(error === "duplicate" ? "duplicate" : "saveFailed")}
-        </p>
-      )}
+      {error && <p className="text-danger text-sm">{t(error)}</p>}
 
       {!isLoading && cuisines.length === 0 && <p className="text-muted text-base">{t("empty")}</p>}
 

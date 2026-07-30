@@ -193,20 +193,13 @@ describe("Recipe Provenance section", () => {
     expect(screen.queryByText("Cuisines")).not.toBeInTheDocument();
   });
 
-  it("offers the run to an editor when nothing is stored", () => {
-    render(<ProvenanceCard />);
-
-    screen.getByText("Work out with AI").click();
-
-    expect(mocks.request).toHaveBeenCalledWith("recipe-provenance");
-  });
-
-  it("reports a retained terminal failure without hiding the action", () => {
+  it("keeps showing stored provenance after a run failed", () => {
+    // A quiet automatic failure leaves the section showing whatever is stored.
     mocks.state = "failed";
+    mocks.recipe.originCountry = "IT";
 
     render(<ProvenanceCard />);
 
-    expect(screen.getByText("Last run failed")).toBeInTheDocument();
-    expect(screen.getByText("Work out with AI")).toBeInTheDocument();
+    expect(screen.getByText("Italië")).toBeInTheDocument();
   });
 });

@@ -189,34 +189,3 @@ export async function replaceRecipeProvenance(
     return true;
   });
 }
-
-/**
- * Clear a recipe's whole Recipe Provenance group.
- *
- * A deliberate editor action, and deliberately distinct from an enrichment run
- * writing an empty result: the write path above refuses an empty proposal, so
- * removal has to be asked for by name.
- *
- * @returns whether the recipe existed
- */
-export async function clearRecipeProvenance(recipeId: string): Promise<boolean> {
-  return await db.transaction(async (tx) => {
-    const updated = await tx
-      .update(recipes)
-      .set({
-        originCountry: null,
-        originRegion: null,
-        provenanceNote: null,
-        updatedAt: new Date(),
-        version: sql`${recipes.version} + 1`,
-      })
-      .where(eq(recipes.id, recipeId))
-      .returning({ id: recipes.id });
-
-    if (updated.length === 0) return false;
-
-    await replaceRecipeCuisinesTx(tx, recipeId, []);
-
-    return true;
-  });
-}

@@ -665,6 +665,9 @@ export async function createRecipeWithRefs(
     fat: payload.fat ?? null,
     carbs: payload.carbs ?? null,
     protein: payload.protein ?? null,
+    originCountry: normalizeOriginCountry(payload.originCountry),
+    originRegion: payload.originRegion ? stripHtmlTags(payload.originRegion) : null,
+    provenanceNote: payload.provenanceNote ? stripHtmlTags(payload.provenanceNote) : null,
     categories: payload.categories ?? [],
   };
 
@@ -696,6 +699,10 @@ export async function createRecipeWithRefs(
         rid,
         payload.tags.map((t) => t.name)
       );
+    }
+
+    if (payload.cuisines.length) {
+      await replaceRecipeCuisinesTx(tx, rid, payload.cuisines);
     }
 
     if (payload.recipeIngredients.length) {

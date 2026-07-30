@@ -214,6 +214,35 @@ describe("Cuisines", () => {
     expect(describeCuisineField()).toMatch(/never translate/i);
   });
 
+  it("tells the model to stay inside the vocabulary under the existing strategy", async () => {
+    respondWith({ originCountry: "IT", originRegion: null, cuisines: [], provenanceNote: "Note." });
+
+    await inferRecipeProvenance(ITALIAN_RECIPE);
+
+    expect(describeCuisineField()).toMatch(/empty array when none of them fits/i);
+    expect(fillPrompt).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ cuisineFallback: expect.stringMatching(/empty list/i) })
+    );
+  });
+
+  it("invites a name outside the vocabulary under the extend strategy", async () => {
+    // Otherwise `extend` is a setting with no effect: the model is never told
+    // it may propose one, so nothing unmatched ever reaches the resolver.
+    vi.mocked(getCuisineStrategy).mockResolvedValue("extend");
+    respondWith({ originCountry: "IT", originRegion: null, cuisines: [], provenanceNote: "Note." });
+
+    await inferRecipeProvenance(ITALIAN_RECIPE);
+
+    expect(describeCuisineField()).toMatch(/name the tradition it does belong to/i);
+    expect(fillPrompt).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        cuisineFallback: expect.stringMatching(/name the tradition it does belong to/i),
+      })
+    );
+  });
+
   it("resolves proposed names to vocabulary row ids", async () => {
     respondWith({
       originCountry: "IT",

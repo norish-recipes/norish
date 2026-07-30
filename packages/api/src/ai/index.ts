@@ -139,7 +139,7 @@ export { transcribeAudio } from "./transcriber";
 
 export { recipeExtractionSchema } from "./schemas/recipe.schema";
 export { nutritionEstimationSchema } from "./schemas/nutrition.schema";
-export { buildProvenanceSchema } from "./schemas/provenance.schema";
+export { buildProvenanceSchema, type ProposedProvenance } from "./schemas/provenance.schema";
 export { conversionSchema } from "@norish/shared-server/ai/schemas/conversion.schema";
 export { autoTaggingSchema } from "./schemas/auto-tagging.schema";
 

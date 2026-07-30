@@ -294,11 +294,8 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
 
   await importAndOpen("Live Provenance Stew", [bareRecipe("Live Provenance Stew")]);
 
-  // Nothing stored and nothing running: the section offers the run rather than
-  // showing an empty panel.
-  await expect(page.getByText("No provenance information yet").first()).toBeVisible({
-    timeout: 15_000,
-  });
+  // Nothing stored and nothing running: the section is absent entirely.
+  await expect(page.getByText("Where it comes from")).toHaveCount(0);
 
   stack!.ai.control.succeedWith(
     provenanceClaim({ originCountry: "JP", originRegion: null, cuisines: ["Japanese"] })
@@ -312,5 +309,6 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
   // connection and the open page re-renders.
   await expect(page.getByText("Japan").first()).toBeVisible({ timeout: 60_000 });
   await expect(page.getByText("Japanese").first()).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText("No provenance information yet")).toHaveCount(0);
+  // The section appeared where there was none, without a reload.
+  await expect(page.getByText("Where it comes from").first()).toBeVisible({ timeout: 3_000 });
 });

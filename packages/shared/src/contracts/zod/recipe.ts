@@ -71,6 +71,9 @@ export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
   id: z.uuid().optional(),
   recipeIngredients: z.array(RecipeIngredientInputSchema).default([]),
   tags: z.array(TagNameSchema).default([]),
+  // Vocabulary row ids, as the recipe form sends them. Names would reintroduce
+  // the create-on-write behaviour the vocabulary exists to prevent.
+  cuisines: z.array(z.uuid()).default([]),
   categories: z.array(recipeCategorySchema).default([]),
   steps: z.array(StepStepSchema).default([]),
   images: z.array(RecipeImageSchema).max(10).default([]),
