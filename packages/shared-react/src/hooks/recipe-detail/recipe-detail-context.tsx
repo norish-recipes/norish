@@ -195,7 +195,7 @@ export function createRecipeDetailContext(adapters: RecipeDetailAdapters) {
     adapters.useRecipeSubscription(recipeId);
     useRecipeShareSubscription(recipeId);
 
-    // One hook for all four enrichment kinds: status, busy state, and requests.
+    // One hook for every enrichment kind: status, busy state, and requests.
     const enrichment = adapters.useRecipeEnrichment(recipeId);
 
     // Get allergies

@@ -9,7 +9,7 @@ import {
   replaceRecipeNutrition,
   replaceRecipeProvenance,
 } from "@norish/db/repositories/recipe-enrichment";
-import { getRecipeFull } from "@norish/db/repositories/recipes";
+import { getRecipeFull, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
 import { appendRecipeTags, getRecipeTagNames } from "@norish/db/repositories/tags";
 
 import { createTestRecipe } from "../../../helpers/db-test-helpers";
@@ -338,6 +338,86 @@ describe("Recipe Enrichment repository", () => {
 
       expect(applied).toBe(false);
       expect((await getRecipeCuisines(testRecipe.id)).map((c) => c.name)).toEqual(["Italian"]);
+    });
+  });
+
+  describe("an editor saving the recipe form", () => {
+    it("writes the whole group, and its Cuisines by id", async () => {
+      const italian = await findCuisineByName("Italian");
+
+      await updateRecipeWithRefs(testRecipe.id, userId, {
+        originCountry: "IT",
+        originRegion: "Lazio",
+        provenanceNote: "My grandmother's, from Rome.",
+        cuisines: [italian!.id],
+      });
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBe("IT");
+      expect(recipe?.originRegion).toBe("Lazio");
+      expect(recipe?.provenanceNote).toBe("My grandmother's, from Rome.");
+      expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Italian"]);
+    });
+
+    it("normalizes a country the editor typed as a name away", async () => {
+      await updateRecipeWithRefs(testRecipe.id, userId, { originCountry: "Italy" });
+
+      expect((await getRecipeFull(testRecipe.id))?.originCountry).toBeNull();
+    });
+
+    it("survives an automatic run afterwards, because it is supplied data", async () => {
+      await updateRecipeWithRefs(testRecipe.id, userId, {
+        originCountry: "NL",
+        provenanceNote: "Set by an editor.",
+      });
+
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "IT", provenanceNote: "Inferred." },
+        "automatic"
+      );
+
+      expect(applied).toBe(false);
+      expect((await getRecipeFull(testRecipe.id))?.provenanceNote).toBe("Set by an editor.");
+    });
+
+    it("clears the group when the editor empties every field", async () => {
+      const italian = await findCuisineByName("Italian");
+
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "IT", provenanceNote: "Wrong.", cuisineIds: [italian!.id] },
+        "manual"
+      );
+
+      await updateRecipeWithRefs(testRecipe.id, userId, {
+        originCountry: null,
+        originRegion: null,
+        provenanceNote: null,
+        cuisines: [],
+      });
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBeNull();
+      expect(recipe?.provenanceNote).toBeNull();
+      expect(recipe?.cuisines).toEqual([]);
+    });
+
+    it("leaves provenance alone when the editor changed something else", async () => {
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "IT", provenanceNote: "Keep me." },
+        "manual"
+      );
+
+      await updateRecipeWithRefs(testRecipe.id, userId, { name: "A new title" });
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.name).toBe("A new title");
+      expect(recipe?.provenanceNote).toBe("Keep me.");
     });
   });
 

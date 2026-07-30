@@ -80,6 +80,9 @@ export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
 export const FullRecipeUpdateSchema = RecipeUpdateBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientInputBaseSchema.partial()).optional(),
   tags: z.array(TagNameSchema).optional(),
+  // Cuisines are picked from the vocabulary rather than typed, so an editor
+  // sends ids. Passing an empty array clears them; omitting leaves them alone.
+  cuisines: z.array(z.uuid()).optional(),
   steps: z.array(StepStepSchema).optional(),
   images: z.array(RecipeImageSchema).max(10).optional(),
   videos: z.array(RecipeVideoSchema).optional(),

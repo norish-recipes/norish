@@ -12,7 +12,7 @@ import { sharedRecipeFamilyHooks } from "./shared-recipe-hooks";
 const sharedUseRecipeEnrichment = sharedRecipeFamilyHooks.useRecipeEnrichment;
 
 /**
- * Recipe Enrichment lifecycle and manual requests for all four kinds.
+ * Recipe Enrichment lifecycle and manual requests for every kind.
  *
  * Only failures of runs this user asked for surface as a toast. Automatic
  * enrichment stays quiet: it is optional background work, and an error there

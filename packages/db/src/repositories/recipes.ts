@@ -23,6 +23,7 @@ import {
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
+import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { MutationOutcome } from "./mutation-outcomes";
@@ -43,6 +44,7 @@ import {
   FullRecipeUpdateSchema,
   RecipeDashboardSchema,
 } from "../zodSchemas";
+import { replaceRecipeCuisinesTx } from "./cuisines";
 import {
   attachIngredientsToRecipeByInputTx,
   getOrCreateManyIngredientsTx,
@@ -1294,6 +1296,14 @@ export async function updateRecipeWithRefs(
     if (payload.fat !== undefined) updateData.fat = payload.fat;
     if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
     if (payload.protein !== undefined) updateData.protein = payload.protein;
+    if (payload.originCountry !== undefined)
+      updateData.originCountry = normalizeOriginCountry(payload.originCountry);
+    if (payload.originRegion !== undefined)
+      updateData.originRegion = payload.originRegion ? stripHtmlTags(payload.originRegion) : null;
+    if (payload.provenanceNote !== undefined)
+      updateData.provenanceNote = payload.provenanceNote
+        ? stripHtmlTags(payload.provenanceNote)
+        : null;
 
     updateData.updatedAt = new Date();
 
@@ -1311,6 +1321,12 @@ export async function updateRecipeWithRefs(
 
     if (!updatedRecipeRow && version) {
       return staleOutcome();
+    }
+
+    // Replace Cuisines if provided. An empty array is an editor clearing them,
+    // which is deliberately distinct from an enrichment run writing nothing.
+    if (payload.cuisines !== undefined) {
+      await replaceRecipeCuisinesTx(tx, recipeId, payload.cuisines);
     }
 
     // Replace tags if provided

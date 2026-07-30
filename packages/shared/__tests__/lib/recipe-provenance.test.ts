@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { countryDisplayName, countryFlagEmoji } from "@norish/shared/lib/recipe-provenance";
+import {
+  countryDisplayName,
+  countryFlagEmoji,
+  listCountryOptions,
+} from "@norish/shared/lib/recipe-provenance";
 
 describe("countryFlagEmoji", () => {
   it("maps an alpha-2 code onto its flag", () => {
@@ -13,6 +17,28 @@ describe("countryFlagEmoji", () => {
     expect(countryFlagEmoji("Italy")).toBeNull();
     expect(countryFlagEmoji("")).toBeNull();
     expect(countryFlagEmoji(null)).toBeNull();
+  });
+});
+
+describe("listCountryOptions", () => {
+  it("offers countries named and sorted in the editor's language", () => {
+    const dutch = listCountryOptions("nl");
+
+    expect(dutch).toContainEqual({ code: "IT", name: "Italië" });
+    expect(dutch.map((option) => option.name)).toEqual(
+      [...dutch.map((option) => option.name)].sort(new Intl.Collator("nl").compare)
+    );
+  });
+
+  it("omits placeholders and supranational groupings", () => {
+    const codes = listCountryOptions("en").map((option) => option.code);
+
+    // Not somewhere a recipe comes from.
+    for (const code of ["ZZ", "EU", "UN", "QO"]) {
+      expect(codes).not.toContain(code);
+    }
+
+    expect(codes).toContain("JP");
   });
 });
 
