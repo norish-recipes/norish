@@ -28,9 +28,7 @@ import { reportStep } from "../job-steps";
 const log = createLogger("worker:recipe-provenance");
 
 /** Exported so the job body can be exercised without a Redis-backed worker. */
-export async function processRecipeProvenanceJob(
-  job: Job<RecipeEnrichmentJobData>
-): Promise<void> {
+export async function processRecipeProvenanceJob(job: Job<RecipeEnrichmentJobData>): Promise<void> {
   await runEnrichmentJob(job, async (recipe) => {
     const inferRecipeProvenance = requireQueueApiHandler("inferRecipeProvenance");
     const result = await inferRecipeProvenance(toRecipeSummary(recipe));
@@ -39,20 +37,24 @@ export async function processRecipeProvenanceJob(
       throw new Error(result.error);
     }
 
-    if (!hasSubstantiveProvenance(result.data)) {
+    const claim = result.data;
+
+    if (claim.cuisineIds.length === 0 && !hasSubstantiveProvenance(claim)) {
       // Replacement clears whatever it does not set, so an entirely empty claim
-      // must fail rather than wipe the stored group.
+      // must fail rather than wipe the stored group. A claim that is only
+      // Cuisines is still substantive: the group is atomic in both directions.
       throw new Error("AI returned no substantive Recipe Provenance");
     }
 
     await reportStep(job, "saving");
 
-    const applied = await replaceRecipeProvenance(recipe.id, result.data, job.data.origin);
+    const applied = await replaceRecipeProvenance(recipe.id, claim, job.data.origin);
 
     log.info(
       {
         recipeId: recipe.id,
-        originCountry: result.data.originCountry,
+        originCountry: claim.originCountry,
+        cuisineCount: claim.cuisineIds.length,
         applied,
         origin: job.data.origin,
       },

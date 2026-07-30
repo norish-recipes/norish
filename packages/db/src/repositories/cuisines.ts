@@ -11,7 +11,7 @@
  * or migration composes its own query.
  */
 
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq, inArray, sql } from "drizzle-orm";
 
 import type { CuisineDto, CuisineSummaryDto } from "@norish/shared/contracts";
 import { db } from "@norish/db/drizzle";
@@ -76,6 +76,39 @@ export async function createCuisine(name: string): Promise<CuisineDto> {
   }
 
   return created[0];
+}
+
+/**
+ * Add several Cuisines at once, skipping the ones that are already there.
+ *
+ * The only bulk create there is, and it exists for the `extend` cuisine
+ * strategy alone. Unlike {@link createCuisine} it tolerates a name that already
+ * exists, because two provenance runs may propose the same new Cuisine at the
+ * same time and neither should fail for it.
+ *
+ * @returns the rows for every requested name, created or pre-existing
+ */
+export async function createCuisines(names: readonly string[]): Promise<CuisineDto[]> {
+  const cleaned = [...new Set(names.map((name) => cleanName(name)))];
+
+  if (cleaned.length === 0) return [];
+
+  return await db.transaction(async (tx) => {
+    await tx
+      .insert(cuisines)
+      .values(cleaned.map((name) => ({ name })))
+      .onConflictDoNothing();
+
+    return await tx
+      .select()
+      .from(cuisines)
+      .where(
+        inArray(
+          sql`lower(${cuisines.name})`,
+          cleaned.map((name) => name.toLowerCase())
+        )
+      );
+  });
 }
 
 /**

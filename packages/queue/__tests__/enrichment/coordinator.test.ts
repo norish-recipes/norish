@@ -217,8 +217,22 @@ describe("automatic enrollment", () => {
     }
   );
 
+  it("skips provenance when a supplied Cuisine makes the whole group substantive", async () => {
+    getRecipeFull.mockResolvedValue(recipe({ cuisines: [{ id: "id-italian", name: "Italian" }] }));
+
+    const results = await enrichRecipe(context, { origin: "automatic" });
+
+    expect(outcome(results, "recipe-provenance")).toEqual({
+      kind: "recipe-provenance",
+      status: "skipped",
+      reason: "supplied-data-present",
+    });
+  });
+
   it("treats blank provenance values as absent", async () => {
-    getRecipeFull.mockResolvedValue(recipe({ originRegion: "  ", provenanceNote: "" }));
+    getRecipeFull.mockResolvedValue(
+      recipe({ originRegion: "  ", provenanceNote: "", cuisines: [] })
+    );
 
     const results = await enrichRecipe(context, { origin: "automatic" });
 

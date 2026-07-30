@@ -3,7 +3,7 @@
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
 import AIActionButton from "@/components/shared/ai-action-button";
 import { usePermissionsContext } from "@/context/permissions-context";
-import { Card, Separator, Skeleton } from "@heroui/react";
+import { Card, Chip, Separator, Skeleton } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { hasSubstantiveProvenance } from "@norish/shared/lib/recipe-enrichment";
@@ -71,6 +71,17 @@ function ProvenanceDisplay({ inCard = true }: { inCard?: boolean }) {
             <div className="flex items-baseline gap-2">
               <span className="text-muted text-sm">{t("region")}</span>
               <span className="text-base">{recipe.originRegion}</span>
+            </div>
+          )}
+          {recipe.cuisines.length > 0 && (
+            <div className="flex flex-wrap items-baseline gap-2">
+              <span className="text-muted text-sm">{t("cuisines")}</span>
+              {recipe.cuisines.map((cuisine) => (
+                <Chip key={cuisine.id} size="sm" variant="soft">
+                  {/* A canonical identifier: shown verbatim in every locale. */}
+                  {cuisine.name}
+                </Chip>
+              ))}
             </div>
           )}
           {recipe.provenanceNote && (

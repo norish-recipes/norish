@@ -124,8 +124,11 @@ export { detectAllergiesInRecipe, type RecipeForAllergyDetection } from "./aller
 export type { AllergyDetectionOutput } from "./allergy-detector";
 
 // Recipe Provenance
-export { inferRecipeProvenance, type RecipeForProvenance } from "./provenance-inferrer";
-export type { ProvenanceInference } from "./provenance-inferrer";
+export {
+  inferRecipeProvenance,
+  type ProvenanceInference,
+  type RecipeForProvenance,
+} from "./provenance-inferrer";
 
 // Transcription
 export { transcribeAudio } from "./transcriber";

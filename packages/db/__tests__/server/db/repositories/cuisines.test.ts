@@ -14,6 +14,7 @@ import { db } from "@norish/db/drizzle";
 import {
   attachRecipeCuisines,
   createCuisine,
+  createCuisines,
   deleteCuisine,
   findCuisineByName,
   getRecipeCuisines,
@@ -141,6 +142,21 @@ describe("Cuisine repository", () => {
 
     it("reports a delete of something that is not there", async () => {
       expect(await deleteCuisine("00000000-0000-0000-0000-000000000000")).toBe(false);
+    });
+
+    it("adds several Cuisines at once for the extend strategy", async () => {
+      const created = await createCuisines(["Basque", "Galician"]);
+
+      expect(created.map((cuisine) => cuisine.name).sort()).toEqual(["Basque", "Galician"]);
+    });
+
+    it("tolerates a name that is already there, so two runs cannot collide", async () => {
+      await createCuisines(["Basque"]);
+
+      const second = await createCuisines(["Basque", "Galician"]);
+
+      expect(second.map((cuisine) => cuisine.name).sort()).toEqual(["Basque", "Galician"]);
+      expect((await listCuisines()).filter((c) => c.name === "Basque")).toHaveLength(1);
     });
 
     it("refuses a rename onto a name that already exists", async () => {

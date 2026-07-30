@@ -23,11 +23,15 @@ export interface QueueRecipeSummary {
   ingredients: string[];
 }
 
-/** The whole Recipe Provenance claim from one AI request. */
+/**
+ * The whole Recipe Provenance claim from one AI request, with Cuisines already
+ * resolved to vocabulary row ids. The worker never sees proposed names.
+ */
 export interface QueueProvenanceInference {
   originCountry: string | null;
   originRegion: string | null;
   provenanceNote: string;
+  cuisineIds: string[];
 }
 
 export interface QueueSyncResult {

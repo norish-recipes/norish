@@ -60,6 +60,7 @@ const INFERENCE = {
   originCountry: "IT",
   originRegion: "Lazio",
   provenanceNote: "Una classica ricetta romana.",
+  cuisineIds: ["id-italian"],
 };
 
 const RECIPE = {
@@ -80,7 +81,12 @@ function jobFor(overrides: Partial<RecipeEnrichmentJobData> = {}): Job<RecipeEnr
     ...overrides,
   };
 
-  return { id: "job-1", data, attemptsMade: 0, opts: { attempts: 3 } } as Job<RecipeEnrichmentJobData>;
+  return {
+    id: "job-1",
+    data,
+    attemptsMade: 0,
+    opts: { attempts: 3 },
+  } as Job<RecipeEnrichmentJobData>;
 }
 
 beforeEach(() => {
@@ -136,11 +142,31 @@ describe("processRecipeProvenanceJob", () => {
   it("refuses an empty claim rather than erasing stored provenance", async () => {
     mocks.inferRecipeProvenance.mockResolvedValue({
       success: true,
-      data: { originCountry: null, originRegion: null, provenanceNote: "   " },
+      data: { originCountry: null, originRegion: null, provenanceNote: "   ", cuisineIds: [] },
     });
 
     await expect(processRecipeProvenanceJob(jobFor())).rejects.toThrow(/no substantive/i);
     expect(mocks.replaceRecipeProvenance).not.toHaveBeenCalled();
+  });
+
+  it("treats a claim that is only Cuisines as substantive", async () => {
+    mocks.inferRecipeProvenance.mockResolvedValue({
+      success: true,
+      data: {
+        originCountry: null,
+        originRegion: null,
+        provenanceNote: "Nothing places this dish in one country.",
+        cuisineIds: ["id-italian", "id-japanese"],
+      },
+    });
+
+    await processRecipeProvenanceJob(jobFor());
+
+    expect(mocks.replaceRecipeProvenance).toHaveBeenCalledWith(
+      "recipe-1",
+      expect.objectContaining({ cuisineIds: ["id-italian", "id-japanese"] }),
+      "automatic"
+    );
   });
 
   it("fails without writing when the response cannot be used", async () => {

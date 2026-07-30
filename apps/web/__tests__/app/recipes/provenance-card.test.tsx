@@ -50,6 +50,7 @@ vi.mock("@heroui/react", () => ({
   Card: Object.assign(({ children }: { children: React.ReactNode }) => <div>{children}</div>, {
     Content: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   }),
+  Chip: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
   Separator: () => <hr />,
   Skeleton: () => <span data-testid="skeleton" />,
 }));
@@ -65,6 +66,7 @@ vi.mock("next-intl", () => ({
     const provenance: Record<string, string> = {
       title: "Where it comes from",
       region: "Region",
+      cuisines: "Cuisines",
       noInfo: "No provenance information yet",
       inferWithAI: "Work out with AI",
     };
@@ -157,6 +159,38 @@ describe("Recipe Provenance section", () => {
 
     expect(screen.getByText("Dit gerecht is niet aan één land te koppelen.")).toBeInTheDocument();
     expect(screen.queryByText("No provenance information yet")).not.toBeInTheDocument();
+  });
+
+  it("shows the recipe's Cuisines verbatim, whatever the reader's language", () => {
+    mocks.recipe.originCountry = "IT";
+    mocks.recipe.cuisines = [
+      { id: "id-italian", name: "Italian", version: 1 },
+      { id: "id-mediterranean", name: "Mediterranean", version: 1 },
+    ];
+
+    render(<ProvenanceCard />);
+
+    // A Cuisine name is a canonical identifier, not a translatable label.
+    expect(screen.getByText("Italian")).toBeInTheDocument();
+    expect(screen.getByText("Mediterranean")).toBeInTheDocument();
+  });
+
+  it("renders a recipe whose only provenance is its Cuisines", () => {
+    mocks.recipe.cuisines = [{ id: "id-italian", name: "Italian", version: 1 }];
+
+    render(<ProvenanceCard />);
+
+    expect(screen.getByText("Italian")).toBeInTheDocument();
+    expect(screen.queryByText("No provenance information yet")).not.toBeInTheDocument();
+  });
+
+  it("omits the Cuisines row when there are none", () => {
+    mocks.recipe.originCountry = "IT";
+    mocks.recipe.provenanceNote = "Una classica ricetta romana.";
+
+    render(<ProvenanceCard />);
+
+    expect(screen.queryByText("Cuisines")).not.toBeInTheDocument();
   });
 
   it("offers the run to an editor when nothing is stored", () => {

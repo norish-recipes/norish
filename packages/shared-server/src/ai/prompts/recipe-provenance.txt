@@ -11,6 +11,13 @@ Work out where this recipe comes from, using only the recipe above.
 - originRegion: the finer-grained region within that country when the recipe
   clearly warrants one (for example "Rome", "Sicily", "Kansai"). Use null when
   the dish is national rather than regional. Do not translate place names.
+- cuisines: the culinary traditions this dish belongs to, chosen from this list
+  and copied VERBATIM, exactly as spelled here:
+  {{cuisines}}
+  Use several only for a genuine fusion dish, and an empty list when none of
+  them fits. Never translate or inflect these names — copy them character for
+  character, in the language they are written in above, whatever language you
+  write the note in.
 - provenanceNote: two or three sentences explaining how you concluded this, and
   what the dish's background is.
 
