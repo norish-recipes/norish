@@ -104,11 +104,13 @@ describe("server config normalization", () => {
       apiKey: "secret-key",
       alwaysUseAI: false,
       tagStrategy: "predefined",
+      cuisineStrategy: "existing",
       automaticEnrichment: {
         autoTagging: false,
         allergyDetection: true,
         autoCategorization: false,
         nutritionEstimation: false,
+        recipeProvenance: false,
       },
     });
 
@@ -126,11 +128,13 @@ describe("server config normalization", () => {
       apiKey: "••••••••",
       alwaysUseAI: false,
       tagStrategy: "predefined",
+      cuisineStrategy: "existing",
       automaticEnrichment: {
         autoTagging: false,
         allergyDetection: true,
         autoCategorization: false,
         nutritionEstimation: false,
+        recipeProvenance: false,
       },
     });
     expect(JSON.parse(decrypt(persisted!.valueEnc!))).toEqual(result);

@@ -5,6 +5,7 @@ export * from "./cuisines";
 export * from "./ingredients";
 export * from "./recipe-tags";
 export * from "./recipe-cuisines";
+export * from "./cuisine-tag-migrations";
 export * from "./recipe-ingredients";
 export * from "./relations";
 export * from "./steps";
