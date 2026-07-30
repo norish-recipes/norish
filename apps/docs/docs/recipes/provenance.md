@@ -18,6 +18,8 @@ It appears in its own section on the recipe page. The country is shown with its
 flag and named **in your own language**, because Norish stores the country code
 rather than a name. The region and the note are shown exactly as written.
 
+![Recipe provenance on a recipe page](/img/screenshots/provenance-recipe.png)
+
 If a recipe has no provenance and nothing is running, the section simply isn't
 there.
 
@@ -34,6 +36,8 @@ Unlike tags, which anyone can invent, cuisines come from a curated list that
 your instance's administrator maintains. Norish ships with a starting list, and
 your administrator can add to it, rename entries, or remove them under
 **Settings → Admin → AI & Processing → Cuisines**.
+
+![Managing the Cuisine vocabulary in admin settings](/img/screenshots/admin-cuisines.png)
 
 - **Renaming** a cuisine updates every recipe using it at once.
 - **Deleting** one removes it from every recipe that had it. Notes written
@@ -80,6 +84,8 @@ against the field next to it.
 You can edit provenance in the recipe form, under **Provenance**. Cuisines are
 picked from your administrator's list, so what you choose matches what AI would
 have chosen. **Clear provenance** empties the whole group in one go.
+
+![Editing recipe provenance in the recipe form](/img/screenshots/provenance-form.png)
 
 :::note
 Clearing provenance does not re-arm automatic inference — automatic enrichment is
