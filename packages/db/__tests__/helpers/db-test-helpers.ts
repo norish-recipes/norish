@@ -75,6 +75,9 @@ export async function cleanDatabase() {
   await db.delete(schema.recipeIngredients);
   await db.delete(schema.recipeTags);
   await db.delete(schema.tags);
+  // The cuisines themselves survive: they are a migration-seeded vocabulary,
+  // not per-test fixture data.
+  await db.delete(schema.recipeCuisines);
   await db.delete(schema.recipeRatings);
   await db.delete(schema.recipeFavorites);
   await db.delete(schema.recipeShares);

@@ -521,6 +521,10 @@
         "title": "Prompts",
         "subtitle": "Personaliza las instrucciones de IA para el procesamiento de recetas"
       },
+      "cuisines": {
+        "title": "Cocinas",
+        "subtitle": "El vocabulario del que eligen las recetas y la IA"
+      },
       "bulkCategorization": {
         "title": "Categorización masiva",
         "subtitle": "Categorizar recetas sin categoría usando IA",
@@ -584,6 +588,12 @@
         "predefined": "Solo etiquetas predefinidas",
         "predefinedDb": "Predefinidas + etiquetas existentes",
         "freeform": "IA puede crear nuevas etiquetas"
+      },
+      "cuisineStrategy": "Estrategia de cocina",
+      "cuisineStrategyDescription": "Si la inferencia de procedencia puede añadir cocinas a tu vocabulario o solo elegir de él",
+      "cuisineStrategies": {
+        "existing": "Solo cocinas existentes",
+        "extend": "La IA puede crear cocinas nuevas"
       }
     },
     "videoConfig": {
@@ -749,6 +759,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Las cocinas son un vocabulario curado que tú controlas. Los nombres se muestran tal como se escriben aquí, en todos los idiomas.",
+      "namePlaceholder": "Nombre de la cocina",
+      "addLabel": "Añadir cocina",
+      "renameLabel": "Renombrar {name}",
+      "deleteLabel": "Eliminar {name}",
+      "deleteConfirm": "¿Eliminar «{name}»? Las recetas que la usan la perderán.",
+      "empty": "Aún no hay cocinas.",
+      "duplicate": "Ya existe una cocina con ese nombre.",
+      "saveFailed": "No se pudo guardar esa cocina."
     }
   }
 }

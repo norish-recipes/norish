@@ -521,6 +521,10 @@
         "title": "Prompt-tekster",
         "subtitle": "Tilpas AI-instruktioner til opskriftbehandling"
       },
+      "cuisines": {
+        "title": "Køkkener",
+        "subtitle": "Ordforrådet som opskrifter og AI vælger fra"
+      },
       "bulkCategorization": {
         "title": "Massekategorisering",
         "subtitle": "Kategoriser ukategoriserede opskrifter med AI",
@@ -584,6 +588,12 @@
         "predefined": "Kun foruddefinerede tags",
         "predefinedDb": "Foruddefinerede + eksisterende tags",
         "freeform": "AI kan oprette nye tags"
+      },
+      "cuisineStrategy": "Køkkenstrategi",
+      "cuisineStrategyDescription": "Om oprindelsesbestemmelse må tilføje køkkener til dit ordforråd eller kun vælge fra det",
+      "cuisineStrategies": {
+        "existing": "Kun eksisterende køkkener",
+        "extend": "AI må oprette nye køkkener"
       }
     },
     "videoConfig": {
@@ -749,6 +759,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Køkkener er et kurateret ordforråd, du ejer. Navne vises præcis som skrevet her, på alle sprog.",
+      "namePlaceholder": "Køkkenets navn",
+      "addLabel": "Tilføj et køkken",
+      "renameLabel": "Omdøb {name}",
+      "deleteLabel": "Slet {name}",
+      "deleteConfirm": "Slet \"{name}\"? Opskrifter, der bruger det, mister det.",
+      "empty": "Ingen køkkener endnu.",
+      "duplicate": "Der findes allerede et køkken med det navn.",
+      "saveFailed": "Kunne ikke gemme det køkken."
     }
   }
 }

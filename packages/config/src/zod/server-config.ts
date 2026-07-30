@@ -251,6 +251,20 @@ export const TagStrategySchema = z.enum(["predefined", "predefined_db", "freefor
 export type TagStrategy = z.infer<typeof TagStrategySchema>;
 
 /**
+ * How provenance inference picks Cuisine names: `existing` restricts it to the
+ * administrator's current vocabulary, `extend` permits it to add rows.
+ *
+ * The tag strategy's value names are deliberately not reused — that enum has
+ * three values and its `predefined` mode names a compile-time list with no
+ * cuisine equivalent. Like the tag strategy, this is independent of whether the
+ * kind runs automatically: how names are picked and whether the kind runs are
+ * orthogonal axes.
+ */
+export const CuisineStrategySchema = z.enum(["existing", "extend"]);
+
+export type CuisineStrategy = z.infer<typeof CuisineStrategySchema>;
+
+/**
  * One independent switch per Recipe Enrichment kind. Each only decides whether the
  * kind is enrolled automatically for a newly usable recipe; Manual Recipe Enrichment
  * stays available whenever AI is enabled.
@@ -278,6 +292,9 @@ export const DEFAULT_AUTOMATIC_ENRICHMENT: AutomaticEnrichmentConfig = {
 
 export const DEFAULT_TAG_STRATEGY: TagStrategy = "predefined";
 
+/** Restrictive by default: an administrator opts in to letting AI mint Cuisines. */
+export const DEFAULT_CUISINE_STRATEGY: CuisineStrategy = "existing";
+
 export const AIConfigInputSchema = z.object({
   enabled: z.boolean(),
   provider: AIProviderSchema,
@@ -290,6 +307,7 @@ export const AIConfigInputSchema = z.object({
   timeoutMs: z.number().int().positive().optional().default(300000),
   alwaysUseAI: z.boolean().default(false),
   tagStrategy: TagStrategySchema.optional(),
+  cuisineStrategy: CuisineStrategySchema.optional(),
   automaticEnrichment: AutomaticEnrichmentSchema.partial().optional(),
   /** @deprecated Migrated into `automaticEnrichment.autoTagging` + `tagStrategy`. */
   autoTaggingMode: AutoTaggingModeSchema.optional(),
@@ -303,7 +321,14 @@ export const AIConfigInputSchema = z.object({
  * effective enabledness, and canonical values always win over legacy ones.
  */
 export const AIConfigSchema = AIConfigInputSchema.transform(
-  ({ autoTaggingMode, autoTagAllergies, tagStrategy, automaticEnrichment, ...rest }) => {
+  ({
+    autoTaggingMode,
+    autoTagAllergies,
+    tagStrategy,
+    cuisineStrategy,
+    automaticEnrichment,
+    ...rest
+  }) => {
     const legacyAutoTaggingOn =
       autoTaggingMode === undefined ? undefined : autoTaggingMode !== "disabled";
     const legacyStrategy =
@@ -312,6 +337,7 @@ export const AIConfigSchema = AIConfigInputSchema.transform(
     return {
       ...rest,
       tagStrategy: tagStrategy ?? legacyStrategy ?? DEFAULT_TAG_STRATEGY,
+      cuisineStrategy: cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY,
       automaticEnrichment: {
         autoTagging:
           automaticEnrichment?.autoTagging ??

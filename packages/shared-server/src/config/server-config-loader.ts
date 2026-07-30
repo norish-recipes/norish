@@ -14,6 +14,7 @@ import type {
   AIConfig,
   AutomaticEnrichmentConfig,
   ContentIndicatorsConfig,
+  CuisineStrategy,
   I18nLocaleConfig,
   PromptsConfig,
   RecipePermissionPolicy,
@@ -30,6 +31,7 @@ import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
 import {
   AIConfigSchema,
+  DEFAULT_CUISINE_STRATEGY,
   DEFAULT_RECIPE_PERMISSION_POLICY,
   DEFAULT_TAG_STRATEGY,
   ServerConfigKeys,
@@ -246,6 +248,17 @@ export async function getTagStrategy(): Promise<TagStrategy> {
   const aiConfig = await getAIConfig();
 
   return aiConfig?.tagStrategy ?? DEFAULT_TAG_STRATEGY;
+}
+
+/**
+ * Get the cuisine strategy provenance inference uses when it runs.
+ * Like the tag strategy, independent of the automatic switch: turning
+ * automation off must not change how names are picked for a manual run.
+ */
+export async function getCuisineStrategy(): Promise<CuisineStrategy> {
+  const aiConfig = await getAIConfig();
+
+  return aiConfig?.cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY;
 }
 
 /**

@@ -3,6 +3,7 @@ export type * from "./dto/household";
 export type * from "./dto/ingredient";
 export type * from "./dto/recipe";
 export type * from "./dto/tag";
+export type * from "./dto/cuisine";
 export type * from "./dto/planned-recipe";
 export type * from "./dto/planned-item";
 export type * from "./dto/planned-item-from-query";

@@ -521,6 +521,10 @@
         "title": "Prompts",
         "subtitle": "Personnalisez les instructions IA pour le traitement des recettes"
       },
+      "cuisines": {
+        "title": "Cuisines",
+        "subtitle": "Le vocabulaire dans lequel les recettes et l'IA puisent"
+      },
       "bulkCategorization": {
         "title": "Catégorisation en masse",
         "subtitle": "Catégoriser les recettes non catégorisées avec l'IA",
@@ -584,6 +588,12 @@
         "predefined": "Tags prédéfinis uniquement",
         "predefinedDb": "Prédéfinis + tags existants",
         "freeform": "L’IA peut créer de nouveaux tags"
+      },
+      "cuisineStrategy": "Stratégie de cuisine",
+      "cuisineStrategyDescription": "Si la déduction de provenance peut ajouter des cuisines à votre vocabulaire ou seulement y puiser",
+      "cuisineStrategies": {
+        "existing": "Cuisines existantes uniquement",
+        "extend": "L'IA peut créer de nouvelles cuisines"
       }
     },
     "videoConfig": {
@@ -749,6 +759,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Les cuisines forment un vocabulaire organisé qui vous appartient. Les noms s'affichent exactement comme écrits ici, dans toutes les langues.",
+      "namePlaceholder": "Nom de la cuisine",
+      "addLabel": "Ajouter une cuisine",
+      "renameLabel": "Renommer {name}",
+      "deleteLabel": "Supprimer {name}",
+      "deleteConfirm": "Supprimer « {name} » ? Les recettes qui l'utilisent la perdront.",
+      "empty": "Aucune cuisine pour le moment.",
+      "duplicate": "Une cuisine porte déjà ce nom.",
+      "saveFailed": "Impossible d'enregistrer cette cuisine."
     }
   }
 }

@@ -521,6 +521,10 @@
         "title": "Prompty",
         "subtitle": "Dostosuj instrukcje AI do przetwarzania przepisów"
       },
+      "cuisines": {
+        "title": "Kuchnie",
+        "subtitle": "Słownik, z którego wybierają przepisy i AI"
+      },
       "bulkCategorization": {
         "title": "Masowa kategoryzacja",
         "subtitle": "Kategoryzuj nieskategoryzowane przepisy za pomocą AI",
@@ -584,6 +588,12 @@
         "predefined": "Tylko zdefiniowane tagi",
         "predefinedDb": "Zdefiniowane + istniejące tagi",
         "freeform": "AI może tworzyć nowe tagi"
+      },
+      "cuisineStrategy": "Strategia kuchni",
+      "cuisineStrategyDescription": "Czy ustalanie pochodzenia może dodawać kuchnie do słownika, czy tylko z niego wybierać",
+      "cuisineStrategies": {
+        "existing": "Tylko istniejące kuchnie",
+        "extend": "AI może dodawać nowe kuchnie"
       }
     },
     "videoConfig": {
@@ -749,6 +759,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Kuchnie to wyselekcjonowany słownik, który należy do Ciebie. Nazwy są pokazywane dokładnie tak, jak je tu zapiszesz, we wszystkich językach.",
+      "namePlaceholder": "Nazwa kuchni",
+      "addLabel": "Dodaj kuchnię",
+      "renameLabel": "Zmień nazwę {name}",
+      "deleteLabel": "Usuń {name}",
+      "deleteConfirm": "Usunąć „{name}”? Przepisy, które jej używają, ją stracą.",
+      "empty": "Brak kuchni.",
+      "duplicate": "Kuchnia o tej nazwie już istnieje.",
+      "saveFailed": "Nie udało się zapisać tej kuchni."
     }
   }
 }

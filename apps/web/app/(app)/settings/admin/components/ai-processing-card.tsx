@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 
 import AIConfigForm from "./ai-config-form";
 import BulkCategorizationForm from "./bulk-categorization-form";
+import CuisineVocabularyForm from "./cuisine-vocabulary-form";
 import PromptsForm from "./prompts-form";
 import { UnsavedChangesChip } from "./unsaved-changes-chip";
 import VideoProcessingForm from "./video-processing-form";
@@ -91,6 +92,23 @@ export default function AIProcessingCard() {
             <Accordion.Panel>
               <Accordion.Body>
                 <PromptsForm onDirtyChange={updateDirtySection("prompts")} />
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          <Accordion.Item id="cuisines">
+            <Accordion.Heading>
+              <Accordion.Trigger>
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-2">{t("cuisines.title")}</div>
+                  <span className="text-muted text-sm">{t("cuisines.subtitle")}</span>
+                </div>
+                <Accordion.Indicator />
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body>
+                <CuisineVocabularyForm />
               </Accordion.Body>
             </Accordion.Panel>
           </Accordion.Item>

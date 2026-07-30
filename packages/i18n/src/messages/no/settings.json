@@ -521,6 +521,10 @@
         "title": "Prompt-tekster",
         "subtitle": "Tilpass AI-instruksjoner for oppskriftbehandling"
       },
+      "cuisines": {
+        "title": "Kjøkken",
+        "subtitle": "Ordlisten oppskrifter og KI velger fra"
+      },
       "bulkCategorization": {
         "title": "Massekategorisering",
         "subtitle": "Kategoriser ukategoriserte oppskrifter med AI",
@@ -584,6 +588,12 @@
         "predefined": "Bare forhåndsdefinerte tags",
         "predefinedDb": "Forhåndsdefinerte + eksisterende tags",
         "freeform": "AI kan opprette nye tags"
+      },
+      "cuisineStrategy": "Kjøkkenstrategi",
+      "cuisineStrategyDescription": "Om opphavsutledning kan legge til kjøkken i ordlisten din eller bare velge fra den",
+      "cuisineStrategies": {
+        "existing": "Bare eksisterende kjøkken",
+        "extend": "KI kan opprette nye kjøkken"
       }
     },
     "videoConfig": {
@@ -749,6 +759,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Kjøkken er en kuratert ordliste du eier. Navn vises nøyaktig slik de står her, på alle språk.",
+      "namePlaceholder": "Navn på kjøkken",
+      "addLabel": "Legg til et kjøkken",
+      "renameLabel": "Gi {name} nytt navn",
+      "deleteLabel": "Slett {name}",
+      "deleteConfirm": "Slette \"{name}\"? Oppskrifter som bruker det, mister det.",
+      "empty": "Ingen kjøkken ennå.",
+      "duplicate": "Et kjøkken med det navnet finnes allerede.",
+      "saveFailed": "Kunne ikke lagre det kjøkkenet."
     }
   }
 }

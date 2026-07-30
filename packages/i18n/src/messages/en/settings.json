@@ -521,6 +521,10 @@
         "title": "Prompts",
         "subtitle": "Customize AI instructions for recipe processing"
       },
+      "cuisines": {
+        "title": "Cuisines",
+        "subtitle": "The vocabulary recipes and AI pick from"
+      },
       "bulkCategorization": {
         "title": "Bulk Categorization",
         "subtitle": "Categorize uncategorized recipes using AI",
@@ -584,6 +588,12 @@
         "predefined": "Predefined Tags Only",
         "predefinedDb": "Predefined + Existing Tags",
         "freeform": "AI Can Create New Tags"
+      },
+      "cuisineStrategy": "Cuisine Strategy",
+      "cuisineStrategyDescription": "Whether provenance inference may add Cuisines to your vocabulary or only pick from it",
+      "cuisineStrategies": {
+        "existing": "Only Existing Cuisines",
+        "extend": "AI Can Add New Cuisines"
       }
     },
     "videoConfig": {
@@ -749,6 +759,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Cuisines are a curated vocabulary you own. Names are shown exactly as written here, in every language.",
+      "namePlaceholder": "Cuisine name",
+      "addLabel": "Add a Cuisine",
+      "renameLabel": "Rename {name}",
+      "deleteLabel": "Delete {name}",
+      "deleteConfirm": "Delete \"{name}\"? Recipes using it will lose it.",
+      "empty": "No Cuisines yet.",
+      "duplicate": "A Cuisine with that name already exists.",
+      "saveFailed": "Could not save that Cuisine."
     }
   }
 }

@@ -521,6 +521,10 @@
         "title": "Prompts",
         "subtitle": "Passe KI-Anweisungen für Rezept-Verarbeitung an"
       },
+      "cuisines": {
+        "title": "Küchen",
+        "subtitle": "Das Vokabular, aus dem Rezepte und KI wählen"
+      },
       "bulkCategorization": {
         "title": "Massenkategorisierung",
         "subtitle": "Nicht kategorisierte Rezepte mit KI kategorisieren",
@@ -584,6 +588,12 @@
         "predefined": "Nur vordefinierte Tags",
         "predefinedDb": "Vordefinierte + existierende Tags",
         "freeform": "KI kann neue Tags erstellen"
+      },
+      "cuisineStrategy": "Küchen-Strategie",
+      "cuisineStrategyDescription": "Ob die Herkunftsermittlung Küchen zu deinem Vokabular hinzufügen darf oder nur daraus wählen",
+      "cuisineStrategies": {
+        "existing": "Nur vorhandene Küchen",
+        "extend": "KI darf neue Küchen anlegen"
       }
     },
     "videoConfig": {
@@ -749,6 +759,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Küchen sind ein kuratiertes Vokabular, das dir gehört. Namen werden in jeder Sprache genau so angezeigt, wie sie hier stehen.",
+      "namePlaceholder": "Name der Küche",
+      "addLabel": "Küche hinzufügen",
+      "renameLabel": "{name} umbenennen",
+      "deleteLabel": "{name} löschen",
+      "deleteConfirm": "\"{name}\" löschen? Rezepte, die sie verwenden, verlieren sie.",
+      "empty": "Noch keine Küchen.",
+      "duplicate": "Eine Küche mit diesem Namen existiert bereits.",
+      "saveFailed": "Diese Küche konnte nicht gespeichert werden."
     }
   }
 }

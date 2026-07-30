@@ -521,6 +521,10 @@
         "title": "Промпты",
         "subtitle": "Настройка инструкций ИИ для обработки рецептов"
       },
+      "cuisines": {
+        "title": "Кухни",
+        "subtitle": "Словарь, из которого выбирают рецепты и ИИ"
+      },
       "bulkCategorization": {
         "title": "Массовая категоризация",
         "subtitle": "Категоризировать рецепты без категории с помощью ИИ",
@@ -584,6 +588,12 @@
         "predefined": "Только предустановленные теги",
         "predefinedDb": "Предустановленные + существующие теги",
         "freeform": "ИИ может создавать новые теги"
+      },
+      "cuisineStrategy": "Стратегия кухонь",
+      "cuisineStrategyDescription": "Может ли определение происхождения добавлять кухни в ваш словарь или только выбирать из него",
+      "cuisineStrategies": {
+        "existing": "Только существующие кухни",
+        "extend": "ИИ может добавлять новые кухни"
       }
     },
     "videoConfig": {
@@ -749,6 +759,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Кухни — это выверенный словарь, которым владеете вы. Названия показываются ровно так, как записаны здесь, на всех языках.",
+      "namePlaceholder": "Название кухни",
+      "addLabel": "Добавить кухню",
+      "renameLabel": "Переименовать {name}",
+      "deleteLabel": "Удалить {name}",
+      "deleteConfirm": "Удалить «{name}»? Рецепты, использующие её, её потеряют.",
+      "empty": "Кухонь пока нет.",
+      "duplicate": "Кухня с таким названием уже существует.",
+      "saveFailed": "Не удалось сохранить эту кухню."
     }
   }
 }

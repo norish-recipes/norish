@@ -521,6 +521,10 @@
         "title": "Prompts",
         "subtitle": "Personalize instruções de IA para processamento de receitas"
       },
+      "cuisines": {
+        "title": "Culinárias",
+        "subtitle": "O vocabulário do qual receitas e IA escolhem"
+      },
       "bulkCategorization": {
         "title": "Categorização em massa",
         "subtitle": "Categorize receitas sem categoria usando IA",
@@ -584,6 +588,12 @@
         "predefined": "Apenas tags predefinidas",
         "predefinedDb": "Predefinidas + tags existentes",
         "freeform": "A IA pode criar novas tags"
+      },
+      "cuisineStrategy": "Estratégia de culinária",
+      "cuisineStrategyDescription": "Se a inferência de procedência pode adicionar culinárias ao seu vocabulário ou apenas escolher dele",
+      "cuisineStrategies": {
+        "existing": "Apenas culinárias existentes",
+        "extend": "A IA pode criar novas culinárias"
       }
     },
     "videoConfig": {
@@ -749,6 +759,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Culinárias são um vocabulário curado que você controla. Os nomes aparecem exatamente como escritos aqui, em todos os idiomas.",
+      "namePlaceholder": "Nome da culinária",
+      "addLabel": "Adicionar culinária",
+      "renameLabel": "Renomear {name}",
+      "deleteLabel": "Excluir {name}",
+      "deleteConfirm": "Excluir \"{name}\"? As receitas que a usam vão perdê-la.",
+      "empty": "Nenhuma culinária ainda.",
+      "duplicate": "Já existe uma culinária com esse nome.",
+      "saveFailed": "Não foi possível salvar essa culinária."
     }
   }
 }

@@ -521,6 +521,10 @@
         "title": "프롬프트",
         "subtitle": "레시피 처리를 위한 AI 지침 사용자 정의"
       },
+      "cuisines": {
+        "title": "요리",
+        "subtitle": "레시피와 AI가 선택하는 어휘 목록"
+      },
       "bulkCategorization": {
         "title": "대량 분류",
         "subtitle": "분류되지 않은 레시피를 AI를 활용하여 분류",
@@ -584,6 +588,12 @@
         "predefined": "사전 정의된 태그만",
         "predefinedDb": "사전 정의된 태그 + 기존 태그",
         "freeform": "AI는 새로운 태그를 만들 수 있습니다"
+      },
+      "cuisineStrategy": "요리 전략",
+      "cuisineStrategyDescription": "출처 추론이 어휘 목록에 요리를 추가할 수 있는지, 아니면 목록에서만 선택할지",
+      "cuisineStrategies": {
+        "existing": "기존 요리만",
+        "extend": "AI가 새 요리를 추가할 수 있음"
       }
     },
     "videoConfig": {
@@ -749,6 +759,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "요리는 관리자가 소유하는 선별된 어휘 목록입니다. 이름은 모든 언어에서 여기 적힌 그대로 표시됩니다.",
+      "namePlaceholder": "요리 이름",
+      "addLabel": "요리 추가",
+      "renameLabel": "{name} 이름 변경",
+      "deleteLabel": "{name} 삭제",
+      "deleteConfirm": "\"{name}\"을(를) 삭제할까요? 사용 중인 레시피에서 사라집니다.",
+      "empty": "아직 요리가 없습니다.",
+      "duplicate": "같은 이름의 요리가 이미 있습니다.",
+      "saveFailed": "해당 요리를 저장할 수 없습니다."
     }
   }
 }

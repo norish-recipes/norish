@@ -22,10 +22,12 @@ import { useTranslations } from "next-intl";
 import type {
   AIConfig,
   AutomaticEnrichmentConfig,
+  CuisineStrategy,
   TagStrategy,
 } from "@norish/config/zod/server-config";
 import {
   DEFAULT_AUTOMATIC_ENRICHMENT,
+  DEFAULT_CUISINE_STRATEGY,
   DEFAULT_TAG_STRATEGY,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
@@ -57,6 +59,7 @@ const PROVIDER_OPTIONS: Array<AIConfig["provider"]> = [
   "generic-openai",
 ];
 const TAG_STRATEGY_OPTIONS: TagStrategy[] = ["predefined", "predefined_db", "freeform"];
+const CUISINE_STRATEGY_OPTIONS: CuisineStrategy[] = ["existing", "extend"];
 
 /** One switch per Recipe Enrichment kind, in the order the docs describe them. */
 const AUTOMATIC_ENRICHMENT_KEYS = [
@@ -81,6 +84,9 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const [alwaysUseAI, setAlwaysUseAI] = useState(aiConfig?.alwaysUseAI ?? false);
   const [tagStrategy, setTagStrategy] = useState<TagStrategy>(
     aiConfig?.tagStrategy ?? DEFAULT_TAG_STRATEGY
+  );
+  const [cuisineStrategy, setCuisineStrategy] = useState<CuisineStrategy>(
+    aiConfig?.cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY
   );
   const [automaticEnrichment, setAutomaticEnrichment] = useState<AutomaticEnrichmentConfig>(
     aiConfig?.automaticEnrichment ?? DEFAULT_AUTOMATIC_ENRICHMENT
@@ -174,6 +180,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       setTimeoutMs(aiConfig.timeoutMs ?? 300000);
       setAlwaysUseAI(aiConfig.alwaysUseAI ?? false);
       setTagStrategy(aiConfig.tagStrategy ?? DEFAULT_TAG_STRATEGY);
+      setCuisineStrategy(aiConfig.cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY);
       setAutomaticEnrichment(aiConfig.automaticEnrichment ?? DEFAULT_AUTOMATIC_ENRICHMENT);
     }
   }, [aiConfig]);
@@ -198,6 +205,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       timeoutMs !== (aiConfig.timeoutMs ?? 300000) ||
       alwaysUseAI !== (aiConfig.alwaysUseAI ?? false) ||
       tagStrategy !== (aiConfig.tagStrategy ?? DEFAULT_TAG_STRATEGY) ||
+      cuisineStrategy !== (aiConfig.cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY) ||
       AUTOMATIC_ENRICHMENT_KEYS.some(
         (key) =>
           automaticEnrichment[key] !==
@@ -217,6 +225,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     timeoutMs,
     alwaysUseAI,
     tagStrategy,
+    cuisineStrategy,
     automaticEnrichment,
     apiKey,
   ]);
@@ -281,6 +290,7 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         timeoutMs,
         alwaysUseAI,
         tagStrategy,
+        cuisineStrategy,
         automaticEnrichment,
       });
     } finally {
@@ -542,6 +552,38 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
                 option === "predefined_db"
                   ? t("tagStrategies.predefinedDb")
                   : t(`tagStrategies.${option}` as Parameters<typeof t>[0]);
+
+              return (
+                <ListBox.Item key={option} id={option} textValue={label}>
+                  {label}
+                </ListBox.Item>
+              );
+            })}
+          </ListBox>
+        </Select.Popover>
+      </Select>
+
+      <Select
+        variant="secondary"
+        isDisabled={!enabled}
+        placeholder={t("cuisineStrategy")}
+        value={cuisineStrategy}
+        onChange={(selected) => {
+          if (typeof selected === "string") {
+            setCuisineStrategy(selected as CuisineStrategy);
+          }
+        }}
+      >
+        <Label>{t("cuisineStrategy")}</Label>
+        <Select.Trigger>
+          <Select.Value />
+          <Select.Indicator />
+        </Select.Trigger>
+        <span className="text-muted px-1 text-xs">{t("cuisineStrategyDescription")}</span>
+        <Select.Popover>
+          <ListBox>
+            {CUISINE_STRATEGY_OPTIONS.map((option) => {
+              const label = t(`cuisineStrategies.${option}`);
 
               return (
                 <ListBox.Item key={option} id={option} textValue={label}>
