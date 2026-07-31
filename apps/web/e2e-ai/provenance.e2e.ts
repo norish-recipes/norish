@@ -149,7 +149,7 @@ test("an import enters automatic provenance inference and the result is stored a
 
   await eventuallyOnRecipe(async () => {
     // The country is localised at render time from the stored alpha-2 code.
-    await expect(page.getByText("Italy").first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("Italia").first()).toBeVisible({ timeout: 3_000 });
     await expect(page.getByText("Lazio").first()).toBeVisible({ timeout: 3_000 });
     // `.first()`: the section renders in both the desktop and mobile layouts,
     // one of which CSS hides — the same reason the other specs scope this way.
@@ -186,7 +186,7 @@ test("supplied provenance suppresses the automatic run for the whole group", asy
     provenanceClaim(),
   ]);
   await eventuallyOnRecipe(async () => {
-    await expect(page.getByText("Italy").first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("Italia").first()).toBeVisible({ timeout: 3_000 });
   });
 
   // The supplied recipe was never touched: the whole group is what a person set,
@@ -220,7 +220,7 @@ test("a manual run replaces the entire group", async () => {
   await page.getByRole("menuitem", { name: "Work Out Provenance" }).click();
 
   await eventuallyOnRecipe(async () => {
-    await expect(page.getByText("Italy").first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("Italia").first()).toBeVisible({ timeout: 3_000 });
   });
 
   const stored = await readStoredProvenance("Manual Provenance Stew");
@@ -299,7 +299,7 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
   await importAndOpen("Live Provenance Stew", [bareRecipe("Live Provenance Stew")]);
 
   // Nothing stored and nothing running: the eventual provenance content is absent.
-  await expect(page.getByRole("heading", { name: "Japan", exact: true, level: 2 })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "日本", exact: true, level: 2 })).toHaveCount(0);
   await expect(page.getByText("Japanese", { exact: true })).toHaveCount(0);
 
   stack!.ai.control.succeedWith(
@@ -312,7 +312,7 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
 
   // No reload: the canonical recipe update arrives over the existing realtime
   // connection and the open page re-renders.
-  await expect(page.getByRole("heading", { name: "Japan", exact: true, level: 2 })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "日本", exact: true, level: 2 })).toBeVisible({
     timeout: 60_000,
   });
   await expect(page.getByText("Japanese", { exact: true }).first()).toBeVisible({

@@ -98,3 +98,37 @@ export function countryDisplayName(code: string | null | undefined, locale: stri
     return normalized;
   }
 }
+
+/**
+ * The country's name in its own language — "Nederland", "Italia", "日本".
+ *
+ * The provenance note is written in the recipe's language, and a Dutch note
+ * under an English "Netherlands" reads like two features disagreeing. The
+ * endonym is derived from the code alone (likely-subtags give the region's
+ * primary language), so it needs no stored language and never varies by
+ * reader. Falls back to the reader's-language name when the platform cannot
+ * maximize the region.
+ */
+export function countryEndonym(
+  code: string | null | undefined,
+  fallbackLocale: string
+): string | null {
+  const normalized = normalizeOriginCountry(code);
+
+  if (normalized === null) return null;
+
+  try {
+    const language = new Intl.Locale("und", { region: normalized }).maximize().language;
+
+    if (language && language !== "und") {
+      const display = new Intl.DisplayNames([language], { type: "region", fallback: "none" });
+      const name = display.of(normalized);
+
+      if (name) return name;
+    }
+  } catch {
+    // An unusable region falls through to the reader's-language name.
+  }
+
+  return countryDisplayName(normalized, fallbackLocale);
+}

@@ -6,17 +6,19 @@ import { Card, Chip, Separator, Skeleton } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { hasSubstantiveProvenance } from "@norish/shared/lib/recipe-enrichment";
-import { countryDisplayName } from "@norish/shared/lib/recipe-provenance";
+import { countryEndonym } from "@norish/shared/lib/recipe-provenance";
 
 /**
  * Recipe Provenance on the recipe page.
  *
- * The country is the card's own title, localised at render time from the
- * stored alpha-2 code, because it is the answer the section exists to give.
- * Until there is one — while a run is in flight, or for a recipe that only
- * has a region or a note — the card falls back to naming itself. The region
- * and the note are shown exactly as stored, because they are recipe content
- * in the recipe's own language and are never translated.
+ * The country is the card's own title, shown as its endonym — the country's
+ * name in its own language, derived at render time from the stored alpha-2
+ * code — so it reads in step with the note beside it, which is written in
+ * the recipe's language. The reader's-language name stays on the flag's
+ * tooltip. Until there is a country — while a run is in flight, or for a
+ * recipe that only has a region or a note — the card falls back to naming
+ * itself. The region and the note are shown exactly as stored, because they
+ * are recipe content in the recipe's own language and are never translated.
  *
  * The section is absent entirely when there is nothing to show and nothing in
  * flight, so a recipe that will never have provenance shows nothing at all.
@@ -37,7 +39,7 @@ function ProvenanceDisplay({ inCard = true }: { inCard?: boolean }) {
   // never have provenance carries no empty panel.
   if (!hasSubstantiveProvenance(recipe) && !isInferring) return null;
 
-  const country = isInferring ? null : countryDisplayName(recipe.originCountry, locale);
+  const country = isInferring ? null : countryEndonym(recipe.originCountry, locale);
 
   const content = (
     <>

@@ -28,7 +28,7 @@ The written explanation is produced in the language the recipe itself is written
 2. As a cook, I want to see the specific region within that country, so that "Italian" becomes "Roman" when the recipe warrants it.
 3. As a cook, I want to see a recipe's Cuisines, so that I can recognise a fusion dish that belongs to more than one tradition.
 4. As a cook, I want a short explanation of why a recipe was placed where it was, so that provenance teaches me something instead of just labelling.
-5. As a cook, I want the country shown with its flag and its name in my own language, so that provenance reads naturally wherever I live.
+5. As a cook, I want the country shown with its flag and named as it names itself — "Nederland", "Italia" — so that the title reads in step with the note beside it, while my own language stays a hover away on the flag.
 6. As a cook, I want the explanation written in the language the recipe is written in, so that it reads alongside the recipe rather than against it.
 7. As a cook, I want provenance to appear on a recipe without my asking, so that my collection becomes browsable by origin over time rather than through manual work.
 8. As a cook, I want provenance inference never to delay or block saving a recipe, so that importing stays as fast as it is today.
@@ -139,7 +139,7 @@ The written explanation is produced in the language the recipe itself is written
 
 ### Client and UI
 
-- Provenance renders on the recipe detail page: the country's flag, its name localised through the platform's region display names, the region, the Cuisines, and the note as stored. The localised country name titles the section.
+- Provenance renders on the recipe detail page: the country's flag, its name, the region, the Cuisines, and the note as stored. The country's endonym — its name in its own language, derived from the stored code via the platform's likely-subtags — titles the section, so a Dutch note sits under "Nederland" rather than under whatever the reader's locale calls it. The reader's-language name, from the platform's region display names, remains on the flag's tooltip.
 - The origin flag also flies wherever the recipe is named — the recipe title and the dashboard cards — as a compact cue. The full group stays on the detail page.
 - The section is absent when there is no provenance and no run in progress, so recipes that will never have it show nothing.
 - An automatic failure is quiet: no toast is raised and the recipe does not change. The per-kind status behind the recipe actions menu still records that the last run failed — an editor who goes looking deserves the diagnostic, and it is what invites a manual retry.

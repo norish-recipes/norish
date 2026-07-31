@@ -40,12 +40,6 @@ vi.mock("@/context/permissions-context", () => ({
   }),
 }));
 
-vi.mock("@/components/shared/ai-action-button", () => ({
-  default: ({ label, onPress }: { label: string; onPress: () => void }) => (
-    <button onClick={onPress}>{label}</button>
-  ),
-}));
-
 vi.mock("@heroui/react", () => ({
   Card: Object.assign(({ children }: { children: React.ReactNode }) => <div>{children}</div>, {
     Content: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -137,17 +131,18 @@ describe("Recipe Provenance section", () => {
     render(<ProvenanceCard />);
 
     expect(screen.getByText("Provenance")).toBeInTheDocument();
-    expect(screen.queryByText("Italië")).not.toBeInTheDocument();
+    expect(screen.queryByText("Italia")).not.toBeInTheDocument();
   });
 
-  it("makes the country the card's title, in the reader's language", () => {
+  it("makes the country the card's title, in its own language", () => {
     mocks.recipe.originCountry = "IT";
     mocks.recipe.provenanceNote = "Una classica ricetta romana.";
 
     render(<ProvenanceCard />);
 
-    // The reader's locale is Dutch; the note stays in the recipe's language.
-    expect(screen.getByRole("heading", { name: /Italië/ })).toBeInTheDocument();
+    // The reader's locale is Dutch; the endonym still titles the card, so it
+    // reads in step with the note, which is in the recipe's language.
+    expect(screen.getByRole("heading", { name: /Italia/ })).toBeInTheDocument();
     expect(screen.getByText("🇮🇹")).toBeInTheDocument();
     expect(screen.getByText("Una classica ricetta romana.")).toBeInTheDocument();
     // The generic name gives way once there is a real answer.
@@ -224,6 +219,6 @@ describe("Recipe Provenance section", () => {
 
     render(<ProvenanceCard />);
 
-    expect(screen.getByText("Italië")).toBeInTheDocument();
+    expect(screen.getByText("Italia")).toBeInTheDocument();
   });
 });

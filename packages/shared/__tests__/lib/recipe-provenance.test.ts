@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   countryDisplayName,
+  countryEndonym,
   countryFlagEmoji,
   listCountryOptions,
 } from "@norish/shared/lib/recipe-provenance";
@@ -39,6 +40,25 @@ describe("listCountryOptions", () => {
     }
 
     expect(codes).toContain("JP");
+  });
+});
+
+describe("countryEndonym", () => {
+  it("names the country in its own language, whatever the reader speaks", () => {
+    expect(countryEndonym("NL", "en")).toBe("Nederland");
+    expect(countryEndonym("IT", "nl")).toBe("Italia");
+    expect(countryEndonym("DE", "en")).toBe("Deutschland");
+    expect(countryEndonym("jp", "en")).toBe("日本");
+  });
+
+  it("falls back to the code for a region with no name of its own", () => {
+    // QQ is unassigned: likely-subtags offer no language that names it.
+    expect(countryEndonym("QQ", "en")).toBe("QQ");
+  });
+
+  it("renders nothing for anything that is not a code", () => {
+    expect(countryEndonym("Italy", "en")).toBeNull();
+    expect(countryEndonym(null, "en")).toBeNull();
   });
 });
 

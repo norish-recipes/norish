@@ -177,14 +177,14 @@ test("provenance on the recipe page", async () => {
   // Wait for the inference to land, then capture the section itself.
   await expect(async () => {
     await page.reload();
-    await expect(page.getByText("Italy").first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("Italia").first()).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
 
   // The card titles itself with the country once one is known, so that heading
   // is what identifies it — there is no fixed section name to anchor on.
   const section = page
     .locator("div.md\\:block")
-    .getByRole("heading", { name: "Italy", exact: true, level: 2 })
+    .getByRole("heading", { name: "Italia", exact: true, level: 2 })
     .locator("xpath=ancestor::div[contains(@class,'rounded-2xl')][1]");
 
   await shoot(section, "provenance-recipe");
