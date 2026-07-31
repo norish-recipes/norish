@@ -18,6 +18,7 @@ import {
   RecipeDeleteInputSchema,
   RecipeGetInputSchema,
   RecipeImportInputSchema,
+  RecipeImportResultSchema,
   RecipeListInputSchema,
   RecipeUpdateInputSchema,
   searchRecipesByName,
@@ -360,12 +361,12 @@ export const importFromUrlProcedure = authedProcedure
       summary: "Queue a recipe import from a URL",
       errorResponses: {
         401: "Missing or invalid API credentials",
-        409: "This recipe already exists or is being imported",
+        409: "An import of this recipe is already in flight",
       },
     },
   })
   .input(RecipeImportInputSchema.extend({ forceAI: z.boolean().optional() }))
-  .output(z.uuid())
+  .output(RecipeImportResultSchema)
   .mutation(async ({ ctx, input }) => {
     const { url, forceAI } = input;
     const recipeId = randomUUID();
@@ -381,14 +382,22 @@ export const importFromUrlProcedure = authedProcedure
       forceAI,
     });
 
-    if (result.status === "exists" || result.status === "duplicate") {
+    // Already holding the recipe is an answer, not a failure: return the one
+    // the caller was reaching for, so it can be opened rather than reported.
+    if (result.status === "exists") {
+      return { recipeId: result.existingRecipeId, status: "exists" as const };
+    }
+
+    // An import already in flight has no recipe to offer yet, so this stays a
+    // conflict — there is nothing for the caller to open.
+    if (result.status === "duplicate") {
       throw new TRPCError({
         code: "CONFLICT",
-        message: "This recipe already exists or is being imported",
+        message: "An import of this recipe is already in flight",
       });
     }
 
-    return recipeId;
+    return { recipeId, status: "queued" as const };
   });
 
 const convertMeasurements = authedProcedure

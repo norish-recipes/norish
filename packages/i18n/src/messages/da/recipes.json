@@ -302,5 +302,9 @@
     "inferring": "Finder ud af, hvor denne opskrift kommer fra …",
     "noInfo": "Ingen oprindelsesoplysninger endnu",
     "inferWithAI": "Find ud af det med AI"
+  },
+  "import": {
+    "alreadyExists": "Du har allerede denne opskrift",
+    "openExisting": "Åbn"
   }
 }

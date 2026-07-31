@@ -302,5 +302,9 @@
     "inferring": "Averiguando de dónde viene esta receta…",
     "noInfo": "Aún no hay información de procedencia",
     "inferWithAI": "Averiguar con IA"
+  },
+  "import": {
+    "alreadyExists": "Ya tienes esta receta",
+    "openExisting": "Abrir"
   }
 }

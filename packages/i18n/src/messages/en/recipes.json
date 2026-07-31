@@ -302,5 +302,9 @@
     "inferring": "Working out where this recipe comes from…",
     "noInfo": "No provenance information yet",
     "inferWithAI": "Work out with AI"
+  },
+  "import": {
+    "alreadyExists": "You already have this recipe",
+    "openExisting": "Open"
   }
 }

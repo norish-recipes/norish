@@ -302,5 +302,9 @@
     "inferring": "이 레시피의 출처를 알아보는 중…",
     "noInfo": "아직 출처 정보가 없습니다",
     "inferWithAI": "AI로 알아보기"
+  },
+  "import": {
+    "alreadyExists": "이미 저장된 레시피입니다",
+    "openExisting": "열기"
   }
 }

@@ -497,6 +497,53 @@ describe("useRecipesMutations", () => {
     });
   });
 
+  describe("importRecipe when the household already holds the URL", () => {
+    async function runImport(status: "queued" | "exists") {
+      queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());
+      queryClient.setQueryData([["recipes", "getPending"], { type: "query" }], []);
+
+      const { useRecipesMutations } = await import("@/hooks/recipes/use-recipes-mutations");
+
+      renderHook(() => useRecipesMutations(), { wrapper: createTestWrapper(queryClient) });
+
+      const options = mockImportFromUrlMutationOptions.mock.calls[0][0] as {
+        onMutate: () => { optimisticPendingId: string };
+        onSuccess: (
+          result: { recipeId: string; status: "queued" | "exists" },
+          variables: { url: string },
+          context: { optimisticPendingId: string }
+        ) => void;
+      };
+
+      const context = options.onMutate();
+
+      act(() => {
+        options.onSuccess(
+          { recipeId: "recipe-held-already", status },
+          { url: "https://example.com/pasta" },
+          context
+        );
+      });
+
+      return queryClient.getQueryData<Array<{ recipeId: string }>>([
+        ["recipes", "getPending"],
+        { type: "query" },
+      ]);
+    }
+
+    it("leaves no pending placeholder behind, because nothing was queued", async () => {
+      // The placeholder stands in for work in flight. There is none, and a
+      // placeholder that never resolves is a spinner that never stops.
+      expect(await runImport("exists")).toEqual([]);
+    });
+
+    it("still tracks a genuinely queued import", async () => {
+      expect((await runImport("queued"))?.map((entry) => entry.recipeId)).toEqual([
+        "recipe-held-already",
+      ]);
+    });
+  });
+
   describe("updateRecipe", () => {
     it("is a function that accepts id and update data", async () => {
       queryClient.setQueryData(["recipes", "list", {}], createMockInfiniteData());

@@ -302,5 +302,9 @@
     "inferring": "Bezig met bepalen waar dit recept vandaan komt…",
     "noInfo": "Nog geen herkomstinformatie",
     "inferWithAI": "Bepalen met AI"
+  },
+  "import": {
+    "alreadyExists": "Je hebt dit recept al",
+    "openExisting": "Openen"
   }
 }

@@ -241,6 +241,10 @@ function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboard
     cookMinutes: recipe.cookMinutes,
     totalMinutes: recipe.totalMinutes,
     calories: recipe.calories,
+    // The dashboard flies the origin flag, so the optimistic card has to carry
+    // the country too — otherwise a just-created recipe loses its flag until
+    // the list refetches.
+    originCountry: recipe.originCountry,
     createdAt: recipe.createdAt,
     updatedAt: recipe.updatedAt,
     tags: recipe.tags,
@@ -266,6 +270,12 @@ export type RecipesMutationsResult = {
 
 export type RecipesMutationErrorHandler = (error: unknown, operation: string) => void;
 export type RecipeCreatedAdapter = (recipeId: string) => void;
+/**
+ * Told when an import found a recipe the household already holds. Not an
+ * error — the id is the one the caller was reaching for, so an app can offer
+ * to open it.
+ */
+export type RecipeAlreadyExistsAdapter = (recipeId: string) => void;
 
 export function createUseRecipesMutations(
   { useTRPC, shouldPreserveOptimisticUpdate }: CreateRecipeHooksOptions,
@@ -282,7 +292,8 @@ export function createUseRecipesMutations(
 ) {
   return function useRecipesMutations(
     onError?: RecipesMutationErrorHandler,
-    onRecipeCreated?: RecipeCreatedAdapter
+    onRecipeCreated?: RecipeCreatedAdapter,
+    onRecipeAlreadyExists?: RecipeAlreadyExistsAdapter
   ): RecipesMutationsResult {
     const trpc = useTRPC();
     const queryClient = useQueryClient();
@@ -309,7 +320,16 @@ export function createUseRecipesMutations(
 
           return { optimisticPendingId };
         },
-        onSuccess: (recipeId, _variables, context) => {
+        onSuccess: ({ recipeId, status }, _variables, context) => {
+          // Nothing was queued, so there is no pending recipe to stand in for:
+          // drop the placeholder and hand the id to whoever can offer it.
+          if (status === "exists") {
+            if (context) removePendingRecipe(context.optimisticPendingId);
+            onRecipeAlreadyExists?.(recipeId);
+
+            return;
+          }
+
           if (!context) {
             addPendingRecipe(recipeId);
 

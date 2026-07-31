@@ -177,6 +177,14 @@ export const RecipeImageImportInputSchema = z.object({
   files: z.array(OcrImportFileSchema).min(1).max(10),
 });
 
+/**
+ * The outcome of asking to import a URL.
+ *
+ * A URL you already hold is not a failure — it is the answer "you have this
+ * one already", and `exists` carries the recipe's own id, so the caller can
+ * offer to open it rather than report a conflict. `queued` carries the id the
+ * job it just enqueued will fill in.
+ */
 export const RecipeImportResultSchema = z.object({
   recipeId: z.uuid(),
   status: z.enum(["queued", "exists"]),
