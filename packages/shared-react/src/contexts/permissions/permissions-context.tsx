@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo } from "react";
 
-import type { AutoTaggingMode, RecipePermissionPolicy } from "@norish/config/zod/server-config";
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 
 import type { PermissionsData } from "../../hooks/permissions/types";
 import {
@@ -8,7 +8,6 @@ import {
   selectCanDeleteRecipe,
   selectCanEditRecipe,
   selectCanViewRecipe,
-  selectIsAutoTaggingEnabled,
 } from "../../hooks/permissions/selectors";
 
 export interface PermissionsContextValue {
@@ -20,10 +19,6 @@ export interface PermissionsContextValue {
   householdUserIds: string[] | null;
   /** Whether the current user is a server admin */
   isServerAdmin: boolean;
-  /** Auto-tagging mode setting */
-  autoTaggingMode: AutoTaggingMode;
-  /** Whether auto-tagging is enabled (not disabled) */
-  isAutoTaggingEnabled: boolean;
   /** Loading state */
   isLoading: boolean;
   /** Check if current user can view a recipe */
@@ -85,14 +80,12 @@ export function createPermissionsContext({
         isAIEnabled: data?.isAIEnabled ?? false,
         householdUserIds: data?.householdUserIds ?? null,
         isServerAdmin: data?.isServerAdmin ?? false,
-        autoTaggingMode: data?.autoTaggingMode ?? "disabled",
-        isAutoTaggingEnabled: selectIsAutoTaggingEnabled(normalized),
         isLoading: isLoadingPermissions,
         canViewRecipe,
         canEditRecipe,
         canDeleteRecipe,
       }),
-      [data, normalized, isLoadingPermissions, canViewRecipe, canEditRecipe, canDeleteRecipe]
+      [data, isLoadingPermissions, canViewRecipe, canEditRecipe, canDeleteRecipe]
     );
 
     return <PermissionsContext.Provider value={value}>{children}</PermissionsContext.Provider>;

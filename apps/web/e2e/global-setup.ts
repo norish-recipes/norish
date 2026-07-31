@@ -107,7 +107,7 @@ async function forceAuthConfig(): Promise<void> {
   }
 
   // getConfig reads may be Redis-cached; drop them so the SQL value wins.
-  execSync("docker compose -f docker-compose.yml exec -T redis redis-cli flushall", {
+  execSync("docker compose -f compose.yaml exec -T redis redis-cli flushall", {
     cwd: E2E_DIR,
     stdio: "ignore",
   });

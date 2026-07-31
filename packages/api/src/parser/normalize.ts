@@ -15,6 +15,7 @@ import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { parserLogger } from "@norish/shared-server/logger";
 import { isUrl } from "@norish/shared/lib/helpers";
+import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
 
 import {
   extractNutrition,
@@ -43,6 +44,27 @@ export function parseTags(keywords: unknown): { name: string }[] {
   return keywords
     .filter((k): k is string => typeof k === "string")
     .map((k) => ({ name: k.toLowerCase() }));
+}
+
+/** Preserve structured, explicitly supplied allergen fields without inferring from ingredients. */
+function parseAllergyIndications(json: Record<string, unknown>): string[] {
+  return [json.allergyIndications, json.allergens, json.allergen].flatMap((value) => {
+    if (typeof value === "string") {
+      return value
+        .split(/[,;]/)
+        .map((entry) => entry.trim().toLowerCase())
+        .filter(Boolean);
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .filter((entry): entry is string => typeof entry === "string")
+        .map((entry) => entry.trim().toLowerCase())
+        .filter(Boolean);
+    }
+
+    return [];
+  });
 }
 
 export function parseCategories(recipeCategory: unknown): RecipeCategory[] {
@@ -166,7 +188,10 @@ export async function normalizeRecipeFromJson(
   }
 
   // --- TAGS ---
-  const tags = parseTags(jsonObj.keywords);
+  const tags = normalizeEnrichmentTagNames([
+    ...parseTags(jsonObj.keywords).map((tag) => tag.name),
+    ...parseAllergyIndications(jsonObj),
+  ]).map((name) => ({ name }));
 
   // --- CATEGORIES ---
   const categories = parseCategories(jsonObj.recipeCategory);

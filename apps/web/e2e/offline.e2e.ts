@@ -166,12 +166,98 @@ test("backend-down unseen navigation boots every Warm Set surface", async () => 
   await expect(page.getByTestId("offline-unavailable")).toBeVisible();
 });
 
+test("an offline grocery toggle survives navigation and a document cold launch", async () => {
+  // Visit /groceries once while Live first. That is what a real user does, and
+  // it is what gives this test teeth: the page's own query batch is a
+  // same-origin GET, so any HTTP-level cache the worker keeps now holds a
+  // pre-toggle copy of it, ready to answer the next Offline refetch with a
+  // stale success. See ADR-0006.
+  server = await startServer();
+  await page.goto("/groceries");
+  await expect(page.getByText(SEEDED_GROCERY_NAME).first()).toBeVisible();
+  await server.stop();
+  server = null;
+
+  await page.goto("/groceries");
+  const groceryCheckbox = page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME });
+
+  await expect(groceryCheckbox).not.toBeChecked();
+  await groceryCheckbox.press("Space");
+  await expect(groceryCheckbox).toBeChecked();
+  await expect.poll(() => readOutbox(page)).toHaveLength(1);
+
+  await page.goto("/calendar");
+  await page.goto("/groceries");
+  await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
+
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
+
+  const [entry] = await readOutbox(page);
+
+  expect(entry?.path).toBe("groceries.toggle");
+  expect(entry?.status).toBe("pending");
+});
+
+test("no Offline API read is answered from a stale cache", async () => {
+  // The cause behind the test above, asserted deterministically: whether the
+  // revert reproduces through the UI depends on which query batch URLs the
+  // worker happens to hold, which is why the suite missed it for so long.
+  //
+  // Offline reads come from the persisted query cache (ADR-0001). An HTTP-level
+  // copy of the same responses is both a second source of truth and a liar: it
+  // turns a failed Offline refetch into a *success* carrying pre-mutation data,
+  // and it would answer the connectivity probe with a cached 200. With the
+  // backend down, no API GET may be answered by anything.
+  const { cachedApiUrls, otherCachedEntries, answered } = await page.evaluate(async () => {
+    const cachedApiUrls: string[] = [];
+    let otherCachedEntries = 0;
+
+    for (const name of await caches.keys()) {
+      const cache = await caches.open(name);
+
+      for (const request of await cache.keys()) {
+        if (new URL(request.url).pathname.startsWith("/api/")) {
+          cachedApiUrls.push(request.url);
+        } else {
+          otherCachedEntries += 1;
+        }
+      }
+    }
+
+    const outcomes = await Promise.all(
+      cachedApiUrls.map(async (url) => {
+        try {
+          const response = await fetch(url);
+
+          return `${new URL(url).pathname} answered ${response.status}`;
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    return {
+      cachedApiUrls,
+      otherCachedEntries,
+      answered: outcomes.filter((outcome) => outcome !== null),
+    };
+  });
+
+  // Arming check: an empty API set only means something if the worker is
+  // caching at all. Without this, a change that stopped the suite exercising
+  // the worker would leave the assertion below passing on nothing.
+  expect(otherCachedEntries).toBeGreaterThan(0);
+  expect(cachedApiUrls).toEqual([]);
+  expect(answered).toEqual([]);
+});
+
 test("an offline grocery add is durably queued for its owner", async () => {
   await page.goto("/groceries");
   await addGroceryViaUi(page, "E2E Dormant Milk");
 
-  await expect.poll(() => readOutbox(page)).toHaveLength(1);
-  const [entry] = await readOutbox(page);
+  await expect.poll(() => readOutbox(page)).toHaveLength(2);
+  const entry = (await readOutbox(page)).find(({ path }) => path === "groceries.create");
 
   expect(entry?.path).toBe("groceries.create");
   expect(entry?.status).toBe("pending");
@@ -190,11 +276,11 @@ test("a bypassed identity change isolates the incoming account and keeps the que
   await expect(page.getByText(SEEDED_GROCERY_NAME)).toHaveCount(0);
   await expect(page.getByText("E2E Dormant Milk")).toHaveCount(0);
 
-  // A's entry is retained dormant under A — never replayed as B.
+  // A's entries are retained dormant under A — never replayed as B.
   const entries = await readOutbox(page);
 
-  expect(entries).toHaveLength(1);
-  expect(entries[0]?.path).toBe("groceries.create");
+  expect(entries).toHaveLength(2);
+  expect(entries.map(({ path }) => path)).toEqual(["groceries.toggle", "groceries.create"]);
 });
 
 test("the dormant queue replays only once its owner signs in again", async () => {
@@ -208,6 +294,9 @@ test("the dormant queue replays only once its owner signs in again", async () =>
   // shows it from server truth.
   await page.reload();
   await expect(page.getByText("E2E Dormant Milk").first()).toBeVisible();
+  // Same for the queued toggle: the row is done because the server says so, so
+  // the Offline check-off survived the whole round trip and applied once.
+  await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
 });
 
 /**

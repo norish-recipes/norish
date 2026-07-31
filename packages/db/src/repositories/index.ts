@@ -6,6 +6,7 @@ export * from "@norish/db/repositories/households";
 export * from "@norish/db/repositories/ingredients";
 export * from "@norish/db/repositories/steps";
 export * from "@norish/db/repositories/tags";
+export * from "@norish/db/repositories/cuisines";
 export * from "@norish/db/repositories/api-keys";
 export * from "@norish/db/repositories/caldav-config";
 export * from "@norish/db/repositories/caldav-sync-status";

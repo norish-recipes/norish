@@ -12,12 +12,14 @@
 // Import defaults for fallback when DB has no value
 import type {
   AIConfig,
-  AutoTaggingMode,
+  AutomaticEnrichmentConfig,
   ContentIndicatorsConfig,
+  CuisineStrategy,
   I18nLocaleConfig,
   PromptsConfig,
   RecipePermissionPolicy,
   RecurrenceConfig,
+  TagStrategy,
   TimerKeywordsConfig,
   UnitsMap,
   VideoConfig,
@@ -28,7 +30,10 @@ import defaultRecurrenceConfig from "@norish/config/recurrence-config.default.js
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 import defaultUnits from "@norish/config/units.default.json";
 import {
+  AIConfigSchema,
+  DEFAULT_CUISINE_STRATEGY,
   DEFAULT_RECIPE_PERMISSION_POLICY,
+  DEFAULT_TAG_STRATEGY,
   ServerConfigKeys,
   UnitsConfigSchema,
   UnitsMapSchema,
@@ -36,6 +41,16 @@ import {
 import { getConfig } from "@norish/db/repositories/server-config";
 import { DEFAULT_LOCALE } from "@norish/i18n/config";
 import { getBundledLocales } from "@norish/i18n/locales";
+import { serverLogger } from "@norish/shared-server/logger";
+
+/** Global AI disablement suppresses every automatic kind, not just the configured ones. */
+const ALL_AUTOMATIC_ENRICHMENT_OFF: AutomaticEnrichmentConfig = {
+  autoTagging: false,
+  allergyDetection: false,
+  autoCategorization: false,
+  nutritionEstimation: false,
+  recipeProvenance: false,
+};
 
 // ============================================================================
 // Configuration Getters - Each call queries the database
@@ -130,7 +145,25 @@ export async function getRecurrenceConfig(): Promise<RecurrenceConfig> {
  * @param includeSecrets - If true, includes decrypted API keys
  */
 export async function getAIConfig(includeSecrets = false): Promise<AIConfig | null> {
-  return await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG, includeSecrets);
+  const stored = await getConfig<unknown>(ServerConfigKeys.AI_CONFIG, includeSecrets);
+
+  if (stored == null) return null;
+
+  // Startup backfill rewrites stored config in canonical shape, but a server that
+  // has not restarted yet still reads pre-migration values. Normalizing here keeps
+  // one contract for every caller regardless of what is on disk.
+  const parsed = AIConfigSchema.safeParse(stored);
+
+  if (!parsed.success) {
+    serverLogger.warn(
+      { issues: parsed.error.issues },
+      "Stored AI config does not match the current contract"
+    );
+
+    return null;
+  }
+
+  return parsed.data;
 }
 
 /**
@@ -208,17 +241,40 @@ export async function isVideoParsingEnabled(): Promise<boolean> {
 }
 
 /**
- * Get auto-tagging mode
- * Returns "disabled" if AI is not enabled
+ * Get the tag strategy auto-tagging uses when it runs.
+ * Deliberately independent of whether auto-tagging runs automatically, so a
+ * disabled automatic switch never removes the manual tool or erases the strategy.
  */
-export async function getAutoTaggingMode(): Promise<AutoTaggingMode> {
-  const aiConfig = await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG);
+export async function getTagStrategy(): Promise<TagStrategy> {
+  const aiConfig = await getAIConfig();
+
+  return aiConfig?.tagStrategy ?? DEFAULT_TAG_STRATEGY;
+}
+
+/**
+ * Get the cuisine strategy provenance inference uses when it runs.
+ * Like the tag strategy, independent of the automatic switch: turning
+ * automation off must not change how names are picked for a manual run.
+ */
+export async function getCuisineStrategy(): Promise<CuisineStrategy> {
+  const aiConfig = await getAIConfig();
+
+  return aiConfig?.cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY;
+}
+
+/**
+ * Get the independent Automatic Recipe Enrichment switches, one per kind.
+ * Every kind is off when AI is globally disabled, because no automatic or manual
+ * AI request may bypass deployment policy.
+ */
+export async function getAutomaticEnrichmentConfig(): Promise<AutomaticEnrichmentConfig> {
+  const aiConfig = await getAIConfig();
 
   if (!aiConfig?.enabled) {
-    return "disabled";
+    return ALL_AUTOMATIC_ENRICHMENT_OFF;
   }
 
-  return aiConfig.autoTaggingMode ?? "disabled";
+  return aiConfig.automaticEnrichment;
 }
 
 // ============================================================================

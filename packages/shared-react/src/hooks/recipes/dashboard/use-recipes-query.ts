@@ -34,15 +34,9 @@ export type RecipesQueryResult = {
   error: unknown;
   queryKey: QueryKey;
   pendingRecipeIds: Set<string>;
-  autoTaggingRecipeIds: Set<string>;
-  allergyDetectionRecipeIds: Set<string>;
   loadMore: () => void;
   addPendingRecipe: (id: string) => void;
   removePendingRecipe: (id: string) => void;
-  addAutoTaggingRecipe: (id: string) => void;
-  removeAutoTaggingRecipe: (id: string) => void;
-  addAllergyDetectionRecipe: (id: string) => void;
-  removeAllergyDetectionRecipe: (id: string) => void;
   setRecipesData: (
     updater: (prev: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined
   ) => void;
@@ -54,19 +48,12 @@ export type RecipesQueryResult = {
 
 export interface RecipesQueryDependencies {
   usePendingRecipesQuery: () => { pendingRecipeIds: Set<string> };
-  useAutoTaggingQuery: () => { autoTaggingRecipeIds: Set<string> };
-  useAllergyDetectionQuery: () => { allergyDetectionRecipeIds: Set<string> };
   useRecipesCacheHelpers: () => RecipesCacheHelpers;
 }
 
 export function createUseRecipesQuery(
   { useTRPC }: CreateRecipeHooksOptions,
-  {
-    usePendingRecipesQuery,
-    useAutoTaggingQuery,
-    useAllergyDetectionQuery,
-    useRecipesCacheHelpers,
-  }: RecipesQueryDependencies
+  { usePendingRecipesQuery, useRecipesCacheHelpers }: RecipesQueryDependencies
 ) {
   return function useRecipesQuery(filters: RecipeFilters = {}): RecipesQueryResult {
     const trpc = useTRPC();
@@ -85,17 +72,8 @@ export function createUseRecipesQuery(
     } = filters;
 
     const { pendingRecipeIds } = usePendingRecipesQuery();
-    const { autoTaggingRecipeIds } = useAutoTaggingQuery();
-    const { allergyDetectionRecipeIds } = useAllergyDetectionQuery();
 
-    const {
-      addPendingRecipe,
-      removePendingRecipe,
-      addAutoTaggingRecipe,
-      removeAutoTaggingRecipe,
-      addAllergyDetectionRecipe,
-      removeAllergyDetectionRecipe,
-    } = useRecipesCacheHelpers();
+    const { addPendingRecipe, removePendingRecipe } = useRecipesCacheHelpers();
 
     const infiniteQueryOptions = trpc.recipes.list.infiniteQueryOptions(
       {
@@ -169,15 +147,9 @@ export function createUseRecipesQuery(
       error,
       queryKey,
       pendingRecipeIds,
-      autoTaggingRecipeIds,
-      allergyDetectionRecipeIds,
       loadMore,
       addPendingRecipe,
       removePendingRecipe,
-      addAutoTaggingRecipe,
-      removeAutoTaggingRecipe,
-      addAllergyDetectionRecipe,
-      removeAllergyDetectionRecipe,
       setRecipesData,
       setAllRecipesData,
       invalidate,

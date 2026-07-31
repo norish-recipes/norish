@@ -19,8 +19,18 @@ import {
 } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { AIConfig, AutoTaggingMode } from "@norish/config/zod/server-config";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import type {
+  AIConfig,
+  AutomaticEnrichmentConfig,
+  CuisineStrategy,
+  TagStrategy,
+} from "@norish/config/zod/server-config";
+import {
+  DEFAULT_AUTOMATIC_ENRICHMENT,
+  DEFAULT_CUISINE_STRATEGY,
+  DEFAULT_TAG_STRATEGY,
+  ServerConfigKeys,
+} from "@norish/config/zod/server-config";
 
 import { useAdminSettingsContext } from "../context";
 
@@ -48,12 +58,17 @@ const PROVIDER_OPTIONS: Array<AIConfig["provider"]> = [
   "lm-studio",
   "generic-openai",
 ];
-const AUTO_TAGGING_MODE_OPTIONS: AutoTaggingMode[] = [
-  "disabled",
-  "predefined",
-  "predefined_db",
-  "freeform",
-];
+const TAG_STRATEGY_OPTIONS: TagStrategy[] = ["predefined", "predefined_db", "freeform"];
+const CUISINE_STRATEGY_OPTIONS: CuisineStrategy[] = ["existing", "extend"];
+
+/** One switch per Recipe Enrichment kind, in the order the docs describe them. */
+const AUTOMATIC_ENRICHMENT_KEYS = [
+  "autoTagging",
+  "allergyDetection",
+  "autoCategorization",
+  "nutritionEstimation",
+  "recipeProvenance",
+] as const satisfies readonly (keyof AutomaticEnrichmentConfig)[];
 export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const t = useTranslations("settings.admin.aiConfig");
   const tActions = useTranslations("common.actions");
@@ -67,10 +82,15 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const [temperature, setTemperature] = useState(aiConfig?.temperature ?? 0);
   const [maxTokens, setMaxTokens] = useState(aiConfig?.maxTokens ?? 10000);
   const [timeoutMs, setTimeoutMs] = useState(aiConfig?.timeoutMs ?? 300000);
-  const [autoTagAllergies, setAutoTagAllergies] = useState(aiConfig?.autoTagAllergies ?? true);
   const [alwaysUseAI, setAlwaysUseAI] = useState(aiConfig?.alwaysUseAI ?? false);
-  const [autoTaggingMode, setAutoTaggingMode] = useState<AutoTaggingMode>(
-    aiConfig?.autoTaggingMode ?? "disabled"
+  const [tagStrategy, setTagStrategy] = useState<TagStrategy>(
+    aiConfig?.tagStrategy ?? DEFAULT_TAG_STRATEGY
+  );
+  const [cuisineStrategy, setCuisineStrategy] = useState<CuisineStrategy>(
+    aiConfig?.cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY
+  );
+  const [automaticEnrichment, setAutomaticEnrichment] = useState<AutomaticEnrichmentConfig>(
+    aiConfig?.automaticEnrichment ?? DEFAULT_AUTOMATIC_ENRICHMENT
   );
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{
@@ -159,9 +179,10 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       setTemperature(aiConfig.temperature);
       setMaxTokens(aiConfig.maxTokens);
       setTimeoutMs(aiConfig.timeoutMs ?? 300000);
-      setAutoTagAllergies(aiConfig.autoTagAllergies ?? true);
       setAlwaysUseAI(aiConfig.alwaysUseAI ?? false);
-      setAutoTaggingMode(aiConfig.autoTaggingMode ?? "disabled");
+      setTagStrategy(aiConfig.tagStrategy ?? DEFAULT_TAG_STRATEGY);
+      setCuisineStrategy(aiConfig.cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY);
+      setAutomaticEnrichment(aiConfig.automaticEnrichment ?? DEFAULT_AUTOMATIC_ENRICHMENT);
     }
   }, [aiConfig]);
 
@@ -183,9 +204,14 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
       temperature !== aiConfig.temperature ||
       maxTokens !== aiConfig.maxTokens ||
       timeoutMs !== (aiConfig.timeoutMs ?? 300000) ||
-      autoTagAllergies !== (aiConfig.autoTagAllergies ?? true) ||
       alwaysUseAI !== (aiConfig.alwaysUseAI ?? false) ||
-      autoTaggingMode !== (aiConfig.autoTaggingMode ?? "disabled") ||
+      tagStrategy !== (aiConfig.tagStrategy ?? DEFAULT_TAG_STRATEGY) ||
+      cuisineStrategy !== (aiConfig.cuisineStrategy ?? DEFAULT_CUISINE_STRATEGY) ||
+      AUTOMATIC_ENRICHMENT_KEYS.some(
+        (key) =>
+          automaticEnrichment[key] !==
+          (aiConfig.automaticEnrichment?.[key] ?? DEFAULT_AUTOMATIC_ENRICHMENT[key])
+      ) ||
       apiKey.trim() !== ""
     );
   }, [
@@ -198,9 +224,10 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
     temperature,
     maxTokens,
     timeoutMs,
-    autoTagAllergies,
     alwaysUseAI,
-    autoTaggingMode,
+    tagStrategy,
+    cuisineStrategy,
+    automaticEnrichment,
     apiKey,
   ]);
   useEffect(() => {
@@ -262,9 +289,10 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         temperature,
         maxTokens,
         timeoutMs,
-        autoTagAllergies,
         alwaysUseAI,
-        autoTaggingMode: autoTaggingMode as AIConfig["autoTaggingMode"],
+        tagStrategy,
+        cuisineStrategy,
+        automaticEnrichment,
       });
     } finally {
       setSaving(false);
@@ -466,19 +494,6 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
 
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <span className="font-medium">{t("autoTagAllergies")}</span>
-          <span className="text-muted text-base">{t("autoTagAllergiesDescription")}</span>
-        </div>
-        <SettingsSwitch
-          color="success"
-          isDisabled={!enabled}
-          isSelected={autoTagAllergies}
-          onValueChange={setAutoTagAllergies}
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
           <span className="font-medium">{t("alwaysUseAI")}</span>
           <span className="text-muted text-base">{t("alwaysUseAIDescription")}</span>
         </div>
@@ -490,30 +505,86 @@ export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
         />
       </div>
 
+      <div className="flex flex-col gap-1">
+        <span className="font-medium">{t("automaticEnrichment")}</span>
+        <span className="text-muted text-base">{t("automaticEnrichmentDescription")}</span>
+      </div>
+
+      {AUTOMATIC_ENRICHMENT_KEYS.map((key) => (
+        <div key={key} className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <span className="font-medium">{t(`automaticEnrichmentKinds.${key}`)}</span>
+            <span className="text-muted text-base">
+              {t(`automaticEnrichmentKinds.${key}Description`)}
+            </span>
+          </div>
+          <SettingsSwitch
+            color="success"
+            isDisabled={!enabled}
+            isSelected={automaticEnrichment[key]}
+            onValueChange={(value) =>
+              setAutomaticEnrichment((current) => ({ ...current, [key]: value }))
+            }
+          />
+        </div>
+      ))}
+
       <Select
         variant="secondary"
         isDisabled={!enabled}
-        placeholder={t("autoTaggingMode")}
-        value={autoTaggingMode}
+        placeholder={t("tagStrategy")}
+        value={tagStrategy}
         onChange={(selected) => {
           if (typeof selected === "string") {
-            setAutoTaggingMode(selected as AutoTaggingMode);
+            setTagStrategy(selected as TagStrategy);
           }
         }}
       >
-        <Label>{t("autoTaggingMode")}</Label>
+        <Label>{t("tagStrategy")}</Label>
         <Select.Trigger>
           <Select.Value />
           <Select.Indicator />
         </Select.Trigger>
-        <span className="text-muted px-1 text-xs">{t("autoTaggingModeDescription")}</span>
+        <span className="text-muted px-1 text-xs">{t("tagStrategyDescription")}</span>
         <Select.Popover>
           <ListBox>
-            {AUTO_TAGGING_MODE_OPTIONS.map((option) => {
+            {TAG_STRATEGY_OPTIONS.map((option) => {
               const label =
                 option === "predefined_db"
-                  ? t("autoTaggingModes.predefinedDb")
-                  : t(`autoTaggingModes.${option}` as Parameters<typeof t>[0]);
+                  ? t("tagStrategies.predefinedDb")
+                  : t(`tagStrategies.${option}` as Parameters<typeof t>[0]);
+
+              return (
+                <ListBox.Item key={option} id={option} textValue={label}>
+                  {label}
+                </ListBox.Item>
+              );
+            })}
+          </ListBox>
+        </Select.Popover>
+      </Select>
+
+      <Select
+        variant="secondary"
+        isDisabled={!enabled}
+        placeholder={t("cuisineStrategy")}
+        value={cuisineStrategy}
+        onChange={(selected) => {
+          if (typeof selected === "string") {
+            setCuisineStrategy(selected as CuisineStrategy);
+          }
+        }}
+      >
+        <Label>{t("cuisineStrategy")}</Label>
+        <Select.Trigger>
+          <Select.Value />
+          <Select.Indicator />
+        </Select.Trigger>
+        <span className="text-muted px-1 text-xs">{t("cuisineStrategyDescription")}</span>
+        <Select.Popover>
+          <ListBox>
+            {CUISINE_STRATEGY_OPTIONS.map((option) => {
+              const label = t(`cuisineStrategies.${option}`);
 
               return (
                 <ListBox.Item key={option} id={option} textValue={label}>

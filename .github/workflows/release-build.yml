@@ -27,6 +27,7 @@ jobs:
     with:
       run-build: true
       run-tests: true
+      run-e2e: true
 
   prepare-release:
     name: Release Prep

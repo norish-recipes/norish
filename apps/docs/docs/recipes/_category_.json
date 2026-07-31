@@ -1,0 +1,9 @@
+{
+  "label": "Recipes",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "title": "Recipes",
+    "description": "Working with recipes in Norish: importing, editing, and AI-assisted enrichment."
+  }
+}

@@ -20,6 +20,7 @@ import {
 import { Button, Dropdown, Label, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 import { useRecipeContextRequired } from "../context";
@@ -38,6 +39,9 @@ type MenuItem = {
   labelClassName?: string;
   iconClassName?: string;
   isDisabled?: boolean;
+  /** Secondary line under the label, e.g. a quiet enrichment failure. */
+  description?: string;
+  descriptionClassName?: string;
 };
 export default function ActionsMenu({ id }: Props) {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
@@ -50,23 +54,13 @@ export default function ActionsMenu({ id }: Props) {
     close: onDeleteModalClose,
   } = useOverlayState();
   const router = useRouter();
-  const { canEditRecipe, canDeleteRecipe, isAutoTaggingEnabled, isAIEnabled } =
-    usePermissionsContext();
+  const { canEditRecipe, canDeleteRecipe, isAIEnabled } = usePermissionsContext();
   const { deleteRecipe } = useRecipesContext();
-  const {
-    recipe,
-    isAutoTagging,
-    triggerAutoTag,
-    isCategorizing,
-    triggerAutoCategorize,
-    isDetectingAllergies,
-    triggerAllergyDetection,
-    isEstimatingNutrition,
-    estimateNutrition,
-  } = useRecipeContextRequired();
+  const { recipe, enrichment } = useRecipeContextRequired();
   const { allergies } = useActiveAllergies();
   const { isSupported, isActive, toggle } = useWakeLockContext();
   const t = useTranslations("recipes.actions");
+  const tEnrichment = useTranslations("recipes.enrichment");
   const canEdit = recipe.userId ? canEditRecipe(recipe.userId) : true;
   const canDelete = recipe.userId ? canDeleteRecipe(recipe.userId) : true;
   const handleDeleteClick = React.useCallback(() => {
@@ -116,54 +110,73 @@ export default function ActionsMenu({ id }: Props) {
         iconClassName: isActive ? "text-success" : "text-muted",
       });
     }
-    if (isAutoTaggingEnabled && canEdit) {
-      items.push({
-        key: "auto-tag",
-        label: isAutoTagging ? t("autoTagging") : t("autoTag"),
-        icon: <SparklesIcon className="size-4" />,
-        onPress: triggerAutoTag,
-        labelClassName: cssAIGradientText,
-        iconClassName: cssAIIconColor,
-        isDisabled: isAutoTagging,
-      });
-    }
+    // Manual Recipe Enrichment: shown on AI enablement and edit permission alone.
+    // The administrator's automatic switches decide what runs on creation, not
+    // whether an editor may ask for it.
     if (isAIEnabled && canEdit) {
-      items.push({
-        key: "auto-categorize",
-        label: t("autoCategorize"),
-        icon: <SparklesIcon className="size-4" />,
-        onPress: () => triggerAutoCategorize(),
-        labelClassName: cssAIGradientText,
-        iconClassName: cssAIIconColor,
-        isDisabled: isCategorizing,
-      });
-    }
+      // Every kind renders the same way, so the states read consistently
+      // and a quiet automatic failure is still discoverable here.
+      const enrichmentActions: {
+        kind: RecipeEnrichmentKind;
+        key: string;
+        idleLabel: string;
+        busyLabel: string;
+        show?: boolean;
+      }[] = [
+        {
+          kind: "auto-tagging",
+          key: "auto-tag",
+          idleLabel: t("autoTag"),
+          busyLabel: t("autoTagging"),
+        },
+        {
+          kind: "auto-categorization",
+          key: "auto-categorize",
+          idleLabel: t("autoCategorize"),
+          busyLabel: t("autoCategorizing"),
+        },
+        {
+          kind: "allergy-detection",
+          key: "detect-allergies",
+          idleLabel: t("detectAllergies"),
+          busyLabel: t("detectingAllergies"),
+          // Allergy detection needs something to look for.
+          show: allergies.length > 0,
+        },
+        {
+          kind: "nutrition-estimation",
+          key: "estimate-nutrition",
+          idleLabel: t("estimateNutrition"),
+          busyLabel: t("estimatingNutrition"),
+        },
+        {
+          kind: "recipe-provenance",
+          key: "infer-provenance",
+          idleLabel: t("inferProvenance"),
+          busyLabel: t("inferringProvenance"),
+        },
+      ];
 
-    // Show allergy detection when AI is enabled, user can edit, and allergies are configured
-    const hasAllergies = allergies.length > 0;
-    if (isAIEnabled && canEdit && hasAllergies) {
-      items.push({
-        key: "detect-allergies",
-        label: isDetectingAllergies ? t("detectingAllergies") : t("detectAllergies"),
-        icon: <SparklesIcon className="size-4" />,
-        onPress: triggerAllergyDetection,
-        labelClassName: cssAIGradientText,
-        iconClassName: cssAIIconColor,
-        isDisabled: isDetectingAllergies,
-      });
-    }
+      for (const action of enrichmentActions) {
+        if (action.show === false) continue;
 
-    // Show nutrition estimation when AI is enabled and user can edit
-    if (isAIEnabled && canEdit) {
-      items.push({
-        key: "estimate-nutrition",
-        label: isEstimatingNutrition ? t("estimatingNutrition") : t("estimateNutrition"),
-        icon: <SparklesIcon className="size-4" />,
-        onPress: estimateNutrition,
-        labelClassName: cssAIGradientText,
-        iconClassName: cssAIIconColor,
-        isDisabled: isEstimatingNutrition,
-      });
+        const state = enrichment.states[action.kind];
+        const isBusy = state === "queued" || state === "processing";
+
+        items.push({
+          key: action.key,
+          label: isBusy ? action.busyLabel : action.idleLabel,
+          icon: <SparklesIcon className="size-4" />,
+          onPress: () => enrichment.request(action.kind),
+          labelClassName: cssAIGradientText,
+          iconClassName: cssAIIconColor,
+          // A failed run stays visible and re-runnable; only an in-flight one
+          // is disabled.
+          description: state === "idle" ? undefined : tEnrichment(`states.${state}`),
+          descriptionClassName: state === "failed" ? "text-danger" : "text-muted",
+          isDisabled: isBusy,
+        });
+      }
     }
     if (canDelete) {
       items.push({
@@ -186,17 +199,10 @@ export default function ActionsMenu({ id }: Props) {
     isActive,
     toggle,
     t,
-    isAutoTaggingEnabled,
-    isAutoTagging,
-    triggerAutoTag,
+    tEnrichment,
     isAIEnabled,
     allergies,
-    isDetectingAllergies,
-    triggerAllergyDetection,
-    isEstimatingNutrition,
-    estimateNutrition,
-    isCategorizing,
-    triggerAutoCategorize,
+    enrichment,
   ]);
   return (
     <>
@@ -235,8 +241,15 @@ export default function ActionsMenu({ id }: Props) {
                   variant="tertiary"
                 >
                   {<span className={item.iconClassName ?? "text-muted"}>{item.icon}</span>}
-                  <span className={`text-sm font-medium ${item.labelClassName ?? ""}`}>
-                    <Label>{item.label}</Label>
+                  <span className="flex flex-col items-start">
+                    <span className={`text-sm font-medium ${item.labelClassName ?? ""}`}>
+                      <Label>{item.label}</Label>
+                    </span>
+                    {item.description && (
+                      <span className={`${item.descriptionClassName ?? "text-muted"} text-xs`}>
+                        {item.description}
+                      </span>
+                    )}
                   </span>
                 </Button>
               </Dropdown.Item>

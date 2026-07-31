@@ -143,13 +143,12 @@ describe("parseRecipeFromUrl import flow", () => {
     mockIsVideoParsingEnabled.mockResolvedValue(true);
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
-    const result = await parseRecipeFromUrl("https://example.com/video", "recipe-1", ["dairy"]);
+    const result = await parseRecipeFromUrl("https://example.com/video", "recipe-1");
 
     expect(result).toEqual({ recipe: structuredRecipe, usedAI: true });
     expect(mockProcessVideoRecipe).toHaveBeenCalledWith(
       "https://example.com/video",
       "recipe-1",
-      ["dairy"],
       undefined
     );
     expect(mockFetchViaPlaywright).not.toHaveBeenCalled();

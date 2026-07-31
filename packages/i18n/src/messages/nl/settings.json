@@ -521,6 +521,10 @@
         "title": "Prompts",
         "subtitle": "Pas AI-instructies aan voor receptverwerking"
       },
+      "cuisines": {
+        "title": "Keukens",
+        "subtitle": "De woordenlijst waaruit recepten en AI kiezen"
+      },
       "bulkCategorization": {
         "title": "Bulkcategorisatie",
         "subtitle": "Categoriseer niet-gecategoriseerde recepten met AI",
@@ -561,21 +565,38 @@
       "temperatureHint": "Lager = gefocuster, Hoger = creatiever",
       "maxTokens": "Max Tokens",
       "requestTimeout": "Time-out van aanvraag (ms)",
-      "autoTagAllergies": "Allergietags automatisch detecteren",
-      "autoTagAllergiesDescription": "Voeg automatisch allergiegerelateerde tags toe bij het importeren van recepten",
       "alwaysUseAI": "Altijd AI gebruiken voor import",
       "alwaysUseAIDescription": "Sla gestructureerde parsers over en extraheer recepten alleen met AI",
-      "autoTaggingMode": "Auto-tagging Modus",
-      "autoTaggingModeDescription": "Wijs automatisch tags/trefwoorden toe aan geïmporteerde recepten met AI",
-      "autoTaggingModes": {
-        "disabled": "Uitgeschakeld",
+      "connectionSuccess": "Verbinding succesvol",
+      "testConnection": "Test verbinding",
+      "vision": "vision",
+      "automaticEnrichment": "Automatische receptverrijking",
+      "automaticEnrichmentDescription": "Kies welke AI-verrijking automatisch draait voor nieuwe recepten. Leden kunnen elke verrijking handmatig blijven starten zolang AI aanstaat.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Automatisch taggen",
+        "autoTaggingDescription": "Voeg door AI voorgestelde tags toe aan nieuwe recepten zonder bestaande tags te verwijderen",
+        "allergyDetection": "Allergiedetectie",
+        "allergyDetectionDescription": "Voeg automatisch allergiegerelateerde tags toe bij het importeren van recepten",
+        "autoCategorization": "Automatisch categoriseren",
+        "autoCategorizationDescription": "Stel maaltijdcategorieën in op nieuwe recepten die er nog geen hebben",
+        "nutritionEstimation": "Voedingswaarde schatten",
+        "nutritionEstimationDescription": "Schat calorieën, vet, koolhydraten en eiwitten voor nieuwe recepten zonder opgegeven waarden",
+        "recipeProvenance": "Receptherkomst",
+        "recipeProvenanceDescription": "Bepaal land, streek, keukens en een korte toelichting voor nieuwe recepten die die nog niet hebben"
+      },
+      "tagStrategy": "Tagstrategie",
+      "tagStrategyDescription": "Welke tags automatisch taggen mag gebruiken, of het nu automatisch of handmatig draait",
+      "tagStrategies": {
         "predefined": "Alleen voorgedefinieerde tags",
         "predefinedDb": "Voorgedefinieerd + bestaande tags",
         "freeform": "AI kan nieuwe tags maken"
       },
-      "connectionSuccess": "Verbinding succesvol",
-      "testConnection": "Test verbinding",
-      "vision": "vision"
+      "cuisineStrategy": "Keukenstrategie",
+      "cuisineStrategyDescription": "Of herkomstbepaling keukens aan je woordenlijst mag toevoegen of er alleen uit mag kiezen",
+      "cuisineStrategies": {
+        "existing": "Alleen bestaande keukens",
+        "extend": "AI kan nieuwe keukens toevoegen"
+      }
     },
     "videoConfig": {
       "enableVideo": "Video parsing inschakelen",
@@ -626,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Voer de voedingswaarde prompt in...",
       "autoTagging": "Auto-tagging Prompt",
       "autoTaggingDescription": "Deze prompt wordt gebruikt om tags te genereren voor geïmporteerde recepten. Definieer taggingregels en een lijst met voorgedefinieerde tags.",
-      "autoTaggingPlaceholder": "Voer de auto-tagging prompt in..."
+      "autoTaggingPlaceholder": "Voer de auto-tagging prompt in...",
+      "recipeProvenance": "Prompt voor receptherkomst",
+      "recipeProvenanceDescription": "Deze prompt bepaalt waar een recept vandaan komt. De toelichting die eruit komt staat in de taal van het recept zelf. Beschikbare variabelen: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Voer de prompt voor receptherkomst in..."
     },
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
     "jsonEditor": {
@@ -740,6 +764,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Keukens zijn een gecureerde woordenlijst die jij beheert. Namen worden in elke taal getoond zoals ze hier staan.",
+      "namePlaceholder": "Naam van keuken",
+      "addLabel": "Keuken toevoegen",
+      "renameLabel": "{name} hernoemen",
+      "deleteLabel": "{name} verwijderen",
+      "deleteConfirm": "\"{name}\" verwijderen? Recepten die deze gebruiken raken hem kwijt.",
+      "empty": "Nog geen keukens.",
+      "duplicate": "Er bestaat al een keuken met die naam.",
+      "saveFailed": "Kon die keuken niet opslaan."
     }
   }
 }

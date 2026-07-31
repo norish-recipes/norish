@@ -97,8 +97,7 @@ function extractInstagramCaption(html: string): string {
 export async function processInstagramImagePost(
   url: string,
   recipeId: string,
-  metadata: VideoMetadata,
-  allergies?: string[]
+  metadata: VideoMetadata
 ): Promise<FullRecipeInsertDTO> {
   let description = metadata.description?.trim() || "";
 
@@ -130,7 +129,7 @@ export async function processInstagramImagePost(
   }
 
   // Use existing AI parser - it handles plain text fine
-  const result = await extractRecipeWithAI(description, recipeId, url, allergies);
+  const result = await extractRecipeWithAI(description, recipeId, url);
 
   if (!result.success) {
     log.warn({ url, error: result.error }, "AI extraction failed for Instagram image post");

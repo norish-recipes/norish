@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { AIConfig, VideoConfig } from "@norish/config/zod/server-config";
 import { testAIEndpoint as testAIEndpointFn } from "@norish/auth/connection-tests";
 import {
+  AIConfigInputSchema,
   AIConfigSchema,
   ServerConfigKeys,
   TranscriptionProviderSchema,
@@ -10,8 +11,7 @@ import {
 } from "@norish/config/zod/server-config";
 import { getRecipesWithoutCategories } from "@norish/db/repositories/recipes";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
-import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
-import { getQueues } from "@norish/queue/registry";
+import { enrichRecipe } from "@norish/queue";
 import { listModels, listTranscriptionModels } from "@norish/shared-server/ai/providers";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -73,7 +73,7 @@ const updateVideoConfig = adminProcedure
 const testAIEndpoint = adminProcedure
   .input(
     z.object({
-      provider: AIConfigSchema.shape.provider,
+      provider: AIConfigInputSchema.shape.provider,
       endpoint: z.string().url().optional(),
       apiKey: z.string().optional(),
     })
@@ -99,7 +99,7 @@ const testAIEndpoint = adminProcedure
 const listAvailableModels = adminProcedure
   .input(
     z.object({
-      provider: AIConfigSchema.shape.provider,
+      provider: AIConfigInputSchema.shape.provider,
       endpoint: z.string().optional(),
       apiKey: z.string().optional(),
     })
@@ -191,14 +191,18 @@ const categorizeAllRecipes = adminProcedure.mutation(async ({ ctx }) => {
     return { queued: 0 };
   }
 
-  const queues = getQueues();
-
+  // An administrator asking for this is a deliberate request, so it enrolls the
+  // same way a manual run does rather than depending on the automatic switch.
   for (const recipe of uncategorized) {
-    await addAutoCategorizationJob(queues.autoCategorization, {
-      recipeId: recipe.id,
-      userId: ctx.user.id,
-      householdKey: ctx.household?.id ?? "",
-    });
+    await enrichRecipe(
+      {
+        recipeId: recipe.id,
+        userId: ctx.user.id,
+        householdKey: ctx.household?.id ?? "",
+        householdUserIds: null,
+      },
+      { origin: "manual", kind: "auto-categorization" }
+    );
   }
 
   log.info({ count: uncategorized.length }, "Bulk categorization jobs queued");

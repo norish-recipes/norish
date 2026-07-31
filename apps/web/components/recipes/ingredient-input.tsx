@@ -104,17 +104,21 @@ export default function IngredientInput({
     },
     [systemUsed, units]
   );
-  const debouncedParse = useCallback(
+  const flushParse = useCallback(
     (updatedItems: IngredientItem[]) => {
-      const doUpdate = debounce((items: IngredientItem[]) => {
-        const parsed = items
-          .map((item, idx) => parseIngredient(item, idx))
-          .filter((ing): ing is ParsedIngredient => ing !== null);
-        onChange(parsed);
-      }, 300);
-      doUpdate(updatedItems);
+      const parsed = updatedItems
+        .map((item, idx) => parseIngredient(item, idx))
+        .filter((ing): ing is ParsedIngredient => ing !== null);
+      onChange(parsed);
     },
     [parseIngredient, onChange]
+  );
+  const debouncedParse = useCallback(
+    (updatedItems: IngredientItem[]) => {
+      const doUpdate = debounce(flushParse, 300);
+      doUpdate(updatedItems);
+    },
+    [flushParse]
   );
   const handleInputChange = useCallback(
     (index: number, value: string) => {
@@ -166,10 +170,14 @@ export default function IngredientInput({
         const updated = items.filter((_, i) => i !== index);
         if (updated.length === 0) updated.push(createItem(""));
         setItems(updated);
-        debouncedParse(updated);
+        flushParse(updated);
+      } else {
+        // Leaving the field commits the pending parse immediately, so a submit
+        // inside the debounce window cannot lose what was just typed.
+        flushParse(items);
       }
     },
-    [items, debouncedParse]
+    [items, flushParse]
   );
   const handleRemove = useCallback(
     (index: number) => {

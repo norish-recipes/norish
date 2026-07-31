@@ -9,37 +9,46 @@ const PROMPTS_DIR = resolveExistingWorkspacePath(
   join("packages", "shared-server", "src", "ai", "prompts")
 );
 
+/** Every administrator-editable prompt, and the config field it is stored in. */
+const PROMPT_FIELDS = {
+  "recipe-extraction": "recipeExtraction",
+  "unit-conversion": "unitConversion",
+  "nutrition-estimation": "nutritionEstimation",
+  "auto-tagging": "autoTagging",
+  "recipe-provenance": "recipeProvenance",
+} as const satisfies Record<string, keyof PromptsConfigInput>;
+
+export type PromptName = keyof typeof PROMPT_FIELDS;
+
+function readDefaultPrompt(name: PromptName): string {
+  return readFileSync(join(PROMPTS_DIR, `${name}.txt`), "utf-8");
+}
+
 /**
  * Load default prompts from text files.
  * Used for seeding database and "Restore to defaults" functionality.
  */
 export function loadDefaultPrompts(): PromptsConfigInput {
   return {
-    recipeExtraction: readFileSync(join(PROMPTS_DIR, "recipe-extraction.txt"), "utf-8"),
-    unitConversion: readFileSync(join(PROMPTS_DIR, "unit-conversion.txt"), "utf-8"),
-    nutritionEstimation: readFileSync(join(PROMPTS_DIR, "nutrition-estimation.txt"), "utf-8"),
-    autoTagging: readFileSync(join(PROMPTS_DIR, "auto-tagging.txt"), "utf-8"),
+    recipeExtraction: readDefaultPrompt("recipe-extraction"),
+    unitConversion: readDefaultPrompt("unit-conversion"),
+    nutritionEstimation: readDefaultPrompt("nutrition-estimation"),
+    autoTagging: readDefaultPrompt("auto-tagging"),
+    recipeProvenance: readDefaultPrompt("recipe-provenance"),
   };
 }
 
-export async function loadPrompt(
-  name: "recipe-extraction" | "unit-conversion" | "nutrition-estimation" | "auto-tagging"
-): Promise<string> {
+/**
+ * Read one prompt, preferring the administrator's stored version.
+ *
+ * Falls back to the shipped file when the stored config predates a prompt, so
+ * an upgrade that adds one does not need a config migration before the feature
+ * it belongs to can run.
+ */
+export async function loadPrompt(name: PromptName): Promise<string> {
   const prompts = await getPrompts();
 
-  switch (name) {
-    case "recipe-extraction":
-      return prompts.recipeExtraction;
-
-    case "nutrition-estimation":
-      return prompts.nutritionEstimation;
-
-    case "unit-conversion":
-      return prompts.unitConversion;
-
-    case "auto-tagging":
-      return prompts.autoTagging;
-  }
+  return prompts[PROMPT_FIELDS[name]] ?? readDefaultPrompt(name);
 }
 
 export function fillPrompt(template: string, vars: Record<string, string>): string {

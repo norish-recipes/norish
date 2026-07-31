@@ -17,7 +17,6 @@ describe("permissions hooks selectors", () => {
       isAIEnabled: false,
       householdUserIds: null,
       isServerAdmin: false,
-      autoTaggingMode: "disabled",
     });
   });
 
@@ -31,7 +30,6 @@ describe("permissions hooks selectors", () => {
       isAIEnabled: true,
       householdUserIds: ["owner-1", "owner-2"],
       isServerAdmin: false,
-      autoTaggingMode: "predefined",
     });
 
     expect(selectCanDeleteRecipe(permissions, "viewer-1", "owner-1")).toBe(true);

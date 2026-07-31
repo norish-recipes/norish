@@ -44,13 +44,14 @@ export { addImportJob } from "./recipe-import/producer";
 export { addImageImportJob } from "./image-import/producer";
 export { addPasteImportJob } from "./paste-import/producer";
 export { MAX_STRUCTURED_PASTE_RECIPES, preparePasteImport } from "./paste-import/parser";
-export { addNutritionEstimationJob } from "./nutrition-estimation/producer";
-export { addAutoTaggingJob, isAutoTaggingJobActive } from "./auto-tagging/producer";
+export { addEnrichmentJob } from "./enrichment/producer";
+export { enrichRecipe } from "./enrichment/coordinator";
+export type { RecipeEnrichmentContext, RecipeEnrichmentRequest } from "./enrichment/coordinator";
 export {
-  addAutoCategorizationJob,
-  isAutoCategorizationJobActive,
-} from "./auto-categorization/producer";
-export { addAllergyDetectionJob, isAllergyDetectionJobActive } from "./allergy-detection/producer";
+  ENRICHMENT_QUEUE_NAMES,
+  enrichmentJobId,
+  findActiveEnrichmentJobId,
+} from "./enrichment/identity";
 export { addCaldavSyncJob } from "./caldav-sync/producer";
 export { initializeScheduledJobs } from "./scheduled-tasks/producer";
 
@@ -71,6 +72,10 @@ export {
   startAllergyDetectionWorker,
   stopAllergyDetectionWorker,
 } from "./allergy-detection/worker";
+export {
+  startRecipeProvenanceWorker,
+  stopRecipeProvenanceWorker,
+} from "./recipe-provenance/worker";
 export { startCaldavSyncWorker, stopCaldavSyncWorker } from "./caldav-sync/worker";
 export { startScheduledTasksWorker, stopScheduledTasksWorker } from "./scheduled-tasks/worker";
 
@@ -82,14 +87,7 @@ export type {
   AddImageImportJobResult,
   PasteImportJobData,
   AddPasteImportJobResult,
-  NutritionEstimationJobData,
-  AddNutritionEstimationJobResult,
-  AutoTaggingJobData,
-  AddAutoTaggingJobResult,
-  AutoCategorizationJobData,
-  AddAutoCategorizationJobResult,
-  AllergyDetectionJobData,
-  AddAllergyDetectionJobResult,
+  RecipeEnrichmentJobData,
   CaldavSyncJobData,
   CaldavSyncOperation,
 } from "@norish/queue/contracts/job-types";

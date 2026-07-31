@@ -521,6 +521,10 @@
         "title": "Prompty",
         "subtitle": "Dostosuj instrukcje AI do przetwarzania przepisów"
       },
+      "cuisines": {
+        "title": "Kuchnie",
+        "subtitle": "Słownik, z którego wybierają przepisy i AI"
+      },
       "bulkCategorization": {
         "title": "Masowa kategoryzacja",
         "subtitle": "Kategoryzuj nieskategoryzowane przepisy za pomocą AI",
@@ -561,21 +565,38 @@
       "temperatureHint": "Niżej = bardziej precyzyjne, Wyżej = bardziej kreatywne",
       "maxTokens": "Maks. tokenów",
       "requestTimeout": "Limit czasu żądania (ms)",
-      "autoTagAllergies": "Automatyczne wykrywanie tagów alergii",
-      "autoTagAllergiesDescription": "Automatycznie dodawaj tagi związane z alergiami podczas importowania przepisów",
       "alwaysUseAI": "Zawsze używaj AI przy imporcie",
       "alwaysUseAIDescription": "Pomijaj parsowanie ustrukturyzowane i wyciągaj przepisy wyłącznie przez AI",
-      "autoTaggingMode": "Tryb automatycznego tagowania",
-      "autoTaggingModeDescription": "Automatycznie przypisuj tagi/słowa kluczowe do importowanych przepisów za pomocą AI",
-      "autoTaggingModes": {
-        "disabled": "Wyłączone",
+      "connectionSuccess": "Połączenie udane",
+      "testConnection": "Testuj połączenie",
+      "vision": "vision",
+      "automaticEnrichment": "Automatyczne wzbogacanie przepisów",
+      "automaticEnrichmentDescription": "Wybierz, które wzbogacanie AI uruchamia się automatycznie dla nowych przepisów. Członkowie nadal mogą uruchomić każde ręcznie, gdy AI jest włączone.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Automatyczne tagowanie",
+        "autoTaggingDescription": "Dodaje tagi zaproponowane przez AI do nowych przepisów bez usuwania istniejących",
+        "allergyDetection": "Wykrywanie alergenów",
+        "allergyDetectionDescription": "Automatycznie dodawaj tagi związane z alergiami podczas importowania przepisów",
+        "autoCategorization": "Automatyczna kategoryzacja",
+        "autoCategorizationDescription": "Ustawia kategorie posiłku w nowych przepisach, które ich nie mają",
+        "nutritionEstimation": "Szacowanie wartości odżywczych",
+        "nutritionEstimationDescription": "Szacuje kalorie, tłuszcze, węglowodany i białko dla nowych przepisów bez podanych wartości",
+        "recipeProvenance": "Pochodzenie przepisu",
+        "recipeProvenanceDescription": "Ustal kraj, region, kuchnie i krótką notatkę dla nowych przepisów, które ich nie mają"
+      },
+      "tagStrategy": "Strategia tagów",
+      "tagStrategyDescription": "Jakich tagów może używać automatyczne tagowanie, niezależnie od tego, czy działa automatycznie czy ręcznie",
+      "tagStrategies": {
         "predefined": "Tylko zdefiniowane tagi",
         "predefinedDb": "Zdefiniowane + istniejące tagi",
         "freeform": "AI może tworzyć nowe tagi"
       },
-      "connectionSuccess": "Połączenie udane",
-      "testConnection": "Testuj połączenie",
-      "vision": "vision"
+      "cuisineStrategy": "Strategia kuchni",
+      "cuisineStrategyDescription": "Czy ustalanie pochodzenia może dodawać kuchnie do słownika, czy tylko z niego wybierać",
+      "cuisineStrategies": {
+        "existing": "Tylko istniejące kuchnie",
+        "extend": "AI może dodawać nowe kuchnie"
+      }
     },
     "videoConfig": {
       "enableVideo": "Włącz parsowanie wideo",
@@ -626,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Wpisz prompt szacowania wartości odżywczych...",
       "autoTagging": "Prompt automatycznego tagowania",
       "autoTaggingDescription": "Ten prompt jest używany do generowania tagów dla importowanych przepisów. Zdefiniuj reguły tagowania i listę predefiniowanych tagów.",
-      "autoTaggingPlaceholder": "Wpisz prompt automatycznego tagowania..."
+      "autoTaggingPlaceholder": "Wpisz prompt automatycznego tagowania...",
+      "recipeProvenance": "Prompt pochodzenia przepisu",
+      "recipeProvenanceDescription": "Ten prompt ustala, skąd pochodzi przepis. Powstała notatka jest napisana w języku samego przepisu. Dostępne zmienne: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Wprowadź prompt pochodzenia przepisu..."
     },
     "unsavedChanges": "Niezapisane zmiany",
     "jsonEditor": {
@@ -740,6 +764,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Kuchnie to wyselekcjonowany słownik, który należy do Ciebie. Nazwy są pokazywane dokładnie tak, jak je tu zapiszesz, we wszystkich językach.",
+      "namePlaceholder": "Nazwa kuchni",
+      "addLabel": "Dodaj kuchnię",
+      "renameLabel": "Zmień nazwę {name}",
+      "deleteLabel": "Usuń {name}",
+      "deleteConfirm": "Usunąć „{name}”? Przepisy, które jej używają, ją stracą.",
+      "empty": "Brak kuchni.",
+      "duplicate": "Kuchnia o tej nazwie już istnieje.",
+      "saveFailed": "Nie udało się zapisać tej kuchni."
     }
   }
 }

@@ -41,20 +41,12 @@ export {
   createUseRandomRecipe,
 };
 
-export function createDashboardRecipeHooks(
-  options: CreateRecipeHooksOptions,
-  dependencies: Pick<
-    import("./use-recipes-query").RecipesQueryDependencies,
-    "useAutoTaggingQuery" | "useAllergyDetectionQuery"
-  >
-) {
+export function createDashboardRecipeHooks(options: CreateRecipeHooksOptions) {
   const usePendingRecipesQuery = createUsePendingRecipesQuery(options);
   const useRecipesCacheHelpers = createUseRecipesCacheHelpers(options);
   const useRecipesQuery = createUseRecipesQuery(options, {
     usePendingRecipesQuery,
     useRecipesCacheHelpers,
-    useAutoTaggingQuery: dependencies.useAutoTaggingQuery,
-    useAllergyDetectionQuery: dependencies.useAllergyDetectionQuery,
   });
   const useRecipesMutations = createUseRecipesMutations(options, {
     useRecipesCacheHelpers,

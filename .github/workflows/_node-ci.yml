@@ -31,6 +31,10 @@ on:
         required: false
         type: boolean
         default: false
+      run-e2e:
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -38,7 +42,7 @@ permissions:
 jobs:
   install:
     name: Install dependencies
-    if: ${{ inputs.run-build || inputs.run-tests || inputs.run-lint || inputs.run-format || inputs.run-i18n }}
+    if: ${{ inputs.run-build || inputs.run-tests || inputs.run-lint || inputs.run-format || inputs.run-i18n || inputs.run-e2e }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -49,7 +53,7 @@ jobs:
 
   build:
     name: Build
-    if: ${{ inputs.run-build || inputs.run-tests || inputs.run-lint || inputs.run-format || inputs.run-i18n }}
+    if: ${{ inputs.run-build || inputs.run-tests || inputs.run-lint || inputs.run-format || inputs.run-i18n || inputs.run-e2e }}
     runs-on: ubuntu-latest
     needs: install
     steps:
@@ -106,6 +110,47 @@ jobs:
 
       - name: Run format check
         run: pnpm run format
+
+  e2e:
+    name: Browser E2E
+    if: ${{ inputs.run-e2e }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup toolchain and install dependencies
+        uses: ./tooling/github/setup
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @norish/web exec playwright install --with-deps chromium
+
+      # setup-uv stopped publishing floating major tags with v8; pin exactly.
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9.0.0
+
+      # The production server boots the embedded parser and refuses to run
+      # without its runtime; the shared setup skips it for every other job.
+      - name: Install the embedded parser runtime
+        run: pnpm --filter @norish/parser-api run install:deps
+
+      - name: Run browser E2E suites
+        run: pnpm run test:e2e
+
+      - name: Upload traces and results on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-results
+          path: |
+            apps/web/e2e/.results
+            apps/web/e2e-ai/.results
+          retention-days: 7
+          if-no-files-found: ignore
+          # Everything lives under dot-directories, which the action skips
+          # by default — without this the upload silently finds nothing.
+          include-hidden-files: true
 
   i18n:
     name: Locale Keys Check

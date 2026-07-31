@@ -102,9 +102,16 @@ describe("server config normalization", () => {
       maxTokens: 1024,
       timeoutMs: 300000,
       apiKey: "secret-key",
-      autoTagAllergies: true,
       alwaysUseAI: false,
-      autoTaggingMode: "disabled",
+      tagStrategy: "predefined",
+      cuisineStrategy: "existing",
+      automaticEnrichment: {
+        autoTagging: false,
+        allergyDetection: true,
+        autoCategorization: false,
+        nutritionEstimation: false,
+        recipeProvenance: false,
+      },
     });
 
     const persisted = await db.query.serverConfig.findFirst({
@@ -119,9 +126,16 @@ describe("server config normalization", () => {
       maxTokens: 1024,
       timeoutMs: 300000,
       apiKey: "••••••••",
-      autoTagAllergies: true,
       alwaysUseAI: false,
-      autoTaggingMode: "disabled",
+      tagStrategy: "predefined",
+      cuisineStrategy: "existing",
+      automaticEnrichment: {
+        autoTagging: false,
+        allergyDetection: true,
+        autoCategorization: false,
+        nutritionEstimation: false,
+        recipeProvenance: false,
+      },
     });
     expect(JSON.parse(decrypt(persisted!.valueEnc!))).toEqual(result);
   });

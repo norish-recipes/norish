@@ -78,10 +78,8 @@ export {
   buildRecipeExtractionPrompt,
   buildImageExtractionPrompt,
   buildVideoExtractionPrompt,
-  buildAllergyInstruction,
   type RecipeExtractionPromptOptions,
   type VideoExtractionPromptOptions,
-  type AllergyInstructionOptions,
 } from "./prompts";
 
 // ============================================================================
@@ -125,6 +123,13 @@ export type { AutoTaggingOutput } from "./auto-tagger";
 export { detectAllergiesInRecipe, type RecipeForAllergyDetection } from "./allergy-detector";
 export type { AllergyDetectionOutput } from "./allergy-detector";
 
+// Recipe Provenance
+export {
+  inferRecipeProvenance,
+  type ProvenanceInference,
+  type RecipeForProvenance,
+} from "./provenance-inferrer";
+
 // Transcription
 export { transcribeAudio } from "./transcriber";
 
@@ -134,6 +139,7 @@ export { transcribeAudio } from "./transcriber";
 
 export { recipeExtractionSchema } from "./schemas/recipe.schema";
 export { nutritionEstimationSchema } from "./schemas/nutrition.schema";
+export { buildProvenanceSchema, type ProposedProvenance } from "./schemas/provenance.schema";
 export { conversionSchema } from "@norish/shared-server/ai/schemas/conversion.schema";
 export { autoTaggingSchema } from "./schemas/auto-tagging.schema";
 

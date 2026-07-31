@@ -1,6 +1,7 @@
 "use client";
 
 import AuthorChip from "@/components/recipes/author-chip";
+import OriginFlag from "@/components/recipes/origin-flag";
 import MediaCarousel, { buildMediaItems } from "@/components/shared/media-carousel";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import {
@@ -45,6 +46,8 @@ type RecipeSummaryLike = RecipeMediaLike & {
   totalMinutes: number | null;
   tags: RecipeTagLike[];
   author?: { id?: string; name?: string | null; image?: string | null } | null;
+  /** Alpha-2, so the flag and its label are resolved at render time. */
+  originCountry?: string | null;
 };
 
 type ReadonlyRecipeSummaryProps = {
@@ -130,6 +133,7 @@ export function ReadonlyRecipeSummary({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl leading-tight font-bold">
+            <OriginFlag className="mr-2" originCountry={recipe.originCountry} />
             {recipe.name}
             {recipe.url && (
               <Link

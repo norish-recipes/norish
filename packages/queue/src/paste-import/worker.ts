@@ -7,6 +7,7 @@
 
 import type { Job } from "bullmq";
 
+import type { CreateRecipeResult } from "@norish/db/repositories/recipes";
 import type {
   PasteImportJobData,
   PasteImportJobResult,
@@ -14,15 +15,10 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { createRecipeWithRefs, dashboardRecipe, getAllergiesForUsers } from "@norish/db";
+import { createRecipeWithRefs, dashboardRecipe } from "@norish/db";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
-import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
-import { getBullClient } from "@norish/queue/redis/bullmq";
-import { getQueues } from "@norish/queue/registry";
 import {
-  getAIConfig,
   getRecipePermissionPolicy,
   isAIEnabled,
 } from "@norish/shared-server/config/server-config-loader";
@@ -34,9 +30,9 @@ import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
-import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { defineLazyWorker, QUEUE_NAMES } from "../config";
+import { announceUsableRecipe } from "../enrichment/announce";
 import { completeStep, reportStep } from "../job-steps";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:paste-import");
 
@@ -57,7 +53,6 @@ interface ParseResult {
 async function parseFromPastedText(
   text: string,
   recipeId: string,
-  allergies?: string[],
   forceAI?: boolean
 ): Promise<ParseResult> {
   const extractRecipeWithAI = requireQueueApiHandler("extractRecipeWithAI");
@@ -76,7 +71,7 @@ async function parseFromPastedText(
     }
 
     const html = `<html><body><main><h1>Pasted recipe</h1><p>${escapeHtml(trimmed)}</p></main></body></html>`;
-    const ai = await extractRecipeWithAI(html, recipeId, undefined, allergies);
+    const ai = await extractRecipeWithAI(html, recipeId);
 
     if (ai.success && hasRecipeNameIngredientsAndSteps(ai.data)) {
       return { recipe: ai.data, usedAI: true };
@@ -90,7 +85,7 @@ async function parseFromPastedText(
   }
 
   const html = `<html><body><main><h1>Pasted recipe</h1><p>${escapeHtml(trimmed)}</p></main></body></html>`;
-  const ai = await extractRecipeWithAI(html, recipeId, undefined, allergies);
+  const ai = await extractRecipeWithAI(html, recipeId);
 
   if (ai.success && hasRecipeNameIngredientsAndSteps(ai.data)) {
     return { recipe: ai.data, usedAI: true };
@@ -128,22 +123,22 @@ async function createStructuredRecipe(
   structuredRecipe: StructuredPasteImportRecipe,
   userId: string,
   _householdKey: string
-): Promise<string | null> {
+): Promise<CreateRecipeResult | null> {
   const parsed = FullRecipeInsertSchema.safeParse(structuredRecipe.recipe);
 
   if (!parsed.success || !hasRecipeNameIngredientsAndSteps(parsed.data)) {
     return null;
   }
 
-  const createdId = await createRecipeWithRefs(structuredRecipe.recipeId, userId, parsed.data);
+  const created = await createRecipeWithRefs(structuredRecipe.recipeId, userId, parsed.data);
 
-  if (!createdId) {
+  if (!created) {
     return null;
   }
 
-  await persistImportedRating(userId, createdId, structuredRecipe.importedRating);
+  await persistImportedRating(userId, created.recipeId, structuredRecipe.importedRating);
 
-  return createdId;
+  return created;
 }
 
 export async function processPasteImportJob(
@@ -168,20 +163,7 @@ export async function processPasteImportJob(
     });
   });
 
-  const aiConfig = await getAIConfig();
-  let allergyNames: string[] | undefined;
-
-  if (aiConfig?.autoTagAllergies) {
-    const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
-
-    allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
-    log.debug(
-      { allergyCount: allergyNames.length },
-      "Fetched household allergies for paste import"
-    );
-  }
-
-  const createdRecipeIds: string[] = [];
+  const created: CreateRecipeResult[] = [];
 
   if (structuredRecipes && structuredRecipes.length > 0) {
     let index = 0;
@@ -189,16 +171,16 @@ export async function processPasteImportJob(
     for (const structuredRecipe of structuredRecipes) {
       index++;
       await reportStep(job, `creating-recipes:${index}/${structuredRecipes.length}`);
-      const createdId = await createStructuredRecipe(structuredRecipe, userId, householdKey);
+      const structuredResult = await createStructuredRecipe(structuredRecipe, userId, householdKey);
 
-      if (!createdId) {
+      if (!structuredResult) {
         continue;
       }
 
-      createdRecipeIds.push(createdId);
+      created.push(structuredResult);
     }
 
-    if (createdRecipeIds.length === 0) {
+    if (created.length === 0) {
       throw new Error("No valid recipes found in structured paste input.");
     }
   } else {
@@ -209,56 +191,41 @@ export async function processPasteImportJob(
     }
 
     await reportStep(job, "parsing-text");
-    const parseResult = await parseFromPastedText(text, recipeId, allergyNames, forceAI);
+    const parseResult = await parseFromPastedText(text, recipeId, forceAI);
 
     await reportStep(job, "saving");
-    const createdId = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
+    const textResult = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
 
-    if (!createdId) {
+    if (!textResult) {
       throw new Error("Failed to save imported recipe");
     }
 
-    createdRecipeIds.push(createdId);
+    created.push(textResult);
   }
 
-  await completeStep(job, { createdCount: createdRecipeIds.length });
+  await completeStep(job, { createdCount: created.length });
   await reportStep(job, "post-processing");
 
-  const queues = getQueues();
-
-  for (const createdId of createdRecipeIds) {
-    const dashboardDto = await dashboardRecipe(createdId);
+  for (const result of created) {
+    const dashboardDto = await dashboardRecipe(result.recipeId);
 
     if (!dashboardDto) {
       continue;
     }
 
-    const usedAI = !structuredRecipes || structuredRecipes.length === 0;
+    log.info({ jobId: job.id, recipeId: result.recipeId }, "Pasted recipe imported successfully");
 
-    log.info({ jobId: job.id, recipeId: createdId, usedAI }, "Pasted recipe imported successfully");
-
+    // Import success is terminal here regardless of what enrichment does next.
     emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
       recipe: dashboardDto,
-      pendingRecipeId: createdId,
-      toast: usedAI ? "imported" : undefined,
+      pendingRecipeId: result.recipeId,
+      toast: "imported",
     });
 
-    if (!usedAI) {
-      await addAutoTaggingJob(queues.autoTagging, {
-        recipeId: createdId,
-        userId,
-        householdKey,
-      });
-
-      await addAllergyDetectionJob(queues.allergyDetection, {
-        recipeId: createdId,
-        userId,
-        householdKey,
-      });
-    }
+    await announceUsableRecipe(result, { userId, householdKey, householdUserIds });
   }
 
-  return { recipeIds: createdRecipeIds };
+  return { recipeIds: created.map((result) => result.recipeId) };
 }
 
 async function handleJobFailed(
@@ -299,20 +266,11 @@ async function handleJobFailed(
   }
 }
 
-export async function startPasteImportWorker(): Promise<void> {
-  await createLazyWorker<PasteImportJobData>(
-    QUEUE_NAMES.PASTE_IMPORT,
-    processPasteImportJob,
-    {
-      connection: getBullClient(),
-      ...baseWorkerOptions,
-      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.PASTE_IMPORT],
-      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.PASTE_IMPORT],
-    },
-    handleJobFailed
-  );
-}
+const pasteImportWorker = defineLazyWorker(
+  QUEUE_NAMES.PASTE_IMPORT,
+  processPasteImportJob,
+  handleJobFailed
+);
 
-export async function stopPasteImportWorker(): Promise<void> {
-  await stopLazyWorker(QUEUE_NAMES.PASTE_IMPORT);
-}
+export const startPasteImportWorker = pasteImportWorker.start;
+export const stopPasteImportWorker = pasteImportWorker.stop;

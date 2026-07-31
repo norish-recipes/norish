@@ -33,7 +33,6 @@ function getFactory(): VideoProcessorFactory {
 export async function processVideoRecipe(
   url: string,
   recipeId: string,
-  allergies?: string[],
   tokens?: SiteAuthTokenDecryptedDto[]
 ): Promise<FullRecipeInsertDTO> {
   const videoEnabled = await isVideoParsingEnabled();
@@ -48,7 +47,7 @@ export async function processVideoRecipe(
   log.info({ url, processor: processor.name }, "Starting video recipe processing");
 
   try {
-    return await processor.process({ url, recipeId, allergies, tokens });
+    return await processor.process({ url, recipeId, tokens });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 

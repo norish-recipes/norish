@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { generateTagsForRecipe } from "@norish/api/ai/auto-tagger";
 import { listAllTagNames } from "@norish/db/repositories/tags";
-import { getAutoTaggingMode, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+import { getTagStrategy, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 
 // Mock dependencies - vi.mock is hoisted by Vitest
 vi.mock("ai", () => ({
@@ -22,7 +22,7 @@ vi.mock("ai", () => ({
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   isAIEnabled: vi.fn(),
-  getAutoTaggingMode: vi.fn(),
+  getTagStrategy: vi.fn(),
   getAIConfig: vi.fn().mockResolvedValue({
     enabled: true,
     provider: "openai",
@@ -84,22 +84,23 @@ describe("Auto-Tagger", () => {
       }
     });
 
-    it("returns error when auto-tagging mode is disabled", async () => {
+    it("still generates tags when automatic auto-tagging is switched off", async () => {
+      // The automatic switch is coordination policy; it must not disable the manual tool.
       vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("disabled");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
+      vi.mocked(generateText).mockResolvedValue({
+        output: { tags: ["Italian"] },
+        usage: { inputTokens: 100, outputTokens: 20, totalTokens: 120 },
+      } as ReturnType<typeof generateText> extends Promise<infer R> ? R : never);
 
       const result = await generateTagsForRecipe(mockRecipe);
 
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe("Auto-tagging is disabled");
-        expect(result.code).toBe("AI_DISABLED");
-      }
+      expect(result.success).toBe(true);
     });
 
     it("returns error when recipe has no ingredients", async () => {
       vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
 
       const recipeWithoutIngredients = {
         title: "Empty Recipe",
@@ -117,7 +118,7 @@ describe("Auto-Tagger", () => {
 
     it("successfully generates tags in predefined mode", async () => {
       vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
       vi.mocked(generateText).mockResolvedValue({
         output: { tags: ["Italian", "Pasta", "Quick"] },
         usage: { inputTokens: 100, outputTokens: 20, totalTokens: 120 },
@@ -134,7 +135,7 @@ describe("Auto-Tagger", () => {
 
     it("fetches existing tags in predefined_db mode", async () => {
       vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined_db");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined_db");
       vi.mocked(listAllTagNames).mockResolvedValue(["dinner", "italian", "vegetarian"]);
       vi.mocked(generateText).mockResolvedValue({
         output: { tags: ["Italian", "Dinner"] },
@@ -152,7 +153,7 @@ describe("Auto-Tagger", () => {
 
     it("normalizes tags (lowercase, trim, deduplicate)", async () => {
       vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("freeform");
+      vi.mocked(getTagStrategy).mockResolvedValue("freeform");
       vi.mocked(generateText).mockResolvedValue({
         output: { tags: ["  PASTA  ", "Italian", "pasta", "Quick ", ""] },
         usage: { inputTokens: 100, outputTokens: 30, totalTokens: 130 },
@@ -169,7 +170,7 @@ describe("Auto-Tagger", () => {
 
     it("returns error when AI returns empty output", async () => {
       vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
       vi.mocked(generateText).mockResolvedValue({
         output: null,
         usage: { inputTokens: 100, outputTokens: 0, totalTokens: 100 },
@@ -186,7 +187,7 @@ describe("Auto-Tagger", () => {
 
     it("returns error when AI response is invalid (missing tags array)", async () => {
       vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
       vi.mocked(generateText).mockResolvedValue({
         output: { notTags: ["something"] },
         usage: { inputTokens: 100, outputTokens: 10, totalTokens: 110 },
@@ -203,7 +204,7 @@ describe("Auto-Tagger", () => {
 
     it("handles AI errors gracefully", async () => {
       vi.mocked(isAIEnabled).mockResolvedValue(true);
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
       vi.mocked(generateText).mockRejectedValue(new Error("API rate limit exceeded"));
 
       const result = await generateTagsForRecipe(mockRecipe);

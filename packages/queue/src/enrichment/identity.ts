@@ -1,0 +1,73 @@
+/**
+ * Recipe Enrichment queue identity.
+ *
+ * One deterministic job id per recipe and kind. Duplicate delivery of the
+ * creation event therefore coalesces into at most one effective enrollment,
+ * which is what makes the non-durable event safe to observe from several
+ * server instances.
+ */
+
+import type { Queue } from "bullmq";
+
+import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
+import { toEnrichmentLifecycleState } from "@norish/shared/lib/recipe-enrichment";
+
+import type { QueueName } from "../config";
+import type { RecipeEnrichmentJobData } from "../contracts/job-types";
+import { QUEUE_NAMES } from "../config";
+
+/** BullMQ job ids cannot contain colons, so kinds are joined with underscores. */
+export function enrichmentJobId(kind: RecipeEnrichmentKind, recipeId: string): string {
+  return `enrich_${kind}_${recipeId}`;
+}
+
+/** Stable fallback for jobs retained from before per-run identity was introduced. */
+export function enrichmentRunId(
+  data: Pick<RecipeEnrichmentJobData, "kind" | "recipeId" | "runId">
+): string {
+  return data.runId ?? enrichmentJobId(data.kind, data.recipeId);
+}
+
+/** Older retained jobs sort before every run enrolled with sequence support. */
+export function enrichmentRunSequence(data: Pick<RecipeEnrichmentJobData, "runSequence">): number {
+  return data.runSequence ?? 0;
+}
+
+export const ENRICHMENT_QUEUE_NAMES: Record<RecipeEnrichmentKind, QueueName> = {
+  "auto-tagging": QUEUE_NAMES.AUTO_TAGGING,
+  "allergy-detection": QUEUE_NAMES.ALLERGY_DETECTION,
+  "auto-categorization": QUEUE_NAMES.AUTO_CATEGORIZATION,
+  "nutrition-estimation": QUEUE_NAMES.NUTRITION_ESTIMATION,
+  "recipe-provenance": QUEUE_NAMES.RECIPE_PROVENANCE,
+};
+
+/** The BullMQ job name each queue's worker processes. */
+export const ENRICHMENT_JOB_NAMES: Record<RecipeEnrichmentKind, string> = {
+  "auto-tagging": "auto-tag",
+  "allergy-detection": "allergy-detect",
+  "auto-categorization": "auto-categorize",
+  "nutrition-estimation": "estimate",
+  "recipe-provenance": "infer-provenance",
+};
+
+/**
+ * Whether a retained job still occupies this recipe and kind.
+ *
+ * Only `queued` and `processing` block a new run. A completed or failed job
+ * kept for history must not prevent a deliberate rerun, so retention never
+ * looks like a permanently active job.
+ */
+export async function findActiveEnrichmentJobId(
+  queue: Queue,
+  kind: RecipeEnrichmentKind,
+  recipeId: string
+): Promise<string | null> {
+  const jobId = enrichmentJobId(kind, recipeId);
+  const job = await queue.getJob(jobId);
+
+  if (!job) return null;
+
+  const state = toEnrichmentLifecycleState(await job.getState());
+
+  return state === "queued" || state === "processing" ? jobId : null;
+}

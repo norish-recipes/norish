@@ -12,39 +12,44 @@ import { createLogger, redactUrl } from "@norish/shared-server/logger";
 
 const log = createLogger("redis");
 
-// Use globalThis to survive HMR in development
+// Read on every access, never copied into a module-local — see the note on
+// `globalForRegistry` in ../registry.ts for why this module is evaluated more
+// than once per process. Here the cost of getting it wrong is one connection
+// per instance, of which shutdown closes only the one it can see.
 const globalForRedis = globalThis as unknown as {
   publisherClient: Redis | null;
   connectionPromise: Promise<Redis> | null;
 };
-
-let publisherClient = globalForRedis.publisherClient ?? null;
-let connectionPromise = globalForRedis.connectionPromise ?? null;
 
 /**
  * Get the publisher client (singleton).
  * Used for PUBLISH operations.
  */
 export async function getPublisherClient(): Promise<Redis> {
-  if (publisherClient && publisherClient.status === "ready") {
-    return publisherClient;
+  const existing = globalForRedis.publisherClient;
+
+  if (existing && existing.status === "ready") {
+    return existing;
   }
 
   // Prevent multiple simultaneous connection attempts
-  if (connectionPromise) {
-    return connectionPromise;
+  const inFlight = globalForRedis.connectionPromise;
+
+  if (inFlight) {
+    return inFlight;
   }
 
-  connectionPromise = connectPublisher();
+  const connectionPromise = connectPublisher();
+
   globalForRedis.connectionPromise = connectionPromise;
 
   try {
-    publisherClient = await connectionPromise;
+    const publisherClient = await connectionPromise;
+
     globalForRedis.publisherClient = publisherClient;
 
     return publisherClient;
   } finally {
-    connectionPromise = null;
     globalForRedis.connectionPromise = null;
   }
 }
@@ -94,10 +99,11 @@ export async function createSubscriberClient(): Promise<Redis> {
  * Call during server shutdown.
  */
 export async function closeRedisConnections(): Promise<void> {
+  const publisherClient = globalForRedis.publisherClient;
+
   if (publisherClient && publisherClient.status !== "end") {
     log.info("Closing Redis connections");
     await publisherClient.quit();
-    publisherClient = null;
     globalForRedis.publisherClient = null;
   }
 }

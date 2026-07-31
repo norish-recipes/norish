@@ -1,5 +1,10 @@
 import type { Job } from "bullmq";
 
+import type {
+  RecipeEnrichmentKind,
+  RecipeEnrichmentOrigin,
+} from "@norish/shared/lib/recipe-enrichment";
+
 export interface RecipeImportJobData {
   url: string;
   recipeId: string;
@@ -72,46 +77,24 @@ export type AddPasteImportJobResult =
   | { status: "queued"; job: Job<PasteImportJobData, PasteImportJobResult> }
   | { status: "duplicate"; existingJobId: string };
 
-export interface NutritionEstimationJobData {
+/**
+ * One job shape for every Recipe Enrichment kind.
+ *
+ * The queues stay independent so a slow kind cannot serialize the others, but
+ * they share this contract because clients need one lifecycle story, not one
+ * per kind.
+ */
+export interface RecipeEnrichmentJobData {
   recipeId: string;
+  /** Unique per accepted enrollment; optional only for retained jobs created before this field existed. */
+  runId?: string;
+  /** Redis-allocated ordering token; optional only for retained jobs created before this field existed. */
+  runSequence?: number;
+  kind: RecipeEnrichmentKind;
   userId: string;
   householdKey: string;
   householdUserIds: string[] | null;
+  origin: RecipeEnrichmentOrigin;
+  /** Set for manual runs only, so a terminal failure reaches the requester alone. */
+  requestedByUserId?: string;
 }
-
-export type AddNutritionEstimationJobResult =
-  | { status: "queued"; job: Job<NutritionEstimationJobData> }
-  | { status: "duplicate"; existingJobId: string };
-
-export interface AutoTaggingJobData {
-  recipeId: string;
-  userId: string;
-  householdKey: string;
-}
-
-export type AddAutoTaggingJobResult =
-  | { status: "queued"; job: Job<AutoTaggingJobData> }
-  | { status: "duplicate"; existingJobId: string }
-  | { status: "skipped"; reason: "disabled" };
-
-export interface AutoCategorizationJobData {
-  recipeId: string;
-  userId: string;
-  householdKey: string;
-}
-
-export type AddAutoCategorizationJobResult =
-  | { status: "queued"; job: Job<AutoCategorizationJobData> }
-  | { status: "duplicate"; existingJobId: string }
-  | { status: "skipped"; reason: "disabled" };
-
-export interface AllergyDetectionJobData {
-  recipeId: string;
-  userId: string;
-  householdKey: string;
-}
-
-export type AddAllergyDetectionJobResult =
-  | { status: "queued"; job: Job<AllergyDetectionJobData> }
-  | { status: "duplicate"; existingJobId: string }
-  | { status: "skipped"; reason: "disabled" | "no_allergies" };

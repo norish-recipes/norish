@@ -70,7 +70,11 @@
     "estimatingNutrition": "Estimating nutrition...",
     "screenOn": "Screen On",
     "keepScreenOn": "Keep Screen On",
-    "actionsLabel": "Actions"
+    "actionsLabel": "Actions",
+    "autoCategorizing": "Auto-categorizing…",
+    "inferProvenance": "Work Out Provenance",
+    "inferringProvenance": "Working out provenance…",
+    "enrichmentFailed": "Last run failed"
   },
   "sharePanel": {
     "title": "Share recipe",
@@ -162,6 +166,16 @@
     "fat": "Fat (g)",
     "carbs": "Carbs (g)",
     "protein": "Protein (g)",
+    "provenance": "Provenance",
+    "provenanceHelp": "Where this recipe comes from.",
+    "originCountry": "Country",
+    "originCountryPlaceholder": "No country",
+    "originRegion": "Region",
+    "originRegionPlaceholder": "e.g. Sicily",
+    "cuisines": "Cuisines",
+    "cuisinesHelp": "Pick from your deployment's list. Several make sense for a fusion dish.",
+    "provenanceNote": "Note",
+    "provenanceNotePlaceholder": "A few sentences about where this dish comes from…",
     "servings": "Servings",
     "cookingTimes": "Cooking Times",
     "optional": "(optional)",
@@ -238,12 +252,6 @@
     "ariaLabel": "Keep screen awake"
   },
   "toasts": {
-    "processingBoth": "Processing tags & allergies",
-    "processingTags": "Generating tags",
-    "processingAllergies": "Detecting allergies",
-    "bothComplete": "Tags & allergies updated",
-    "tagsComplete": "Tags generated",
-    "allergiesComplete": "Allergies detected",
     "imported": "Recipe imported",
     "converted": "Measurements converted",
     "convertedDescription": "Recipe converted to {system} units",
@@ -270,5 +278,33 @@
     "swipeSteps": "Swipe to navigate steps",
     "swipeIngredients": "Swipe left for ingredients",
     "swipeBackToSteps": "Swipe right for steps"
+  },
+  "enrichment": {
+    "failed": "Enrichment failed",
+    "states": {
+      "queued": "Queued",
+      "processing": "In progress",
+      "succeeded": "Completed",
+      "failed": "Last run failed"
+    },
+    "kinds": {
+      "auto-tagging": "Auto-tagging",
+      "allergy-detection": "Allergy detection",
+      "auto-categorization": "Auto-categorization",
+      "nutrition-estimation": "Nutrition estimation",
+      "recipe-provenance": "Recipe Provenance"
+    }
+  },
+  "provenance": {
+    "title": "Provenance",
+    "region": "Region",
+    "cuisines": "Cuisines",
+    "inferring": "Working out where this recipe comes from…",
+    "noInfo": "No provenance information yet",
+    "inferWithAI": "Work out with AI"
+  },
+  "import": {
+    "alreadyExists": "You already have this recipe",
+    "openExisting": "Open"
   }
 }

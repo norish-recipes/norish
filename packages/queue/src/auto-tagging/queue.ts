@@ -7,7 +7,7 @@
 
 import type { Queue } from "bullmq";
 
-import type { AutoTaggingJobData } from "@norish/queue/contracts/job-types";
+import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { getBullClient } from "@norish/queue/redis/bullmq";
 
 import type { QueueRemovalOptions } from "../config";
@@ -20,8 +20,8 @@ import { createOperationAwareQueue } from "../operation-aware-queue";
  */
 export function createAutoTaggingQueue(
   removalOptions?: QueueRemovalOptions
-): Queue<AutoTaggingJobData> {
-  return createOperationAwareQueue<AutoTaggingJobData>(QUEUE_NAMES.AUTO_TAGGING, {
+): Queue<RecipeEnrichmentJobData> {
+  return createOperationAwareQueue<RecipeEnrichmentJobData>(QUEUE_NAMES.AUTO_TAGGING, {
     connection: getBullClient(),
     defaultJobOptions: { ...autoTaggingJobOptions, ...removalOptions },
   });

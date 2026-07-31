@@ -34,7 +34,7 @@ Use this file for lightweight repo context.
 - Use the existing logger patterns instead of `console.log`.
 - Avoid `as any`, `@ts-ignore`, and `@ts-expect-error`.
 - Route database access through repositories instead of direct router-level queries.
-- Definition of done: the `CONTRIBUTING.md` gates — `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build` — plus tests for new functionality; user-visible work also follows `docs/agents/feature-docs.md`.
+- Definition of done: the `CONTRIBUTING.md` gates — `pnpm lint`, `pnpm test:run`, `pnpm i18n:check`, `pnpm build` — plus tests for new functionality. User-visible workflows whose acceptance criteria depend on browser behavior also require passing E2E coverage and follow `docs/agents/feature-docs.md`.
 - Keep repo guidance concise; prefer practical conventions over long project narratives.
 
 ## Agent skills

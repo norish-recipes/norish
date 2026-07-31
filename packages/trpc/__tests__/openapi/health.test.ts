@@ -3,6 +3,8 @@
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { getOpenApiDocument, handleOpenApiRequest } from "../../src/openapi";
+
 process.env.NODE_ENV = "development";
 
 const dbExecuteMock = vi.hoisted(() => vi.fn());
@@ -65,7 +67,6 @@ vi.mock("@norish/auth/auth", () => ({
 
 describe("openapi health endpoint", () => {
   beforeEach(() => {
-    vi.resetModules();
     process.env.NORISH_VERSION_REPORT_JSON = JSON.stringify({
       root: "1.2.3",
       apps: {
@@ -115,70 +116,64 @@ describe("openapi health endpoint", () => {
     vi.clearAllMocks();
   });
 
-  it(
-    "returns ok for anonymous callers when the parser is healthy",
-    { timeout: 30000 },
-    async () => {
-      getSessionMock.mockResolvedValue(null);
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue(
-          new Response(JSON.stringify({ status: "ok", recipeScrapersVersion: "15.10.0" }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          })
-        )
-      );
+  it("returns ok for anonymous callers when the parser is healthy", async () => {
+    getSessionMock.mockResolvedValue(null);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ status: "ok", recipeScrapersVersion: "15.10.0" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+    );
 
-      const { handleOpenApiRequest } = await import("../../src/openapi");
-      const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
-      const responseJson = await response.json();
+    const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
+    const responseJson = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(responseJson).toEqual({
+    expect(response.status).toBe(200);
+    expect(responseJson).toEqual({
+      status: "ok",
+      db: {
         status: "ok",
-        db: {
-          status: "ok",
+      },
+      versions: {
+        root: "1.2.3",
+        apps: {
+          mobile: "7.8.9",
+          "parser-api": "8.9.10",
+          web: "4.5.6",
         },
-        versions: {
-          root: "1.2.3",
-          apps: {
-            mobile: "7.8.9",
-            "parser-api": "8.9.10",
-            web: "4.5.6",
-          },
-          packages: {
-            api: "1.0.0",
-            auth: "1.0.0",
-            config: "1.0.0",
-            db: "1.0.0",
-            i18n: "1.0.0",
-            queue: "1.0.0",
-            shared: "1.0.0",
-            "shared-react": "1.0.0",
-            "shared-server": "1.0.0",
-            trpc: "1.0.0",
-            ui: "1.0.0",
-          },
-          scraper: "15.10.0",
+        packages: {
+          api: "1.0.0",
+          auth: "1.0.0",
+          config: "1.0.0",
+          db: "1.0.0",
+          i18n: "1.0.0",
+          queue: "1.0.0",
+          shared: "1.0.0",
+          "shared-react": "1.0.0",
+          "shared-server": "1.0.0",
+          trpc: "1.0.0",
+          ui: "1.0.0",
         },
-        parser: {
-          status: "ok",
-          recipeScrapersVersion: "15.10.0",
-        },
-      });
-      expect(fetch).toHaveBeenCalledWith(
-        "http://127.0.0.1:8001/health",
-        expect.objectContaining({ signal: expect.any(AbortSignal) })
-      );
-    }
-  );
+        scraper: "15.10.0",
+      },
+      parser: {
+        status: "ok",
+        recipeScrapersVersion: "15.10.0",
+      },
+    });
+    expect(fetch).toHaveBeenCalledWith(
+      "http://127.0.0.1:8001/health",
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
+  });
 
   it("returns 503 for anonymous callers when the parser is unhealthy", async () => {
     getSessionMock.mockResolvedValue(null);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 503 })));
 
-    const { handleOpenApiRequest } = await import("../../src/openapi");
     const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
 
     expect(response.status).toBe(503);
@@ -203,7 +198,6 @@ describe("openapi health endpoint", () => {
       )
     );
 
-    const { handleOpenApiRequest } = await import("../../src/openapi");
     const response = await handleOpenApiRequest(new Request("http://localhost/api/v1/health"));
 
     expect(response.status).toBe(503);
@@ -218,7 +212,6 @@ describe("openapi health endpoint", () => {
   it("rejects anonymous requests to protected openapi endpoints", async () => {
     getSessionMock.mockResolvedValue(null);
 
-    const { handleOpenApiRequest } = await import("../../src/openapi");
     const response = await handleOpenApiRequest(
       new Request("http://localhost/api/v1/recipes/search", {
         method: "POST",
@@ -237,7 +230,6 @@ describe("openapi health endpoint", () => {
   });
 
   it("documents health as public while protected endpoints require security", async () => {
-    const { getOpenApiDocument } = await import("../../src/openapi");
     const document = getOpenApiDocument("http://localhost");
 
     expect(document.paths["/health"]?.get).toEqual(

@@ -70,7 +70,11 @@
     "estimatingNutrition": "Оцениваем пищевую ценность...",
     "screenOn": "Экран включён",
     "keepScreenOn": "Не выключать экран",
-    "actionsLabel": "Действия"
+    "actionsLabel": "Действия",
+    "autoCategorizing": "Категоризация…",
+    "inferProvenance": "Определить происхождение",
+    "inferringProvenance": "Определяем происхождение…",
+    "enrichmentFailed": "Последняя попытка не удалась"
   },
   "sharePanel": {
     "title": "Поделиться рецептом",
@@ -162,6 +166,16 @@
     "fat": "Жиры (г)",
     "carbs": "Углеводы (г)",
     "protein": "Белки (г)",
+    "provenance": "Происхождение",
+    "provenanceHelp": "Откуда этот рецепт.",
+    "originCountry": "Страна",
+    "originCountryPlaceholder": "Без страны",
+    "originRegion": "Регион",
+    "originRegionPlaceholder": "напр. Сицилия",
+    "cuisines": "Кухни",
+    "cuisinesHelp": "Выберите из списка вашей установки. Несколько уместны для фьюжн-блюда.",
+    "provenanceNote": "Заметка",
+    "provenanceNotePlaceholder": "Несколько предложений о происхождении этого блюда…",
     "servings": "Порции",
     "cookingTimes": "Время приготовления",
     "optional": "(необязательно)",
@@ -238,12 +252,6 @@
     "ariaLabel": "Не выключать экран"
   },
   "toasts": {
-    "processingBoth": "Обработка тегов и аллергенов",
-    "processingTags": "Генерация тегов",
-    "processingAllergies": "Определение аллергенов",
-    "bothComplete": "Теги и аллергены обновлены",
-    "tagsComplete": "Теги сгенерированы",
-    "allergiesComplete": "Аллергены определены",
     "imported": "Рецепт импортирован",
     "converted": "Единицы измерения преобразованы",
     "convertedDescription": "Рецепт преобразован в систему {system}",
@@ -270,5 +278,33 @@
     "swipeSteps": "Проведите для навигации по шагам",
     "swipeIngredients": "Проведите влево для ингредиентов",
     "swipeBackToSteps": "Проведите вправо для шагов"
+  },
+  "enrichment": {
+    "failed": "Не удалось выполнить обогащение",
+    "states": {
+      "queued": "В очереди",
+      "processing": "Выполняется",
+      "succeeded": "Завершено",
+      "failed": "Последняя попытка не удалась"
+    },
+    "kinds": {
+      "auto-tagging": "Автоматические теги",
+      "allergy-detection": "Определение аллергенов",
+      "auto-categorization": "Автоматическая категоризация",
+      "nutrition-estimation": "Оценка пищевой ценности",
+      "recipe-provenance": "Происхождение рецепта"
+    }
+  },
+  "provenance": {
+    "title": "Происхождение",
+    "region": "Регион",
+    "cuisines": "Кухни",
+    "inferring": "Определяем происхождение этого рецепта…",
+    "noInfo": "Пока нет сведений о происхождении",
+    "inferWithAI": "Определить с помощью ИИ"
+  },
+  "import": {
+    "alreadyExists": "У вас уже есть этот рецепт",
+    "openExisting": "Открыть"
   }
 }

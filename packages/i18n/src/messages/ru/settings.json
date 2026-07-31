@@ -521,6 +521,10 @@
         "title": "Промпты",
         "subtitle": "Настройка инструкций ИИ для обработки рецептов"
       },
+      "cuisines": {
+        "title": "Кухни",
+        "subtitle": "Словарь, из которого выбирают рецепты и ИИ"
+      },
       "bulkCategorization": {
         "title": "Массовая категоризация",
         "subtitle": "Категоризировать рецепты без категории с помощью ИИ",
@@ -561,21 +565,38 @@
       "temperatureHint": "Ниже = более точные ответы, выше = более творческие",
       "maxTokens": "Макс. токенов",
       "requestTimeout": "Время ожидания запроса (мс)",
-      "autoTagAllergies": "Автоматически добавлять теги аллергии",
-      "autoTagAllergiesDescription": "Автоматически добавлять теги, связанные с аллергией, при импорте рецептов",
       "alwaysUseAI": "Всегда использовать импорт с ИИ",
       "alwaysUseAIDescription": "Пропускать структурированные парсеры и извлекать рецепт только с помощью ИИ",
-      "autoTaggingMode": "Режим автотегирования",
-      "autoTaggingModeDescription": "Автоматически назначать теги/ключевые слова импортированным рецептам с помощью ИИ",
-      "autoTaggingModes": {
-        "disabled": "Отключено",
+      "connectionSuccess": "Подключение успешно",
+      "testConnection": "Проверить подключение",
+      "vision": "vision",
+      "automaticEnrichment": "Автоматическое обогащение рецептов",
+      "automaticEnrichmentDescription": "Выберите, какое обогащение ИИ выполняется автоматически для новых рецептов. Участники по-прежнему могут запускать каждое вручную, пока ИИ включён.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Автоматические теги",
+        "autoTaggingDescription": "Добавляет предложенные ИИ теги к новым рецептам, не удаляя существующие",
+        "allergyDetection": "Определение аллергенов",
+        "allergyDetectionDescription": "Автоматически добавлять теги, связанные с аллергией, при импорте рецептов",
+        "autoCategorization": "Автоматическая категоризация",
+        "autoCategorizationDescription": "Задаёт категории приёма пищи для новых рецептов, у которых их нет",
+        "nutritionEstimation": "Оценка пищевой ценности",
+        "nutritionEstimationDescription": "Оценивает калории, жиры, углеводы и белки для новых рецептов без указанных значений",
+        "recipeProvenance": "Происхождение рецепта",
+        "recipeProvenanceDescription": "Определять страну, регион, кухни и короткую заметку для новых рецептов, где их нет"
+      },
+      "tagStrategy": "Стратегия тегов",
+      "tagStrategyDescription": "Какие теги может использовать автоматическое тегирование — как автоматически, так и вручную",
+      "tagStrategies": {
         "predefined": "Только предустановленные теги",
         "predefinedDb": "Предустановленные + существующие теги",
         "freeform": "ИИ может создавать новые теги"
       },
-      "connectionSuccess": "Подключение успешно",
-      "testConnection": "Проверить подключение",
-      "vision": "vision"
+      "cuisineStrategy": "Стратегия кухонь",
+      "cuisineStrategyDescription": "Может ли определение происхождения добавлять кухни в ваш словарь или только выбирать из него",
+      "cuisineStrategies": {
+        "existing": "Только существующие кухни",
+        "extend": "ИИ может добавлять новые кухни"
+      }
     },
     "videoConfig": {
       "enableVideo": "Включить парсинг видео",
@@ -626,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Введите промпт оценки пищевой ценности...",
       "autoTagging": "Промпт автотегирования",
       "autoTaggingDescription": "Этот промпт используется для генерации тегов для импортируемых рецептов. Задайте правила тегирования и список предустановленных тегов.",
-      "autoTaggingPlaceholder": "Введите промпт автотегирования..."
+      "autoTaggingPlaceholder": "Введите промпт автотегирования...",
+      "recipeProvenance": "Промпт происхождения рецепта",
+      "recipeProvenanceDescription": "Этот промпт определяет происхождение рецепта. Полученная заметка пишется на языке самого рецепта. Доступные переменные: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Введите промпт происхождения рецепта..."
     },
     "unsavedChanges": "Несохранённые изменения",
     "jsonEditor": {
@@ -740,6 +764,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Кухни — это выверенный словарь, которым владеете вы. Названия показываются ровно так, как записаны здесь, на всех языках.",
+      "namePlaceholder": "Название кухни",
+      "addLabel": "Добавить кухню",
+      "renameLabel": "Переименовать {name}",
+      "deleteLabel": "Удалить {name}",
+      "deleteConfirm": "Удалить «{name}»? Рецепты, использующие её, её потеряют.",
+      "empty": "Кухонь пока нет.",
+      "duplicate": "Кухня с таким названием уже существует.",
+      "saveFailed": "Не удалось сохранить эту кухню."
     }
   }
 }

@@ -1,0 +1,30 @@
+Recipe: {{recipeName}}
+{{description}}
+Ingredients:
+{{ingredients}}
+
+Work out where this recipe comes from, using only the recipe above.
+
+- originCountry: the ISO-3166-1 alpha-2 code of the country the dish comes from
+  (for example IT, MX, JP). Use the code, never the country's name. Use null if
+  no single country fits.
+- originRegion: the finer-grained region within that country when the recipe
+  clearly warrants one (for example "Rome", "Sicily", "Kansai"). Use null when
+  the dish is national rather than regional. Do not translate place names.
+- cuisines: the culinary traditions this dish belongs to, from this list:
+  {{cuisines}}
+  Use several only for a genuine fusion dish. {{cuisineFallback}}
+  Names taken from the list must be copied VERBATIM, exactly as spelled above —
+  never translated or inflected, character for character, in the language they
+  are written in, whatever language you write the note in.
+- provenanceNote: two or three sentences explaining how you concluded this, and
+  what the dish's background is.
+
+WRITE THE NOTE IN THE LANGUAGE THE RECIPE ITSELF IS WRITTEN IN. Judge that
+language from the title, description, and ingredients above — not from any other
+instruction in this prompt. An Italian recipe gets an Italian note; a Dutch
+recipe gets a Dutch one. This applies whatever language these instructions are
+written in.
+
+Say what you can support from the recipe. If the dish is genuinely unplaceable,
+return null for the country and the region and explain that in the note.

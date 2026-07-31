@@ -10,13 +10,11 @@ import {
   updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getBullClient } from "@norish/queue/redis/bullmq";
 import { createLogger } from "@norish/shared-server/logger";
 import { caldavEmitter } from "@norish/shared-server/realtime/caldav";
 
-import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { defineLazyWorker, QUEUE_NAMES } from "../config";
 import { reportStep } from "../job-steps";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:caldav-sync");
 
@@ -186,24 +184,16 @@ async function handleJobFailed(
  * Start the CalDAV sync worker (lazy - starts on demand).
  * Call during server startup.
  */
-export async function startCaldavSyncWorker(): Promise<void> {
-  await createLazyWorker<CaldavSyncJobData>(
-    QUEUE_NAMES.CALDAV_SYNC,
-    processCaldavSyncJob,
-    {
-      connection: getBullClient(),
-      ...baseWorkerOptions,
-      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.CALDAV_SYNC],
-      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.CALDAV_SYNC],
-    },
-    handleJobFailed
-  );
-}
+const caldavSyncWorker = defineLazyWorker(
+  QUEUE_NAMES.CALDAV_SYNC,
+  processCaldavSyncJob,
+  handleJobFailed
+);
+
+export const startCaldavSyncWorker = caldavSyncWorker.start;
 
 /**
  * Stop the CalDAV sync worker.
  * Call during server shutdown.
  */
-export async function stopCaldavSyncWorker(): Promise<void> {
-  await stopLazyWorker(QUEUE_NAMES.CALDAV_SYNC);
-}
+export const stopCaldavSyncWorker = caldavSyncWorker.stop;

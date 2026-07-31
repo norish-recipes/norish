@@ -12,11 +12,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildAutoTaggingPrompt } from "@norish/api/ai/prompts/builder";
 import { listAllTagNames } from "@norish/db/repositories/tags";
 import { loadPrompt } from "@norish/shared-server/ai/prompts/loader";
-import { getAutoTaggingMode } from "@norish/shared-server/config/server-config-loader";
+import { getTagStrategy } from "@norish/shared-server/config/server-config-loader";
 
 // Mock dependencies before imports
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
-  getAutoTaggingMode: vi.fn(),
+  getTagStrategy: vi.fn(),
 }));
 
 vi.mock("@norish/db/repositories/tags", () => ({
@@ -47,36 +47,20 @@ PREDEFINED TAGS:
     vi.mocked(loadPrompt).mockResolvedValue(mockBasePrompt);
   });
 
-  describe("when auto-tagging is disabled", () => {
-    it("returns empty string", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("disabled");
-
-      const result = await buildAutoTaggingPrompt({});
-
-      expect(result).toBe("");
-      expect(loadPrompt).not.toHaveBeenCalled();
-    });
-
-    it("returns empty string for embedded mode", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("disabled");
-
-      const result = await buildAutoTaggingPrompt({ embedded: true });
-
-      expect(result).toBe("");
-    });
-
-    it("returns empty string for standalone mode", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("disabled");
+  describe("when automatic auto-tagging is switched off", () => {
+    it("still builds a prompt, because the strategy is not an enablement check", async () => {
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
 
       const result = await buildAutoTaggingPrompt({ embedded: false }, mockRecipe);
 
-      expect(result).toBe("");
+      expect(result).toContain("PREDEFINED TAGS:");
+      expect(loadPrompt).toHaveBeenCalledWith("auto-tagging");
     });
   });
 
   describe("predefined mode", () => {
     beforeEach(() => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
     });
 
     it("loads auto-tagging prompt template", async () => {
@@ -130,7 +114,7 @@ PREDEFINED TAGS:
 
   describe("predefined_db mode", () => {
     beforeEach(() => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined_db");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined_db");
     });
 
     it("fetches existing tags from database", async () => {
@@ -170,7 +154,7 @@ PREDEFINED TAGS:
 
   describe("freeform mode", () => {
     beforeEach(() => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("freeform");
+      vi.mocked(getTagStrategy).mockResolvedValue("freeform");
     });
 
     it("includes note about creating new tags", async () => {
@@ -188,7 +172,7 @@ PREDEFINED TAGS:
 
   describe("recipe without description", () => {
     it("handles recipe without description in standalone mode", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
 
       const recipeNoDesc = {
         title: "Simple Eggs",
@@ -204,7 +188,7 @@ PREDEFINED TAGS:
     });
 
     it("handles recipe with null description", async () => {
-      vi.mocked(getAutoTaggingMode).mockResolvedValue("predefined");
+      vi.mocked(getTagStrategy).mockResolvedValue("predefined");
 
       const recipeNullDesc = {
         title: "Simple Eggs",

@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getDatabaseHealth } from "@norish/db/drizzle";
+import { listCuisines } from "@norish/db/repositories/cuisines";
 import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
 import { getAppVersions, trpcLogger as log } from "@norish/shared-server";
 import {
@@ -126,6 +127,20 @@ const tags = authedProcedure.query(async ({ ctx }) => {
 });
 
 /**
+ * Get the deployment's Cuisine vocabulary.
+ *
+ * Unscoped on purpose: unlike Tags, which grow out of whichever recipes a user
+ * can see, the vocabulary is one administrator-owned list. An editor picks from
+ * exactly the same list AI does, which is what makes manual entries match
+ * inferred ones.
+ */
+const cuisines = authedProcedure.query(async ({ ctx }) => {
+  log.debug({ userId: ctx.user.id }, "Getting the Cuisine vocabulary");
+
+  return { cuisines: await listCuisines() };
+});
+
+/**
  * Get units configuration for ingredient parsing
  * Units rarely change, safe to cache aggressively on client
  */
@@ -231,6 +246,7 @@ export const health = publicProcedure
 export const configProcedures = router({
   localeConfig,
   tags,
+  cuisines,
   units,
   recurrenceConfig,
   uploadLimits,

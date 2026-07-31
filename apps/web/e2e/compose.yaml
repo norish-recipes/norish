@@ -1,0 +1,26 @@
+name: norish-web-e2e
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: norish_e2e
+      POSTGRES_PASSWORD: norish_e2e
+      POSTGRES_USER: norish_e2e
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U norish_e2e -d norish_e2e"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:8.6.2-alpine
+    ports:
+      - "56379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 5s
+      retries: 30

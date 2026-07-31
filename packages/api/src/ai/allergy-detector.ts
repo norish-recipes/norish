@@ -9,7 +9,7 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 
 import { getGenerationSettings, getModels } from "@norish/shared-server/ai/providers";
-import { getAIConfig, isAIEnabled } from "@norish/shared-server/config/server-config-loader";
+import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
 
 import type { AIResult } from "./core/types";
@@ -87,15 +87,6 @@ export async function detectAllergiesInRecipe(
     aiLogger.info("AI features are disabled, skipping allergy detection");
 
     return aiError("AI features are disabled", "AI_DISABLED");
-  }
-
-  // Guard: autoTagAllergies must be enabled
-  const aiConfig = await getAIConfig();
-
-  if (!aiConfig?.autoTagAllergies) {
-    aiLogger.info("Allergy detection is disabled");
-
-    return aiError("Allergy detection is disabled", "AI_DISABLED");
   }
 
   // Guard: Must have allergens to detect

@@ -70,7 +70,11 @@
     "estimatingNutrition": "Estimerer næring...",
     "screenOn": "Skjerm på",
     "keepScreenOn": "Hold skjermen på",
-    "actionsLabel": "Handlinger"
+    "actionsLabel": "Handlinger",
+    "autoCategorizing": "Kategoriserer…",
+    "inferProvenance": "Finn opphavet",
+    "inferringProvenance": "Finner opphavet …",
+    "enrichmentFailed": "Siste forsøk mislyktes"
   },
   "sharePanel": {
     "title": "Del oppskrift",
@@ -162,6 +166,16 @@
     "fat": "Fett (g)",
     "carbs": "Karbohydrater (g)",
     "protein": "Protein (g)",
+    "provenance": "Opphav",
+    "provenanceHelp": "Hvor denne oppskriften kommer fra.",
+    "originCountry": "Land",
+    "originCountryPlaceholder": "Ingen land",
+    "originRegion": "Region",
+    "originRegionPlaceholder": "f.eks. Sicilia",
+    "cuisines": "Kjøkken",
+    "cuisinesHelp": "Velg fra listen til installasjonen din. Flere gir mening for en fusjonsrett.",
+    "provenanceNote": "Notat",
+    "provenanceNotePlaceholder": "Noen setninger om hvor denne retten kommer fra …",
     "servings": "Porsjoner",
     "cookingTimes": "Tilberedningstider",
     "optional": "(valgfritt)",
@@ -238,12 +252,6 @@
     "ariaLabel": "Hold skjermen på"
   },
   "toasts": {
-    "processingBoth": "Behandler tags og allergener",
-    "processingTags": "Genererer tags",
-    "processingAllergies": "Registrerer allergener",
-    "bothComplete": "Tags og allergener oppdatert",
-    "tagsComplete": "Tags generert",
-    "allergiesComplete": "Allergener registrert",
     "imported": "Oppskrift importert",
     "converted": "Mål konvertert",
     "convertedDescription": "Oppskrift konvertert til {system}-enheter",
@@ -270,5 +278,33 @@
     "swipeSteps": "Sveip for å navigere mellom trinn",
     "swipeIngredients": "Sveip til venstre for ingredienser",
     "swipeBackToSteps": "Sveip til høyre for trinn"
+  },
+  "enrichment": {
+    "failed": "Berikelse mislyktes",
+    "states": {
+      "queued": "I kø",
+      "processing": "Pågår",
+      "succeeded": "Fullført",
+      "failed": "Siste forsøk mislyktes"
+    },
+    "kinds": {
+      "auto-tagging": "Automatiske tagger",
+      "allergy-detection": "Allergideteksjon",
+      "auto-categorization": "Automatisk kategorisering",
+      "nutrition-estimation": "Estimering av næringsinnhold",
+      "recipe-provenance": "Oppskriftens opphav"
+    }
+  },
+  "provenance": {
+    "title": "Opphav",
+    "region": "Region",
+    "cuisines": "Kjøkken",
+    "inferring": "Finner ut hvor denne oppskriften kommer fra …",
+    "noInfo": "Ingen opphavsinformasjon ennå",
+    "inferWithAI": "Finn ut med KI"
+  },
+  "import": {
+    "alreadyExists": "Du har allerede denne oppskriften",
+    "openExisting": "Åpne"
   }
 }

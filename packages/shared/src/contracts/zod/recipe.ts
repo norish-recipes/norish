@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { measurementSystemEnum, recipes } from "@norish/db-schema/schema";
 
+import { CuisineSummarySchema } from "./cuisine";
 import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
 import {
   RecipeIngredientInputBaseSchema,
@@ -40,6 +41,11 @@ export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   fat: true,
   carbs: true,
   protein: true,
+  // The dashboard carries the origin country, and only that: it flies the
+  // flag beside each recipe's name. The region and the note have nothing to
+  // show at that size, so they stay behind the full recipe.
+  originRegion: true,
+  provenanceNote: true,
 }).extend({
   tags: z.array(TagSummarySchema).default([]),
   categories: z.array(recipeCategorySchema).default([]),
@@ -52,6 +58,9 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientsWithIdSchema),
   steps: z.array(StepOutputSchema).default([]),
   tags: z.array(TagSummarySchema).default([]),
+  // Recipe Provenance travels with the recipe, which is why an Offline reader
+  // sees exactly what a Live one does and no separate warming is needed.
+  cuisines: z.array(CuisineSummarySchema).default([]),
   categories: z.array(recipeCategorySchema).default([]),
   author: AuthorSchema,
   images: RecipeImagesArraySchema.default([]),
@@ -62,6 +71,9 @@ export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
   id: z.uuid().optional(),
   recipeIngredients: z.array(RecipeIngredientInputSchema).default([]),
   tags: z.array(TagNameSchema).default([]),
+  // Vocabulary row ids, as the recipe form sends them. Names would reintroduce
+  // the create-on-write behaviour the vocabulary exists to prevent.
+  cuisines: z.array(z.uuid()).default([]),
   categories: z.array(recipeCategorySchema).default([]),
   steps: z.array(StepStepSchema).default([]),
   images: z.array(RecipeImageSchema).max(10).default([]),
@@ -71,6 +83,9 @@ export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
 export const FullRecipeUpdateSchema = RecipeUpdateBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientInputBaseSchema.partial()).optional(),
   tags: z.array(TagNameSchema).optional(),
+  // Cuisines are picked from the vocabulary rather than typed, so an editor
+  // sends ids. Passing an empty array clears them; omitting leaves them alone.
+  cuisines: z.array(z.uuid()).optional(),
   steps: z.array(StepStepSchema).optional(),
   images: z.array(RecipeImageSchema).max(10).optional(),
   videos: z.array(RecipeVideoSchema).optional(),
@@ -162,6 +177,14 @@ export const RecipeImageImportInputSchema = z.object({
   files: z.array(OcrImportFileSchema).min(1).max(10),
 });
 
+/**
+ * The outcome of asking to import a URL.
+ *
+ * A URL you already hold is not a failure — it is the answer "you have this
+ * one already", and `exists` carries the recipe's own id, so the caller can
+ * offer to open it rather than report a conflict. `queued` carries the id the
+ * job it just enqueued will fill in.
+ */
 export const RecipeImportResultSchema = z.object({
   recipeId: z.uuid(),
   status: z.enum(["queued", "exists"]),

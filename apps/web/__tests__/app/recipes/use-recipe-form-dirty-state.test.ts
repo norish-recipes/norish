@@ -27,6 +27,12 @@ interface RecipeFormState {
   fat: number | null;
   carbs: number | null;
   protein: number | null;
+  provenance: {
+    originCountry: string | null;
+    originRegion: string;
+    provenanceNote: string;
+    cuisineIds: string[];
+  };
 }
 
 const units = {} satisfies UnitsMap;
@@ -48,6 +54,10 @@ const baseRecipe: FullRecipeDTO = {
   fat: "12.5",
   carbs: "60",
   protein: "8",
+  originCountry: "IT",
+  originRegion: "Lazio",
+  provenanceNote: "A Roman classic.",
+  cuisines: [{ id: "id-italian", name: "Italian", version: 1 }],
   createdAt: new Date("2026-05-01T10:00:00.000Z"),
   updatedAt: new Date("2026-05-01T10:00:00.000Z"),
   categories: ["Dinner"],
@@ -180,6 +190,12 @@ function createInitialCurrent(overrides: Partial<RecipeFormState> = {}): RecipeF
     fat: 12.5,
     carbs: 60,
     protein: 8,
+    provenance: {
+      originCountry: "IT",
+      originRegion: "Lazio",
+      provenanceNote: "A Roman classic.",
+      cuisineIds: ["id-italian"],
+    },
     ...overrides,
   };
 }
@@ -361,6 +377,12 @@ describe("useRecipeFormDirtyState", () => {
         fat: null,
         carbs: null,
         protein: null,
+        provenance: {
+          originCountry: null,
+          originRegion: "",
+          provenanceNote: "",
+          cuisineIds: [],
+        },
       },
       initialData: undefined,
       initializedRecipeId: null,
@@ -368,6 +390,38 @@ describe("useRecipeFormDirtyState", () => {
     });
 
     expect(result.current).toBe(false);
+  });
+
+  it("reports an edited provenance group as dirty", () => {
+    const { result } = renderDirtyState({
+      current: createInitialCurrent({
+        provenance: {
+          originCountry: "IT",
+          originRegion: "Sicily",
+          provenanceNote: "A Roman classic.",
+          cuisineIds: ["id-italian"],
+        },
+      }),
+      initialData: baseRecipe,
+    });
+
+    expect(result.current).toBe(true);
+  });
+
+  it("reports a cleared provenance group as dirty", () => {
+    const { result } = renderDirtyState({
+      current: createInitialCurrent({
+        provenance: {
+          originCountry: null,
+          originRegion: "",
+          provenanceNote: "",
+          cuisineIds: [],
+        },
+      }),
+      initialData: baseRecipe,
+    });
+
+    expect(result.current).toBe(true);
   });
 
   it("reports a create form as dirty after input", () => {
@@ -391,6 +445,12 @@ describe("useRecipeFormDirtyState", () => {
         fat: null,
         carbs: null,
         protein: null,
+        provenance: {
+          originCountry: null,
+          originRegion: "",
+          provenanceNote: "",
+          cuisineIds: [],
+        },
       },
       initialData: undefined,
       initializedRecipeId: null,

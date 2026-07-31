@@ -10,26 +10,17 @@ import type { Job } from "bullmq";
 
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
-import {
-  addRecipeImages,
-  createRecipeWithRefs,
-  dashboardRecipe,
-  getAllergiesForUsers,
-} from "@norish/db";
+import { addRecipeImages, createRecipeWithRefs, dashboardRecipe } from "@norish/db";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getBullClient } from "@norish/queue/redis/bullmq";
-import {
-  getAIConfig,
-  getRecipePermissionPolicy,
-} from "@norish/shared-server/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
 import { emitByPolicy } from "@norish/shared-server/realtime/policy";
 import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
-import { baseWorkerOptions, QUEUE_NAMES, STALLED_INTERVAL, WORKER_CONCURRENCY } from "../config";
+import { defineLazyWorker, QUEUE_NAMES } from "../config";
+import { announceUsableRecipe } from "../enrichment/announce";
 import { reportStep } from "../job-steps";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:image-import");
 
@@ -52,24 +43,8 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
     url: `[${files.length} image(s)]`,
   });
 
-  // Fetch household allergies for targeted allergy detection
-  await reportStep(job, "preparing-images");
-  const aiConfig = await getAIConfig();
-  let allergyNames: string[] | undefined;
-
-  if (aiConfig?.autoTagAllergies) {
-    const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
-
-    allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
-    log.debug(
-      { allergyCount: allergyNames.length },
-      "Fetched household allergies for image import"
-    );
-  }
-
-  // Extract recipe from images using AI vision
-  await reportStep(job, "ai-extraction");
-  const result = await extractRecipeFromImages(recipeId, files, allergyNames);
+  // Vision parsing reads the images; every inference happens afterwards.
+  const result = await extractRecipeFromImages(recipeId, files);
 
   if (!result.success) {
     throw new Error(
@@ -82,7 +57,8 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   // Save the recipe
   await reportStep(job, "saving");
-  const createdId = await createRecipeWithRefs(recipeId, userId, parsedRecipe);
+  const created = await createRecipeWithRefs(recipeId, userId, parsedRecipe);
+  const createdId = created?.recipeId;
 
   if (!createdId) {
     throw new Error("Failed to save imported recipe");
@@ -120,10 +96,11 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
       pendingRecipeId: recipeId,
       toast: "imported",
     });
-
-    // Note: No auto-tagging job queued - image import is always AI-based,
-    // and AI extraction prompts already include auto-tagging instructions
   }
+
+  // Vision parsing is a reader, not an inference step: an image import enters
+  // the same enrichment flow as every other creation path.
+  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
 }
 
 /**
@@ -163,20 +140,11 @@ async function handleJobFailed(
 /**
  * Start the image import worker (lazy - starts on demand).
  */
-export async function startImageImportWorker(): Promise<void> {
-  await createLazyWorker<ImageImportJobData>(
-    QUEUE_NAMES.IMAGE_IMPORT,
-    processImageImportJob,
-    {
-      connection: getBullClient(),
-      ...baseWorkerOptions,
-      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.IMAGE_IMPORT],
-      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.IMAGE_IMPORT],
-    },
-    handleJobFailed
-  );
-}
+const imageImportWorker = defineLazyWorker(
+  QUEUE_NAMES.IMAGE_IMPORT,
+  processImageImportJob,
+  handleJobFailed
+);
 
-export async function stopImageImportWorker(): Promise<void> {
-  await stopLazyWorker(QUEUE_NAMES.IMAGE_IMPORT);
-}
+export const startImageImportWorker = imageImportWorker.start;
+export const stopImageImportWorker = imageImportWorker.stop;

@@ -360,14 +360,14 @@ async function importRecipeItems(
       // Save imported rating if present and user is authenticated
       if (importedRating && userId && created) {
         try {
-          await rateRecipe(userId, created as string, importedRating);
+          await rateRecipe(userId, created.recipeId, importedRating);
         } catch {
           // Ignore rating errors - don't fail the import
         }
       }
 
       // Fetch recipe AFTER saving rating so averageRating is included in the DTO
-      const recipe = await dashboardRecipe(created as string);
+      const recipe = created ? await dashboardRecipe(created.recipeId) : null;
 
       if (recipe) {
         imported.push(recipe);

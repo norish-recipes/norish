@@ -1,11 +1,7 @@
 import type { inferRouterOutputs } from "@trpc/server";
 import type { createTRPCContext } from "@trpc/tanstack-react-query";
 
-import type {
-  AutoTaggingMode,
-  PermissionLevel,
-  RecipePermissionPolicy,
-} from "@norish/config/zod/server-config";
+import type { PermissionLevel, RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import type { AppRouter } from "@norish/trpc/client";
 
 type PermissionsOutputs = inferRouterOutputs<AppRouter>["permissions"];
@@ -19,7 +15,6 @@ export interface NormalizedPermissionsData {
   isAIEnabled: boolean;
   householdUserIds: string[] | null;
   isServerAdmin: boolean;
-  autoTaggingMode: AutoTaggingMode;
 }
 
 export interface PermissionAccessInput {

@@ -20,9 +20,19 @@ permissions:
   packages: write
 
 jobs:
+  quality:
+    name: RC Quality Gates
+    uses: ./.github/workflows/_node-ci.yml
+    secrets: inherit
+    with:
+      run-build: true
+      run-tests: true
+      run-e2e: true
+
   prepare-release:
     name: RC Beta Release Prep
     runs-on: ubuntu-latest
+    needs: quality
     outputs:
       tag: ${{ steps.compute_tag.outputs.tag }}
       image_tags: ${{ steps.image_tags.outputs.value }}

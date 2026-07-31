@@ -23,6 +23,7 @@ import {
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
+import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { MutationOutcome } from "./mutation-outcomes";
@@ -43,6 +44,7 @@ import {
   FullRecipeUpdateSchema,
   RecipeDashboardSchema,
 } from "../zodSchemas";
+import { replaceRecipeCuisinesTx } from "./cuisines";
 import {
   attachIngredientsToRecipeByInputTx,
   getOrCreateManyIngredientsTx,
@@ -464,6 +466,9 @@ export async function listRecipes(
         cookMinutes: true,
         totalMinutes: true,
         calories: true,
+        // Only the country: the dashboard flies its flag, and the rest of the
+        // provenance group has nothing to show at that size.
+        originCountry: true,
         categories: true,
         createdAt: true,
         updatedAt: true,
@@ -509,6 +514,7 @@ export async function listRecipes(
       cookMinutes: r.cookMinutes ?? null,
       totalMinutes: r.totalMinutes ?? null,
       calories: r.calories ?? null,
+      originCountry: r.originCountry ?? null,
       categories: r.categories ?? [],
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -559,6 +565,9 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
       cookMinutes: true,
       totalMinutes: true,
       calories: true,
+      // Only the country: the dashboard flies its flag, and the rest of the
+      // provenance group has nothing to show at that size.
+      originCountry: true,
       categories: true,
       createdAt: true,
       updatedAt: true,
@@ -603,6 +612,7 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
     cookMinutes: r.cookMinutes ?? null,
     totalMinutes: r.totalMinutes ?? null,
     calories: r.calories ?? null,
+    originCountry: r.originCountry ?? null,
     categories: r.categories ?? [],
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
@@ -620,11 +630,23 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
   return parsed.success ? parsed.data : null;
 }
 
+/**
+ * Outcome of a recipe creation attempt.
+ *
+ * `inserted` distinguishes a genuinely new recipe from a URL that already
+ * resolved to one. Only a new insert becomes a usable recipe for the first
+ * time, and only that may enroll Automatic Recipe Enrichment — an ambiguous
+ * identifier alone cannot tell the caller which happened.
+ */
+export type CreateRecipeResult =
+  | { status: "inserted"; recipeId: string }
+  | { status: "existing"; recipeId: string };
+
 export async function createRecipeWithRefs(
   recipeId: string,
   userId: string | null | undefined,
   input: FullRecipeInsertDTO
-): Promise<string | null> {
+): Promise<CreateRecipeResult | null> {
   const parsed = FullRecipeInsertSchema.safeParse(input);
 
   dbLogger.debug({ parsed }, "Parsed full recipe insert");
@@ -651,10 +673,13 @@ export async function createRecipeWithRefs(
     fat: payload.fat ?? null,
     carbs: payload.carbs ?? null,
     protein: payload.protein ?? null,
+    originCountry: normalizeOriginCountry(payload.originCountry),
+    originRegion: payload.originRegion ? stripHtmlTags(payload.originRegion) : null,
+    provenanceNote: payload.provenanceNote ? stripHtmlTags(payload.provenanceNote) : null,
     categories: payload.categories ?? [],
   };
 
-  const finalRecipeId = await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx): Promise<CreateRecipeResult> => {
     const [inserted] = await tx
       .insert(recipes)
       .values(toInsert)
@@ -671,7 +696,7 @@ export async function createRecipeWithRefs(
         throw new Error("Failed to save recipe");
       }
 
-      return existing.id;
+      return { status: "existing", recipeId: existing.id };
     }
 
     const rid = inserted.id;
@@ -682,6 +707,10 @@ export async function createRecipeWithRefs(
         rid,
         payload.tags.map((t) => t.name)
       );
+    }
+
+    if (payload.cuisines.length) {
+      await replaceRecipeCuisinesTx(tx, rid, payload.cuisines);
     }
 
     if (payload.recipeIngredients.length) {
@@ -729,10 +758,10 @@ export async function createRecipeWithRefs(
       );
     }
 
-    return rid;
+    return { status: "inserted", recipeId: rid };
   });
 
-  return finalRecipeId;
+  return result;
 }
 
 export async function setActiveSystemForRecipe(
@@ -812,6 +841,9 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       fat: true,
       carbs: true,
       protein: true,
+      originCountry: true,
+      originRegion: true,
+      provenanceNote: true,
       categories: true,
       createdAt: true,
       updatedAt: true,
@@ -822,6 +854,11 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
         columns: {},
         with: { tag: { columns: { id: true, name: true, version: true } } },
         orderBy: (rt, { asc }) => [asc(rt.order)],
+      },
+      recipeCuisines: {
+        columns: {},
+        with: { cuisine: { columns: { id: true, name: true, version: true } } },
+        orderBy: (rc, { asc }) => [asc(rc.order)],
       },
       ingredients: {
         columns: {
@@ -897,6 +934,9 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     fat: full.fat ?? null,
     carbs: full.carbs ?? null,
     protein: full.protein ?? null,
+    originCountry: full.originCountry ?? null,
+    originRegion: full.originRegion ?? null,
+    provenanceNote: full.provenanceNote ?? null,
     categories: full.categories ?? [],
     steps: (full.steps ?? []).map((s: any) => ({
       step: s.step,
@@ -917,6 +957,14 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       .map((rt: any) => rt.tag)
       .filter((tag: { name?: string; version?: number } | null | undefined) => tag?.name)
       .map((tag: { name: string; version: number }) => ({ name: tag.name, version: tag.version })),
+    cuisines: (full.recipeCuisines ?? [])
+      .map((rc: any) => rc.cuisine)
+      .filter((cuisine: { name?: string } | null | undefined) => cuisine?.name)
+      .map((cuisine: { id: string; name: string; version: number }) => ({
+        id: cuisine.id,
+        name: cuisine.name,
+        version: cuisine.version,
+      })),
     recipeIngredients: (full.ingredients ?? []).map((ri: any) => ({
       id: ri.id,
       ingredientId: ri.ingredientId,
@@ -1263,6 +1311,14 @@ export async function updateRecipeWithRefs(
     if (payload.fat !== undefined) updateData.fat = payload.fat;
     if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
     if (payload.protein !== undefined) updateData.protein = payload.protein;
+    if (payload.originCountry !== undefined)
+      updateData.originCountry = normalizeOriginCountry(payload.originCountry);
+    if (payload.originRegion !== undefined)
+      updateData.originRegion = payload.originRegion ? stripHtmlTags(payload.originRegion) : null;
+    if (payload.provenanceNote !== undefined)
+      updateData.provenanceNote = payload.provenanceNote
+        ? stripHtmlTags(payload.provenanceNote)
+        : null;
 
     updateData.updatedAt = new Date();
 
@@ -1280,6 +1336,12 @@ export async function updateRecipeWithRefs(
 
     if (!updatedRecipeRow && version) {
       return staleOutcome();
+    }
+
+    // Replace Cuisines if provided. An empty array is an editor clearing them,
+    // which is deliberately distinct from an enrichment run writing nothing.
+    if (payload.cuisines !== undefined) {
+      await replaceRecipeCuisinesTx(tx, recipeId, payload.cuisines);
     }
 
     // Replace tags if provided

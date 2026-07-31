@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { nutritionEstimationSchema } from "./nutrition.schema";
+import { sourceNutritionSchema } from "./nutrition.schema";
 
 /**
  * Dual-system recipe schema for AI extraction.
@@ -47,12 +47,18 @@ export const recipeExtractionSchema = z
     keywords: z
       .array(z.string())
       .nullable()
-      .describe("Tags including detected allergens (e.g., gluten, dairy, nuts)"),
+      .describe("Tags the source explicitly lists. Do not infer tags the source does not state."),
+    allergyIndications: z
+      .array(z.string())
+      .describe(
+        "Allergy or allergen indications the source explicitly states, such as a Contains statement. Empty when the source states none; never infer from ingredients."
+      ),
     categories: z
       .array(z.string())
-      .min(1)
-      .describe("Meal categories - MUST include at least one of: Breakfast, Lunch, Dinner, Snack"),
-    nutrition: nutritionEstimationSchema,
+      .describe(
+        "Meal categories the source explicitly states, from: Breakfast, Lunch, Dinner, Snack. Empty when the source states none."
+      ),
+    nutrition: sourceNutritionSchema,
   })
   .strict();
 

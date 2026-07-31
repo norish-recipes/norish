@@ -70,7 +70,11 @@
     "estimatingNutrition": "Estimation de la nutrition...",
     "screenOn": "Écran allumé",
     "keepScreenOn": "Garder l’écran allumé",
-    "actionsLabel": "Actions"
+    "actionsLabel": "Actions",
+    "autoCategorizing": "Catégorisation…",
+    "inferProvenance": "Déterminer la provenance",
+    "inferringProvenance": "Détermination de la provenance…",
+    "enrichmentFailed": "Dernière tentative échouée"
   },
   "sharePanel": {
     "title": "Partager la recette",
@@ -162,6 +166,16 @@
     "fat": "Lipides (g)",
     "carbs": "Glucides (g)",
     "protein": "Protéines (g)",
+    "provenance": "Provenance",
+    "provenanceHelp": "D'où vient cette recette.",
+    "originCountry": "Pays",
+    "originCountryPlaceholder": "Aucun pays",
+    "originRegion": "Région",
+    "originRegionPlaceholder": "p. ex. Sicile",
+    "cuisines": "Cuisines",
+    "cuisinesHelp": "Choisissez dans la liste de votre installation. Plusieurs se justifient pour un plat fusion.",
+    "provenanceNote": "Note",
+    "provenanceNotePlaceholder": "Quelques phrases sur l'origine de ce plat…",
     "servings": "Portions",
     "cookingTimes": "Temps de cuisson",
     "optional": "(optionnel)",
@@ -238,12 +252,6 @@
     "ariaLabel": "Garder l’écran éveillé"
   },
   "toasts": {
-    "processingBoth": "Traitement des tags et des allergies",
-    "processingTags": "Génération des tags",
-    "processingAllergies": "Détection des allergies",
-    "bothComplete": "Tags et allergies mis à jour",
-    "tagsComplete": "Tags générés",
-    "allergiesComplete": "Allergies détectées",
     "imported": "Recette importée",
     "converted": "Mesures converties",
     "convertedDescription": "Recette convertie en unités {system}",
@@ -270,5 +278,33 @@
     "swipeSteps": "Glissez pour naviguer entre les étapes",
     "swipeIngredients": "Glissez à gauche pour les ingrédients",
     "swipeBackToSteps": "Glissez à droite pour les étapes"
+  },
+  "enrichment": {
+    "failed": "L'enrichissement a échoué",
+    "states": {
+      "queued": "En attente",
+      "processing": "En cours",
+      "succeeded": "Terminé",
+      "failed": "La dernière tentative a échoué"
+    },
+    "kinds": {
+      "auto-tagging": "Étiquetage automatique",
+      "allergy-detection": "Détection des allergies",
+      "auto-categorization": "Catégorisation automatique",
+      "nutrition-estimation": "Estimation nutritionnelle",
+      "recipe-provenance": "Provenance de la recette"
+    }
+  },
+  "provenance": {
+    "title": "Provenance",
+    "region": "Région",
+    "cuisines": "Cuisines",
+    "inferring": "Recherche de l'origine de cette recette…",
+    "noInfo": "Pas encore d'informations de provenance",
+    "inferWithAI": "Déterminer avec l'IA"
+  },
+  "import": {
+    "alreadyExists": "Vous avez déjà cette recette",
+    "openExisting": "Ouvrir"
   }
 }

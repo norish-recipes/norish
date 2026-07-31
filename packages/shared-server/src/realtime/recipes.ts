@@ -6,6 +6,7 @@ import type {
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
 import type { RecipeShareLifecycleEventDto } from "@norish/shared/contracts/dto/recipe-shares";
+import type { RecipeEnrichmentLifecycleEventDto } from "@norish/shared/lib/recipe-enrichment";
 import { createTypedEmitter } from "@norish/shared-server/redis/pubsub";
 
 export type RecipeSubscriptionEvents = {
@@ -21,22 +22,16 @@ export type RecipeSubscriptionEvents = {
   shareRevoked: RecipeShareLifecycleEventDto;
   shareReactivated: RecipeShareLifecycleEventDto;
   shareDeleted: RecipeShareLifecycleEventDto;
-  updated: { recipe: FullRecipeDTO };
+  updated: { recipe: FullRecipeDTO; source?: "enrichment" };
   deleted: { id: string };
   converted: { recipe: FullRecipeDTO };
   failed: { reason: string; recipeId?: string; url?: string };
-  nutritionStarted: { recipeId: string };
-  autoTaggingStarted: { recipeId: string };
-  autoTaggingCompleted: { recipeId: string };
-  autoCategorizationStarted: { recipeId: string };
-  autoCategorizationCompleted: { recipeId: string };
-  allergyDetectionStarted: { recipeId: string };
-  allergyDetectionCompleted: { recipeId: string };
-  processingToast: {
-    recipeId: string;
-    titleKey: string;
-    severity: "default" | "success";
-  };
+  /**
+   * One typed lifecycle event for every Recipe Enrichment kind and transition.
+   * Replaces the per-kind started/completed pairs and the processing toasts, so
+   * clients need one status implementation rather than four.
+   */
+  enrichment: RecipeEnrichmentLifecycleEventDto;
   recipeBatchCreated: { recipes: RecipeDashboardDTO[] };
   archiveProgress: ArchiveProgressPayload;
   archiveCompleted: ArchiveCompletedPayload;

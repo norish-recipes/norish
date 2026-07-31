@@ -521,6 +521,10 @@
         "title": "Prompt-tekster",
         "subtitle": "Tilpass AI-instruksjoner for oppskriftbehandling"
       },
+      "cuisines": {
+        "title": "Kjøkken",
+        "subtitle": "Ordlisten oppskrifter og KI velger fra"
+      },
       "bulkCategorization": {
         "title": "Massekategorisering",
         "subtitle": "Kategoriser ukategoriserte oppskrifter med AI",
@@ -561,21 +565,38 @@
       "temperatureHint": "Lavere = mer fokusert, Høyere = mer kreativ",
       "maxTokens": "Maks. tokens",
       "requestTimeout": "Tidsavbrudd for forespørsel (ms)",
-      "autoTagAllergies": "Registrer allergentags automatisk",
-      "autoTagAllergiesDescription": "Legg automatisk til allergenrelaterte tags ved import av oppskrifter",
       "alwaysUseAI": "Bruk alltid AI-import",
       "alwaysUseAIDescription": "Hopp over strukturerte analysatorer og trekk ut oppskrifter med AI alene",
-      "autoTaggingMode": "Auto-tagmodus",
-      "autoTaggingModeDescription": "Tildel automatisk tags/nøkkelord til importerte oppskrifter med AI",
-      "autoTaggingModes": {
-        "disabled": "Deaktivert",
+      "connectionSuccess": "Tilkobling vellykket",
+      "testConnection": "Test tilkobling",
+      "vision": "visjon",
+      "automaticEnrichment": "Automatisk oppskriftsberikelse",
+      "automaticEnrichmentDescription": "Velg hvilken AI-berikelse som kjøres automatisk for nye oppskrifter. Medlemmer kan fortsatt kjøre hver enkelt manuelt når AI er på.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Automatiske tagger",
+        "autoTaggingDescription": "Legg til AI-foreslåtte tagger på nye oppskrifter uten å fjerne eksisterende tagger",
+        "allergyDetection": "Allergideteksjon",
+        "allergyDetectionDescription": "Legg automatisk til allergenrelaterte tags ved import av oppskrifter",
+        "autoCategorization": "Automatisk kategorisering",
+        "autoCategorizationDescription": "Sett måltidskategorier på nye oppskrifter som mangler dem",
+        "nutritionEstimation": "Estimering av næringsinnhold",
+        "nutritionEstimationDescription": "Estimer kalorier, fett, karbohydrater og protein for nye oppskrifter uten oppgitte verdier",
+        "recipeProvenance": "Oppskriftens opphav",
+        "recipeProvenanceDescription": "Utled land, region, kjøkken og et kort notat for nye oppskrifter som mangler det"
+      },
+      "tagStrategy": "Taggstrategi",
+      "tagStrategyDescription": "Hvilke tagger automatisk tagging kan bruke, enten den kjører automatisk eller manuelt",
+      "tagStrategies": {
         "predefined": "Bare forhåndsdefinerte tags",
         "predefinedDb": "Forhåndsdefinerte + eksisterende tags",
         "freeform": "AI kan opprette nye tags"
       },
-      "connectionSuccess": "Tilkobling vellykket",
-      "testConnection": "Test tilkobling",
-      "vision": "visjon"
+      "cuisineStrategy": "Kjøkkenstrategi",
+      "cuisineStrategyDescription": "Om opphavsutledning kan legge til kjøkken i ordlisten din eller bare velge fra den",
+      "cuisineStrategies": {
+        "existing": "Bare eksisterende kjøkken",
+        "extend": "KI kan opprette nye kjøkken"
+      }
     },
     "videoConfig": {
       "enableVideo": "Aktiver videoanalyse",
@@ -626,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Skriv inn prompt for næringsestimering...",
       "autoTagging": "Prompt for auto-tagging",
       "autoTaggingDescription": "Denne prompten brukes til å generere tags for importerte oppskrifter. Definer taggregler og liste over forhåndsdefinerte tags.",
-      "autoTaggingPlaceholder": "Skriv inn prompt for auto-tagging..."
+      "autoTaggingPlaceholder": "Skriv inn prompt for auto-tagging...",
+      "recipeProvenance": "Ledetekst for oppskriftens opphav",
+      "recipeProvenanceDescription": "Denne ledeteksten finner ut hvor en oppskrift kommer fra. Notatet skrives på oppskriftens eget språk. Tilgjengelige variabler: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Skriv inn ledeteksten for oppskriftens opphav ..."
     },
     "unsavedChanges": "Ulagrede endringer",
     "jsonEditor": {
@@ -740,6 +764,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Kjøkken er en kuratert ordliste du eier. Navn vises nøyaktig slik de står her, på alle språk.",
+      "namePlaceholder": "Navn på kjøkken",
+      "addLabel": "Legg til et kjøkken",
+      "renameLabel": "Gi {name} nytt navn",
+      "deleteLabel": "Slett {name}",
+      "deleteConfirm": "Slette \"{name}\"? Oppskrifter som bruker det, mister det.",
+      "empty": "Ingen kjøkken ennå.",
+      "duplicate": "Et kjøkken med det navnet finnes allerede.",
+      "saveFailed": "Kunne ikke lagre det kjøkkenet."
     }
   }
 }

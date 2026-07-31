@@ -521,6 +521,10 @@
         "title": "Prompts",
         "subtitle": "Personnalisez les instructions IA pour le traitement des recettes"
       },
+      "cuisines": {
+        "title": "Cuisines",
+        "subtitle": "Le vocabulaire dans lequel les recettes et l'IA puisent"
+      },
       "bulkCategorization": {
         "title": "Catégorisation en masse",
         "subtitle": "Catégoriser les recettes non catégorisées avec l'IA",
@@ -561,21 +565,38 @@
       "temperatureHint": "Bas = plus précis, Haut = plus créatif",
       "maxTokens": "Tokens max",
       "requestTimeout": "Délai d'expiration (ms)",
-      "autoTagAllergies": "Détection auto des tags d’allergies",
-      "autoTagAllergiesDescription": "Ajoute automatiquement des tags liés aux allergies lors de l’import",
       "alwaysUseAI": "Toujours utiliser l’import IA",
       "alwaysUseAIDescription": "Ignore les parseurs structurés et utilise uniquement l’IA",
-      "autoTaggingMode": "Mode auto‑tag",
-      "autoTaggingModeDescription": "Attribuer automatiquement des tags aux recettes importées",
-      "autoTaggingModes": {
-        "disabled": "Désactivé",
+      "connectionSuccess": "Connexion réussie",
+      "testConnection": "Tester la connexion",
+      "vision": "vision",
+      "automaticEnrichment": "Enrichissement automatique des recettes",
+      "automaticEnrichmentDescription": "Choisissez quel enrichissement IA s'exécute automatiquement pour les nouvelles recettes. Les membres peuvent toujours lancer chacun manuellement tant que l'IA est activée.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Étiquetage automatique",
+        "autoTaggingDescription": "Ajoute des étiquettes suggérées par l'IA aux nouvelles recettes sans supprimer les étiquettes existantes",
+        "allergyDetection": "Détection des allergies",
+        "allergyDetectionDescription": "Ajoute automatiquement des tags liés aux allergies lors de l’import",
+        "autoCategorization": "Catégorisation automatique",
+        "autoCategorizationDescription": "Attribue des catégories de repas aux nouvelles recettes qui n'en ont pas",
+        "nutritionEstimation": "Estimation nutritionnelle",
+        "nutritionEstimationDescription": "Estime les calories, lipides, glucides et protéines des nouvelles recettes sans valeurs fournies",
+        "recipeProvenance": "Provenance des recettes",
+        "recipeProvenanceDescription": "Déduire le pays, la région, les cuisines et une courte note pour les nouvelles recettes qui n'en ont pas"
+      },
+      "tagStrategy": "Stratégie d'étiquetage",
+      "tagStrategyDescription": "Quelles étiquettes l'étiquetage automatique peut utiliser, qu'il soit automatique ou manuel",
+      "tagStrategies": {
         "predefined": "Tags prédéfinis uniquement",
         "predefinedDb": "Prédéfinis + tags existants",
         "freeform": "L’IA peut créer de nouveaux tags"
       },
-      "connectionSuccess": "Connexion réussie",
-      "testConnection": "Tester la connexion",
-      "vision": "vision"
+      "cuisineStrategy": "Stratégie de cuisine",
+      "cuisineStrategyDescription": "Si la déduction de provenance peut ajouter des cuisines à votre vocabulaire ou seulement y puiser",
+      "cuisineStrategies": {
+        "existing": "Cuisines existantes uniquement",
+        "extend": "L'IA peut créer de nouvelles cuisines"
+      }
     },
     "videoConfig": {
       "enableVideo": "Activer l’analyse vidéo",
@@ -626,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Entrez le prompt...",
       "autoTagging": "Prompt d’auto‑tag",
       "autoTaggingDescription": "Utilisé pour générer les tags des recettes importées",
-      "autoTaggingPlaceholder": "Entrez le prompt..."
+      "autoTaggingPlaceholder": "Entrez le prompt...",
+      "recipeProvenance": "Invite de provenance des recettes",
+      "recipeProvenanceDescription": "Cette invite détermine l'origine d'une recette. La note produite est rédigée dans la langue de la recette elle-même. Variables disponibles : recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Saisissez l'invite de provenance des recettes..."
     },
     "unsavedChanges": "Modifications non enregistrées",
     "jsonEditor": {
@@ -740,6 +764,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Les cuisines forment un vocabulaire organisé qui vous appartient. Les noms s'affichent exactement comme écrits ici, dans toutes les langues.",
+      "namePlaceholder": "Nom de la cuisine",
+      "addLabel": "Ajouter une cuisine",
+      "renameLabel": "Renommer {name}",
+      "deleteLabel": "Supprimer {name}",
+      "deleteConfirm": "Supprimer « {name} » ? Les recettes qui l'utilisent la perdront.",
+      "empty": "Aucune cuisine pour le moment.",
+      "duplicate": "Une cuisine porte déjà ce nom.",
+      "saveFailed": "Impossible d'enregistrer cette cuisine."
     }
   }
 }

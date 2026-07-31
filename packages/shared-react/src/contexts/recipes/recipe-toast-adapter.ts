@@ -64,20 +64,6 @@ export function createRecipeSubscriptionToasts(
           readToastMessage(payload) ?? adapter.translate("recipes.toasts.failedDescription"),
       });
     },
-    onProcessingToast: (payload) => {
-      const message = readToastMessage(payload);
-      const processingToast = readProcessingToastPayload(payload);
-      const title = processingToast?.titleKey
-        ? adapter.translate(`recipes.toasts.${processingToast.titleKey}`)
-        : message;
-
-      if (!title) return;
-
-      adapter.show({
-        severity: processingToast?.severity ?? "default",
-        title,
-      });
-    },
   };
 }
 

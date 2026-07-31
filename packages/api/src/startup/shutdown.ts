@@ -9,6 +9,7 @@
 import type { Server } from "node:http";
 
 import { stopCaldavSync } from "@norish/api/caldav/event-listener";
+import { stopRecipeEnrichmentListener } from "@norish/api/recipes/enrichment-listener";
 import { stopWorkers } from "@norish/queue/start-workers";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { closeRedisConnections } from "@norish/shared-server/redis/client";
@@ -105,16 +106,24 @@ async function performShutdown(
     stopCaldavSync();
     log.info("CalDAV sync service stopped");
 
-    // 3. Stop all BullMQ workers and close queues
+    // 3. Stop listening for newly usable recipes
+    await withTimeout(
+      stopRecipeEnrichmentListener(),
+      SHUTDOWN_TIMEOUT_MS,
+      "Stop Recipe Enrichment listener"
+    );
+    log.info("Recipe Enrichment listener stopped");
+
+    // 4. Stop all BullMQ workers and close queues
     await withTimeout(stopWorkers(), SHUTDOWN_TIMEOUT_MS, "Stop workers");
 
-    // 4. Stop extra runtime helpers that depend on HTTP/workers being drained first
+    // 5. Stop extra runtime helpers that depend on HTTP/workers being drained first
     for (const task of shutdownTasks) {
       await withTimeout(task.run(), SHUTDOWN_TIMEOUT_MS, task.name);
       log.info(`${task.name} completed`);
     }
 
-    // 5. Close Redis pub/sub connections (after all consumers stopped)
+    // 6. Close Redis pub/sub connections (after all consumers stopped)
     await withTimeout(closeRedisConnections(), SHUTDOWN_TIMEOUT_MS, "Close Redis");
     log.info("Redis connections closed");
 

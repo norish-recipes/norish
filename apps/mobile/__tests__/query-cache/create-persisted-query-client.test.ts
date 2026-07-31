@@ -79,13 +79,16 @@ describe("createPersistedQueryClient", () => {
     const subscribeOptions = mockPersistQueryClientSubscribe.mock.calls[0]?.[0] as
       | {
           dehydrateOptions?: {
-            shouldDehydrateQuery?: (query: { state: { status: string } }) => boolean;
+            shouldDehydrateQuery?: (query: { state: { status: string; data: unknown } }) => boolean;
           };
         }
       | undefined;
     const shouldDehydrateQuery = subscribeOptions?.dehydrateOptions?.shouldDehydrateQuery;
 
-    expect(shouldDehydrateQuery?.({ state: { status: "success" } })).toBe(true);
-    expect(shouldDehydrateQuery?.({ state: { status: "error" } })).toBe(false);
+    expect(shouldDehydrateQuery?.({ state: { status: "success", data: { id: "r1" } } })).toBe(true);
+    // A failed background refetch keeps the last successful data — that copy is
+    // still the valid offline read, so it must survive the next persist.
+    expect(shouldDehydrateQuery?.({ state: { status: "error", data: { id: "r1" } } })).toBe(true);
+    expect(shouldDehydrateQuery?.({ state: { status: "error", data: undefined } })).toBe(false);
   });
 });

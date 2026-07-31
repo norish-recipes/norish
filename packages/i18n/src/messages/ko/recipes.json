@@ -70,7 +70,11 @@
     "estimatingNutrition": "영양소 추정 중...",
     "screenOn": "화면 켜짐",
     "keepScreenOn": "화면 켜짐 유지",
-    "actionsLabel": "작업"
+    "actionsLabel": "작업",
+    "autoCategorizing": "분류 중…",
+    "inferProvenance": "출처 알아보기",
+    "inferringProvenance": "출처를 알아보는 중…",
+    "enrichmentFailed": "마지막 실행 실패"
   },
   "sharePanel": {
     "title": "레시피 공유",
@@ -162,6 +166,16 @@
     "fat": "지방(g)",
     "carbs": "탄수화물(g)",
     "protein": "단백질(g)",
+    "provenance": "출처",
+    "provenanceHelp": "이 레시피의 출처입니다.",
+    "originCountry": "국가",
+    "originCountryPlaceholder": "국가 없음",
+    "originRegion": "지역",
+    "originRegionPlaceholder": "예: 시칠리아",
+    "cuisines": "요리",
+    "cuisinesHelp": "설치본의 목록에서 선택하세요. 퓨전 요리라면 여러 개가 알맞습니다.",
+    "provenanceNote": "설명",
+    "provenanceNotePlaceholder": "이 요리의 출처에 대한 몇 문장…",
     "servings": "인분",
     "cookingTimes": "요리 시간",
     "optional": "(선택사항)",
@@ -238,12 +252,6 @@
     "ariaLabel": "화면 켜짐 유지"
   },
   "toasts": {
-    "processingBoth": "태그 및 알러지 처리",
-    "processingTags": "태그 만들기 중",
-    "processingAllergies": "알러지 감지",
-    "bothComplete": "태그 및 알러지가 수정되었습니다.",
-    "tagsComplete": "태그 생성 완료",
-    "allergiesComplete": "알러지가 감지됨",
     "imported": "레시피 가져오기 완료",
     "converted": "측정 단위 변환 완료",
     "convertedDescription": "레시피를 {system} 단위로 변환했습니다",
@@ -270,5 +278,33 @@
     "swipeSteps": "스와이프하여 단계를 탐색하세요",
     "swipeIngredients": "왼쪽으로 스와이프하여 재료 보기",
     "swipeBackToSteps": "오른쪽으로 스와이프하여 단계 보기"
+  },
+  "enrichment": {
+    "failed": "보강에 실패했습니다",
+    "states": {
+      "queued": "대기 중",
+      "processing": "진행 중",
+      "succeeded": "완료됨",
+      "failed": "마지막 실행 실패"
+    },
+    "kinds": {
+      "auto-tagging": "자동 태그 지정",
+      "allergy-detection": "알레르기 감지",
+      "auto-categorization": "자동 분류",
+      "nutrition-estimation": "영양 정보 추정",
+      "recipe-provenance": "레시피 출처"
+    }
+  },
+  "provenance": {
+    "title": "출처",
+    "region": "지역",
+    "cuisines": "요리",
+    "inferring": "이 레시피의 출처를 알아보는 중…",
+    "noInfo": "아직 출처 정보가 없습니다",
+    "inferWithAI": "AI로 알아보기"
+  },
+  "import": {
+    "alreadyExists": "이미 저장된 레시피입니다",
+    "openExisting": "열기"
   }
 }

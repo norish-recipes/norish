@@ -251,6 +251,7 @@ function createValidOutput(): RecipeExtractionOutput {
     prepTime: "PT15M",
     totalTime: "PT45M",
     keywords: [],
+    allergyIndications: [],
     categories: null,
     nutrition: {
       calories: 350,
@@ -269,6 +270,39 @@ function createPartialOutput(overrides: Partial<RecipeExtractionOutput>): Recipe
 }
 
 describe("normalizeExtractionOutput - HTML Entity Decoding", () => {
+  it("preserves explicit source allergy indications as recipe tags", async () => {
+    const output = {
+      ...createValidOutput(),
+      allergyIndications: [" Peanut ", "Milk", "peanut"],
+    } as RecipeExtractionOutput;
+    const { normalizeRecipeFromJson } = await import("@norish/api/parser/normalize");
+
+    vi.mocked(normalizeRecipeFromJson).mockResolvedValue({
+      name: "Chocolate Cake",
+      description: "Test",
+      url: null,
+      image: undefined,
+      servings: 2,
+      prepMinutes: null,
+      cookMinutes: null,
+      totalMinutes: null,
+      calories: null,
+      fat: null,
+      carbs: null,
+      protein: null,
+      recipeIngredients: [],
+      steps: [],
+      systemUsed: "metric",
+      tags: [{ name: "Dessert" }],
+      images: [],
+      categories: [],
+    } as FullRecipeInsertDTO);
+
+    const result = await normalizeExtractionOutput(output, { recipeId: "recipe-123" });
+
+    expect(result?.tags).toEqual([{ name: "Dessert" }, { name: "Peanut" }, { name: "Milk" }]);
+  });
+
   it("keeps metric and US systems separated even when base normalizer infers US", async () => {
     const output: RecipeExtractionOutput = {
       name: "Mapo Tofu Udon",

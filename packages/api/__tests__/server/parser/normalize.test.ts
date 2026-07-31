@@ -1063,6 +1063,23 @@ describe("normalizeRecipeFromJson - Notes", () => {
   });
 });
 
+describe("normalizeRecipeFromJson - explicit allergy facts", () => {
+  it("preserves structured source allergen fields as deduplicated tags", async () => {
+    const result = await normalizeRecipeFromJson(
+      {
+        name: "Allergen-labelled Recipe",
+        recipeIngredient: ["flour"],
+        recipeInstructions: ["Mix"],
+        keywords: ["Quick", "peanut"],
+        allergens: ["Peanut", "Milk"],
+      },
+      "recipe-123"
+    );
+
+    expect(result?.tags).toEqual([{ name: "quick" }, { name: "peanut" }, { name: "milk" }]);
+  });
+});
+
 describe("recipeCategory extraction", () => {
   it("extracts recipeCategory as string and maps to enum", async () => {
     const json = {

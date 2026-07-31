@@ -521,6 +521,10 @@
         "title": "Prompts",
         "subtitle": "Personaliza las instrucciones de IA para el procesamiento de recetas"
       },
+      "cuisines": {
+        "title": "Cocinas",
+        "subtitle": "El vocabulario del que eligen las recetas y la IA"
+      },
       "bulkCategorization": {
         "title": "Categorización masiva",
         "subtitle": "Categorizar recetas sin categoría usando IA",
@@ -561,21 +565,38 @@
       "temperatureHint": "Más bajo = más centrado, Más alto = más creativo",
       "maxTokens": "Máx. tokens",
       "requestTimeout": "Tiempo de espera de la solicitud (ms)",
-      "autoTagAllergies": "Detectar etiquetas de alergias automáticamente",
-      "autoTagAllergiesDescription": "Añadir etiquetas relacionadas con alergias automáticamente al importar recetas",
       "alwaysUseAI": "Usar siempre IA para importar",
       "alwaysUseAIDescription": "Omitir los analizadores estructurados y extraer recetas solo con IA",
-      "autoTaggingMode": "Modo de etiquetado automático",
-      "autoTaggingModeDescription": "Asignar etiquetas/palabras clave automáticamente a recetas importadas usando IA",
-      "autoTaggingModes": {
-        "disabled": "Desactivado",
+      "connectionSuccess": "Conexión correcta",
+      "testConnection": "Probar conexión",
+      "vision": "visión",
+      "automaticEnrichment": "Enriquecimiento automático de recetas",
+      "automaticEnrichmentDescription": "Elige qué enriquecimiento con IA se ejecuta automáticamente en las recetas nuevas. Los miembros pueden ejecutar cada uno manualmente mientras la IA esté activada.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Etiquetado automático",
+        "autoTaggingDescription": "Añade etiquetas sugeridas por IA a las recetas nuevas sin eliminar las existentes",
+        "allergyDetection": "Detección de alergias",
+        "allergyDetectionDescription": "Añadir etiquetas relacionadas con alergias automáticamente al importar recetas",
+        "autoCategorization": "Categorización automática",
+        "autoCategorizationDescription": "Asigna categorías de comida a las recetas nuevas que no tengan ninguna",
+        "nutritionEstimation": "Estimación nutricional",
+        "nutritionEstimationDescription": "Estima calorías, grasas, carbohidratos y proteínas en recetas nuevas sin datos",
+        "recipeProvenance": "Procedencia de la receta",
+        "recipeProvenanceDescription": "Deducir el país, la región, las cocinas y una nota breve para recetas nuevas que no los tengan"
+      },
+      "tagStrategy": "Estrategia de etiquetas",
+      "tagStrategyDescription": "Qué etiquetas puede usar el etiquetado automático, se ejecute automática o manualmente",
+      "tagStrategies": {
         "predefined": "Solo etiquetas predefinidas",
         "predefinedDb": "Predefinidas + etiquetas existentes",
         "freeform": "IA puede crear nuevas etiquetas"
       },
-      "connectionSuccess": "Conexión correcta",
-      "testConnection": "Probar conexión",
-      "vision": "visión"
+      "cuisineStrategy": "Estrategia de cocina",
+      "cuisineStrategyDescription": "Si la inferencia de procedencia puede añadir cocinas a tu vocabulario o solo elegir de él",
+      "cuisineStrategies": {
+        "existing": "Solo cocinas existentes",
+        "extend": "La IA puede crear cocinas nuevas"
+      }
     },
     "videoConfig": {
       "enableVideo": "Activar analizador de vídeo",
@@ -626,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Introduce el prompt de estimación nutricional...",
       "autoTagging": "Prompt de etiquetado automático",
       "autoTaggingDescription": "Este prompt se usa para generar etiquetas al importar recetas. Define reglas de etiquetado y la lista de etiquetas predefinidas.",
-      "autoTaggingPlaceholder": "Introduce el prompt de etiquetado automático..."
+      "autoTaggingPlaceholder": "Introduce el prompt de etiquetado automático...",
+      "recipeProvenance": "Prompt de procedencia de la receta",
+      "recipeProvenanceDescription": "Este prompt deduce de dónde viene una receta. La nota resultante se escribe en el idioma de la propia receta. Variables disponibles: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Introduce el prompt de procedencia de la receta..."
     },
     "unsavedChanges": "Cambios sin guardar",
     "jsonEditor": {
@@ -740,6 +764,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Las cocinas son un vocabulario curado que tú controlas. Los nombres se muestran tal como se escriben aquí, en todos los idiomas.",
+      "namePlaceholder": "Nombre de la cocina",
+      "addLabel": "Añadir cocina",
+      "renameLabel": "Renombrar {name}",
+      "deleteLabel": "Eliminar {name}",
+      "deleteConfirm": "¿Eliminar «{name}»? Las recetas que la usan la perderán.",
+      "empty": "Aún no hay cocinas.",
+      "duplicate": "Ya existe una cocina con ese nombre.",
+      "saveFailed": "No se pudo guardar esa cocina."
     }
   }
 }

@@ -1,13 +1,41 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMockInfiniteData, createTestQueryClient, createTestWrapper } from "./test-utils";
+import type { FullRecipeDTO } from "@norish/shared/contracts";
+
+import {
+  createMockInfiniteData,
+  createMockRecipe,
+  createTestQueryClient,
+  createTestWrapper,
+} from "./test-utils";
 
 // Track subscription callbacks
 const subscriptionCallbacks: Record<string, ((data: unknown) => void) | undefined> = {};
 
 function emitPayload(payload: unknown) {
   return { payload };
+}
+
+function fullRecipe(overrides: Partial<FullRecipeDTO> = {}): FullRecipeDTO {
+  return {
+    ...createMockRecipe({ id: "recipe-1" }),
+    systemUsed: "metric",
+    fat: null,
+    carbs: null,
+    protein: null,
+    originCountry: null,
+    originRegion: null,
+    provenanceNote: null,
+    cuisines: [],
+    categories: [],
+    version: 1,
+    recipeIngredients: [],
+    steps: [],
+    images: [],
+    videos: [],
+    ...overrides,
+  };
 }
 
 // Mock tRPC provider
@@ -21,6 +49,12 @@ vi.mock("@/app/providers/trpc-provider", () => ({
           queryFn: async () => ({ recipes: [], total: 0, nextCursor: null }),
           getNextPageParam: () => null,
         }),
+      },
+      get: {
+        queryKey: ({ id }: { id: string }) => [
+          ["recipes", "get"],
+          { input: { id }, type: "query" },
+        ],
       },
       getPending: {
         queryKey: () => [["recipes", "getPending"], { type: "query" }],
@@ -262,6 +296,48 @@ describe("useRecipesSubscription", () => {
       const { useSubscription } = await import("@trpc/tanstack-react-query");
 
       expect(useSubscription).toHaveBeenCalled();
+    });
+
+    it("writes enrichment updates directly to recipe caches without invalidating", async () => {
+      const listKey = [["recipes", "list"], { input: {}, type: "infinite" }] as const;
+      const detailKey = [["recipes", "get"], { input: { id: "recipe-1" }, type: "query" }] as const;
+      const before = fullRecipe({ name: "Before enrichment" });
+      const updated = fullRecipe({
+        name: "After enrichment",
+        calories: 420,
+        categories: ["Dinner"],
+      });
+
+      queryClient.setQueryData(listKey, createMockInfiniteData([before]));
+      queryClient.setQueryData(detailKey, before);
+      const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+
+      const { useRecipesSubscription } = await import("@/hooks/recipes/use-recipes-subscription");
+
+      renderHook(() => useRecipesSubscription(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      subscriptionCallbacks.onUpdated?.(emitPayload({ recipe: updated, source: "enrichment" }));
+
+      expect(queryClient.getQueryData(detailKey)).toEqual(updated);
+      expect(queryClient.getQueryData<ReturnType<typeof createMockInfiniteData>>(listKey)).toEqual(
+        expect.objectContaining({
+          pages: [
+            expect.objectContaining({
+              recipes: [
+                expect.objectContaining({
+                  id: "recipe-1",
+                  name: "After enrichment",
+                  calories: 420,
+                  categories: ["Dinner"],
+                }),
+              ],
+            }),
+          ],
+        })
+      );
+      expect(invalidateQueries).not.toHaveBeenCalled();
     });
   });
 

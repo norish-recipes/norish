@@ -27,10 +27,6 @@ export type RecipesCacheHelpers = {
   replacePendingRecipe: (fromId: string, toId: string) => void;
   replaceOldestOptimisticPendingRecipe: (recipeId: string) => void;
   removePendingRecipe: (id: string) => void;
-  addAutoTaggingRecipe: (id: string) => void;
-  removeAutoTaggingRecipe: (id: string) => void;
-  addAllergyDetectionRecipe: (id: string) => void;
-  removeAllergyDetectionRecipe: (id: string) => void;
 };
 
 export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptions) {
@@ -42,8 +38,6 @@ export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptio
     const recipesPath = useMemo(() => [recipesBaseKey[0]], [recipesBaseKey]);
 
     const pendingKey = trpc.recipes.getPending.queryKey();
-    const autoTaggingKey = trpc.recipes.getPendingAutoTagging.queryKey();
-    const allergyDetectionKey = trpc.recipes.getPendingAllergyDetection.queryKey();
 
     const setAllRecipesData = useCallback(
       (updater: (prev: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined) => {
@@ -133,54 +127,6 @@ export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptio
       [queryClient, pendingKey]
     );
 
-    const addAutoTaggingRecipe = useCallback(
-      (recipeId: string) => {
-        queryClient.setQueryData<string[]>(autoTaggingKey, (prev) => {
-          const arr = prev ?? [];
-
-          if (arr.includes(recipeId)) return arr;
-
-          return [...arr, recipeId];
-        });
-      },
-      [queryClient, autoTaggingKey]
-    );
-
-    const removeAutoTaggingRecipe = useCallback(
-      (recipeId: string) => {
-        queryClient.setQueryData<string[]>(autoTaggingKey, (prev) => {
-          const arr = prev ?? [];
-
-          return arr.filter((id) => id !== recipeId);
-        });
-      },
-      [queryClient, autoTaggingKey]
-    );
-
-    const addAllergyDetectionRecipe = useCallback(
-      (recipeId: string) => {
-        queryClient.setQueryData<string[]>(allergyDetectionKey, (prev) => {
-          const arr = prev ?? [];
-
-          if (arr.includes(recipeId)) return arr;
-
-          return [...arr, recipeId];
-        });
-      },
-      [queryClient, allergyDetectionKey]
-    );
-
-    const removeAllergyDetectionRecipe = useCallback(
-      (recipeId: string) => {
-        queryClient.setQueryData<string[]>(allergyDetectionKey, (prev) => {
-          const arr = prev ?? [];
-
-          return arr.filter((id) => id !== recipeId);
-        });
-      },
-      [queryClient, allergyDetectionKey]
-    );
-
     return {
       setAllRecipesData,
       invalidate,
@@ -188,10 +134,6 @@ export function createUseRecipesCacheHelpers({ useTRPC }: CreateRecipeHooksOptio
       replacePendingRecipe,
       replaceOldestOptimisticPendingRecipe,
       removePendingRecipe,
-      addAutoTaggingRecipe,
-      removeAutoTaggingRecipe,
-      addAllergyDetectionRecipe,
-      removeAllergyDetectionRecipe,
     };
   };
 }

@@ -1,16 +1,12 @@
-import type { CreateRecipeHooksOptions } from "../types";
-import type { SystemScopedIngredientDto } from "./use-recipe-ingredients";
-
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 
+import type { CreateRecipeHooksOptions } from "../types";
+import type { SystemScopedIngredientDto } from "./use-recipe-ingredients";
 import { selectIngredientsForSystem } from "./use-recipe-ingredients";
 
 export function createUseLinkedRecipeIngredients({ useTRPC }: CreateRecipeHooksOptions) {
-  return function useLinkedRecipeIngredients(
-    recipeIds: string[],
-    preferredSystem?: string | null
-  ) {
+  return function useLinkedRecipeIngredients(recipeIds: string[], preferredSystem?: string | null) {
     const trpc = useTRPC();
     const queries = useQueries({
       queries: recipeIds.map((id) => trpc.recipes.get.queryOptions({ id })),

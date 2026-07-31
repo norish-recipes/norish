@@ -18,7 +18,14 @@ vi.mock("@norish/db", () => ({
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
-  getAIConfig: vi.fn().mockResolvedValue({ autoTagAllergies: false }),
+  getAIConfig: vi.fn().mockResolvedValue({
+    automaticEnrichment: {
+      autoTagging: false,
+      allergyDetection: false,
+      autoCategorization: false,
+      nutritionEstimation: false,
+    },
+  }),
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "everyone" }),
 }));
 
@@ -82,7 +89,7 @@ describe("processImageImportJob", () => {
         videos: [],
       },
     });
-    createRecipeWithRefs.mockResolvedValue("recipe-123");
+    createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "recipe-123" });
     dashboardRecipe.mockResolvedValue({ id: "recipe-123", name: "Extracted Recipe" });
     saveImageBytes.mockResolvedValue("/recipes/recipe-123/uploaded.jpg");
   });
@@ -109,11 +116,7 @@ describe("processImageImportJob", () => {
       },
     } as any);
 
-    expect(extractRecipeFromImages).toHaveBeenCalledWith(
-      "recipe-123",
-      expect.any(Array),
-      undefined
-    );
+    expect(extractRecipeFromImages).toHaveBeenCalledWith("recipe-123", expect.any(Array));
     expect(createRecipeWithRefs).toHaveBeenCalledWith(
       "recipe-123",
       "user-1",

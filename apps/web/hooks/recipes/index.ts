@@ -21,23 +21,7 @@ export { useRecipeImages } from "./use-recipe-images";
 export { useRecipeVideos } from "./use-recipe-videos";
 export { useConvertMutation, type ConvertMutationResult } from "./use-convert-mutation";
 
-export { useAutoTaggingQuery } from "./use-auto-tagging-query";
-export { useAutoTagging, useAutoTaggingMutation } from "./use-auto-tagging-subscription";
-
-export {
-  useAutoCategorization,
-  useAutoCategorizationMutation,
-} from "./use-auto-categorization-subscription";
-
-export { useAllergyDetectionQuery } from "./use-allergy-detection-query";
-export {
-  useAllergyDetection,
-  useAllergyDetectionMutation,
-} from "./use-allergy-detection-subscription";
-
-export { useNutritionQuery } from "./use-nutrition-query";
-export { useNutritionMutation } from "./use-nutrition-mutation";
-export { useNutritionSubscription } from "./use-nutrition-subscription";
+export { useRecipeEnrichment } from "./use-recipe-enrichment";
 
 export {
   useServingsScaler,

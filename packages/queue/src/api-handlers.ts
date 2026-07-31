@@ -23,6 +23,17 @@ export interface QueueRecipeSummary {
   ingredients: string[];
 }
 
+/**
+ * The whole Recipe Provenance claim from one AI request, with Cuisines already
+ * resolved to vocabulary row ids. The worker never sees proposed names.
+ */
+export interface QueueProvenanceInference {
+  originCountry: string | null;
+  originRegion: string | null;
+  provenanceNote: string;
+  cuisineIds: string[];
+}
+
 export interface QueueSyncResult {
   uid: string;
   isNew: boolean;
@@ -42,20 +53,17 @@ export interface QueueApiHandlers {
     html: string,
     recipeId: string,
     url?: string,
-    allergies?: string[],
     originalHtml?: string
   ): Promise<AIResult<FullRecipeInsertDTO>>;
   parseRecipeFromUrl(
     url: string,
     recipeId: string,
-    allergies?: string[],
     forceAI?: boolean,
     tokens?: SiteAuthTokenDecryptedDto[]
   ): Promise<QueueParseRecipeResult>;
   extractRecipeFromImages(
     recipeId: string,
-    files: ImageImportFile[],
-    allergies?: string[]
+    files: ImageImportFile[]
   ): Promise<AIResult<FullRecipeInsertDTO>>;
   estimateNutritionFromIngredients(
     recipeName: string,
@@ -72,6 +80,7 @@ export interface QueueApiHandlers {
     recipe: QueueRecipeSummary,
     allergiesToDetect: string[]
   ): Promise<AIResult<string[]>>;
+  inferRecipeProvenance(recipe: QueueRecipeSummary): Promise<AIResult<QueueProvenanceInference>>;
   syncPlannedItem(
     userId: string,
     itemId: string,

@@ -521,6 +521,10 @@
         "title": "Prompts",
         "subtitle": "Passe KI-Anweisungen für Rezept-Verarbeitung an"
       },
+      "cuisines": {
+        "title": "Küchen",
+        "subtitle": "Das Vokabular, aus dem Rezepte und KI wählen"
+      },
       "bulkCategorization": {
         "title": "Massenkategorisierung",
         "subtitle": "Nicht kategorisierte Rezepte mit KI kategorisieren",
@@ -561,21 +565,38 @@
       "temperatureHint": "Niedriger = fokussierter, Höher = kreativer",
       "maxTokens": "Max Token",
       "requestTimeout": "Zeitüberschreitung der Anforderung (ms)",
-      "autoTagAllergies": "Allergene automatisch erkennen",
-      "autoTagAllergiesDescription": "Füge automatisch allergiebezogene Tags beim Importieren von Rezepten hinzu",
       "alwaysUseAI": "Immer KI-Import verwenden",
       "alwaysUseAIDescription": "Überspringe strukturierte Parser und extrahiere Rezepte nur mit KI",
-      "autoTaggingMode": "Auto-Tagging-Modus",
-      "autoTaggingModeDescription": "Weise importierten Rezepten automatisch Tags/Schlüsselwörter mit KI zu",
-      "autoTaggingModes": {
-        "disabled": "Deaktiviert",
+      "connectionSuccess": "Verbindung erfolgreich",
+      "testConnection": "Verbindung testen",
+      "vision": "Vision",
+      "automaticEnrichment": "Automatische Rezeptanreicherung",
+      "automaticEnrichmentDescription": "Wählen Sie, welche KI-Anreicherung für neue Rezepte automatisch läuft. Mitglieder können jede Anreicherung weiterhin manuell starten, solange KI aktiviert ist.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Automatische Tags",
+        "autoTaggingDescription": "Fügt neuen Rezepten KI-vorgeschlagene Tags hinzu, ohne vorhandene Tags zu entfernen",
+        "allergyDetection": "Allergieerkennung",
+        "allergyDetectionDescription": "Füge automatisch allergiebezogene Tags beim Importieren von Rezepten hinzu",
+        "autoCategorization": "Automatische Kategorisierung",
+        "autoCategorizationDescription": "Setzt Mahlzeitkategorien für neue Rezepte, die noch keine haben",
+        "nutritionEstimation": "Nährwertschätzung",
+        "nutritionEstimationDescription": "Schätzt Kalorien, Fett, Kohlenhydrate und Eiweiß für neue Rezepte ohne Angaben",
+        "recipeProvenance": "Rezept-Herkunft",
+        "recipeProvenanceDescription": "Land, Region, Küchen und eine kurze Notiz für neue Rezepte ermitteln, die noch keine haben"
+      },
+      "tagStrategy": "Tag-Strategie",
+      "tagStrategyDescription": "Welche Tags die automatische Verschlagwortung verwenden darf, ob automatisch oder manuell",
+      "tagStrategies": {
         "predefined": "Nur vordefinierte Tags",
         "predefinedDb": "Vordefinierte + existierende Tags",
         "freeform": "KI kann neue Tags erstellen"
       },
-      "connectionSuccess": "Verbindung erfolgreich",
-      "testConnection": "Verbindung testen",
-      "vision": "Vision"
+      "cuisineStrategy": "Küchen-Strategie",
+      "cuisineStrategyDescription": "Ob die Herkunftsermittlung Küchen zu Ihrem Vokabular hinzufügen darf oder nur daraus wählen",
+      "cuisineStrategies": {
+        "existing": "Nur vorhandene Küchen",
+        "extend": "KI darf neue Küchen anlegen"
+      }
     },
     "videoConfig": {
       "enableVideo": "Video-Parsing aktivieren",
@@ -626,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Geben Sie den Nährwert-Schätzungs-Prompt ein...",
       "autoTagging": "Auto-Tagging-Prompt",
       "autoTaggingDescription": "Dieser Prompt wird verwendet, um Tags für importierte Rezepte zu generieren. Definiere Tagging-Regeln und vordefinierte Tags-Liste.",
-      "autoTaggingPlaceholder": "Geben Sie den Auto-Tagging-Prompt ein..."
+      "autoTaggingPlaceholder": "Geben Sie den Auto-Tagging-Prompt ein...",
+      "recipeProvenance": "Prompt für Rezept-Herkunft",
+      "recipeProvenanceDescription": "Dieser Prompt ermittelt die Herkunft eines Rezepts. Die entstehende Notiz ist in der Sprache des Rezepts selbst verfasst. Verfügbare Variablen: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Prompt für die Rezept-Herkunft eingeben ..."
     },
     "unsavedChanges": "Ungespeicherte Änderungen",
     "jsonEditor": {
@@ -740,6 +764,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Küchen sind ein kuratiertes Vokabular, das Ihnen gehört. Namen werden in jeder Sprache genau so angezeigt, wie sie hier stehen.",
+      "namePlaceholder": "Name der Küche",
+      "addLabel": "Küche hinzufügen",
+      "renameLabel": "{name} umbenennen",
+      "deleteLabel": "{name} löschen",
+      "deleteConfirm": "\"{name}\" löschen? Rezepte, die sie verwenden, verlieren sie.",
+      "empty": "Noch keine Küchen.",
+      "duplicate": "Eine Küche mit diesem Namen existiert bereits.",
+      "saveFailed": "Diese Küche konnte nicht gespeichert werden."
     }
   }
 }

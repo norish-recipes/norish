@@ -521,6 +521,10 @@
         "title": "Prompts",
         "subtitle": "Customize AI instructions for recipe processing"
       },
+      "cuisines": {
+        "title": "Cuisines",
+        "subtitle": "The vocabulary recipes and AI pick from"
+      },
       "bulkCategorization": {
         "title": "Bulk Categorization",
         "subtitle": "Categorize uncategorized recipes using AI",
@@ -561,21 +565,38 @@
       "temperatureHint": "Lower = more focused, Higher = more creative",
       "maxTokens": "Max Tokens",
       "requestTimeout": "Request Timeout (ms)",
-      "autoTagAllergies": "Auto-detect Allergy Tags",
-      "autoTagAllergiesDescription": "Automatically add allergy-related tags when importing recipes",
       "alwaysUseAI": "Always Use AI Importing",
       "alwaysUseAIDescription": "Skip structured parsers and extract recipes using AI only",
-      "autoTaggingMode": "Auto-Tagging Mode",
-      "autoTaggingModeDescription": "Automatically assign tags/keywords to imported recipes using AI",
-      "autoTaggingModes": {
-        "disabled": "Disabled",
+      "connectionSuccess": "Connection successful",
+      "testConnection": "Test Connection",
+      "vision": "vision",
+      "automaticEnrichment": "Automatic Recipe Enrichment",
+      "automaticEnrichmentDescription": "Choose which AI enrichment runs automatically for newly created recipes. Members can still run each one manually while AI is enabled.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Auto-Tagging",
+        "autoTaggingDescription": "Add AI-suggested tags to new recipes without removing existing tags",
+        "allergyDetection": "Allergy Detection",
+        "allergyDetectionDescription": "Automatically add allergy-related tags when importing recipes",
+        "autoCategorization": "Auto-Categorization",
+        "autoCategorizationDescription": "Set meal categories on new recipes that have none",
+        "nutritionEstimation": "Nutrition Estimation",
+        "nutritionEstimationDescription": "Estimate calories, fat, carbs, and protein for new recipes that supply none",
+        "recipeProvenance": "Recipe Provenance",
+        "recipeProvenanceDescription": "Work out the country, region, Cuisines, and a short note for new recipes that have none"
+      },
+      "tagStrategy": "Tag Strategy",
+      "tagStrategyDescription": "Which tags auto-tagging may use, whether it runs automatically or manually",
+      "tagStrategies": {
         "predefined": "Predefined Tags Only",
         "predefinedDb": "Predefined + Existing Tags",
         "freeform": "AI Can Create New Tags"
       },
-      "connectionSuccess": "Connection successful",
-      "testConnection": "Test Connection",
-      "vision": "vision"
+      "cuisineStrategy": "Cuisine Strategy",
+      "cuisineStrategyDescription": "Whether provenance inference may add Cuisines to your vocabulary or only pick from it",
+      "cuisineStrategies": {
+        "existing": "Only Existing Cuisines",
+        "extend": "AI Can Add New Cuisines"
+      }
     },
     "videoConfig": {
       "enableVideo": "Enable Video Parsing",
@@ -626,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Enter the nutrition estimation prompt...",
       "autoTagging": "Auto-Tagging Prompt",
       "autoTaggingDescription": "This prompt is used to generate tags for imported recipes. Define tagging rules and predefined tags list.",
-      "autoTaggingPlaceholder": "Enter the auto-tagging prompt..."
+      "autoTaggingPlaceholder": "Enter the auto-tagging prompt...",
+      "recipeProvenance": "Recipe Provenance Prompt",
+      "recipeProvenanceDescription": "This prompt is used to work out where a recipe comes from. The note it produces is written in the language of the recipe itself. Available variables: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Enter the Recipe Provenance prompt..."
     },
     "unsavedChanges": "Unsaved changes",
     "jsonEditor": {
@@ -740,6 +764,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Cuisines are a curated vocabulary you own. Names are shown exactly as written here, in every language.",
+      "namePlaceholder": "Cuisine name",
+      "addLabel": "Add a Cuisine",
+      "renameLabel": "Rename {name}",
+      "deleteLabel": "Delete {name}",
+      "deleteConfirm": "Delete \"{name}\"? Recipes using it will lose it.",
+      "empty": "No Cuisines yet.",
+      "duplicate": "A Cuisine with that name already exists.",
+      "saveFailed": "Could not save that Cuisine."
     }
   }
 }

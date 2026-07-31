@@ -67,7 +67,11 @@ export function createPersistedQueryClient(): PersistedQueryClientResult {
         persister,
         buster: APP_VERSION,
         dehydrateOptions: {
-          shouldDehydrateQuery: (query) => query.state.status === "success",
+          // Persist usable read data even when its latest background refetch
+          // failed: TanStack keeps the last successful data but flips status to
+          // "error", so a success-only rule lets one failed refetch erase a
+          // valid offline copy. Mirrors the web client.
+          shouldDehydrateQuery: (query) => query.state.data !== undefined,
         },
       });
     });

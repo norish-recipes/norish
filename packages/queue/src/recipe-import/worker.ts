@@ -9,38 +9,19 @@ import type { Job } from "bullmq";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import type { PolicyEmitContext } from "@norish/shared-server/realtime/policy";
-import {
-  createRecipeWithRefs,
-  dashboardRecipe,
-  getAllergiesForUsers,
-  recipeExistsByUrlForPolicy,
-} from "@norish/db";
+import { createRecipeWithRefs, dashboardRecipe, recipeExistsByUrlForPolicy } from "@norish/db";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
-import { addAllergyDetectionJob } from "@norish/queue/allergy-detection/producer";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { addAutoCategorizationJob } from "@norish/queue/auto-categorization/producer";
-import { addAutoTaggingJob } from "@norish/queue/auto-tagging/producer";
-import { getBullClient } from "@norish/queue/redis/bullmq";
-import { getQueues } from "@norish/queue/registry";
-import {
-  getAIConfig,
-  getRecipePermissionPolicy,
-} from "@norish/shared-server/config/server-config-loader";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { emitByPolicy } from "@norish/shared-server/realtime/policy";
 import { recipeEmitter } from "@norish/shared-server/realtime/recipes";
 
-import {
-  baseWorkerOptions,
-  QUEUE_NAMES,
-  RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
-  STALLED_INTERVAL,
-  WORKER_CONCURRENCY,
-} from "../config";
+import { defineLazyWorker, QUEUE_NAMES, RECIPE_IMPORT_PROCESSING_TIMEOUT_MS } from "../config";
+import { announceUsableRecipe } from "../enrichment/announce";
 import { withTimeout } from "../helpers";
 import { completeStep, reportStep } from "../job-steps";
-import { createLazyWorker, stopLazyWorker } from "../lazy-worker-manager";
 
 const log = createLogger("worker:recipe-import");
 
@@ -91,25 +72,8 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
     return;
   }
 
-  // Fetch household allergies for targeted allergy detection (only if autoTagAllergies is enabled)
-  await reportStep(job, "fetch-allergies");
-  const aiConfig = await getAIConfig();
-  let allergyNames: string[] | undefined;
-
-  if (aiConfig?.autoTagAllergies) {
-    const householdAllergies = await getAllergiesForUsers(householdUserIds ?? [userId]);
-
-    allergyNames = [...new Set(householdAllergies.map((a) => a.tagName))];
-    log.debug(
-      { allergyCount: allergyNames.length, allergies: allergyNames },
-      "Fetched household allergies"
-    );
-  } else {
-    log.debug("Auto-tag allergies disabled, skipping allergy detection");
-  }
-
-  await completeStep(job, { allergies: allergyNames ?? [], allergyCount: allergyNames?.length ?? 0 });
-
+  // No allergy list is fetched here: extraction reads the source, and allergy
+  // detection runs afterwards as its own enrichment kind.
   // Parse and create recipe
   await reportStep(job, "parsing");
   const userTokens = await getDecryptedTokensByUserId(userId);
@@ -118,7 +82,6 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       parseRecipeFromUrl(
         url,
         recipeId,
-        allergyNames,
         job.data.forceAI,
         userTokens.length > 0 ? userTokens : undefined
       ),
@@ -134,7 +97,8 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
   await completeStep(job, { usedAI: parseResult.usedAI });
 
   await reportStep(job, "saving");
-  const createdId = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
+  const created = await createRecipeWithRefs(recipeId, userId, parseResult.recipe);
+  const createdId = created?.recipeId;
 
   if (!createdId) {
     throw new Error("Failed to save imported recipe");
@@ -148,45 +112,16 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<void> {
       "Recipe imported successfully"
     );
 
-    // If AI was used, no processing will follow - show imported toast
-    // If AI was NOT used, auto-tagging/allergy detection will follow - no toast needed
+    // Import success is terminal here: enrichment is enrolled independently and
+    // cannot roll it back, delay it, or change the toast the user sees.
     emitByPolicy(recipeEmitter, viewPolicy, ctx, "imported", {
       recipe: dashboardDto,
       pendingRecipeId: recipeId,
-      toast: parseResult.usedAI ? "imported" : undefined,
+      toast: "imported",
     });
-
-    // Trigger auto-tagging only if AI was NOT used for extraction
-    // (AI extraction already includes auto-tagging instructions in the prompt)
-    if (!parseResult.usedAI) {
-      await reportStep(job, "post-processing");
-      const queues = getQueues();
-
-      await addAutoTaggingJob(queues.autoTagging, {
-        recipeId: createdId,
-        userId,
-        householdKey,
-      });
-
-      // Trigger allergy detection for structured imports
-      // (AI extraction already handles allergy detection inline)
-      await addAllergyDetectionJob(queues.allergyDetection, {
-        recipeId: createdId,
-        userId,
-        householdKey,
-      });
-
-      // Trigger auto-categorization for structured imports without categories
-      // (AI extraction already includes categorization in the prompt)
-      if (!parseResult.recipe.categories?.length) {
-        await addAutoCategorizationJob(queues.autoCategorization, {
-          recipeId: createdId,
-          userId,
-          householdKey,
-        });
-      }
-    }
   }
+
+  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
 }
 
 /**
@@ -235,27 +170,18 @@ async function handleJobFailed(
  * Start the recipe import worker (lazy - starts on demand).
  * Call during server startup.
  */
-export async function startRecipeImportWorker(): Promise<void> {
-  const rawProcessor = (job: Job<RecipeImportJobData>) =>
-    withTimeout(
-      () => processImportJob(job),
-      RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
-      "Recipe import job"
-    );
-
-  await createLazyWorker<RecipeImportJobData>(
-    QUEUE_NAMES.RECIPE_IMPORT,
-    rawProcessor,
-    {
-      connection: getBullClient(),
-      ...baseWorkerOptions,
-      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.RECIPE_IMPORT],
-      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.RECIPE_IMPORT],
-    },
-    handleJobFailed
+const processRecipeImportJob = (job: Job<RecipeImportJobData>) =>
+  withTimeout(
+    () => processImportJob(job),
+    RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
+    "Recipe import job"
   );
-}
 
-export async function stopRecipeImportWorker(): Promise<void> {
-  await stopLazyWorker(QUEUE_NAMES.RECIPE_IMPORT);
-}
+const recipeImportWorker = defineLazyWorker(
+  QUEUE_NAMES.RECIPE_IMPORT,
+  processRecipeImportJob,
+  handleJobFailed
+);
+
+export const startRecipeImportWorker = recipeImportWorker.start;
+export const stopRecipeImportWorker = recipeImportWorker.stop;

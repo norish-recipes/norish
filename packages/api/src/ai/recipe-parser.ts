@@ -31,14 +31,12 @@ export type { RecipeExtractionOutput };
  *
  * @param html - The HTML content to extract recipe from.
  * @param url - Optional source URL of the recipe.
- * @param allergies - Optional list of allergens to detect.
  * @returns AIResult with extracted recipe or error.
  */
 export async function extractRecipeWithAI(
   html: string,
   recipeId: string,
   url?: string,
-  allergies?: string[],
   originalHtml?: string
 ): Promise<AIResult<FullRecipeInsertDTO>> {
   // Guard: AI must be enabled
@@ -61,11 +59,7 @@ export async function extractRecipeWithAI(
     const truncated = sanitized.slice(0, 50000);
 
     // Build prompt using shared builder
-    const prompt = await buildRecipeExtractionPrompt(truncated, {
-      url,
-      allergies,
-      strictAllergyDetection: true, // Use strict mode for HTML extraction
-    });
+    const prompt = await buildRecipeExtractionPrompt(truncated, { url });
 
     aiLogger.debug(
       { url, promptLength: prompt.length, provider: providerName },

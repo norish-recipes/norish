@@ -6,6 +6,7 @@ import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
 import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
+import ProvenanceCard from "@/app/(app)/recipes/[id]/components/provenance-card";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
@@ -148,6 +149,10 @@ export default function RecipePageDesktop() {
               }
             />
           </DoubleTapContainer>
+
+          {/* Recipe Provenance — above the notes, because where a dish comes
+              from frames the cook's own notes about it. */}
+          <ProvenanceCard />
 
           {/* Notes */}
           {recipe.notes && (

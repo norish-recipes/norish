@@ -12,6 +12,7 @@ const userPreferencesState = {
 };
 
 vi.mock("next-intl", () => ({
+  useLocale: () => "en",
   useTranslations: () => (key: string) => key,
 }));
 
@@ -81,6 +82,11 @@ vi.mock("@norish/ui/star-rating", () => ({
 vi.mock("@/components/shared/media-carousel", () => ({
   default: () => <div>media-carousel</div>,
   buildMediaItems: () => [],
+}));
+
+vi.mock("@/app/(app)/recipes/[id]/components/provenance-card", () => ({
+  default: () => <div>provenance-card</div>,
+  ProvenanceSection: () => <div>provenance-section</div>,
 }));
 
 vi.mock("@/app/(app)/recipes/[id]/components/nutrition-card", () => ({

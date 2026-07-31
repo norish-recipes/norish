@@ -521,6 +521,10 @@
         "title": "Prompt",
         "subtitle": "Personalizza le istruzioni IA per l'elaborazione delle ricette"
       },
+      "cuisines": {
+        "title": "Cucine",
+        "subtitle": "Il vocabolario da cui scelgono le ricette e l'IA"
+      },
       "bulkCategorization": {
         "title": "Categorizzazione in blocco",
         "subtitle": "Categorizza le ricette non categorizzate usando l'IA",
@@ -561,21 +565,38 @@
       "temperatureHint": "Più bassa = più focalizzata, Più alta = più creativa",
       "maxTokens": "Token massimi",
       "requestTimeout": "Timeout richiesta (ms)",
-      "autoTagAllergies": "Rileva automaticamente tag allergie",
-      "autoTagAllergiesDescription": "Aggiungi automaticamente tag relativi alle allergie durante l'importazione delle ricette",
       "alwaysUseAI": "Usa sempre importazione IA",
       "alwaysUseAIDescription": "Salta i parser strutturati ed estrai le ricette usando solo l'IA",
-      "autoTaggingMode": "Modalità tag automatici",
-      "autoTaggingModeDescription": "Assegna automaticamente tag/parole chiave alle ricette importate usando l'IA",
-      "autoTaggingModes": {
-        "disabled": "Disabilitato",
+      "connectionSuccess": "Connessione riuscita",
+      "testConnection": "Testa connessione",
+      "vision": "visione",
+      "automaticEnrichment": "Arricchimento automatico delle ricette",
+      "automaticEnrichmentDescription": "Scegli quale arricchimento AI viene eseguito automaticamente per le nuove ricette. I membri possono comunque eseguirne ciascuno manualmente quando l'AI è attiva.",
+      "automaticEnrichmentKinds": {
+        "autoTagging": "Tag automatici",
+        "autoTaggingDescription": "Aggiunge tag suggeriti dall'AI alle nuove ricette senza rimuovere quelli esistenti",
+        "allergyDetection": "Rilevamento allergie",
+        "allergyDetectionDescription": "Aggiungi automaticamente tag relativi alle allergie durante l'importazione delle ricette",
+        "autoCategorization": "Categorizzazione automatica",
+        "autoCategorizationDescription": "Assegna categorie di pasto alle nuove ricette che non ne hanno",
+        "nutritionEstimation": "Stima nutrizionale",
+        "nutritionEstimationDescription": "Stima calorie, grassi, carboidrati e proteine per le nuove ricette senza valori indicati",
+        "recipeProvenance": "Provenienza della ricetta",
+        "recipeProvenanceDescription": "Dedurre paese, regione, cucine e una breve nota per le nuove ricette che non ne hanno"
+      },
+      "tagStrategy": "Strategia dei tag",
+      "tagStrategyDescription": "Quali tag può usare il tagging automatico, sia che venga eseguito automaticamente o manualmente",
+      "tagStrategies": {
         "predefined": "Solo tag predefiniti",
         "predefinedDb": "Tag predefiniti + esistenti",
         "freeform": "L'IA può creare nuovi tag"
       },
-      "connectionSuccess": "Connessione riuscita",
-      "testConnection": "Testa connessione",
-      "vision": "visione"
+      "cuisineStrategy": "Strategia delle cucine",
+      "cuisineStrategyDescription": "Se la deduzione della provenienza può aggiungere cucine al tuo vocabolario o solo sceglierne",
+      "cuisineStrategies": {
+        "existing": "Solo cucine esistenti",
+        "extend": "L'IA può creare nuove cucine"
+      }
     },
     "videoConfig": {
       "enableVideo": "Abilita analisi video",
@@ -626,7 +647,10 @@
       "nutritionEstimationPlaceholder": "Inserisci il prompt di stima valori nutrizionali...",
       "autoTagging": "Prompt tag automatici",
       "autoTaggingDescription": "Questo prompt viene utilizzato per generare tag per le ricette importate. Definisci le regole di tagging e la lista dei tag predefiniti.",
-      "autoTaggingPlaceholder": "Inserisci il prompt per i tag automatici..."
+      "autoTaggingPlaceholder": "Inserisci il prompt per i tag automatici...",
+      "recipeProvenance": "Prompt per la provenienza della ricetta",
+      "recipeProvenanceDescription": "Questo prompt deduce da dove proviene una ricetta. La nota prodotta è scritta nella lingua della ricetta stessa. Variabili disponibili: recipeName, description, ingredients",
+      "recipeProvenancePlaceholder": "Inserisci il prompt per la provenienza della ricetta..."
     },
     "unsavedChanges": "Modifiche non salvate",
     "jsonEditor": {
@@ -740,6 +764,17 @@
         "description": "How many finished jobs to keep per queue for monitoring. Changes require a server restart."
       },
       "pagination": "Page {current} of {total}"
+    },
+    "cuisineVocabulary": {
+      "description": "Le cucine sono un vocabolario curato che gestisci tu. I nomi vengono mostrati esattamente come scritti qui, in ogni lingua.",
+      "namePlaceholder": "Nome della cucina",
+      "addLabel": "Aggiungi una cucina",
+      "renameLabel": "Rinomina {name}",
+      "deleteLabel": "Elimina {name}",
+      "deleteConfirm": "Eliminare \"{name}\"? Le ricette che la usano la perderanno.",
+      "empty": "Ancora nessuna cucina.",
+      "duplicate": "Esiste già una cucina con quel nome.",
+      "saveFailed": "Impossibile salvare quella cucina."
     }
   }
 }
