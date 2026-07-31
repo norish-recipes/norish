@@ -1,7 +1,7 @@
 /**
  * Recipe Enrichment browser scenarios.
  *
- * Acceptance for this flow crosses recipe creation, four queues, WebSocket
+ * Acceptance for this flow crosses recipe creation, the enrichment queues, WebSocket
  * delivery, client cache updates, and visible feedback — no single unit seam
  * covers it. Only the AI provider's HTTP boundary is faked; the real Norish
  * server, database, Redis, BullMQ workers, repositories, authorized mutation
@@ -10,7 +10,7 @@
 import type { AIE2EStack } from "@/e2e-ai/harness";
 import type { BrowserContext, Page } from "@playwright/test";
 import { E2E_BASE_URL, USER_A } from "@/e2e-ai/env";
-import { bootStack, setAutomaticEnrichment, signIn } from "@/e2e-ai/harness";
+import { bootStack, readStoredCategories, setAutomaticEnrichment, signIn } from "@/e2e-ai/harness";
 import { expect, test } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
@@ -146,10 +146,10 @@ async function createManuallyAndOpen(name: string): Promise<void> {
 
   await page.getByLabel("Recipe Name").fill(name);
   await page.getByPlaceholder("e.g., 2 cups flour").fill("200 g pinto beans");
+  // Focusing the step field blurs the ingredient row, and blur commits the
+  // parsed ingredient immediately — no debounce window left to outwait.
   await page.getByPlaceholder("Step 1: Describe the step...").fill("Simmer until tender.");
 
-  // Ingredient parsing is deliberately debounced in the form.
-  await page.waitForTimeout(400);
   await page.getByRole("button", { name: "Create Recipe" }).click();
 
   await expect(page).toHaveURL(/\/recipes\/[^/]+$/, { timeout: 30_000 });
@@ -164,7 +164,7 @@ async function eventuallyOnRecipe(assertion: () => Promise<void>): Promise<void>
   }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
 }
 
-// One automatic kind per scenario. The four queues run concurrently, so a
+// One automatic kind per scenario. The enrichment queues run concurrently, so a
 // scenario that enabled two would race for the provider's queued responses;
 // which kind runs is the coordinator's decision and is asserted directly.
 test("an import enrols the enabled automatic kind and renders the result", async () => {
@@ -318,9 +318,11 @@ test("an automatic failure stays quiet and leaves the recipe intact", async () =
   // provider. Otherwise this job can consume that scenario's extraction reply.
   await expect(async () => {
     await openActions();
-    await expect(
-      page.getByRole("menuitem", { name: /Auto Categorize Last run failed/i })
-    ).toBeVisible({ timeout: 2_000 });
+    const action = page.getByRole("menuitem", { name: "Auto Categorize", exact: true });
+
+    await expect(action.getByText("Last run failed", { exact: true })).toBeVisible({
+      timeout: 2_000,
+    });
   }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
 
   // The discoverable inline status is not an automatic error toast.
@@ -378,7 +380,12 @@ test("lifecycle state survives a page reload and reconnect", async () => {
     await context.setOffline(true);
     isOffline = true;
     stack!.ai.control.release();
-    await page.waitForTimeout(1_000);
+    // Stay offline until the released worker has persisted its result: the
+    // terminal events then provably fired while this browser was disconnected,
+    // so reconnecting exercises recovery rather than live delivery.
+    await expect(async () => {
+      expect(await readStoredCategories("Reload Recovery Stew")).toContain("Dinner");
+    }).toPass({ timeout: 30_000, intervals: [250, 500, 1_000] });
     await context.setOffline(false);
     isOffline = false;
 

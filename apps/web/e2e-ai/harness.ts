@@ -160,6 +160,27 @@ export async function readStoredProvenance(recipeName: string): Promise<{
   }
 }
 
+/** Read a recipe's stored categories straight from the database. */
+export async function readStoredCategories(recipeName: string): Promise<string[]> {
+  const db = new Client({ connectionString: E2E_DATABASE_URL });
+
+  await db.connect();
+
+  try {
+    const recipe = await db.query<{ categories: string[] }>(
+      "select categories from recipes where name = $1",
+      [recipeName]
+    );
+    const row = recipe.rows[0];
+
+    if (!row) throw new Error(`Recipe not found: ${recipeName}`);
+
+    return row.categories;
+  } finally {
+    await db.end();
+  }
+}
+
 /** Write Recipe Provenance straight into the database, as a person would have. */
 export async function supplyProvenance(
   recipeName: string,

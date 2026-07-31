@@ -67,9 +67,17 @@ let context: BrowserContext;
 let page: Page;
 
 async function shoot(target: Page | Locator, name: string): Promise<void> {
-  // Let fonts settle and any entrance animation finish, so captures are stable.
-  await page.waitForTimeout(600);
-  await target.screenshot({ path: path.join(SCREENSHOT_DIR, `${name}.png`) });
+  // Wait for fonts by their own signal; finite animations are disabled and
+  // fast-forwarded by the screenshot call itself, so captures are stable. The
+  // capture retries as a unit: an entrance re-render can swap the resolved
+  // node out of the DOM between locating it and photographing it.
+  await page.evaluate(() => document.fonts.ready);
+  await expect(async () => {
+    await target.screenshot({
+      path: path.join(SCREENSHOT_DIR, `${name}.png`),
+      animations: "disabled",
+    });
+  }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
 }
 
 /**
@@ -81,29 +89,34 @@ async function shoot(target: Page | Locator, name: string): Promise<void> {
  * height instead gives a readable crop that starts where the reader looks.
  */
 async function shootRegion(anchor: Locator, name: string, height: number): Promise<void> {
-  // `scrollIntoViewIfNeeded` shows the *bottom* of anything taller than the
-  // viewport, which leaves the top — the part worth capturing — off-screen.
-  await anchor.evaluate((element) => element.scrollIntoView({ block: "start" }));
-  // Then clear the sticky navbar, so the clip contains content, not chrome.
-  await page.evaluate(() => window.scrollBy(0, -96));
-  await page.waitForTimeout(600);
+  // Retried as a unit: a re-render can detach the anchor between the scroll
+  // and the capture, and the retry re-resolves it.
+  await expect(async () => {
+    // `scrollIntoViewIfNeeded` shows the *bottom* of anything taller than the
+    // viewport, which leaves the top — the part worth capturing — off-screen.
+    await anchor.evaluate((element) => element.scrollIntoView({ block: "start" }));
+    // Then clear the sticky navbar, so the clip contains content, not chrome.
+    await page.evaluate(() => window.scrollBy(0, -96));
+    await page.evaluate(() => document.fonts.ready);
 
-  const box = await anchor.boundingBox();
-  const viewport = page.viewportSize();
+    const box = await anchor.boundingBox();
+    const viewport = page.viewportSize();
 
-  if (!box || !viewport) throw new Error(`Cannot capture ${name}: no box or viewport`);
+    if (!box || !viewport) throw new Error(`Cannot capture ${name}: no box or viewport`);
 
-  const top = Math.max(box.y - 12, 0);
+    const top = Math.max(box.y - 12, 0);
 
-  await page.screenshot({
-    path: path.join(SCREENSHOT_DIR, `${name}.png`),
-    clip: {
-      x: box.x,
-      y: top,
-      width: Math.min(box.width, viewport.width - box.x),
-      height: Math.min(height, viewport.height - top),
-    },
-  });
+    await page.screenshot({
+      path: path.join(SCREENSHOT_DIR, `${name}.png`),
+      animations: "disabled",
+      clip: {
+        x: box.x,
+        y: top,
+        width: Math.min(box.width, viewport.width - box.x),
+        height: Math.min(height, viewport.height - top),
+      },
+    });
+  }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
 }
 
 test.beforeAll(async ({ browser }) => {
