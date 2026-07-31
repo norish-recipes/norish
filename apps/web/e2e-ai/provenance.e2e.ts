@@ -298,8 +298,9 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
 
   await importAndOpen("Live Provenance Stew", [bareRecipe("Live Provenance Stew")]);
 
-  // Nothing stored and nothing running: the section is absent entirely.
-  await expect(page.getByText("Where it comes from")).toHaveCount(0);
+  // Nothing stored and nothing running: the eventual provenance content is absent.
+  await expect(page.getByRole("heading", { name: "Japan", exact: true, level: 2 })).toHaveCount(0);
+  await expect(page.getByText("Japanese", { exact: true })).toHaveCount(0);
 
   stack!.ai.control.succeedWith(
     provenanceClaim({ originCountry: "JP", originRegion: null, cuisines: ["Japanese"] })
@@ -311,8 +312,10 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
 
   // No reload: the canonical recipe update arrives over the existing realtime
   // connection and the open page re-renders.
-  await expect(page.getByText("Japan").first()).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByText("Japanese").first()).toBeVisible({ timeout: 15_000 });
-  // The section appeared where there was none, without a reload.
-  await expect(page.getByText("Where it comes from").first()).toBeVisible({ timeout: 3_000 });
+  await expect(page.getByRole("heading", { name: "Japan", exact: true, level: 2 })).toBeVisible({
+    timeout: 60_000,
+  });
+  await expect(page.getByText("Japanese", { exact: true }).first()).toBeVisible({
+    timeout: 15_000,
+  });
 });
