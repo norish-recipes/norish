@@ -13,7 +13,7 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/16/solid";
 import { Chip, Link } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import type { RecipeCategory } from "@norish/shared/contracts";
 import {
@@ -21,6 +21,7 @@ import {
   isAllergenTag,
   sortTagsWithAllergyPriority,
 } from "@norish/shared/lib/helpers";
+import { countryDisplayName, countryFlagEmoji } from "@norish/shared/lib/recipe-provenance";
 
 type RecipeTagLike = { name: string };
 
@@ -45,6 +46,8 @@ type RecipeSummaryLike = RecipeMediaLike & {
   totalMinutes: number | null;
   tags: RecipeTagLike[];
   author?: { id?: string; name?: string | null; image?: string | null } | null;
+  /** Alpha-2, so the flag and its label are resolved at render time. */
+  originCountry?: string | null;
 };
 
 type ReadonlyRecipeSummaryProps = {
@@ -124,12 +127,26 @@ export function ReadonlyRecipeSummary({
 }: ReadonlyRecipeSummaryProps) {
   const t = useTranslations("recipes.detail");
   const tForm = useTranslations("recipes.form");
+  const locale = useLocale();
+
+  const flag = countryFlagEmoji(recipe.originCountry);
+  const country = countryDisplayName(recipe.originCountry, locale);
 
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl leading-tight font-bold">
+            {/* Decorative here on purpose. The Provenance section names the
+                country in the reader's own language whenever a flag can appear,
+                so labelling this would announce it twice and would put a country
+                inside the heading's accessible name. The tooltip covers the
+                sighted reader who does not recognise the flag. */}
+            {flag && (
+              <span aria-hidden="true" className="mr-2" title={country ?? undefined}>
+                {flag}
+              </span>
+            )}
             {recipe.name}
             {recipe.url && (
               <Link

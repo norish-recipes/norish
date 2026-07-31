@@ -2,8 +2,7 @@
 
 import { useMemo } from "react";
 import { useCuisinesQuery } from "@/hooks/config";
-import { XMarkIcon } from "@heroicons/react/16/solid";
-import { Button, ComboBox, Input, Label, ListBox, TextArea, TextField } from "@heroui/react";
+import { ComboBox, Input, Label, ListBox, Select, TextArea, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { listCountryOptions } from "@norish/shared/lib/recipe-provenance";
@@ -23,16 +22,27 @@ export const EMPTY_PROVENANCE_FORM_VALUE: ProvenanceFormValue = {
   cuisineIds: [],
 };
 
+/**
+ * The "no country" row's key.
+ *
+ * Country codes are two letters, so this cannot collide with one — and a real
+ * row is what makes emptying the field reachable by keyboard and by screen
+ * reader, which a text-clearing gesture alone is not.
+ */
+const NO_COUNTRY_KEY = "__none__";
+
 interface ProvenanceFieldsProps {
   value: ProvenanceFormValue;
   onChange: (value: ProvenanceFormValue) => void;
 }
 
 /**
- * Edit Recipe Provenance as one atomic group.
+ * Edit Recipe Provenance as one group.
  *
- * Atomicity is deliberate: the note explains the whole claim, so the country,
- * the region, the Cuisines, and the note are edited and cleared together.
+ * Every field clears on its own terms: the country by picking its "no country"
+ * row, the region and note by emptying them, the Cuisines by deselecting. There
+ * is no separate clear-everything action, because each control already says how
+ * to empty it.
  *
  * Cuisines are picked from the administrator's vocabulary rather than typed, so
  * an editor's entries land on exactly the rows AI produces. Country is stored as
@@ -44,13 +54,11 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
   const { cuisines } = useCuisinesQuery();
   const countries = useMemo(() => listCountryOptions(locale), [locale]);
 
-  const isEmpty =
-    value.originCountry === null &&
-    value.originRegion.trim() === "" &&
-    value.provenanceNote.trim() === "" &&
-    value.cuisineIds.length === 0;
-
   const patch = (changes: Partial<ProvenanceFormValue>) => onChange({ ...value, ...changes });
+
+  const selectedCuisineNames = cuisines
+    .filter((cuisine) => value.cuisineIds.includes(cuisine.id))
+    .map((cuisine) => cuisine.name);
 
   return (
     <div className="flex flex-col gap-4">
@@ -59,7 +67,13 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <ComboBox
           selectedKey={value.originCountry}
-          onSelectionChange={(key) => patch({ originCountry: key ? String(key) : null })}
+          onSelectionChange={(key) =>
+            patch({
+              // A dismissed popover reports a null key; both it and the
+              // "no country" row mean the same thing — leave it unset.
+              originCountry: key === null || key === NO_COUNTRY_KEY ? null : String(key),
+            })
+          }
         >
           <Label>{t("originCountry")}</Label>
           <ComboBox.InputGroup>
@@ -68,6 +82,11 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
           </ComboBox.InputGroup>
           <ComboBox.Popover>
             <ListBox>
+              {/* The same words as the placeholder, because picking this row and
+                  never having picked anything leave the field in one state. */}
+              <ListBox.Item id={NO_COUNTRY_KEY} textValue={t("originCountryPlaceholder")}>
+                {t("originCountryPlaceholder")}
+              </ListBox.Item>
               {countries.map((option) => (
                 <ListBox.Item key={option.code} id={option.code} textValue={option.name}>
                   {option.name}
@@ -87,33 +106,40 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
         </TextField>
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* `value`/`onChange`, not `selectedKeys`/`onSelectionChange`: those are
+          the deprecated single-selection props, and a multiple-mode Select
+          silently ignores them — it renders as empty however much is chosen. */}
+      <Select
+        placeholder={t("cuisines")}
+        selectionMode="multiple"
+        value={value.cuisineIds}
+        variant="secondary"
+        onChange={(keys) => patch({ cuisineIds: keys.map(String) })}
+      >
         <Label>{t("cuisines")}</Label>
         <p className="text-muted text-sm">{t("cuisinesHelp")}</p>
-        <div className="flex flex-wrap gap-2">
-          {cuisines.map((cuisine) => {
-            const selected = value.cuisineIds.includes(cuisine.id);
-
-            return (
-              <Button
-                key={cuisine.id}
-                size="sm"
-                variant={selected ? "primary" : "tertiary"}
-                onPress={() =>
-                  patch({
-                    cuisineIds: selected
-                      ? value.cuisineIds.filter((id) => id !== cuisine.id)
-                      : [...value.cuisineIds, cuisine.id],
-                  })
-                }
-              >
-                {/* A canonical identifier: shown verbatim in every locale. */}
+        <Select.Trigger>
+          <Select.Value>
+            {({ defaultChildren, isPlaceholder }) =>
+              isPlaceholder
+                ? defaultChildren
+                : // Canonical identifiers: shown verbatim in every locale.
+                  selectedCuisineNames.join(", ")
+            }
+          </Select.Value>
+          <Select.Indicator />
+        </Select.Trigger>
+        <Select.Popover>
+          <ListBox selectionMode="multiple">
+            {cuisines.map((cuisine) => (
+              <ListBox.Item key={cuisine.id} id={cuisine.id} textValue={cuisine.name}>
                 {cuisine.name}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            ))}
+          </ListBox>
+        </Select.Popover>
+      </Select>
 
       <TextField
         aria-label={t("provenanceNote")}
@@ -123,19 +149,6 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
         <Label>{t("provenanceNote")}</Label>
         <TextArea placeholder={t("provenanceNotePlaceholder")} rows={4} variant="secondary" />
       </TextField>
-
-      <div className="flex justify-end">
-        {/* Clearing is an explicit editor action, distinct from an enrichment
-            run writing an empty result — which the write path refuses. */}
-        <Button
-          isDisabled={isEmpty}
-          variant="tertiary"
-          onPress={() => onChange({ ...EMPTY_PROVENANCE_FORM_VALUE })}
-        >
-          <XMarkIcon className="h-4 w-4" />
-          {t("clearProvenance")}
-        </Button>
-      </div>
     </div>
   );
 }
