@@ -9,7 +9,8 @@
  * Ports, database, and Redis are deliberately distinct from the backend-down
  * offline suite (apps/web/e2e) so the two suites never share state or collide.
  *
- * Prerequisites (once per checkout/build):
+ * `pnpm run test:e2e` at the repo root builds and runs every browser suite in
+ * one command. To run just this suite on an existing build (Docker running):
  *   pnpm run build:web && pnpm run build:server   # from the repo root
  *   pnpm --filter @norish/web run test:e2e:ai
  */

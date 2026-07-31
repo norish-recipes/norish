@@ -3,7 +3,9 @@
  *
  * The suite runs the production server bundle against the dedicated e2e
  * Postgres/Redis from ./docker-compose.yml, on its own port so a running dev
- * server never interferes. Prerequisites (once per checkout/build):
+ * server never interferes. `pnpm run test:e2e` at the repo root builds and
+ * runs every browser suite in one command; to run just this suite on an
+ * existing build (Docker running):
  *
  *   pnpm run build:web && pnpm run build:server   # from the repo root
  *   pnpm --filter @norish/web run test:e2e

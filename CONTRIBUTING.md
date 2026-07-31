@@ -208,7 +208,13 @@ pnpm i18n:check
 pnpm build
 ```
 
-For an affected web workflow, the relevant browser E2E suite is also a required gate and must pass before the work is complete. An unavailable or environmentally blocked browser run is reported as blocked, not treated as passing acceptance evidence.
+For an affected web workflow, the browser E2E suites are also a required gate and must pass before the work is complete. One command builds and runs them all (it is also enforced by CI on every PR and before every RC/release image):
+
+```bash
+pnpm test:e2e
+```
+
+An unavailable or environmentally blocked browser run is reported as blocked, not treated as passing acceptance evidence.
 
 ### 4. Submit a Pull Request
 
@@ -234,8 +240,12 @@ pnpm --filter @norish/web run test
 # Run a specific test file (from within the workspace directory)
 cd apps/web && pnpm exec vitest run __tests__/hooks/recipes/use-recipes-query.test.ts
 
-# Run the web browser E2E suite when the workflow requires it
+# Build and run every browser E2E suite (backend-down + production-like AI)
+pnpm test:e2e
+
+# Run one suite against an existing build (see apps/web/e2e*/env.ts)
 pnpm --filter @norish/web run test:e2e
+pnpm --filter @norish/web run test:e2e:ai
 ```
 
 ## Adding Translations

@@ -7,7 +7,8 @@
  * deterministic in-harness provider (./ai-provider.ts). Reusable by every
  * production-like AI browser scenario.
  *
- * Prerequisites (Docker running, once per build):
+ * One command for every browser suite, build included: pnpm run test:e2e (repo
+ * root). To run just this suite on an existing build (Docker running):
  *   pnpm run build:web && pnpm run build:server        # repo root
  *   pnpm --filter @norish/web run test:e2e:ai
  */

@@ -25,7 +25,7 @@ const STOP_TIMEOUT_MS = 15_000;
 export function ensureBuilt(): void {
   if (!existsSync(DIST_SERVER_ENTRY)) {
     throw new Error(
-      `Missing ${DIST_SERVER_ENTRY}. Build first: pnpm run build:web && pnpm run build:server (repo root).`
+      `Missing ${DIST_SERVER_ENTRY}. Build first: pnpm run build:web && pnpm run build:server (repo root), or run pnpm run test:e2e (repo root) to build and run everything.`
     );
   }
 }
