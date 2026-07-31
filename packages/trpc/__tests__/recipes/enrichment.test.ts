@@ -4,6 +4,7 @@ import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RecipeEnrichmentEnrollment } from "@norish/shared/lib/recipe-enrichment";
+import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
 import { recipesRouter } from "../../src/routers/recipes";
 import { canAccessResource, isAIEnabled } from "../mocks/permissions";
@@ -157,12 +158,7 @@ describe("requestEnrichment", () => {
   });
 
   it("accepts every kind in the shared vocabulary", async () => {
-    for (const kind of [
-      "auto-tagging",
-      "allergy-detection",
-      "auto-categorization",
-      "nutrition-estimation",
-    ] as const) {
+    for (const kind of ENRICHMENT_KINDS) {
       await expect(caller().requestEnrichment({ recipeId: RECIPE_ID, kind })).resolves.toEqual({
         success: true,
       });
@@ -170,10 +166,11 @@ describe("requestEnrichment", () => {
   });
 
   it("rejects a kind outside the vocabulary before touching the coordinator", async () => {
-    await expect(
-      // @ts-expect-error deliberately outside the enum, to prove input validation
-      caller().requestEnrichment({ recipeId: RECIPE_ID, kind: "run-everything" })
-    ).rejects.toBeInstanceOf(TRPCError);
+    // The wire can carry any string; the router's zod schema is the gate under
+    // test, so the payload bypasses compile-time checking on purpose.
+    const outsideVocabulary = { recipeId: RECIPE_ID, kind: "run-everything" } as never;
+
+    await expect(caller().requestEnrichment(outsideVocabulary)).rejects.toBeInstanceOf(TRPCError);
     expect(enrichRecipe).not.toHaveBeenCalled();
   });
 });
