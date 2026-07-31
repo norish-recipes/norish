@@ -44,6 +44,7 @@ describe("cuisine tags migrating onto the Cuisine vocabulary", () => {
   const testDbName = generateTestDbName("test_cuisine_leaves_tags");
   let pool: pg.Pool;
   let userId: string;
+  let legacyCuisineAllergyTagId: string;
 
   /** Ids of the fixture recipes, by the role they play. */
   const recipes = {
@@ -85,6 +86,16 @@ describe("cuisine tags migrating onto the Cuisine vocabulary", () => {
 
   async function allTagNames(): Promise<string[]> {
     const result = await pool.query<{ name: string }>("SELECT name FROM tags ORDER BY name");
+
+    return result.rows.map((row) => row.name);
+  }
+
+  async function predefinedDbTagNames(): Promise<string[]> {
+    const result = await pool.query<{ name: string }>(
+      `SELECT DISTINCT t.name FROM tags t
+       INNER JOIN recipe_tags rt ON rt.tag_id = t.id
+       ORDER BY t.name`
+    );
 
     return result.rows.map((row) => row.name);
   }
@@ -158,6 +169,14 @@ describe("cuisine tags migrating onto the Cuisine vocabulary", () => {
     // Free-form cuisine-like Tags outside the seeded vocabulary.
     await tagRecipe(recipes.folksonomy, ["sicilian", "tex-mex", "levantine"]);
 
+    legacyCuisineAllergyTagId = (
+      await pool.query<{ id: string }>("SELECT id FROM tags WHERE lower(name) = 'italian'")
+    ).rows[0]!.id;
+    await pool.query("INSERT INTO user_allergies (user_id, tag_id) VALUES ($1, $2)", [
+      userId,
+      legacyCuisineAllergyTagId,
+    ]);
+
     await applyCuisineMigration();
   }, 180_000);
 
@@ -185,9 +204,19 @@ describe("cuisine tags migrating onto the Cuisine vocabulary", () => {
     // circulation after the migration meant to end it.
     const names = await allTagNames();
 
-    expect(names).not.toContain("italian");
     expect(names).not.toContain("japanese");
     expect(names).not.toContain("mexican");
+  });
+
+  it("preserves a matched Tag and allergy link while excluding it from predefined_db", async () => {
+    const retained = await pool.query(
+      "SELECT 1 FROM user_allergies WHERE user_id = $1 AND tag_id = $2",
+      [userId, legacyCuisineAllergyTagId]
+    );
+
+    expect(retained.rowCount).toBe(1);
+    expect(await allTagNames()).toContain("italian");
+    expect(await predefinedDbTagNames()).not.toContain("italian");
   });
 
   it("leaves unmatched Tags untouched, including free-form cuisine-like ones", async () => {

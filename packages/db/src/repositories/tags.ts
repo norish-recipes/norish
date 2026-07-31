@@ -1,9 +1,9 @@
-import { asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import z from "zod";
 
 import type { TagDto } from "@norish/shared/contracts/dto/tag";
 import { db } from "@norish/db/drizzle";
-import { recipes, recipeTags, tags } from "@norish/db/schema";
+import { recipes, recipeTags, tags, userAllergies } from "@norish/db/schema";
 import { TagSelectBaseSchema } from "@norish/shared/contracts/zod";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
@@ -142,12 +142,15 @@ export async function getOrCreateManyTagsTx(tx: any, names: string[]): Promise<T
 }
 
 export async function deleteOrphanedTagsTx(tx: any): Promise<void> {
-  // Find tags that have no associated recipes (LEFT JOIN antipattern)
+  // A tag is only orphaned when neither recipes nor allergy settings use it.
+  // Deleting an allergy-linked tag would cascade through user_allergies and
+  // silently erase safety data.
   const orphanedTagIds = await tx
     .select({ id: tags.id })
     .from(tags)
     .leftJoin(recipeTags, eq(tags.id, recipeTags.tagId))
-    .where(sql`${recipeTags.tagId} IS NULL`)
+    .leftJoin(userAllergies, eq(tags.id, userAllergies.tagId))
+    .where(and(isNull(recipeTags.tagId), isNull(userAllergies.tagId)))
     .then((rows: any[]) => rows.map((r) => r.id));
 
   if (orphanedTagIds.length === 0) return;
