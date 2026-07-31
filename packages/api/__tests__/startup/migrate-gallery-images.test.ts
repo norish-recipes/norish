@@ -1,68 +1,85 @@
 // @vitest-environment node
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockInfo = vi.fn();
-const mockWarn = vi.fn();
-const mockDebug = vi.fn();
-const mockError = vi.fn();
-const mockSelect = vi.fn();
-const mockUpdate = vi.fn();
+import { migrateGalleryImages } from "@norish/api/startup/migrate-gallery-images";
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
-const recipesTable = { table: "recipes" };
-const recipeImagesTable = { table: "recipe_images" };
+// The module under test captures UPLOADS_DIR at import time, so the config is
+// mocked once for the whole file and every test works inside that directory.
+// Re-mocking per test (resetModules + dynamic import) re-evaluated the heavy
+// import chain inside each test's timeout budget, which blew up under a fully
+// parallel run — and the abandoned run then drained the shared fixture queue
+// of the next test. Fixtures are therefore keyed by table, never consumed.
+const mocks = vi.hoisted(() => ({
+  info: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
+  error: vi.fn(),
+  select: vi.fn(),
+  update: vi.fn(),
+  recipesTable: { table: "recipes" },
+  recipeImagesTable: { table: "recipe_images" },
+}));
+
+const { warn: mockWarn, recipesTable, recipeImagesTable } = mocks;
 
 vi.mock("@norish/shared-server/logger", () => ({
   dbLogger: {
-    info: mockInfo,
-    warn: mockWarn,
-    debug: mockDebug,
-    error: mockError,
+    info: mocks.info,
+    warn: mocks.warn,
+    debug: mocks.debug,
+    error: mocks.error,
   },
 }));
 
 vi.mock("@norish/db/schema", () => ({
-  recipes: recipesTable,
-  recipeImages: recipeImagesTable,
+  recipes: mocks.recipesTable,
+  recipeImages: mocks.recipeImagesTable,
 }));
 
 vi.mock("@norish/db/drizzle", () => ({
   db: {
-    select: mockSelect,
-    update: mockUpdate,
+    select: mocks.select,
+    update: mocks.update,
   },
 }));
 
+vi.mock("@norish/config/env-config-server", async () => {
+  const { mkdtempSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+
+  return {
+    SERVER_CONFIG: {
+      MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
+      UPLOADS_DIR: mkdtempSync(join(tmpdir(), "norish-migrate-images-")),
+    },
+  };
+});
+
 describe("migrateGalleryImages", () => {
-  let uploadsDir: string;
-  let selectResults: unknown[][];
+  const uploadsDir = SERVER_CONFIG.UPLOADS_DIR;
+  const recipesDir = path.join(uploadsDir, "recipes");
+  let selectResultsByTable: Map<unknown, unknown[]>;
   const updates: Array<{ table: unknown; values: unknown }> = [];
 
   beforeEach(async () => {
-    vi.resetModules();
     vi.clearAllMocks();
     updates.length = 0;
-    selectResults = [];
+    selectResultsByTable = new Map();
 
-    uploadsDir = await fs.mkdtemp(path.join(os.tmpdir(), "norish-migrate-images-"));
-    await fs.mkdir(path.join(uploadsDir, "recipes"), { recursive: true });
+    await fs.rm(recipesDir, { recursive: true, force: true });
+    await fs.mkdir(recipesDir, { recursive: true });
 
-    vi.doMock("@norish/config/env-config-server", () => ({
-      SERVER_CONFIG: {
-        MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
-        UPLOADS_DIR: uploadsDir,
-      },
-    }));
-
-    mockSelect.mockImplementation(() => ({
-      from: () => ({
-        where: async () => selectResults.shift() ?? [],
+    mocks.select.mockImplementation(() => ({
+      from: (table: unknown) => ({
+        where: async () => selectResultsByTable.get(table) ?? [],
       }),
     }));
 
-    mockUpdate.mockImplementation((table: unknown) => ({
+    mocks.update.mockImplementation((table: unknown) => ({
       set: (values: unknown) => ({
         where: async () => {
           updates.push({ table, values });
@@ -71,29 +88,24 @@ describe("migrateGalleryImages", () => {
     }));
   });
 
-  afterEach(async () => {
-    vi.doUnmock("@norish/config/env-config-server");
+  afterAll(async () => {
     await fs.rm(uploadsDir, { recursive: true, force: true });
   });
 
   it("skips recipe and gallery URL rewrites when referenced files are missing", async () => {
-    selectResults = [
-      [
-        {
-          id: "11111111-1111-1111-1111-111111111111",
-          image: "/recipes/images/missing-cover.jpg",
-        },
-      ],
-      [
-        {
-          id: "image-1",
-          recipeId: "11111111-1111-1111-1111-111111111111",
-          image: "/recipes/11111111-1111-1111-1111-111111111111/gallery/missing-gallery.jpg",
-        },
-      ],
-    ];
-
-    const { migrateGalleryImages } = await import("@norish/api/startup/migrate-gallery-images");
+    selectResultsByTable.set(recipesTable, [
+      {
+        id: "11111111-1111-1111-1111-111111111111",
+        image: "/recipes/images/missing-cover.jpg",
+      },
+    ]);
+    selectResultsByTable.set(recipeImagesTable, [
+      {
+        id: "image-1",
+        recipeId: "11111111-1111-1111-1111-111111111111",
+        image: "/recipes/11111111-1111-1111-1111-111111111111/gallery/missing-gallery.jpg",
+      },
+    ]);
 
     await migrateGalleryImages();
 
@@ -124,30 +136,23 @@ describe("migrateGalleryImages", () => {
   it("rewrites old URLs when the referenced files exist on disk", async () => {
     const recipeId = "22222222-2222-2222-2222-222222222222";
 
-    await fs.mkdir(path.join(uploadsDir, "recipes", recipeId, "gallery"), { recursive: true });
-    await fs.writeFile(path.join(uploadsDir, "recipes", recipeId, "cover.jpg"), "cover");
-    await fs.writeFile(
-      path.join(uploadsDir, "recipes", recipeId, "gallery", "gallery.jpg"),
-      "gallery"
-    );
+    await fs.mkdir(path.join(recipesDir, recipeId, "gallery"), { recursive: true });
+    await fs.writeFile(path.join(recipesDir, recipeId, "cover.jpg"), "cover");
+    await fs.writeFile(path.join(recipesDir, recipeId, "gallery", "gallery.jpg"), "gallery");
 
-    selectResults = [
-      [
-        {
-          id: recipeId,
-          image: "/recipes/images/cover.jpg",
-        },
-      ],
-      [
-        {
-          id: "image-2",
-          recipeId,
-          image: `/recipes/${recipeId}/gallery/gallery.jpg`,
-        },
-      ],
-    ];
-
-    const { migrateGalleryImages } = await import("@norish/api/startup/migrate-gallery-images");
+    selectResultsByTable.set(recipesTable, [
+      {
+        id: recipeId,
+        image: "/recipes/images/cover.jpg",
+      },
+    ]);
+    selectResultsByTable.set(recipeImagesTable, [
+      {
+        id: "image-2",
+        recipeId,
+        image: `/recipes/${recipeId}/gallery/gallery.jpg`,
+      },
+    ]);
 
     await migrateGalleryImages();
 
