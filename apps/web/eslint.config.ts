@@ -6,7 +6,9 @@ import { reactConfig } from "../../tooling/eslint/react.ts";
 
 export default defineConfig(
   {
-    ignores: [".next/**"],
+    // The .results dirs hold Playwright output (traces carry .js resources);
+    // they appear and vanish while suites run, so walking them crashes eslint.
+    ignores: [".next/**", "e2e/.results/**", "e2e-ai/.results/**", "e2e-ai/.runtime/**"],
   },
   baseConfig,
   reactConfig,
