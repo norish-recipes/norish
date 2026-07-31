@@ -14,10 +14,14 @@ Provenance is where a recipe comes from. Norish records four things:
   several
 - **Note** — a couple of sentences explaining how that was concluded
 
-It appears in its own section on the recipe page, and the country's flag also
-flies in front of the recipe's title. The country is shown with its flag and
-named **in your own language**, because Norish stores the country code rather
-than a name. The region and the note are shown exactly as written.
+It appears in its own section on the recipe page, just above the notes, and the
+country is that section's own heading — with its flag, and named **in your own
+language**, because Norish stores the country code rather than a name. Until
+there is a country the section simply calls itself **Provenance**. The region
+and the note are shown exactly as written.
+
+The flag also flies in front of the recipe's title, and beside every recipe on
+your dashboard, so you can see at a glance where a dish comes from.
 
 ![Recipe provenance on a recipe page](/img/screenshots/provenance-recipe.png)
 
