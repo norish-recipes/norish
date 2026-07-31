@@ -41,9 +41,9 @@ export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   fat: true,
   carbs: true,
   protein: true,
-  // Browsing by origin is a separate feature; the dashboard has no use for
-  // Recipe Provenance, so it does not carry it.
-  originCountry: true,
+  // The dashboard carries the origin country, and only that: it flies the
+  // flag beside each recipe's name. The region and the note have nothing to
+  // show at that size, so they stay behind the full recipe.
   originRegion: true,
   provenanceNote: true,
 }).extend({

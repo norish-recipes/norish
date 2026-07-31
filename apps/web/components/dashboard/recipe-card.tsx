@@ -4,6 +4,7 @@ import type { MouseEvent } from "react";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MiniCalendar, MiniGroceries } from "@/components/Panel/consumers";
+import OriginFlag from "@/components/recipes/origin-flag";
 import HeartButton from "@/components/shared/heart-button";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { usePermissionsContext } from "@/context/permissions-context";
@@ -340,6 +341,7 @@ function RecipeCardComponent({
                       className={`text-foreground truncate text-base leading-5 font-semibold ${open ? "" : "group-hover/row:underline"} `}
                       title={recipe.name}
                     >
+                      <OriginFlag className="mr-1.5" originCountry={recipe.originCountry} />
                       {recipe.name}
                     </h3>
                     {description && (
@@ -415,6 +417,7 @@ function RecipeCardComponent({
                 className={`text-foreground truncate text-base font-semibold ${open ? "" : "group-hover/row:underline"} `}
                 title={recipe.name}
               >
+                <OriginFlag className="mr-1.5" originCountry={recipe.originCountry} />
                 {recipe.name}
               </h3>
 

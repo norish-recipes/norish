@@ -466,6 +466,9 @@ export async function listRecipes(
         cookMinutes: true,
         totalMinutes: true,
         calories: true,
+        // Only the country: the dashboard flies its flag, and the rest of the
+        // provenance group has nothing to show at that size.
+        originCountry: true,
         categories: true,
         createdAt: true,
         updatedAt: true,
@@ -511,6 +514,7 @@ export async function listRecipes(
       cookMinutes: r.cookMinutes ?? null,
       totalMinutes: r.totalMinutes ?? null,
       calories: r.calories ?? null,
+      originCountry: r.originCountry ?? null,
       categories: r.categories ?? [],
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -561,6 +565,9 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
       cookMinutes: true,
       totalMinutes: true,
       calories: true,
+      // Only the country: the dashboard flies its flag, and the rest of the
+      // provenance group has nothing to show at that size.
+      originCountry: true,
       categories: true,
       createdAt: true,
       updatedAt: true,
@@ -605,6 +612,7 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
     cookMinutes: r.cookMinutes ?? null,
     totalMinutes: r.totalMinutes ?? null,
     calories: r.calories ?? null,
+    originCountry: r.originCountry ?? null,
     categories: r.categories ?? [],
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
