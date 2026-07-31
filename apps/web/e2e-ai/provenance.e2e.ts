@@ -268,9 +268,13 @@ test("an automatic failure is quiet and leaves the recipe untouched and unmarked
   await expect(async () => {
     await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Actions" }).click();
-    await expect(
-      page.getByRole("menuitem", { name: /Work Out Provenance Last run failed/i })
-    ).toBeVisible({ timeout: 2_000 });
+    const action = page
+      .getByRole("menuitem")
+      .filter({ has: page.getByText("Work Out Provenance", { exact: true }) });
+
+    await expect(action.getByText("Last run failed", { exact: true })).toBeVisible({
+      timeout: 2_000,
+    });
   }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
   await page.keyboard.press("Escape");
 

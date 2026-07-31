@@ -318,7 +318,9 @@ test("an automatic failure stays quiet and leaves the recipe intact", async () =
   // provider. Otherwise this job can consume that scenario's extraction reply.
   await expect(async () => {
     await openActions();
-    const action = page.getByRole("menuitem", { name: "Auto Categorize", exact: true });
+    const action = page
+      .getByRole("menuitem")
+      .filter({ has: page.getByText("Auto Categorize", { exact: true }) });
 
     await expect(action.getByText("Last run failed", { exact: true })).toBeVisible({
       timeout: 2_000,
