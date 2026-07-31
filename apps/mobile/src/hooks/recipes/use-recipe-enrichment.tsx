@@ -8,7 +8,7 @@ import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment"
 
 const sharedUseRecipeEnrichment = sharedRecipeFamilyHooks.useRecipeEnrichment;
 
-/** Recipe Enrichment lifecycle and manual requests for all four kinds. */
+/** Recipe Enrichment lifecycle and manual requests for every kind. */
 export function useRecipeEnrichment(recipeId: string) {
   const { user } = useAuth();
   const intl = useIntl();

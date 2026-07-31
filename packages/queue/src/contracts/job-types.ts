@@ -78,10 +78,11 @@ export type AddPasteImportJobResult =
   | { status: "duplicate"; existingJobId: string };
 
 /**
- * One job shape for all four Recipe Enrichment kinds.
+ * One job shape for every Recipe Enrichment kind.
  *
  * The queues stay independent so a slow kind cannot serialize the others, but
- * they share this contract because clients need one lifecycle story, not four.
+ * they share this contract because clients need one lifecycle story, not one
+ * per kind.
  */
 export interface RecipeEnrichmentJobData {
   recipeId: string;

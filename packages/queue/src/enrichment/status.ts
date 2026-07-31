@@ -21,7 +21,7 @@ import { getQueueByName } from "../registry";
 import { ENRICHMENT_QUEUE_NAMES, enrichmentJobId } from "./identity";
 
 /**
- * Read the lifecycle state of all four kinds for one recipe.
+ * Read the lifecycle state of every enrichment kind for one recipe.
  *
  * Always returns an entry per kind so a client never has to distinguish
  * "no data yet" from `idle`.

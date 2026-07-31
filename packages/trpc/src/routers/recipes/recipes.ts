@@ -759,7 +759,7 @@ const ENRICHMENT_SKIP_MESSAGES: Record<RecipeEnrichmentSkipReason, string> = {
 };
 
 /**
- * Authoritative lifecycle read for all four kinds.
+ * Authoritative lifecycle read for every enrichment kind.
  *
  * Clients use this on mount, refocus, and reconnect to converge on current
  * state, which is why no periodic enrichment polling is needed.

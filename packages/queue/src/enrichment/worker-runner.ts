@@ -6,7 +6,7 @@
  * enrollment policy — by the time a job exists, the coordinator has decided the
  * kind should run.
  *
- * The lifecycle publication is shared here so all four kinds report the same
+ * The lifecycle publication is shared here so every kind reports the same
  * five states through the same event, and so origin decides who hears about a
  * failure: automatic work stays quiet, a manual request tells its requester.
  */
