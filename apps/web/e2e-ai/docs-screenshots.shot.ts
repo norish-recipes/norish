@@ -175,6 +175,19 @@ test("provenance on the recipe page", async () => {
   await shoot(section, "provenance-recipe");
 });
 
+test("the origin country's flag on the recipe title", async () => {
+  // The docs claim the flag flies in front of the title, and the provenance
+  // card's own crop cannot show it — the title sits outside that card.
+  const title = page
+    .locator("div.md\\:block")
+    .getByRole("heading", { name: RECIPE_NAME, exact: true, level: 1 });
+
+  await expect(title).toBeVisible({ timeout: 30_000 });
+  await expect(title).toContainText("🇮🇹");
+
+  await shootRegion(title, "provenance-title-flag", 120);
+});
+
 test("provenance in the recipe form", async () => {
   const recipeId = new URL(page.url()).pathname.split("/").pop();
 
@@ -182,8 +195,12 @@ test("provenance in the recipe form", async () => {
 
   const heading = page.getByRole("heading", { name: "Provenance" });
 
-  await heading.scrollIntoViewIfNeeded();
-  await expect(heading).toBeVisible({ timeout: 30_000 });
+  // The form re-renders as the recipe's data arrives, which detaches whatever
+  // was located a moment earlier. Retry until a scroll lands on a stable node.
+  await expect(async () => {
+    await expect(heading).toBeVisible({ timeout: 5_000 });
+    await heading.scrollIntoViewIfNeeded({ timeout: 5_000 });
+  }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
 
   await shoot(
     page.locator("section").filter({ has: page.getByRole("heading", { name: "Provenance" }) }),

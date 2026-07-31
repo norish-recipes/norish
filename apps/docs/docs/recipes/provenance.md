@@ -14,9 +14,10 @@ Provenance is where a recipe comes from. Norish records four things:
   several
 - **Note** — a couple of sentences explaining how that was concluded
 
-It appears in its own section on the recipe page. The country is shown with its
-flag and named **in your own language**, because Norish stores the country code
-rather than a name. The region and the note are shown exactly as written.
+It appears in its own section on the recipe page, and the country's flag also
+flies in front of the recipe's title. The country is shown with its flag and
+named **in your own language**, because Norish stores the country code rather
+than a name. The region and the note are shown exactly as written.
 
 ![Recipe provenance on a recipe page](/img/screenshots/provenance-recipe.png)
 
@@ -83,13 +84,15 @@ against the field next to it.
 
 You can edit provenance in the recipe form, under **Provenance**. Cuisines are
 picked from your administrator's list, so what you choose matches what AI would
-have chosen. **Clear provenance** empties the whole group in one go.
+have chosen — pick as many as fit a fusion dish. Each field empties on its own:
+choose **No country** to take a country back, clear the region or note, or
+deselect every cuisine.
 
 ![Editing recipe provenance in the recipe form](/img/screenshots/provenance-form.png)
 
 :::note
-Clearing provenance does not re-arm automatic inference — automatic enrichment is
-enrolled once, when a recipe is new. Clear it, then ask for a run.
+Emptying provenance does not re-arm automatic inference — automatic enrichment is
+enrolled once, when a recipe is new. Empty it, then ask for a run.
 :::
 
 ## Cuisines used to be tags
