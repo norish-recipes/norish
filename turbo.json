@@ -23,7 +23,9 @@
     },
     "build:server": {
       "dependsOn": ["^build:server"],
-      "outputs": []
+      // The bundle lands at the repo root, outside what turbo can capture as
+      // an output — a cache hit would skip tsdown and keep a stale dist-server.
+      "cache": false
     },
     "dev": {
       "dependsOn": ["^dev"],
