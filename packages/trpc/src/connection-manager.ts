@@ -127,7 +127,7 @@ export async function startInvalidationListener(): Promise<void> {
   } finally {
     // Always cleanup Redis subscriber
     try {
-      await subscriber.unsubscribe(INVALIDATION_CHANNEL);
+      await subscriber.unsubscribe(CONNECTION_INVALIDATION_CHANNEL);
       await subscriber.quit();
     } catch (err) {
       log.debug({ err }, "Error during invalidation listener cleanup");
