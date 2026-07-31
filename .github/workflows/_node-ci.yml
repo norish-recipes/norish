@@ -148,6 +148,9 @@ jobs:
             apps/web/e2e-ai/.results
           retention-days: 7
           if-no-files-found: ignore
+          # Everything lives under dot-directories, which the action skips
+          # by default — without this the upload silently finds nothing.
+          include-hidden-files: true
 
   i18n:
     name: Locale Keys Check

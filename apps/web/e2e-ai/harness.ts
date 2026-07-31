@@ -29,15 +29,22 @@ export type SessionCookies = Awaited<ReturnType<APIRequestContext["storageState"
  * Retried as a unit: a leftover toast can steal the click that opens the
  * menu, and the dialog itself can close between the fill and the submit —
  * connection-recovery re-renders have been caught unmounting it mid-flow.
- * Escape-and-reopen makes every attempt start from a known state, and the
- * submit click carries a short timeout so a dead dialog fails the attempt
- * instead of hanging the test. A click only throws before it dispatches,
- * so a retry can never submit the same import twice.
+ * Every attempt after the first starts from a reload, because a dialog can
+ * also survive with its AI Import action missing (the permissions read died
+ * on a connection drop), and only a fresh page heals a dead query. The
+ * submit click carries a short timeout so a dead control fails the attempt
+ * instead of hanging the test, and a click only throws before it
+ * dispatches, so a retry can never submit the same import twice.
  */
 export async function submitPasteImport(page: Page, text: string): Promise<void> {
   const pasteArea = page.getByPlaceholder("Paste a recipe (free text) or JSON-LD here...");
+  let attempt = 0;
 
   await expect(async () => {
+    if (attempt++ > 0) {
+      await page.reload();
+    }
+
     if (!(await pasteArea.isVisible().catch(() => false))) {
       await page.keyboard.press("Escape");
       await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
