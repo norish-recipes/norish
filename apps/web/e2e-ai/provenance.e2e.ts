@@ -19,6 +19,7 @@ import {
   readStoredProvenance,
   setAutomaticEnrichment,
   signIn,
+  submitPasteImport,
   supplyProvenance,
 } from "@/e2e-ai/harness";
 import { expect, test } from "@playwright/test";
@@ -83,16 +84,6 @@ test.afterAll(async () => {
   stack = null;
 });
 
-async function openPasteImport(): Promise<void> {
-  await expect(async () => {
-    await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Paste" }).click({ timeout: 2_000 });
-    await expect(
-      page.getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
-    ).toBeVisible({ timeout: 2_000 });
-  }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
-}
-
 async function openRecipe(name: string): Promise<void> {
   await page.getByRole("heading", { name, exact: true, level: 3 }).click();
   await expect(page).toHaveURL(/\/recipes\/[^/]+$/);
@@ -112,11 +103,7 @@ async function importRecipe(name: string, directives: unknown[]): Promise<void> 
   ai.control.setDefault(null);
 
   await page.goto("/");
-  await openPasteImport();
-  await page
-    .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
-    .fill(`Import ${name} — the harness supplies the result.`);
-  await page.getByRole("button", { name: "AI Import" }).click();
+  await submitPasteImport(page, `Import ${name} — the harness supplies the result.`);
 
   await expect(async () => {
     await page.reload();
@@ -248,11 +235,7 @@ test("an automatic failure is quiet and leaves the recipe untouched and unmarked
   ai.control.failPermanently("provider refused");
 
   await page.goto("/");
-  await openPasteImport();
-  await page
-    .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
-    .fill("Import Quiet Provenance Stew — the harness supplies the result.");
-  await page.getByRole("button", { name: "AI Import" }).click();
+  await submitPasteImport(page, "Import Quiet Provenance Stew — the harness supplies the result.");
 
   await expect(async () => {
     await page.reload();

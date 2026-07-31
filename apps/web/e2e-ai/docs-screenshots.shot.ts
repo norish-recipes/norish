@@ -12,7 +12,7 @@ import path from "node:path";
 import type { AIE2EStack } from "@/e2e-ai/harness";
 import type { BrowserContext, Locator, Page } from "@playwright/test";
 import { E2E_BASE_URL, REPO_ROOT, USER_A } from "@/e2e-ai/env";
-import { bootStack, setAutomaticEnrichment, signIn } from "@/e2e-ai/harness";
+import { bootStack, setAutomaticEnrichment, signIn, submitPasteImport } from "@/e2e-ai/harness";
 import { expect, test } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
@@ -142,18 +142,7 @@ test.beforeAll(async ({ browser }) => {
   stack.ai.control.setDefault(null);
 
   await page.goto("/");
-  await expect(async () => {
-    await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Paste" }).click({ timeout: 2_000 });
-    await expect(
-      page.getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
-    ).toBeVisible({ timeout: 2_000 });
-  }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
-
-  await page
-    .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
-    .fill(`Import ${RECIPE_NAME} — the harness supplies the result.`);
-  await page.getByRole("button", { name: "AI Import" }).click();
+  await submitPasteImport(page, `Import ${RECIPE_NAME} — the harness supplies the result.`);
 
   await expect(async () => {
     await page.reload();

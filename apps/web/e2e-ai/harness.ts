@@ -6,8 +6,8 @@
  * `stack.ai.control`. This keeps every `.e2e.ts` free of harness
  * plumbing and free of scenario-specific coupling to the offline suite.
  */
-import type { APIRequestContext } from "@playwright/test";
-import { request } from "@playwright/test";
+import type { APIRequestContext, Page } from "@playwright/test";
+import { expect, request } from "@playwright/test";
 import { Client } from "pg";
 
 import type { FakeAIProvider } from "./ai-provider";
@@ -22,6 +22,33 @@ export { startServer } from "./server";
 export type { E2eServer } from "./server";
 
 export type SessionCookies = Awaited<ReturnType<APIRequestContext["storageState"]>>["cookies"];
+
+/**
+ * Drive the paste-import dialog through to a submitted import.
+ *
+ * Retried as a unit: a leftover toast can steal the click that opens the
+ * menu, and the dialog itself can close between the fill and the submit —
+ * connection-recovery re-renders have been caught unmounting it mid-flow.
+ * Escape-and-reopen makes every attempt start from a known state, and the
+ * submit click carries a short timeout so a dead dialog fails the attempt
+ * instead of hanging the test. A click only throws before it dispatches,
+ * so a retry can never submit the same import twice.
+ */
+export async function submitPasteImport(page: Page, text: string): Promise<void> {
+  const pasteArea = page.getByPlaceholder("Paste a recipe (free text) or JSON-LD here...");
+
+  await expect(async () => {
+    if (!(await pasteArea.isVisible().catch(() => false))) {
+      await page.keyboard.press("Escape");
+      await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
+      await page.getByRole("menuitem", { name: "Paste" }).click({ timeout: 2_000 });
+      await expect(pasteArea).toBeVisible({ timeout: 2_000 });
+    }
+
+    await pasteArea.fill(text);
+    await page.getByRole("button", { name: "AI Import" }).click({ timeout: 3_000 });
+  }).toPass({ timeout: 90_000, intervals: [500, 1_000, 2_000] });
+}
 
 /** Sign in against the real auth API and return the resulting session cookies. */
 export async function signIn(user: { email: string; password: string }): Promise<SessionCookies> {

@@ -10,7 +10,13 @@
 import type { AIE2EStack } from "@/e2e-ai/harness";
 import type { BrowserContext, Page } from "@playwright/test";
 import { E2E_BASE_URL, USER_A } from "@/e2e-ai/env";
-import { bootStack, readStoredCategories, setAutomaticEnrichment, signIn } from "@/e2e-ai/harness";
+import {
+  bootStack,
+  readStoredCategories,
+  setAutomaticEnrichment,
+  signIn,
+  submitPasteImport,
+} from "@/e2e-ai/harness";
 import { expect, test } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
@@ -90,11 +96,7 @@ async function importAndOpen(name: string, directives: unknown[]): Promise<void>
   ai.control.setDefault(null);
 
   await page.goto("/");
-  await openPasteImport();
-  await page
-    .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
-    .fill(`Import ${name} — the harness supplies the result.`);
-  await page.getByRole("button", { name: "AI Import" }).click();
+  await submitPasteImport(page, `Import ${name} — the harness supplies the result.`);
 
   await expect(async () => {
     await page.reload();
@@ -117,25 +119,6 @@ async function openRecipe(name: string): Promise<void> {
 async function openActions(): Promise<void> {
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Actions" }).click();
-}
-
-/**
- * Open the create menu and choose Paste.
- *
- * Retried as a unit: a toast left over from a previous scenario can steal the
- * click that opens the menu, and the menu then never appears.
- */
-async function openPasteImport(): Promise<void> {
-  // Retried as a unit through to the open dialog: a toast left over from an
-  // earlier scenario can steal the click that opens the menu, and the menu can
-  // also close again between opening and the next action.
-  await expect(async () => {
-    await page.getByRole("button", { name: "Add Recipe", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Paste" }).click({ timeout: 2_000 });
-    await expect(
-      page.getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
-    ).toBeVisible({ timeout: 2_000 });
-  }).toPass({ timeout: 60_000, intervals: [500, 1_000, 2_000] });
 }
 
 /** Create through the ordinary recipe form, then wait for the detail route. */
@@ -297,11 +280,7 @@ test("an automatic failure stays quiet and leaves the recipe intact", async () =
   ai.control.failPermanently("provider refused");
 
   await page.goto("/");
-  await openPasteImport();
-  await page
-    .getByPlaceholder("Paste a recipe (free text) or JSON-LD here...")
-    .fill("Import Quiet Failure Stew — the harness supplies the result.");
-  await page.getByRole("button", { name: "AI Import" }).click();
+  await submitPasteImport(page, "Import Quiet Failure Stew — the harness supplies the result.");
 
   // The recipe still arrives: enrichment cannot turn a successful import into
   // a failure, and its own failure raises no error for the user.
