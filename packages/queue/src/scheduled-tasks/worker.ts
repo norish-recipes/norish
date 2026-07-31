@@ -24,12 +24,13 @@ interface ScheduledTaskJobData {
   taskType: ScheduledTaskType;
 }
 
-// Use globalThis to survive HMR in development
+// Read on every access, never copied into a module-local — see the note on
+// `globalForRegistry` in ../registry.ts for why this module is evaluated more
+// than once per process. Here the cost of getting it wrong is a rival always-on
+// worker that the first instance's shutdown cannot reach.
 const globalForWorker = globalThis as unknown as {
   scheduledTasksWorker: Worker<ScheduledTaskJobData> | null;
 };
-
-let worker: Worker<ScheduledTaskJobData> | null = globalForWorker.scheduledTasksWorker ?? null;
 
 async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<void> {
   const cleanupOrphanedImages = requireQueueApiHandler("cleanupOrphanedImages");
@@ -97,18 +98,22 @@ async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<voi
 }
 
 export function startScheduledTasksWorker(): void {
-  if (worker) {
+  if (globalForWorker.scheduledTasksWorker) {
     log.warn("Scheduled tasks worker already running");
 
     return;
   }
 
-  worker = new Worker<ScheduledTaskJobData>(QUEUE_NAMES.SCHEDULED_TASKS, processScheduledTask, {
-    connection: getBullClient(),
-    ...baseWorkerOptions,
-    stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.SCHEDULED_TASKS],
-    concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.SCHEDULED_TASKS],
-  });
+  const worker = new Worker<ScheduledTaskJobData>(
+    QUEUE_NAMES.SCHEDULED_TASKS,
+    processScheduledTask,
+    {
+      connection: getBullClient(),
+      ...baseWorkerOptions,
+      stalledInterval: STALLED_INTERVAL[QUEUE_NAMES.SCHEDULED_TASKS],
+      concurrency: WORKER_CONCURRENCY[QUEUE_NAMES.SCHEDULED_TASKS],
+    }
+  );
 
   worker.on("completed", (job) => {
     log.debug({ jobId: job.id, taskType: job.data.taskType }, "Scheduled task completed");
@@ -130,10 +135,11 @@ export function startScheduledTasksWorker(): void {
 }
 
 export async function stopScheduledTasksWorker(): Promise<void> {
+  const worker = globalForWorker.scheduledTasksWorker;
+
   if (worker) {
     worker.removeAllListeners();
     await worker.close();
-    worker = null;
     globalForWorker.scheduledTasksWorker = null;
     log.info("Scheduled tasks worker stopped");
   }

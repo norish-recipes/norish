@@ -40,10 +40,18 @@ const log = createLogger("queue:registry");
 
 /**
  * Registry state - holds all active queue instances.
- * Uses globalThis to survive HMR in development.
+ *
+ * Lives on globalThis and is read on every access rather than copied into a
+ * module-local, because this module is genuinely evaluated more than once per
+ * process. Development resolves `@norish/queue/registry` through the app's path
+ * alias into the source tree from one import chain and through the node_modules
+ * copy from another; HMR does the same over time. A module-local captured at
+ * load time stays null in whichever instance loaded before initialization, and
+ * that instance then reports "not initialized" while the queues are running.
  */
 const globalForRegistry = globalThis as unknown as {
   queueRegistry: QueueRegistry | null;
+  queueRegistryInitializing: Promise<QueueRegistry> | null;
 };
 
 interface QueueRegistry {
@@ -58,10 +66,6 @@ interface QueueRegistry {
   caldavSync: Queue<CaldavSyncJobData>;
   scheduledTasks: Queue<ScheduledTaskJobData>;
 }
-
-let registry: QueueRegistry | null = globalForRegistry.queueRegistry ?? null;
-
-let initializing: Promise<QueueRegistry> | null = null;
 
 async function loadJobRetention(): Promise<JobRetentionConfig> {
   try {
@@ -83,23 +87,29 @@ async function loadJobRetention(): Promise<JobRetentionConfig> {
  * config requires a server restart to take effect.
  */
 export async function initializeQueues(): Promise<QueueRegistry> {
-  if (registry) {
+  const existing = globalForRegistry.queueRegistry;
+
+  if (existing) {
     log.debug("Queue registry already initialized");
 
-    return registry;
+    return existing;
   }
 
-  if (initializing) {
-    return initializing;
+  // The in-flight promise is global too, so a second module instance joins the
+  // first one's initialization instead of building a rival set of queues.
+  const inFlight = globalForRegistry.queueRegistryInitializing;
+
+  if (inFlight) {
+    return inFlight;
   }
 
-  initializing = (async () => {
+  const initializing = (async () => {
     log.info("Initializing queue registry...");
 
     const retention = await loadJobRetention();
     const removalOptions = buildRemovalOptions(retention);
 
-    registry = {
+    const created: QueueRegistry = {
       recipeImport: createRecipeImportQueue(removalOptions),
       imageImport: createImageImportQueue(removalOptions),
       pasteImport: createPasteImportQueue(removalOptions),
@@ -112,17 +122,19 @@ export async function initializeQueues(): Promise<QueueRegistry> {
       scheduledTasks: createScheduledTasksQueue(removalOptions),
     };
 
-    globalForRegistry.queueRegistry = registry;
+    globalForRegistry.queueRegistry = created;
 
     log.info({ retention }, "Queue registry initialized");
 
-    return registry;
+    return created;
   })();
+
+  globalForRegistry.queueRegistryInitializing = initializing;
 
   try {
     return await initializing;
   } finally {
-    initializing = null;
+    globalForRegistry.queueRegistryInitializing = null;
   }
 }
 
@@ -131,6 +143,8 @@ export async function initializeQueues(): Promise<QueueRegistry> {
  * Use this in application code that needs queue access.
  */
 export function getQueues(): QueueRegistry {
+  const registry = globalForRegistry.queueRegistry;
+
   if (!registry) {
     throw new Error("Queue registry not initialized. Call initializeQueues() at server startup.");
   }
@@ -172,6 +186,8 @@ export function getAllQueueEntries(): { name: QueueName; queue: Queue }[] {
  * Close all queues. Call during server shutdown.
  */
 export async function closeAllQueues(): Promise<void> {
+  const registry = globalForRegistry.queueRegistry;
+
   if (!registry) {
     log.debug("No queue registry to close");
 
@@ -193,7 +209,6 @@ export async function closeAllQueues(): Promise<void> {
     registry.scheduledTasks.close(),
   ]);
 
-  registry = null;
   globalForRegistry.queueRegistry = null;
 
   log.info("All queues closed");

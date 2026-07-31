@@ -9,6 +9,7 @@ import { seedServerConfig } from "@norish/api/startup/seed-config";
 import { registerShutdownHandlers } from "@norish/api/startup/shutdown";
 import { initializeVideoProcessing } from "@norish/api/startup/video-processing";
 import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
+import { initializeQueues } from "@norish/queue/registry";
 import { startWorkers } from "@norish/queue/start-workers";
 import { serverLogger as log, redactUrl } from "@norish/shared-server/logger";
 
@@ -45,6 +46,13 @@ async function main() {
 
   initCaldavSync();
   log.info("CalDAV sync service initialized");
+  log.info("-".repeat(50));
+
+  // Queues first: the listener enrolls enrichment the moment it receives an
+  // event, so subscribing before the registry exists gives it a window in which
+  // every kind fails to queue. `startWorkers` initializes them too, and
+  // initialization is idempotent, so this only moves the step earlier.
+  await initializeQueues();
   log.info("-".repeat(50));
 
   // Subscribe before any recipe-producing worker or HTTP handler can publish,
