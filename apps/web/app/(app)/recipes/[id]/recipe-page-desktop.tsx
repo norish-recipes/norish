@@ -113,9 +113,6 @@ export default function RecipePageDesktop() {
 
           {/* Nutrition Card */}
           <NutritionCard />
-
-          {/* Recipe Provenance */}
-          <ProvenanceCard />
         </div>
 
         {/* RIGHT column: Image + Steps (stacked) */}
@@ -152,6 +149,10 @@ export default function RecipePageDesktop() {
               }
             />
           </DoubleTapContainer>
+
+          {/* Recipe Provenance — above the notes, because where a dish comes
+              from frames the cook's own notes about it. */}
+          <ProvenanceCard />
 
           {/* Notes */}
           {recipe.notes && (

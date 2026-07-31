@@ -156,6 +156,10 @@ export default function RecipePageMobile() {
 
           <Separator />
 
+          {/* Recipe Provenance — above the notes, because where a dish comes
+              from frames the cook's own notes about it. */}
+          <ProvenanceSection />
+
           {/* Notes */}
           {recipe.notes && (
             <>
@@ -196,9 +200,6 @@ export default function RecipePageMobile() {
 
           {/* Nutrition Section */}
           <NutritionSection />
-
-          {/* Recipe Provenance */}
-          <ProvenanceSection />
         </Card.Content>
       </Card>
 

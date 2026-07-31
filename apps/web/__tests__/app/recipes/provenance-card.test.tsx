@@ -64,7 +64,7 @@ vi.mock("next-intl", () => ({
       "states.failed": "Last run failed",
     };
     const provenance: Record<string, string> = {
-      title: "Where it comes from",
+      title: "Provenance",
       region: "Region",
       cuisines: "Cuisines",
       noInfo: "No provenance information yet",
@@ -112,7 +112,10 @@ describe("Recipe Provenance section", () => {
 
     render(<ProvenanceCard />);
 
-    expect(screen.getByText("In progress")).toBeInTheDocument();
+    // A skeleton under the section's own name, and no running commentary: the
+    // shape is what says work is happening.
+    expect(screen.getByText("Provenance")).toBeInTheDocument();
+    expect(screen.queryByText("In progress")).not.toBeInTheDocument();
     expect(screen.queryByText("No provenance information yet")).not.toBeInTheDocument();
     expect(screen.getAllByTestId("skeleton").length).toBeGreaterThan(0);
   });
@@ -123,19 +126,40 @@ describe("Recipe Provenance section", () => {
 
     render(<ProvenanceCard />);
 
-    expect(screen.getByText("Queued")).toBeInTheDocument();
+    expect(screen.getAllByTestId("skeleton").length).toBeGreaterThan(0);
   });
 
-  it("renders the country's flag and its name in the reader's language", () => {
+  it("does not pre-empt the title with a country a run has not produced yet", () => {
+    // Stale provenance must not headline a card that is being replaced.
+    mocks.recipe.originCountry = "IT";
+    mocks.state = "processing";
+
+    render(<ProvenanceCard />);
+
+    expect(screen.getByText("Provenance")).toBeInTheDocument();
+    expect(screen.queryByText("Italië")).not.toBeInTheDocument();
+  });
+
+  it("makes the country the card's title, in the reader's language", () => {
     mocks.recipe.originCountry = "IT";
     mocks.recipe.provenanceNote = "Una classica ricetta romana.";
 
     render(<ProvenanceCard />);
 
     // The reader's locale is Dutch; the note stays in the recipe's language.
-    expect(screen.getByText("Italië")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Italië/ })).toBeInTheDocument();
     expect(screen.getByText("🇮🇹")).toBeInTheDocument();
     expect(screen.getByText("Una classica ricetta romana.")).toBeInTheDocument();
+    // The generic name gives way once there is a real answer.
+    expect(screen.queryByText("Provenance")).not.toBeInTheDocument();
+  });
+
+  it("falls back to naming itself when there is no country", () => {
+    mocks.recipe.originRegion = "Lazio";
+
+    render(<ProvenanceCard />);
+
+    expect(screen.getByText("Provenance")).toBeInTheDocument();
   });
 
   it("shows the region only when there is one", () => {

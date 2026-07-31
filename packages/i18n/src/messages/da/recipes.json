@@ -296,7 +296,7 @@
     }
   },
   "provenance": {
-    "title": "Hvor den kommer fra",
+    "title": "Oprindelse",
     "region": "Region",
     "cuisines": "Køkkener",
     "inferring": "Finder ud af, hvor denne opskrift kommer fra …",
