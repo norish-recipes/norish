@@ -44,3 +44,4 @@ jobs:
       run-lint: true
       run-format: true
       run-i18n: true
+      run-e2e: true
