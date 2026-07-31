@@ -17,19 +17,20 @@ Extend the existing harness rather than building a second one — reuse its stac
 
 An environmentally blocked E2E run is reported as **blocked**, not as passed. Say plainly which scenarios ran, which failed, and which could not run.
 
-The quiet-automatic-failure scenario is the one most likely to pass vacuously — make sure it asserts the recipe is genuinely untouched and unmarked, and that nothing is surfaced to the user, rather than merely that no error appeared.
+The quiet-automatic-failure scenario is the one most likely to pass vacuously — make sure it asserts the recipe is genuinely untouched and that no toast or interruption reaches the user, rather than merely that no error appeared. The per-kind "last run failed" status behind the actions menu is deliberate: it is the diagnostic that invites a manual retry, not a user-facing alarm.
 
 ## Acceptance criteria
 
 - [ ] An import enters automatic provenance inference and the result is stored and rendered.
 - [ ] Supplied provenance suppresses the automatic run for the whole group, end to end.
 - [ ] A manual run replaces the entire group, end to end.
-- [ ] An automatic failure is quiet: the recipe is untouched, unmarked, and nothing is surfaced to the user.
+- [ ] An automatic failure is quiet: the recipe is untouched, nothing interrupts the user, and the failure shows only as the per-kind status behind the actions menu.
 - [ ] A rendered recipe updates in place when provenance arrives, without a reload.
 - [ ] Only the external AI provider is mocked; server, database, Redis, workers, repositories, mutation layer, realtime and UI are real.
 - [ ] Feature documentation is updated and the documentation check passes.
 - [ ] Repo gates green: lint, full test run, internationalization check, production build.
 - [ ] Every gate and E2E run is reported explicitly as passed, failed, or blocked.
+- [ ] The browser suites build and run as one command (`pnpm test:e2e`), and CI enforces it on pull requests and in the RC and release pipelines.
 
 ## Non-goals
 

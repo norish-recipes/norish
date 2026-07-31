@@ -16,7 +16,7 @@ A related problem hides underneath. Ten of the predefined auto-tagging Tags are 
 
 Recipe Provenance becomes the fifth kind of Recipe Enrichment. It infers where a recipe comes from — an origin country, an optional finer-grained region, its Cuisines, and a short written explanation — and it reaches users through the machinery the other four kinds already use: one coordinator decides eligibility, one queue carries the work, one lifecycle contract reports progress, and one repository operation persists the result.
 
-Cuisine becomes a first-class controlled vocabulary that an administrator owns. It is seeded once by a versioned migration and extended thereafter through admin settings, never by further hand-written migrations. The AI chooses from that vocabulary — or, when configured to, extends it — and its output is always matched against what exists first, so near-misses like "Sicilian" and "Tuscan" land on the row that already means them instead of breeding duplicates.
+Cuisine becomes a first-class controlled vocabulary that an administrator owns. It is seeded once by a versioned migration and extended thereafter through admin settings, never by further hand-written migrations. The AI chooses from that vocabulary — or, when configured to, extends it — and its output is always matched against what exists first, so spelling, casing, and whitespace variants of an existing Cuisine land on the row that already means it instead of breeding duplicates. Matching forgives spelling only, deliberately: a matcher loose enough to send "Sicilian" to "Italian" would manufacture farfetched merges, so semantic discipline is the prompt's job — it picks names verbatim from the supplied vocabulary.
 
 Cuisine leaves the predefined Tag vocabulary. Auto-tagging stops proposing cuisine Tags, and a one-time migration moves the cuisine Tags already stored onto the new vocabulary.
 
@@ -32,7 +32,7 @@ The written explanation is produced in the language the recipe itself is written
 6. As a cook, I want the explanation written in the language the recipe is written in, so that it reads alongside the recipe rather than against it.
 7. As a cook, I want provenance to appear on a recipe without my asking, so that my collection becomes browsable by origin over time rather than through manual work.
 8. As a cook, I want provenance inference never to delay or block saving a recipe, so that importing stays as fast as it is today.
-9. As a cook, I want a failed inference to leave my recipe untouched and unmarked, so that a background failure is not my problem.
+9. As a cook, I want a failed inference to leave my recipe untouched and to interrupt me with nothing, so that a background failure is not my problem.
 10. As a recipe editor, I want to correct an inferred origin, so that my grandmother's recipe is attributed to the country I know it came from.
 11. As a recipe editor, I want my corrections to survive, so that Automatic Recipe Enrichment never overwrites what I typed.
 12. As a recipe editor, I want to request provenance inference on demand, so that a recipe imported before this feature existed can be filled in.
@@ -50,7 +50,7 @@ The written explanation is produced in the language the recipe itself is written
 24. As an administrator, I want to rename a Cuisine, so that correcting a name does not orphan the recipes already using it.
 25. As an administrator, I want to delete a Cuisine, so that a mistaken entry can be removed with consequences documented up front.
 26. As an administrator, I want to choose whether AI may invent new Cuisines or only pick from mine, so that I decide how much control I keep over the vocabulary.
-27. As an administrator, I want AI output matched against my vocabulary before anything is stored, so that "Sicilian" does not become a second row meaning Italian.
+27. As an administrator, I want AI output matched against my vocabulary before anything is stored, so that a misspelt "Itallian" does not become a second row meaning Italian.
 28. As an administrator, I want to edit the provenance inference prompt, so that I can tune tone and behaviour like every other AI feature.
 29. As an administrator, I want to see provenance jobs in the job monitor, so that failures are diagnosable the same way as the other kinds.
 30. As a self-hoster, I want provenance to require no new infrastructure, so that upgrading is an ordinary release.
@@ -93,6 +93,7 @@ The written explanation is produced in the language the recipe itself is written
 - A cuisine strategy setting governs how names are chosen: `existing` restricts the AI to the current vocabulary, `extend` permits it to add rows. It defaults to `existing`. The tag strategy's names are deliberately **not** reused — it has three values, and its `predefined` mode names a compile-time list that has no cuisine equivalent.
 - The strategy is independent of the automatic switch, following the correction already made for auto-tagging: how names are picked and whether the kind runs automatically are orthogonal axes, and conflating them once already made manual availability depend on automatic policy.
 - Under both strategies, proposed names are matched against the existing vocabulary before anything is stored. Under `existing` an unmatched name is dropped; under `extend` it becomes a new row. Matching prevents near-duplicates in both cases.
+- Matching forgives spelling, casing, and whitespace — never semantics. "Sicilian" is a different Cuisine from "Italian", not a variant of it, and under `extend` it legitimately becomes its own row. A semantically aggressive matcher would produce farfetched merges an administrator never asked for.
 - Dropped names are returned by the resolver — they are part of its contract and its tests — but nothing consumes them. They are not logged, not persisted, and not surfaced. A recipe whose cuisine was dropped is indistinguishable from one where nothing fitted.
 
 ### Cuisine leaves the Tag vocabulary
@@ -138,8 +139,10 @@ The written explanation is produced in the language the recipe itself is written
 
 ### Client and UI
 
-- Provenance renders on the recipe detail page: the country's flag, its name localised through the platform's region display names, the region, the Cuisines, and the note as stored.
+- Provenance renders on the recipe detail page: the country's flag, its name localised through the platform's region display names, the region, the Cuisines, and the note as stored. The localised country name titles the section.
+- The origin flag also flies wherever the recipe is named — the recipe title and the dashboard cards — as a compact cue. The full group stays on the detail page.
 - The section is absent when there is no provenance and no run in progress, so recipes that will never have it show nothing.
+- An automatic failure is quiet: no toast is raised and the recipe does not change. The per-kind status behind the recipe actions menu still records that the last run failed — an editor who goes looking deserves the diagnostic, and it is what invites a manual retry.
 - Provenance is editable in the recipe form as one atomic group, alongside the other enrichable fields.
 - Lifecycle progress rides the single existing enrichment contract. No new subscription, no new status query, and no new client integration point.
 - All new interface work uses the HeroUI version the application is on. The earlier attempt's component predates it and is treated as a description of what to show, not as code to port.
@@ -157,7 +160,7 @@ The written explanation is produced in the language the recipe itself is written
 - Existing seams are extended rather than replaced. The coordinator interface, repository integration fixtures, worker tests, combined-status tests, client hook tests, and the production-like AI browser harness are all prior art for this work.
 - The primary seam is the Recipe Enrichment coordinator interface. Feed it a persisted recipe, configuration, and origin; observe typed per-kind enrollment results.
 - Coordinator tests cover provenance eligibility with and without ingredients, the automatic switch in both positions, atomic supplied-provenance precedence, manual runs ignoring the automatic switch, and global AI disabled. Because the coordinator is not refactored, the four existing kinds need no regression coverage beyond what they already have.
-- The cuisine resolver is the second seam and is a pure function: proposed names, strategy, and current vocabulary in; resolved rows, newly created names, and dropped names out. It is tested without a database and without AI, covering exact matches, case and whitespace differences, near-miss matching under both strategies, unmatched names under both strategies, duplicate proposals collapsing to one row, and an empty proposal set.
+- The cuisine resolver is the second seam and is a pure function: proposed names, strategy, and current vocabulary in; resolved rows, newly created names, and dropped names out. It is tested without a database and without AI, covering exact matches, case and whitespace differences, spelling-variant matching under both strategies, unmatched names under both strategies, duplicate proposals collapsing to one row, and an empty proposal set.
 - Repository integration tests use a real database and verify atomic writes across scalar fields, note, and join rows; conditional automatic replacement deferring to supplied data; unconditional manual replacement; no-op behaviour on failed validation; and that a failed write leaves no partial group.
 - Inferrer tests mock only the external AI provider. They verify that the request schema is built from the current vocabulary, that cuisine names are taken verbatim from that vocabulary rather than translated into the recipe's language, that the note comes back in the recipe's language for at least two different recipe languages, and that an unparseable response fails without writing.
 - Worker tests verify validated persistence, retry on transient failure, terminal lifecycle failure, canonical recipe update emission, and origin-aware notification. They also assert the worker composes no queries of its own.
@@ -170,6 +173,7 @@ The written explanation is produced in the language the recipe itself is written
 - UI tests verify the section is absent with no provenance and no active run, the in-progress state, localised country rendering, editing the group, and clearing it.
 - Production-like browser E2E extends the existing AI harness: mock only the external AI provider while using the real server, database, Redis, workers, repositories, authorized mutation layer, realtime connection, and UI. It covers an import entering automatic provenance inference, supplied-provenance precedence, a manual replacement, a quiet automatic failure, and a rendered recipe update.
 - Completion requires the repository gates: lint, full test run, internationalization check, and production build. Applicable browser E2E and documentation checks are hard gates; an environmentally blocked E2E run is reported as blocked, not passed.
+- The browser suites build and run as one command — `pnpm test:e2e` at the repo root — and CI enforces that command on every pull request and ahead of every RC and release image.
 
 ## Out of Scope
 
