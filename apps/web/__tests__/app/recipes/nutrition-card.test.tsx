@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -6,8 +6,7 @@ import "@testing-library/jest-dom";
 import NutritionCard from "@/app/(app)/recipes/[id]/components/nutrition-card";
 
 const mocks = vi.hoisted(() => ({
-  canEdit: false,
-  request: vi.fn(),
+  hasData: false,
   state: "idle" as "idle" | "queued" | "processing" | "succeeded" | "failed",
 }));
 
@@ -24,31 +23,18 @@ vi.mock("@/app/(app)/recipes/[id]/context", () => ({
     enrichment: {
       states: { "nutrition-estimation": mocks.state },
       isBusy: () => mocks.state === "queued" || mocks.state === "processing",
-      request: mocks.request,
+      request: vi.fn(),
     },
-  }),
-}));
-
-vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({
-    isAIEnabled: true,
-    canEditRecipe: () => mocks.canEdit,
   }),
 }));
 
 vi.mock("@/components/recipes/readonly-nutrition", () => ({
   MACROS: [],
-  getNutritionData: () => ({ hasData: false, values: {} }),
+  getNutritionData: () => ({ hasData: mocks.hasData, values: {} }),
 }));
 
 vi.mock("@/components/recipes/nutrition-portion-control", () => ({
   default: () => null,
-}));
-
-vi.mock("@/components/shared/ai-action-button", () => ({
-  default: ({ label, onPress }: { label: string; onPress: () => void }) => (
-    <button onClick={onPress}>{label}</button>
-  ),
 }));
 
 vi.mock("@heroui/react", () => ({
@@ -56,7 +42,7 @@ vi.mock("@heroui/react", () => ({
     Content: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   }),
   Separator: () => <hr />,
-  Skeleton: () => <span />,
+  Skeleton: () => <span data-testid="skeleton" />,
 }));
 
 vi.mock("next-intl", () => ({
@@ -72,39 +58,54 @@ vi.mock("next-intl", () => ({
   },
 }));
 
-describe("NutritionCard AI action authorization", () => {
+/**
+ * The card follows the Recipe Provenance rules: absent when there is nothing
+ * stored and nothing running, working without naming lifecycle states, and
+ * never reporting enrichment state — that lives in the actions menu.
+ */
+describe("NutritionCard", () => {
   beforeEach(() => {
-    mocks.canEdit = false;
+    mocks.hasData = false;
     mocks.state = "idle";
-    mocks.request.mockClear();
   });
 
-  it("does not present enrichment to a viewer without edit permission", () => {
-    render(<NutritionCard />);
+  it("is absent when nothing is stored and nothing is running", () => {
+    const { container } = render(<NutritionCard />);
 
-    expect(screen.queryByRole("button", { name: "estimateWithAI" })).not.toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it("lets an editor request nutrition enrichment", () => {
-    mocks.canEdit = true;
-    render(<NutritionCard />);
+  it("stays absent after a quiet automatic failure left nothing stored", () => {
+    mocks.state = "failed";
 
-    fireEvent.click(screen.getByRole("button", { name: "estimateWithAI" }));
+    const { container } = render(<NutritionCard />);
 
-    expect(mocks.request).toHaveBeenCalledWith("nutrition-estimation");
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByText("Last run failed")).not.toBeInTheDocument();
   });
 
-  it.each([
-    ["queued", "Queued"],
-    ["processing", "In progress"],
-    ["succeeded", "Completed"],
-    ["failed", "Last run failed"],
-  ] as const)("renders the %s lifecycle state beside the control", (state, label) => {
-    mocks.canEdit = true;
-    mocks.state = state;
+  it.each([["queued"], ["processing"]] as const)(
+    "renders a %s run as working, without naming the state",
+    (state) => {
+      mocks.state = state;
+
+      render(<NutritionCard />);
+
+      expect(screen.getByRole("heading", { name: "title" })).toBeInTheDocument();
+      expect(screen.getAllByTestId("skeleton").length).toBeGreaterThan(0);
+      expect(screen.queryByText("Queued")).not.toBeInTheDocument();
+      expect(screen.queryByText("In progress")).not.toBeInTheDocument();
+    }
+  );
+
+  it("shows stored values without any lifecycle state beside them", () => {
+    mocks.hasData = true;
+    mocks.state = "failed";
 
     render(<NutritionCard />);
 
-    expect(screen.getByText(label)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "title" })).toBeInTheDocument();
+    expect(screen.queryByText("Last run failed")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("skeleton")).not.toBeInTheDocument();
   });
 });

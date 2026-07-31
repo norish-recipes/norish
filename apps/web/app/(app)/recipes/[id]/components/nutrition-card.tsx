@@ -4,21 +4,22 @@ import { useMemo, useState } from "react";
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
 import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 import { getNutritionData, MACROS } from "@/components/recipes/readonly-nutrition";
-import AIActionButton from "@/components/shared/ai-action-button";
-import { usePermissionsContext } from "@/context/permissions-context";
 import { Card, Separator, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+/**
+ * Nutrition Information on the recipe page, following the Recipe Provenance
+ * rules: the section is absent when nothing is stored and nothing is running,
+ * a run in flight renders as working rather than naming its lifecycle state,
+ * and both asking for a run and seeing that one failed live in the actions
+ * menu — the card itself never reports enrichment state.
+ */
 function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
   const { recipe, enrichment } = useRecipeContext();
   // Queued and processing both render as "working"; a quiet automatic failure
   // simply leaves the panel showing whatever is stored.
   const isEstimatingNutrition = enrichment.isBusy("nutrition-estimation");
-  const enrichmentState = enrichment.states["nutrition-estimation"];
-  const { canEditRecipe, isAIEnabled } = usePermissionsContext();
-  const canEdit = recipe?.userId ? canEditRecipe(recipe.userId) : true;
   const t = useTranslations("recipes.nutrition");
-  const tEnrichment = useTranslations("recipes.enrichment");
   // Independent portion state - defaults to 1 (per serving)
   const [portions, setPortions] = useState(1);
 
@@ -26,17 +27,16 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
     if (!recipe) return null;
 
     const values = getNutritionData(recipe, portions);
-    const hasData = values.hasData;
-
-    if (!hasData && !(isAIEnabled && canEdit)) return null;
 
     return {
-      hasData,
+      hasData: values.hasData,
       values: values.values,
     };
-  }, [recipe, portions, isAIEnabled, canEdit]);
+  }, [recipe, portions]);
 
-  if (!nutritionData) return null;
+  // Nothing stored and nothing running: show nothing, so a recipe that will
+  // never have Nutrition Information carries no empty panel.
+  if (!nutritionData || (!nutritionData.hasData && !isEstimatingNutrition)) return null;
 
   const content = (
     <>
@@ -48,7 +48,6 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
       </div>
       {isEstimatingNutrition ? (
         <div className="space-y-1">
-          <p className="text-muted pb-1 text-sm">{tEnrichment(`states.${enrichmentState}`)}</p>
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center justify-between py-2">
               <div className="flex items-center gap-3">
@@ -59,7 +58,7 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
             </div>
           ))}
         </div>
-      ) : nutritionData.hasData ? (
+      ) : (
         <>
           <div className="divide-border divide-y">
             {MACROS.map(({ key, labelKey, unit, icon: Icon, color, bg }) => {
@@ -89,26 +88,6 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
             </p>
           )}
         </>
-      ) : (
-        <div className="flex flex-col items-center gap-3 py-2">
-          <p className="text-muted text-base">{t("noInfo")}</p>
-          {isAIEnabled && canEdit && (
-            <AIActionButton
-              isLoading={isEstimatingNutrition}
-              label={t("estimateWithAI")}
-              onPress={() => enrichment.request("nutrition-estimation")}
-            />
-          )}
-          {enrichmentState !== "idle" && (
-            <p
-              className={
-                enrichmentState === "failed" ? "text-danger text-sm" : "text-muted text-sm"
-              }
-            >
-              {tEnrichment(`states.${enrichmentState}`)}
-            </p>
-          )}
-        </div>
       )}
     </>
   );
