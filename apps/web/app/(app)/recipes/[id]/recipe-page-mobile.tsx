@@ -2,8 +2,14 @@ import ActionsMenu from "@/app/(app)/recipes/[id]/components/actions-menu";
 import AddToGroceries from "@/app/(app)/recipes/[id]/components/add-to-groceries-button";
 import CookingMode from "@/app/(app)/recipes/[id]/components/cookingmode";
 import IngredientsList from "@/app/(app)/recipes/[id]/components/ingredient-list";
-import { NutritionSection } from "@/app/(app)/recipes/[id]/components/nutrition-card";
-import { ProvenanceSection } from "@/app/(app)/recipes/[id]/components/provenance-card";
+import {
+  NutritionSection,
+  useNutritionSectionVisible,
+} from "@/app/(app)/recipes/[id]/components/nutrition-card";
+import {
+  ProvenanceSection,
+  useProvenanceSectionVisible,
+} from "@/app/(app)/recipes/[id]/components/provenance-card";
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
 import StepsList from "@/app/(app)/recipes/[id]/components/steps-list";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
@@ -50,6 +56,10 @@ export default function RecipePageMobile() {
   const showFavorites = getShowFavoritesPreference(user);
   const { highlightedIngredientKey, highlightIngredient, ingredientListRef } =
     useIngredientLinkHighlight();
+  // The page owns every rule between sections, so it has to know which
+  // sections will render — the same answer each section renders by.
+  const showProvenance = useProvenanceSectionVisible();
+  const showNutrition = useNutritionSectionVisible();
 
   const isFavorite = checkFavorite(recipe.id);
   const handleToggleFavorite = () => toggleFavorite(recipe.id);
@@ -132,6 +142,16 @@ export default function RecipePageMobile() {
 
           <CookingMode fullWidth />
 
+          {/* Recipe Provenance — right after the cooking-mode control and
+              before the ingredients, because where a dish comes from frames
+              the recipe, the way it already does on desktop. */}
+          {showProvenance && (
+            <>
+              <Separator />
+              <ProvenanceSection />
+            </>
+          )}
+
           <Separator />
 
           {/* Ingredients Section */}
@@ -154,15 +174,10 @@ export default function RecipePageMobile() {
             <AddToGroceries recipeId={recipe.id} />
           </div>
 
-          <Separator />
-
-          {/* Recipe Provenance — above the notes, because where a dish comes
-              from frames the cook's own notes about it. */}
-          <ProvenanceSection />
-
           {/* Notes */}
           {recipe.notes && (
             <>
+              <Separator />
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold">{t("notes")}</h2>
@@ -171,9 +186,10 @@ export default function RecipePageMobile() {
                   <ReadonlyRecipeNotes notes={recipe.notes} />
                 </div>
               </div>
-              <Separator />
             </>
           )}
+
+          <Separator />
 
           {/* Steps Section */}
           <div className="space-y-4">
@@ -199,7 +215,12 @@ export default function RecipePageMobile() {
           </div>
 
           {/* Nutrition Section */}
-          <NutritionSection />
+          {showNutrition && (
+            <>
+              <Separator />
+              <NutritionSection />
+            </>
+          )}
         </Card.Content>
       </Card>
 

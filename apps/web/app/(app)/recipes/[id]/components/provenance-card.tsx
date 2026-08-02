@@ -2,11 +2,26 @@
 
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
 import OriginFlag from "@/components/recipes/origin-flag";
-import { Card, Chip, Separator, Skeleton } from "@heroui/react";
+import { Card, Chip, Skeleton } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { hasSubstantiveProvenance } from "@norish/shared/lib/recipe-enrichment";
 import { countryEndonym } from "@norish/shared/lib/recipe-provenance";
+
+/**
+ * Whether the Recipe Provenance section has anything to show: something
+ * stored, or a run in flight. Queued and processing both read as "working";
+ * a quiet automatic failure simply leaves the section showing whatever is
+ * stored. The page layouts read this too, so the rules they draw between
+ * sections come from the same answer the section itself renders by.
+ */
+export function useProvenanceSectionVisible(): boolean {
+  const { recipe, enrichment } = useRecipeContext();
+
+  if (!recipe) return false;
+
+  return hasSubstantiveProvenance(recipe) || enrichment.isBusy("recipe-provenance");
+}
 
 /**
  * Recipe Provenance on the recipe page.
@@ -28,16 +43,11 @@ function ProvenanceDisplay({ inCard = true }: { inCard?: boolean }) {
   const { recipe, enrichment } = useRecipeContext();
   const locale = useLocale();
   const t = useTranslations("recipes.provenance");
+  const isVisible = useProvenanceSectionVisible();
 
-  // Queued and processing both read as "working"; a quiet automatic failure
-  // simply leaves the section showing whatever is stored.
   const isInferring = enrichment.isBusy("recipe-provenance");
 
-  if (!recipe) return null;
-
-  // Nothing stored and nothing running: show nothing, so a recipe that will
-  // never have provenance carries no empty panel.
-  if (!hasSubstantiveProvenance(recipe) && !isInferring) return null;
+  if (!recipe || !isVisible) return null;
 
   const country = isInferring ? null : countryEndonym(recipe.originCountry, locale);
 
@@ -82,15 +92,14 @@ function ProvenanceDisplay({ inCard = true }: { inCard?: boolean }) {
     </>
   );
 
+  // As a section the display draws no rule of its own: the page owns the
+  // rhythm between sections.
   return inCard ? (
     <Card className="rounded-2xl">
       <Card.Content className="p-5">{content}</Card.Content>
     </Card>
   ) : (
-    <>
-      <Separator />
-      <div className="space-y-2">{content}</div>
-    </>
+    <div className="space-y-2">{content}</div>
   );
 }
 

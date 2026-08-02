@@ -4,8 +4,23 @@ import { useMemo, useState } from "react";
 import { useRecipeContext } from "@/app/(app)/recipes/[id]/context";
 import NutritionPortionControl from "@/components/recipes/nutrition-portion-control";
 import { getNutritionData, MACROS } from "@/components/recipes/readonly-nutrition";
-import { Card, Separator, Skeleton } from "@heroui/react";
+import { Card, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+/**
+ * Whether the Nutrition Information section has anything to show: something
+ * stored, or a run in flight. Queued and processing both render as "working";
+ * a quiet automatic failure simply leaves the panel showing whatever is
+ * stored. The page layouts read this too, so the rules they draw between
+ * sections come from the same answer the section itself renders by.
+ */
+export function useNutritionSectionVisible(): boolean {
+  const { recipe, enrichment } = useRecipeContext();
+
+  if (!recipe) return false;
+
+  return getNutritionData(recipe, 1).hasData || enrichment.isBusy("nutrition-estimation");
+}
 
 /**
  * Nutrition Information on the recipe page, following the Recipe Provenance
@@ -16,10 +31,9 @@ import { useTranslations } from "next-intl";
  */
 function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
   const { recipe, enrichment } = useRecipeContext();
-  // Queued and processing both render as "working"; a quiet automatic failure
-  // simply leaves the panel showing whatever is stored.
   const isEstimatingNutrition = enrichment.isBusy("nutrition-estimation");
   const t = useTranslations("recipes.nutrition");
+  const isVisible = useNutritionSectionVisible();
   // Independent portion state - defaults to 1 (per serving)
   const [portions, setPortions] = useState(1);
 
@@ -34,9 +48,7 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
     };
   }, [recipe, portions]);
 
-  // Nothing stored and nothing running: show nothing, so a recipe that will
-  // never have Nutrition Information carries no empty panel.
-  if (!nutritionData || (!nutritionData.hasData && !isEstimatingNutrition)) return null;
+  if (!nutritionData || !isVisible) return null;
 
   const content = (
     <>
@@ -92,15 +104,14 @@ function NutritionDisplay({ inCard = true }: { inCard?: boolean }) {
     </>
   );
 
+  // As a section the display draws no rule of its own: the page owns the
+  // rhythm between sections.
   return inCard ? (
     <Card className="rounded-2xl">
       <Card.Content className="p-5">{content}</Card.Content>
     </Card>
   ) : (
-    <>
-      <Separator />
-      <div className="space-y-2">{content}</div>
-    </>
+    <div className="space-y-2">{content}</div>
   );
 }
 
