@@ -26,14 +26,16 @@ export function useProvenanceSectionVisible(): boolean {
 /**
  * Recipe Provenance on the recipe page.
  *
- * The country is the card's own title, shown as its endonym — the country's
- * name in its own language, derived at render time from the stored alpha-2
- * code — so it reads in step with the note beside it, which is written in
- * the recipe's language. The reader's-language name stays on the flag's
- * tooltip. Until there is a country — while a run is in flight, or for a
- * recipe that only has a region or a note — the card falls back to naming
- * itself. The region and the note are shown exactly as stored, because they
- * are recipe content in the recipe's own language and are never translated.
+ * The country is the card's own title, shown as its stored written name — the
+ * name the inference wrote in the recipe's language, or the one a manual pick
+ * stored in the editor's own words — so it reads in step with the note beside
+ * it. Rows with a code but no stored name fall back to the endonym derived
+ * from the code, converging as runs happen. The reader's-language name stays
+ * on the flag's tooltip. Until there is a country — while a run is in flight,
+ * or for a recipe that only has a region or a note — the card falls back to
+ * naming itself. The region and the note are shown exactly as stored, because
+ * they are recipe content in the recipe's own language and are never
+ * translated.
  *
  * The section is absent entirely when there is nothing to show and nothing in
  * flight, so a recipe that will never have provenance shows nothing at all.
@@ -49,7 +51,9 @@ function ProvenanceDisplay({ inCard = true }: { inCard?: boolean }) {
 
   if (!recipe || !isVisible) return null;
 
-  const country = isInferring ? null : countryEndonym(recipe.originCountry, locale);
+  const country = isInferring
+    ? null
+    : (recipe.originCountryName ?? countryEndonym(recipe.originCountry, locale));
 
   const content = (
     <>

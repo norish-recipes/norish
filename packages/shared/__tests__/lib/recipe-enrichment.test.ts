@@ -71,6 +71,7 @@ describe("normalizeProvenanceGroup", () => {
   it("nulls omitted, blank, and malformed fields so replacement cannot mix claims", () => {
     expect(normalizeProvenanceGroup({ originCountry: "Italy", originRegion: "   " })).toEqual({
       originCountry: null,
+      originCountryName: null,
       originRegion: null,
       provenanceNote: null,
     });
@@ -80,13 +81,28 @@ describe("normalizeProvenanceGroup", () => {
     expect(
       normalizeProvenanceGroup({
         originCountry: "jp",
+        originCountryName: " \u65e5\u672c ",
         originRegion: " Kansai ",
         provenanceNote: "  \u3053\u306e\u30ec\u30b7\u30d4\u306f...  ",
       })
     ).toEqual({
       originCountry: "JP",
+      originCountryName: "\u65e5\u672c",
       originRegion: "Kansai",
       provenanceNote: "\u3053\u306e\u30ec\u30b7\u30d4\u306f...",
+    });
+  });
+
+  it("drops a written name whose country code did not survive", () => {
+    // The name is the code's companion: a name beside a malformed code would
+    // title the card while the flag and the picker disagree.
+    expect(
+      normalizeProvenanceGroup({ originCountry: "Italy", originCountryName: "Italia" })
+    ).toEqual({
+      originCountry: null,
+      originCountryName: null,
+      originRegion: null,
+      provenanceNote: null,
     });
   });
 });

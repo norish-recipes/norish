@@ -130,6 +130,7 @@ export function useRecipeFormDirtyState({
       protein: initialData?.protein != null ? Number(initialData.protein) : null,
       provenance: {
         originCountry: initialData?.originCountry ?? null,
+        originCountryName: initialData?.originCountryName ?? null,
         originRegion: initialData?.originRegion ?? "",
         provenanceNote: initialData?.provenanceNote ?? "",
         cuisineIds: initialData?.cuisines.map((cuisine) => cuisine.id) ?? [],

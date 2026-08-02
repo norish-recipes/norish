@@ -25,7 +25,13 @@ export function buildProvenanceSchema(vocabulary: readonly string[], strategy: C
         .string()
         .nullable()
         .describe(
-          "ISO-3166-1 alpha-2 code of the country this dish comes from, e.g. IT. Never a country name. Null if no single country fits."
+          "ISO-3166-1 alpha-2 code of the single country with the strongest claim to this dish, e.g. IT. Never a country name. When several countries claim the dish, still pick the strongest claim and acknowledge the rivals in the note. Null only when the dish belongs to no national tradition at all."
+        ),
+      originCountryName: z
+        .string()
+        .nullable()
+        .describe(
+          "That country's name written in the language the recipe itself is written in — the same language as the note, e.g. Turkije in a Dutch recipe about a Turkish dish. Null exactly when originCountry is null."
         ),
       originRegion: z
         .string()

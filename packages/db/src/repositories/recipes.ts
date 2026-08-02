@@ -674,6 +674,12 @@ export async function createRecipeWithRefs(
     carbs: payload.carbs ?? null,
     protein: payload.protein ?? null,
     originCountry: normalizeOriginCountry(payload.originCountry),
+    // The written name is the code's companion: without a code there is no
+    // country to name, so a name supplied alone is dropped with it.
+    originCountryName:
+      normalizeOriginCountry(payload.originCountry) && payload.originCountryName
+        ? stripHtmlTags(payload.originCountryName)
+        : null,
     originRegion: payload.originRegion ? stripHtmlTags(payload.originRegion) : null,
     provenanceNote: payload.provenanceNote ? stripHtmlTags(payload.provenanceNote) : null,
     categories: payload.categories ?? [],
@@ -842,6 +848,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       carbs: true,
       protein: true,
       originCountry: true,
+      originCountryName: true,
       originRegion: true,
       provenanceNote: true,
       categories: true,
@@ -935,6 +942,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     carbs: full.carbs ?? null,
     protein: full.protein ?? null,
     originCountry: full.originCountry ?? null,
+    originCountryName: full.originCountryName ?? null,
     originRegion: full.originRegion ?? null,
     provenanceNote: full.provenanceNote ?? null,
     categories: full.categories ?? [],
@@ -1313,6 +1321,13 @@ export async function updateRecipeWithRefs(
     if (payload.protein !== undefined) updateData.protein = payload.protein;
     if (payload.originCountry !== undefined)
       updateData.originCountry = normalizeOriginCountry(payload.originCountry);
+    if (payload.originCountryName !== undefined || payload.originCountry !== undefined)
+      // The written name accompanies the code: clearing or changing the code
+      // without a fresh name clears the stale name with it.
+      updateData.originCountryName =
+        normalizeOriginCountry(payload.originCountry) && payload.originCountryName
+          ? stripHtmlTags(payload.originCountryName)
+          : null;
     if (payload.originRegion !== undefined)
       updateData.originRegion = payload.originRegion ? stripHtmlTags(payload.originRegion) : null;
     if (payload.provenanceNote !== undefined)

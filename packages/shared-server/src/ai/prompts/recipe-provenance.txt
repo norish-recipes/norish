@@ -5,9 +5,15 @@ Ingredients:
 
 Work out where this recipe comes from, using only the recipe above.
 
-- originCountry: the ISO-3166-1 alpha-2 code of the country the dish comes from
-  (for example IT, MX, JP). Use the code, never the country's name. Use null if
-  no single country fits.
+- originCountry: the ISO-3166-1 alpha-2 code of the single country with the
+  strongest claim to the dish (for example IT, MX, JP). Use the code, never the
+  country's name. When several countries claim the dish, do not bail out: pick
+  the one whose claim is strongest and acknowledge the rivals in the note. Use
+  null only when the dish belongs to no national tradition at all.
+- originCountryName: that country's name, written in the language the recipe
+  itself is written in — the same language you write the note in. A Dutch
+  recipe about a Turkish dish says "Turkije"; an Italian recipe about a French
+  dish says "Francia". Use null exactly when originCountry is null.
 - originRegion: the finer-grained region within that country when the recipe
   clearly warrants one (for example "Rome", "Sicily", "Kansai"). Use null when
   the dish is national rather than regional. Do not translate place names.
@@ -18,13 +24,15 @@ Work out where this recipe comes from, using only the recipe above.
   never translated or inflected, character for character, in the language they
   are written in, whatever language you write the note in.
 - provenanceNote: two or three sentences explaining how you concluded this, and
-  what the dish's background is.
+  what the dish's background is. When the dish is contested, name the rival
+  claims here.
 
-WRITE THE NOTE IN THE LANGUAGE THE RECIPE ITSELF IS WRITTEN IN. Judge that
-language from the title, description, and ingredients above — not from any other
-instruction in this prompt. An Italian recipe gets an Italian note; a Dutch
-recipe gets a Dutch one. This applies whatever language these instructions are
-written in.
+WRITE THE NOTE AND THE COUNTRY NAME IN THE LANGUAGE THE RECIPE ITSELF IS
+WRITTEN IN. Judge that language from the title, description, and ingredients
+above — not from any other instruction in this prompt. An Italian recipe gets
+an Italian note; a Dutch recipe gets a Dutch one. This applies whatever
+language these instructions are written in.
 
-Say what you can support from the recipe. If the dish is genuinely unplaceable,
-return null for the country and the region and explain that in the note.
+Say what you can support from the recipe. Only when the dish is genuinely
+unplaceable — belonging to no national tradition at all — return null for the
+country, its name, and the region, and explain that in the note.

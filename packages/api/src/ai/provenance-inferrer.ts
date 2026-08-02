@@ -45,6 +45,8 @@ export interface RecipeForProvenance {
 /** The stored claim: scalars plus resolved vocabulary row ids, never names. */
 export interface ProvenanceInference {
   originCountry: string | null;
+  /** The country's written name in the recipe's language, beside the code. */
+  originCountryName: string | null;
   originRegion: string | null;
   provenanceNote: string;
   cuisineIds: string[];
@@ -178,6 +180,7 @@ export async function inferRecipeProvenance(
       {
         title: recipe.title,
         originCountry: output.originCountry,
+        originCountryName: output.originCountryName,
         originRegion: output.originRegion,
         cuisineCount: cuisineIds.length,
       },
@@ -187,6 +190,13 @@ export async function inferRecipeProvenance(
     return aiSuccess(
       {
         originCountry: output.originCountry,
+        // The written name is the code's companion. A model that returns a
+        // name without a code (or a blank name) degrades to null, and the
+        // card falls back to the endonym rather than storing a loose name.
+        originCountryName:
+          output.originCountry && typeof output.originCountryName === "string"
+            ? output.originCountryName.trim() || null
+            : null,
         originRegion: output.originRegion,
         provenanceNote: output.provenanceNote,
         cuisineIds,

@@ -10,6 +10,11 @@ import { listCountryOptions } from "@norish/shared/lib/recipe-provenance";
 /** Recipe Provenance as the form holds it: one atomic group. */
 export interface ProvenanceFormValue {
   originCountry: string | null;
+  /**
+   * The country's written name as the editor saw it — the picker label they
+   * chose, in their own words — or, untouched, whatever name is stored.
+   */
+  originCountryName: string | null;
   originRegion: string;
   provenanceNote: string;
   cuisineIds: string[];
@@ -17,6 +22,7 @@ export interface ProvenanceFormValue {
 
 export const EMPTY_PROVENANCE_FORM_VALUE: ProvenanceFormValue = {
   originCountry: null,
+  originCountryName: null,
   originRegion: "",
   provenanceNote: "",
   cuisineIds: [],
@@ -67,13 +73,21 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <ComboBox
           selectedKey={value.originCountry}
-          onSelectionChange={(key) =>
+          onSelectionChange={(key) => {
+            // A dismissed popover reports a null key; both it and the
+            // "no country" row mean the same thing — leave it unset.
+            const code = key === null || key === NO_COUNTRY_KEY ? null : String(key);
+
             patch({
-              // A dismissed popover reports a null key; both it and the
-              // "no country" row mean the same thing — leave it unset.
-              originCountry: key === null || key === NO_COUNTRY_KEY ? null : String(key),
-            })
-          }
+              originCountry: code,
+              // A manual pick stores the label the editor saw, in their own
+              // words. Clearing the country clears the name with it.
+              originCountryName:
+                code === null
+                  ? null
+                  : (countries.find((option) => option.code === code)?.name ?? null),
+            });
+          }}
         >
           <Label>{t("originCountry")}</Label>
           <ComboBox.InputGroup>

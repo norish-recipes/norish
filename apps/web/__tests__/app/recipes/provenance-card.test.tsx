@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
     id: "recipe-1",
     userId: "owner-1",
     originCountry: null as string | null,
+    originCountryName: null as string | null,
     originRegion: null as string | null,
     provenanceNote: null as string | null,
     cuisines: [] as { id: string; name: string; version: number }[],
@@ -57,6 +58,7 @@ beforeEach(() => {
     id: "recipe-1",
     userId: "owner-1",
     originCountry: null,
+    originCountryName: null,
     originRegion: null,
     provenanceNote: null,
     cuisines: [],
@@ -101,6 +103,7 @@ describe("Recipe Provenance section", () => {
   it("does not pre-empt the title with a country a run has not produced yet", () => {
     // Stale provenance must not headline a card that is being replaced.
     mocks.recipe.originCountry = "IT";
+    mocks.recipe.originCountryName = "Italia";
     mocks.state = "processing";
 
     render(<ProvenanceCard />);
@@ -109,14 +112,29 @@ describe("Recipe Provenance section", () => {
     expect(screen.queryByText("Italia")).not.toBeInTheDocument();
   });
 
-  it("makes the country the card's title, in its own language", () => {
+  it("titles the card with the stored written name, in the recipe's language", () => {
+    // A Dutch recipe about a Turkish dish: the stored name speaks the language
+    // of the note beside it, not the country's own or the reader's.
+    mocks.recipe.originCountry = "TR";
+    mocks.recipe.originCountryName = "Turkije";
+    mocks.recipe.provenanceNote = "Dit gerecht komt uit de Turkse keuken.";
+
+    render(<ProvenanceCard />);
+
+    expect(screen.getByRole("heading", { name: /Turkije/ })).toBeInTheDocument();
+    expect(screen.getByText("🇹🇷")).toBeInTheDocument();
+    expect(screen.queryByText("Provenance")).not.toBeInTheDocument();
+  });
+
+  it("falls back to the endonym when a row has a code but no stored name", () => {
     mocks.recipe.originCountry = "IT";
+    mocks.recipe.originCountryName = null;
     mocks.recipe.provenanceNote = "Una classica ricetta romana.";
 
     render(<ProvenanceCard />);
 
-    // The reader's locale is Dutch; the endonym still titles the card, so it
-    // reads in step with the note, which is in the recipe's language.
+    // The reader's locale is Dutch; the endonym still titles the card until a
+    // run stores a written name, so nothing ever renders as a bare code.
     expect(screen.getByRole("heading", { name: /Italia/ })).toBeInTheDocument();
     expect(screen.getByText("🇮🇹")).toBeInTheDocument();
     expect(screen.getByText("Una classica ricetta romana.")).toBeInTheDocument();

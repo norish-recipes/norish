@@ -198,6 +198,7 @@ describe("Recipe Enrichment repository", () => {
         testRecipe.id,
         {
           originCountry: "IT",
+          originCountryName: "Italia",
           originRegion: "Lazio",
           provenanceNote: "Una classica ricetta romana.",
           cuisineIds: [await cuisineId("Italian"), await cuisineId("Mediterranean")],
@@ -210,9 +211,33 @@ describe("Recipe Enrichment repository", () => {
       const recipe = await getRecipeFull(testRecipe.id);
 
       expect(recipe?.originCountry).toBe("IT");
+      expect(recipe?.originCountryName).toBe("Italia");
       expect(recipe?.originRegion).toBe("Lazio");
       expect(recipe?.provenanceNote).toBe("Una classica ricetta romana.");
       expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Italian", "Mediterranean"]);
+    });
+
+    it("replaces the written name with the group, and clears one that is not renewed", async () => {
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "IT", originCountryName: "Italia", provenanceNote: "First claim." },
+        "manual"
+      );
+
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "JP", provenanceNote: "Second claim." },
+        "manual"
+      );
+
+      expect(applied).toBe(true);
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      // A stale name must never sit beside a new code: rows with a code and
+      // no name fall back to the endonym at render time instead.
+      expect(recipe?.originCountry).toBe("JP");
+      expect(recipe?.originCountryName).toBeNull();
     });
 
     it("replaces the whole group, clearing omitted fields and dropped Cuisines", async () => {
@@ -351,6 +376,7 @@ describe("Recipe Enrichment repository", () => {
 
       await updateRecipeWithRefs(testRecipe.id, userId, {
         originCountry: "IT",
+        originCountryName: "Italië",
         originRegion: "Lazio",
         provenanceNote: "My grandmother's, from Rome.",
         cuisines: [italian!.id],
@@ -359,9 +385,30 @@ describe("Recipe Enrichment repository", () => {
       const recipe = await getRecipeFull(testRecipe.id);
 
       expect(recipe?.originCountry).toBe("IT");
+      // The label the editor saw in the picker, in their own words.
+      expect(recipe?.originCountryName).toBe("Italië");
       expect(recipe?.originRegion).toBe("Lazio");
       expect(recipe?.provenanceNote).toBe("My grandmother's, from Rome.");
       expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Italian"]);
+    });
+
+    it("clears a stored written name when the country is cleared", async () => {
+      await updateRecipeWithRefs(testRecipe.id, userId, {
+        originCountry: "IT",
+        originCountryName: "Italia",
+        provenanceNote: "Stored.",
+      });
+
+      await updateRecipeWithRefs(testRecipe.id, userId, {
+        originCountry: null,
+        originCountryName: null,
+        provenanceNote: "Stored.",
+      });
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBeNull();
+      expect(recipe?.originCountryName).toBeNull();
     });
 
     it("keeps the Cuisines chosen while creating the recipe", async () => {

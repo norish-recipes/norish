@@ -197,6 +197,7 @@ export function normalizeNutritionGroup(nutrition: NutritionGroupInput): Nutriti
 /** Recipe Provenance as proposed: any field may be absent or blank. */
 export interface ProvenanceGroupInput {
   originCountry?: string | null;
+  originCountryName?: string | null;
   originRegion?: string | null;
   provenanceNote?: string | null;
   /** Resolved Cuisine names, or the rows themselves when reading a stored recipe. */
@@ -206,18 +207,23 @@ export interface ProvenanceGroupInput {
 /**
  * Recipe Provenance as stored.
  *
- * The country is an ISO-3166-1 alpha-2 code so the client can localise it; the
- * region and the note are free text and are never translated. Cuisines are not
- * part of this shape because they are join rows rather than columns.
+ * The country is an ISO-3166-1 alpha-2 code — authoritative for flags — beside
+ * its written name, which is recipe content: inference writes it in the
+ * recipe's language, a manual pick stores the label the editor saw. The region
+ * and the note are free text. None of the written fields is translated.
+ * Cuisines are not part of this shape because they are join rows rather than
+ * columns.
  */
 export interface ProvenanceGroup {
   originCountry: string | null;
+  originCountryName: string | null;
   originRegion: string | null;
   provenanceNote: string | null;
 }
 
 export const EMPTY_PROVENANCE_GROUP: ProvenanceGroup = {
   originCountry: null,
+  originCountryName: null,
   originRegion: null,
   provenanceNote: null,
 };
@@ -277,11 +283,16 @@ export function hasSubstantiveProvenance(provenance: ProvenanceGroupInput): bool
 /**
  * Normalize a proposed Recipe Provenance group for replacement.
  * Omitted, blank, and malformed fields become null because replacement cannot
- * mix an old claim with a new one.
+ * mix an old claim with a new one. The written country name is the code's
+ * companion: without a code there is no country to name, so the name is
+ * dropped with it.
  */
 export function normalizeProvenanceGroup(provenance: ProvenanceGroupInput): ProvenanceGroup {
+  const originCountry = normalizeOriginCountry(provenance.originCountry);
+
   return {
-    originCountry: normalizeOriginCountry(provenance.originCountry),
+    originCountry,
+    originCountryName: originCountry === null ? null : normalizeText(provenance.originCountryName),
     originRegion: normalizeText(provenance.originRegion),
     provenanceNote: normalizeText(provenance.provenanceNote),
   };

@@ -158,6 +158,77 @@ describe("inferRecipeProvenance", () => {
     expect(result.success && result.data.provenanceNote).toBe(note);
   });
 
+  it("carries the country's written name beside the code", async () => {
+    respondWith({
+      originCountry: "TR",
+      originCountryName: "Turkije",
+      originRegion: null,
+      cuisines: [],
+      provenanceNote: "Dit gerecht komt uit de Turkse keuken.",
+    });
+
+    const result = await inferRecipeProvenance(DUTCH_RECIPE);
+
+    expect(result.success && result.data.originCountry).toBe("TR");
+    expect(result.success && result.data.originCountryName).toBe("Turkije");
+  });
+
+  it("drops a written name that arrives without a country code", async () => {
+    // The name is the code's companion: a loose name would render a title
+    // with no flag and nothing for the picker to agree with.
+    respondWith({
+      originCountry: null,
+      originCountryName: "Italia",
+      originRegion: null,
+      cuisines: [],
+      provenanceNote: "Nota.",
+    });
+
+    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+
+    expect(result.success && result.data.originCountryName).toBe(null);
+  });
+
+  it("degrades a blank written name to null so the endonym fallback applies", async () => {
+    respondWith({
+      originCountry: "IT",
+      originCountryName: "   ",
+      originRegion: null,
+      cuisines: [],
+      provenanceNote: "Nota.",
+    });
+
+    const result = await inferRecipeProvenance(ITALIAN_RECIPE);
+
+    expect(result.success && result.data.originCountry).toBe("IT");
+    expect(result.success && result.data.originCountryName).toBe(null);
+  });
+
+  it("asks for the single strongest claim rather than bailing out on rivals", async () => {
+    respondWith({
+      originCountry: "IT",
+      originCountryName: "Italia",
+      originRegion: null,
+      cuisines: [],
+      provenanceNote: "Nota.",
+    });
+
+    await inferRecipeProvenance(ITALIAN_RECIPE);
+
+    const schema = vi.mocked(generateText).mock.calls[0]?.[0].output as unknown as {
+      shape: {
+        originCountry: { description?: string };
+        originCountryName: { description?: string };
+      };
+    };
+
+    expect(schema.shape.originCountry.description).toMatch(/strongest claim/i);
+    expect(schema.shape.originCountry.description).toMatch(/null only when/i);
+    expect(schema.shape.originCountryName.description).toMatch(
+      /language the recipe itself is written in/i
+    );
+  });
+
   it("fails without writing when the response is empty", async () => {
     respondWith(undefined);
 

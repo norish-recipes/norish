@@ -136,6 +136,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     initialData
       ? {
           originCountry: initialData.originCountry ?? null,
+          originCountryName: initialData.originCountryName ?? null,
           originRegion: initialData.originRegion ?? "",
           provenanceNote: initialData.provenanceNote ?? "",
           cuisineIds: initialData.cuisines.map((cuisine) => cuisine.id),
@@ -355,6 +356,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         carbs: carbs != null ? carbs.toString() : null,
         protein: protein != null ? protein.toString() : null,
         originCountry: provenance.originCountry,
+        originCountryName: provenance.originCountryName,
         originRegion: provenance.originRegion.trim() || null,
         provenanceNote: provenance.provenanceNote.trim() || null,
         cuisines: provenance.cuisineIds,

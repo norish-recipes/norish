@@ -41,9 +41,11 @@ export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   fat: true,
   carbs: true,
   protein: true,
-  // The dashboard carries the origin country, and only that: it flies the
-  // flag beside each recipe's name. The region and the note have nothing to
-  // show at that size, so they stay behind the full recipe.
+  // The dashboard carries the origin country code, and only that: it flies
+  // the flag beside each recipe's name. The written name, the region, and
+  // the note have nothing to show at that size, so they stay behind the
+  // full recipe.
+  originCountryName: true,
   originRegion: true,
   provenanceNote: true,
 }).extend({

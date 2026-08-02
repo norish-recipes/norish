@@ -179,6 +179,7 @@ function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO |
     // Recipe Provenance is never supplied at creation: it is inferred later, or
     // typed in the recipe form afterwards.
     originCountry: input.originCountry ?? null,
+    originCountryName: input.originCountryName ?? null,
     originRegion: input.originRegion ?? null,
     provenanceNote: input.provenanceNote ?? null,
     cuisines: [],

@@ -29,6 +29,7 @@ interface RecipeFormState {
   protein: number | null;
   provenance: {
     originCountry: string | null;
+    originCountryName: string | null;
     originRegion: string;
     provenanceNote: string;
     cuisineIds: string[];
@@ -55,6 +56,7 @@ const baseRecipe: FullRecipeDTO = {
   carbs: "60",
   protein: "8",
   originCountry: "IT",
+  originCountryName: "Italia",
   originRegion: "Lazio",
   provenanceNote: "A Roman classic.",
   cuisines: [{ id: "id-italian", name: "Italian", version: 1 }],
@@ -192,6 +194,7 @@ function createInitialCurrent(overrides: Partial<RecipeFormState> = {}): RecipeF
     protein: 8,
     provenance: {
       originCountry: "IT",
+      originCountryName: "Italia",
       originRegion: "Lazio",
       provenanceNote: "A Roman classic.",
       cuisineIds: ["id-italian"],
@@ -379,6 +382,7 @@ describe("useRecipeFormDirtyState", () => {
         protein: null,
         provenance: {
           originCountry: null,
+          originCountryName: null,
           originRegion: "",
           provenanceNote: "",
           cuisineIds: [],
@@ -397,6 +401,7 @@ describe("useRecipeFormDirtyState", () => {
       current: createInitialCurrent({
         provenance: {
           originCountry: "IT",
+          originCountryName: "Italia",
           originRegion: "Sicily",
           provenanceNote: "A Roman classic.",
           cuisineIds: ["id-italian"],
@@ -413,6 +418,7 @@ describe("useRecipeFormDirtyState", () => {
       current: createInitialCurrent({
         provenance: {
           originCountry: null,
+          originCountryName: null,
           originRegion: "",
           provenanceNote: "",
           cuisineIds: [],
@@ -447,6 +453,7 @@ describe("useRecipeFormDirtyState", () => {
         protein: null,
         provenance: {
           originCountry: null,
+          originCountryName: null,
           originRegion: "",
           provenanceNote: "",
           cuisineIds: [],

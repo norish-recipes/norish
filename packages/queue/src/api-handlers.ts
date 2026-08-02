@@ -29,6 +29,7 @@ export interface QueueRecipeSummary {
  */
 export interface QueueProvenanceInference {
   originCountry: string | null;
+  originCountryName: string | null;
   originRegion: string | null;
   provenanceNote: string;
   cuisineIds: string[];

@@ -157,6 +157,7 @@ vi.mock("next-intl", () => ({
 
 const FILLED: ProvenanceFormValue = {
   originCountry: "IT",
+  originCountryName: "Italia",
   originRegion: "Lazio",
   provenanceNote: "Una classica ricetta romana.",
   cuisineIds: ["id-italian"],
@@ -227,12 +228,16 @@ describe("Recipe Provenance form fields", () => {
     expect(container.querySelector('[data-row="__none__"]')).toBeInTheDocument();
   });
 
-  it("clears the country on its own, leaving the rest of the group alone", () => {
+  it("clears the country on its own, taking its written name with it", () => {
     const { container } = render(<ProvenanceFields value={FILLED} onChange={onChange} />);
 
     fireEvent.click(container.querySelector('[data-row="__none__"]')!);
 
-    expect(onChange).toHaveBeenCalledWith({ ...FILLED, originCountry: null });
+    expect(onChange).toHaveBeenCalledWith({
+      ...FILLED,
+      originCountry: null,
+      originCountryName: null,
+    });
   });
 
   it("treats a dismissed picker as leaving the country unset", () => {
@@ -240,14 +245,24 @@ describe("Recipe Provenance form fields", () => {
 
     fireEvent.click(screen.getByText("dismiss-country"));
 
-    expect(onChange).toHaveBeenCalledWith({ ...FILLED, originCountry: null });
+    expect(onChange).toHaveBeenCalledWith({
+      ...FILLED,
+      originCountry: null,
+      originCountryName: null,
+    });
   });
 
-  it("still records a country the editor picks", () => {
+  it("records a picked country as the label the editor saw, in their own words", () => {
     const { container } = render(<ProvenanceFields value={FILLED} onChange={onChange} />);
 
     fireEvent.click(container.querySelector('[data-row="JP"]')!);
 
-    expect(onChange).toHaveBeenCalledWith({ ...FILLED, originCountry: "JP" });
+    // The picker runs in the editor's locale (English here), so the stored
+    // written name is the row they clicked, not an endonym or a translation.
+    expect(onChange).toHaveBeenCalledWith({
+      ...FILLED,
+      originCountry: "JP",
+      originCountryName: "Japan",
+    });
   });
 });

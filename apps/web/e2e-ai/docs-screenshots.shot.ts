@@ -56,6 +56,7 @@ const RECIPE = {
 /** The provenance claim, as the model would return it. */
 const PROVENANCE = {
   originCountry: "IT",
+  originCountryName: "Italia",
   originRegion: "Lazio",
   cuisines: ["Italian", "Mediterranean"],
   provenanceNote:

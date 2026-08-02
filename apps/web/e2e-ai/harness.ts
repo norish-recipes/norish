@@ -154,6 +154,7 @@ export async function findCuisineIdByName(name: string): Promise<string> {
 /** Read a recipe's stored Recipe Provenance straight from the database. */
 export async function readStoredProvenance(recipeName: string): Promise<{
   originCountry: string | null;
+  originCountryName: string | null;
   originRegion: string | null;
   provenanceNote: string | null;
   cuisines: string[];
@@ -166,11 +167,13 @@ export async function readStoredProvenance(recipeName: string): Promise<{
     const recipe = await db.query<{
       id: string;
       origin_country: string | null;
+      origin_country_name: string | null;
       origin_region: string | null;
       provenance_note: string | null;
-    }>("select id, origin_country, origin_region, provenance_note from recipes where name = $1", [
-      recipeName,
-    ]);
+    }>(
+      "select id, origin_country, origin_country_name, origin_region, provenance_note from recipes where name = $1",
+      [recipeName]
+    );
     const row = recipe.rows[0];
 
     if (!row) throw new Error(`Recipe not found: ${recipeName}`);
@@ -185,6 +188,7 @@ export async function readStoredProvenance(recipeName: string): Promise<{
 
     return {
       originCountry: row.origin_country,
+      originCountryName: row.origin_country_name,
       originRegion: row.origin_region,
       provenanceNote: row.provenance_note,
       cuisines: cuisines.rows.map((cuisine) => cuisine.name),
