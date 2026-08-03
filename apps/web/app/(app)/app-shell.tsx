@@ -32,6 +32,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       data-app-container
                       className="relative flex min-h-dvh flex-col overflow-x-hidden"
                     >
+                      {/* Installed-PWA polish: content scrolls under the translucent
+                          status bar (viewport-fit: cover), so a soft background fade
+                          masks it instead of a hard clip. Mobile-only — desktop has
+                          no status bar — and height collapses to the small tail
+                          where the safe-area inset is zero. Below the nav's z-60,
+                          above content; theme-aware via the background token. */}
+                      <div
+                        aria-hidden
+                        className="from-background pointer-events-none fixed inset-x-0 top-0 z-50 bg-gradient-to-b to-transparent md:hidden"
+                        style={{ height: "calc(env(safe-area-inset-top) + 0.75rem)" }}
+                      />
                       <Navbar />
                       <main
                         className={`container mx-auto flex max-w-7xl flex-1 flex-col ${APP_MAIN_HORIZONTAL_PADDING_CLASS} pb-20 md:pb-6`}
