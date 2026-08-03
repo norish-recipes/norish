@@ -253,9 +253,11 @@
       "half": "De helft",
       "third": "Een derde",
       "quarter": "Een kwart",
-      "custom": "Aangepast…"
+      "custom": "Aangepast…",
+      "amount": "Hoeveelheid…"
     },
     "customShareLabel": "Aangepast deel",
+    "customAmountLabel": "Hoeveelheid",
     "removeLabel": "{name} verwijderen"
   },
   "ingredientInput": {

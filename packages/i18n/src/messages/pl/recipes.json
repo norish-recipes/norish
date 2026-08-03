@@ -253,9 +253,11 @@
       "half": "Połowa",
       "third": "Jedna trzecia",
       "quarter": "Jedna czwarta",
-      "custom": "Niestandardowa…"
+      "custom": "Niestandardowa…",
+      "amount": "Ilość…"
     },
     "customShareLabel": "Niestandardowa część",
+    "customAmountLabel": "Ilość",
     "removeLabel": "Usuń {name}"
   },
   "ingredientInput": {

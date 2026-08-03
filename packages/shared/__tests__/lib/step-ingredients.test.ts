@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   deriveStepIngredientAmount,
   resolveStepIngredients,
+  toLineAmount,
 } from "@norish/shared/lib/step-ingredients";
 
 const METRIC_LINES = [
@@ -16,6 +17,25 @@ const US_LINES = [
   { ingredientName: "water", amount: 0.25, unit: "cup", systemUsed: "us", order: 0 },
   { ingredientName: "salt", amount: 1, unit: "tsp", systemUsed: "us", order: 1 },
 ];
+
+describe("toLineAmount", () => {
+  it("reads numbers and database numeric strings alike", () => {
+    expect(toLineAmount(5)).toBe(5);
+    expect(toLineAmount("2.5")).toBe(2.5);
+  });
+
+  it("treats absence, emptiness, and unparseable text as no amount", () => {
+    expect(toLineAmount(null)).toBeNull();
+    expect(toLineAmount(undefined)).toBeNull();
+    expect(toLineAmount("")).toBeNull();
+    expect(toLineAmount("a pinch")).toBeNull();
+  });
+
+  it("offers no divisor for a zero or negative amount", () => {
+    expect(toLineAmount(0)).toBeNull();
+    expect(toLineAmount("-2")).toBeNull();
+  });
+});
 
 describe("deriveStepIngredientAmount", () => {
   it("multiplies the line's current amount by the share", () => {

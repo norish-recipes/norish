@@ -253,9 +253,11 @@
       "half": "Die Hälfte",
       "third": "Ein Drittel",
       "quarter": "Ein Viertel",
-      "custom": "Benutzerdefiniert…"
+      "custom": "Benutzerdefiniert…",
+      "amount": "Menge…"
     },
     "customShareLabel": "Benutzerdefinierter Anteil",
+    "customAmountLabel": "Menge",
     "removeLabel": "{name} entfernen"
   },
   "ingredientInput": {

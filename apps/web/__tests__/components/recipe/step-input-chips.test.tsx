@@ -79,6 +79,7 @@ const INGREDIENTS = [
   { ingredientName: "salt", amount: 5, unit: "g", systemUsed: "metric" as const, order: 0 },
   { ingredientName: "pepper", amount: 3, unit: "g", systemUsed: "metric" as const, order: 1 },
   { ingredientName: "paprika", amount: 2, unit: "g", systemUsed: "metric" as const, order: 2 },
+  { ingredientName: "salt", amount: 1, unit: "tsp", systemUsed: "us" as const, order: 0 },
 ];
 
 let onChange: ReturnType<typeof vi.fn>;
@@ -167,5 +168,27 @@ describe("StepInput chips", () => {
     expect(lastEmitted()[0]?.stepIngredients).toEqual([
       { ingredientOrder: 0, share: 0.5, order: 0 },
     ]);
+  });
+
+  it("derives chip amounts from the active system's lines", () => {
+    render(
+      <StepInput
+        ingredients={INGREDIENTS}
+        steps={[
+          {
+            step: "Add half the salt.",
+            order: 0,
+            systemUsed: "metric",
+            stepIngredients: [{ ingredientOrder: 0, share: 0.5, order: 0 }],
+          },
+        ]}
+        systemUsed="metric"
+        onChange={onChange}
+      />
+    );
+
+    // The salt line exists in both systems at order 0; the chip resolves
+    // against the metric one because that is the system being edited.
+    expect(screen.getByText("2.5 g salt")).toBeInTheDocument();
   });
 });

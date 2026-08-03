@@ -253,9 +253,11 @@
       "half": "Halvdelen",
       "third": "En tredjedel",
       "quarter": "En fjerdedel",
-      "custom": "Tilpasset…"
+      "custom": "Tilpasset…",
+      "amount": "Mængde…"
     },
     "customShareLabel": "Tilpasset andel",
+    "customAmountLabel": "Mængde",
     "removeLabel": "Fjern {name}"
   },
   "ingredientInput": {

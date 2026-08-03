@@ -31,6 +31,13 @@ describe("the shipped Ingredient Linking prompt", () => {
     expect(LINKING_PROMPT).toMatch(/the share is 1/i);
   });
 
+  it("teaches stated amounts and keeps the division out of the model", () => {
+    expect(LINKING_PROMPT).toMatch(/"crack 3 of the eggs"/i);
+    expect(LINKING_PROMPT).toMatch(/give that number as\s+amount and set share to null/i);
+    expect(LINKING_PROMPT).toMatch(/never do\s+the division yourself/i);
+    expect(LINKING_PROMPT).toMatch(/never state more than the line holds/i);
+  });
+
   it("lets steps that use nothing stay bare", () => {
     expect(LINKING_PROMPT).toMatch(/Omit steps that use nothing/i);
   });

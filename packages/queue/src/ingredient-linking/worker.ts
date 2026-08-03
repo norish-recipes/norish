@@ -19,6 +19,7 @@ import type { QueueRecipeForIngredientLinking } from "@norish/queue/api-handlers
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
 import { addStepIngredientsToBareSteps } from "@norish/db/repositories/recipe-enrichment";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
+import { toLineAmount } from "@norish/shared/lib/step-ingredients";
 import { createLogger } from "@norish/shared-server/logger";
 
 import { defineLazyWorker, QUEUE_NAMES } from "../config";
@@ -32,7 +33,8 @@ type RecipeForLinking = Parameters<Parameters<typeof runEnrichmentJob>[1]>[0];
 /**
  * The semantic view the inference reads: the active system's rows, with
  * their orders as reference keys. Heading rows are marked so the inferrer
- * neither offers nor accepts them.
+ * neither offers nor accepts them. Line amounts ride along numerically so a
+ * claim that states an amount can be turned into a share of its line.
  */
 export function toLinkableRecipe(recipe: RecipeForLinking): QueueRecipeForIngredientLinking {
   const system = recipe.systemUsed;
@@ -47,6 +49,7 @@ export function toLinkableRecipe(recipe: RecipeForLinking): QueueRecipeForIngred
         text: [line.amount, line.unit, line.ingredientName]
           .filter((part) => part !== null && part !== undefined && part !== "")
           .join(" "),
+        amount: toLineAmount(line.amount),
         isHeading: line.ingredientName.trim().startsWith("#"),
       })),
     steps: recipe.steps

@@ -253,9 +253,11 @@
       "half": "Половина",
       "third": "Треть",
       "quarter": "Четверть",
-      "custom": "Другое…"
+      "custom": "Другое…",
+      "amount": "Количество…"
     },
     "customShareLabel": "Своя доля",
+    "customAmountLabel": "Количество",
     "removeLabel": "Убрать {name}"
   },
   "ingredientInput": {

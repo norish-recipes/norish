@@ -56,10 +56,10 @@ vi.mock("next-intl", () => ({
 }));
 
 const LINES = [
-  { ingredientName: "water", order: 0 },
+  { ingredientName: "water", order: 0, amount: 50, unit: "ml" },
   { ingredientName: "# For the sauce", order: 1 },
   { ingredientName: "salt", order: 2 },
-  { ingredientName: "paprika", order: 3 },
+  { ingredientName: "eggs", order: 3, amount: 5, unit: null },
 ];
 
 let onChange: ReturnType<typeof vi.fn>;
@@ -113,14 +113,27 @@ describe("StepIngredientChips", () => {
     expect(onChange).toHaveBeenCalledWith([{ ingredientOrder: 0, share: 0.5 }]);
   });
 
-  it("shows the fractional share on the chip", () => {
-    renderChips([{ ingredientOrder: 0, share: 0.5 }]);
+  it("shows the fractional share on a chip whose line has no amount", () => {
+    renderChips([{ ingredientOrder: 2, share: 0.5 }]);
 
-    expect(screen.getByText("½ × water")).toBeInTheDocument();
+    expect(screen.getByText("½ × salt")).toBeInTheDocument();
   });
 
-  it("accepts a custom share typed by hand", () => {
+  it("labels partial use of an amounted line with the derived amount", () => {
+    renderChips([{ ingredientOrder: 0, share: 0.5 }]);
+
+    expect(screen.getByText("25 ml water")).toBeInTheDocument();
+  });
+
+  it("keeps the bare name on a full-share chip even when the line has an amount", () => {
     renderChips([{ ingredientOrder: 0, share: 1 }]);
+
+    expect(screen.getByText("water")).toBeInTheDocument();
+    expect(screen.queryByText("50 ml water")).not.toBeInTheDocument();
+  });
+
+  it("accepts a custom share typed by hand on an amountless line", () => {
+    renderChips([{ ingredientOrder: 2, share: 1 }]);
 
     fireEvent.click(screen.getByRole("menuitem", { name: "share.custom" }));
 
@@ -129,17 +142,77 @@ describe("StepIngredientChips", () => {
     fireEvent.change(input, { target: { value: "0.4" } });
     fireEvent.keyDown(input, { key: "Enter" });
 
-    expect(onChange).toHaveBeenCalledWith([{ ingredientOrder: 0, share: 0.4 }]);
+    expect(onChange).toHaveBeenCalledWith([{ ingredientOrder: 2, share: 0.4 }]);
+  });
+
+  it("stores an entered amount as the equivalent share of the line", () => {
+    renderChips([{ ingredientOrder: 3, share: 1 }]);
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "share.amount" }));
+
+    const input = screen.getByLabelText("customAmountLabel");
+
+    // 3 of the 5 eggs: the cook types the amount, the chip stores the share.
+    fireEvent.change(input, { target: { value: "3" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onChange).toHaveBeenCalledWith([{ ingredientOrder: 3, share: 0.6 }]);
+  });
+
+  it("prefills the amount input with the chip's current derived amount", () => {
+    renderChips([{ ingredientOrder: 0, share: 0.5 }]);
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "share.amount" }));
+
+    expect(screen.getByLabelText<HTMLInputElement>("customAmountLabel").value).toBe("25");
+  });
+
+  it("changes nothing when the input closes unedited", () => {
+    // A third of 50 ml prefills as the rounded 16.67; leaving without typing
+    // must not rewrite the stored third as 0.3334.
+    renderChips([{ ingredientOrder: 0, share: 1 / 3 }]);
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "share.amount" }));
+    fireEvent.blur(screen.getByLabelText("customAmountLabel"));
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("offers amount entry only where the line has an amount", () => {
+    renderChips([{ ingredientOrder: 3, share: 1 }]);
+
+    expect(screen.getByRole("menuitem", { name: "share.amount" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "share.custom" })).not.toBeInTheDocument();
+  });
+
+  it("keeps share entry where the line has none", () => {
+    renderChips([{ ingredientOrder: 2, share: 1 }]);
+
+    expect(screen.getByRole("menuitem", { name: "share.custom" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "share.amount" })).not.toBeInTheDocument();
   });
 
   it("ignores a custom share that is not a positive number", () => {
-    renderChips([{ ingredientOrder: 0, share: 1 }]);
+    renderChips([{ ingredientOrder: 2, share: 1 }]);
 
     fireEvent.click(screen.getByRole("menuitem", { name: "share.custom" }));
 
     const input = screen.getByLabelText("customShareLabel");
 
     fireEvent.change(input, { target: { value: "-2" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("ignores an amount that is not a positive number", () => {
+    renderChips([{ ingredientOrder: 3, share: 1 }]);
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "share.amount" }));
+
+    const input = screen.getByLabelText("customAmountLabel");
+
+    fireEvent.change(input, { target: { value: "0" } });
     fireEvent.keyDown(input, { key: "Enter" });
 
     expect(onChange).not.toHaveBeenCalled();

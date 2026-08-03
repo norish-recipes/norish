@@ -253,9 +253,11 @@
       "half": "절반",
       "third": "3분의 1",
       "quarter": "4분의 1",
-      "custom": "직접 입력…"
+      "custom": "직접 입력…",
+      "amount": "양 입력…"
     },
     "customShareLabel": "직접 입력한 분량",
+    "customAmountLabel": "양",
     "removeLabel": "{name} 제거"
   },
   "ingredientInput": {

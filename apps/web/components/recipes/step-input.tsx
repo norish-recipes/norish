@@ -85,14 +85,16 @@ export default function StepInput({
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const dragConstraintsRef = useRef<HTMLUListElement>(null);
   const { uploadStepImage, deleteStepImage } = useRecipeImages();
+  // Chips derive amounts, so they get the active system's lines only — an
+  // entered "100" means 100 in the units the editor is looking at.
+  const chipLines = useMemo(
+    () => ingredients.filter((ingredient) => ingredient.systemUsed === systemUsed),
+    [ingredients, systemUsed]
+  );
   const ingredientSuggestions = useMemo(
     () =>
-      ingredients
-        .filter(
-          (ingredient) =>
-            ingredient.systemUsed === systemUsed &&
-            !ingredient.ingredientName.trim().startsWith("#")
-        )
+      chipLines
+        .filter((ingredient) => !ingredient.ingredientName.trim().startsWith("#"))
         .map(
           (ingredient): SmartTextInputIngredientSuggestion => ({
             key: `${ingredient.order}`,
@@ -100,7 +102,7 @@ export default function StepInput({
             ingredientOrder: ingredient.order,
           })
         ),
-    [ingredients, systemUsed]
+    [chipLines]
   );
 
   // Initialize from steps prop
@@ -362,7 +364,7 @@ export default function StepInput({
           fileInputRefs={fileInputRefs}
           index={index}
           ingredientSuggestions={ingredientSuggestions}
-          ingredients={ingredients}
+          ingredients={chipLines}
           isLast={index === items.length - 1}
           item={item}
           recipeId={recipeId}

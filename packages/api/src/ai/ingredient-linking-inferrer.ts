@@ -33,6 +33,8 @@ export interface IngredientLineForLinking {
   /** The line's order within its measurement system — the reference key. */
   order: number;
   text: string;
+  /** The line's numeric amount, for turning a stated amount into a share. */
+  amount: number | null;
   isHeading: boolean;
 }
 
@@ -57,6 +59,25 @@ export interface InferredStepLinks {
 
 export interface IngredientLinkingInference {
   links: InferredStepLinks[];
+}
+
+/**
+ * The claim states how much as a share or as an amount; the stored form is a
+ * share. A stated amount is divided by the line's own amount — the model
+ * reads numbers, this code does arithmetic — and clamped to the whole line:
+ * a step cannot use more than the line holds. A line with no amount has
+ * nothing to divide by, so the claim falls back to the stated share, or to
+ * the whole line.
+ */
+function toShare(
+  candidate: { share: number | null; amount: number | null },
+  lineAmount: number | null
+): number {
+  if (candidate.amount != null && lineAmount != null && lineAmount > 0) {
+    return Math.min(1, candidate.amount / lineAmount);
+  }
+
+  return candidate.share ?? 1;
 }
 
 async function buildIngredientLinkingPrompt(
@@ -144,7 +165,9 @@ export async function inferStepIngredients(
 
         if (!line) return [];
 
-        return [{ ingredientOrder: line.order, share: candidate.share, order: index }];
+        return [
+          { ingredientOrder: line.order, share: toShare(candidate, line.amount), order: index },
+        ];
       });
 
       if (refs.length > 0) {

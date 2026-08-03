@@ -121,7 +121,12 @@ describe("toLinkableRecipe", () => {
     const view = toLinkableRecipe(RECIPE as never);
 
     expect(view.ingredients.map((line) => line.order)).toEqual([0, 1, 2]);
-    expect(view.ingredients[1]).toEqual({ order: 1, text: "5 g salt", isHeading: false });
+    expect(view.ingredients[1]).toEqual({
+      order: 1,
+      text: "5 g salt",
+      amount: 5,
+      isHeading: false,
+    });
     expect(view.steps.map((step) => step.order)).toEqual([0, 1]);
   });
 

@@ -253,9 +253,11 @@
       "half": "Halvparten",
       "third": "En tredjedel",
       "quarter": "En fjerdedel",
-      "custom": "Egendefinert…"
+      "custom": "Egendefinert…",
+      "amount": "Mengde…"
     },
     "customShareLabel": "Egendefinert andel",
+    "customAmountLabel": "Mengde",
     "removeLabel": "Fjern {name}"
   },
   "ingredientInput": {

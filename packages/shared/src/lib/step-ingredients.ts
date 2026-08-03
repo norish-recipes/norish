@@ -38,6 +38,20 @@ export interface ResolvedStepIngredient {
 }
 
 /**
+ * A line's amount as a positive number — database numerics arrive as
+ * strings — or null when the line has none worth dividing by. The zero and
+ * negative cases fold into null deliberately: a step ingredient entered as
+ * an amount needs a divisor, and "0 flour" offers none.
+ */
+export function toLineAmount(raw: number | string | null | undefined): number | null {
+  if (raw == null || raw === "") return null;
+
+  const parsed = Number(raw);
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+/**
  * share × the line's current amount, rounded to four decimals so a third of
  * 50 reads as 16.6667 rather than a float tail. A line with no amount stays
  * amountless: the step then shows the name only.

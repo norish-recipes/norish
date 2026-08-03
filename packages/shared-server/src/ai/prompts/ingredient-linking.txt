@@ -15,7 +15,11 @@ each. Use only the recipe above.
   line above; name them all.
 - share: the fraction of the line's amount this step uses. 1 means the whole
   line. "Half the water" is 0.5; "a third of the butter" is 0.33. When the
-  step does not say otherwise, the share is 1.
+  step does not say otherwise, the share is 1 and amount is null.
+- amount: when the step states the quantity it uses in the line's own unit —
+  "crack 3 of the eggs", "add 100 g of the flour" — give that number as
+  amount and set share to null. State the number the step wrote: never do
+  the division yourself, and never state more than the line holds.
 - Refer to steps and ingredient lines strictly by the numbers shown above.
   Never invent numbers, and never link a section heading (a line starting
   with #).

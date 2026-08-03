@@ -253,9 +253,11 @@
       "half": "La moitié",
       "third": "Un tiers",
       "quarter": "Un quart",
-      "custom": "Personnalisé…"
+      "custom": "Personnalisé…",
+      "amount": "Quantité…"
     },
     "customShareLabel": "Part personnalisée",
+    "customAmountLabel": "Quantité",
     "removeLabel": "Retirer {name}"
   },
   "ingredientInput": {

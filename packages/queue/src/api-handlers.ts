@@ -48,6 +48,8 @@ export interface QueueIngredientLinkingInference {
 export interface QueueLinkableIngredientLine {
   order: number;
   text: string;
+  /** The line's numeric amount, for turning a stated amount into a share. */
+  amount: number | null;
   isHeading: boolean;
 }
 

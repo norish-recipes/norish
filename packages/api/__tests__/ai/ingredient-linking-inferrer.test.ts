@@ -47,10 +47,10 @@ vi.mock("@norish/shared-server/logger", () => ({
 const RECIPE = {
   title: "Spiced Stew",
   ingredients: [
-    { order: 0, text: "# Spices", isHeading: true },
-    { order: 1, text: "5 g salt", isHeading: false },
-    { order: 2, text: "3 g pepper", isHeading: false },
-    { order: 4, text: "50 ml water", isHeading: false },
+    { order: 0, text: "# Spices", amount: null, isHeading: true },
+    { order: 1, text: "5 g salt", amount: 5, isHeading: false },
+    { order: 2, text: "3 g pepper", amount: 3, isHeading: false },
+    { order: 4, text: "50 ml water", amount: 50, isHeading: false },
   ],
   steps: [
     { order: 0, text: "# Cooking", isHeading: true },
@@ -114,11 +114,11 @@ describe("inferStepIngredients", () => {
         {
           step: 1,
           ingredients: [
-            { line: 1, share: 1 },
-            { line: 2, share: 1 },
+            { line: 1, share: 1, amount: null },
+            { line: 2, share: 1, amount: null },
           ],
         },
-        { step: 2, ingredients: [{ line: 3, share: 0.5 }] },
+        { step: 2, ingredients: [{ line: 3, share: 0.5, amount: null }] },
       ],
     });
 
@@ -140,14 +140,82 @@ describe("inferStepIngredients", () => {
   it("drops invented step and line numbers rather than writing them wrong", async () => {
     respondWith({
       links: [
-        { step: 9, ingredients: [{ line: 1, share: 1 }] },
-        { step: 1, ingredients: [{ line: 42, share: 1 }] },
+        { step: 9, ingredients: [{ line: 1, share: 1, amount: null }] },
+        { step: 1, ingredients: [{ line: 42, share: 1, amount: null }] },
       ],
     });
 
     const result = await inferStepIngredients(RECIPE);
 
     expect(result.success && result.data.links).toEqual([]);
+  });
+
+  it("converts a stated amount into the line's share", async () => {
+    // "Add 25 ml of the water" against the 50 ml line: the model states the
+    // amount its step read; the division happens here, not in the model.
+    respondWith({
+      links: [{ step: 2, ingredients: [{ line: 3, share: null, amount: 25 }] }],
+    });
+
+    const result = await inferStepIngredients(RECIPE);
+
+    expect(result.success && result.data.links).toEqual([
+      { stepOrder: 3, refs: [{ ingredientOrder: 4, share: 0.5, order: 0 }] },
+    ]);
+  });
+
+  it("clamps a stated amount to the whole line", async () => {
+    respondWith({
+      links: [{ step: 2, ingredients: [{ line: 3, share: null, amount: 80 }] }],
+    });
+
+    const result = await inferStepIngredients(RECIPE);
+
+    expect(result.success && result.data.links).toEqual([
+      { stepOrder: 3, refs: [{ ingredientOrder: 4, share: 1, order: 0 }] },
+    ]);
+  });
+
+  it("prefers the stated amount over a share when both arrive", async () => {
+    respondWith({
+      links: [{ step: 2, ingredients: [{ line: 3, share: 0.2, amount: 25 }] }],
+    });
+
+    const result = await inferStepIngredients(RECIPE);
+
+    expect(result.success && result.data.links).toEqual([
+      { stepOrder: 3, refs: [{ ingredientOrder: 4, share: 0.5, order: 0 }] },
+    ]);
+  });
+
+  it("falls back to the whole line when an amount is stated for an amountless line", async () => {
+    const recipe = {
+      title: "Seasoned",
+      ingredients: [{ order: 0, text: "salt to taste", amount: null, isHeading: false }],
+      steps: [{ order: 0, text: "Season with 2 pinches of salt.", isHeading: false }],
+    };
+
+    respondWith({
+      links: [{ step: 1, ingredients: [{ line: 1, share: null, amount: 2 }] }],
+    });
+
+    const result = await inferStepIngredients(recipe);
+
+    expect(result.success && result.data.links).toEqual([
+      { stepOrder: 0, refs: [{ ingredientOrder: 0, share: 1, order: 0 }] },
+    ]);
+  });
+
+  it("uses the whole line when the claim states neither share nor amount", async () => {
+    respondWith({
+      links: [{ step: 1, ingredients: [{ line: 1, share: null, amount: null }] }],
+    });
+
+    const result = await inferStepIngredients(RECIPE);
+
+    expect(result.success && result.data.links).toEqual([
+      { stepOrder: 1, refs: [{ ingredientOrder: 1, share: 1, order: 0 }] },
+    ]);
   });
 
   it("returns an empty claim as a valid answer, not a failure", async () => {

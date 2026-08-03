@@ -253,9 +253,11 @@
       "half": "Half",
       "third": "A third",
       "quarter": "A quarter",
-      "custom": "Custom…"
+      "custom": "Custom…",
+      "amount": "Amount…"
     },
     "customShareLabel": "Custom share",
+    "customAmountLabel": "Amount",
     "removeLabel": "Remove {name}"
   },
   "ingredientInput": {

@@ -6,6 +6,7 @@ import { Button, Dropdown, Input, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { formatAmount } from "@norish/shared/lib/format-amount";
+import { deriveStepIngredientAmount, toLineAmount } from "@norish/shared/lib/step-ingredients";
 
 /** A chip as the editor holds it: which line, and how much of it. */
 export interface StepIngredientDraft {
@@ -16,6 +17,8 @@ export interface StepIngredientDraft {
 type LineLike = {
   ingredientName: string;
   order: number;
+  amount?: number | string | null;
+  unit?: string | null;
 };
 
 export interface StepIngredientChipsProps {
@@ -36,15 +39,31 @@ function isHeading(line: LineLike): boolean {
   return line.ingredientName.trim().startsWith("#");
 }
 
-function shareLabel(share: number): string | null {
-  if (Math.abs(share - 1) < 0.0001) return null;
+/**
+ * A chip using the whole line is the bare name. Partial use of an amounted
+ * line reads as the derived amount ("2.5 g salt") — the same number readers
+ * see beneath the step; only an amountless line falls back to the fraction.
+ */
+function chipLabel(line: LineLike, share: number): string {
+  if (Math.abs(share - 1) < 0.0001) return line.ingredientName;
 
-  return formatAmount(share, "fraction");
+  const lineAmount = toLineAmount(line.amount);
+
+  if (lineAmount == null) return `${formatAmount(share, "fraction")} × ${line.ingredientName}`;
+
+  const derived = deriveStepIngredientAmount(lineAmount, share);
+
+  return [formatAmount(derived, "decimal"), line.unit ?? "", line.ingredientName]
+    .filter(Boolean)
+    .join(" ");
 }
 
 /**
  * The chips row beneath a step in the editor: every ingredient line the step
- * uses, each removable with a tap and carrying an editable fractional share.
+ * uses, each removable with a tap and carrying an editable use of its line.
+ * A line with an amount is edited in amounts — "3" of the 5 eggs — and the
+ * entry is stored as the equivalent share, so display stays derived from the
+ * live line; a line without one is edited as a fractional share directly.
  * The picker attaches any of the recipe's lines without naming it in the
  * text — that is how "add the spices" carries its three links. Heading rows
  * are not on offer: they are never Step Ingredients.
@@ -54,9 +73,12 @@ export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredi
   const [customIndex, setCustomIndex] = useState<number | null>(null);
   const [customValue, setCustomValue] = useState("");
   const customInputRef = useRef<HTMLInputElement | null>(null);
+  // What the input opened with: leaving it untouched must change nothing, so
+  // a rounded amount prefill cannot drift the stored share on a mere blur.
+  const customOpenedWithRef = useRef("");
 
-  // Focus follows the editor's own choice of "Custom…" — this is not a
-  // page-load focus steal, which is what the autoFocus prop rule guards.
+  // Focus follows the editor's own choice of "Custom…"/"Amount…" — this is
+  // not a page-load focus steal, which is what the autoFocus prop rule guards.
   useEffect(() => {
     if (customIndex !== null) customInputRef.current?.focus();
   }, [customIndex]);
@@ -82,14 +104,36 @@ export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredi
     onChange(refs.map((ref, i) => (i === index ? { ...ref, share } : ref)));
   };
 
+  // An entry on an amounted line is an amount and becomes the equivalent
+  // share here, at commit — the stored form never changes. On an amountless
+  // line the entry is the share itself.
   const commitCustom = (index: number) => {
     const parsed = Number(customValue);
+    const line = linesByOrder.get(refs[index]?.ingredientOrder ?? -1);
+    const lineAmount = line ? toLineAmount(line.amount) : null;
+    const edited = customValue !== customOpenedWithRef.current;
 
-    if (Number.isFinite(parsed) && parsed > 0) {
-      setShareAt(index, parsed);
+    if (edited && Number.isFinite(parsed) && parsed > 0) {
+      setShareAt(index, lineAmount == null ? parsed : parsed / lineAmount);
     }
     setCustomIndex(null);
     setCustomValue("");
+  };
+
+  const openCustom = (index: number) => {
+    const ref = refs[index];
+    const line = ref ? linesByOrder.get(ref.ingredientOrder) : undefined;
+    const lineAmount = line ? toLineAmount(line.amount) : null;
+    const derived =
+      lineAmount == null
+        ? null
+        : (deriveStepIngredientAmount(lineAmount, ref?.share ?? 1) ?? lineAmount);
+    const openedWith =
+      derived == null ? String(ref?.share ?? 1) : String(Math.round(derived * 100) / 100);
+
+    setCustomIndex(index);
+    setCustomValue(openedWith);
+    customOpenedWithRef.current = openedWith;
   };
 
   if (refs.length === 0 && available.length === 0) return null;
@@ -101,8 +145,9 @@ export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredi
 
         if (!line) return null;
 
-        const share = shareLabel(ref.share);
-        const label = share ? `${share} × ${line.ingredientName}` : line.ingredientName;
+        const label = chipLabel(line, ref.share);
+        const hasAmount = toLineAmount(line.amount) != null;
+        const customEntryLabel = t(hasAmount ? "share.amount" : "share.custom");
 
         return (
           <li
@@ -110,26 +155,31 @@ export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredi
             className="border-border bg-surface-secondary flex items-center gap-0.5 rounded-full border py-0.5 pr-1 pl-2.5"
           >
             {customIndex === index ? (
-              <Input
-                ref={customInputRef}
-                aria-label={t("customShareLabel")}
-                className="h-6 w-16 text-sm"
-                min="0.01"
-                step="0.05"
-                type="number"
-                value={customValue}
-                onBlur={() => commitCustom(index)}
-                onChange={(event) => setCustomValue(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    commitCustom(index);
-                  } else if (event.key === "Escape") {
-                    setCustomIndex(null);
-                    setCustomValue("");
-                  }
-                }}
-              />
+              <>
+                <Input
+                  ref={customInputRef}
+                  aria-label={t(hasAmount ? "customAmountLabel" : "customShareLabel")}
+                  className="h-6 w-16 text-sm"
+                  min="0.01"
+                  step="0.05"
+                  type="number"
+                  value={customValue}
+                  onBlur={() => commitCustom(index)}
+                  onChange={(event) => setCustomValue(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      commitCustom(index);
+                    } else if (event.key === "Escape") {
+                      setCustomIndex(null);
+                      setCustomValue("");
+                    }
+                  }}
+                />
+                {hasAmount && line.unit ? (
+                  <span className="text-muted text-sm">{line.unit}</span>
+                ) : null}
+              </>
             ) : (
               <Dropdown>
                 <Button
@@ -154,13 +204,10 @@ export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredi
                     ))}
                     <Dropdown.Item
                       id="custom"
-                      textValue={t("share.custom")}
-                      onAction={() => {
-                        setCustomIndex(index);
-                        setCustomValue(String(ref.share));
-                      }}
+                      textValue={customEntryLabel}
+                      onAction={() => openCustom(index)}
                     >
-                      <Label>{t("share.custom")}</Label>
+                      <Label>{customEntryLabel}</Label>
                     </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown.Popover>
