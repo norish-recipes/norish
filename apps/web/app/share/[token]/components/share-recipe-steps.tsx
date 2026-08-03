@@ -6,7 +6,7 @@ import { ReadonlyStepsList } from "@/components/recipes/readonly-steps-list";
 import { usePublicRecipeContext } from "../public/public-recipe-context";
 
 export function ShareRecipeSteps() {
-  const { recipe, state, token } = usePublicRecipeContext();
+  const { recipe, state, token, units } = usePublicRecipeContext();
 
   return (
     <ReadonlyStepsList
@@ -19,6 +19,7 @@ export function ShareRecipeSteps() {
       steps={recipe.steps}
       systemUsed={state.activeSystem}
       token={token}
+      units={units}
     />
   );
 }

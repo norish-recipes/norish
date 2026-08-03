@@ -1,11 +1,13 @@
 "use client";
 
 import { SmartInstruction } from "@/components/recipe/smart-instruction";
+import { StepIngredientsRow } from "@/components/recipes/step-ingredients-row";
 import { BookOpenIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
 import { Button, Chip, Meter, ScrollShadow, Surface, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
+import type { CookingModeDialogProps } from "./types";
 import { StepImages } from "./step-images";
 import { clampStep } from "./utils";
 
@@ -14,6 +16,8 @@ type CookingStepViewProps = {
   recipeId: string;
   recipeName: string;
   steps: ResolvedCookingModeStep[];
+  displayIngredients: CookingModeDialogProps["displayIngredients"];
+  recipeSystemUsed: string;
   onStepChange: (step: number) => void;
 };
 
@@ -22,6 +26,8 @@ export function CookingStepView({
   recipeId,
   recipeName,
   steps,
+  displayIngredients,
+  recipeSystemUsed,
   onStepChange,
 }: CookingStepViewProps) {
   const tCookMode = useTranslations("recipes.cookMode");
@@ -71,6 +77,17 @@ export function CookingStepView({
                 text={step.text}
               />
             </div>
+
+            {step.stepIngredients.length > 0 && (
+              // The current step's ingredients and amounts, in front of the
+              // cook exactly when hands are full — derived from the same
+              // servings-adjusted lines the ingredients tab shows.
+              <StepIngredientsRow
+                ingredients={displayIngredients}
+                refs={step.stepIngredients}
+                systemUsed={recipeSystemUsed}
+              />
+            )}
 
             <StepImages step={step} />
           </div>

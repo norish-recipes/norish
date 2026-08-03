@@ -74,4 +74,23 @@ describe("resolveCookingModeSteps", () => {
       { image: "/recipes/1/steps/chop.jpg", order: 1 },
     ]);
   });
+
+  it("carries each step's Step Ingredients through resolution", () => {
+    const steps = resolveCookingModeSteps(
+      [
+        {
+          step: "Add half the water.",
+          systemUsed: "metric",
+          order: 0,
+          stepIngredients: [{ ingredientOrder: 0, share: 0.5, order: 0 }],
+        },
+        { step: "Serve.", systemUsed: "metric", order: 1 },
+      ],
+      "metric"
+    );
+
+    expect(steps[0]?.stepIngredients).toEqual([{ ingredientOrder: 0, share: 0.5, order: 0 }]);
+    // A step that uses nothing stays bare rather than undefined.
+    expect(steps[1]?.stepIngredients).toEqual([]);
+  });
 });

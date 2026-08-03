@@ -48,8 +48,10 @@ export function CookingModeTabs({
       >
         <CookingStepView
           activeStep={activeStep}
+          displayIngredients={displayIngredients}
           recipeId={recipeId}
           recipeName={recipeName}
+          recipeSystemUsed={recipeSystemUsed}
           steps={steps}
           onStepChange={onStepChange}
         />

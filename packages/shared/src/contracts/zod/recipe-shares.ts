@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { measurementSystems, recipeCategorySchema } from "./recipe";
+import { StepIngredientOutputSchema } from "./step-ingredients";
 
 export const recipeShareExpiryPolicies = ["1day", "1week", "1month", "1year", "forever"] as const;
 export const recipeShareStatuses = ["active", "expired", "revoked"] as const;
@@ -140,6 +141,9 @@ export const PublicRecipeStepSchema = z.object({
   systemUsed: z.enum(measurementSystems),
   order: z.coerce.number(),
   images: z.array(PublicRecipeImageSchema).default([]),
+  // Step Ingredients resolve by line order within the step's system, so the
+  // public view carries them without exposing any ids.
+  stepIngredients: z.array(StepIngredientOutputSchema).default([]),
 });
 
 export const PublicRecipeViewSchema = z.object({

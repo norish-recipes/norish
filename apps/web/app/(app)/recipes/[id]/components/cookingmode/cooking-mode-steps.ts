@@ -1,5 +1,7 @@
 "use client";
 
+import type { StepIngredientRefLike } from "@norish/shared/lib/step-ingredients";
+
 export type CookingModeStepImage = {
   image: string;
   order?: number;
@@ -10,6 +12,7 @@ export type CookingModeStepLike = {
   systemUsed: string;
   order: number;
   images?: CookingModeStepImage[];
+  stepIngredients?: StepIngredientRefLike[];
 };
 
 export type ResolvedCookingModeStep = {
@@ -18,6 +21,7 @@ export type ResolvedCookingModeStep = {
   text: string;
   heading?: string;
   images: CookingModeStepImage[];
+  stepIngredients: StepIngredientRefLike[];
 };
 
 export function resolveCookingModeSteps(
@@ -50,6 +54,7 @@ export function resolveCookingModeSteps(
       text: step.step,
       heading,
       images: pendingHeadingImages.length > 0 ? [...pendingHeadingImages, ...images] : images,
+      stepIngredients: step.stepIngredients ?? [],
     });
     pendingHeadingImages = [];
   });
