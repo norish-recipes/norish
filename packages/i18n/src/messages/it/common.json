@@ -269,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Sei offline",
-    "body": "Questa pagina non è nella cache offline. Le pagine visitate di recente sono ancora disponibili.",
+    "title": "Anche Nora è offline.",
+    "body": "Questa pagina non è salvata per l'uso offline — le pagine visitate di recente sono ancora qui.",
+    "backOnlineTitle": "Nora ha trovato la connessione!",
+    "backOnlineBody": "Norish è di nuovo raggiungibile — riprova a caricare questa pagina.",
     "retry": "Riprova",
     "home": "Apri Norish"
   },

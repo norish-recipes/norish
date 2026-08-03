@@ -269,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Sie sind offline",
-    "body": "Diese Seite ist nicht im Offline-Cache. Kürzlich besuchte Seiten sind weiterhin verfügbar.",
+    "title": "Nora ist auch offline.",
+    "body": "Diese Seite ist nicht offline gespeichert — zuletzt besuchte Seiten sind weiterhin da.",
+    "backOnlineTitle": "Nora hat die Verbindung gefunden!",
+    "backOnlineBody": "Norish ist wieder erreichbar — versuchen Sie, diese Seite neu zu laden.",
     "retry": "Erneut versuchen",
     "home": "Norish öffnen"
   },

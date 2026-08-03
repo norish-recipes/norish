@@ -269,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Du er frakoblet",
-    "body": "Denne siden er ikke i frakoblet-cachen. Nylig besøkte sider er fortsatt tilgjengelige.",
+    "title": "Nora er også frakoblet.",
+    "body": "Denne siden er ikke lagret for frakoblet bruk — sider du nylig har besøkt er fortsatt her.",
+    "backOnlineTitle": "Nora fant tilkoblingen!",
+    "backOnlineBody": "Norish er tilgjengelig igjen — prøv å laste denne siden på nytt.",
     "retry": "Prøv igjen",
     "home": "Åpne Norish"
   },

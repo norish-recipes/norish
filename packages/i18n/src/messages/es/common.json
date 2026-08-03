@@ -269,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Estás sin conexión",
-    "body": "Esta página no está en la caché sin conexión. Las páginas visitadas recientemente siguen disponibles.",
+    "title": "Nora también está sin conexión.",
+    "body": "Esta página no está guardada para el modo sin conexión; las páginas visitadas recientemente siguen aquí.",
+    "backOnlineTitle": "¡Nora encontró la conexión!",
+    "backOnlineBody": "Norish vuelve a estar disponible: intenta cargar esta página.",
     "retry": "Reintentar",
     "home": "Abrir Norish"
   },

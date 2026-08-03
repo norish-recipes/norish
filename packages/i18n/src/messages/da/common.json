@@ -269,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Du er offline",
-    "body": "Denne side er ikke i offline-cachen. Senest besøgte sider er stadig tilgængelige.",
+    "title": "Nora er også offline.",
+    "body": "Denne side er ikke gemt til offline — sider, du har besøgt for nylig, er her stadig.",
+    "backOnlineTitle": "Nora har fundet forbindelsen!",
+    "backOnlineBody": "Norish kan nås igen — prøv at indlæse denne side igen.",
     "retry": "Prøv igen",
     "home": "Åbn Norish"
   },

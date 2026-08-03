@@ -269,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Vous êtes hors ligne",
-    "body": "Cette page n'est pas dans le cache hors ligne. Les pages récemment visitées restent disponibles.",
+    "title": "Nora est hors ligne aussi.",
+    "body": "Cette page n'est pas enregistrée pour le hors ligne — les pages visitées récemment sont toujours là.",
+    "backOnlineTitle": "Nora a retrouvé la connexion !",
+    "backOnlineBody": "Norish est de nouveau joignable — réessayez de charger cette page.",
     "retry": "Réessayer",
     "home": "Ouvrir Norish"
   },
