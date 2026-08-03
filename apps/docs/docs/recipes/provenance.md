@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 title: Recipe provenance
 description: Where a recipe comes from — its country, region, cuisines, and a short explanation — how Norish works that out, and how to curate the cuisine list.
 ---
@@ -14,11 +14,20 @@ Provenance is where a recipe comes from. Norish records four things:
   several
 - **Note** — a couple of sentences explaining how that was concluded
 
-It appears in its own section on the recipe page, just above the notes, and the
-country is that section's own heading — with its flag, and named **in your own
-language**, because Norish stores the country code rather than a name. Until
-there is a country the section simply calls itself **Provenance**. The region
-and the note are shown exactly as written.
+It appears in its own section on the recipe page — beside the media on a
+desktop, and right after the **Cook** button on a phone, so where a dish comes
+from frames the recipe before its ingredients. The country is that section's
+own heading — with its flag, and named **in the recipe's language**, the same
+language as the note beside it: a Dutch recipe about a Turkish dish is titled
+_Turkije_. Recipes placed before this name existed fall back to the country's
+own name for itself until a run stores one. Until there is a country at all,
+the section simply calls itself **Provenance**. The region and the note are
+shown exactly as written.
+
+A dish that several countries claim still gets a country: Norish picks the
+single strongest claim and acknowledges the rivals in the note. Only a dish
+that belongs to no national tradition at all keeps an empty country — an
+honest blank rather than an invented answer.
 
 The flag also flies in front of the recipe's title, and beside every recipe on
 your dashboard, so you can see at a glance where a dish comes from.
@@ -34,6 +43,11 @@ The explanation is written in the language **the recipe itself** is written in,
 not yours. An Italian recipe gets an Italian note beside its Italian steps; a
 Dutch recipe gets a Dutch one. The note is recipe content, like the steps and
 the ingredients, and is never translated.
+
+The country's written name follows the same rule: inference names the country
+in the recipe's language, and when you pick a country by hand the label you
+picked is stored in your own words. Interface chrome — the flag's tooltip, the
+dashboard, the country picker — stays in your language.
 
 ## Cuisines are a list your administrator owns
 

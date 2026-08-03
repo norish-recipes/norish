@@ -6,11 +6,15 @@
 
 **Spec:** `.scratch/general-improvements/spec.md`
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Every step in the editor has a chips row with an add picker over the recipe's ingredient lines.
-- [ ] A chip's share defaults to the full line and can be set to ½, ⅓, ¼, or a custom fraction; a chip can be removed.
-- [ ] Chips round-trip through save and render as amounts beneath the step on the recipe page.
-- [ ] Heading rows cannot receive chips.
-- [ ] Unsaved-changes detection treats chip edits as edits.
-- [ ] Component tests live beside the existing recipe-form tests.
+- [x] Every step in the editor has a chips row with an add picker over the recipe's ingredient lines.
+- [x] A chip's share defaults to the full line and can be set to ½, ⅓, ¼, or a custom fraction; a chip can be removed.
+- [x] Chips round-trip through save and render as amounts beneath the step on the recipe page.
+- [x] Heading rows cannot receive chips.
+- [x] Unsaved-changes detection treats chip edits as edits.
+- [x] Component tests live beside the existing recipe-form tests.
+
+## Comments
+
+- Shipped in 9908249a. Chips row beneath every non-heading step with an add picker over the recipe's lines; shares editable (whole, ½, ⅓, ¼, custom) and chips removable with a tap; heading rows can't receive chips and shed any they had; chip edits count as unsaved changes; round-trips through save. Component tests beside the recipe-form tests.

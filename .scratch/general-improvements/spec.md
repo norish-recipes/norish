@@ -1,10 +1,10 @@
 # Step Ingredients, Provenance Refinements, and Recipe-Editing Docs
 
-Status: ready-for-agent
+Status: done
 
 ## Problem Statement
 
-A cook reading a step like "add the spices" has to stop, scroll back to the ingredient list, and guess which lines the step means and how much of each. When a step uses part of an ingredient — "add half the water" — the arithmetic is theirs to do, mid-cook, with wet hands. Nothing in Norish connects a step to the ingredient lines it consumes, and the one gesture that gestured at this (`@`-tokens in step text) only decorates a name the user already typed: it cannot say that "the spices" means salt, pepper, *and* paprika, and it cannot say that "half the water" means 25 ml of the 50.
+A cook reading a step like "add the spices" has to stop, scroll back to the ingredient list, and guess which lines the step means and how much of each. When a step uses part of an ingredient — "add half the water" — the arithmetic is theirs to do, mid-cook, with wet hands. Nothing in Norish connects a step to the ingredient lines it consumes, and the one gesture that gestured at this (`@`-tokens in step text) only decorates a name the user already typed: it cannot say that "the spices" means salt, pepper, _and_ paprika, and it cannot say that "half the water" means 25 ml of the 50.
 
 Recipe Provenance, shipped recently, has three rough edges. The country that titles the provenance section is written in the country's own language — "Türkiye" above a Dutch note about a Turkish dish — so the heading argues with the recipe content it sits beside. A dish that several countries claim gets no country at all, because the inference is instructed to bail out on ambiguity; contested classics like hummus or couscous stay flagless forever. And on phones the section renders below the ingredients with a doubled rule above it, while on desktop its placement is right.
 

@@ -6,11 +6,15 @@
 
 **Spec:** `.scratch/general-improvements/spec.md`
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `@` opens ingredient autocomplete in step text; picking inserts the plain word and attaches a chip with a full share.
-- [ ] Stored step text never contains `@` tokens produced by the gesture.
-- [ ] The `@` trigger respects word boundaries (no trigger mid-word or in email-like text).
-- [ ] The inline linkification pass is removed from both the private and public renderers; legacy tokens display literally.
-- [ ] The editor formatting help teaches the mention gesture instead of the `@` syntax, in every shipped locale.
-- [ ] The `/` recipe-link and `#` heading affordances are unaffected.
+- [x] `@` opens ingredient autocomplete in step text; picking inserts the plain word and attaches a chip with a full share.
+- [x] Stored step text never contains `@` tokens produced by the gesture.
+- [x] The `@` trigger respects word boundaries (no trigger mid-word or in email-like text).
+- [x] The inline linkification pass is removed from both the private and public renderers; legacy tokens display literally.
+- [x] The editor formatting help teaches the mention gesture instead of the `@` syntax, in every shipped locale.
+- [x] The `/` recipe-link and `#` heading affordances are unaffected.
+
+## Comments
+
+- Shipped in f96b15c6. @ inserts the plain word and attaches a full-share chip atomically; word-boundary trigger keeps email-like text plain; the linkification pass, the norish-ingredient scheme, and the tap-to-highlight chain are deleted from private and public renderers (legacy tokens read literally, no migration); the formatting help teaches the gesture in all 13 locales; / and # untouched.

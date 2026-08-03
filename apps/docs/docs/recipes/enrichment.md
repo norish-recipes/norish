@@ -1,12 +1,12 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 title: Recipe enrichment
-description: How Norish adds tags, allergy indications, meal categories, nutrition, and provenance to your recipes with AI, and how to run each one yourself.
+description: How Norish adds tags, allergy indications, meal categories, nutrition, provenance, and step ingredients to your recipes with AI, and how to run each one yourself.
 ---
 
 # Recipe enrichment
 
-When your Norish instance has AI enabled, it can fill in five things about a
+When your Norish instance has AI enabled, it can fill in six things about a
 recipe:
 
 - **Tags** — descriptive keywords such as _quick_, _one-pot_, _vegetarian_
@@ -15,6 +15,8 @@ recipe:
 - **Nutrition** — calories, fat, carbs, and protein per serving
 - **[Provenance](./provenance.md)** — where the recipe comes from: its country,
   region, cuisines, and a short written explanation
+- **[Step ingredients](./step-ingredients.md)** — which ingredient lines each
+  step uses, for the steps you haven't linked yourself
 
 This is called _enrichment_, and it always happens **after** your recipe is
 saved. Importing or creating a recipe never waits for it, and never fails
@@ -23,7 +25,7 @@ have your recipe — exactly as it was saved.
 
 ## Automatic enrichment
 
-Your administrator chooses which of the five run automatically for newly created
+Your administrator chooses which of the six run automatically for newly created
 recipes. Whatever they choose applies the same way to every recipe you create,
 whether you typed it in yourself or imported it from a link, a photo, or pasted
 text.
@@ -45,6 +47,8 @@ takes precedence:
   never ends up arguing against a country you set yourself.
 - Tags and allergy indications are only ever **added**. Enrichment never removes
   a tag you added.
+- Step ingredients are filled **per step**: a step you linked yourself is never
+  touched, whoever asks — see [Step ingredients](./step-ingredients.md).
 
 This holds even when the enrichment was already running: if you fill in
 nutrition while an estimate is in flight, your value wins.
@@ -59,6 +63,7 @@ edit the recipe, you'll find one action per kind:
 - **Auto-categorize**
 - **Estimate nutrition**
 - **Work out provenance**
+- **Link ingredients to steps**
 
 These stay available even when your administrator has turned the matching
 automatic switch off — the switch controls background work, not what you can ask
@@ -67,7 +72,9 @@ spend an AI request on tags.
 
 A run you request is a deliberate refresh, so it **replaces** the current
 categories, the complete nutrition group, or the complete provenance group,
-rather than deferring to what is already there. Tags and allergy indications are
+rather than deferring to what is already there. Ingredient linking is the
+exception: even a run you request only fills steps that have no links, so it
+can never replace the ones you attached. Tags and allergy indications are
 still only added.
 
 ## What you'll see

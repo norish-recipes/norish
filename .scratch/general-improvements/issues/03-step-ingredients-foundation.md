@@ -6,11 +6,15 @@
 
 **Spec:** `.scratch/general-improvements/spec.md`
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Step Ingredients are stored per measurement system with a fractional share (default one) and a display order, and are deleted with their step or their ingredient line.
-- [ ] References travel with the step payload on save — the same mechanism step images use — so they survive the editor's recreate-on-save behavior.
-- [ ] The full recipe contract exposes each step's Step Ingredients.
-- [ ] Amounts render beneath steps on the recipe page in both the desktop and mobile layouts, derived at display time as share × the line's current amount; a line with no amount shows its name only.
-- [ ] Editing an ingredient line's amount changes what renders under its steps without any reference being touched.
-- [ ] Real-database repository tests cover save round-trip and cascades; shared-library tests cover amount derivation, including fractions and per-system resolution.
+- [x] Step Ingredients are stored per measurement system with a fractional share (default one) and a display order, and are deleted with their step or their ingredient line.
+- [x] References travel with the step payload on save — the same mechanism step images use — so they survive the editor's recreate-on-save behavior.
+- [x] The full recipe contract exposes each step's Step Ingredients.
+- [x] Amounts render beneath steps on the recipe page in both the desktop and mobile layouts, derived at display time as share × the line's current amount; a line with no amount shows its name only.
+- [x] Editing an ingredient line's amount changes what renders under its steps without any reference being touched.
+- [x] Real-database repository tests cover save round-trip and cascades; shared-library tests cover amount derivation, including fractions and per-system resolution.
+
+## Comments
+
+- Shipped in 3f22a1bb. step_ingredients table (share numeric, display order, FK cascades both ways); references ride the step payload like images through create and positional update; FullRecipeSchema exposes them per step; amounts derive at display time via resolveStepIngredients (share × live amount, name-only when amountless). Real-DB round-trip/cascade tests and shared-library derivation tests included; recipe-page rendering landed with 376b59de.

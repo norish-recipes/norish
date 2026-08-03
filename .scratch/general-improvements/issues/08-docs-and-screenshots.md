@@ -6,11 +6,15 @@
 
 **Spec:** `.scratch/general-improvements/spec.md`
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A creating-and-editing page covers the form end to end, including `#` sections, `/` recipe links, and the mention gesture with chips.
-- [ ] A step-ingredients page covers the feature end to end, including the amounts under steps, cooking mode, the admin switch, gap-filling manual runs, and offline behavior.
-- [ ] Five new screenshots are produced by the screenshot suite, not by hand: a form with a `#` section, the `/` autocomplete open, the `@` autocomplete with chips beneath a step, amounts under a step on the recipe page, and cooking mode showing a step's ingredients.
-- [ ] The provenance page's claims about the country name's language, the section's placement, and undecidable countries match the shipped behavior.
-- [ ] The Target Version release-notes page gains a short section per feature.
-- [ ] The docs build passes with the new pages in the sidebar's recipes category.
+- [x] A creating-and-editing page covers the form end to end, including `#` sections, `/` recipe links, and the mention gesture with chips.
+- [x] A step-ingredients page covers the feature end to end, including the amounts under steps, cooking mode, the admin switch, gap-filling manual runs, and offline behavior.
+- [x] Five new screenshots are produced by the screenshot suite, not by hand: a form with a `#` section, the `/` autocomplete open, the `@` autocomplete with chips beneath a step, amounts under a step on the recipe page, and cooking mode showing a step's ingredients.
+- [x] The provenance page's claims about the country name's language, the section's placement, and undecidable countries match the shipped behavior.
+- [x] The Target Version release-notes page gains a short section per feature.
+- [x] The docs build passes with the new pages in the sidebar's recipes category.
+
+## Comments
+
+- Shipped with the docs commit: creating-and-editing and step-ingredients pages in the recipes category, five harness-generated screenshots, the three invalidated provenance sentences corrected, and a release-notes section per feature on the 0.20.0-beta page.
