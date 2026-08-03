@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Page introuvable",
-    "message": "Oups! Nora n'a pas trouvé ce que vous cherchez.\nLa page a peut-être été déplacée ou n'existe plus."
+    "title": "Nora est perdue.",
+    "message": "Elle renifle partout pour retrouver où vous vouliez aller.",
+    "imageAlt": "Nora a l'air perdue"
   },
   "import": {
     "url": {

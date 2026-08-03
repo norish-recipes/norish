@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Nie znaleziono strony",
-    "message": "Ups! Nora nie mogła znaleźć tego, czego szukasz."
+    "title": "Nora jest zdezorientowana.",
+    "message": "Węszy dookoła, żeby znaleźć stronę, której szukasz.",
+    "imageAlt": "Zdezorientowana Nora"
   },
   "import": {
     "url": {

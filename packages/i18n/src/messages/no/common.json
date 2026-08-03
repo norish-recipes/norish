@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Siden ble ikke funnet",
-    "message": "Ups! Nora kunne ikke finne det du leter etter.\nSiden kan ha blitt flyttet eller eksisterer ikke."
+    "title": "Nora er forvirret.",
+    "message": "Hun snuser rundt for å finne ut hvor du skulle.",
+    "imageAlt": "Nora ser forvirret ut"
   },
   "import": {
     "url": {

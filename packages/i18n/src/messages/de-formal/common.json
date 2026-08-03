@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Seite nicht gefunden",
-    "message": "Oops! Ich konnte nicht finden, was Sie suchen.\nDie Seite wurde möglicherweise verschoben oder existiert nicht."
+    "title": "Nora ist verwirrt.",
+    "message": "Sie schnüffelt herum, um herauszufinden, wohin Sie wollten.",
+    "imageAlt": "Nora schaut verwirrt"
   },
   "import": {
     "url": {

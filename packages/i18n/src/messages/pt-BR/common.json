@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Página não encontrada",
-    "message": "Ops! Nora não encontrou o que você está procurando.\nA página pode ter sido movida ou não existir."
+    "title": "A Nora está confusa.",
+    "message": "Ela está farejando por aí para descobrir aonde você queria ir.",
+    "imageAlt": "Nora com cara de confusa"
   },
   "import": {
     "url": {

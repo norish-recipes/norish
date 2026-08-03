@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Page Not Found",
-    "message": "Oops! Nora couldn't find what you're looking for.\nThe page may have been moved or doesn't exist."
+    "title": "Nora is confused.",
+    "message": "She is sniffing around to find where you wanted to go.",
+    "imageAlt": "Nora looking confused"
   },
   "import": {
     "url": {
