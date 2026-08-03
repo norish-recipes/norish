@@ -40,8 +40,16 @@ exposed.
 
 In the recipe form, every step has a chips row: mention an ingredient with `@`
 while typing, or attach one from the **Link ingredient** picker without naming
-it in the text. Each chip carries a share of its line — half, a third, a
-quarter, or a custom value — and a tap removes it. See
+it in the text. Each chip carries how much of its line the step uses — half, a
+third, a quarter, or an exact amount when the line has one. A recipe that
+calls for 5 eggs can use **3** in one step and **2** in another: pick
+**Amount…** on the chip and type the number the step means. A tap removes a
+chip.
+
+An entered amount is stored as the equivalent share of its line — 3 of the
+5 eggs is stored as 0.6 — which is exactly why the displayed amounts keep
+following edits, the servings control, and the measurement system. Only a
+line with no amount of its own is edited as a share directly. See
 [Creating and editing recipes](./creating-and-editing.md) for the editor's
 affordances in full.
 

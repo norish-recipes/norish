@@ -52,10 +52,15 @@ with no special syntax stored in it.
 Chips can also be added without naming anything in the text: the **Link
 ingredient** picker beneath each step attaches any of the recipe's ingredient
 lines, which is how a step like _"add the spices"_ carries its three links.
-Each chip can be set to a share of its line — half, a third, a quarter, or a
-custom value — and a tap removes it. What readers see on the recipe page comes
-from these chips; the whole story is on
-[Step ingredients](./step-ingredients.md).
+Each chip can be set to how much of its line the step uses — half, a third, a
+quarter, or an exact amount when the line has one: **Amount…** on a chip of a
+five-egg line takes **3**, and the step reads _3 eggs_, leaving the other two
+for the step that uses them. Amounts are stored as the line's share, so they
+keep scaling with servings; a line with no amount is set as a share directly.
+A tap removes a chip. What readers see on the recipe page comes from these
+chips; the whole story is on [Step ingredients](./step-ingredients.md).
+
+![Amount entry on a chip beneath a step](/img/screenshots/editor-amount-entry.png)
 
 ## Saving
 
