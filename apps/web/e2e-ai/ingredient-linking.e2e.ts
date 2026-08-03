@@ -221,6 +221,69 @@ test("a share-link recipient sees the same amounts beneath steps", async () => {
   await anonymous.close();
 });
 
+test("attaching from the picker asks for the amount, and Escape keeps the whole line", async () => {
+  await openRecipe("Linked Spice Stew");
+
+  const recipeId = new URL(page.url()).pathname.split("/").pop();
+
+  await page.goto(`/recipes/edit/${recipeId}`);
+
+  const instructions = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Instructions" }) });
+
+  // The bare "Serve." step is the third row; give it the salt line. Its own
+  // chips list scopes the assertions — the spices step carries bare-name
+  // chips of the same lines.
+  await expect(instructions.getByRole("textbox").nth(2)).toHaveValue("Serve.", {
+    timeout: 30_000,
+  });
+
+  const serveChips = instructions.getByRole("list", { name: "Linked ingredients" }).nth(2);
+
+  await instructions.getByRole("button", { name: "Link ingredient" }).nth(2).click();
+  await page.getByRole("menuitem", { name: "salt", exact: true }).click();
+
+  // The ask: focused over the fresh chip — the picker menu's own focus
+  // restore must not win — and prefilled with the whole line.
+  const ask = page.getByRole("spinbutton", { name: "Amount" });
+
+  await expect(ask).toBeFocused({ timeout: 15_000 });
+  await expect(ask).toHaveValue("5");
+
+  // Half the salt, typed as its amount. The chip shows the derived amount
+  // with the line's stored unit — the import stores "grams" long-form.
+  await ask.fill("2.5");
+  await ask.press("Enter");
+  await expect(serveChips.getByText("2.5 grams salt")).toBeVisible();
+  // The keyboard lands back in the step's text.
+  await expect(instructions.getByRole("textbox").nth(2)).toBeFocused();
+
+  // Escape after typing keeps the whole line: the abandoned 9 never lands.
+  await instructions.getByRole("button", { name: "Link ingredient" }).nth(2).click();
+  await page.getByRole("menuitem", { name: "pepper", exact: true }).click();
+  await expect(ask).toBeFocused({ timeout: 15_000 });
+  await ask.fill("9");
+  await ask.press("Escape");
+  await expect(serveChips.getByText("9 grams pepper")).not.toBeVisible();
+  await expect(serveChips.getByText("pepper", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page).toHaveURL(/\/recipes\/[^/]+$/, { timeout: 30_000 });
+
+  // Stored as shares of the line: 2.5 of the 5 g salt is 0.5; the escaped
+  // pepper stays the whole line. The editor's save rewrites the active
+  // system's steps positionally from 0, so "Serve." is stepOrder 2 now —
+  // the import's 1-based numbering survives only on the untouched system.
+  const stored = await readStoredStepIngredients("Linked Spice Stew");
+  const serveStep = stored.filter((row) => row.systemUsed === "metric" && row.stepOrder === 2);
+
+  expect(serveStep).toEqual([
+    { systemUsed: "metric", stepOrder: 2, ingredientOrder: 0, share: 0.5 },
+    { systemUsed: "metric", stepOrder: 2, ingredientOrder: 1, share: 1 },
+  ]);
+});
+
 test("gap-filling leaves a hand-attached chip untouched while bare steps are filled", async () => {
   await setAutomaticEnrichment({});
 

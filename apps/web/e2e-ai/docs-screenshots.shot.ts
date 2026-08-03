@@ -334,6 +334,41 @@ test("amount entry on a chip beneath a step", async () => {
   await page.keyboard.press("Escape");
 });
 
+test("the ask after attaching from the picker", async () => {
+  // Self-sufficient navigation, like the capture before it: attaching an
+  // amounted line opens the ask over the fresh chip, prefilled with the
+  // whole line.
+  await page.goto("/");
+  await page.getByRole("heading", { name: RECIPE_NAME, exact: true, level: 3 }).click();
+  await expect(page).toHaveURL(/\/recipes\/[^/]+$/);
+
+  const recipeId = new URL(page.url()).pathname.split("/").pop();
+
+  await page.goto(`/recipes/edit/${recipeId}`);
+
+  const instructions = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Instructions" }) });
+  const toastStep = instructions.getByRole("textbox").nth(1);
+
+  await expect(toastStep).toHaveValue(/Toast the peppercorns/, { timeout: 30_000 });
+  await toastStep.scrollIntoViewIfNeeded();
+  await instructions.getByRole("button", { name: "Link ingredient" }).first().click();
+  await page.getByRole("menuitem", { name: "spaghetti", exact: true }).click();
+
+  const ask = page.getByRole("spinbutton", { name: "Amount" });
+
+  await expect(ask).toBeFocused({ timeout: 15_000 });
+  await expect(ask).toHaveValue("200");
+
+  await shootRegion(toastStep, "editor-amount-ask", 400);
+
+  // Put the form back exactly as it was, so later captures navigate freely.
+  // First: the boil step carries its own linked spaghetti chip further down.
+  await instructions.getByRole("button", { name: "Remove spaghetti" }).first().click();
+  await expect(instructions.getByText("200 g spaghetti")).not.toBeVisible();
+});
+
 test("amounts under a step on the recipe page", async () => {
   const recipeId = new URL(page.url()).pathname.split("/").pop();
 
