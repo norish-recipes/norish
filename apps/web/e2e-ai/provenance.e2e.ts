@@ -367,7 +367,12 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
   await expect(page.getByText("Japanese", { exact: true })).toHaveCount(0);
 
   stack!.ai.control.succeedWith(
-    provenanceClaim({ originCountry: "JP", originRegion: null, cuisines: ["Japanese"] })
+    provenanceClaim({
+      originCountry: "JP",
+      originCountryName: "日本",
+      originRegion: null,
+      cuisines: ["Japanese"],
+    })
   );
 
   await page.getByRole("button", { name: "Actions" }).click();

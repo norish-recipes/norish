@@ -254,6 +254,80 @@ export async function supplyProvenance(
   }
 }
 
+/** Read a recipe's stored Step Ingredients straight from the database. */
+export async function readStoredStepIngredients(recipeName: string): Promise<
+  {
+    systemUsed: string;
+    stepOrder: number;
+    ingredientOrder: number;
+    share: number;
+  }[]
+> {
+  const db = new Client({ connectionString: E2E_DATABASE_URL });
+
+  await db.connect();
+
+  try {
+    const rows = await db.query<{
+      system_used: string;
+      step_order: string;
+      ingredient_order: string;
+      share: string;
+    }>(
+      `select s.system_used, s."order" as step_order, ri."order" as ingredient_order, si.share
+         from step_ingredients si
+         join steps s on s.id = si.step_id
+         join recipe_ingredients ri on ri.id = si.recipe_ingredient_id
+         join recipes r on r.id = s.recipe_id
+        where r.name = $1
+        order by s.system_used, s."order", si."order"`,
+      [recipeName]
+    );
+
+    return rows.rows.map((row) => ({
+      systemUsed: row.system_used,
+      stepOrder: Number(row.step_order),
+      ingredientOrder: Number(row.ingredient_order),
+      share: Number(row.share),
+    }));
+  } finally {
+    await db.end();
+  }
+}
+
+/**
+ * Attach a Step Ingredient straight into the database, as an editor's chip
+ * would have. Writes one system's step only — exactly what the editor does.
+ */
+export async function supplyStepIngredient(
+  recipeName: string,
+  link: { systemUsed: string; stepOrder: number; ingredientOrder: number; share: number }
+): Promise<void> {
+  const db = new Client({ connectionString: E2E_DATABASE_URL });
+
+  await db.connect();
+
+  try {
+    const inserted = await db.query(
+      `insert into step_ingredients (step_id, recipe_ingredient_id, share, "order")
+       select s.id, ri.id, $4, 0
+         from recipes r
+         join steps s on s.recipe_id = r.id and s.system_used = $2 and s."order" = $3::numeric
+         join recipe_ingredients ri
+           on ri.recipe_id = r.id and ri.system_used = $2 and ri."order" = $5::numeric
+        where r.name = $1
+        returning id`,
+      [recipeName, link.systemUsed, link.stepOrder, String(link.share), link.ingredientOrder]
+    );
+
+    if (inserted.rowCount !== 1) {
+      throw new Error(`Could not attach Step Ingredient on: ${recipeName}`);
+    }
+  } finally {
+    await db.end();
+  }
+}
+
 export interface AIE2EStack {
   ai: FakeAIProvider;
   server: E2eServer;
