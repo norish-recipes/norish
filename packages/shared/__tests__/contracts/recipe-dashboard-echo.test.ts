@@ -14,9 +14,7 @@ type FullRecipe = Parameters<typeof patchDashboardRecipeFromFull>[1];
 
 // The keys a full-recipe echo can actually deliver, straight from the schemas.
 const echoableKeys = RECIPE_DASHBOARD_KEYS.filter((key) => key in FullRecipeSchema.shape);
-const dashboardOnlyKeys = RECIPE_DASHBOARD_KEYS.filter(
-  (key) => !(key in FullRecipeSchema.shape)
-);
+const dashboardOnlyKeys = RECIPE_DASHBOARD_KEYS.filter((key) => !(key in FullRecipeSchema.shape));
 
 describe("patchDashboardRecipeFromFull", () => {
   it("carries the origin country, the field the hand-list forgot", () => {
@@ -47,9 +45,7 @@ describe("patchDashboardRecipeFromFull", () => {
   it("preserves dashboard-only aggregates the echo does not carry", () => {
     // The full recipe computes no list aggregates; blindly copying their keys
     // would overwrite live values with undefined on every echo.
-    expect(dashboardOnlyKeys).toEqual(
-      expect.arrayContaining(["averageRating", "ratingCount"])
-    );
+    expect(dashboardOnlyKeys).toEqual(expect.arrayContaining(["averageRating", "ratingCount"]));
 
     const stale = Object.fromEntries(
       RECIPE_DASHBOARD_KEYS.map((key) => [key, `stale-${key}`])

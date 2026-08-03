@@ -51,7 +51,8 @@ export const ThemeSwitchContent: FC<ThemeSwitchContentProps> = ({
 }) => {
   const t = useTranslations("navbar.theme");
 
-  const label = theme === "system" ? t("system") : theme === "dark" || isDark ? t("dark") : t("light");
+  const label =
+    theme === "system" ? t("system") : theme === "dark" || isDark ? t("dark") : t("light");
 
   if (!mounted) {
     return (

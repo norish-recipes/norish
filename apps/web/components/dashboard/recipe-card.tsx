@@ -92,7 +92,10 @@ function dashboardFieldEqual(a: unknown, b: unknown): boolean {
     return (
       keysA.length === keysB.length &&
       keysA.every((key) =>
-        dashboardFieldEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])
+        dashboardFieldEqual(
+          (a as Record<string, unknown>)[key],
+          (b as Record<string, unknown>)[key]
+        )
       )
     );
   }

@@ -6,9 +6,9 @@ description: What stays available when Norish cannot reach your server, how queu
 
 # Use Norish offline
 
-The Norish web app keeps an Offline Cache on your device so core funcionallity work
-continues when your server is unreachable. It refreshes this Warm Set in the
-background while the app is Live.
+The Norish web app keeps an Offline Cache on your device so core functionality
+keeps working when your server is unreachable. It refreshes this Warm Set in
+the background while the app is Live.
 
 The Warm Set includes:
 
@@ -17,7 +17,16 @@ The Warm Set includes:
 - the calendar's initial window
 
 A recipe outside the Warm Set, or a page that does not support offline use,
-shows an explicit unavailable screen instead of loading forever.
+shows an explicit unavailable screen instead of loading forever. If the
+connection returns while you are on it, the page retries itself once; after
+that, the screen tells you the connection is back and leaves the retry to you.
+
+![The offline unavailable screen](/img/screenshots/offline-unavailable.png)
+
+Slow networks are bounded the same way as lost ones: if your server has not
+answered a page load within five seconds, Norish shows what it has — the saved
+copy of a page you visited before, or the offline app — instead of leaving you
+on the splash screen.
 
 ## Check connection and offline status
 

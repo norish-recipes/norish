@@ -388,3 +388,50 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
     timeout: 15_000,
   });
 });
+
+test("a manually picked country reaches the dashboard card without a reload", async () => {
+  // Pins the drift regression: the realtime echo used to hand-copy dashboard
+  // fields and forgot originCountry, so a card only gained its flag after a
+  // full refresh — the detail cache got the full write, the list cache never
+  // (see RECIPE_DASHBOARD_KEYS).
+  await setAutomaticEnrichment({});
+
+  const name = "Dashboard Flag Rigatoni";
+
+  await importRecipe(name, [bareRecipe(name)]);
+
+  // A second page parks on the dashboard and is never navigated again: only
+  // the realtime echo may deliver the flag to it.
+  const dashboard = await context.newPage();
+
+  await dashboard.goto("/");
+
+  const heading = dashboard.getByRole("heading", { name, exact: true, level: 3 });
+
+  await expect(heading).toBeVisible({ timeout: 15_000 });
+  const card = heading.locator("xpath=ancestor::*[contains(@class, 'group/row')][1]");
+
+  await expect(card.getByTitle("Italy")).toHaveCount(0);
+
+  // Manual provenance through the real edit form and the real update mutation.
+  await openRecipe(name);
+  const recipeId = new URL(page.url()).pathname.split("/").pop();
+
+  await page.goto(`/recipes/edit/${recipeId}`);
+
+  // The form re-renders as the recipe's data arrives; retry until the country
+  // picker takes the selection (same pattern as the screenshot suite).
+  const country = page.getByRole("combobox", { name: "Country" });
+
+  await expect(async () => {
+    await expect(country).toBeVisible({ timeout: 5_000 });
+    await country.fill("Italy");
+    await page.getByRole("option", { name: "Italy", exact: true }).click({ timeout: 5_000 });
+  }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
+
+  await page.getByRole("button", { name: "Save Changes" }).click();
+
+  // The parked dashboard gains the flag purely through the echo.
+  await expect(card.getByTitle("Italy").first()).toBeVisible({ timeout: 30_000 });
+  await dashboard.close();
+});

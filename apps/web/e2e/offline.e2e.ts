@@ -4,6 +4,10 @@
  * stopped for the offline phases. Serial by design — the tests share one
  * browser context (one origin profile) and one server lifecycle.
  */
+import { mkdirSync } from "node:fs";
+import net from "node:net";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { BrowserContext, Page } from "@playwright/test";
 import { expect, request, test } from "@playwright/test";
 
@@ -164,6 +168,114 @@ test("backend-down unseen navigation boots every Warm Set surface", async () => 
   await expect(page.getByTestId("offline-unavailable")).toBeVisible();
   await page.goto("/import");
   await expect(page.getByTestId("offline-unavailable")).toBeVisible();
+
+  // The docs embed this state (offline.md) and this suite is the only place
+  // it exists genuinely offline, so the capture lives here rather than in the
+  // AI-harness screenshot suite.
+  const screenshotDir = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "../../..",
+    "apps/docs/static/img/screenshots"
+  );
+
+  mkdirSync(screenshotDir, { recursive: true });
+  await page
+    .getByTestId("offline-unavailable")
+    .locator(".max-w-lg")
+    .first()
+    .screenshot({
+      path: path.join(screenshotDir, "offline-unavailable.png"),
+      animations: "disabled",
+    });
+});
+
+/**
+ * A TCP listener that accepts connections and never answers: the
+ * slow-but-alive network, as opposed to the stopped server's instant
+ * connection refusal. Requests into it hang instead of erroring.
+ */
+async function startBlackhole(): Promise<() => Promise<void>> {
+  const port = Number(new URL(E2E_BASE_URL).port);
+  const sockets = new Set<net.Socket>();
+  const listener = net.createServer((socket) => {
+    sockets.add(socket);
+    socket.on("close", () => sockets.delete(socket));
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    listener.once("error", reject);
+    listener.listen(port, resolve);
+  });
+
+  return () =>
+    new Promise<void>((resolve) => {
+      for (const socket of sockets) socket.destroy();
+      listener.close(() => resolve());
+    });
+}
+
+test("a hanging network observes the Reachability Deadline (ADR-0013)", async () => {
+  // Before the deadline handler, this scenario hung on whatever was on screen
+  // indefinitely: NetworkFirst had no timeout for documents and the fallback
+  // only fired on a network *error*, which a crawling network never raises.
+  //
+  // Cache one real document under service-worker control first: the suite's
+  // initial Live visit predates the worker claiming the page, so the pages
+  // cache is still empty.
+  server = await startServer();
+  await page.goto("/settings");
+  await server.stop();
+  server = null;
+
+  const stopBlackhole = await startBlackhole();
+
+  try {
+    // An uncached route must fail over to the offline shell at the deadline.
+    let startedAt = Date.now();
+
+    await page.goto("/import");
+    await expect(page.getByTestId("offline-unavailable")).toBeVisible();
+    expect(Date.now() - startedAt).toBeLessThan(20_000);
+
+    // A route visited while Live serves its cached document at the deadline
+    // instead of the shell.
+    startedAt = Date.now();
+    await page.goto("/settings");
+    expect(Date.now() - startedAt).toBeLessThan(20_000);
+    await expect(page.getByTestId("offline-unavailable")).not.toBeVisible();
+  } finally {
+    await stopBlackhole();
+  }
+
+  // Park on a Warm Set surface so no auto-reload candidate is mounted when a
+  // later test brings the backend back.
+  await page.goto("/");
+});
+
+test("the Offline-unavailable card reloads its page once when Live returns", async () => {
+  // Parked on an unwarmed recipe with the backend down…
+  await page.goto(`/recipes/${UNWARMED_RECIPE_ID}`);
+  await expect(page.getByTestId("offline-unavailable")).toBeVisible();
+
+  // …the backend returning must resolve the dead end without any user action:
+  // the card reloads the originally requested URL once. The id is not seeded,
+  // so the Live render is the recipe's not-found state — what matters is that
+  // the offline card is gone without a manual reload.
+  server = await startServer();
+  await expect(page.getByTestId("offline-unavailable")).toBeHidden({ timeout: 90_000 });
+
+  // The reload spent its once-per-path shot and recorded it.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (id) => sessionStorage.getItem(`norish.offline-unavailable.reloaded:/recipes/${id}`),
+        UNWARMED_RECIPE_ID
+      )
+    )
+    .toBe("1");
+
+  await server.stop();
+  server = null;
 });
 
 test("an offline grocery toggle survives navigation and a document cold launch", async () => {

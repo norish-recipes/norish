@@ -18,12 +18,7 @@ const ThemeProvider = NextThemesProvider as unknown as ComponentType<
  */
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider
-      disableTransitionOnChange
-      enableSystem
-      attribute="class"
-      defaultTheme="system"
-    >
+    <ThemeProvider disableTransitionOnChange enableSystem attribute="class" defaultTheme="system">
       {children}
     </ThemeProvider>
   );

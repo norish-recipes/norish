@@ -1,9 +1,7 @@
+import type { ConnectivityPosture } from "@/app/providers/connectivity-provider";
+import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-import type { ConnectivityPosture } from "@/app/providers/connectivity-provider";
-
-import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 
 const connectivity = { posture: "offline" as ConnectivityPosture };
 
