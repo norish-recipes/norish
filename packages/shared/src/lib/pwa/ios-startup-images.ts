@@ -51,6 +51,8 @@ export const iosSplashSchema: readonly IOSSplashSpec[] = [
   spec("ipad", 744, 1133, 2, { label: "iPad mini 8.3", released: "2021-09-24" }),
 ];
 
+type ColorScheme = "light" | "dark";
+
 export const mediaQuery = (specification: IOSSplashSpec, orientation: Orientation) =>
   [
     `(device-width: ${specification.points.width}px)`,
@@ -62,16 +64,21 @@ export const mediaQuery = (specification: IOSSplashSpec, orientation: Orientatio
 export const generateAppleWebAppSplashScreenConfigs = (): AppleWebAppStartupImage[] => {
   return iosSplashSchema.flatMap((specification) => {
     const orientations: Orientation[] = ["portrait", "landscape"];
+    // Startup images are static link tags, so the OS scheme is the only theme
+    // signal they can ever follow (iOS honours prefers-color-scheme in their
+    // media queries since 13.4). Both schemes are explicit: exactly one entry
+    // matches per device, orientation, and scheme.
+    const schemes: ColorScheme[] = ["light", "dark"];
 
-    return orientations.map((orientation) => {
+    return orientations.flatMap((orientation) => {
       const isPortrait = orientation === "portrait";
       const width = isPortrait ? specification.px.width : specification.px.height;
       const height = isPortrait ? specification.px.height : specification.px.width;
 
-      return {
-        media: `screen and ${mediaQuery(specification, orientation)}`,
-        url: `/images/splash?width=${width}&height=${height}`,
-      };
+      return schemes.map((scheme) => ({
+        media: `screen and (prefers-color-scheme: ${scheme}) and ${mediaQuery(specification, orientation)}`,
+        url: `/images/splash?width=${width}&height=${height}&scheme=${scheme}`,
+      }));
     });
   });
 };
