@@ -63,13 +63,14 @@ const RECIPE = {
 
 /**
  * The Step Ingredient links, as the model would return them: the prompt's own
- * 1-based numbering over the linkable (non-heading) lines and steps.
+ * 1-based numbering over the linkable (non-heading) lines and steps, each
+ * stating a share or an amount, never both.
  */
 const LINKING = {
   links: [
-    { step: 1, ingredients: [{ line: 3, share: 1 }] },
-    { step: 2, ingredients: [{ line: 1, share: 1 }] },
-    { step: 3, ingredients: [{ line: 2, share: 1 }] },
+    { step: 1, ingredients: [{ line: 3, share: 1, amount: null }] },
+    { step: 2, ingredients: [{ line: 1, share: 1, amount: null }] },
+    { step: 3, ingredients: [{ line: 2, share: 1, amount: null }] },
   ],
 };
 
@@ -303,6 +304,34 @@ test("the @ mention autocomplete, with chips beneath the step", async () => {
 
   await expect(page.getByText("pecorino romano").first()).toBeVisible({ timeout: 15_000 });
   await shootRegion(toastStep, "editor-mention-chips", 360);
+});
+
+test("amount entry on a chip beneath a step", async () => {
+  // Self-sufficient navigation, so this capture can be regenerated alone:
+  // from the dashboard to the recipe, then into its edit form.
+  await page.goto("/");
+  await page.getByRole("heading", { name: RECIPE_NAME, exact: true, level: 3 }).click();
+  await expect(page).toHaveURL(/\/recipes\/[^/]+$/);
+
+  const recipeId = new URL(page.url()).pathname.split("/").pop();
+
+  await page.goto(`/recipes/edit/${recipeId}`);
+
+  const instructions = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Instructions" }) });
+  const toastStep = instructions.getByRole("textbox").nth(1);
+
+  await expect(toastStep).toHaveValue(/Toast the peppercorns/, { timeout: 30_000 });
+  await toastStep.scrollIntoViewIfNeeded();
+
+  // The peppercorn chip the linking run attached: its menu offers the share
+  // presets and, because the line has an amount, Amount… entry.
+  await page.getByRole("button", { name: "Change the share of black peppercorns" }).click();
+  await expect(page.getByRole("menuitem", { name: "Amount…" })).toBeVisible({ timeout: 15_000 });
+
+  await shootRegion(toastStep, "editor-amount-entry", 400);
+  await page.keyboard.press("Escape");
 });
 
 test("amounts under a step on the recipe page", async () => {

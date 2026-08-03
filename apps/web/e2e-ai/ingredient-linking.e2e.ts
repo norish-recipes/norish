@@ -54,19 +54,22 @@ function linkableRecipe(name: string) {
 
 /**
  * The linking claim as the model would return it, in the prompt's own
- * numbering: lines and steps numbered 1..n over the linkable rows.
+ * numbering: lines and steps numbered 1..n over the linkable rows. The water
+ * link states an amount — 25 of the 50 ml line — rather than a share: the
+ * claim passes the real output schema and the inferrer does the division, so
+ * the stored share is 0.5 and every surface still derives 25 ml from it.
  */
 const LINKING_CLAIM = {
   links: [
     {
       step: 1,
       ingredients: [
-        { line: 1, share: 1 },
-        { line: 2, share: 1 },
-        { line: 3, share: 1 },
+        { line: 1, share: 1, amount: null },
+        { line: 2, share: 1, amount: null },
+        { line: 3, share: 1, amount: null },
       ],
     },
-    { step: 2, ingredients: [{ line: 4, share: 0.5 }] },
+    { step: 2, ingredients: [{ line: 4, share: null, amount: 25 }] },
   ],
 };
 
