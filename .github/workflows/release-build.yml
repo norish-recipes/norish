@@ -1,11 +1,5 @@
 name: Release Tag and Promote Docker
 
-env:
-  NODE_ENV: production
-  DATABASE_URL: postgres://ci-user:ci-password@localhost:5432/ci-db
-  MASTER_KEY: test-master-key
-  SKIP_ENV_VALIDATION: "1"
-
 on:
   push:
     branches:
@@ -34,65 +28,29 @@ jobs:
     runs-on: ubuntu-latest
     needs: quality
     outputs:
-      tag: ${{ steps.compute_tag.outputs.tag }}
-      rc_tag: ${{ steps.compute_rc_tag.outputs.tag }}
-      tag_exists: ${{ steps.check_tag.outputs.exists }}
+      tag: ${{ steps.tag.outputs.tag }}
+      rc_tag: ${{ steps.rc_tag.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
+      # Tag computation only needs Node itself, not the workspace install.
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
 
-      - name: Read version from package.json
-        id: read_version
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Compute tag name
-        id: compute_tag
-        run: |
-          TAG="v${{ steps.read_version.outputs.version }}"
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+      - name: Create release tag
+        id: tag
+        uses: ./tooling/github/tag-release
+        with:
+          tag-prefix: v
 
       - name: Compute RC tag name
-        id: compute_rc_tag
-        run: |
-          TAG="rc-v${{ steps.read_version.outputs.version }}"
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-
-      - name: Fetch tags
-        run: git fetch --tags --force
-
-      - name: Check if tag exists
-        id: check_tag
-        run: |
-          TAG="${{ steps.compute_tag.outputs.tag }}"
-          if git show-ref --tags --verify --quiet "refs/tags/$TAG"; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Configure git user
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Create and push tag
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          TAG="${{ steps.compute_tag.outputs.tag }}"
-          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
-            echo "Tag $TAG already exists on origin; skipping tag creation"
-            exit 0
-          fi
-          git tag "$TAG"
-          git push origin "refs/tags/$TAG"
+        id: rc_tag
+        run: echo "tag=rc-v${{ steps.tag.outputs.version }}" >> "$GITHUB_OUTPUT"
 
   docker-promote:
     name: Promote RC Docker Images
@@ -101,22 +59,19 @@ jobs:
     permissions:
       packages: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
+      - name: Login to container registries
+        uses: ./tooling/github/registry-login
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          registry: docker.io
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          ghcr-username: ${{ github.repository_owner }}
+          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Promote GitHub Container Registry image
         run: |
