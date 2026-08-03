@@ -22,11 +22,18 @@ interface SmartTextInputProps {
    * The `@` mention gesture: picking a suggestion inserts the plain word into
    * the sentence and hands the caller both the updated text and the picked
    * line in one call, so the text change and the attachment land atomically.
-   * The `@` itself never reaches the stored text.
+   * The `@` itself never reaches the stored text. Returning true means the
+   * caller takes focus (it is asking for the amount): the caret is still
+   * placed after the inserted word, but without pulling focus back here.
    */
-  onIngredientMention?: (suggestion: SmartTextInputIngredientSuggestion, newValue: string) => void;
+  onIngredientMention?: (
+    suggestion: SmartTextInputIngredientSuggestion,
+    newValue: string
+  ) => boolean | void;
   onBlur?: () => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
+  /** Reaches the underlying textarea, for callers that manage row focus. */
+  ref?: React.Ref<HTMLTextAreaElement>;
 }
 
 type AutocompleteState =
@@ -53,6 +60,7 @@ export default function SmartTextInput({
   onIngredientMention,
   onBlur,
   onKeyDown,
+  ref,
 }: SmartTextInputProps) {
   const [autocomplete, setAutocomplete] = useState<AutocompleteState>(null);
   const [openAbove, setOpenAbove] = useState(false);
@@ -157,17 +165,23 @@ export default function SmartTextInput({
       const newValue = `${before}${suggestion.label}${after}`;
       const newCursorPos = before.length + suggestion.label.length;
 
+      // A handler returning true is taking focus — it opens the amount ask
+      // for the attached line. The caret still lands after the inserted
+      // word, ready for when focus comes back; it is just not fought over.
+      let callerTakesFocus = false;
+
       if (onIngredientMention) {
-        onIngredientMention(suggestion, newValue);
+        callerTakesFocus = onIngredientMention(suggestion, newValue) === true;
       } else {
         onValueChange(newValue);
       }
+
       setAutocomplete(null);
 
       setTimeout(() => {
         if (!textareaRef.current) return;
 
-        textareaRef.current.focus();
+        if (!callerTakesFocus) textareaRef.current.focus();
         textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
       }, 0);
     },
@@ -191,10 +205,16 @@ export default function SmartTextInput({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const setTextareaRef = (element: HTMLTextAreaElement | null) => {
+    textareaRef.current = element;
+    if (typeof ref === "function") ref(element);
+    else if (ref) ref.current = element;
+  };
+
   return (
     <div ref={containerRef} className="relative w-full">
       <TextArea
-        ref={textareaRef}
+        ref={setTextareaRef}
         className="border-border dark:border-border-tertiary w-full text-base"
         placeholder={placeholder}
         rows={minRows}

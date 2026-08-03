@@ -12,6 +12,7 @@ import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { MeasurementSystem } from "@norish/shared/contracts";
+import { toLineAmount } from "@norish/shared/lib/step-ingredients";
 
 export interface StepImage {
   id?: string;
@@ -80,6 +81,12 @@ export default function StepInput({
 }: StepInputProps) {
   const t = useTranslations("recipes.stepInput");
   const [items, setItems] = useState<StepItem[]>([createStepItem("", [])]);
+  // A freshly mentioned line whose chip should ask for its amount: the row
+  // it landed on, and the line's order for the chips to open once rendered.
+  const [pendingMentionEntry, setPendingMentionEntry] = useState<{
+    index: number;
+    order: number;
+  } | null>(null);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
@@ -164,7 +171,7 @@ export default function StepInput({
     [items, emitChanges]
   );
   const handleIngredientMention = useCallback(
-    (index: number, suggestion: SmartTextInputIngredientSuggestion, newText: string) => {
+    (index: number, suggestion: SmartTextInputIngredientSuggestion, newText: string): boolean => {
       // One update for both halves of the gesture: the plain word lands in
       // the sentence and the chip attaches beneath it, at the full share.
       const updated = [...items];
@@ -187,8 +194,27 @@ export default function StepInput({
       }
       setItems(updated);
       emitChanges(updated);
+
+      // A newly attached, amounted line gets asked how much of it the step
+      // uses; the chips take focus for the ask, so the mention reports it.
+      // Re-mentions, amountless lines, and heading rows ask nothing. This
+      // predicts what the chips' pending-entry effect will decide — the two
+      // must agree, or the mention gives up focus for an ask that never
+      // opens and the keyboard is left nowhere.
+      const line = chipLines.find((candidate) => candidate.order === suggestion.ingredientOrder);
+      const willAsk =
+        !alreadyAttached &&
+        !newText.trim().startsWith("#") &&
+        line != null &&
+        toLineAmount(line.amount) != null;
+
+      if (willAsk) {
+        setPendingMentionEntry({ index, order: suggestion.ingredientOrder });
+      }
+
+      return willAsk;
     },
-    [items, emitChanges]
+    [items, emitChanges, chipLines]
   );
   const handleInputChange = useCallback(
     (index: number, value: string) => {
@@ -336,6 +362,7 @@ export default function StepInput({
     },
     [emitChanges]
   );
+  const clearPendingMentionEntry = useCallback(() => setPendingMentionEntry(null), []);
 
   // Track step numbers excluding headings
   const getStepNumber = (index: number): number | null => {
@@ -360,11 +387,13 @@ export default function StepInput({
       {items.map((item, index) => (
         <StepRow
           key={item.id}
+          autoEntryOrder={pendingMentionEntry?.index === index ? pendingMentionEntry.order : null}
           dragConstraintsRef={dragConstraintsRef}
           fileInputRefs={fileInputRefs}
           index={index}
           ingredientSuggestions={ingredientSuggestions}
           ingredients={chipLines}
+          textareaRefs={textareaRefs}
           isLast={index === items.length - 1}
           item={item}
           recipeId={recipeId}
@@ -377,6 +406,7 @@ export default function StepInput({
             number: index + 1,
           })}
           uploadingIndex={uploadingIndex}
+          onAutoEntryHandled={clearPendingMentionEntry}
           onBlur={() => handleBlur(index)}
           onFileSelect={() => handleFileSelect(index)}
           onImageUpload={(file) => handleImageUpload(index, file)}
@@ -412,11 +442,14 @@ interface StepRowProps {
   recipeId?: string;
   uploadingIndex: number | null;
   fileInputRefs: React.RefObject<(HTMLInputElement | null)[]>;
+  textareaRefs: React.RefObject<(HTMLTextAreaElement | null)[]>;
   dragConstraintsRef: React.RefObject<HTMLUListElement | null>;
   stepPlaceholder: string;
   stepPlaceholderShort: string;
   ingredientSuggestions: SmartTextInputIngredientSuggestion[];
   ingredients: StepInputIngredient[];
+  autoEntryOrder: number | null;
+  onAutoEntryHandled: () => void;
   onValueChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onBlur: () => void;
@@ -425,7 +458,10 @@ interface StepRowProps {
   onRemoveImage: (imageIndex: number) => void;
   onFileSelect: () => void;
   onStepIngredientsChange: (refs: StepIngredientDraft[]) => void;
-  onIngredientMention: (suggestion: SmartTextInputIngredientSuggestion, newText: string) => void;
+  onIngredientMention: (
+    suggestion: SmartTextInputIngredientSuggestion,
+    newText: string
+  ) => boolean | void;
 }
 function StepRow({
   item,
@@ -436,11 +472,14 @@ function StepRow({
   recipeId,
   uploadingIndex,
   fileInputRefs,
+  textareaRefs,
   dragConstraintsRef,
   stepPlaceholder,
   stepPlaceholderShort,
   ingredientSuggestions,
   ingredients,
+  autoEntryOrder,
+  onAutoEntryHandled,
   onValueChange,
   onKeyDown,
   onBlur,
@@ -492,6 +531,9 @@ function StepRow({
 
         <div className="flex flex-1 flex-col gap-2">
           <SmartTextInput
+            ref={(element) => {
+              textareaRefs.current[index] = element;
+            }}
             ingredientSuggestions={ingredientSuggestions}
             minRows={2}
             placeholder={index === 0 ? stepPlaceholder : stepPlaceholderShort}
@@ -504,9 +546,12 @@ function StepRow({
 
           {canCarryStepIngredients && (
             <StepIngredientChips
+              autoEntryOrder={autoEntryOrder}
               ingredients={ingredients}
               refs={item.stepIngredients}
+              onAutoEntryHandled={onAutoEntryHandled}
               onChange={onStepIngredientsChange}
+              onEntryKeyboardClose={() => textareaRefs.current[index]?.focus()}
             />
           )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Dropdown, Input, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -26,6 +26,19 @@ export interface StepIngredientChipsProps {
   /** The recipe's ingredient lines in the editor's active system. */
   ingredients: LineLike[];
   onChange: (refs: StepIngredientDraft[]) => void;
+  /**
+   * Ask for this line's amount as soon as its chip exists — how a mention
+   * attach requests the ask from outside. Consumed via onAutoEntryHandled;
+   * an amountless line consumes the ask silently.
+   */
+  autoEntryOrder?: number | null;
+  onAutoEntryHandled?: () => void;
+  /**
+   * An auto-opened ask closed by keyboard (Enter or Escape) — the moment to
+   * put focus back into the step's text. Blur closes stay where the person
+   * clicked, and entries opened from the chip's own menu never report.
+   */
+  onEntryKeyboardClose?: () => void;
 }
 
 const SHARE_PRESETS = [
@@ -68,19 +81,39 @@ function chipLabel(line: LineLike, share: number): string {
  * text — that is how "add the spices" carries its three links. Heading rows
  * are not on offer: they are never Step Ingredients.
  */
-export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredientChipsProps) {
+export function StepIngredientChips({
+  refs,
+  ingredients,
+  onChange,
+  autoEntryOrder,
+  onAutoEntryHandled,
+  onEntryKeyboardClose,
+}: StepIngredientChipsProps) {
   const t = useTranslations("recipes.stepIngredients");
   const [customIndex, setCustomIndex] = useState<number | null>(null);
   const [customValue, setCustomValue] = useState("");
+  // A line whose chip should open its ask as soon as it exists — set by the
+  // picker on attach, or fed in from the mention gesture via autoEntryOrder.
+  const [pendingEntryOrder, setPendingEntryOrder] = useState<number | null>(null);
   const customInputRef = useRef<HTMLInputElement | null>(null);
   // What the input opened with: leaving it untouched must change nothing, so
   // a rounded amount prefill cannot drift the stored share on a mere blur.
   const customOpenedWithRef = useRef("");
+  // Whether the open entry was an automatic ask (attach) rather than a
+  // deliberate menu choice — only asks hand focus back on keyboard close.
+  const autoOpenedRef = useRef(false);
+  // Closing hands focus away, which blurs the still-mounted input — and that
+  // blur re-enters commit with the stale typed value. One close per open.
+  const closingRef = useRef(false);
 
   // Focus follows the editor's own choice of "Custom…"/"Amount…" — this is
-  // not a page-load focus steal, which is what the autoFocus prop rule guards.
+  // not a page-load focus steal, which is what the autoFocus prop rule
+  // guards. The prefill is selected whole so typing replaces it.
   useEffect(() => {
-    if (customIndex !== null) customInputRef.current?.focus();
+    if (customIndex !== null) {
+      customInputRef.current?.focus();
+      customInputRef.current?.select();
+    }
   }, [customIndex]);
 
   const linesByOrder = useMemo(() => {
@@ -104,10 +137,24 @@ export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredi
     onChange(refs.map((ref, i) => (i === index ? { ...ref, share } : ref)));
   };
 
+  const closeCustom = (viaKeyboard: boolean) => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+
+    const wasAuto = autoOpenedRef.current;
+
+    autoOpenedRef.current = false;
+    setCustomIndex(null);
+    setCustomValue("");
+    if (wasAuto && viaKeyboard) onEntryKeyboardClose?.();
+  };
+
   // An entry on an amounted line is an amount and becomes the equivalent
   // share here, at commit — the stored form never changes. On an amountless
   // line the entry is the share itself.
-  const commitCustom = (index: number) => {
+  const commitCustom = (index: number, viaKeyboard: boolean) => {
+    if (closingRef.current) return;
+
     const parsed = Number(customValue);
     const line = linesByOrder.get(refs[index]?.ingredientOrder ?? -1);
     const lineAmount = line ? toLineAmount(line.amount) : null;
@@ -116,25 +163,57 @@ export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredi
     if (edited && Number.isFinite(parsed) && parsed > 0) {
       setShareAt(index, lineAmount == null ? parsed : parsed / lineAmount);
     }
-    setCustomIndex(null);
-    setCustomValue("");
+    closeCustom(viaKeyboard);
   };
 
-  const openCustom = (index: number) => {
-    const ref = refs[index];
-    const line = ref ? linesByOrder.get(ref.ingredientOrder) : undefined;
-    const lineAmount = line ? toLineAmount(line.amount) : null;
-    const derived =
-      lineAmount == null
-        ? null
-        : (deriveStepIngredientAmount(lineAmount, ref?.share ?? 1) ?? lineAmount);
-    const openedWith =
-      derived == null ? String(ref?.share ?? 1) : String(Math.round(derived * 100) / 100);
+  const openCustom = useCallback(
+    (index: number) => {
+      const ref = refs[index];
+      const line = ref ? linesByOrder.get(ref.ingredientOrder) : undefined;
+      const lineAmount = line ? toLineAmount(line.amount) : null;
+      const derived =
+        lineAmount == null
+          ? null
+          : (deriveStepIngredientAmount(lineAmount, ref?.share ?? 1) ?? lineAmount);
+      const openedWith =
+        derived == null ? String(ref?.share ?? 1) : String(Math.round(derived * 100) / 100);
 
-    setCustomIndex(index);
-    setCustomValue(openedWith);
-    customOpenedWithRef.current = openedWith;
-  };
+      closingRef.current = false;
+      setCustomIndex(index);
+      setCustomValue(openedWith);
+      customOpenedWithRef.current = openedWith;
+    },
+    [refs, linesByOrder]
+  );
+
+  // The mention gesture asks from outside: adopt the order and confirm, so
+  // the same ask is never replayed by a later render.
+  useEffect(() => {
+    if (autoEntryOrder == null) return;
+    setPendingEntryOrder(autoEntryOrder);
+    onAutoEntryHandled?.();
+  }, [autoEntryOrder, onAutoEntryHandled]);
+
+  // Open the ask the moment the attached chip exists. An amountless line has
+  // no number to ask for and consumes the ask silently. This is the deciding
+  // half of the mention's willAsk prediction in step-input — the two must
+  // agree, or a mention would give up focus for an ask that never opens.
+  useEffect(() => {
+    if (pendingEntryOrder == null) return;
+
+    const index = refs.findIndex((ref) => ref.ingredientOrder === pendingEntryOrder);
+
+    if (index === -1) return;
+
+    setPendingEntryOrder(null);
+
+    const line = linesByOrder.get(pendingEntryOrder);
+
+    if (!line || toLineAmount(line.amount) == null) return;
+
+    autoOpenedRef.current = true;
+    openCustom(index);
+  }, [pendingEntryOrder, refs, linesByOrder, openCustom]);
 
   if (refs.length === 0 && available.length === 0) return null;
 
@@ -164,15 +243,14 @@ export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredi
                   step="0.05"
                   type="number"
                   value={customValue}
-                  onBlur={() => commitCustom(index)}
+                  onBlur={() => commitCustom(index, false)}
                   onChange={(event) => setCustomValue(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       event.preventDefault();
-                      commitCustom(index);
+                      commitCustom(index, true);
                     } else if (event.key === "Escape") {
-                      setCustomIndex(null);
-                      setCustomValue("");
+                      closeCustom(true);
                     }
                   }}
                 />
@@ -205,7 +283,10 @@ export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredi
                     <Dropdown.Item
                       id="custom"
                       textValue={customEntryLabel}
-                      onAction={() => openCustom(index)}
+                      onAction={() => {
+                        autoOpenedRef.current = false;
+                        openCustom(index);
+                      }}
                     >
                       <Label>{customEntryLabel}</Label>
                     </Dropdown.Item>
@@ -249,7 +330,13 @@ export function StepIngredientChips({ refs, ingredients, onChange }: StepIngredi
                     key={`${line.order}`}
                     id={`${line.order}`}
                     textValue={line.ingredientName}
-                    onAction={() => onChange([...refs, { ingredientOrder: line.order, share: 1 }])}
+                    onAction={() => {
+                      // Attach at the whole line, then ask how much of it —
+                      // the ask opens once the chip exists, and dismissing
+                      // it unedited keeps the whole line.
+                      onChange([...refs, { ingredientOrder: line.order, share: 1 }]);
+                      setPendingEntryOrder(line.order);
+                    }}
                   >
                     <Label>{line.ingredientName}</Label>
                   </Dropdown.Item>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -22,7 +22,10 @@ const SUGGESTIONS: SmartTextInputIngredientSuggestion[] = [
 function SmartTextInputHarness({
   onMention,
 }: {
-  onMention?: (suggestion: SmartTextInputIngredientSuggestion, newValue: string) => void;
+  onMention?: (
+    suggestion: SmartTextInputIngredientSuggestion,
+    newValue: string
+  ) => boolean | void;
 }) {
   const [value, setValue] = useState("");
 
@@ -35,13 +38,21 @@ function SmartTextInputHarness({
         onMention
           ? (suggestion, newValue) => {
               setValue(newValue);
-              onMention(suggestion, newValue);
+
+              return onMention(suggestion, newValue);
             }
           : undefined
       }
       onValueChange={setValue}
     />
   );
+}
+
+/** Flush the mention gesture's zero-delay caret/focus timeout. */
+async function flushMentionTimeout() {
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1));
+  });
 }
 
 describe("SmartTextInput ingredient mention gesture", () => {
@@ -81,6 +92,46 @@ describe("SmartTextInput ingredient mention gesture", () => {
     fireEvent.click(screen.getByText("Ground black pepper"));
 
     expect(screen.getByPlaceholderText("Step")).toHaveValue("Add Ground black pepper");
+  });
+
+  it("refocuses the textarea after a mention, restoring the caret", async () => {
+    render(
+      <>
+        <SmartTextInputHarness onMention={() => undefined} />
+        <input aria-label="entry" />
+      </>
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("Step"), { target: { value: "Add @gro" } });
+    // Something else holds focus when the suggestion is clicked.
+    screen.getByLabelText("entry").focus();
+    fireEvent.click(screen.getByText("Ground black pepper"));
+    await flushMentionTimeout();
+
+    expect(screen.getByPlaceholderText("Step")).toHaveFocus();
+  });
+
+  it("leaves focus with a mention handler that takes it — the amount ask", async () => {
+    render(
+      <>
+        <SmartTextInputHarness
+          onMention={() => {
+            // The chips open their amount entry and focus it.
+            screen.getByLabelText("entry").focus();
+
+            return true;
+          }}
+        />
+        <input aria-label="entry" />
+      </>
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("Step"), { target: { value: "Add @gro" } });
+    fireEvent.click(screen.getByText("Ground black pepper"));
+    await flushMentionTimeout();
+
+    // The caret restore must not have fought the ask for focus.
+    expect(screen.getByLabelText("entry")).toHaveFocus();
   });
 
   it("does not trigger mid-word, so email-like text stays plain", () => {

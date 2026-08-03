@@ -22,13 +22,38 @@ vi.mock("@/hooks/recipes", () => ({
 }));
 
 vi.mock("@/components/shared/smart-text-input", () => ({
+  // The mock keeps the real contract's two halves that matter here: the ref
+  // reaches the textarea, and a mention hands (suggestion, newValue) up and
+  // returns whether the caller took focus.
   default: ({
     value,
     onValueChange,
+    onIngredientMention,
+    ingredientSuggestions = [],
+    ref,
   }: {
     value: string;
     onValueChange: (value: string) => void;
-  }) => <textarea value={value} onChange={(event) => onValueChange(event.target.value)} />,
+    onIngredientMention?: (
+      suggestion: { key: string; label: string; ingredientOrder: number },
+      newValue: string
+    ) => boolean | void;
+    ingredientSuggestions?: { key: string; label: string; ingredientOrder: number }[];
+    ref?: React.Ref<HTMLTextAreaElement>;
+  }) => (
+    <div>
+      <textarea ref={ref} value={value} onChange={(event) => onValueChange(event.target.value)} />
+      {ingredientSuggestions.map((suggestion) => (
+        <button
+          key={suggestion.key}
+          type="button"
+          onClick={() => onIngredientMention?.(suggestion, `${value} ${suggestion.label}`.trim())}
+        >
+          mention:{suggestion.label}
+        </button>
+      ))}
+    </div>
+  ),
 }));
 
 vi.mock("@heroui/react", () => {
@@ -79,6 +104,7 @@ const INGREDIENTS = [
   { ingredientName: "salt", amount: 5, unit: "g", systemUsed: "metric" as const, order: 0 },
   { ingredientName: "pepper", amount: 3, unit: "g", systemUsed: "metric" as const, order: 1 },
   { ingredientName: "paprika", amount: 2, unit: "g", systemUsed: "metric" as const, order: 2 },
+  { ingredientName: "parsley", amount: null, unit: null, systemUsed: "metric" as const, order: 3 },
   { ingredientName: "salt", amount: 1, unit: "tsp", systemUsed: "us" as const, order: 0 },
 ];
 
@@ -168,6 +194,131 @@ describe("StepInput chips", () => {
     expect(lastEmitted()[0]?.stepIngredients).toEqual([
       { ingredientOrder: 0, share: 0.5, order: 0 },
     ]);
+  });
+
+  it("asks for the amount after a picker attach, and commits the answer as a share", () => {
+    render(
+      <StepInput
+        ingredients={INGREDIENTS}
+        steps={[
+          {
+            step: "Season it.",
+            order: 0,
+            systemUsed: "metric",
+            stepIngredients: [],
+          },
+        ]}
+        systemUsed="metric"
+        onChange={onChange}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "pepper" }));
+
+    // The chip attached at the whole line and the ask opened over it,
+    // prefilled with the line's amount.
+    const input = screen.getByLabelText<HTMLInputElement>("customAmountLabel");
+
+    expect(input.value).toBe("3");
+
+    fireEvent.change(input, { target: { value: "1.5" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(lastEmitted()[0]?.stepIngredients).toEqual([
+      { ingredientOrder: 1, share: 0.5, order: 0 },
+    ]);
+    // Keyboard close hands focus back to the step's text.
+    expect(document.activeElement).toBe(screen.getAllByRole("textbox")[0]);
+  });
+
+  it("the mention gesture attaches, asks, and an Escape keeps the whole line", () => {
+    render(
+      <StepInput
+        ingredients={INGREDIENTS}
+        steps={[
+          {
+            step: "Season it.",
+            order: 0,
+            systemUsed: "metric",
+            stepIngredients: [],
+          },
+        ]}
+        systemUsed="metric"
+        onChange={onChange}
+      />
+    );
+
+    // One mention button per row — the trailing empty row has its own.
+    fireEvent.click(screen.getAllByRole("button", { name: "mention:salt" })[0]!);
+
+    expect(lastEmitted()[0]?.stepIngredients).toEqual([{ ingredientOrder: 0, share: 1, order: 0 }]);
+
+    const input = screen.getByLabelText<HTMLInputElement>("customAmountLabel");
+
+    expect(input.value).toBe("5");
+
+    fireEvent.keyDown(input, { key: "Escape" });
+
+    // Dismissed: the chip stays at the whole line, focus back in the text.
+    expect(lastEmitted()[0]?.stepIngredients).toEqual([{ ingredientOrder: 0, share: 1, order: 0 }]);
+    expect(document.activeElement).toBe(screen.getAllByRole("textbox")[0]);
+  });
+
+  it("keeps the whole line when the ask is escaped after typing", () => {
+    render(
+      <StepInput
+        ingredients={INGREDIENTS}
+        steps={[
+          {
+            step: "Season it.",
+            order: 0,
+            systemUsed: "metric",
+            stepIngredients: [],
+          },
+        ]}
+        systemUsed="metric"
+        onChange={onChange}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "pepper" }));
+
+    const input = screen.getByLabelText<HTMLInputElement>("customAmountLabel");
+
+    // Typed, then thought better of it. The Escape hands focus back to the
+    // step's text, and that focus shift blurs the input — which must not
+    // commit the abandoned value on re-entry.
+    fireEvent.change(input, { target: { value: "9" } });
+    fireEvent.keyDown(input, { key: "Escape" });
+    fireEvent.blur(input);
+
+    expect(lastEmitted()[0]?.stepIngredients).toEqual([
+      { ingredientOrder: 1, share: 1, order: 0 },
+    ]);
+  });
+
+  it("attaches an amountless line silently, with nothing to ask", () => {
+    render(
+      <StepInput
+        ingredients={INGREDIENTS}
+        steps={[
+          {
+            step: "Season it.",
+            order: 0,
+            systemUsed: "metric",
+            stepIngredients: [],
+          },
+        ]}
+        systemUsed="metric"
+        onChange={onChange}
+      />
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "mention:parsley" })[0]!);
+
+    expect(lastEmitted()[0]?.stepIngredients).toEqual([{ ingredientOrder: 3, share: 1, order: 0 }]);
+    expect(screen.queryByLabelText("customAmountLabel")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("customShareLabel")).not.toBeInTheDocument();
   });
 
   it("derives chip amounts from the active system's lines", () => {

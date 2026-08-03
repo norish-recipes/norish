@@ -63,13 +63,23 @@ const LINES = [
 ];
 
 let onChange: ReturnType<typeof vi.fn>;
+let onEntryKeyboardClose: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   onChange = vi.fn();
+  onEntryKeyboardClose = vi.fn();
 });
 
-function renderChips(refs: StepIngredientDraft[]) {
-  return render(<StepIngredientChips ingredients={LINES} refs={refs} onChange={onChange} />);
+function renderChips(refs: StepIngredientDraft[], autoEntryOrder: number | null = null) {
+  return render(
+    <StepIngredientChips
+      autoEntryOrder={autoEntryOrder}
+      ingredients={LINES}
+      refs={refs}
+      onChange={onChange}
+      onEntryKeyboardClose={onEntryKeyboardClose}
+    />
+  );
 }
 
 describe("StepIngredientChips", () => {
@@ -216,6 +226,107 @@ describe("StepIngredientChips", () => {
     fireEvent.keyDown(input, { key: "Enter" });
 
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("asks for the amount after a picker attach of an amounted line", () => {
+    const { rerender } = renderChips([]);
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "water" }));
+    expect(onChange).toHaveBeenCalledWith([{ ingredientOrder: 0, share: 1 }]);
+
+    // The parent applies the change; the chip appears and the ask opens,
+    // prefilled with the whole line so typing replaces it.
+    rerender(
+      <StepIngredientChips
+        autoEntryOrder={null}
+        ingredients={LINES}
+        refs={[{ ingredientOrder: 0, share: 1 }]}
+        onChange={onChange}
+        onEntryKeyboardClose={onEntryKeyboardClose}
+      />
+    );
+
+    expect(screen.getByLabelText<HTMLInputElement>("customAmountLabel").value).toBe("50");
+  });
+
+  it("attaches an amountless line silently, asking nothing", () => {
+    const { rerender } = renderChips([]);
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "salt" }));
+
+    rerender(
+      <StepIngredientChips
+        autoEntryOrder={null}
+        ingredients={LINES}
+        refs={[{ ingredientOrder: 2, share: 1 }]}
+        onChange={onChange}
+        onEntryKeyboardClose={onEntryKeyboardClose}
+      />
+    );
+
+    expect(screen.queryByLabelText("customAmountLabel")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("customShareLabel")).not.toBeInTheDocument();
+  });
+
+  it("opens the ask for a mention via autoEntryOrder and reports it handled", () => {
+    const onAutoEntryHandled = vi.fn();
+
+    render(
+      <StepIngredientChips
+        autoEntryOrder={3}
+        ingredients={LINES}
+        refs={[{ ingredientOrder: 3, share: 1 }]}
+        onChange={onChange}
+        onAutoEntryHandled={onAutoEntryHandled}
+        onEntryKeyboardClose={onEntryKeyboardClose}
+      />
+    );
+
+    expect(screen.getByLabelText<HTMLInputElement>("customAmountLabel").value).toBe("5");
+    expect(onAutoEntryHandled).toHaveBeenCalled();
+  });
+
+  it("keeps the whole line when the ask is dismissed with Escape, and hands focus back", () => {
+    renderChips([{ ingredientOrder: 0, share: 1 }], 0);
+
+    fireEvent.keyDown(screen.getByLabelText("customAmountLabel"), { key: "Escape" });
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(onEntryKeyboardClose).toHaveBeenCalled();
+  });
+
+  it("commits a typed answer to the ask and hands focus back", () => {
+    renderChips([{ ingredientOrder: 3, share: 1 }], 3);
+
+    const input = screen.getByLabelText("customAmountLabel");
+
+    fireEvent.change(input, { target: { value: "3" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onChange).toHaveBeenCalledWith([{ ingredientOrder: 3, share: 0.6 }]);
+    expect(onEntryKeyboardClose).toHaveBeenCalled();
+  });
+
+  it("does not yank focus when the ask closes by blur", () => {
+    renderChips([{ ingredientOrder: 0, share: 1 }], 0);
+
+    fireEvent.blur(screen.getByLabelText("customAmountLabel"));
+
+    expect(onEntryKeyboardClose).not.toHaveBeenCalled();
+  });
+
+  it("never hands focus around for an entry opened from the chip's own menu", () => {
+    renderChips([{ ingredientOrder: 3, share: 1 }]);
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "share.amount" }));
+
+    const input = screen.getByLabelText("customAmountLabel");
+
+    fireEvent.change(input, { target: { value: "2" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onChange).toHaveBeenCalled();
+    expect(onEntryKeyboardClose).not.toHaveBeenCalled();
   });
 
   it("renders nothing for a chip whose line no longer exists", () => {
