@@ -40,8 +40,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           above content; theme-aware via the background token. */}
                       <div
                         aria-hidden
-                        className="from-background pointer-events-none fixed inset-x-0 top-0 z-50 bg-gradient-to-b to-transparent md:hidden"
-                        style={{ height: "calc(env(safe-area-inset-top) + 0.75rem)" }}
+                        className="
+                          pointer-events-none fixed inset-x-0 top-0 z-50
+                          bg-gradient-to-b
+                          from-background
+                          via-background/80 via-35%
+                          to-transparent
+                          dark:via-background/80 dark:via-40%
+                          md:hidden
+                        "
+                        style={{
+                          height: "calc(env(safe-area-inset-top, 0px) + 0.85rem)",
+                        }}
                       />
                       <Navbar />
                       <main
