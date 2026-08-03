@@ -47,7 +47,7 @@ sentence as plain text, and the ingredient attaches to the step as a chip
 beneath it. The chip is the link — your sentence stays exactly what you typed,
 with no special syntax stored in it. If the line has an amount, the chip asks
 for it on the spot: type the number the step means and press Enter, or press
-Escape to keep the whole line — either way you land back in your sentence.
+Escape to keep the whole line.
 
 ![The @ mention autocomplete, with chips beneath the step](/img/screenshots/editor-mention-chips.png)
 
@@ -70,10 +70,3 @@ A tap removes a chip. What readers see on the recipe page comes from these
 chips; the whole story is on [Step ingredients](./step-ingredients.md).
 
 ![Amount entry on a chip beneath a step](/img/screenshots/editor-amount-entry.png)
-
-## Saving
-
-Unsaved changes are guarded — navigating away asks first, and chip edits count
-as changes like everything else. Saving keeps both measurement systems intact
-when a recipe has them: you edit the system you are looking at, and the other
-one stays as it was.
