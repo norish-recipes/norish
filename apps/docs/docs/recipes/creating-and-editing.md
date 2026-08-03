@@ -45,13 +45,22 @@ suggestion inserts the link; readers can tap it to jump to that recipe.
 Type `@` while writing a step and pick an ingredient: the word lands in your
 sentence as plain text, and the ingredient attaches to the step as a chip
 beneath it. The chip is the link — your sentence stays exactly what you typed,
-with no special syntax stored in it.
+with no special syntax stored in it. If the line has an amount, the chip asks
+for it on the spot: type the number the step means and press Enter, or press
+Escape to keep the whole line — either way you land back in your sentence.
 
 ![The @ mention autocomplete, with chips beneath the step](/img/screenshots/editor-mention-chips.png)
 
 Chips can also be added without naming anything in the text: the **Link
 ingredient** picker beneath each step attaches any of the recipe's ingredient
 lines, which is how a step like _"add the spices"_ carries its three links.
+Attaching from the picker asks the same question right away: the amount entry
+opens over the fresh chip, prefilled with the whole line. Answer it, or ignore
+it — clicking on or pressing Escape keeps the whole line, so attaching several
+lines in a row costs nothing extra.
+
+![The ask: an amount entry opens over a freshly attached chip](/img/screenshots/editor-amount-ask.png)
+
 Each chip can be set to how much of its line the step uses — half, a third, a
 quarter, or an exact amount when the line has one: **Amount…** on a chip of a
 five-egg line takes **3**, and the step reads _3 eggs_, leaving the other two

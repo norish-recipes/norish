@@ -40,11 +40,13 @@ exposed.
 
 In the recipe form, every step has a chips row: mention an ingredient with `@`
 while typing, or attach one from the **Link ingredient** picker without naming
-it in the text. Each chip carries how much of its line the step uses — half, a
-third, a quarter, or an exact amount when the line has one. A recipe that
-calls for 5 eggs can use **3** in one step and **2** in another: pick
-**Amount…** on the chip and type the number the step means. A tap removes a
-chip.
+it in the text. Attaching a line that has an amount asks for it on the spot —
+type the number and press Enter, or dismiss the ask to use the whole line.
+Each chip carries how much of its line the step uses — half, a third, a
+quarter, or an exact amount when the line has one. A recipe that calls for
+5 eggs can use **3** in one step and **2** in another: answer the ask, or pick
+**Amount…** on the chip later and type the number the step means. A tap
+removes a chip.
 
 An entered amount is stored as the equivalent share of its line — 3 of the
 5 eggs is stored as 0.6 — which is exactly why the displayed amounts keep
