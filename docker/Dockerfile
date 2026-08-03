@@ -98,7 +98,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=cache,target=/root/.local/share/uv/python \
   UV_PYTHON_DOWNLOADS=0 uv sync --project /app/apps/parser-api --locked --python 3.14
 
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
+# NODE_ENV matches what CI exports around the same `pnpm run build` (and turbo
+# passes it through to every package build), so the image build can never
+# silently diverge from the build the gates tested. `next build` forces
+# production internally either way; this pins the rest of the task graph.
+ENV NODE_ENV=production \
+  DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
   SKIP_ENV_VALIDATION=1
 
 RUN pnpm run build && \
