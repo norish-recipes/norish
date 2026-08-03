@@ -241,6 +241,21 @@
     "stepPlaceholder": "Etapa {number}: Descreva a etapa...",
     "stepPlaceholderShort": "Etapa {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Ingredientes vinculados",
+    "addLabel": "Vincular ingrediente",
+    "pickerLabel": "Vincule um ingrediente a esta etapa",
+    "shareLabel": "Alterar a parte de {name}",
+    "share": {
+      "full": "Linha inteira",
+      "half": "Metade",
+      "third": "Um terço",
+      "quarter": "Um quarto",
+      "custom": "Personalizada…"
+    },
+    "customShareLabel": "Parte personalizada",
+    "removeLabel": "Remover {name}"
+  },
   "ingredientInput": {
     "placeholder": "ex.: 2 xícaras de farinha"
   },

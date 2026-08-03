@@ -241,6 +241,21 @@
     "stepPlaceholder": "Passaggio {number}: Descrivi il passaggio...",
     "stepPlaceholderShort": "Passaggio {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Ingredienti collegati",
+    "addLabel": "Collega ingrediente",
+    "pickerLabel": "Collega un ingrediente a questo passaggio",
+    "shareLabel": "Modifica la parte di {name}",
+    "share": {
+      "full": "Riga intera",
+      "half": "La metà",
+      "third": "Un terzo",
+      "quarter": "Un quarto",
+      "custom": "Personalizzata…"
+    },
+    "customShareLabel": "Parte personalizzata",
+    "removeLabel": "Rimuovi {name}"
+  },
   "ingredientInput": {
     "placeholder": "es. 2 tazze di farina"
   },

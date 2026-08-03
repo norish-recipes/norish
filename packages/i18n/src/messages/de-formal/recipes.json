@@ -241,6 +241,21 @@
     "stepPlaceholder": "Schritt {number}: Beschreibe den Schritt...",
     "stepPlaceholderShort": "Schritt {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Verknüpfte Zutaten",
+    "addLabel": "Zutat verknüpfen",
+    "pickerLabel": "Verknüpfen Sie eine Zutat mit diesem Schritt",
+    "shareLabel": "Anteil von {name} ändern",
+    "share": {
+      "full": "Ganze Zeile",
+      "half": "Die Hälfte",
+      "third": "Ein Drittel",
+      "quarter": "Ein Viertel",
+      "custom": "Benutzerdefiniert…"
+    },
+    "customShareLabel": "Benutzerdefinierter Anteil",
+    "removeLabel": "{name} entfernen"
+  },
   "ingredientInput": {
     "placeholder": "z.B. 2 Tassen Mehl"
   },

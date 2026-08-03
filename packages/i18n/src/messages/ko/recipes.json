@@ -241,6 +241,21 @@
     "stepPlaceholder": "{number} 단계: 단계를 설명하세요...",
     "stepPlaceholderShort": "{number} 단계"
   },
+  "stepIngredients": {
+    "rowLabel": "연결된 재료",
+    "addLabel": "재료 연결",
+    "pickerLabel": "이 단계에 재료를 연결하세요",
+    "shareLabel": "{name}의 분량 변경",
+    "share": {
+      "full": "전체",
+      "half": "절반",
+      "third": "3분의 1",
+      "quarter": "4분의 1",
+      "custom": "직접 입력…"
+    },
+    "customShareLabel": "직접 입력한 분량",
+    "removeLabel": "{name} 제거"
+  },
   "ingredientInput": {
     "placeholder": "예: 밀가루 2컵"
   },

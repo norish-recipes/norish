@@ -250,6 +250,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       systemUsed: s.systemUsed,
       version: s.version,
       images: s.images || [],
+      stepIngredients: s.stepIngredients || [],
     }));
     setSteps(initSteps);
     initializedRecipeIdRef.current = initialData.id;
@@ -381,6 +382,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           systemUsed: s.systemUsed,
           version: s.version,
           images: s.images || [],
+          stepIngredients: s.stepIngredients || [],
         })),
         // Images array field
         images,

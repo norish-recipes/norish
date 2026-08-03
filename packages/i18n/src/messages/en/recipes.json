@@ -241,6 +241,21 @@
     "stepPlaceholder": "Step {number}: Describe the step...",
     "stepPlaceholderShort": "Step {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Linked ingredients",
+    "addLabel": "Link ingredient",
+    "pickerLabel": "Attach an ingredient to this step",
+    "shareLabel": "Change the share of {name}",
+    "share": {
+      "full": "Whole line",
+      "half": "Half",
+      "third": "A third",
+      "quarter": "A quarter",
+      "custom": "Custom…"
+    },
+    "customShareLabel": "Custom share",
+    "removeLabel": "Remove {name}"
+  },
   "ingredientInput": {
     "placeholder": "e.g., 2 cups flour"
   },

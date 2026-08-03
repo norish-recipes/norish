@@ -121,6 +121,7 @@ export function useRecipeFormDirtyState({
         systemUsed: step.systemUsed,
         version: step.version,
         images: step.images || [],
+        stepIngredients: step.stepIngredients || [],
       })),
       systemUsed: initialData?.systemUsed ?? "metric",
       media: buildInitialMedia(initialData),

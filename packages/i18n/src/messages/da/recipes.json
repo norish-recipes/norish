@@ -241,6 +241,21 @@
     "stepPlaceholder": "Trin {number}: Beskriv trinnet...",
     "stepPlaceholderShort": "Trin {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Tilknyttede ingredienser",
+    "addLabel": "Tilknyt ingrediens",
+    "pickerLabel": "Tilknyt en ingrediens til dette trin",
+    "shareLabel": "Ændr andelen af {name}",
+    "share": {
+      "full": "Hele linjen",
+      "half": "Halvdelen",
+      "third": "En tredjedel",
+      "quarter": "En fjerdedel",
+      "custom": "Tilpasset…"
+    },
+    "customShareLabel": "Tilpasset andel",
+    "removeLabel": "Fjern {name}"
+  },
   "ingredientInput": {
     "placeholder": "f.eks. 2 dl mel"
   },

@@ -241,6 +241,21 @@
     "stepPlaceholder": "Paso {number}: Describe el paso...",
     "stepPlaceholderShort": "Paso {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Ingredientes vinculados",
+    "addLabel": "Vincular ingrediente",
+    "pickerLabel": "Vincula un ingrediente a este paso",
+    "shareLabel": "Cambiar la parte de {name}",
+    "share": {
+      "full": "Línea completa",
+      "half": "La mitad",
+      "third": "Un tercio",
+      "quarter": "Un cuarto",
+      "custom": "Personalizado…"
+    },
+    "customShareLabel": "Parte personalizada",
+    "removeLabel": "Quitar {name}"
+  },
   "ingredientInput": {
     "placeholder": "p. ej., 400 g harina"
   },

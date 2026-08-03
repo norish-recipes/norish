@@ -93,6 +93,7 @@ const baseRecipe: FullRecipeDTO = {
       order: 0,
       version: 1,
       images: [{ id: "step-img-1", image: "/steps/mix.jpg", order: 0, version: 1 }],
+      stepIngredients: [{ ingredientOrder: 0, share: 0.5, order: 0 }],
     },
     {
       step: "Mix ingredients",
@@ -100,6 +101,7 @@ const baseRecipe: FullRecipeDTO = {
       order: 0,
       version: 1,
       images: [],
+      stepIngredients: [],
     },
   ],
   tags: [{ name: "dessert" }, { name: "baking" }],
@@ -160,6 +162,7 @@ function createInitialCurrent(overrides: Partial<RecipeFormState> = {}): RecipeF
         order: 0,
         version: 1,
         images: [{ id: "step-img-1", image: "/steps/mix.jpg", order: 0, version: 1 }],
+        stepIngredients: [{ ingredientOrder: 0, share: 0.5, order: 0 }],
       },
     ],
     systemUsed: "metric",
@@ -282,6 +285,28 @@ describe("useRecipeFormDirtyState", () => {
             order: 0,
             version: 1,
             images: [],
+            stepIngredients: [{ ingredientOrder: 0, share: 0.5, order: 0 }],
+          },
+        ],
+      }),
+      initialData: baseRecipe,
+    });
+
+    expect(result.current).toBe(true);
+  });
+
+  it("reports Step Ingredient chip edits as edits", () => {
+    const { result } = renderDirtyState({
+      current: createInitialCurrent({
+        steps: [
+          {
+            step: "Mix ingredients",
+            systemUsed: "metric",
+            order: 0,
+            version: 1,
+            images: [{ id: "step-img-1", image: "/steps/mix.jpg", order: 0, version: 1 }],
+            // The share moved from a half to a third: nothing else changed.
+            stepIngredients: [{ ingredientOrder: 0, share: 1 / 3, order: 0 }],
           },
         ],
       }),

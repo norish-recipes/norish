@@ -241,6 +241,21 @@
     "stepPlaceholder": "Шаг {number}: Опишите действие...",
     "stepPlaceholderShort": "Шаг {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Связанные ингредиенты",
+    "addLabel": "Связать ингредиент",
+    "pickerLabel": "Привяжите ингредиент к этому шагу",
+    "shareLabel": "Изменить долю {name}",
+    "share": {
+      "full": "Вся строка",
+      "half": "Половина",
+      "third": "Треть",
+      "quarter": "Четверть",
+      "custom": "Другое…"
+    },
+    "customShareLabel": "Своя доля",
+    "removeLabel": "Убрать {name}"
+  },
   "ingredientInput": {
     "placeholder": "например, 2 стакана муки"
   },
