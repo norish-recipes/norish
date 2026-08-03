@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Pagina niet gevonden",
-    "message": "Oeps! Nora kon niet vinden wat je zocht.\nDe pagina is mogelijk verplaatst of bestaat niet."
+    "title": "Nora is in de war.",
+    "message": "Ze snuffelt rond om te vinden waar je naartoe wilde.",
+    "imageAlt": "Nora kijkt verward"
   },
   "import": {
     "url": {
@@ -156,6 +157,7 @@
     "heading": "Begin een regel met <strong>#</strong> voor een kop",
     "bold": "Gebruik <strong>**dubbele sterretjes**</strong> voor bold tekst",
     "recipeLink": "Typ <strong>/receptnaam</strong> om naar een ander recept te linken",
+    "ingredientMention": "Typ <strong>@</strong> om een ingrediënt aan de stap te koppelen — het woord komt in je zin, de koppeling wordt een chip eronder",
     "helpAriaLabel": "Formateringshulp"
   },
   "tagInput": {
@@ -267,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Je bent offline",
-    "body": "Deze pagina staat niet in de offlinecache. Onlangs bezochte pagina's zijn nog wel beschikbaar.",
+    "title": "Nora is ook offline.",
+    "body": "Deze pagina is niet offline opgeslagen — onlangs bezochte pagina's zijn er nog wel.",
+    "backOnlineTitle": "Nora heeft de verbinding gevonden!",
+    "backOnlineBody": "Norish is weer bereikbaar — probeer deze pagina opnieuw te laden.",
     "retry": "Opnieuw proberen",
     "home": "Norish openen"
   },

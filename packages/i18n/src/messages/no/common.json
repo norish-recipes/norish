@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Siden ble ikke funnet",
-    "message": "Ups! Nora kunne ikke finne det du leter etter.\nSiden kan ha blitt flyttet eller eksisterer ikke."
+    "title": "Nora er forvirret.",
+    "message": "Hun snuser rundt for å finne ut hvor du skulle.",
+    "imageAlt": "Nora ser forvirret ut"
   },
   "import": {
     "url": {
@@ -156,6 +157,7 @@
     "heading": "Start en linje med <strong>#</strong> for en overskrift",
     "bold": "Omgi med <strong>**doble stjerner**</strong> for fet skrift",
     "recipeLink": "Skriv <strong>/oppskriftnavn</strong> for å lenke til en annen oppskrift",
+    "ingredientMention": "Skriv <strong>@</strong> for å koble en ingrediens til trinnet — ordet havner i setningen, koblingen blir en brikke under",
     "helpAriaLabel": "Hjelp til formatering"
   },
   "tagInput": {
@@ -267,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Du er frakoblet",
-    "body": "Denne siden er ikke i frakoblet-cachen. Nylig besøkte sider er fortsatt tilgjengelige.",
+    "title": "Nora er også frakoblet.",
+    "body": "Denne siden er ikke lagret for frakoblet bruk — sider du nylig har besøkt er fortsatt her.",
+    "backOnlineTitle": "Nora fant tilkoblingen!",
+    "backOnlineBody": "Norish er tilgjengelig igjen — prøv å laste denne siden på nytt.",
     "retry": "Prøv igjen",
     "home": "Åpne Norish"
   },

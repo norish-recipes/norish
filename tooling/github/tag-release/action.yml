@@ -1,0 +1,78 @@
+name: "Compute and push release tag"
+description: "Reads the root package.json version, computes <tag-prefix><version>, optionally requires a -beta suffix, and creates + pushes the git tag if absent."
+
+inputs:
+  tag-prefix:
+    description: "Prefix for the tag (e.g. 'v' or 'rc-v')."
+    required: true
+  require-beta:
+    description: "Fail unless the version contains a -beta suffix."
+    required: false
+    default: "false"
+
+outputs:
+  version:
+    description: "The root package.json version."
+    value: ${{ steps.read_version.outputs.version }}
+  tag:
+    description: "The computed tag name."
+    value: ${{ steps.compute_tag.outputs.tag }}
+
+runs:
+  using: composite
+  steps:
+    - name: Read version from package.json
+      id: read_version
+      shell: bash
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Verify version contains beta suffix
+      if: ${{ inputs.require-beta == 'true' }}
+      shell: bash
+      run: |
+        VERSION="${{ steps.read_version.outputs.version }}"
+        if [[ "$VERSION" != *-beta* ]]; then
+          echo "::error::RC branch version '$VERSION' must contain '-beta' suffix"
+          exit 1
+        fi
+
+    - name: Compute tag name
+      id: compute_tag
+      shell: bash
+      run: echo "tag=${{ inputs.tag-prefix }}${{ steps.read_version.outputs.version }}" >> "$GITHUB_OUTPUT"
+
+    - name: Fetch tags
+      shell: bash
+      run: git fetch --tags --force
+
+    - name: Check if tag exists
+      id: check_tag
+      shell: bash
+      run: |
+        TAG="${{ steps.compute_tag.outputs.tag }}"
+        if git show-ref --tags --verify --quiet "refs/tags/$TAG"; then
+          echo "exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "exists=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Configure git user
+      if: ${{ steps.check_tag.outputs.exists == 'false' }}
+      shell: bash
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Create and push tag
+      if: ${{ steps.check_tag.outputs.exists == 'false' }}
+      shell: bash
+      run: |
+        TAG="${{ steps.compute_tag.outputs.tag }}"
+        if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
+          echo "Tag $TAG already exists on origin; skipping tag creation"
+          exit 0
+        fi
+        git tag "$TAG"
+        git push origin "refs/tags/$TAG"

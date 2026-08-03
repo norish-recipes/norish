@@ -74,6 +74,8 @@
     "autoCategorizing": "Automatisch categoriseren…",
     "inferProvenance": "Herkomst bepalen",
     "inferringProvenance": "Herkomst bepalen…",
+    "linkIngredients": "Ingrediënten aan stappen koppelen",
+    "linkingIngredients": "Ingrediënten koppelen…",
     "enrichmentFailed": "Laatste poging mislukt"
   },
   "sharePanel": {
@@ -241,6 +243,23 @@
     "stepPlaceholder": "Stap {number}: Beschrijf de stap...",
     "stepPlaceholderShort": "Stap {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Gekoppelde ingrediënten",
+    "addLabel": "Ingrediënt koppelen",
+    "pickerLabel": "Koppel een ingrediënt aan deze stap",
+    "shareLabel": "Deel van {name} aanpassen",
+    "share": {
+      "full": "Hele regel",
+      "half": "De helft",
+      "third": "Een derde",
+      "quarter": "Een kwart",
+      "custom": "Aangepast…",
+      "amount": "Hoeveelheid…"
+    },
+    "customShareLabel": "Aangepast deel",
+    "customAmountLabel": "Hoeveelheid",
+    "removeLabel": "{name} verwijderen"
+  },
   "ingredientInput": {
     "placeholder": "bijv. 2 kopjes bloem"
   },
@@ -292,7 +311,8 @@
       "allergy-detection": "Allergiedetectie",
       "auto-categorization": "Automatisch categoriseren",
       "nutrition-estimation": "Voedingswaarde schatten",
-      "recipe-provenance": "Receptherkomst"
+      "recipe-provenance": "Receptherkomst",
+      "ingredient-linking": "Ingrediëntkoppeling"
     }
   },
   "provenance": {

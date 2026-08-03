@@ -10,16 +10,12 @@
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { useSharePublicConfigQuery } from "@/hooks/recipes/use-share-public-config-query";
 
-import type { IngredientLinkCandidate } from "@norish/shared-react/text";
-
 interface PublicSmartInstructionProps {
   text: string;
   recipeId: string;
   token: string;
   recipeName?: string;
   stepIndex: number;
-  ingredientCandidates?: IngredientLinkCandidate[];
-  onIngredientPress?: (candidate: IngredientLinkCandidate) => void;
 }
 
 export function PublicSmartInstruction({
@@ -28,14 +24,11 @@ export function PublicSmartInstruction({
   token,
   recipeName,
   stepIndex,
-  ingredientCandidates,
-  onIngredientPress,
 }: PublicSmartInstructionProps) {
   const { timersEnabled, timerKeywords } = useSharePublicConfigQuery(token);
 
   return (
     <SmartMarkdownRenderer
-      ingredientCandidates={ingredientCandidates}
       linkMode="public"
       text={text}
       timerConfig={{
@@ -49,7 +42,6 @@ export function PublicSmartInstruction({
         recipeName,
         stepIndex,
       }}
-      onIngredientPress={onIngredientPress}
     />
   );
 }

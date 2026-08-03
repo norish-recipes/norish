@@ -4,7 +4,12 @@ import { QuestionMarkCircleIcon } from "@heroicons/react/16/solid";
 import { Popover } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-export default function SmartInputHelp() {
+type SmartInputHelpProps = {
+  /** Steps only: `@` is the mention gesture that attaches a Step Ingredient. */
+  showIngredientMention?: boolean;
+};
+
+export default function SmartInputHelp({ showIngredientMention = false }: SmartInputHelpProps) {
   const t = useTranslations("common.formatting");
 
   return (
@@ -42,6 +47,14 @@ export default function SmartInputHelp() {
                 </code>
                 <span dangerouslySetInnerHTML={{ __html: t.raw("recipeLink") }} />
               </li>
+              {showIngredientMention && (
+                <li className="flex items-start gap-2">
+                  <code className="bg-surface-secondary text-accent rounded px-1.5 py-0.5 font-mono text-xs">
+                    @
+                  </code>
+                  <span dangerouslySetInnerHTML={{ __html: t.raw("ingredientMention") }} />
+                </li>
+              )}
             </ul>
           </div>
         </Popover.Dialog>

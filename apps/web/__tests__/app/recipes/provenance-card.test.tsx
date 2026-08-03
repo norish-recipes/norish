@@ -8,14 +8,12 @@ import ProvenanceCard from "@/app/(app)/recipes/[id]/components/provenance-card"
 type LifecycleState = "idle" | "queued" | "processing" | "succeeded" | "failed";
 
 const mocks = vi.hoisted(() => ({
-  canEdit: true,
-  isAIEnabled: true,
-  request: vi.fn(),
   state: "idle" as LifecycleState,
   recipe: {
     id: "recipe-1",
     userId: "owner-1",
     originCountry: null as string | null,
+    originCountryName: null as string | null,
     originRegion: null as string | null,
     provenanceNote: null as string | null,
     cuisines: [] as { id: string; name: string; version: number }[],
@@ -28,15 +26,7 @@ vi.mock("@/app/(app)/recipes/[id]/context", () => ({
     enrichment: {
       states: { "recipe-provenance": mocks.state },
       isBusy: () => mocks.state === "queued" || mocks.state === "processing",
-      request: mocks.request,
     },
-  }),
-}));
-
-vi.mock("@/context/permissions-context", () => ({
-  usePermissionsContext: () => ({
-    isAIEnabled: mocks.isAIEnabled,
-    canEditRecipe: () => mocks.canEdit,
   }),
 }));
 
@@ -51,33 +41,24 @@ vi.mock("@heroui/react", () => ({
 
 vi.mock("next-intl", () => ({
   useLocale: () => "nl",
-  useTranslations: (namespace: string) => (key: string) => {
-    const enrichment: Record<string, string> = {
-      "states.queued": "Queued",
-      "states.processing": "In progress",
-      "states.failed": "Last run failed",
-    };
+  useTranslations: () => (key: string) => {
     const provenance: Record<string, string> = {
       title: "Provenance",
       region: "Region",
       cuisines: "Cuisines",
-      noInfo: "No provenance information yet",
-      inferWithAI: "Work out with AI",
     };
 
-    return namespace === "recipes.enrichment" ? (enrichment[key] ?? key) : (provenance[key] ?? key);
+    return provenance[key] ?? key;
   },
 }));
 
 beforeEach(() => {
-  mocks.canEdit = true;
-  mocks.isAIEnabled = true;
   mocks.state = "idle";
-  mocks.request.mockClear();
   mocks.recipe = {
     id: "recipe-1",
     userId: "owner-1",
     originCountry: null,
+    originCountryName: null,
     originRegion: null,
     provenanceNote: null,
     cuisines: [],
@@ -85,16 +66,15 @@ beforeEach(() => {
 });
 
 describe("Recipe Provenance section", () => {
-  it("is absent when there is no provenance, no run in progress, and no action to offer", () => {
-    mocks.canEdit = false;
-
+  it("is absent when nothing is stored and no run is in flight", () => {
     const { container } = render(<ProvenanceCard />);
 
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("is absent when AI is disabled and nothing is stored", () => {
-    mocks.isAIEnabled = false;
+  it("stays absent after a failed run when nothing is stored", () => {
+    // A quiet automatic failure leaves no empty panel behind.
+    mocks.state = "failed";
 
     const { container } = render(<ProvenanceCard />);
 
@@ -106,16 +86,13 @@ describe("Recipe Provenance section", () => {
 
     render(<ProvenanceCard />);
 
-    // A skeleton under the section's own name, and no running commentary: the
-    // shape is what says work is happening.
+    // A skeleton under the section's own name: the shape is what says work
+    // is happening.
     expect(screen.getByText("Provenance")).toBeInTheDocument();
-    expect(screen.queryByText("In progress")).not.toBeInTheDocument();
-    expect(screen.queryByText("No provenance information yet")).not.toBeInTheDocument();
     expect(screen.getAllByTestId("skeleton").length).toBeGreaterThan(0);
   });
 
-  it("shows an in-progress run to a reader who could not have started one", () => {
-    mocks.canEdit = false;
+  it("shows the skeleton while a run is still queued", () => {
     mocks.state = "queued";
 
     render(<ProvenanceCard />);
@@ -126,6 +103,7 @@ describe("Recipe Provenance section", () => {
   it("does not pre-empt the title with a country a run has not produced yet", () => {
     // Stale provenance must not headline a card that is being replaced.
     mocks.recipe.originCountry = "IT";
+    mocks.recipe.originCountryName = "Italia";
     mocks.state = "processing";
 
     render(<ProvenanceCard />);
@@ -134,14 +112,29 @@ describe("Recipe Provenance section", () => {
     expect(screen.queryByText("Italia")).not.toBeInTheDocument();
   });
 
-  it("makes the country the card's title, in its own language", () => {
+  it("titles the card with the stored written name, in the recipe's language", () => {
+    // A Dutch recipe about a Turkish dish: the stored name speaks the language
+    // of the note beside it, not the country's own or the reader's.
+    mocks.recipe.originCountry = "TR";
+    mocks.recipe.originCountryName = "Turkije";
+    mocks.recipe.provenanceNote = "Dit gerecht komt uit de Turkse keuken.";
+
+    render(<ProvenanceCard />);
+
+    expect(screen.getByRole("heading", { name: /Turkije/ })).toBeInTheDocument();
+    expect(screen.getByText("🇹🇷")).toBeInTheDocument();
+    expect(screen.queryByText("Provenance")).not.toBeInTheDocument();
+  });
+
+  it("falls back to the endonym when a row has a code but no stored name", () => {
     mocks.recipe.originCountry = "IT";
+    mocks.recipe.originCountryName = null;
     mocks.recipe.provenanceNote = "Una classica ricetta romana.";
 
     render(<ProvenanceCard />);
 
-    // The reader's locale is Dutch; the endonym still titles the card, so it
-    // reads in step with the note, which is in the recipe's language.
+    // The reader's locale is Dutch; the endonym still titles the card until a
+    // run stores a written name, so nothing ever renders as a bare code.
     expect(screen.getByRole("heading", { name: /Italia/ })).toBeInTheDocument();
     expect(screen.getByText("🇮🇹")).toBeInTheDocument();
     expect(screen.getByText("Una classica ricetta romana.")).toBeInTheDocument();
@@ -177,7 +170,8 @@ describe("Recipe Provenance section", () => {
     render(<ProvenanceCard />);
 
     expect(screen.getByText("Dit gerecht is niet aan één land te koppelen.")).toBeInTheDocument();
-    expect(screen.queryByText("No provenance information yet")).not.toBeInTheDocument();
+    // The section still names itself, since there is no country to title it.
+    expect(screen.getByText("Provenance")).toBeInTheDocument();
   });
 
   it("shows the recipe's Cuisines verbatim, whatever the reader's language", () => {
@@ -200,7 +194,6 @@ describe("Recipe Provenance section", () => {
     render(<ProvenanceCard />);
 
     expect(screen.getByText("Italian")).toBeInTheDocument();
-    expect(screen.queryByText("No provenance information yet")).not.toBeInTheDocument();
   });
 
   it("omits the Cuisines row when there are none", () => {

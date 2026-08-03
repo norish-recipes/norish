@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "페이지를 찾을 수 없음",
-    "message": "이런! Nora가 찾으시는 페이지를 찾을 수 없어요. 페이지가 이동되었거나 존재하지 않을 수 있어요."
+    "title": "노라가 헷갈려해요.",
+    "message": "노라가 여기저기 킁킁대며 가려던 곳을 찾고 있어요.",
+    "imageAlt": "어리둥절한 노라"
   },
   "import": {
     "url": {
@@ -156,6 +157,7 @@
     "heading": "제목을 만들려면 줄 앞에 <strong>#</strong>을 입력하세요",
     "bold": "굵게 표시하려면 <strong>**이중 별표**</strong>로 묶으세요.",
     "recipeLink": "다른 레시피에 연결하려면 <strong>/recipe 이름</strong>을 입력하세요.",
+    "ingredientMention": "<strong>@</strong>를 입력하면 재료가 단계에 연결됩니다 — 단어는 문장에 남고 연결은 아래에 칩으로 표시됩니다",
     "helpAriaLabel": "서식 지정 도움말"
   },
   "tagInput": {
@@ -267,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "오프라인 상태입니다",
-    "body": "이 페이지는 오프라인 캐시에 없습니다. 최근에 방문한 페이지는 계속 사용할 수 있습니다.",
+    "title": "노라도 오프라인이에요.",
+    "body": "이 페이지는 오프라인용으로 저장되어 있지 않아요. 최근에 방문한 페이지는 계속 볼 수 있어요.",
+    "backOnlineTitle": "노라가 연결을 찾았어요!",
+    "backOnlineBody": "Norish에 다시 연결됐어요. 이 페이지를 다시 불러와 보세요.",
     "retry": "다시 시도",
     "home": "Norish 열기"
   },

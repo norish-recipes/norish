@@ -184,4 +184,38 @@ describe("recipe share repository", () => {
     expect(publicRecipe?.recipeIngredients[0]).not.toHaveProperty("ingredientId");
     expect(publicRecipe?.steps[0]).not.toHaveProperty("version");
   });
+
+  it("carries Step Ingredients into the public view without exposing any ids", async () => {
+    const db = getTestDb();
+    const { token } = await createTestRecipeShare(testUserId, testRecipeId, {
+      token: "step-ingredients-token",
+    });
+    const ingredient = await createTestIngredient({ name: "Water" });
+    const step = await createTestRecipeStep(testRecipeId, "metric", {
+      step: "Add half the water",
+      order: "0",
+    });
+    const line = await createTestRecipeIngredients(testRecipeId, ingredient.id, "metric", {
+      amount: "50",
+      unit: "ml",
+      order: "0",
+    });
+
+    await db.insert(schema.stepIngredients).values({
+      stepId: step.id,
+      recipeIngredientId: line.id,
+      share: "0.5",
+      order: "0",
+    });
+
+    const publicRecipe = await getPublicRecipeView(testRecipeId, token);
+
+    // The reference resolves by line order within the system — the recipient
+    // derives 25 ml at display time, and no row id crosses the boundary.
+    expect(publicRecipe?.steps[0]?.stepIngredients).toEqual([
+      { ingredientOrder: 0, share: 0.5, order: 0 },
+    ]);
+    expect(publicRecipe?.steps[0]?.stepIngredients[0]).not.toHaveProperty("id");
+    expect(publicRecipe?.steps[0]?.stepIngredients[0]).not.toHaveProperty("recipeIngredientId");
+  });
 });

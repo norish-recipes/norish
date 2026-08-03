@@ -125,6 +125,7 @@ export function mapRecipeToPublicRecipeView(
         image: toSharedMediaUrl(image.image, shareToken),
         order: image.order,
       })),
+      stepIngredients: step.stepIngredients ?? [],
     })),
     author: recipe.author
       ? {

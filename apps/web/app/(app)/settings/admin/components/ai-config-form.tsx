@@ -68,6 +68,7 @@ const AUTOMATIC_ENRICHMENT_KEYS = [
   "autoCategorization",
   "nutritionEstimation",
   "recipeProvenance",
+  "ingredientLinking",
 ] as const satisfies readonly (keyof AutomaticEnrichmentConfig)[];
 export default function AIConfigForm({ onDirtyChange }: AIConfigFormProps) {
   const t = useTranslations("settings.admin.aiConfig");

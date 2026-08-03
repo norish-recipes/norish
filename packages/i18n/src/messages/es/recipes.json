@@ -74,6 +74,8 @@
     "autoCategorizing": "Categorizando…",
     "inferProvenance": "Averiguar la procedencia",
     "inferringProvenance": "Averiguando la procedencia…",
+    "linkIngredients": "Vincular ingredientes a los pasos",
+    "linkingIngredients": "Vinculando ingredientes…",
     "enrichmentFailed": "El último intento falló"
   },
   "sharePanel": {
@@ -241,6 +243,23 @@
     "stepPlaceholder": "Paso {number}: Describe el paso...",
     "stepPlaceholderShort": "Paso {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Ingredientes vinculados",
+    "addLabel": "Vincular ingrediente",
+    "pickerLabel": "Vincula un ingrediente a este paso",
+    "shareLabel": "Cambiar la parte de {name}",
+    "share": {
+      "full": "Línea completa",
+      "half": "La mitad",
+      "third": "Un tercio",
+      "quarter": "Un cuarto",
+      "custom": "Personalizado…",
+      "amount": "Cantidad…"
+    },
+    "customShareLabel": "Parte personalizada",
+    "customAmountLabel": "Cantidad",
+    "removeLabel": "Quitar {name}"
+  },
   "ingredientInput": {
     "placeholder": "p. ej., 400 g harina"
   },
@@ -292,7 +311,8 @@
       "allergy-detection": "Detección de alergias",
       "auto-categorization": "Categorización automática",
       "nutrition-estimation": "Estimación nutricional",
-      "recipe-provenance": "Procedencia de la receta"
+      "recipe-provenance": "Procedencia de la receta",
+      "ingredient-linking": "Vinculación de ingredientes"
     }
   },
   "provenance": {

@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Side ikke fundet",
-    "message": "Ups! Nora kunne ikke finde det, du leder efter.\nSiden kan være blevet flyttet eller eksisterer ikke."
+    "title": "Nora er forvirret.",
+    "message": "Hun snuser rundt for at finde ud af, hvor du ville hen.",
+    "imageAlt": "Nora ser forvirret ud"
   },
   "import": {
     "url": {
@@ -156,6 +157,7 @@
     "heading": "Start en linje med <strong>#</strong> for en overskrift",
     "bold": "Omslut med <strong>**dobbelte stjerner**</strong> for fed skrift",
     "recipeLink": "Skriv <strong>/opskriftsnavn</strong> for at linke til en anden opskrift",
+    "ingredientMention": "Skriv <strong>@</strong> for at tilknytte en ingrediens til trinnet — ordet lander i sætningen, tilknytningen bliver en brik nedenunder",
     "helpAriaLabel": "Hjælp til formatering"
   },
   "tagInput": {
@@ -267,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Du er offline",
-    "body": "Denne side er ikke i offline-cachen. Senest besøgte sider er stadig tilgængelige.",
+    "title": "Nora er også offline.",
+    "body": "Denne side er ikke gemt til offline — sider, du har besøgt for nylig, er her stadig.",
+    "backOnlineTitle": "Nora har fundet forbindelsen!",
+    "backOnlineBody": "Norish kan nås igen — prøv at indlæse denne side igen.",
     "retry": "Prøv igen",
     "home": "Åbn Norish"
   },

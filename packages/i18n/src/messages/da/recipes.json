@@ -74,6 +74,8 @@
     "autoCategorizing": "Kategoriserer…",
     "inferProvenance": "Find oprindelsen",
     "inferringProvenance": "Finder oprindelsen …",
+    "linkIngredients": "Tilknyt ingredienser til trin",
+    "linkingIngredients": "Tilknytter ingredienser…",
     "enrichmentFailed": "Sidste forsøg mislykkedes"
   },
   "sharePanel": {
@@ -241,6 +243,23 @@
     "stepPlaceholder": "Trin {number}: Beskriv trinnet...",
     "stepPlaceholderShort": "Trin {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Tilknyttede ingredienser",
+    "addLabel": "Tilknyt ingrediens",
+    "pickerLabel": "Tilknyt en ingrediens til dette trin",
+    "shareLabel": "Ændr andelen af {name}",
+    "share": {
+      "full": "Hele linjen",
+      "half": "Halvdelen",
+      "third": "En tredjedel",
+      "quarter": "En fjerdedel",
+      "custom": "Tilpasset…",
+      "amount": "Mængde…"
+    },
+    "customShareLabel": "Tilpasset andel",
+    "customAmountLabel": "Mængde",
+    "removeLabel": "Fjern {name}"
+  },
   "ingredientInput": {
     "placeholder": "f.eks. 2 dl mel"
   },
@@ -292,7 +311,8 @@
       "allergy-detection": "Allergiregistrering",
       "auto-categorization": "Automatisk kategorisering",
       "nutrition-estimation": "Estimering af næringsindhold",
-      "recipe-provenance": "Opskriftens oprindelse"
+      "recipe-provenance": "Opskriftens oprindelse",
+      "ingredient-linking": "Ingredienstilknytning"
     }
   },
   "provenance": {

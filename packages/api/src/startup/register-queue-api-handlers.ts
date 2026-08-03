@@ -2,6 +2,7 @@ import { detectAllergiesInRecipe } from "@norish/api/ai/allergy-detector";
 import { categorizeRecipe } from "@norish/api/ai/auto-categorizer";
 import { generateTagsForRecipe } from "@norish/api/ai/auto-tagger";
 import { extractRecipeFromImages } from "@norish/api/ai/image-recipe-parser";
+import { inferStepIngredients } from "@norish/api/ai/ingredient-linking-inferrer";
 import { estimateNutritionFromIngredients } from "@norish/api/ai/nutrition-estimator";
 import { inferRecipeProvenance } from "@norish/api/ai/provenance-inferrer";
 import { extractRecipeWithAI } from "@norish/api/ai/recipe-parser";
@@ -35,6 +36,7 @@ export function registerApiHandlersForQueue(): void {
     categorizeRecipe,
     detectAllergiesInRecipe,
     inferRecipeProvenance,
+    inferStepIngredients,
     syncPlannedItem,
     deletePlannedItem,
     truncateErrorMessage,

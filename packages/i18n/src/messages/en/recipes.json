@@ -74,6 +74,8 @@
     "autoCategorizing": "Auto-categorizing…",
     "inferProvenance": "Work Out Provenance",
     "inferringProvenance": "Working out provenance…",
+    "linkIngredients": "Link Ingredients to Steps",
+    "linkingIngredients": "Linking ingredients…",
     "enrichmentFailed": "Last run failed"
   },
   "sharePanel": {
@@ -241,6 +243,23 @@
     "stepPlaceholder": "Step {number}: Describe the step...",
     "stepPlaceholderShort": "Step {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Linked ingredients",
+    "addLabel": "Link ingredient",
+    "pickerLabel": "Attach an ingredient to this step",
+    "shareLabel": "Change the share of {name}",
+    "share": {
+      "full": "Whole line",
+      "half": "Half",
+      "third": "A third",
+      "quarter": "A quarter",
+      "custom": "Custom…",
+      "amount": "Amount…"
+    },
+    "customShareLabel": "Custom share",
+    "customAmountLabel": "Amount",
+    "removeLabel": "Remove {name}"
+  },
   "ingredientInput": {
     "placeholder": "e.g., 2 cups flour"
   },
@@ -292,7 +311,8 @@
       "allergy-detection": "Allergy detection",
       "auto-categorization": "Auto-categorization",
       "nutrition-estimation": "Nutrition estimation",
-      "recipe-provenance": "Recipe Provenance"
+      "recipe-provenance": "Recipe Provenance",
+      "ingredient-linking": "Ingredient Linking"
     }
   },
   "provenance": {

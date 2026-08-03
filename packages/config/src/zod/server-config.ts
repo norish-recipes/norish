@@ -129,6 +129,7 @@ export const PromptsConfigSchema = z.object({
   // Optional so config stored before Recipe Provenance shipped still parses.
   // The loader falls back to the on-disk default for whatever is missing.
   recipeProvenance: z.string().optional(),
+  ingredientLinking: z.string().optional(),
   isOverridden: z.boolean().default(false),
 });
 
@@ -278,6 +279,7 @@ export const AutomaticEnrichmentSchema = z.object({
   autoCategorization: z.boolean(),
   nutritionEstimation: z.boolean(),
   recipeProvenance: z.boolean(),
+  ingredientLinking: z.boolean(),
 });
 
 export type AutomaticEnrichmentConfig = z.infer<typeof AutomaticEnrichmentSchema>;
@@ -294,6 +296,7 @@ export const DEFAULT_AUTOMATIC_ENRICHMENT: AutomaticEnrichmentConfig = {
   autoCategorization: false,
   nutritionEstimation: false,
   recipeProvenance: false,
+  ingredientLinking: false,
 };
 
 export const DEFAULT_TAG_STRATEGY: TagStrategy = "predefined";
@@ -361,6 +364,8 @@ export const AIConfigSchema = AIConfigInputSchema.transform(
           DEFAULT_AUTOMATIC_ENRICHMENT.nutritionEstimation,
         recipeProvenance:
           automaticEnrichment?.recipeProvenance ?? DEFAULT_AUTOMATIC_ENRICHMENT.recipeProvenance,
+        ingredientLinking:
+          automaticEnrichment?.ingredientLinking ?? DEFAULT_AUTOMATIC_ENRICHMENT.ingredientLinking,
       },
     };
   }

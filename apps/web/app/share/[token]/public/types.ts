@@ -2,7 +2,6 @@ import type { sharedRecipeShareHooks } from "@/hooks/recipes/shared-recipe-hooks
 import type { RefObject } from "react";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
-import type { IngredientLinkCandidate } from "@norish/shared-react/text";
 import type { MeasurementSystem } from "@norish/shared/contracts";
 
 export type SharedRecipe = NonNullable<
@@ -31,7 +30,4 @@ export type PublicRecipeContextValue = {
   recipe: SharedRecipe;
   units: UnitsMap;
   state: ShareRecipeState;
-  highlightedIngredientKey: string | null;
-  ingredientListRef: RefObject<HTMLUListElement | null>;
-  highlightIngredient: (candidate: IngredientLinkCandidate) => void;
 };

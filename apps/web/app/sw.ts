@@ -1,12 +1,14 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
+import { REACHABILITY_DEADLINE_MS } from "@/lib/connectivity/reachability";
 import {
   IMAGE_CACHE_MAX_AGE_SECONDS,
   IMAGE_CACHE_MAX_ENTRIES,
   IMAGE_CACHE_NAME,
   LEGACY_API_CACHE_NAME,
 } from "@/lib/offline/cache-names";
-import { defaultCache } from "@serwist/next/worker";
-import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist } from "serwist";
+import { defaultCache, PAGES_CACHE_NAME } from "@serwist/next/worker";
+import type { StrategyHandler } from "serwist";
+import { CacheFirst, ExpirationPlugin, NetworkOnly, Serwist, Strategy } from "serwist";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -18,12 +20,105 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+// Parity with the ExpirationPlugin cap the defaultCache page strategy carried;
+// the hand-rolled put below must bound the cache itself.
+const DOCUMENT_CACHE_LIMIT = 32;
+
+async function cacheDocument(request: Request, response: Response) {
+  const cache = await caches.open(PAGES_CACHE_NAME.html);
+
+  await cache.put(request, response);
+  const keys = await cache.keys();
+
+  if (keys.length > DOCUMENT_CACHE_LIMIT) {
+    await Promise.all(
+      keys.slice(0, keys.length - DOCUMENT_CACHE_LIMIT).map((key) => cache.delete(key))
+    );
+  }
+}
+
+/**
+ * Document navigations observe the Reachability Deadline (ADR-0013).
+ *
+ * Serwist's NetworkFirst has no timeout for documents, and its fallback only
+ * fires on a network *error* — so a cold launch over a slow-but-alive network
+ * hangs on the iOS startup image indefinitely. Past the deadline, a visited
+ * route serves its cached copy and an uncached one fails over to the
+ * precached offline shell (via `fallbacks`), whose bootstrap renders the Warm
+ * Set surface or the explicit Offline-unavailable state. In-app soft
+ * navigations are RSC fetches, not documents, and keep the default
+ * strategies.
+ *
+ * A Strategy subclass, not a plain handler function, deliberately: Serwist
+ * injects its fallback plugin only into `runtimeCaching` handlers that are
+ * `instanceof Strategy` — a function handler's throw would surface as the
+ * browser's error page instead of the offline shell.
+ */
+class ReachabilityDeadlineDocuments extends Strategy {
+  async _handle(request: Request, handler: StrategyHandler): Promise<Response> {
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const { event } = handler;
+
+    const network = (async () => {
+      // The navigation preload request (navigationPreload: true) *is* the
+      // network attempt for documents; issuing a second fetch would double
+      // every page load. It cannot be aborted — past the deadline it is
+      // merely no longer awaited.
+      const preloaded =
+        "preloadResponse" in event
+          ? ((await (event as FetchEvent).preloadResponse) as Response | undefined)
+          : undefined;
+
+      if (preloaded) return preloaded;
+
+      return fetch(request, { signal: controller.signal });
+    })();
+
+    const outcome = await Promise.race([
+      network.then(
+        (response) => ({ kind: "response" as const, response }),
+        () => ({ kind: "unreachable" as const })
+      ),
+      new Promise<{ kind: "deadline" }>((resolve) => {
+        timer = setTimeout(() => resolve({ kind: "deadline" }), REACHABILITY_DEADLINE_MS);
+      }),
+    ]);
+
+    if (outcome.kind === "response") {
+      clearTimeout(timer);
+      if (outcome.response.ok) {
+        handler.waitUntil(cacheDocument(request, outcome.response.clone()));
+      }
+
+      return outcome.response;
+    }
+
+    clearTimeout(timer);
+    controller.abort();
+    const cache = await caches.open(PAGES_CACHE_NAME.html);
+    const cached = await cache.match(request);
+
+    if (cached) return cached;
+
+    // An Error instance, deliberately: the injected fallback plugin fires on
+    // handlerDidError and answers with the precached /~offline shell.
+    throw new Error(`Document navigation missed the reachability deadline: ${request.url}`);
+  }
+}
+
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
+    // Documents race the network against the Reachability Deadline; shadows
+    // defaultCache's NetworkFirst-without-timeout for navigations (ADR-0013).
+    {
+      matcher: ({ request, sameOrigin }) => sameOrigin && request.destination === "document",
+      handler: new ReachabilityDeadlineDocuments({ cacheName: PAGES_CACHE_NAME.html }),
+    },
     // Same-origin images (recipe photos via /_next/image included), cache-first
     // like the hand-rolled sw.js this replaces — but bounded. The old worker
     // capped nothing; defaultCache's 64-entry image LRUs are below the Warm Set

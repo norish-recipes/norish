@@ -99,8 +99,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Página no encontrada",
-    "message": "¡Vaya! Nora no ha encontrado lo que buscas.\nPuede que la página se haya movido o ya no exista."
+    "title": "Nora está confundida.",
+    "message": "Está olfateando para encontrar adónde querías ir.",
+    "imageAlt": "Nora con cara de confusión"
   },
   "import": {
     "url": {
@@ -151,6 +152,7 @@
     "heading": "Empieza una línea con <strong>#</strong> para dar formato de título",
     "bold": "Usa <strong>**dobles asteriscos**</strong> para negrita",
     "recipeLink": "Escribe <strong>/nombre de la receta</strong> para enlazar otra receta",
+    "ingredientMention": "Escribe <strong>@</strong> para vincular un ingrediente al paso — la palabra queda en tu frase y el vínculo se convierte en una etiqueta debajo",
     "helpAriaLabel": "Ayuda de formato"
   },
   "tagInput": {
@@ -267,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Estás sin conexión",
-    "body": "Esta página no está en la caché sin conexión. Las páginas visitadas recientemente siguen disponibles.",
+    "title": "Nora también está sin conexión.",
+    "body": "Esta página no está guardada para el modo sin conexión; las páginas visitadas recientemente siguen aquí.",
+    "backOnlineTitle": "¡Nora encontró la conexión!",
+    "backOnlineBody": "Norish vuelve a estar disponible: intenta cargar esta página.",
     "retry": "Reintentar",
     "home": "Abrir Norish"
   },

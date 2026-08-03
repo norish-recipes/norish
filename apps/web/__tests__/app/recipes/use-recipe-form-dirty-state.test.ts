@@ -29,6 +29,7 @@ interface RecipeFormState {
   protein: number | null;
   provenance: {
     originCountry: string | null;
+    originCountryName: string | null;
     originRegion: string;
     provenanceNote: string;
     cuisineIds: string[];
@@ -55,6 +56,7 @@ const baseRecipe: FullRecipeDTO = {
   carbs: "60",
   protein: "8",
   originCountry: "IT",
+  originCountryName: "Italia",
   originRegion: "Lazio",
   provenanceNote: "A Roman classic.",
   cuisines: [{ id: "id-italian", name: "Italian", version: 1 }],
@@ -91,6 +93,7 @@ const baseRecipe: FullRecipeDTO = {
       order: 0,
       version: 1,
       images: [{ id: "step-img-1", image: "/steps/mix.jpg", order: 0, version: 1 }],
+      stepIngredients: [{ ingredientOrder: 0, share: 0.5, order: 0 }],
     },
     {
       step: "Mix ingredients",
@@ -98,6 +101,7 @@ const baseRecipe: FullRecipeDTO = {
       order: 0,
       version: 1,
       images: [],
+      stepIngredients: [],
     },
   ],
   tags: [{ name: "dessert" }, { name: "baking" }],
@@ -158,6 +162,7 @@ function createInitialCurrent(overrides: Partial<RecipeFormState> = {}): RecipeF
         order: 0,
         version: 1,
         images: [{ id: "step-img-1", image: "/steps/mix.jpg", order: 0, version: 1 }],
+        stepIngredients: [{ ingredientOrder: 0, share: 0.5, order: 0 }],
       },
     ],
     systemUsed: "metric",
@@ -192,6 +197,7 @@ function createInitialCurrent(overrides: Partial<RecipeFormState> = {}): RecipeF
     protein: 8,
     provenance: {
       originCountry: "IT",
+      originCountryName: "Italia",
       originRegion: "Lazio",
       provenanceNote: "A Roman classic.",
       cuisineIds: ["id-italian"],
@@ -279,6 +285,28 @@ describe("useRecipeFormDirtyState", () => {
             order: 0,
             version: 1,
             images: [],
+            stepIngredients: [{ ingredientOrder: 0, share: 0.5, order: 0 }],
+          },
+        ],
+      }),
+      initialData: baseRecipe,
+    });
+
+    expect(result.current).toBe(true);
+  });
+
+  it("reports Step Ingredient chip edits as edits", () => {
+    const { result } = renderDirtyState({
+      current: createInitialCurrent({
+        steps: [
+          {
+            step: "Mix ingredients",
+            systemUsed: "metric",
+            order: 0,
+            version: 1,
+            images: [{ id: "step-img-1", image: "/steps/mix.jpg", order: 0, version: 1 }],
+            // The share moved from a half to a third: nothing else changed.
+            stepIngredients: [{ ingredientOrder: 0, share: 1 / 3, order: 0 }],
           },
         ],
       }),
@@ -379,6 +407,7 @@ describe("useRecipeFormDirtyState", () => {
         protein: null,
         provenance: {
           originCountry: null,
+          originCountryName: null,
           originRegion: "",
           provenanceNote: "",
           cuisineIds: [],
@@ -397,6 +426,7 @@ describe("useRecipeFormDirtyState", () => {
       current: createInitialCurrent({
         provenance: {
           originCountry: "IT",
+          originCountryName: "Italia",
           originRegion: "Sicily",
           provenanceNote: "A Roman classic.",
           cuisineIds: ["id-italian"],
@@ -413,6 +443,7 @@ describe("useRecipeFormDirtyState", () => {
       current: createInitialCurrent({
         provenance: {
           originCountry: null,
+          originCountryName: null,
           originRegion: "",
           provenanceNote: "",
           cuisineIds: [],
@@ -447,6 +478,7 @@ describe("useRecipeFormDirtyState", () => {
         protein: null,
         provenance: {
           originCountry: null,
+          originCountryName: null,
           originRegion: "",
           provenanceNote: "",
           cuisineIds: [],

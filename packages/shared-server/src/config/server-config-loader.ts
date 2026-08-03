@@ -50,6 +50,7 @@ const ALL_AUTOMATIC_ENRICHMENT_OFF: AutomaticEnrichmentConfig = {
   autoCategorization: false,
   nutritionEstimation: false,
   recipeProvenance: false,
+  ingredientLinking: false,
 };
 
 // ============================================================================

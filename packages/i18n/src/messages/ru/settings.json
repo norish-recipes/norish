@@ -582,7 +582,9 @@
         "nutritionEstimation": "Оценка пищевой ценности",
         "nutritionEstimationDescription": "Оценивает калории, жиры, углеводы и белки для новых рецептов без указанных значений",
         "recipeProvenance": "Происхождение рецепта",
-        "recipeProvenanceDescription": "Определять страну, регион, кухни и короткую заметку для новых рецептов, где их нет"
+        "recipeProvenanceDescription": "Определять страну, регион, кухни и короткую заметку для новых рецептов, где их нет",
+        "ingredientLinking": "Связывание ингредиентов",
+        "ingredientLinkingDescription": "Связывает каждый шаг с используемыми строками ингредиентов — только для шагов без связей"
       },
       "tagStrategy": "Стратегия тегов",
       "tagStrategyDescription": "Какие теги может использовать автоматическое тегирование — как автоматически, так и вручную",
@@ -650,6 +652,9 @@
       "autoTaggingPlaceholder": "Введите промпт автотегирования...",
       "recipeProvenance": "Промпт происхождения рецепта",
       "recipeProvenanceDescription": "Этот промпт определяет происхождение рецепта. Полученная заметка пишется на языке самого рецепта. Доступные переменные: recipeName, description, ingredients",
+      "ingredientLinking": "Промпт связывания ингредиентов",
+      "ingredientLinkingPlaceholder": "Промпт для связывания ингредиентов с шагами...",
+      "ingredientLinkingDescription": "Используется при связывании каждого шага со строками ингредиентов",
       "recipeProvenancePlaceholder": "Введите промпт происхождения рецепта..."
     },
     "unsavedChanges": "Несохранённые изменения",
@@ -708,6 +713,8 @@
         "auto-tagging": "Auto-tagging",
         "auto-categorization": "Auto-categorization",
         "allergy-detection": "Allergy detection",
+        "recipe-provenance": "Происхождение рецепта",
+        "ingredient-linking": "Связывание ингредиентов",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks"
       },

@@ -14,29 +14,23 @@ export function useThemeSwitch() {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    if (theme !== "light" && theme !== "dark") {
-      setTheme("light");
-    }
-  }, [mounted, setTheme, theme]);
-
   const effectiveTheme = resolvedTheme ?? theme;
   const isDark = effectiveTheme === "dark";
 
   const cycleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
+    const nextTheme = theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
 
     setTheme(nextTheme);
   };
 
-  const icon = !mounted ? (
-    <ComputerDesktopIcon className="size-4" />
-  ) : isDark ? (
-    <MoonIcon className="size-4" />
-  ) : (
-    <SunIcon className="size-4" />
-  );
+  const icon =
+    !mounted || theme === "system" ? (
+      <ComputerDesktopIcon className="size-4" />
+    ) : isDark ? (
+      <MoonIcon className="size-4" />
+    ) : (
+      <SunIcon className="size-4" />
+    );
 
   // Return raw theme for label lookup
   return { mounted, icon, theme, isDark, cycleTheme };
@@ -57,7 +51,8 @@ export const ThemeSwitchContent: FC<ThemeSwitchContentProps> = ({
 }) => {
   const t = useTranslations("navbar.theme");
 
-  const label = theme === "dark" || isDark ? t("dark") : t("light");
+  const label =
+    theme === "system" ? t("system") : theme === "dark" || isDark ? t("dark") : t("light");
 
   if (!mounted) {
     return (

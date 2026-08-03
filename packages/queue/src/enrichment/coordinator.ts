@@ -139,6 +139,7 @@ const SETTING_BY_KIND = {
   "auto-categorization": "autoCategorization",
   "nutrition-estimation": "nutritionEstimation",
   "recipe-provenance": "recipeProvenance",
+  "ingredient-linking": "ingredientLinking",
 } as const satisfies Record<RecipeEnrichmentKind, string>;
 
 interface EvaluationInput {
@@ -193,6 +194,14 @@ function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibili
       return origin === "automatic" && hasSubstantiveProvenance(recipe)
         ? ineligible("supplied-data-present")
         : ELIGIBLE;
+
+    case "ingredient-linking":
+      // A gap-filler for both origins: it only ever writes to steps that
+      // have no Step Ingredients, so a person's own links suppress it at the
+      // only granularity where suppression is true — per step, in the worker
+      // and the repository write. No recipe-level supplied-data check exists
+      // on purpose. Steps are its raw material, so none means nothing to do.
+      return recipe.steps.length === 0 ? ineligible("insufficient-input") : ELIGIBLE;
   }
 }
 

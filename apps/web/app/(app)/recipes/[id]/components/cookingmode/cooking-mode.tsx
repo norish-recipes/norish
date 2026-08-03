@@ -4,7 +4,6 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWakeLockContext } from "@/app/(app)/recipes/[id]/components/wake-lock-context";
 import { TimerDock } from "@/components/timer-dock";
-import { useIngredientLinkHighlight } from "@/hooks/use-ingredient-link-highlight";
 import { FireIcon } from "@heroicons/react/20/solid";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -164,11 +163,6 @@ export default function CookingMode({ className = "", fullWidth = false }: Cooki
     },
     [activeTab, steps.length]
   );
-  const { highlightedIngredientKey, highlightIngredient, ingredientListRef } =
-    useIngredientLinkHighlight({
-      onBeforeHighlight: () => setActiveTab("ingredients"),
-    });
-
   const dialogProps = {
     activeStep: currentStep,
     activeTab,
@@ -178,10 +172,7 @@ export default function CookingMode({ className = "", fullWidth = false }: Cooki
     recipeServings: recipe.servings,
     recipeSystemUsed: recipe.systemUsed ?? "metric",
     steps,
-    highlightedIngredientKey,
-    ingredientListRef,
     onClose: close,
-    onIngredientPress: highlightIngredient,
     onPointerDown: handlePointerDown,
     onPointerUp: handlePointerUp,
     onStepChange: setActiveStep,

@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Nie znaleziono strony",
-    "message": "Ups! Nora nie mogła znaleźć tego, czego szukasz."
+    "title": "Nora jest zdezorientowana.",
+    "message": "Węszy dookoła, żeby znaleźć stronę, której szukasz.",
+    "imageAlt": "Zdezorientowana Nora"
   },
   "import": {
     "url": {
@@ -156,6 +157,7 @@
     "heading": "Zacznij linię od **#** dla nagłówka",
     "bold": "Otoczyć **podwójnymi gwiazdkami** aby pogrubić",
     "recipeLink": "Wpisz **/nazwa przepisu** aby linkować przepis",
+    "ingredientMention": "Wpisz <strong>@</strong>, aby powiązać składnik z krokiem — słowo trafi do zdania, a powiązanie pojawi się jako etykieta poniżej",
     "helpAriaLabel": "Pomoc formatowania"
   },
   "tagInput": {
@@ -267,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Jesteś offline",
-    "body": "Tej strony nie ma w pamięci podręcznej offline. Ostatnio odwiedzane strony są nadal dostępne.",
+    "title": "Nora też jest offline.",
+    "body": "Ta strona nie jest zapisana do trybu offline — ostatnio odwiedzane strony wciąż tu są.",
+    "backOnlineTitle": "Nora znalazła połączenie!",
+    "backOnlineBody": "Norish znów jest osiągalny — spróbuj ponownie wczytać tę stronę.",
     "retry": "Spróbuj ponownie",
     "home": "Otwórz Norish"
   },

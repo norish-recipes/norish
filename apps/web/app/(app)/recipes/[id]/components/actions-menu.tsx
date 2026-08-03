@@ -155,6 +155,12 @@ export default function ActionsMenu({ id }: Props) {
           idleLabel: t("inferProvenance"),
           busyLabel: t("inferringProvenance"),
         },
+        {
+          kind: "ingredient-linking",
+          key: "link-ingredients",
+          idleLabel: t("linkIngredients"),
+          busyLabel: t("linkingIngredients"),
+        },
       ];
 
       for (const action of enrichmentActions) {

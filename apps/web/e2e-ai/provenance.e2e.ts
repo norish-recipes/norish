@@ -55,6 +55,7 @@ function bareRecipe(name: string) {
 function provenanceClaim(overrides: Record<string, unknown> = {}) {
   return {
     originCountry: "IT",
+    originCountryName: "Italia",
     originRegion: "Lazio",
     cuisines: ["Italian"],
     provenanceNote: "Questa ricetta viene dalla cucina romana.",
@@ -135,7 +136,8 @@ test("an import enters automatic provenance inference and the result is stored a
   ]);
 
   await eventuallyOnRecipe(async () => {
-    // The country is localised at render time from the stored alpha-2 code.
+    // The card titles itself with the stored written name, in the language the
+    // inference wrote the note in.
     await expect(page.getByText("Italia").first()).toBeVisible({ timeout: 3_000 });
     await expect(page.getByText("Lazio").first()).toBeVisible({ timeout: 3_000 });
     // `.first()`: the section renders in both the desktop and mobile layouts,
@@ -146,12 +148,45 @@ test("an import enters automatic provenance inference and the result is stored a
     await expect(page.getByText("Italian").first()).toBeVisible({ timeout: 3_000 });
   });
 
-  // Stored as a code and as a resolved vocabulary row, not as rendered text.
+  // Stored as a code, a written name, and a resolved vocabulary row.
   const stored = await readStoredProvenance("Automatic Provenance Stew");
 
   expect(stored.originCountry).toBe("IT");
+  expect(stored.originCountryName).toBe("Italia");
   expect(stored.originRegion).toBe("Lazio");
   expect(stored.cuisines).toEqual(["Italian"]);
+});
+
+test("the provenance heading speaks the recipe's language, not the country's or the reader's", async () => {
+  await setAutomaticEnrichment({ recipeProvenance: true });
+
+  // A Dutch recipe about a Turkish dish: the model writes the note in Dutch
+  // and names the country in Dutch too. The reader's locale is English and the
+  // endonym would be "Türkiye" — "Turkije" can only come from the stored name.
+  await importAndOpen("Turkse Linzensoep", [
+    bareRecipe("Turkse Linzensoep"),
+    provenanceClaim({
+      originCountry: "TR",
+      originCountryName: "Turkije",
+      originRegion: null,
+      cuisines: [],
+      provenanceNote: "Dit gerecht komt uit de Turkse keuken.",
+    }),
+  ]);
+
+  await eventuallyOnRecipe(async () => {
+    await expect(page.getByRole("heading", { name: "Turkije", level: 2 }).first()).toBeVisible({
+      timeout: 3_000,
+    });
+    await expect(page.getByText("Dit gerecht komt uit de Turkse keuken.").first()).toBeVisible({
+      timeout: 3_000,
+    });
+  });
+
+  const stored = await readStoredProvenance("Turkse Linzensoep");
+
+  expect(stored.originCountry).toBe("TR");
+  expect(stored.originCountryName).toBe("Turkije");
 });
 
 test("supplied provenance suppresses the automatic run for the whole group", async () => {
@@ -182,6 +217,7 @@ test("supplied provenance suppresses the automatic run for the whole group", asy
 
   expect(stored).toEqual({
     originCountry: "NL",
+    originCountryName: null,
     originRegion: null,
     provenanceNote: "Set by an editor.",
     cuisines: [],
@@ -214,6 +250,7 @@ test("a manual run replaces the entire group", async () => {
 
   expect(stored).toEqual({
     originCountry: "IT",
+    originCountryName: "Italia",
     originRegion: "Lazio",
     provenanceNote: "Questa ricetta viene dalla cucina romana.",
     // The whole group was replaced: the earlier Cuisine is gone, not merged.
@@ -269,11 +306,55 @@ test("an automatic failure is quiet and leaves the recipe untouched and unmarked
 
   expect(stored).toEqual({
     originCountry: null,
+    originCountryName: null,
     originRegion: null,
     provenanceNote: null,
     cuisines: [],
   });
   await expect(page.getByText("Questa ricetta")).toHaveCount(0);
+});
+
+test("a genuinely unplaceable dish keeps an empty country, titled by the section itself", async () => {
+  await setAutomaticEnrichment({});
+
+  await importAndOpen("Unplaceable Fusion Bowl", [bareRecipe("Unplaceable Fusion Bowl")]);
+
+  // The model follows the null-only-when-unplaceable rule: no country, no
+  // name, no region — but the note explains, so the claim is substantive.
+  stack!.ai.control.succeedWith(
+    provenanceClaim({
+      originCountry: null,
+      originCountryName: null,
+      originRegion: null,
+      cuisines: [],
+      provenanceNote: "Dit gerecht is niet aan één land te koppelen.",
+    })
+  );
+
+  await page.getByRole("button", { name: "Actions" }).click();
+  await page.getByRole("menuitem", { name: "Work Out Provenance" }).click();
+  await page.keyboard.press("Escape");
+
+  await eventuallyOnRecipe(async () => {
+    // No invented country: the section falls back to naming itself, and the
+    // note is stored intact rather than wiped with the empty fields.
+    await expect(page.getByRole("heading", { name: "Provenance", level: 2 }).first()).toBeVisible({
+      timeout: 3_000,
+    });
+    await expect(
+      page.getByText("Dit gerecht is niet aan één land te koppelen.").first()
+    ).toBeVisible({ timeout: 3_000 });
+  });
+
+  const stored = await readStoredProvenance("Unplaceable Fusion Bowl");
+
+  expect(stored).toEqual({
+    originCountry: null,
+    originCountryName: null,
+    originRegion: null,
+    provenanceNote: "Dit gerecht is niet aan één land te koppelen.",
+    cuisines: [],
+  });
 });
 
 test("a rendered recipe updates in place when provenance arrives", async () => {
@@ -286,7 +367,12 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
   await expect(page.getByText("Japanese", { exact: true })).toHaveCount(0);
 
   stack!.ai.control.succeedWith(
-    provenanceClaim({ originCountry: "JP", originRegion: null, cuisines: ["Japanese"] })
+    provenanceClaim({
+      originCountry: "JP",
+      originCountryName: "日本",
+      originRegion: null,
+      cuisines: ["Japanese"],
+    })
   );
 
   await page.getByRole("button", { name: "Actions" }).click();
@@ -301,4 +387,51 @@ test("a rendered recipe updates in place when provenance arrives", async () => {
   await expect(page.getByText("Japanese", { exact: true }).first()).toBeVisible({
     timeout: 15_000,
   });
+});
+
+test("a manually picked country reaches the dashboard card without a reload", async () => {
+  // Pins the drift regression: the realtime echo used to hand-copy dashboard
+  // fields and forgot originCountry, so a card only gained its flag after a
+  // full refresh — the detail cache got the full write, the list cache never
+  // (see RECIPE_DASHBOARD_KEYS).
+  await setAutomaticEnrichment({});
+
+  const name = "Dashboard Flag Rigatoni";
+
+  await importRecipe(name, [bareRecipe(name)]);
+
+  // A second page parks on the dashboard and is never navigated again: only
+  // the realtime echo may deliver the flag to it.
+  const dashboard = await context.newPage();
+
+  await dashboard.goto("/");
+
+  const heading = dashboard.getByRole("heading", { name, exact: true, level: 3 });
+
+  await expect(heading).toBeVisible({ timeout: 15_000 });
+  const card = heading.locator("xpath=ancestor::*[contains(@class, 'group/row')][1]");
+
+  await expect(card.getByTitle("Italy")).toHaveCount(0);
+
+  // Manual provenance through the real edit form and the real update mutation.
+  await openRecipe(name);
+  const recipeId = new URL(page.url()).pathname.split("/").pop();
+
+  await page.goto(`/recipes/edit/${recipeId}`);
+
+  // The form re-renders as the recipe's data arrives; retry until the country
+  // picker takes the selection (same pattern as the screenshot suite).
+  const country = page.getByRole("combobox", { name: "Country" });
+
+  await expect(async () => {
+    await expect(country).toBeVisible({ timeout: 5_000 });
+    await country.fill("Italy");
+    await page.getByRole("option", { name: "Italy", exact: true }).click({ timeout: 5_000 });
+  }).toPass({ timeout: 60_000, intervals: [1_000, 2_000, 5_000] });
+
+  await page.getByRole("button", { name: "Save Changes" }).click();
+
+  // The parked dashboard gains the flag purely through the echo.
+  await expect(card.getByTitle("Italy").first()).toBeVisible({ timeout: 30_000 });
+  await dashboard.close();
 });

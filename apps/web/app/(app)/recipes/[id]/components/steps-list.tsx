@@ -2,15 +2,9 @@
 
 import { ReadonlyStepsList } from "@/components/recipes/readonly-steps-list";
 
-import type { IngredientLinkCandidate } from "@norish/shared-react/text";
-
 import { useRecipeContext } from "../context";
 
-type StepsListProps = {
-  onIngredientPress?: (candidate: IngredientLinkCandidate) => void;
-};
-
-export default function StepsList({ onIngredientPress }: StepsListProps = {}) {
+export default function StepsList() {
   const context = useRecipeContext();
   const recipe = context?.recipe;
   const ingredients =
@@ -27,7 +21,6 @@ export default function StepsList({ onIngredientPress }: StepsListProps = {}) {
       recipeName={recipe?.name}
       steps={recipe?.steps ?? []}
       systemUsed={recipe?.systemUsed ?? "metric"}
-      onIngredientPress={onIngredientPress}
     />
   );
 }

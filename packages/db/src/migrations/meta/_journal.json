@@ -267,6 +267,20 @@
       "when": 1785425822049,
       "tag": "0037_cuisine_leaves_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1785698527153,
+      "tag": "0038_provenance_country_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1785709646509,
+      "tag": "0039_step_ingredients",
+      "breakpoints": true
     }
   ]
 }

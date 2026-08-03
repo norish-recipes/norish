@@ -58,6 +58,7 @@ const { handleEnrichmentJobFailure } = await import("../../src/enrichment/worker
 
 const INFERENCE = {
   originCountry: "IT",
+  originCountryName: "Italia",
   originRegion: "Lazio",
   provenanceNote: "Una classica ricetta romana.",
   cuisineIds: ["id-italian"],

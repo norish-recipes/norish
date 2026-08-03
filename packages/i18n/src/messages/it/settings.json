@@ -582,7 +582,9 @@
         "nutritionEstimation": "Stima nutrizionale",
         "nutritionEstimationDescription": "Stima calorie, grassi, carboidrati e proteine per le nuove ricette senza valori indicati",
         "recipeProvenance": "Provenienza della ricetta",
-        "recipeProvenanceDescription": "Dedurre paese, regione, cucine e una breve nota per le nuove ricette che non ne hanno"
+        "recipeProvenanceDescription": "Dedurre paese, regione, cucine e una breve nota per le nuove ricette che non ne hanno",
+        "ingredientLinking": "Collegamento degli ingredienti",
+        "ingredientLinkingDescription": "Collega ogni passaggio alle righe di ingredienti che usa, per i passaggi senza collegamenti"
       },
       "tagStrategy": "Strategia dei tag",
       "tagStrategyDescription": "Quali tag può usare il tagging automatico, sia che venga eseguito automaticamente o manualmente",
@@ -650,6 +652,9 @@
       "autoTaggingPlaceholder": "Inserisci il prompt per i tag automatici...",
       "recipeProvenance": "Prompt per la provenienza della ricetta",
       "recipeProvenanceDescription": "Questo prompt deduce da dove proviene una ricetta. La nota prodotta è scritta nella lingua della ricetta stessa. Variabili disponibili: recipeName, description, ingredients",
+      "ingredientLinking": "Prompt di collegamento degli ingredienti",
+      "ingredientLinkingPlaceholder": "Prompt per collegare gli ingredienti ai passaggi...",
+      "ingredientLinkingDescription": "Usato per collegare ogni passaggio alle righe di ingredienti che utilizza",
       "recipeProvenancePlaceholder": "Inserisci il prompt per la provenienza della ricetta..."
     },
     "unsavedChanges": "Modifiche non salvate",
@@ -708,6 +713,8 @@
         "auto-tagging": "Auto-tagging",
         "auto-categorization": "Auto-categorization",
         "allergy-detection": "Allergy detection",
+        "recipe-provenance": "Provenienza della ricetta",
+        "ingredient-linking": "Collegamento degli ingredienti",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks"
       },

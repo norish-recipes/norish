@@ -136,6 +136,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
     initialData
       ? {
           originCountry: initialData.originCountry ?? null,
+          originCountryName: initialData.originCountryName ?? null,
           originRegion: initialData.originRegion ?? "",
           provenanceNote: initialData.provenanceNote ?? "",
           cuisineIds: initialData.cuisines.map((cuisine) => cuisine.id),
@@ -249,6 +250,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
       systemUsed: s.systemUsed,
       version: s.version,
       images: s.images || [],
+      stepIngredients: s.stepIngredients || [],
     }));
     setSteps(initSteps);
     initializedRecipeIdRef.current = initialData.id;
@@ -355,6 +357,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
         carbs: carbs != null ? carbs.toString() : null,
         protein: protein != null ? protein.toString() : null,
         originCountry: provenance.originCountry,
+        originCountryName: provenance.originCountryName,
         originRegion: provenance.originRegion.trim() || null,
         provenanceNote: provenance.provenanceNote.trim() || null,
         cuisines: provenance.cuisineIds,
@@ -379,6 +382,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           systemUsed: s.systemUsed,
           version: s.version,
           images: s.images || [],
+          stepIngredients: s.stepIngredients || [],
         })),
         // Images array field
         images,
@@ -571,7 +575,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           <div className="ml-0 md:ml-9">
             <p className="text-muted mb-3 flex items-center gap-1 text-base">
               {t("instructionsHelp")}
-              <SmartInputHelp />
+              <SmartInputHelp showIngredientMention />
             </p>
             <StepInput
               ingredients={ingredients}

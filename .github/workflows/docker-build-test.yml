@@ -1,11 +1,5 @@
 name: Docker Build Test
 
-env:
-  NODE_ENV: production
-  DATABASE_URL: postgres://ci-user:ci-password@localhost:5432/ci-db
-  MASTER_KEY: test-master-key
-  SKIP_ENV_VALIDATION: "1"
-
 on:
   pull_request:
     branches:

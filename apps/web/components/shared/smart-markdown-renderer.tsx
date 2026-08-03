@@ -4,13 +4,7 @@ import Link from "next/link";
 import { TimerChip } from "@/components/recipe/timer-chip";
 import ReactMarkdown from "react-markdown";
 
-import type { IngredientLinkCandidate } from "@norish/shared-react/text";
 import type { TimerKeywords, TimerMatch } from "@norish/shared/lib/timer-parser";
-import {
-  applyIngredientLinkMarkup,
-  isIngredientLinkHref,
-  parseIngredientLinkHref,
-} from "@norish/shared-react/text";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { parseTimerDurations } from "@norish/shared/lib/timer-parser";
 
@@ -33,33 +27,29 @@ export interface SmartMarkdownRendererProps {
   className?: string;
   disableLinks?: boolean;
   linkMode?: SmartMarkdownLinkMode;
-  ingredientCandidates?: IngredientLinkCandidate[];
   timerConfig?: SmartMarkdownTimerConfig;
-  onIngredientPress?: (candidate: IngredientLinkCandidate) => void;
 }
 
 /**
  * Renders text with smart markdown processing:
  * - #heading renders as styled heading
  * - /recipe-name renders as clickable link to recipe
- * - @ingredient references render as ingredient links when candidates are supplied
  * - timer durations render as timer chips when timerConfig is enabled
+ *
+ * There is deliberately no `@`-token pass: Step Ingredients replaced inline
+ * linkification outright, so legacy `@` tokens in stored text render as the
+ * literal text they always were.
  */
 export default function SmartMarkdownRenderer({
   text,
   className = "",
   disableLinks = false,
   linkMode,
-  ingredientCandidates = [],
   timerConfig,
-  onIngredientPress,
 }: SmartMarkdownRendererProps) {
   const resolvedLinkMode: SmartMarkdownLinkMode = disableLinks
     ? "disabled"
     : (linkMode ?? "private");
-  const candidateByKey = new Map(
-    ingredientCandidates.map((candidate) => [candidate.key, candidate])
-  );
   const timerMatches = parseTimerMatches(text, timerConfig);
   const timerByHrefKey = new Map(
     timerMatches.map((match, index) => [
@@ -72,10 +62,7 @@ export default function SmartMarkdownRenderer({
       },
     ])
   );
-  const processedText = preprocessText(
-    applyIngredientLinkMarkup(applyTimerMarkup(text, timerMatches), ingredientCandidates),
-    resolvedLinkMode
-  );
+  const processedText = preprocessText(applyTimerMarkup(text, timerMatches), resolvedLinkMode);
 
   return (
     <span className={className}>
@@ -114,32 +101,6 @@ export default function SmartMarkdownRenderer({
                   recipeId={timerConfig.recipeId}
                   recipeName={timerConfig.recipeName}
                 />
-              );
-            }
-
-            if (isIngredientLinkHref(href)) {
-              const key = parseIngredientLinkHref(href);
-              const candidate = key ? candidateByKey.get(key) : null;
-
-              if (!candidate || resolvedLinkMode === "disabled") {
-                return (
-                  <span className="text-accent decoration-accent/50 font-medium underline underline-offset-2">
-                    {children}
-                  </span>
-                );
-              }
-
-              return (
-                <button
-                  className="text-accent decoration-accent/50 hover:decoration-accent inline font-medium underline underline-offset-2 transition-colors"
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onIngredientPress?.(candidate);
-                  }}
-                >
-                  {children}
-                </button>
               );
             }
 
@@ -265,7 +226,7 @@ function escapeMarkdownLabel(value: string): string {
 }
 
 function transformMarkdownUrl(url: string): string {
-  if (url.startsWith(TIMER_HREF_PREFIX) || url.startsWith("norish-ingredient:")) return url;
+  if (url.startsWith(TIMER_HREF_PREFIX)) return url;
   if (url.startsWith("/recipes/") || url.startsWith("#")) return url;
   if (/^https?:\/\//i.test(url) || /^mailto:/i.test(url)) return url;
 

@@ -74,6 +74,8 @@
     "autoCategorizing": "Kategorisierung läuft…",
     "inferProvenance": "Herkunft ermitteln",
     "inferringProvenance": "Herkunft wird ermittelt …",
+    "linkIngredients": "Zutaten mit Schritten verknüpfen",
+    "linkingIngredients": "Zutaten werden verknüpft…",
     "enrichmentFailed": "Letzter Versuch fehlgeschlagen"
   },
   "sharePanel": {
@@ -241,6 +243,23 @@
     "stepPlaceholder": "Schritt {number}: Beschreibe den Schritt...",
     "stepPlaceholderShort": "Schritt {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Verknüpfte Zutaten",
+    "addLabel": "Zutat verknüpfen",
+    "pickerLabel": "Verknüpfen Sie eine Zutat mit diesem Schritt",
+    "shareLabel": "Anteil von {name} ändern",
+    "share": {
+      "full": "Ganze Zeile",
+      "half": "Die Hälfte",
+      "third": "Ein Drittel",
+      "quarter": "Ein Viertel",
+      "custom": "Benutzerdefiniert…",
+      "amount": "Menge…"
+    },
+    "customShareLabel": "Benutzerdefinierter Anteil",
+    "customAmountLabel": "Menge",
+    "removeLabel": "{name} entfernen"
+  },
   "ingredientInput": {
     "placeholder": "z.B. 2 Tassen Mehl"
   },
@@ -292,7 +311,8 @@
       "allergy-detection": "Allergieerkennung",
       "auto-categorization": "Automatische Kategorisierung",
       "nutrition-estimation": "Nährwertschätzung",
-      "recipe-provenance": "Rezept-Herkunft"
+      "recipe-provenance": "Rezept-Herkunft",
+      "ingredient-linking": "Zutatenverknüpfung"
     }
   },
   "provenance": {

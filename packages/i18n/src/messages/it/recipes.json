@@ -74,6 +74,8 @@
     "autoCategorizing": "Categorizzazione…",
     "inferProvenance": "Deduci la provenienza",
     "inferringProvenance": "Deduzione della provenienza…",
+    "linkIngredients": "Collega gli ingredienti ai passaggi",
+    "linkingIngredients": "Collegamento degli ingredienti…",
     "enrichmentFailed": "Ultimo tentativo non riuscito"
   },
   "sharePanel": {
@@ -241,6 +243,23 @@
     "stepPlaceholder": "Passaggio {number}: Descrivi il passaggio...",
     "stepPlaceholderShort": "Passaggio {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Ingredienti collegati",
+    "addLabel": "Collega ingrediente",
+    "pickerLabel": "Collega un ingrediente a questo passaggio",
+    "shareLabel": "Modifica la parte di {name}",
+    "share": {
+      "full": "Riga intera",
+      "half": "La metà",
+      "third": "Un terzo",
+      "quarter": "Un quarto",
+      "custom": "Personalizzata…",
+      "amount": "Quantità…"
+    },
+    "customShareLabel": "Parte personalizzata",
+    "customAmountLabel": "Quantità",
+    "removeLabel": "Rimuovi {name}"
+  },
   "ingredientInput": {
     "placeholder": "es. 2 tazze di farina"
   },
@@ -292,7 +311,8 @@
       "allergy-detection": "Rilevamento allergie",
       "auto-categorization": "Categorizzazione automatica",
       "nutrition-estimation": "Stima nutrizionale",
-      "recipe-provenance": "Provenienza della ricetta"
+      "recipe-provenance": "Provenienza della ricetta",
+      "ingredient-linking": "Collegamento degli ingredienti"
     }
   },
   "provenance": {

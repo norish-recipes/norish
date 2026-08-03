@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { findCuisineByName, getRecipeCuisines } from "@norish/db/repositories/cuisines";
 import {
+  addStepIngredientsToBareSteps,
   replaceRecipeCategories,
   replaceRecipeNutrition,
   replaceRecipeProvenance,
@@ -198,6 +199,7 @@ describe("Recipe Enrichment repository", () => {
         testRecipe.id,
         {
           originCountry: "IT",
+          originCountryName: "Italia",
           originRegion: "Lazio",
           provenanceNote: "Una classica ricetta romana.",
           cuisineIds: [await cuisineId("Italian"), await cuisineId("Mediterranean")],
@@ -210,9 +212,33 @@ describe("Recipe Enrichment repository", () => {
       const recipe = await getRecipeFull(testRecipe.id);
 
       expect(recipe?.originCountry).toBe("IT");
+      expect(recipe?.originCountryName).toBe("Italia");
       expect(recipe?.originRegion).toBe("Lazio");
       expect(recipe?.provenanceNote).toBe("Una classica ricetta romana.");
       expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Italian", "Mediterranean"]);
+    });
+
+    it("replaces the written name with the group, and clears one that is not renewed", async () => {
+      await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "IT", originCountryName: "Italia", provenanceNote: "First claim." },
+        "manual"
+      );
+
+      const applied = await replaceRecipeProvenance(
+        testRecipe.id,
+        { originCountry: "JP", provenanceNote: "Second claim." },
+        "manual"
+      );
+
+      expect(applied).toBe(true);
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      // A stale name must never sit beside a new code: rows with a code and
+      // no name fall back to the endonym at render time instead.
+      expect(recipe?.originCountry).toBe("JP");
+      expect(recipe?.originCountryName).toBeNull();
     });
 
     it("replaces the whole group, clearing omitted fields and dropped Cuisines", async () => {
@@ -351,6 +377,7 @@ describe("Recipe Enrichment repository", () => {
 
       await updateRecipeWithRefs(testRecipe.id, userId, {
         originCountry: "IT",
+        originCountryName: "Italië",
         originRegion: "Lazio",
         provenanceNote: "My grandmother's, from Rome.",
         cuisines: [italian!.id],
@@ -359,9 +386,30 @@ describe("Recipe Enrichment repository", () => {
       const recipe = await getRecipeFull(testRecipe.id);
 
       expect(recipe?.originCountry).toBe("IT");
+      // The label the editor saw in the picker, in their own words.
+      expect(recipe?.originCountryName).toBe("Italië");
       expect(recipe?.originRegion).toBe("Lazio");
       expect(recipe?.provenanceNote).toBe("My grandmother's, from Rome.");
       expect(recipe?.cuisines.map((cuisine) => cuisine.name)).toEqual(["Italian"]);
+    });
+
+    it("clears a stored written name when the country is cleared", async () => {
+      await updateRecipeWithRefs(testRecipe.id, userId, {
+        originCountry: "IT",
+        originCountryName: "Italia",
+        provenanceNote: "Stored.",
+      });
+
+      await updateRecipeWithRefs(testRecipe.id, userId, {
+        originCountry: null,
+        originCountryName: null,
+        provenanceNote: "Stored.",
+      });
+
+      const recipe = await getRecipeFull(testRecipe.id);
+
+      expect(recipe?.originCountry).toBeNull();
+      expect(recipe?.originCountryName).toBeNull();
     });
 
     it("keeps the Cuisines chosen while creating the recipe", async () => {
@@ -438,6 +486,135 @@ describe("Recipe Enrichment repository", () => {
 
       expect(recipe?.name).toBe("A new title");
       expect(recipe?.provenanceNote).toBe("Keep me.");
+    });
+  });
+
+  describe("addStepIngredientsToBareSteps", () => {
+    /** Dual-system recipe with a heading row and a hand-linked step. */
+    async function createLinkedFixture() {
+      const created = await createRecipeWithRefs(randomUUID(), userId, {
+        name: "Gap Fill Stew",
+        systemUsed: "metric",
+        servings: 2,
+        recipeIngredients: [
+          {
+            ingredientName: "# Spices",
+            ingredientId: null,
+            amount: null,
+            unit: null,
+            order: 0,
+            systemUsed: "metric",
+          },
+          {
+            ingredientName: "salt",
+            ingredientId: null,
+            amount: 5,
+            unit: "g",
+            order: 1,
+            systemUsed: "metric",
+          },
+          {
+            ingredientName: "water",
+            ingredientId: null,
+            amount: 50,
+            unit: "ml",
+            order: 2,
+            systemUsed: "metric",
+          },
+          {
+            ingredientName: "salt",
+            ingredientId: null,
+            amount: 0.2,
+            unit: "tsp",
+            order: 1,
+            systemUsed: "us",
+          },
+          {
+            ingredientName: "water",
+            ingredientId: null,
+            amount: 0.25,
+            unit: "cup",
+            order: 2,
+            systemUsed: "us",
+          },
+        ],
+        steps: [
+          { step: "# Cooking", order: 0, systemUsed: "metric" },
+          {
+            step: "Season with the salt.",
+            order: 1,
+            systemUsed: "metric",
+            stepIngredients: [{ ingredientOrder: 1, share: 1, order: 0 }],
+          },
+          { step: "Add half the water.", order: 2, systemUsed: "metric" },
+          {
+            step: "Season with the salt.",
+            order: 1,
+            systemUsed: "us",
+            stepIngredients: [{ ingredientOrder: 1, share: 1, order: 0 }],
+          },
+          { step: "Add half the water.", order: 2, systemUsed: "us" },
+        ],
+      });
+
+      return created!.recipeId;
+    }
+
+    it("fills bare steps in every measurement system and leaves linked steps untouched", async () => {
+      const recipeId = await createLinkedFixture();
+
+      const written = await addStepIngredientsToBareSteps(recipeId, [
+        // The claim also names the already-linked step: the write must skip it.
+        { stepOrder: 1, refs: [{ ingredientOrder: 2, share: 1, order: 0 }] },
+        { stepOrder: 2, refs: [{ ingredientOrder: 2, share: 0.5, order: 0 }] },
+      ]);
+
+      // The bare "half the water" step, once per system.
+      expect(written).toBe(2);
+
+      const recipe = await getRecipeFull(recipeId);
+      const metric = recipe!.steps.filter((step) => step.systemUsed === "metric");
+      const us = recipe!.steps.filter((step) => step.systemUsed === "us");
+
+      // A person's own link is exactly as they left it, not replaced.
+      expect(metric[1]?.stepIngredients).toEqual([{ ingredientOrder: 1, share: 1, order: 0 }]);
+      expect(metric[2]?.stepIngredients).toEqual([{ ingredientOrder: 2, share: 0.5, order: 0 }]);
+      // The us system has no heading row, so its array is one shorter.
+      expect(us[0]?.stepIngredients).toEqual([{ ingredientOrder: 1, share: 1, order: 0 }]);
+      expect(us[1]?.stepIngredients).toEqual([{ ingredientOrder: 2, share: 0.5, order: 0 }]);
+    });
+
+    it("never links heading rows on either side of the reference", async () => {
+      const recipeId = await createLinkedFixture();
+
+      const written = await addStepIngredientsToBareSteps(recipeId, [
+        // Step order 0 is a heading row; line order 0 is the "# Spices" row.
+        { stepOrder: 0, refs: [{ ingredientOrder: 1, share: 1, order: 0 }] },
+        { stepOrder: 2, refs: [{ ingredientOrder: 0, share: 1, order: 0 }] },
+      ]);
+
+      expect(written).toBe(0);
+    });
+
+    it("drops references to line orders that do not exist", async () => {
+      const recipeId = await createLinkedFixture();
+
+      const written = await addStepIngredientsToBareSteps(recipeId, [
+        { stepOrder: 2, refs: [{ ingredientOrder: 99, share: 1, order: 0 }] },
+      ]);
+
+      expect(written).toBe(0);
+
+      const recipe = await getRecipeFull(recipeId);
+      const metric = recipe!.steps.filter((step) => step.systemUsed === "metric");
+
+      expect(metric[2]?.stepIngredients).toEqual([]);
+    });
+
+    it("writes nothing for an empty claim", async () => {
+      const recipeId = await createLinkedFixture();
+
+      expect(await addStepIngredientsToBareSteps(recipeId, [])).toBe(0);
     });
   });
 });

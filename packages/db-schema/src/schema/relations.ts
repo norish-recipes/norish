@@ -16,6 +16,7 @@ import { recipeVideos } from "./recipe-videos";
 import { recipes } from "./recipes";
 import { serverConfig } from "./server-config";
 import { stepImages } from "./step-images";
+import { stepIngredients } from "./step-ingredients";
 import { steps } from "./steps";
 import { ingredientStorePreferences, stores } from "./stores";
 import { tags } from "./tags";
@@ -112,12 +113,24 @@ export const stepsRelations = relations(steps, ({ one, many }) => ({
     references: [recipes.id],
   }),
   images: many(stepImages),
+  stepIngredients: many(stepIngredients),
 }));
 
 export const stepImagesRelations = relations(stepImages, ({ one }) => ({
   step: one(steps, {
     fields: [stepImages.stepId],
     references: [steps.id],
+  }),
+}));
+
+export const stepIngredientsRelations = relations(stepIngredients, ({ one }) => ({
+  step: one(steps, {
+    fields: [stepIngredients.stepId],
+    references: [steps.id],
+  }),
+  recipeIngredient: one(recipeIngredients, {
+    fields: [stepIngredients.recipeIngredientId],
+    references: [recipeIngredients.id],
   }),
 }));
 

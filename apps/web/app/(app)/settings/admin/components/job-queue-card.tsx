@@ -46,6 +46,8 @@ const QUEUE_OPTIONS = [
   "auto-tagging",
   "auto-categorization",
   "allergy-detection",
+  "recipe-provenance",
+  "ingredient-linking",
   "caldav-sync",
   "scheduled-tasks",
 ] as const;

@@ -16,6 +16,7 @@ const PROMPT_FIELDS = {
   "nutrition-estimation": "nutritionEstimation",
   "auto-tagging": "autoTagging",
   "recipe-provenance": "recipeProvenance",
+  "ingredient-linking": "ingredientLinking",
 } as const satisfies Record<string, keyof PromptsConfigInput>;
 
 export type PromptName = keyof typeof PROMPT_FIELDS;
@@ -35,6 +36,7 @@ export function loadDefaultPrompts(): PromptsConfigInput {
     nutritionEstimation: readDefaultPrompt("nutrition-estimation"),
     autoTagging: readDefaultPrompt("auto-tagging"),
     recipeProvenance: readDefaultPrompt("recipe-provenance"),
+    ingredientLinking: readDefaultPrompt("ingredient-linking"),
   };
 }
 
@@ -47,8 +49,12 @@ export function loadDefaultPrompts(): PromptsConfigInput {
  */
 export async function loadPrompt(name: PromptName): Promise<string> {
   const prompts = await getPrompts();
+  const stored = prompts[PROMPT_FIELDS[name]];
 
-  return prompts[PROMPT_FIELDS[name]] ?? readDefaultPrompt(name);
+  // A missing field (config predating the prompt) and a blank one (saved
+  // untouched from the admin form) both mean "no override": an empty prompt
+  // is never something a deployment actually wants to send to a model.
+  return stored && stored.trim() !== "" ? stored : readDefaultPrompt(name);
 }
 
 export function fillPrompt(template: string, vars: Record<string, string>): string {

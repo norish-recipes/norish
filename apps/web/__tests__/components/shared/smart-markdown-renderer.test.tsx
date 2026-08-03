@@ -1,41 +1,30 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 
-import { createIngredientLinkCandidates } from "@norish/shared-react/text";
-
 vi.mock("@/components/recipe/timer-chip", () => ({
   TimerChip: ({ originalText }: { originalText: string }) => <span>timer:{originalText}</span>,
 }));
 
-const ingredientCandidates = createIngredientLinkCandidates(
-  [
-    { ingredientName: "Salt", systemUsed: "metric", order: 0 },
-    { ingredientName: "Ground black pepper", systemUsed: "metric", order: 1 },
-  ],
-  "metric"
-);
-
 describe("SmartMarkdownRenderer", () => {
-  it("renders known ingredient markers as actionable links", () => {
-    const onIngredientPress = vi.fn();
+  it("renders legacy @ tokens as the literal text they always were", () => {
+    // Inline linkification is retired outright: Step Ingredients carry the
+    // links now, and stored text renders exactly as written.
+    render(<SmartMarkdownRenderer text="Season with @salt." />);
 
-    render(
-      <SmartMarkdownRenderer
-        ingredientCandidates={ingredientCandidates}
-        text="Season with @salt."
-        onIngredientPress={onIngredientPress}
-      />
-    );
+    expect(screen.getByText(/Season with @salt\./)).toBeInTheDocument();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("link")).toBeNull();
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: "Salt" }));
+  it("renders legacy braced tokens literally too", () => {
+    render(<SmartMarkdownRenderer text="Stir @ground black pepper{2 g} in." />);
 
-    expect(onIngredientPress).toHaveBeenCalledWith(
-      expect.objectContaining({ ingredientName: "Salt", key: "metric:salt" })
-    );
+    expect(screen.getByText(/Stir @ground black pepper\{2 g\} in\./)).toBeInTheDocument();
+    expect(screen.queryByRole("button")).toBeNull();
   });
 
   it("keeps public recipe references as text", () => {
@@ -54,11 +43,10 @@ describe("SmartMarkdownRenderer", () => {
     );
   });
 
-  it("renders timers and ingredient links together", () => {
+  it("still renders timers beside literal legacy tokens", () => {
     render(
       <SmartMarkdownRenderer
-        ingredientCandidates={ingredientCandidates}
-        text="Stir @ground black pepper{2 g} for 10 minutes."
+        text="Stir @salt for 10 minutes."
         timerConfig={{
           enabled: true,
           recipeId: "recipe-1",
@@ -68,7 +56,7 @@ describe("SmartMarkdownRenderer", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "Ground black pepper (2 g)" })).toBeInTheDocument();
     expect(screen.getByText("timer:10 minutes")).toBeInTheDocument();
+    expect(screen.getByText(/@salt/)).toBeInTheDocument();
   });
 });

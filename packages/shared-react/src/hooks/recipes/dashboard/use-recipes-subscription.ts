@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 
 import type { CreateRecipeHooksOptions } from "../types";
 import type { InfiniteRecipeData, RecipesCacheHelpers } from "./use-recipes-cache";
@@ -69,22 +70,7 @@ export function createUseRecipesSubscription(
           pages: prev.pages.map((page) => ({
             ...page,
             recipes: page.recipes.map((r) =>
-              r.id === updatedRecipe.id
-                ? {
-                    ...r,
-                    name: updatedRecipe.name,
-                    description: updatedRecipe.description,
-                    image: updatedRecipe.image,
-                    servings: updatedRecipe.servings,
-                    prepMinutes: updatedRecipe.prepMinutes,
-                    cookMinutes: updatedRecipe.cookMinutes,
-                    totalMinutes: updatedRecipe.totalMinutes,
-                    calories: updatedRecipe.calories,
-                    tags: updatedRecipe.tags,
-                    categories: updatedRecipe.categories,
-                    updatedAt: updatedRecipe.updatedAt,
-                  }
-                : r
+              r.id === updatedRecipe.id ? patchDashboardRecipeFromFull(r, updatedRecipe) : r
             ),
           })),
         };

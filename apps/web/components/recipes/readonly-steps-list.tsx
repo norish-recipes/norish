@@ -1,20 +1,22 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { SmartInstruction } from "@/components/recipe/smart-instruction";
+import { StepIngredientsRow } from "@/components/recipes/step-ingredients-row";
 import ImageLightbox from "@/components/shared/image-lightbox";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
 import { CheckIcon } from "@heroicons/react/16/solid";
 
-import type { IngredientLinkCandidate } from "@norish/shared-react/text";
-import { createIngredientLinkCandidates } from "@norish/shared-react/text";
+import type { UnitsMap } from "@norish/config/zod/server-config";
+import type { StepIngredientRefLike } from "@norish/shared/lib/step-ingredients";
 
 type StepLike = {
   step: string;
   systemUsed: string;
   order: number;
   images?: Array<{ image: string }>;
+  stepIngredients?: StepIngredientRefLike[];
 };
 
 type SmartInstructionLike = React.ComponentType<{
@@ -23,8 +25,6 @@ type SmartInstructionLike = React.ComponentType<{
   token?: string;
   recipeName?: string;
   stepIndex: number;
-  ingredientCandidates?: IngredientLinkCandidate[];
-  onIngredientPress?: (candidate: IngredientLinkCandidate) => void;
 }>;
 
 type IngredientLike = {
@@ -44,9 +44,10 @@ export type ReadonlyStepsListProps = {
   token?: string;
   recipeName?: string;
   ingredients?: IngredientLike[];
-  onIngredientPress?: (candidate: IngredientLinkCandidate) => void;
   /** Override the timer-aware instruction renderer (e.g. for public share pages). */
   InstructionComponent?: SmartInstructionLike;
+  /** Public surfaces pass their shared unit config; private ones omit it. */
+  units?: UnitsMap;
 };
 
 export function ReadonlyStepsList({
@@ -58,8 +59,8 @@ export function ReadonlyStepsList({
   token,
   recipeName,
   ingredients = [],
-  onIngredientPress,
   InstructionComponent = SmartInstruction,
+  units,
 }: ReadonlyStepsListProps) {
   const [done, setDone] = useState<Set<number>>(() => new Set());
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -106,10 +107,6 @@ export function ReadonlyStepsList({
   const filteredSteps = steps
     .filter((s) => s.systemUsed === systemUsed)
     .sort((a, b) => a.order - b.order);
-  const ingredientCandidates = useMemo(
-    () => createIngredientLinkCandidates(ingredients, systemUsed),
-    [ingredients, systemUsed]
-  );
 
   let stepNumber = 0;
 
@@ -178,18 +175,20 @@ export function ReadonlyStepsList({
                         stepIndex={currentStepNumber - 1}
                         text={s.step}
                         token={token}
-                        ingredientCandidates={ingredientCandidates}
-                        onIngredientPress={onIngredientPress}
                       />
                     ) : (
-                      <SmartMarkdownRenderer
-                        disableLinks={interactive && isDone}
-                        ingredientCandidates={ingredientCandidates}
-                        text={s.step}
-                        onIngredientPress={onIngredientPress}
-                      />
+                      <SmartMarkdownRenderer disableLinks={interactive && isDone} text={s.step} />
                     )}
                   </div>
+
+                  {(s.stepIngredients?.length ?? 0) > 0 && (
+                    <StepIngredientsRow
+                      ingredients={ingredients}
+                      refs={s.stepIngredients ?? []}
+                      systemUsed={systemUsed}
+                      units={units}
+                    />
+                  )}
 
                   {stepImages.length > 0 && (
                     <div className="flex flex-wrap gap-2">

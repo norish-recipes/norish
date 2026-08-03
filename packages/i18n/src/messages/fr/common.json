@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Page introuvable",
-    "message": "Oups! Nora n'a pas trouvé ce que vous cherchez.\nLa page a peut-être été déplacée ou n'existe plus."
+    "title": "Nora est perdue.",
+    "message": "Elle renifle partout pour retrouver où vous vouliez aller.",
+    "imageAlt": "Nora a l'air perdue"
   },
   "import": {
     "url": {
@@ -156,6 +157,7 @@
     "heading": "Commencez une ligne par <strong>#</strong> pour un titre",
     "bold": "Entourez le texte de <strong>**doubles astérisques**</strong> pour le gras",
     "recipeLink": "Tapez <strong>/nom de la recette</strong> pour accéder à une autre recette",
+    "ingredientMention": "Tapez <strong>@</strong> pour associer un ingrédient à l'étape — le mot s'insère dans votre phrase, le lien devient une pastille en dessous",
     "helpAriaLabel": "Aide à la mise en forme"
   },
   "tagInput": {
@@ -267,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Vous êtes hors ligne",
-    "body": "Cette page n'est pas dans le cache hors ligne. Les pages récemment visitées restent disponibles.",
+    "title": "Nora est hors ligne aussi.",
+    "body": "Cette page n'est pas enregistrée pour le hors ligne — les pages visitées récemment sont toujours là.",
+    "backOnlineTitle": "Nora a retrouvé la connexion !",
+    "backOnlineBody": "Norish est de nouveau joignable — réessayez de charger cette page.",
     "retry": "Réessayer",
     "home": "Ouvrir Norish"
   },

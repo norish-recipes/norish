@@ -582,7 +582,9 @@
         "nutritionEstimation": "Nährwertschätzung",
         "nutritionEstimationDescription": "Schätzt Kalorien, Fett, Kohlenhydrate und Eiweiß für neue Rezepte ohne Angaben",
         "recipeProvenance": "Rezept-Herkunft",
-        "recipeProvenanceDescription": "Land, Region, Küchen und eine kurze Notiz für neue Rezepte ermitteln, die noch keine haben"
+        "recipeProvenanceDescription": "Land, Region, Küchen und eine kurze Notiz für neue Rezepte ermitteln, die noch keine haben",
+        "ingredientLinking": "Zutatenverknüpfung",
+        "ingredientLinkingDescription": "Verknüpft jeden Schritt mit den Zutatenzeilen, die er verwendet — nur für Schritte ohne Verknüpfungen"
       },
       "tagStrategy": "Tag-Strategie",
       "tagStrategyDescription": "Welche Tags die automatische Verschlagwortung verwenden darf, ob automatisch oder manuell",
@@ -650,6 +652,9 @@
       "autoTaggingPlaceholder": "Geben Sie den Auto-Tagging-Prompt ein...",
       "recipeProvenance": "Prompt für Rezept-Herkunft",
       "recipeProvenanceDescription": "Dieser Prompt ermittelt die Herkunft eines Rezepts. Die entstehende Notiz ist in der Sprache des Rezepts selbst verfasst. Verfügbare Variablen: recipeName, description, ingredients",
+      "ingredientLinking": "Prompt für Zutatenverknüpfung",
+      "ingredientLinkingPlaceholder": "Prompt zum Verknüpfen von Zutaten mit Schritten...",
+      "ingredientLinkingDescription": "Wird verwendet, um jeden Schritt mit den verwendeten Zutatenzeilen zu verknüpfen",
       "recipeProvenancePlaceholder": "Prompt für die Rezept-Herkunft eingeben ..."
     },
     "unsavedChanges": "Ungespeicherte Änderungen",
@@ -708,6 +713,8 @@
         "auto-tagging": "Auto-tagging",
         "auto-categorization": "Auto-categorization",
         "allergy-detection": "Allergy detection",
+        "recipe-provenance": "Rezeptherkunft",
+        "ingredient-linking": "Zutatenverknüpfung",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks"
       },

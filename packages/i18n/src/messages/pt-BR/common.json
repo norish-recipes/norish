@@ -104,8 +104,9 @@
   },
   "notFound": {
     "code": "404",
-    "title": "Página não encontrada",
-    "message": "Ops! Nora não encontrou o que você está procurando.\nA página pode ter sido movida ou não existir."
+    "title": "A Nora está confusa.",
+    "message": "Ela está farejando por aí para descobrir aonde você queria ir.",
+    "imageAlt": "Nora com cara de confusa"
   },
   "import": {
     "url": {
@@ -156,6 +157,7 @@
     "heading": "Comece uma linha com <strong>#</strong> para criar um título",
     "bold": "Envolva com <strong>**asteriscos duplos**</strong> para negrito",
     "recipeLink": "Digite <strong>/nome da receita</strong> para vincular a outra receita",
+    "ingredientMention": "Digite <strong>@</strong> para vincular um ingrediente à etapa — a palavra fica na frase e o vínculo vira uma etiqueta abaixo",
     "helpAriaLabel": "Ajuda de formatação"
   },
   "tagInput": {
@@ -267,8 +269,10 @@
     }
   },
   "offlineFallback": {
-    "title": "Você está offline",
-    "body": "Esta página não está no cache offline. As páginas visitadas recentemente continuam disponíveis.",
+    "title": "A Nora também está offline.",
+    "body": "Esta página não está salva para uso offline — as páginas visitadas recentemente continuam aqui.",
+    "backOnlineTitle": "A Nora encontrou a conexão!",
+    "backOnlineBody": "O Norish está acessível de novo — tente carregar esta página novamente.",
     "retry": "Tentar novamente",
     "home": "Abrir Norish"
   },

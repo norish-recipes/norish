@@ -154,6 +154,7 @@ export async function findCuisineIdByName(name: string): Promise<string> {
 /** Read a recipe's stored Recipe Provenance straight from the database. */
 export async function readStoredProvenance(recipeName: string): Promise<{
   originCountry: string | null;
+  originCountryName: string | null;
   originRegion: string | null;
   provenanceNote: string | null;
   cuisines: string[];
@@ -166,11 +167,13 @@ export async function readStoredProvenance(recipeName: string): Promise<{
     const recipe = await db.query<{
       id: string;
       origin_country: string | null;
+      origin_country_name: string | null;
       origin_region: string | null;
       provenance_note: string | null;
-    }>("select id, origin_country, origin_region, provenance_note from recipes where name = $1", [
-      recipeName,
-    ]);
+    }>(
+      "select id, origin_country, origin_country_name, origin_region, provenance_note from recipes where name = $1",
+      [recipeName]
+    );
     const row = recipe.rows[0];
 
     if (!row) throw new Error(`Recipe not found: ${recipeName}`);
@@ -185,6 +188,7 @@ export async function readStoredProvenance(recipeName: string): Promise<{
 
     return {
       originCountry: row.origin_country,
+      originCountryName: row.origin_country_name,
       originRegion: row.origin_region,
       provenanceNote: row.provenance_note,
       cuisines: cuisines.rows.map((cuisine) => cuisine.name),
@@ -244,6 +248,80 @@ export async function supplyProvenance(
          on conflict do nothing`,
         [id, cuisineId, order]
       );
+    }
+  } finally {
+    await db.end();
+  }
+}
+
+/** Read a recipe's stored Step Ingredients straight from the database. */
+export async function readStoredStepIngredients(recipeName: string): Promise<
+  {
+    systemUsed: string;
+    stepOrder: number;
+    ingredientOrder: number;
+    share: number;
+  }[]
+> {
+  const db = new Client({ connectionString: E2E_DATABASE_URL });
+
+  await db.connect();
+
+  try {
+    const rows = await db.query<{
+      system_used: string;
+      step_order: string;
+      ingredient_order: string;
+      share: string;
+    }>(
+      `select s.system_used, s."order" as step_order, ri."order" as ingredient_order, si.share
+         from step_ingredients si
+         join steps s on s.id = si.step_id
+         join recipe_ingredients ri on ri.id = si.recipe_ingredient_id
+         join recipes r on r.id = s.recipe_id
+        where r.name = $1
+        order by s.system_used, s."order", si."order"`,
+      [recipeName]
+    );
+
+    return rows.rows.map((row) => ({
+      systemUsed: row.system_used,
+      stepOrder: Number(row.step_order),
+      ingredientOrder: Number(row.ingredient_order),
+      share: Number(row.share),
+    }));
+  } finally {
+    await db.end();
+  }
+}
+
+/**
+ * Attach a Step Ingredient straight into the database, as an editor's chip
+ * would have. Writes one system's step only — exactly what the editor does.
+ */
+export async function supplyStepIngredient(
+  recipeName: string,
+  link: { systemUsed: string; stepOrder: number; ingredientOrder: number; share: number }
+): Promise<void> {
+  const db = new Client({ connectionString: E2E_DATABASE_URL });
+
+  await db.connect();
+
+  try {
+    const inserted = await db.query(
+      `insert into step_ingredients (step_id, recipe_ingredient_id, share, "order")
+       select s.id, ri.id, $4, 0
+         from recipes r
+         join steps s on s.recipe_id = r.id and s.system_used = $2 and s."order" = $3::numeric
+         join recipe_ingredients ri
+           on ri.recipe_id = r.id and ri.system_used = $2 and ri."order" = $5::numeric
+        where r.name = $1
+        returning id`,
+      [recipeName, link.systemUsed, link.stepOrder, String(link.share), link.ingredientOrder]
+    );
+
+    if (inserted.rowCount !== 1) {
+      throw new Error(`Could not attach Step Ingredient on: ${recipeName}`);
     }
   } finally {
     await db.end();

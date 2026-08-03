@@ -9,7 +9,7 @@
  * they share; this module owns the two replacement groups.
  */
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import type { RecipeCategory } from "@norish/shared/contracts";
 import type {
@@ -18,7 +18,14 @@ import type {
   RecipeEnrichmentOrigin,
 } from "@norish/shared/lib/recipe-enrichment";
 import { db } from "@norish/db/drizzle";
-import { recipeCuisines, recipes } from "@norish/db/schema";
+import {
+  ingredients,
+  recipeCuisines,
+  recipeIngredients,
+  recipes,
+  stepIngredients,
+  steps,
+} from "@norish/db/schema";
 import {
   hasSubstantiveCategories,
   hasSubstantiveNutrition,
@@ -157,6 +164,114 @@ export interface ProvenanceReplacement extends ProvenanceGroupInput {
  *
  * @returns whether the replacement was applied
  */
+/** One step's inferred Step Ingredients, in row-order space, system-agnostic. */
+export interface StepIngredientLinkClaim {
+  stepOrder: number;
+  refs: readonly { ingredientOrder: number; share: number; order: number }[];
+}
+
+/**
+ * Write inferred Step Ingredients to the recipe's bare steps.
+ *
+ * Ingredient Linking is a gap-filler in every case — automatic or manual, it
+ * only ever adds links to steps that have none, so it can never replace or
+ * remove what a person attached. That per-step check is the suppression, at
+ * the only granularity where it is true, and it lives here so no caller can
+ * write past it. Heading rows on either side are never linked.
+ *
+ * The claim is semantic — step orders and line orders, no system — and is
+ * fanned out to every measurement system the recipe stores, matching rows by
+ * order within each system. A reference whose line does not exist in some
+ * system is dropped there rather than written wrong.
+ *
+ * @returns how many steps received links
+ */
+export async function addStepIngredientsToBareSteps(
+  recipeId: string,
+  links: readonly StepIngredientLinkClaim[]
+): Promise<number> {
+  if (links.length === 0) return 0;
+
+  return await db.transaction(async (tx) => {
+    const stepRows = await tx
+      .select({ id: steps.id, order: steps.order, systemUsed: steps.systemUsed, step: steps.step })
+      .from(steps)
+      .where(eq(steps.recipeId, recipeId));
+    const lineRows = await tx
+      .select({
+        id: recipeIngredients.id,
+        order: recipeIngredients.order,
+        systemUsed: recipeIngredients.systemUsed,
+        name: ingredients.name,
+      })
+      .from(recipeIngredients)
+      .innerJoin(ingredients, eq(recipeIngredients.ingredientId, ingredients.id))
+      .where(eq(recipeIngredients.recipeId, recipeId));
+
+    const stepIds = stepRows.map((row) => row.id);
+    const occupied = new Set<string>(
+      stepIds.length > 0
+        ? (
+            await tx
+              .selectDistinct({ stepId: stepIngredients.stepId })
+              .from(stepIngredients)
+              .where(inArray(stepIngredients.stepId, stepIds))
+          ).map((row) => row.stepId)
+        : []
+    );
+
+    const systems = [...new Set(stepRows.map((row) => row.systemUsed))];
+    let written = 0;
+
+    for (const system of systems) {
+      const stepByOrder = new Map<number, (typeof stepRows)[number]>();
+
+      for (const row of stepRows) {
+        if (row.systemUsed !== system) continue;
+        if (row.step.trim().startsWith("#")) continue;
+        if (!stepByOrder.has(Number(row.order ?? 0))) stepByOrder.set(Number(row.order ?? 0), row);
+      }
+
+      const lineIdByOrder = new Map<number, string>();
+
+      for (const row of lineRows) {
+        if (row.systemUsed !== system) continue;
+        if (row.name.trim().startsWith("#")) continue;
+        if (!lineIdByOrder.has(Number(row.order ?? 0)))
+          lineIdByOrder.set(Number(row.order ?? 0), row.id);
+      }
+
+      for (const claim of links) {
+        const step = stepByOrder.get(claim.stepOrder);
+
+        if (!step || occupied.has(step.id)) continue;
+
+        const values = claim.refs.flatMap((ref) => {
+          const recipeIngredientId = lineIdByOrder.get(ref.ingredientOrder);
+
+          if (!recipeIngredientId) return [];
+
+          return [
+            {
+              stepId: step.id,
+              recipeIngredientId,
+              share: String(ref.share),
+              order: String(ref.order),
+            },
+          ];
+        });
+
+        if (values.length === 0) continue;
+
+        await tx.insert(stepIngredients).values(values);
+        written += 1;
+      }
+    }
+
+    return written;
+  });
+}
+
 export async function replaceRecipeProvenance(
   recipeId: string,
   provenance: ProvenanceReplacement,

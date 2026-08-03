@@ -6,6 +6,7 @@ export * from "./ingredient";
 export * from "./recipe-ingredients";
 export * from "./steps";
 export * from "./step-images";
+export * from "./step-ingredients";
 export * from "./recipe-images";
 export * from "./recipe-videos";
 export * from "./household";

@@ -41,9 +41,11 @@ export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   fat: true,
   carbs: true,
   protein: true,
-  // The dashboard carries the origin country, and only that: it flies the
-  // flag beside each recipe's name. The region and the note have nothing to
-  // show at that size, so they stay behind the full recipe.
+  // The dashboard carries the origin country code, and only that: it flies
+  // the flag beside each recipe's name. The written name, the region, and
+  // the note have nothing to show at that size, so they stay behind the
+  // full recipe.
+  originCountryName: true,
   originRegion: true,
   provenanceNote: true,
 }).extend({
@@ -53,6 +55,39 @@ export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   averageRating: z.number().nullable().optional(),
   ratingCount: z.number().optional(),
 });
+
+/**
+ * Every key the dashboard projection carries, straight from the schema. The
+ * realtime echo merge and the dashboard card's memo comparator both walk this
+ * list, so a field added to RecipeDashboardSchema reaches cached lists and
+ * re-renders automatically — the hand-copied allowlists this replaces drifted
+ * (originCountry never made it in).
+ */
+export const RECIPE_DASHBOARD_KEYS = Object.keys(RecipeDashboardSchema.shape) as ReadonlyArray<
+  keyof z.output<typeof RecipeDashboardSchema>
+>;
+
+/**
+ * Patch a cached dashboard recipe from a full-recipe realtime echo. Only keys
+ * the echo actually carries are copied: the full recipe does not compute the
+ * dashboard-only aggregates (averageRating, ratingCount), and overwriting
+ * them with undefined would wipe live values off the cards.
+ */
+export function patchDashboardRecipeFromFull(
+  dashboardRecipe: z.output<typeof RecipeDashboardSchema>,
+  fullRecipe: z.output<typeof FullRecipeSchema>
+): z.output<typeof RecipeDashboardSchema> {
+  const patched: Record<string, unknown> = { ...dashboardRecipe };
+  const echo = fullRecipe as Record<string, unknown>;
+
+  for (const key of RECIPE_DASHBOARD_KEYS) {
+    if (key in echo) {
+      patched[key] = echo[key];
+    }
+  }
+
+  return patched as z.output<typeof RecipeDashboardSchema>;
+}
 
 export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   recipeIngredients: z.array(RecipeIngredientsWithIdSchema),

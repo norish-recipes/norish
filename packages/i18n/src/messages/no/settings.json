@@ -582,7 +582,9 @@
         "nutritionEstimation": "Estimering av næringsinnhold",
         "nutritionEstimationDescription": "Estimer kalorier, fett, karbohydrater og protein for nye oppskrifter uten oppgitte verdier",
         "recipeProvenance": "Oppskriftens opphav",
-        "recipeProvenanceDescription": "Utled land, region, kjøkken og et kort notat for nye oppskrifter som mangler det"
+        "recipeProvenanceDescription": "Utled land, region, kjøkken og et kort notat for nye oppskrifter som mangler det",
+        "ingredientLinking": "Ingredienskobling",
+        "ingredientLinkingDescription": "Kobler hvert trinn til ingredienslinjene det bruker, for trinn uten koblinger"
       },
       "tagStrategy": "Taggstrategi",
       "tagStrategyDescription": "Hvilke tagger automatisk tagging kan bruke, enten den kjører automatisk eller manuelt",
@@ -650,6 +652,9 @@
       "autoTaggingPlaceholder": "Skriv inn prompt for auto-tagging...",
       "recipeProvenance": "Ledetekst for oppskriftens opphav",
       "recipeProvenanceDescription": "Denne ledeteksten finner ut hvor en oppskrift kommer fra. Notatet skrives på oppskriftens eget språk. Tilgjengelige variabler: recipeName, description, ingredients",
+      "ingredientLinking": "Prompt for ingredienskobling",
+      "ingredientLinkingPlaceholder": "Prompt for å koble ingredienser til trinn...",
+      "ingredientLinkingDescription": "Brukes når hvert trinn kobles til ingredienslinjene det bruker",
       "recipeProvenancePlaceholder": "Skriv inn ledeteksten for oppskriftens opphav ..."
     },
     "unsavedChanges": "Ulagrede endringer",
@@ -708,6 +713,8 @@
         "auto-tagging": "Auto-tagging",
         "auto-categorization": "Auto-categorization",
         "allergy-detection": "Allergy detection",
+        "recipe-provenance": "Oppskriftens opprinnelse",
+        "ingredient-linking": "Ingredienskobling",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks"
       },

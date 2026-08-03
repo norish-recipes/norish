@@ -74,6 +74,8 @@
     "autoCategorizing": "Kategoriserer…",
     "inferProvenance": "Finn opphavet",
     "inferringProvenance": "Finner opphavet …",
+    "linkIngredients": "Koble ingredienser til trinn",
+    "linkingIngredients": "Kobler ingredienser…",
     "enrichmentFailed": "Siste forsøk mislyktes"
   },
   "sharePanel": {
@@ -241,6 +243,23 @@
     "stepPlaceholder": "Trinn {number}: Beskriv trinnet...",
     "stepPlaceholderShort": "Trinn {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Koblede ingredienser",
+    "addLabel": "Koble ingrediens",
+    "pickerLabel": "Koble en ingrediens til dette trinnet",
+    "shareLabel": "Endre andelen av {name}",
+    "share": {
+      "full": "Hele linjen",
+      "half": "Halvparten",
+      "third": "En tredjedel",
+      "quarter": "En fjerdedel",
+      "custom": "Egendefinert…",
+      "amount": "Mengde…"
+    },
+    "customShareLabel": "Egendefinert andel",
+    "customAmountLabel": "Mengde",
+    "removeLabel": "Fjern {name}"
+  },
   "ingredientInput": {
     "placeholder": "f.eks. 2 dl mel"
   },
@@ -292,7 +311,8 @@
       "allergy-detection": "Allergideteksjon",
       "auto-categorization": "Automatisk kategorisering",
       "nutrition-estimation": "Estimering av næringsinnhold",
-      "recipe-provenance": "Oppskriftens opphav"
+      "recipe-provenance": "Oppskriftens opphav",
+      "ingredient-linking": "Ingredienskobling"
     }
   },
   "provenance": {

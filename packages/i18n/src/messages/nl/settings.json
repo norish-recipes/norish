@@ -582,7 +582,9 @@
         "nutritionEstimation": "Voedingswaarde schatten",
         "nutritionEstimationDescription": "Schat calorieën, vet, koolhydraten en eiwitten voor nieuwe recepten zonder opgegeven waarden",
         "recipeProvenance": "Receptherkomst",
-        "recipeProvenanceDescription": "Bepaal land, streek, keukens en een korte toelichting voor nieuwe recepten die die nog niet hebben"
+        "recipeProvenanceDescription": "Bepaal land, streek, keukens en een korte toelichting voor nieuwe recepten die die nog niet hebben",
+        "ingredientLinking": "Ingrediëntkoppeling",
+        "ingredientLinkingDescription": "Koppel elke stap aan de ingrediëntregels die hij gebruikt, voor stappen zonder koppelingen"
       },
       "tagStrategy": "Tagstrategie",
       "tagStrategyDescription": "Welke tags automatisch taggen mag gebruiken, of het nu automatisch of handmatig draait",
@@ -650,6 +652,9 @@
       "autoTaggingPlaceholder": "Voer de auto-tagging prompt in...",
       "recipeProvenance": "Prompt voor receptherkomst",
       "recipeProvenanceDescription": "Deze prompt bepaalt waar een recept vandaan komt. De toelichting die eruit komt staat in de taal van het recept zelf. Beschikbare variabelen: recipeName, description, ingredients",
+      "ingredientLinking": "Prompt voor ingrediëntkoppeling",
+      "ingredientLinkingPlaceholder": "Prompt voor het koppelen van ingrediënten aan stappen...",
+      "ingredientLinkingDescription": "Gebruikt bij het koppelen van elke stap aan de ingrediëntregels die hij gebruikt",
       "recipeProvenancePlaceholder": "Voer de prompt voor receptherkomst in..."
     },
     "unsavedChanges": "Niet-opgeslagen wijzigingen",
@@ -708,6 +713,8 @@
         "auto-tagging": "Auto-tagging",
         "auto-categorization": "Auto-categorization",
         "allergy-detection": "Allergy detection",
+        "recipe-provenance": "Herkomst van recept",
+        "ingredient-linking": "Ingrediëntkoppeling",
         "caldav-sync": "CalDAV sync",
         "scheduled-tasks": "Scheduled tasks"
       },

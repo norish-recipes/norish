@@ -179,6 +179,7 @@ function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO |
     // Recipe Provenance is never supplied at creation: it is inferred later, or
     // typed in the recipe form afterwards.
     originCountry: input.originCountry ?? null,
+    originCountryName: input.originCountryName ?? null,
     originRegion: input.originRegion ?? null,
     provenanceNote: input.provenanceNote ?? null,
     cuisines: [],
@@ -206,6 +207,11 @@ function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO |
         image: image.image,
         order: toNumber(image.order),
         version: image.version ?? 1,
+      })),
+      stepIngredients: (step.stepIngredients ?? []).map((ref, refIndex) => ({
+        ingredientOrder: toNumber(ref.ingredientOrder),
+        share: toNumber(ref.share, 1),
+        order: toNumber(ref.order, refIndex),
       })),
     })),
     author: undefined,

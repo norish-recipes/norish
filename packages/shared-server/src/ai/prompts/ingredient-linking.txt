@@ -1,0 +1,27 @@
+Recipe: {{recipeName}}
+
+INGREDIENTS (numbered lines):
+{{ingredients}}
+
+STEPS (numbered):
+{{steps}}
+
+Work out, for each step, which ingredient lines the step uses, and how much of
+each. Use only the recipe above.
+
+- Return one entry per step that clearly uses one or more ingredient lines.
+  Omit steps that use nothing — resting, flipping, plating, preheating.
+- A step may use several lines at once. "Add the spices" means every spice
+  line above; name them all.
+- share: the fraction of the line's amount this step uses. 1 means the whole
+  line. "Half the water" is 0.5; "a third of the butter" is 0.33. When the
+  step does not say otherwise, the share is 1 and amount is null.
+- amount: when the step states the quantity it uses in the line's own unit —
+  "crack 3 of the eggs", "add 100 g of the flour" — give that number as
+  amount and set share to null. State the number the step wrote: never do
+  the division yourself, and never state more than the line holds.
+- Refer to steps and ingredient lines strictly by the numbers shown above.
+  Never invent numbers, and never link a section heading (a line starting
+  with #).
+- Link only what the step's own words support. When you cannot tell which
+  line a phrase means, leave that phrase unlinked rather than guessing.

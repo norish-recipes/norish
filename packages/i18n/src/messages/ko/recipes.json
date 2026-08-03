@@ -74,6 +74,8 @@
     "autoCategorizing": "분류 중…",
     "inferProvenance": "출처 알아보기",
     "inferringProvenance": "출처를 알아보는 중…",
+    "linkIngredients": "재료를 단계에 연결",
+    "linkingIngredients": "재료 연결 중…",
     "enrichmentFailed": "마지막 실행 실패"
   },
   "sharePanel": {
@@ -241,6 +243,23 @@
     "stepPlaceholder": "{number} 단계: 단계를 설명하세요...",
     "stepPlaceholderShort": "{number} 단계"
   },
+  "stepIngredients": {
+    "rowLabel": "연결된 재료",
+    "addLabel": "재료 연결",
+    "pickerLabel": "이 단계에 재료를 연결하세요",
+    "shareLabel": "{name}의 분량 변경",
+    "share": {
+      "full": "전체",
+      "half": "절반",
+      "third": "3분의 1",
+      "quarter": "4분의 1",
+      "custom": "직접 입력…",
+      "amount": "양 입력…"
+    },
+    "customShareLabel": "직접 입력한 분량",
+    "customAmountLabel": "양",
+    "removeLabel": "{name} 제거"
+  },
   "ingredientInput": {
     "placeholder": "예: 밀가루 2컵"
   },
@@ -292,7 +311,8 @@
       "allergy-detection": "알레르기 감지",
       "auto-categorization": "자동 분류",
       "nutrition-estimation": "영양 정보 추정",
-      "recipe-provenance": "레시피 출처"
+      "recipe-provenance": "레시피 출처",
+      "ingredient-linking": "재료 연결"
     }
   },
   "provenance": {

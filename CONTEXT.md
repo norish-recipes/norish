@@ -11,7 +11,7 @@ A recipe whose creation transaction has succeeded and whose stored state can be 
 _Avoid_: Complete Recipe (suggests optional fields must be present)
 
 **Recipe Enrichment**:
-Optional AI-assisted processing that adds or refreshes recipe tags, allergy indications, meal categories, nutrition values, or provenance after a recipe is usable. It includes both automatic runs for newly usable recipes and manually requested runs; its outcome does not determine whether recipe creation or import succeeded.
+Optional AI-assisted processing that adds or refreshes recipe tags, allergy indications, meal categories, nutrition values, provenance, or Step Ingredients after a recipe is usable. It includes both automatic runs for newly usable recipes and manually requested runs; its outcome does not determine whether recipe creation or import succeeded.
 _Avoid_: Post-Import Enrichment (excludes manual creation and manual runs)
 
 **Automatic Recipe Enrichment**:
@@ -37,7 +37,7 @@ A recipe's calories, fat, carbohydrates, and protein considered as one atomic gr
 _Avoid_: Macros (does not include calories)
 
 **Recipe Provenance**:
-Where a recipe comes from: its origin country, an optional finer-grained region within that country, its Cuisines, and a short written explanation of how that was concluded. The explanation is written in the language of the recipe itself, not the reader's — it is recipe content, not interface chrome, and is never translated. It is one kind of Recipe Enrichment.
+Where a recipe comes from: a single origin country, an optional finer-grained region within it, its Cuisines, and a short written explanation of how that was concluded. A dish claimed by several countries still gets the single strongest claim, with rivals acknowledged in the explanation; only a genuinely unplaceable dish has no country. The country's written name, the region, and the explanation are recipe content, not interface chrome: they speak the language of the recipe itself when inferred (or the supplier's own words when supplied) and are never translated. Flags, pickers, and tooltips are chrome and follow the reader's language. It is one kind of Recipe Enrichment.
 _Avoid_: Origin (names only one part), Provenance Inference (names the process, not the data)
 
 **Cuisine**:
@@ -46,6 +46,13 @@ _Avoid_: Cuisine Tag (a Tag is open, a Cuisine is curated), Category (that is th
 
 **Tag**:
 A free-form keyword attached to a recipe, mintable by anyone and by AI. Tags are an open folksonomy and deliberately overlap other taxonomies; Cuisines and Categories are the curated lists.
+
+**Step Ingredient**:
+A step's use of one of the recipe's ingredient lines, carried as a fractional share of that line (half the water is 0.5, "the spices" is several lines at their full share). An amount is entry vocabulary, not a stored form: the editor and the AI claim both accept "3 of the 5 eggs", and it becomes the equivalent share (0.6) at entry time. Attaching an amounted line asks for its amount on the spot — the ask — and dismissing the ask keeps the whole line. The step's prose is never rewritten to express it; readers see the resolved names and amounts presented with the step. Amounts are always derived from the ingredient line at the moment of display, so they follow edits and the active measurement system.
+_Avoid_: Ingredient Link (suggests a hyperlink in the text rather than a usage relation), Cooklang (names a foreign syntax Norish does not use)
+
+**Ingredient Linking**:
+The Recipe Enrichment kind that infers Step Ingredients. It is a gap-filler in every case — automatic or manual, it only ever adds links to steps that have none, so it can never replace or remove what a person attached and needs no supplied-data suppression: a step that already has Step Ingredients is simply not its business. Heading rows are never linked. A step that genuinely uses nothing stays bare and may be examined again by later runs.
 
 ### Connectivity & Offline
 
@@ -56,6 +63,10 @@ _Avoid_: disconnected (that is the WebSocket status, a narrower thing)
 **Live**:
 The state in which the web client can reach the Norish backend and data exchange is permitted. Live does not require the realtime channel to be up — reaching the backend at all is what counts.
 _Avoid_: online (ambiguous with general internet connectivity)
+
+**Reachability Deadline**:
+The single bounded wait — five seconds — after which the backend counts as unreachable for the attempt at hand. The connectivity verdict and a launching page navigation observe the same deadline: a launch that outlives it proceeds Offline with what is cached rather than waiting indefinitely.
+_Avoid_: Network timeout (a mechanism, not the meaning), Launch timeout (the deadline is shared, not launch-specific)
 
 **App Shell**:
 The static assets (HTML, JS, CSS, fonts, icons) required to boot the web app without any backend response.

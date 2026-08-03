@@ -40,22 +40,12 @@ permissions:
   contents: read
 
 jobs:
-  install:
-    name: Install dependencies
-    if: ${{ inputs.run-build || inputs.run-tests || inputs.run-lint || inputs.run-format || inputs.run-i18n || inputs.run-e2e }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
   build:
     name: Build
     if: ${{ inputs.run-build || inputs.run-tests || inputs.run-lint || inputs.run-format || inputs.run-i18n || inputs.run-e2e }}
     runs-on: ubuntu-latest
-    needs: install
+    outputs:
+      gates-matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -66,11 +56,34 @@ jobs:
       - name: Run build
         run: pnpm run build
 
-  tests:
-    name: Tests
-    if: ${{ inputs.run-tests }}
+      # Which simple gates (one pnpm command on a fresh checkout) the caller
+      # asked for. Computed here so the matrix job below needs no extra runner.
+      - name: Plan gate matrix
+        id: plan
+        run: |
+          entries=()
+          if ${{ inputs.run-tests }}; then entries+=('{"name":"Tests","command":"pnpm run test"}'); fi
+          if ${{ inputs.run-lint }}; then entries+=('{"name":"Lint","command":"pnpm run lint"}'); fi
+          if ${{ inputs.run-format }}; then entries+=('{"name":"Format Check","command":"pnpm run format"}'); fi
+          if ${{ inputs.run-i18n }}; then entries+=('{"name":"Locale Keys Check","command":"pnpm run i18n:check"}'); fi
+          if [ ${#entries[@]} -eq 0 ]; then
+            matrix='[]'
+          else
+            matrix=$(printf '%s\n' "${entries[@]}" | jq -cs '.')
+          fi
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  gates:
+    # Each leg keeps its historical job name (Tests, Lint, Format Check, Locale
+    # Keys Check) so existing required-check contexts stay stable.
+    name: ${{ matrix.name }}
+    if: ${{ needs.build.outputs.gates-matrix != '[]' }}
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.build.outputs.gates-matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -78,38 +91,8 @@ jobs:
       - name: Setup toolchain and install dependencies
         uses: ./tooling/github/setup
 
-      - name: Run tests
-        run: pnpm run test
-
-  lint:
-    name: Lint
-    if: ${{ inputs.run-lint }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Run lint
-        run: pnpm run lint
-
-  format:
-    name: Format Check
-    if: ${{ inputs.run-format }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Run format check
-        run: pnpm run format
+      - name: Run ${{ matrix.name }}
+        run: ${{ matrix.command }}
 
   e2e:
     name: Browser E2E
@@ -151,18 +134,3 @@ jobs:
           # Everything lives under dot-directories, which the action skips
           # by default — without this the upload silently finds nothing.
           include-hidden-files: true
-
-  i18n:
-    name: Locale Keys Check
-    if: ${{ inputs.run-i18n }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup toolchain and install dependencies
-        uses: ./tooling/github/setup
-
-      - name: Check locale keys
-        run: pnpm run i18n:check

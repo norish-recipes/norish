@@ -74,6 +74,8 @@
     "autoCategorizing": "Kategoryzowanie…",
     "inferProvenance": "Ustal pochodzenie",
     "inferringProvenance": "Ustalanie pochodzenia…",
+    "linkIngredients": "Powiąż składniki z krokami",
+    "linkingIngredients": "Wiązanie składników…",
     "enrichmentFailed": "Ostatnia próba nie powiodła się"
   },
   "sharePanel": {
@@ -241,6 +243,23 @@
     "stepPlaceholder": "Krok {number}: Opisz krok...",
     "stepPlaceholderShort": "Krok {number}"
   },
+  "stepIngredients": {
+    "rowLabel": "Powiązane składniki",
+    "addLabel": "Powiąż składnik",
+    "pickerLabel": "Powiąż składnik z tym krokiem",
+    "shareLabel": "Zmień część {name}",
+    "share": {
+      "full": "Cała pozycja",
+      "half": "Połowa",
+      "third": "Jedna trzecia",
+      "quarter": "Jedna czwarta",
+      "custom": "Niestandardowa…",
+      "amount": "Ilość…"
+    },
+    "customShareLabel": "Niestandardowa część",
+    "customAmountLabel": "Ilość",
+    "removeLabel": "Usuń {name}"
+  },
   "ingredientInput": {
     "placeholder": "np. 2 szklanki mąki"
   },
@@ -292,7 +311,8 @@
       "allergy-detection": "Wykrywanie alergenów",
       "auto-categorization": "Automatyczna kategoryzacja",
       "nutrition-estimation": "Szacowanie wartości odżywczych",
-      "recipe-provenance": "Pochodzenie przepisu"
+      "recipe-provenance": "Pochodzenie przepisu",
+      "ingredient-linking": "Wiązanie składników"
     }
   },
   "provenance": {
