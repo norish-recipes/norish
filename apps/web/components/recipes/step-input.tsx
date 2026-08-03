@@ -11,11 +11,6 @@ import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import {
-  createIngredientLinkCandidates,
-  formatIngredientLinkAmount,
-  formatIngredientLinkToken,
-} from "@norish/shared-react/text";
 import { MeasurementSystem } from "@norish/shared/contracts";
 
 export interface StepImage {
@@ -92,16 +87,19 @@ export default function StepInput({
   const { uploadStepImage, deleteStepImage } = useRecipeImages();
   const ingredientSuggestions = useMemo(
     () =>
-      createIngredientLinkCandidates(ingredients, systemUsed).map(
-        (candidate): SmartTextInputIngredientSuggestion => ({
-          key: candidate.key,
-          label: candidate.ingredientName,
-          token: formatIngredientLinkToken(
-            candidate.ingredientName,
-            formatIngredientLinkAmount(candidate)
-          ),
-        })
-      ),
+      ingredients
+        .filter(
+          (ingredient) =>
+            ingredient.systemUsed === systemUsed &&
+            !ingredient.ingredientName.trim().startsWith("#")
+        )
+        .map(
+          (ingredient): SmartTextInputIngredientSuggestion => ({
+            key: `${ingredient.order}`,
+            label: ingredient.ingredientName,
+            ingredientOrder: ingredient.order,
+          })
+        ),
     [ingredients, systemUsed]
   );
 
@@ -158,6 +156,33 @@ export default function StepInput({
         ...updated[index],
         stepIngredients: refs,
       };
+      setItems(updated);
+      emitChanges(updated);
+    },
+    [items, emitChanges]
+  );
+  const handleIngredientMention = useCallback(
+    (index: number, suggestion: SmartTextInputIngredientSuggestion, newText: string) => {
+      // One update for both halves of the gesture: the plain word lands in
+      // the sentence and the chip attaches beneath it, at the full share.
+      const updated = [...items];
+      const target = updated[index];
+      const alreadyAttached = target.stepIngredients.some(
+        (ref) => ref.ingredientOrder === suggestion.ingredientOrder
+      );
+
+      updated[index] = {
+        ...target,
+        text: newText,
+        stepIngredients: alreadyAttached
+          ? target.stepIngredients
+          : [...target.stepIngredients, { ingredientOrder: suggestion.ingredientOrder, share: 1 }],
+      };
+
+      // Mentioning in the trailing row grows the list, exactly like typing.
+      if (index === items.length - 1 && newText.trim()) {
+        updated.push(createStepItem("", []));
+      }
       setItems(updated);
       emitChanges(updated);
     },
@@ -355,6 +380,9 @@ export default function StepInput({
           onImageUpload={(file) => handleImageUpload(index, file)}
           onKeyDown={(e) => handleKeyDown(index, e)}
           onRemove={() => handleRemove(index)}
+          onIngredientMention={(suggestion, newText) =>
+            handleIngredientMention(index, suggestion, newText)
+          }
           onRemoveImage={(imgIndex) => handleRemoveImage(index, imgIndex)}
           onStepIngredientsChange={(refs) => handleStepIngredientsChange(index, refs)}
           onValueChange={(v) => handleInputChange(index, v)}
@@ -395,6 +423,7 @@ interface StepRowProps {
   onRemoveImage: (imageIndex: number) => void;
   onFileSelect: () => void;
   onStepIngredientsChange: (refs: StepIngredientDraft[]) => void;
+  onIngredientMention: (suggestion: SmartTextInputIngredientSuggestion, newText: string) => void;
 }
 function StepRow({
   item,
@@ -418,6 +447,7 @@ function StepRow({
   onRemoveImage,
   onFileSelect,
   onStepIngredientsChange,
+  onIngredientMention,
 }: StepRowProps) {
   const controls = useDragControls();
   const hasContent = !!item.text || item.images.length > 0;
@@ -465,6 +495,7 @@ function StepRow({
             placeholder={index === 0 ? stepPlaceholder : stepPlaceholderShort}
             value={item.text}
             onBlur={onBlur}
+            onIngredientMention={onIngredientMention}
             onKeyDown={onKeyDown}
             onValueChange={onValueChange}
           />

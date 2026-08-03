@@ -26,7 +26,6 @@ import HeartButton from "@/components/shared/heart-button";
 import { useUserContext } from "@/context/user-context";
 import { useFavoritesMutation, useFavoritesQuery } from "@/hooks/favorites";
 import { useRatingQuery, useRatingsMutation } from "@/hooks/ratings";
-import { useIngredientLinkHighlight } from "@/hooks/use-ingredient-link-highlight";
 import { ArrowLeftIcon } from "@heroicons/react/16/solid";
 import { Card, Link, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -54,8 +53,6 @@ export default function RecipePageMobile() {
   const t = useTranslations("recipes.detail");
   const showRatings = getShowRatingsPreference(user);
   const showFavorites = getShowFavoritesPreference(user);
-  const { highlightedIngredientKey, highlightIngredient, ingredientListRef } =
-    useIngredientLinkHighlight();
   // The page owns every rule between sections, so it has to know which
   // sections will render — the same answer each section renders by.
   const showProvenance = useProvenanceSectionVisible();
@@ -165,10 +162,7 @@ export default function RecipePageMobile() {
               </div>
             </div>
 
-            <IngredientsList
-              highlightedIngredientKey={highlightedIngredientKey}
-              ingredientListRef={ingredientListRef}
-            />
+            <IngredientsList />
 
             {/* Add to groceries button - below ingredients */}
             <AddToGroceries recipeId={recipe.id} />
@@ -198,7 +192,7 @@ export default function RecipePageMobile() {
             </div>
 
             <div className="text-left">
-              <StepsList onIngredientPress={highlightIngredient} />
+              <StepsList />
             </div>
 
             {/* Rating Section */}

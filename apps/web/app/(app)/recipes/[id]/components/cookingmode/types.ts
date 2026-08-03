@@ -1,6 +1,4 @@
-import type { PointerEvent, Ref } from "react";
-
-import type { IngredientLinkCandidate } from "@norish/shared-react/text";
+import type { PointerEvent } from "react";
 
 import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
 
@@ -23,10 +21,7 @@ export type CookingModeDialogProps = {
   recipeServings?: number | null;
   recipeSystemUsed: string;
   steps: ResolvedCookingModeStep[];
-  highlightedIngredientKey?: string | null;
-  ingredientListRef?: Ref<HTMLUListElement>;
   onClose: () => void;
-  onIngredientPress?: (candidate: IngredientLinkCandidate) => void;
   onPointerDown: (event: PointerEvent) => void;
   onPointerUp: (event: PointerEvent) => void;
   onStepChange: (step: number) => void;

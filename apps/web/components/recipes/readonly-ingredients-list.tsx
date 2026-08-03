@@ -1,6 +1,5 @@
 "use client";
 
-import type { Ref } from "react";
 import { useState } from "react";
 import { GroceryCheckbox } from "@/components/groceries/grocery-checkbox";
 import SmartMarkdownRenderer from "@/components/shared/smart-markdown-renderer";
@@ -10,7 +9,6 @@ import { useLocale } from "next-intl";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import { useUnitFormatter as useSharedUnitFormatter } from "@norish/shared-react/hooks";
-import { getIngredientLinkCandidateKey } from "@norish/shared-react/text";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 
 type IngredientLike = {
@@ -26,8 +24,6 @@ export type ReadonlyIngredientsListProps = {
   systemUsed: string;
   interactive?: boolean;
   units?: UnitsMap;
-  highlightedIngredientKey?: string | null;
-  ingredientListRef?: Ref<HTMLUListElement>;
 };
 
 type ReadonlyIngredientsListContentProps = Omit<ReadonlyIngredientsListProps, "units"> & {
@@ -38,8 +34,6 @@ function ReadonlyIngredientsListContent({
   ingredients,
   systemUsed,
   interactive = false,
-  highlightedIngredientKey,
-  ingredientListRef,
   formatUnitOnly,
 }: ReadonlyIngredientsListContentProps) {
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
@@ -84,7 +78,7 @@ function ReadonlyIngredientsListContent({
   };
 
   return (
-    <ul ref={ingredientListRef} className="space-y-2">
+    <ul className="space-y-2">
       {ingredients
         .filter((it) => it.systemUsed === systemUsed)
         .sort((a, b) => a.order - b.order)
@@ -106,29 +100,17 @@ function ReadonlyIngredientsListContent({
           const amount = formatAmount(it.amount, mode);
           const unit = it.unit ? formatUnitOnly(it.unit, it.amount) : "";
           const isChecked = checked.has(idx);
-          const ingredientKey = getIngredientLinkCandidateKey({
-            ingredientName: it.ingredientName,
-            systemUsed: it.systemUsed,
-          });
-          const isHighlighted = highlightedIngredientKey === ingredientKey;
           const wrapperClassName = interactive
             ? `group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 select-none ${
-                isChecked
-                  ? "bg-surface-secondary/50"
-                  : isHighlighted
-                    ? "bg-accent/10 ring-accent/30 ring-1"
-                    : "hover:bg-surface-secondary"
+                isChecked ? "bg-surface-secondary/50" : "hover:bg-surface-secondary"
               }`
-            : `flex items-start gap-3 rounded-xl px-3 py-2.5 ${
-                isHighlighted ? "bg-accent/10 ring-accent/30 ring-1" : ""
-              }`;
+            : "flex items-start gap-3 rounded-xl px-3 py-2.5";
 
           return (
             <li key={`${it.ingredientName}-${idx}`}>
               <div
                 aria-pressed={interactive ? isChecked : undefined}
                 className={wrapperClassName}
-                data-ingredient-link-key={ingredientKey}
                 role={interactive ? "button" : undefined}
                 tabIndex={interactive ? 0 : undefined}
                 onClick={(e) => onRowClick(e, idx)}

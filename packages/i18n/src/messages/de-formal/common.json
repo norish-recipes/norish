@@ -156,6 +156,7 @@
     "heading": "Starte eine Zeile mit <strong>#</strong> für eine Überschrift",
     "bold": "Umgebe Text mit <strong>**doppelten Sternchen**</strong> für fett",
     "recipeLink": "Gib <strong>/Rezeptname</strong> ein, um zu einem anderen Rezept zu verlinken",
+    "ingredientMention": "Tippen Sie <strong>@</strong>, um eine Zutat mit dem Schritt zu verknüpfen — das Wort landet im Satz, die Verknüpfung wird ein Chip darunter",
     "helpAriaLabel": "Formatierungshilfe"
   },
   "tagInput": {

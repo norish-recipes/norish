@@ -156,6 +156,7 @@
     "heading": "Commencez une ligne par <strong>#</strong> pour un titre",
     "bold": "Entourez le texte de <strong>**doubles astérisques**</strong> pour le gras",
     "recipeLink": "Tapez <strong>/nom de la recette</strong> pour accéder à une autre recette",
+    "ingredientMention": "Tapez <strong>@</strong> pour associer un ingrédient à l'étape — le mot s'insère dans votre phrase, le lien devient une pastille en dessous",
     "helpAriaLabel": "Aide à la mise en forme"
   },
   "tagInput": {

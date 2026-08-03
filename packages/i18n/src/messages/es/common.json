@@ -151,6 +151,7 @@
     "heading": "Empieza una línea con <strong>#</strong> para dar formato de título",
     "bold": "Usa <strong>**dobles asteriscos**</strong> para negrita",
     "recipeLink": "Escribe <strong>/nombre de la receta</strong> para enlazar otra receta",
+    "ingredientMention": "Escribe <strong>@</strong> para vincular un ingrediente al paso — la palabra queda en tu frase y el vínculo se convierte en una etiqueta debajo",
     "helpAriaLabel": "Ayuda de formato"
   },
   "tagInput": {

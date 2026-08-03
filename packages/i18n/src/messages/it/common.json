@@ -156,6 +156,7 @@
     "heading": "Inizia una riga con <strong>#</strong> per un titolo",
     "bold": "Racchiudi tra <strong>**doppi asterischi**</strong> per il grassetto",
     "recipeLink": "Digita <strong>/nome ricetta</strong> per collegare un'altra ricetta",
+    "ingredientMention": "Digita <strong>@</strong> per collegare un ingrediente al passaggio — la parola resta nella frase, il collegamento diventa un'etichetta sotto",
     "helpAriaLabel": "Aiuto formattazione"
   },
   "tagInput": {

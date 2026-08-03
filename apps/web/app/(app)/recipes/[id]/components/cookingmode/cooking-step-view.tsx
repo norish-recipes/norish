@@ -5,8 +5,6 @@ import { BookOpenIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/2
 import { Button, Chip, Meter, ScrollShadow, Surface, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { IngredientLinkCandidate } from "@norish/shared-react/text";
-
 import type { ResolvedCookingModeStep } from "./cooking-mode-steps";
 import { StepImages } from "./step-images";
 import { clampStep } from "./utils";
@@ -16,8 +14,6 @@ type CookingStepViewProps = {
   recipeId: string;
   recipeName: string;
   steps: ResolvedCookingModeStep[];
-  ingredientCandidates: IngredientLinkCandidate[];
-  onIngredientPress?: (candidate: IngredientLinkCandidate) => void;
   onStepChange: (step: number) => void;
 };
 
@@ -26,8 +22,6 @@ export function CookingStepView({
   recipeId,
   recipeName,
   steps,
-  ingredientCandidates,
-  onIngredientPress,
   onStepChange,
 }: CookingStepViewProps) {
   const tCookMode = useTranslations("recipes.cookMode");
@@ -75,8 +69,6 @@ export function CookingStepView({
                 recipeName={recipeName}
                 stepIndex={step.originalIndex}
                 text={step.text}
-                ingredientCandidates={ingredientCandidates}
-                onIngredientPress={onIngredientPress}
               />
             </div>
 

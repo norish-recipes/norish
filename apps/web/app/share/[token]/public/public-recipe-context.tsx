@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 import { useSharePublicConfigQuery } from "@/hooks/recipes/use-share-public-config-query";
-import { useIngredientLinkHighlight } from "@/hooks/use-ingredient-link-highlight";
 
 import type { PublicRecipeContextValue, SharedRecipe } from "./types";
 import { useShareRecipeState } from "./use-share-recipe-state";
@@ -21,8 +20,6 @@ export function PublicRecipeProvider({
 }) {
   const { units } = useSharePublicConfigQuery(token);
   const state = useShareRecipeState(recipe);
-  const { highlightedIngredientKey, highlightIngredient, ingredientListRef } =
-    useIngredientLinkHighlight();
 
   const value = useMemo(
     () => ({
@@ -30,11 +27,8 @@ export function PublicRecipeProvider({
       recipe,
       units,
       state,
-      highlightedIngredientKey,
-      ingredientListRef,
-      highlightIngredient,
     }),
-    [token, recipe, units, state, highlightedIngredientKey, ingredientListRef, highlightIngredient]
+    [token, recipe, units, state]
   );
 
   return <PublicRecipeContext.Provider value={value}>{children}</PublicRecipeContext.Provider>;

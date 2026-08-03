@@ -575,7 +575,7 @@ export default function RecipeForm({ mode, initialData }: RecipeFormProps) {
           <div className="ml-0 md:ml-9">
             <p className="text-muted mb-3 flex items-center gap-1 text-base">
               {t("instructionsHelp")}
-              <SmartInputHelp />
+              <SmartInputHelp showIngredientMention />
             </p>
             <StepInput
               ingredients={ingredients}

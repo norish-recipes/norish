@@ -156,6 +156,7 @@
     "heading": "Begin een regel met <strong>#</strong> voor een kop",
     "bold": "Gebruik <strong>**dubbele sterretjes**</strong> voor bold tekst",
     "recipeLink": "Typ <strong>/receptnaam</strong> om naar een ander recept te linken",
+    "ingredientMention": "Typ <strong>@</strong> om een ingrediënt aan de stap te koppelen — het woord komt in je zin, de koppeling wordt een chip eronder",
     "helpAriaLabel": "Formateringshulp"
   },
   "tagInput": {

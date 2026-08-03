@@ -156,6 +156,7 @@
     "heading": "Start en linje med <strong>#</strong> for en overskrift",
     "bold": "Omgi med <strong>**doble stjerner**</strong> for fet skrift",
     "recipeLink": "Skriv <strong>/oppskriftnavn</strong> for å lenke til en annen oppskrift",
+    "ingredientMention": "Skriv <strong>@</strong> for å koble en ingrediens til trinnet — ordet havner i setningen, koblingen blir en brikke under",
     "helpAriaLabel": "Hjelp til formatering"
   },
   "tagInput": {

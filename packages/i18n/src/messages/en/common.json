@@ -156,6 +156,7 @@
     "heading": "Start a line with <strong>#</strong> for a heading",
     "bold": "Wrap in <strong>**double asterisks**</strong> for bold",
     "recipeLink": "Type <strong>/recipe name</strong> to link to another recipe",
+    "ingredientMention": "Type <strong>@</strong> to attach an ingredient to the step — the word lands in your sentence, the link becomes a chip below it",
     "helpAriaLabel": "Formatting help"
   },
   "tagInput": {

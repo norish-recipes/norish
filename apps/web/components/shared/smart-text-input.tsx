@@ -8,7 +8,8 @@ import { useTranslations } from "next-intl";
 export interface SmartTextInputIngredientSuggestion {
   key: string;
   label: string;
-  token: string;
+  /** The referenced ingredient line's order — what a mention attaches. */
+  ingredientOrder: number;
 }
 
 interface SmartTextInputProps {
@@ -17,6 +18,13 @@ interface SmartTextInputProps {
   placeholder?: string;
   minRows?: number;
   ingredientSuggestions?: SmartTextInputIngredientSuggestion[];
+  /**
+   * The `@` mention gesture: picking a suggestion inserts the plain word into
+   * the sentence and hands the caller both the updated text and the picked
+   * line in one call, so the text change and the attachment land atomically.
+   * The `@` itself never reaches the stored text.
+   */
+  onIngredientMention?: (suggestion: SmartTextInputIngredientSuggestion, newValue: string) => void;
   onBlur?: () => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
 }
@@ -42,6 +50,7 @@ export default function SmartTextInput({
   placeholder,
   minRows = 1,
   ingredientSuggestions = [],
+  onIngredientMention,
   onBlur,
   onKeyDown,
 }: SmartTextInputProps) {
@@ -141,12 +150,18 @@ export default function SmartTextInput({
     (suggestion: SmartTextInputIngredientSuggestion) => {
       if (autocomplete?.type !== "ingredient") return;
 
+      // The mention gesture: the plain word goes into the sentence — the `@`
+      // and the query it swallowed are replaced, never stored.
       const before = value.slice(0, autocomplete.triggerStart);
       const after = value.slice(autocomplete.cursorPosition);
-      const newValue = `${before}${suggestion.token}${after}`;
-      const newCursorPos = before.length + suggestion.token.length;
+      const newValue = `${before}${suggestion.label}${after}`;
+      const newCursorPos = before.length + suggestion.label.length;
 
-      onValueChange(newValue);
+      if (onIngredientMention) {
+        onIngredientMention(suggestion, newValue);
+      } else {
+        onValueChange(newValue);
+      }
       setAutocomplete(null);
 
       setTimeout(() => {
@@ -156,7 +171,7 @@ export default function SmartTextInput({
         textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
       }, 0);
     },
-    [autocomplete, onValueChange, value]
+    [autocomplete, onIngredientMention, onValueChange, value]
   );
 
   const handleBlur = useCallback(() => {

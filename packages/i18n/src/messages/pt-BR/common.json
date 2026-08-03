@@ -156,6 +156,7 @@
     "heading": "Comece uma linha com <strong>#</strong> para criar um título",
     "bold": "Envolva com <strong>**asteriscos duplos**</strong> para negrito",
     "recipeLink": "Digite <strong>/nome da receita</strong> para vincular a outra receita",
+    "ingredientMention": "Digite <strong>@</strong> para vincular um ingrediente à etapa — a palavra fica na frase e o vínculo vira uma etiqueta abaixo",
     "helpAriaLabel": "Ajuda de formatação"
   },
   "tagInput": {

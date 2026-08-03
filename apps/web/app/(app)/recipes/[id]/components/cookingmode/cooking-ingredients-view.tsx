@@ -1,6 +1,5 @@
 "use client";
 
-import type { Ref } from "react";
 import ServingsControl from "@/app/(app)/recipes/[id]/components/servings-control";
 import SystemConvertMenu from "@/app/(app)/recipes/[id]/components/system-convert-menu";
 import AmountDisplayToggle from "@/components/recipes/amount-display-toggle";
@@ -15,8 +14,6 @@ type CookingIngredientsViewProps = Pick<
   "displayIngredients" | "recipeServings" | "recipeSystemUsed" | "onPointerDown" | "onPointerUp"
 > & {
   showTitle: boolean;
-  highlightedIngredientKey?: string | null;
-  ingredientListRef?: Ref<HTMLUListElement>;
 };
 
 export function CookingIngredientsView({
@@ -24,8 +21,6 @@ export function CookingIngredientsView({
   recipeServings,
   recipeSystemUsed,
   showTitle,
-  highlightedIngredientKey,
-  ingredientListRef,
   onPointerDown,
   onPointerUp,
 }: CookingIngredientsViewProps) {
@@ -61,8 +56,6 @@ export function CookingIngredientsView({
           <ScrollShadow className="h-full px-4 py-4 md:px-6" size={64}>
             <ReadonlyIngredientsList
               interactive
-              highlightedIngredientKey={highlightedIngredientKey}
-              ingredientListRef={ingredientListRef}
               ingredients={displayIngredients}
               systemUsed={recipeSystemUsed}
             />

@@ -115,13 +115,6 @@ vi.mock("@/hooks/ratings", () => ({
   useRatingQuery: () => ({ userRating: null, averageRating: null, isLoading: false }),
   useRatingsMutation: () => ({ rateRecipe: vi.fn(), isRating: false }),
 }));
-vi.mock("@/hooks/use-ingredient-link-highlight", () => ({
-  useIngredientLinkHighlight: () => ({
-    highlightedIngredientKey: null,
-    highlightIngredient: vi.fn(),
-    ingredientListRef: { current: null },
-  }),
-}));
 vi.mock("@norish/shared/lib/user-preferences", () => ({
   getShowRatingsPreference: () => true,
   getShowFavoritesPreference: () => true,

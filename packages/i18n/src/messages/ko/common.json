@@ -156,6 +156,7 @@
     "heading": "제목을 만들려면 줄 앞에 <strong>#</strong>을 입력하세요",
     "bold": "굵게 표시하려면 <strong>**이중 별표**</strong>로 묶으세요.",
     "recipeLink": "다른 레시피에 연결하려면 <strong>/recipe 이름</strong>을 입력하세요.",
+    "ingredientMention": "<strong>@</strong>를 입력하면 재료가 단계에 연결됩니다 — 단어는 문장에 남고 연결은 아래에 칩으로 표시됩니다",
     "helpAriaLabel": "서식 지정 도움말"
   },
   "tagInput": {
